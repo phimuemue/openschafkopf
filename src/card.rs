@@ -1,0 +1,105 @@
+use std::fmt;
+use std::mem;
+
+pub use self::EFarbe::*;
+#[derive(PartialEq, Eq, Debug, Copy, Clone, PartialOrd, Ord)]
+#[allow(non_camel_case_types)]
+pub enum EFarbe {
+    efarbeEICHEL,
+    efarbeGRAS,
+    efarbeHERZ,
+    efarbeSCHELLN,
+}
+
+impl EFarbe {
+    pub fn all_values() -> [EFarbe; 4] {
+        [efarbeEICHEL, efarbeGRAS, efarbeHERZ, efarbeSCHELLN,]
+    }
+}
+
+impl fmt::Display for EFarbe {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+pub use self::ESchlag::*;
+#[allow(non_camel_case_types)]
+#[derive(PartialEq, Eq, Debug, Copy, Clone, PartialOrd, Ord)]
+pub enum ESchlag {
+    eschlag7, eschlag8, eschlag9, eschlagZ, eschlagU, eschlagO, eschlagK, eschlagA
+}
+
+impl ESchlag {
+    pub fn all_values() -> [ESchlag; 8] {
+        [eschlag7, eschlag8, eschlag9, eschlagZ, eschlagU, eschlagO, eschlagK, eschlagA,]
+    }
+}
+
+impl fmt::Display for ESchlag {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub struct CCard {
+    m_n_internalrepresentation : i8,
+}
+
+impl fmt::Display for CCard {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}{}", 
+            match self.farbe() {
+                efarbeEICHEL => "E",
+                efarbeGRAS => "G",
+                efarbeHERZ => "H",
+                efarbeSCHELLN => "S",
+            },
+            match self.schlag() {
+                eschlag7 => "7",
+                eschlag8 => "8",
+                eschlag9 => "9",
+                eschlagZ => "Z",
+                eschlagU => "U",
+                eschlagO => "O",
+                eschlagK => "K",
+                eschlagA => "A",
+            }
+        )
+    }
+}
+
+impl CCard {
+    pub fn new(efarbe : EFarbe, eschlag : ESchlag) -> CCard {
+        CCard{m_n_internalrepresentation : efarbe as i8 * 8 + eschlag as i8}
+    }
+    pub fn farbe(&self) -> EFarbe {
+        unsafe{(mem::transmute(self.m_n_internalrepresentation / 8))}
+    }
+    pub fn schlag(&self) -> ESchlag {
+        unsafe{(mem::transmute(self.m_n_internalrepresentation % 8))}
+    }
+    fn image_filename(&self) -> String {
+        return format!("../img/{}.png", self)
+    }
+    fn image_size() -> (i32, i32) {
+        (114, 201)
+    }
+}
+
+#[test]
+fn test_farbe_schlag_enumerators() {
+    assert_eq!(EFarbe::all_values().iter().count(), 4);
+    assert_eq!(ESchlag::all_values().iter().count(), 8);
+}
+
+#[test]
+fn test_card_ctor() {
+    for &efarbe in EFarbe::all_values().iter() {
+        for &eschlag in ESchlag::all_values().iter() {
+            assert_eq!(CCard::new(efarbe, eschlag).farbe(), efarbe);
+            assert_eq!(CCard::new(efarbe, eschlag).schlag(), eschlag);
+        }
+    }
+}
