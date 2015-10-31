@@ -19,6 +19,12 @@ impl CGame {
         // prepare
         self.m_gamestate.m_vecstich.clear();
         println!("Starting game");
+        let mut veccard_all : Vec<CCard> = Vec::new();
+        for efarbe in EFarbe::all_values().iter() {
+            for eschlag in ESchlag::all_values().iter() {
+                veccard_all.push(CCard::new(*efarbe, *eschlag));
+            }
+        }
         unimplemented!(); // self.m_gamestate.m_ahand = CGame::deal_cards(); // TODO
         for hand in self.m_gamestate.m_ahand.iter() {
             print!("{} |", hand);
