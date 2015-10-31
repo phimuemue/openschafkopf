@@ -45,8 +45,7 @@ impl CGame {
 
         println!("Asked players if they want to play. Determining rules");
         // TODO: find sensible way to deal with multiple game announcements
-        let ref gameannounce_play = vecpaireplayerindexgameannounce.first().unwrap().1;
-        // TODO: extract rules from game announcement
+        self.m_gamestate.m_rules = vecpaireplayerindexgameannounce.pop().unwrap().1;
         unimplemented!();
 
         println!("Rules determined. Sorting hands");
