@@ -79,9 +79,9 @@ impl CGame {
     fn zugeben(&mut self, card : CCard) {
         let mut stich = self.m_gamestate.m_vecstich.last_mut().unwrap();
         println!("Player {} played card", (stich.first_player_index() + stich.size())%4);
-        let ref mut hand = self.m_gamestate.m_ahand[(stich.first_player_index() + stich.size())%4]; // TODO: reference?
+        let ref mut hand = self.m_gamestate.m_ahand[(stich.first_player_index() + stich.size())%4];
         unimplemented!();
-        //assert!(self.m_gamestate.m_rules.card_is_allowed(self.m_gamestate.m_vecstich, hand, card)); // TODO
+        assert!(self.m_gamestate.m_rules.card_is_allowed(&self.m_gamestate.m_vecstich, hand, card));
         hand.play_card(card);
         stich.zugeben(card);
         self.notify_game_listeners();

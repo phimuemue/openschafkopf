@@ -105,7 +105,7 @@ pub trait TRules {
         }
     }
 
-    fn card_is_allowed(&self, vecstich: &Vec<CStich>, stich: &CStich, hand: &CHand, card: CCard) -> bool {
+    fn card_is_allowed(&self, vecstich: &Vec<CStich>, hand: &CHand, card: CCard) -> bool {
         self.all_allowed_cards(vecstich, hand).into_iter()
             .any(|card_iterated| card_iterated==card)
     }
