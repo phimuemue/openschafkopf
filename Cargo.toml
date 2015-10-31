@@ -5,6 +5,4 @@ authors = ["philipp"]
 
 [dependencies]
 combine = "1.0.0"
-
-[dev-dependencies]
 quickcheck = "0.2"
