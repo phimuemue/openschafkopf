@@ -1,0 +1,4 @@
+*.toml.swp
+*.rs.swp
+Cargo.lock
+target
