@@ -40,7 +40,6 @@ pub trait TRules {
             .fold(0, |n_sum, (_, card)| n_sum + self.points_card(card))
     }
     fn points_per_player(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
-        // TODO: doable via folds?
         let an_points = [0, 0, 0, 0,];
         for stich in vecstich {
             let mut n_points_stich = 0;
@@ -113,15 +112,14 @@ pub trait TRules {
     //fn DefaultStrategy() -> std::shared_ptr<CStrategy>;
     
     fn winner_index(&self, stich: &CStich) -> EPlayerIndex {
-        // TODO: doable with fold?
-        let mut i_best = stich.m_eplayerindex_first;
+        let mut eplayerindex_best = stich.m_eplayerindex_first;
         for i in 0..stich.size() {
-            let i_current = (stich.m_eplayerindex_first + i)%4;
-            if Ordering::Less==self.compare_in_stich(stich.m_acard[i_best as usize], stich.m_acard[i_current as usize]) {
-                i_best = i_current;
+            let eplayerindex_current = (stich.m_eplayerindex_first + i)%4;
+            if Ordering::Less==self.compare_in_stich(stich.m_acard[eplayerindex_best], stich.m_acard[eplayerindex_current]) {
+                eplayerindex_best = eplayerindex_current;
             }
         }
-        i_best
+        eplayerindex_best
     }
     fn best_card_in_stich(&self, stich: &CStich) -> CCard {
         return stich.m_acard[self.winner_index(stich) as usize];
