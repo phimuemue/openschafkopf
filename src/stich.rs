@@ -125,4 +125,5 @@ fn test_stich() {
         }
         assert_eq!(stich.first_player_index(), eplayerindex);
     }
+    // TODO: indices_and_cards
 }
