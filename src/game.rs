@@ -108,13 +108,12 @@ impl CGame {
             let mut i_player_last_stich = 0;
             {
                 let ref stich = self.m_gamestate.m_vecstich.last().unwrap();
-                let i_player_last_stich_internal = self.m_gamestate.m_rules.winner_index(stich);
+                i_player_last_stich = self.m_gamestate.m_rules.winner_index(stich);
                 println!("{} made by {}, ({} points)",
                     stich,
-                    i_player_last_stich_internal,
+                    i_player_last_stich,
                     self.m_gamestate.m_rules.points_stich(stich)
                 );
-                i_player_last_stich = i_player_last_stich_internal;
             }
             self.m_gamestate.m_vecstich.push(CStich::new(i_player_last_stich)); // open new stich
             self.notify_game_listeners();
