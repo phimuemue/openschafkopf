@@ -10,12 +10,6 @@ mod game;
 mod player;
 mod playercomputer;
 
-use card::CCard;
-use card::EFarbe::*;
-use card::ESchlag::*;
-use hand::*;
-use cardvectorparser::*;
-use gamestate::*;
 use game::*;
 
 fn main() {

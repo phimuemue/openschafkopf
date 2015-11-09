@@ -4,7 +4,6 @@ use hand::*;
 use player::*;
 use gamestate::*;
 use rules::*;
-use game::*;
 use rulesrufspiel::*;
 
 use std::sync::mpsc;
@@ -24,11 +23,11 @@ impl CPlayer for CPlayerComputer {
                     gamestate.m_vecstich.last().unwrap().current_player_index()
                 ]
             )[0]
-        );
+        ).ok();
         println!("CPlayerComputer {} played card", gamestate.m_vecstich.last().unwrap().current_player_index());
     }
 
-    fn ask_for_game(&self, eplayerindex: EPlayerIndex, hand: &CHand) -> Option<Box<TRules>> {
+    fn ask_for_game(&self, eplayerindex: EPlayerIndex, _: &CHand) -> Option<Box<TRules>> {
         // TODO: implement a more intelligent decision strategy
         return Some(
             Box::new(

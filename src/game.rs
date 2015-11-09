@@ -8,8 +8,6 @@ use cardvectorparser::*;
 use rulesrufspiel::*;
 use playercomputer::*;
 
-use std::rc::Rc;
-use std::thread;
 use std::sync::mpsc;
 
 pub struct CGame {
@@ -78,7 +76,7 @@ impl CGame {
         {
             let ref rules = self.m_gamestate.m_rules;
             for hand in self.m_gamestate.m_ahand.iter_mut() {
-                hand.sort(|&cardFst, &cardSnd| rules.compare_in_stich(cardFst, cardSnd));
+                hand.sort(|&card_fst, &card_snd| rules.compare_in_stich(card_fst, card_snd));
                 println!("{}", hand);
             }
         }
@@ -88,12 +86,11 @@ impl CGame {
         println!("Giving control to player {}", eplayerindex_first);
         let (txcard, rxcard) = mpsc::channel();
         let mut eplayerindex_last_stich = eplayerindex_first;
-        for i_stich in 0..8 { // TODO: kurze Karte?
+        for /*i_stich*/ _ in 0..8 { // TODO: kurze Karte?
             self.m_gamestate.m_vecstich.push(CStich::new(eplayerindex_last_stich));
             self.notify_game_listeners();
             for eplayerindex in (eplayerindex_last_stich..eplayerindex_last_stich+4).map(|eplayerindex| eplayerindex%4) {
-                assert!(eplayerindex< 4);
-                assert!(0 <= eplayerindex);
+                assert!(eplayerindex< 4); // note: 0<=eplayerindex by type!
                 {
                     self.m_vecplayer[eplayerindex].take_control(&self.m_gamestate, txcard.clone());
                 }
@@ -101,7 +98,7 @@ impl CGame {
                     let card_played = rxcard.recv().ok().unwrap();
                     println!("Player {} played {}", eplayerindex, card_played);
                     {
-                        let mut stich = self.m_gamestate.m_vecstich.last_mut().unwrap();
+                        let stich = self.m_gamestate.m_vecstich.last_mut().unwrap();
                         assert_eq!(eplayerindex, (stich.first_player_index() + stich.size())%4);
                     }
                     {

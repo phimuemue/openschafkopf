@@ -3,7 +3,6 @@ use hand::*;
 use stich::*;
 use rules::*;
 use gamestate::*;
-use game::*;
 
 use std::sync::mpsc;
 

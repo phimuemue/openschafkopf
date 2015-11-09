@@ -42,19 +42,19 @@ impl CHand {
     //    where CmpLess: Fn(CCard, CCard) -> bool
     //{
     //}
-    fn for_each_card_with<Pred, Func>(&self, pred: Pred, func: Func)
-        where Pred: Fn(&CCard) -> bool,
-              Func: Fn(&CCard)
-    {
-        for card in self.m_veccard.iter().filter(|card| pred(card)) {
-            func(card);
-        }
-    }
-    fn count_cards_with<Pred>(&self, pred: Pred) -> usize
-        where Pred: Fn(&CCard) -> bool
-    {
-        self.m_veccard.iter().filter(|card| pred(card)).count()
-    }
+    //fn for_each_card_with<Pred, Func>(&self, pred: Pred, func: Func)
+    //    where Pred: Fn(&CCard) -> bool,
+    //          Func: Fn(&CCard)
+    //{
+    //    for card in self.m_veccard.iter().filter(|card| pred(card)) {
+    //        func(card);
+    //    }
+    //}
+    //fn count_cards_with<Pred>(&self, pred: Pred) -> usize
+    //    where Pred: Fn(&CCard) -> bool
+    //{
+    //    self.m_veccard.iter().filter(|card| pred(card)).count()
+    //}
     pub fn cards(&self) -> &Vec<CCard> {
         &self.m_veccard
     }
@@ -63,7 +63,7 @@ impl CHand {
 impl fmt::Display for CHand {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for card in self.m_veccard.iter() {
-            write!(f, "{}, ", card);
+            try!(write!(f, "{}, ", card));
         }
         write!(f, "")
     }

@@ -5,23 +5,25 @@ use std::cmp::Ordering;
 
 pub type CHandVector = Vec<CCard>; // TODO: vector with fixed capacity 8
 
-struct PlayerAndFarbe {
-    m_eplayerindex : EPlayerIndex,
-    m_efarbe : EFarbe
+#[derive(PartialEq)]
+pub enum VTrumpfOrFarbe {
+    Trumpf,
+    Farbe (EFarbe),
 }
 
-#[derive(PartialEq)]
-pub enum ETrumpfOrFarbe {
-    trumpf,
-    farbe (EFarbe),
+pub fn equivalent_when_on_same_hand_default<Rules> (_: &Rules, _: CCard, _: CCard, _: &Vec<CStich>) -> bool 
+    where Rules : TRules
+{
+    // TODO implement default version
+    false
 }
 
 pub trait TRules {
 
-    fn trumpf_or_farbe(&self, card: CCard) -> ETrumpfOrFarbe;
+    fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe;
 
     fn is_trumpf(&self, card: CCard) -> bool {
-        ETrumpfOrFarbe::trumpf == self.trumpf_or_farbe(card)
+        VTrumpfOrFarbe::Trumpf == self.trumpf_or_farbe(card)
     }
 
     fn points_card(&self, card: CCard) -> isize {
@@ -50,20 +52,12 @@ pub trait TRules {
         an_points
     }
 
-    fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<CStich>) -> bool {
-        unimplemented!();
-        false
-    }
+    fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<CStich>) -> bool;
 
-    fn is_prematurely_winner(&self, vecstich: &Vec<CStich>) -> [bool; 4] {
-        unimplemented!();
-        [false, false, false, false]
-    }
+    fn is_prematurely_winner(&self, vecstich: &Vec<CStich>) -> [bool; 4];
 
-    fn equivalent_when_on_same_hand(&self, card1: CCard, card2: CCard, vecstich: &Vec<CStich>) -> bool {
-        unimplemented!();
-        false
-    }
+    // impls of equivalent_when_on_same_hand may use equivalent_when_on_same_hand_default
+    fn equivalent_when_on_same_hand(&self, card1: CCard, card2: CCard, vecstich: &Vec<CStich>) -> bool;
 
     fn all_cards_of_farbe(&self, efarbe: EFarbe) -> Vec<CCard>;
 

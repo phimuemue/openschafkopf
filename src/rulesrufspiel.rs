@@ -35,11 +35,11 @@ impl CRulesRufspiel {
 }
 
 impl TRules for CRulesRufspiel {
-    fn trumpf_or_farbe(&self, card: CCard) -> ETrumpfOrFarbe {
-        if (card.schlag()==eschlagO || card.schlag()==eschlagU || card.farbe()==efarbeHERZ) {
-            ETrumpfOrFarbe::trumpf
+    fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe {
+        if card.schlag()==eschlagO || card.schlag()==eschlagU || card.farbe()==efarbeHERZ {
+            VTrumpfOrFarbe::Trumpf
         } else {
-            ETrumpfOrFarbe::farbe(card.farbe())
+            VTrumpfOrFarbe::Farbe(card.farbe())
         }
     }
 
@@ -64,7 +64,7 @@ impl TRules for CRulesRufspiel {
     }
 
     fn equivalent_when_on_same_hand(&self, card1: CCard, card2: CCard, vecstich: &Vec<CStich>) -> bool {
-        if TRules::equivalent_when_on_same_hand(self, card1, card2, vecstich) { // TODO: does this work?!
+        if equivalent_when_on_same_hand_default(self, card1, card2, vecstich) { // TODO: see if TRules::equivalent_when_on_same_hand works at some point
             return true;
         }
         if !self.is_trumpf(card1) && !self.is_trumpf(card2) && self.points_card(card1) == self.points_card(card2) {
@@ -73,8 +73,8 @@ impl TRules for CRulesRufspiel {
                     .flat_map(|stich| stich.indices_and_cards())
                     .map(|(_, card)| card)
                     .filter(|&card| match self.trumpf_or_farbe(card) {
-                                ETrumpfOrFarbe::trumpf => false,
-                                ETrumpfOrFarbe::farbe(efarbeCard) => efarbeCard==efarbe
+                                VTrumpfOrFarbe::Trumpf => false,
+                                VTrumpfOrFarbe::Farbe(efarbe_card) => efarbe_card==efarbe
                             } )
                     .count()
             };

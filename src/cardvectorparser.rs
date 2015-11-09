@@ -2,7 +2,6 @@ extern crate combine;
 
 use card::*;
 use self::combine::*;
-use self::combine::combinator::FnParser;
 use self::combine::primitives::Stream;
 
 // For now, parsing is only used to simplify input in programming.
@@ -20,8 +19,8 @@ where I: Stream<Item=char> {
         combine::char('h'),
         combine::char('s'),
     ])
-    .map(|chrFarbe| {
-        match chrFarbe {
+    .map(|chr_farbe| {
+        match chr_farbe {
             'e' => efarbeEICHEL,
             'g' => efarbeGRAS,
             'h' => efarbeHERZ,
@@ -44,8 +43,8 @@ where I: Stream<Item=char> {
         combine::char('k'),
         combine::char('a'),
     ])
-    .map(|chrFarbe| {
-        match chrFarbe {
+    .map(|chr_farbe| {
+        match chr_farbe {
             '7' => eschlag7,
             '8' => eschlag8,
             '9' => eschlag9,
@@ -67,9 +66,9 @@ where I: Stream<Item=char> {
         .parse_state(input)
 }
 
-pub fn parse_cards(strCards: &str) -> Vec<CCard> {
+pub fn parse_cards(str_cards: &str) -> Vec<CCard> {
     sep_by::<Vec<_>,_,_>(parser(card_parse), spaces())
-        .parse(strCards)
+        .parse(str_cards)
         .unwrap()
         .0
 }
