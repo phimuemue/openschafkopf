@@ -26,16 +26,6 @@ fn main() {
         println!("{} hat {}", i_player, card);
     }
     println!("{}", stich);
-    let hand = CHand::new_from_vec(
-        vec!(
-            CCard::new(efarbeEICHEL, eschlagU),
-            CCard::new(efarbeHERZ, eschlagK),
-            CCard::new(efarbeSCHELLN, eschlag7),
-        )
-    );
-    println!("{}", hand);
-    let hand2 = hand.new_from_hand(CCard::new(efarbeHERZ, eschlagK));
-    println!("{}", hand2);
 
     let mut game = CGame::new();
     println!("Hand 0 : {}", game.m_gamestate.m_ahand[0]);

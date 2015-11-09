@@ -69,4 +69,17 @@ impl fmt::Display for CHand {
     }
 }
 
-// TODO: add tests
+#[test]
+fn test_hand() {
+    let hand = CHand::new_from_vec(
+        vec!(
+            CCard::new(efarbeEICHEL, eschlagU),
+            CCard::new(efarbeHERZ, eschlagK),
+            CCard::new(efarbeSCHELLN, eschlag7),
+        )
+    );
+    let hand2 = hand.new_from_hand(CCard::new(efarbeHERZ, eschlagK));
+    assert_eq!(hand.cards().len()-1, hand2.cards().len());
+    assert!(hand2.cards()[0]==CCard::new(efarbeEICHEL, eschlagU));
+    assert!(hand2.cards()[1]==CCard::new(efarbeSCHELLN, eschlag7));
+}
