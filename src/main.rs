@@ -19,14 +19,6 @@ use gamestate::*;
 use game::*;
 
 fn main() {
-    let mut stich = stich::CStich::new(2);
-    stich.zugeben(CCard::new(efarbeEICHEL, eschlagU));
-    stich.zugeben(CCard::new(efarbeGRAS, eschlag7));
-    for (i_player, card) in stich.indices_and_cards() {
-        println!("{} hat {}", i_player, card);
-    }
-    println!("{}", stich);
-
     let mut game = CGame::new();
     println!("Hand 0 : {}", game.m_gamestate.m_ahand[0]);
     game.run_game(0);

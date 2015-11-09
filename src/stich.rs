@@ -124,5 +124,11 @@ fn test_stich() {
         }
         assert_eq!(stich.first_player_index(), eplayerindex);
     }
-    // TODO: indices_and_cards
+
+    let mut stich = CStich::new(2);
+    stich.zugeben(CCard::new(efarbeEICHEL, eschlagU));
+    stich.zugeben(CCard::new(efarbeGRAS, eschlag7));
+    assert!(stich[2]==CCard::new(efarbeEICHEL, eschlagU));
+    assert!(stich[3]==CCard::new(efarbeGRAS, eschlag7));
+    assert_eq!(stich.indices_and_cards().count(), 2);
 }
