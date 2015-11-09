@@ -31,7 +31,7 @@ impl CHand {
             .any(pred)
     }
     pub fn play_card(&mut self, card_played: CCard) {
-        self.m_veccard.retain(|&card| card==card_played)
+        self.m_veccard.retain(|&card| card!=card_played)
     }
     pub fn sort<CmpLess>(&mut self, cmpless: CmpLess)
         where CmpLess: Fn(&CCard, &CCard) -> Ordering

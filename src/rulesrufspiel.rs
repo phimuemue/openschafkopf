@@ -4,9 +4,9 @@ use hand::*;
 use rules::*;
 use std::cmp::Ordering;
 
-struct CRulesRufspiel {
-    m_eplayerindex : EPlayerIndex,
-    m_efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
+pub struct CRulesRufspiel {
+    pub m_eplayerindex : EPlayerIndex,
+    pub m_efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
 }
 
 impl CRulesRufspiel {

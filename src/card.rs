@@ -106,12 +106,13 @@ impl CCard {
     pub fn schlag(&self) -> ESchlag {
         unsafe{(mem::transmute(self.m_n_internalrepresentation % 8))}
     }
-    fn image_filename(&self) -> String {
-        return format!("../img/{}.png", self)
-    }
-    fn image_size() -> (i32, i32) {
-        (114, 201)
-    }
+    // TODO: inspect if those are really needed and remove if necessary
+    // fn image_filename(&self) -> String {
+    //     return format!("../img/{}.png", self)
+    // }
+    // fn image_size() -> (i32, i32) {
+    //     (114, 201)
+    // }
 }
 
 impl quickcheck::Arbitrary for CCard {

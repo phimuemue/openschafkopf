@@ -3,9 +3,11 @@ use hand::*;
 use stich::*;
 use rules::*;
 use gamestate::*;
+use game::*;
+
+use std::sync::mpsc;
 
 pub trait CPlayer {
-    fn take_control<FnPlayCard>(&mut self, gamestate: &SGameState, fn_play_card : FnPlayCard)
-        where FnPlayCard : Fn(CCard);
-    fn ask_for_game(&self, hand: &CHand) -> Option<Box<TRules>>;
+    fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<CCard>);
+    fn ask_for_game(&self, eplayerindex: EPlayerIndex, hand: &CHand) -> Option<Box<TRules>>;
 }

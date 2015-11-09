@@ -2,7 +2,6 @@ use card::*;
 use std::fmt;
 use std::iter;
 
-use std::ops::Add;
 use std::ops::Index;
 use std::ops::IndexMut;
 
@@ -26,8 +25,8 @@ impl<'stich> Iterator for StichIterator<'stich> {
             return None;
         }
         else {
-            let i_index = self.m_stich.m_eplayerindex_first + self.m_eplayerindex;
-            let pairicard = (i_index, self.m_stich[i_index]);
+            let eplayerindex = (self.m_stich.m_eplayerindex_first + self.m_eplayerindex)%4;
+            let pairicard = (eplayerindex, self.m_stich[eplayerindex]);
             self.m_eplayerindex = self.m_eplayerindex + 1;
             return Some(pairicard);
         }
@@ -62,7 +61,7 @@ impl CStich {
         self.m_eplayerindex_first
     }
     pub fn current_player_index(&self) -> EPlayerIndex {
-        self.first_player_index() + self.size()
+        (self.first_player_index() + self.size()) % 4
     }
     pub fn size(&self) -> usize {
         self.m_n_size
@@ -73,14 +72,14 @@ impl CStich {
         self[eplayerindex] = card; // sad: can not inline eplayerindex (borrowing)
         self.m_n_size = self.m_n_size + 1;
     }
-    pub fn undo_most_recent_card(&mut self) {
-        assert!(0 < self.m_n_size);
-        self.m_n_size = self.m_n_size - 1;
-    }
-    pub fn set_card_by_offset(&mut self, i: usize, card: CCard) {
-        let eplayerindex = self.m_eplayerindex_first + i;
-        self[eplayerindex] = card; // sad: can not inline eplayerindex (borrowing)
-    }
+    // pub fn undo_most_recent_card(&mut self) {
+    //     assert!(0 < self.m_n_size);
+    //     self.m_n_size = self.m_n_size - 1;
+    // }
+    // pub fn set_card_by_offset(&mut self, i: usize, card: CCard) {
+    //     let eplayerindex = self.m_eplayerindex_first + i;
+    //     self[eplayerindex] = card; // sad: can not inline eplayerindex (borrowing)
+    // }
     pub fn first_card(&self) -> CCard {
         self[self.m_eplayerindex_first]
     }
@@ -101,13 +100,13 @@ impl fmt::Display for CStich {
         }
         for (i, ocard) in vecocard.into_iter().enumerate() {
             if i==self.m_eplayerindex_first {
-                write!(f, ">");
+                try!(write!(f, ">"));
             } else {
-                write!(f, " ");
+                try!(write!(f, " "));
             }
             match ocard {
-                None => {write!(f, "__");}
-                Some(card) => {write!(f, "{}", card);}
+                None => {try!(write!(f, "__"));}
+                Some(card) => {try!(write!(f, "{}", card));}
             }
         }
         write!(f, "")

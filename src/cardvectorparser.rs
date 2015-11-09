@@ -67,7 +67,7 @@ where I: Stream<Item=char> {
         .parse_state(input)
 }
 
-pub fn ParseCards(strCards: &str) -> Vec<CCard> {
+pub fn parse_cards(strCards: &str) -> Vec<CCard> {
     sep_by::<Vec<_>,_,_>(parser(card_parse), spaces())
         .parse(strCards)
         .unwrap()

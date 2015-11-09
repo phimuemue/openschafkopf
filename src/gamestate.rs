@@ -7,4 +7,3 @@ pub struct SGameState {
     pub m_rules : Box<TRules>,
     pub m_vecstich : Vec<CStich>,
 }
-
