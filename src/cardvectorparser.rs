@@ -73,3 +73,10 @@ pub fn parse_cards(strCards: &str) -> Vec<CCard> {
         .unwrap()
         .0
 }
+
+#[test]
+fn test_cardvectorparser() {
+    let veccard = parse_cards("ek gk hz hu s7");
+    assert_eq!(veccard.len(), 5);
+    assert!(veccard[1] == CCard::new(efarbeGRAS, eschlagK));
+}

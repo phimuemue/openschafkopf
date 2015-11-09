@@ -36,11 +36,6 @@ fn main() {
     println!("{}", hand);
     let hand2 = hand.new_from_hand(CCard::new(efarbeHERZ, eschlagK));
     println!("{}", hand2);
-    let veccard = cardvectorparser::parse_cards("ek gk hz hu s7");
-    println!("Parsed cards");
-    for card in veccard {
-        println!("{}", card);
-    }
 
     let mut game = CGame::new();
     println!("Hand 0 : {}", game.m_gamestate.m_ahand[0]);
