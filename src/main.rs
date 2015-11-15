@@ -9,6 +9,7 @@ mod gamestate;
 mod game;
 mod player;
 mod playercomputer;
+mod suspicion;
 
 use game::*;
 

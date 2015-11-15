@@ -2,6 +2,7 @@ use card::*;
 use std::fmt;
 use std::cmp::Ordering;
 
+#[derive(Clone)]
 pub struct CHand {
     m_veccard: Vec<CCard>, // TODO: use arrayvec
 }

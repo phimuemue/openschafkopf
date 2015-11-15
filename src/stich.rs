@@ -7,6 +7,7 @@ use std::ops::IndexMut;
 
 pub type EPlayerIndex = usize; // TODO: would a real enum be more adequate?
 
+#[derive(Clone)]
 pub struct CStich {
     pub m_eplayerindex_first: EPlayerIndex,
     m_n_size: usize,
