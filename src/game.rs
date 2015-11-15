@@ -7,6 +7,7 @@ use player::*;
 use cardvectorparser::*;
 use rulesrufspiel::*;
 use playercomputer::*;
+use playerhuman::*;
 
 use std::sync::mpsc;
 
@@ -18,7 +19,7 @@ pub struct CGame {
 
 impl CGame {
     //fn new_by_random(bShort : bool/*TODO: is it a good idea to have players in CGame?*/) -> CGame; // shall replace DealCards
-    pub fn new() -> CGame {
+    pub fn new(vecplayer: Vec<Box<CPlayer>>) -> CGame {
         CGame {
             m_gamestate : SGameState {
                 m_ahand : [ // TODO: shuffle cards
@@ -30,16 +31,12 @@ impl CGame {
                 m_rules : Box::new(CRulesRufspiel {m_eplayerindex : 0, m_efarbe: efarbeEICHEL} ),
                 m_vecstich : Vec::new()
             },
-            m_vecplayer : vec![ // TODO: take players in ctor?
-                Box::new(CPlayerComputer),
-                Box::new(CPlayerComputer),
-                Box::new(CPlayerComputer),
-                Box::new(CPlayerComputer)
-            ]
+            m_vecplayer : vecplayer
         }
     }
 
-    pub fn run_game(&mut self, eplayerindex_first : EPlayerIndex) {
+    pub fn run_game(mut self, eplayerindex_first : EPlayerIndex) {
+
         // prepare
         self.m_gamestate.m_vecstich.clear();
         println!("Starting game");

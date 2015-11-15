@@ -9,12 +9,26 @@ mod gamestate;
 mod game;
 mod player;
 mod playercomputer;
+mod playerhuman;
 mod suspicion;
+mod ui;
+mod mainwindow;
 
 use game::*;
+use mainwindow::*;
+use playerhuman::*;
+use playercomputer::*;
+
+extern crate gtk;
+
+use std::thread;
 
 fn main() {
-    let mut game = CGame::new();
-    println!("Hand 0 : {}", game.m_gamestate.m_ahand[0]);
-    game.run_game(0);
+    if gtk::init().is_err() {
+        println!("Failed to initialize gtk");
+        return;
+    }
+    main_window();
+    gtk::main();
+
 }
