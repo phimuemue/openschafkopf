@@ -39,7 +39,7 @@ impl CGame {
         }
     }
 
-    pub fn run_game(&mut self, eplayerindex_first : EPlayerIndex) {
+    pub fn start_game(&mut self, eplayerindex_first : EPlayerIndex) {
         // prepare
         self.m_gamestate.m_vecstich.clear();
         println!("Starting game");
@@ -66,7 +66,7 @@ impl CGame {
             }
         }
         if vecpaireplayerindexgameannounce.is_empty() {
-            return self.run_game(eplayerindex_first + 1); // TODO: just return something like "took not place"
+            return self.start_game(eplayerindex_first + 1); // TODO: just return something like "took not place"
         }
 
         println!("Asked players if they want to play. Determining rules");
@@ -82,63 +82,64 @@ impl CGame {
         }
 
         // starting game
-        println!("Beginning first stich");
-        println!("Giving control to player {}", eplayerindex_first);
-        let (txcard, rxcard) = mpsc::channel();
-        let mut eplayerindex_last_stich = eplayerindex_first;
-        for /*i_stich*/ _ in 0..8 { // TODO: kurze Karte?
-            self.m_gamestate.m_vecstich.push(CStich::new(eplayerindex_last_stich));
-            self.notify_game_listeners();
-            for eplayerindex in (eplayerindex_last_stich..eplayerindex_last_stich+4).map(|eplayerindex| eplayerindex%4) {
-                assert!(eplayerindex< 4); // note: 0<=eplayerindex by type!
-                {
-                    self.m_vecplayer[eplayerindex].take_control(&self.m_gamestate, txcard.clone());
+        self.new_stich(eplayerindex_first); // install first stich
+    }
+
+    fn new_stich(&mut self, eplayerindex_last_stich: EPlayerIndex) {
+        println!("Opening new stich starting at {}", eplayerindex_last_stich);
+        assert!(self.m_gamestate.m_vecstich.is_empty() || 4==self.m_gamestate.m_vecstich.last().unwrap().size());
+        self.m_gamestate.m_vecstich.push(CStich::new(eplayerindex_last_stich));
+        self.notify_game_listeners();
+    }
+
+    fn zugeben(&mut self, card_played: CCard, eplayerindex: EPlayerIndex) -> EPlayerIndex { // TODO: should invalid inputs be indicated by return value?
+        // returns the EPlayerIndex of the player who is the next in row to do something
+        // TODO: how to cope with finished game?
+        println!("Player {} wants to play {}", eplayerindex, card_played);
+        {
+            let stich = self.m_gamestate.m_vecstich.last_mut().unwrap();
+            assert_eq!(eplayerindex, (stich.first_player_index() + stich.size())%4);
+            assert!(self.m_gamestate.m_ahand[eplayerindex].contains(card_played));
+        }
+        {
+            let ref mut hand = self.m_gamestate.m_ahand[eplayerindex];
+            assert!(self.m_gamestate.m_rules.card_is_allowed(&self.m_gamestate.m_vecstich, hand, card_played));
+            hand.play_card(card_played);
+            self.m_gamestate.m_vecstich.last_mut().unwrap().zugeben(card_played);
+        }
+        for eplayerindex in 0..4 {
+            println!("Hand {}: {}", eplayerindex, self.m_gamestate.m_ahand[eplayerindex]);
+        }
+        if 4==self.m_gamestate.m_vecstich.last().unwrap().size() {
+            if 8==self.m_gamestate.m_vecstich.len() { // TODO kurze Karte?
+                println!("Game finished.");
+                for (i_stich, stich) in self.m_gamestate.m_vecstich.iter().enumerate() {
+                    println!("Stich {}: {}", i_stich, stich);
                 }
-                {
-                    let card_played = rxcard.recv().ok().unwrap();
-                    println!("Player {} played {}", eplayerindex, card_played);
-                    {
-                        let stich = self.m_gamestate.m_vecstich.last_mut().unwrap();
-                        assert_eq!(eplayerindex, (stich.first_player_index() + stich.size())%4);
-                    }
-                    {
-                        let ref mut hand = self.m_gamestate.m_ahand[eplayerindex];
-                        assert!(self.m_gamestate.m_rules.card_is_allowed(&self.m_gamestate.m_vecstich, hand, card_played));
-                        hand.play_card(card_played);
-                        self.m_gamestate.m_vecstich.last_mut().unwrap().zugeben(card_played);
-                    }
-                    self.notify_game_listeners();
-                }
-            }
-            {
-                for eplayerindex in 0..4 {
-                    println!("Hand {}: {}", eplayerindex, self.m_gamestate.m_ahand[eplayerindex]);
-                }
-            }
-            // TODO: all players should have to acknowledge the current stich in some way
-            {
-                {
-                    let ref stich = self.m_gamestate.m_vecstich.last().unwrap();
+                self.notify_game_listeners();
+                (self.m_gamestate.m_vecstich.first().unwrap().first_player_index() + 1) % 4 // for next game
+            } else {
+                // TODO: all players should have to acknowledge the current stich in some way
+                let eplayerindex_last_stich = {
+                    let stich = self.m_gamestate.m_vecstich.last().unwrap();
                     println!("Stich: {}", stich);
-                    eplayerindex_last_stich = self.m_gamestate.m_rules.winner_index(stich);
+                    let eplayerindex_last_stich = self.m_gamestate.m_rules.winner_index(stich);
                     println!("{} made by {}, ({} points)",
                         stich,
                         eplayerindex_last_stich,
                         self.m_gamestate.m_rules.points_stich(stich)
                     );
-                }
+                    eplayerindex_last_stich
+                };
+                self.new_stich(eplayerindex_last_stich);
                 self.notify_game_listeners();
+                eplayerindex_last_stich
             }
-
+        } else {
+            self.notify_game_listeners();
+            (eplayerindex + 1) % 4
         }
-
-        println!("Game finished.");
-        for (i_stich, stich) in self.m_gamestate.m_vecstich.iter().enumerate() {
-            println!("Stich {}: {}", i_stich, stich);
-        }
-
     }
-
 
     fn notify_game_listeners(&self) {
         // TODO: notify game listeners
