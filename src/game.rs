@@ -7,6 +7,7 @@ use player::*;
 use cardvectorparser::*;
 use rulesrufspiel::*;
 use playercomputer::*;
+use playerhuman::*;
 
 pub struct CGame {
     pub m_gamestate : SGameState,
@@ -29,7 +30,7 @@ impl CGame {
                 m_vecstich : Vec::new()
             },
             m_vecplayer : vec![ // TODO: take players in ctor?
-                Box::new(CPlayerComputer),
+                Box::new(CPlayerHuman),
                 Box::new(CPlayerComputer),
                 Box::new(CPlayerComputer),
                 Box::new(CPlayerComputer)
@@ -85,13 +86,7 @@ impl CGame {
     }
 
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
-        if 8==self.m_gamestate.m_vecstich.len() && 4==self.m_gamestate.m_vecstich.last().unwrap().size() {
-            None
-        } else {
-            Some(
-                (self.m_gamestate.m_vecstich.last().unwrap().first_player_index() + self.m_gamestate.m_vecstich.last().unwrap().size() ) % 4
-            )
-        }
+        self.m_gamestate.which_player_can_do_something()
     }
 
     fn new_stich(&mut self, eplayerindex_last_stich: EPlayerIndex) {
