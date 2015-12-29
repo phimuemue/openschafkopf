@@ -39,7 +39,7 @@ impl CGame {
         }
     }
 
-    pub fn start_game(&mut self, eplayerindex_first : EPlayerIndex) {
+    pub fn start_game(&mut self, eplayerindex_first : EPlayerIndex) -> EPlayerIndex {
         // prepare
         self.m_gamestate.m_vecstich.clear();
         println!("Starting game");
@@ -83,6 +83,17 @@ impl CGame {
 
         // starting game
         self.new_stich(eplayerindex_first); // install first stich
+        eplayerindex_first
+    }
+
+    pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
+        if 8==self.m_gamestate.m_vecstich.len() && 4==self.m_gamestate.m_vecstich.last().unwrap().size() {
+            None
+        } else {
+            Some(
+                (self.m_gamestate.m_vecstich.last().unwrap().first_player_index() + self.m_gamestate.m_vecstich.last().unwrap().size() ) % 4
+            )
+        }
     }
 
     fn new_stich(&mut self, eplayerindex_last_stich: EPlayerIndex) {
@@ -92,13 +103,14 @@ impl CGame {
         self.notify_game_listeners();
     }
 
-    fn zugeben(&mut self, card_played: CCard, eplayerindex: EPlayerIndex) -> EPlayerIndex { // TODO: should invalid inputs be indicated by return value?
+    pub fn zugeben(&mut self, card_played: CCard, eplayerindex: EPlayerIndex) -> EPlayerIndex { // TODO: should invalid inputs be indicated by return value?
         // returns the EPlayerIndex of the player who is the next in row to do something
         // TODO: how to cope with finished game?
         println!("Player {} wants to play {}", eplayerindex, card_played);
         {
-            let stich = self.m_gamestate.m_vecstich.last_mut().unwrap();
-            assert_eq!(eplayerindex, (stich.first_player_index() + stich.size())%4);
+            let eplayerindex_privileged = self.which_player_can_do_something().unwrap();
+            let ref stich = self.m_gamestate.m_vecstich.last_mut().unwrap();
+            assert_eq!(eplayerindex, eplayerindex_privileged);
             assert!(self.m_gamestate.m_ahand[eplayerindex].contains(card_played));
         }
         {
