@@ -8,12 +8,10 @@ use cardvectorparser::*;
 use rulesrufspiel::*;
 use playercomputer::*;
 
-use std::sync::mpsc;
-
 pub struct CGame {
     pub m_gamestate : SGameState,
     //m_vecplayer : Vec<Rc<CPlayer>> ,
-    m_vecplayer : Vec<Box<CPlayer>>, // TODO: good idea to use Box<CPlayer>, maybe shared_ptr equivalent?
+    pub m_vecplayer : Vec<Box<CPlayer>>, // TODO: good idea to use Box<CPlayer>, maybe shared_ptr equivalent?
 }
 
 impl CGame {
