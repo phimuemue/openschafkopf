@@ -45,7 +45,10 @@ fn ask_for_alternative<T>(vect: &Vec<T>) -> T
 impl CPlayer for CPlayerHuman {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<CCard>) {
         let eplayerindex = gamestate.which_player_can_do_something().unwrap();
-        println!("Human player has: {}", gamestate.m_ahand[eplayerindex]);
+        for (i_stich, stich) in gamestate.m_vecstich.iter().enumerate() {
+            println!("Stich {}: {}", i_stich, stich);
+        }
+        println!("Your cards: {}", gamestate.m_ahand[eplayerindex]);
         txcard.send(
             ask_for_alternative(
                 &gamestate.m_rules.all_allowed_cards(
