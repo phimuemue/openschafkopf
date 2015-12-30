@@ -16,6 +16,9 @@ fn ask_for_alternative<T>(vect: &Vec<T>) -> T
     where T : Display + Clone
 {
     assert!(0<vect.len());
+    if 1==vect.len() {
+        return vect[0].clone(); // just return if there's no choice anyway
+    }
     println!("Please choose:");
     loop {
         for (i_t, t) in vect.iter().enumerate() {
