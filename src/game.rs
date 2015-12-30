@@ -9,6 +9,8 @@ use rulesrufspiel::*;
 use playercomputer::*;
 use playerhuman::*;
 
+use std::rc::Rc;
+
 pub struct CGame {
     pub m_gamestate : SGameState,
     //m_vecplayer : Vec<Rc<CPlayer>> ,
@@ -26,7 +28,7 @@ impl CGame {
                     CHand::new_from_vec(parse_cards("s9 g9 ea sa eu hz h9 eo")),
                     CHand::new_from_vec(parse_cards("h8 e8 ha e7 hu gk su go"))
                 ],
-                m_rules : Box::new(CRulesRufspiel {m_eplayerindex : 0, m_efarbe: efarbeEICHEL} ),
+                m_rules : Rc::new(CRulesRufspiel {m_eplayerindex : 0, m_efarbe: efarbeEICHEL} ),
                 m_vecstich : Vec::new()
             },
             m_vecplayer : vec![ // TODO: take players in ctor?
@@ -55,7 +57,7 @@ impl CGame {
 
         // decide which game is played
         println!("Asking players if they want to play");
-        let mut vecpaireplayerindexgameannounce : Vec<(EPlayerIndex, Box<TRules>)> = Vec::new();
+        let mut vecpaireplayerindexgameannounce : Vec<(EPlayerIndex, Rc<TRules>)> = Vec::new();
         for eplayerindex in (eplayerindex_first..eplayerindex_first+4).map(|eplayerindex| eplayerindex%4) {
             if let Some(gameannounce) = self.m_vecplayer[eplayerindex].ask_for_game(
                 eplayerindex,

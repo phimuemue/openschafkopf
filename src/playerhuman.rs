@@ -9,6 +9,7 @@ use rulesrufspiel::*;
 use std::sync::mpsc;
 use std::io::{self, Read};
 use std::fmt::Display;
+use std::rc::Rc;
 
 pub struct CPlayerHuman;
 
@@ -59,7 +60,7 @@ impl CPlayer for CPlayerHuman {
         );
     }
 
-    fn ask_for_game(&self, eplayerindex: EPlayerIndex, _: &CHand) -> Option<Box<TRules>> {
+    fn ask_for_game(&self, eplayerindex: EPlayerIndex, _: &CHand) -> Option<Rc<TRules>> {
         None // TODO: implement this properly
     }
 }

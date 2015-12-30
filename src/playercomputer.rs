@@ -7,6 +7,7 @@ use rules::*;
 use rulesrufspiel::*;
 
 use std::sync::mpsc;
+use std::rc::Rc;
 
 pub struct CPlayerComputer;
 
@@ -27,10 +28,10 @@ impl CPlayer for CPlayerComputer {
         println!("CPlayerComputer {} played card", gamestate.m_vecstich.last().unwrap().current_player_index());
     }
 
-    fn ask_for_game(&self, eplayerindex: EPlayerIndex, _: &CHand) -> Option<Box<TRules>> {
+    fn ask_for_game(&self, eplayerindex: EPlayerIndex, _: &CHand) -> Option<Rc<TRules>> {
         // TODO: implement a more intelligent decision strategy
         return Some(
-            Box::new(
+            Rc::new(
                 CRulesRufspiel {
                     m_eplayerindex : eplayerindex,
                     m_efarbe : efarbeEICHEL
