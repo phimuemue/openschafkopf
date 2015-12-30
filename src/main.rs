@@ -11,6 +11,7 @@ mod player;
 mod playercomputer;
 mod playerhuman;
 mod suspicion;
+mod ruleset;
 
 use game::*;
 use std::sync::mpsc;
