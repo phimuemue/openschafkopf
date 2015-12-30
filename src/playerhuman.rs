@@ -30,7 +30,6 @@ fn ask_for_alternative<T>(vect: &Vec<T>) -> T
         }
         match str_index.trim().parse::<usize>() {
             Ok(i) if i < vect.len() => {
-                println!("Chosen {}", i);
                 return vect[i].clone();
             }
             Ok(_) => {
@@ -47,16 +46,14 @@ impl CPlayer for CPlayerHuman {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<CCard>) {
         let eplayerindex = gamestate.which_player_can_do_something().unwrap();
         println!("Human player has: {}", gamestate.m_ahand[eplayerindex]);
-        let veccard_allowed = gamestate.m_rules.all_allowed_cards(
-            &gamestate.m_vecstich,
-            &gamestate.m_ahand[eplayerindex]
+        txcard.send(
+            ask_for_alternative(
+                &gamestate.m_rules.all_allowed_cards(
+                    &gamestate.m_vecstich,
+                    &gamestate.m_ahand[eplayerindex]
+                )
+            )
         );
-        println!(
-            "Please choose a card (0 to {})",
-            veccard_allowed.len()-1,
-        );
-        txcard.send(ask_for_alternative(&veccard_allowed));
-        println!("Sent");
     }
 
     fn ask_for_game(&self, eplayerindex: EPlayerIndex, _: &CHand) -> Option<Box<TRules>> {
