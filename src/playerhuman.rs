@@ -63,11 +63,12 @@ impl CPlayer for CPlayerHuman {
         );
     }
 
-    fn ask_for_game(&self, eplayerindex: EPlayerIndex, _: &CHand) -> Option<Rc<TRules>> {
+    fn ask_for_game(&self, eplayerindex: EPlayerIndex, hand: &CHand) -> Option<Rc<TRules>> {
         let vecorules = Some(None).into_iter() // TODO is there no singleton iterator?
             .chain(
                 ruleset_default(eplayerindex).m_vecrules.iter()
-                .map(|rules| Some(rules.clone()))
+                    .filter(|rules| rules.can_be_played(hand))
+                    .map(|rules| Some(rules.clone()))
             )
             .collect();
         ask_for_alternative(
