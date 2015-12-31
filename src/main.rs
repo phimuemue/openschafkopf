@@ -5,6 +5,7 @@ mod cardvectorparser;
 mod hand;
 mod rules;
 mod rulesrufspiel;
+mod rulessolo;
 mod gamestate;
 mod game;
 mod player;

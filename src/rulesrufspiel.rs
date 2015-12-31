@@ -17,6 +17,14 @@ impl fmt::Display for CRulesRufspiel {
 }
 
 impl CRulesRufspiel {
+    fn all_cards_of_farbe(&self, efarbe: EFarbe) -> Vec<CCard> { // TODO really needed?
+        assert!(efarbeHERZ!=efarbe); // Herz not a farbe in rufspiel
+        ESchlag::all_values().iter()
+            .filter(|&&eschlag| eschlagO!=eschlag && eschlagU!=eschlag)
+            .map(|&eschlag| CCard::new(efarbe, eschlag))
+            .collect::<Vec<_>>()
+    }
+
     fn rufsau(&self) -> CCard {
         CCard::new(self.m_efarbe, eschlagA)
     }
@@ -68,11 +76,11 @@ impl TRules for CRulesRufspiel {
         let an_points = self.points_per_player(vecstich);
         let mut ab_winner = [false, false, false, false,];
         if let Some(i_mitspieler) = self.determine_mitspieler(vecstich) {
-            for i_player in 0..3 {
+            for i_player in 0..4 {
                 ab_winner[i_player] = self.check_points_to_win(i_player, i_mitspieler, &an_points);
             }
         } else {
-            for i_player in 0..3 {
+            for i_player in 0..4 {
                 ab_winner[i_player] = an_points[i_player] >= 61;
             }
         }
@@ -85,7 +93,7 @@ impl TRules for CRulesRufspiel {
     }
 
     fn equivalent_when_on_same_hand(&self, card1: CCard, card2: CCard, vecstich: &Vec<CStich>) -> bool {
-        if equivalent_when_on_same_hand_default(self, card1, card2, vecstich) { // TODO: see if TRules::equivalent_when_on_same_hand works at some point
+        if equivalent_when_on_same_hand_default(card1, card2, vecstich) { // TODO: see if TRules::equivalent_when_on_same_hand works at some point
             return true;
         }
         if !self.is_trumpf(card1) && !self.is_trumpf(card2) && self.points_card(card1) == self.points_card(card2) {
@@ -105,14 +113,6 @@ impl TRules for CRulesRufspiel {
             }
         }
         false
-    }
-
-    fn all_cards_of_farbe(&self, efarbe: EFarbe) -> Vec<CCard> {
-        assert!(efarbeHERZ!=efarbe); // Herz not a farbe in rufspiel
-        ESchlag::all_values().iter()
-            .filter(|&&eschlag| eschlagO!=eschlag && eschlagU!=eschlag)
-            .map(|&eschlag| CCard::new(efarbe, eschlag))
-            .collect::<Vec<_>>()
     }
 
     fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {

@@ -2,6 +2,7 @@ use card::*;
 use stich::*;
 use rules::*;
 use rulesrufspiel::*;
+use rulessolo::*;
 use std::rc::Rc;
 
 pub struct SRuleSet {
@@ -21,6 +22,11 @@ pub fn ruleset_default(eplayerindex: EPlayerIndex) -> SRuleSet {
             Rc::new(CRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbeEICHEL}),
             Rc::new(CRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbeGRAS}),
             Rc::new(CRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbeSCHELLN}),
+
+            Rc::new(CRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: efarbeEICHEL}),
+            Rc::new(CRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: efarbeGRAS}),
+            Rc::new(CRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: efarbeHERZ}),
+            Rc::new(CRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: efarbeSCHELLN}),
         ]
     }
 }

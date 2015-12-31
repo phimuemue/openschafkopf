@@ -12,9 +12,8 @@ pub enum VTrumpfOrFarbe {
     Farbe (EFarbe),
 }
 
-pub fn equivalent_when_on_same_hand_default<Rules> (_: &Rules, _: CCard, _: CCard, _: &Vec<CStich>) -> bool 
-    where Rules : TRules
-{
+pub fn equivalent_when_on_same_hand_default (_: CCard, _: CCard, _: &Vec<CStich>) -> bool {
+    unimplemented!();
     // TODO implement default version
     false
 }
@@ -62,9 +61,9 @@ pub trait TRules : fmt::Display {
     fn is_prematurely_winner(&self, vecstich: &Vec<CStich>) -> [bool; 4];
 
     // impls of equivalent_when_on_same_hand may use equivalent_when_on_same_hand_default
-    fn equivalent_when_on_same_hand(&self, card1: CCard, card2: CCard, vecstich: &Vec<CStich>) -> bool;
-
-    fn all_cards_of_farbe(&self, efarbe: EFarbe) -> Vec<CCard>;
+    fn equivalent_when_on_same_hand(&self, card1: CCard, card2: CCard, vecstich: &Vec<CStich>) -> bool {
+        equivalent_when_on_same_hand_default(card1, card2, vecstich)
+    }
 
     fn all_allowed_cards(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
         if vecstich.last().unwrap().empty() {
