@@ -16,18 +16,13 @@ impl SRuleSet {
 }
 
 pub fn ruleset_default(eplayerindex: EPlayerIndex) -> SRuleSet {
-    SRuleSet {
-        m_vecrules : vec![
-            // TODO: can I somehow collect this?
-            Rc::new(CRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbeEICHEL}),
-            Rc::new(CRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbeGRAS}),
-            Rc::new(CRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbeSCHELLN}),
-
-            Rc::new(CRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: efarbeEICHEL}),
-            Rc::new(CRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: efarbeGRAS}),
-            Rc::new(CRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: efarbeHERZ}),
-            Rc::new(CRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: efarbeSCHELLN}),
-        ]
+    let mut vecrules = Vec::<Rc<TRules>>::new();
+    for efarbe in EFarbe::all_values().iter().filter(|&efarbe| efarbeHERZ!=*efarbe) {
+        vecrules.push(Rc::new(CRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: *efarbe}));
     }
+    for efarbe in EFarbe::all_values().iter() {
+        vecrules.push(Rc::new(CRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: *efarbe}));
+    }
+    SRuleSet { m_vecrules : vecrules }
 }
 
