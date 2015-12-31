@@ -4,14 +4,14 @@ use rules::*;
 use rulesrufspiel::*;
 use std::rc::Rc;
 
-struct SRuleSet {
-    m_vecrules : Vec<Rc<TRules>>,
+pub struct SRuleSet {
+    pub m_vecrules : Vec<Rc<TRules>>,
 }
 
 impl SRuleSet {
 }
 
-fn ruleset_default(eplayerindex: EPlayerIndex) -> SRuleSet {
+pub fn ruleset_default(eplayerindex: EPlayerIndex) -> SRuleSet {
     SRuleSet {
         m_vecrules : vec![
             // TODO: can I somehow collect this?

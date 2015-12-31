@@ -2,6 +2,7 @@ use card::*;
 use stich::*;
 use hand::*;
 use std::cmp::Ordering;
+use std::fmt;
 
 pub type CHandVector = Vec<CCard>; // TODO: vector with fixed capacity 8
 
@@ -18,7 +19,7 @@ pub fn equivalent_when_on_same_hand_default<Rules> (_: &Rules, _: CCard, _: CCar
     false
 }
 
-pub trait TRules {
+pub trait TRules : fmt::Display {
 
     fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe;
 

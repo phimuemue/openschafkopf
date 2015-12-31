@@ -2,11 +2,18 @@ use card::*;
 use stich::*;
 use hand::*;
 use rules::*;
+use std::fmt;
 use std::cmp::Ordering;
 
 pub struct CRulesRufspiel {
     pub m_eplayerindex : EPlayerIndex,
     pub m_efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
+}
+
+impl fmt::Display for CRulesRufspiel {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Rufspiel mit der {}-Sau", self.m_efarbe)
+    }
 }
 
 impl CRulesRufspiel {

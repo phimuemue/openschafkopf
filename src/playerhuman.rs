@@ -5,6 +5,7 @@ use player::*;
 use gamestate::*;
 use rules::*;
 use rulesrufspiel::*;
+use ruleset::*;
 
 use std::sync::mpsc;
 use std::io::{self, Read};
@@ -13,8 +14,9 @@ use std::rc::Rc;
 
 pub struct CPlayerHuman;
 
-fn ask_for_alternative<T>(vect: &Vec<T>) -> T 
-    where T : Display + Clone
+fn ask_for_alternative<T, FnFormat>(vect: &Vec<T>, fn_format: FnFormat) -> T 
+    where T : Clone,
+          FnFormat : Fn(&T) -> String
 {
     assert!(0<vect.len());
     if 1==vect.len() {
@@ -23,7 +25,7 @@ fn ask_for_alternative<T>(vect: &Vec<T>) -> T
     println!("Please choose:");
     loop {
         for (i_t, t) in vect.iter().enumerate() {
-            println!("{} ({})", t, i_t);
+            println!("{} ({})", fn_format(&t), i_t);
         }
         let mut str_index = String::new();
         if let Err(e) = (io::stdin().read_line(&mut str_index)) {
@@ -55,12 +57,25 @@ impl CPlayer for CPlayerHuman {
                 &gamestate.m_rules.all_allowed_cards(
                     &gamestate.m_vecstich,
                     &gamestate.m_ahand[eplayerindex]
-                )
+                ),
+                |card| card.to_string()
             )
         );
     }
 
     fn ask_for_game(&self, eplayerindex: EPlayerIndex, _: &CHand) -> Option<Rc<TRules>> {
-        None // TODO: implement this properly
+        let vecorules = Some(None).into_iter() // TODO is there no singleton iterator?
+            .chain(
+                ruleset_default(eplayerindex).m_vecrules.iter()
+                .map(|rules| Some(rules.clone()))
+            )
+            .collect();
+        ask_for_alternative(
+            &vecorules,
+            |orules| match orules {
+                &None => "Nothing".to_string(),
+                &Some(ref rules) => rules.to_string()
+            }
+        )
     }
 }
