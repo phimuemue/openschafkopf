@@ -21,6 +21,14 @@ impl CRulesRufspiel {
         CCard::new(self.m_efarbe, eschlagA)
     }
 
+    fn is_ruffarbe(&self, card: CCard) -> bool {
+        if !self.is_trumpf(card) {
+            card.farbe()==self.m_efarbe
+        } else {
+            false
+        }
+    }
+
     fn determine_mitspieler(&self, vecstich: &Vec<CStich>) -> Option<EPlayerIndex> {
         // TODO: currently not recognizing weglaufen, right?
         vecstich.iter()
@@ -42,6 +50,12 @@ impl CRulesRufspiel {
 }
 
 impl TRules for CRulesRufspiel {
+    fn can_be_played(&self, hand: &CHand) -> bool {
+        hand.cards().iter()
+            .filter(|&card| self.is_ruffarbe(*card))
+            .all(|card| card.schlag()!=eschlagA)
+    }
+
     fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe {
         if card.schlag()==eschlagO || card.schlag()==eschlagU || card.farbe()==efarbeHERZ {
             VTrumpfOrFarbe::Trumpf
@@ -110,7 +124,7 @@ impl TRules for CRulesRufspiel {
                     if b_rufsau_known_before_stich {
                         // already known
                         true
-                    } else if !self.is_trumpf(stich.first_card()) && stich.first_card().farbe()==self.m_efarbe {
+                    } else if self.is_ruffarbe(stich.first_card()) {
                         // gesucht or weggelaufen
                         true
                     } else {
@@ -123,7 +137,7 @@ impl TRules for CRulesRufspiel {
             let mut n_cards_ruffarbe = 0;
             let mut b_contains_rufsau = false;
             for &card in hand.cards() {
-                if !self.is_trumpf(card) && self.m_efarbe==card.farbe() {
+                if self.is_ruffarbe(card) {
                     n_cards_ruffarbe = n_cards_ruffarbe + 1;
                     if eschlagA==card.schlag() {
                         b_contains_rufsau = true;
@@ -153,7 +167,7 @@ impl TRules for CRulesRufspiel {
             let mut allow_card = |card| {
                 veccard_allowed.push(card);
             };
-            if !self.is_trumpf(card_first) && self.m_efarbe==card_first.farbe() && hand.contains(self.rufsau()) {
+            if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) {
                 // special case: gesucht
                 allow_card(self.rufsau());
             } else if self.is_trumpf(card_first) {

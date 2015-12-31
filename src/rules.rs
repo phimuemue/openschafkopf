@@ -23,6 +23,10 @@ pub trait TRules : fmt::Display {
 
     fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe;
 
+    fn can_be_played(&self, _hand: &CHand) -> bool {
+        true // probably, only Rufspiel is prevented in some cases
+    }
+
     fn is_trumpf(&self, card: CCard) -> bool {
         VTrumpfOrFarbe::Trumpf == self.trumpf_or_farbe(card)
     }
