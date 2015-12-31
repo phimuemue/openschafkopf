@@ -30,13 +30,6 @@ impl CPlayer for CPlayerComputer {
 
     fn ask_for_game(&self, eplayerindex: EPlayerIndex, _: &CHand) -> Option<Rc<TRules>> {
         // TODO: implement a more intelligent decision strategy
-        return Some(
-            Rc::new(
-                CRulesRufspiel {
-                    m_eplayerindex : eplayerindex,
-                    m_efarbe : efarbeEICHEL
-                }
-            )
-        );
+        None
     }
 }

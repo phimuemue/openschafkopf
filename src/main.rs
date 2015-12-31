@@ -20,7 +20,7 @@ use card::CCard;
 fn main() {
     let mut game = CGame::new();
     println!("Hand 0 : {}", game.m_gamestate.m_ahand[0]);
-    let eplayerindex_first = game.start_game(0);
+    game.start_game(0);
     while let Some(eplayerindex)=game.which_player_can_do_something() {
         let (txcard, rxcard) = mpsc::channel::<CCard>();
         game.m_vecplayer[eplayerindex].take_control(

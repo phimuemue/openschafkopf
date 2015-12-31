@@ -72,8 +72,13 @@ impl CGame {
 
         println!("Asked players if they want to play. Determining rules");
         // TODO: find sensible way to deal with multiple game announcements
-        self.m_gamestate.m_rules = vecpaireplayerindexgameannounce.pop().unwrap().1;
-        println!("Rules determined. Sorting hands");
+        let paireplayerindexgameannounce = vecpaireplayerindexgameannounce.pop().unwrap();
+        self.m_gamestate.m_rules = paireplayerindexgameannounce.1;
+        println!(
+            "Rules determined ({} plays {}). Sorting hands",
+            paireplayerindexgameannounce.0,
+            self.m_gamestate.m_rules
+        );
         {
             let ref rules = self.m_gamestate.m_rules;
             for hand in self.m_gamestate.m_ahand.iter_mut() {
