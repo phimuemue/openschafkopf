@@ -9,7 +9,6 @@ use ruleset::*;
 
 use std::sync::mpsc;
 use std::io::{self, Read};
-use std::fmt::Display;
 use std::rc::Rc;
 
 pub struct CPlayerHuman;
