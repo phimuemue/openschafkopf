@@ -153,3 +153,25 @@ pub fn compare_farbcards_same_color(card_fst: CCard, card_snd: CCard) -> Orderin
         Ordering::Greater
     }
 }
+
+pub fn compare_trumpfcards_solo(card_fst: CCard, card_snd: CCard) -> Ordering {
+    match (card_fst.schlag(), card_snd.schlag()) {
+        (eschlagO, eschlagO) | (eschlagU, eschlagU) => {
+            assert!(card_fst.schlag()==eschlagO || card_fst.schlag()==eschlagU);
+            // TODO static_assert not available in rust, right?
+            assert!(efarbeEICHEL < efarbeGRAS, "Farb-Sorting can't be used here");
+            assert!(efarbeGRAS < efarbeHERZ, "Farb-Sorting can't be used here");
+            assert!(efarbeHERZ < efarbeSCHELLN, "Farb-Sorting can't be used here");
+            if card_snd.farbe() < card_fst.farbe() {
+                Ordering::Less
+            } else {
+                Ordering::Greater
+            }
+        }
+        (eschlagO, _) => Ordering::Greater,
+        (_, eschlagO) => Ordering::Less,
+        (eschlagU, _) => Ordering::Greater,
+        (_, eschlagU) => Ordering::Less,
+        _ => compare_farbcards_same_color(card_fst, card_snd),
+    }
+}
