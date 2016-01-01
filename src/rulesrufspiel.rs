@@ -213,11 +213,7 @@ impl TRules for CRulesRufspiel {
             (_, eschlagO) => Ordering::Less,
             (eschlagU, _) => Ordering::Greater,
             (_, eschlagU) => Ordering::Less,
-            _ => if get_canonical_farbcard_value_for_comparison(card_fst) < get_canonical_farbcard_value_for_comparison(card_snd) {
-                Ordering::Less
-            } else {
-                Ordering::Greater
-            },
+            _ => compare_farbcards_same_color(card_fst, card_snd),
         }
     }
 
@@ -225,11 +221,7 @@ impl TRules for CRulesRufspiel {
         if card_fst.farbe() != card_snd.farbe() {
             Ordering::Greater
         } else {
-            if get_canonical_farbcard_value_for_comparison(card_fst) < get_canonical_farbcard_value_for_comparison(card_snd) {
-                Ordering::Less
-            } else {
-                Ordering::Greater
-            }
+            compare_farbcards_same_color(card_fst, card_snd)
         }
     }
 

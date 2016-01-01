@@ -136,8 +136,8 @@ pub trait TRules : fmt::Display {
     }
 }
 
-pub fn get_canonical_farbcard_value_for_comparison(card: CCard) -> usize {
-    match card.schlag() {
+pub fn compare_farbcards_same_color(card_fst: CCard, card_snd: CCard) -> Ordering {
+    let get_schlag_value = |card: CCard| { match card.schlag() {
         eschlag7 => 0,
         eschlag8 => 1,
         eschlag9 => 2,
@@ -146,5 +146,10 @@ pub fn get_canonical_farbcard_value_for_comparison(card: CCard) -> usize {
         eschlagK => 5,
         eschlagZ => 6,
         eschlagA => 7,
+    } };
+    if get_schlag_value(card_fst) < get_schlag_value(card_snd) {
+        Ordering::Less
+    } else {
+        Ordering::Greater
     }
 }
