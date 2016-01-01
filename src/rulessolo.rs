@@ -76,58 +76,42 @@ impl TRules for CRulesSolo {
         }
     }
 
-    fn compare_in_stich(&self, card_fst: CCard, card_snd: CCard) -> Ordering {
-        assert!(card_fst!=card_snd);
-        let get_rufspiel_farbe_value = |card: CCard| {
-            match card.schlag() {
-                eschlag7 => 0,
-                eschlag8 => 1,
-                eschlag9 => 2,
-                eschlagK => 3,
-                eschlagZ => 4,
-                eschlagA => 5,
-                _ => unreachable!(),
-            }
-        };
-        match (self.is_trumpf(card_fst), self.is_trumpf(card_snd)) {
-            (true, false) => Ordering::Greater,
-            (false, true) => Ordering::Less,
-            (true, true) => {
-                match (card_fst.schlag(), card_snd.schlag()) {
-                    (eschlagO, eschlagO) | (eschlagU, eschlagU) => {
-                        assert!(card_fst.schlag()==eschlagO || card_fst.schlag()==eschlagU);
-                        // TODO static_assert not available in rust, right?
-                        assert!(efarbeEICHEL < efarbeGRAS, "Farb-Sorting can't be used here");
-                        assert!(efarbeGRAS < efarbeHERZ, "Farb-Sorting can't be used here");
-                        assert!(efarbeHERZ < efarbeSCHELLN, "Farb-Sorting can't be used here");
-                        if card_snd.farbe() < card_fst.farbe() {
-                            Ordering::Less
-                        } else {
-                            Ordering::Greater
-                        }
-                    }
-                    (eschlagO, _) => Ordering::Greater,
-                    (_, eschlagO) => Ordering::Less,
-                    (eschlagU, _) => Ordering::Greater,
-                    (_, eschlagU) => Ordering::Less,
-                    _ => if get_rufspiel_farbe_value(card_fst) < get_rufspiel_farbe_value(card_snd) {
-                        Ordering::Less
-                    } else {
-                        Ordering::Greater
-                    },
-                }
-            },
-            (false, false) => {
-                if card_fst.farbe() != card_snd.farbe() {
-                    Ordering::Greater
+    fn compare_in_stich_trumpf(&self, card_fst: CCard, card_snd: CCard) -> Ordering {
+        match (card_fst.schlag(), card_snd.schlag()) {
+            (eschlagO, eschlagO) | (eschlagU, eschlagU) => {
+                assert!(card_fst.schlag()==eschlagO || card_fst.schlag()==eschlagU);
+                // TODO static_assert not available in rust, right?
+                assert!(efarbeEICHEL < efarbeGRAS, "Farb-Sorting can't be used here");
+                assert!(efarbeGRAS < efarbeHERZ, "Farb-Sorting can't be used here");
+                assert!(efarbeHERZ < efarbeSCHELLN, "Farb-Sorting can't be used here");
+                if card_snd.farbe() < card_fst.farbe() {
+                    Ordering::Less
                 } else {
-                    if get_rufspiel_farbe_value(card_fst) < get_rufspiel_farbe_value(card_snd) {
-                        Ordering::Less
-                    } else {
-                        Ordering::Greater
-                    }
+                    Ordering::Greater
                 }
+            }
+            (eschlagO, _) => Ordering::Greater,
+            (_, eschlagO) => Ordering::Less,
+            (eschlagU, _) => Ordering::Greater,
+            (_, eschlagU) => Ordering::Less,
+            _ => if get_canonical_farbcard_value_for_comparison(card_fst) < get_canonical_farbcard_value_for_comparison(card_snd) {
+                Ordering::Less
+            } else {
+                Ordering::Greater
             },
+        }
+    }
+
+
+    fn compare_in_stich_farbe(&self, card_fst: CCard, card_snd: CCard) -> Ordering {
+        if card_fst.farbe() != card_snd.farbe() {
+            Ordering::Greater
+        } else {
+            if get_canonical_farbcard_value_for_comparison(card_fst) < get_canonical_farbcard_value_for_comparison(card_snd) {
+                Ordering::Less
+            } else {
+                Ordering::Greater
+            }
         }
     }
 

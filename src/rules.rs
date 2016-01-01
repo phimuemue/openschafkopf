@@ -85,8 +85,6 @@ pub trait TRules : fmt::Display {
         }
     }
 
-    fn compare_in_stich(&self, card_fst: CCard, card_snd: CCard) -> Ordering;
-
     fn compare_less_equivalence(&self, card_fst: CCard, card_snd: CCard) -> bool {
         if card_fst.schlag()==card_snd.schlag() {
             card_fst.farbe() < card_snd.farbe()
@@ -122,5 +120,31 @@ pub trait TRules : fmt::Display {
     fn best_card_in_stich(&self, stich: &CStich) -> CCard {
         return stich.m_acard[self.winner_index(stich) as usize];
     }
+
+    fn compare_in_stich_trumpf(&self, card_fst: CCard, card_snd: CCard) -> Ordering;
+
+    fn compare_in_stich_farbe(&self, card_fst: CCard, card_snd: CCard) -> Ordering;
+
+    fn compare_in_stich(&self, card_fst: CCard, card_snd: CCard) -> Ordering {
+        assert!(card_fst!=card_snd);
+        match (self.is_trumpf(card_fst), self.is_trumpf(card_snd)) {
+            (true, false) => Ordering::Greater,
+            (false, true) => Ordering::Less,
+            (true, true) => self.compare_in_stich_trumpf(card_fst, card_snd),
+            (false, false) => self.compare_in_stich_farbe(card_fst, card_snd),
+        }
+    }
 }
 
+pub fn get_canonical_farbcard_value_for_comparison(card: CCard) -> usize {
+    match card.schlag() {
+        eschlag7 => 0,
+        eschlag8 => 1,
+        eschlag9 => 2,
+        eschlagU => 3,
+        eschlagO => 4,
+        eschlagK => 5,
+        eschlagZ => 6,
+        eschlagA => 7,
+    }
+}
