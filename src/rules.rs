@@ -123,7 +123,13 @@ pub trait TRules : fmt::Display {
 
     fn compare_in_stich_trumpf(&self, card_fst: CCard, card_snd: CCard) -> Ordering;
 
-    fn compare_in_stich_farbe(&self, card_fst: CCard, card_snd: CCard) -> Ordering;
+    fn compare_in_stich_farbe(&self, card_fst: CCard, card_snd: CCard) -> Ordering {
+        if card_fst.farbe() != card_snd.farbe() {
+            Ordering::Greater
+        } else {
+            compare_farbcards_same_color(card_fst, card_snd)
+        }
+    }
 
     fn compare_in_stich(&self, card_fst: CCard, card_snd: CCard) -> Ordering {
         assert!(card_fst!=card_snd);

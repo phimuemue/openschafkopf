@@ -199,13 +199,4 @@ impl TRules for CRulesRufspiel {
         compare_trumpfcards_solo(card_fst, card_snd)
     }
 
-    fn compare_in_stich_farbe(&self, card_fst: CCard, card_snd: CCard) -> Ordering {
-        if card_fst.farbe() != card_snd.farbe() {
-            Ordering::Greater
-        } else {
-            compare_farbcards_same_color(card_fst, card_snd)
-        }
-    }
-
-
 }
