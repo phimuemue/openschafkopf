@@ -1,3 +1,5 @@
+extern crate rand;
+
 mod card;
 mod stich;
 mod combinatorics;

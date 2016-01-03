@@ -10,6 +10,7 @@ use playercomputer::*;
 use playerhuman::*;
 
 use std::rc::Rc;
+use rand::{self, Rng};
 
 pub struct CGame {
     pub m_gamestate : SGameState,
@@ -22,12 +23,21 @@ impl CGame {
     pub fn new() -> CGame {
         CGame {
             m_gamestate : SGameState {
-                m_ahand : [ // TODO: shuffle cards
-                    CHand::new_from_vec(parse_cards("g7 hk ga so gu e9 ho sk")),
-                    CHand::new_from_vec(parse_cards("gz g8 ek s8 h7 ez sz s7")),
-                    CHand::new_from_vec(parse_cards("s9 g9 ea sa eu hz h9 eo")),
-                    CHand::new_from_vec(parse_cards("h8 e8 ha e7 hu gk su go"))
-                ],
+                m_ahand : {
+                    let mut veccard : Vec<CCard> = Vec::new();
+                    // TODO: doable via flat_map?
+                    for efarbe in EFarbe::all_values().iter() {
+                        for eschlag in ESchlag::all_values().iter() {
+                            veccard.push(CCard::new(*efarbe, *eschlag));
+                        }
+                    }
+                    assert!(veccard.len()==32);
+                    rand::thread_rng().shuffle(&mut veccard);
+                    let hand_for_player = |eplayerindex| {
+                        CHand::new_from_vec(veccard.iter().cloned().skip((eplayerindex as usize)*8).take(8).collect())
+                    };
+                    [hand_for_player(0), hand_for_player(1), hand_for_player(2), hand_for_player(3)]
+                },
                 m_rules : Rc::new(CRulesRufspiel {m_eplayerindex : 0, m_efarbe: efarbeEICHEL} ),
                 m_vecstich : Vec::new()
             },
@@ -44,12 +54,6 @@ impl CGame {
         // prepare
         self.m_gamestate.m_vecstich.clear();
         println!("Starting game");
-        let mut veccard_all : Vec<CCard> = Vec::new();
-        for efarbe in EFarbe::all_values().iter() {
-            for eschlag in ESchlag::all_values().iter() {
-                veccard_all.push(CCard::new(*efarbe, *eschlag));
-            }
-        }
         for hand in self.m_gamestate.m_ahand.iter() {
             print!("{} |", hand);
         }
