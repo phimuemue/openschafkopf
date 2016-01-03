@@ -50,7 +50,8 @@ impl CGame {
         }
     }
 
-    pub fn start_game(&mut self, eplayerindex_first : EPlayerIndex) -> EPlayerIndex {
+    // TODO: what is a useful return value for start_game?
+    pub fn start_game(&mut self, eplayerindex_first : EPlayerIndex) -> bool {
         // prepare
         self.m_gamestate.m_vecstich.clear();
         println!("Starting game");
@@ -71,7 +72,7 @@ impl CGame {
             }
         }
         if vecpaireplayerindexgameannounce.is_empty() {
-            return self.start_game(eplayerindex_first + 1); // TODO: just return something like "took not place"
+            return false;
         }
 
         println!("Asked players if they want to play. Determining rules");
@@ -91,9 +92,8 @@ impl CGame {
             }
         }
 
-        // starting game
         self.new_stich(eplayerindex_first); // install first stich
-        eplayerindex_first
+        true
     }
 
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {

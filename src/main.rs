@@ -21,21 +21,24 @@ use std::sync::mpsc;
 use card::CCard;
 
 fn main() {
-    let mut game = CGame::new();
-    println!("Hand 0 : {}", game.m_gamestate.m_ahand[0]);
-    game.start_game(0);
-    while let Some(eplayerindex)=game.which_player_can_do_something() {
-        let (txcard, rxcard) = mpsc::channel::<CCard>();
-        game.m_vecplayer[eplayerindex].take_control(
-            &game.m_gamestate,
-            txcard.clone()
-        );
-        let card_played = rxcard.recv().unwrap();
-        game.zugeben(card_played, eplayerindex);
-    }
-    let an_points = game.points_per_player();
-    println!("Results");
-    for eplayerindex in 0..4 {
-        println!("Player {}: {} points", eplayerindex, an_points[eplayerindex]);
+    loop {
+        let mut game = CGame::new();
+        println!("Hand 0 : {}", game.m_gamestate.m_ahand[0]);
+        if game.start_game(0) {
+            while let Some(eplayerindex)=game.which_player_can_do_something() {
+                let (txcard, rxcard) = mpsc::channel::<CCard>();
+                game.m_vecplayer[eplayerindex].take_control(
+                    &game.m_gamestate,
+                    txcard.clone()
+                );
+                let card_played = rxcard.recv().unwrap();
+                game.zugeben(card_played, eplayerindex);
+            }
+        }
+        let an_points = game.points_per_player();
+        println!("Results");
+        for eplayerindex in 0..4 {
+            println!("Player {}: {} points", eplayerindex, an_points[eplayerindex]);
+        }
     }
 }
