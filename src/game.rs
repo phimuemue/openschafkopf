@@ -157,6 +157,10 @@ impl CGame {
         }
     }
 
+    pub fn points_per_player(&self) -> [isize; 4] {
+        self.m_gamestate.m_rules.points_per_player(&self.m_gamestate.m_vecstich)
+    }
+
     fn notify_game_listeners(&self) {
         // TODO: notify game listeners
     }

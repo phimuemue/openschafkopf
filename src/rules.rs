@@ -46,12 +46,13 @@ pub trait TRules : fmt::Display {
             .fold(0, |n_sum, (_, card)| n_sum + self.points_card(card))
     }
     fn points_per_player(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
-        let an_points = [0, 0, 0, 0,];
+        let mut an_points = [0, 0, 0, 0,];
         for stich in vecstich {
             let mut n_points_stich = 0;
             for (_, card) in stich.indices_and_cards() {
                 n_points_stich = n_points_stich + self.points_card(card);
             }
+            an_points[self.winner_index(stich)] = an_points[self.winner_index(stich)] + n_points_stich;
         }
         an_points
     }

@@ -31,7 +31,11 @@ fn main() {
             txcard.clone()
         );
         let card_played = rxcard.recv().unwrap();
-        println!("Ja genau");
         game.zugeben(card_played, eplayerindex);
+    }
+    let an_points = game.points_per_player();
+    println!("Results");
+    for eplayerindex in 0..4 {
+        println!("Player {}: {} points", eplayerindex, an_points[eplayerindex]);
     }
 }
