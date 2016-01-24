@@ -6,5 +6,5 @@ authors = ["philipp"]
 [dependencies]
 combine = "1.0.0"
 quickcheck = "0.2"
-gtk = "0.0.5"
 rand = "0.3"
+ncurses = "5.80.0"
