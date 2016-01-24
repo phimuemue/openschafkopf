@@ -37,13 +37,13 @@ fn main() {
                 let card_played = rxcard.recv().unwrap();
                 game.zugeben(card_played, eplayerindex);
             }
+            let an_points = game.points_per_player();
+            println!("Results");
+            for eplayerindex in 0..4 {
+                println!("Player {}: {} points", eplayerindex, an_points[eplayerindex]);
+            }
+            accountbalance.apply_payout(&game.payout());
         }
-        let an_points = game.points_per_player();
-        println!("Results");
-        for eplayerindex in 0..4 {
-            println!("Player {}: {} points", eplayerindex, an_points[eplayerindex]);
-        }
-        accountbalance.apply_payout(&game.payout());
         println!("Account balance:");
         for eplayerindex in 0..4 {
             println!("Player {}: {}", eplayerindex, accountbalance.get(eplayerindex));
