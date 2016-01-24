@@ -28,7 +28,7 @@ impl CPlayer for CPlayerComputer {
         println!("CPlayerComputer {} played card", gamestate.m_vecstich.last().unwrap().current_player_index());
     }
 
-    fn ask_for_game(&self, eplayerindex: EPlayerIndex, _: &CHand) -> Option<Rc<TRules>> {
+    fn ask_for_game(&self, _eplayerindex: EPlayerIndex, _: &CHand) -> Option<Rc<TRules>> {
         // TODO: implement a more intelligent decision strategy
         None
     }

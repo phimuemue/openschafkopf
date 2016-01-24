@@ -74,12 +74,12 @@ impl SSuspicion {
         self.m_ahand[0].cards().len()
     }
 
-    fn compute_successors(&mut self, rules: &TRules) {
+    fn compute_successors(&mut self, _rules: &TRules) {
         unimplemented!();
         //TODO: internal_compute_successors(self, rules, Vec::new());
     }
 
-    fn internal_compute_successors(&mut self, rules: &TRules, vecstich: &mut Vec<CStich>) {
+    fn internal_compute_successors(&mut self, _rules: &TRules, vecstich: &mut Vec<CStich>) {
         unimplemented!();
         //assert_eq!(self.m_vecsusptrans.len(), 0); // currently, we have no caching
         //vecstich.push(CStich::new(self.m_eplayerindex_first));
@@ -131,7 +131,7 @@ impl SSuspicion {
     }
 
     fn size(&self) -> usize {
-        self.m_vecsusptrans.iter().fold(0, |acc, ref susptrans| susptrans.m_psusp.size())
+        self.m_vecsusptrans.iter().fold(0, |acc, ref susptrans| acc+susptrans.m_psusp.size())
     }
 
     fn leaf_count(&self) -> usize {
@@ -139,11 +139,11 @@ impl SSuspicion {
             assert_eq!(self.hand_size(), 0);
             1
         } else {
-            self.m_vecsusptrans.iter().fold(0, |acc, ref susptrans| susptrans.m_psusp.leaf_count())
+            self.m_vecsusptrans.iter().fold(0, |acc, ref susptrans| acc+susptrans.m_psusp.leaf_count())
         }
     }
 
-    fn print_suspicion(&self, n_maxlevel: usize, n_level: usize) {
+    fn print_suspicion(&self, _n_maxlevel: usize, _n_level: usize) {
         unimplemented!();
     }
 
@@ -157,7 +157,7 @@ impl SSuspicion {
     //     implements an accumulation strategy.
     // (3) We can not be sure that we can cache the quality, which is why we do not do it at the moment.
 
-    fn quality<TSuspicionQuality, FuncAccu> (&self, func_accu: FuncAccu)
+    fn quality<TSuspicionQuality, FuncAccu> (&self, _func_accu: FuncAccu)
         where FuncAccu: Fn(&Vec<CStich>, &Vec<(SSuspicionTransition, TSuspicionQuality)>) -> TSuspicionQuality
     {
         unimplemented!();

@@ -66,7 +66,7 @@ impl TRules for CRulesSolo {
         an_payout
     }
 
-    fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
+    fn all_allowed_cards_first_in_stich(&self, _vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
         hand.cards().clone()
     }
 

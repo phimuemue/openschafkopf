@@ -113,7 +113,6 @@ impl CGame {
         println!("Player {} wants to play {}", eplayerindex, card_played);
         {
             let eplayerindex_privileged = self.which_player_can_do_something().unwrap();
-            let ref stich = self.m_gamestate.m_vecstich.last_mut().unwrap();
             assert_eq!(eplayerindex, eplayerindex_privileged);
             assert!(self.m_gamestate.m_ahand[eplayerindex].contains(card_played));
         }

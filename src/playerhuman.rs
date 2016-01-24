@@ -27,7 +27,7 @@ fn ask_for_alternative<T, FnFormat>(vect: &Vec<T>, fn_format: FnFormat) -> T
             println!("{} ({})", fn_format(&t), i_t);
         }
         let mut str_index = String::new();
-        if let Err(e) = (io::stdin().read_line(&mut str_index)) {
+        if let Err(_) = (io::stdin().read_line(&mut str_index)) {
             return vect[0].clone(); // TODO: make return type optional?
         }
         match str_index.trim().parse::<usize>() {
