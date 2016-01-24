@@ -27,11 +27,9 @@ impl TRules for CRulesSolo {
 
     fn is_prematurely_winner(&self, vecstich: &Vec<CStich>) -> [bool; 4] {
         let an_points = self.points_per_player(vecstich);
-        let mut ab_winner = [false, false, false, false,];
-        for i_player in 0..4 {
-            ab_winner[i_player] = an_points[i_player] >= 61;
-        }
-        ab_winner
+        create_playerindexmap(|eplayerindex| {
+            an_points[eplayerindex] >= 61
+        } )
     }
 
     fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<CStich>) -> bool {
@@ -44,9 +42,8 @@ impl TRules for CRulesSolo {
     }
 
     fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
-        let mut an_payout = [0, 0, 0, 0];
-        for eplayerindex in 0..4 {
-            an_payout[eplayerindex] = /*n_payout_solo*/ 50 * {
+        create_playerindexmap(|eplayerindex| {
+            /*n_payout_solo*/ 50 * {
                 if self.is_winner(eplayerindex, vecstich) {
                     1
                 } else {
@@ -58,12 +55,8 @@ impl TRules for CRulesSolo {
                 } else {
                     1
                 }
-            };
-        }
-        for eplayerindex in 0..4 {
-            println!("{} :", an_payout[eplayerindex]);
-        }
-        an_payout
+            }
+        } )
     }
 
     fn all_allowed_cards_first_in_stich(&self, _vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {

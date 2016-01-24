@@ -1,11 +1,26 @@
 use card::*;
 use std::fmt;
 use std::iter;
+use std::mem;
 
 use std::ops::Index;
 use std::ops::IndexMut;
 
 pub type EPlayerIndex = usize; // TODO: would a real enum be more adequate?
+
+// TODO: introduce generic enummap
+pub fn create_playerindexmap<T, F>(func: F) -> [T; 4]
+    where F:Fn(EPlayerIndex)->T
+{
+    let mut at : [T; 4];
+    unsafe {
+        at = mem::uninitialized();
+    }
+    for eplayerindex in 0..4 {
+        at[eplayerindex] = func(eplayerindex);
+    }
+    at
+}
 
 #[derive(Clone)]
 pub struct CStich {

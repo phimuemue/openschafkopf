@@ -74,17 +74,15 @@ impl TRules for CRulesRufspiel {
 
     fn is_prematurely_winner(&self, vecstich: &Vec<CStich>) -> [bool; 4] {
         let an_points = self.points_per_player(vecstich);
-        let mut ab_winner = [false, false, false, false,];
         if let Some(i_mitspieler) = self.determine_mitspieler(vecstich) {
-            for i_player in 0..4 {
-                ab_winner[i_player] = self.check_points_to_win(i_player, i_mitspieler, &an_points);
-            }
+            create_playerindexmap(|eplayerindex| {
+                self.check_points_to_win(eplayerindex, i_mitspieler, &an_points)
+            } )
         } else {
-            for i_player in 0..4 {
-                ab_winner[i_player] = an_points[i_player] >= 61;
-            }
+            create_playerindexmap(|eplayerindex| {
+                an_points[eplayerindex] >= 61
+            } )
         }
-        ab_winner
     }
 
     fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<CStich>) -> bool {
@@ -93,17 +91,15 @@ impl TRules for CRulesRufspiel {
     }
 
     fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
-        let mut an_payout = [0, 0, 0, 0];
-        for eplayerindex in 0..4 {
-            an_payout[eplayerindex] = /*n_payout_rufspiel*/ 10 * {
+        create_playerindexmap(|eplayerindex| {
+            /*n_payout_rufspiel*/ 10 * {
                 if self.is_winner(eplayerindex, vecstich) {
                     1
                 } else {
                     -1
                 }
-            };
-        }
-        an_payout
+            }
+        } )
     }
 
     fn equivalent_when_on_same_hand(&self, card1: CCard, card2: CCard, vecstich: &Vec<CStich>) -> bool {
