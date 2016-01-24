@@ -92,6 +92,20 @@ impl TRules for CRulesRufspiel {
         self.check_points_to_win(eplayerindex, self.determine_mitspieler(vecstich).unwrap(), &self.points_per_player(vecstich))
     }
 
+    fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
+        let mut an_payout = [0, 0, 0, 0];
+        for eplayerindex in 0..4 {
+            an_payout[eplayerindex] = /*n_payout_rufspiel*/ 10 * {
+                if self.is_winner(eplayerindex, vecstich) {
+                    1
+                } else {
+                    -1
+                }
+            };
+        }
+        an_payout
+    }
+
     fn equivalent_when_on_same_hand(&self, card1: CCard, card2: CCard, vecstich: &Vec<CStich>) -> bool {
         if equivalent_when_on_same_hand_default(card1, card2, vecstich) { // TODO: see if TRules::equivalent_when_on_same_hand works at some point
             return true;

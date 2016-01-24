@@ -164,6 +164,10 @@ impl CGame {
     fn notify_game_listeners(&self) {
         // TODO: notify game listeners
     }
+
+    pub fn payout(&self) -> [isize; 4] {
+        self.m_gamestate.m_rules.payout(&self.m_gamestate.m_vecstich)
+    }
     
     // fn RegisterPlayer(&mut self, Rc<CPlayer> rcplayer) -> EPlayerIndex {
     //     assert!(self.m_vecplayer.len()<4);

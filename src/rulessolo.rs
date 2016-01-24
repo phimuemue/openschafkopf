@@ -43,6 +43,29 @@ impl TRules for CRulesSolo {
         }
     }
 
+    fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
+        let mut an_payout = [0, 0, 0, 0];
+        for eplayerindex in 0..4 {
+            an_payout[eplayerindex] = /*n_payout_solo*/ 50 * {
+                if self.is_winner(eplayerindex, vecstich) {
+                    1
+                } else {
+                    -1
+                }
+            } * {
+                if self.m_eplayerindex==eplayerindex {
+                    3
+                } else {
+                    1
+                }
+            };
+        }
+        for eplayerindex in 0..4 {
+            println!("{} :", an_payout[eplayerindex]);
+        }
+        an_payout
+    }
+
     fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
         hand.cards().clone()
     }

@@ -61,6 +61,8 @@ pub trait TRules : fmt::Display {
 
     fn is_prematurely_winner(&self, vecstich: &Vec<CStich>) -> [bool; 4];
 
+    fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4];
+
     // impls of equivalent_when_on_same_hand may use equivalent_when_on_same_hand_default
     fn equivalent_when_on_same_hand(&self, card1: CCard, card2: CCard, vecstich: &Vec<CStich>) -> bool {
         equivalent_when_on_same_hand_default(card1, card2, vecstich)

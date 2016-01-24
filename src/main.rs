@@ -15,12 +15,15 @@ mod playercomputer;
 mod playerhuman;
 mod suspicion;
 mod ruleset;
+mod accountbalance;
 
 use game::*;
 use std::sync::mpsc;
 use card::CCard;
+use accountbalance::SAccountBalance;
 
 fn main() {
+    let mut accountbalance = SAccountBalance::new();
     loop {
         let mut game = CGame::new();
         println!("Hand 0 : {}", game.m_gamestate.m_ahand[0]);
@@ -39,6 +42,11 @@ fn main() {
         println!("Results");
         for eplayerindex in 0..4 {
             println!("Player {}: {} points", eplayerindex, an_points[eplayerindex]);
+        }
+        accountbalance.apply_payout(&game.payout());
+        println!("Account balance:");
+        for eplayerindex in 0..4 {
+            println!("Player {}: {}", eplayerindex, accountbalance.get(eplayerindex));
         }
     }
 }
