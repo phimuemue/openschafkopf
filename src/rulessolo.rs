@@ -36,7 +36,11 @@ impl TRules for CRulesSolo {
 
     fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<CStich>) -> bool {
         assert!(8==vecstich.len());
-        self.points_per_player(vecstich)[eplayerindex]>=61
+        if eplayerindex==self.m_eplayerindex {
+            self.points_per_player(vecstich)[self.m_eplayerindex]>=61
+        } else {
+            self.points_per_player(vecstich)[self.m_eplayerindex]<=60
+        }
     }
 
     fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
