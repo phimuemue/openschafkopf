@@ -2,6 +2,7 @@ extern crate quickcheck;
 
 use std::fmt;
 use std::mem;
+use std::ops::{Index, IndexMut};
 
 pub use self::EFarbe::*;
 #[derive(PartialEq, Eq, Debug, Copy, Clone, PartialOrd, Ord)]
@@ -139,5 +140,38 @@ fn test_card_ctor() {
             assert_eq!(CCard::new(efarbe, eschlag).farbe(), efarbe);
             assert_eq!(CCard::new(efarbe, eschlag).schlag(), eschlag);
         }
+    }
+}
+
+pub struct SCardMap<T> {
+    m_at : [T; 32],
+}
+
+impl <T> SCardMap<T> {
+    pub fn new_from_pairs<ItPair>(itpairtcard : ItPair) -> SCardMap<T>
+        where ItPair : Iterator<Item=(T, CCard)>
+    {
+        let mut mapcardt : SCardMap<T>;
+        unsafe {
+            mapcardt = mem::uninitialized();
+        }
+        for (t, card) in itpairtcard {
+            mapcardt[card] = t;
+        }
+        mapcardt
+    }
+}
+
+impl <T> Index<CCard> for SCardMap<T> {
+    type Output = T;
+
+    fn index(&self, card: CCard) -> &T {
+        &self.m_at[card.m_n_internalrepresentation as usize]
+    }
+}
+
+impl <T> IndexMut<CCard> for SCardMap<T> {
+    fn index_mut(&mut self, card: CCard) -> &mut Self::Output {
+        &mut self.m_at[card.m_n_internalrepresentation as usize]
     }
 }

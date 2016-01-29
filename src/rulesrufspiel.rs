@@ -3,7 +3,9 @@ use stich::*;
 use hand::*;
 use rules::*;
 use std::fmt;
+use std::mem;
 use std::cmp::Ordering;
+use itertools::Itertools;
 
 pub struct CRulesRufspiel {
     pub m_eplayerindex : EPlayerIndex,
@@ -91,8 +93,25 @@ impl TRules for CRulesRufspiel {
     }
 
     fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
+        let mapcardeplayerindex = SCardMap::<EPlayerIndex>::new_from_pairs(
+            vecstich.iter().flat_map(|stich| stich.indices_and_cards())
+        );
+        let veccard_laufende = EFarbe::all_values().iter().map(|efarbe| CCard::new(*efarbe, eschlagO))
+            .chain(EFarbe::all_values().iter().map(|efarbe| CCard::new(*efarbe, eschlagU)))
+            .chain(ESchlag::all_values().iter().rev()
+                .filter(|&eschlag| eschlagO!=*eschlag && eschlagU!=*eschlag)
+                .map(|eschlag| CCard::new(efarbeHERZ, *eschlag)))
+            .collect::<Vec<CCard>>();
+        let n_laufende = veccard_laufende.iter()
+            .map(|card| mapcardeplayerindex[*card])
+            .group_by(|eplayerindex| self.is_winner(*eplayerindex, vecstich))
+            .nth(0).unwrap().1 // group_by yields (key, group)
+            .iter()
+            .count() as isize;
         create_playerindexmap(|eplayerindex| {
-            /*n_payout_rufspiel*/ 10 * {
+            (/*n_payout_rufspiel_default*/ 10 
+             + {if n_laufende<3 {0} else {n_laufende}} * 10
+            ) * {
                 if self.is_winner(eplayerindex, vecstich) {
                     1
                 } else {

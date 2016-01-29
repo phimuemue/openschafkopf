@@ -1,5 +1,6 @@
 extern crate rand;
 extern crate ncurses;
+extern crate itertools;
 
 mod card;
 mod stich;
