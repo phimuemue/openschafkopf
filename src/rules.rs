@@ -63,6 +63,7 @@ pub trait TRules : fmt::Display {
 
     fn truempfe_in_order(&self, veceschlag : Vec<ESchlag>, efarbe_trumpf: EFarbe) -> Vec<CCard> {
         let n_trumpf_expected = 4 * veceschlag.len() + 8 - veceschlag.len();
+        assert!(0<n_trumpf_expected);
         let mut veccard = Vec::with_capacity(n_trumpf_expected);
         for eschlag in veceschlag.iter() {
             for efarbe in EFarbe::all_values().iter() {
