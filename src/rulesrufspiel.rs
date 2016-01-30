@@ -93,19 +93,7 @@ impl TRules for CRulesRufspiel {
     }
 
     fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
-        let n_laufende = {
-            let mapcardeplayerindex = SCardMap::<EPlayerIndex>::new_from_pairs(
-                vecstich.iter().flat_map(|stich| stich.indices_and_cards())
-            );
-            let laufende_relevant = |card: &CCard| {
-                self.is_winner(mapcardeplayerindex[*card], vecstich)
-            };
-            let vec_trumpf = self.truempfe_in_order(vec!(eschlagO, eschlagU), efarbeHERZ);
-            let b_might_have_lauf = laufende_relevant(vec_trumpf.first().unwrap());
-            vec_trumpf.iter()
-                .take_while(|card| b_might_have_lauf==laufende_relevant(card))
-                .count() as isize
-        };
+        let n_laufende = self.count_laufende(vecstich, vec!(eschlagO, eschlagU), efarbeHERZ);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_rufspiel_default*/ 10 
              + {if n_laufende<3 {0} else {n_laufende}} * 10
