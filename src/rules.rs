@@ -61,6 +61,23 @@ pub trait TRules : fmt::Display {
 
     fn is_prematurely_winner(&self, vecstich: &Vec<CStich>) -> [bool; 4];
 
+    fn truempfe_in_order(&self, veceschlag : Vec<ESchlag>, efarbe_trumpf: EFarbe) -> Vec<CCard> {
+        let n_trumpf_expected = 4 * veceschlag.len() + 8 - veceschlag.len();
+        let mut veccard = Vec::with_capacity(n_trumpf_expected);
+        for eschlag in veceschlag.iter() {
+            for efarbe in EFarbe::all_values().iter() {
+                veccard.push(CCard::new(*efarbe, *eschlag));
+            }
+        }
+        for eschlag in ESchlag::all_values().iter() {
+            if !veceschlag.iter().any(|eschlag_trumpf| *eschlag_trumpf==*eschlag) {
+                veccard.push(CCard::new(efarbe_trumpf, *eschlag));
+            }
+        }
+        assert_eq!(n_trumpf_expected, veccard.len());
+        veccard
+    }
+
     fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4];
 
     // impls of equivalent_when_on_same_hand may use equivalent_when_on_same_hand_default

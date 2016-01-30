@@ -96,13 +96,7 @@ impl TRules for CRulesRufspiel {
         let mapcardeplayerindex = SCardMap::<EPlayerIndex>::new_from_pairs(
             vecstich.iter().flat_map(|stich| stich.indices_and_cards())
         );
-        let veccard_laufende = EFarbe::all_values().iter().map(|efarbe| CCard::new(*efarbe, eschlagO))
-            .chain(EFarbe::all_values().iter().map(|efarbe| CCard::new(*efarbe, eschlagU)))
-            .chain(ESchlag::all_values().iter().rev()
-                .filter(|&eschlag| eschlagO!=*eschlag && eschlagU!=*eschlag)
-                .map(|eschlag| CCard::new(efarbeHERZ, *eschlag)))
-            .collect::<Vec<CCard>>();
-        let n_laufende = veccard_laufende.iter()
+        let n_laufende = self.truempfe_in_order(vec!(eschlagO, eschlagU), efarbeHERZ).iter()
             .map(|card| mapcardeplayerindex[*card])
             .group_by(|eplayerindex| self.is_winner(*eplayerindex, vecstich))
             .nth(0).unwrap().1 // group_by yields (key, group)

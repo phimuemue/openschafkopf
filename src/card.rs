@@ -47,12 +47,12 @@ pub use self::ESchlag::*;
 #[allow(non_camel_case_types)]
 #[derive(PartialEq, Eq, Debug, Copy, Clone, PartialOrd, Ord)]
 pub enum ESchlag {
-    eschlag7, eschlag8, eschlag9, eschlagZ, eschlagU, eschlagO, eschlagK, eschlagA
+    eschlagA, eschlagZ, eschlagK, eschlagO, eschlagU, eschlag9, eschlag8, eschlag7
 }
 
 impl ESchlag {
     pub fn all_values() -> [ESchlag; 8] {
-        [eschlag7, eschlag8, eschlag9, eschlagZ, eschlagU, eschlagO, eschlagK, eschlagA,]
+        [eschlagA, eschlagZ, eschlagK, eschlagO, eschlagU, eschlag9, eschlag8, eschlag7,]
     }
 }
 
