@@ -105,22 +105,27 @@ impl CStich {
             m_stich: self
         }
     }
+    pub fn get(&self, eplayerindex: EPlayerIndex) -> Option<CCard> {
+        // TODO: more elegance!
+        for (eplayerindex_in_stich, card) in self.indices_and_cards() {
+            if eplayerindex==eplayerindex_in_stich {
+                return Some(card);
+            }
+        }
+        None
+    }
 }
 
 impl fmt::Display for CStich {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // TODO: more elegance!
-        let mut vecocard = iter::repeat(None).take(4).collect::<Vec<Option<CCard>>>();
-        for (i_player, card) in self.indices_and_cards() {
-            vecocard[i_player as usize] = Some(card);
-        }
-        for (i, ocard) in vecocard.into_iter().enumerate() {
-            if i==self.m_eplayerindex_first {
+        for eplayerindex in 0..4 {
+            if eplayerindex==self.m_eplayerindex_first {
                 try!(write!(f, ">"));
             } else {
                 try!(write!(f, " "));
             }
-            match ocard {
+            match self.get(eplayerindex) {
                 None => {try!(write!(f, "__"));}
                 Some(card) => {try!(write!(f, "{}", card));}
             }

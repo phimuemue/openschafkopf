@@ -18,6 +18,7 @@ mod playerhuman;
 mod suspicion;
 mod ruleset;
 mod accountbalance;
+mod skui;
 
 use game::*;
 use std::sync::mpsc;

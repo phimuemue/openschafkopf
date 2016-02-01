@@ -6,6 +6,7 @@ use gamestate::*;
 use rules::*;
 use rulesrufspiel::*;
 use ruleset::*;
+use skui;
 
 use std::sync::mpsc;
 use std::io::{self, Read};
@@ -47,9 +48,7 @@ fn ask_for_alternative<T, FnFormat>(vect: &Vec<T>, fn_format: FnFormat) -> T
 impl CPlayer for CPlayerHuman {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<CCard>) {
         let eplayerindex = gamestate.which_player_can_do_something().unwrap();
-        for (i_stich, stich) in gamestate.m_vecstich.iter().enumerate() {
-            println!("Stich {}: {}", i_stich, stich);
-        }
+        skui::print_vecstich(&gamestate.m_vecstich);
         println!("Your cards: {}", gamestate.m_ahand[eplayerindex]);
         txcard.send(
             ask_for_alternative(

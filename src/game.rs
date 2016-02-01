@@ -8,6 +8,7 @@ use cardvectorparser::*;
 use rulesrufspiel::*;
 use playercomputer::*;
 use playerhuman::*;
+use skui;
 
 use std::rc::Rc;
 use rand::{self, Rng};
@@ -128,9 +129,7 @@ impl CGame {
         if 4==self.m_gamestate.m_vecstich.last().unwrap().size() {
             if 8==self.m_gamestate.m_vecstich.len() { // TODO kurze Karte?
                 println!("Game finished.");
-                for (i_stich, stich) in self.m_gamestate.m_vecstich.iter().enumerate() {
-                    println!("Stich {}: {}", i_stich, stich);
-                }
+                skui::print_vecstich(&self.m_gamestate.m_vecstich);
                 self.notify_game_listeners();
                 (self.m_gamestate.m_vecstich.first().unwrap().first_player_index() + 1) % 4 // for next game
             } else {
