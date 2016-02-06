@@ -4,7 +4,6 @@ use hand::*;
 use player::*;
 use gamestate::*;
 use rules::*;
-use rulesrufspiel::*;
 
 use std::sync::mpsc;
 use std::rc::Rc;

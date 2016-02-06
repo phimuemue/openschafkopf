@@ -4,12 +4,11 @@ use hand::*;
 use player::*;
 use gamestate::*;
 use rules::*;
-use rulesrufspiel::*;
 use ruleset::*;
 use skui;
 
 use std::sync::mpsc;
-use std::io::{self, Read};
+use std::io::Read;
 use std::rc::Rc;
 
 pub struct CPlayerHuman;

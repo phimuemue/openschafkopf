@@ -3,9 +3,7 @@ use stich::*;
 use hand::*;
 use rules::*;
 use std::fmt;
-use std::mem;
 use std::cmp::Ordering;
-use itertools::Itertools;
 
 pub struct CRulesRufspiel {
     pub m_eplayerindex : EPlayerIndex,

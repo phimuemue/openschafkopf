@@ -4,7 +4,6 @@ use stich::*;
 use rules::*;
 use gamestate::*;
 use player::*;
-use cardvectorparser::*;
 use rulesrufspiel::*;
 use playercomputer::*;
 use playerhuman::*;

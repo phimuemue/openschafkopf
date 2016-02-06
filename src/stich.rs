@@ -1,6 +1,5 @@
 use card::*;
 use std::fmt;
-use std::iter;
 use std::mem;
 
 use std::ops::Index;
