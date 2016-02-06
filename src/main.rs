@@ -29,6 +29,7 @@ fn main() {
     ncurses::initscr();
     ncurses::keypad(ncurses::stdscr, true);
     ncurses::noecho();
+    ncurses::start_color();
     let mut accountbalance = SAccountBalance::new();
     for _igame in 0..4 { // TODO make number of rounds adjustable
         let mut game = CGame::new();

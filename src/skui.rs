@@ -30,32 +30,41 @@ pub fn print_vecstich(vecstich: &Vec<CStich>) {
         0, // y
         0, // x
     );
-    let tui_card_string = |stich: &CStich, eplayerindex| {
-        let str_card = format!("{}{}",
-            if eplayerindex==stich.first_player_index() { ">" } else { " " },
-            match stich.get(eplayerindex) {
-                None => {"..".to_string()},
-                Some(card) => {format!("{}", card)},
+    // TODO lib: enummap!
+    ncurses::init_pair(1, ncurses::COLOR_YELLOW, ncurses::COLOR_BLACK);
+    ncurses::init_pair(2, ncurses::COLOR_GREEN, ncurses::COLOR_BLACK);
+    ncurses::init_pair(3, ncurses::COLOR_RED, ncurses::COLOR_BLACK);
+    ncurses::init_pair(4, ncurses::COLOR_CYAN, ncurses::COLOR_BLACK);
+    let print_card_string = |vecnneplayerindex_space_plidx| {
+        for stich in vecstich {
+            for &(n_space_before, n_space_after, eplayerindex) in &vecnneplayerindex_space_plidx {
+                let onccolorpair = stich.get(eplayerindex).map(|card| {
+                    ncurses::COLOR_PAIR((card.farbe() as i16)+1) // TODO lib: enummap
+                });
+                if let Some(nccolorpair) = onccolorpair {
+                    ncurses::wattron(ncwin, nccolorpair as i32);
+                }
+                for _n_space in 0..n_space_before {
+                    wprint(ncwin, " ");
+                }
+                wprint(ncwin, if eplayerindex==stich.first_player_index() { ">" } else { " " });
+                match stich.get(eplayerindex) {
+                    None => {wprint(ncwin, "..")},
+                    Some(card) => {wprint(ncwin, &format!("{}", card))},
+                };
+                for _n_space in 0..n_space_after {
+                    wprint(ncwin, " ");
+                }
+                if let Some(nccolorpair) = onccolorpair {
+                    ncurses::wattroff(ncwin, nccolorpair as i32);
+                }
             }
-        );
-        assert_eq!(str_card.len(), 3);
-        str_card
+        }
+        wprintln(ncwin, "");
     };
-    for stich in vecstich {
-        wprint(ncwin, &format!("   {}    ", tui_card_string(stich, /*eplayerindex*/2)));
-    }
-    wprintln(ncwin, "");
-    for stich in vecstich {
-        wprint(ncwin, &format!(" {} {}  ",
-           tui_card_string(stich, /*eplayerindex*/1),
-           tui_card_string(stich, /*eplayerindex*/3)
-        ));
-    }
-    wprintln(ncwin, "");
-    for stich in vecstich {
-        wprint(ncwin, &format!("   {}    ", tui_card_string(stich, /*eplayerindex*/0)));
-    }
-    wprintln(ncwin, "");
+    print_card_string(vec!((3, 4, /*eplayerindex*/2)));
+    print_card_string(vec!((1, 1, /*eplayerindex*/1), (0, 2, /*eplayerindex*/3)));
+    print_card_string(vec!((3, 4, /*eplayerindex*/0)));
     ncurses::delwin(ncwin);
 }
 
