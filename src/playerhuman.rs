@@ -14,44 +14,13 @@ use std::rc::Rc;
 
 pub struct CPlayerHuman;
 
-fn ask_for_alternative<T, FnFormat>(vect: &Vec<T>, fn_format: FnFormat) -> T 
-    where T : Clone,
-          FnFormat : Fn(&T) -> String
-{
-    assert!(0<vect.len());
-    if 1==vect.len() {
-        return vect[0].clone(); // just return if there's no choice anyway
-    }
-    println!("Please choose:");
-    loop {
-        for (i_t, t) in vect.iter().enumerate() {
-            println!("{} ({})", fn_format(&t), i_t);
-        }
-        let mut str_index = String::new();
-        if let Err(_) = (io::stdin().read_line(&mut str_index)) {
-            return vect[0].clone(); // TODO: make return type optional?
-        }
-        match str_index.trim().parse::<usize>() {
-            Ok(i) if i < vect.len() => {
-                return vect[i].clone();
-            }
-            Ok(_) => {
-                println!("Error. Number not within suggested bounds.");
-            }
-            _ => {
-                println!("Error. Input not a number");
-            }
-        }
-    }
-}
-
 impl CPlayer for CPlayerHuman {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<CCard>) {
         let eplayerindex = gamestate.which_player_can_do_something().unwrap();
         skui::print_vecstich(&gamestate.m_vecstich);
-        println!("Your cards: {}", gamestate.m_ahand[eplayerindex]);
+        skui::println(&format!("Your cards: {}", gamestate.m_ahand[eplayerindex]));
         txcard.send(
-            ask_for_alternative(
+            skui::ask_for_alternative(
                 &gamestate.m_rules.all_allowed_cards(
                     &gamestate.m_vecstich,
                     &gamestate.m_ahand[eplayerindex]
@@ -69,7 +38,7 @@ impl CPlayer for CPlayerHuman {
                     .map(|rules| Some(rules.clone()))
             )
             .collect();
-        ask_for_alternative(
+        skui::ask_for_alternative(
             &vecorules,
             |orules| match orules {
                 &None => "Nothing".to_string(),

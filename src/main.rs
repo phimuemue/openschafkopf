@@ -26,10 +26,13 @@ use card::CCard;
 use accountbalance::SAccountBalance;
 
 fn main() {
+    ncurses::initscr();
+    ncurses::keypad(ncurses::stdscr, true);
+    ncurses::noecho();
     let mut accountbalance = SAccountBalance::new();
-    loop {
+    for _igame in 0..4 { // TODO make number of rounds adjustable
         let mut game = CGame::new();
-        println!("Hand 0 : {}", game.m_gamestate.m_ahand[0]);
+        ncurses::printw(&format!("Hand 0 : {}", game.m_gamestate.m_ahand[0]));
         if game.start_game(0) {
             while let Some(eplayerindex)=game.which_player_can_do_something() {
                 let (txcard, rxcard) = mpsc::channel::<CCard>();
@@ -41,15 +44,16 @@ fn main() {
                 game.zugeben(card_played, eplayerindex);
             }
             let an_points = game.points_per_player();
-            println!("Results");
+            ncurses::printw("Results");
             for eplayerindex in 0..4 {
-                println!("Player {}: {} points", eplayerindex, an_points[eplayerindex]);
+                ncurses::printw(&format!("Player {}: {} points", eplayerindex, an_points[eplayerindex]));
             }
             accountbalance.apply_payout(&game.payout());
         }
-        println!("Account balance:");
+        ncurses::printw("Account balance:");
         for eplayerindex in 0..4 {
-            println!("Player {}: {}", eplayerindex, accountbalance.get(eplayerindex));
+            ncurses::printw(&format!("Player {}: {}", eplayerindex, accountbalance.get(eplayerindex)));
         }
     }
+    ncurses::endwin();
 }
