@@ -87,9 +87,10 @@ pub fn print_vecstich(vecstich: &Vec<CStich>) {
     ncurses::delwin(ncwin);
 }
 
-pub fn ask_for_alternative<T, FnFormat>(str_question: &str, vect: &Vec<T>, fn_format: FnFormat) -> T 
+pub fn ask_for_alternative<T, FnFormat, FnCallback>(str_question: &str, vect: &Vec<T>, fn_format: FnFormat, fn_callback: FnCallback) -> T 
     where T : Clone,
-          FnFormat : Fn(&T) -> String
+          FnFormat : Fn(&T) -> String,
+          FnCallback : Fn(&T, usize)
 {
     let ncwin = ncurses::newwin(
         (vect.len() as i32)+1, // height
@@ -111,6 +112,7 @@ pub fn ask_for_alternative<T, FnFormat>(str_question: &str, vect: &Vec<T>, fn_fo
                 i_t
             ));
         }
+        fn_callback(&vect[i_alternative], i_alternative);
     };
     let mut ch = ncurses::KEY_UP;
     while ch!=ncurses::KEY_RIGHT {
@@ -154,7 +156,7 @@ pub fn print_hand(hand: &CHand, oi_card: Option<usize>) {
             if i_card==i {
                 wprint(ncwin, " vv");
             } else {
-                wprint(ncwin, "   ");
+                wprint(ncwin, " ..");
             }
         }
     }

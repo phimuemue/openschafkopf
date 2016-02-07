@@ -18,7 +18,6 @@ impl CPlayer for CPlayerHuman {
         let eplayerindex = gamestate.which_player_can_do_something().unwrap();
         skui::print_vecstich(&gamestate.m_vecstich);
         let ref hand = gamestate.m_ahand[eplayerindex];
-        skui::print_hand(hand, None);
         txcard.send(
             skui::ask_for_alternative(
                 &format!("Your cards: {}", hand),
@@ -26,7 +25,11 @@ impl CPlayer for CPlayerHuman {
                     &gamestate.m_vecstich,
                     &hand
                 ),
-                |card| card.to_string()
+                |card| card.to_string(),
+                |_card, _i_card| {
+                    // beware: i_card is not a valid index into hand!
+                    skui::print_hand(hand, None)
+                }
             )
         );
     }
@@ -39,13 +42,32 @@ impl CPlayer for CPlayerHuman {
                     .map(|rules| Some(rules.clone()))
             )
             .collect();
-        skui::print_hand(hand, None);
         skui::ask_for_alternative(
             &format!("Your cards: {}. What do you want to play?", hand),
             &vecorules,
             |orules| match orules {
                 &None => "Nothing".to_string(),
                 &Some(ref rules) => rules.to_string()
+            },
+            |orules, _i_orules| {
+                let mut veccard = hand.cards().clone();
+                if let Some(rules)=orules.as_ref() {
+                    veccard.sort_by(|&card_lhs, &card_rhs| {
+                        match(rules.trumpf_or_farbe(card_lhs), rules.trumpf_or_farbe(card_rhs)) {
+                            (VTrumpfOrFarbe::Farbe(efarbe_lhs), VTrumpfOrFarbe::Farbe(efarbe_rhs)) => {
+                                if efarbe_lhs==efarbe_rhs {
+                                    rules.compare_in_stich_farbe(card_lhs, card_rhs)
+                                } else {
+                                    efarbe_lhs.cmp(&efarbe_rhs)
+                                }
+                            }
+                            (_, _) => { // at least one of them is trumpf
+                                rules.compare_in_stich(card_lhs, card_rhs)
+                            }
+                        }
+                    }.reverse());
+                }
+                skui::print_hand(&CHand::new_from_vec(veccard), None);
             }
         )
     }
