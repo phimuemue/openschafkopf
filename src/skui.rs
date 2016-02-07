@@ -56,35 +56,45 @@ fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: CCard) {
     ncurses::wattroff(ncwin, nccolorpair as i32);
 }
 
+fn do_in_window<FnDo, RetVal>(n_height: i32, n_width: i32, n_y: i32, n_x: i32, fn_do: FnDo) -> RetVal
+    where FnDo: Fn(ncurses::WINDOW) -> RetVal
+{
+    let ncwin = ncurses::newwin(n_height, n_width, n_y, n_x);
+    let retval = fn_do(ncwin);
+    ncurses::delwin(ncwin);
+    retval
+}
+
 pub fn print_vecstich(vecstich: &Vec<CStich>) {
-    let ncwin = ncurses::newwin(
+    do_in_window(
         5, // height
         90, // width
         0, // y
         0, // x
-    );
-    let print_card_string = |vecnneplayerindex_space_plidx| {
-        for stich in vecstich {
-            for &(n_space_before, n_space_after, eplayerindex) in &vecnneplayerindex_space_plidx {
-                for _n_space in 0..n_space_before {
-                    wprint(ncwin, " ");
+        |ncwin| {
+            let print_card_string = |vecnneplayerindex_space_plidx| {
+                for stich in vecstich {
+                    for &(n_space_before, n_space_after, eplayerindex) in &vecnneplayerindex_space_plidx {
+                        for _n_space in 0..n_space_before {
+                            wprint(ncwin, " ");
+                        }
+                        wprint(ncwin, if eplayerindex==stich.first_player_index() { ">" } else { " " });
+                        match stich.get(eplayerindex) {
+                            None => {wprint(ncwin, "..")},
+                            Some(card) => {print_card_with_farbe(ncwin, card)},
+                        };
+                        for _n_space in 0..n_space_after {
+                            wprint(ncwin, " ");
+                        }
+                    }
                 }
-                wprint(ncwin, if eplayerindex==stich.first_player_index() { ">" } else { " " });
-                match stich.get(eplayerindex) {
-                    None => {wprint(ncwin, "..")},
-                    Some(card) => {print_card_with_farbe(ncwin, card)},
-                };
-                for _n_space in 0..n_space_after {
-                    wprint(ncwin, " ");
-                }
-            }
+                wprintln(ncwin, "");
+            };
+            print_card_string(vec!((3, 4, /*eplayerindex*/2)));
+            print_card_string(vec!((1, 1, /*eplayerindex*/1), (0, 2, /*eplayerindex*/3)));
+            print_card_string(vec!((3, 4, /*eplayerindex*/0)));
         }
-        wprintln(ncwin, "");
-    };
-    print_card_string(vec!((3, 4, /*eplayerindex*/2)));
-    print_card_string(vec!((1, 1, /*eplayerindex*/1), (0, 2, /*eplayerindex*/3)));
-    print_card_string(vec!((3, 4, /*eplayerindex*/0)));
-    ncurses::delwin(ncwin);
+    );
 }
 
 pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(str_question: &str, vect: &Vec<T>, fn_filter: FnFilter, fn_format: FnFormat, fn_callback: FnCallback) -> T 
@@ -93,51 +103,52 @@ pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(str_question: &str
           FnFilter : Fn(&T) -> bool,
           FnCallback : Fn(&T, usize)
 {
-    let vect = vect.iter().enumerate().filter(|&(_i_t, t)| fn_filter(t)).collect::<Vec<_>>();
-    let ncwin = ncurses::newwin(
+    do_in_window(
         (vect.len() as i32)+1, // height
         80, // width
         10, // y, leave space for stich
         0, // x
-    );
-    assert!(0<vect.len());
-    let mut i_alternative = 0; // initially, point to 0th alternative
-    if 1==vect.len() {
-        return vect[0].1.clone(); // just return if there's no choice anyway
-    }
-    let print_alternatives = |i_alternative| {
-        wprintln(ncwin, str_question);
-        for (i_t, t) in vect.iter().enumerate() {
-            wprintln(ncwin, &format!("{} {} ({})",
-                if i_t==i_alternative {"*"} else {" "},
-                fn_format(&t.1),
-                i_t
-            ));
-        }
-        fn_callback(&vect[i_alternative].1, vect[i_alternative].0);
-    };
-    let mut ch = ncurses::KEY_UP;
-    while ch!=ncurses::KEY_RIGHT {
-        ncurses::werase(ncwin);
-        match ch {
-            ncurses::KEY_UP => {
-                if 0<i_alternative {
-                    i_alternative = i_alternative - 1
+        |ncwin| {
+            let vect = vect.iter().enumerate().filter(|&(_i_t, t)| fn_filter(t)).collect::<Vec<_>>();
+            assert!(0<vect.len());
+            let mut i_alternative = 0; // initially, point to 0th alternative
+            if 1==vect.len() {
+                return vect[0].1.clone(); // just return if there's no choice anyway
+            }
+            let print_alternatives = |i_alternative| {
+                wprintln(ncwin, str_question);
+                for (i_t, t) in vect.iter().enumerate() {
+                    wprintln(ncwin, &format!("{} {} ({})",
+                        if i_t==i_alternative {"*"} else {" "},
+                        fn_format(&t.1),
+                        i_t
+                    ));
                 }
-            },
-            ncurses::KEY_DOWN => {
-                if i_alternative<vect.len()-1 {
-                    i_alternative = i_alternative + 1
+                fn_callback(&vect[i_alternative].1, vect[i_alternative].0);
+            };
+            let mut ch = ncurses::KEY_UP;
+            while ch!=ncurses::KEY_RIGHT {
+                ncurses::werase(ncwin);
+                match ch {
+                    ncurses::KEY_UP => {
+                        if 0<i_alternative {
+                            i_alternative = i_alternative - 1
+                        }
+                    },
+                    ncurses::KEY_DOWN => {
+                        if i_alternative<vect.len()-1 {
+                            i_alternative = i_alternative + 1
+                        }
+                    },
+                    _ => {},
                 }
-            },
-            _ => {},
+                print_alternatives(i_alternative);
+                ch = ncurses::getch();
+            }
+            ncurses::erase();
+            vect[i_alternative].1.clone()
         }
-        print_alternatives(i_alternative);
-        ch = ncurses::getch();
-    }
-    ncurses::erase();
-    ncurses::delwin(ncwin);
-    vect[i_alternative].1.clone()
+    )
 }
 
 pub fn print_hand(hand: &CHand, oi_card: Option<usize>) {
@@ -147,26 +158,27 @@ pub fn print_hand(hand: &CHand, oi_card: Option<usize>) {
         ncurses::getmaxyx(ncurses::stdscr, &mut n_height, &mut n_width);
         (n_height, n_width)
     };
-    let ncwin = ncurses::newwin(
+    do_in_window(
         2, // height
         80, // width
         n_height - 2, // y
         0, // x
-    );
-    if let Some(i_card)=oi_card {
-        for i in 0..hand.cards().len() {
-            if i_card==i {
-                wprint(ncwin, " vv");
-            } else {
-                wprint(ncwin, " ..");
+        |ncwin| {
+            if let Some(i_card)=oi_card {
+                for i in 0..hand.cards().len() {
+                    if i_card==i {
+                        wprint(ncwin, " vv");
+                    } else {
+                        wprint(ncwin, " ..");
+                    }
+                }
             }
+            wprintln(ncwin, "");
+            for card in hand.cards() {
+                wprint(ncwin, " ");
+                print_card_with_farbe(ncwin, *card);
+            }
+            ncurses::refresh();
         }
-    }
-    wprintln(ncwin, "");
-    for card in hand.cards() {
-        wprint(ncwin, " ");
-        print_card_with_farbe(ncwin, *card);
-    }
-    ncurses::refresh();
-    ncurses::delwin(ncwin);
+    );
 }
