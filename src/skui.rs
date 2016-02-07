@@ -168,5 +168,5 @@ pub fn print_hand(hand: &CHand, oi_card: Option<usize>) {
         print_card_with_farbe(ncwin, *card);
     }
     ncurses::refresh();
-    //ncurses::delwin(ncwin);
+    ncurses::delwin(ncwin);
 }
