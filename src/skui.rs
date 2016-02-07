@@ -87,11 +87,13 @@ pub fn print_vecstich(vecstich: &Vec<CStich>) {
     ncurses::delwin(ncwin);
 }
 
-pub fn ask_for_alternative<T, FnFormat, FnCallback>(str_question: &str, vect: &Vec<T>, fn_format: FnFormat, fn_callback: FnCallback) -> T 
+pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(str_question: &str, vect: &Vec<T>, fn_filter: FnFilter, fn_format: FnFormat, fn_callback: FnCallback) -> T 
     where T : Clone,
           FnFormat : Fn(&T) -> String,
+          FnFilter : Fn(&T) -> bool,
           FnCallback : Fn(&T, usize)
 {
+    let vect = vect.iter().enumerate().filter(|&(_i_t, t)| fn_filter(t)).collect::<Vec<_>>();
     let ncwin = ncurses::newwin(
         (vect.len() as i32)+1, // height
         80, // width
@@ -101,18 +103,18 @@ pub fn ask_for_alternative<T, FnFormat, FnCallback>(str_question: &str, vect: &V
     assert!(0<vect.len());
     let mut i_alternative = 0; // initially, point to 0th alternative
     if 1==vect.len() {
-        return vect[0].clone(); // just return if there's no choice anyway
+        return vect[0].1.clone(); // just return if there's no choice anyway
     }
     let print_alternatives = |i_alternative| {
         wprintln(ncwin, str_question);
         for (i_t, t) in vect.iter().enumerate() {
             wprintln(ncwin, &format!("{} {} ({})",
                 if i_t==i_alternative {"*"} else {" "},
-                fn_format(&t),
+                fn_format(&t.1),
                 i_t
             ));
         }
-        fn_callback(&vect[i_alternative], i_alternative);
+        fn_callback(&vect[i_alternative].1, vect[i_alternative].0);
     };
     let mut ch = ncurses::KEY_UP;
     while ch!=ncurses::KEY_RIGHT {
@@ -135,7 +137,7 @@ pub fn ask_for_alternative<T, FnFormat, FnCallback>(str_question: &str, vect: &V
     }
     ncurses::erase();
     ncurses::delwin(ncwin);
-    vect[i_alternative].clone()
+    vect[i_alternative].1.clone()
 }
 
 pub fn print_hand(hand: &CHand, oi_card: Option<usize>) {

@@ -17,17 +17,15 @@ impl CPlayer for CPlayerHuman {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<CCard>) {
         skui::print_vecstich(&gamestate.m_vecstich);
         let ref hand = gamestate.m_ahand[gamestate.which_player_can_do_something().unwrap()];
+        let veccard_allowed = gamestate.m_rules.all_allowed_cards(&gamestate.m_vecstich, &hand);
         txcard.send(
             skui::ask_for_alternative(
                 &format!("Your cards: {}", hand),
-                &gamestate.m_rules.all_allowed_cards(
-                    &gamestate.m_vecstich,
-                    &hand
-                ),
+                hand.cards(),
+                |card| {veccard_allowed.iter().any(|card_allowed| card_allowed==card)},
                 |card| card.to_string(),
-                |_card, _i_card| {
-                    // beware: i_card is not a valid index into hand!
-                    skui::print_hand(hand, None)
+                |_card, i_card| {
+                    skui::print_hand(hand, Some(i_card))
                 }
             )
         );
@@ -43,6 +41,7 @@ impl CPlayer for CPlayerHuman {
                     .map(|rules| Some(rules.clone()))
             )
             .collect::<Vec<_>>(),
+            |_orules| {true},
             |orules| match orules {
                 &None => "Nothing".to_string(),
                 &Some(ref rules) => rules.to_string()
