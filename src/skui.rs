@@ -1,13 +1,13 @@
 use stich::*;
 use ncurses;
 
-pub fn println(s: &str) {
+fn println(s: &str) {
     ncurses::printw(s);
     ncurses::printw("\n");
     ncurses::refresh();
 }
 
-pub fn print(s: &str) {
+fn print(s: &str) {
     ncurses::printw(s);
     ncurses::refresh();
 }
@@ -21,6 +21,14 @@ fn wprintln(ncwin: ncurses::WINDOW, s: &str) {
 fn wprint(ncwin: ncurses::WINDOW, s: &str) {
     ncurses::wprintw(ncwin, s);
     ncurses::wrefresh(ncwin);
+}
+
+pub fn logln(s: &str) {
+    ncurses::refresh();
+}
+
+pub fn log(s: &str) {
+    ncurses::refresh();
 }
 
 pub fn print_vecstich(vecstich: &Vec<CStich>) {

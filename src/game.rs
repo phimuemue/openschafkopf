@@ -54,14 +54,14 @@ impl CGame {
     pub fn start_game(&mut self, eplayerindex_first : EPlayerIndex) -> bool {
         // prepare
         self.m_gamestate.m_vecstich.clear();
-        skui::println("Starting game");
+        skui::logln("Starting game");
         for hand in self.m_gamestate.m_ahand.iter() {
-            skui::print(&format!("{} |", hand));
+            skui::log(&format!("{} |", hand));
         }
-        skui::println("");
+        skui::logln("");
 
         // decide which game is played
-        skui::println("Asking players if they want to play");
+        skui::logln("Asking players if they want to play");
         let mut vecpaireplayerindexgameannounce : Vec<(EPlayerIndex, Rc<TRules>)> = Vec::new();
         for eplayerindex in (eplayerindex_first..eplayerindex_first+4).map(|eplayerindex| eplayerindex%4) {
             if let Some(gameannounce) = self.m_vecplayer[eplayerindex].ask_for_game(
@@ -75,11 +75,11 @@ impl CGame {
             return false;
         }
 
-        skui::println("Asked players if they want to play. Determining rules");
+        skui::logln("Asked players if they want to play. Determining rules");
         // TODO: find sensible way to deal with multiple game announcements
         let paireplayerindexgameannounce = vecpaireplayerindexgameannounce.pop().unwrap();
         self.m_gamestate.m_rules = paireplayerindexgameannounce.1;
-        skui::println(&format!(
+        skui::logln(&format!(
             "Rules determined ({} plays {}). Sorting hands",
             paireplayerindexgameannounce.0,
             self.m_gamestate.m_rules
@@ -88,7 +88,7 @@ impl CGame {
             let ref rules = self.m_gamestate.m_rules;
             for hand in self.m_gamestate.m_ahand.iter_mut() {
                 hand.sort(|&card_fst, &card_snd| rules.compare_in_stich(card_fst, card_snd));
-                skui::println(&format!("{}", hand));
+                skui::logln(&format!("{}", hand));
             }
         }
 
@@ -101,7 +101,7 @@ impl CGame {
     }
 
     fn new_stich(&mut self, eplayerindex_last_stich: EPlayerIndex) {
-        skui::println(&format!("Opening new stich starting at {}", eplayerindex_last_stich));
+        skui::logln(&format!("Opening new stich starting at {}", eplayerindex_last_stich));
         assert!(self.m_gamestate.m_vecstich.is_empty() || 4==self.m_gamestate.m_vecstich.last().unwrap().size());
         self.m_gamestate.m_vecstich.push(CStich::new(eplayerindex_last_stich));
         self.notify_game_listeners();
@@ -110,7 +110,7 @@ impl CGame {
     pub fn zugeben(&mut self, card_played: CCard, eplayerindex: EPlayerIndex) -> EPlayerIndex { // TODO: should invalid inputs be indicated by return value?
         // returns the EPlayerIndex of the player who is the next in row to do something
         // TODO: how to cope with finished game?
-        skui::println(&format!("Player {} wants to play {}", eplayerindex, card_played));
+        skui::logln(&format!("Player {} wants to play {}", eplayerindex, card_played));
         {
             let eplayerindex_privileged = self.which_player_can_do_something().unwrap();
             assert_eq!(eplayerindex, eplayerindex_privileged);
@@ -123,11 +123,11 @@ impl CGame {
             self.m_gamestate.m_vecstich.last_mut().unwrap().zugeben(card_played);
         }
         for eplayerindex in 0..4 {
-            skui::println(&format!("Hand {}: {}", eplayerindex, self.m_gamestate.m_ahand[eplayerindex]));
+            skui::logln(&format!("Hand {}: {}", eplayerindex, self.m_gamestate.m_ahand[eplayerindex]));
         }
         if 4==self.m_gamestate.m_vecstich.last().unwrap().size() {
             if 8==self.m_gamestate.m_vecstich.len() { // TODO kurze Karte?
-                skui::println("Game finished.");
+                skui::logln("Game finished.");
                 skui::print_vecstich(&self.m_gamestate.m_vecstich);
                 self.notify_game_listeners();
                 (self.m_gamestate.m_vecstich.first().unwrap().first_player_index() + 1) % 4 // for next game
@@ -135,9 +135,9 @@ impl CGame {
                 // TODO: all players should have to acknowledge the current stich in some way
                 let eplayerindex_last_stich = {
                     let stich = self.m_gamestate.m_vecstich.last().unwrap();
-                    skui::println(&format!("Stich: {}", stich));
+                    skui::logln(&format!("Stich: {}", stich));
                     let eplayerindex_last_stich = self.m_gamestate.m_rules.winner_index(stich);
-                    skui::println(&format!("{} made by {}, ({} points)",
+                    skui::logln(&format!("{} made by {}, ({} points)",
                         stich,
                         eplayerindex_last_stich,
                         self.m_gamestate.m_rules.points_stich(stich)
