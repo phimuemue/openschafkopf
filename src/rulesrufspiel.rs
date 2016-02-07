@@ -59,9 +59,9 @@ impl CRulesRufspiel {
 
 impl TRules for CRulesRufspiel {
     fn can_be_played(&self, hand: &CHand) -> bool {
-        hand.cards().iter()
-            .filter(|&card| self.is_ruffarbe(*card))
-            .all(|card| card.schlag()!=eschlagA)
+        let it = || {hand.cards().iter().filter(|&card| self.is_ruffarbe(*card))};
+        it().all(|card| card.schlag()!=eschlagA)
+        && 0<it().count()
     }
 
     fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe {
