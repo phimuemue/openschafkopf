@@ -1,3 +1,4 @@
+use card::*;
 use stich::*;
 use hand::*;
 use ncurses;
@@ -43,6 +44,18 @@ pub fn log(s: &str) {
     ncurses::refresh();
 }
 
+fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: CCard) {
+    // TODO lib: enummap!
+    ncurses::init_pair(1, ncurses::COLOR_YELLOW, ncurses::COLOR_BLACK);
+    ncurses::init_pair(2, ncurses::COLOR_GREEN, ncurses::COLOR_BLACK);
+    ncurses::init_pair(3, ncurses::COLOR_RED, ncurses::COLOR_BLACK);
+    ncurses::init_pair(4, ncurses::COLOR_CYAN, ncurses::COLOR_BLACK);
+    let nccolorpair = ncurses::COLOR_PAIR((card.farbe() as i16)+1); // TODO lib: enummap
+    ncurses::wattron(ncwin, nccolorpair as i32);
+    wprint(ncwin, &format!("{}", card));
+    ncurses::wattroff(ncwin, nccolorpair as i32);
+}
+
 pub fn print_vecstich(vecstich: &Vec<CStich>) {
     let ncwin = ncurses::newwin(
         5, // height
@@ -50,33 +63,19 @@ pub fn print_vecstich(vecstich: &Vec<CStich>) {
         0, // y
         0, // x
     );
-    // TODO lib: enummap!
-    ncurses::init_pair(1, ncurses::COLOR_YELLOW, ncurses::COLOR_BLACK);
-    ncurses::init_pair(2, ncurses::COLOR_GREEN, ncurses::COLOR_BLACK);
-    ncurses::init_pair(3, ncurses::COLOR_RED, ncurses::COLOR_BLACK);
-    ncurses::init_pair(4, ncurses::COLOR_CYAN, ncurses::COLOR_BLACK);
     let print_card_string = |vecnneplayerindex_space_plidx| {
         for stich in vecstich {
             for &(n_space_before, n_space_after, eplayerindex) in &vecnneplayerindex_space_plidx {
-                let onccolorpair = stich.get(eplayerindex).map(|card| {
-                    ncurses::COLOR_PAIR((card.farbe() as i16)+1) // TODO lib: enummap
-                });
-                if let Some(nccolorpair) = onccolorpair {
-                    ncurses::wattron(ncwin, nccolorpair as i32);
-                }
                 for _n_space in 0..n_space_before {
                     wprint(ncwin, " ");
                 }
                 wprint(ncwin, if eplayerindex==stich.first_player_index() { ">" } else { " " });
                 match stich.get(eplayerindex) {
                     None => {wprint(ncwin, "..")},
-                    Some(card) => {wprint(ncwin, &format!("{}", card))},
+                    Some(card) => {print_card_with_farbe(ncwin, card)},
                 };
                 for _n_space in 0..n_space_after {
                     wprint(ncwin, " ");
-                }
-                if let Some(nccolorpair) = onccolorpair {
-                    ncurses::wattroff(ncwin, nccolorpair as i32);
                 }
             }
         }
@@ -161,7 +160,8 @@ pub fn print_hand(hand: &CHand, oi_card: Option<usize>) {
     }
     wprintln(ncwin, "");
     for card in hand.cards() {
-        wprint(ncwin, &format!(" {}", card));
+        wprint(ncwin, " ");
+        print_card_with_farbe(ncwin, *card);
     }
     ncurses::refresh();
     //ncurses::delwin(ncwin);
