@@ -17,12 +17,14 @@ impl CPlayer for CPlayerHuman {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<CCard>) {
         let eplayerindex = gamestate.which_player_can_do_something().unwrap();
         skui::print_vecstich(&gamestate.m_vecstich);
+        let ref hand = gamestate.m_ahand[eplayerindex];
+        skui::print_hand(hand, None);
         txcard.send(
             skui::ask_for_alternative(
-                &format!("Your cards: {}", gamestate.m_ahand[eplayerindex]),
+                &format!("Your cards: {}", hand),
                 &gamestate.m_rules.all_allowed_cards(
                     &gamestate.m_vecstich,
-                    &gamestate.m_ahand[eplayerindex]
+                    &hand
                 ),
                 |card| card.to_string()
             )
@@ -37,6 +39,7 @@ impl CPlayer for CPlayerHuman {
                     .map(|rules| Some(rules.clone()))
             )
             .collect();
+        skui::print_hand(hand, None);
         skui::ask_for_alternative(
             &format!("Your cards: {}. What do you want to play?", hand),
             &vecorules,

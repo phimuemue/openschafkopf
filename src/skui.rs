@@ -1,4 +1,5 @@
 use stich::*;
+use hand::*;
 use ncurses;
 
 pub fn init_ui() {
@@ -136,3 +137,32 @@ pub fn ask_for_alternative<T, FnFormat>(str_question: &str, vect: &Vec<T>, fn_fo
     vect[i_alternative].clone()
 }
 
+pub fn print_hand(hand: &CHand, oi_card: Option<usize>) {
+    let (n_height, n_width) = {
+        let mut n_height = 0;
+        let mut n_width = 0;
+        ncurses::getmaxyx(ncurses::stdscr, &mut n_height, &mut n_width);
+        (n_height, n_width)
+    };
+    let ncwin = ncurses::newwin(
+        2, // height
+        80, // width
+        n_height - 2, // y
+        0, // x
+    );
+    if let Some(i_card)=oi_card {
+        for i in 0..hand.cards().len() {
+            if i_card==i {
+                wprint(ncwin, " vv");
+            } else {
+                wprint(ncwin, "   ");
+            }
+        }
+    }
+    wprintln(ncwin, "");
+    for card in hand.cards() {
+        wprint(ncwin, &format!(" {}", card));
+    }
+    ncurses::refresh();
+    //ncurses::delwin(ncwin);
+}
