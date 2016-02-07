@@ -1,6 +1,17 @@
 use stich::*;
 use ncurses;
 
+pub fn init_ui() {
+    ncurses::initscr();
+    ncurses::keypad(ncurses::stdscr, true);
+    ncurses::noecho();
+    ncurses::start_color();
+}
+
+pub fn end_ui() {
+    ncurses::endwin();
+}
+
 fn println(s: &str) {
     ncurses::printw(s);
     ncurses::printw("\n");
@@ -76,7 +87,7 @@ pub fn print_vecstich(vecstich: &Vec<CStich>) {
     ncurses::delwin(ncwin);
 }
 
-pub fn ask_for_alternative<T, FnFormat>(vect: &Vec<T>, fn_format: FnFormat) -> T 
+pub fn ask_for_alternative<T, FnFormat>(str_question: &str, vect: &Vec<T>, fn_format: FnFormat) -> T 
     where T : Clone,
           FnFormat : Fn(&T) -> String
 {
@@ -92,7 +103,7 @@ pub fn ask_for_alternative<T, FnFormat>(vect: &Vec<T>, fn_format: FnFormat) -> T
         return vect[0].clone(); // just return if there's no choice anyway
     }
     let print_alternatives = |i_alternative| {
-        wprintln(ncwin, "Please choose:");
+        wprintln(ncwin, str_question);
         for (i_t, t) in vect.iter().enumerate() {
             wprintln(ncwin, &format!("{} {} ({})",
                 if i_t==i_alternative {"*"} else {" "},

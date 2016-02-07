@@ -17,9 +17,9 @@ impl CPlayer for CPlayerHuman {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<CCard>) {
         let eplayerindex = gamestate.which_player_can_do_something().unwrap();
         skui::print_vecstich(&gamestate.m_vecstich);
-        skui::logln(&format!("Your cards: {}", gamestate.m_ahand[eplayerindex]));
         txcard.send(
             skui::ask_for_alternative(
+                &format!("Your cards: {}", gamestate.m_ahand[eplayerindex]),
                 &gamestate.m_rules.all_allowed_cards(
                     &gamestate.m_vecstich,
                     &gamestate.m_ahand[eplayerindex]
@@ -38,6 +38,7 @@ impl CPlayer for CPlayerHuman {
             )
             .collect();
         skui::ask_for_alternative(
+            &format!("Your cards: {}. What do you want to play?", hand),
             &vecorules,
             |orules| match orules {
                 &None => "Nothing".to_string(),
