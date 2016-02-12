@@ -3,6 +3,12 @@ use stich::*;
 use hand::*;
 use ncurses;
 
+enum ESkUiWindow {
+    Stich,
+    Interaction,
+    Hand,
+}
+
 pub fn init_ui() {
     ncurses::initscr();
     ncurses::keypad(ncurses::stdscr, true);
@@ -56,10 +62,28 @@ fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: CCard) {
     ncurses::wattroff(ncwin, nccolorpair as i32);
 }
 
-fn do_in_window<FnDo, RetVal>(n_height: i32, n_width: i32, n_y: i32, n_x: i32, fn_do: FnDo) -> RetVal
+fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
     where FnDo: Fn(ncurses::WINDOW) -> RetVal
 {
-    let ncwin = ncurses::newwin(n_height, n_width, n_y, n_x);
+    let (n_height, n_width) = {
+        let mut n_height = 0;
+        let mut n_width = 0;
+        ncurses::getmaxyx(ncurses::stdscr, &mut n_height, &mut n_width);
+        (n_height, n_width)
+    };
+    let create_fullwidth_window = |n_top, n_bottom| {
+        ncurses::newwin(
+            n_bottom-n_top, // height
+            n_width, // width
+            n_top, // y
+            0 // x
+        )
+    };
+    let ncwin = match skuiwin {
+        ESkUiWindow::Stich => {create_fullwidth_window(0, 5)},
+        ESkUiWindow::Interaction => {create_fullwidth_window(5, n_height-3)}
+        ESkUiWindow::Hand => {create_fullwidth_window(n_height-3, n_height-1)}
+    };
     let retval = fn_do(ncwin);
     ncurses::delwin(ncwin);
     retval
@@ -67,10 +91,7 @@ fn do_in_window<FnDo, RetVal>(n_height: i32, n_width: i32, n_y: i32, n_x: i32, f
 
 pub fn print_vecstich(vecstich: &Vec<CStich>) {
     do_in_window(
-        5, // height
-        90, // width
-        0, // y
-        0, // x
+        ESkUiWindow::Stich,
         |ncwin| {
             let print_card_string = |vecnneplayerindex_space_plidx| {
                 for stich in vecstich {
@@ -104,10 +125,7 @@ pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(str_question: &str
           FnCallback : Fn(&T, usize)
 {
     do_in_window(
-        (vect.len() as i32)+1, // height
-        80, // width
-        10, // y, leave space for stich
-        0, // x
+        ESkUiWindow::Interaction,
         |ncwin| {
             let vect = vect.iter().enumerate().filter(|&(_i_t, t)| fn_filter(t)).collect::<Vec<_>>();
             assert!(0<vect.len());
@@ -152,17 +170,8 @@ pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(str_question: &str
 }
 
 pub fn print_hand(hand: &CHand, oi_card: Option<usize>) {
-    let (n_height, n_width) = {
-        let mut n_height = 0;
-        let mut n_width = 0;
-        ncurses::getmaxyx(ncurses::stdscr, &mut n_height, &mut n_width);
-        (n_height, n_width)
-    };
     do_in_window(
-        2, // height
-        80, // width
-        n_height - 2, // y
-        0, // x
+        ESkUiWindow::Hand,
         |ncwin| {
             if let Some(i_card)=oi_card {
                 for i in 0..hand.cards().len() {
