@@ -81,8 +81,8 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
     };
     let ncwin = match skuiwin {
         ESkUiWindow::Stich => {create_fullwidth_window(0, 5)},
-        ESkUiWindow::Interaction => {create_fullwidth_window(5, n_height-3)}
-        ESkUiWindow::Hand => {create_fullwidth_window(n_height-3, n_height-1)}
+        ESkUiWindow::Interaction => {create_fullwidth_window(5, n_height-2)}
+        ESkUiWindow::Hand => {create_fullwidth_window(n_height-2, n_height-1)}
     };
     let retval = fn_do(ncwin);
     ncurses::delwin(ncwin);
@@ -173,19 +173,16 @@ pub fn print_hand(veccard: &Vec<CCard>, oi_card: Option<usize>) {
     do_in_window(
         ESkUiWindow::Hand,
         |ncwin| {
-            if let Some(i_card)=oi_card {
-                for i in 0..veccard.len() {
-                    if i_card==i {
-                        wprint(ncwin, " vv");
-                    } else {
-                        wprint(ncwin, " ..");
-                    }
+            let is_oi_card = |i| { oi_card.map_or(false, |i_card| i==i_card) };
+            for (i, card) in veccard.iter().enumerate() {
+                if is_oi_card(i) {
+                    ncurses::wattron(ncwin, ncurses::A_REVERSE() as i32);
                 }
-            }
-            wprintln(ncwin, "");
-            for card in veccard {
                 wprint(ncwin, " ");
                 print_card_with_farbe(ncwin, *card);
+                if is_oi_card(i) {
+                    ncurses::wattroff(ncwin, ncurses::A_REVERSE() as i32);
+                }
             }
             ncurses::refresh();
         }
