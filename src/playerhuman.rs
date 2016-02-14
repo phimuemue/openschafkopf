@@ -25,7 +25,7 @@ impl CPlayer for CPlayerHuman {
                 |card| {veccard_allowed.iter().any(|card_allowed| card_allowed==card)},
                 |card| card.to_string(),
                 |_card, i_card| {
-                    skui::print_hand(hand, Some(i_card))
+                    skui::print_hand(hand.cards(), Some(i_card))
                 }
             )
         );
@@ -64,7 +64,7 @@ impl CPlayer for CPlayerHuman {
                         }
                     }.reverse());
                 }
-                skui::print_hand(&CHand::new_from_vec(veccard), None);
+                skui::print_hand(&veccard, None);
             }
         )
     }

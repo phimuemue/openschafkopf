@@ -169,12 +169,12 @@ pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(str_question: &str
     )
 }
 
-pub fn print_hand(hand: &CHand, oi_card: Option<usize>) {
+pub fn print_hand(veccard: &Vec<CCard>, oi_card: Option<usize>) {
     do_in_window(
         ESkUiWindow::Hand,
         |ncwin| {
             if let Some(i_card)=oi_card {
-                for i in 0..hand.cards().len() {
+                for i in 0..veccard.len() {
                     if i_card==i {
                         wprint(ncwin, " vv");
                     } else {
@@ -183,7 +183,7 @@ pub fn print_hand(hand: &CHand, oi_card: Option<usize>) {
                 }
             }
             wprintln(ncwin, "");
-            for card in hand.cards() {
+            for card in veccard {
                 wprint(ncwin, " ");
                 print_card_with_farbe(ncwin, *card);
             }
