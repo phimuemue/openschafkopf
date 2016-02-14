@@ -87,7 +87,7 @@ impl CGame {
         {
             let ref rules = self.m_gamestate.m_rules;
             for hand in self.m_gamestate.m_ahand.iter_mut() {
-                hand.sort(|&card_fst, &card_snd| rules.compare_in_stich(card_fst, card_snd));
+                hand.sort(|&card_fst, &card_snd| rules.compare_in_stich(card_fst, card_snd).reverse());
                 skui::logln(&format!("{}", hand));
             }
         }
