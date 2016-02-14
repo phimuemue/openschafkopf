@@ -3,7 +3,6 @@ use std::fmt;
 use std::mem;
 
 use std::ops::Index;
-use std::ops::IndexMut;
 
 pub type EPlayerIndex = usize; // TODO: would a real enum be more adequate?
 
@@ -55,12 +54,6 @@ impl Index<EPlayerIndex> for CStich {
     }
 }
 
-impl IndexMut<EPlayerIndex> for CStich {
-    fn index_mut<'a>(&'a mut self, eplayerindex: EPlayerIndex) -> &'a mut CCard {
-        &mut self.m_acard[eplayerindex]
-    }
-}
-
 impl CStich {
     pub fn new(eplayerindex_first: EPlayerIndex) -> CStich {
         CStich {
@@ -84,7 +77,7 @@ impl CStich {
     pub fn zugeben(&mut self, card: CCard) {
         assert!(self.m_n_size<4);
         let eplayerindex = (self.m_eplayerindex_first + self.m_n_size)%4;
-        self[eplayerindex] = card; // sad: can not inline eplayerindex (borrowing)
+        self.m_acard[eplayerindex] = card; // sad: can not inline eplayerindex (borrowing)
         self.m_n_size = self.m_n_size + 1;
     }
     // pub fn undo_most_recent_card(&mut self) {
