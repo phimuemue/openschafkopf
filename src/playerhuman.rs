@@ -22,6 +22,7 @@ impl CPlayer for CPlayerHuman {
             skui::ask_for_alternative(
                 &format!("Your cards: {}", hand),
                 hand.cards(),
+                &skui::choose_card_from_hand_key_bindings(),
                 |card| {veccard_allowed.iter().any(|card_allowed| card_allowed==card)},
                 |card| card.to_string(),
                 |_card, i_card| {
@@ -41,6 +42,7 @@ impl CPlayer for CPlayerHuman {
                     .map(|rules| Some(rules.clone()))
             )
             .collect::<Vec<_>>(),
+            &skui::choose_alternative_from_list_key_bindings(),
             |_orules| {true},
             |orules| match orules {
                 &None => "Nothing".to_string(),

@@ -118,7 +118,36 @@ pub fn print_vecstich(vecstich: &Vec<CStich>) {
     );
 }
 
-pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(str_question: &str, vect: &Vec<T>, fn_filter: FnFilter, fn_format: FnFormat, fn_callback: FnCallback) -> T 
+pub struct SAskForAlternativeKeyBindings {
+    m_key_prev : i32,
+    m_key_next : i32,
+    m_key_choose : i32,
+}
+
+pub fn choose_card_from_hand_key_bindings() -> SAskForAlternativeKeyBindings {
+    SAskForAlternativeKeyBindings {
+        m_key_prev : ncurses::KEY_LEFT,
+        m_key_next : ncurses::KEY_RIGHT,
+        m_key_choose : ncurses::KEY_UP,
+    }
+}
+
+pub fn choose_alternative_from_list_key_bindings() -> SAskForAlternativeKeyBindings {
+    SAskForAlternativeKeyBindings {
+        m_key_prev : ncurses::KEY_UP,
+        m_key_next : ncurses::KEY_DOWN,
+        m_key_choose : ncurses::KEY_RIGHT,
+    }
+}
+
+pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(
+    str_question: &str,
+    vect: &Vec<T>,
+    askforalternativekeybindings: &SAskForAlternativeKeyBindings,
+    fn_filter: FnFilter,
+    fn_format: FnFormat,
+    fn_callback: FnCallback
+) -> T 
     where T : Clone,
           FnFormat : Fn(&T) -> String,
           FnFilter : Fn(&T) -> bool,
@@ -144,21 +173,17 @@ pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(str_question: &str
                 }
                 fn_callback(&vect[i_alternative].1, vect[i_alternative].0);
             };
-            let mut ch = ncurses::KEY_UP;
-            while ch!=ncurses::KEY_RIGHT {
+            let mut ch = askforalternativekeybindings.m_key_prev;
+            while ch!=askforalternativekeybindings.m_key_choose {
                 ncurses::werase(ncwin);
-                match ch {
-                    ncurses::KEY_UP => {
-                        if 0<i_alternative {
-                            i_alternative = i_alternative - 1
-                        }
-                    },
-                    ncurses::KEY_DOWN => {
-                        if i_alternative<vect.len()-1 {
-                            i_alternative = i_alternative + 1
-                        }
-                    },
-                    _ => {},
+                if ch==askforalternativekeybindings.m_key_prev {
+                    if 0<i_alternative {
+                        i_alternative = i_alternative - 1
+                    }
+                } else if ch== askforalternativekeybindings.m_key_next {
+                    if i_alternative<vect.len()-1 {
+                        i_alternative = i_alternative + 1
+                    }
                 }
                 print_alternatives(i_alternative);
                 ch = ncurses::getch();
