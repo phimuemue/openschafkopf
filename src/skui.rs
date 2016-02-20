@@ -81,8 +81,8 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
     };
     let ncwin = match skuiwin {
         ESkUiWindow::Stich => {create_fullwidth_window(0, 5)},
-        ESkUiWindow::Interaction => {create_fullwidth_window(5, n_height-2)}
-        ESkUiWindow::Hand => {create_fullwidth_window(n_height-2, n_height-1)}
+        ESkUiWindow::Hand => {create_fullwidth_window(5, 7)}
+        ESkUiWindow::Interaction => {create_fullwidth_window(7, n_height-1)}
     };
     let retval = fn_do(ncwin);
     ncurses::delwin(ncwin);
