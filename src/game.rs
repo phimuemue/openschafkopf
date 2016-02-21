@@ -38,7 +38,7 @@ impl CGame {
                     };
                     [hand_for_player(0), hand_for_player(1), hand_for_player(2), hand_for_player(3)]
                 },
-                m_rules : Rc::new(CRulesRufspiel {m_eplayerindex : 0, m_efarbe: efarbeEICHEL} ),
+                m_rules : Box::new(CRulesRufspiel {m_eplayerindex : 0, m_efarbe: efarbeEICHEL} ),
                 m_vecstich : Vec::new()
             },
             m_vecplayer : vec![ // TODO: take players in ctor?
@@ -62,7 +62,7 @@ impl CGame {
 
         // decide which game is played
         skui::logln("Asking players if they want to play");
-        let mut vecpaireplayerindexgameannounce : Vec<(EPlayerIndex, Rc<TRules>)> = Vec::new();
+        let mut vecpaireplayerindexgameannounce : Vec<(EPlayerIndex, Box<TRules>)> = Vec::new();
         for eplayerindex in (eplayerindex_first..eplayerindex_first+4).map(|eplayerindex| eplayerindex%4) {
             if let Some(gameannounce) = self.m_vecplayer[eplayerindex].ask_for_game(
                 eplayerindex,

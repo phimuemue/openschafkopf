@@ -63,7 +63,7 @@ fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: CCard) {
 }
 
 fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
-    where FnDo: Fn(ncurses::WINDOW) -> RetVal
+    where FnDo: FnOnce(ncurses::WINDOW) -> RetVal
 {
     let (n_height, n_width) = {
         let mut n_height = 0;
@@ -138,54 +138,55 @@ pub fn choose_alternative_from_list_key_bindings() -> SAskForAlternativeKeyBindi
 
 pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(
     str_question: &str,
-    vect: &Vec<T>,
-    askforalternativekeybindings: &SAskForAlternativeKeyBindings,
+    vect: Vec<T>,
+    askforalternativekeybindings: SAskForAlternativeKeyBindings,
     fn_filter: FnFilter,
     fn_format: FnFormat,
     fn_callback: FnCallback
 ) -> T 
-    where T : Clone,
-          FnFormat : Fn(&T) -> String,
+    where FnFormat : Fn(&T) -> String,
           FnFilter : Fn(&T) -> bool,
           FnCallback : Fn(&T, usize)
 {
     do_in_window(
         ESkUiWindow::Interaction,
         |ncwin| {
-            let vect = vect.iter().enumerate().filter(|&(_i_t, t)| fn_filter(t)).collect::<Vec<_>>();
+            let vect = vect.into_iter().enumerate().filter(|&(_i_t, ref t)| fn_filter(&t)).collect::<Vec<_>>();
             assert!(0<vect.len());
             let mut i_alternative = 0; // initially, point to 0th alternative
             if 1==vect.len() {
-                return vect[0].1.clone(); // just return if there's no choice anyway
+                return vect.into_iter().nth(0).unwrap().1; // just return if there's no choice anyway
             }
-            let print_alternatives = |i_alternative| {
-                wprintln(ncwin, str_question);
-                for (i_t, t) in vect.iter().enumerate() {
-                    wprintln(ncwin, &format!("{} {} ({})",
-                        if i_t==i_alternative {"*"} else {" "},
-                        fn_format(&t.1),
-                        i_t
-                    ));
-                }
-                fn_callback(&vect[i_alternative].1, vect[i_alternative].0);
-            };
-            let mut ch = askforalternativekeybindings.m_key_prev;
-            while ch!=askforalternativekeybindings.m_key_choose {
-                ncurses::werase(ncwin);
-                if ch==askforalternativekeybindings.m_key_prev {
-                    if 0<i_alternative {
-                        i_alternative = i_alternative - 1
+            {
+                let print_alternatives = |i_alternative| {
+                    wprintln(ncwin, str_question);
+                    for (i_t, t) in vect.iter().enumerate() {
+                        wprintln(ncwin, &format!("{} {} ({})",
+                            if i_t==i_alternative {"*"} else {" "},
+                            fn_format(&t.1),
+                            i_t
+                        ));
                     }
-                } else if ch== askforalternativekeybindings.m_key_next {
-                    if i_alternative<vect.len()-1 {
-                        i_alternative = i_alternative + 1
+                    fn_callback(&vect[i_alternative].1, vect[i_alternative].0);
+                };
+                let mut ch = askforalternativekeybindings.m_key_prev;
+                while ch!=askforalternativekeybindings.m_key_choose {
+                    ncurses::werase(ncwin);
+                    if ch==askforalternativekeybindings.m_key_prev {
+                        if 0<i_alternative {
+                            i_alternative = i_alternative - 1
+                        }
+                    } else if ch== askforalternativekeybindings.m_key_next {
+                        if i_alternative<vect.len()-1 {
+                            i_alternative = i_alternative + 1
+                        }
                     }
+                    print_alternatives(i_alternative);
+                    ch = ncurses::getch();
                 }
-                print_alternatives(i_alternative);
-                ch = ncurses::getch();
+                ncurses::erase();
             }
-            ncurses::erase();
-            vect[i_alternative].1.clone()
+            vect.into_iter().nth(i_alternative).unwrap().1
         }
     )
 }

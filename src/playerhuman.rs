@@ -9,7 +9,6 @@ use skui;
 
 use std::sync::mpsc;
 use std::io::Read;
-use std::rc::Rc;
 
 pub struct CPlayerHuman;
 
@@ -21,8 +20,8 @@ impl CPlayer for CPlayerHuman {
         txcard.send(
             skui::ask_for_alternative(
                 &format!("Your cards: {}", hand),
-                hand.cards(),
-                &skui::choose_card_from_hand_key_bindings(),
+                hand.cards().clone(),
+                skui::choose_card_from_hand_key_bindings(),
                 |card| {veccard_allowed.iter().any(|card_allowed| card_allowed==card)},
                 |card| card.to_string(),
                 |_card, i_card| {
@@ -32,17 +31,17 @@ impl CPlayer for CPlayerHuman {
         );
     }
 
-    fn ask_for_game(&self, eplayerindex: EPlayerIndex, hand: &CHand) -> Option<Rc<TRules>> {
+    fn ask_for_game(&self, eplayerindex: EPlayerIndex, hand: &CHand) -> Option<Box<TRules>> {
         skui::ask_for_alternative(
             &format!("Your cards: {}. What do you want to play?", hand),
-            &Some(None).into_iter() // TODO is there no singleton iterator?
+            Some(None).into_iter() // TODO is there no singleton iterator?
             .chain(
-                ruleset_default(eplayerindex).allowed_rules().iter()
+                ruleset_default(eplayerindex).allowed_rules().into_iter()
                     .filter(|rules| rules.can_be_played(hand))
-                    .map(|rules| Some(rules.clone()))
+                    .map(|rules| Some(rules))
             )
             .collect::<Vec<_>>(),
-            &skui::choose_alternative_from_list_key_bindings(),
+            skui::choose_alternative_from_list_key_bindings(),
             |_orules| {true},
             |orules| match orules {
                 &None => "Nothing".to_string(),

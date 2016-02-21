@@ -6,7 +6,6 @@ use gamestate::*;
 use rules::*;
 
 use std::sync::mpsc;
-use std::rc::Rc;
 
 pub struct CPlayerComputer;
 
@@ -25,7 +24,7 @@ impl CPlayer for CPlayerComputer {
         ).ok();
     }
 
-    fn ask_for_game(&self, _eplayerindex: EPlayerIndex, _: &CHand) -> Option<Rc<TRules>> {
+    fn ask_for_game(&self, _eplayerindex: EPlayerIndex, _: &CHand) -> Option<Box<TRules>> {
         // TODO: implement a more intelligent decision strategy
         None
     }
