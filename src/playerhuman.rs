@@ -5,6 +5,7 @@ use player::*;
 use gamestate::*;
 use rules::*;
 use ruleset::*;
+use game::*;
 use skui;
 
 use std::sync::mpsc;
@@ -31,7 +32,8 @@ impl CPlayer for CPlayerHuman {
         );
     }
 
-    fn ask_for_game(&self, eplayerindex: EPlayerIndex, hand: &CHand) -> Option<Box<TRules>> {
+    fn ask_for_game(&self, eplayerindex: EPlayerIndex, hand: &CHand, vecgameannouncement : &Vec<SGameAnnouncement>) -> Option<Box<TRules>> {
+        skui::print_game_announcements(vecgameannouncement);
         skui::ask_for_alternative(
             &format!("Your cards: {}. What do you want to play?", hand),
             Some(None).into_iter() // TODO is there no singleton iterator?

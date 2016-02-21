@@ -28,10 +28,10 @@ use accountbalance::SAccountBalance;
 fn main() {
     skui::init_ui();
     let mut accountbalance = SAccountBalance::new();
-    for _igame in 0..4 { // TODO make number of rounds adjustable
+    for i_game in 0..4 { // TODO make number of rounds adjustable
         let mut game = CGame::new();
         skui::logln(&format!("Hand 0 : {}", game.m_gamestate.m_ahand[0]));
-        if game.start_game(0) {
+        if game.start_game(i_game % 4) {
             while let Some(eplayerindex)=game.which_player_can_do_something() {
                 let (txcard, rxcard) = mpsc::channel::<CCard>();
                 game.m_vecplayer[eplayerindex].take_control(

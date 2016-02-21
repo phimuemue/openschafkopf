@@ -1,13 +1,9 @@
 use card::*;
 use stich::*;
 use hand::*;
+use rules::*;
+use game::*;
 use ncurses;
-
-enum ESkUiWindow {
-    Stich,
-    Interaction,
-    Hand,
-}
 
 pub fn init_ui() {
     ncurses::initscr();
@@ -62,6 +58,13 @@ fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: CCard) {
     ncurses::wattroff(ncwin, nccolorpair as i32);
 }
 
+enum ESkUiWindow {
+    Stich,
+    Interaction,
+    Hand,
+    PlayerInfo (EPlayerIndex),
+}
+
 fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
     where FnDo: FnOnce(ncurses::WINDOW) -> RetVal
 {
@@ -80,9 +83,22 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
         )
     };
     let ncwin = match skuiwin {
-        ESkUiWindow::Stich => {create_fullwidth_window(0, 5)},
-        ESkUiWindow::Hand => {create_fullwidth_window(5, 7)}
-        ESkUiWindow::Interaction => {create_fullwidth_window(7, n_height-1)}
+        ESkUiWindow::PlayerInfo(eplayerindex) => {
+            if 0==eplayerindex {
+                create_fullwidth_window(n_height-2, n_height-1)
+            } else {
+                assert!(1==eplayerindex || 2==eplayerindex || 3==eplayerindex);
+                ncurses::newwin(
+                    1, // height
+                    24, // width
+                    0, // y
+                    (eplayerindex as i32 - 1)*25 // x
+                )
+            }
+        },
+        ESkUiWindow::Stich => {create_fullwidth_window(1, 6)},
+        ESkUiWindow::Hand => {create_fullwidth_window(6, 8)},
+        ESkUiWindow::Interaction => {create_fullwidth_window(8, n_height-2)},
     };
     let retval = fn_do(ncwin);
     ncurses::delwin(ncwin);
@@ -112,6 +128,21 @@ pub fn print_vecstich(vecstich: &Vec<CStich>) {
             }
         }
     );
+}
+
+pub fn print_game_announcements(vecgameannouncement: &Vec<SGameAnnouncement>) {
+    for &(eplayerindex, ref orules) in vecgameannouncement {
+        do_in_window(
+            ESkUiWindow::PlayerInfo(eplayerindex),
+            |ncwin| {
+                if orules.is_none() {
+                    wprint(ncwin, &format!("{}: Nothing", eplayerindex));
+                } else {
+                    wprint(ncwin, &format!("{}: {}", eplayerindex, orules.as_ref().unwrap().to_string()));
+                }
+            }
+        );
+    }
 }
 
 pub struct SAskForAlternativeKeyBindings {

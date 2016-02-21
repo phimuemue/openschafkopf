@@ -18,6 +18,8 @@ pub struct CGame {
     pub m_vecplayer : Vec<Box<CPlayer>>, // TODO: good idea to use Box<CPlayer>, maybe shared_ptr equivalent?
 }
 
+pub type SGameAnnouncement = (EPlayerIndex, Option<Box<TRules>>);
+
 impl CGame {
     //fn new_by_random(bShort : bool/*TODO: is it a good idea to have players in CGame?*/) -> CGame; // shall replace DealCards
     pub fn new() -> CGame {
@@ -62,23 +64,25 @@ impl CGame {
 
         // decide which game is played
         skui::logln("Asking players if they want to play");
-        let mut vecpaireplayerindexgameannounce : Vec<(EPlayerIndex, Box<TRules>)> = Vec::new();
+        let mut vecgameannouncement : Vec<SGameAnnouncement> = Vec::new();
         for eplayerindex in (eplayerindex_first..eplayerindex_first+4).map(|eplayerindex| eplayerindex%4) {
-            if let Some(gameannounce) = self.m_vecplayer[eplayerindex].ask_for_game(
+            let gameannouncement = self.m_vecplayer[eplayerindex].ask_for_game(
                 eplayerindex,
-                &self.m_gamestate.m_ahand[eplayerindex]
-            ) {
-                vecpaireplayerindexgameannounce.push((eplayerindex, gameannounce));
-            }
+                &self.m_gamestate.m_ahand[eplayerindex],
+                &vecgameannouncement
+            );
+            vecgameannouncement.push((eplayerindex, gameannouncement));
         }
-        if vecpaireplayerindexgameannounce.is_empty() {
-            return false;
-        }
-
         skui::logln("Asked players if they want to play. Determining rules");
         // TODO: find sensible way to deal with multiple game announcements
-        let paireplayerindexgameannounce = vecpaireplayerindexgameannounce.pop().unwrap();
-        self.m_gamestate.m_rules = paireplayerindexgameannounce.1;
+        vecgameannouncement.retain(|&(_eplayerindex, ref orules)| {
+            orules.is_some()
+        });
+        if vecgameannouncement.is_empty() {
+            return false;
+        }
+        let paireplayerindexgameannounce = vecgameannouncement.pop().unwrap();
+        self.m_gamestate.m_rules = paireplayerindexgameannounce.1.unwrap();
         skui::logln(&format!(
             "Rules determined ({} plays {}). Sorting hands",
             paireplayerindexgameannounce.0,

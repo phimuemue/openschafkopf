@@ -5,6 +5,7 @@ use player::*;
 use gamestate::*;
 use rules::*;
 use ruleset::*;
+use game::*;
 
 use std::sync::mpsc;
 
@@ -25,15 +26,21 @@ impl CPlayer for CPlayerComputer {
         ).ok();
     }
 
-    fn ask_for_game(&self, eplayerindex: EPlayerIndex, hand: &CHand) -> Option<Box<TRules>> {
+    fn ask_for_game(&self, eplayerindex: EPlayerIndex, hand: &CHand, _ : &Vec<SGameAnnouncement>) -> Option<Box<TRules>> {
         // TODO: implement a more intelligent decision strategy
+        let count_trumpf = |hand: &CHand, rules: &Box<TRules>| {
+            hand.cards().iter().filter(|&card| {
+                rules.is_trumpf(*card)
+            })
+            .count()
+        };
         ruleset_default(eplayerindex).allowed_rules().into_iter()
             .filter(|rules| rules.can_be_played(hand))
+            .filter(|rules| {
+                6 <= count_trumpf(hand, rules)
+            })
             .max_by_key(|rules| {
-                hand.cards().iter().filter(|&card| {
-                    rules.clone().is_trumpf(*card)
-                })
-                .count()>=4
+                count_trumpf(hand, rules)
             })
     }
 }
