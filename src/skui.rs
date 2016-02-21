@@ -93,27 +93,23 @@ pub fn print_vecstich(vecstich: &Vec<CStich>) {
     do_in_window(
         ESkUiWindow::Stich,
         |ncwin| {
-            let print_card_string = |vecnneplayerindex_space_plidx| {
-                for stich in vecstich {
-                    for &(n_space_before, n_space_after, eplayerindex) in &vecnneplayerindex_space_plidx {
-                        for _n_space in 0..n_space_before {
-                            wprint(ncwin, " ");
-                        }
-                        wprint(ncwin, if eplayerindex==stich.first_player_index() { ">" } else { " " });
-                        match stich.get(eplayerindex) {
-                            None => {wprint(ncwin, "..")},
-                            Some(card) => {print_card_with_farbe(ncwin, card)},
-                        };
-                        for _n_space in 0..n_space_after {
-                            wprint(ncwin, " ");
-                        }
-                    }
-                }
-                wprintln(ncwin, "");
-            };
-            print_card_string(vec!((3, 4, /*eplayerindex*/2)));
-            print_card_string(vec!((1, 1, /*eplayerindex*/1), (0, 2, /*eplayerindex*/3)));
-            print_card_string(vec!((3, 4, /*eplayerindex*/0)));
+            for (i_stich, stich) in vecstich.iter().enumerate() {
+                let n_x = (i_stich as i32)*10+3;
+                let n_y = 1;
+                let print_card = |eplayerindex, (n_y, n_x)| {
+                    ncurses::wmove(ncwin, n_y, n_x);
+                    wprint(ncwin, if eplayerindex==stich.first_player_index() { ">" } else { " " });
+                    match stich.get(eplayerindex) {
+                        None => {wprint(ncwin, "..")},
+                        Some(card) => {print_card_with_farbe(ncwin, card)},
+                    };
+                };
+                let n_card_width = 2;
+                print_card(0, (n_y+1, n_x));
+                print_card(1, (n_y, n_x-n_card_width));
+                print_card(2, (n_y-1, n_x));
+                print_card(3, (n_y, n_x+n_card_width));
+            }
         }
     );
 }
