@@ -146,11 +146,9 @@ impl SSuspicion {
         if 0==self.hand_size() {
             assert_eq!(8, vecstich.len());
             let an_payout = rules.payout(vecstich);
-            let mut ann_payout : [(isize, isize); 4] = [(0,0); 4];
-            for eplayerindex in 0..4 {
-                ann_payout[eplayerindex] = (an_payout[eplayerindex], an_payout[eplayerindex]);
-            }
-            ann_payout
+            create_playerindexmap(|eplayerindex| {
+                (an_payout[eplayerindex], an_payout[eplayerindex])
+            })
         } else {
             assert!(!self.m_vecsusptrans.is_empty());
             vecstich.push(self.m_vecsusptrans.first().unwrap().m_stich.clone());
