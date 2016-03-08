@@ -167,16 +167,7 @@ impl SSuspicion {
         eplayerindex: EPlayerIndex
     ) -> isize {
         let vecstich_backup = vecstich.clone();
-        if let Some(stich_given) = ostich_given.clone() {
-            //println!("{}", stich_given);
-            assert!(stich_given.size() < 4);
-        }
-        //println!("{}", self.m_ahand[0]);
-        //println!("{}", self.hand_size());
-        //println!("{}", vecstich.len());
-        for stich in vecstich.iter() {
-            //println!("{}", stich);
-        }
+        assert!(ostich_given.as_ref().map_or(true, |stich| stich.size() < 4));
         assert!(vecstich.iter().all(|stich| stich.size()==4));
         assert_eq!(vecstich.len()+self.hand_size(), 8);
         if 0==self.hand_size() {
@@ -186,19 +177,14 @@ impl SSuspicion {
         let n_payout = self.m_vecsusptrans.iter()
             .filter(|susptrans| { // only consider successors compatible with current stich_given so far
                 assert_eq!(susptrans.m_susp.hand_size()+1, self.hand_size());
-                match ostich_given {
-                    None => true,
-                    Some(ref stich_given) => {
-                        //println!("{} vs {}", stich_given, susptrans.m_stich);
-                        stich_given.indices_and_cards()
-                            .zip(susptrans.m_stich.indices_and_cards())
-                            .all(|((i_current_stich, card_current_stich), (i_susp_stich, card_susp_stich))| {
-                                //println!("hallo {} {}", i_current_stich, i_susp_stich);
-                                assert_eq!(i_current_stich, i_susp_stich);
-                                card_current_stich==card_susp_stich
-                            })
-                    }
-                }
+                ostich_given.as_ref().map_or(true, |stich_given| {
+                    stich_given.indices_and_cards()
+                        .zip(susptrans.m_stich.indices_and_cards())
+                        .all(|((i_current_stich, card_current_stich), (i_susp_stich, card_susp_stich))| {
+                            assert_eq!(i_current_stich, i_susp_stich);
+                            card_current_stich==card_susp_stich
+                        })
+                })
             })
             .map(|susptrans| {
                 let n_stich = vecstich.len();
@@ -206,7 +192,6 @@ impl SSuspicion {
                 assert!(vecstich.iter().all(|stich| stich.size()==4));
                 let n_payout = susptrans.m_susp.min_reachable_payout(rules, vecstich, None, eplayerindex);
                 assert!(vecstich.iter().all(|stich| stich.size()==4));
-                //assert_eq!(vecstich.last().unwrap(), susptrans.m_stich);
                 vecstich.pop().expect("vecstich empty");
                 assert_eq!(n_stich, vecstich.len());
                 (susptrans, n_payout)
