@@ -27,6 +27,15 @@ pub struct CStich {
     pub m_acard: [CCard; 4],
 }
 
+impl PartialEq for CStich {
+    fn eq(&self, stich_other: &CStich) -> bool {
+        self.indices_and_cards()
+            .zip(stich_other.indices_and_cards())
+            .all(|((i1, c1), (i2, c2))| i1==i2 && c1==c2)
+    }
+}
+impl Eq for CStich {}
+
 struct StichIterator<'stich> {
     m_eplayerindex : EPlayerIndex,
     m_stich: &'stich CStich,

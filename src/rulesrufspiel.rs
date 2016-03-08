@@ -91,6 +91,7 @@ impl TRules for CRulesRufspiel {
     }
 
     fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
+        assert_eq!(vecstich.len(), 8);
         let n_laufende = self.count_laufende(vecstich, vec!(eschlagO, eschlagU), efarbeHERZ);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_rufspiel_default*/ 10 

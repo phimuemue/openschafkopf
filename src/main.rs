@@ -25,6 +25,7 @@ use std::sync::mpsc;
 use card::*;
 use stich::*;
 use hand::*;
+use rules::*;
 use accountbalance::SAccountBalance;
 use suspicion::SSuspicion;
 use rulesrufspiel::CRulesRufspiel;
@@ -39,8 +40,8 @@ fn main() {
         {
             let mut add_stich = |eplayerindex, str_stich| {
                 vecstich_internal.push(CStich::new(eplayerindex));
-                for card in cardvectorparser::parse_cards(str_stich) {
-                    vecstich_internal.last_mut().unwrap().zugeben(card);
+                for card in cardvectorparser::parse_cards(str_stich).iter().cycle().skip(eplayerindex).take(4) {
+                    vecstich_internal.last_mut().unwrap().zugeben(card.clone());
                 }
             };
             add_stich(0, "g7 ga hz g9");
@@ -62,7 +63,8 @@ fn main() {
         ]
     );
     susp.compute_successors(&rules);
-    susp.print_suspicion(8, 0, &rules, &mut vecstich);
+    let eplayerindex_current_stich = rules.winner_index(vecstich.last().unwrap());
+    susp.print_suspicion(8, 0, &rules, &mut vecstich, Some(CStich::new(eplayerindex_current_stich)));
     return;
 
 
