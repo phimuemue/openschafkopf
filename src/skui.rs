@@ -3,6 +3,7 @@ use stich::*;
 use game::*;
 use gamestate::*;
 use ncurses;
+use accountbalance::*;
 
 pub fn init_ui() {
     ncurses::initscr();
@@ -52,6 +53,7 @@ enum ESkUiWindow {
     Hand,
     PlayerInfo (EPlayerIndex),
     GameInfo,
+    AccountBalance,
 }
 
 fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
@@ -89,6 +91,7 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
         ESkUiWindow::Hand => {create_fullwidth_window(6, 8)},
         ESkUiWindow::Interaction => {create_fullwidth_window(8, n_height-3)},
         ESkUiWindow::GameInfo => {create_fullwidth_window(n_height-3, n_height-2)}
+        ESkUiWindow::AccountBalance => {create_fullwidth_window(n_height-2, n_height-1)}
     };
     let retval = fn_do(ncwin);
     ncurses::delwin(ncwin);
@@ -145,6 +148,20 @@ pub fn print_game_info(gamestate: &SGameState) {
                 wprint(ncwin, &format!(", played by {}", eplayerindex));
             }
             ncurses::wrefresh(ncwin);
+        }
+    )
+}
+
+pub fn print_account_balance(accountbalance : &SAccountBalance) {
+    do_in_window(
+        ESkUiWindow::AccountBalance,
+        |ncwin| {
+            for eplayerindex in 0..4 {
+                wprint(ncwin, &format!("{}: {}", eplayerindex, accountbalance.get(eplayerindex)));
+                if eplayerindex<3 {
+                    wprint(ncwin, " | ");
+                }
+            }
         }
     )
 }

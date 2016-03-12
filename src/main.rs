@@ -146,10 +146,7 @@ fn main() {
             }
             accountbalance.apply_payout(&game.payout());
         }
-        skui::logln("Account balance:");
-        for eplayerindex in 0..4 {
-            skui::logln(&format!("Player {}: {}", eplayerindex, accountbalance.get(eplayerindex)));
-        }
+        skui::print_account_balance(&accountbalance);
     }
     skui::end_ui();
 }
