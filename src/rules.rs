@@ -6,7 +6,7 @@ use std::fmt;
 
 pub type CHandVector = Vec<CCard>; // TODO: vector with fixed capacity 8
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq, Hash)]
 pub enum VTrumpfOrFarbe {
     Trumpf,
     Farbe (EFarbe),

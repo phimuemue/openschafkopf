@@ -13,8 +13,15 @@ fn binomial(n: isize, k: isize) -> u64 {
         .fold(1, |n_acc, i| (n_acc * ((n-i) as u64)) / ((i+1) as u64))
 }
 
-pub fn for_each_suspicion<Func>(hand_known: &CHand, veccard_unknown : &Vec<CCard>, eplayerindex: EPlayerIndex, mut func: Func)
-    where Func: FnMut(SSuspicion)
+pub fn for_each_suspicion<FuncFilter, Func>(
+    hand_known: &CHand,
+    veccard_unknown : &Vec<CCard>,
+    eplayerindex: EPlayerIndex,
+    mut func_filter: FuncFilter,
+    mut func: Func
+)
+    where Func: FnMut(SSuspicion),
+          FuncFilter: FnMut(&SSuspicion) -> bool
 {
     assert_eq!(0, eplayerindex); // TODO: generalize
     let n_cards_total = veccard_unknown.len();
@@ -27,7 +34,7 @@ pub fn for_each_suspicion<Func>(hand_known: &CHand, veccard_unknown : &Vec<CCard
                 .filter(|&(i, eplayerindex_susp)| *eplayerindex_susp == eplayerindex_hand)
                 .map(|(i, _eplayerindex_susp)| veccard_unknown[i.clone()]).collect())
         };
-        func(SSuspicion::new_from_raw(
+        let susp = SSuspicion::new_from_raw(
             eplayerindex,
             &[
                 hand_known.clone(),
@@ -36,7 +43,10 @@ pub fn for_each_suspicion<Func>(hand_known: &CHand, veccard_unknown : &Vec<CCard
                 get_hand(2),
             ]
 
-        ));
+        );
+        if func_filter(&susp) {
+            func(susp);
+        }
     };
     callback(&veci);
     while veci[..].next_permutation() {

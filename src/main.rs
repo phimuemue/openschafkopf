@@ -30,6 +30,7 @@ use rules::*;
 use accountbalance::SAccountBalance;
 use suspicion::SSuspicion;
 use rulesrufspiel::CRulesRufspiel;
+use std::collections::HashSet;
 
 fn main() {
     let rules = CRulesRufspiel {
@@ -45,20 +46,67 @@ fn main() {
                     vecstich_internal.last_mut().unwrap().zugeben(card.clone());
                 }
             };
-            add_stich(0, "g7 ga hz g9");
+            add_stich(0, "g7 g8 ga g9");
             add_stich(2, "s8 ho s7 s9");
             add_stich(1, "h7 hk hu su");
-            add_stich(2, "eo go g8 h8");
+            add_stich(2, "eo go hz h8");
             add_stich(2, "e9 ek e8 ea");
         }
         vecstich_internal
     };
+
+    println!("sdf");
+    macro_rules! new_hashset {
+        () => { {
+            let mut settrumpforfarbe = HashSet::new();
+            settrumpforfarbe.insert(VTrumpfOrFarbe::Trumpf);
+            for efarbe in EFarbe::all_values().iter() {
+                settrumpforfarbe.insert(VTrumpfOrFarbe::Farbe(*efarbe));
+            }
+            settrumpforfarbe
+        } };
+    };
+    let mut mapeplayerindexsettrumpforfarbe : [HashSet<VTrumpfOrFarbe>; 4] = [
+        new_hashset!(), new_hashset!(), new_hashset!(), new_hashset!(),
+    ];
+    println!("asdlkf");
+    for stich in vecstich.iter() {
+        println!("{}", stich);
+        let trumpforfarbe_first_card = rules.trumpf_or_farbe(stich.first_card());
+        for (eplayerindex, card) in stich.indices_and_cards() {
+            let trumpforfarbe = rules.trumpf_or_farbe(card);
+            if trumpforfarbe_first_card != trumpforfarbe {
+                println!("Removing {} from player {}",
+                    match trumpforfarbe_first_card {
+                        VTrumpfOrFarbe::Trumpf => "Trumpf".to_string(),
+                        VTrumpfOrFarbe::Farbe(efarbe) => format!("{}", efarbe),
+                    },
+                    eplayerindex
+                );
+                mapeplayerindexsettrumpforfarbe[eplayerindex].remove(&trumpforfarbe_first_card);
+            } else {
+                // assert consistency over the whole game
+                assert!(mapeplayerindexsettrumpforfarbe[eplayerindex].contains(&trumpforfarbe_first_card));
+            }
+        }
+    }
 
     let mut n_susp = 0;
     combinatorics::for_each_suspicion(
         &CHand::new_from_vec(cardvectorparser::parse_cards("sa gk sk")),
         &cardvectorparser::parse_cards("eu gz e7 so sz ha h9 ez gu"),
         0, // eplayerindex
+        |susp| {
+            susp.hands().iter()
+                .enumerate()
+                .all(|(eplayerindex, hand)| {
+                    hand.cards().iter()
+                        .map(|card| rules.trumpf_or_farbe(card.clone()))
+                        .all(|trumpforfarbe| {
+                            mapeplayerindexsettrumpforfarbe[eplayerindex].contains(&trumpforfarbe)
+                        })
+                })
+        },
         |mut susp| {
             n_susp += 1;
             println!("{} {} {} {}",
@@ -69,7 +117,7 @@ fn main() {
             );
             susp.compute_successors(&rules);
             let eplayerindex_current_stich = rules.winner_index(vecstich.last().unwrap());
-            susp.print_suspicion(8, 8, &rules, &mut vecstich, Some(CStich::new(eplayerindex_current_stich)));
+            susp.print_suspicion(8, 9, &rules, &mut vecstich, Some(CStich::new(eplayerindex_current_stich)));
         }
     );
     println!("{}", n_susp);

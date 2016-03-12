@@ -5,7 +5,7 @@ use std::mem;
 use std::ops::{Index, IndexMut};
 
 pub use self::EFarbe::*;
-#[derive(PartialEq, Eq, Debug, Copy, Clone, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, Debug, Copy, Clone, PartialOrd, Ord, Hash)]
 #[allow(non_camel_case_types)]
 pub enum EFarbe {
     efarbeEICHEL,
