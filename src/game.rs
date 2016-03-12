@@ -2,6 +2,7 @@ use card::*;
 use hand::*;
 use stich::*;
 use rules::*;
+use ruleset::*;
 use gamestate::*;
 use player::*;
 use playercomputer::*;
@@ -56,9 +57,9 @@ impl SGamePreparations {
         let mut vecgameannouncement : Vec<SGameAnnouncement> = Vec::new();
         for eplayerindex in (eplayerindex_first..eplayerindex_first+4).map(|eplayerindex| eplayerindex%4) {
             let gameannouncement = self.m_vecplayer[eplayerindex].ask_for_game(
-                eplayerindex,
                 &self.m_ahand[eplayerindex],
-                &vecgameannouncement
+                &vecgameannouncement,
+                ruleset_default(eplayerindex)
             );
             vecgameannouncement.push((eplayerindex, gameannouncement));
         }

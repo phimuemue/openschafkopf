@@ -1,4 +1,3 @@
-use stich::*;
 use card::*;
 use hand::*;
 use player::*;
@@ -36,13 +35,13 @@ impl CPlayer for CPlayerHuman {
         }
     }
 
-    fn ask_for_game(&self, eplayerindex: EPlayerIndex, hand: &CHand, vecgameannouncement : &Vec<SGameAnnouncement>) -> Option<Box<TRules>> {
+    fn ask_for_game(&self, hand: &CHand, vecgameannouncement : &Vec<SGameAnnouncement>, ruleset: SRuleSet) -> Option<Box<TRules>> {
         skui::print_game_announcements(vecgameannouncement);
         skui::ask_for_alternative(
             &format!("Your cards: {}. What do you want to play?", hand),
             Some(None).into_iter() // TODO is there no singleton iterator?
             .chain(
-                ruleset_default(eplayerindex).allowed_rules().into_iter()
+                ruleset.allowed_rules().into_iter()
                     .filter(|rules| rules.can_be_played(hand))
                     .map(|rules| Some(rules))
             )
