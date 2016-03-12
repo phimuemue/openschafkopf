@@ -17,14 +17,6 @@ impl fmt::Display for CRulesRufspiel {
 }
 
 impl CRulesRufspiel {
-    fn all_cards_of_farbe(&self, efarbe: EFarbe) -> Vec<CCard> { // TODO really needed?
-        assert!(EFarbe::Herz!=efarbe); // Herz not a farbe in rufspiel
-        ESchlag::all_values().iter()
-            .filter(|&&eschlag| ESchlag::Ober!=eschlag && ESchlag::Unter!=eschlag)
-            .map(|&eschlag| CCard::new(efarbe, eschlag))
-            .collect::<Vec<_>>()
-    }
-
     fn rufsau(&self) -> CCard {
         CCard::new(self.m_efarbe, ESchlag::Ass)
     }
