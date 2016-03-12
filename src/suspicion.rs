@@ -1,4 +1,3 @@
-use card::*;
 use stich::*;
 use hand::*;
 use rules::*;

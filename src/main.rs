@@ -28,7 +28,6 @@ use stich::*;
 use hand::*;
 use rules::*;
 use accountbalance::SAccountBalance;
-use suspicion::SSuspicion;
 use rulesrufspiel::CRulesRufspiel;
 use std::collections::HashSet;
 
@@ -122,7 +121,7 @@ fn main() {
     );
     println!("{}", n_susp);
 
-    return;
+    //return;
 
 
     skui::init_ui();

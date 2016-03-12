@@ -4,7 +4,6 @@ use hand::*;
 use stich::*;
 use suspicion::*;
 
-use permutohedron;
 use permutohedron::LexicalPermutation;
 
 fn binomial(n: isize, k: isize) -> u64 {

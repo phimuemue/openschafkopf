@@ -1,7 +1,5 @@
 use card::*;
 use stich::*;
-use hand::*;
-use rules::*;
 use game::*;
 use ncurses;
 

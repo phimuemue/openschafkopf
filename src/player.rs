@@ -6,7 +6,6 @@ use gamestate::*;
 use game::*;
 
 use std::sync::mpsc;
-use std::rc::Rc;
 
 pub trait CPlayer {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<CCard>);

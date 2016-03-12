@@ -9,7 +9,6 @@ use playercomputer::*;
 use playerhuman::*;
 use skui;
 
-use std::rc::Rc;
 use rand::{self, Rng};
 
 pub struct CGame {
