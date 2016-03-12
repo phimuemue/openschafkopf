@@ -56,12 +56,13 @@ impl SGamePreparations {
         skui::logln("Asking players if they want to play");
         let mut vecgameannouncement : Vec<SGameAnnouncement> = Vec::new();
         for eplayerindex in (eplayerindex_first..eplayerindex_first+4).map(|eplayerindex| eplayerindex%4) {
-            let gameannouncement = self.m_vecplayer[eplayerindex].ask_for_game(
+            let orules = self.m_vecplayer[eplayerindex].ask_for_game(
                 &self.m_ahand[eplayerindex],
                 &vecgameannouncement,
                 ruleset_default(eplayerindex)
             );
-            vecgameannouncement.push((eplayerindex, gameannouncement));
+            assert!(orules.as_ref().map_or(true, |rules| eplayerindex==rules.playerindex().unwrap()));
+            vecgameannouncement.push((eplayerindex, orules));
         }
         skui::logln("Asked players if they want to play. Determining rules");
         // TODO: find sensible way to deal with multiple game announcements
