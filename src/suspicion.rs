@@ -1,7 +1,6 @@
 use stich::*;
 use hand::*;
 use rules::*;
-use std::cmp;
 use itertools::Itertools;
 
 struct SSuspicionTransition {
@@ -135,10 +134,6 @@ impl SSuspicion {
         for eplayerindex in 0..4 {
             print!("{} | ", self.m_ahand[eplayerindex]);
         }
-        //let ann_payout = self.internal_quality(rules, vecstich);
-        //for eplayerindex in 0..4 {
-        //    print!("({}, {}) ", ann_payout[eplayerindex].0, ann_payout[eplayerindex].1);
-        //}
         print!(", min payouts: ");
         for eplayerindex in 0..4 {
             print!("{}, ", self.min_reachable_payout(rules, vecstich, ostich_given.clone(), eplayerindex));
@@ -208,40 +203,6 @@ impl SSuspicion {
         assert!(vecstich_backup.iter().zip(vecstich.iter()).all(|(s1,s2)|s1.size()==s2.size()));
         n_payout
     }
-
-    fn internal_quality(&self, rules: &TRules, vecstich: &mut Vec<CStich>) -> [(isize, isize); 4] {
-        // for now, quality is measured as range [min payout, max payout]
-        if 0==self.hand_size() {
-            assert_eq!(8, vecstich.len());
-            let an_payout = rules.payout(vecstich);
-            create_playerindexmap(|eplayerindex| {
-                (an_payout[eplayerindex], an_payout[eplayerindex])
-            })
-        } else {
-            assert!(!self.m_vecsusptrans.is_empty());
-            vecstich.push(self.m_vecsusptrans.first().unwrap().m_stich.clone());
-            let mut ann_payout = self.m_vecsusptrans.first().unwrap().m_susp.internal_quality(rules, vecstich);
-            vecstich.pop().expect("vecstich is empty");
-
-            for susptrans in self.m_vecsusptrans.iter().skip(1) {
-                vecstich.push(susptrans.m_stich.clone());
-                let ann_payout_successor = susptrans.m_susp.internal_quality(rules, vecstich);
-                for eplayerindex in 0..4 {
-                    ann_payout[eplayerindex].0 = cmp::min(
-                        ann_payout[eplayerindex].0,
-                        ann_payout_successor[eplayerindex].0
-                    );
-                    ann_payout[eplayerindex].1 = cmp::max(
-                        ann_payout[eplayerindex].1,
-                        ann_payout_successor[eplayerindex].1
-                    );
-                }
-                vecstich.pop().expect("vecstich is empty");
-            }
-            ann_payout
-        }
-    }
-
 
 }
 
