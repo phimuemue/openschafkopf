@@ -30,7 +30,7 @@ pub fn for_each_suspicion<FuncFilter, Func>(
     let mut callback = |veci : &Vec<usize>| {
         let get_hand = |eplayerindex_hand| {
             CHand::new_from_vec(veci.iter().enumerate()
-                .filter(|&(i, eplayerindex_susp)| *eplayerindex_susp == eplayerindex_hand)
+                .filter(|&(_i, eplayerindex_susp)| *eplayerindex_susp == eplayerindex_hand)
                 .map(|(i, _eplayerindex_susp)| veccard_unknown[i.clone()]).collect())
         };
         let susp = SSuspicion::new_from_raw(

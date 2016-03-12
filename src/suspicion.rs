@@ -212,10 +212,10 @@ impl SSuspicion {
                         // in this group, we need the worst case if other players play badly
                         grpsusptransn_eplayerindex.into_iter().min_by_key(|&(_susptrans, n_payout)| n_payout).unwrap()
                     })
-                    .max_by_key(|&(susptrans, n_payout)| n_payout)
+                    .max_by_key(|&(_susptrans, n_payout)| n_payout)
                     .unwrap()
             })
-            .min_by_key(|&(susptrans, n_payout)| n_payout)
+            .min_by_key(|&(_susptrans, n_payout)| n_payout)
             .unwrap()
             .1;
         assert!(vecstich_backup.iter().zip(vecstich.iter()).all(|(s1,s2)|s1.size()==s2.size()));
