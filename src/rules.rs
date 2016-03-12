@@ -20,6 +20,8 @@ pub trait TRules : fmt::Display {
 
     fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe;
 
+    fn playerindex(&self) -> Option<EPlayerIndex>;
+
     fn can_be_played(&self, _hand: &CHand) -> bool {
         true // probably, only Rufspiel is prevented in some cases
     }

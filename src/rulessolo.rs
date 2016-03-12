@@ -25,6 +25,10 @@ impl TRules for CRulesSolo {
         }
     }
 
+    fn playerindex(&self) -> Option<EPlayerIndex> {
+        Some(self.m_eplayerindex)
+    }
+
     fn is_prematurely_winner(&self, vecstich: &Vec<CStich>) -> [bool; 4] {
         let an_points = self.points_per_player(vecstich);
         create_playerindexmap(|eplayerindex| {

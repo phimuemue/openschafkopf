@@ -26,7 +26,8 @@ impl CPlayer for CPlayerHuman {
                 |card| {veccard_allowed.iter().any(|card_allowed| card_allowed==card)},
                 |card| card.to_string(),
                 |_card, i_card| {
-                    skui::print_hand(hand.cards(), Some(i_card))
+                    skui::print_hand(hand.cards(), Some(i_card));
+                    skui::print_game_info(gamestate);
                 }
             )
         ) {

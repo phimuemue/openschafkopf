@@ -1,6 +1,7 @@
 use card::*;
 use stich::*;
 use game::*;
+use gamestate::*;
 use ncurses;
 
 pub fn init_ui() {
@@ -50,6 +51,7 @@ enum ESkUiWindow {
     Interaction,
     Hand,
     PlayerInfo (EPlayerIndex),
+    GameInfo,
 }
 
 fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
@@ -85,7 +87,8 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
         },
         ESkUiWindow::Stich => {create_fullwidth_window(1, 6)},
         ESkUiWindow::Hand => {create_fullwidth_window(6, 8)},
-        ESkUiWindow::Interaction => {create_fullwidth_window(8, n_height-2)},
+        ESkUiWindow::Interaction => {create_fullwidth_window(8, n_height-3)},
+        ESkUiWindow::GameInfo => {create_fullwidth_window(n_height-3, n_height-2)}
     };
     let retval = fn_do(ncwin);
     ncurses::delwin(ncwin);
@@ -131,6 +134,19 @@ pub fn print_game_announcements(vecgameannouncement: &Vec<SGameAnnouncement>) {
             }
         );
     }
+}
+
+pub fn print_game_info(gamestate: &SGameState) {
+    do_in_window(
+        ESkUiWindow::GameInfo,
+        |ncwin| {
+            wprint(ncwin, &format!("{}", gamestate.m_rules));
+            if let Some(eplayerindex) = gamestate.m_rules.playerindex() {
+                wprint(ncwin, &format!(", played by {}", eplayerindex));
+            }
+            ncurses::wrefresh(ncwin);
+        }
+    )
 }
 
 pub struct SAskForAlternativeKeyBindings {

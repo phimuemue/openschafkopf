@@ -12,7 +12,7 @@ pub struct CRulesRufspiel {
 
 impl fmt::Display for CRulesRufspiel {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Rufspiel mit der {}-Sau", self.m_efarbe)
+        write!(f, "Rufspiel mit der {}-Sau von {}", self.m_efarbe, self.m_eplayerindex)
     }
 }
 
@@ -54,6 +54,10 @@ impl TRules for CRulesRufspiel {
         let it = || {hand.cards().iter().filter(|&card| self.is_ruffarbe(*card))};
         it().all(|card| card.schlag()!=ESchlag::Ass)
         && 0<it().count()
+    }
+
+    fn playerindex(&self) -> Option<EPlayerIndex> {
+        Some(self.m_eplayerindex)
     }
 
     fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe {
