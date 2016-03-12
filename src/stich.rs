@@ -1,6 +1,7 @@
 use card::*;
 use std::fmt;
 use std::mem;
+use std::ptr;
 
 use std::ops::Index;
 
@@ -13,9 +14,9 @@ pub fn create_playerindexmap<T, F>(func: F) -> [T; 4]
     let mut at : [T; 4];
     unsafe {
         at = mem::uninitialized();
-    }
-    for eplayerindex in 0..4 {
-        at[eplayerindex] = func(eplayerindex);
+        for eplayerindex in 0..4 {
+            ptr::write(&mut at[eplayerindex], func(eplayerindex)); // ptr::write prevents dropping uninitialized memory
+        }
     }
     at
 }
