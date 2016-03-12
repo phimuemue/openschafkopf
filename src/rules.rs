@@ -13,9 +13,7 @@ pub enum VTrumpfOrFarbe {
 }
 
 pub fn equivalent_when_on_same_hand_default (_: CCard, _: CCard, _: &Vec<CStich>) -> bool {
-    unimplemented!();
-    // TODO implement default version
-    false
+    unimplemented!(); // TODO implement default version
 }
 
 pub trait TRules : fmt::Display {
