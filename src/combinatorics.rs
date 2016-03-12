@@ -1,4 +1,3 @@
-use std::cmp;
 use card::*;
 use hand::*;
 use stich::*;
