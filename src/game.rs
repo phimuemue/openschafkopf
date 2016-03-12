@@ -174,11 +174,4 @@ impl CGame {
     pub fn payout(&self) -> [isize; 4] {
         self.m_gamestate.m_rules.payout(&self.m_gamestate.m_vecstich)
     }
-    
-    // fn RegisterPlayer(&mut self, Rc<CPlayer> rcplayer) -> EPlayerIndex {
-    //     assert!(self.m_vecplayer.len()<4);
-    //     let eplayerindex = self.m_vecplayer.len();
-    //     self.m_vecplayer.push(rcplayer);
-    //     eplayerindex
-    // }
 }
