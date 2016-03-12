@@ -4,43 +4,34 @@ use stich::*;
 use rules::*;
 use gamestate::*;
 use player::*;
-use rulesrufspiel::*;
 use playercomputer::*;
 use playerhuman::*;
 use skui;
 
 use rand::{self, Rng};
 
-pub struct CGame {
-    pub m_gamestate : SGameState,
-    //m_vecplayer : Vec<Rc<CPlayer>> ,
-    pub m_vecplayer : Vec<Box<CPlayer>>, // TODO: good idea to use Box<CPlayer>, maybe shared_ptr equivalent?
+pub struct SGamePreparations {
+    pub m_ahand : [CHand; 4],
+    pub m_vecplayer : Vec<Box<CPlayer>>, // TODO: good idea to have players in here?
 }
 
-pub type SGameAnnouncement = (EPlayerIndex, Option<Box<TRules>>);
-
-impl CGame {
-    //fn new_by_random(bShort : bool/*TODO: is it a good idea to have players in CGame?*/) -> CGame; // shall replace DealCards
-    pub fn new() -> CGame {
-        CGame {
-            m_gamestate : SGameState {
-                m_ahand : {
-                    let mut veccard : Vec<CCard> = Vec::new();
-                    // TODO: doable via flat_map?
-                    for efarbe in EFarbe::all_values().iter() {
-                        for eschlag in ESchlag::all_values().iter() {
-                            veccard.push(CCard::new(*efarbe, *eschlag));
-                        }
+impl SGamePreparations {
+    pub fn new() -> SGamePreparations {
+        SGamePreparations {
+            m_ahand : {
+                let mut veccard : Vec<CCard> = Vec::new();
+                // TODO: doable via flat_map?
+                for efarbe in EFarbe::all_values().iter() {
+                    for eschlag in ESchlag::all_values().iter() {
+                        veccard.push(CCard::new(*efarbe, *eschlag));
                     }
-                    assert!(veccard.len()==32);
-                    rand::thread_rng().shuffle(&mut veccard);
-                    let hand_for_player = |eplayerindex| {
-                        CHand::new_from_vec(veccard.iter().cloned().skip((eplayerindex as usize)*8).take(8).collect())
-                    };
-                    [hand_for_player(0), hand_for_player(1), hand_for_player(2), hand_for_player(3)]
-                },
-                m_rules : Box::new(CRulesRufspiel {m_eplayerindex : 0, m_efarbe: EFarbe::Eichel} ),
-                m_vecstich : Vec::new()
+                }
+                assert!(veccard.len()==32);
+                rand::thread_rng().shuffle(&mut veccard);
+                let hand_for_player = |eplayerindex| {
+                    CHand::new_from_vec(veccard.iter().cloned().skip((eplayerindex as usize)*8).take(8).collect())
+                };
+                [hand_for_player(0), hand_for_player(1), hand_for_player(2), hand_for_player(3)]
             },
             m_vecplayer : vec![ // TODO: take players in ctor?
                 Box::new(CPlayerHuman),
@@ -51,12 +42,11 @@ impl CGame {
         }
     }
 
-    // TODO: what is a useful return value for start_game?
-    pub fn start_game(&mut self, eplayerindex_first : EPlayerIndex) -> bool {
+    // TODO: extend return value to support stock, etc.
+    pub fn start_game(mut self, eplayerindex_first : EPlayerIndex) -> Option<CGame> {
         // prepare
-        self.m_gamestate.m_vecstich.clear();
-        skui::logln("Starting game");
-        for hand in self.m_gamestate.m_ahand.iter() {
+        skui::logln("Preparing game");
+        for hand in self.m_ahand.iter() {
             skui::log(&format!("{} |", hand));
         }
         skui::logln("");
@@ -67,7 +57,7 @@ impl CGame {
         for eplayerindex in (eplayerindex_first..eplayerindex_first+4).map(|eplayerindex| eplayerindex%4) {
             let gameannouncement = self.m_vecplayer[eplayerindex].ask_for_game(
                 eplayerindex,
-                &self.m_gamestate.m_ahand[eplayerindex],
+                &self.m_ahand[eplayerindex],
                 &vecgameannouncement
             );
             vecgameannouncement.push((eplayerindex, gameannouncement));
@@ -78,26 +68,42 @@ impl CGame {
             orules.is_some()
         });
         if vecgameannouncement.is_empty() {
-            return false;
+            return None;
         }
         let paireplayerindexgameannounce = vecgameannouncement.pop().unwrap();
-        self.m_gamestate.m_rules = paireplayerindexgameannounce.1.unwrap();
+
         skui::logln(&format!(
             "Rules determined ({} plays {}). Sorting hands",
             paireplayerindexgameannounce.0,
-            self.m_gamestate.m_rules
+            paireplayerindexgameannounce.1.as_ref().unwrap()
         ));
         {
-            let ref rules = self.m_gamestate.m_rules;
-            for hand in self.m_gamestate.m_ahand.iter_mut() {
+            let rules = paireplayerindexgameannounce.1.as_ref().unwrap();
+            for hand in self.m_ahand.iter_mut() {
                 hand.sort(|&card_fst, &card_snd| rules.compare_in_stich(card_fst, card_snd).reverse());
                 skui::logln(&format!("{}", hand));
             }
         }
 
-        self.new_stich(eplayerindex_first); // install first stich
-        true
+        Some(CGame {
+            m_gamestate : SGameState {
+                m_ahand : self.m_ahand,
+                m_rules : paireplayerindexgameannounce.1.unwrap(),
+                m_vecstich : vec![CStich::new(eplayerindex_first)],
+            },
+            m_vecplayer : self.m_vecplayer,
+        })
     }
+}
+
+pub struct CGame {
+    pub m_gamestate : SGameState,
+    pub m_vecplayer : Vec<Box<CPlayer>>, // TODO: good idea to use Box<CPlayer>, maybe shared_ptr equivalent?
+}
+
+pub type SGameAnnouncement = (EPlayerIndex, Option<Box<TRules>>);
+
+impl CGame {
 
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
         self.m_gamestate.which_player_can_do_something()
