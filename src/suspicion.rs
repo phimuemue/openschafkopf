@@ -121,19 +121,6 @@ impl SSuspicion {
         vecstich.pop().expect("vecstich was empty at the end of compute_successors");
     }
 
-    fn size(&self) -> usize {
-        self.m_vecsusptrans.iter().fold(0, |acc, ref susptrans| acc+susptrans.m_susp.size())
-    }
-
-    fn leaf_count(&self) -> usize {
-        if 0==self.m_vecsusptrans.len() {
-            assert_eq!(self.hand_size(), 0);
-            1
-        } else {
-            self.m_vecsusptrans.iter().fold(0, |acc, ref susptrans| acc+susptrans.m_susp.leaf_count())
-        }
-    }
-
     pub fn print_suspicion(
         &self,
         n_maxlevel: usize,
