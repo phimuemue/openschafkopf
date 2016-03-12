@@ -141,7 +141,7 @@ fn test_stich() {
     for eplayerindex in 0..4 {
         let mut stich = CStich::new(eplayerindex);
         for i_size in 0..4 {
-            stich.zugeben(CCard::new(EFarbe::EFarbe::Eichel, ESchlag::ESchlag::S7));
+            stich.zugeben(CCard::new(EFarbe::Eichel, ESchlag::S7));
             assert_eq!(stich.size(), i_size+1);
         }
         assert_eq!(stich.first_player_index(), eplayerindex);
