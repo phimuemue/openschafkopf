@@ -18,7 +18,7 @@ impl fmt::Display for CRulesSolo {
 
 impl TRules for CRulesSolo {
     fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe {
-        if card.schlag()==eschlagO || card.schlag()==eschlagU || card.farbe()==self.m_efarbe {
+        if card.schlag()==ESchlag::Ober || card.schlag()==ESchlag::Unter || card.farbe()==self.m_efarbe {
             VTrumpfOrFarbe::Trumpf
         } else {
             VTrumpfOrFarbe::Farbe(card.farbe())
@@ -42,7 +42,7 @@ impl TRules for CRulesSolo {
     }
 
     fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
-        let n_laufende = self.count_laufende(vecstich, vec!(eschlagO, eschlagU), self.m_efarbe);
+        let n_laufende = self.count_laufende(vecstich, vec!(ESchlag::Ober, ESchlag::Unter), self.m_efarbe);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_solo*/ 50
              + {if n_laufende<3 {0} else {n_laufende}} * 10

@@ -21,10 +21,10 @@ where I: Stream<Item=char> {
     ])
     .map(|chr_farbe| {
         match chr_farbe {
-            'e' => efarbeEICHEL,
-            'g' => efarbeGRAS,
-            'h' => efarbeHERZ,
-            's' => efarbeSCHELLN,
+            'e' => EFarbe::Eichel,
+            'g' => EFarbe::Gras,
+            'h' => EFarbe::Herz,
+            's' => EFarbe::Schelln,
             _ => unreachable!(),
         }
     } )
@@ -45,14 +45,14 @@ where I: Stream<Item=char> {
     ])
     .map(|chr_farbe| {
         match chr_farbe {
-            '7' => eschlag7,
-            '8' => eschlag8,
-            '9' => eschlag9,
-            'z' => eschlagZ,
-            'u' => eschlagU,
-            'o' => eschlagO,
-            'k' => eschlagK,
-            'a' => eschlagA,
+            '7' => ESchlag::S7,
+            '8' => ESchlag::S8,
+            '9' => ESchlag::S9,
+            'z' => ESchlag::Zehn,
+            'u' => ESchlag::Unter,
+            'o' => ESchlag::Ober,
+            'k' => ESchlag::Koenig,
+            'a' => ESchlag::Ass,
             _ => unreachable!(),
         }
     } )
@@ -77,5 +77,5 @@ pub fn parse_cards(str_cards: &str) -> Vec<CCard> {
 fn test_cardvectorparser() {
     let veccard = parse_cards("ek gk hz hu s7");
     assert_eq!(veccard.len(), 5);
-    assert!(veccard[1] == CCard::new(efarbeGRAS, eschlagK));
+    assert!(veccard[1] == CCard::new(EFarbe::Gras, ESchlag::Koenig));
 }

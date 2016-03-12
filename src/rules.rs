@@ -33,12 +33,12 @@ pub trait TRules : fmt::Display {
     fn points_card(&self, card: CCard) -> isize {
         // by default, we assume that we use the usual points
         match card.schlag() {
-            eschlag7 | eschlag8 | eschlag9 => 0,
-            eschlagU => 2,
-            eschlagO => 3,
-            eschlagK => 4,
-            eschlagZ => 10,
-            eschlagA => 11,
+            ESchlag::S7 | ESchlag::S8 | ESchlag::S9 => 0,
+            ESchlag::Unter => 2,
+            ESchlag::Ober => 3,
+            ESchlag::Koenig => 4,
+            ESchlag::Zehn => 10,
+            ESchlag::Ass => 11,
         }
     }
     fn points_stich(&self, stich: &CStich) -> isize {
@@ -174,14 +174,14 @@ pub trait TRules : fmt::Display {
 
 pub fn compare_farbcards_same_color(card_fst: CCard, card_snd: CCard) -> Ordering {
     let get_schlag_value = |card: CCard| { match card.schlag() {
-        eschlag7 => 0,
-        eschlag8 => 1,
-        eschlag9 => 2,
-        eschlagU => 3,
-        eschlagO => 4,
-        eschlagK => 5,
-        eschlagZ => 6,
-        eschlagA => 7,
+        ESchlag::S7 => 0,
+        ESchlag::S8 => 1,
+        ESchlag::S9 => 2,
+        ESchlag::Unter => 3,
+        ESchlag::Ober => 4,
+        ESchlag::Koenig => 5,
+        ESchlag::Zehn => 6,
+        ESchlag::Ass => 7,
     } };
     if get_schlag_value(card_fst) < get_schlag_value(card_snd) {
         Ordering::Less
@@ -192,22 +192,22 @@ pub fn compare_farbcards_same_color(card_fst: CCard, card_snd: CCard) -> Orderin
 
 pub fn compare_trumpfcards_solo(card_fst: CCard, card_snd: CCard) -> Ordering {
     match (card_fst.schlag(), card_snd.schlag()) {
-        (eschlagO, eschlagO) | (eschlagU, eschlagU) => {
-            assert!(card_fst.schlag()==eschlagO || card_fst.schlag()==eschlagU);
+        (ESchlag::Ober, ESchlag::Ober) | (ESchlag::Unter, ESchlag::Unter) => {
+            assert!(card_fst.schlag()==ESchlag::Ober || card_fst.schlag()==ESchlag::Unter);
             // TODO static_assert not available in rust, right?
-            assert!(efarbeEICHEL < efarbeGRAS, "Farb-Sorting can't be used here");
-            assert!(efarbeGRAS < efarbeHERZ, "Farb-Sorting can't be used here");
-            assert!(efarbeHERZ < efarbeSCHELLN, "Farb-Sorting can't be used here");
+            assert!(EFarbe::Eichel < EFarbe::Gras, "Farb-Sorting can't be used here");
+            assert!(EFarbe::Gras < EFarbe::Herz, "Farb-Sorting can't be used here");
+            assert!(EFarbe::Herz < EFarbe::Schelln, "Farb-Sorting can't be used here");
             if card_snd.farbe() < card_fst.farbe() {
                 Ordering::Less
             } else {
                 Ordering::Greater
             }
         }
-        (eschlagO, _) => Ordering::Greater,
-        (_, eschlagO) => Ordering::Less,
-        (eschlagU, _) => Ordering::Greater,
-        (_, eschlagU) => Ordering::Less,
+        (ESchlag::Ober, _) => Ordering::Greater,
+        (_, ESchlag::Ober) => Ordering::Less,
+        (ESchlag::Unter, _) => Ordering::Greater,
+        (_, ESchlag::Unter) => Ordering::Less,
         _ => compare_farbcards_same_color(card_fst, card_snd),
     }
 }

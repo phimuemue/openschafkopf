@@ -68,7 +68,7 @@ impl CStich {
         CStich {
             m_eplayerindex_first : eplayerindex_first,
             m_n_size: 0,
-            m_acard: [CCard::new(EFarbe::efarbeEICHEL, ESchlag::eschlag7); 4]
+            m_acard: [CCard::new(EFarbe::Eichel, ESchlag::S7); 4]
         }
     }
     pub fn empty(&self) -> bool {
@@ -141,16 +141,16 @@ fn test_stich() {
     for eplayerindex in 0..4 {
         let mut stich = CStich::new(eplayerindex);
         for i_size in 0..4 {
-            stich.zugeben(CCard::new(EFarbe::efarbeEICHEL, ESchlag::eschlag7));
+            stich.zugeben(CCard::new(EFarbe::EFarbe::Eichel, ESchlag::ESchlag::S7));
             assert_eq!(stich.size(), i_size+1);
         }
         assert_eq!(stich.first_player_index(), eplayerindex);
     }
 
     let mut stich = CStich::new(2);
-    stich.zugeben(CCard::new(efarbeEICHEL, eschlagU));
-    stich.zugeben(CCard::new(efarbeGRAS, eschlag7));
-    assert!(stich[2]==CCard::new(efarbeEICHEL, eschlagU));
-    assert!(stich[3]==CCard::new(efarbeGRAS, eschlag7));
+    stich.zugeben(CCard::new(EFarbe::Eichel, ESchlag::Unter));
+    stich.zugeben(CCard::new(EFarbe::Gras, ESchlag::S7));
+    assert!(stich[2]==CCard::new(EFarbe::Eichel, ESchlag::Unter));
+    assert!(stich[3]==CCard::new(EFarbe::Gras, ESchlag::S7));
     assert_eq!(stich.indices_and_cards().count(), 2);
 }

@@ -35,7 +35,7 @@ use std::collections::HashSet;
 fn main() {
     let rules = CRulesRufspiel {
         m_eplayerindex : 0,
-        m_efarbe : efarbeGRAS,
+        m_efarbe : EFarbe::Gras,
     };
     let mut vecstich = {
         let mut vecstich_internal = Vec::new();

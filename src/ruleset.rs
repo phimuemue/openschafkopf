@@ -16,7 +16,7 @@ impl SRuleSet {
 
 pub fn ruleset_default(eplayerindex: EPlayerIndex) -> SRuleSet {
     let mut vecrules = Vec::<Box<TRules>>::new();
-    for efarbe in EFarbe::all_values().iter().filter(|&efarbe| efarbeHERZ!=*efarbe) {
+    for efarbe in EFarbe::all_values().iter().filter(|&efarbe| EFarbe::Herz!=*efarbe) {
         vecrules.push(Box::new(CRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: *efarbe}));
     }
     for efarbe in EFarbe::all_values().iter() {

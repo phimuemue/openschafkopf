@@ -40,7 +40,7 @@ impl CGame {
                     };
                     [hand_for_player(0), hand_for_player(1), hand_for_player(2), hand_for_player(3)]
                 },
-                m_rules : Box::new(CRulesRufspiel {m_eplayerindex : 0, m_efarbe: efarbeEICHEL} ),
+                m_rules : Box::new(CRulesRufspiel {m_eplayerindex : 0, m_efarbe: EFarbe::Eichel} ),
                 m_vecstich : Vec::new()
             },
             m_vecplayer : vec![ // TODO: take players in ctor?

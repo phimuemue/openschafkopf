@@ -6,17 +6,16 @@ use std::ops::{Index, IndexMut};
 
 pub use self::EFarbe::*;
 #[derive(PartialEq, Eq, Debug, Copy, Clone, PartialOrd, Ord, Hash)]
-#[allow(non_camel_case_types)]
 pub enum EFarbe {
-    efarbeEICHEL,
-    efarbeGRAS,
-    efarbeHERZ,
-    efarbeSCHELLN,
+    Eichel,
+    Gras,
+    Herz,
+    Schelln,
 }
 
 impl EFarbe {
     pub fn all_values() -> [EFarbe; 4] {
-        [efarbeEICHEL, efarbeGRAS, efarbeHERZ, efarbeSCHELLN,]
+        [EFarbe::Eichel, EFarbe::Gras, EFarbe::Herz, EFarbe::Schelln,]
     }
 }
 
@@ -35,24 +34,30 @@ impl quickcheck::Arbitrary for EFarbe {
 impl fmt::Display for EFarbe {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", match self {
-            &efarbeEICHEL => "Eichel",
-            &efarbeGRAS => "Gras",
-            &efarbeHERZ => "Herz",
-            &efarbeSCHELLN => "Schelln",
+            &EFarbe::Eichel => "Eichel",
+            &EFarbe::Gras => "Gras",
+            &EFarbe::Herz => "Herz",
+            &EFarbe::Schelln => "Schelln",
         } )
     }
 }
 
 pub use self::ESchlag::*;
-#[allow(non_camel_case_types)]
 #[derive(PartialEq, Eq, Debug, Copy, Clone, PartialOrd, Ord)]
 pub enum ESchlag {
-    eschlagA, eschlagZ, eschlagK, eschlagO, eschlagU, eschlag9, eschlag8, eschlag7
+    Ass,
+    Zehn,
+    Koenig,
+    Ober,
+    Unter,
+    S9,
+    S8,
+    S7,
 }
 
 impl ESchlag {
     pub fn all_values() -> [ESchlag; 8] {
-        [eschlagA, eschlagZ, eschlagK, eschlagO, eschlagU, eschlag9, eschlag8, eschlag7,]
+        [ ESchlag::Ass, ESchlag::Zehn, ESchlag::Koenig, ESchlag::Ober, ESchlag::Unter, ESchlag::S9, ESchlag::S8, ESchlag::S7, ]
     }
 }
 
@@ -83,20 +88,20 @@ impl fmt::Display for CCard {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}{}", 
             match self.farbe() {
-                efarbeEICHEL => "E",
-                efarbeGRAS => "G",
-                efarbeHERZ => "H",
-                efarbeSCHELLN => "S",
+                EFarbe::Eichel => "E",
+                EFarbe::Gras => "G",
+                EFarbe::Herz => "H",
+                EFarbe::Schelln => "S",
             },
             match self.schlag() {
-                eschlag7 => "7",
-                eschlag8 => "8",
-                eschlag9 => "9",
-                eschlagZ => "Z",
-                eschlagU => "U",
-                eschlagO => "O",
-                eschlagK => "K",
-                eschlagA => "A",
+                ESchlag::S7 => "7",
+                ESchlag::S8 => "8",
+                ESchlag::S9 => "9",
+                ESchlag::Zehn => "Z",
+                ESchlag::Unter => "U",
+                ESchlag::Ober => "O",
+                ESchlag::Koenig => "K",
+                ESchlag::Ass => "A",
             }
         )
     }

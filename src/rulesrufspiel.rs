@@ -18,15 +18,15 @@ impl fmt::Display for CRulesRufspiel {
 
 impl CRulesRufspiel {
     fn all_cards_of_farbe(&self, efarbe: EFarbe) -> Vec<CCard> { // TODO really needed?
-        assert!(efarbeHERZ!=efarbe); // Herz not a farbe in rufspiel
+        assert!(EFarbe::Herz!=efarbe); // Herz not a farbe in rufspiel
         ESchlag::all_values().iter()
-            .filter(|&&eschlag| eschlagO!=eschlag && eschlagU!=eschlag)
+            .filter(|&&eschlag| ESchlag::Ober!=eschlag && ESchlag::Unter!=eschlag)
             .map(|&eschlag| CCard::new(efarbe, eschlag))
             .collect::<Vec<_>>()
     }
 
     fn rufsau(&self) -> CCard {
-        CCard::new(self.m_efarbe, eschlagA)
+        CCard::new(self.m_efarbe, ESchlag::Ass)
     }
 
     fn is_ruffarbe(&self, card: CCard) -> bool {
@@ -60,12 +60,12 @@ impl CRulesRufspiel {
 impl TRules for CRulesRufspiel {
     fn can_be_played(&self, hand: &CHand) -> bool {
         let it = || {hand.cards().iter().filter(|&card| self.is_ruffarbe(*card))};
-        it().all(|card| card.schlag()!=eschlagA)
+        it().all(|card| card.schlag()!=ESchlag::Ass)
         && 0<it().count()
     }
 
     fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe {
-        if card.schlag()==eschlagO || card.schlag()==eschlagU || card.farbe()==efarbeHERZ {
+        if card.schlag()==ESchlag::Ober || card.schlag()==ESchlag::Unter || card.farbe()==EFarbe::Herz {
             VTrumpfOrFarbe::Trumpf
         } else {
             VTrumpfOrFarbe::Farbe(card.farbe())
@@ -92,7 +92,7 @@ impl TRules for CRulesRufspiel {
 
     fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
         assert_eq!(vecstich.len(), 8);
-        let n_laufende = self.count_laufende(vecstich, vec!(eschlagO, eschlagU), efarbeHERZ);
+        let n_laufende = self.count_laufende(vecstich, vec!(ESchlag::Ober, ESchlag::Unter), EFarbe::Herz);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_rufspiel_default*/ 10 
              + {if n_laufende<3 {0} else {n_laufende}} * 10
@@ -153,7 +153,7 @@ impl TRules for CRulesRufspiel {
             for &card in hand.cards() {
                 if self.is_ruffarbe(card) {
                     n_cards_ruffarbe = n_cards_ruffarbe + 1;
-                    if eschlagA==card.schlag() {
+                    if ESchlag::Ass==card.schlag() {
                         b_contains_rufsau = true;
                     }
                 }
@@ -163,7 +163,7 @@ impl TRules for CRulesRufspiel {
                 hand.cards().to_vec()
             } else {
                 hand.cards().iter()
-                    .filter(|&&card| !self.is_trumpf(card) || card.farbe()!=self.m_efarbe || card.schlag()==eschlagA)
+                    .filter(|&&card| !self.is_trumpf(card) || card.farbe()!=self.m_efarbe || card.schlag()==ESchlag::Ass)
                     .cloned()
                     .collect::<CHandVector>()
             }
