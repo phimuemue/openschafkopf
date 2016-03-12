@@ -173,10 +173,7 @@ pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(
             let vect = vect.into_iter().enumerate().filter(|&(_i_t, ref t)| fn_filter(&t)).collect::<Vec<_>>();
             assert!(0<vect.len());
             let mut i_alternative = 0; // initially, point to 0th alternative
-            if 1==vect.len() {
-                return vect.into_iter().nth(0).unwrap().1; // just return if there's no choice anyway
-            }
-            {
+            if 1<vect.len() {
                 let mut ch = askforalternativekeybindings.m_key_prev;
                 while ch!=askforalternativekeybindings.m_key_choose {
                     ncurses::werase(ncwin);
