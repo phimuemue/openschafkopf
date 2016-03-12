@@ -127,6 +127,7 @@ pub fn print_game_announcements(vecgameannouncement: &Vec<SGameAnnouncement>) {
                 } else {
                     wprint(ncwin, &format!("{}: {}", eplayerindex, orules.as_ref().unwrap().to_string()));
                 }
+                ncurses::wrefresh(ncwin);
             }
         );
     }
