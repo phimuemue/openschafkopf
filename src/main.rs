@@ -1,6 +1,7 @@
 extern crate rand;
 extern crate ncurses;
 extern crate itertools;
+extern crate permutohedron;
 
 mod card;
 mod stich;
@@ -53,18 +54,26 @@ fn main() {
         vecstich_internal
     };
 
-    let mut susp = SSuspicion::new_from_raw(
-        0,
-        &[
-            CHand::new_from_vec(cardvectorparser::parse_cards("sa gk sk")),
-            CHand::new_from_vec(cardvectorparser::parse_cards("eu gz e7")),
-            CHand::new_from_vec(cardvectorparser::parse_cards("so sz ha")),
-            CHand::new_from_vec(cardvectorparser::parse_cards("h9 ez gu")),
-        ]
+    let mut n_susp = 0;
+    combinatorics::for_each_suspicion(
+        &CHand::new_from_vec(cardvectorparser::parse_cards("sa gk sk")),
+        &cardvectorparser::parse_cards("eu gz e7 so sz ha h9 ez gu"),
+        0, // eplayerindex
+        |mut susp| {
+            n_susp += 1;
+            println!("{} {} {} {}",
+                susp.hands()[0],
+                susp.hands()[1],
+                susp.hands()[2],
+                susp.hands()[3]
+            );
+            susp.compute_successors(&rules);
+            let eplayerindex_current_stich = rules.winner_index(vecstich.last().unwrap());
+            susp.print_suspicion(8, 8, &rules, &mut vecstich, Some(CStich::new(eplayerindex_current_stich)));
+        }
     );
-    susp.compute_successors(&rules);
-    let eplayerindex_current_stich = rules.winner_index(vecstich.last().unwrap());
-    susp.print_suspicion(8, 0, &rules, &mut vecstich, Some(CStich::new(eplayerindex_current_stich)));
+    println!("{}", n_susp);
+
     return;
 
 

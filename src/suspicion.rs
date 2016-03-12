@@ -60,6 +60,10 @@ impl SSuspicion {
         }
     }
 
+    pub fn hands(&self) -> &[CHand; 4] {
+        &self.m_ahand
+    }
+
     fn new_from_susp(&self, stich: &CStich, rules: &TRules) -> Self {
         //println!("new_from_susp {}", stich);
         //println!("wi: {}", rules.winner_index(stich));
