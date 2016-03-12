@@ -56,16 +56,11 @@ pub struct SSuspicion {
 
 impl SSuspicion {
 
-    pub fn new_from_raw(eplayerindex_first: EPlayerIndex, ahand: &[CHand; 4]) -> Self {
+    pub fn new_from_raw(eplayerindex_first: EPlayerIndex, ahand: [CHand; 4]) -> Self {
         SSuspicion {
             m_vecsusptrans: Vec::new(),
             m_eplayerindex_first : eplayerindex_first,
-            m_ahand : [
-                ahand[0].clone(),
-                ahand[1].clone(),
-                ahand[2].clone(),
-                ahand[3].clone(),
-            ]
+            m_ahand : ahand
         }
     }
 

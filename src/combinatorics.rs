@@ -28,7 +28,7 @@ pub fn for_each_suspicion<FuncFilter, Func>(
         };
         let susp = SSuspicion::new_from_raw(
             eplayerindex,
-            &[
+            [
                 hand_known.clone(),
                 get_hand(0),
                 get_hand(1),
