@@ -74,12 +74,9 @@ impl SSuspicion {
         SSuspicion {
             m_vecsusptrans: Vec::new(),
             m_eplayerindex_first : rules.winner_index(stich),
-            m_ahand : [
-                self.m_ahand[0].new_from_hand(stich[0]),
-                self.m_ahand[1].new_from_hand(stich[1]),
-                self.m_ahand[2].new_from_hand(stich[2]),
-                self.m_ahand[3].new_from_hand(stich[3]),
-            ]
+            m_ahand : create_playerindexmap(|eplayerindex| {
+                self.m_ahand[eplayerindex].new_from_hand(stich[eplayerindex])
+            })
         }
     }
 
