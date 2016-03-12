@@ -177,17 +177,6 @@ pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(
                 return vect.into_iter().nth(0).unwrap().1; // just return if there's no choice anyway
             }
             {
-                let print_alternatives = |i_alternative| {
-                    wprintln(ncwin, str_question);
-                    for (i_t, t) in vect.iter().enumerate() {
-                        wprintln(ncwin, &format!("{} {} ({})",
-                            if i_t==i_alternative {"*"} else {" "},
-                            fn_format(&t.1),
-                            i_t
-                        ));
-                    }
-                    fn_callback(&vect[i_alternative].1, vect[i_alternative].0);
-                };
                 let mut ch = askforalternativekeybindings.m_key_prev;
                 while ch!=askforalternativekeybindings.m_key_choose {
                     ncurses::werase(ncwin);
@@ -200,7 +189,15 @@ pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(
                             i_alternative = i_alternative + 1
                         }
                     }
-                    print_alternatives(i_alternative);
+                    wprintln(ncwin, str_question);
+                    for (i_t, t) in vect.iter().enumerate() {
+                        wprintln(ncwin, &format!("{} {} ({})",
+                            if i_t==i_alternative {"*"} else {" "},
+                            fn_format(&t.1),
+                            i_t
+                        ));
+                    }
+                    fn_callback(&vect[i_alternative].1, vect[i_alternative].0);
                     ch = ncurses::getch();
                 }
                 ncurses::erase();
