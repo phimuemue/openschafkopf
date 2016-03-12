@@ -94,10 +94,7 @@ impl CStich {
         assert!(0 < self.m_n_size);
         self.m_n_size = self.m_n_size - 1;
     }
-    // pub fn set_card_by_offset(&mut self, i: usize, card: CCard) {
-    //     let eplayerindex = self.m_eplayerindex_first + i;
-    //     self[eplayerindex] = card; // sad: can not inline eplayerindex (borrowing)
-    // }
+
     pub fn first_card(&self) -> CCard {
         self[self.m_eplayerindex_first]
     }
