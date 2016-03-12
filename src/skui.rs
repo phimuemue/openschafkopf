@@ -14,17 +14,6 @@ pub fn end_ui() {
     ncurses::endwin();
 }
 
-fn println(s: &str) {
-    ncurses::printw(s);
-    ncurses::printw("\n");
-    ncurses::refresh();
-}
-
-fn print(s: &str) {
-    ncurses::printw(s);
-    ncurses::refresh();
-}
-
 fn wprintln(ncwin: ncurses::WINDOW, s: &str) {
     ncurses::wprintw(ncwin, s);
     ncurses::wprintw(ncwin, "\n");
