@@ -18,7 +18,7 @@ impl CPlayer for CPlayerHuman {
         skui::print_vecstich(&gamestate.m_vecstich);
         let ref hand = gamestate.m_ahand[gamestate.which_player_can_do_something().unwrap()];
         let veccard_allowed = gamestate.m_rules.all_allowed_cards(&gamestate.m_vecstich, &hand);
-        txcard.send(
+        match txcard.send(
             skui::ask_for_alternative(
                 &format!("Your cards: {}", hand),
                 hand.cards().clone(),
@@ -29,7 +29,10 @@ impl CPlayer for CPlayerHuman {
                     skui::print_hand(hand.cards(), Some(i_card))
                 }
             )
-        );
+        ) {
+            Ok(_) => (),
+            Err(_) => unimplemented!(), // we possibly want to be able to deal with "blocked" plays (timeout etc.)
+        }
     }
 
     fn ask_for_game(&self, eplayerindex: EPlayerIndex, hand: &CHand, vecgameannouncement : &Vec<SGameAnnouncement>) -> Option<Box<TRules>> {
