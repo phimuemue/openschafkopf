@@ -25,11 +25,11 @@ fn wprint(ncwin: ncurses::WINDOW, s: &str) {
     ncurses::wrefresh(ncwin);
 }
 
-pub fn logln(s: &str) {
+pub fn logln(_s: &str) {
     ncurses::refresh();
 }
 
-pub fn log(s: &str) {
+pub fn log(_s: &str) {
     ncurses::refresh();
 }
 
