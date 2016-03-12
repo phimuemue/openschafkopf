@@ -8,6 +8,19 @@ struct SSuspicionTransition {
     m_susp : SSuspicion,
 }
 
+fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<CStich>, stich: CStich, func: Func) -> R
+    where Func: FnOnce(&mut Vec<CStich>) -> R
+{
+    let n_stich = vecstich.len();
+    assert!(vecstich.iter().all(|stich| stich.size()==4));
+    vecstich.push(stich);
+    let r = func(vecstich);
+    vecstich.pop().expect("vecstich unexpectedly empty");
+    assert!(vecstich.iter().all(|stich| stich.size()==4));
+    assert_eq!(n_stich, vecstich.len());
+    r
+}
+
 impl SSuspicionTransition {
     fn new(susp: &SSuspicion, stich: CStich, rules: &TRules) -> SSuspicionTransition {
         let susp = SSuspicion::new_from_susp(susp, &stich, rules);
@@ -19,20 +32,18 @@ impl SSuspicionTransition {
 
     fn print_suspiciontransition(&self, n_maxlevel: usize, n_level: usize, rules: &TRules, vecstich: &mut Vec<CStich>, ostich_given: Option<CStich>) {
         if n_level<=n_maxlevel {
-            assert!(vecstich.iter().all(|stich| 4==stich.size()));
-            vecstich.push(self.m_stich.clone());
-            assert_eq!(vecstich.len()+self.m_susp.hand_size(), 8);
-            for _ in 0..n_level+1 {
-                print!(" ");
-            }
-            print!("{} : ", self.m_stich);
-            if 1<self.m_susp.hand_size() {
-                self.m_susp.print_suspicion(n_maxlevel, n_level, rules, vecstich, ostich_given);
-            } else {
-                println!("");
-            }
-            assert!(vecstich.iter().all(|stich| 4==stich.size()));
-            vecstich.pop().expect("vecstich empty");
+            push_pop_vecstich(vecstich, self.m_stich.clone(), |vecstich| {
+                assert_eq!(vecstich.len()+self.m_susp.hand_size(), 8);
+                for _ in 0..n_level+1 {
+                    print!(" ");
+                }
+                print!("{} : ", self.m_stich);
+                if 1<self.m_susp.hand_size() {
+                    self.m_susp.print_suspicion(n_maxlevel, n_level, rules, vecstich, ostich_given);
+                } else {
+                    println!("");
+                }
+            });
         }
     }
 }
@@ -90,34 +101,34 @@ impl SSuspicion {
 
     fn internal_compute_successors(&mut self, rules: &TRules, vecstich: &mut Vec<CStich>) {
         assert_eq!(self.m_vecsusptrans.len(), 0); // currently, we have no caching
-        vecstich.push(CStich::new(self.m_eplayerindex_first));
-        let eplayerindex_first = self.m_eplayerindex_first;
-        let player_index = move |i_raw: usize| {(eplayerindex_first + i_raw) % 4};
-        macro_rules! traverse_valid_cards {
-            ($i_raw : expr, $func: expr) => {
-                // TODO use equivalent card optimization
-                for card in rules.all_allowed_cards(vecstich, &self.m_ahand[player_index($i_raw)]) {
-                    vecstich.last_mut().unwrap().zugeben(card);
-                    assert!(card==vecstich.last().unwrap()[player_index($i_raw)]);
-                    $func;
-                    vecstich.last_mut().unwrap().undo_most_recent_card();
-                }
+        push_pop_vecstich(vecstich, CStich::new(self.m_eplayerindex_first), |vecstich| {
+            let eplayerindex_first = self.m_eplayerindex_first;
+            let player_index = move |i_raw: usize| {(eplayerindex_first + i_raw) % 4};
+            macro_rules! traverse_valid_cards {
+                ($i_raw : expr, $func: expr) => {
+                    // TODO use equivalent card optimization
+                    for card in rules.all_allowed_cards(vecstich, &self.m_ahand[player_index($i_raw)]) {
+                        vecstich.last_mut().unwrap().zugeben(card);
+                        assert!(card==vecstich.last().unwrap()[player_index($i_raw)]);
+                        $func;
+                        vecstich.last_mut().unwrap().undo_most_recent_card();
+                    }
+                };
             };
-        };
-        traverse_valid_cards!(0, { // TODO: more efficient to explicitly handle first card?
-            traverse_valid_cards!(1, {
-                traverse_valid_cards!(2, {
-                    traverse_valid_cards!(3, {
-                        let susptrans = SSuspicionTransition::new(self, vecstich.last().unwrap().clone(), rules);
-                        self.m_vecsusptrans.push(susptrans);
-                        let n_stich = vecstich.len();
-                        self.m_vecsusptrans.last_mut().unwrap().m_susp.internal_compute_successors(rules, vecstich);
-                        assert_eq!(n_stich, vecstich.len());
+            traverse_valid_cards!(0, { // TODO: more efficient to explicitly handle first card?
+                traverse_valid_cards!(1, {
+                    traverse_valid_cards!(2, {
+                        traverse_valid_cards!(3, {
+                            let susptrans = SSuspicionTransition::new(self, vecstich.last().unwrap().clone(), rules);
+                            self.m_vecsusptrans.push(susptrans);
+                            let n_stich = vecstich.len();
+                            self.m_vecsusptrans.last_mut().unwrap().m_susp.internal_compute_successors(rules, vecstich);
+                            assert_eq!(n_stich, vecstich.len());
+                        } );
                     } );
                 } );
             } );
-        } );
-        vecstich.pop().expect("vecstich was empty at the end of compute_successors");
+        });
     }
 
     pub fn print_suspicion(
@@ -172,14 +183,10 @@ impl SSuspicion {
                 })
             })
             .map(|susptrans| {
-                let n_stich = vecstich.len();
-                vecstich.push(susptrans.m_stich.clone());
-                assert!(vecstich.iter().all(|stich| stich.size()==4));
-                let n_payout = susptrans.m_susp.min_reachable_payout(rules, vecstich, None, eplayerindex);
-                assert!(vecstich.iter().all(|stich| stich.size()==4));
-                vecstich.pop().expect("vecstich empty");
-                assert_eq!(n_stich, vecstich.len());
-                (susptrans, n_payout)
+                assert_eq!(susptrans.m_stich.size(), 4);
+                push_pop_vecstich(vecstich, susptrans.m_stich.clone(), |vecstich| {
+                    (susptrans, susptrans.m_susp.min_reachable_payout(rules, vecstich, None, eplayerindex))
+                })
             })
             .group_by(|&(susptrans, _n_payout)| { // other players may play inconveniently for eplayerindex...
                 susptrans.m_stich.indices_and_cards()
