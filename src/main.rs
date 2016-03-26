@@ -126,9 +126,9 @@ fn main() {
     //return;
 
 
+    let aruleset = create_playerindexmap(|eplayerindex| ruleset_default(eplayerindex));
     skui::init_ui();
     let mut accountbalance = SAccountBalance::new();
-    let aruleset = create_playerindexmap(|eplayerindex| ruleset_default(eplayerindex));
     for i_game in 0..4 { // TODO make number of rounds adjustable
         let gameprep = SGamePreparations::new(&aruleset);
         skui::logln(&format!("Hand 0 : {}", gameprep.m_ahand[0]));
