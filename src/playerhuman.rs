@@ -20,7 +20,7 @@ impl CPlayer for CPlayerHuman {
         match txcard.send(
             skui::ask_for_alternative(
                 &format!("Your cards: {}", hand),
-                hand.cards().clone(),
+                &hand.cards(),
                 skui::choose_card_from_hand_key_bindings(),
                 |card| {veccard_allowed.iter().any(|card_allowed| card_allowed==card)},
                 |card| card.to_string(),
@@ -28,24 +28,26 @@ impl CPlayer for CPlayerHuman {
                     skui::print_hand(hand.cards(), Some(i_card));
                     skui::print_game_info(gamestate);
                 }
-            )
+            ).clone()
         ) {
             Ok(_) => (),
             Err(_) => unimplemented!(), // we possibly want to be able to deal with "blocked" plays (timeout etc.)
         }
     }
 
-    fn ask_for_game(&self, hand: &CHand, vecgameannouncement : &Vec<SGameAnnouncement>, ruleset: SRuleSet) -> Option<Box<TRules>> {
+    fn ask_for_game<'rules>(&self, hand: &CHand, vecgameannouncement : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules Box<TRules>> {
         skui::print_game_announcements(vecgameannouncement);
-        skui::ask_for_alternative(
-            &format!("Your cards: {}. What do you want to play?", hand),
+        let vecorules : Vec<Option<&Box<TRules>>> = 
             Some(None).into_iter() // TODO is there no singleton iterator?
             .chain(
-                ruleset.allowed_rules().into_iter()
+                ruleset.allowed_rules().iter()
                     .filter(|rules| rules.can_be_played(hand))
                     .map(|rules| Some(rules))
             )
-            .collect::<Vec<_>>(),
+            .collect::<_>();
+        *skui::ask_for_alternative(
+            &format!("Your cards: {}. What do you want to play?", hand),
+            &vecorules,
             skui::choose_alternative_from_list_key_bindings(),
             |_orules| {true},
             |orules| match orules {

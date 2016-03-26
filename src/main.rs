@@ -30,6 +30,7 @@ use rules::*;
 use accountbalance::SAccountBalance;
 use rulesrufspiel::CRulesRufspiel;
 use std::collections::HashSet;
+use ruleset::*;
 
 fn main() {
     let rules = CRulesRufspiel {
@@ -126,8 +127,9 @@ fn main() {
 
     skui::init_ui();
     let mut accountbalance = SAccountBalance::new();
+    let aruleset = create_playerindexmap(|eplayerindex| ruleset_default(eplayerindex));
     for i_game in 0..4 { // TODO make number of rounds adjustable
-        let gameprep = SGamePreparations::new();
+        let gameprep = SGamePreparations::new(&aruleset);
         skui::logln(&format!("Hand 0 : {}", gameprep.m_ahand[0]));
         if let Some(mut game)=gameprep.start_game(i_game % 4) {
             while let Some(eplayerindex)=game.which_player_can_do_something() {

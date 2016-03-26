@@ -188,14 +188,14 @@ pub fn choose_alternative_from_list_key_bindings() -> SAskForAlternativeKeyBindi
     }
 }
 
-pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(
+pub fn ask_for_alternative<'vect, T, FnFormat, FnFilter, FnCallback>(
     str_question: &str,
-    vect: Vec<T>,
+    vect: &'vect Vec<T>,
     askforalternativekeybindings: SAskForAlternativeKeyBindings,
     fn_filter: FnFilter,
     fn_format: FnFormat,
     fn_callback: FnCallback
-) -> T 
+) -> &'vect T 
     where FnFormat : Fn(&T) -> String,
           FnFilter : Fn(&T) -> bool,
           FnCallback : Fn(&T, usize)

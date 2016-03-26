@@ -9,8 +9,8 @@ pub struct SRuleSet {
 }
 
 impl SRuleSet {
-    pub fn allowed_rules(self) -> Vec<Box<TRules>> {
-        self.m_vecrules
+    pub fn allowed_rules(&self) -> &Vec<Box<TRules>> {
+        &self.m_vecrules
     }
 }
 

@@ -11,13 +11,14 @@ use skui;
 
 use rand::{self, Rng};
 
-pub struct SGamePreparations {
+pub struct SGamePreparations<'rules> {
     pub m_ahand : [CHand; 4],
     pub m_vecplayer : Vec<Box<CPlayer>>, // TODO: good idea to have players in here?
+    m_aruleset : &'rules [SRuleSet; 4],
 }
 
-impl SGamePreparations {
-    pub fn new() -> SGamePreparations {
+impl<'rules> SGamePreparations<'rules> {
+    pub fn new(aruleset : &'rules [SRuleSet; 4]) -> SGamePreparations<'rules> {
         SGamePreparations {
             m_ahand : {
                 let mut veccard : Vec<CCard> = Vec::new();
@@ -39,12 +40,13 @@ impl SGamePreparations {
                 Box::new(CPlayerComputer),
                 Box::new(CPlayerComputer),
                 Box::new(CPlayerComputer)
-            ]
+            ],
+            m_aruleset : aruleset,
         }
     }
 
     // TODO: extend return value to support stock, etc.
-    pub fn start_game(mut self, eplayerindex_first : EPlayerIndex) -> Option<CGame> {
+    pub fn start_game(mut self, eplayerindex_first : EPlayerIndex) -> Option<CGame<'rules>> {
         // prepare
         skui::logln("Preparing game");
         for hand in self.m_ahand.iter() {
@@ -59,7 +61,7 @@ impl SGamePreparations {
             let orules = self.m_vecplayer[eplayerindex].ask_for_game(
                 &self.m_ahand[eplayerindex],
                 &vecgameannouncement,
-                ruleset_default(eplayerindex)
+                &self.m_aruleset[eplayerindex]
             );
             assert!(orules.as_ref().map_or(true, |rules| eplayerindex==rules.playerindex().unwrap()));
             vecgameannouncement.push((eplayerindex, orules));
@@ -98,14 +100,14 @@ impl SGamePreparations {
     }
 }
 
-pub struct CGame {
-    pub m_gamestate : SGameState,
+pub struct CGame<'rules> {
+    pub m_gamestate : SGameState<'rules>,
     pub m_vecplayer : Vec<Box<CPlayer>>, // TODO: good idea to use Box<CPlayer>, maybe shared_ptr equivalent?
 }
 
-pub type SGameAnnouncement = (EPlayerIndex, Option<Box<TRules>>);
+pub type SGameAnnouncement<'rules> = (EPlayerIndex, Option<&'rules Box<TRules>>);
 
-impl CGame {
+impl<'rules> CGame<'rules> {
 
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
         self.m_gamestate.which_player_can_do_something()
