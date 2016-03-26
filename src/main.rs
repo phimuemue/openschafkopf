@@ -51,6 +51,7 @@ fn main() {
             add_stich(1, "h7 hk hu su");
             add_stich(2, "eo go hz h8");
             add_stich(2, "e9 ek e8 ea");
+            add_stich(3, "sa eu so ha");
         }
         vecstich_internal
     };
@@ -93,8 +94,8 @@ fn main() {
 
     let mut n_susp = 0;
     combinatorics::for_each_suspicion(
-        &CHand::new_from_vec(cardvectorparser::parse_cards("sa gk sk")),
-        &cardvectorparser::parse_cards("eu gz e7 so sz ha h9 ez gu"),
+        &CHand::new_from_vec(cardvectorparser::parse_cards("gk sk")),
+        &cardvectorparser::parse_cards("gz e7 sz h9 ez gu"),
         0, // eplayerindex
         |susp| {
             susp.hands().iter()
@@ -120,7 +121,7 @@ fn main() {
             susp.print_suspicion(8, 9, &rules, &mut vecstich, Some(CStich::new(eplayerindex_current_stich)));
         }
     );
-    println!("{}", n_susp);
+    println!("{} suspicions", n_susp);
 
     //return;
 
