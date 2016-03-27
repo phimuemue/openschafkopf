@@ -73,29 +73,10 @@ impl TRules for CRulesSolo {
     fn all_allowed_cards_within_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
         assert!(!vecstich.is_empty());
         let card_first = vecstich.last().unwrap().first_card();
-        let mut veccard_allowed = CHandVector::new();
-        {
-            let mut allow_card = |card| {
-                veccard_allowed.push(card);
-            };
-            if self.is_trumpf(card_first) {
-                // trumpf
-                for card in hand.cards().iter()
-                    .filter(|&&card| self.is_trumpf(card))
-                    .cloned()
-                {
-                    allow_card(card);
-                }
-            } else {
-                // other farbe
-                for card in hand.cards().iter()
-                    .filter(|&&card| !self.is_trumpf(card) && card.farbe()==card_first.farbe())
-                    .cloned()
-                {
-                    allow_card(card);
-                }
-            }
-        }
+        let veccard_allowed : Vec<CCard> = hand.cards().iter()
+            .filter(|&&card| self.trumpf_or_farbe(card)==self.trumpf_or_farbe(card_first))
+            .cloned()
+            .collect();
         if veccard_allowed.is_empty() {
             hand.cards().to_vec()
         } else {
