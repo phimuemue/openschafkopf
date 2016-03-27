@@ -1,7 +1,6 @@
 use card::*;
 use hand::*;
 use player::*;
-use gamestate::*;
 use rules::*;
 use ruleset::*;
 use game::*;

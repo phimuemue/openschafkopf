@@ -1,7 +1,6 @@
 use card::*;
 use stich::*;
 use game::*;
-use gamestate::*;
 use ncurses;
 use accountbalance::*;
 

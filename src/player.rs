@@ -2,7 +2,6 @@ use card::*;
 use hand::*;
 use rules::*;
 use ruleset::*;
-use gamestate::*;
 use game::*;
 
 use std::sync::mpsc;
