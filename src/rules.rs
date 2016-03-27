@@ -48,12 +48,11 @@ pub trait TRules : fmt::Display {
     fn points_per_player(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
         let mut an_points = [0, 0, 0, 0,];
         for stich in vecstich {
-            let n_points_stich = stich.indices_and_cards()
+            an_points[self.winner_index(stich)] += stich.indices_and_cards()
                 .fold(
                     0,
                     |n_acc, (_eplayerindex, card)| n_acc + self.points_card(card)
                 );
-            an_points[self.winner_index(stich)] = an_points[self.winner_index(stich)] + n_points_stich;
         }
         an_points
     }
