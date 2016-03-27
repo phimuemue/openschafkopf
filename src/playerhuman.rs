@@ -36,17 +36,15 @@ impl CPlayer for CPlayerHuman {
 
     fn ask_for_game<'rules>(&self, hand: &CHand, vecgameannouncement : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules Box<TRules>> {
         skui::print_game_announcements(vecgameannouncement);
-        let vecorules : Vec<Option<&Box<TRules>>> = 
-            Some(None).into_iter() // TODO is there no singleton iterator?
-            .chain(
-                ruleset.allowed_rules().iter()
-                    .filter(|rules| rules.can_be_played(hand))
-                    .map(|rules| Some(rules))
-            )
-            .collect::<_>();
         *skui::ask_for_alternative(
             &format!("Your cards: {}. What do you want to play?", hand),
-            &vecorules,
+            &Some(None).into_iter() // TODO is there no singleton iterator?
+                .chain(
+                    ruleset.allowed_rules().iter()
+                        .filter(|rules| rules.can_be_played(hand))
+                        .map(|rules| Some(rules))
+                )
+                .collect::<_>(),
             skui::choose_alternative_from_list_key_bindings(),
             |_orules| {true},
             |orules| match orules {
