@@ -30,10 +30,9 @@ impl<'rules> SGamePreparations<'rules> {
                 }
                 assert!(veccard.len()==32);
                 rand::thread_rng().shuffle(&mut veccard);
-                let hand_for_player = |eplayerindex| {
+                create_playerindexmap(|eplayerindex|
                     CHand::new_from_vec(veccard.iter().cloned().skip((eplayerindex as usize)*8).take(8).collect())
-                };
-                [hand_for_player(0), hand_for_player(1), hand_for_player(2), hand_for_player(3)]
+                )
             },
             m_vecplayer : vec![ // TODO: take players in ctor?
                 Box::new(CPlayerHuman),
