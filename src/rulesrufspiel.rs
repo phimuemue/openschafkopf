@@ -171,37 +171,27 @@ impl TRules for CRulesRufspiel {
 
     fn all_allowed_cards_within_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
         assert!(!vecstich.is_empty());
-        let card_first = vecstich.last().unwrap().first_card();
-        let mut veccard_allowed = CHandVector::new();
-        {
-            let mut allow_card = |card| {
-                veccard_allowed.push(card);
-            };
-            if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) {
-                // special case: gesucht
-                allow_card(self.rufsau());
-            } else if self.is_trumpf(card_first) {
-                // trumpf
-                for card in hand.cards().iter()
-                    .filter(|&&card| self.is_trumpf(card))
-                    .cloned()
-                {
-                    allow_card(card);
-                }
-            } else {
-                // other farbe
-                for card in hand.cards().iter()
-                    .filter(|&&card| !self.is_trumpf(card) && card.farbe()==card_first.farbe())
-                    .cloned()
-                {
-                    allow_card(card);
-                }
-            }
-        }
-        if veccard_allowed.is_empty() {
+        if hand.cards().len()<=1 {
             hand.cards().to_vec()
         } else {
-            veccard_allowed
+            let card_first = vecstich.last().unwrap().first_card();
+            if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) {
+                // special case: gesucht
+                vec![self.rufsau()]
+            } else {
+                let veccard_allowed : Vec<CCard> = hand.cards().iter()
+                    .filter(|&&card| 
+                        self.rufsau()!=card 
+                        && self.trumpf_or_farbe(card)==self.trumpf_or_farbe(card_first)
+                    )
+                    .cloned()
+                    .collect();
+                if veccard_allowed.is_empty() {
+                    hand.cards().to_vec()
+                } else {
+                    veccard_allowed
+                }
+            }
         }
     }
 
