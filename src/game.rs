@@ -81,12 +81,9 @@ impl<'rules> SGamePreparations<'rules> {
             paireplayerindexgameannounce.0,
             paireplayerindexgameannounce.1.as_ref().unwrap()
         ));
-        {
-            let rules = paireplayerindexgameannounce.1.as_ref().unwrap();
-            for hand in self.m_ahand.iter_mut() {
-                hand.sort(|&card_fst, &card_snd| rules.compare_in_stich(card_fst, card_snd).reverse());
-                skui::logln(&format!("{}", hand));
-            }
+        for hand in self.m_ahand.iter_mut() {
+            hand.sort(|&card_fst, &card_snd| paireplayerindexgameannounce.1.as_ref().unwrap().compare_in_stich(card_fst, card_snd).reverse());
+            skui::logln(&format!("{}", hand));
         }
 
         Some(CGame {
