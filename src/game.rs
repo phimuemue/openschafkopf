@@ -73,22 +73,22 @@ impl<'rules> SGamePreparations<'rules> {
         if vecgameannouncement.is_empty() {
             return None;
         }
-        let paireplayerindexgameannounce = vecgameannouncement.pop().unwrap();
+        let gameannouncement = vecgameannouncement.pop().unwrap();
 
         skui::logln(&format!(
             "Rules determined ({} plays {}). Sorting hands",
-            paireplayerindexgameannounce.0,
-            paireplayerindexgameannounce.1.as_ref().unwrap()
+            gameannouncement.0,
+            gameannouncement.1.as_ref().unwrap()
         ));
         for hand in self.m_ahand.iter_mut() {
-            hand.sort(|&card_fst, &card_snd| paireplayerindexgameannounce.1.as_ref().unwrap().compare_in_stich(card_fst, card_snd).reverse());
+            hand.sort(|&card_fst, &card_snd| gameannouncement.1.as_ref().unwrap().compare_in_stich(card_fst, card_snd).reverse());
             skui::logln(&format!("{}", hand));
         }
 
         Some(CGame {
             m_gamestate : SGameState {
                 m_ahand : self.m_ahand,
-                m_rules : paireplayerindexgameannounce.1.unwrap(),
+                m_rules : gameannouncement.1.unwrap(),
                 m_vecstich : vec![CStich::new(eplayerindex_first)],
             },
             m_vecplayer : self.m_vecplayer,
