@@ -120,11 +120,8 @@ impl<'rules> CGame<'rules> {
         // returns the EPlayerIndex of the player who is the next in row to do something
         // TODO: how to cope with finished game?
         skui::logln(&format!("Player {} wants to play {}", eplayerindex, card_played));
-        {
-            let eplayerindex_privileged = self.which_player_can_do_something().unwrap();
-            assert_eq!(eplayerindex, eplayerindex_privileged);
-            assert!(self.m_gamestate.m_ahand[eplayerindex].contains(card_played));
-        }
+        assert_eq!(eplayerindex, self.which_player_can_do_something().unwrap());
+        assert!(self.m_gamestate.m_ahand[eplayerindex].contains(card_played));
         {
             let ref mut hand = self.m_gamestate.m_ahand[eplayerindex];
             assert!(self.m_gamestate.m_rules.card_is_allowed(&self.m_gamestate.m_vecstich, hand, card_played));
