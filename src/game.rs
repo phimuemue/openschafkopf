@@ -72,33 +72,32 @@ impl<'rules> SGamePreparations<'rules> {
             });
         }
         skui::logln("Asked players if they want to play. Determining rules");
-        // TODO: find sensible way to deal with multiple game announcements
-        vecgameannouncement.retain(|gameannouncement| {
-            gameannouncement.m_opairrulespriority.is_some()
-        });
-        if vecgameannouncement.is_empty() {
-            return None;
-        }
-        let gameannouncement = vecgameannouncement.pop().unwrap();
-
-        skui::logln(&format!(
-            "Rules determined ({} plays {}). Sorting hands",
-            gameannouncement.m_eplayerindex,
-            gameannouncement.m_opairrulespriority.as_ref().unwrap().0
-        ));
-        for hand in self.m_ahand.iter_mut() {
-            hand.sort(|&card_fst, &card_snd| gameannouncement.m_opairrulespriority.as_ref().unwrap().0.compare_in_stich(card_fst, card_snd).reverse());
-            skui::logln(&format!("{}", hand));
-        }
-
-        Some(CGame {
-            m_gamestate : SGameState {
-                m_ahand : self.m_ahand,
-                m_rules : gameannouncement.m_opairrulespriority.unwrap().0,
-                m_vecstich : vec![CStich::new(eplayerindex_first)],
-            },
-            m_vecplayer : self.m_vecplayer,
-        })
+        // TODO: find sensible way to deal with multiple game announcements (currently, we choose highest priority)
+        assert!(!vecgameannouncement.is_empty());
+        vecgameannouncement.iter()
+            .map(|gameannouncement| gameannouncement.m_opairrulespriority)
+            .max_by_key(|opairrulespriority| opairrulespriority.map(|(_orules, priority)| priority)) 
+            .unwrap()
+            .map(move |(rules, _priority)| {
+                assert!(rules.playerindex().is_some());
+                skui::logln(&format!(
+                    "Rules determined ({} plays {}). Sorting hands",
+                    rules.playerindex().unwrap(),
+                    rules
+                ));
+                for hand in self.m_ahand.iter_mut() {
+                    hand.sort(|&card_fst, &card_snd| rules.compare_in_stich(card_fst, card_snd).reverse());
+                    skui::logln(&format!("{}", hand));
+                }
+                CGame {
+                    m_gamestate : SGameState {
+                        m_ahand : self.m_ahand,
+                        m_rules : rules,
+                        m_vecstich : vec![CStich::new(eplayerindex_first)],
+                    },
+                    m_vecplayer : self.m_vecplayer,
+                }
+            })
     }
 }
 
