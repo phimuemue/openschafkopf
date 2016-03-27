@@ -126,7 +126,7 @@ fn main() {
     //return;
 
 
-    let aruleset = create_playerindexmap(|eplayerindex| ruleset_default(eplayerindex));
+    let aruleset = read_ruleset();
     skui::init_ui();
     let mut accountbalance = SAccountBalance::new();
     for i_game in 0..4 { // TODO make number of rounds adjustable
