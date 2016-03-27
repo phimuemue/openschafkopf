@@ -124,14 +124,14 @@ pub fn print_vecstich(vecstich: &Vec<CStich>) {
 }
 
 pub fn print_game_announcements(vecgameannouncement: &Vec<SGameAnnouncement>) {
-    for &(eplayerindex, ref orules) in vecgameannouncement {
+    for gameannouncement in vecgameannouncement {
         do_in_window(
-            ESkUiWindow::PlayerInfo(eplayerindex),
+            ESkUiWindow::PlayerInfo(gameannouncement.m_eplayerindex),
             |ncwin| {
-                if orules.is_none() {
-                    wprint(ncwin, &format!("{}: Nothing", eplayerindex));
+                if gameannouncement.m_opairrulespriority.is_none() {
+                    wprint(ncwin, &format!("{}: Nothing", gameannouncement.m_eplayerindex));
                 } else {
-                    wprint(ncwin, &format!("{}: {}", eplayerindex, orules.as_ref().unwrap().to_string()));
+                    wprint(ncwin, &format!("{}: {}", gameannouncement.m_eplayerindex, gameannouncement.m_opairrulespriority.as_ref().unwrap().0.to_string()));
                 }
                 ncurses::wrefresh(ncwin);
             }

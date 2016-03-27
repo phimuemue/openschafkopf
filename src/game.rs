@@ -63,12 +63,18 @@ impl<'rules> SGamePreparations<'rules> {
                 &self.m_aruleset[eplayerindex]
             );
             assert!(orules.as_ref().map_or(true, |rules| eplayerindex==rules.playerindex().unwrap()));
-            vecgameannouncement.push((eplayerindex, orules));
+            vecgameannouncement.push(SGameAnnouncement{
+                m_eplayerindex : eplayerindex, 
+                m_opairrulespriority : orules.map(|rules| (
+                    rules,
+                    0 // priority, TODO determine priority
+                )),
+            });
         }
         skui::logln("Asked players if they want to play. Determining rules");
         // TODO: find sensible way to deal with multiple game announcements
-        vecgameannouncement.retain(|&(_eplayerindex, ref orules)| {
-            orules.is_some()
+        vecgameannouncement.retain(|gameannouncement| {
+            gameannouncement.m_opairrulespriority.is_some()
         });
         if vecgameannouncement.is_empty() {
             return None;
@@ -77,18 +83,18 @@ impl<'rules> SGamePreparations<'rules> {
 
         skui::logln(&format!(
             "Rules determined ({} plays {}). Sorting hands",
-            gameannouncement.0,
-            gameannouncement.1.as_ref().unwrap()
+            gameannouncement.m_eplayerindex,
+            gameannouncement.m_opairrulespriority.as_ref().unwrap().0
         ));
         for hand in self.m_ahand.iter_mut() {
-            hand.sort(|&card_fst, &card_snd| gameannouncement.1.as_ref().unwrap().compare_in_stich(card_fst, card_snd).reverse());
+            hand.sort(|&card_fst, &card_snd| gameannouncement.m_opairrulespriority.as_ref().unwrap().0.compare_in_stich(card_fst, card_snd).reverse());
             skui::logln(&format!("{}", hand));
         }
 
         Some(CGame {
             m_gamestate : SGameState {
                 m_ahand : self.m_ahand,
-                m_rules : gameannouncement.1.unwrap(),
+                m_rules : gameannouncement.m_opairrulespriority.unwrap().0,
                 m_vecstich : vec![CStich::new(eplayerindex_first)],
             },
             m_vecplayer : self.m_vecplayer,
@@ -101,7 +107,12 @@ pub struct CGame<'rules> {
     pub m_vecplayer : Vec<Box<CPlayer>>, // TODO: good idea to use Box<CPlayer>, maybe shared_ptr equivalent?
 }
 
-pub type SGameAnnouncement<'rules> = (EPlayerIndex, Option<&'rules Box<TRules>>);
+pub type SGameAnnouncementPriority = isize;
+
+pub struct SGameAnnouncement<'rules> {
+    pub m_eplayerindex : EPlayerIndex,
+    pub m_opairrulespriority : Option<(&'rules Box<TRules>, SGameAnnouncementPriority)>,
+}
 
 impl<'rules> CGame<'rules> {
 
