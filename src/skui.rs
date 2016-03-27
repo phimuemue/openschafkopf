@@ -157,11 +157,10 @@ pub fn print_account_balance(accountbalance : &SAccountBalance) {
         ESkUiWindow::AccountBalance,
         |ncwin| {
             for eplayerindex in 0..4 {
-                wprint(ncwin, &format!("{}: {}", eplayerindex, accountbalance.get(eplayerindex)));
-                if eplayerindex<3 {
-                    wprint(ncwin, " | ");
-                }
+                wprint(ncwin, &format!("{}: {}", eplayerindex, accountbalance.get(EAccountBalanceValue::PlayerIndex(eplayerindex))));
+                wprint(ncwin, " | ");
             }
+            wprint(ncwin, &format!("Stock: {}", accountbalance.get(EAccountBalanceValue::Stock)));
         }
     )
 }
