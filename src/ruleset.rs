@@ -29,8 +29,7 @@ pub fn read_ruleset() -> [SRuleSet; 4] {
                 Err(why) => panic!("Could not open {}: {}", path.display(), Error::description(&why)),
                 Ok(file) => file,
             };
-            for str_line in BufReader::new(&file).lines() {
-                let str_l : String = str_line.unwrap();
+            for str_l in BufReader::new(&file).lines().map(|str| str.unwrap()) {
                 println!("allowing rule: {}", str_l);
                 if str_l=="rufspiel" {
                     for efarbe in EFarbe::all_values().iter().filter(|&efarbe| EFarbe::Herz!=*efarbe) {
