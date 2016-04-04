@@ -2,11 +2,6 @@
 
 use stich::*;
 
-pub enum EAccountBalanceValue {
-    PlayerIndex (EPlayerIndex),
-    Stock,
-}
-
 pub struct SAccountBalance {
     m_an : [isize; 4],
     m_n_stock : isize,
@@ -33,12 +28,14 @@ impl SAccountBalance {
         self.assert_invariant();
     }
 
-    pub fn get(&self, eaccbalanceval : EAccountBalanceValue) -> isize {
+    pub fn get_player(&self, eplayerindex : EPlayerIndex) -> isize {
         self.assert_invariant();
-        match eaccbalanceval {
-            EAccountBalanceValue::PlayerIndex(eplayerindex) => self.m_an[eplayerindex],
-            EAccountBalanceValue::Stock => self.m_n_stock,
-        }
+        self.m_an[eplayerindex]
+    }
+
+    pub fn get_stock(&self) -> isize {
+        self.assert_invariant();
+        self.m_n_stock
     }
 }
 
