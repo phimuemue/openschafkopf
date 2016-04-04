@@ -30,6 +30,7 @@ use accountbalance::SAccountBalance;
 use rulesrufspiel::CRulesRufspiel;
 use std::collections::HashSet;
 use ruleset::*;
+use rand::Rng;
 
 fn main() {
     let rules = CRulesRufspiel {
@@ -115,8 +116,13 @@ fn main() {
                 susp.hands()[2],
                 susp.hands()[3]
             );
-            susp.compute_successors(&rules, vecstich.clone(), &|_vecstich_successor| {
-                /*leave vecstich_successor unchanged*/
+            susp.compute_successors(&rules, vecstich.clone(), &|vecstich_successor| {
+                if !vecstich_successor.is_empty() {
+                    let i_stich = rand::thread_rng().gen_range(0, vecstich_successor.len());
+                    let stich = vecstich_successor[i_stich].clone();
+                    vecstich_successor.clear();
+                    vecstich_successor.push(stich);
+                }
             });
             let eplayerindex_current_stich = rules.winner_index(vecstich.last().unwrap());
             susp.print_suspicion(8, 9, &rules, &mut vecstich, Some(CStich::new(eplayerindex_current_stich)));
