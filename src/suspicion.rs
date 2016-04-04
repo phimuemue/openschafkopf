@@ -93,6 +93,7 @@ impl SSuspicion {
 
     fn internal_compute_successors(&mut self, rules: &TRules, vecstich: &mut Vec<CStich>) {
         assert_eq!(self.m_vecsusptrans.len(), 0); // currently, we have no caching
+        let mut vecstich_successor : Vec<CStich> = Vec::new();
         push_pop_vecstich(vecstich, CStich::new(self.m_eplayerindex_first), |vecstich| {
             let eplayerindex_first = self.m_eplayerindex_first;
             let player_index = move |i_raw: usize| {(eplayerindex_first + i_raw) % 4};
@@ -111,16 +112,21 @@ impl SSuspicion {
                 traverse_valid_cards!(1, {
                     traverse_valid_cards!(2, {
                         traverse_valid_cards!(3, {
-                            let susptrans = SSuspicionTransition::new(self, vecstich.last().unwrap().clone(), rules);
-                            self.m_vecsusptrans.push(susptrans);
-                            let n_stich = vecstich.len();
-                            self.m_vecsusptrans.last_mut().unwrap().m_susp.internal_compute_successors(rules, vecstich);
-                            assert_eq!(n_stich, vecstich.len());
+                            vecstich_successor.push(vecstich.last().unwrap().clone());
                         } );
                     } );
                 } );
             } );
         });
+        self.m_vecsusptrans = vecstich_successor.into_iter()
+            .map(|stich| {
+                let mut susptrans = SSuspicionTransition::new(self, stich.clone(), rules);
+                push_pop_vecstich(vecstich, stich, |vecstich| {
+                    susptrans.m_susp.internal_compute_successors(rules, vecstich);
+                });
+                susptrans
+            })
+            .collect();
     }
 
     pub fn print_suspicion(
