@@ -11,7 +11,6 @@ mod hand;
 mod rules;
 mod rulesrufspiel;
 mod rulessolo;
-mod gamestate;
 mod game;
 mod player;
 mod playercomputer;
@@ -30,6 +29,7 @@ use rules::*;
 use accountbalance::SAccountBalance;
 use rulesrufspiel::CRulesRufspiel;
 use std::collections::HashSet;
+use ruleset::*;
 
 fn main() {
     let rules = CRulesRufspiel {
@@ -50,6 +50,7 @@ fn main() {
             add_stich(1, "h7 hk hu su");
             add_stich(2, "eo go hz h8");
             add_stich(2, "e9 ek e8 ea");
+            add_stich(3, "sa eu so ha");
         }
         vecstich_internal
     };
@@ -92,8 +93,8 @@ fn main() {
 
     let mut n_susp = 0;
     combinatorics::for_each_suspicion(
-        &CHand::new_from_vec(cardvectorparser::parse_cards("sa gk sk")),
-        &cardvectorparser::parse_cards("eu gz e7 so sz ha h9 ez gu"),
+        &CHand::new_from_vec(cardvectorparser::parse_cards("gk sk")),
+        &cardvectorparser::parse_cards("gz e7 sz h9 ez gu"),
         0, // eplayerindex
         |susp| {
             susp.hands().iter()
@@ -121,15 +122,16 @@ fn main() {
             susp.print_suspicion(8, 9, &rules, &mut vecstich, Some(CStich::new(eplayerindex_current_stich)));
         }
     );
-    println!("{}", n_susp);
+    println!("{} suspicions", n_susp);
 
     //return;
 
 
+    let aruleset = read_ruleset();
     skui::init_ui();
     let mut accountbalance = SAccountBalance::new();
     for i_game in 0..4 { // TODO make number of rounds adjustable
-        let gameprep = SGamePreparations::new();
+        let gameprep = SGamePreparations::new(&aruleset);
         skui::logln(&format!("Hand 0 : {}", gameprep.m_ahand[0]));
         if let Some(mut game)=gameprep.start_game(i_game % 4) {
             while let Some(eplayerindex)=game.which_player_can_do_something() {

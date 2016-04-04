@@ -1,7 +1,6 @@
 use card::*;
 use hand::*;
 use player::*;
-use gamestate::*;
 use rules::*;
 use ruleset::*;
 use game::*;
@@ -25,7 +24,7 @@ impl CPlayer for CPlayerComputer {
         ).ok();
     }
 
-    fn ask_for_game(&self, hand: &CHand, _ : &Vec<SGameAnnouncement>, ruleset: SRuleSet) -> Option<Box<TRules>> {
+    fn ask_for_game<'rules>(&self, hand: &CHand, _ : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules Box<TRules>> {
         // TODO: implement a more intelligent decision strategy
         let count_trumpf = |hand: &CHand, rules: &Box<TRules>| {
             hand.cards().iter().filter(|&card| {
@@ -33,7 +32,7 @@ impl CPlayer for CPlayerComputer {
             })
             .count()
         };
-        ruleset.allowed_rules().into_iter()
+        ruleset.allowed_rules().iter()
             .filter(|rules| rules.can_be_played(hand))
             .filter(|rules| {
                 6 <= count_trumpf(hand, rules)

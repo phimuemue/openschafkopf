@@ -37,7 +37,7 @@ impl PartialEq for CStich {
 }
 impl Eq for CStich {}
 
-struct StichIterator<'stich> {
+pub struct StichIterator<'stich> {
     m_eplayerindex : EPlayerIndex,
     m_stich: &'stich CStich,
 }

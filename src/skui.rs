@@ -1,7 +1,6 @@
 use card::*;
 use stich::*;
 use game::*;
-use gamestate::*;
 use ncurses;
 use accountbalance::*;
 
@@ -124,14 +123,14 @@ pub fn print_vecstich(vecstich: &Vec<CStich>) {
 }
 
 pub fn print_game_announcements(vecgameannouncement: &Vec<SGameAnnouncement>) {
-    for &(eplayerindex, ref orules) in vecgameannouncement {
+    for gameannouncement in vecgameannouncement {
         do_in_window(
-            ESkUiWindow::PlayerInfo(eplayerindex),
+            ESkUiWindow::PlayerInfo(gameannouncement.m_eplayerindex),
             |ncwin| {
-                if orules.is_none() {
-                    wprint(ncwin, &format!("{}: Nothing", eplayerindex));
+                if gameannouncement.m_opairrulespriority.is_none() {
+                    wprint(ncwin, &format!("{}: Nothing", gameannouncement.m_eplayerindex));
                 } else {
-                    wprint(ncwin, &format!("{}: {}", eplayerindex, orules.as_ref().unwrap().to_string()));
+                    wprint(ncwin, &format!("{}: {}", gameannouncement.m_eplayerindex, gameannouncement.m_opairrulespriority.as_ref().unwrap().0.to_string()));
                 }
                 ncurses::wrefresh(ncwin);
             }
@@ -157,11 +156,10 @@ pub fn print_account_balance(accountbalance : &SAccountBalance) {
         ESkUiWindow::AccountBalance,
         |ncwin| {
             for eplayerindex in 0..4 {
-                wprint(ncwin, &format!("{}: {}", eplayerindex, accountbalance.get(eplayerindex)));
-                if eplayerindex<3 {
-                    wprint(ncwin, " | ");
-                }
+                wprint(ncwin, &format!("{}: {}", eplayerindex, accountbalance.get(EAccountBalanceValue::PlayerIndex(eplayerindex))));
+                wprint(ncwin, " | ");
             }
+            wprint(ncwin, &format!("Stock: {}", accountbalance.get(EAccountBalanceValue::Stock)));
         }
     )
 }
@@ -188,14 +186,14 @@ pub fn choose_alternative_from_list_key_bindings() -> SAskForAlternativeKeyBindi
     }
 }
 
-pub fn ask_for_alternative<T, FnFormat, FnFilter, FnCallback>(
+pub fn ask_for_alternative<'vect, T, FnFormat, FnFilter, FnCallback>(
     str_question: &str,
-    vect: Vec<T>,
+    vect: &'vect Vec<T>,
     askforalternativekeybindings: SAskForAlternativeKeyBindings,
     fn_filter: FnFilter,
     fn_format: FnFormat,
     fn_callback: FnCallback
-) -> T 
+) -> &'vect T 
     where FnFormat : Fn(&T) -> String,
           FnFilter : Fn(&T) -> bool,
           FnCallback : Fn(&T, usize)
