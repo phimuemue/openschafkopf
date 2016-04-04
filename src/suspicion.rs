@@ -87,8 +87,8 @@ impl SSuspicion {
         self.m_ahand[0].cards().len()
     }
 
-    pub fn compute_successors(&mut self, rules: &TRules) {
-        self.internal_compute_successors(rules, &mut Vec::new())
+    pub fn compute_successors(&mut self, rules: &TRules, mut vecstich: Vec<CStich>) {
+        self.internal_compute_successors(rules, &mut vecstich)
     }
 
     fn internal_compute_successors(&mut self, rules: &TRules, vecstich: &mut Vec<CStich>) {

@@ -114,7 +114,7 @@ fn main() {
                 susp.hands()[2],
                 susp.hands()[3]
             );
-            susp.compute_successors(&rules);
+            susp.compute_successors(&rules, vecstich.clone());
             let eplayerindex_current_stich = rules.winner_index(vecstich.last().unwrap());
             susp.print_suspicion(8, 9, &rules, &mut vecstich, Some(CStich::new(eplayerindex_current_stich)));
         }
