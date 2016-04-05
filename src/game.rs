@@ -16,23 +16,25 @@ pub struct SGamePreparations<'rules> {
     m_aruleset : &'rules [SRuleSet; 4],
 }
 
+pub fn random_hands() -> [CHand; 4] {
+    let mut veccard : Vec<CCard> = Vec::new();
+    // TODO: doable via flat_map?
+    for efarbe in EFarbe::all_values().iter() {
+        for eschlag in ESchlag::all_values().iter() {
+            veccard.push(CCard::new(*efarbe, *eschlag));
+        }
+    }
+    assert!(veccard.len()==32);
+    rand::thread_rng().shuffle(&mut veccard);
+    create_playerindexmap(|eplayerindex|
+        CHand::new_from_vec(veccard.iter().cloned().skip((eplayerindex as usize)*8).take(8).collect())
+    )
+}
+
 impl<'rules> SGamePreparations<'rules> {
     pub fn new(aruleset : &'rules [SRuleSet; 4]) -> SGamePreparations<'rules> {
         SGamePreparations {
-            m_ahand : {
-                let mut veccard : Vec<CCard> = Vec::new();
-                // TODO: doable via flat_map?
-                for efarbe in EFarbe::all_values().iter() {
-                    for eschlag in ESchlag::all_values().iter() {
-                        veccard.push(CCard::new(*efarbe, *eschlag));
-                    }
-                }
-                assert!(veccard.len()==32);
-                rand::thread_rng().shuffle(&mut veccard);
-                create_playerindexmap(|eplayerindex|
-                    CHand::new_from_vec(veccard.iter().cloned().skip((eplayerindex as usize)*8).take(8).collect())
-                )
-            },
+            m_ahand : random_hands(),
             m_vecplayer : vec![ // TODO: take players in ctor?
                 Box::new(CPlayerHuman),
                 Box::new(CPlayerComputer),
