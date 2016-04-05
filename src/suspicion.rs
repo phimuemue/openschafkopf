@@ -98,29 +98,30 @@ impl SSuspicion {
     {
         assert_eq!(self.m_vecsusptrans.len(), 0); // currently, we have no caching
         let mut vecstich_successor : Vec<CStich> = Vec::new();
-        let eplayerindex_first = self.m_eplayerindex_first;
-        let player_index = move |i_raw: usize| {(eplayerindex_first + i_raw) % 4};
-        let mut stich = CStich::new(self.m_eplayerindex_first);
-        macro_rules! traverse_valid_cards {
-            ($i_raw : expr, $func: expr) => {
-                // TODO use equivalent card optimization
-                for card in rules.all_allowed_cards(vecstich, &self.m_ahand[player_index($i_raw)]) {
-                    stich.zugeben(card);
-                    assert!(card==stich[player_index($i_raw)]);
-                    $func;
-                    stich.undo_most_recent_card();
-                }
+        push_pop_vecstich(vecstich, CStich::new(self.m_eplayerindex_first), |vecstich| {
+            let eplayerindex_first = self.m_eplayerindex_first;
+            let player_index = move |i_raw: usize| {(eplayerindex_first + i_raw) % 4};
+            macro_rules! traverse_valid_cards {
+                ($i_raw : expr, $func: expr) => {
+                    // TODO use equivalent card optimization
+                    for card in rules.all_allowed_cards(vecstich, &self.m_ahand[player_index($i_raw)]) {
+                        vecstich.last_mut().unwrap().zugeben(card);
+                        assert!(card==vecstich.last().unwrap()[player_index($i_raw)]);
+                        $func;
+                        vecstich.last_mut().unwrap().undo_most_recent_card();
+                    }
+                };
             };
-        };
-        traverse_valid_cards!(0, { // TODO: more efficient to explicitly handle first card?
-            traverse_valid_cards!(1, {
-                traverse_valid_cards!(2, {
-                    traverse_valid_cards!(3, {
-                        vecstich_successor.push(stich.clone());
+            traverse_valid_cards!(0, { // TODO: more efficient to explicitly handle first card?
+                traverse_valid_cards!(1, {
+                    traverse_valid_cards!(2, {
+                        traverse_valid_cards!(3, {
+                            vecstich_successor.push(vecstich.last().unwrap().clone());
+                        } );
                     } );
                 } );
             } );
-        } );
+        });
         func_filter_successors(&mut vecstich_successor);
         self.m_vecsusptrans = vecstich_successor.into_iter()
             .map(|stich| {
