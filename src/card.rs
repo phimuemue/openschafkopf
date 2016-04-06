@@ -117,6 +117,15 @@ impl CCard {
     pub fn schlag(&self) -> ESchlag {
         unsafe{(mem::transmute(self.m_n_internalrepresentation % 8))}
     }
+    pub fn all_values() -> Vec<CCard> { // TODO Rust: return iterator once we can specify that return type is an iterator
+        return iproduct!(
+            EFarbe::all_values().iter(),
+            ESchlag::all_values().iter()
+        )
+        .map(|(efarbe, eschlag)| CCard::new(*efarbe, *eschlag))
+        .collect()
+    }
+
     // TODO: inspect if those are really needed and remove if necessary
     // fn image_filename(&self) -> String {
     //     return format!("../img/{}.png", self)

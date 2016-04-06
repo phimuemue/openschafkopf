@@ -1,5 +1,6 @@
 extern crate rand;
 extern crate ncurses;
+#[macro_use]
 extern crate itertools;
 extern crate permutohedron;
 

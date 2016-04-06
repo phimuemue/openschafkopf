@@ -35,13 +35,7 @@ pub fn random_hand(vecocard : &mut Vec<Option<CCard>>) -> CHand {
 }
 
 pub fn random_hands() -> [CHand; 4] {
-    let mut vecocard = Vec::new();
-    // TODO: doable via flat_map?
-    for efarbe in EFarbe::all_values().iter() {
-        for eschlag in ESchlag::all_values().iter() {
-            vecocard.push(Some(CCard::new(*efarbe, *eschlag)));
-        }
-    }
+    let mut vecocard : Vec<Option<CCard>> = CCard::all_values().into_iter().map(|card| Some(card)).collect();
     assert!(vecocard.len()==32);
     create_playerindexmap(move |_eplayerindex|
         random_hand(&mut vecocard)
