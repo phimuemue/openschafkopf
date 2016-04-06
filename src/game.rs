@@ -16,18 +16,35 @@ pub struct SGamePreparations<'rules> {
     m_aruleset : &'rules [SRuleSet; 4],
 }
 
+pub fn random_hand(vecocard : &mut Vec<Option<CCard>>) -> CHand {
+    let n_card_total = 32;
+    assert_eq!(vecocard.len(), n_card_total);
+    assert_eq!(vecocard.iter().filter(|ocard| ocard.is_some()).count()%8, 0);
+    CHand::new_from_vec({
+        let mut veccard = Vec::new();
+        for _i in 0..8 {
+            let mut i_card = rand::thread_rng().gen_range(0, n_card_total);
+            while vecocard[i_card].is_none() {
+                i_card = rand::thread_rng().gen_range(0, n_card_total);
+            }
+            veccard.push(vecocard[i_card].unwrap());
+            vecocard[i_card] = None;
+        }
+        veccard
+    })
+}
+
 pub fn random_hands() -> [CHand; 4] {
-    let mut veccard : Vec<CCard> = Vec::new();
+    let mut vecocard = Vec::new();
     // TODO: doable via flat_map?
     for efarbe in EFarbe::all_values().iter() {
         for eschlag in ESchlag::all_values().iter() {
-            veccard.push(CCard::new(*efarbe, *eschlag));
+            vecocard.push(Some(CCard::new(*efarbe, *eschlag)));
         }
     }
-    assert!(veccard.len()==32);
-    rand::thread_rng().shuffle(&mut veccard);
-    create_playerindexmap(|eplayerindex|
-        CHand::new_from_vec(veccard.iter().cloned().skip((eplayerindex as usize)*8).take(8).collect())
+    assert!(vecocard.len()==32);
+    create_playerindexmap(move |_eplayerindex|
+        random_hand(&mut vecocard)
     )
 }
 
