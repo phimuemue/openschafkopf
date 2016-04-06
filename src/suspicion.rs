@@ -87,13 +87,7 @@ impl SSuspicion {
         self.m_ahand[0].cards().len()
     }
 
-    pub fn compute_successors<FuncFilterSuccessors>(&mut self, rules: &TRules, mut vecstich: Vec<CStich>, func_filter_successors: &FuncFilterSuccessors)
-        where FuncFilterSuccessors : Fn(&mut Vec<CStich>/*vecstich_successor*/)
-    {
-        self.internal_compute_successors(rules, &mut vecstich, func_filter_successors)
-    }
-
-    fn internal_compute_successors<FuncFilterSuccessors>(&mut self, rules: &TRules, vecstich: &mut Vec<CStich>, func_filter_successors: &FuncFilterSuccessors)
+    pub fn compute_successors<FuncFilterSuccessors>(&mut self, rules: &TRules, vecstich: &mut Vec<CStich>, func_filter_successors: &FuncFilterSuccessors)
         where FuncFilterSuccessors : Fn(&mut Vec<CStich>/*vecstich_successor*/)
     {
         assert_eq!(self.m_vecsusptrans.len(), 0); // currently, we have no caching
@@ -127,7 +121,7 @@ impl SSuspicion {
             .map(|stich| {
                 let mut susptrans = SSuspicionTransition::new(self, stich.clone(), rules);
                 push_pop_vecstich(vecstich, stich, |vecstich| {
-                    susptrans.m_susp.internal_compute_successors(rules, vecstich, func_filter_successors);
+                    susptrans.m_susp.compute_successors(rules, vecstich, func_filter_successors);
                 });
                 susptrans
             })
