@@ -172,7 +172,6 @@ impl SSuspicion {
         if 0==self.hand_size() {
             return rules.payout(vecstich)[eplayerindex];
         }
-        assert!(!vecstich.is_empty());
         let n_payout = self.m_vecsusptrans.iter()
             .filter(|susptrans| { // only consider successors compatible with current stich_given so far
                 assert_eq!(susptrans.m_susp.hand_size()+1, self.hand_size());
