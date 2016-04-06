@@ -187,7 +187,7 @@ impl TRules for CRulesRufspiel {
                     .cloned()
                     .collect();
                 if veccard_allowed.is_empty() {
-                    hand.cards().to_vec()
+                    hand.cards().iter().cloned().filter(|&card| self.rufsau()!=card).collect()
                 } else {
                     veccard_allowed
                 }
