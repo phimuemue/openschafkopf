@@ -8,8 +8,8 @@ use std::ops::Index;
 pub type EPlayerIndex = usize; // TODO: would a real enum be more adequate?
 
 // TODO: introduce generic enummap
-pub fn create_playerindexmap<T, F>(func: F) -> [T; 4]
-    where F:Fn(EPlayerIndex)->T
+pub fn create_playerindexmap<T, F>(mut func: F) -> [T; 4]
+    where F:FnMut(EPlayerIndex)->T
 {
     let mut at : [T; 4];
     unsafe {
