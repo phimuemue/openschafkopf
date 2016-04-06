@@ -177,4 +177,5 @@ fn main() {
         skui::print_account_balance(&accountbalance);
     }
     skui::end_ui();
+    println!("Results: {}", skui::account_balance_string(&accountbalance));
 }

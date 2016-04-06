@@ -151,15 +151,20 @@ pub fn print_game_info(gamestate: &SGameState) {
     )
 }
 
+pub fn account_balance_string(accountbalance: &SAccountBalance) -> String {
+    let mut str = "".to_string();
+    for eplayerindex in 0..4 {
+        str = str + &format!("{}: {} | ", eplayerindex, accountbalance.get_player(eplayerindex));
+    }
+    str = str + &format!("Stock: {}", accountbalance.get_stock());
+    str
+}
+
 pub fn print_account_balance(accountbalance : &SAccountBalance) {
     do_in_window(
         ESkUiWindow::AccountBalance,
         |ncwin| {
-            for eplayerindex in 0..4 {
-                wprint(ncwin, &format!("{}: {}", eplayerindex, accountbalance.get_player(eplayerindex)));
-                wprint(ncwin, " | ");
-            }
-            wprint(ncwin, &format!("Stock: {}", accountbalance.get_stock()));
+            wprint(ncwin, &account_balance_string(accountbalance));
         }
     )
 }
