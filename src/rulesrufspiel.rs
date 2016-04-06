@@ -144,18 +144,12 @@ impl TRules for CRulesRufspiel {
                     }
                 } )
         {
-            let mut n_cards_ruffarbe = 0;
-            let mut b_contains_rufsau = false;
-            for &card in hand.cards() {
-                if self.is_ruffarbe(card) {
-                    n_cards_ruffarbe = n_cards_ruffarbe + 1;
-                    if ESchlag::Ass==card.schlag() {
-                        b_contains_rufsau = true;
-                    }
-                }
-            }
             // Remark: Player must have 4 cards of ruffarbe on his hand *at this point of time* (i.e. not only at the beginning!)
-            if !b_contains_rufsau || 4<=n_cards_ruffarbe {
+            if !hand.contains(self.rufsau()) 
+                || 4 <= hand.cards().iter()
+                    .filter(|&card| self.is_ruffarbe(*card))
+                    .count()
+            {
                 hand.cards().to_vec()
             } else {
                 hand.cards().iter()
