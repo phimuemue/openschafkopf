@@ -153,8 +153,8 @@ impl TRules for CRulesRufspiel {
                 hand.cards().to_vec()
             } else {
                 hand.cards().iter()
-                    .filter(|&&card| !self.is_trumpf(card) || card.farbe()!=self.m_efarbe || card.schlag()==ESchlag::Ass)
                     .cloned()
+                    .filter(|&card| !self.is_ruffarbe(card) || self.rufsau()==card)
                     .collect::<CHandVector>()
             }
         }
