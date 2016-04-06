@@ -177,6 +177,15 @@ impl TRules for CRulesRufspiel {
             let card_first = vecstich.last().unwrap().first_card();
             if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) {
                 // special case: gesucht
+                // TODO Consider the following distribution of cards:
+                // 0: GA GZ GK G8 ...   <- opens first stich
+                // 1, 2: ..             <- mainly irrelevant
+                // 3: G7 G9 ...         <- plays with GA
+                // The first two stichs are as follows:
+                //      e7        ..
+                //   e9   g9    ..  >g7
+                //     >g8        ..
+                // Is player 0 obliged to play GA? We implement it this way for now.
                 vec![self.rufsau()]
             } else {
                 let veccard_allowed : Vec<CCard> = hand.cards().iter()
