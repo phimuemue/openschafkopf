@@ -32,6 +32,7 @@ use rulesrufspiel::CRulesRufspiel;
 use std::collections::HashSet;
 use ruleset::*;
 use rand::Rng;
+use playercomputer::*;
 
 fn main() {
     {
@@ -133,10 +134,24 @@ fn main() {
         println!("{} suspicions", n_susp);
     }
 
+    let aruleset = read_ruleset();
+    {
+        let playercomputer = CPlayerComputer;
+        let hand_fixed = random_hand(&mut CCard::all_values().into_iter().map(|card| Some(card)).collect());
+        let eplayerindex_fixed = 0;
+
+        println!("Hand: {}", hand_fixed);
+        for rules in aruleset[eplayerindex_fixed].allowed_rules().iter() 
+            .filter(|rules| rules.can_be_played(&hand_fixed))
+        {
+            let f_payout_avg = playercomputer.rank_rules(&hand_fixed, eplayerindex_fixed, rules, 100);
+            println!("{}", rules);
+            println!("{}", f_payout_avg);
+        }
+    }
     //return;
 
 
-    let aruleset = read_ruleset();
     skui::init_ui();
     let mut accountbalance = SAccountBalance::new();
     for i_game in 0..4 { // TODO make number of rounds adjustable

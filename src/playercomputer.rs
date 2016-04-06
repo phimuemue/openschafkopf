@@ -4,10 +4,53 @@ use player::*;
 use rules::*;
 use ruleset::*;
 use game::*;
+use stich::*;
+use suspicion::*;
 
 use std::sync::mpsc;
+use rand;
+use rand::Rng;
 
 pub struct CPlayerComputer;
+
+impl CPlayerComputer {
+    pub fn rank_rules (&self, hand_fixed: &CHand, eplayerindex_fixed: EPlayerIndex, rules: &Box<TRules>, n_tests: usize) -> f64 {
+        let rank_rules_single = || {
+            let mut vecocard : Vec<Option<CCard>> = CCard::all_values().into_iter()
+                .map(|card| 
+                     if hand_fixed.cards().as_slice().contains(&card) {
+                         None
+                     } else {
+                         Some(card)
+                     }
+                )
+                .collect();
+            let mut susp = SSuspicion::new_from_raw(
+                eplayerindex_fixed,
+                create_playerindexmap(|eplayerindex| {
+                    if eplayerindex_fixed==eplayerindex {
+                        hand_fixed.clone()
+                    } else {
+                        random_hand(&mut vecocard)
+                    }
+                })
+            );
+            susp.compute_successors(rules.as_ref(), Vec::new(), &|vecstich_successor| {
+                if !vecstich_successor.is_empty() {
+                    let i_stich = rand::thread_rng().gen_range(0, vecstich_successor.len());
+                    let stich = vecstich_successor[i_stich].clone();
+                    vecstich_successor.clear();
+                    vecstich_successor.push(stich);
+                }
+            });
+            susp.min_reachable_payout(rules.as_ref(), &mut Vec::new(), None, eplayerindex_fixed)
+        };
+        (0..n_tests)
+            .map(|_i_test| rank_rules_single())
+            .fold(0, |n_payout_acc, n_payout| n_payout_acc+n_payout) as f64
+            / n_tests as f64
+    }
+}
 
 impl CPlayer for CPlayerComputer {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<CCard>) {
@@ -32,13 +75,21 @@ impl CPlayer for CPlayerComputer {
             })
             .count()
         };
+        let n_tests_per_rules = 50;
         ruleset.allowed_rules().iter()
             .filter(|rules| rules.can_be_played(hand))
             .filter(|rules| {
-                6 <= count_trumpf(hand, rules)
+                4 <= count_trumpf(hand, rules)
             })
-            .max_by_key(|rules| {
-                count_trumpf(hand, rules)
+            .map(|rules| {
+                let eplayerindex_fixed = rules.playerindex().unwrap(); 
+                (
+                    rules,
+                    self.rank_rules(hand, eplayerindex_fixed, rules, n_tests_per_rules)
+                )
             })
+            .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
+            .max_by_key(|&(_rules, f_payout_avg)| f_payout_avg as isize) // TODO f64 no Ord => what to do?
+            .map(|(rules, _f_payout_avg)| rules)
     }
 }
