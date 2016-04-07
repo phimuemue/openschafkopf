@@ -29,13 +29,6 @@ impl TRules for CRulesSolo {
         Some(self.m_eplayerindex)
     }
 
-    fn is_prematurely_winner(&self, vecstich: &Vec<CStich>) -> [bool; 4] {
-        let an_points = self.points_per_player(vecstich);
-        create_playerindexmap(|eplayerindex| {
-            an_points[eplayerindex] >= 61
-        } )
-    }
-
     fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<CStich>) -> bool {
         assert!(8==vecstich.len());
         if eplayerindex==self.m_eplayerindex {

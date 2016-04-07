@@ -68,19 +68,6 @@ impl TRules for CRulesRufspiel {
         }
     }
 
-    fn is_prematurely_winner(&self, vecstich: &Vec<CStich>) -> [bool; 4] {
-        let an_points = self.points_per_player(vecstich);
-        if let Some(i_mitspieler) = self.determine_mitspieler(vecstich) {
-            create_playerindexmap(|eplayerindex| {
-                self.check_points_to_win(eplayerindex, i_mitspieler, &an_points)
-            } )
-        } else {
-            create_playerindexmap(|eplayerindex| {
-                an_points[eplayerindex] >= 61
-            } )
-        }
-    }
-
     fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<CStich>) -> bool {
         assert!(8==vecstich.len());
         self.check_points_to_win(eplayerindex, self.determine_mitspieler(vecstich).unwrap(), &self.points_per_player(vecstich))

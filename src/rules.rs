@@ -59,8 +59,6 @@ pub trait TRules : fmt::Display {
 
     fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<CStich>) -> bool;
 
-    fn is_prematurely_winner(&self, vecstich: &Vec<CStich>) -> [bool; 4];
-
     fn count_laufende(&self, vecstich: &Vec<CStich>, veceschlag : Vec<ESchlag>, efarbe_trumpf: EFarbe) -> isize {
         let n_trumpf_expected = 4 * veceschlag.len() + 8 - veceschlag.len();
         assert!(0<n_trumpf_expected);
