@@ -96,6 +96,8 @@ pub trait TRules : fmt::Display {
     }
 
     fn all_allowed_cards(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
+        assert!(!vecstich.is_empty());
+        assert!(vecstich.last().unwrap().size()<4);
         if vecstich.last().unwrap().empty() {
             self.all_allowed_cards_first_in_stich(vecstich, hand)
         } else {
