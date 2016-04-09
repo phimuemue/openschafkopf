@@ -34,28 +34,13 @@ impl CHand {
     pub fn play_card(&mut self, card_played: CCard) {
         self.m_veccard.retain(|&card| card!=card_played)
     }
+
     pub fn sort<CmpLess>(&mut self, cmpless: CmpLess)
         where CmpLess: Fn(&CCard, &CCard) -> Ordering
     {
         self.m_veccard.sort_by(cmpless)
     }
-    //fn find_best_card_cmp<CmpLess>(&self, cmpless: CmpLess) -> CCard
-    //    where CmpLess: Fn(CCard, CCard) -> bool
-    //{
-    //}
-    //fn for_each_card_with<Pred, Func>(&self, pred: Pred, func: Func)
-    //    where Pred: Fn(&CCard) -> bool,
-    //          Func: Fn(&CCard)
-    //{
-    //    for card in self.m_veccard.iter().filter(|card| pred(card)) {
-    //        func(card);
-    //    }
-    //}
-    //fn count_cards_with<Pred>(&self, pred: Pred) -> usize
-    //    where Pred: Fn(&CCard) -> bool
-    //{
-    //    self.m_veccard.iter().filter(|card| pred(card)).count()
-    //}
+
     pub fn cards(&self) -> &Vec<CCard> {
         &self.m_veccard
     }
