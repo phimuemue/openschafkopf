@@ -34,14 +34,14 @@ impl CRulesRufspiel {
         vecstich.iter()
             .flat_map(|stich| stich.indices_and_cards())
             .find(|&(_, card)| card==self.rufsau())
-            .map(|(i_player, _)| i_player)
+            .map(|(eplayerindex, _)| eplayerindex)
     }
 
-    fn check_points_to_win(&self, i_player: EPlayerIndex, i_mitspieler: EPlayerIndex, an_points: &[isize; 4]) -> bool {
-        // TODO: this method is always fishy when I read it (passing in i_mitspieler does not seem
+    fn check_points_to_win(&self, eplayerindex_player: EPlayerIndex, eplayerindex_coplayer: EPlayerIndex, an_points: &[isize; 4]) -> bool {
+        // TODO: this method is always fishy when I read it (passing in eplayerindex_coplayer does not seem
         // to be the best idea)
-        let n_points_player_party = an_points[self.m_eplayerindex as usize] + an_points[i_mitspieler as usize];
-        if i_player==self.m_eplayerindex || i_player==i_mitspieler {
+        let n_points_player_party = an_points[self.m_eplayerindex as usize] + an_points[eplayerindex_coplayer as usize];
+        if eplayerindex_player==self.m_eplayerindex || eplayerindex_player==eplayerindex_coplayer {
             n_points_player_party >= 61
         } else {
             n_points_player_party <= 60
