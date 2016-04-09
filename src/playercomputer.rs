@@ -69,17 +69,13 @@ impl CPlayer for CPlayerComputer {
 
     fn ask_for_game<'rules>(&self, hand: &CHand, _ : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules Box<TRules>> {
         // TODO: implement a more intelligent decision strategy
-        let count_trumpf = |hand: &CHand, rules: &Box<TRules>| {
-            hand.cards().iter().filter(|&card| {
-                rules.is_trumpf(*card)
-            })
-            .count()
-        };
         let n_tests_per_rules = 50;
         ruleset.allowed_rules().iter()
             .filter(|rules| rules.can_be_played(hand))
             .filter(|rules| {
-                4 <= count_trumpf(hand, rules)
+                4 <= hand.cards().iter()
+                    .filter(|&card| rules.is_trumpf(*card))
+                    .count()
             })
             .map(|rules| {
                 let eplayerindex_fixed = rules.playerindex().unwrap(); 
