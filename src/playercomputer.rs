@@ -18,7 +18,7 @@ impl CPlayerComputer {
         let rank_rules_single = || {
             let mut vecocard : Vec<Option<CCard>> = CCard::all_values().into_iter()
                 .map(|card| 
-                     if hand_fixed.cards().as_slice().contains(&card) {
+                     if hand_fixed.contains(card) {
                          None
                      } else {
                          Some(card)
