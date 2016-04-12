@@ -1,3 +1,6 @@
 * implement more rules
 * split CStich into CStichComplete and CStichCurrent
 * "graphical" output (possibly via libaa/libcaca)
+* simplify count_runnings: consider only highest trumpf per party
+* &Box<X> => &X
+* implement strategy for CPlayerComputer
