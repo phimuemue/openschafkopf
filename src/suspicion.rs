@@ -88,7 +88,7 @@ impl SSuspicion {
     }
 
     pub fn compute_successors<FuncFilterSuccessors>(&mut self, rules: &TRules, vecstich: &mut Vec<CStich>, func_filter_successors: &FuncFilterSuccessors)
-        where FuncFilterSuccessors : Fn(&mut Vec<CStich>/*vecstich_successor*/)
+        where FuncFilterSuccessors : Fn(&Vec<CStich> /*vecstich_complete*/, &mut Vec<CStich>/*vecstich_successor*/)
     {
         assert_eq!(self.m_vecsusptrans.len(), 0); // currently, we have no caching
         let mut vecstich_successor : Vec<CStich> = Vec::new();
@@ -116,7 +116,7 @@ impl SSuspicion {
                 } );
             } );
         });
-        func_filter_successors(&mut vecstich_successor);
+        func_filter_successors(vecstich, &mut vecstich_successor);
         self.m_vecsusptrans = vecstich_successor.into_iter()
             .map(|stich| {
                 let mut susptrans = SSuspicionTransition::new(self, stich.clone(), rules);

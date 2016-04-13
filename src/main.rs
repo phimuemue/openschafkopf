@@ -119,7 +119,7 @@ fn main() {
                     susp.hands()[2],
                     susp.hands()[3]
                 );
-                susp.compute_successors(&rules, &mut vecstich.clone(), &|vecstich_successor| {
+                susp.compute_successors(&rules, &mut vecstich.clone(), &|_vecstich_complete, vecstich_successor| {
                     if !vecstich_successor.is_empty() {
                         let i_stich = rand::thread_rng().gen_range(0, vecstich_successor.len());
                         let stich = vecstich_successor[i_stich].clone();
