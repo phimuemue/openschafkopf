@@ -79,7 +79,7 @@ impl fmt::Display for ESchlag {
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Hash)]
 pub struct CCard {
     m_n_internalrepresentation : i8,
 }
