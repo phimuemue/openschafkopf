@@ -108,21 +108,6 @@ pub trait TRules : fmt::Display {
         }
     }
 
-    fn compare_less_equivalence(&self, card_fst: CCard, card_snd: CCard) -> bool {
-        if card_fst.schlag()==card_snd.schlag() {
-            card_fst.farbe() < card_snd.farbe()
-        } else {
-            let n_points_fst = self.points_card(card_fst);
-            let n_points_snd = self.points_card(card_snd);
-            if n_points_fst==n_points_snd {
-                card_fst.farbe() < card_snd.farbe()
-                    || card_fst.farbe() == card_snd.farbe() && card_fst.schlag() < card_snd.schlag()
-            } else {
-                n_points_fst < n_points_snd
-            }
-        }
-    }
-
     fn card_is_allowed(&self, vecstich: &Vec<CStich>, hand: &CHand, card: CCard) -> bool {
         self.all_allowed_cards(vecstich, hand).into_iter()
             .any(|card_iterated| card_iterated==card)
