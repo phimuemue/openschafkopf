@@ -30,6 +30,14 @@ impl SSuspicionTransition {
         }
     }
 
+    pub fn stich(&self) -> &CStich {
+        &self.m_stich
+    }
+
+    pub fn suspicion(&self) -> &SSuspicion {
+        &self.m_susp
+    }
+
     fn print_suspiciontransition(&self, n_maxlevel: usize, n_level: usize, rules: &TRules, vecstich: &mut Vec<CStich>, ostich_given: Option<CStich>) {
         if n_level<=n_maxlevel {
             push_pop_vecstich(vecstich, self.m_stich.clone(), |vecstich| {
@@ -55,6 +63,10 @@ pub struct SSuspicion {
 }
 
 impl SSuspicion {
+
+    pub fn suspicion_tranitions(&self) -> &Vec<SSuspicionTransition> {
+        &self.m_vecsusptrans
+    }
 
     pub fn new_from_raw(eplayerindex_first: EPlayerIndex, ahand: [CHand; 4]) -> Self {
         SSuspicion {
