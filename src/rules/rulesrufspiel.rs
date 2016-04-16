@@ -29,14 +29,6 @@ impl CRulesRufspiel {
         }
     }
 
-    fn determine_mitspieler(&self, vecstich: &Vec<CStich>) -> Option<EPlayerIndex> {
-        // TODO: currently not recognizing weglaufen, right?
-        vecstich.iter()
-            .flat_map(|stich| stich.indices_and_cards())
-            .find(|&(_, card)| card==self.rufsau())
-            .map(|(eplayerindex, _)| eplayerindex)
-    }
-
     fn check_points_to_win(&self, eplayerindex_player: EPlayerIndex, eplayerindex_coplayer: EPlayerIndex, an_points: &[isize; 4]) -> bool {
         // TODO: this method is always fishy when I read it (passing in eplayerindex_coplayer does not seem
         // to be the best idea)
@@ -70,7 +62,15 @@ impl TRules for CRulesRufspiel {
 
     fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<CStich>) -> bool {
         assert!(8==vecstich.len());
-        self.check_points_to_win(eplayerindex, self.determine_mitspieler(vecstich).unwrap(), &self.points_per_player(vecstich))
+        self.check_points_to_win(
+            eplayerindex,
+            /*eplayerindex_coplayer*/vecstich.iter()
+                .flat_map(|stich| stich.indices_and_cards())
+                .find(|&(_, card)| card==self.rufsau())
+                .map(|(eplayerindex, _)| eplayerindex)
+                .unwrap(),
+            &self.points_per_player(vecstich)
+        )
     }
 
     fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
