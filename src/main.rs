@@ -31,7 +31,7 @@ use accountbalance::SAccountBalance;
 use rulesrufspiel::CRulesRufspiel;
 use std::collections::HashSet;
 use ruleset::*;
-use playercomputer::*;
+use ai::*;
 
 fn main() {
     {
@@ -131,7 +131,6 @@ fn main() {
 
     let aruleset = read_ruleset();
     {
-        let playercomputer = CPlayerComputer;
         let hand_fixed = random_hand(8, &mut CCard::all_values().into_iter().map(|card| Some(card)).collect());
         let eplayerindex_fixed = 0;
 
@@ -139,7 +138,7 @@ fn main() {
         for rules in aruleset[eplayerindex_fixed].allowed_rules().iter() 
             .filter(|rules| rules.can_be_played(&hand_fixed))
         {
-            let f_payout_avg = playercomputer.rank_rules(&hand_fixed, eplayerindex_fixed, rules, 100);
+            let f_payout_avg = ai::rank_rules(&hand_fixed, eplayerindex_fixed, rules, 100);
             println!("{}", rules);
             println!("{}", f_payout_avg);
         }
