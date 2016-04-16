@@ -1,3 +1,6 @@
+pub mod playercomputer;
+pub mod playerhuman;
+
 use card::*;
 use hand::*;
 use rules::*;

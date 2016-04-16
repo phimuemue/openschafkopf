@@ -12,8 +12,6 @@ mod hand;
 mod rules;
 mod game;
 mod player;
-mod playercomputer;
-mod playerhuman;
 mod ai;
 mod accountbalance;
 mod skui;

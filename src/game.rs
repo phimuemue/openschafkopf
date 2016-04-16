@@ -4,8 +4,8 @@ use stich::*;
 use rules::*;
 use rules::ruleset::*;
 use player::*;
-use playercomputer::*;
-use playerhuman::*;
+use player::playercomputer::*;
+use player::playerhuman::*;
 use skui;
 
 use rand::{self, Rng};
