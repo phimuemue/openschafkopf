@@ -122,9 +122,6 @@ pub trait TRules : fmt::Display {
         }
         eplayerindex_best
     }
-    fn best_card_in_stich(&self, stich: &CStich) -> CCard {
-        return stich.m_acard[self.winner_index(stich) as usize];
-    }
 
     fn compare_in_stich_trumpf(&self, card_fst: CCard, card_snd: CCard) -> Ordering;
 
