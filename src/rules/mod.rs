@@ -14,10 +14,6 @@ pub enum VTrumpfOrFarbe {
     Farbe (EFarbe),
 }
 
-pub fn equivalent_when_on_same_hand_default (_: CCard, _: CCard, _: &Vec<CStich>) -> bool {
-    unimplemented!(); // TODO implement default version
-}
-
 pub trait TRules : fmt::Display {
 
     fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe;
@@ -89,11 +85,6 @@ pub trait TRules : fmt::Display {
     }
 
     fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4];
-
-    // impls of equivalent_when_on_same_hand may use equivalent_when_on_same_hand_default
-    fn equivalent_when_on_same_hand(&self, card1: CCard, card2: CCard, vecstich: &Vec<CStich>) -> bool {
-        equivalent_when_on_same_hand_default(card1, card2, vecstich)
-    }
 
     fn all_allowed_cards(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
         assert!(!vecstich.is_empty());

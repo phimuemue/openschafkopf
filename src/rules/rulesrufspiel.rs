@@ -81,29 +81,6 @@ impl TRules for CRulesRufspiel {
         } )
     }
 
-    fn equivalent_when_on_same_hand(&self, card1: CCard, card2: CCard, vecstich: &Vec<CStich>) -> bool {
-        if equivalent_when_on_same_hand_default(card1, card2, vecstich) { // TODO: see if TRules::equivalent_when_on_same_hand works at some point
-            return true;
-        }
-        if !self.is_trumpf(card1) && !self.is_trumpf(card2) && self.points_card(card1) == self.points_card(card2) {
-            let count_farbe = |efarbe| {
-                vecstich.iter()
-                    .flat_map(|stich| stich.indices_and_cards())
-                    .map(|(_, card)| card)
-                    .filter(|&card| match self.trumpf_or_farbe(card) {
-                                VTrumpfOrFarbe::Trumpf => false,
-                                VTrumpfOrFarbe::Farbe(efarbe_card) => efarbe_card==efarbe
-                            } )
-                    .count()
-            };
-            // if card1 and card2 are the only remaining cards of their colors and both have 0 points, they are equivalent
-            if 5==count_farbe(card1.farbe()) && 5==count_farbe(card2.farbe()) {
-                return true;
-            }
-        }
-        false
-    }
-
     fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
         assert!(!vecstich.is_empty());
         if // do we already know who had the rufsau?
