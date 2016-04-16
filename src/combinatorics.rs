@@ -1,7 +1,7 @@
 use card::*;
 use hand::*;
 use stich::*;
-use suspicion::*;
+use ai::suspicion::*;
 
 use permutohedron::LexicalPermutation;
 

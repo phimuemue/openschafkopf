@@ -5,7 +5,7 @@ use rules::*;
 use ruleset::*;
 use game::*;
 use stich::*;
-use suspicion::*;
+use ai::suspicion::*;
 
 use std::sync::mpsc;
 use rand;

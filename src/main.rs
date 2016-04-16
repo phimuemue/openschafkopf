@@ -16,7 +16,7 @@ mod game;
 mod player;
 mod playercomputer;
 mod playerhuman;
-mod suspicion;
+mod ai;
 mod ruleset;
 mod accountbalance;
 mod skui;
