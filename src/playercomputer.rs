@@ -13,10 +13,17 @@ use rand::Rng;
 
 pub struct CPlayerComputer;
 
-fn unplayed_cards(hand_fixed: &CHand) -> Vec<Option<CCard>> {
+fn unplayed_cards(vecstich: &Vec<CStich>, hand_fixed: &CHand) -> Vec<Option<CCard>> {
     CCard::all_values().into_iter()
         .map(|card| 
-             if hand_fixed.contains(card) {
+             if 
+                 hand_fixed.contains(card)
+                 || vecstich.iter().any(|stich|
+                    stich.indices_and_cards().any(|(_eplayerindex, card_played)|
+                        card_played==card
+                    )
+                 )
+             {
                  None
              } else {
                  Some(card)
@@ -29,7 +36,7 @@ impl CPlayerComputer {
     pub fn rank_rules (&self, hand_fixed: &CHand, eplayerindex_fixed: EPlayerIndex, rules: &Box<TRules>, n_tests: usize) -> f64 {
         (0..n_tests)
             .map(|_i_test| {
-                let mut vecocard = unplayed_cards(hand_fixed);
+                let mut vecocard = unplayed_cards(&Vec::new(), hand_fixed);
                 let mut susp = SSuspicion::new_from_raw(
                     eplayerindex_fixed,
                     create_playerindexmap(|eplayerindex| {
