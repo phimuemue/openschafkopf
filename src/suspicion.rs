@@ -8,7 +8,7 @@ pub struct SSuspicionTransition {
     m_susp : SSuspicion,
 }
 
-fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<CStich>, stich: CStich, func: Func) -> R
+pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<CStich>, stich: CStich, func: Func) -> R
     where Func: FnOnce(&mut Vec<CStich>) -> R
 {
     let n_stich = vecstich.len();
