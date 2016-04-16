@@ -137,7 +137,7 @@ fn main() {
     let aruleset = read_ruleset();
     {
         let playercomputer = CPlayerComputer;
-        let hand_fixed = random_hand(&mut CCard::all_values().into_iter().map(|card| Some(card)).collect());
+        let hand_fixed = random_hand(8, &mut CCard::all_values().into_iter().map(|card| Some(card)).collect());
         let eplayerindex_fixed = 0;
 
         println!("Hand: {}", hand_fixed);

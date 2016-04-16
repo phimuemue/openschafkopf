@@ -32,7 +32,7 @@ impl CPlayerComputer {
                         if eplayerindex_fixed==eplayerindex {
                             hand_fixed.clone()
                         } else {
-                            random_hand(&mut vecocard)
+                            random_hand(8, &mut vecocard)
                         }
                     })
                 );

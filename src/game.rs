@@ -16,13 +16,13 @@ pub struct SGamePreparations<'rules> {
     m_aruleset : &'rules [SRuleSet; 4],
 }
 
-pub fn random_hand(vecocard : &mut Vec<Option<CCard>>) -> CHand {
+pub fn random_hand(n_size: usize, vecocard : &mut Vec<Option<CCard>>) -> CHand {
     let n_card_total = 32;
     assert_eq!(vecocard.len(), n_card_total);
-    assert_eq!(vecocard.iter().filter(|ocard| ocard.is_some()).count()%8, 0);
+    assert!(vecocard.iter().filter(|ocard| ocard.is_some()).count()>=n_size);
     CHand::new_from_vec({
         let mut veccard = Vec::new();
-        for _i in 0..8 {
+        for _i in 0..n_size {
             let mut i_card = rand::thread_rng().gen_range(0, n_card_total);
             while vecocard[i_card].is_none() {
                 i_card = rand::thread_rng().gen_range(0, n_card_total);
@@ -30,6 +30,7 @@ pub fn random_hand(vecocard : &mut Vec<Option<CCard>>) -> CHand {
             veccard.push(vecocard[i_card].unwrap());
             vecocard[i_card] = None;
         }
+        assert_eq!(veccard.len(), n_size);
         veccard
     })
 }
@@ -38,7 +39,7 @@ pub fn random_hands() -> [CHand; 4] {
     let mut vecocard : Vec<Option<CCard>> = CCard::all_values().into_iter().map(|card| Some(card)).collect();
     assert!(vecocard.len()==32);
     create_playerindexmap(move |_eplayerindex|
-        random_hand(&mut vecocard)
+        random_hand(8, &mut vecocard)
     )
 }
 
