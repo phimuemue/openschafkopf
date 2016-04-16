@@ -3,7 +3,7 @@ use hand::*;
 use rules::*;
 use itertools::Itertools;
 
-struct SSuspicionTransition {
+pub struct SSuspicionTransition {
     m_stich : CStich,
     m_susp : SSuspicion,
 }
