@@ -139,10 +139,9 @@ pub trait TRules : fmt::Display {
     
     fn winner_index(&self, stich: &CStich) -> EPlayerIndex {
         let mut eplayerindex_best = stich.m_eplayerindex_first;
-        for i in 1..stich.size() {
-            let eplayerindex_current = (stich.m_eplayerindex_first + i)%4;
-            if Ordering::Less==self.compare_in_stich(stich.m_acard[eplayerindex_best], stich.m_acard[eplayerindex_current]) {
-                eplayerindex_best = eplayerindex_current;
+        for (eplayerindex, card) in stich.indices_and_cards().skip(1) {
+            if Ordering::Less==self.compare_in_stich(stich.m_acard[eplayerindex_best], card) {
+                eplayerindex_best = eplayerindex;
             }
         }
         eplayerindex_best
