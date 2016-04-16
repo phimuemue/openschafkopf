@@ -28,17 +28,6 @@ impl CRulesRufspiel {
             false
         }
     }
-
-    fn check_points_to_win(&self, eplayerindex_player: EPlayerIndex, eplayerindex_coplayer: EPlayerIndex, an_points: &[isize; 4]) -> bool {
-        // TODO: this method is always fishy when I read it (passing in eplayerindex_coplayer does not seem
-        // to be the best idea)
-        let n_points_player_party = an_points[self.m_eplayerindex as usize] + an_points[eplayerindex_coplayer as usize];
-        if eplayerindex_player==self.m_eplayerindex || eplayerindex_player==eplayerindex_coplayer {
-            n_points_player_party >= 61
-        } else {
-            n_points_player_party <= 60
-        }
-    }
 }
 
 impl TRules for CRulesRufspiel {
@@ -62,15 +51,18 @@ impl TRules for CRulesRufspiel {
 
     fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<CStich>) -> bool {
         assert!(8==vecstich.len());
-        self.check_points_to_win(
-            eplayerindex,
-            /*eplayerindex_coplayer*/vecstich.iter()
-                .flat_map(|stich| stich.indices_and_cards())
-                .find(|&(_, card)| card==self.rufsau())
-                .map(|(eplayerindex, _)| eplayerindex)
-                .unwrap(),
-            &self.points_per_player(vecstich)
-        )
+        let eplayerindex_coplayer = vecstich.iter()
+            .flat_map(|stich| stich.indices_and_cards())
+            .find(|&(_, card)| card==self.rufsau())
+            .map(|(eplayerindex, _)| eplayerindex)
+            .unwrap();
+        let an_points = &self.points_per_player(vecstich);
+        let n_points_player_party = an_points[self.m_eplayerindex as usize] + an_points[eplayerindex_coplayer as usize];
+        if eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer {
+            n_points_player_party >= 61
+        } else {
+            n_points_player_party <= 60
+        }
     }
 
     fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
