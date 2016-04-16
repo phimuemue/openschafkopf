@@ -31,9 +31,7 @@ pub struct CStich {
 impl PartialEq for CStich {
     fn eq(&self, stich_other: &CStich) -> bool {
         self.size()==stich_other.size()
-        && self.indices_and_cards()
-            .zip(stich_other.indices_and_cards())
-            .all(|((i1, c1), (i2, c2))| i1==i2 && c1==c2)
+        && self.equal_up_to_size(stich_other, self.m_n_size)
     }
 }
 impl Eq for CStich {}
@@ -72,6 +70,12 @@ impl CStich {
             m_n_size: 0,
             m_acard: [CCard::new(EFarbe::Eichel, ESchlag::S7); 4]
         }
+    }
+    pub fn equal_up_to_size(&self, stich_other: &CStich, n_size: usize) -> bool {
+        self.indices_and_cards()
+            .zip(stich_other.indices_and_cards())
+            .take(n_size)
+            .all(|((i1, c1), (i2, c2))| i1==i2 && c1==c2)
     }
     pub fn empty(&self) -> bool {
         self.m_n_size == 0
