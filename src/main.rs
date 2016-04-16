@@ -3,6 +3,7 @@ extern crate ncurses;
 #[macro_use]
 extern crate itertools;
 extern crate permutohedron;
+extern crate clap;
 
 mod card;
 mod stich;
@@ -27,8 +28,15 @@ use rules::rulesrufspiel::CRulesRufspiel;
 use std::collections::HashSet;
 use rules::ruleset::*;
 use ai::*;
+use std::path::Path;
 
 fn main() {
+    let clapmatches = clap::App::new("schafkopf")
+        .arg(clap::Arg::with_name("rulesetpath")
+             .long("ruleset")
+             .default_value(".schafkopfruleset")
+        )
+        .get_matches();
     {
         let rules = CRulesRufspiel {
             m_eplayerindex : 0,
@@ -124,7 +132,7 @@ fn main() {
         println!("{} suspicions", n_susp);
     }
 
-    let aruleset = read_ruleset();
+    let aruleset = read_ruleset(Path::new(clapmatches.value_of("rulesetpath").unwrap()));
     {
         let hand_fixed = random_hand(8, &mut CCard::all_values().into_iter().map(|card| Some(card)).collect());
         let eplayerindex_fixed = 0;

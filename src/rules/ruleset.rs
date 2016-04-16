@@ -20,8 +20,7 @@ impl SRuleSet {
     }
 }
 
-pub fn read_ruleset() -> [SRuleSet; 4] {
-    let path = Path::new(".schafkopfruleset");
+pub fn read_ruleset(path: &Path) -> [SRuleSet; 4] {
     if !path.exists() {
         println!("File {} not found. Creating it.", path.display());
         let mut file = match File::create(&path) {
