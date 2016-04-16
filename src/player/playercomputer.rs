@@ -15,10 +15,11 @@ impl CPlayer for CPlayerComputer {
         txcard.send(ai::suggest_card(gamestate)).ok();
     }
 
-    fn ask_for_game<'rules>(&self, hand: &CHand, _ : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules Box<TRules>> {
+    fn ask_for_game<'rules>(&self, hand: &CHand, _ : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules TRules> {
         // TODO: implement a more intelligent decision strategy
         let n_tests_per_rules = 50;
         ruleset.allowed_rules().iter()
+            .map(|rules| rules.as_ref())
             .filter(|rules| rules.can_be_played(hand))
             .filter(|rules| {
                 4 <= hand.cards().iter()

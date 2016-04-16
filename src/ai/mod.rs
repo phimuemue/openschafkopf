@@ -11,7 +11,7 @@ use rand;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-pub fn rank_rules (hand_fixed: &CHand, eplayerindex_fixed: EPlayerIndex, rules: &Box<TRules>, n_tests: usize) -> f64 {
+pub fn rank_rules (hand_fixed: &CHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
     (0..n_tests)
         .map(|_i_test| {
             let mut vecocard = unplayed_cards(&Vec::new(), hand_fixed);
@@ -25,11 +25,11 @@ pub fn rank_rules (hand_fixed: &CHand, eplayerindex_fixed: EPlayerIndex, rules: 
                     }
                 })
             );
-            susp.compute_successors(rules.as_ref(), &mut Vec::new(), &|_vecstich_complete, vecstich_successor| {
+            susp.compute_successors(rules, &mut Vec::new(), &|_vecstich_complete, vecstich_successor| {
                 assert!(!vecstich_successor.is_empty());
                 random_sample_from_vec(vecstich_successor, 1);
             });
-            susp.min_reachable_payout(rules.as_ref(), &mut Vec::new(), None, eplayerindex_fixed)
+            susp.min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex_fixed)
         })
         .fold(0, |n_payout_acc, n_payout| n_payout_acc+n_payout) as f64
         / n_tests as f64
@@ -131,7 +131,7 @@ pub fn suggest_card(gamestate: &SGameState) -> CCard {
         .map(|ahand| {
             let mut susp = SSuspicion::new_from_raw(stich_current.first_player_index(), ahand);
             susp.compute_successors(
-                gamestate.m_rules.as_ref(),
+                gamestate.m_rules,
                 &mut vecstich_complete_mut,
                 &|vecstich_complete_successor: &Vec<CStich>, vecstich_successor: &mut Vec<CStich>| {
                     assert!(!vecstich_successor.is_empty());
@@ -163,7 +163,7 @@ pub fn suggest_card(gamestate: &SGameState) -> CCard {
                     let mut vecstich_complete_payout = vecstich_complete_immutable.clone();
                     let n_payout = push_pop_vecstich(&mut vecstich_complete_payout, susptrans.stich().clone(), |mut vecstich_complete_payout| {
                         susptrans.suspicion().min_reachable_payout(
-                            gamestate.m_rules.as_ref(),
+                            gamestate.m_rules,
                             &mut vecstich_complete_payout,
                             None,
                             eplayerindex_fixed

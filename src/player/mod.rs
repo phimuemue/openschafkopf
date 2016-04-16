@@ -17,5 +17,5 @@ pub trait CPlayer {
         hand: &CHand,
         vecgameannouncement: &Vec<SGameAnnouncement>,
         ruleset : &'rules SRuleSet
-    ) -> Option<&'rules Box<TRules>>;
+    ) -> Option<&'rules TRules>;
 }

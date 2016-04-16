@@ -116,7 +116,7 @@ impl<'rules> SGamePreparations<'rules> {
 
 pub struct SGameState<'rules> {
     pub m_ahand : [CHand; 4],
-    pub m_rules : &'rules Box<TRules>,
+    pub m_rules : &'rules TRules,
     pub m_vecstich : Vec<CStich>,
 }
 
@@ -141,7 +141,7 @@ pub type SGameAnnouncementPriority = isize;
 
 pub struct SGameAnnouncement<'rules> {
     pub m_eplayerindex : EPlayerIndex,
-    pub m_opairrulespriority : Option<(&'rules Box<TRules>, SGameAnnouncementPriority)>,
+    pub m_opairrulespriority : Option<(&'rules TRules, SGameAnnouncementPriority)>,
 }
 
 impl<'rules> CGame<'rules> {
