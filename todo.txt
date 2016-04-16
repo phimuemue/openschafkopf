@@ -3,5 +3,6 @@
 * "graphical" output (possibly via libaa/libcaca)
 * simplify count_runnings: consider only highest trumpf per party
 * &Box<X> => &X
-* implement strategy for CPlayerComputer
 * introduce actively_playable_rules (shall be offered by what currently is called "all_allowed_rules")
+* fix graphical output (currently, it is often cleared when ai is running)
+* add indication to show that ai is working
