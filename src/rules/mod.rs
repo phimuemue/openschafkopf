@@ -113,8 +113,6 @@ pub trait TRules : fmt::Display {
             .any(|card_iterated| card_iterated==card)
     }
 
-    //fn DefaultStrategy() -> std::shared_ptr<CStrategy>;
-    
     fn winner_index(&self, stich: &CStich) -> EPlayerIndex {
         let mut eplayerindex_best = stich.m_eplayerindex_first;
         for (eplayerindex, card) in stich.indices_and_cards().skip(1) {
