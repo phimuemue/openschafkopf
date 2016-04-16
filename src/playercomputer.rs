@@ -9,7 +9,6 @@ use suspicion::*;
 
 use std::sync::mpsc;
 use rand;
-use rand::Rng;
 
 pub struct CPlayerComputer;
 
@@ -32,6 +31,15 @@ fn unplayed_cards(vecstich: &Vec<CStich>, hand_fixed: &CHand) -> Vec<Option<CCar
         .collect()
 }
 
+pub fn random_sample_from_vec(vecstich: &mut Vec<CStich>, n_size: usize) {
+    let vecstich_sample = rand::sample(&mut rand::thread_rng(), vecstich.iter().cloned(), n_size);
+    // TODO can't we just assign to vecstich?
+    vecstich.clear();
+    for stich in vecstich_sample.into_iter() {
+        vecstich.push(stich.clone())
+    }
+}
+
 impl CPlayerComputer {
     pub fn rank_rules (&self, hand_fixed: &CHand, eplayerindex_fixed: EPlayerIndex, rules: &Box<TRules>, n_tests: usize) -> f64 {
         (0..n_tests)
@@ -48,12 +56,8 @@ impl CPlayerComputer {
                     })
                 );
                 susp.compute_successors(rules.as_ref(), &mut Vec::new(), &|_vecstich_complete, vecstich_successor| {
-                    if !vecstich_successor.is_empty() {
-                        let i_stich = rand::thread_rng().gen_range(0, vecstich_successor.len());
-                        let stich = vecstich_successor[i_stich].clone();
-                        vecstich_successor.clear();
-                        vecstich_successor.push(stich);
-                    }
+                    assert!(!vecstich_successor.is_empty());
+                    random_sample_from_vec(vecstich_successor, 1);
                 });
                 susp.min_reachable_payout(rules.as_ref(), &mut Vec::new(), None, eplayerindex_fixed)
             })

@@ -116,7 +116,10 @@ impl SSuspicion {
                 } );
             } );
         });
-        func_filter_successors(vecstich, &mut vecstich_successor);
+        if !vecstich_successor.is_empty() {
+            func_filter_successors(vecstich, &mut vecstich_successor);
+            assert!(!vecstich_successor.is_empty());
+        }
         self.m_vecsusptrans = vecstich_successor.into_iter()
             .map(|stich| {
                 let mut susptrans = SSuspicionTransition::new(self, stich.clone(), rules);
