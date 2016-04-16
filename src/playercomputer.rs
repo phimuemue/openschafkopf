@@ -13,19 +13,23 @@ use rand::Rng;
 
 pub struct CPlayerComputer;
 
+fn unplayed_cards(hand_fixed: &CHand) -> Vec<Option<CCard>> {
+    CCard::all_values().into_iter()
+        .map(|card| 
+             if hand_fixed.contains(card) {
+                 None
+             } else {
+                 Some(card)
+             }
+        )
+        .collect()
+}
+
 impl CPlayerComputer {
     pub fn rank_rules (&self, hand_fixed: &CHand, eplayerindex_fixed: EPlayerIndex, rules: &Box<TRules>, n_tests: usize) -> f64 {
         (0..n_tests)
             .map(|_i_test| {
-                let mut vecocard : Vec<Option<CCard>> = CCard::all_values().into_iter()
-                    .map(|card| 
-                         if hand_fixed.contains(card) {
-                             None
-                         } else {
-                             Some(card)
-                         }
-                    )
-                    .collect();
+                let mut vecocard = unplayed_cards(hand_fixed);
                 let mut susp = SSuspicion::new_from_raw(
                     eplayerindex_fixed,
                     create_playerindexmap(|eplayerindex| {
