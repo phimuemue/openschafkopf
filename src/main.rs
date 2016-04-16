@@ -36,6 +36,10 @@ fn main() {
              .long("ruleset")
              .default_value(".schafkopfruleset")
         )
+        .arg(clap::Arg::with_name("numgames")
+             .long("numgames")
+             .default_value("4")
+         )
         .get_matches();
     {
         let rules = CRulesRufspiel {
@@ -151,7 +155,7 @@ fn main() {
 
     skui::init_ui();
     let mut accountbalance = SAccountBalance::new();
-    for i_game in 0..4 { // TODO make number of rounds adjustable
+    for i_game in 0..clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4) {
         let gameprep = SGamePreparations::new(&aruleset);
         skui::logln(&format!("Hand 0 : {}", gameprep.m_ahand[0]));
         if let Some(mut game)=gameprep.start_game(i_game % 4) {
