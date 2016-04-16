@@ -66,12 +66,12 @@ impl TRules for CRulesSolo {
     fn all_allowed_cards_within_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
         assert!(!vecstich.is_empty());
         let card_first = vecstich.last().unwrap().first_card();
-        let veccard_allowed : Vec<CCard> = hand.cards().iter()
+        let veccard_allowed : CHandVector = hand.cards().iter()
             .filter(|&&card| self.trumpf_or_farbe(card)==self.trumpf_or_farbe(card_first))
             .cloned()
             .collect();
         if veccard_allowed.is_empty() {
-            hand.cards().to_vec()
+            hand.cards().clone()
         } else {
             veccard_allowed
         }

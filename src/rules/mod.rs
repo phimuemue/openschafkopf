@@ -8,8 +8,6 @@ use hand::*;
 use std::cmp::Ordering;
 use std::fmt;
 
-pub type CHandVector = Vec<CCard>; // TODO: vector with fixed capacity 8
-
 #[derive(PartialEq, Eq, Hash)]
 pub enum VTrumpfOrFarbe {
     Trumpf,

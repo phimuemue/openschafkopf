@@ -21,7 +21,7 @@ pub fn random_hand(n_size: usize, vecocard : &mut Vec<Option<CCard>>) -> CHand {
     assert_eq!(vecocard.len(), n_card_total);
     assert!(vecocard.iter().filter(|ocard| ocard.is_some()).count()>=n_size);
     CHand::new_from_vec({
-        let mut veccard = Vec::new();
+        let mut veccard = CHandVector::new();
         for _i in 0..n_size {
             let mut i_card = rand::thread_rng().gen_range(0, n_card_total);
             while vecocard[i_card].is_none() {

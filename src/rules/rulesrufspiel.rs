@@ -137,7 +137,7 @@ impl TRules for CRulesRufspiel {
                     .filter(|&card| self.is_ruffarbe(*card))
                     .count()
             {
-                hand.cards().to_vec()
+                hand.cards().clone()
             } else {
                 hand.cards().iter()
                     .cloned()
@@ -146,14 +146,14 @@ impl TRules for CRulesRufspiel {
             }
         }
         else {
-            hand.cards().to_vec()
+            hand.cards().clone()
         }
     }
 
     fn all_allowed_cards_within_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
         assert!(!vecstich.is_empty());
         if hand.cards().len()<=1 {
-            hand.cards().to_vec()
+            hand.cards().clone()
         } else {
             let card_first = vecstich.last().unwrap().first_card();
             if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) {
@@ -167,9 +167,9 @@ impl TRules for CRulesRufspiel {
                 //   e9   g9    ..  >g7
                 //     >g8        ..
                 // Is player 0 obliged to play GA? We implement it this way for now.
-                vec![self.rufsau()]
+                Some(self.rufsau()).into_iter().collect()
             } else {
-                let veccard_allowed : Vec<CCard> = hand.cards().iter()
+                let veccard_allowed : CHandVector = hand.cards().iter()
                     .filter(|&&card| 
                         self.rufsau()!=card 
                         && self.trumpf_or_farbe(card)==self.trumpf_or_farbe(card_first)

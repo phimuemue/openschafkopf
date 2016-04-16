@@ -1,10 +1,13 @@
 use card::*;
 use std::fmt;
 use std::cmp::Ordering;
+use arrayvec::ArrayVec;
+
+pub type CHandVector = ArrayVec<[CCard; 8]>;
 
 #[derive(Clone)]
 pub struct CHand {
-    m_veccard: Vec<CCard>, // TODO: use arrayvec
+    m_veccard: CHandVector,
 }
 
 impl CHand {
@@ -15,10 +18,10 @@ impl CHand {
                 .iter()
                 .map(|x| x.clone())
                 .filter(|&card| card!=card_played)
-                .collect::<Vec<_>>()
+                .collect()
         }
     }
-    pub fn new_from_vec(veccard: Vec<CCard>) -> CHand {
+    pub fn new_from_vec(veccard: CHandVector) -> CHand {
         CHand {m_veccard : veccard}
     }
     pub fn contains(&self, card_check: CCard) -> bool {
@@ -32,7 +35,7 @@ impl CHand {
             .any(pred)
     }
     pub fn play_card(&mut self, card_played: CCard) {
-        self.m_veccard.retain(|&card| card!=card_played)
+        self.m_veccard.retain(|&mut card| card!=card_played)
     }
 
     pub fn sort<CmpLess>(&mut self, cmpless: CmpLess)
@@ -41,7 +44,7 @@ impl CHand {
         self.m_veccard.sort_by(cmpless)
     }
 
-    pub fn cards(&self) -> &Vec<CCard> {
+    pub fn cards(&self) -> &CHandVector {
         &self.m_veccard
     }
 }

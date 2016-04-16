@@ -4,6 +4,7 @@ extern crate ncurses;
 extern crate itertools;
 extern crate permutohedron;
 extern crate clap;
+extern crate arrayvec;
 
 mod card;
 mod stich;
@@ -103,7 +104,7 @@ fn main() {
 
         let mut n_susp = 0;
         combinatorics::for_each_suspicion(
-            &CHand::new_from_vec(cardvectorparser::parse_cards("gk sk")),
+            &CHand::new_from_vec(cardvectorparser::parse_cards("gk sk").into_iter().collect()),
             &cardvectorparser::parse_cards("gz e7 sz h9 ez gu"),
             0, // eplayerindex
             |susp| {
