@@ -97,7 +97,7 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
     retval
 }
 
-pub fn print_vecstich(vecstich: &Vec<CStich>) {
+pub fn print_vecstich(vecstich: &[CStich]) {
     do_in_window(
         ESkUiWindow::Stich,
         |ncwin| {
@@ -122,7 +122,7 @@ pub fn print_vecstich(vecstich: &Vec<CStich>) {
     );
 }
 
-pub fn print_game_announcements(vecgameannouncement: &Vec<SGameAnnouncement>) {
+pub fn print_game_announcements(vecgameannouncement: &[SGameAnnouncement]) {
     for gameannouncement in vecgameannouncement {
         do_in_window(
             ESkUiWindow::PlayerInfo(gameannouncement.m_eplayerindex),
@@ -196,7 +196,7 @@ pub fn choose_alternative_from_list_key_bindings() -> SAskForAlternativeKeyBindi
 
 pub fn ask_for_alternative<'vect, T, FnFormat, FnFilter, FnCallback, FnSuggest>(
     str_question: &str,
-    vect: &'vect Vec<T>,
+    vect: &'vect [T],
     askforalternativekeybindings: SAskForAlternativeKeyBindings,
     fn_filter: FnFilter,
     fn_format: FnFormat,
@@ -251,7 +251,7 @@ pub fn ask_for_alternative<'vect, T, FnFormat, FnFilter, FnCallback, FnSuggest>(
     )
 }
 
-pub fn print_hand(veccard: &Vec<CCard>, oi_card: Option<usize>) {
+pub fn print_hand(veccard: &[CCard], oi_card: Option<usize>) {
     do_in_window(
         ESkUiWindow::Hand,
         |ncwin| {

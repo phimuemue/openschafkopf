@@ -46,7 +46,7 @@ impl CPlayer for CPlayerHuman {
                         .filter(|rules| rules.can_be_played(hand))
                         .map(|rules| Some(rules))
                 )
-                .collect::<_>(),
+                .collect::<Vec<_>>(),
             skui::choose_alternative_from_list_key_bindings(),
             |_orules| {true},
             |orules| match orules {
