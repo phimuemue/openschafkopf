@@ -173,6 +173,7 @@ pub struct SAskForAlternativeKeyBindings {
     m_key_prev : i32,
     m_key_next : i32,
     m_key_choose : i32,
+    m_key_suggest : i32,
 }
 
 pub fn choose_card_from_hand_key_bindings() -> SAskForAlternativeKeyBindings {
@@ -180,6 +181,7 @@ pub fn choose_card_from_hand_key_bindings() -> SAskForAlternativeKeyBindings {
         m_key_prev : ncurses::KEY_LEFT,
         m_key_next : ncurses::KEY_RIGHT,
         m_key_choose : ncurses::KEY_UP,
+        m_key_suggest : '?' as i32,
     }
 }
 
@@ -188,24 +190,28 @@ pub fn choose_alternative_from_list_key_bindings() -> SAskForAlternativeKeyBindi
         m_key_prev : ncurses::KEY_UP,
         m_key_next : ncurses::KEY_DOWN,
         m_key_choose : ncurses::KEY_RIGHT,
+        m_key_suggest : '?' as i32,
     }
 }
 
-pub fn ask_for_alternative<'vect, T, FnFormat, FnFilter, FnCallback>(
+pub fn ask_for_alternative<'vect, T, FnFormat, FnFilter, FnCallback, FnSuggest>(
     str_question: &str,
     vect: &'vect Vec<T>,
     askforalternativekeybindings: SAskForAlternativeKeyBindings,
     fn_filter: FnFilter,
     fn_format: FnFormat,
-    fn_callback: FnCallback
+    fn_callback: FnCallback,
+    fn_suggest: FnSuggest
 ) -> &'vect T 
     where FnFormat : Fn(&T) -> String,
           FnFilter : Fn(&T) -> bool,
-          FnCallback : Fn(&T, usize)
+          FnCallback : Fn(&T, usize),
+          FnSuggest : Fn() -> Option<T>
 {
     do_in_window(
         ESkUiWindow::Interaction,
         |ncwin| {
+            let mut ot_suggest = None;
             let vect = vect.into_iter().enumerate().filter(|&(_i_t, ref t)| fn_filter(&t)).collect::<Vec<_>>();
             assert!(0<vect.len());
             let mut i_alternative = 0; // initially, point to 0th alternative
@@ -221,6 +227,11 @@ pub fn ask_for_alternative<'vect, T, FnFormat, FnFilter, FnCallback>(
                         if i_alternative<vect.len()-1 {
                             i_alternative = i_alternative + 1
                         }
+                    } else if ch==askforalternativekeybindings.m_key_suggest {
+                        ot_suggest = fn_suggest();
+                    }
+                    if let Some(ref t) = ot_suggest {
+                        wprintln(ncwin, &format!("AI: {}", fn_format(t)));
                     }
                     wprintln(ncwin, str_question);
                     for (i_t, t) in vect.iter().enumerate() {

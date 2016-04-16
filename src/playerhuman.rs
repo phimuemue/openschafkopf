@@ -5,6 +5,7 @@ use rules::*;
 use ruleset::*;
 use game::*;
 use skui;
+use ai;
 
 use std::sync::mpsc;
 use std::io::Read;
@@ -26,7 +27,8 @@ impl CPlayer for CPlayerHuman {
                 |_card, i_card| {
                     skui::print_hand(hand.cards(), Some(i_card));
                     skui::print_game_info(gamestate);
-                }
+                },
+                || {Some(ai::suggest_card(gamestate))}
             ).clone()
         ) {
             Ok(_) => (),
@@ -70,7 +72,8 @@ impl CPlayer for CPlayerHuman {
                     }.reverse());
                 }
                 skui::print_hand(&veccard, None);
-            }
+            },
+            ||{None}
         )
     }
 }
