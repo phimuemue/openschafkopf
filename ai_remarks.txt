@@ -18,3 +18,8 @@ Gras-Solo by 0:
 * 1 plays HO in Stich 1. => TODO: Possibly, we should acknowledge that a (Solo-)Player probably has above average cards.
 * 3 gets stich 4 wich SO.
 * 3 plays EA in stich 7. => Maybe because it made no difference anyway?
+
+    GK        EK        S9        GU        HA       >EU        E8        EO
+ >GZ  GA    HK  EA   >S7  SZ    S8  GO    H9 >H8    HO  SU   >G8  G7   >G9  EZ
+    HZ       >E7        SA       >SK        H7        HU        E9        SO
+* AI suggests to play E9 in stich 7 (possibly because it does not matter for payout, anyway).
