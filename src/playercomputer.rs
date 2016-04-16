@@ -2,7 +2,7 @@ use card::*;
 use hand::*;
 use player::*;
 use rules::*;
-use ruleset::*;
+use rules::ruleset::*;
 use game::*;
 use ai;
 

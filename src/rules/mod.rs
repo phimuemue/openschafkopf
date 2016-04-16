@@ -1,3 +1,7 @@
+pub mod rulesrufspiel;
+pub mod rulessolo;
+pub mod ruleset;
+
 use card::*;
 use stich::*;
 use hand::*;

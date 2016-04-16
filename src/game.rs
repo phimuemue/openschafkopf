@@ -2,7 +2,7 @@ use card::*;
 use hand::*;
 use stich::*;
 use rules::*;
-use ruleset::*;
+use rules::ruleset::*;
 use player::*;
 use playercomputer::*;
 use playerhuman::*;

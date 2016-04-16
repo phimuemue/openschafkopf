@@ -10,14 +10,11 @@ mod combinatorics;
 mod cardvectorparser;
 mod hand;
 mod rules;
-mod rulesrufspiel;
-mod rulessolo;
 mod game;
 mod player;
 mod playercomputer;
 mod playerhuman;
 mod ai;
-mod ruleset;
 mod accountbalance;
 mod skui;
 
@@ -28,9 +25,9 @@ use stich::*;
 use hand::*;
 use rules::*;
 use accountbalance::SAccountBalance;
-use rulesrufspiel::CRulesRufspiel;
+use rules::rulesrufspiel::CRulesRufspiel;
 use std::collections::HashSet;
-use ruleset::*;
+use rules::ruleset::*;
 use ai::*;
 
 fn main() {

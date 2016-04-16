@@ -1,8 +1,8 @@
 use card::*;
 use stich::*;
 use rules::*;
-use rulesrufspiel::*;
-use rulessolo::*;
+use rules::rulesrufspiel::*;
+use rules::rulessolo::*;
 
 use std::error::Error;
 use std::fs::File;
