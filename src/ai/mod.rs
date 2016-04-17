@@ -141,6 +141,7 @@ pub fn suggest_card(gamestate: &SGameState) -> CCard {
     assert!(stich_current.size()<4);
     let eplayerindex_fixed = stich_current.current_player_index();
     let ref hand_fixed = gamestate.m_ahand[eplayerindex_fixed];
+    let veccard_allowed_fixed = gamestate.m_rules.all_allowed_cards(&gamestate.m_vecstich, hand_fixed);
     let mapcardpayout = forever_rand_hands(&vecstich_complete_immutable, hand_fixed.clone(), eplayerindex_fixed)
         .filter(|ahand| {
             // hands must contain respective cards from stich_current...
@@ -191,8 +192,8 @@ pub fn suggest_card(gamestate: &SGameState) -> CCard {
         .fold(
             // aggregate n_payout per card in some way
             HashMap::from_iter(
-                gamestate.m_rules.all_allowed_cards(&gamestate.m_vecstich, hand_fixed).into_iter()
-                    .map(|card| (card, 0)) // TODO Option<isize> more convenient?
+                veccard_allowed_fixed.iter()
+                    .map(|card| (card.clone(), 0)) // TODO Option<isize> more convenient?
             ),
             |mut mapcardpayout: HashMap<CCard, isize>, susp| {
                 for susptrans in susp.suspicion_tranitions() {
@@ -213,7 +214,7 @@ pub fn suggest_card(gamestate: &SGameState) -> CCard {
             }
         );
     assert!(!hand_fixed.cards().is_empty());
-    gamestate.m_rules.all_allowed_cards(&gamestate.m_vecstich, hand_fixed).into_iter()
+    veccard_allowed_fixed.into_iter()
         .max_by_key(|card| mapcardpayout[card])
         .unwrap()
         .clone()
