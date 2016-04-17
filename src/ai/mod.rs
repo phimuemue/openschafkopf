@@ -8,6 +8,7 @@ use stich::*;
 use ai::suspicion::*;
 
 use rand;
+use rand::Rng;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
@@ -64,34 +65,68 @@ pub fn unplayed_cards(vecstich: &Vec<CStich>, hand_fixed: &CHand) -> Vec<Option<
 }
 
 struct SForeverRandHands {
-    m_vecocard : Vec<Option<CCard>>,
     m_eplayerindex_fixed : EPlayerIndex,
-    m_hand_fixed : CHand,
+    m_ahand: [CHand; 4],
 }
 
 impl Iterator for SForeverRandHands {
     type Item = [CHand; 4];
     fn next(&mut self) -> Option<[CHand; 4]> {
-        let mut vecocard = self.m_vecocard.clone();
-        Some(create_playerindexmap(|eplayerindex| {
-            if self.m_eplayerindex_fixed==eplayerindex {
-                self.m_hand_fixed.clone()
-            } else {
-                random_hand(self.m_hand_fixed.cards().len(), &mut vecocard)
+        let n_len_hand = self.m_ahand[0].cards().len();
+        assert!(self.m_ahand.iter().all(|hand| hand.cards().len()==n_len_hand));
+        let mut rng = rand::thread_rng();
+        for i_card in 0..3*n_len_hand {
+            let i_rand = rng.gen_range(0, 3*n_len_hand - i_card);
+            let ((eplayerindex_swap, i_hand_swap), (eplayerindex_rand, i_hand_rand)) = {
+                let convert_to_idxs = |i_rand| {
+                    // eplayerindex_fixed==0 => 8..31 valid
+                    // eplayerindex_fixed==1 => 0..7, 16..31 valid
+                    // eplayerindex_fixed==2 => 0..15, 24..31 valid
+                    // eplayerindex_fixed==3 => 0..23  valid
+                    let i_valid = {
+                        if i_rand < self.m_eplayerindex_fixed*n_len_hand {
+                            i_rand
+                        } else {
+                            i_rand + n_len_hand
+                        }
+                    };
+                    (i_valid/n_len_hand, i_valid%n_len_hand)
+                };
+                (convert_to_idxs(i_card), convert_to_idxs(i_rand))
+            };
+            {
+                let assert_valid = |eplayerindex, i_hand| {
+                    assert!(eplayerindex<4);
+                    assert!(i_hand<n_len_hand);
+                    assert!(eplayerindex!=self.m_eplayerindex_fixed);
+                };
+                assert_valid(eplayerindex_swap, i_hand_swap);
+                assert_valid(eplayerindex_rand, i_hand_rand);
             }
-        }))
+            let card_swap = self.m_ahand[eplayerindex_swap].cards()[i_hand_swap];
+            let card_rand = self.m_ahand[eplayerindex_rand].cards()[i_hand_rand];
+            *self.m_ahand[eplayerindex_swap].cards_mut().get_mut(i_hand_swap).unwrap() = card_rand;
+            *self.m_ahand[eplayerindex_rand].cards_mut().get_mut(i_hand_rand).unwrap() = card_swap;
+        }
+        Some(create_playerindexmap(|eplayerindex| self.m_ahand[eplayerindex].clone()))
     }
 }
 
 fn forever_rand_hands(vecstich: &Vec<CStich>, hand_fixed: CHand, eplayerindex_fixed: EPlayerIndex) -> SForeverRandHands {
     SForeverRandHands {
-        m_vecocard : {
-            let vecocard = unplayed_cards(vecstich, &hand_fixed);
-            assert!(vecocard.iter().filter(|ocard| ocard.is_some()).count()>=3*hand_fixed.cards().len());
-            vecocard
-        },
         m_eplayerindex_fixed : eplayerindex_fixed,
-        m_hand_fixed : hand_fixed,
+        m_ahand : {
+            let mut vecocard = unplayed_cards(vecstich, &hand_fixed);
+            assert!(vecocard.iter().filter(|ocard| ocard.is_some()).count()>=3*hand_fixed.cards().len());
+            let n_size = hand_fixed.cards().len();
+            create_playerindexmap(|eplayerindex| {
+                if eplayerindex==eplayerindex_fixed {
+                    hand_fixed.clone()
+                } else {
+                    random_hand(n_size, &mut vecocard)
+                }
+            })
+        }
     }
 }
 

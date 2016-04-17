@@ -47,6 +47,10 @@ impl CHand {
     pub fn cards(&self) -> &CHandVector {
         &self.m_veccard
     }
+
+    pub fn cards_mut(&mut self) -> &mut CHandVector {
+        &mut self.m_veccard
+    }
 }
 
 impl fmt::Display for CHand {
