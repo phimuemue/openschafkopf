@@ -22,11 +22,7 @@ impl CRulesRufspiel {
     }
 
     fn is_ruffarbe(&self, card: CCard) -> bool {
-        if !self.is_trumpf(card) {
-            card.farbe()==self.m_efarbe
-        } else {
-            false
-        }
+        VTrumpfOrFarbe::Farbe(self.m_efarbe)==self.trumpf_or_farbe(card)
     }
 }
 
