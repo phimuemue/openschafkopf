@@ -142,7 +142,7 @@ pub fn suggest_card(gamestate: &SGameState) -> CCard {
                             stich_current.equal_up_to_size(stich_successor, stich_current.size())
                         });
                         assert!(!vecstich_successor.is_empty());
-                    } else if vecstich_complete_successor.len() < 6 {
+                    } else if vecstich_complete_immutable.len() < 6 {
                         // TODO: maybe keep more than one successor stich
                         random_sample_from_vec(vecstich_successor, 1);
                     } else {
@@ -150,6 +150,7 @@ pub fn suggest_card(gamestate: &SGameState) -> CCard {
                     }
                 }
             );
+            assert_eq!(susp.suspicion_tranitions().len(), susp.count_leaves());
             susp
         })
         .fold(

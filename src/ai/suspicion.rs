@@ -80,6 +80,15 @@ impl SSuspicion {
         &self.m_ahand
     }
 
+    pub fn count_leaves(&self) -> usize {
+        if self.m_vecsusptrans.len()==0 {
+            1
+        } else {
+            self.m_vecsusptrans.iter()
+                .fold(0, |n_size_acc, susptrans| n_size_acc + susptrans.m_susp.count_leaves())
+        }
+    }
+
     fn new_from_susp(&self, stich: &CStich, rules: &TRules) -> Self {
         //println!("new_from_susp {}", stich);
         //println!("wi: {}", rules.winner_index(stich));
