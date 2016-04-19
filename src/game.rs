@@ -58,7 +58,7 @@ impl<'rules> SGamePreparations<'rules> {
     }
 
     // TODO: extend return value to support stock, etc.
-    pub fn start_game(mut self, eplayerindex_first : EPlayerIndex) -> Option<CGame<'rules>> {
+    pub fn start_game(mut self, eplayerindex_first : EPlayerIndex) -> Option<SGame<'rules>> {
         // prepare
         skui::logln("Preparing game");
         for hand in self.m_ahand.iter() {
@@ -102,7 +102,7 @@ impl<'rules> SGamePreparations<'rules> {
                     hand.sort(|&card_fst, &card_snd| rules.compare_in_stich(card_fst, card_snd).reverse());
                     skui::logln(&format!("{}", hand));
                 }
-                CGame {
+                SGame {
                     m_gamestate : SGameState {
                         m_ahand : self.m_ahand,
                         m_rules : rules,
@@ -132,7 +132,7 @@ impl<'rules> SGameState<'rules> {
     }
 }
 
-pub struct CGame<'rules> {
+pub struct SGame<'rules> {
     pub m_gamestate : SGameState<'rules>,
     pub m_vecplayer : Vec<Box<CPlayer>>, // TODO: good idea to use Box<CPlayer>, maybe shared_ptr equivalent?
 }
@@ -144,7 +144,7 @@ pub struct SGameAnnouncement<'rules> {
     pub m_opairrulespriority : Option<(&'rules TRules, SGameAnnouncementPriority)>,
 }
 
-impl<'rules> CGame<'rules> {
+impl<'rules> SGame<'rules> {
 
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
         self.m_gamestate.which_player_can_do_something()
