@@ -106,7 +106,7 @@ impl<'rules> SGamePreparations<'rules> {
                     m_gamestate : SGameState {
                         m_ahand : self.m_ahand,
                         m_rules : rules,
-                        m_vecstich : vec![CStich::new(eplayerindex_first)],
+                        m_vecstich : vec![SStich::new(eplayerindex_first)],
                     },
                     m_vecplayer : self.m_vecplayer,
                 }
@@ -117,7 +117,7 @@ impl<'rules> SGamePreparations<'rules> {
 pub struct SGameState<'rules> {
     pub m_ahand : [CHand; 4],
     pub m_rules : &'rules TRules,
-    pub m_vecstich : Vec<CStich>,
+    pub m_vecstich : Vec<SStich>,
 }
 
 impl<'rules> SGameState<'rules> {
@@ -153,7 +153,7 @@ impl<'rules> CGame<'rules> {
     fn new_stich(&mut self, eplayerindex_last_stich: EPlayerIndex) {
         skui::logln(&format!("Opening new stich starting at {}", eplayerindex_last_stich));
         assert!(self.m_gamestate.m_vecstich.is_empty() || 4==self.m_gamestate.m_vecstich.last().unwrap().size());
-        self.m_gamestate.m_vecstich.push(CStich::new(eplayerindex_last_stich));
+        self.m_gamestate.m_vecstich.push(SStich::new(eplayerindex_last_stich));
         self.notify_game_listeners();
     }
 

@@ -22,23 +22,23 @@ pub fn create_playerindexmap<T, F>(mut func: F) -> [T; 4]
 }
 
 #[derive(Clone)]
-pub struct CStich {
+pub struct SStich {
     pub m_eplayerindex_first: EPlayerIndex,
     m_n_size: usize,
     pub m_acard: [CCard; 4],
 }
 
-impl PartialEq for CStich {
-    fn eq(&self, stich_other: &CStich) -> bool {
+impl PartialEq for SStich {
+    fn eq(&self, stich_other: &SStich) -> bool {
         self.size()==stich_other.size()
         && self.equal_up_to_size(stich_other, self.m_n_size)
     }
 }
-impl Eq for CStich {}
+impl Eq for SStich {}
 
 pub struct StichIterator<'stich> {
     m_eplayerindex : EPlayerIndex,
-    m_stich: &'stich CStich,
+    m_stich: &'stich SStich,
 }
 
 impl<'stich> Iterator for StichIterator<'stich> {
@@ -56,22 +56,22 @@ impl<'stich> Iterator for StichIterator<'stich> {
     }
 }
 
-impl Index<EPlayerIndex> for CStich {
+impl Index<EPlayerIndex> for SStich {
     type Output = CCard;
     fn index<'a>(&'a self, eplayerindex : EPlayerIndex) -> &'a CCard {
         &self.m_acard[eplayerindex]
     }
 }
 
-impl CStich {
-    pub fn new(eplayerindex_first: EPlayerIndex) -> CStich {
-        CStich {
+impl SStich {
+    pub fn new(eplayerindex_first: EPlayerIndex) -> SStich {
+        SStich {
             m_eplayerindex_first : eplayerindex_first,
             m_n_size: 0,
             m_acard: [CCard::new(EFarbe::Eichel, ESchlag::S7); 4]
         }
     }
-    pub fn equal_up_to_size(&self, stich_other: &CStich, n_size: usize) -> bool {
+    pub fn equal_up_to_size(&self, stich_other: &SStich, n_size: usize) -> bool {
         self.indices_and_cards()
             .zip(stich_other.indices_and_cards())
             .take(n_size)
@@ -120,7 +120,7 @@ impl CStich {
     }
 }
 
-impl fmt::Display for CStich {
+impl fmt::Display for SStich {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // TODO: more elegance!
         for eplayerindex in 0..4 {
@@ -142,7 +142,7 @@ impl fmt::Display for CStich {
 fn test_stich() {
     // TODO: use quicktest or similar and check proper retrieval
     for eplayerindex in 0..4 {
-        let mut stich = CStich::new(eplayerindex);
+        let mut stich = SStich::new(eplayerindex);
         for i_size in 0..4 {
             stich.zugeben(CCard::new(EFarbe::Eichel, ESchlag::S7));
             assert_eq!(stich.size(), i_size+1);
@@ -150,7 +150,7 @@ fn test_stich() {
         assert_eq!(stich.first_player_index(), eplayerindex);
     }
 
-    let mut stich = CStich::new(2);
+    let mut stich = SStich::new(2);
     stich.zugeben(CCard::new(EFarbe::Eichel, ESchlag::Unter));
     stich.zugeben(CCard::new(EFarbe::Gras, ESchlag::S7));
     assert!(stich[2]==CCard::new(EFarbe::Eichel, ESchlag::Unter));

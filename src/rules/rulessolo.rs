@@ -29,7 +29,7 @@ impl TRules for CRulesSolo {
         Some(self.m_eplayerindex)
     }
 
-    fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<CStich>) -> bool {
+    fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<SStich>) -> bool {
         assert!(8==vecstich.len());
         if eplayerindex==self.m_eplayerindex {
             self.points_per_player(vecstich)[self.m_eplayerindex]>=61
@@ -38,7 +38,7 @@ impl TRules for CRulesSolo {
         }
     }
 
-    fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
+    fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
         let n_laufende = self.count_laufende(vecstich, vec!(ESchlag::Ober, ESchlag::Unter), self.m_efarbe);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_solo*/ 50
@@ -59,11 +59,11 @@ impl TRules for CRulesSolo {
         } )
     }
 
-    fn all_allowed_cards_first_in_stich(&self, _vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
+    fn all_allowed_cards_first_in_stich(&self, _vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector {
         hand.cards().clone()
     }
 
-    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
+    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector {
         assert!(!vecstich.is_empty());
         let card_first = vecstich.last().unwrap().first_card();
         let veccard_allowed : CHandVector = hand.cards().iter()

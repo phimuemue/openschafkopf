@@ -51,7 +51,7 @@ fn main() {
             let mut vecstich_internal = Vec::new();
             {
                 let mut add_stich = |eplayerindex, str_stich| {
-                    vecstich_internal.push(CStich::new(eplayerindex));
+                    vecstich_internal.push(SStich::new(eplayerindex));
                     for card in cardvectorparser::parse_cards(str_stich).iter().cycle().skip(eplayerindex).take(4) {
                         vecstich_internal.last_mut().unwrap().zugeben(card.clone());
                     }
@@ -131,7 +131,7 @@ fn main() {
                     random_sample_from_vec(vecstich_successor, 1);
                 });
                 let eplayerindex_current_stich = rules.winner_index(vecstich.last().unwrap());
-                susp.print_suspicion(8, 9, &rules, &mut vecstich, Some(CStich::new(eplayerindex_current_stich)));
+                susp.print_suspicion(8, 9, &rules, &mut vecstich, Some(SStich::new(eplayerindex_current_stich)));
             }
         );
         println!("{} suspicions", n_susp);

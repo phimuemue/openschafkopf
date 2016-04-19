@@ -97,7 +97,7 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
     retval
 }
 
-pub fn print_vecstich(vecstich: &[CStich]) {
+pub fn print_vecstich(vecstich: &[SStich]) {
     do_in_window(
         ESkUiWindow::Stich,
         |ncwin| {

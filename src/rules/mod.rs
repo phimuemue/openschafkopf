@@ -39,11 +39,11 @@ pub trait TRules : fmt::Display {
             ESchlag::Ass => 11,
         }
     }
-    fn points_stich(&self, stich: &CStich) -> isize {
+    fn points_stich(&self, stich: &SStich) -> isize {
         stich.indices_and_cards()
             .fold(0, |n_sum, (_, card)| n_sum + self.points_card(card))
     }
-    fn points_per_player(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
+    fn points_per_player(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
         let mut an_points = [0, 0, 0, 0,];
         for stich in vecstich {
             an_points[self.winner_index(stich)] += stich.indices_and_cards()
@@ -55,9 +55,9 @@ pub trait TRules : fmt::Display {
         an_points
     }
 
-    fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<CStich>) -> bool;
+    fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<SStich>) -> bool;
 
-    fn count_laufende(&self, vecstich: &Vec<CStich>, veceschlag : Vec<ESchlag>, efarbe_trumpf: EFarbe) -> isize {
+    fn count_laufende(&self, vecstich: &Vec<SStich>, veceschlag : Vec<ESchlag>, efarbe_trumpf: EFarbe) -> isize {
         let n_trumpf_expected = 4 * veceschlag.len() + 8 - veceschlag.len();
         assert!(0<n_trumpf_expected);
         let mut veccard_trumpf = Vec::with_capacity(n_trumpf_expected);
@@ -84,9 +84,9 @@ pub trait TRules : fmt::Display {
             .count() as isize
     }
 
-    fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4];
+    fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4];
 
-    fn all_allowed_cards(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
+    fn all_allowed_cards(&self, vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector {
         assert!(!vecstich.is_empty());
         assert!(vecstich.last().unwrap().size()<4);
         if vecstich.last().unwrap().empty() {
@@ -96,9 +96,9 @@ pub trait TRules : fmt::Display {
         }
     }
 
-    fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector;
+    fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector;
 
-    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector;
+    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector;
 
     fn better_card(&self, card_fst: CCard, card_snd: CCard) -> CCard {
         if Ordering::Less==self.compare_in_stich(card_fst, card_snd) {
@@ -108,12 +108,12 @@ pub trait TRules : fmt::Display {
         }
     }
 
-    fn card_is_allowed(&self, vecstich: &Vec<CStich>, hand: &CHand, card: CCard) -> bool {
+    fn card_is_allowed(&self, vecstich: &Vec<SStich>, hand: &CHand, card: CCard) -> bool {
         self.all_allowed_cards(vecstich, hand).into_iter()
             .any(|card_iterated| card_iterated==card)
     }
 
-    fn winner_index(&self, stich: &CStich) -> EPlayerIndex {
+    fn winner_index(&self, stich: &SStich) -> EPlayerIndex {
         let mut eplayerindex_best = stich.m_eplayerindex_first;
         for (eplayerindex, card) in stich.indices_and_cards().skip(1) {
             if Ordering::Less==self.compare_in_stich(stich.m_acard[eplayerindex_best], card) {

@@ -4,12 +4,12 @@ use rules::*;
 use itertools::Itertools;
 
 pub struct SSuspicionTransition {
-    m_stich : CStich,
+    m_stich : SStich,
     m_susp : SSuspicion,
 }
 
-pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<CStich>, stich: CStich, func: Func) -> R
-    where Func: FnOnce(&mut Vec<CStich>) -> R
+pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<SStich>, stich: SStich, func: Func) -> R
+    where Func: FnOnce(&mut Vec<SStich>) -> R
 {
     let n_stich = vecstich.len();
     assert!(vecstich.iter().all(|stich| stich.size()==4));
@@ -22,7 +22,7 @@ pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<CStich>, stich: CStich, fun
 }
 
 impl SSuspicionTransition {
-    fn new(susp: &SSuspicion, stich: CStich, rules: &TRules) -> SSuspicionTransition {
+    fn new(susp: &SSuspicion, stich: SStich, rules: &TRules) -> SSuspicionTransition {
         let susp = SSuspicion::new_from_susp(susp, &stich, rules);
         SSuspicionTransition {
             m_stich : stich,
@@ -30,7 +30,7 @@ impl SSuspicionTransition {
         }
     }
 
-    pub fn stich(&self) -> &CStich {
+    pub fn stich(&self) -> &SStich {
         &self.m_stich
     }
 
@@ -38,7 +38,7 @@ impl SSuspicionTransition {
         &self.m_susp
     }
 
-    fn print_suspiciontransition(&self, n_maxlevel: usize, n_level: usize, rules: &TRules, vecstich: &mut Vec<CStich>, ostich_given: Option<CStich>) {
+    fn print_suspiciontransition(&self, n_maxlevel: usize, n_level: usize, rules: &TRules, vecstich: &mut Vec<SStich>, ostich_given: Option<SStich>) {
         if n_level<=n_maxlevel {
             push_pop_vecstich(vecstich, self.m_stich.clone(), |vecstich| {
                 assert_eq!(vecstich.len()+self.m_susp.hand_size(), 8);
@@ -89,7 +89,7 @@ impl SSuspicion {
         }
     }
 
-    fn new_from_susp(&self, stich: &CStich, rules: &TRules) -> Self {
+    fn new_from_susp(&self, stich: &SStich, rules: &TRules) -> Self {
         //println!("new_from_susp {}", stich);
         //println!("wi: {}", rules.winner_index(stich));
         SSuspicion {
@@ -108,12 +108,12 @@ impl SSuspicion {
         self.m_ahand[0].cards().len()
     }
 
-    pub fn compute_successors<FuncFilterSuccessors>(&mut self, rules: &TRules, vecstich: &mut Vec<CStich>, func_filter_successors: &FuncFilterSuccessors)
-        where FuncFilterSuccessors : Fn(&Vec<CStich> /*vecstich_complete*/, &mut Vec<CStich>/*vecstich_successor*/)
+    pub fn compute_successors<FuncFilterSuccessors>(&mut self, rules: &TRules, vecstich: &mut Vec<SStich>, func_filter_successors: &FuncFilterSuccessors)
+        where FuncFilterSuccessors : Fn(&Vec<SStich> /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
     {
         assert_eq!(self.m_vecsusptrans.len(), 0); // currently, we have no caching
-        let mut vecstich_successor : Vec<CStich> = Vec::new();
-        push_pop_vecstich(vecstich, CStich::new(self.m_eplayerindex_first), |vecstich| {
+        let mut vecstich_successor : Vec<SStich> = Vec::new();
+        push_pop_vecstich(vecstich, SStich::new(self.m_eplayerindex_first), |vecstich| {
             let eplayerindex_first = self.m_eplayerindex_first;
             let player_index = move |i_raw: usize| {(eplayerindex_first + i_raw) % 4};
             macro_rules! traverse_valid_cards {
@@ -157,8 +157,8 @@ impl SSuspicion {
         n_maxlevel: usize,
         n_level: usize,
         rules: &TRules,
-        vecstich: &mut Vec<CStich>,
-        ostich_given: Option<CStich>
+        vecstich: &mut Vec<SStich>,
+        ostich_given: Option<SStich>
     ) {
         if n_maxlevel < n_level {
             return;
@@ -179,8 +179,8 @@ impl SSuspicion {
     pub fn min_reachable_payout(
         &self,
         rules: &TRules,
-        vecstich: &mut Vec<CStich>,
-        ostich_given: Option<CStich>,
+        vecstich: &mut Vec<SStich>,
+        ostich_given: Option<SStich>,
         eplayerindex: EPlayerIndex
     ) -> isize {
         let vecstich_backup = vecstich.clone();

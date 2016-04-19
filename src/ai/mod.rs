@@ -36,7 +36,7 @@ pub fn rank_rules (hand_fixed: &CHand, eplayerindex_fixed: EPlayerIndex, rules: 
         / n_tests as f64
 }
 
-pub fn random_sample_from_vec(vecstich: &mut Vec<CStich>, n_size: usize) {
+pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
     let vecstich_sample = rand::sample(&mut rand::thread_rng(), vecstich.iter().cloned(), n_size);
     // TODO can't we just assign to vecstich?
     vecstich.clear();
@@ -45,7 +45,7 @@ pub fn random_sample_from_vec(vecstich: &mut Vec<CStich>, n_size: usize) {
     }
 }
 
-pub fn unplayed_cards(vecstich: &Vec<CStich>, hand_fixed: &CHand) -> Vec<Option<CCard>> {
+pub fn unplayed_cards(vecstich: &Vec<SStich>, hand_fixed: &CHand) -> Vec<Option<CCard>> {
     CCard::all_values().into_iter()
         .map(|card| 
              if 
@@ -112,7 +112,7 @@ impl Iterator for SForeverRandHands {
     }
 }
 
-fn forever_rand_hands(vecstich: &Vec<CStich>, hand_fixed: CHand, eplayerindex_fixed: EPlayerIndex) -> SForeverRandHands {
+fn forever_rand_hands(vecstich: &Vec<SStich>, hand_fixed: CHand, eplayerindex_fixed: EPlayerIndex) -> SForeverRandHands {
     SForeverRandHands {
         m_eplayerindex_fixed : eplayerindex_fixed,
         m_ahand : {
@@ -150,7 +150,7 @@ pub fn suggest_card(gamestate: &SGameState) -> CCard {
             // ... and must not contain other cards preventing farbe/trumpf frei
             && {
                 let mut vecstich_complete_and_current_stich = vecstich_complete_immutable.clone();
-                vecstich_complete_and_current_stich.push(CStich::new(stich_current.first_player_index()));
+                vecstich_complete_and_current_stich.push(SStich::new(stich_current.first_player_index()));
                 stich_current.indices_and_cards()
                     .all(|(eplayerindex, card_played)| {
                         let b_valid = gamestate.m_rules.card_is_allowed(
@@ -169,7 +169,7 @@ pub fn suggest_card(gamestate: &SGameState) -> CCard {
             susp.compute_successors(
                 gamestate.m_rules,
                 &mut vecstich_complete_mut,
-                &|vecstich_complete_successor: &Vec<CStich>, vecstich_successor: &mut Vec<CStich>| {
+                &|vecstich_complete_successor: &Vec<SStich>, vecstich_successor: &mut Vec<SStich>| {
                     assert!(!vecstich_successor.is_empty());
                     if vecstich_complete_successor.len()==vecstich_complete_immutable.len() {
                         assert!(vecstich_complete_successor.iter().eq(vecstich_complete_immutable.iter()));

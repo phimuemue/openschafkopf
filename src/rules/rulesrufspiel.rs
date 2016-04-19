@@ -45,7 +45,7 @@ impl TRules for CRulesRufspiel {
         }
     }
 
-    fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<CStich>) -> bool {
+    fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<SStich>) -> bool {
         assert!(8==vecstich.len());
         let eplayerindex_coplayer = vecstich.iter()
             .flat_map(|stich| stich.indices_and_cards())
@@ -61,7 +61,7 @@ impl TRules for CRulesRufspiel {
         }
     }
 
-    fn payout(&self, vecstich: &Vec<CStich>) -> [isize; 4] {
+    fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
         assert_eq!(vecstich.len(), 8);
         let n_laufende = self.count_laufende(vecstich, vec!(ESchlag::Ober, ESchlag::Unter), EFarbe::Herz);
         create_playerindexmap(|eplayerindex| {
@@ -77,7 +77,7 @@ impl TRules for CRulesRufspiel {
         } )
     }
 
-    fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
+    fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector {
         assert!(!vecstich.is_empty());
         if // do we already know who had the rufsau?
             !vecstich.iter()
@@ -115,7 +115,7 @@ impl TRules for CRulesRufspiel {
         }
     }
 
-    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<CStich>, hand: &CHand) -> CHandVector {
+    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector {
         assert!(!vecstich.is_empty());
         if hand.cards().len()<=1 {
             hand.cards().clone()
