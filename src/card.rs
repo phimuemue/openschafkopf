@@ -80,11 +80,11 @@ impl fmt::Display for ESchlag {
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Hash)]
-pub struct CCard {
+pub struct SCard {
     m_n_internalrepresentation : i8,
 }
 
-impl fmt::Display for CCard {
+impl fmt::Display for SCard {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}{}", 
             match self.farbe() {
@@ -107,9 +107,9 @@ impl fmt::Display for CCard {
     }
 }
 
-impl CCard {
-    pub fn new(efarbe : EFarbe, eschlag : ESchlag) -> CCard {
-        CCard{m_n_internalrepresentation : efarbe as i8 * 8 + eschlag as i8}
+impl SCard {
+    pub fn new(efarbe : EFarbe, eschlag : ESchlag) -> SCard {
+        SCard{m_n_internalrepresentation : efarbe as i8 * 8 + eschlag as i8}
     }
     pub fn farbe(&self) -> EFarbe {
         unsafe{(mem::transmute(self.m_n_internalrepresentation / 8))}
@@ -117,12 +117,12 @@ impl CCard {
     pub fn schlag(&self) -> ESchlag {
         unsafe{(mem::transmute(self.m_n_internalrepresentation % 8))}
     }
-    pub fn all_values() -> Vec<CCard> { // TODO Rust: return iterator once we can specify that return type is an iterator
+    pub fn all_values() -> Vec<SCard> { // TODO Rust: return iterator once we can specify that return type is an iterator
         return iproduct!(
             EFarbe::all_values().iter(),
             ESchlag::all_values().iter()
         )
-        .map(|(efarbe, eschlag)| CCard::new(*efarbe, *eschlag))
+        .map(|(efarbe, eschlag)| SCard::new(*efarbe, *eschlag))
         .collect()
     }
 
@@ -135,9 +135,9 @@ impl CCard {
     // }
 }
 
-impl quickcheck::Arbitrary for CCard {
-    fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> CCard {
-        CCard::new(EFarbe::arbitrary(g), ESchlag::arbitrary(g))
+impl quickcheck::Arbitrary for SCard {
+    fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> SCard {
+        SCard::new(EFarbe::arbitrary(g), ESchlag::arbitrary(g))
     }
 }
 
@@ -151,8 +151,8 @@ fn test_farbe_schlag_enumerators() {
 fn test_card_ctor() {
     for &efarbe in EFarbe::all_values().iter() {
         for &eschlag in ESchlag::all_values().iter() {
-            assert_eq!(CCard::new(efarbe, eschlag).farbe(), efarbe);
-            assert_eq!(CCard::new(efarbe, eschlag).schlag(), eschlag);
+            assert_eq!(SCard::new(efarbe, eschlag).farbe(), efarbe);
+            assert_eq!(SCard::new(efarbe, eschlag).schlag(), eschlag);
         }
     }
 }
@@ -163,7 +163,7 @@ pub struct SCardMap<T> {
 
 impl <T> SCardMap<T> {
     pub fn new_from_pairs<ItPair>(itpairtcard : ItPair) -> SCardMap<T>
-        where ItPair : Iterator<Item=(T, CCard)>
+        where ItPair : Iterator<Item=(T, SCard)>
     {
         let mut mapcardt : SCardMap<T>;
         unsafe {
@@ -176,16 +176,16 @@ impl <T> SCardMap<T> {
     }
 }
 
-impl <T> Index<CCard> for SCardMap<T> {
+impl <T> Index<SCard> for SCardMap<T> {
     type Output = T;
 
-    fn index(&self, card: CCard) -> &T {
+    fn index(&self, card: SCard) -> &T {
         &self.m_at[card.m_n_internalrepresentation as usize]
     }
 }
 
-impl <T> IndexMut<CCard> for SCardMap<T> {
-    fn index_mut(&mut self, card: CCard) -> &mut Self::Output {
+impl <T> IndexMut<SCard> for SCardMap<T> {
+    fn index_mut(&mut self, card: SCard) -> &mut Self::Output {
         &mut self.m_at[card.m_n_internalrepresentation as usize]
     }
 }

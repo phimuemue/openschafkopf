@@ -16,7 +16,7 @@ pub struct SGamePreparations<'rules> {
     m_aruleset : &'rules [SRuleSet; 4],
 }
 
-pub fn random_hand(n_size: usize, vecocard : &mut Vec<Option<CCard>>) -> SHand {
+pub fn random_hand(n_size: usize, vecocard : &mut Vec<Option<SCard>>) -> SHand {
     let n_card_total = 32;
     assert_eq!(vecocard.len(), n_card_total);
     assert!(vecocard.iter().filter(|ocard| ocard.is_some()).count()>=n_size);
@@ -36,7 +36,7 @@ pub fn random_hand(n_size: usize, vecocard : &mut Vec<Option<CCard>>) -> SHand {
 }
 
 pub fn random_hands() -> [SHand; 4] {
-    let mut vecocard : Vec<Option<CCard>> = CCard::all_values().into_iter().map(|card| Some(card)).collect();
+    let mut vecocard : Vec<Option<SCard>> = SCard::all_values().into_iter().map(|card| Some(card)).collect();
     assert!(vecocard.len()==32);
     create_playerindexmap(move |_eplayerindex|
         random_hand(8, &mut vecocard)
@@ -157,7 +157,7 @@ impl<'rules> CGame<'rules> {
         self.notify_game_listeners();
     }
 
-    pub fn zugeben(&mut self, card_played: CCard, eplayerindex: EPlayerIndex) -> EPlayerIndex { // TODO: should invalid inputs be indicated by return value?
+    pub fn zugeben(&mut self, card_played: SCard, eplayerindex: EPlayerIndex) -> EPlayerIndex { // TODO: should invalid inputs be indicated by return value?
         // returns the EPlayerIndex of the player who is the next in row to do something
         // TODO: how to cope with finished game?
         skui::logln(&format!("Player {} wants to play {}", eplayerindex, card_played));

@@ -45,8 +45,8 @@ pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
     }
 }
 
-pub fn unplayed_cards(vecstich: &Vec<SStich>, hand_fixed: &SHand) -> Vec<Option<CCard>> {
-    CCard::all_values().into_iter()
+pub fn unplayed_cards(vecstich: &Vec<SStich>, hand_fixed: &SHand) -> Vec<Option<SCard>> {
+    SCard::all_values().into_iter()
         .map(|card| 
              if 
                  hand_fixed.contains(card)
@@ -130,7 +130,7 @@ fn forever_rand_hands(vecstich: &Vec<SStich>, hand_fixed: SHand, eplayerindex_fi
     }
 }
 
-pub fn suggest_card(gamestate: &SGameState) -> CCard {
+pub fn suggest_card(gamestate: &SGameState) -> SCard {
     let n_tests = 100;
     let mut vecstich_complete_mut = gamestate.m_vecstich.iter()
         .filter(|stich| stich.size()==4)
@@ -195,7 +195,7 @@ pub fn suggest_card(gamestate: &SGameState) -> CCard {
                 veccard_allowed_fixed.iter()
                     .map(|card| (card.clone(), 0)) // TODO Option<isize> more convenient?
             ),
-            |mut mapcardpayout: HashMap<CCard, isize>, susp| {
+            |mut mapcardpayout: HashMap<SCard, isize>, susp| {
                 for susptrans in susp.suspicion_tranitions() {
                     let mut vecstich_complete_payout = vecstich_complete_immutable.clone();
                     let n_payout = push_pop_vecstich(&mut vecstich_complete_payout, susptrans.stich().clone(), |mut vecstich_complete_payout| {

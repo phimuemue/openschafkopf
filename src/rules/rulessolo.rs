@@ -17,7 +17,7 @@ impl fmt::Display for CRulesSolo {
 }
 
 impl TRules for CRulesSolo {
-    fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe {
+    fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
         if card.schlag()==ESchlag::Ober || card.schlag()==ESchlag::Unter || card.farbe()==self.m_efarbe {
             VTrumpfOrFarbe::Trumpf
         } else {
@@ -77,7 +77,7 @@ impl TRules for CRulesSolo {
         }
     }
 
-    fn compare_in_stich_trumpf(&self, card_fst: CCard, card_snd: CCard) -> Ordering {
+    fn compare_in_stich_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
         compare_trumpfcards_solo(card_fst, card_snd)
     }
 }

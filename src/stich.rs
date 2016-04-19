@@ -25,7 +25,7 @@ pub fn create_playerindexmap<T, F>(mut func: F) -> [T; 4]
 pub struct SStich {
     pub m_eplayerindex_first: EPlayerIndex,
     m_n_size: usize,
-    pub m_acard: [CCard; 4],
+    pub m_acard: [SCard; 4],
 }
 
 impl PartialEq for SStich {
@@ -42,8 +42,8 @@ pub struct StichIterator<'stich> {
 }
 
 impl<'stich> Iterator for StichIterator<'stich> {
-    type Item = (EPlayerIndex, CCard);
-    fn next(&mut self) -> Option<(EPlayerIndex, CCard)> {
+    type Item = (EPlayerIndex, SCard);
+    fn next(&mut self) -> Option<(EPlayerIndex, SCard)> {
         if self.m_eplayerindex==self.m_stich.size() {
             return None;
         }
@@ -57,8 +57,8 @@ impl<'stich> Iterator for StichIterator<'stich> {
 }
 
 impl Index<EPlayerIndex> for SStich {
-    type Output = CCard;
-    fn index<'a>(&'a self, eplayerindex : EPlayerIndex) -> &'a CCard {
+    type Output = SCard;
+    fn index<'a>(&'a self, eplayerindex : EPlayerIndex) -> &'a SCard {
         &self.m_acard[eplayerindex]
     }
 }
@@ -68,7 +68,7 @@ impl SStich {
         SStich {
             m_eplayerindex_first : eplayerindex_first,
             m_n_size: 0,
-            m_acard: [CCard::new(EFarbe::Eichel, ESchlag::S7); 4]
+            m_acard: [SCard::new(EFarbe::Eichel, ESchlag::S7); 4]
         }
     }
     pub fn equal_up_to_size(&self, stich_other: &SStich, n_size: usize) -> bool {
@@ -89,7 +89,7 @@ impl SStich {
     pub fn size(&self) -> usize {
         self.m_n_size
     }
-    pub fn zugeben(&mut self, card: CCard) {
+    pub fn zugeben(&mut self, card: SCard) {
         assert!(self.m_n_size<4);
         let eplayerindex = (self.m_eplayerindex_first + self.m_n_size)%4;
         self.m_acard[eplayerindex] = card; // sad: can not inline eplayerindex (borrowing)
@@ -100,7 +100,7 @@ impl SStich {
         self.m_n_size = self.m_n_size - 1;
     }
 
-    pub fn first_card(&self) -> CCard {
+    pub fn first_card(&self) -> SCard {
         self[self.m_eplayerindex_first]
     }
     pub fn indices_and_cards(&self) -> StichIterator {
@@ -109,7 +109,7 @@ impl SStich {
             m_stich: self
         }
     }
-    pub fn get(&self, eplayerindex: EPlayerIndex) -> Option<CCard> {
+    pub fn get(&self, eplayerindex: EPlayerIndex) -> Option<SCard> {
         // TODO: more elegance!
         for (eplayerindex_in_stich, card) in self.indices_and_cards() {
             if eplayerindex==eplayerindex_in_stich {
@@ -144,16 +144,16 @@ fn test_stich() {
     for eplayerindex in 0..4 {
         let mut stich = SStich::new(eplayerindex);
         for i_size in 0..4 {
-            stich.zugeben(CCard::new(EFarbe::Eichel, ESchlag::S7));
+            stich.zugeben(SCard::new(EFarbe::Eichel, ESchlag::S7));
             assert_eq!(stich.size(), i_size+1);
         }
         assert_eq!(stich.first_player_index(), eplayerindex);
     }
 
     let mut stich = SStich::new(2);
-    stich.zugeben(CCard::new(EFarbe::Eichel, ESchlag::Unter));
-    stich.zugeben(CCard::new(EFarbe::Gras, ESchlag::S7));
-    assert!(stich[2]==CCard::new(EFarbe::Eichel, ESchlag::Unter));
-    assert!(stich[3]==CCard::new(EFarbe::Gras, ESchlag::S7));
+    stich.zugeben(SCard::new(EFarbe::Eichel, ESchlag::Unter));
+    stich.zugeben(SCard::new(EFarbe::Gras, ESchlag::S7));
+    assert!(stich[2]==SCard::new(EFarbe::Eichel, ESchlag::Unter));
+    assert!(stich[3]==SCard::new(EFarbe::Gras, ESchlag::S7));
     assert_eq!(stich.indices_and_cards().count(), 2);
 }

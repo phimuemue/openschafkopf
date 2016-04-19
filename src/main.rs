@@ -139,7 +139,7 @@ fn main() {
 
     let aruleset = read_ruleset(Path::new(clapmatches.value_of("rulesetpath").unwrap()));
     {
-        let hand_fixed = random_hand(8, &mut CCard::all_values().into_iter().map(|card| Some(card)).collect());
+        let hand_fixed = random_hand(8, &mut SCard::all_values().into_iter().map(|card| Some(card)).collect());
         let eplayerindex_fixed = 0;
 
         println!("Hand: {}", hand_fixed);
@@ -161,7 +161,7 @@ fn main() {
         skui::logln(&format!("Hand 0 : {}", gameprep.m_ahand[0]));
         if let Some(mut game)=gameprep.start_game(i_game % 4) {
             while let Some(eplayerindex)=game.which_player_can_do_something() {
-                let (txcard, rxcard) = mpsc::channel::<CCard>();
+                let (txcard, rxcard) = mpsc::channel::<SCard>();
                 game.m_vecplayer[eplayerindex].take_control(
                     &game.m_gamestate,
                     txcard.clone()

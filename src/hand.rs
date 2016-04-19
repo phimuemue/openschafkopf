@@ -3,7 +3,7 @@ use std::fmt;
 use std::cmp::Ordering;
 use arrayvec::ArrayVec;
 
-pub type SHandVector = ArrayVec<[CCard; 8]>;
+pub type SHandVector = ArrayVec<[SCard; 8]>;
 
 #[derive(Clone)]
 pub struct SHand {
@@ -11,7 +11,7 @@ pub struct SHand {
 }
 
 impl SHand {
-    pub fn new_from_hand(&self, card_played: CCard) -> SHand {
+    pub fn new_from_hand(&self, card_played: SCard) -> SHand {
         SHand {
             m_veccard : self
                 .m_veccard
@@ -24,22 +24,22 @@ impl SHand {
     pub fn new_from_vec(veccard: SHandVector) -> SHand {
         SHand {m_veccard : veccard}
     }
-    pub fn contains(&self, card_check: CCard) -> bool {
+    pub fn contains(&self, card_check: SCard) -> bool {
         self.contains_pred(|&card| card==card_check)
     }
     fn contains_pred<Pred>(&self, pred: Pred) -> bool
-        where Pred: Fn(&CCard) -> bool
+        where Pred: Fn(&SCard) -> bool
     {
         self.m_veccard
             .iter()
             .any(pred)
     }
-    pub fn play_card(&mut self, card_played: CCard) {
+    pub fn play_card(&mut self, card_played: SCard) {
         self.m_veccard.retain(|&mut card| card!=card_played)
     }
 
     pub fn sort<CmpLess>(&mut self, cmpless: CmpLess)
-        where CmpLess: Fn(&CCard, &CCard) -> Ordering
+        where CmpLess: Fn(&SCard, &SCard) -> Ordering
     {
         self.m_veccard.sort_by(cmpless)
     }
@@ -66,13 +66,13 @@ impl fmt::Display for SHand {
 fn test_hand() {
     let hand = SHand::new_from_vec(
         vec!(
-            CCard::new(EFarbe::Eichel, ESchlag::Unter),
-            CCard::new(EFarbe::Herz, ESchlag::Koenig),
-            CCard::new(EFarbe::Schelln, ESchlag::S7),
+            SCard::new(EFarbe::Eichel, ESchlag::Unter),
+            SCard::new(EFarbe::Herz, ESchlag::Koenig),
+            SCard::new(EFarbe::Schelln, ESchlag::S7),
         )
     );
-    let hand2 = hand.new_from_hand(CCard::new(EFarbe::Herz, ESchlag::Koenig));
+    let hand2 = hand.new_from_hand(SCard::new(EFarbe::Herz, ESchlag::Koenig));
     assert_eq!(hand.cards().len()-1, hand2.cards().len());
-    assert!(hand2.cards()[0]==CCard::new(EFarbe::Eichel, ESchlag::Unter));
-    assert!(hand2.cards()[1]==CCard::new(EFarbe::Schelln, ESchlag::S7));
+    assert!(hand2.cards()[0]==SCard::new(EFarbe::Eichel, ESchlag::Unter));
+    assert!(hand2.cards()[1]==SCard::new(EFarbe::Schelln, ESchlag::S7));
 }

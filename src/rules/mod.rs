@@ -16,7 +16,7 @@ pub enum VTrumpfOrFarbe {
 
 pub trait TRules : fmt::Display {
 
-    fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe;
+    fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe;
 
     fn playerindex(&self) -> Option<EPlayerIndex>;
 
@@ -24,11 +24,11 @@ pub trait TRules : fmt::Display {
         true // probably, only Rufspiel is prevented in some cases
     }
 
-    fn is_trumpf(&self, card: CCard) -> bool {
+    fn is_trumpf(&self, card: SCard) -> bool {
         VTrumpfOrFarbe::Trumpf == self.trumpf_or_farbe(card)
     }
 
-    fn points_card(&self, card: CCard) -> isize {
+    fn points_card(&self, card: SCard) -> isize {
         // by default, we assume that we use the usual points
         match card.schlag() {
             ESchlag::S7 | ESchlag::S8 | ESchlag::S9 => 0,
@@ -63,19 +63,19 @@ pub trait TRules : fmt::Display {
         let mut veccard_trumpf = Vec::with_capacity(n_trumpf_expected);
         for eschlag in veceschlag.iter() {
             for efarbe in EFarbe::all_values().iter() {
-                veccard_trumpf.push(CCard::new(*efarbe, *eschlag));
+                veccard_trumpf.push(SCard::new(*efarbe, *eschlag));
             }
         }
         for eschlag in ESchlag::all_values().iter() {
             if !veceschlag.iter().any(|eschlag_trumpf| *eschlag_trumpf==*eschlag) {
-                veccard_trumpf.push(CCard::new(efarbe_trumpf, *eschlag));
+                veccard_trumpf.push(SCard::new(efarbe_trumpf, *eschlag));
             }
         }
         assert_eq!(n_trumpf_expected, veccard_trumpf.len());
         let mapcardeplayerindex = SCardMap::<EPlayerIndex>::new_from_pairs(
             vecstich.iter().flat_map(|stich| stich.indices_and_cards())
         );
-        let laufende_relevant = |card: &CCard| {
+        let laufende_relevant = |card: &SCard| {
             self.is_winner(mapcardeplayerindex[*card], vecstich)
         };
         let b_might_have_lauf = laufende_relevant(veccard_trumpf.first().unwrap());
@@ -100,7 +100,7 @@ pub trait TRules : fmt::Display {
 
     fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector;
 
-    fn better_card(&self, card_fst: CCard, card_snd: CCard) -> CCard {
+    fn better_card(&self, card_fst: SCard, card_snd: SCard) -> SCard {
         if Ordering::Less==self.compare_in_stich(card_fst, card_snd) {
             card_snd
         } else {
@@ -108,7 +108,7 @@ pub trait TRules : fmt::Display {
         }
     }
 
-    fn card_is_allowed(&self, vecstich: &Vec<SStich>, hand: &SHand, card: CCard) -> bool {
+    fn card_is_allowed(&self, vecstich: &Vec<SStich>, hand: &SHand, card: SCard) -> bool {
         self.all_allowed_cards(vecstich, hand).into_iter()
             .any(|card_iterated| card_iterated==card)
     }
@@ -123,9 +123,9 @@ pub trait TRules : fmt::Display {
         eplayerindex_best
     }
 
-    fn compare_in_stich_trumpf(&self, card_fst: CCard, card_snd: CCard) -> Ordering;
+    fn compare_in_stich_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering;
 
-    fn compare_in_stich_farbe(&self, card_fst: CCard, card_snd: CCard) -> Ordering {
+    fn compare_in_stich_farbe(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
         if card_fst.farbe() != card_snd.farbe() {
             Ordering::Greater
         } else {
@@ -133,7 +133,7 @@ pub trait TRules : fmt::Display {
         }
     }
 
-    fn compare_in_stich(&self, card_fst: CCard, card_snd: CCard) -> Ordering {
+    fn compare_in_stich(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
         assert!(card_fst!=card_snd);
         match (self.is_trumpf(card_fst), self.is_trumpf(card_snd)) {
             (true, false) => Ordering::Greater,
@@ -144,8 +144,8 @@ pub trait TRules : fmt::Display {
     }
 }
 
-pub fn compare_farbcards_same_color(card_fst: CCard, card_snd: CCard) -> Ordering {
-    let get_schlag_value = |card: CCard| { match card.schlag() {
+pub fn compare_farbcards_same_color(card_fst: SCard, card_snd: SCard) -> Ordering {
+    let get_schlag_value = |card: SCard| { match card.schlag() {
         ESchlag::S7 => 0,
         ESchlag::S8 => 1,
         ESchlag::S9 => 2,
@@ -162,7 +162,7 @@ pub fn compare_farbcards_same_color(card_fst: CCard, card_snd: CCard) -> Orderin
     }
 }
 
-pub fn compare_trumpfcards_solo(card_fst: CCard, card_snd: CCard) -> Ordering {
+pub fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering {
     match (card_fst.schlag(), card_snd.schlag()) {
         (ESchlag::Ober, ESchlag::Ober) | (ESchlag::Unter, ESchlag::Unter) => {
             assert!(card_fst.schlag()==ESchlag::Ober || card_fst.schlag()==ESchlag::Unter);

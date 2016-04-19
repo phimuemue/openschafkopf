@@ -59,14 +59,14 @@ where I: Stream<Item=char> {
     .parse_state(input)
 }
 
-fn card_parse<I>(input: State<I>) -> ParseResult<CCard, I>
+fn card_parse<I>(input: State<I>) -> ParseResult<SCard, I>
 where I: Stream<Item=char> {
     (parser(farbe_parse), parser(schlag_parse))
-        .map(|(efarbe, eschlag)| CCard::new(efarbe, eschlag))
+        .map(|(efarbe, eschlag)| SCard::new(efarbe, eschlag))
         .parse_state(input)
 }
 
-pub fn parse_cards(str_cards: &str) -> Vec<CCard> {
+pub fn parse_cards(str_cards: &str) -> Vec<SCard> {
     sep_by::<Vec<_>,_,_>(parser(card_parse), spaces())
         .parse(str_cards)
         .unwrap()
@@ -77,5 +77,5 @@ pub fn parse_cards(str_cards: &str) -> Vec<CCard> {
 fn test_cardvectorparser() {
     let veccard = parse_cards("ek gk hz hu s7");
     assert_eq!(veccard.len(), 5);
-    assert!(veccard[1] == CCard::new(EFarbe::Gras, ESchlag::Koenig));
+    assert!(veccard[1] == SCard::new(EFarbe::Gras, ESchlag::Koenig));
 }

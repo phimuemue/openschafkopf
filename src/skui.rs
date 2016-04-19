@@ -34,7 +34,7 @@ pub fn log(_s: &str) {
     ncurses::refresh();
 }
 
-fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: CCard) {
+fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: SCard) {
     // TODO lib: enummap!
     ncurses::init_pair(1, ncurses::COLOR_YELLOW, ncurses::COLOR_BLACK);
     ncurses::init_pair(2, ncurses::COLOR_GREEN, ncurses::COLOR_BLACK);
@@ -251,7 +251,7 @@ pub fn ask_for_alternative<'vect, T, FnFormat, FnFilter, FnCallback, FnSuggest>(
     )
 }
 
-pub fn print_hand(veccard: &[CCard], oi_card: Option<usize>) {
+pub fn print_hand(veccard: &[SCard], oi_card: Option<usize>) {
     do_in_window(
         ESkUiWindow::Hand,
         |ncwin| {

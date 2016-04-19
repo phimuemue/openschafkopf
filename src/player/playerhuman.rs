@@ -13,7 +13,7 @@ use std::io::Read;
 pub struct CPlayerHuman;
 
 impl CPlayer for CPlayerHuman {
-    fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<CCard>) {
+    fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<SCard>) {
         skui::print_vecstich(&gamestate.m_vecstich);
         let ref hand = gamestate.m_ahand[gamestate.which_player_can_do_something().unwrap()];
         let veccard_allowed = gamestate.m_rules.all_allowed_cards(&gamestate.m_vecstich, &hand);

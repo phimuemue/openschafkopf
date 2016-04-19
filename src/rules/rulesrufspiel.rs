@@ -17,11 +17,11 @@ impl fmt::Display for CRulesRufspiel {
 }
 
 impl CRulesRufspiel {
-    fn rufsau(&self) -> CCard {
-        CCard::new(self.m_efarbe, ESchlag::Ass)
+    fn rufsau(&self) -> SCard {
+        SCard::new(self.m_efarbe, ESchlag::Ass)
     }
 
-    fn is_ruffarbe(&self, card: CCard) -> bool {
+    fn is_ruffarbe(&self, card: SCard) -> bool {
         VTrumpfOrFarbe::Farbe(self.m_efarbe)==self.trumpf_or_farbe(card)
     }
 }
@@ -37,7 +37,7 @@ impl TRules for CRulesRufspiel {
         Some(self.m_eplayerindex)
     }
 
-    fn trumpf_or_farbe(&self, card: CCard) -> VTrumpfOrFarbe {
+    fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
         if card.schlag()==ESchlag::Ober || card.schlag()==ESchlag::Unter || card.farbe()==EFarbe::Herz {
             VTrumpfOrFarbe::Trumpf
         } else {
@@ -150,7 +150,7 @@ impl TRules for CRulesRufspiel {
         }
     }
 
-    fn compare_in_stich_trumpf(&self, card_fst: CCard, card_snd: CCard) -> Ordering {
+    fn compare_in_stich_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
         compare_trumpfcards_solo(card_fst, card_snd)
     }
 

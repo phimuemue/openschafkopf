@@ -10,7 +10,7 @@ use game::*;
 use std::sync::mpsc;
 
 pub trait CPlayer {
-    fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<CCard>);
+    fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<SCard>);
     // TODO: players need information about who already wants to play
     fn ask_for_game<'rules>(
         &self,

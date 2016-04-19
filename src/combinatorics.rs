@@ -7,7 +7,7 @@ use permutohedron::LexicalPermutation;
 
 pub fn for_each_suspicion<FuncFilter, Func>(
     hand_known: &SHand,
-    veccard_unknown : &Vec<CCard>,
+    veccard_unknown : &Vec<SCard>,
     eplayerindex: EPlayerIndex,
     mut func_filter: FuncFilter,
     mut func: Func

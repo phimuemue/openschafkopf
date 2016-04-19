@@ -11,7 +11,7 @@ use std::sync::mpsc;
 pub struct CPlayerComputer;
 
 impl CPlayer for CPlayerComputer {
-    fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<CCard>) {
+    fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<SCard>) {
         txcard.send(ai::suggest_card(gamestate)).ok();
     }
 
