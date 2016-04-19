@@ -11,17 +11,17 @@ use skui;
 use rand::{self, Rng};
 
 pub struct SGamePreparations<'rules> {
-    pub m_ahand : [CHand; 4],
+    pub m_ahand : [SHand; 4],
     pub m_vecplayer : Vec<Box<CPlayer>>, // TODO: good idea to have players in here?
     m_aruleset : &'rules [SRuleSet; 4],
 }
 
-pub fn random_hand(n_size: usize, vecocard : &mut Vec<Option<CCard>>) -> CHand {
+pub fn random_hand(n_size: usize, vecocard : &mut Vec<Option<CCard>>) -> SHand {
     let n_card_total = 32;
     assert_eq!(vecocard.len(), n_card_total);
     assert!(vecocard.iter().filter(|ocard| ocard.is_some()).count()>=n_size);
-    CHand::new_from_vec({
-        let mut veccard = CHandVector::new();
+    SHand::new_from_vec({
+        let mut veccard = SHandVector::new();
         for _i in 0..n_size {
             let mut i_card = rand::thread_rng().gen_range(0, n_card_total);
             while vecocard[i_card].is_none() {
@@ -35,7 +35,7 @@ pub fn random_hand(n_size: usize, vecocard : &mut Vec<Option<CCard>>) -> CHand {
     })
 }
 
-pub fn random_hands() -> [CHand; 4] {
+pub fn random_hands() -> [SHand; 4] {
     let mut vecocard : Vec<Option<CCard>> = CCard::all_values().into_iter().map(|card| Some(card)).collect();
     assert!(vecocard.len()==32);
     create_playerindexmap(move |_eplayerindex|
@@ -115,7 +115,7 @@ impl<'rules> SGamePreparations<'rules> {
 }
 
 pub struct SGameState<'rules> {
-    pub m_ahand : [CHand; 4],
+    pub m_ahand : [SHand; 4],
     pub m_rules : &'rules TRules,
     pub m_vecstich : Vec<SStich>,
 }

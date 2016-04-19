@@ -12,7 +12,7 @@ use rand::Rng;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-pub fn rank_rules (hand_fixed: &CHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
+pub fn rank_rules (hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
     (0..n_tests)
         .map(|_i_test| {
             let mut vecocard = unplayed_cards(&Vec::new(), hand_fixed);
@@ -45,7 +45,7 @@ pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
     }
 }
 
-pub fn unplayed_cards(vecstich: &Vec<SStich>, hand_fixed: &CHand) -> Vec<Option<CCard>> {
+pub fn unplayed_cards(vecstich: &Vec<SStich>, hand_fixed: &SHand) -> Vec<Option<CCard>> {
     CCard::all_values().into_iter()
         .map(|card| 
              if 
@@ -66,12 +66,12 @@ pub fn unplayed_cards(vecstich: &Vec<SStich>, hand_fixed: &CHand) -> Vec<Option<
 
 struct SForeverRandHands {
     m_eplayerindex_fixed : EPlayerIndex,
-    m_ahand: [CHand; 4],
+    m_ahand: [SHand; 4],
 }
 
 impl Iterator for SForeverRandHands {
-    type Item = [CHand; 4];
-    fn next(&mut self) -> Option<[CHand; 4]> {
+    type Item = [SHand; 4];
+    fn next(&mut self) -> Option<[SHand; 4]> {
         let n_len_hand = self.m_ahand[0].cards().len();
         assert!(self.m_ahand.iter().all(|hand| hand.cards().len()==n_len_hand));
         let mut rng = rand::thread_rng();
@@ -112,7 +112,7 @@ impl Iterator for SForeverRandHands {
     }
 }
 
-fn forever_rand_hands(vecstich: &Vec<SStich>, hand_fixed: CHand, eplayerindex_fixed: EPlayerIndex) -> SForeverRandHands {
+fn forever_rand_hands(vecstich: &Vec<SStich>, hand_fixed: SHand, eplayerindex_fixed: EPlayerIndex) -> SForeverRandHands {
     SForeverRandHands {
         m_eplayerindex_fixed : eplayerindex_fixed,
         m_ahand : {

@@ -3,16 +3,16 @@ use std::fmt;
 use std::cmp::Ordering;
 use arrayvec::ArrayVec;
 
-pub type CHandVector = ArrayVec<[CCard; 8]>;
+pub type SHandVector = ArrayVec<[CCard; 8]>;
 
 #[derive(Clone)]
-pub struct CHand {
-    m_veccard: CHandVector,
+pub struct SHand {
+    m_veccard: SHandVector,
 }
 
-impl CHand {
-    pub fn new_from_hand(&self, card_played: CCard) -> CHand {
-        CHand {
+impl SHand {
+    pub fn new_from_hand(&self, card_played: CCard) -> SHand {
+        SHand {
             m_veccard : self
                 .m_veccard
                 .iter()
@@ -21,8 +21,8 @@ impl CHand {
                 .collect()
         }
     }
-    pub fn new_from_vec(veccard: CHandVector) -> CHand {
-        CHand {m_veccard : veccard}
+    pub fn new_from_vec(veccard: SHandVector) -> SHand {
+        SHand {m_veccard : veccard}
     }
     pub fn contains(&self, card_check: CCard) -> bool {
         self.contains_pred(|&card| card==card_check)
@@ -44,16 +44,16 @@ impl CHand {
         self.m_veccard.sort_by(cmpless)
     }
 
-    pub fn cards(&self) -> &CHandVector {
+    pub fn cards(&self) -> &SHandVector {
         &self.m_veccard
     }
 
-    pub fn cards_mut(&mut self) -> &mut CHandVector {
+    pub fn cards_mut(&mut self) -> &mut SHandVector {
         &mut self.m_veccard
     }
 }
 
-impl fmt::Display for CHand {
+impl fmt::Display for SHand {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for card in self.m_veccard.iter() {
             try!(write!(f, "{}, ", card));
@@ -64,7 +64,7 @@ impl fmt::Display for CHand {
 
 #[test]
 fn test_hand() {
-    let hand = CHand::new_from_vec(
+    let hand = SHand::new_from_vec(
         vec!(
             CCard::new(EFarbe::Eichel, ESchlag::Unter),
             CCard::new(EFarbe::Herz, ESchlag::Koenig),

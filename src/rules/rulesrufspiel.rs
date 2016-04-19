@@ -27,7 +27,7 @@ impl CRulesRufspiel {
 }
 
 impl TRules for CRulesRufspiel {
-    fn can_be_played(&self, hand: &CHand) -> bool {
+    fn can_be_played(&self, hand: &SHand) -> bool {
         let it = || {hand.cards().iter().filter(|&card| self.is_ruffarbe(*card))};
         it().all(|card| card.schlag()!=ESchlag::Ass)
         && 0<it().count()
@@ -77,7 +77,7 @@ impl TRules for CRulesRufspiel {
         } )
     }
 
-    fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector {
+    fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
         if // do we already know who had the rufsau?
             !vecstich.iter()
@@ -107,7 +107,7 @@ impl TRules for CRulesRufspiel {
                 hand.cards().iter()
                     .cloned()
                     .filter(|&card| !self.is_ruffarbe(card) || self.rufsau()==card)
-                    .collect::<CHandVector>()
+                    .collect::<SHandVector>()
             }
         }
         else {
@@ -115,7 +115,7 @@ impl TRules for CRulesRufspiel {
         }
     }
 
-    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector {
+    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
         if hand.cards().len()<=1 {
             hand.cards().clone()
@@ -134,7 +134,7 @@ impl TRules for CRulesRufspiel {
                 // Is player 0 obliged to play GA? We implement it this way for now.
                 Some(self.rufsau()).into_iter().collect()
             } else {
-                let veccard_allowed : CHandVector = hand.cards().iter()
+                let veccard_allowed : SHandVector = hand.cards().iter()
                     .filter(|&&card| 
                         self.rufsau()!=card 
                         && self.trumpf_or_farbe(card)==self.trumpf_or_farbe(card_first)

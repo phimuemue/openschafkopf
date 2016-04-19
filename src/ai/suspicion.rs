@@ -59,7 +59,7 @@ impl SSuspicionTransition {
 pub struct SSuspicion {
     m_vecsusptrans : Vec<SSuspicionTransition>,
     m_eplayerindex_first : EPlayerIndex,
-    m_ahand : [CHand; 4],
+    m_ahand : [SHand; 4],
 }
 
 impl SSuspicion {
@@ -68,7 +68,7 @@ impl SSuspicion {
         &self.m_vecsusptrans
     }
 
-    pub fn new_from_raw(eplayerindex_first: EPlayerIndex, ahand: [CHand; 4]) -> Self {
+    pub fn new_from_raw(eplayerindex_first: EPlayerIndex, ahand: [SHand; 4]) -> Self {
         SSuspicion {
             m_vecsusptrans: Vec::new(),
             m_eplayerindex_first : eplayerindex_first,
@@ -76,7 +76,7 @@ impl SSuspicion {
         }
     }
 
-    pub fn hands(&self) -> &[CHand; 4] {
+    pub fn hands(&self) -> &[SHand; 4] {
         &self.m_ahand
     }
 

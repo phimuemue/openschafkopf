@@ -15,7 +15,7 @@ impl CPlayer for CPlayerComputer {
         txcard.send(ai::suggest_card(gamestate)).ok();
     }
 
-    fn ask_for_game<'rules>(&self, hand: &CHand, _ : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules TRules> {
+    fn ask_for_game<'rules>(&self, hand: &SHand, _ : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules TRules> {
         // TODO: implement a more intelligent decision strategy
         let n_tests_per_rules = 50;
         ruleset.allowed_rules().iter()

@@ -59,14 +59,14 @@ impl TRules for CRulesSolo {
         } )
     }
 
-    fn all_allowed_cards_first_in_stich(&self, _vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector {
+    fn all_allowed_cards_first_in_stich(&self, _vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
         hand.cards().clone()
     }
 
-    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector {
+    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
         let card_first = vecstich.last().unwrap().first_card();
-        let veccard_allowed : CHandVector = hand.cards().iter()
+        let veccard_allowed : SHandVector = hand.cards().iter()
             .filter(|&&card| self.trumpf_or_farbe(card)==self.trumpf_or_farbe(card_first))
             .cloned()
             .collect();

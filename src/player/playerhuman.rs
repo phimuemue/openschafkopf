@@ -36,7 +36,7 @@ impl CPlayer for CPlayerHuman {
         }
     }
 
-    fn ask_for_game<'rules>(&self, hand: &CHand, vecgameannouncement : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules TRules> {
+    fn ask_for_game<'rules>(&self, hand: &SHand, vecgameannouncement : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules TRules> {
         skui::print_game_announcements(vecgameannouncement);
         *skui::ask_for_alternative(
             &format!("Your cards: {}. What do you want to play?", hand),

@@ -14,7 +14,7 @@ pub trait CPlayer {
     // TODO: players need information about who already wants to play
     fn ask_for_game<'rules>(
         &self,
-        hand: &CHand,
+        hand: &SHand,
         vecgameannouncement: &Vec<SGameAnnouncement>,
         ruleset : &'rules SRuleSet
     ) -> Option<&'rules TRules>;

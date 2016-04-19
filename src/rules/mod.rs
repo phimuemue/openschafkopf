@@ -20,7 +20,7 @@ pub trait TRules : fmt::Display {
 
     fn playerindex(&self) -> Option<EPlayerIndex>;
 
-    fn can_be_played(&self, _hand: &CHand) -> bool {
+    fn can_be_played(&self, _hand: &SHand) -> bool {
         true // probably, only Rufspiel is prevented in some cases
     }
 
@@ -86,7 +86,7 @@ pub trait TRules : fmt::Display {
 
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4];
 
-    fn all_allowed_cards(&self, vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector {
+    fn all_allowed_cards(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
         assert!(vecstich.last().unwrap().size()<4);
         if vecstich.last().unwrap().empty() {
@@ -96,9 +96,9 @@ pub trait TRules : fmt::Display {
         }
     }
 
-    fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector;
+    fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector;
 
-    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &CHand) -> CHandVector;
+    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector;
 
     fn better_card(&self, card_fst: CCard, card_snd: CCard) -> CCard {
         if Ordering::Less==self.compare_in_stich(card_fst, card_snd) {
@@ -108,7 +108,7 @@ pub trait TRules : fmt::Display {
         }
     }
 
-    fn card_is_allowed(&self, vecstich: &Vec<SStich>, hand: &CHand, card: CCard) -> bool {
+    fn card_is_allowed(&self, vecstich: &Vec<SStich>, hand: &SHand, card: CCard) -> bool {
         self.all_allowed_cards(vecstich, hand).into_iter()
             .any(|card_iterated| card_iterated==card)
     }
