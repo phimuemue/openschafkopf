@@ -5,18 +5,18 @@ use rules::*;
 use std::fmt;
 use std::cmp::Ordering;
 
-pub struct CRulesRufspiel {
+pub struct SRulesRufspiel {
     pub m_eplayerindex : EPlayerIndex,
     pub m_efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
 }
 
-impl fmt::Display for CRulesRufspiel {
+impl fmt::Display for SRulesRufspiel {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Rufspiel mit der {}-Sau von {}", self.m_efarbe, self.m_eplayerindex)
     }
 }
 
-impl CRulesRufspiel {
+impl SRulesRufspiel {
     fn rufsau(&self) -> SCard {
         SCard::new(self.m_efarbe, ESchlag::Ass)
     }
@@ -26,7 +26,7 @@ impl CRulesRufspiel {
     }
 }
 
-impl TRules for CRulesRufspiel {
+impl TRules for SRulesRufspiel {
     fn can_be_played(&self, hand: &SHand) -> bool {
         let it = || {hand.cards().iter().filter(|&card| self.is_ruffarbe(*card))};
         it().all(|card| card.schlag()!=ESchlag::Ass)

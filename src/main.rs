@@ -25,7 +25,7 @@ use stich::*;
 use hand::*;
 use rules::*;
 use accountbalance::SAccountBalance;
-use rules::rulesrufspiel::CRulesRufspiel;
+use rules::rulesrufspiel::SRulesRufspiel;
 use std::collections::HashSet;
 use rules::ruleset::*;
 use ai::*;
@@ -43,7 +43,7 @@ fn main() {
          )
         .get_matches();
     {
-        let rules = CRulesRufspiel {
+        let rules = SRulesRufspiel {
             m_eplayerindex : 0,
             m_efarbe : EFarbe::Gras,
         };

@@ -5,18 +5,18 @@ use rules::*;
 use std::fmt;
 use std::cmp::Ordering;
 
-pub struct CRulesSolo {
+pub struct SRulesSolo {
     pub m_eplayerindex : EPlayerIndex,
     pub m_efarbe : EFarbe,
 }
 
-impl fmt::Display for CRulesSolo {
+impl fmt::Display for SRulesSolo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}-Solo", self.m_efarbe)
     }
 }
 
-impl TRules for CRulesSolo {
+impl TRules for SRulesSolo {
     fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
         if card.schlag()==ESchlag::Ober || card.schlag()==ESchlag::Unter || card.farbe()==self.m_efarbe {
             VTrumpfOrFarbe::Trumpf

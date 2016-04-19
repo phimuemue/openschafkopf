@@ -42,11 +42,11 @@ pub fn read_ruleset(path: &Path) -> [SRuleSet; 4] {
             println!("allowing rule: {}", str_l);
             if str_l=="rufspiel" {
                 for efarbe in EFarbe::all_values().iter().filter(|&efarbe| EFarbe::Herz!=*efarbe) {
-                    vecrules.push(Box::new(CRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: *efarbe}));
+                    vecrules.push(Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: *efarbe}));
                 }
             } else if str_l=="solo" {
                 for efarbe in EFarbe::all_values().iter() {
-                    vecrules.push(Box::new(CRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: *efarbe}));
+                    vecrules.push(Box::new(SRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: *efarbe}));
                 }
             } else {
                 println!("{} is not a valid rule descriptor", str_l);
