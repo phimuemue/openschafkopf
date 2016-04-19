@@ -8,9 +8,9 @@ use ai;
 
 use std::sync::mpsc;
 
-pub struct CPlayerComputer;
+pub struct SPlayerComputer;
 
-impl CPlayer for CPlayerComputer {
+impl CPlayer for SPlayerComputer {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<SCard>) {
         txcard.send(ai::suggest_card(gamestate)).ok();
     }

@@ -48,10 +48,10 @@ impl<'rules> SGamePreparations<'rules> {
         SGamePreparations {
             m_ahand : random_hands(),
             m_vecplayer : vec![ // TODO: take players in ctor?
-                Box::new(CPlayerHuman),
-                Box::new(CPlayerComputer),
-                Box::new(CPlayerComputer),
-                Box::new(CPlayerComputer)
+                Box::new(SPlayerHuman),
+                Box::new(SPlayerComputer),
+                Box::new(SPlayerComputer),
+                Box::new(SPlayerComputer)
             ],
             m_aruleset : aruleset,
         }

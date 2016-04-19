@@ -10,9 +10,9 @@ use ai;
 use std::sync::mpsc;
 use std::io::Read;
 
-pub struct CPlayerHuman;
+pub struct SPlayerHuman;
 
-impl CPlayer for CPlayerHuman {
+impl CPlayer for SPlayerHuman {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<SCard>) {
         skui::print_vecstich(&gamestate.m_vecstich);
         let ref hand = gamestate.m_ahand[gamestate.which_player_can_do_something().unwrap()];
