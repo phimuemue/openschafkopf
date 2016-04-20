@@ -130,6 +130,38 @@ fn forever_rand_hands(vecstich: &Vec<SStich>, hand_fixed: SHand, eplayerindex_fi
     }
 }
 
+fn suspicion_from_hands_respecting_stich_current(
+    rules: &TRules,
+    ahand: [SHand; 4],
+    vecstich_complete_immutable: &Vec<SStich>,
+    mut vecstich_complete_mut: &mut Vec<SStich>,
+    stich_current: &SStich
+) -> SSuspicion {
+    let mut susp = SSuspicion::new_from_raw(stich_current.first_player_index(), ahand);
+    susp.compute_successors(
+        rules,
+        &mut vecstich_complete_mut,
+        &|vecstich_complete_successor: &Vec<SStich>, vecstich_successor: &mut Vec<SStich>| {
+            assert!(!vecstich_successor.is_empty());
+            if vecstich_complete_successor.len()==vecstich_complete_immutable.len() {
+                assert!(vecstich_complete_successor.iter().eq(vecstich_complete_immutable.iter()));
+                vecstich_successor.retain(|stich_successor| {
+                    assert!(stich_successor.size()==4);
+                    stich_current.equal_up_to_size(stich_successor, stich_current.size())
+                });
+                assert!(!vecstich_successor.is_empty());
+            } else if vecstich_complete_immutable.len() < 6 {
+                // TODO: maybe keep more than one successor stich
+                random_sample_from_vec(vecstich_successor, 1);
+            } else {
+                // if vecstich_complete_successor>=6, we hope that we can compute everything
+            }
+        }
+    );
+    assert_eq!(susp.suspicion_tranitions().len(), susp.count_leaves());
+    susp
+}
+
 pub fn suggest_card(gamestate: &SGameState) -> SCard {
     let n_tests = 100;
     let mut vecstich_complete_mut = gamestate.m_vecstich.iter()
@@ -164,31 +196,13 @@ pub fn suggest_card(gamestate: &SGameState) -> SCard {
             }
         })
         .take(n_tests)
-        .map(|ahand| {
-            let mut susp = SSuspicion::new_from_raw(stich_current.first_player_index(), ahand);
-            susp.compute_successors(
-                gamestate.m_rules,
-                &mut vecstich_complete_mut,
-                &|vecstich_complete_successor: &Vec<SStich>, vecstich_successor: &mut Vec<SStich>| {
-                    assert!(!vecstich_successor.is_empty());
-                    if vecstich_complete_successor.len()==vecstich_complete_immutable.len() {
-                        assert!(vecstich_complete_successor.iter().eq(vecstich_complete_immutable.iter()));
-                        vecstich_successor.retain(|stich_successor| {
-                            assert!(stich_successor.size()==4);
-                            stich_current.equal_up_to_size(stich_successor, stich_current.size())
-                        });
-                        assert!(!vecstich_successor.is_empty());
-                    } else if vecstich_complete_immutable.len() < 6 {
-                        // TODO: maybe keep more than one successor stich
-                        random_sample_from_vec(vecstich_successor, 1);
-                    } else {
-                        // if vecstich_complete_successor>=6, we hope that we can compute everything
-                    }
-                }
-            );
-            assert_eq!(susp.suspicion_tranitions().len(), susp.count_leaves());
-            susp
-        })
+        .map(|ahand| suspicion_from_hands_respecting_stich_current(
+            gamestate.m_rules,
+            ahand,
+            &vecstich_complete_immutable,
+            &mut vecstich_complete_mut,
+            &stich_current
+        ))
         .fold(
             // aggregate n_payout per card in some way
             HashMap::from_iter(
