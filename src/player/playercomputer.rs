@@ -10,7 +10,7 @@ use std::sync::mpsc;
 
 pub struct SPlayerComputer;
 
-impl CPlayer for SPlayerComputer {
+impl TPlayer for SPlayerComputer {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<SCard>) {
         txcard.send(ai::suggest_card(gamestate)).ok();
     }

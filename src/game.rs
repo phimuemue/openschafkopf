@@ -12,7 +12,7 @@ use rand::{self, Rng};
 
 pub struct SGamePreparations<'rules> {
     pub m_ahand : [SHand; 4],
-    pub m_vecplayer : Vec<Box<CPlayer>>, // TODO: good idea to have players in here?
+    pub m_vecplayer : Vec<Box<TPlayer>>, // TODO: good idea to have players in here?
     m_aruleset : &'rules [SRuleSet; 4],
 }
 
@@ -134,7 +134,7 @@ impl<'rules> SGameState<'rules> {
 
 pub struct SGame<'rules> {
     pub m_gamestate : SGameState<'rules>,
-    pub m_vecplayer : Vec<Box<CPlayer>>, // TODO: good idea to use Box<CPlayer>, maybe shared_ptr equivalent?
+    pub m_vecplayer : Vec<Box<TPlayer>>, // TODO: good idea to use Box<TPlayer>, maybe shared_ptr equivalent?
 }
 
 pub type SGameAnnouncementPriority = isize;
