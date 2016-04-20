@@ -116,7 +116,8 @@ fn suspicion_from_hands_respecting_stich_current(
     ahand: [SHand; 4],
     vecstich_complete_immutable: &Vec<SStich>,
     mut vecstich_complete_mut: &mut Vec<SStich>,
-    stich_current: &SStich
+    stich_current: &SStich,
+    n_branches: usize
 ) -> SSuspicion {
     let n_hand_len = ahand[0].cards().len();
     assert!(ahand.iter().all(|hand| hand.cards().len()==n_hand_len));
@@ -135,13 +136,13 @@ fn suspicion_from_hands_respecting_stich_current(
                 assert!(!vecstich_successor.is_empty());
             } else if vecstich_complete_immutable.len() < 6 {
                 // TODO: maybe keep more than one successor stich
-                random_sample_from_vec(vecstich_successor, 1);
+                random_sample_from_vec(vecstich_successor, n_branches);
             } else {
                 // if vecstich_complete_successor>=6, we hope that we can compute everything
             }
         }
     );
-    assert_eq!(susp.suspicion_tranitions().len(), susp.count_leaves());
+    assert!(susp.suspicion_tranitions().len() <= susp.count_leaves());
     susp
 }
 
@@ -189,7 +190,8 @@ impl TAi for SAiCheating {
             ),
             &vecstich_complete_immutable,
             &mut vecstich_complete_mut,
-            &stich_current
+            &stich_current,
+            /*n_branches*/2
         );
         possible_payouts(gamestate.m_rules, &susp, &vecstich_complete_immutable, stich_current.current_player_index()).into_iter()
             .max_by_key(|&(_card, n_payout)| n_payout)
@@ -264,7 +266,8 @@ impl TAi for SAiSimulating {
                 ahand,
                 &vecstich_complete_immutable,
                 &mut vecstich_complete_mut,
-                &stich_current
+                &stich_current,
+                /*n_branches*/1
             ))
             .fold(
                 // aggregate n_payout per card in some way
