@@ -12,28 +12,9 @@ use rand::Rng;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-pub fn rank_rules (hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
-    (0..n_tests)
-        .map(|_i_test| {
-            let mut vecocard = unplayed_cards(&Vec::new(), hand_fixed);
-            let mut susp = SSuspicion::new_from_raw(
-                eplayerindex_fixed,
-                create_playerindexmap(|eplayerindex| {
-                    if eplayerindex_fixed==eplayerindex {
-                        hand_fixed.clone()
-                    } else {
-                        random_hand(8, &mut vecocard)
-                    }
-                })
-            );
-            susp.compute_successors(rules, &mut Vec::new(), &|_vecstich_complete, vecstich_successor| {
-                assert!(!vecstich_successor.is_empty());
-                random_sample_from_vec(vecstich_successor, 1);
-            });
-            susp.min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex_fixed)
-        })
-        .fold(0, |n_payout_acc, n_payout| n_payout_acc+n_payout) as f64
-        / n_tests as f64
+pub trait TAi {
+    fn rank_rules(hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
+    fn suggest_card(gamestate: &SGameState) -> SCard;
 }
 
 pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
@@ -179,64 +160,92 @@ fn possible_payouts(rules: &TRules, susp: &SSuspicion, vecstich_complete_immutab
         .collect()
 }
 
-pub fn suggest_card(gamestate: &SGameState) -> SCard {
-    let n_tests = 100;
-    let mut vecstich_complete_mut = gamestate.m_vecstich.iter()
-        .filter(|stich| stich.size()==4)
-        .cloned()
-        .collect::<Vec<_>>();
-    let vecstich_complete_immutable = vecstich_complete_mut.clone();
-    let stich_current = gamestate.m_vecstich.last().unwrap().clone();
-    assert!(stich_current.size()<4);
-    let eplayerindex_fixed = stich_current.current_player_index();
-    let ref hand_fixed = gamestate.m_ahand[eplayerindex_fixed];
-    let veccard_allowed_fixed = gamestate.m_rules.all_allowed_cards(&gamestate.m_vecstich, hand_fixed);
-    let mapcardpayout = forever_rand_hands(&vecstich_complete_immutable, hand_fixed.clone(), eplayerindex_fixed)
-        .filter(|ahand| {
-            // hands must contain respective cards from stich_current...
-            stich_current.indices_and_cards()
-                .all(|(eplayerindex, card)| ahand[eplayerindex].contains(card))
-            // ... and must not contain other cards preventing farbe/trumpf frei
-            && {
-                let mut vecstich_complete_and_current_stich = vecstich_complete_immutable.clone();
-                vecstich_complete_and_current_stich.push(SStich::new(stich_current.first_player_index()));
-                stich_current.indices_and_cards()
-                    .all(|(eplayerindex, card_played)| {
-                        let b_valid = gamestate.m_rules.card_is_allowed(
-                            &vecstich_complete_and_current_stich,
-                            &ahand[eplayerindex],
-                            card_played
-                        );
-                        vecstich_complete_and_current_stich.last_mut().unwrap().zugeben(card_played);
-                        b_valid
+pub struct SAiSimulating {}
+
+impl TAi for SAiSimulating {
+    fn rank_rules (hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
+        (0..n_tests)
+            .map(|_i_test| {
+                let mut vecocard = unplayed_cards(&Vec::new(), hand_fixed);
+                let mut susp = SSuspicion::new_from_raw(
+                    eplayerindex_fixed,
+                    create_playerindexmap(|eplayerindex| {
+                        if eplayerindex_fixed==eplayerindex {
+                            hand_fixed.clone()
+                        } else {
+                            random_hand(8, &mut vecocard)
+                        }
                     })
-            }
-        })
-        .take(n_tests)
-        .map(|ahand| suspicion_from_hands_respecting_stich_current(
-            gamestate.m_rules,
-            ahand,
-            &vecstich_complete_immutable,
-            &mut vecstich_complete_mut,
-            &stich_current
-        ))
-        .fold(
-            // aggregate n_payout per card in some way
-            HashMap::from_iter(
-                veccard_allowed_fixed.iter()
-                    .map(|card| (card.clone(), 0)) // TODO Option<isize> more convenient?
-            ),
-            |mut mapcardpayout: HashMap<SCard, isize>, susp| {
-                for (card, n_payout) in possible_payouts(gamestate.m_rules, &susp, &vecstich_complete_immutable, eplayerindex_fixed) {
-                    let n_payout_acc = mapcardpayout[&card];
-                    *mapcardpayout.get_mut(&card).unwrap() = n_payout_acc + n_payout;
+                );
+                susp.compute_successors(rules, &mut Vec::new(), &|_vecstich_complete, vecstich_successor| {
+                    assert!(!vecstich_successor.is_empty());
+                    random_sample_from_vec(vecstich_successor, 1);
+                });
+                susp.min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex_fixed)
+            })
+            .fold(0, |n_payout_acc, n_payout| n_payout_acc+n_payout) as f64
+            / n_tests as f64
+    }
+
+    fn suggest_card(gamestate: &SGameState) -> SCard {
+        let n_tests = 100;
+        let mut vecstich_complete_mut = gamestate.m_vecstich.iter()
+            .filter(|stich| stich.size()==4)
+            .cloned()
+            .collect::<Vec<_>>();
+        let vecstich_complete_immutable = vecstich_complete_mut.clone();
+        let stich_current = gamestate.m_vecstich.last().unwrap().clone();
+        assert!(stich_current.size()<4);
+        let eplayerindex_fixed = stich_current.current_player_index();
+        let ref hand_fixed = gamestate.m_ahand[eplayerindex_fixed];
+        let veccard_allowed_fixed = gamestate.m_rules.all_allowed_cards(&gamestate.m_vecstich, hand_fixed);
+        let mapcardpayout = forever_rand_hands(&vecstich_complete_immutable, hand_fixed.clone(), eplayerindex_fixed)
+            .filter(|ahand| {
+                // hands must contain respective cards from stich_current...
+                stich_current.indices_and_cards()
+                    .all(|(eplayerindex, card)| ahand[eplayerindex].contains(card))
+                // ... and must not contain other cards preventing farbe/trumpf frei
+                && {
+                    let mut vecstich_complete_and_current_stich = vecstich_complete_immutable.clone();
+                    vecstich_complete_and_current_stich.push(SStich::new(stich_current.first_player_index()));
+                    stich_current.indices_and_cards()
+                        .all(|(eplayerindex, card_played)| {
+                            let b_valid = gamestate.m_rules.card_is_allowed(
+                                &vecstich_complete_and_current_stich,
+                                &ahand[eplayerindex],
+                                card_played
+                            );
+                            vecstich_complete_and_current_stich.last_mut().unwrap().zugeben(card_played);
+                            b_valid
+                        })
                 }
-                mapcardpayout
-            }
-        );
-    assert!(!hand_fixed.cards().is_empty());
-    veccard_allowed_fixed.into_iter()
-        .max_by_key(|card| mapcardpayout[card])
-        .unwrap()
-        .clone()
+            })
+            .take(n_tests)
+            .map(|ahand| suspicion_from_hands_respecting_stich_current(
+                gamestate.m_rules,
+                ahand,
+                &vecstich_complete_immutable,
+                &mut vecstich_complete_mut,
+                &stich_current
+            ))
+            .fold(
+                // aggregate n_payout per card in some way
+                HashMap::from_iter(
+                    veccard_allowed_fixed.iter()
+                        .map(|card| (card.clone(), 0)) // TODO Option<isize> more convenient?
+                ),
+                |mut mapcardpayout: HashMap<SCard, isize>, susp| {
+                    for (card, n_payout) in possible_payouts(gamestate.m_rules, &susp, &vecstich_complete_immutable, eplayerindex_fixed) {
+                        let n_payout_acc = mapcardpayout[&card];
+                        *mapcardpayout.get_mut(&card).unwrap() = n_payout_acc + n_payout;
+                    }
+                    mapcardpayout
+                }
+            );
+        assert!(!hand_fixed.cards().is_empty());
+        veccard_allowed_fixed.into_iter()
+            .max_by_key(|card| mapcardpayout[card])
+            .unwrap()
+            .clone()
+    }
 }

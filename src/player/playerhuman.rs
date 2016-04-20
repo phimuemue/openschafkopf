@@ -6,6 +6,7 @@ use rules::ruleset::*;
 use game::*;
 use skui;
 use ai;
+use ai::TAi;
 
 use std::sync::mpsc;
 use std::io::Read;
@@ -28,7 +29,7 @@ impl TPlayer for SPlayerHuman {
                     skui::print_hand(hand.cards(), Some(i_card));
                     skui::print_game_info(gamestate);
                 },
-                || {Some(ai::suggest_card(gamestate))}
+                || {Some(ai::SAiSimulating::suggest_card(gamestate))}
             ).clone()
         ) {
             Ok(_) => (),
