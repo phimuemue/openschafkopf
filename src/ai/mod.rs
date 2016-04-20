@@ -162,6 +162,23 @@ fn suspicion_from_hands_respecting_stich_current(
     susp
 }
 
+fn possible_payouts(rules: &TRules, susp: &SSuspicion, vecstich_complete_immutable: &Vec<SStich>, eplayerindex_fixed: EPlayerIndex) -> Vec<(SCard, isize)> { // TODO Rust: return iterator
+    susp.suspicion_tranitions().iter()
+        .map(|susptrans| {
+            let mut vecstich_complete_payout = vecstich_complete_immutable.clone();
+            let n_payout = push_pop_vecstich(&mut vecstich_complete_payout, susptrans.stich().clone(), |mut vecstich_complete_payout| {
+                susptrans.suspicion().min_reachable_payout(
+                    rules,
+                    &mut vecstich_complete_payout,
+                    None,
+                    eplayerindex_fixed
+                )
+            });
+            (susptrans.stich()[eplayerindex_fixed], n_payout)
+        })
+        .collect()
+}
+
 pub fn suggest_card(gamestate: &SGameState) -> SCard {
     let n_tests = 100;
     let mut vecstich_complete_mut = gamestate.m_vecstich.iter()
@@ -210,17 +227,7 @@ pub fn suggest_card(gamestate: &SGameState) -> SCard {
                     .map(|card| (card.clone(), 0)) // TODO Option<isize> more convenient?
             ),
             |mut mapcardpayout: HashMap<SCard, isize>, susp| {
-                for susptrans in susp.suspicion_tranitions() {
-                    let mut vecstich_complete_payout = vecstich_complete_immutable.clone();
-                    let n_payout = push_pop_vecstich(&mut vecstich_complete_payout, susptrans.stich().clone(), |mut vecstich_complete_payout| {
-                        susptrans.suspicion().min_reachable_payout(
-                            gamestate.m_rules,
-                            &mut vecstich_complete_payout,
-                            None,
-                            eplayerindex_fixed
-                        )
-                    });
-                    let card = susptrans.stich()[eplayerindex_fixed];
+                for (card, n_payout) in possible_payouts(gamestate.m_rules, &susp, &vecstich_complete_immutable, eplayerindex_fixed) {
                     let n_payout_acc = mapcardpayout[&card];
                     *mapcardpayout.get_mut(&card).unwrap() = n_payout_acc + n_payout;
                 }
