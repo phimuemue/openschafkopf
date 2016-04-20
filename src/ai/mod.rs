@@ -118,6 +118,8 @@ fn suspicion_from_hands_respecting_stich_current(
     mut vecstich_complete_mut: &mut Vec<SStich>,
     stich_current: &SStich
 ) -> SSuspicion {
+    let n_hand_len = ahand[0].cards().len();
+    assert!(ahand.iter().all(|hand| hand.cards().len()==n_hand_len));
     let mut susp = SSuspicion::new_from_raw(stich_current.first_player_index(), ahand);
     susp.compute_successors(
         rules,
