@@ -7,8 +7,10 @@ use player::*;
 use player::playercomputer::*;
 use player::playerhuman::*;
 use skui;
+use ai::*;
 
 use rand::{self, Rng};
+use std::marker::PhantomData;
 
 pub struct SGamePreparations<'rules> {
     pub m_ahand : [SHand; 4],
@@ -49,9 +51,9 @@ impl<'rules> SGamePreparations<'rules> {
             m_ahand : random_hands(),
             m_vecplayer : vec![ // TODO: take players in ctor?
                 Box::new(SPlayerHuman),
-                Box::new(SPlayerComputer),
-                Box::new(SPlayerComputer),
-                Box::new(SPlayerComputer)
+                Box::new(SPlayerComputer::<SAiCheating>{m_phantomai: PhantomData}),
+                Box::new(SPlayerComputer::<SAiCheating>{m_phantomai: PhantomData}),
+                Box::new(SPlayerComputer::<SAiCheating>{m_phantomai: PhantomData})
             ],
             m_aruleset : aruleset,
         }

@@ -4,16 +4,18 @@ use player::*;
 use rules::*;
 use rules::ruleset::*;
 use game::*;
-use ai;
 use ai::TAi;
 
 use std::sync::mpsc;
+use std::marker::PhantomData;
 
-pub struct SPlayerComputer;
+pub struct SPlayerComputer<Ai: TAi> {
+    pub m_phantomai : PhantomData<Ai>,
+}
 
-impl TPlayer for SPlayerComputer {
+impl<Ai: TAi> TPlayer for SPlayerComputer<Ai> {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<SCard>) {
-        txcard.send(ai::SAiSimulating::suggest_card(gamestate)).ok();
+        txcard.send(Ai::suggest_card(gamestate)).ok();
     }
 
     fn ask_for_game<'rules>(&self, hand: &SHand, _ : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules TRules> {
@@ -31,7 +33,7 @@ impl TPlayer for SPlayerComputer {
                 let eplayerindex_fixed = rules.playerindex().unwrap(); 
                 (
                     rules,
-                    ai::SAiSimulating::rank_rules(hand, eplayerindex_fixed, rules, n_tests_per_rules)
+                    Ai::rank_rules(hand, eplayerindex_fixed, rules, n_tests_per_rules)
                 )
             })
             .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold

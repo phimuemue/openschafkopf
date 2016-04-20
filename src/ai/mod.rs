@@ -162,6 +162,42 @@ fn possible_payouts(rules: &TRules, susp: &SSuspicion, vecstich_complete_immutab
         .collect()
 }
 
+pub struct SAiCheating {}
+
+impl TAi for SAiCheating {
+    fn rank_rules (hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
+        // TODO: adjust interface to get whole gamestate
+        SAiSimulating::rank_rules(hand_fixed, eplayerindex_fixed, rules, n_tests)
+    }
+
+    fn suggest_card(gamestate: &SGameState) -> SCard {
+        let mut vecstich_complete_mut = gamestate.m_vecstich.iter()
+            .filter(|stich| stich.size()==4)
+            .cloned()
+            .collect::<Vec<_>>();
+        let vecstich_complete_immutable = vecstich_complete_mut.clone();
+        let stich_current = gamestate.m_vecstich.last().unwrap().clone();
+        assert!(stich_current.size()<4);
+        let susp = suspicion_from_hands_respecting_stich_current(
+            gamestate.m_rules,
+            create_playerindexmap(|eplayerindex|
+                SHand::new_from_vec(
+                    stich_current.get(eplayerindex).into_iter()
+                        .chain(gamestate.m_ahand[eplayerindex].cards().iter().cloned())
+                        .collect()
+                )
+            ),
+            &vecstich_complete_immutable,
+            &mut vecstich_complete_mut,
+            &stich_current
+        );
+        possible_payouts(gamestate.m_rules, &susp, &vecstich_complete_immutable, stich_current.current_player_index()).into_iter()
+            .max_by_key(|&(_card, n_payout)| n_payout)
+            .unwrap()
+            .0
+    }
+}
+
 pub struct SAiSimulating {}
 
 impl TAi for SAiSimulating {
