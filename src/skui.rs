@@ -194,17 +194,15 @@ pub fn choose_alternative_from_list_key_bindings() -> SAskForAlternativeKeyBindi
     }
 }
 
-pub fn ask_for_alternative<'vect, T, FnFormat, FnFilter, FnCallback, FnSuggest>(
+pub fn ask_for_alternative<'vect, T, FnFilter, FnCallback, FnSuggest>(
     vect: &'vect [T],
     askforalternativekeybindings: SAskForAlternativeKeyBindings,
     fn_filter: FnFilter,
-    fn_format: &FnFormat,
     fn_callback: FnCallback,
     fn_suggest: FnSuggest
 ) -> &'vect T 
-    where FnFormat : Fn(&T) -> String,
-          FnFilter : Fn(&T) -> bool,
-          FnCallback : Fn(ncurses::WINDOW, usize),
+    where FnFilter : Fn(&T) -> bool,
+          FnCallback : Fn(ncurses::WINDOW, usize, &Option<T>),
           FnSuggest : Fn() -> Option<T>
 {
     do_in_window(
@@ -229,10 +227,7 @@ pub fn ask_for_alternative<'vect, T, FnFormat, FnFilter, FnCallback, FnSuggest>(
                     } else if ch==askforalternativekeybindings.m_key_suggest {
                         ot_suggest = fn_suggest();
                     }
-                    if let Some(ref t) = ot_suggest {
-                        wprintln(ncwin, &format!("AI: {}", fn_format(t)));
-                    }
-                    fn_callback(ncwin, vect[i_alternative].0);
+                    fn_callback(ncwin, vect[i_alternative].0, &ot_suggest);
                     ch = ncurses::getch();
                 }
                 ncurses::erase();

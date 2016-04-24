@@ -24,8 +24,10 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
                 &hand.cards(),
                 skui::choose_card_from_hand_key_bindings(),
                 |card| {veccard_allowed.iter().any(|card_allowed| card_allowed==card)},
-                &|card| card.to_string(),
-                |_ncwin, i_card_chosen| {
+                |ncwin, i_card_chosen, ocard_suggest| {
+                    if let &Some(card) = ocard_suggest {
+                        skui::wprintln(ncwin, &format!("AI: {}", card));
+                    }
                     skui::print_hand(hand.cards(), Some(i_card_chosen));
                     skui::print_game_info(gamestate);
                 },
@@ -46,16 +48,18 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
                     .map(|rules| Some(rules.as_ref()))
             )
             .collect::<Vec<_>>();
-        let fn_format = |orules : &Option<&TRules>| match orules {
-            &None => "Nothing".to_string(),
-            &Some(ref rules) => rules.to_string()
-        };
         *skui::ask_for_alternative(
             &vecorules,
             skui::choose_alternative_from_list_key_bindings(),
             |_orules| {true},
-            &fn_format,
-            |ncwin, i_orules_chosen| {
+            |ncwin, i_orules_chosen, oorules_suggest| {
+                let fn_format = |orules : &Option<&TRules>| match orules {
+                    &None => "Nothing".to_string(),
+                    &Some(ref rules) => rules.to_string()
+                };
+                if let &Some(ref rules) = oorules_suggest {
+                    skui::wprintln(ncwin, &format!("AI: {}", fn_format(rules)));
+                }
                 skui::wprintln(ncwin, &format!("Your cards: {}. What do you want to play?", hand));
                 for (i_orules, orules) in vecorules.iter().enumerate() {
                     skui::wprintln(ncwin, &format!("{} {} ({})",
