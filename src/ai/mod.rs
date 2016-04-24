@@ -7,8 +7,7 @@ use game::*;
 use stich::*;
 use ai::suspicion::*;
 
-use rand;
-use rand::Rng;
+use rand::{self, Rng};
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
