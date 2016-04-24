@@ -114,7 +114,6 @@ fn forever_rand_hands(vecstich: &Vec<SStich>, hand_fixed: SHand, eplayerindex_fi
 fn suspicion_from_hands_respecting_stich_current(
     rules: &TRules,
     ahand: [SHand; 4],
-    vecstich_complete_immutable: &Vec<SStich>,
     mut vecstich_complete_mut: &mut Vec<SStich>,
     stich_current: &SStich,
     n_branches: usize
@@ -122,20 +121,19 @@ fn suspicion_from_hands_respecting_stich_current(
     let n_hand_len = ahand[0].cards().len();
     assert!(ahand.iter().all(|hand| hand.cards().len()==n_hand_len));
     let mut susp = SSuspicion::new_from_raw(stich_current.first_player_index(), ahand);
-    assert!(vecstich_complete_mut.iter().eq(vecstich_complete_immutable.iter()));
+    let n_stich_complete = vecstich_complete_mut.len();
     susp.compute_successors(
         rules,
         &mut vecstich_complete_mut,
         &|vecstich_complete_successor: &Vec<SStich>, vecstich_successor: &mut Vec<SStich>| {
             assert!(!vecstich_successor.is_empty());
-            if vecstich_complete_successor.len()==vecstich_complete_immutable.len() {
-                assert!(vecstich_complete_successor.iter().eq(vecstich_complete_immutable.iter()));
+            if vecstich_complete_successor.len()==n_stich_complete {
                 vecstich_successor.retain(|stich_successor| {
                     assert!(stich_successor.size()==4);
                     stich_current.equal_up_to_size(stich_successor, stich_current.size())
                 });
                 assert!(!vecstich_successor.is_empty());
-            } else if vecstich_complete_immutable.len() < 6 {
+            } else if n_stich_complete < 6 {
                 // TODO: maybe keep more than one successor stich
                 random_sample_from_vec(vecstich_successor, n_branches);
             } else {
@@ -189,7 +187,6 @@ impl TAi for SAiCheating {
                         .collect()
                 )
             ),
-            &vecstich_complete_immutable,
             &mut vecstich_complete_mut,
             &stich_current,
             /*n_branches*/2
@@ -265,7 +262,6 @@ impl TAi for SAiSimulating {
             .map(|ahand| suspicion_from_hands_respecting_stich_current(
                 gamestate.m_rules,
                 ahand,
-                &vecstich_complete_immutable,
                 &mut vecstich_complete_mut,
                 &stich_current,
                 /*n_branches*/1
