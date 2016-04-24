@@ -7,7 +7,6 @@
 * fix graphical output (currently, it is often cleared when ai is running)
 * add indication to show that ai is working
 * ruleset: group rules into categories (e.g. Rufspiel with Farbe, Solo with Farbe, etc.)
-* AI should be stored as global box and be customizable via command line argument
 * clean up mess introduced by SAiCheating-Commit
 * compute_successors should acknowledge ostich_given
 * could susp_from_raw construct m_ahand on its own (to ensure ahand.iter().transform(hand.size()).all_same)
