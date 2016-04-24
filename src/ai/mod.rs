@@ -13,8 +13,8 @@ use std::collections::HashMap;
 use std::iter::FromIterator;
 
 pub trait TAi {
-    fn rank_rules(hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
-    fn suggest_card(gamestate: &SGameState) -> SCard;
+    fn rank_rules(&self, hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
+    fn suggest_card(&self, gamestate: &SGameState) -> SCard;
 }
 
 pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
@@ -166,12 +166,12 @@ fn possible_payouts(rules: &TRules, susp: &SSuspicion, vecstich_complete_immutab
 pub struct SAiCheating {}
 
 impl TAi for SAiCheating {
-    fn rank_rules (hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
+    fn rank_rules (&self, hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
         // TODO: adjust interface to get whole gamestate
-        SAiSimulating::rank_rules(hand_fixed, eplayerindex_fixed, rules, n_tests)
+        SAiSimulating{}.rank_rules(hand_fixed, eplayerindex_fixed, rules, n_tests)
     }
 
-    fn suggest_card(gamestate: &SGameState) -> SCard {
+    fn suggest_card(&self, gamestate: &SGameState) -> SCard {
         let mut vecstich_complete_mut = gamestate.m_vecstich.iter()
             .filter(|stich| stich.size()==4)
             .cloned()
@@ -203,7 +203,7 @@ impl TAi for SAiCheating {
 pub struct SAiSimulating {}
 
 impl TAi for SAiSimulating {
-    fn rank_rules (hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
+    fn rank_rules (&self, hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
         (0..n_tests)
             .map(|_i_test| {
                 let mut vecocard = unplayed_cards(&Vec::new(), hand_fixed);
@@ -227,7 +227,7 @@ impl TAi for SAiSimulating {
             / n_tests as f64
     }
 
-    fn suggest_card(gamestate: &SGameState) -> SCard {
+    fn suggest_card(&self, gamestate: &SGameState) -> SCard {
         let n_tests = 100;
         let mut vecstich_complete_mut = gamestate.m_vecstich.iter()
             .filter(|stich| stich.size()==4)

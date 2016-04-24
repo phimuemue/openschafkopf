@@ -33,7 +33,6 @@ use std::path::Path;
 use player::*;
 use player::playerhuman::*;
 use player::playercomputer::*;
-use std::marker::PhantomData;
 
 fn main() {
     let clapmatches = clap::App::new("schafkopf")
@@ -141,6 +140,8 @@ fn main() {
         println!("{} suspicions", n_susp);
     }
 
+    let ai : Box<TAi> = Box::new(ai::SAiCheating{});
+
     let aruleset = read_ruleset(Path::new(clapmatches.value_of("rulesetpath").unwrap()));
     {
         let hand_fixed = random_hand(8, &mut SCard::all_values().into_iter().map(|card| Some(card)).collect());
@@ -150,20 +151,19 @@ fn main() {
         for rules in aruleset[eplayerindex_fixed].allowed_rules().iter() 
             .filter(|rules| rules.can_be_played(&hand_fixed))
         {
-            let f_payout_avg = ai::SAiSimulating::rank_rules(&hand_fixed, eplayerindex_fixed, rules.as_ref(), 100);
+            let f_payout_avg = ai.rank_rules(&hand_fixed, eplayerindex_fixed, rules.as_ref(), 100);
             println!("{}", rules);
             println!("{}", f_payout_avg);
         }
     }
     //return;
 
-
     skui::init_ui();
     let mut vecplayer : Vec<Box<TPlayer>> = vec![
         Box::new(SPlayerHuman),
-        Box::new(SPlayerComputer::<SAiCheating>{m_phantomai: PhantomData}),
-        Box::new(SPlayerComputer::<SAiCheating>{m_phantomai: PhantomData}),
-        Box::new(SPlayerComputer::<SAiCheating>{m_phantomai: PhantomData})
+        Box::new(SPlayerComputer{m_ai : ai.as_ref()}),
+        Box::new(SPlayerComputer{m_ai : ai.as_ref()}),
+        Box::new(SPlayerComputer{m_ai : ai.as_ref()})
     ];
     let mut accountbalance = SAccountBalance::new();
     for i_game in 0..clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4) {

@@ -50,7 +50,7 @@ impl<'rules> SGamePreparations<'rules> {
 
     // TODO: extend return value to support stock, etc.
     // TODO: eliminate vecplayer and substitute start_game by which_player_can_do_something (similar to SGame)
-    pub fn start_game(mut self, eplayerindex_first : EPlayerIndex, vecplayer: &Vec<Box<TPlayer>>) -> Option<SGame<'rules>> {
+    pub fn start_game<'players>(mut self, eplayerindex_first : EPlayerIndex, vecplayer: &Vec<Box<TPlayer+'players>>) -> Option<SGame<'rules>> {
         // prepare
         skui::logln("Preparing game");
         for hand in self.m_ahand.iter() {
