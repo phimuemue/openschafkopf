@@ -44,6 +44,10 @@ fn main() {
              .long("numgames")
              .default_value("4")
          )
+        .arg(clap::Arg::with_name("ai")
+             .long("ai")
+             .default_value("cheating")
+         )
         .get_matches();
     {
         let rules = SRulesRufspiel {
@@ -140,7 +144,16 @@ fn main() {
         println!("{} suspicions", n_susp);
     }
 
-    let ai : Box<TAi> = Box::new(ai::SAiCheating{});
+    let ai : Box<TAi> = {
+        match clapmatches.value_of("ai").unwrap().as_ref() {
+            "cheating" => Box::new(ai::SAiCheating{}),
+            "simulating" => Box::new(ai::SAiSimulating{}),
+            _ => {
+                println!("Warning: AI not recognized. Defaulting to 'cheating'");
+                Box::new(ai::SAiCheating{})
+            }
+        }
+    };
 
     let aruleset = read_ruleset(Path::new(clapmatches.value_of("rulesetpath").unwrap()));
     {
