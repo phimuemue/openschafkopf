@@ -91,7 +91,7 @@ impl<'rules> SGamePreparations<'rules> {
                     rules
                 ));
                 for hand in self.m_ahand.iter_mut() {
-                    hand.sort(|&card_fst, &card_snd| rules.compare_in_stich(card_fst, card_snd).reverse());
+                    rules.sort_cards_first_trumpf_then_farbe(hand.cards_mut());
                     skui::logln(&format!("{}", hand));
                 }
                 SGame {

@@ -58,20 +58,7 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
             |orules, _i_orules| {
                 let mut veccard = hand.cards().clone();
                 if let Some(rules)=orules.as_ref() {
-                    veccard.sort_by(|&card_lhs, &card_rhs| {
-                        match(rules.trumpf_or_farbe(card_lhs), rules.trumpf_or_farbe(card_rhs)) {
-                            (VTrumpfOrFarbe::Farbe(efarbe_lhs), VTrumpfOrFarbe::Farbe(efarbe_rhs)) => {
-                                if efarbe_lhs==efarbe_rhs {
-                                    rules.compare_in_stich_farbe(card_lhs, card_rhs)
-                                } else {
-                                    efarbe_lhs.cmp(&efarbe_rhs)
-                                }
-                            }
-                            (_, _) => { // at least one of them is trumpf
-                                rules.compare_in_stich(card_lhs, card_rhs)
-                            }
-                        }
-                    }.reverse());
+                    rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
                 }
                 skui::print_hand(&veccard, None);
             },

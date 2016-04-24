@@ -142,6 +142,23 @@ pub trait TRules : fmt::Display {
             (false, false) => self.compare_in_stich_farbe(card_fst, card_snd),
         }
     }
+
+    fn sort_cards_first_trumpf_then_farbe(&self, veccard: &mut [SCard]) {
+        veccard.sort_by(|&card_lhs, &card_rhs| {
+            match(self.trumpf_or_farbe(card_lhs), self.trumpf_or_farbe(card_rhs)) {
+                (VTrumpfOrFarbe::Farbe(efarbe_lhs), VTrumpfOrFarbe::Farbe(efarbe_rhs)) => {
+                    if efarbe_lhs==efarbe_rhs {
+                        self.compare_in_stich_farbe(card_rhs, card_lhs)
+                    } else {
+                        efarbe_lhs.cmp(&efarbe_rhs)
+                    }
+                }
+                (_, _) => { // at least one of them is trumpf
+                    self.compare_in_stich(card_rhs, card_lhs)
+                }
+            }
+        });
+    }
 }
 
 pub fn compare_farbcards_same_color(card_fst: SCard, card_snd: SCard) -> Ordering {

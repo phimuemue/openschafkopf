@@ -1,6 +1,5 @@
 use card::*;
 use std::fmt;
-use std::cmp::Ordering;
 use arrayvec::ArrayVec;
 
 pub type SHandVector = ArrayVec<[SCard; 8]>;
@@ -36,12 +35,6 @@ impl SHand {
     }
     pub fn play_card(&mut self, card_played: SCard) {
         self.m_veccard.retain(|&mut card| card!=card_played)
-    }
-
-    pub fn sort<CmpLess>(&mut self, cmpless: CmpLess)
-        where CmpLess: Fn(&SCard, &SCard) -> Ordering
-    {
-        self.m_veccard.sort_by(cmpless)
     }
 
     pub fn cards(&self) -> &SHandVector {
