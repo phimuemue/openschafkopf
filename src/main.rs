@@ -173,7 +173,7 @@ fn main() {
 
     skui::init_ui();
     let mut vecplayer : Vec<Box<TPlayer>> = vec![
-        Box::new(SPlayerHuman),
+        Box::new(SPlayerHuman{m_ai : ai.as_ref()}),
         Box::new(SPlayerComputer{m_ai : ai.as_ref()}),
         Box::new(SPlayerComputer{m_ai : ai.as_ref()}),
         Box::new(SPlayerComputer{m_ai : ai.as_ref()})

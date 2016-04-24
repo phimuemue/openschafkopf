@@ -5,13 +5,16 @@ use rules::*;
 use rules::ruleset::*;
 use game::*;
 use skui;
+use ai::*;
 
 use std::sync::mpsc;
 use std::io::Read;
 
-pub struct SPlayerHuman;
+pub struct SPlayerHuman<'ai> {
+    pub m_ai : &'ai TAi,
+}
 
-impl TPlayer for SPlayerHuman {
+impl<'ai> TPlayer for SPlayerHuman<'ai> {
     fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<SCard>) {
         skui::print_vecstich(&gamestate.m_vecstich);
         let ref hand = gamestate.m_ahand[gamestate.which_player_can_do_something().unwrap()];
@@ -27,10 +30,7 @@ impl TPlayer for SPlayerHuman {
                     skui::print_hand(hand.cards(), Some(i_card));
                     skui::print_game_info(gamestate);
                 },
-                || {
-                    unimplemented!();
-                    //Some(ai::SAiSimulating::suggest_card(gamestate))
-                }
+                || {Some(self.m_ai.suggest_card(gamestate))}
             ).clone()
         ) {
             Ok(_) => (),
