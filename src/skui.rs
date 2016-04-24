@@ -87,8 +87,8 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
             }
         },
         ESkUiWindow::Stich => {create_fullwidth_window(1, 6)},
-        ESkUiWindow::Hand => {create_fullwidth_window(6, 8)},
-        ESkUiWindow::Interaction => {create_fullwidth_window(8, n_height-3)},
+        ESkUiWindow::Hand => {create_fullwidth_window(6, 17)},
+        ESkUiWindow::Interaction => {create_fullwidth_window(17, n_height-3)},
         ESkUiWindow::GameInfo => {create_fullwidth_window(n_height-3, n_height-2)}
         ESkUiWindow::AccountBalance => {create_fullwidth_window(n_height-2, n_height-1)}
     };
@@ -243,14 +243,14 @@ pub fn print_hand(veccard: &[SCard], oi_card: Option<usize>) {
         |ncwin| {
             let is_oi_card = |i| { oi_card.map_or(false, |i_card| i==i_card) };
             for (i, card) in veccard.iter().enumerate() {
-                if is_oi_card(i) {
-                    ncurses::wattron(ncwin, ncurses::A_REVERSE() as i32);
-                }
-                wprint(ncwin, " ");
+                let n_card_width = 10;
+                ncurses::wmove(ncwin,
+                    /*n_y*/ {if is_oi_card(i) { 0 } else { 1 }} as i32,
+                    /*n_x*/ n_card_width * i as i32
+                );
+                wprint(ncwin, " +--");
                 print_card_with_farbe(ncwin, *card);
-                if is_oi_card(i) {
-                    ncurses::wattroff(ncwin, ncurses::A_REVERSE() as i32);
-                }
+                wprint(ncwin, "--+ ");
             }
             ncurses::refresh();
         }
