@@ -8,9 +8,8 @@ use skui;
 
 use rand::{self, Rng};
 
-pub struct SGamePreparations<'rules, 'players> {
+pub struct SGamePreparations<'rules> {
     pub m_ahand : [SHand; 4],
-    pub m_vecplayer : &'players Vec<Box<TPlayer>>, // TODO remove m_vecplayer, similar to SGame
     m_aruleset : &'rules [SRuleSet; 4],
 }
 
@@ -41,17 +40,17 @@ pub fn random_hands() -> [SHand; 4] {
     )
 }
 
-impl<'rules, 'players> SGamePreparations<'rules, 'players> {
-    pub fn new(aruleset : &'rules [SRuleSet; 4], vecplayer : &'players Vec<Box<TPlayer>>) -> SGamePreparations<'rules, 'players> {
+impl<'rules> SGamePreparations<'rules> {
+    pub fn new(aruleset : &'rules [SRuleSet; 4]) -> SGamePreparations<'rules> {
         SGamePreparations {
             m_ahand : random_hands(),
-            m_vecplayer : vecplayer,
             m_aruleset : aruleset,
         }
     }
 
     // TODO: extend return value to support stock, etc.
-    pub fn start_game(mut self, eplayerindex_first : EPlayerIndex) -> Option<SGame<'rules>> {
+    // TODO: eliminate vecplayer and substitute start_game by which_player_can_do_something (similar to SGame)
+    pub fn start_game(mut self, eplayerindex_first : EPlayerIndex, vecplayer: &Vec<Box<TPlayer>>) -> Option<SGame<'rules>> {
         // prepare
         skui::logln("Preparing game");
         for hand in self.m_ahand.iter() {
@@ -63,7 +62,7 @@ impl<'rules, 'players> SGamePreparations<'rules, 'players> {
         skui::logln("Asking players if they want to play");
         let mut vecgameannouncement : Vec<SGameAnnouncement> = Vec::new();
         for eplayerindex in (eplayerindex_first..eplayerindex_first+4).map(|eplayerindex| eplayerindex%4) {
-            let orules = self.m_vecplayer[eplayerindex].ask_for_game(
+            let orules = vecplayer[eplayerindex].ask_for_game(
                 &self.m_ahand[eplayerindex],
                 &vecgameannouncement,
                 &self.m_aruleset[eplayerindex]

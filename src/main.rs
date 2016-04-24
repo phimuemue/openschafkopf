@@ -168,9 +168,9 @@ fn main() {
     let mut accountbalance = SAccountBalance::new();
     for i_game in 0..clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4) {
         let ogame = {
-            let gameprep = SGamePreparations::new(&aruleset, &vecplayer);
+            let gameprep = SGamePreparations::new(&aruleset);
             skui::logln(&format!("Hand 0 : {}", gameprep.m_ahand[0]));
-            gameprep.start_game(i_game % 4)
+            gameprep.start_game(i_game % 4, &vecplayer)
         };
         if let Some(mut game)=ogame {
             while let Some(eplayerindex)=game.which_player_can_do_something() {
