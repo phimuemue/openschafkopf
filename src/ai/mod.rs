@@ -175,7 +175,6 @@ impl TAi for SAiCheating {
             .filter(|stich| stich.size()==4)
             .cloned()
             .collect::<Vec<_>>();
-        let vecstich_complete_immutable = vecstich_complete_mut.clone();
         let stich_current = gamestate.m_vecstich.last().unwrap().clone();
         assert!(stich_current.size()<4);
         let susp = suspicion_from_hands_respecting_stich_current(
@@ -191,7 +190,7 @@ impl TAi for SAiCheating {
             &stich_current,
             /*n_branches*/2
         );
-        possible_payouts(gamestate.m_rules, &susp, &vecstich_complete_immutable, stich_current.current_player_index()).into_iter()
+        possible_payouts(gamestate.m_rules, &susp, &vecstich_complete_mut, stich_current.current_player_index()).into_iter()
             .max_by_key(|&(_card, n_payout)| n_payout)
             .unwrap()
             .0
