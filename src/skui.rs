@@ -15,7 +15,7 @@ pub fn end_ui() {
     ncurses::endwin();
 }
 
-fn wprintln(ncwin: ncurses::WINDOW, s: &str) {
+pub fn wprintln(ncwin: ncurses::WINDOW, s: &str) {
     ncurses::wprintw(ncwin, s);
     ncurses::wprintw(ncwin, "\n");
     ncurses::wrefresh(ncwin);
@@ -195,17 +195,16 @@ pub fn choose_alternative_from_list_key_bindings() -> SAskForAlternativeKeyBindi
 }
 
 pub fn ask_for_alternative<'vect, T, FnFormat, FnFilter, FnCallback, FnSuggest>(
-    str_question: &str,
     vect: &'vect [T],
     askforalternativekeybindings: SAskForAlternativeKeyBindings,
     fn_filter: FnFilter,
-    fn_format: FnFormat,
+    fn_format: &FnFormat,
     fn_callback: FnCallback,
     fn_suggest: FnSuggest
 ) -> &'vect T 
     where FnFormat : Fn(&T) -> String,
           FnFilter : Fn(&T) -> bool,
-          FnCallback : Fn(&T, usize),
+          FnCallback : Fn(ncurses::WINDOW, usize),
           FnSuggest : Fn() -> Option<T>
 {
     do_in_window(
@@ -233,15 +232,7 @@ pub fn ask_for_alternative<'vect, T, FnFormat, FnFilter, FnCallback, FnSuggest>(
                     if let Some(ref t) = ot_suggest {
                         wprintln(ncwin, &format!("AI: {}", fn_format(t)));
                     }
-                    wprintln(ncwin, str_question);
-                    for (i_t, t) in vect.iter().enumerate() {
-                        wprintln(ncwin, &format!("{} {} ({})",
-                            if i_t==i_alternative {"*"} else {" "},
-                            fn_format(&t.1),
-                            i_t
-                        ));
-                    }
-                    fn_callback(&vect[i_alternative].1, vect[i_alternative].0);
+                    fn_callback(ncwin, vect[i_alternative].0);
                     ch = ncurses::getch();
                 }
                 ncurses::erase();
