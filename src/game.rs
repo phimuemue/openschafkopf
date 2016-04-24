@@ -4,17 +4,13 @@ use stich::*;
 use rules::*;
 use rules::ruleset::*;
 use player::*;
-use player::playercomputer::*;
-use player::playerhuman::*;
 use skui;
-use ai::*;
 
 use rand::{self, Rng};
-use std::marker::PhantomData;
 
-pub struct SGamePreparations<'rules> {
+pub struct SGamePreparations<'rules, 'players> {
     pub m_ahand : [SHand; 4],
-    pub m_vecplayer : Vec<Box<TPlayer>>, // TODO: good idea to have players in here?
+    pub m_vecplayer : &'players Vec<Box<TPlayer>>, // TODO remove m_vecplayer, similar to SGame
     m_aruleset : &'rules [SRuleSet; 4],
 }
 
@@ -45,16 +41,11 @@ pub fn random_hands() -> [SHand; 4] {
     )
 }
 
-impl<'rules> SGamePreparations<'rules> {
-    pub fn new(aruleset : &'rules [SRuleSet; 4]) -> SGamePreparations<'rules> {
+impl<'rules, 'players> SGamePreparations<'rules, 'players> {
+    pub fn new(aruleset : &'rules [SRuleSet; 4], vecplayer : &'players Vec<Box<TPlayer>>) -> SGamePreparations<'rules, 'players> {
         SGamePreparations {
             m_ahand : random_hands(),
-            m_vecplayer : vec![ // TODO: take players in ctor?
-                Box::new(SPlayerHuman),
-                Box::new(SPlayerComputer::<SAiCheating>{m_phantomai: PhantomData}),
-                Box::new(SPlayerComputer::<SAiCheating>{m_phantomai: PhantomData}),
-                Box::new(SPlayerComputer::<SAiCheating>{m_phantomai: PhantomData})
-            ],
+            m_vecplayer : vecplayer,
             m_aruleset : aruleset,
         }
     }
@@ -110,7 +101,6 @@ impl<'rules> SGamePreparations<'rules> {
                         m_rules : rules,
                         m_vecstich : vec![SStich::new(eplayerindex_first)],
                     },
-                    m_vecplayer : self.m_vecplayer,
                 }
             })
     }
@@ -136,7 +126,6 @@ impl<'rules> SGameState<'rules> {
 
 pub struct SGame<'rules> {
     pub m_gamestate : SGameState<'rules>,
-    pub m_vecplayer : Vec<Box<TPlayer>>, // TODO: good idea to use Box<TPlayer>, maybe shared_ptr equivalent?
 }
 
 pub type SGameAnnouncementPriority = isize;

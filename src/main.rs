@@ -30,6 +30,10 @@ use std::collections::HashSet;
 use rules::ruleset::*;
 use ai::*;
 use std::path::Path;
+use player::*;
+use player::playerhuman::*;
+use player::playercomputer::*;
+use std::marker::PhantomData;
 
 fn main() {
     let clapmatches = clap::App::new("schafkopf")
@@ -155,14 +159,23 @@ fn main() {
 
 
     skui::init_ui();
+    let mut vecplayer : Vec<Box<TPlayer>> = vec![
+        Box::new(SPlayerHuman),
+        Box::new(SPlayerComputer::<SAiCheating>{m_phantomai: PhantomData}),
+        Box::new(SPlayerComputer::<SAiCheating>{m_phantomai: PhantomData}),
+        Box::new(SPlayerComputer::<SAiCheating>{m_phantomai: PhantomData})
+    ];
     let mut accountbalance = SAccountBalance::new();
     for i_game in 0..clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4) {
-        let gameprep = SGamePreparations::new(&aruleset);
-        skui::logln(&format!("Hand 0 : {}", gameprep.m_ahand[0]));
-        if let Some(mut game)=gameprep.start_game(i_game % 4) {
+        let ogame = {
+            let gameprep = SGamePreparations::new(&aruleset, &vecplayer);
+            skui::logln(&format!("Hand 0 : {}", gameprep.m_ahand[0]));
+            gameprep.start_game(i_game % 4)
+        };
+        if let Some(mut game)=ogame {
             while let Some(eplayerindex)=game.which_player_can_do_something() {
                 let (txcard, rxcard) = mpsc::channel::<SCard>();
-                game.m_vecplayer[eplayerindex].take_control(
+                vecplayer[eplayerindex].take_control(
                     &game.m_gamestate,
                     txcard.clone()
                 );
