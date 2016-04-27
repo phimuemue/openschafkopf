@@ -140,13 +140,6 @@ impl<'rules> SGame<'rules> {
         self.m_gamestate.which_player_can_do_something()
     }
 
-    fn new_stich(&mut self, eplayerindex_last_stich: EPlayerIndex) {
-        skui::logln(&format!("Opening new stich starting at {}", eplayerindex_last_stich));
-        assert!(self.m_gamestate.m_vecstich.is_empty() || 4==self.m_gamestate.m_vecstich.last().unwrap().size());
-        self.m_gamestate.m_vecstich.push(SStich::new(eplayerindex_last_stich));
-        self.notify_game_listeners();
-    }
-
     pub fn zugeben(&mut self, card_played: SCard, eplayerindex: EPlayerIndex) -> EPlayerIndex { // TODO: should invalid inputs be indicated by return value?
         // returns the EPlayerIndex of the player who is the next in row to do something
         // TODO: how to cope with finished game?
@@ -181,7 +174,11 @@ impl<'rules> SGame<'rules> {
                     ));
                     eplayerindex_last_stich
                 };
-                self.new_stich(eplayerindex_last_stich);
+                skui::logln(&format!("Opening new stich starting at {}", eplayerindex_last_stich));
+                assert!(self.m_gamestate.m_vecstich.is_empty() || 4==self.m_gamestate.m_vecstich.last().unwrap().size());
+                self.m_gamestate.m_vecstich.push(SStich::new(eplayerindex_last_stich));
+                self.notify_game_listeners();
+
                 self.notify_game_listeners();
                 eplayerindex_last_stich
             }
