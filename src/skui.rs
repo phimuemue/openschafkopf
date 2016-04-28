@@ -138,12 +138,12 @@ pub fn print_game_announcements(vecgameannouncement: &[SGameAnnouncement]) {
     }
 }
 
-pub fn print_game_info(gamestate: &SGameState) {
+pub fn print_game_info(game: &SGame) {
     do_in_window(
         ESkUiWindow::GameInfo,
         |ncwin| {
-            wprint(ncwin, &format!("{}", gamestate.m_rules));
-            if let Some(eplayerindex) = gamestate.m_rules.playerindex() {
+            wprint(ncwin, &format!("{}", game.m_rules));
+            if let Some(eplayerindex) = game.m_rules.playerindex() {
                 wprint(ncwin, &format!(", played by {}", eplayerindex));
             }
             ncurses::wrefresh(ncwin);

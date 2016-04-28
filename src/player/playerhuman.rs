@@ -15,10 +15,10 @@ pub struct SPlayerHuman<'ai> {
 }
 
 impl<'ai> TPlayer for SPlayerHuman<'ai> {
-    fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<SCard>) {
-        skui::print_vecstich(&gamestate.m_vecstich);
-        let ref hand = gamestate.m_ahand[gamestate.which_player_can_do_something().unwrap()];
-        let veccard_allowed = gamestate.m_rules.all_allowed_cards(&gamestate.m_vecstich, &hand);
+    fn take_control(&mut self, game: &SGame, txcard: mpsc::Sender<SCard>) {
+        skui::print_vecstich(&game.m_vecstich);
+        let ref hand = game.m_ahand[game.which_player_can_do_something().unwrap()];
+        let veccard_allowed = game.m_rules.all_allowed_cards(&game.m_vecstich, &hand);
         match txcard.send(
             skui::ask_for_alternative(
                 &hand.cards(),
@@ -29,9 +29,9 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
                         skui::wprintln(ncwin, &format!("AI: {}", card));
                     }
                     skui::print_hand(hand.cards(), Some(i_card_chosen));
-                    skui::print_game_info(gamestate);
+                    skui::print_game_info(game);
                 },
-                || {Some(self.m_ai.suggest_card(gamestate))}
+                || {Some(self.m_ai.suggest_card(game))}
             ).clone()
         ) {
             Ok(_) => (),

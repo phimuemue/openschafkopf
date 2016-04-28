@@ -189,7 +189,7 @@ fn main() {
             while let Some(eplayerindex)=game.which_player_can_do_something() {
                 let (txcard, rxcard) = mpsc::channel::<SCard>();
                 vecplayer[eplayerindex].take_control(
-                    &game.m_gamestate,
+                    &game,
                     txcard.clone()
                 );
                 let card_played = rxcard.recv().unwrap();

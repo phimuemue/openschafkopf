@@ -13,8 +13,8 @@ pub struct SPlayerComputer<'ai> {
 }
 
 impl<'ai> TPlayer for SPlayerComputer<'ai> {
-    fn take_control(&mut self, gamestate: &SGameState, txcard: mpsc::Sender<SCard>) {
-        txcard.send(self.m_ai.suggest_card(gamestate)).ok();
+    fn take_control(&mut self, game: &SGame, txcard: mpsc::Sender<SCard>) {
+        txcard.send(self.m_ai.suggest_card(game)).ok();
     }
 
     fn ask_for_game<'rules>(&self, hand: &SHand, _ : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules TRules> {

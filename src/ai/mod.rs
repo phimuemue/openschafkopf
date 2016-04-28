@@ -13,7 +13,7 @@ use std::iter::FromIterator;
 
 pub trait TAi {
     fn rank_rules(&self, hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
-    fn suggest_card(&self, gamestate: &SGameState) -> SCard;
+    fn suggest_card(&self, game: &SGame) -> SCard;
 }
 
 pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
@@ -165,23 +165,23 @@ pub struct SAiCheating {}
 
 impl TAi for SAiCheating {
     fn rank_rules (&self, hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
-        // TODO: adjust interface to get whole gamestate
+        // TODO: adjust interface to get whole game
         SAiSimulating{}.rank_rules(hand_fixed, eplayerindex_fixed, rules, n_tests)
     }
 
-    fn suggest_card(&self, gamestate: &SGameState) -> SCard {
-        let mut vecstich_complete_mut = gamestate.m_vecstich.iter()
+    fn suggest_card(&self, game: &SGame) -> SCard {
+        let mut vecstich_complete_mut = game.m_vecstich.iter()
             .filter(|stich| stich.size()==4)
             .cloned()
             .collect::<Vec<_>>();
-        let stich_current = gamestate.m_vecstich.last().unwrap().clone();
+        let stich_current = game.m_vecstich.last().unwrap().clone();
         assert!(stich_current.size()<4);
         let susp = suspicion_from_hands_respecting_stich_current(
-            gamestate.m_rules,
+            game.m_rules,
             create_playerindexmap(|eplayerindex|
                 SHand::new_from_vec(
                     stich_current.get(eplayerindex).into_iter()
-                        .chain(gamestate.m_ahand[eplayerindex].cards().iter().cloned())
+                        .chain(game.m_ahand[eplayerindex].cards().iter().cloned())
                         .collect()
                 )
             ),
@@ -189,7 +189,7 @@ impl TAi for SAiCheating {
             &stich_current,
             /*n_branches*/2
         );
-        possible_payouts(gamestate.m_rules, &susp, &vecstich_complete_mut, stich_current.current_player_index()).into_iter()
+        possible_payouts(game.m_rules, &susp, &vecstich_complete_mut, stich_current.current_player_index()).into_iter()
             .max_by_key(|&(_card, n_payout)| n_payout)
             .unwrap()
             .0
@@ -223,18 +223,18 @@ impl TAi for SAiSimulating {
             / n_tests as f64
     }
 
-    fn suggest_card(&self, gamestate: &SGameState) -> SCard {
+    fn suggest_card(&self, game: &SGame) -> SCard {
         let n_tests = 100;
-        let mut vecstich_complete_mut = gamestate.m_vecstich.iter()
+        let mut vecstich_complete_mut = game.m_vecstich.iter()
             .filter(|stich| stich.size()==4)
             .cloned()
             .collect::<Vec<_>>();
         let vecstich_complete_immutable = vecstich_complete_mut.clone();
-        let stich_current = gamestate.m_vecstich.last().unwrap().clone();
+        let stich_current = game.m_vecstich.last().unwrap().clone();
         assert!(stich_current.size()<4);
         let eplayerindex_fixed = stich_current.current_player_index();
-        let ref hand_fixed = gamestate.m_ahand[eplayerindex_fixed];
-        let veccard_allowed_fixed = gamestate.m_rules.all_allowed_cards(&gamestate.m_vecstich, hand_fixed);
+        let ref hand_fixed = game.m_ahand[eplayerindex_fixed];
+        let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&game.m_vecstich, hand_fixed);
         let mapcardpayout = forever_rand_hands(&vecstich_complete_immutable, hand_fixed.clone(), eplayerindex_fixed)
             .filter(|ahand| {
                 // hands must contain respective cards from stich_current...
@@ -246,7 +246,7 @@ impl TAi for SAiSimulating {
                     vecstich_complete_and_current_stich.push(SStich::new(stich_current.first_player_index()));
                     stich_current.indices_and_cards()
                         .all(|(eplayerindex, card_played)| {
-                            let b_valid = gamestate.m_rules.card_is_allowed(
+                            let b_valid = game.m_rules.card_is_allowed(
                                 &vecstich_complete_and_current_stich,
                                 &ahand[eplayerindex],
                                 card_played
@@ -258,7 +258,7 @@ impl TAi for SAiSimulating {
             })
             .take(n_tests)
             .map(|ahand| suspicion_from_hands_respecting_stich_current(
-                gamestate.m_rules,
+                game.m_rules,
                 ahand,
                 &mut vecstich_complete_mut,
                 &stich_current,
@@ -271,7 +271,7 @@ impl TAi for SAiSimulating {
                         .map(|card| (card.clone(), 0)) // TODO Option<isize> more convenient?
                 ),
                 |mut mapcardpayout: HashMap<SCard, isize>, susp| {
-                    for (card, n_payout) in possible_payouts(gamestate.m_rules, &susp, &vecstich_complete_immutable, eplayerindex_fixed) {
+                    for (card, n_payout) in possible_payouts(game.m_rules, &susp, &vecstich_complete_immutable, eplayerindex_fixed) {
                         let n_payout_acc = mapcardpayout[&card];
                         *mapcardpayout.get_mut(&card).unwrap() = n_payout_acc + n_payout;
                     }
