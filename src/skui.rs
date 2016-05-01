@@ -16,13 +16,13 @@ pub fn end_ui() {
 }
 
 pub fn wprintln(ncwin: ncurses::WINDOW, s: &str) {
-    ncurses::wprintw(ncwin, s);
-    ncurses::wprintw(ncwin, "\n");
+    ncurses::waddstr(ncwin, s);
+    ncurses::waddstr(ncwin, "\n");
     ncurses::wrefresh(ncwin);
 }
 
 fn wprint(ncwin: ncurses::WINDOW, s: &str) {
-    ncurses::wprintw(ncwin, s);
+    ncurses::waddstr(ncwin, s);
     ncurses::wrefresh(ncwin);
 }
 
