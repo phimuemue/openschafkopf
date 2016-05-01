@@ -34,16 +34,24 @@ pub fn log(_s: &str) {
     ncurses::refresh();
 }
 
+fn print_string_with_nc_colors(ncwin: ncurses::WINDOW, color_fg: i16, color_bg: i16, str_output: &str) {
+    let i_color_pair = color_fg * 8 + color_bg;
+    ncurses::init_pair(i_color_pair, color_fg, color_bg);
+    let nccolorpair = ncurses::COLOR_PAIR(i_color_pair) as i32;
+    ncurses::wattron(ncwin, nccolorpair);
+    wprint(ncwin, str_output);
+    ncurses::wattroff(ncwin, nccolorpair);
+}
+
 fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: SCard) {
-    // TODO lib: enummap!
-    ncurses::init_pair(1, ncurses::COLOR_YELLOW, ncurses::COLOR_BLACK);
-    ncurses::init_pair(2, ncurses::COLOR_GREEN, ncurses::COLOR_BLACK);
-    ncurses::init_pair(3, ncurses::COLOR_RED, ncurses::COLOR_BLACK);
-    ncurses::init_pair(4, ncurses::COLOR_CYAN, ncurses::COLOR_BLACK);
-    let nccolorpair = ncurses::COLOR_PAIR((card.farbe() as i16)+1); // TODO lib: enummap
-    ncurses::wattron(ncwin, nccolorpair as i32);
-    wprint(ncwin, &format!("{}", card));
-    ncurses::wattroff(ncwin, nccolorpair as i32);
+    let vecpaircolorcolor = vec! [ // TODO lib: enummap!
+        (ncurses::COLOR_YELLOW, ncurses::COLOR_BLACK),
+        (ncurses::COLOR_GREEN, ncurses::COLOR_BLACK),
+        (ncurses::COLOR_RED, ncurses::COLOR_BLACK),
+        (ncurses::COLOR_CYAN, ncurses::COLOR_BLACK),
+    ];
+    let i_paircolor = card.farbe() as usize;
+    print_string_with_nc_colors(ncwin, vecpaircolorcolor[i_paircolor].0, vecpaircolorcolor[i_paircolor].1, &format!("{}", card));
 }
 
 enum ESkUiWindow {
