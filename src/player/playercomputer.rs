@@ -21,14 +21,13 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         // TODO: implement a more intelligent decision strategy
         let n_tests_per_rules = 50;
         ruleset.allowed_rules().iter()
-            .map(|rules| rules.as_ref())
             .filter(|rules| rules.can_be_played(hand))
             .filter(|rules| {
                 4 <= hand.cards().iter()
                     .filter(|&card| rules.is_trumpf(*card))
                     .count()
             })
-            .map(|rules| {
+            .map(|&rules| {
                 let eplayerindex_fixed = rules.playerindex().unwrap(); 
                 (
                     rules,

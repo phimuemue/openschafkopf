@@ -164,7 +164,7 @@ fn main() {
         for rules in aruleset[eplayerindex_fixed].allowed_rules().iter() 
             .filter(|rules| rules.can_be_played(&hand_fixed))
         {
-            let f_payout_avg = ai.rank_rules(&hand_fixed, eplayerindex_fixed, rules.as_ref(), 100);
+            let f_payout_avg = ai.rank_rules(&hand_fixed, eplayerindex_fixed, rules.clone(), 100);
             println!("{}", rules);
             println!("{}", f_payout_avg);
         }

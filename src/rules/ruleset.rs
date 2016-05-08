@@ -10,13 +10,18 @@ use std::io::prelude::*;
 use std::path::Path;
 use std::io::BufReader;
 
-pub struct SRuleSet {
+struct SRuleGroup {
+    m_str_name : String,
     m_vecrules : Vec<Box<TRules>>,
 }
 
+pub struct SRuleSet {
+    m_vecrulegroup : Vec<SRuleGroup>,
+}
+
 impl SRuleSet {
-    pub fn allowed_rules(&self) -> &Vec<Box<TRules>> {
-        &self.m_vecrules
+    pub fn allowed_rules(&self) -> Vec<&TRules> {
+        self.m_vecrulegroup.iter().flat_map(|rulegroup| rulegroup.m_vecrules.iter().map(|rules| rules.as_ref())).collect()
     }
 }
 
@@ -32,27 +37,37 @@ pub fn read_ruleset(path: &Path) -> [SRuleSet; 4] {
         file.write_all(b"solo\n").unwrap();
     }
     create_playerindexmap(|eplayerindex| {
-        let mut vecrules = Vec::<Box<TRules>>::new();
         assert!(path.exists()); 
         let file = match File::open(&path) {
             Err(why) => panic!("Could not open {}: {}", path.display(), Error::description(&why)),
             Ok(file) => file,
         };
-        for str_l in BufReader::new(&file).lines().map(|str| str.unwrap()) {
-            println!("allowing rule: {}", str_l);
-            if str_l=="rufspiel" {
-                for efarbe in EFarbe::all_values().iter().filter(|&efarbe| EFarbe::Herz!=*efarbe) {
-                    vecrules.push(Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: *efarbe}));
+        SRuleSet {m_vecrulegroup : BufReader::new(&file).lines()
+            .map(|str| str.unwrap())
+            .filter_map(|str_l| {
+                println!("allowing rule: {}", str_l);
+                if str_l=="rufspiel" {
+                    Some(SRuleGroup{
+                        m_str_name : "Rufspiel".to_string(),
+                        m_vecrules : EFarbe::all_values().iter()
+                            .filter(|&efarbe| EFarbe::Herz!=*efarbe)
+                            .map(|&efarbe| Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TRules>)
+                            .collect()
+                    })
+                } else if str_l=="solo" {
+                    Some(SRuleGroup{
+                        m_str_name : "Solo".to_string(),
+                        m_vecrules : EFarbe::all_values().iter()
+                            .map(|&efarbe| Box::new(SRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TRules>)
+                            .collect()
+                    })
+                } else {
+                    println!("{} is not a valid rule descriptor", str_l);
+                    None
                 }
-            } else if str_l=="solo" {
-                for efarbe in EFarbe::all_values().iter() {
-                    vecrules.push(Box::new(SRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: *efarbe}));
-                }
-            } else {
-                println!("{} is not a valid rule descriptor", str_l);
-            }
+            })
+            .collect()
         }
-        SRuleSet { m_vecrules : vecrules }
     })
 }
 
