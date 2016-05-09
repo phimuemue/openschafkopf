@@ -14,6 +14,34 @@ pub struct SPlayerHuman<'ai> {
     pub m_ai : &'ai TAi,
 }
 
+fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(hand: &SHand, vect : &'t Vec<T>, fn_format: FnFormat, fn_choose: FnChoose) -> &'t T
+    where FnFormat: Fn(&T) -> String,
+          FnChoose: Fn(usize) -> Option<&'t TRules>
+{
+    &skui::ask_for_alternative(
+        vect,
+        skui::choose_alternative_from_list_key_bindings(),
+        |_ot| {true},
+        |ncwin, i_ot_chosen, _ot_suggest| {
+            assert!(_ot_suggest.is_none());
+            skui::wprintln(ncwin, &format!("Your cards: {}. What do you want to play?", hand));
+            for (i_t, t) in vect.iter().enumerate() {
+                skui::wprintln(ncwin, &format!("{} {} ({})",
+                    if i_t==i_ot_chosen {"*"} else {" "},
+                    fn_format(&t),
+                    i_t
+                ));
+            }
+            let mut veccard = hand.cards().clone();
+            if let Some(rules)=fn_choose(i_ot_chosen) {
+                rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
+            }
+            skui::print_hand(&veccard, None);
+        },
+        || {None}
+    )
+}
+
 impl<'ai> TPlayer for SPlayerHuman<'ai> {
     fn take_control(&mut self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         skui::print_vecstich(&game.m_vecstich);
@@ -41,38 +69,44 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
 
     fn ask_for_game<'rules>(&self, hand: &SHand, vecgameannouncement : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules TRules> {
         skui::print_game_announcements(vecgameannouncement);
-        let vecorules : Vec<Option<&TRules>> = Some(None).into_iter()
+        let vecorulegroup : Vec<Option<&SRuleGroup>> = Some(None).into_iter()
             .chain(
-                ruleset.allowed_rules().iter()
-                    .filter(|rules| rules.can_be_played(hand))
-                    .map(|rules| Some(rules.clone()))
+                ruleset.m_vecrulegroup.iter()
+                    .filter(|rulegroup| rulegroup.m_vecrules.iter()
+                        .any(|rules| rules.can_be_played(hand))
+                    )
+                    .map(|rulegroup| Some(rulegroup))
             )
             .collect();
-        *skui::ask_for_alternative(
-            &vecorules,
-            skui::choose_alternative_from_list_key_bindings(),
-            |_orules| {true},
-            |ncwin, i_orules_chosen, _oorules_suggest| {
-                assert!(_oorules_suggest.is_none());
-                let fn_format = |orules : &Option<&TRules>| match orules {
-                    &None => "Nothing".to_string(),
-                    &Some(ref rules) => rules.to_string()
-                };
-                skui::wprintln(ncwin, &format!("Your cards: {}. What do you want to play?", hand));
-                for (i_orules, orules) in vecorules.iter().enumerate() {
-                    skui::wprintln(ncwin, &format!("{} {} ({})",
-                        if i_orules==i_orules_chosen {"*"} else {" "},
-                        fn_format(&orules),
-                        i_orules
-                    ));
-                }
-                let mut veccard = hand.cards().clone();
-                if let Some(rules)=vecorules[i_orules_chosen].as_ref() {
-                    rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
-                }
-                skui::print_hand(&veccard, None);
+        while let &Some(rulegroup) = choose_ruleset_or_rules(
+            hand,
+            &vecorulegroup,
+            |orulegroup : &Option<&SRuleGroup>| match orulegroup {
+                &None => "Nothing".to_string(),
+                &Some(rulegroup) => rulegroup.m_str_name.clone(),
             },
-            ||{None}
+            |i_orulegroup_chosen| vecorulegroup[i_orulegroup_chosen].map(|rulegroup| rulegroup.m_vecrules[0].as_ref()),
         )
+        {
+            let vecorules : Vec<Option<&TRules>> = Some(None).into_iter()
+                .chain(
+                    rulegroup.m_vecrules.iter()
+                        .filter(|rules| rules.can_be_played(hand))
+                        .map(|rules| Some(rules.as_ref().clone()))
+                )
+                .collect();
+            if let &Some(rules) = choose_ruleset_or_rules(
+                hand,
+                &vecorules,
+                |orules : &Option<&TRules>| match orules {
+                    &None => "Back".to_string(),
+                    &Some(ref rules) => rules.to_string()
+                },
+                |i_orules_chosen| vecorules[i_orules_chosen]
+            ) {
+                return Some(rules);
+            }
+        }
+        return None;
     }
 }

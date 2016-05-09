@@ -10,13 +10,13 @@ use std::io::prelude::*;
 use std::path::Path;
 use std::io::BufReader;
 
-struct SRuleGroup {
-    m_str_name : String,
-    m_vecrules : Vec<Box<TRules>>,
+pub struct SRuleGroup {
+    pub m_str_name : String,
+    pub m_vecrules : Vec<Box<TRules>>,
 }
 
 pub struct SRuleSet {
-    m_vecrulegroup : Vec<SRuleGroup>,
+    pub m_vecrulegroup : Vec<SRuleGroup>,
 }
 
 impl SRuleSet {
