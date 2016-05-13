@@ -25,6 +25,15 @@ impl SRuleSet {
     }
 }
 
+pub fn create_rulegroup<ItRules> (str_name: &str, itrules: ItRules) -> Option<SRuleGroup> 
+    where ItRules: Iterator<Item=Box<TRules>>,
+{
+    Some(SRuleGroup{
+        m_str_name: str_name.to_string(),
+        m_vecrules: itrules.collect()
+    })
+}
+
 pub fn read_ruleset(path: &Path) -> [SRuleSet; 4] {
     if !path.exists() {
         println!("File {} not found. Creating it.", path.display());
@@ -47,20 +56,18 @@ pub fn read_ruleset(path: &Path) -> [SRuleSet; 4] {
             .filter_map(|str_l| {
                 println!("allowing rule: {}", str_l);
                 if str_l=="rufspiel" {
-                    Some(SRuleGroup{
-                        m_str_name : "Rufspiel".to_string(),
-                        m_vecrules : EFarbe::all_values().iter()
+                    create_rulegroup(
+                        "Rufspiel", 
+                        EFarbe::all_values().iter()
                             .filter(|&efarbe| EFarbe::Herz!=*efarbe)
                             .map(|&efarbe| Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TRules>)
-                            .collect()
-                    })
+                    )
                 } else if str_l=="solo" {
-                    Some(SRuleGroup{
-                        m_str_name : "Solo".to_string(),
-                        m_vecrules : EFarbe::all_values().iter()
+                    create_rulegroup(
+                        "Solo",
+                        EFarbe::all_values().iter()
                             .map(|&efarbe| Box::new(SRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TRules>)
-                            .collect()
-                    })
+                    )
                 } else {
                     println!("{} is not a valid rule descriptor", str_l);
                     None
