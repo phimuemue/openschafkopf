@@ -25,12 +25,10 @@ impl SRuleSet {
     }
 }
 
-pub fn create_rulegroup<ItRules> (str_name: &str, itrules: ItRules) -> Option<SRuleGroup> 
-    where ItRules: Iterator<Item=Box<TRules>>,
-{
+pub fn create_rulegroup (str_name: &str, vecrules: Vec<Box<TRules>>) -> Option<SRuleGroup> {
     Some(SRuleGroup{
         m_str_name: str_name.to_string(),
-        m_vecrules: itrules.collect()
+        m_vecrules: vecrules
     })
 }
 
@@ -44,6 +42,8 @@ pub fn read_ruleset(path: &Path) -> [SRuleSet; 4] {
         // TODO: make creation of ruleset file adjustable
         file.write_all(b"rufspiel\n").unwrap();
         file.write_all(b"solo\n").unwrap();
+        file.write_all(b"farbwenz\n").unwrap();
+        file.write_all(b"wenz\n").unwrap();
     }
     create_playerindexmap(|eplayerindex| {
         assert!(path.exists()); 
@@ -61,20 +61,14 @@ pub fn read_ruleset(path: &Path) -> [SRuleSet; 4] {
                         EFarbe::all_values().iter()
                             .filter(|&efarbe| EFarbe::Herz!=*efarbe)
                             .map(|&efarbe| Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TRules>)
+                            .collect()
                     )
                 } else if str_l=="solo" {
-                    create_rulegroup(
-                        "Solo",
-                        EFarbe::all_values().iter()
-                            .map(|&efarbe| Box::new(
-                                SRulesActiveSinglePlay::<SCoreSolo> {
-                                    m_eplayerindex: eplayerindex,
-                                    m_core: SCoreSolo {
-                                        m_efarbe: efarbe,
-                                    },
-                                }
-                            ) as Box<TRules>)
-                    )
+                    create_rulegroup("Solo", all_rulessolo(eplayerindex))
+                } else if str_l=="farbwenz" {
+                    create_rulegroup("Farbwenz", all_rulesfarbwenz(eplayerindex))
+                } else if str_l=="wenz" {
+                    create_rulegroup("Wenz", all_ruleswenz(eplayerindex))
                 } else {
                     println!("{} is not a valid rule descriptor", str_l);
                     None

@@ -64,7 +64,11 @@ impl TRules for SRulesRufspiel {
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
         assert_eq!(vecstich.len(), 8);
         let ab_winner = create_playerindexmap(|eplayerindex| self.is_winner(eplayerindex, vecstich));
-        let n_laufende = count_laufende(vecstich, vec!(ESchlag::Ober, ESchlag::Unter), EFarbe::Herz, &ab_winner);
+        let n_laufende = count_laufende_from_veccard_trumpf(
+            vecstich,
+            &trumps_in_descending_order(&vec!(ESchlag::Ober, ESchlag::Unter), &Some(EFarbe::Herz)),
+            &ab_winner
+        );
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_rufspiel_default*/ 10 
              + {if n_laufende<3 {0} else {n_laufende}} * 10

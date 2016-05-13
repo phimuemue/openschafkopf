@@ -174,8 +174,8 @@ pub fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering {
     }
 }
 
-pub fn count_laufende(vecstich: &Vec<SStich>, veceschlag : Vec<ESchlag>, efarbe_trumpf: EFarbe, ab_winner: &[bool; 4]) -> isize {
-    let n_trumpf_expected = 4 * veceschlag.len() + 8 - veceschlag.len();
+pub fn trumps_in_descending_order(veceschlag : &Vec<ESchlag>, oefarbe_trumpf: &Option<EFarbe>) -> Vec<SCard> {
+    let n_trumpf_expected = 4 * veceschlag.len() + {if oefarbe_trumpf.is_some() {8 - veceschlag.len()} else {0}};
     assert!(0<n_trumpf_expected);
     let mut veccard_trumpf = Vec::with_capacity(n_trumpf_expected);
     for eschlag in veceschlag.iter() {
@@ -183,12 +183,18 @@ pub fn count_laufende(vecstich: &Vec<SStich>, veceschlag : Vec<ESchlag>, efarbe_
             veccard_trumpf.push(SCard::new(*efarbe, *eschlag));
         }
     }
-    for eschlag in ESchlag::all_values().iter() {
-        if !veceschlag.iter().any(|eschlag_trumpf| *eschlag_trumpf==*eschlag) {
-            veccard_trumpf.push(SCard::new(efarbe_trumpf, *eschlag));
+    if let &Some(efarbe_trumpf)=oefarbe_trumpf {
+        for eschlag in ESchlag::all_values().iter() {
+            if !veceschlag.iter().any(|eschlag_trumpf| *eschlag_trumpf==*eschlag) {
+                veccard_trumpf.push(SCard::new(efarbe_trumpf, *eschlag));
+            }
         }
     }
     assert_eq!(n_trumpf_expected, veccard_trumpf.len());
+    veccard_trumpf
+}
+
+pub fn count_laufende_from_veccard_trumpf(vecstich: &Vec<SStich>, veccard_trumpf: &Vec<SCard>, ab_winner: &[bool; 4]) -> isize {
     let mapcardeplayerindex = SCardMap::<EPlayerIndex>::new_from_pairs(
         vecstich.iter().flat_map(|stich| stich.indices_and_cards())
     );
