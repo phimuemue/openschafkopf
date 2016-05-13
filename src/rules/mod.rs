@@ -57,33 +57,6 @@ pub trait TRules : fmt::Display {
 
     fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<SStich>) -> bool;
 
-    fn count_laufende(&self, vecstich: &Vec<SStich>, veceschlag : Vec<ESchlag>, efarbe_trumpf: EFarbe) -> isize {
-        let n_trumpf_expected = 4 * veceschlag.len() + 8 - veceschlag.len();
-        assert!(0<n_trumpf_expected);
-        let mut veccard_trumpf = Vec::with_capacity(n_trumpf_expected);
-        for eschlag in veceschlag.iter() {
-            for efarbe in EFarbe::all_values().iter() {
-                veccard_trumpf.push(SCard::new(*efarbe, *eschlag));
-            }
-        }
-        for eschlag in ESchlag::all_values().iter() {
-            if !veceschlag.iter().any(|eschlag_trumpf| *eschlag_trumpf==*eschlag) {
-                veccard_trumpf.push(SCard::new(efarbe_trumpf, *eschlag));
-            }
-        }
-        assert_eq!(n_trumpf_expected, veccard_trumpf.len());
-        let mapcardeplayerindex = SCardMap::<EPlayerIndex>::new_from_pairs(
-            vecstich.iter().flat_map(|stich| stich.indices_and_cards())
-        );
-        let laufende_relevant = |card: &SCard| {
-            self.is_winner(mapcardeplayerindex[*card], vecstich)
-        };
-        let b_might_have_lauf = laufende_relevant(veccard_trumpf.first().unwrap());
-        veccard_trumpf.iter()
-            .take_while(|card| b_might_have_lauf==laufende_relevant(card))
-            .count() as isize
-    }
-
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4];
 
     fn all_allowed_cards(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
@@ -200,3 +173,31 @@ pub fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering {
         _ => compare_farbcards_same_color(card_fst, card_snd),
     }
 }
+
+pub fn count_laufende(vecstich: &Vec<SStich>, veceschlag : Vec<ESchlag>, efarbe_trumpf: EFarbe, ab_winner: &[bool; 4]) -> isize {
+    let n_trumpf_expected = 4 * veceschlag.len() + 8 - veceschlag.len();
+    assert!(0<n_trumpf_expected);
+    let mut veccard_trumpf = Vec::with_capacity(n_trumpf_expected);
+    for eschlag in veceschlag.iter() {
+        for efarbe in EFarbe::all_values().iter() {
+            veccard_trumpf.push(SCard::new(*efarbe, *eschlag));
+        }
+    }
+    for eschlag in ESchlag::all_values().iter() {
+        if !veceschlag.iter().any(|eschlag_trumpf| *eschlag_trumpf==*eschlag) {
+            veccard_trumpf.push(SCard::new(efarbe_trumpf, *eschlag));
+        }
+    }
+    assert_eq!(n_trumpf_expected, veccard_trumpf.len());
+    let mapcardeplayerindex = SCardMap::<EPlayerIndex>::new_from_pairs(
+        vecstich.iter().flat_map(|stich| stich.indices_and_cards())
+    );
+    let laufende_relevant = |card: &SCard| {
+        ab_winner[mapcardeplayerindex[*card]]
+    };
+    let b_might_have_lauf = laufende_relevant(veccard_trumpf.first().unwrap());
+    veccard_trumpf.iter()
+        .take_while(|card| b_might_have_lauf==laufende_relevant(card))
+        .count() as isize
+}
+

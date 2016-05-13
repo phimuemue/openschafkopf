@@ -39,12 +39,13 @@ impl TRules for SRulesSolo {
     }
 
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
-        let n_laufende = self.count_laufende(vecstich, vec!(ESchlag::Ober, ESchlag::Unter), self.m_efarbe);
+        let ab_winner = create_playerindexmap(|eplayerindex| self.is_winner(eplayerindex, vecstich));
+        let n_laufende = count_laufende(vecstich, vec!(ESchlag::Ober, ESchlag::Unter), self.m_efarbe, &ab_winner);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_solo*/ 50
              + {if n_laufende<3 {0} else {n_laufende}} * 10
             ) * {
-                if self.is_winner(eplayerindex, vecstich) {
+                if ab_winner[eplayerindex] {
                     1
                 } else {
                     -1
