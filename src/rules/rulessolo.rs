@@ -5,20 +5,55 @@ use rules::*;
 use std::fmt;
 use std::cmp::Ordering;
 
-pub struct SRulesSolo {
-    pub m_eplayerindex : EPlayerIndex,
-    pub m_efarbe : EFarbe,
+pub trait TActiveSinglePlayCore {
+    fn is_trumpf(&self, card: SCard) -> bool;
+    fn count_laufende(&self, vecstich: &Vec<SStich>, ab_winner: &[bool; 4]) -> isize;
+    fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering;
+    fn to_string(&self) -> String;
 }
 
-impl fmt::Display for SRulesSolo {
+pub struct SRulesActiveSinglePlay<ActiveSinglePlayCore> 
+    where ActiveSinglePlayCore: TActiveSinglePlayCore,
+{
+    pub m_eplayerindex : EPlayerIndex,
+    pub m_core : ActiveSinglePlayCore,
+}
+
+impl<ActiveSinglePlayCore> fmt::Display for SRulesActiveSinglePlay<ActiveSinglePlayCore> 
+    where ActiveSinglePlayCore: TActiveSinglePlayCore,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}-Solo", self.m_efarbe)
+        write!(f, "{}", self.m_core.to_string())
     }
 }
 
-impl TRules for SRulesSolo {
+pub struct SCoreSolo {
+    pub m_efarbe: EFarbe,
+}
+
+impl TActiveSinglePlayCore for SCoreSolo {
+    fn is_trumpf(&self, card: SCard) -> bool {
+        card.schlag()==ESchlag::Ober || card.schlag()==ESchlag::Unter || card.farbe()==self.m_efarbe 
+    }
+
+    fn count_laufende(&self, vecstich: &Vec<SStich>, ab_winner: &[bool; 4]) -> isize {
+        count_laufende(vecstich, vec!(ESchlag::Ober, ESchlag::Unter), self.m_efarbe, &ab_winner)
+    }
+
+    fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering {
+        compare_trumpfcards_solo(card_fst, card_snd)
+    }
+
+    fn to_string(&self) -> String {
+        format!("{}-Solo", self.m_efarbe)
+    }
+}
+
+impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCore> 
+    where ActiveSinglePlayCore: TActiveSinglePlayCore,
+{
     fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        if card.schlag()==ESchlag::Ober || card.schlag()==ESchlag::Unter || card.farbe()==self.m_efarbe {
+        if self.m_core.is_trumpf(card) {
             VTrumpfOrFarbe::Trumpf
         } else {
             VTrumpfOrFarbe::Farbe(card.farbe())
@@ -40,7 +75,7 @@ impl TRules for SRulesSolo {
 
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
         let ab_winner = create_playerindexmap(|eplayerindex| self.is_winner(eplayerindex, vecstich));
-        let n_laufende = count_laufende(vecstich, vec!(ESchlag::Ober, ESchlag::Unter), self.m_efarbe, &ab_winner);
+        let n_laufende = self.m_core.count_laufende(vecstich, &ab_winner);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_solo*/ 50
              + {if n_laufende<3 {0} else {n_laufende}} * 10
@@ -79,6 +114,7 @@ impl TRules for SRulesSolo {
     }
 
     fn compare_in_stich_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
-        compare_trumpfcards_solo(card_fst, card_snd)
+        ActiveSinglePlayCore::compare_trumpfcards_solo(card_fst, card_snd)
     }
 }
+

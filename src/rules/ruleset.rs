@@ -66,7 +66,14 @@ pub fn read_ruleset(path: &Path) -> [SRuleSet; 4] {
                     create_rulegroup(
                         "Solo",
                         EFarbe::all_values().iter()
-                            .map(|&efarbe| Box::new(SRulesSolo{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TRules>)
+                            .map(|&efarbe| Box::new(
+                                SRulesActiveSinglePlay::<SCoreSolo> {
+                                    m_eplayerindex: eplayerindex,
+                                    m_core: SCoreSolo {
+                                        m_efarbe: efarbe,
+                                    },
+                                }
+                            ) as Box<TRules>)
                     )
                 } else {
                     println!("{} is not a valid rule descriptor", str_l);
