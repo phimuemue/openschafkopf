@@ -56,8 +56,6 @@ pub trait TRules : fmt::Display {
         an_points
     }
 
-    fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<SStich>) -> bool;
-
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4];
 
     fn all_allowed_cards(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {

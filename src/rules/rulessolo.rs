@@ -38,17 +38,15 @@ impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCor
         Some(self.m_eplayerindex)
     }
 
-    fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<SStich>) -> bool {
-        assert!(8==vecstich.len());
-        if eplayerindex==self.m_eplayerindex {
-            self.points_per_player(vecstich)[self.m_eplayerindex]>=61
-        } else {
-            self.points_per_player(vecstich)[self.m_eplayerindex]<=60
-        }
-    }
-
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
-        let ab_winner = create_playerindexmap(|eplayerindex| self.is_winner(eplayerindex, vecstich));
+        assert_eq!(vecstich.len(), 8);
+        let ab_winner = create_playerindexmap(|eplayerindex| {
+            if eplayerindex==self.m_eplayerindex {
+                self.points_per_player(vecstich)[self.m_eplayerindex]>=61
+            } else {
+                self.points_per_player(vecstich)[self.m_eplayerindex]<=60
+            }
+        });
         let n_laufende = count_laufende_from_veccard_trumpf(
             vecstich,
             &ActiveSinglePlayCore::trumpfs_in_descending_order(Vec::new(), Vec::new()),

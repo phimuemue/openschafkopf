@@ -51,25 +51,22 @@ impl TRules for SRulesRufspiel {
         }
     }
 
-    fn is_winner(&self, eplayerindex: EPlayerIndex, vecstich: &Vec<SStich>) -> bool {
-        assert!(8==vecstich.len());
-        let eplayerindex_coplayer = vecstich.iter()
-            .flat_map(|stich| stich.indices_and_cards())
-            .find(|&(_, card)| card==self.rufsau())
-            .map(|(eplayerindex, _)| eplayerindex)
-            .unwrap();
-        let an_points = &self.points_per_player(vecstich);
-        let n_points_player_party = an_points[self.m_eplayerindex as usize] + an_points[eplayerindex_coplayer as usize];
-        if eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer {
-            n_points_player_party >= 61
-        } else {
-            n_points_player_party <= 60
-        }
-    }
-
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
         assert_eq!(vecstich.len(), 8);
-        let ab_winner = create_playerindexmap(|eplayerindex| self.is_winner(eplayerindex, vecstich));
+        let ab_winner = create_playerindexmap(|eplayerindex| {
+            let eplayerindex_coplayer = vecstich.iter()
+                .flat_map(|stich| stich.indices_and_cards())
+                .find(|&(_, card)| card==self.rufsau())
+                .map(|(eplayerindex, _)| eplayerindex)
+                .unwrap();
+            let an_points = &self.points_per_player(vecstich);
+            let n_points_player_party = an_points[self.m_eplayerindex as usize] + an_points[eplayerindex_coplayer as usize];
+            if eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer {
+                n_points_player_party >= 61
+            } else {
+                n_points_player_party <= 60
+            }
+        });
         let n_laufende = count_laufende_from_veccard_trumpf(
             vecstich,
             &STrumpfDeciderRufspiel::trumpfs_in_descending_order(Vec::new(), Vec::new()),
