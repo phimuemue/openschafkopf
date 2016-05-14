@@ -2,6 +2,7 @@ use card::*;
 use stich::*;
 use hand::*;
 use rules::*;
+use rules::trumpfdecider::*;
 use std::fmt;
 use std::cmp::Ordering;
 
@@ -15,6 +16,11 @@ impl fmt::Display for SRulesRufspiel {
         write!(f, "Rufspiel mit der {}-Sau von {}", self.m_efarbe, self.m_eplayerindex)
     }
 }
+
+pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag<
+    SSchlagDesignatorOber, STrumpfDeciderSchlag<
+    SSchlagDesignatorUnter, STrumpfDeciderFarbe<
+    SFarbeDesignatorHerz, STrumpfDeciderNoTrumpf>>>;
 
 impl SRulesRufspiel {
     fn rufsau(&self) -> SCard {
@@ -38,7 +44,7 @@ impl TRules for SRulesRufspiel {
     }
 
     fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        if card.schlag()==ESchlag::Ober || card.schlag()==ESchlag::Unter || card.farbe()==EFarbe::Herz {
+        if STrumpfDeciderRufspiel::is_trumpf(card) {
             VTrumpfOrFarbe::Trumpf
         } else {
             VTrumpfOrFarbe::Farbe(card.farbe())
@@ -66,7 +72,7 @@ impl TRules for SRulesRufspiel {
         let ab_winner = create_playerindexmap(|eplayerindex| self.is_winner(eplayerindex, vecstich));
         let n_laufende = count_laufende_from_veccard_trumpf(
             vecstich,
-            &trumps_in_descending_order(&vec!(ESchlag::Ober, ESchlag::Unter), &Some(EFarbe::Herz)),
+            &STrumpfDeciderRufspiel::trumpfs_in_descending_order(Vec::new(), Vec::new()),
             &ab_winner
         );
         create_playerindexmap(|eplayerindex| {

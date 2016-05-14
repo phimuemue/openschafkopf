@@ -1,6 +1,7 @@
 pub mod rulesrufspiel;
 pub mod rulessolo;
 pub mod ruleset;
+mod trumpfdecider;
 
 use card::*;
 use stich::*;
@@ -172,26 +173,6 @@ pub fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering {
         (_, ESchlag::Unter) => Ordering::Less,
         _ => compare_farbcards_same_color(card_fst, card_snd),
     }
-}
-
-pub fn trumps_in_descending_order(veceschlag : &Vec<ESchlag>, oefarbe_trumpf: &Option<EFarbe>) -> Vec<SCard> {
-    let n_trumpf_expected = 4 * veceschlag.len() + {if oefarbe_trumpf.is_some() {8 - veceschlag.len()} else {0}};
-    assert!(0<n_trumpf_expected);
-    let mut veccard_trumpf = Vec::with_capacity(n_trumpf_expected);
-    for eschlag in veceschlag.iter() {
-        for efarbe in EFarbe::all_values().iter() {
-            veccard_trumpf.push(SCard::new(*efarbe, *eschlag));
-        }
-    }
-    if let &Some(efarbe_trumpf)=oefarbe_trumpf {
-        for eschlag in ESchlag::all_values().iter() {
-            if !veceschlag.iter().any(|eschlag_trumpf| *eschlag_trumpf==*eschlag) {
-                veccard_trumpf.push(SCard::new(efarbe_trumpf, *eschlag));
-            }
-        }
-    }
-    assert_eq!(n_trumpf_expected, veccard_trumpf.len());
-    veccard_trumpf
 }
 
 pub fn count_laufende_from_veccard_trumpf(vecstich: &Vec<SStich>, veccard_trumpf: &Vec<SCard>, ab_winner: &[bool; 4]) -> isize {
