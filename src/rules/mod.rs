@@ -173,16 +173,3 @@ pub fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering {
     }
 }
 
-pub fn count_laufende_from_veccard_trumpf(vecstich: &Vec<SStich>, veccard_trumpf: &Vec<SCard>, ab_winner: &[bool; 4]) -> isize {
-    let mapcardeplayerindex = SCardMap::<EPlayerIndex>::new_from_pairs(
-        vecstich.iter().flat_map(|stich| stich.indices_and_cards())
-    );
-    let laufende_relevant = |card: &SCard| {
-        ab_winner[mapcardeplayerindex[*card]]
-    };
-    let b_might_have_lauf = laufende_relevant(veccard_trumpf.first().unwrap());
-    veccard_trumpf.iter()
-        .take_while(|card| b_might_have_lauf==laufende_relevant(card))
-        .count() as isize
-}
-

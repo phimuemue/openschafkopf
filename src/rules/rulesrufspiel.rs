@@ -67,11 +67,7 @@ impl TRules for SRulesRufspiel {
                 n_points_player_party <= 60
             }
         });
-        let n_laufende = count_laufende_from_veccard_trumpf(
-            vecstich,
-            &STrumpfDeciderRufspiel::trumpfs_in_descending_order(Vec::new(), Vec::new()),
-            &ab_winner
-        );
+        let n_laufende = STrumpfDeciderRufspiel::count_laufende(vecstich, &ab_winner);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_rufspiel_default*/ 10 
              + {if n_laufende<3 {0} else {n_laufende}} * 10

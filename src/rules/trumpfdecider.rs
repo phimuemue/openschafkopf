@@ -1,4 +1,5 @@
 use card::*;
+use stich::*;
 use rules::*;
 use std::cmp::Ordering;
 use std::marker::PhantomData;
@@ -7,6 +8,19 @@ pub trait TTrumpfDecider {
     fn is_trumpf(card: SCard) -> bool;
     fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>, mut vecefarbe: Vec<EFarbe>) -> Vec<SCard>;
     fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering;
+    fn count_laufende(vecstich: &Vec<SStich>, ab_winner: &[bool; 4]) -> isize {
+        let veccard_trumpf = Self::trumpfs_in_descending_order(Vec::new(), Vec::new());
+        let mapcardeplayerindex = SCardMap::<EPlayerIndex>::new_from_pairs(
+            vecstich.iter().flat_map(|stich| stich.indices_and_cards())
+        );
+        let laufende_relevant = |card: &SCard| {
+            ab_winner[mapcardeplayerindex[*card]]
+        };
+        let b_might_have_lauf = laufende_relevant(veccard_trumpf.first().unwrap());
+        veccard_trumpf.iter()
+            .take_while(|card| b_might_have_lauf==laufende_relevant(card))
+            .count() as isize
+    }
 }
 
 pub struct STrumpfDeciderNoTrumpf {}
