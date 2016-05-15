@@ -40,12 +40,9 @@ impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCor
 
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
         assert_eq!(vecstich.len(), 8);
+        let b_active_player_wins = self.points_per_player(vecstich)[self.m_eplayerindex]>=61;
         let ab_winner = create_playerindexmap(|eplayerindex| {
-            if eplayerindex==self.m_eplayerindex {
-                self.points_per_player(vecstich)[self.m_eplayerindex]>=61
-            } else {
-                self.points_per_player(vecstich)[self.m_eplayerindex]<=60
-            }
+            (eplayerindex==self.m_eplayerindex) == b_active_player_wins
         });
         let n_laufende = ActiveSinglePlayCore::count_laufende(vecstich, &ab_winner);
         create_playerindexmap(|eplayerindex| {
