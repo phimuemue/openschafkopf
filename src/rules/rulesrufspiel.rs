@@ -53,19 +53,15 @@ impl TRules for SRulesRufspiel {
 
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
         assert_eq!(vecstich.len(), 8);
+        let eplayerindex_coplayer = vecstich.iter()
+            .flat_map(|stich| stich.indices_and_cards())
+            .find(|&(_, card)| card==self.rufsau())
+            .map(|(eplayerindex, _)| eplayerindex)
+            .unwrap();
+        let an_points = &self.points_per_player(vecstich);
+        let b_player_party_wins = an_points[self.m_eplayerindex as usize] + an_points[eplayerindex_coplayer as usize] >= 61;
         let ab_winner = create_playerindexmap(|eplayerindex| {
-            let eplayerindex_coplayer = vecstich.iter()
-                .flat_map(|stich| stich.indices_and_cards())
-                .find(|&(_, card)| card==self.rufsau())
-                .map(|(eplayerindex, _)| eplayerindex)
-                .unwrap();
-            let an_points = &self.points_per_player(vecstich);
-            let n_points_player_party = an_points[self.m_eplayerindex as usize] + an_points[eplayerindex_coplayer as usize];
-            if eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer {
-                n_points_player_party >= 61
-            } else {
-                n_points_player_party <= 60
-            }
+            (eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer) == b_player_party_wins
         });
         let n_laufende = STrumpfDeciderRufspiel::count_laufende(vecstich, &ab_winner);
         create_playerindexmap(|eplayerindex| {
