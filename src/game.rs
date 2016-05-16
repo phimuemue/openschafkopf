@@ -175,8 +175,8 @@ impl<'rules> SGame<'rules> {
         }
     }
 
-    pub fn points_per_player(&self) -> [isize; 4] {
-        self.m_rules.points_per_player(&self.m_vecstich)
+    pub fn points_per_player(&self, eplayerindex: EPlayerIndex) -> isize {
+        self.m_rules.points_per_player(&self.m_vecstich, eplayerindex)
     }
 
     fn notify_game_listeners(&self) {

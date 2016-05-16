@@ -44,16 +44,9 @@ pub trait TRules : fmt::Display {
         stich.indices_and_cards()
             .fold(0, |n_sum, (_, card)| n_sum + self.points_card(card))
     }
-    fn points_per_player(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
-        let mut an_points = [0, 0, 0, 0,];
-        for stich in vecstich {
-            an_points[self.winner_index(stich)] += stich.indices_and_cards()
-                .fold(
-                    0,
-                    |n_acc, (_eplayerindex, card)| n_acc + self.points_card(card)
-                );
-        }
-        an_points
+    fn points_per_player(&self, vecstich: &Vec<SStich>, eplayerindex: EPlayerIndex) -> isize {
+        vecstich.iter()
+            .fold(0, |n_points_acc, stich| n_points_acc + self.points_card(stich[eplayerindex]))
     }
 
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4];

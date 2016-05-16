@@ -195,10 +195,9 @@ fn main() {
                 let card_played = rxcard.recv().unwrap();
                 game.zugeben(card_played, eplayerindex);
             }
-            let an_points = game.points_per_player();
             skui::logln("Results");
             for eplayerindex in 0..4 {
-                skui::logln(&format!("Player {}: {} points", eplayerindex, an_points[eplayerindex]));
+                skui::logln(&format!("Player {}: {} points", eplayerindex, game.points_per_player(eplayerindex)));
             }
             accountbalance.apply_payout(&game.payout());
         }

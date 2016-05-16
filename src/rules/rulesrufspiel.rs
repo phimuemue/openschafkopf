@@ -58,8 +58,10 @@ impl TRules for SRulesRufspiel {
             .find(|&(_, card)| card==self.rufsau())
             .map(|(eplayerindex, _)| eplayerindex)
             .unwrap();
-        let an_points = &self.points_per_player(vecstich);
-        let b_player_party_wins = an_points[self.m_eplayerindex as usize] + an_points[eplayerindex_coplayer as usize] >= 61;
+        let b_player_party_wins = 
+            self.points_per_player(vecstich, self.m_eplayerindex)
+            + self.points_per_player(vecstich, eplayerindex_coplayer)
+            >= 61;
         let ab_winner = create_playerindexmap(|eplayerindex| {
             (eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer) == b_player_party_wins
         });
