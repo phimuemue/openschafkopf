@@ -5,6 +5,14 @@ use std::cmp::Ordering;
 use std::marker::PhantomData;
 
 pub trait TTrumpfDecider {
+    fn trumpf_or_farbe(card: SCard) -> VTrumpfOrFarbe {
+        if Self::is_trumpf(card) {
+            VTrumpfOrFarbe::Trumpf
+        } else {
+            VTrumpfOrFarbe::Farbe(card.farbe())
+        }
+    }
+
     fn is_trumpf(card: SCard) -> bool;
     fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>, mut vecefarbe: Vec<EFarbe>) -> Vec<SCard>;
     fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering;

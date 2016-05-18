@@ -21,11 +21,7 @@ pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag<
 
 impl TRules for SRulesRamsch {
     fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        if STrumpfDeciderRamsch::is_trumpf(card) {
-            VTrumpfOrFarbe::Trumpf
-        } else {
-            VTrumpfOrFarbe::Farbe(card.farbe())
-        }
+        STrumpfDeciderRamsch::trumpf_or_farbe(card)
     }
 
     fn playerindex(&self) -> Option<EPlayerIndex> {

@@ -44,11 +44,7 @@ impl TRules for SRulesRufspiel {
     }
 
     fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        if STrumpfDeciderRufspiel::is_trumpf(card) {
-            VTrumpfOrFarbe::Trumpf
-        } else {
-            VTrumpfOrFarbe::Farbe(card.farbe())
-        }
+        STrumpfDeciderRufspiel::trumpf_or_farbe(card)
     }
 
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {

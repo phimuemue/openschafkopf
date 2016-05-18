@@ -27,11 +27,7 @@ impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCor
     where ActiveSinglePlayCore: TTrumpfDecider,
 {
     fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        if ActiveSinglePlayCore::is_trumpf(card) {
-            VTrumpfOrFarbe::Trumpf
-        } else {
-            VTrumpfOrFarbe::Farbe(card.farbe())
-        }
+        ActiveSinglePlayCore::trumpf_or_farbe(card)
     }
 
     fn playerindex(&self) -> Option<EPlayerIndex> {
