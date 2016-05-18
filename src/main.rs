@@ -155,13 +155,13 @@ fn main() {
         }
     };
 
-    let aruleset = read_ruleset(Path::new(clapmatches.value_of("rulesetpath").unwrap()));
+    let ruleset = read_ruleset(Path::new(clapmatches.value_of("rulesetpath").unwrap()));
     {
         let hand_fixed = random_hand(8, &mut SCard::all_values().into_iter().map(|card| Some(card)).collect());
         let eplayerindex_fixed = 0;
 
         println!("Hand: {}", hand_fixed);
-        for rules in aruleset[eplayerindex_fixed].allowed_rules().iter() 
+        for rules in allowed_rules(&ruleset.m_avecrulegroup[eplayerindex_fixed]).iter() 
             .filter(|rules| rules.can_be_played(&hand_fixed))
         {
             let f_payout_avg = ai.rank_rules(&hand_fixed, eplayerindex_fixed, rules.clone(), 100);
@@ -181,7 +181,7 @@ fn main() {
     let mut accountbalance = SAccountBalance::new();
     for i_game in 0..clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4) {
         let ogame = {
-            let gameprep = SGamePreparations::new(&aruleset);
+            let gameprep = SGamePreparations::new(&ruleset);
             skui::logln(&format!("Hand 0 : {}", gameprep.m_ahand[0]));
             gameprep.start_game(i_game % 4, &vecplayer)
         };

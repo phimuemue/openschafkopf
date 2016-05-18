@@ -67,11 +67,11 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
         }
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SHand, vecgameannouncement : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules TRules> {
+    fn ask_for_game<'rules>(&self, hand: &SHand, vecgameannouncement : &Vec<SGameAnnouncement>, vecrulegroup: &'rules Vec<SRuleGroup>) -> Option<&'rules TRules> {
         skui::print_game_announcements(vecgameannouncement);
         let vecorulegroup : Vec<Option<&SRuleGroup>> = Some(None).into_iter()
             .chain(
-                ruleset.m_vecrulegroup.iter()
+                vecrulegroup.iter()
                     .filter(|rulegroup| rulegroup.m_vecrules.iter()
                         .any(|rules| rules.can_be_played(hand))
                     )

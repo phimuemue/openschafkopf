@@ -10,7 +10,7 @@ use rand::{self, Rng};
 
 pub struct SGamePreparations<'rules> {
     pub m_ahand : [SHand; 4],
-    m_aruleset : &'rules [SRuleSet; 4],
+    m_ruleset : &'rules SRuleSet,
 }
 
 pub fn random_hand(n_size: usize, vecocard : &mut Vec<Option<SCard>>) -> SHand {
@@ -41,10 +41,10 @@ pub fn random_hands() -> [SHand; 4] {
 }
 
 impl<'rules> SGamePreparations<'rules> {
-    pub fn new(aruleset : &'rules [SRuleSet; 4]) -> SGamePreparations<'rules> {
+    pub fn new(ruleset : &'rules SRuleSet) -> SGamePreparations<'rules> {
         SGamePreparations {
             m_ahand : random_hands(),
-            m_aruleset : aruleset,
+            m_ruleset : ruleset,
         }
     }
 
@@ -65,7 +65,7 @@ impl<'rules> SGamePreparations<'rules> {
             let orules = vecplayer[eplayerindex].ask_for_game(
                 &self.m_ahand[eplayerindex],
                 &vecgameannouncement,
-                &self.m_aruleset[eplayerindex]
+                &self.m_ruleset.m_avecrulegroup[eplayerindex]
             );
             assert!(orules.as_ref().map_or(true, |rules| eplayerindex==rules.playerindex().unwrap()));
             vecgameannouncement.push(SGameAnnouncement{

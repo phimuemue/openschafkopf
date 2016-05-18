@@ -16,6 +16,6 @@ pub trait TPlayer {
         &self,
         hand: &SHand,
         vecgameannouncement: &Vec<SGameAnnouncement>,
-        ruleset : &'rules SRuleSet
+        vecrulegroup: &'rules Vec<SRuleGroup>
     ) -> Option<&'rules TRules>;
 }

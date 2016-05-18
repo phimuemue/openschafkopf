@@ -17,13 +17,11 @@ pub struct SRuleGroup {
 }
 
 pub struct SRuleSet {
-    pub m_vecrulegroup : Vec<SRuleGroup>,
+    pub m_avecrulegroup : [Vec<SRuleGroup>; 4],
 }
 
-impl SRuleSet {
-    pub fn allowed_rules(&self) -> Vec<&TRules> {
-        self.m_vecrulegroup.iter().flat_map(|rulegroup| rulegroup.m_vecrules.iter().map(|rules| rules.as_ref())).collect()
-    }
+pub fn allowed_rules(vecrulegroup: &Vec<SRuleGroup>) -> Vec<&TRules> {
+    vecrulegroup.iter().flat_map(|rulegroup| rulegroup.m_vecrules.iter().map(|rules| rules.as_ref())).collect()
 }
 
 pub fn create_rulegroup (str_name: &str, vecrules: Vec<Box<TRules>>) -> Option<SRuleGroup> {
@@ -33,7 +31,7 @@ pub fn create_rulegroup (str_name: &str, vecrules: Vec<Box<TRules>>) -> Option<S
     })
 }
 
-pub fn read_ruleset(path: &Path) -> [SRuleSet; 4] {
+pub fn read_ruleset(path: &Path) -> SRuleSet {
     if !path.exists() {
         println!("File {} not found. Creating it.", path.display());
         let mut file = match File::create(&path) {
@@ -54,31 +52,32 @@ pub fn read_ruleset(path: &Path) -> [SRuleSet; 4] {
         };
         BufReader::new(&file).lines().map(|str| str.unwrap()).collect::<HashSet<_>>()
     };
-    create_playerindexmap(|eplayerindex| {
-        SRuleSet {m_vecrulegroup : setstr_rule_name.iter()
-            .filter_map(|str_l| {
-                println!("allowing {} for {}", str_l, eplayerindex);
-                if str_l=="rufspiel" {
-                    create_rulegroup(
-                        "Rufspiel", 
-                        EFarbe::all_values().iter()
-                            .filter(|&efarbe| EFarbe::Herz!=*efarbe)
-                            .map(|&efarbe| Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TRules>)
-                            .collect()
-                    )
-                } else if str_l=="solo" {
-                    create_rulegroup("Solo", all_rulessolo(eplayerindex))
-                } else if str_l=="farbwenz" {
-                    create_rulegroup("Farbwenz", all_rulesfarbwenz(eplayerindex))
-                } else if str_l=="wenz" {
-                    create_rulegroup("Wenz", all_ruleswenz(eplayerindex))
-                } else {
-                    println!("{} is not a valid rule descriptor", str_l);
-                    None
-                }
-            })
-            .collect()
-        }
-    })
+    SRuleSet {
+        m_avecrulegroup : create_playerindexmap(|eplayerindex| {
+            setstr_rule_name.iter()
+                .filter_map(|str_l| {
+                    println!("allowing {} for {}", str_l, eplayerindex);
+                    if str_l=="rufspiel" {
+                        create_rulegroup(
+                            "Rufspiel", 
+                            EFarbe::all_values().iter()
+                                .filter(|&efarbe| EFarbe::Herz!=*efarbe)
+                                .map(|&efarbe| Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TRules>)
+                                .collect()
+                        )
+                    } else if str_l=="solo" {
+                        create_rulegroup("Solo", all_rulessolo(eplayerindex))
+                    } else if str_l=="farbwenz" {
+                        create_rulegroup("Farbwenz", all_rulesfarbwenz(eplayerindex))
+                    } else if str_l=="wenz" {
+                        create_rulegroup("Wenz", all_ruleswenz(eplayerindex))
+                    } else {
+                        println!("{} is not a valid rule descriptor", str_l);
+                        None
+                    }
+                })
+                .collect()
+        })
+    }
 }
 

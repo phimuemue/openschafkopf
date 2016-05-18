@@ -17,10 +17,10 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         txcard.send(self.m_ai.suggest_card(game)).ok();
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SHand, _ : &Vec<SGameAnnouncement>, ruleset: &'rules SRuleSet) -> Option<&'rules TRules> {
+    fn ask_for_game<'rules>(&self, hand: &SHand, _ : &Vec<SGameAnnouncement>, vecrulegroup: &'rules Vec<SRuleGroup>) -> Option<&'rules TRules> {
         // TODO: implement a more intelligent decision strategy
         let n_tests_per_rules = 50;
-        ruleset.allowed_rules().iter()
+        allowed_rules(vecrulegroup).iter()
             .filter(|rules| rules.can_be_played(hand))
             .filter(|rules| {
                 4 <= hand.cards().iter()
