@@ -79,11 +79,11 @@ impl<'rules> SGamePreparations<'rules> {
         skui::logln("Asked players if they want to play. Determining rules");
         // TODO: find sensible way to deal with multiple game announcements (currently, we choose highest priority)
         assert!(!vecgameannouncement.is_empty());
-        vecgameannouncement.iter()
+        let orules_actively_played = vecgameannouncement.iter()
             .map(|gameannouncement| gameannouncement.m_opairrulespriority)
             .max_by_key(|opairrulespriority| opairrulespriority.map(|(_orules, priority)| priority)) 
             .unwrap()
-            .map(move |(rules, _priority)| {
+            .map(|(rules, _priority)| {
                 assert!(rules.playerindex().is_some());
                 skui::logln(&format!(
                     "Rules determined ({} plays {}). Sorting hands",
@@ -94,12 +94,22 @@ impl<'rules> SGamePreparations<'rules> {
                     rules.sort_cards_first_trumpf_then_farbe(hand.cards_mut());
                     skui::logln(&format!("{}", hand));
                 }
-                SGame {
-                    m_ahand : self.m_ahand,
-                    m_rules : rules,
-                    m_vecstich : vec![SStich::new(eplayerindex_first)],
-                }
+                rules
+            });
+        let create_game = |ahand, rules| {
+            Some(SGame {
+                m_ahand : ahand,
+                m_rules : rules,
+                m_vecstich : vec![SStich::new(eplayerindex_first)],
             })
+        };
+        if let Some(rules) = orules_actively_played {
+            create_game(self.m_ahand, rules)
+        } else if let Some(ref rulesramsch) = self.m_ruleset.m_orulesramsch {
+            create_game(self.m_ahand, rulesramsch.as_ref())
+        } else {
+            None
+        }
     }
 }
 

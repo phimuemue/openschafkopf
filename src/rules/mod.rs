@@ -1,5 +1,6 @@
 pub mod rulesrufspiel;
 pub mod rulessolo;
+pub mod rulesramsch;
 pub mod ruleset;
 mod trumpfdecider;
 

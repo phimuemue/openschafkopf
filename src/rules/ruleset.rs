@@ -3,6 +3,7 @@ use stich::*;
 use rules::*;
 use rules::rulesrufspiel::*;
 use rules::rulessolo::*;
+use rules::rulesramsch::*;
 
 use std::error::Error;
 use std::fs::File;
@@ -18,6 +19,7 @@ pub struct SRuleGroup {
 
 pub struct SRuleSet {
     pub m_avecrulegroup : [Vec<SRuleGroup>; 4],
+    pub m_orulesramsch : Option<Box<TRules>>,
 }
 
 pub fn allowed_rules(vecrulegroup: &Vec<SRuleGroup>) -> Vec<&TRules> {
@@ -72,12 +74,18 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
                     } else if str_l=="wenz" {
                         create_rulegroup("Wenz", all_ruleswenz(eplayerindex))
                     } else {
-                        println!("{} is not a valid rule descriptor", str_l);
                         None
                     }
                 })
                 .collect()
-        })
+        }),
+        m_orulesramsch : { 
+            if setstr_rule_name.contains("ramsch") {
+                Some(Box::new(SRulesRamsch{}))
+            } else {
+                None
+            }
+        },
     }
 }
 
