@@ -10,3 +10,4 @@
 * clean up mess introduced by SAiCheating-Commit
 * compute_successors should acknowledge ostich_given
 * could susp_from_raw construct m_ahand on its own (to ensure ahand.iter().transform(hand.size()).all_same)
+* should rules/mod.rs reexport all necessary things for concrete rules?
