@@ -5,6 +5,7 @@ use rules::*;
 use rules::trumpfdecider::*;
 use std::fmt;
 use std::cmp::Ordering;
+use itertools::Itertools;
 
 pub struct SRulesRamsch {}
 
@@ -42,36 +43,33 @@ impl TRules for SRulesRamsch {
             if 1==veceplayerindex_most_points.len() {
                 veceplayerindex_most_points[0]
             } else {
-                let vecpaireplayerindexcard_highest_trumpf = veceplayerindex_most_points.into_iter()
-                    .map(|eplayerindex| {
-                        let hand = SHand::new_from_vec(
-                            vecstich.iter()
-                                .map(|stich| stich[eplayerindex])
-                                .filter(|card| self.is_trumpf(*card))
-                                .collect()
-                        );
-                        // If two ore more players have the maximum number of points,
-                        // they both must have had at least one trumpf.
-                        assert!(0<hand.cards().len());
-                        // TODO: introduce max_by_cmp
-                        let mut card_highest_trumpf = hand.cards()[0];
-                        for card in hand.cards().iter().skip(1).cloned() {
-                            if Ordering::Greater==STrumpfDeciderRamsch::compare_trumpfcards_solo(card, card_highest_trumpf) {
-                                card_highest_trumpf = card;
-                            }
+                veceplayerindex_most_points.into_iter()
+                    .map(|eplayerindex| {(
+                        eplayerindex,
+                        vecstich.iter()
+                            .map(|stich| stich[eplayerindex])
+                            .filter(|card| self.is_trumpf(*card))
+                            // TODO: introduce max_by_cmp
+                            .fold1(|card_fst, card_snd| STrumpfDeciderRamsch::better_trumpf(card_fst, card_snd))
+                    )})
+                    .fold1(|paireplayerindexocard_fst, paireplayerindexocard_snd| {
+                        match (paireplayerindexocard_fst.1, paireplayerindexocard_snd.1) {
+                            (Some(card_trumpf_fst), Some(card_trumpf_snd)) => {
+                                if Ordering::Less==STrumpfDeciderRamsch::compare_trumpfcards_solo(card_trumpf_fst, card_trumpf_snd) {
+                                    paireplayerindexocard_snd
+                                } else {
+                                    paireplayerindexocard_fst
+                                }
+                            },
+                            (Some(_), None) => paireplayerindexocard_fst,
+                            (None, Some(_)) => paireplayerindexocard_snd,
+                            // If two ore more players have the maximum number of points,
+                            // at least one of them must have had at least one trumpf.
+                            (None, None) => panic!("Two losing players with same points, but none of them with trumpf."),
                         }
-                        (eplayerindex, card_highest_trumpf)
                     })
-                    .collect::<Vec<_>>();
-                // TODO: introduce max_by_cmp
-                let (mut eplayerindex_highest_trumpf, mut card_highest_trumpf) = vecpaireplayerindexcard_highest_trumpf[0].clone();
-                for (eplayerindex, card) in vecpaireplayerindexcard_highest_trumpf.into_iter().skip(1) {
-                    if Ordering::Greater==STrumpfDeciderRamsch::compare_trumpfcards_solo(card, card_highest_trumpf) {
-                        eplayerindex_highest_trumpf = eplayerindex;
-                        card_highest_trumpf = card;
-                    }
-                }
-                eplayerindex_highest_trumpf
+                    .unwrap()
+                    .0
             }
         };
         create_playerindexmap(|eplayerindex| {

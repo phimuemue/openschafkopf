@@ -13,6 +13,16 @@ pub trait TTrumpfDecider {
         }
     }
 
+    fn better_trumpf(card_fst: SCard, card_snd: SCard) -> SCard {
+        assert!(Self::is_trumpf(card_fst));
+        assert!(Self::is_trumpf(card_snd));
+        if Ordering::Less==Self::compare_trumpfcards_solo(card_fst, card_snd) {
+            card_snd
+        } else {
+            card_fst
+        }
+    }
+
     fn is_trumpf(card: SCard) -> bool;
     fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>, mut vecefarbe: Vec<EFarbe>) -> Vec<SCard>;
     fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering;

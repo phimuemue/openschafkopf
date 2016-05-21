@@ -66,14 +66,6 @@ pub trait TRules : fmt::Display {
 
     fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector;
 
-    fn better_card(&self, card_fst: SCard, card_snd: SCard) -> SCard {
-        if Ordering::Less==self.compare_in_stich(card_fst, card_snd) {
-            card_snd
-        } else {
-            card_fst
-        }
-    }
-
     fn card_is_allowed(&self, vecstich: &Vec<SStich>, hand: &SHand, card: SCard) -> bool {
         self.all_allowed_cards(vecstich, hand).into_iter()
             .any(|card_iterated| card_iterated==card)
