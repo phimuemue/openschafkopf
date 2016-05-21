@@ -149,7 +149,7 @@ impl TRules for SRulesRufspiel {
     }
 
     fn compare_in_stich_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
-        compare_trumpfcards_solo(card_fst, card_snd)
+        STrumpfDeciderRufspiel::compare_trumpfcards_solo(card_fst, card_snd)
     }
 
 }
