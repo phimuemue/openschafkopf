@@ -8,7 +8,6 @@ extern crate arrayvec;
 
 mod card;
 mod stich;
-mod combinatorics;
 mod cardvectorparser;
 mod hand;
 mod rules;
@@ -110,7 +109,7 @@ fn main() {
         }
 
         let mut n_susp = 0;
-        combinatorics::for_each_suspicion(
+        suspicion::for_each_suspicion(
             &SHand::new_from_vec(cardvectorparser::parse_cards("gk sk").into_iter().collect()),
             &cardvectorparser::parse_cards("gz e7 sz h9 ez gu"),
             0, // eplayerindex
