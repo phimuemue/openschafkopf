@@ -72,7 +72,6 @@ fn main() {
             vecstich_internal
         };
 
-        println!("sdf");
         macro_rules! new_hashset {
             () => { {
                 let mut settrumpforfarbe = HashSet::new();
@@ -86,7 +85,6 @@ fn main() {
         let mut mapeplayerindexsettrumpforfarbe : [HashSet<VTrumpfOrFarbe>; 4] = [
             new_hashset!(), new_hashset!(), new_hashset!(), new_hashset!(),
         ];
-        println!("asdlkf");
         for stich in vecstich.iter() {
             println!("{}", stich);
             let trumpforfarbe_first_card = rules.trumpf_or_farbe(stich.first_card());
