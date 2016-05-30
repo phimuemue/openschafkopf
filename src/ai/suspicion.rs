@@ -5,6 +5,9 @@ use rules::*;
 use itertools::Itertools;
 
 use permutohedron::LexicalPermutation;
+use std::fs;
+use std::io::Write;
+use std::io;
 
 pub struct SSuspicionTransition {
     m_stich : SStich,
@@ -41,20 +44,31 @@ impl SSuspicionTransition {
         &self.m_susp
     }
 
-    fn print_suspiciontransition(&self, n_maxlevel: usize, n_level: usize, rules: &TRules, vecstich: &mut Vec<SStich>, ostich_given: Option<SStich>) {
+    fn print_suspiciontransition(
+        &self,
+        n_maxlevel: usize,
+        n_level: usize,
+        rules: &TRules,
+        vecstich: &mut Vec<SStich>,
+        ostich_given: Option<SStich>,
+        mut file_output: &mut fs::File,
+    ) -> io::Result<()> {
         if n_level<=n_maxlevel {
             push_pop_vecstich(vecstich, self.m_stich.clone(), |vecstich| {
                 assert_eq!(vecstich.len()+self.m_susp.hand_size(), 8);
                 for _ in 0..n_level+1 {
-                    print!(" ");
+                    try!(file_output.write_all(b" "));
                 }
-                print!("{} : ", self.m_stich);
+                try!(file_output.write_all(&format!("{} : ", self.m_stich).as_bytes()));
                 if 1<self.m_susp.hand_size() {
-                    self.m_susp.print_suspicion(n_maxlevel, n_level, rules, vecstich, ostich_given);
+                    try!(self.m_susp.print_suspicion(n_maxlevel, n_level, rules, vecstich, ostich_given, &mut file_output));
                 } else {
-                    println!("");
+                    try!(file_output.write_all(b""));
                 }
-            });
+                Ok(())
+            })
+        } else {
+            Ok(())
         }
     }
 }
@@ -161,21 +175,24 @@ impl SSuspicion {
         n_level: usize,
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
-        ostich_given: Option<SStich>
-    ) {
+        ostich_given: Option<SStich>,
+        mut file_output: &mut fs::File,
+    ) -> io::Result<()> {
         if n_maxlevel < n_level {
-            return;
-        }
-        for eplayerindex in 0..4 {
-            print!("{} | ", self.m_ahand[eplayerindex]);
-        }
-        print!(", min payouts: ");
-        for eplayerindex in 0..4 {
-            print!("{}, ", self.min_reachable_payout(rules, vecstich, ostich_given.clone(), eplayerindex));
-        }
-        println!("");
-        for susptrans in self.m_vecsusptrans.iter() {
-            susptrans.print_suspiciontransition(n_maxlevel, n_level+1, rules, vecstich, ostich_given.clone());
+            Ok(())
+        } else {
+            for eplayerindex in 0..4 {
+                try!(file_output.write_all(&format!("{} | ", self.m_ahand[eplayerindex]).as_bytes()));
+            }
+            try!(file_output.write_all(b", min payouts: "));
+            for eplayerindex in 0..4 {
+                try!(file_output.write_all(&format!("{}, ", self.min_reachable_payout(rules, vecstich, ostich_given.clone(), eplayerindex)).as_bytes()));
+            }
+            try!(file_output.write_all(b""));
+            for susptrans in self.m_vecsusptrans.iter() {
+                try!(susptrans.print_suspiciontransition(n_maxlevel, n_level+1, rules, vecstich, ostich_given.clone(), &mut file_output));
+            }
+            Ok(())
         }
     }
 

@@ -26,6 +26,7 @@ use rules::*;
 use accountbalance::SAccountBalance;
 use rules::rulesrufspiel::SRulesRufspiel;
 use std::collections::HashSet;
+use std::fs;
 use rules::ruleset::*;
 use ai::*;
 use std::path::Path;
@@ -135,7 +136,9 @@ fn main() {
                     random_sample_from_vec(vecstich_successor, 1);
                 });
                 let eplayerindex_current_stich = rules.winner_index(vecstich.last().unwrap());
-                susp.print_suspicion(8, 9, &rules, &mut vecstich, Some(SStich::new(eplayerindex_current_stich)));
+                if let Err(_)=susp.print_suspicion(8, 0, &rules, &mut vecstich, Some(SStich::new(eplayerindex_current_stich)), &mut fs::File::create(&"suspicion.txt").unwrap()) {
+                    println!("Cound not write suspition to file.");
+                }
             }
         );
         println!("{} suspicions", n_susp);
