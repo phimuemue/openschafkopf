@@ -144,10 +144,9 @@ fn suspicion_from_hands_respecting_stich_current(
     susp
 }
 
-fn possible_payouts(rules: &TRules, susp: &SSuspicion, vecstich_complete_immutable: &Vec<SStich>, eplayerindex_fixed: EPlayerIndex) -> Vec<(SCard, isize)> { // TODO Rust: return iterator
+fn possible_payouts(rules: &TRules, susp: &SSuspicion, mut vecstich_complete_payout: &mut Vec<SStich>, eplayerindex_fixed: EPlayerIndex) -> Vec<(SCard, isize)> { // TODO Rust: return iterator
     susp.suspicion_tranitions().iter()
         .map(|susptrans| {
-            let mut vecstich_complete_payout = vecstich_complete_immutable.clone();
             let n_payout = push_pop_vecstich(&mut vecstich_complete_payout, susptrans.stich().clone(), |mut vecstich_complete_payout| {
                 susptrans.suspicion().min_reachable_payout(
                     rules,
@@ -189,7 +188,7 @@ impl TAi for SAiCheating {
             &stich_current,
             /*n_branches*/2
         );
-        possible_payouts(game.m_rules, &susp, &vecstich_complete_mut, stich_current.current_player_index()).into_iter()
+        possible_payouts(game.m_rules, &susp, &mut vecstich_complete_mut, stich_current.current_player_index()).into_iter()
             .max_by_key(|&(_card, n_payout)| n_payout)
             .unwrap()
             .0
@@ -271,7 +270,7 @@ impl TAi for SAiSimulating {
                         .map(|card| (card.clone(), 0)) // TODO Option<isize> more convenient?
                 ),
                 |mut mapcardpayout: HashMap<SCard, isize>, susp| {
-                    for (card, n_payout) in possible_payouts(game.m_rules, &susp, &vecstich_complete_immutable, eplayerindex_fixed) {
+                    for (card, n_payout) in possible_payouts(game.m_rules, &susp, &mut vecstich_complete_immutable.clone(), eplayerindex_fixed) {
                         let n_payout_acc = mapcardpayout[&card];
                         *mapcardpayout.get_mut(&card).unwrap() = n_payout_acc + n_payout;
                     }
