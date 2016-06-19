@@ -126,12 +126,9 @@ impl<FarbeDesignator> TTrumpfDecider for STrumpfDeciderFarbe<FarbeDesignator>
             .collect()
     }
     fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering {
-        match (FarbeDesignator::farbe()==card_fst.farbe(), FarbeDesignator::farbe()==card_snd.farbe()) {
-            (true, true) => {compare_farbcards_same_color(card_fst, card_snd)},
-            (true, false) => Ordering::Greater,
-            (false, true) => Ordering::Less,
-            (false, false) => panic!("STrumpfDeciderFarbe::compare_trumpfcards_solo called with two no-trumpf cards"),
-        }
+        assert!(Self::is_trumpf(card_fst));
+        assert!(Self::is_trumpf(card_snd));
+        compare_farbcards_same_color(card_fst, card_snd)
     }
 }
 
