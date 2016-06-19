@@ -107,7 +107,7 @@ macro_rules! generate_sololike_farbe {
 pub type SCoreSolo<FarbeDesignator> = STrumpfDeciderSchlag<
     SSchlagDesignatorOber, STrumpfDeciderSchlag<
     SSchlagDesignatorUnter, STrumpfDeciderFarbe<
-    FarbeDesignator, STrumpfDeciderNoTrumpf>>>;
+    FarbeDesignator>>>;
 
 pub fn all_rulessolo(eplayerindex: EPlayerIndex) -> Vec<Box<TRules>> {
     generate_sololike_farbe!(eplayerindex, SCoreSolo, "Solo")
@@ -115,7 +115,7 @@ pub fn all_rulessolo(eplayerindex: EPlayerIndex) -> Vec<Box<TRules>> {
 
 pub type SCoreFarbwenz<FarbeDesignator> = STrumpfDeciderSchlag<
     SSchlagDesignatorUnter, STrumpfDeciderFarbe<
-    FarbeDesignator, STrumpfDeciderNoTrumpf>>;
+    FarbeDesignator>>;
 
 pub fn all_rulesfarbwenz(eplayerindex: EPlayerIndex) -> Vec<Box<TRules>> {
     generate_sololike_farbe!(eplayerindex, SCoreFarbwenz, "Wenz")

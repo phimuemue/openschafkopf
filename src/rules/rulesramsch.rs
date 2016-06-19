@@ -18,7 +18,7 @@ impl fmt::Display for SRulesRamsch {
 pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag<
     SSchlagDesignatorOber, STrumpfDeciderSchlag<
     SSchlagDesignatorUnter, STrumpfDeciderFarbe<
-    SFarbeDesignatorHerz, STrumpfDeciderNoTrumpf>>>;
+    SFarbeDesignatorHerz>>>;
 
 impl TRules for SRulesRamsch {
     fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {

@@ -20,7 +20,7 @@ impl fmt::Display for SRulesRufspiel {
 pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag<
     SSchlagDesignatorOber, STrumpfDeciderSchlag<
     SSchlagDesignatorUnter, STrumpfDeciderFarbe<
-    SFarbeDesignatorHerz, STrumpfDeciderNoTrumpf>>>;
+    SFarbeDesignatorHerz>>>;
 
 impl SRulesRufspiel {
     fn rufsau(&self) -> SCard {

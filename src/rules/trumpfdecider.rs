@@ -24,10 +24,10 @@ pub trait TTrumpfDecider {
     }
 
     fn is_trumpf(card: SCard) -> bool;
-    fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>, mut vecefarbe: Vec<EFarbe>) -> Vec<SCard>;
+    fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>) -> Vec<SCard>;
     fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering;
     fn count_laufende(vecstich: &Vec<SStich>, ab_winner: &[bool; 4]) -> isize {
-        let veccard_trumpf = Self::trumpfs_in_descending_order(Vec::new(), Vec::new());
+        let veccard_trumpf = Self::trumpfs_in_descending_order(Vec::new());
         let mapcardeplayerindex = SCardMap::<EPlayerIndex>::new_from_pairs(
             vecstich.iter().flat_map(|stich| stich.indices_and_cards())
         );
@@ -46,7 +46,7 @@ impl TTrumpfDecider for STrumpfDeciderNoTrumpf {
     fn is_trumpf(_card: SCard) -> bool {
         false
     }
-    fn trumpfs_in_descending_order(mut _veceschlag: Vec<ESchlag>, mut _vecefarbe: Vec<EFarbe>) -> Vec<SCard> {
+    fn trumpfs_in_descending_order(mut _veceschlag: Vec<ESchlag>) -> Vec<SCard> {
         Vec::new()
     }
     fn compare_trumpfcards_solo(_card_fst: SCard, _card_snd: SCard) -> Ordering {
@@ -71,13 +71,12 @@ impl<SchlagDesignator, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<Schla
     fn is_trumpf(card: SCard) -> bool {
         SchlagDesignator::schlag() == card.schlag() || DeciderSec::is_trumpf(card)
     }
-    fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>, vecefarbe: Vec<EFarbe>) -> Vec<SCard> {
+    fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>) -> Vec<SCard> {
         let mut veccard_trumpf : Vec<_> = EFarbe::all_values().iter()
-            .filter(|efarbe| !vecefarbe.iter().any(|&efarbe_done| efarbe_done==**efarbe))
             .map(|&efarbe| SCard::new(efarbe, SchlagDesignator::schlag()))
             .collect();
         veceschlag.push(SchlagDesignator::schlag());
-        let mut veccard_trumpf_sec = DeciderSec::trumpfs_in_descending_order(veceschlag, vecefarbe);
+        let mut veccard_trumpf_sec = DeciderSec::trumpfs_in_descending_order(veceschlag);
         veccard_trumpf.append(&mut veccard_trumpf_sec);
         veccard_trumpf
     }
@@ -111,33 +110,27 @@ impl TFarbeDesignator for SFarbeDesignatorHerz { fn farbe() -> EFarbe {EFarbe::H
 pub struct SFarbeDesignatorSchelln {}
 impl TFarbeDesignator for SFarbeDesignatorSchelln { fn farbe() -> EFarbe {EFarbe::Schelln} }
 
-pub struct STrumpfDeciderFarbe<FarbeDesignator, DeciderSec> {
+pub struct STrumpfDeciderFarbe<FarbeDesignator> {
     m_farbedesignator: PhantomData<FarbeDesignator>,
-    m_decidersec: PhantomData<DeciderSec>,
 }
-impl<FarbeDesignator, DeciderSec> TTrumpfDecider for STrumpfDeciderFarbe<FarbeDesignator, DeciderSec> 
-    where DeciderSec: TTrumpfDecider,
-          FarbeDesignator: TFarbeDesignator,
+impl<FarbeDesignator> TTrumpfDecider for STrumpfDeciderFarbe<FarbeDesignator> 
+    where FarbeDesignator: TFarbeDesignator,
 {
     fn is_trumpf(card: SCard) -> bool {
-        FarbeDesignator::farbe() == card.farbe() || DeciderSec::is_trumpf(card)
+        FarbeDesignator::farbe() == card.farbe()
     }
-    fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>, mut vecefarbe: Vec<EFarbe>) -> Vec<SCard> {
-        let mut veccard_trumpf : Vec<_> = ESchlag::all_values().iter()
+    fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> Vec<SCard> {
+        ESchlag::all_values().iter()
             .filter(|eschlag| !veceschlag.iter().any(|&eschlag_done| eschlag_done==**eschlag))
             .map(|&eschlag| SCard::new(FarbeDesignator::farbe(), eschlag))
-            .collect();
-        vecefarbe.push(FarbeDesignator::farbe());
-        let mut veccard_trumpf_sec = DeciderSec::trumpfs_in_descending_order(veceschlag, vecefarbe);
-        veccard_trumpf.append(&mut veccard_trumpf_sec);
-        veccard_trumpf
+            .collect()
     }
     fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering {
         match (FarbeDesignator::farbe()==card_fst.farbe(), FarbeDesignator::farbe()==card_snd.farbe()) {
             (true, true) => {compare_farbcards_same_color(card_fst, card_snd)},
             (true, false) => Ordering::Greater,
             (false, true) => Ordering::Less,
-            (false, false) => DeciderSec::compare_trumpfcards_solo(card_fst, card_snd),
+            (false, false) => panic!("STrumpfDeciderFarbe::compare_trumpfcards_solo called with two no-trumpf cards"),
         }
     }
 }
