@@ -7,7 +7,7 @@ extern crate clap;
 extern crate arrayvec;
 
 mod primitives;
-mod cardvectorparser;
+mod util;
 mod rules;
 mod game;
 mod player;
@@ -55,7 +55,7 @@ fn main() {
             {
                 let mut add_stich = |eplayerindex, str_stich| {
                     vecstich_internal.push(SStich::new(eplayerindex));
-                    for card in cardvectorparser::parse_cards(str_stich).iter().cycle().skip(eplayerindex).take(4) {
+                    for card in util::cardvectorparser::parse_cards(str_stich).iter().cycle().skip(eplayerindex).take(4) {
                         vecstich_internal.last_mut().unwrap().zugeben(card.clone());
                     }
                 };
@@ -105,8 +105,8 @@ fn main() {
 
         let mut n_susp = 0;
         suspicion::for_each_suspicion(
-            &SHand::new_from_vec(cardvectorparser::parse_cards("gk sk").into_iter().collect()),
-            &cardvectorparser::parse_cards("gz e7 sz h9 ez gu"),
+            &SHand::new_from_vec(util::cardvectorparser::parse_cards("gk sk").into_iter().collect()),
+            &util::cardvectorparser::parse_cards("gz e7 sz h9 ez gu"),
             0, // eplayerindex
             |susp| {
                 susp.hands().iter()
