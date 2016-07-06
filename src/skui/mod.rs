@@ -1,7 +1,6 @@
 use primitives::*;
 use game::*;
 use ncurses;
-use accountbalance::*;
 
 pub fn init_ui() {
     ncurses::initscr();
