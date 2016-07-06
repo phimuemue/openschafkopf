@@ -1,10 +1,8 @@
 pub mod suspicion;
 
-use card::*;
-use hand::*;
+use primitives::*;
 use rules::*;
 use game::*;
-use stich::*;
 use ai::suspicion::*;
 
 use rand::{self, Rng};

@@ -6,10 +6,8 @@ extern crate permutohedron;
 extern crate clap;
 extern crate arrayvec;
 
-mod card;
-mod stich;
+mod primitives;
 mod cardvectorparser;
-mod hand;
 mod rules;
 mod game;
 mod player;
@@ -19,9 +17,7 @@ mod skui;
 
 use game::*;
 use std::sync::mpsc;
-use card::*;
-use stich::*;
-use hand::*;
+use primitives::*;
 use rules::*;
 use accountbalance::SAccountBalance;
 use rules::rulesrufspiel::SRulesRufspiel;

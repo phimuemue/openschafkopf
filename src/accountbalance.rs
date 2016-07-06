@@ -1,6 +1,6 @@
 // this stores the how much money each player currently has
 
-use stich::*;
+use primitives::stich::*;
 
 pub struct SAccountBalance {
     m_an : [isize; 4],

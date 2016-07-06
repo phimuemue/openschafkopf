@@ -1,5 +1,4 @@
-use card::*;
-use stich::*;
+use primitives::*;
 use rules::*;
 use std::cmp::Ordering;
 use std::marker::PhantomData;

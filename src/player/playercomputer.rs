@@ -1,5 +1,4 @@
-use card::*;
-use hand::*;
+use primitives::*;
 use player::*;
 use rules::*;
 use rules::ruleset::*;

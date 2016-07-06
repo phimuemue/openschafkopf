@@ -1,6 +1,6 @@
 extern crate combine;
 
-use card::*;
+use primitives::card::*;
 use self::combine::*;
 use self::combine::primitives::Stream;
 

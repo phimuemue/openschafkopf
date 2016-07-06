@@ -1,5 +1,4 @@
-use card::*;
-use stich::*;
+use primitives::*;
 use game::*;
 use ncurses;
 use accountbalance::*;

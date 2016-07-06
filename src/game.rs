@@ -1,6 +1,4 @@
-use card::*;
-use hand::*;
-use stich::*;
+use primitives::*;
 use rules::*;
 use rules::ruleset::*;
 use player::*;

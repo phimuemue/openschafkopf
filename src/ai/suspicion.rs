@@ -1,6 +1,4 @@
-use card::*;
-use stich::*;
-use hand::*;
+use primitives::*;
 use rules::*;
 use itertools::Itertools;
 

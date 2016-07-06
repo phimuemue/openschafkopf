@@ -4,9 +4,7 @@ pub mod rulesramsch;
 pub mod ruleset;
 mod trumpfdecider;
 
-use card::*;
-use stich::*;
-use hand::*;
+use primitives::*;
 use std::cmp::Ordering;
 use std::fmt;
 

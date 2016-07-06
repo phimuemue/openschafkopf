@@ -1,8 +1,7 @@
 pub mod playercomputer;
 pub mod playerhuman;
 
-use card::*;
-use hand::*;
+use primitives::*;
 use rules::*;
 use rules::ruleset::*;
 use game::*;
