@@ -12,3 +12,5 @@
 * compute_successors should acknowledge ostich_given
 * could susp_from_raw construct m_ahand on its own (to ensure ahand.iter().transform(hand.size()).all_same)
 * should rules/mod.rs reexport all necessary things for concrete rules?
+* VTrumpfOrFarbe should not be publicly exported (concept of Trumpf/Farbe should be internal to TRules)
+* sort_cards_fist_trumpf_then_farbe should not be needed (concept of Trumpf/Farbe should be internal to TRules)
