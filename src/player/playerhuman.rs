@@ -7,7 +7,6 @@ use skui;
 use ai::*;
 
 use std::sync::mpsc;
-use std::io::Read;
 
 pub struct SPlayerHuman<'ai> {
     pub m_ai : &'ai TAi,
