@@ -67,19 +67,14 @@ fn main() {
             vecstich_internal
         };
 
-        macro_rules! new_hashset {
-            () => { {
-                let mut settrumpforfarbe = HashSet::new();
-                settrumpforfarbe.insert(VTrumpfOrFarbe::Trumpf);
-                for efarbe in EFarbe::all_values().iter() {
-                    settrumpforfarbe.insert(VTrumpfOrFarbe::Farbe(*efarbe));
-                }
-                settrumpforfarbe
-            } };
-        };
-        let mut mapeplayerindexsettrumpforfarbe : [HashSet<VTrumpfOrFarbe>; 4] = [
-            new_hashset!(), new_hashset!(), new_hashset!(), new_hashset!(),
-        ];
+        let mut mapeplayerindexsettrumpforfarbe = create_playerindexmap(|_eplayerindex| {
+            let mut settrumpforfarbe = HashSet::new();
+            settrumpforfarbe.insert(VTrumpfOrFarbe::Trumpf);
+            for efarbe in EFarbe::all_values().iter() {
+                settrumpforfarbe.insert(VTrumpfOrFarbe::Farbe(*efarbe));
+            }
+            settrumpforfarbe
+        });
         for stich in vecstich.iter() {
             println!("{}", stich);
             let trumpforfarbe_first_card = rules.trumpf_or_farbe(stich.first_card());
