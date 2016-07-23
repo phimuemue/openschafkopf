@@ -43,7 +43,11 @@ fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(hand: &SHand, vect : &'t V
 impl<'ai> TPlayer for SPlayerHuman<'ai> {
     fn take_control(&mut self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         skui::print_vecstich(&game.m_vecstich);
-        let ref hand = game.m_ahand[game.which_player_can_do_something().unwrap()];
+        let hand = {
+            let mut hand = game.m_ahand[game.which_player_can_do_something().unwrap()].clone();
+            game.m_rules.sort_cards_first_trumpf_then_farbe(hand.cards_mut());
+            hand
+        };
         let veccard_allowed = game.m_rules.all_allowed_cards(&game.m_vecstich, &hand);
         match txcard.send(
             skui::ask_for_alternative(

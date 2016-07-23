@@ -51,7 +51,7 @@ impl<'rules> SGamePreparations<'rules> {
 
     // TODO: extend return value to support stock, etc.
     // TODO: eliminate vecplayer and substitute start_game by which_player_can_do_something (similar to SGame)
-    pub fn start_game<'players>(mut self, eplayerindex_first : EPlayerIndex, vecplayer: &Vec<Box<TPlayer+'players>>) -> Option<SGame<'rules>> {
+    pub fn start_game<'players>(self, eplayerindex_first : EPlayerIndex, vecplayer: &Vec<Box<TPlayer+'players>>) -> Option<SGame<'rules>> {
         // prepare
         skui::logln("Preparing game");
         for hand in self.m_ahand.iter() {
@@ -86,15 +86,6 @@ impl<'rules> SGamePreparations<'rules> {
             .unwrap()
             .map(|(rules, _priority)| {
                 assert!(rules.playerindex().is_some());
-                skui::logln(&format!(
-                    "Rules determined ({} plays {}). Sorting hands",
-                    rules.playerindex().unwrap(),
-                    rules
-                ));
-                for hand in self.m_ahand.iter_mut() {
-                    rules.sort_cards_first_trumpf_then_farbe(hand.cards_mut());
-                    skui::logln(&format!("{}", hand));
-                }
                 rules
             });
         let create_game = |ahand, rules| {
