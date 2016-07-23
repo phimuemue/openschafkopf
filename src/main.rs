@@ -20,7 +20,6 @@ use primitives::*;
 use rules::*;
 use rules::rulesrufspiel::SRulesRufspiel;
 use std::collections::HashSet;
-use std::fs;
 use rules::ruleset::*;
 use ai::*;
 use std::path::Path;
@@ -48,7 +47,7 @@ fn main() {
             m_eplayerindex : 0,
             m_efarbe : EFarbe::Gras,
         };
-        let mut vecstich = {
+        let vecstich = {
             let mut vecstich_internal = Vec::new();
             {
                 let mut add_stich = |eplayerindex, str_stich| {
@@ -124,10 +123,6 @@ fn main() {
                     assert!(!vecstich_successor.is_empty());
                     random_sample_from_vec(vecstich_successor, 1);
                 });
-                let eplayerindex_current_stich = rules.winner_index(vecstich.last().unwrap());
-                if let Err(_)=susp.print_suspicion(8, 0, &rules, &mut vecstich, Some(SStich::new(eplayerindex_current_stich)), &mut fs::File::create(&"suspicion.txt").unwrap()) {
-                    println!("Cound not write suspition to file.");
-                }
             }
         );
         println!("{} suspicions", n_susp);

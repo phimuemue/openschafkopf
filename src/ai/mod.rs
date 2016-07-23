@@ -8,6 +8,7 @@ use ai::suspicion::*;
 use rand::{self, Rng};
 use std::collections::HashMap;
 use std::iter::FromIterator;
+use std::fs;
 
 pub trait TAi {
     fn rank_rules(&self, hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
@@ -139,6 +140,9 @@ fn suspicion_from_hands_respecting_stich_current(
         }
     );
     assert!(susp.suspicion_tranitions().len() <= susp.count_leaves());
+    if let Err(_) = susp.print_suspicion(8, 0, rules, vecstich_complete_mut, Some(stich_current.clone()), &mut fs::File::create(&"suspicion.txt").unwrap()) {
+        // TODO: what shall be done on error?
+    }
     susp
 }
 
