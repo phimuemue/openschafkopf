@@ -8,12 +8,39 @@ def CardString(strCardRaw):
     assert(strCardRaw[1] in "789ZUOKA")
     return strCardRaw
 
+dictstrstrGame = {
+    "Sauspiel auf die Alte" : "SRulesRufspiel(EFarbe::Eichel)",
+    "Sauspiel auf die Blaue" : "SRulesRufspiel(EFarbe::Gras)",
+    "Sauspiel auf die Hundsgfickte" : "SRulesRufspiel(EFarbe::Schelln)",
+
+    "Eichel-Solo" : "SRulesSolo(EFarbe::Eichel)",
+    "Gras-Solo" : "SRulesSolo(EFarbe::Gras)",
+    "Herz-Solo" : "SRulesSolo(EFarbe::Herz)",
+    "Schelln-Solo" : "SRulesSolo(EFarbe::Schelln)",
+    
+    "Wenz" : "SRulesWenz",
+    "Eichel-Farbwenz" : "SRulesFarbwenz(EFarbe::Eichel)",
+    "Gras-Farbwenz" : "SRulesFarbwenz(EFarbe::Gras)",
+    "Herz-Farbwenz" : "SRulesFarbwenz(EFarbe::Herz)",
+    "Schelln-Farbwenz" : "SRulesFarbwenz(EFarbe::Schelln)",
+
+    "Geier" : "SRulesGeier",
+    "Eichel-Farbgeier" : "SRulesFarbgeier(EFarbe::Eichel)",
+    "Gras-Farbgeier" : "SRulesFarbgeier(EFarbe::Gras)",
+    "Herz-Farbgeier" : "SRulesFarbgeier(EFarbe::Herz)",
+    "Schelln-Farbgeier" : "SRulesFarbgeier(EFarbe::Schelln)",
+
+    "Ramscch" : "SRulesRamsch",
+}
+
 def OpenFileParseGame(strFile):
     with open(strFile) as fileHtml:
         soup = BeautifulSoup(fileHtml.read(), "html.parser")
         divplayers = soup.find(class_="players")
         vecdivplayer = divplayers.find_all("div")
         assert(4==len(vecdivplayer))
+        h1Game = soup.find(class_="game-name-title")
+        print(h1Game.contents[0])
         dictstreplayerindex = {}
         strDataUsername = "data-username"
         for eplayerindex, divplayer in enumerate(vecdivplayer):
@@ -51,5 +78,4 @@ vecstrFiles = sys.argv[1:]
 for strFile in vecstrFiles:
     print(strFile)
     OpenFileParseGame(strFile)
-
 
