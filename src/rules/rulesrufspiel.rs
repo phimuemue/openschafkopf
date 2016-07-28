@@ -52,16 +52,22 @@ impl TRules for SRulesRufspiel {
             .find(|&(_, card)| card==self.rufsau())
             .map(|(eplayerindex, _)| eplayerindex)
             .unwrap();
-        let b_player_party_wins = 
+        let n_points_player_party = 
             self.points_per_player(vecstich, self.m_eplayerindex)
-            + self.points_per_player(vecstich, eplayerindex_coplayer)
-            >= 61;
+            + self.points_per_player(vecstich, eplayerindex_coplayer);
+        let b_player_party_wins = n_points_player_party >= 61;
+        let b_schneider = if b_player_party_wins {
+            n_points_player_party>90
+        } else {
+            n_points_player_party<=30
+        };
         let ab_winner = create_playerindexmap(|eplayerindex| {
             (eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer) == b_player_party_wins
         });
         let n_laufende = STrumpfDeciderRufspiel::count_laufende(vecstich, &ab_winner);
         create_playerindexmap(|eplayerindex| {
-            (/*n_payout_rufspiel_default*/ 10 
+            (/*n_payout_rufspiel_default*/ 20 
+             + {if b_schneider {10} else {0}}
              + {if n_laufende<3 {0} else {n_laufende}} * 10
             ) * {
                 if ab_winner[eplayerindex] {
