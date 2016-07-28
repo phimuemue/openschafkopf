@@ -148,7 +148,6 @@ impl<'rules> SGame<'rules> {
             if 8==self.m_vecstich.len() { // TODO kurze Karte?
                 skui::logln("Game finished.");
                 skui::print_vecstich(&self.m_vecstich);
-                self.notify_game_listeners();
                 (self.m_vecstich.first().unwrap().first_player_index() + 1) % 4 // for next game
             } else {
                 // TODO: all players should have to acknowledge the current stich in some way
@@ -166,23 +165,15 @@ impl<'rules> SGame<'rules> {
                 skui::logln(&format!("Opening new stich starting at {}", eplayerindex_last_stich));
                 assert!(self.m_vecstich.is_empty() || 4==self.m_vecstich.last().unwrap().size());
                 self.m_vecstich.push(SStich::new(eplayerindex_last_stich));
-                self.notify_game_listeners();
-
-                self.notify_game_listeners();
                 eplayerindex_last_stich
             }
         } else {
-            self.notify_game_listeners();
             (eplayerindex + 1) % 4
         }
     }
 
     pub fn points_per_player(&self, eplayerindex: EPlayerIndex) -> isize {
         self.m_rules.points_per_player(&self.m_vecstich, eplayerindex)
-    }
-
-    fn notify_game_listeners(&self) {
-        // TODO: notify game listeners
     }
 
     pub fn payout(&self) -> [isize; 4] {
