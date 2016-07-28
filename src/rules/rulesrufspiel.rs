@@ -157,3 +157,28 @@ impl TRules for SRulesRufspiel {
     }
 
 }
+
+#[test]
+fn test_rulesrufspiel() {
+    use rules::test_rules::*;
+    test_rules(
+        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Eichel},
+        [
+            "eo gu hu ez gz g8 g7 sz",
+            "su hk h9 ea e7 g9 s9 s8",
+            "so eu ha h8 ek e9 sk s7",
+            "go ho hz h7 e8 ga gk sa",
+        ],
+        [
+            (0, "ez ea e9 e8"), 
+            (1, "h9 eu h7 hu"), 
+            (2, "sk sa sz s8"), 
+            (3, "ho eo hk h8"), 
+            (0, "gz g9 so ga"), 
+            (2, "ek hz gu e7"), 
+            (0, "g7 su s7 gk"), 
+            (1, "s9 ha go g8"), 
+        ],
+        [-20, 20, -20, 20],
+    );
+}

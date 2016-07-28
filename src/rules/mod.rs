@@ -136,3 +136,37 @@ pub fn compare_farbcards_same_color(card_fst: SCard, card_snd: SCard) -> Orderin
     }
 }
 
+#[cfg(test)]
+pub mod test_rules {
+    use rules;
+    use primitives::*;
+    pub fn test_rules(
+        rules: &rules::TRules,
+        astr_hand: [&str; 4],
+        vecpaireplayerindexstr_stich: [(EPlayerIndex, &str); 8],
+        an_payout: [isize; 4],
+    ) {
+        use game;
+        use util::cardvectorparser;
+        let mut game = game::SGame {
+            m_ahand : create_playerindexmap(|eplayerindex| {
+                SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex]).into_iter().collect())
+            }),
+            m_rules: rules,
+            m_vecstich: vec![SStich::new(0)], // TODO: parametrize w.r.t. eplayerindex_first
+        };
+        for (i_stich, &(eplayerindex_first_in_stich, str_stich)) in vecpaireplayerindexstr_stich.iter().enumerate() {
+            println!("Stich {}: {}", i_stich, str_stich);
+            assert_eq!(Some(eplayerindex_first_in_stich), game.which_player_can_do_something());
+            assert_eq!(4, cardvectorparser::parse_cards(str_stich).len());
+            for card in cardvectorparser::parse_cards(str_stich).into_iter() {
+                assert!(game.which_player_can_do_something().is_some());
+                let eplayerindex = game.which_player_can_do_something().unwrap();
+                println!("{}, {}", card, eplayerindex);
+                game.zugeben(card, eplayerindex);
+            }
+            println!("Stich {}: {}", i_stich, game.m_vecstich.last().unwrap());
+        }
+        assert_eq!(game.payout(), an_payout);
+    }
+}
