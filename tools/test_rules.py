@@ -39,8 +39,6 @@ def OpenFileParseGame(strFile):
         divplayers = soup.find(class_="players")
         vecdivplayer = divplayers.find_all("div")
         assert(4==len(vecdivplayer))
-        h1Game = soup.find(class_="game-name-title")
-        print(h1Game.contents[0])
         dictstreplayerindex = {}
         strDataUsername = "data-username"
         for eplayerindex, divplayer in enumerate(vecdivplayer):
@@ -53,6 +51,16 @@ def OpenFileParseGame(strFile):
             for spancard in vecspancard:
                 print(CardString(spancard["class"][3]), end=" ")
             print("")
+        h1Game = soup.find(class_="game-name-title").contents[0]
+        bGameFound = False
+        for strGame in dictstrstrGame:
+            if h1Game.startswith(strGame):
+                assert(not bGameFound)
+                bGameFound = True
+                strGameWithVon = strGame+" von "
+                assert(h1Game.startswith(strGameWithVon))
+                print(dictstreplayerindex[h1Game[len(strGameWithVon):]])
+                print(dictstrstrGame[strGame])
         for divtrickcontainer in soup.find_all(class_="content_full trick-container"):
             for divtricks in divtrickcontainer.find_all(class_="tricks"):
                 vecdivcard = divtricks.find_all("div")
