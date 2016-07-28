@@ -183,7 +183,7 @@ impl SSuspicion {
                 try!(file_output.write_all(&format!("{} | ", self.m_ahand[eplayerindex]).as_bytes()));
             }
             try!(file_output.write_all(b", min payouts: "));
-            for eplayerindex in 0..4 {
+            for _eplayerindex in 0..4 {
                 try!(file_output.write_all(&format!("TODO: payout").as_bytes()));
             }
             try!(file_output.write_all(b""));
