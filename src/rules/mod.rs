@@ -147,6 +147,7 @@ pub mod test_rules {
     use rules;
     use primitives::*;
     pub fn test_rules(
+        str_info: &str,
         rules: &rules::TRules,
         astr_hand: [&str; 4],
         vecpaireplayerindexstr_stich: [(EPlayerIndex, &str); 8],
@@ -154,6 +155,7 @@ pub mod test_rules {
     ) {
         use game;
         use util::cardvectorparser;
+        println!("Testing rules: {}", str_info);
         let mut game = game::SGame {
             m_ahand : create_playerindexmap(|eplayerindex| {
                 SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex]).into_iter().collect())
@@ -171,7 +173,9 @@ pub mod test_rules {
                 println!("{}, {}", card, eplayerindex);
                 game.zugeben(card, eplayerindex);
             }
-            println!("Stich {}: {}", i_stich, game.m_vecstich.last().unwrap());
+        }
+        for (i_stich, stich) in game.m_vecstich.iter().enumerate() {
+            println!("Stich {}: {}", i_stich, stich);
         }
         assert_eq!(game.payout(), an_payout);
     }
