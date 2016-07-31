@@ -82,7 +82,7 @@ impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCor
 }
 
 macro_rules! generate_sololike {
-    ($eplayerindex: ident, $coretype: ty, $rulename: expr) => {
+    ($eplayerindex: expr, $coretype: ty, $rulename: expr) => {
         Box::new(SRulesActiveSinglePlay::<$coretype> {
             m_eplayerindex: $eplayerindex,
             m_core: PhantomData::<$coretype>,
