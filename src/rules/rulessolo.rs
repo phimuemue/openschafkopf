@@ -34,13 +34,36 @@ impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCor
 
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
         assert_eq!(vecstich.len(), 8);
-        let b_active_player_wins = self.points_per_player(vecstich, self.m_eplayerindex)>=61;
+        let n_player_points = self.points_per_player(vecstich, self.m_eplayerindex);
+        let b_active_player_wins = n_player_points>=61;
+        let eschneiderschwarz = if b_active_player_wins {
+            if vecstich.iter().all(|stich| self.m_eplayerindex==self.winner_index(stich)) {
+                ESchneiderSchwarz::Schwarz
+            } else if n_player_points>90 {
+                ESchneiderSchwarz::Schneider
+            } else {
+                ESchneiderSchwarz::Nothing
+            }
+        } else {
+            if !vecstich.iter().any(|stich| self.m_eplayerindex==self.winner_index(stich)) {
+                ESchneiderSchwarz::Schwarz
+            } else if n_player_points<=30 {
+                ESchneiderSchwarz::Schneider
+            } else {
+                ESchneiderSchwarz::Nothing
+            }
+        };
         let ab_winner = create_playerindexmap(|eplayerindex| {
             (eplayerindex==self.m_eplayerindex) == b_active_player_wins
         });
         let n_laufende = ActiveSinglePlayCore::count_laufende(vecstich, &ab_winner);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_solo*/ 50
+             + { match eschneiderschwarz {
+                 ESchneiderSchwarz::Nothing => 0,
+                 ESchneiderSchwarz::Schneider => 10,
+                 ESchneiderSchwarz::Schwarz => 20,
+             }}
              + {if n_laufende<3 {0} else {n_laufende}} * 10
             ) * {
                 if ab_winner[eplayerindex] {

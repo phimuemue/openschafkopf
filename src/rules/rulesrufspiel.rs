@@ -56,10 +56,22 @@ impl TRules for SRulesRufspiel {
             self.points_per_player(vecstich, self.m_eplayerindex)
             + self.points_per_player(vecstich, eplayerindex_coplayer);
         let b_player_party_wins = n_points_player_party >= 61;
-        let b_schneider = if b_player_party_wins {
-            n_points_player_party>90
+        let eschneiderschwarz = if b_player_party_wins {
+            if vecstich.iter().all(|stich| eplayerindex_coplayer==self.winner_index(stich) || self.m_eplayerindex==self.winner_index(stich)) {
+                ESchneiderSchwarz::Schwarz
+            } else if n_points_player_party>90 {
+                ESchneiderSchwarz::Schneider
+            } else {
+                ESchneiderSchwarz::Nothing
+            }
         } else {
-            n_points_player_party<=30
+            if !vecstich.iter().any(|stich| eplayerindex_coplayer==self.winner_index(stich) || self.m_eplayerindex==self.winner_index(stich)) {
+                ESchneiderSchwarz::Schwarz
+            } else if n_points_player_party<=30 {
+                ESchneiderSchwarz::Schneider
+            } else {
+                ESchneiderSchwarz::Nothing
+            }
         };
         let ab_winner = create_playerindexmap(|eplayerindex| {
             (eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer) == b_player_party_wins
@@ -67,7 +79,11 @@ impl TRules for SRulesRufspiel {
         let n_laufende = STrumpfDeciderRufspiel::count_laufende(vecstich, &ab_winner);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_rufspiel_default*/ 20 
-             + {if b_schneider {10} else {0}}
+             + { match eschneiderschwarz {
+                 ESchneiderSchwarz::Nothing => 0,
+                 ESchneiderSchwarz::Schneider => 10,
+                 ESchneiderSchwarz::Schwarz => 20,
+             }}
              + {if n_laufende<3 {0} else {n_laufende}} * 10
             ) * {
                 if ab_winner[eplayerindex] {

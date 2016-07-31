@@ -14,6 +14,12 @@ pub enum VTrumpfOrFarbe {
     Farbe (EFarbe),
 }
 
+pub enum ESchneiderSchwarz {
+    Nothing,
+    Schneider,
+    Schwarz,
+}
+
 pub trait TRules : fmt::Display {
 
     fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe;
