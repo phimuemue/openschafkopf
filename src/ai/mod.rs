@@ -256,7 +256,39 @@ impl TAi for SAiSimulating {
                             b_valid
                         })
                 }
-                // TODO: hand in connection with vecstich_complete_immutable must be compatibel with rules
+                && {
+                    assert!(vecstich_complete_immutable.iter().all(|stich| 4==stich.size()));
+                    let n_hand_size = ahand[0].cards().len();
+                    assert!(ahand.iter().all(|hand| n_hand_size==hand.cards().len()));
+                    let mut ahand_simulate = create_playerindexmap(|eplayerindex| {
+                        ahand[eplayerindex].clone()
+                    });
+                    for stich in vecstich_complete_immutable.iter().rev() {
+                        for eplayerindex in 0..4 {
+                            ahand_simulate[eplayerindex].cards_mut().push(stich[eplayerindex]);
+                        }
+                    }
+                    let mut vecstich_simulate = Vec::new();
+                    let mut b_valid_up_to_now = true;
+                    'loopstich: for stich in vecstich_complete_immutable.iter() {
+                        vecstich_simulate.push(SStich::new(stich.m_eplayerindex_first));
+                        for (eplayerindex, card) in stich.indices_and_cards() {
+                            if game.m_rules.card_is_allowed(
+                                &vecstich_simulate,
+                                &ahand_simulate[eplayerindex],
+                                card
+                            ) {
+                                assert!(ahand_simulate[eplayerindex].contains(card));
+                                ahand_simulate[eplayerindex].play_card(card);
+                                vecstich_simulate.last_mut().unwrap().zugeben(card);
+                            } else {
+                                b_valid_up_to_now = false;
+                                break 'loopstich;
+                            }
+                        }
+                    }
+                    b_valid_up_to_now
+                }
             })
             .take(n_tests)
             .map(|ahand| suspicion_from_hands_respecting_stich_current(
