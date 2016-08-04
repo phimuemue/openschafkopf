@@ -241,39 +241,22 @@ impl TAi for SAiSimulating {
                 // hands must contain respective cards from stich_current...
                 stich_current.indices_and_cards()
                     .all(|(eplayerindex, card)| ahand[eplayerindex].contains(card))
+                // ... and must not contain other cards preventing farbe/trumpf frei
                 && {
-                    // ... and must conform to cards played up to now
-                    let mut aveccard = create_playerindexmap(|eplayerindex| {
-                        ahand[eplayerindex].cards().clone()
-                    });
-                    for stich in game.m_vecstich.iter().rev() {
-                        for (eplayerindex, card) in stich.indices_and_cards() {
-                            aveccard[eplayerindex].push(card);
-                        }
-                    };
-                    let mut ahand_simulate = create_playerindexmap(|eplayerindex| {
-                        SHand::new_from_vec(aveccard[eplayerindex].clone()) // TODO map for playerindexmap
-                    });
-                    let mut b_all_cards_up_to_now_valid = true;
-                    let mut vecstich_simulate = Vec::new();
-                    'loopstich: for stich in game.m_vecstich.iter() {
-                        vecstich_simulate.push(SStich::new(stich.first_player_index()));
-                        for (eplayerindex, card) in stich.indices_and_cards() {
-                            if game.m_rules.card_is_allowed(
-                                &vecstich_simulate,
-                                &ahand_simulate[eplayerindex],
-                                card
-                            ) {
-                                assert!(*ahand_simulate[eplayerindex].cards().last().unwrap()==card);
-                                ahand_simulate[eplayerindex].cards_mut().pop();
-                            } else {
-                                b_all_cards_up_to_now_valid = false;
-                                break 'loopstich;
-                            }
-                        }
-                    }
-                    b_all_cards_up_to_now_valid
+                    let mut vecstich_complete_and_current_stich = vecstich_complete_immutable.clone();
+                    vecstich_complete_and_current_stich.push(SStich::new(stich_current.first_player_index()));
+                    stich_current.indices_and_cards()
+                        .all(|(eplayerindex, card_played)| {
+                            let b_valid = game.m_rules.card_is_allowed(
+                                &vecstich_complete_and_current_stich,
+                                &ahand[eplayerindex],
+                                card_played
+                            );
+                            vecstich_complete_and_current_stich.last_mut().unwrap().zugeben(card_played);
+                            b_valid
+                        })
                 }
+                // TODO: hand in connection with vecstich_complete_immutable must be compatibel with rules
             })
             .take(n_tests)
             .map(|ahand| suspicion_from_hands_respecting_stich_current(
