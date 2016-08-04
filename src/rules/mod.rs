@@ -20,6 +20,43 @@ pub enum ESchneiderSchwarz {
     Schwarz,
 }
 
+pub fn points_to_schneiderschwarz_and_winners<FnIsPlayerParty, Rules>(
+    vecstich: &Vec<SStich>,
+    rules: &Rules,
+    fn_is_player_party: FnIsPlayerParty,
+) -> (ESchneiderSchwarz, [bool; 4])
+    where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
+          Rules: TRules,
+{
+    assert_eq!(vecstich.len(), 8);
+    let n_points_player_party = vecstich.iter()
+        .filter(|stich| fn_is_player_party(rules.winner_index(stich)))
+        .fold(0, |n_points, stich| n_points + rules.points_stich(stich));
+    let b_player_party_wins = n_points_player_party>=61;
+    (
+        if b_player_party_wins {
+            if vecstich.iter().all(|stich| fn_is_player_party(rules.winner_index(stich))) {
+                ESchneiderSchwarz::Schwarz
+            } else if n_points_player_party>90 {
+                ESchneiderSchwarz::Schneider
+            } else {
+                ESchneiderSchwarz::Nothing
+            }
+        } else {
+            if vecstich.iter().all(|stich| !fn_is_player_party(rules.winner_index(stich))) {
+                ESchneiderSchwarz::Schwarz
+            } else if n_points_player_party<=30 {
+                ESchneiderSchwarz::Schneider
+            } else {
+                ESchneiderSchwarz::Nothing
+            }
+        },
+        create_playerindexmap(|eplayerindex| {
+            fn_is_player_party(eplayerindex)==b_player_party_wins
+        })
+    )
+}
+
 pub trait TRules : fmt::Display {
 
     fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe;
