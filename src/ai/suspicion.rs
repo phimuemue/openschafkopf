@@ -12,6 +12,12 @@ pub struct SSuspicionTransition {
     m_susp : SSuspicion,
 }
 
+pub fn assert_ahand_same_size(ahand: &[SHand; 4]) {
+    let n_len_hand = ahand[0].cards().len();
+    assert!(ahand.iter().all(|hand| hand.cards().len()==n_len_hand));
+}
+
+
 pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<SStich>, stich: SStich, func: Func) -> R
     where Func: FnOnce(&mut Vec<SStich>) -> R
 {
@@ -117,9 +123,7 @@ impl SSuspicion {
     }
 
     fn hand_size(&self) -> usize {
-        assert_eq!(self.m_ahand[0].cards().len(), self.m_ahand[1].cards().len());
-        assert_eq!(self.m_ahand[0].cards().len(), self.m_ahand[2].cards().len());
-        assert_eq!(self.m_ahand[0].cards().len(), self.m_ahand[3].cards().len());
+        assert_ahand_same_size(&self.m_ahand);
         self.m_ahand[0].cards().len()
     }
 

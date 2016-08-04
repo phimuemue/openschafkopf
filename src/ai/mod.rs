@@ -51,8 +51,8 @@ struct SForeverRandHands {
 impl Iterator for SForeverRandHands {
     type Item = [SHand; 4];
     fn next(&mut self) -> Option<[SHand; 4]> {
+        assert_ahand_same_size(&self.m_ahand);
         let n_len_hand = self.m_ahand[0].cards().len();
-        assert!(self.m_ahand.iter().all(|hand| hand.cards().len()==n_len_hand));
         let mut rng = rand::thread_rng();
         for i_card in 0..3*n_len_hand {
             let i_rand = rng.gen_range(0, 3*n_len_hand - i_card);
@@ -116,8 +116,7 @@ fn suspicion_from_hands_respecting_stich_current(
     stich_current: &SStich,
     n_branches: usize
 ) -> SSuspicion {
-    let n_hand_len = ahand[0].cards().len();
-    assert!(ahand.iter().all(|hand| hand.cards().len()==n_hand_len));
+    assert_ahand_same_size(&ahand);
     let mut susp = SSuspicion::new_from_raw(stich_current.first_player_index(), ahand);
     let n_stich_complete = vecstich_complete_mut.len();
     susp.compute_successors(
@@ -258,8 +257,7 @@ impl TAi for SAiSimulating {
                 }
                 && {
                     assert!(vecstich_complete_immutable.iter().all(|stich| 4==stich.size()));
-                    let n_hand_size = ahand[0].cards().len();
-                    assert!(ahand.iter().all(|hand| n_hand_size==hand.cards().len()));
+                    assert_ahand_same_size(ahand);
                     let mut ahand_simulate = create_playerindexmap(|eplayerindex| {
                         ahand[eplayerindex].clone()
                     });
