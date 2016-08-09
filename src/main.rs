@@ -164,12 +164,21 @@ fn main() {
     ];
     let mut accountbalance = SAccountBalance::new();
     for i_game in 0..clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4) {
-        let ogame = {
-            let gameprep = SGamePreparations::new(&ruleset);
-            skui::logln(&format!("Hand 0 : {}", gameprep.m_ahand[0]));
-            gameprep.start_game(i_game % 4, &vecplayer)
-        };
-        if let Some(mut game)=ogame {
+        let mut gamepreparations = SGamePreparations::new(
+            &ruleset,
+            /*eplayerindex_first*/i_game % 4,
+        );
+        while let Some(eplayerindex) = gamepreparations.which_player_can_do_something() {
+            skui::logln(&format!("Asking player {} for game", eplayerindex));
+            let orules = vecplayer[eplayerindex].ask_for_game(
+                &gamepreparations.m_ahand[eplayerindex],
+                &gamepreparations.m_vecgameannouncement,
+                &gamepreparations.m_ruleset.m_avecrulegroup[eplayerindex]
+            );
+            gamepreparations.announce_game(eplayerindex, orules);
+        }
+        skui::logln("Asked players if they want to play. Determining rules");
+        if let Some(mut game) = gamepreparations.determine_rules() {
             while let Some(eplayerindex)=game.which_player_can_do_something() {
                 let (txcard, rxcard) = mpsc::channel::<SCard>();
                 vecplayer[eplayerindex].take_control(

@@ -4,14 +4,15 @@ pub use self::accountbalance::*;
 use primitives::*;
 use rules::*;
 use rules::ruleset::*;
-use player::*;
 use skui;
 
 use rand::{self, Rng};
 
 pub struct SGamePreparations<'rules> {
     pub m_ahand : [SHand; 4],
-    m_ruleset : &'rules SRuleSet,
+    pub m_ruleset : &'rules SRuleSet,
+    m_eplayerindex_first : EPlayerIndex,
+    pub m_vecgameannouncement : Vec<SGameAnnouncement<'rules>>,
 }
 
 pub fn random_hand(n_size: usize, vecocard : &mut Vec<Option<SCard>>) -> SHand {
@@ -42,45 +43,48 @@ pub fn random_hands() -> [SHand; 4] {
 }
 
 impl<'rules> SGamePreparations<'rules> {
-    pub fn new(ruleset : &'rules SRuleSet) -> SGamePreparations<'rules> {
+    pub fn new(ruleset : &'rules SRuleSet, eplayerindex_first: EPlayerIndex) -> SGamePreparations<'rules> {
         SGamePreparations {
-            m_ahand : random_hands(),
+            m_ahand : {
+                let ahand = random_hands();
+                skui::logln("Preparing game");
+                for hand in ahand.iter() {
+                    skui::log(&format!("{} |", hand));
+                }
+                skui::logln("");
+                ahand
+            },
             m_ruleset : ruleset,
+            m_eplayerindex_first : eplayerindex_first,
+            m_vecgameannouncement : Vec::new(),
         }
     }
 
-    // TODO: extend return value to support stock, etc.
-    // TODO: eliminate vecplayer and substitute start_game by which_player_can_do_something (similar to SGame)
-    pub fn start_game<'players>(self, eplayerindex_first : EPlayerIndex, vecplayer: &Vec<Box<TPlayer+'players>>) -> Option<SGame<'rules>> {
-        // prepare
-        skui::logln("Preparing game");
-        for hand in self.m_ahand.iter() {
-            skui::log(&format!("{} |", hand));
+    pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
+        if self.m_vecgameannouncement.len() == 4 {
+            return None;
+        } else {
+            return Some((self.m_eplayerindex_first + self.m_vecgameannouncement.len()) % 4);
         }
-        skui::logln("");
+    }
 
-        // decide which game is played
-        skui::logln("Asking players if they want to play");
-        let mut vecgameannouncement : Vec<SGameAnnouncement> = Vec::new();
-        for eplayerindex in (eplayerindex_first..eplayerindex_first+4).map(|eplayerindex| eplayerindex%4) {
-            let orules = vecplayer[eplayerindex].ask_for_game(
-                &self.m_ahand[eplayerindex],
-                &vecgameannouncement,
-                &self.m_ruleset.m_avecrulegroup[eplayerindex]
-            );
-            assert!(orules.as_ref().map_or(true, |rules| eplayerindex==rules.playerindex().unwrap()));
-            vecgameannouncement.push(SGameAnnouncement{
-                m_eplayerindex : eplayerindex, 
-                m_opairrulespriority : orules.map(|rules| (
-                    rules,
-                    0 // priority, TODO determine priority
-                )),
-            });
-        }
-        skui::logln("Asked players if they want to play. Determining rules");
+    pub fn announce_game(&mut self, eplayerindex: EPlayerIndex, orules: Option<&'rules TRules>) { // TODO return value: Result<(), Err> or similar
+        assert_eq!(eplayerindex, self.which_player_can_do_something().unwrap());
+        assert!(orules.as_ref().map_or(true, |rules| eplayerindex==rules.playerindex().unwrap()));
+        self.m_vecgameannouncement.push(SGameAnnouncement{
+            m_eplayerindex : eplayerindex,
+            m_opairrulespriority : orules.map(|rules| (
+                rules,
+                0 // priority, TODO determine priority
+            )),
+        });
+        assert!(!self.m_vecgameannouncement.is_empty());
+    }
+
+    // TODO: extend return value to support stock, etc.
+    pub fn determine_rules<'players>(self) -> Option<SGame<'rules>> {
         // TODO: find sensible way to deal with multiple game announcements (currently, we choose highest priority)
-        assert!(!vecgameannouncement.is_empty());
-        let orules_actively_played = vecgameannouncement.iter()
+        let orules_actively_played = self.m_vecgameannouncement.iter()
             .map(|gameannouncement| gameannouncement.m_opairrulespriority)
             .max_by_key(|opairrulespriority| opairrulespriority.map(|(_orules, priority)| priority)) 
             .unwrap()
@@ -88,7 +92,8 @@ impl<'rules> SGamePreparations<'rules> {
                 assert!(rules.playerindex().is_some());
                 rules
             });
-        let create_game = |ahand, rules| {
+        let eplayerindex_first = self.m_eplayerindex_first;
+        let create_game = move |ahand, rules| {
             Some(SGame {
                 m_ahand : ahand,
                 m_rules : rules,
