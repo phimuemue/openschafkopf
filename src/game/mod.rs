@@ -141,7 +141,6 @@ impl<'rules> SGame<'rules> {
 
     pub fn zugeben(&mut self, card_played: SCard, eplayerindex: EPlayerIndex) -> Result<(), &'static str> {
         // returns the EPlayerIndex of the player who is the next in row to do something
-        // TODO: how to cope with finished game?
         skui::logln(&format!("Player {} wants to play {}", eplayerindex, card_played));
         if Some(eplayerindex)!=self.which_player_can_do_something() {
             return Err("Wrong player index");
@@ -191,6 +190,7 @@ impl<'rules> SGame<'rules> {
     }
 
     pub fn payout(&self) -> [isize; 4] {
+        assert!(self.which_player_can_do_something().is_none());
         self.m_rules.payout(&self.m_vecstich)
     }
 }
