@@ -68,9 +68,13 @@ impl<'rules> SGamePreparations<'rules> {
         }
     }
 
-    pub fn announce_game(&mut self, eplayerindex: EPlayerIndex, orules: Option<&'rules TRules>) { // TODO return value: Result<(), Err> or similar
-        assert_eq!(eplayerindex, self.which_player_can_do_something().unwrap());
-        assert!(orules.as_ref().map_or(true, |rules| eplayerindex==rules.playerindex().unwrap()));
+    pub fn announce_game(&mut self, eplayerindex: EPlayerIndex, orules: Option<&'rules TRules>) -> Result<(), &'static str> {
+        if Some(eplayerindex)!=self.which_player_can_do_something() {
+            return Err("Wrong player index");
+        }
+        if orules.map_or(false, |rules| Some(eplayerindex)!=rules.playerindex()) {
+            return Err("Only actively playable rules can be announced");
+        }
         self.m_vecgameannouncement.push(SGameAnnouncement{
             m_eplayerindex : eplayerindex,
             m_opairrulespriority : orules.map(|rules| (
@@ -79,6 +83,7 @@ impl<'rules> SGamePreparations<'rules> {
             )),
         });
         assert!(!self.m_vecgameannouncement.is_empty());
+        Ok(())
     }
 
     // TODO: extend return value to support stock, etc.

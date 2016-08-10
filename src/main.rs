@@ -175,7 +175,7 @@ fn main() {
                 &gamepreparations.m_vecgameannouncement,
                 &gamepreparations.m_ruleset.m_avecrulegroup[eplayerindex]
             );
-            gamepreparations.announce_game(eplayerindex, orules);
+            gamepreparations.announce_game(eplayerindex, orules).unwrap();
         }
         skui::logln("Asked players if they want to play. Determining rules");
         if let Some(mut game) = gamepreparations.determine_rules() {
