@@ -122,7 +122,6 @@ impl SStich {
 
 impl fmt::Display for SStich {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // TODO: more elegance!
         for eplayerindex in 0..4 {
             if eplayerindex==self.m_eplayerindex_first {
                 try!(write!(f, ">"));
