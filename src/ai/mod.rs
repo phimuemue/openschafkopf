@@ -9,6 +9,7 @@ use rand::{self, Rng};
 use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::fs;
+use std::mem;
 
 pub trait TAi {
     fn rank_rules(&self, hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
@@ -16,12 +17,8 @@ pub trait TAi {
 }
 
 pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
-    let vecstich_sample = rand::sample(&mut rand::thread_rng(), vecstich.iter().cloned(), n_size);
-    // TODO can't we just assign to vecstich?
-    vecstich.clear();
-    for stich in vecstich_sample.into_iter() {
-        vecstich.push(stich.clone())
-    }
+    let mut vecstich_sample = rand::sample(&mut rand::thread_rng(), vecstich.iter().cloned(), n_size);
+    mem::swap(vecstich, &mut vecstich_sample);
 }
 
 pub fn unplayed_cards(vecstich: &Vec<SStich>, hand_fixed: &SHand) -> Vec<Option<SCard>> {
