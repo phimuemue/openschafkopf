@@ -125,14 +125,6 @@ impl SCard {
         .map(|(efarbe, eschlag)| SCard::new(*efarbe, *eschlag))
         .collect()
     }
-
-    // TODO: inspect if those are really needed and remove if necessary
-    // fn image_filename(&self) -> String {
-    //     return format!("../img/{}.png", self)
-    // }
-    // fn image_size() -> (i32, i32) {
-    //     (114, 201)
-    // }
 }
 
 impl quickcheck::Arbitrary for SCard {
