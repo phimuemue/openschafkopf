@@ -186,7 +186,7 @@ fn main() {
                     txcard.clone()
                 );
                 let card_played = rxcard.recv().unwrap();
-                game.zugeben(card_played, eplayerindex);
+                game.zugeben(card_played, eplayerindex).unwrap();
             }
             skui::logln("Results");
             for eplayerindex in 0..4 {

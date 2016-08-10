@@ -208,7 +208,7 @@ pub mod test_rules {
                 assert!(game.which_player_can_do_something().is_some());
                 let eplayerindex = game.which_player_can_do_something().unwrap();
                 println!("{}, {}", card, eplayerindex);
-                game.zugeben(card, eplayerindex);
+                game.zugeben(card, eplayerindex).unwrap();
             }
         }
         for (i_stich, stich) in game.m_vecstich.iter().enumerate() {

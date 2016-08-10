@@ -134,12 +134,16 @@ impl<'rules> SGame<'rules> {
         }
     }
 
-    pub fn zugeben(&mut self, card_played: SCard, eplayerindex: EPlayerIndex) -> EPlayerIndex { // TODO: should invalid inputs be indicated by return value?
+    pub fn zugeben(&mut self, card_played: SCard, eplayerindex: EPlayerIndex) -> Result<(), &'static str> {
         // returns the EPlayerIndex of the player who is the next in row to do something
         // TODO: how to cope with finished game?
         skui::logln(&format!("Player {} wants to play {}", eplayerindex, card_played));
-        assert_eq!(eplayerindex, self.which_player_can_do_something().unwrap());
-        assert!(self.m_ahand[eplayerindex].contains(card_played));
+        if Some(eplayerindex)!=self.which_player_can_do_something() {
+            return Err("Wrong player index");
+        }
+        if !self.m_ahand[eplayerindex].contains(card_played) {
+            return Err("card not contained in player's hand");
+        }
         {
             let ref mut hand = self.m_ahand[eplayerindex];
             assert!(self.m_rules.card_is_allowed(&self.m_vecstich, hand, card_played));
@@ -153,7 +157,7 @@ impl<'rules> SGame<'rules> {
             if 8==self.m_vecstich.len() { // TODO kurze Karte?
                 skui::logln("Game finished.");
                 skui::print_vecstich(&self.m_vecstich);
-                (self.m_vecstich.first().unwrap().first_player_index() + 1) % 4 // for next game
+                Ok(())
             } else {
                 // TODO: all players should have to acknowledge the current stich in some way
                 let eplayerindex_last_stich = {
@@ -170,10 +174,10 @@ impl<'rules> SGame<'rules> {
                 skui::logln(&format!("Opening new stich starting at {}", eplayerindex_last_stich));
                 assert!(self.m_vecstich.is_empty() || 4==self.m_vecstich.last().unwrap().size());
                 self.m_vecstich.push(SStich::new(eplayerindex_last_stich));
-                eplayerindex_last_stich
+                Ok(())
             }
         } else {
-            (eplayerindex + 1) % 4
+            Ok(())
         }
     }
 
