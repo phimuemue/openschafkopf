@@ -145,20 +145,32 @@ impl fmt::Display for SStich {
 
 #[test]
 fn test_stich() {
-    // TODO: use quicktest or similar and check proper retrieval
-    for eplayerindex in 0..4 {
-        let mut stich = SStich::new(eplayerindex);
-        for i_size in 0..4 {
-            stich.zugeben(SCard::new(EFarbe::Eichel, ESchlag::S7));
-            assert_eq!(stich.size(), i_size+1);
+    // TODO? use quicktest or similar
+    {
+        use util::cardvectorparser;
+        let veccard = cardvectorparser::parse_cards("e7 e8 e9 ek");
+        for eplayerindex_first in 0..4 {
+            for n_size in 0..5 {
+                let mut stich = SStich::new(eplayerindex_first);
+                for i_card in 0..n_size {
+                    stich.zugeben(veccard[i_card]);
+                }
+                assert_eq!(stich.size(), n_size);
+                assert_eq!(stich.first_player_index(), eplayerindex_first);
+                assert_eq!(stich.size(), stich.indices_and_cards().count());
+                for (eplayerindex, card) in stich.indices_and_cards() {
+                    assert_eq!(stich.get(eplayerindex), Some(card));
+                    assert_eq!(stich[eplayerindex], card);
+                }
+            }
         }
-        assert_eq!(stich.first_player_index(), eplayerindex);
     }
-
-    let mut stich = SStich::new(2);
-    stich.zugeben(SCard::new(EFarbe::Eichel, ESchlag::Unter));
-    stich.zugeben(SCard::new(EFarbe::Gras, ESchlag::S7));
-    assert!(stich[2]==SCard::new(EFarbe::Eichel, ESchlag::Unter));
-    assert!(stich[3]==SCard::new(EFarbe::Gras, ESchlag::S7));
-    assert_eq!(stich.indices_and_cards().count(), 2);
+    {
+        let mut stich = SStich::new(2);
+        stich.zugeben(SCard::new(EFarbe::Eichel, ESchlag::Unter));
+        stich.zugeben(SCard::new(EFarbe::Gras, ESchlag::S7));
+        assert!(stich[2]==SCard::new(EFarbe::Eichel, ESchlag::Unter));
+        assert!(stich[3]==SCard::new(EFarbe::Gras, ESchlag::S7));
+        assert_eq!(stich.indices_and_cards().count(), 2);
+    }
 }
