@@ -44,6 +44,8 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
         file.write_all(b"solo\n").unwrap();
         file.write_all(b"farbwenz\n").unwrap();
         file.write_all(b"wenz\n").unwrap();
+        file.write_all(b"farbgeier\n").unwrap();
+        file.write_all(b"geier\n").unwrap();
     }
     let setstr_rule_name = {
         assert!(path.exists()); 
@@ -72,6 +74,10 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
                         create_rulegroup("Farbwenz", all_rulesfarbwenz(eplayerindex))
                     } else if str_l=="wenz" {
                         create_rulegroup("Wenz", all_ruleswenz(eplayerindex))
+                    } else if str_l=="farbgeier" {
+                        create_rulegroup("Farbgeier", all_rulesfarbgeier(eplayerindex))
+                    } else if str_l=="geier" {
+                        create_rulegroup("geier", all_rulesgeier(eplayerindex))
                     } else {
                         None
                     }

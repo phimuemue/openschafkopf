@@ -134,6 +134,11 @@ pub type SCoreFarbwenz<TrumpfFarbDecider> = STrumpfDeciderSchlag<
 
 generate_sololike_farbe_and_farblos!(SCoreFarbwenz, "Wenz", all_rulesfarbwenz, all_ruleswenz);
 
+pub type SCoreFarbgeier<TrumpfFarbDecider> = STrumpfDeciderSchlag<
+    SSchlagDesignatorOber, TrumpfFarbDecider>;
+
+generate_sololike_farbe_and_farblos!(SCoreFarbgeier, "Geier", all_rulesfarbgeier, all_rulesgeier);
+
 #[test]
 fn test_rulessolo() {
     use rules::test_rules::*;
