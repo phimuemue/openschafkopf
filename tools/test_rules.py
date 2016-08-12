@@ -15,10 +15,10 @@ dictstrfnGame = {
     #"Sauspiel auf die Blaue" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Gras}"%(eplayerindex),
     #"Sauspiel auf die Hundsgfickte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln}"%(eplayerindex),
 
-    "Eichel-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<SFarbeDesignatorEichel>, \"Eichel-Solo\")"%(eplayerindex),
-    "Gras-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<SFarbeDesignatorGras>, \"Gras-Solo\")"%(eplayerindex),
-    "Herz-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<SFarbeDesignatorHerz>, \"Herz-Solo\")"%(eplayerindex),
-    "Schelln-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<SFarbeDesignatorSchelln>, \"Schelln-Solo\")"%(eplayerindex),
+    "Eichel-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, \"Eichel-Solo\")"%(eplayerindex),
+    "Gras-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, \"Gras-Solo\")"%(eplayerindex),
+    "Herz-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, \"Herz-Solo\")"%(eplayerindex),
+    "Schelln-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, \"Schelln-Solo\")"%(eplayerindex),
 
     #"Wenz" : lambda eplayerindex: "SRulesWenz"%(eplayerindex),
     #"Eichel-Wenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreFarbwenz<SFarbeDesignatorEichel>), \"Eichel-Wenz\""%(eplayerindex),
