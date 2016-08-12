@@ -59,6 +59,7 @@ impl<'stich> Iterator for StichIterator<'stich> {
 impl Index<EPlayerIndex> for SStich {
     type Output = SCard;
     fn index<'a>(&'a self, eplayerindex : EPlayerIndex) -> &'a SCard {
+        assert!(self.valid_index(eplayerindex));
         &self.m_acard[eplayerindex]
     }
 }
@@ -109,14 +110,19 @@ impl SStich {
             m_stich: self
         }
     }
-    pub fn get(&self, eplayerindex: EPlayerIndex) -> Option<SCard> {
-        // TODO: more elegance!
-        for (eplayerindex_in_stich, card) in self.indices_and_cards() {
-            if eplayerindex==eplayerindex_in_stich {
-                return Some(card);
-            }
+    fn valid_index(&self, eplayerindex: EPlayerIndex) -> bool {
+        if eplayerindex >= self.m_eplayerindex_first {
+            self.m_n_size > eplayerindex-self.m_eplayerindex_first
+        } else {
+            self.m_n_size > 4-self.m_eplayerindex_first+eplayerindex
         }
-        None
+    }
+    pub fn get(&self, eplayerindex: EPlayerIndex) -> Option<SCard> {
+        if self.valid_index(eplayerindex) {
+            Some(self.m_acard[eplayerindex])
+        } else {
+            None
+        }
     }
 }
 
