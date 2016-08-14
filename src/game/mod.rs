@@ -133,9 +133,7 @@ impl<'rules> SGame<'rules> {
         if 8==self.m_vecstich.len() && 4==self.m_vecstich.last().unwrap().size() {
             None
         } else {
-            Some(
-                (self.m_vecstich.last().unwrap().first_player_index() + self.m_vecstich.last().unwrap().size() ) % 4
-            )
+            Some(self.m_vecstich.last().unwrap().current_player_index())
         }
     }
 
