@@ -140,6 +140,68 @@ pub type SCoreGenericGeier<TrumpfFarbDecider> = STrumpfDeciderSchlag<
 generate_sololike_farbe_and_farblos!(SCoreGenericGeier, "Geier", all_rulesfarbgeier, all_rulesgeier);
 
 #[test]
+fn test_ruleswenz() {
+    use rules::test_rules::*;
+    //"../../testdata/games/wenz/1.html", // TODO kurze Karte
+    test_rules(
+        "../../testdata/games/wenz/6.html",
+        &*generate_sololike!(3, SCoreGenericWenz<STrumpfDeciderNoTrumpf>, "Wenz"),
+        ["ek e8 e7 gz g9 hk sz so","eu hu gk go g8 ho h7 s8","gu su ez eo h9 h8 sk s7","ea e9 ga g7 ha hz sa s9",],
+        [(0, "hk h7 h8 ha"),(3, "sa so s8 s7"),(3, "ga g9 g8 su"),(2, "sk s9 sz ho"),(0, "gz go h9 g7"),(0, "ek gk eo ea"),(3, "hz e7 hu ez"),(1, "eu gu e9 e8"),],
+        [90, 90, 90, -270], // TODO: Doppeln
+    );
+    test_rules(
+        "../../testdata/games/wenz/3.html",
+        &*generate_sololike!(1, SCoreGenericWenz<STrumpfDeciderNoTrumpf>, "Wenz"),
+        ["eo e9 gz g7 ho h7 sz s9","eu gu hu ek ga go hk sa","su ez gk ha h9 h8 sk s7","ea e8 e7 g9 g8 hz so s8",],
+        [(0, "eo ek ez ea"),(3, "g9 g7 go gk"),(2, "ha hz ho hk"),(2, "h9 so h7 hu"),(1, "gu su s8 e9"),(1, "eu h8 g8 gz"),(1, "ga s7 e7 s9"),(1, "sa sk e8 sz"),],
+        [80, -240, 80, 80],
+    );
+    test_rules(
+        "../../testdata/games/wenz/7.html",
+        &*generate_sololike!(2, SCoreGenericWenz<STrumpfDeciderNoTrumpf>, "Wenz"),
+        ["ez ek gk go ho h9 sz s7","gu eo g8 g7 hz h8 so s8","ea e9 e8 ga g9 ha h7 sa","eu hu su e7 gz hk sk s9",],
+        [(0, "ek eo ea e7"),(2, "sa s9 s7 s8"),(2, "ha hk h9 h8"),(2, "ga gz go g7"),(2, "h7 su ho hz"),(3, "eu sz gu g9"),(3, "hu ez so e8"),(3, "sk gk g8 e9"),],
+        [-90, -90, 270, -90],
+    );
+    test_rules(
+        "../../testdata/games/wenz/8.html",
+        &*generate_sololike!(0, SCoreGenericWenz<STrumpfDeciderNoTrumpf>, "Wenz"),
+        ["eu su gz g9 hz ho h7 sa","hu e7 ga gk ha hk so s7","ea ez ek g8 h9 h8 s9 s8","gu eo e9 e8 go g7 sz sk",],
+        [(0, "eu hu g8 gu"),(0, "h7 hk h8 go"),(1, "ha h9 eo ho"),(1, "ga s9 g7 g9"),(1, "so s8 sk sa"),(0, "hz e7 ek e9"),(0, "gz gk ez e8"),(0, "su s7 ea sz"),],
+        [150, -50, -50, -50],
+    );
+    // "../../testdata/games/wenz/4.html", // TODO kurze Karte
+    // "../../testdata/games/wenz/4.html", // TODO kurze Karte
+    // "../../testdata/games/wenz/5.html", // TODO kurze Karte
+    // "../../testdata/games/wenz/12.html", // TODO kurze Karte
+    // "../../testdata/games/wenz/9.html", // TODO kurze Karte
+    // "../../testdata/games/wenz/14.html", // TODO kurze Karte
+    test_rules(
+        "../../testdata/games/wenz/13.html",
+        &*generate_sololike!(2, SCoreGenericWenz<STrumpfDeciderNoTrumpf>, "Wenz"),
+        ["eo ga gz gk ha ho h9 sz","su e8 g7 hz sk so s9 s7","gu hu ea ez ek e9 go g9","eu e7 g8 hk h8 h7 sa s8",],
+        [(0, "eo e8 ek e7"),(2, "hu eu sz su"),(3, "g8 gk g7 g9"),(0, "gz s7 go sa"),(0, "ga so gu s8"),(2, "ea h7 h9 s9"),(2, "ez h8 ho sk"),(2, "e9 hk ha hz"),],
+        [-50, -50, 150, -50], // TODO Doppeln
+    );
+    test_rules(
+        "../../testdata/games/wenz/10.html",
+        &*generate_sololike!(2, SCoreGenericWenz<STrumpfDeciderNoTrumpf>, "Wenz"),
+        ["ez ek gk go ho h9 sz s7","gu eo g8 g7 hz h8 so s8","ea e9 e8 ga g9 ha h7 sa","eu hu su e7 gz hk sk s9",],
+        [(0, "ek eo ea e7"),(2, "sa s9 s7 s8"),(2, "ha hk h9 h8"),(2, "ga gz go g7"),(2, "h7 su ho hz"),(3, "eu sz gu g9"),(3, "hu ez so e8"),(3, "sk gk g8 e9"),],
+        [-90, -90, 270, -90],
+    );
+    test_rules(
+        "../../testdata/games/wenz/2.html",
+        &*generate_sololike!(1, SCoreGenericWenz<STrumpfDeciderNoTrumpf>, "Wenz"),
+        ["eo e7 ga ho h7 sk s9 s8","eu su gk g8 g7 ha hz sa","gu hu ez ek e8 hk h9 so","ea e9 gz go g9 h8 sz s7",],
+        [(0, "ga g7 ez gz"),(0, "eo g8 ek ea"),(3, "s7 sk sa so"),(1, "eu hu h8 e7"),(1, "hz h9 e9 h7"),(1, "su gu g9 ho"),(2, "hk go s8 ha"),(1, "gk e8 sz s9"),],
+        [-50, 150, -50, -50], // TODO Doppeln
+    );
+    // "../../testdata/games/wenz/11.html", // TODO kurze Karte
+}
+
+#[test]
 fn test_rulessolo() {
     use rules::test_rules::*;
     test_rules(
