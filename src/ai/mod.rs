@@ -231,6 +231,7 @@ impl TAi for SAiSimulating {
         assert!(stich_current.size()<4);
         let eplayerindex_fixed = stich_current.current_player_index();
         let ref hand_fixed = game.m_ahand[eplayerindex_fixed];
+        assert!(!hand_fixed.cards().is_empty());
         let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&vecstich, hand_fixed);
         let mapcardpayout = forever_rand_hands(&vecstich_complete_immutable, hand_fixed.clone(), eplayerindex_fixed)
             .filter(|ahand| {
@@ -307,7 +308,6 @@ impl TAi for SAiSimulating {
                     mapcardpayout
                 }
             );
-        assert!(!hand_fixed.cards().is_empty());
         veccard_allowed_fixed.into_iter()
             .max_by_key(|card| mapcardpayout[card])
             .unwrap()
