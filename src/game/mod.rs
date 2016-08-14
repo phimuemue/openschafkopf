@@ -193,4 +193,10 @@ impl<'rules> SGame<'rules> {
         assert!(self.which_player_can_do_something().is_none());
         self.m_rules.payout(&self.m_vecstich)
     }
+
+    pub fn completed_stichs(&self) -> &[SStich] {
+        assert_eq!(self.m_vecstich[0..self.m_vecstich.len()-1].len(), self.m_vecstich.len()-1);
+        assert!(self.m_vecstich[0..self.m_vecstich.len()-1].iter().all(|stich| stich.size()==4));
+        &self.m_vecstich[0..self.m_vecstich.len()-1]
+    }
 }
