@@ -221,11 +221,11 @@ impl TAi for SAiSimulating {
     }
 
     fn suggest_card(&self, game: &SGame) -> SCard {
-        let n_tests = 100;
         let mut vecstich_complete_mut = game.m_vecstich.iter()
             .filter(|stich| stich.size()==4)
             .cloned()
             .collect::<Vec<_>>();
+        let n_tests = 10;
         let vecstich_complete_immutable = vecstich_complete_mut.clone();
         let stich_current = game.m_vecstich.last().unwrap().clone();
         assert!(stich_current.size()<4);
