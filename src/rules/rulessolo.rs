@@ -129,15 +129,15 @@ macro_rules! generate_sololike_farbe_and_farblos {
     }
 }
 
-pub type SCoreFarbwenz<TrumpfFarbDecider> = STrumpfDeciderSchlag<
+pub type SCoreGenericWenz<TrumpfFarbDecider> = STrumpfDeciderSchlag<
     SSchlagDesignatorUnter, TrumpfFarbDecider>;
 
-generate_sololike_farbe_and_farblos!(SCoreFarbwenz, "Wenz", all_rulesfarbwenz, all_ruleswenz);
+generate_sololike_farbe_and_farblos!(SCoreGenericWenz, "Wenz", all_rulesfarbwenz, all_ruleswenz);
 
-pub type SCoreFarbgeier<TrumpfFarbDecider> = STrumpfDeciderSchlag<
+pub type SCoreGenericGeier<TrumpfFarbDecider> = STrumpfDeciderSchlag<
     SSchlagDesignatorOber, TrumpfFarbDecider>;
 
-generate_sololike_farbe_and_farblos!(SCoreFarbgeier, "Geier", all_rulesfarbgeier, all_rulesgeier);
+generate_sololike_farbe_and_farblos!(SCoreGenericGeier, "Geier", all_rulesfarbgeier, all_rulesgeier);
 
 #[test]
 fn test_rulessolo() {
