@@ -1,4 +1,5 @@
-* AI should only consider suspicions/hands that are compatible with the cards played so far
+* Move tests into own files/modules
+* Test that AI only considers suspicions/hands that are compatible with the cards played so far
 * implement more rules
 * split CStich into CStichComplete and CStichCurrent
 * "graphical" output (possibly via libaa/libcaca) (possibly by augmenting/impriving ask_for_alternative)
@@ -7,7 +8,6 @@
 * introduce actively_playable_rules (shall be offered by what currently is called "all_allowed_rules")
 * fix graphical output (currently, it is often cleared when ai is running)
 * add indication to show that ai is working
-* ruleset: group rules into categories (e.g. Rufspiel with Farbe, Solo with Farbe, etc.)
 * clean up mess introduced by SAiCheating-Commit
 * compute_successors should acknowledge ostich_given
 * could susp_from_raw construct m_ahand on its own (to ensure ahand.iter().transform(hand.size()).all_same)
