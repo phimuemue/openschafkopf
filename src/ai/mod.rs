@@ -221,17 +221,17 @@ impl TAi for SAiSimulating {
     }
 
     fn suggest_card(&self, game: &SGame) -> SCard {
-        let mut vecstich_complete_mut = game.m_vecstich.iter()
-            .filter(|stich| stich.size()==4)
-            .cloned()
-            .collect::<Vec<_>>();
         let n_tests = 10;
+        let ref vecstich = game.m_vecstich;
+        let mut vecstich_complete_mut = vecstich[0..vecstich.len()-1].iter().cloned().collect::<Vec<_>>();
+        assert_eq!(vecstich_complete_mut.len(), vecstich.len()-1);
+        assert!(vecstich_complete_mut.iter().all(|stich| stich.size()==4));
         let vecstich_complete_immutable = vecstich_complete_mut.clone();
-        let stich_current = game.m_vecstich.last().unwrap().clone();
+        let ref stich_current = vecstich.last().unwrap();
         assert!(stich_current.size()<4);
         let eplayerindex_fixed = stich_current.current_player_index();
         let ref hand_fixed = game.m_ahand[eplayerindex_fixed];
-        let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&game.m_vecstich, hand_fixed);
+        let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&vecstich, hand_fixed);
         let mapcardpayout = forever_rand_hands(&vecstich_complete_immutable, hand_fixed.clone(), eplayerindex_fixed)
             .filter(|ahand| {
                 // hands must contain respective cards from stich_current...
