@@ -20,11 +20,11 @@ dictstrfnGame = {
     #"Herz-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, \"Herz-Solo\")"%(eplayerindex),
     #"Schelln-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, \"Schelln-Solo\")"%(eplayerindex),
 
-    "Wenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderNoTrumpf>, \"Wenz\")"%(eplayerindex),
-    #"Eichel-Wenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreFarbwenz<SFarbeDesignatorEichel>), \"Eichel-Wenz\""%(eplayerindex),
-    #"Gras-Wenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreFarbwenz<SFarbeDesignatorGras>), \"Gras-Wenz\""%(eplayerindex),
-    #"Herz-Wenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreFarbwenz<SFarbeDesignatorHerz>), \"Herz-Wenz\""%(eplayerindex),
-    #"Schelln-Wenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreFarbwenz<SFarbeDesignatorSchelln>), \"Schelln-Wenz\""%(eplayerindex),
+    #"Wenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderNoTrumpf>, \"Wenz\")"%(eplayerindex),
+    "Eichel-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, \"Eichel-Wenz\")"%(eplayerindex),
+    "Gras-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, \"Gras-Wenz\")"%(eplayerindex),
+    "Herz-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, \"Herz-Wenz\")"%(eplayerindex),
+    "Schelln-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, \"Schelln-Wenz\")"%(eplayerindex),
 
     #"Geier" : lambda eplayerindex: "SRulesGeier"%(eplayerindex),
     #"Eichel-Farbgeier" : lambda eplayerindex: "SRulesFarbgeier{EFarbe::Eichel, %d}"%(eplayerindex),

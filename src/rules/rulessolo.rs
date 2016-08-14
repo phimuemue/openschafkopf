@@ -140,6 +140,30 @@ pub type SCoreGenericGeier<TrumpfFarbDecider> = STrumpfDeciderSchlag<
 generate_sololike_farbe_and_farblos!(SCoreGenericGeier, "Geier", all_rulesfarbgeier, all_rulesgeier);
 
 #[test]
+fn test_rulesfarbwenz() {
+    use rules::test_rules::*;
+    // "../../testdata/games/farbwenz/1.html", // TODO kurze Karte
+    // "../../testdata/games/farbwenz/7.html", // TODO kurze Karte
+test_rules(
+    "../../testdata/games/farbwenz/8.html",
+    &*generate_sololike!(2, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, "Gras-Wenz"),
+    ["su gk go eo e8 h7 sz s8","eu gu hu e7 hz h8 s9 s7","gz g9 g8 g7 ea ek ha sa","ga ez e9 hk ho h9 sk so",],
+    [(0, "h7 h8 ha h9"),(2, "g9 ga gk hu"),(1, "e7 ea e9 e8"),(2, "g8 ez go gu"),(1, "eu g7 hk su"),(1, "s7 sa so s8"),(2, "gz sk eo s9"),(2, "ek ho sz hz"),],
+    [-100, -100, 300, -100], // TODO Doppeln, Kontra
+);
+    // "../../testdata/games/farbwenz/5.html", // TODO kurze Karte
+test_rules(
+    "../../testdata/games/farbwenz/9.html",
+    &*generate_sololike!(0, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, "Eichel-Wenz"),
+    ["gu su ea ek e9 e8 e7 s7","eu hu gk g9 g8 sa so s8","ga go hz hk ho h8 sz sk","ez eo gz g7 ha h9 h7 s9",],
+    [(0, "su hu hz ez"),(1, "sa sk s9 s7"),(1, "g8 ga g7 ea"),(0, "gu eu sz eo"),(1, "s8 ho h7 ek"),(0, "e9 gk hk h9"),(0, "e8 so h8 gz"),(0, "e7 g9 go ha"),],
+    [150, -50, -50, -50],
+);
+    // "../../testdata/games/farbwenz/10.html", // TODO kurze Karte
+    // "../../testdata/games/farbwenz/2.html", // TODO kurze Karte
+}
+
+#[test]
 fn test_ruleswenz() {
     use rules::test_rules::*;
     //"../../testdata/games/wenz/1.html", // TODO kurze Karte
