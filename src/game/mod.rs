@@ -193,6 +193,7 @@ impl<'rules> SGame<'rules> {
     }
 
     pub fn completed_stichs(&self) -> &[SStich] {
+        assert!(self.m_vecstich.last().unwrap().size()<4);
         assert_eq!(self.m_vecstich[0..self.m_vecstich.len()-1].len(), self.m_vecstich.len()-1);
         assert!(self.m_vecstich[0..self.m_vecstich.len()-1].iter().all(|stich| stich.size()==4));
         &self.m_vecstich[0..self.m_vecstich.len()-1]
