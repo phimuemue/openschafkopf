@@ -1,5 +1,4 @@
 * Move tests into own files/modules
-* Test that AI only considers suspicions/hands that are compatible with the cards played so far
 * implement more rules
 * split CStich into CStichComplete and CStichCurrent
 * "graphical" output (possibly via libaa/libcaca) (possibly by augmenting/impriving ask_for_alternative)
