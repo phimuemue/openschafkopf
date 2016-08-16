@@ -313,3 +313,61 @@ impl TAi for SAiSimulating {
             .clone()
     }
 }
+
+#[test]
+fn test_is_compatible_with_game_so_far() {
+    use rules::rulesrufspiel::*;
+    use util::cardvectorparser;
+    use game;
+    let rules = SRulesRufspiel {m_eplayerindex: 1, m_efarbe: EFarbe::Gras};
+    let mut game = game::SGame {
+        m_ahand : [
+            SHand::new_from_vec(cardvectorparser::parse_cards("h8 su g7 s7 gu eo gk s9").into_iter().collect()),
+            SHand::new_from_vec(cardvectorparser::parse_cards("eu h7 g8 sa ho sz hk hz").into_iter().collect()),
+            SHand::new_from_vec(cardvectorparser::parse_cards("h9 e7 ga gz g9 e9 ek ea").into_iter().collect()),
+            SHand::new_from_vec(cardvectorparser::parse_cards("hu ha so s8 go e8 sk ez").into_iter().collect()),
+        ],
+        m_rules : &rules,
+        m_vecstich : vec![SStich::new(2)],
+    };
+    let play_stich = |game: &mut SGame, str_stich| {
+        for card in cardvectorparser::parse_cards(str_stich).into_iter() {
+            let eplayerindex = game.which_player_can_do_something().unwrap();
+            game.zugeben(card, eplayerindex).unwrap();
+        }
+    };
+    let check_suggested_hands = |game: &SGame, vecpaireplayerindextrumpforfarbe_frei: Vec<(EPlayerIndex, VTrumpfOrFarbe)>| {
+        for ahand in forever_rand_hands(
+            game.completed_stichs(),
+            game.m_ahand[game.which_player_can_do_something().unwrap()].clone(),
+            game.which_player_can_do_something().unwrap()
+        )
+            .filter(|ahand| is_compatible_with_game_so_far(ahand, &game))
+            .take(1000)
+        {
+            for eplayerindex in 0..4 {
+                println!("{}: {}", eplayerindex, ahand[eplayerindex]);
+            }
+            for &(eplayerindex, ref trumpforfarbe) in vecpaireplayerindextrumpforfarbe_frei.iter() {
+                assert!(!ahand[eplayerindex].contains_pred(|card| *trumpforfarbe==rules.trumpf_or_farbe(*card)));
+            }
+        }
+    };
+    play_stich(&mut game, "h9 hu h8 eu");
+    play_stich(&mut game, "h7 e7 ha su");
+    check_suggested_hands(&game, vec![
+        (2, VTrumpfOrFarbe::Trumpf),
+    ]);
+    play_stich(&mut game, "g7 g8 ga so");
+    check_suggested_hands(&game, vec![
+        (2, VTrumpfOrFarbe::Trumpf),
+        (3, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
+    ]);
+    play_stich(&mut game, "s8 s7 sa gz");
+    check_suggested_hands(&game, vec![
+        (2, VTrumpfOrFarbe::Trumpf),
+        (3, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
+        (2, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
+    ]);
+	// Remaining stichs: "ho g9 go gu" "e8 eo sz e9" "gk hk ek sk" "hz ea ez s9"
+}
