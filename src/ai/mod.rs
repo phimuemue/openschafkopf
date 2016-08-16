@@ -319,55 +319,72 @@ fn test_is_compatible_with_game_so_far() {
     use rules::rulesrufspiel::*;
     use util::cardvectorparser;
     use game;
-    let rules = SRulesRufspiel {m_eplayerindex: 1, m_efarbe: EFarbe::Gras};
-    let mut game = game::SGame {
-        m_ahand : [
-            SHand::new_from_vec(cardvectorparser::parse_cards("h8 su g7 s7 gu eo gk s9").into_iter().collect()),
-            SHand::new_from_vec(cardvectorparser::parse_cards("eu h7 g8 sa ho sz hk hz").into_iter().collect()),
-            SHand::new_from_vec(cardvectorparser::parse_cards("h9 e7 ga gz g9 e9 ek ea").into_iter().collect()),
-            SHand::new_from_vec(cardvectorparser::parse_cards("hu ha so s8 go e8 sk ez").into_iter().collect()),
-        ],
-        m_rules : &rules,
-        m_vecstich : vec![SStich::new(2)],
-    };
-    let play_stich = |game: &mut SGame, str_stich| {
-        for card in cardvectorparser::parse_cards(str_stich).into_iter() {
-            let eplayerindex = game.which_player_can_do_something().unwrap();
-            game.zugeben(card, eplayerindex).unwrap();
+    enum VTestAction {
+        PlayStich(&'static str),
+        AssertFrei(EPlayerIndex, VTrumpfOrFarbe),
+    }
+    let test_game = |astr_hand: [&'static str; 4], rules: &TRules, eplayerindex_first, vectestaction: Vec<VTestAction>| {
+        let mut game = game::SGame {
+            m_ahand : create_playerindexmap(|eplayerindex| {
+                SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex]).into_iter().collect())
+            }),
+            m_rules : rules,
+            m_vecstich : vec![SStich::new(eplayerindex_first)],
+        };
+        let mut vecpaireplayerindextrumpforfarbe_frei = Vec::new();
+        for testaction in vectestaction {
+            match testaction {
+                VTestAction::PlayStich(str_stich) => {
+                    for card in cardvectorparser::parse_cards(str_stich).into_iter() {
+                        let eplayerindex = game.which_player_can_do_something().unwrap();
+                        game.zugeben(card, eplayerindex).unwrap();
+                    }
+                },
+                VTestAction::AssertFrei(eplayerindex, trumpforfarbe) => {
+                    vecpaireplayerindextrumpforfarbe_frei.push((eplayerindex, trumpforfarbe));
+                },
+            }
+            for ahand in forever_rand_hands(
+                game.completed_stichs(),
+                game.m_ahand[game.which_player_can_do_something().unwrap()].clone(),
+                game.which_player_can_do_something().unwrap()
+            )
+                .filter(|ahand| is_compatible_with_game_so_far(ahand, &game))
+                .take(100)
+            {
+                for eplayerindex in 0..4 {
+                    println!("{}: {}", eplayerindex, ahand[eplayerindex]);
+                }
+                for &(eplayerindex, ref trumpforfarbe) in vecpaireplayerindextrumpforfarbe_frei.iter() {
+                    assert!(!ahand[eplayerindex].contains_pred(|card| *trumpforfarbe==game.m_rules.trumpf_or_farbe(*card)));
+                }
+            }
         }
     };
-    let check_suggested_hands = |game: &SGame, vecpaireplayerindextrumpforfarbe_frei: Vec<(EPlayerIndex, VTrumpfOrFarbe)>| {
-        for ahand in forever_rand_hands(
-            game.completed_stichs(),
-            game.m_ahand[game.which_player_can_do_something().unwrap()].clone(),
-            game.which_player_can_do_something().unwrap()
-        )
-            .filter(|ahand| is_compatible_with_game_so_far(ahand, &game))
-            .take(1000)
-        {
-            for eplayerindex in 0..4 {
-                println!("{}: {}", eplayerindex, ahand[eplayerindex]);
-            }
-            for &(eplayerindex, ref trumpforfarbe) in vecpaireplayerindextrumpforfarbe_frei.iter() {
-                assert!(!ahand[eplayerindex].contains_pred(|card| *trumpforfarbe==rules.trumpf_or_farbe(*card)));
-            }
-        }
-    };
-    play_stich(&mut game, "h9 hu h8 eu");
-    play_stich(&mut game, "h7 e7 ha su");
-    check_suggested_hands(&game, vec![
-        (2, VTrumpfOrFarbe::Trumpf),
-    ]);
-    play_stich(&mut game, "g7 g8 ga so");
-    check_suggested_hands(&game, vec![
-        (2, VTrumpfOrFarbe::Trumpf),
-        (3, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
-    ]);
-    play_stich(&mut game, "s8 s7 sa gz");
-    check_suggested_hands(&game, vec![
-        (2, VTrumpfOrFarbe::Trumpf),
-        (3, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
-        (2, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
-    ]);
-	// Remaining stichs: "ho g9 go gu" "e8 eo sz e9" "gk hk ek sk" "hz ea ez s9"
+    test_game(
+        ["h8 su g7 s7 gu eo gk s9", "eu h7 g8 sa ho sz hk hz", "h9 e7 ga gz g9 e9 ek ea", "hu ha so s8 go e8 sk ez"],
+        &SRulesRufspiel {m_eplayerindex: 1, m_efarbe: EFarbe::Gras},
+        /*eplayerindex_first*/ 2,
+        vec![
+            VTestAction::PlayStich("h9 hu h8 eu"),
+            VTestAction::PlayStich("h7 e7 ha su"),
+            VTestAction::AssertFrei(2, VTrumpfOrFarbe::Trumpf),
+            VTestAction::PlayStich("g7 g8 ga so"),
+            VTestAction::AssertFrei(3, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
+            VTestAction::PlayStich("s8 s7 sa gz"),
+            VTestAction::AssertFrei(2, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
+            // Remaining stichs: "ho g9 go gu" "e8 eo sz e9" "gk hk ek sk" "hz ea ez s9"
+        ]
+    );
+    test_game(
+        ["sz ga hk g8 ea e8 g9 e7", "s7 gz h7 ho g7 sa s8 s9", "e9 ek gu go gk su sk hu", "so ez eo h9 hz h8 ha eu"],
+        &SRulesRufspiel {m_eplayerindex: 0, m_efarbe: EFarbe::Schelln},
+        /*eplayerindex_first*/ 1,
+        vec![
+            VTestAction::PlayStich("s9 sk hz sz"),
+            VTestAction::AssertFrei(0, VTrumpfOrFarbe::Farbe(Schelln)),
+            VTestAction::AssertFrei(2, VTrumpfOrFarbe::Farbe(Schelln)),
+            VTestAction::AssertFrei(3, VTrumpfOrFarbe::Farbe(Schelln)),
+        ]
+    );
 }
