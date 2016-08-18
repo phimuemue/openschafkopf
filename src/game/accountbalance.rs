@@ -16,8 +16,7 @@ impl SAccountBalance {
     }
 
     fn assert_invariant(&self) {
-        // TODO Rust: Can we use iter().sum?
-        assert_eq!(self.m_an.iter().fold(self.m_n_stock, |n_acc, n| n_acc + n), 0);
+        assert_eq!(self.m_n_stock + self.m_an.iter().sum::<isize>(), 0);
     }
 
     pub fn apply_payout(&mut self, an_payout: &[isize; 4]) {
