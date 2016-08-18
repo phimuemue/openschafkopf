@@ -29,9 +29,10 @@ pub fn points_to_schneiderschwarz_and_winners<FnIsPlayerParty, Rules>(
           Rules: TRules,
 {
     assert_eq!(vecstich.len(), 8);
-    let n_points_player_party = vecstich.iter()
+    let n_points_player_party : isize = vecstich.iter()
         .filter(|stich| fn_is_player_party(rules.winner_index(stich)))
-        .fold(0, |n_points, stich| n_points + rules.points_stich(stich));
+        .map(|stich| rules.points_stich(stich))
+        .sum();
     let b_player_party_wins = n_points_player_party>=61;
     (
         if b_player_party_wins {
@@ -84,12 +85,14 @@ pub trait TRules : fmt::Display {
     }
     fn points_stich(&self, stich: &SStich) -> isize {
         stich.indices_and_cards()
-            .fold(0, |n_sum, (_, card)| n_sum + self.points_card(card))
+            .map(|(_, card)| self.points_card(card))
+            .sum()
     }
     fn points_per_player(&self, vecstich: &Vec<SStich>, eplayerindex: EPlayerIndex) -> isize {
         vecstich.iter()
             .filter(|stich| eplayerindex==self.winner_index(stich))
-            .fold(0, |n_points_acc, stich| n_points_acc + self.points_stich(stich))
+            .map(|stich| self.points_stich(stich))
+            .sum()
     }
 
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4];

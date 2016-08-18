@@ -270,7 +270,7 @@ impl TAi for SAiSimulating {
                 });
                 susp.min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex_fixed)
             })
-            .fold(0, |n_payout_acc, n_payout| n_payout_acc+n_payout) as f64
+            .sum::<isize>() as f64
             / n_tests as f64
     }
 

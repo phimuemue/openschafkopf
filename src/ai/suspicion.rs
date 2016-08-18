@@ -106,7 +106,8 @@ impl SSuspicion {
             1
         } else {
             self.m_vecsusptrans.iter()
-                .fold(0, |n_size_acc, susptrans| n_size_acc + susptrans.m_susp.count_leaves())
+                .map(|susptrans| susptrans.m_susp.count_leaves())
+                .sum()
         }
     }
 
