@@ -4,20 +4,12 @@ use std::fmt;
 use std::mem;
 use std::ops::{Index, IndexMut};
 
-pub use self::EFarbe::*;
-#[derive(PartialEq, Eq, Debug, Copy, Clone, PartialOrd, Ord, Hash)]
-pub enum EFarbe {
+plain_enum!{EFarbe {
     Eichel,
     Gras,
     Herz,
     Schelln,
-}
-
-impl EFarbe {
-    pub fn all_values() -> [EFarbe; 4] {
-        [EFarbe::Eichel, EFarbe::Gras, EFarbe::Herz, EFarbe::Schelln,]
-    }
-}
+}}
 
 impl quickcheck::Arbitrary for EFarbe {
     fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> EFarbe {
@@ -42,9 +34,7 @@ impl fmt::Display for EFarbe {
     }
 }
 
-pub use self::ESchlag::*;
-#[derive(PartialEq, Eq, Debug, Copy, Clone, PartialOrd, Ord)]
-pub enum ESchlag {
+plain_enum!{ESchlag {
     Ass,
     Zehn,
     Koenig,
@@ -53,13 +43,7 @@ pub enum ESchlag {
     S9,
     S8,
     S7,
-}
-
-impl ESchlag {
-    pub fn all_values() -> [ESchlag; 8] {
-        [ ESchlag::Ass, ESchlag::Zehn, ESchlag::Koenig, ESchlag::Ober, ESchlag::Unter, ESchlag::S9, ESchlag::S8, ESchlag::S7, ]
-    }
-}
+}}
 
 impl quickcheck::Arbitrary for ESchlag {
     fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> ESchlag {

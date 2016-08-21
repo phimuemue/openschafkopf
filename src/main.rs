@@ -6,8 +6,9 @@ extern crate permutohedron;
 extern crate clap;
 extern crate arrayvec;
 
-mod primitives;
+#[macro_use]
 mod util;
+mod primitives;
 mod rules;
 mod game;
 mod player;
