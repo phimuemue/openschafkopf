@@ -382,9 +382,9 @@ fn test_is_compatible_with_game_so_far() {
         /*eplayerindex_first*/ 1,
         vec![
             VTestAction::PlayStich("s9 sk hz sz"),
-            VTestAction::AssertFrei(0, VTrumpfOrFarbe::Farbe(Schelln)),
-            VTestAction::AssertFrei(2, VTrumpfOrFarbe::Farbe(Schelln)),
-            VTestAction::AssertFrei(3, VTrumpfOrFarbe::Farbe(Schelln)),
+            VTestAction::AssertFrei(0, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
+            VTestAction::AssertFrei(2, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
+            VTestAction::AssertFrei(3, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
         ]
     );
 }
