@@ -52,6 +52,30 @@ pub fn unplayed_cards(vecstich: &[SStich], hand_fixed: &SHand) -> Vec<Option<SCa
         .collect()
 }
 
+#[test]
+fn test_unplayed_cards() {
+    use util::cardvectorparser;
+    let vecstich = ["g7 g8 ga g9", "s8 ho s7 s9", "h7 hk hu su", "eo go hz h8", "e9 ek e8 ea", "sa eu so ha"].into_iter()
+        .map(|str_stich| {
+            let mut stich = SStich::new(/*eplayerindex should not be relevant*/0);
+            for card in cardvectorparser::parse_cards(str_stich).into_iter() {
+                stich.zugeben(card.clone());
+            }
+            stich
+        })
+        .collect::<Vec<_>>();
+    let veccard_unplayed = unplayed_cards(
+        &vecstich,
+        &SHand::new_from_vec(cardvectorparser::parse_cards("gk sk").into_iter().collect())
+    ).into_iter()
+    .filter_map(|ocard| ocard)
+    .collect::<Vec<_>>();
+    let veccard_unplayed_check = cardvectorparser::parse_cards("gz e7 sz h9 ez gu");
+    assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
+    assert!(veccard_unplayed.iter().all(|card| veccard_unplayed_check.contains(card)));
+    assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
+}
+
 struct SForeverRandHands {
     m_eplayerindex_fixed : EPlayerIndex,
     m_ahand: [SHand; 4],
