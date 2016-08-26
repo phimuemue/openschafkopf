@@ -18,9 +18,6 @@ mod skui;
 use game::*;
 use std::sync::mpsc;
 use primitives::*;
-use rules::*;
-use rules::rulesrufspiel::SRulesRufspiel;
-use std::collections::HashSet;
 use rules::ruleset::*;
 use ai::*;
 use std::path::Path;
@@ -44,77 +41,21 @@ fn main() {
          )
         .get_matches();
     {
-        let rules = SRulesRufspiel {
-            m_eplayerindex : 0,
-            m_efarbe : EFarbe::Gras,
-        };
-        let vecstich = {
-            let mut vecstich_internal = Vec::new();
-            {
-                let mut add_stich = |eplayerindex, str_stich| {
-                    vecstich_internal.push(SStich::new(eplayerindex));
-                    for card in util::cardvectorparser::parse_cards(str_stich).iter().cycle().skip(eplayerindex).take(4) {
-                        vecstich_internal.last_mut().unwrap().zugeben(card.clone());
-                    }
-                };
-                add_stich(0, "g7 g8 ga g9");
-                add_stich(2, "s8 ho s7 s9");
-                add_stich(1, "h7 hk hu su");
-                add_stich(2, "eo go hz h8");
-                add_stich(2, "e9 ek e8 ea");
-                add_stich(3, "sa eu so ha");
-            }
-            vecstich_internal
-        };
-
-        let mut mapeplayerindexsettrumpforfarbe = create_playerindexmap(|_eplayerindex| {
-            let mut settrumpforfarbe = HashSet::new();
-            settrumpforfarbe.insert(VTrumpfOrFarbe::Trumpf);
-            for efarbe in EFarbe::all_values().iter() {
-                settrumpforfarbe.insert(VTrumpfOrFarbe::Farbe(*efarbe));
-            }
-            settrumpforfarbe
-        });
-        for stich in vecstich.iter() {
-            println!("{}", stich);
-            let trumpforfarbe_first_card = rules.trumpf_or_farbe(stich.first_card());
-            for (eplayerindex, card) in stich.indices_and_cards() {
-                let trumpforfarbe = rules.trumpf_or_farbe(card);
-                if trumpforfarbe_first_card != trumpforfarbe {
-                    println!("Removing {} from player {}",
-                        match trumpforfarbe_first_card {
-                            VTrumpfOrFarbe::Trumpf => "Trumpf".to_string(),
-                            VTrumpfOrFarbe::Farbe(efarbe) => format!("{}", efarbe),
-                        },
-                        eplayerindex
-                    );
-                    mapeplayerindexsettrumpforfarbe[eplayerindex].remove(&trumpforfarbe_first_card);
-                } else {
-                    // assert consistency over the whole game
-                    assert!(mapeplayerindexsettrumpforfarbe[eplayerindex].contains(&trumpforfarbe_first_card));
-                }
-            }
-        }
-
         println!(
             "{} suspicions", 
             ai::handiterators::all_possible_hands(
-                &vecstich,
+                &[(0, "g7 g8 ga g9"), (2, "s8 ho s7 s9"), (1, "h7 hk hu su"), (2, "eo go hz h8"), (2, "e9 ek e8 ea"), (3, "sa eu so ha")].iter()
+                    .map(|&(eplayerindex, str_stich)| {
+                        let mut stich = SStich::new(eplayerindex);
+                        for card in util::cardvectorparser::parse_cards(str_stich).iter().cycle().skip(eplayerindex).take(4) {
+                            stich.zugeben(card.clone());
+                        }
+                        stich
+                    })
+                    .collect::<Vec<_>>(),
                 SHand::new_from_vec(util::cardvectorparser::parse_cards("gk sk").into_iter().collect()),
                 0, // eplayerindex_fixed
-            ).into_iter()
-                .filter(|ahand| {
-                    ahand.iter()
-                        .enumerate()
-                        .all(|(eplayerindex, hand)| {
-                            hand.cards().iter()
-                                .map(|card| rules.trumpf_or_farbe(card.clone()))
-                                .all(|trumpforfarbe| {
-                                    mapeplayerindexsettrumpforfarbe[eplayerindex].contains(&trumpforfarbe)
-                                })
-                        })
-                })
-                .count()
+            ).count()
         );
     }
 
