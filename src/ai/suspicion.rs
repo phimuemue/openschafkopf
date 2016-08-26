@@ -257,15 +257,15 @@ impl SSuspicion {
 
 }
 
-pub fn for_each_suspicion<FuncFilter, Func>(
+pub fn for_each_possible_hand<FuncFilter, Func>(
     vecstich: &Vec<SStich>,
     hand_known: &SHand,
     eplayerindex: EPlayerIndex,
     mut func_filter: FuncFilter,
     mut func: Func
 )
-    where Func: FnMut(SSuspicion),
-          FuncFilter: FnMut(&SSuspicion) -> bool
+    where Func: FnMut([SHand; 4]),
+          FuncFilter: FnMut(&[SHand; 4]) -> bool
 {
     let veccard_unknown = unplayed_cards(vecstich, hand_known).into_iter()
         .filter_map(|ocard| ocard)
@@ -281,18 +281,14 @@ pub fn for_each_suspicion<FuncFilter, Func>(
                 .filter(|&(_i, eplayerindex_susp)| *eplayerindex_susp == eplayerindex_hand)
                 .map(|(i, _eplayerindex_susp)| veccard_unknown[i.clone()]).collect())
         };
-        let susp = SSuspicion::new_from_raw(
-            eplayerindex,
-            [
-                hand_known.clone(),
-                get_hand(0),
-                get_hand(1),
-                get_hand(2),
-            ]
-
-        );
-        if func_filter(&susp) {
-            func(susp);
+        let ahand = [
+            hand_known.clone(),
+            get_hand(0),
+            get_hand(1),
+            get_hand(2),
+        ];
+        if func_filter(&ahand) {
+            func(ahand);
         }
     };
     callback(&veci);

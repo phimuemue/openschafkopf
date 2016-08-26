@@ -97,12 +97,12 @@ fn main() {
         }
 
         let mut n_susp = 0;
-        suspicion::for_each_suspicion(
+        suspicion::for_each_possible_hand(
             &vecstich,
             &SHand::new_from_vec(util::cardvectorparser::parse_cards("gk sk").into_iter().collect()),
             0, // eplayerindex
-            |susp| {
-                susp.hands().iter()
+            |ahand| {
+                ahand.iter()
                     .enumerate()
                     .all(|(eplayerindex, hand)| {
                         hand.cards().iter()
@@ -112,7 +112,8 @@ fn main() {
                             })
                     })
             },
-            |mut susp| {
+            |ahand| {
+                let mut susp = suspicion::SSuspicion::new_from_raw(/*eplayerindex*/0, ahand);
                 n_susp += 1;
                 println!("{} {} {} {}",
                     susp.hands()[0],
