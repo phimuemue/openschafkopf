@@ -97,7 +97,7 @@ fn main() {
         }
 
         let mut n_susp = 0;
-        suspicion::for_each_possible_hand(
+        ai::handiterators::for_each_possible_hand(
             &vecstich,
             &SHand::new_from_vec(util::cardvectorparser::parse_cards("gk sk").into_iter().collect()),
             0, // eplayerindex

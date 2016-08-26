@@ -2,11 +2,9 @@ use primitives::*;
 use rules::*;
 use itertools::Itertools;
 
-use permutohedron::LexicalPermutation;
 use std::fs;
 use std::io::Write;
 use std::io;
-use ai::*;
 
 pub struct SSuspicionTransition {
     m_stich : SStich,
@@ -257,53 +255,3 @@ impl SSuspicion {
 
 }
 
-pub fn for_each_possible_hand<FuncFilter, Func>(
-    vecstich: &Vec<SStich>,
-    hand_known: &SHand,
-    eplayerindex_fixed: EPlayerIndex,
-    mut func_filter: FuncFilter,
-    mut func: Func
-)
-    where Func: FnMut([SHand; 4]),
-          FuncFilter: FnMut(&[SHand; 4]) -> bool
-{
-    let veccard_unknown = unplayed_cards(vecstich, hand_known).into_iter()
-        .filter_map(|ocard| ocard)
-        .collect::<Vec<_>>();
-    let n_cards_total = veccard_unknown.len();
-    assert_eq!(n_cards_total%3, 0);
-    let n_cards_per_player = n_cards_total / 3;
-    let mut veceplayerindex : Vec<EPlayerIndex> = (0..n_cards_total)
-        .map(|i| {
-            let eplayerindex = i/n_cards_per_player;
-            assert!(eplayerindex<=2);
-            if eplayerindex<eplayerindex_fixed {
-                eplayerindex
-            } else {
-                eplayerindex + 1
-            }
-            
-        })
-        .collect();
-    let mut callback = |veceplayerindex : &Vec<EPlayerIndex>| {
-        let get_hand = |eplayerindex_hand| {
-            SHand::new_from_vec(veceplayerindex.iter().enumerate()
-                .filter(|&(_i, eplayerindex_susp)| *eplayerindex_susp == eplayerindex_hand)
-                .map(|(i, _eplayerindex_susp)| veccard_unknown[i.clone()]).collect())
-        };
-        let ahand = create_playerindexmap(|eplayerindex| {
-            if eplayerindex_fixed==eplayerindex {
-                hand_known.clone()
-            } else {
-                get_hand(eplayerindex)
-            }
-        });
-        if func_filter(&ahand) {
-            func(ahand);
-        }
-    };
-    callback(&veceplayerindex);
-    while veceplayerindex[..].next_permutation() {
-        callback(&veceplayerindex);
-    }
-}
