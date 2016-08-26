@@ -255,9 +255,17 @@ impl TAi for SAiSimulating {
         let ref hand_fixed = game.m_ahand[eplayerindex_fixed];
         assert!(!hand_fixed.cards().is_empty());
         let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&game.m_vecstich, hand_fixed);
-        let mapcardpayout = forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
-            .filter(|ahand| is_compatible_with_game_so_far(ahand, game))
-            .take(n_tests)
+        let vecahand : Vec<[SHand; 4]>= { if hand_fixed.cards().len()<=2 {
+            all_possible_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
+                .filter(|ahand| is_compatible_with_game_so_far(ahand, game))
+                .collect()
+        } else {
+            forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
+                .filter(|ahand| is_compatible_with_game_so_far(ahand, game))
+                .take(n_tests)
+                .collect()
+        }};
+        let mapcardpayout = vecahand.into_iter()
             .map(|ahand| suspicion_from_hands_respecting_stich_current(
                 game.m_rules,
                 ahand,
