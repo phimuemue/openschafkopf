@@ -28,17 +28,23 @@ use player::playercomputer::*;
 fn main() {
     let clapmatches = clap::App::new("schafkopf")
         .arg(clap::Arg::with_name("rulesetpath")
-             .long("ruleset")
-             .default_value(".schafkopfruleset")
+            .long("ruleset")
+            .default_value(".schafkopfruleset")
         )
         .arg(clap::Arg::with_name("numgames")
-             .long("numgames")
-             .default_value("4")
-         )
+            .long("numgames")
+            .default_value("4")
+        )
         .arg(clap::Arg::with_name("ai")
-             .long("ai")
-             .default_value("cheating")
-         )
+            .long("ai")
+            .default_value("cheating")
+        )
+        .subcommand(clap::SubCommand::with_name("rank-rules")
+            .arg(clap::Arg::with_name("hand")
+                .long("hand")
+                .default_value("")
+            )
+        )
         .get_matches();
     {
         println!(
@@ -71,20 +77,23 @@ fn main() {
     };
 
     let ruleset = read_ruleset(Path::new(clapmatches.value_of("rulesetpath").unwrap()));
-    {
-        let hand_fixed = random_hand(8, &mut SCard::all_values().into_iter().map(|card| Some(card)).collect());
-        let eplayerindex_fixed = 0;
 
-        println!("Hand: {}", hand_fixed);
-        for rules in allowed_rules(&ruleset.m_avecrulegroup[eplayerindex_fixed]).iter() 
-            .filter(|rules| rules.can_be_played(&hand_fixed))
-        {
-            let f_payout_avg = ai.rank_rules(&hand_fixed, eplayerindex_fixed, rules.clone(), 100);
-            println!("{}", rules);
-            println!("{}", f_payout_avg);
+    if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
+        if let Some(str_hand) = subcommand_matches.value_of("hand") {
+            let hand_fixed = SHand::new_from_vec(util::cardvectorparser::parse_cards(str_hand).into_iter().collect());
+            let eplayerindex_fixed = 0;
+            println!("Hand: {}", hand_fixed);
+            for rules in allowed_rules(&ruleset.m_avecrulegroup[eplayerindex_fixed]).iter() 
+                .filter(|rules| rules.can_be_played(&hand_fixed))
+            {
+                println!("{}: {}",
+                    rules,
+                    ai.rank_rules(&hand_fixed, eplayerindex_fixed, rules.clone(), 100)
+                );
+            }
         }
+        return;
     }
-    //return;
 
     skui::init_ui();
     let mut vecplayer : Vec<Box<TPlayer>> = vec![
