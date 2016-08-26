@@ -75,6 +75,62 @@ pub fn forever_rand_hands(vecstich: &[SStich], hand_fixed: SHand, eplayerindex_f
     }
 }
 
+pub struct SAllHands {
+    m_eplayerindex_fixed : EPlayerIndex,
+    m_veccard_unknown: Vec<SCard>,
+    m_veceplayerindex: Vec<EPlayerIndex>,
+    m_hand_known: SHand,
+    m_b_valid: bool,
+}
+
+impl Iterator for SAllHands {
+    type Item = [SHand; 4];
+    fn next(&mut self) -> Option<[SHand; 4]> {
+        if self.m_b_valid {
+            let ahand = create_playerindexmap(|eplayerindex| {
+                if self.m_eplayerindex_fixed==eplayerindex {
+                    self.m_hand_known.clone()
+                } else {
+                    SHand::new_from_vec(self.m_veceplayerindex.iter().enumerate()
+                        .filter(|&(_i, eplayerindex_susp)| *eplayerindex_susp == eplayerindex)
+                        .map(|(i, _eplayerindex_susp)| self.m_veccard_unknown[i.clone()]).collect())
+                }
+            });
+            self.m_b_valid = self.m_veceplayerindex[..].next_permutation();
+            Some(ahand)
+        } else {
+            assert!(!self.m_veceplayerindex[..].next_permutation());
+            None
+        }
+    }
+}
+
+pub fn all_possible_hands(vecstich: &[SStich], hand_fixed: SHand, eplayerindex_fixed: EPlayerIndex) -> SAllHands {
+    let veccard_unknown = unplayed_cards(vecstich, &hand_fixed).into_iter()
+        .filter_map(|ocard| ocard)
+        .collect::<Vec<_>>();
+    let n_cards_total = veccard_unknown.len();
+    assert_eq!(n_cards_total%3, 0);
+    let n_cards_per_player = n_cards_total / 3;
+    SAllHands {
+        m_eplayerindex_fixed : eplayerindex_fixed,
+        m_veccard_unknown: veccard_unknown,
+        m_veceplayerindex: (0..n_cards_total)
+            .map(|i| {
+                let eplayerindex = i/n_cards_per_player;
+                assert!(eplayerindex<=2);
+                if eplayerindex<eplayerindex_fixed {
+                    eplayerindex
+                } else {
+                    eplayerindex + 1
+                }
+                
+            })
+            .collect(),
+        m_hand_known: hand_fixed,
+        m_b_valid: true, // in the beginning, there should be a valid assignment of cards to players
+    }
+}
 
 pub fn for_each_possible_hand<FuncFilter, Func>(
     vecstich: &Vec<SStich>,

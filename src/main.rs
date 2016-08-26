@@ -97,6 +97,7 @@ fn main() {
         }
 
         let mut n_susp = 0;
+        let mut vecahand : Vec<[SHand; 4]> = Vec::new();
         ai::handiterators::for_each_possible_hand(
             &vecstich,
             &SHand::new_from_vec(util::cardvectorparser::parse_cards("gk sk").into_iter().collect()),
@@ -113,6 +114,7 @@ fn main() {
                     })
             },
             |ahand| {
+                vecahand.push(create_playerindexmap(|eplayerindex| ahand[eplayerindex].clone()));
                 let mut susp = suspicion::SSuspicion::new_from_raw(/*eplayerindex*/0, ahand);
                 n_susp += 1;
                 println!("{} {} {} {}",
@@ -127,6 +129,27 @@ fn main() {
                 });
             }
         );
+        assert_eq!(n_susp, vecahand.len());
+        let vecahand_check = ai::handiterators::all_possible_hands(
+            &vecstich,
+            SHand::new_from_vec(util::cardvectorparser::parse_cards("gk sk").into_iter().collect()),
+            0, // eplayerindex_fixed
+        ).into_iter()
+            .filter(|ahand| {
+                ahand.iter()
+                    .enumerate()
+                    .all(|(eplayerindex, hand)| {
+                        hand.cards().iter()
+                            .map(|card| rules.trumpf_or_farbe(card.clone()))
+                            .all(|trumpforfarbe| {
+                                mapeplayerindexsettrumpforfarbe[eplayerindex].contains(&trumpforfarbe)
+                            })
+                    })
+            })
+            .collect::<Vec<[SHand; 4]>>();
+        assert_eq!(vecahand.len(), vecahand_check.len());
+        assert_eq!(vecahand, vecahand_check);
+        assert_eq!(vecahand, vecahand_check);
         println!("{} suspicions", n_susp);
     }
 
