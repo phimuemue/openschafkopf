@@ -13,7 +13,19 @@ use std::mem;
 
 pub trait TAi {
     fn rank_rules(&self, hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
-    fn suggest_card(&self, game: &SGame) -> SCard;
+    fn suggest_card(&self, game: &SGame) -> SCard {
+        let veccard_allowed = game.m_rules.all_allowed_cards(
+            &game.m_vecstich,
+            &game.m_ahand[game.which_player_can_do_something().unwrap()]
+        );
+        assert!(1<=veccard_allowed.len());
+        if 1==veccard_allowed.len() {
+            veccard_allowed.first().unwrap().clone()
+        } else {
+            self.internal_suggest_card(game)
+        }
+    }
+    fn internal_suggest_card(&self, game: &SGame) -> SCard;
 }
 
 pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
@@ -166,7 +178,7 @@ impl TAi for SAiCheating {
         SAiSimulating{}.rank_rules(hand_fixed, eplayerindex_fixed, rules, n_tests)
     }
 
-    fn suggest_card(&self, game: &SGame) -> SCard {
+    fn internal_suggest_card(&self, game: &SGame) -> SCard {
         let mut vecstich_complete_mut = game.m_vecstich.iter()
             .filter(|stich| stich.size()==4)
             .cloned()
@@ -274,7 +286,7 @@ impl TAi for SAiSimulating {
             / n_tests as f64
     }
 
-    fn suggest_card(&self, game: &SGame) -> SCard {
+    fn internal_suggest_card(&self, game: &SGame) -> SCard {
         let n_tests = 10;
         let mut vecstich_complete_mut = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
         let ref stich_current = game.m_vecstich.last().unwrap();
