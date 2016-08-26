@@ -6,6 +6,7 @@ use permutohedron::LexicalPermutation;
 use std::fs;
 use std::io::Write;
 use std::io;
+use ai::*;
 
 pub struct SSuspicionTransition {
     m_stich : SStich,
@@ -257,8 +258,8 @@ impl SSuspicion {
 }
 
 pub fn for_each_suspicion<FuncFilter, Func>(
+    vecstich: &Vec<SStich>,
     hand_known: &SHand,
-    veccard_unknown : &Vec<SCard>,
     eplayerindex: EPlayerIndex,
     mut func_filter: FuncFilter,
     mut func: Func
@@ -266,6 +267,9 @@ pub fn for_each_suspicion<FuncFilter, Func>(
     where Func: FnMut(SSuspicion),
           FuncFilter: FnMut(&SSuspicion) -> bool
 {
+    let veccard_unknown = unplayed_cards(vecstich, hand_known).into_iter()
+        .filter_map(|ocard| ocard)
+        .collect::<Vec<_>>();
     assert_eq!(0, eplayerindex); // TODO: generalize
     let n_cards_total = veccard_unknown.len();
     assert_eq!(n_cards_total%3, 0);
