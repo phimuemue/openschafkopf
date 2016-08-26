@@ -105,16 +105,13 @@ pub fn for_each_possible_hand<FuncFilter, Func>(
         })
         .collect();
     let mut callback = |veceplayerindex : &Vec<EPlayerIndex>| {
-        let get_hand = |eplayerindex_hand| {
-            SHand::new_from_vec(veceplayerindex.iter().enumerate()
-                .filter(|&(_i, eplayerindex_susp)| *eplayerindex_susp == eplayerindex_hand)
-                .map(|(i, _eplayerindex_susp)| veccard_unknown[i.clone()]).collect())
-        };
         let ahand = create_playerindexmap(|eplayerindex| {
             if eplayerindex_fixed==eplayerindex {
                 hand_known.clone()
             } else {
-                get_hand(eplayerindex)
+                SHand::new_from_vec(veceplayerindex.iter().enumerate()
+                    .filter(|&(_i, eplayerindex_susp)| *eplayerindex_susp == eplayerindex)
+                    .map(|(i, _eplayerindex_susp)| veccard_unknown[i.clone()]).collect())
             }
         });
         if func_filter(&ahand) {
