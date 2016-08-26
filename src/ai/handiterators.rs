@@ -132,50 +132,24 @@ pub fn all_possible_hands(vecstich: &[SStich], hand_fixed: SHand, eplayerindex_f
     }
 }
 
-pub fn for_each_possible_hand<FuncFilter, Func>(
-    vecstich: &Vec<SStich>,
-    hand_known: &SHand,
-    eplayerindex_fixed: EPlayerIndex,
-    mut func_filter: FuncFilter,
-    mut func: Func
-)
-    where Func: FnMut([SHand; 4]),
-          FuncFilter: FnMut(&[SHand; 4]) -> bool
-{
-    let veccard_unknown = unplayed_cards(vecstich, hand_known).into_iter()
-        .filter_map(|ocard| ocard)
-        .collect::<Vec<_>>();
-    let n_cards_total = veccard_unknown.len();
-    assert_eq!(n_cards_total%3, 0);
-    let n_cards_per_player = n_cards_total / 3;
-    let mut veceplayerindex : Vec<EPlayerIndex> = (0..n_cards_total)
-        .map(|i| {
-            let eplayerindex = i/n_cards_per_player;
-            assert!(eplayerindex<=2);
-            if eplayerindex<eplayerindex_fixed {
-                eplayerindex
-            } else {
-                eplayerindex + 1
+#[test]
+fn test_all_possible_hands() {
+    use util::cardvectorparser;
+    // TODO improve test
+    let vecstich = ["g7 g8 ga g9", "s8 ho s7 s9", "h7 hk hu su", "eo go hz h8", "e9 ek e8 ea", "sa eu so ha"].into_iter()
+        .map(|str_stich| {
+            let mut stich = SStich::new(/*eplayerindex should not be relevant*/0);
+            for card in cardvectorparser::parse_cards(str_stich).into_iter() {
+                stich.zugeben(card.clone());
             }
-            
+            stich
         })
-        .collect();
-    let mut callback = |veceplayerindex : &Vec<EPlayerIndex>| {
-        let ahand = create_playerindexmap(|eplayerindex| {
-            if eplayerindex_fixed==eplayerindex {
-                hand_known.clone()
-            } else {
-                SHand::new_from_vec(veceplayerindex.iter().enumerate()
-                    .filter(|&(_i, eplayerindex_susp)| *eplayerindex_susp == eplayerindex)
-                    .map(|(i, _eplayerindex_susp)| veccard_unknown[i.clone()]).collect())
-            }
-        });
-        if func_filter(&ahand) {
-            func(ahand);
-        }
-    };
-    callback(&veceplayerindex);
-    while veceplayerindex[..].next_permutation() {
-        callback(&veceplayerindex);
-    }
+        .collect::<Vec<_>>();
+    let vecahand = all_possible_hands(
+        &vecstich,
+        SHand::new_from_vec(cardvectorparser::parse_cards("gk sk").into_iter().collect()),
+        0, // eplayerindex_fixed
+    ).collect::<Vec<_>>();
+    assert_eq!(vecahand.len(), 90); // 6 cards are unknown, distributed among three other players, i.e. binomial(6,2)*binomial(4,2)=90 possibilities
 }
+

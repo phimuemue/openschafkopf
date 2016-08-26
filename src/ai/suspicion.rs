@@ -96,10 +96,6 @@ impl SSuspicion {
         }
     }
 
-    pub fn hands(&self) -> &[SHand; 4] {
-        &self.m_ahand
-    }
-
     pub fn count_leaves(&self) -> usize {
         if self.m_vecsusptrans.len()==0 {
             1
