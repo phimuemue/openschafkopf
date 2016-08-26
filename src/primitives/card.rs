@@ -11,18 +11,6 @@ plain_enum!{EFarbe {
     Schelln,
 }}
 
-impl quickcheck::Arbitrary for EFarbe {
-    fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> EFarbe {
-        *EFarbe::all_values().iter()
-            .nth(
-                g.gen_range(
-                    0,
-                    EFarbe::all_values().iter().count()
-                )
-            ).unwrap()
-    }
-}
-
 impl fmt::Display for EFarbe {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", match self {
@@ -44,18 +32,6 @@ plain_enum!{ESchlag {
     S8,
     S7,
 }}
-
-impl quickcheck::Arbitrary for ESchlag {
-    fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> ESchlag {
-        *ESchlag::all_values().iter()
-            .nth(
-                g.gen_range(
-                    0,
-                    ESchlag::all_values().iter().count()
-                )
-            ).unwrap()
-    }
-}
 
 impl fmt::Display for ESchlag {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
