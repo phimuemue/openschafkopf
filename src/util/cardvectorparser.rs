@@ -70,7 +70,9 @@ where I: Stream<Item=char> {
 pub fn parse_cards<C>(str_cards: &str) -> C 
     where C: FromIterator<SCard>
 {
-    sep_by::<C,_,_>(parser(card_parse), spaces())
+    spaces()
+        .with(sep_by::<C,_,_>(parser(card_parse), spaces()))
+        .skip(spaces().skip(eof()))
         .parse(str_cards)
         .unwrap()
         .0
