@@ -43,8 +43,8 @@ where I: Stream<Item=char> {
         combine::char('k'),
         combine::char('a'),
     ])
-    .map(|chr_farbe| {
-        match chr_farbe {
+    .map(|chr_schlag| {
+        match chr_schlag {
             '7' => ESchlag::S7,
             '8' => ESchlag::S8,
             '9' => ESchlag::S9,
