@@ -8,7 +8,6 @@ use std::iter::FromIterator;
 // For now, parsing is only used to simplify input in programming.
 // But it is clear that these methods are far from perfect.
 // TODO: case-insensitive parsing
-// TODO: error handling
 // TODO farbe_parse and schlag_parse should be simplified (eliminate "duplicate enumeration")
 // TODO: enable parsing stuff like egho gazk9 s7
 
@@ -67,20 +66,22 @@ where I: Stream<Item=char> {
         .parse_state(input)
 }
 
-pub fn parse_cards<C>(str_cards: &str) -> C 
+pub fn parse_cards<C>(str_cards: &str) -> Option<C>
     where C: FromIterator<SCard>
 {
-    spaces()
+    match spaces()
         .with(sep_by::<C,_,_>(parser(card_parse), spaces()))
         .skip(spaces().skip(eof()))
         .parse(str_cards)
-        .unwrap()
-        .0
+    {
+        Ok(pairoutconsumed) => Some(pairoutconsumed.0),
+        Err(_) => None
+    }
 }
 
 #[test]
 fn test_cardvectorparser() {
-    let veccard = parse_cards::<Vec<_>>("ek gk hz hu s7");
+    let veccard = parse_cards::<Vec<_>>("ek gk hz hu s7").unwrap();
     assert_eq!(veccard.len(), 5);
     assert!(veccard[1] == SCard::new(EFarbe::Gras, ESchlag::Koenig));
 }

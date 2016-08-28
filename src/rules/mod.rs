@@ -198,7 +198,7 @@ pub mod test_rules {
         println!("Testing rules: {}", str_info);
         let mut game = game::SGame {
             m_ahand : create_playerindexmap(|eplayerindex| {
-                SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex]))
+                SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex]).unwrap())
             }),
             m_rules: rules,
             m_vecstich: vec![SStich::new(0)], // TODO: parametrize w.r.t. eplayerindex_first
@@ -206,8 +206,8 @@ pub mod test_rules {
         for (i_stich, &(eplayerindex_first_in_stich, str_stich)) in vecpaireplayerindexstr_stich.iter().enumerate() {
             println!("Stich {}: {}", i_stich, str_stich);
             assert_eq!(Some(eplayerindex_first_in_stich), game.which_player_can_do_something());
-            assert_eq!(4, cardvectorparser::parse_cards::<Vec<_>>(str_stich).len());
-            for card in cardvectorparser::parse_cards::<Vec<_>>(str_stich) {
+            assert_eq!(4, cardvectorparser::parse_cards::<Vec<_>>(str_stich).unwrap().len());
+            for card in cardvectorparser::parse_cards::<Vec<_>>(str_stich).unwrap() {
                 assert!(game.which_player_can_do_something().is_some());
                 let eplayerindex = game.which_player_can_do_something().unwrap();
                 println!("{}, {}", card, eplayerindex);
