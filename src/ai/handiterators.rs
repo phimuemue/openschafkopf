@@ -139,7 +139,7 @@ fn test_all_possible_hands() {
     let vecstich = ["g7 g8 ga g9", "s8 ho s7 s9", "h7 hk hu su", "eo go hz h8", "e9 ek e8 ea", "sa eu so ha"].into_iter()
         .map(|str_stich| {
             let mut stich = SStich::new(/*eplayerindex should not be relevant*/0);
-            for card in cardvectorparser::parse_cards(str_stich).into_iter() {
+            for card in cardvectorparser::parse_cards::<Vec<_>>(str_stich) {
                 stich.zugeben(card.clone());
             }
             stich
@@ -147,7 +147,7 @@ fn test_all_possible_hands() {
         .collect::<Vec<_>>();
     let vecahand = all_possible_hands(
         &vecstich,
-        SHand::new_from_vec(cardvectorparser::parse_cards("gk sk").into_iter().collect()),
+        SHand::new_from_vec(cardvectorparser::parse_cards("gk sk")),
         0, // eplayerindex_fixed
     ).collect::<Vec<_>>();
     assert_eq!(vecahand.len(), 90); // 6 cards are unknown, distributed among three other players, i.e. binomial(6,2)*binomial(4,2)=90 possibilities

@@ -148,7 +148,7 @@ fn test_stich() {
     // TODO? use quicktest or similar
     {
         use util::cardvectorparser;
-        let veccard = cardvectorparser::parse_cards("e7 e8 e9 ek");
+        let veccard = cardvectorparser::parse_cards::<Vec<_>>("e7 e8 e9 ek");
         for eplayerindex_first in 0..4 {
             for n_size in 0..5 {
                 let mut stich = SStich::new(eplayerindex_first);

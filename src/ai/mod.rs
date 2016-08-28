@@ -60,7 +60,7 @@ fn test_unplayed_cards() {
     let vecstich = ["g7 g8 ga g9", "s8 ho s7 s9", "h7 hk hu su", "eo go hz h8", "e9 ek e8 ea", "sa eu so ha"].into_iter()
         .map(|str_stich| {
             let mut stich = SStich::new(/*eplayerindex should not be relevant*/0);
-            for card in cardvectorparser::parse_cards(str_stich).into_iter() {
+            for card in cardvectorparser::parse_cards::<Vec<_>>(str_stich) {
                 stich.zugeben(card.clone());
             }
             stich
@@ -68,11 +68,11 @@ fn test_unplayed_cards() {
         .collect::<Vec<_>>();
     let veccard_unplayed = unplayed_cards(
         &vecstich,
-        &SHand::new_from_vec(cardvectorparser::parse_cards("gk sk").into_iter().collect())
+        &SHand::new_from_vec(cardvectorparser::parse_cards("gk sk"))
     ).into_iter()
     .filter_map(|ocard| ocard)
     .collect::<Vec<_>>();
-    let veccard_unplayed_check = cardvectorparser::parse_cards("gz e7 sz h9 ez gu");
+    let veccard_unplayed_check = cardvectorparser::parse_cards::<Vec<_>>("gz e7 sz h9 ez gu");
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
     assert!(veccard_unplayed.iter().all(|card| veccard_unplayed_check.contains(card)));
     assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
@@ -306,7 +306,7 @@ fn test_is_compatible_with_game_so_far() {
     let test_game = |astr_hand: [&'static str; 4], rules: &TRules, eplayerindex_first, vectestaction: Vec<VTestAction>| {
         let mut game = game::SGame {
             m_ahand : create_playerindexmap(|eplayerindex| {
-                SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex]).into_iter().collect())
+                SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex]))
             }),
             m_rules : rules,
             m_vecstich : vec![SStich::new(eplayerindex_first)],
@@ -315,7 +315,7 @@ fn test_is_compatible_with_game_so_far() {
         for testaction in vectestaction {
             match testaction {
                 VTestAction::PlayStich(str_stich) => {
-                    for card in cardvectorparser::parse_cards(str_stich).into_iter() {
+                    for card in cardvectorparser::parse_cards::<Vec<_>>(str_stich) {
                         let eplayerindex = game.which_player_can_do_something().unwrap();
                         game.zugeben(card, eplayerindex).unwrap();
                     }

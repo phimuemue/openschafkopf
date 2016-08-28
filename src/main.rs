@@ -53,13 +53,13 @@ fn main() {
                 &[(0, "g7 g8 ga g9"), (2, "s8 ho s7 s9"), (1, "h7 hk hu su"), (2, "eo go hz h8"), (2, "e9 ek e8 ea"), (3, "sa eu so ha")].iter()
                     .map(|&(eplayerindex, str_stich)| {
                         let mut stich = SStich::new(eplayerindex);
-                        for card in util::cardvectorparser::parse_cards(str_stich).iter().cycle().skip(eplayerindex).take(4) {
+                        for card in util::cardvectorparser::parse_cards::<Vec<_>>(str_stich).iter().cycle().skip(eplayerindex).take(4) {
                             stich.zugeben(card.clone());
                         }
                         stich
                     })
                     .collect::<Vec<_>>(),
-                SHand::new_from_vec(util::cardvectorparser::parse_cards("gk sk").into_iter().collect()),
+                SHand::new_from_vec(util::cardvectorparser::parse_cards("gk sk")),
                 0, // eplayerindex_fixed
             ).count()
         );
@@ -80,7 +80,7 @@ fn main() {
 
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
         if let Some(str_hand) = subcommand_matches.value_of("hand") {
-            let hand_fixed = SHand::new_from_vec(util::cardvectorparser::parse_cards(str_hand).into_iter().collect());
+            let hand_fixed = SHand::new_from_vec(util::cardvectorparser::parse_cards(str_hand));
             let eplayerindex_fixed = 0;
             println!("Hand: {}", hand_fixed);
             for rules in allowed_rules(&ruleset.m_avecrulegroup[eplayerindex_fixed]).iter() 

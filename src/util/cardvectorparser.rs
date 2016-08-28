@@ -3,6 +3,7 @@ extern crate combine;
 use primitives::card::*;
 use self::combine::*;
 use self::combine::primitives::Stream;
+use std::iter::FromIterator;
 
 // For now, parsing is only used to simplify input in programming.
 // But it is clear that these methods are far from perfect.
@@ -66,8 +67,10 @@ where I: Stream<Item=char> {
         .parse_state(input)
 }
 
-pub fn parse_cards(str_cards: &str) -> Vec<SCard> {
-    sep_by::<Vec<_>,_,_>(parser(card_parse), spaces())
+pub fn parse_cards<C>(str_cards: &str) -> C 
+    where C: FromIterator<SCard>
+{
+    sep_by::<C,_,_>(parser(card_parse), spaces())
         .parse(str_cards)
         .unwrap()
         .0
@@ -75,7 +78,7 @@ pub fn parse_cards(str_cards: &str) -> Vec<SCard> {
 
 #[test]
 fn test_cardvectorparser() {
-    let veccard = parse_cards("ek gk hz hu s7");
+    let veccard = parse_cards::<Vec<_>>("ek gk hz hu s7");
     assert_eq!(veccard.len(), 5);
     assert!(veccard[1] == SCard::new(EFarbe::Gras, ESchlag::Koenig));
 }
