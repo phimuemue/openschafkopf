@@ -7,55 +7,50 @@ use std::iter::FromIterator;
 
 // For now, parsing is only used to simplify input in programming.
 // But it is clear that these methods are far from perfect.
-// TODO: case-insensitive parsing
-// TODO farbe_parse and schlag_parse should be simplified (eliminate "duplicate enumeration")
 // TODO: enable parsing stuff like egho gazk9 s7
+
+use std::fmt;
+use std::error::Error as StdError;
+#[derive(Debug)]
+struct ParseEnumError;
+impl fmt::Display for ParseEnumError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "error")
+    }
+}
+impl StdError for ParseEnumError {
+    fn description(&self) -> &str {
+        "error"
+    }
+}
 
 fn farbe_parse<I>(input: State<I>) -> ParseResult<EFarbe, I>
 where I: Stream<Item=char> {
-    combine::choice([
-        combine::char('e'),
-        combine::char('g'),
-        combine::char('h'),
-        combine::char('s'),
-    ])
-    .map(|chr_farbe| {
-        match chr_farbe {
-            'e' => EFarbe::Eichel,
-            'g' => EFarbe::Gras,
-            'h' => EFarbe::Herz,
-            's' => EFarbe::Schelln,
-            _ => unreachable!(),
-        }
-    } )
+    letter()
+        .and_then(|chr_farbe| { match chr_farbe {
+            'e'|'E'=> Ok(EFarbe::Eichel),
+            'g'|'G'=> Ok(EFarbe::Gras),
+            'h'|'H'=> Ok(EFarbe::Herz),
+            's'|'S'=> Ok(EFarbe::Schelln),
+            _ => Err(ParseEnumError),
+        } } )
     .parse_state(input)
 }
 
 fn schlag_parse<I>(input: State<I>) -> ParseResult<ESchlag, I>
 where I: Stream<Item=char> {
-    combine::choice([
-        combine::char('7'),
-        combine::char('8'),
-        combine::char('9'),
-        combine::char('z'),
-        combine::char('u'),
-        combine::char('o'),
-        combine::char('k'),
-        combine::char('a'),
-    ])
-    .map(|chr_schlag| {
-        match chr_schlag {
-            '7' => ESchlag::S7,
-            '8' => ESchlag::S8,
-            '9' => ESchlag::S9,
-            'z' => ESchlag::Zehn,
-            'u' => ESchlag::Unter,
-            'o' => ESchlag::Ober,
-            'k' => ESchlag::Koenig,
-            'a' => ESchlag::Ass,
-            _ => unreachable!(),
-        }
-    } )
+    alpha_num()
+        .and_then(|chr_schlag| { match chr_schlag {
+            '7'    => Ok(ESchlag::S7),
+            '8'    => Ok(ESchlag::S8),
+            '9'    => Ok(ESchlag::S9),
+            'z'|'Z'=> Ok(ESchlag::Zehn),
+            'u'|'U'=> Ok(ESchlag::Unter),
+            'o'|'O'=> Ok(ESchlag::Ober),
+            'k'|'K'=> Ok(ESchlag::Koenig),
+            'a'|'A'=> Ok(ESchlag::Ass),
+            _ => Err(ParseEnumError),
+        } } )
     .parse_state(input)
 }
 
