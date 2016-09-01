@@ -87,7 +87,7 @@ impl<'rules> SGamePreparations<'rules> {
     }
 
     // TODO: extend return value to support stock, etc.
-    pub fn determine_rules<'players>(self) -> Option<SGame<'rules>> {
+    pub fn determine_rules(self) -> Option<SGame<'rules>> {
         // TODO: find sensible way to deal with multiple game announcements (currently, we choose highest priority)
         let orules_actively_played = self.m_vecgameannouncement.iter()
             .map(|gameannouncement| gameannouncement.m_opairrulespriority)
