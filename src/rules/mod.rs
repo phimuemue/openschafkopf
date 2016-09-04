@@ -196,19 +196,21 @@ pub mod test_rules {
         str_info: &str,
         rules: &rules::TRules,
         astr_hand: [&str; 4],
+        veceplayerindex_stoss: Vec<EPlayerIndex>,
         vecpaireplayerindexstr_stich: [(EPlayerIndex, &str); 8],
         an_payout: [isize; 4],
     ) {
         use game;
         use util::cardvectorparser;
         println!("Testing rules: {}", str_info);
+        // TODO test that SStoss is actually allowed using SPreGame
         let mut game = game::SGame {
             m_ahand : create_playerindexmap(|eplayerindex| {
                 SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex]).unwrap())
             }),
             m_rules: rules,
             m_vecstich: vec![SStich::new(0)], // TODO: parametrize w.r.t. eplayerindex_first
-            m_vecstoss: vec![], // TODO implement tests for SStoss
+            m_vecstoss: veceplayerindex_stoss.into_iter().map(|eplayerindex| rules::SStoss{m_eplayerindex: eplayerindex}).collect(),
         };
         for (i_stich, &(eplayerindex_first_in_stich, str_stich)) in vecpaireplayerindexstr_stich.iter().enumerate() {
             println!("Stich {}: {}", i_stich, str_stich);

@@ -15,16 +15,16 @@ dictstrfnGame = {
     #"Sauspiel auf die Blaue" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Gras}"%(eplayerindex),
     #"Sauspiel auf die Hundsgfickte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln}"%(eplayerindex),
 
-    #"Eichel-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, \"Eichel-Solo\")"%(eplayerindex),
-    #"Gras-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, \"Gras-Solo\")"%(eplayerindex),
-    #"Herz-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, \"Herz-Solo\")"%(eplayerindex),
-    #"Schelln-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, \"Schelln-Solo\")"%(eplayerindex),
+    "Eichel-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, \"Eichel-Solo\")"%(eplayerindex),
+    "Gras-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, \"Gras-Solo\")"%(eplayerindex),
+    "Herz-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, \"Herz-Solo\")"%(eplayerindex),
+    "Schelln-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, \"Schelln-Solo\")"%(eplayerindex),
 
     #"Wenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderNoTrumpf>, \"Wenz\")"%(eplayerindex),
-    "Eichel-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, \"Eichel-Wenz\")"%(eplayerindex),
-    "Gras-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, \"Gras-Wenz\")"%(eplayerindex),
-    "Herz-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, \"Herz-Wenz\")"%(eplayerindex),
-    "Schelln-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, \"Schelln-Wenz\")"%(eplayerindex),
+    #"Eichel-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, \"Eichel-Wenz\")"%(eplayerindex),
+    #"Gras-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, \"Gras-Wenz\")"%(eplayerindex),
+    #"Herz-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, \"Herz-Wenz\")"%(eplayerindex),
+    #"Schelln-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, \"Schelln-Wenz\")"%(eplayerindex),
 
     #"Geier" : lambda eplayerindex: "SRulesGeier"%(eplayerindex),
     #"Eichel-Farbgeier" : lambda eplayerindex: "SRulesFarbgeier{EFarbe::Eichel, %d}"%(eplayerindex),
@@ -67,6 +67,10 @@ def OpenFileParseGame(strFile):
                 print("Error in file: len(vecspancard)!=8")
                 return
             print("\"%s\"," % (" ".join([CardString(spancard["class"][3]) for spancard in vecspancard])), end="")
+        print("],")
+        print("    vec![", end="")
+        for aKontraRetour in soup.find(text="Kontra und Retour").find_parent("tr").find_all("a", href=True):
+            print("%s,"%dictstreplayerindex[aKontraRetour.contents[0]], end="")
         print("],")
         print("    [", end="")
         for divtrickcontainer in soup.find_all(class_="content_full trick-container"):
