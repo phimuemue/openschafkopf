@@ -145,13 +145,15 @@ pub fn print_game_announcements(vecgameannouncement: &[SGameAnnouncement]) {
 }
 
 pub fn print_game_info(game: &SGame) {
-    // TODO print info about stoss
     do_in_window(
         ESkUiWindow::GameInfo,
         |ncwin| {
             wprint(ncwin, &format!("{}", game.m_rules));
             if let Some(eplayerindex) = game.m_rules.playerindex() {
-                wprint(ncwin, &format!(", played by {}", eplayerindex));
+                wprint(ncwin, &format!(", played by {}. Stoesse: ", eplayerindex));
+                for stoss in &game.m_vecstoss {
+                    wprint(ncwin, &format!("{},", stoss.m_eplayerindex));
+                }
             }
             ncurses::wrefresh(ncwin);
         }
