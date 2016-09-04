@@ -59,7 +59,7 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
                         skui::wprintln(ncwin, &format!("AI: {}", card));
                     }
                     skui::print_hand(hand.cards(), Some(i_card_chosen));
-                    skui::print_game_info(game);
+                    skui::print_game_info(game.m_rules, &game.m_vecstoss);
                 },
                 || {Some(self.m_ai.suggest_card(game))}
             ).clone()
@@ -129,12 +129,19 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
             |_| true, // all alternatives allowed
             |ncwin, i_b_stoss_chosen, ob_stoss_suggest| {
                 assert!(ob_stoss_suggest.is_none());
-                skui::wprintln(ncwin, &format!("{} / {} until now. Stoss?", rules, vecstoss.len()));
+                skui::print_game_info(rules, vecstoss);
                 skui::print_hand(hand.cards(), None);
                 for (i_b_stoss, b_stoss) in vecb_stoss.iter().enumerate() {
-                    skui::wprintln(ncwin, &format!("{} {}",
+                    skui::wprintln(ncwin, &format!("{} {} {}",
                         if i_b_stoss==i_b_stoss_chosen {"*"} else {" "},
-                        if *b_stoss {"Yes"} else {"No"},
+                        if *b_stoss {"Give"} else {"No"},
+                        { match vecstoss.len() {
+                            0 => "Kontra",
+                            1 => "Re",
+                            2 => "Sup",
+                            3 => "Hirsch",
+                            _ => panic!() // currently only quadruple stoss supported
+                        } },
                     ));
                 }
             },

@@ -1,6 +1,7 @@
 use primitives::*;
 use game::*;
 use ncurses;
+use rules::*;
 
 pub fn init_ui() {
     ncurses::initscr();
@@ -144,14 +145,14 @@ pub fn print_game_announcements(vecgameannouncement: &[SGameAnnouncement]) {
     }
 }
 
-pub fn print_game_info(game: &SGame) {
+pub fn print_game_info(rules: &TRules, vecstoss: &Vec<SStoss>) {
     do_in_window(
         ESkUiWindow::GameInfo,
         |ncwin| {
-            wprint(ncwin, &format!("{}", game.m_rules));
-            if let Some(eplayerindex) = game.m_rules.playerindex() {
+            wprint(ncwin, &format!("{}", rules));
+            if let Some(eplayerindex) = rules.playerindex() {
                 wprint(ncwin, &format!(", played by {}. Stoesse: ", eplayerindex));
-                for stoss in &game.m_vecstoss {
+                for stoss in vecstoss {
                     wprint(ncwin, &format!("{},", stoss.m_eplayerindex));
                 }
             }
