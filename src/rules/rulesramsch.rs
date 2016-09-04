@@ -38,10 +38,9 @@ impl TRules for SRulesRamsch {
             self.points_per_player(vecstich, eplayerindex)
         });
         let n_points_max = an_points.iter().max().unwrap().clone();
-        let veceplayerindex_most_points : Vec<EPlayerIndex> = (0..4)
-            .map(|eplayerindex| eplayerindex as usize)
+        let veceplayerindex_most_points = (0..4)
             .filter(|eplayerindex| n_points_max==an_points[*eplayerindex])
-            .collect();
+            .collect::<Vec<_>>();
         let n_price = 10;
         let eplayerindex_loser : EPlayerIndex = {
             if 1==veceplayerindex_most_points.len() {
