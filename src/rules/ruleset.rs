@@ -63,9 +63,9 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
                     if str_l=="rufspiel" {
                         create_rulegroup(
                             "Rufspiel", 
-                            EFarbe::all_values().iter()
-                                .filter(|&efarbe| EFarbe::Herz!=*efarbe)
-                                .map(|&efarbe| Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TRules>)
+                            EFarbe::all_values()
+                                .filter(|efarbe| EFarbe::Herz!=*efarbe)
+                                .map(|efarbe| Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TRules>)
                                 .collect()
                         )
                     } else if str_l=="solo" {

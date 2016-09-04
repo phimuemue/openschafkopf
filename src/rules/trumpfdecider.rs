@@ -71,8 +71,8 @@ impl<SchlagDesignator, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<Schla
         SchlagDesignator::schlag() == card.schlag() || DeciderSec::is_trumpf(card)
     }
     fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>) -> Vec<SCard> {
-        let mut veccard_trumpf : Vec<_> = EFarbe::all_values().iter()
-            .map(|&efarbe| SCard::new(efarbe, SchlagDesignator::schlag()))
+        let mut veccard_trumpf : Vec<_> = EFarbe::all_values()
+            .map(|efarbe| SCard::new(efarbe, SchlagDesignator::schlag()))
             .collect();
         veceschlag.push(SchlagDesignator::schlag());
         let mut veccard_trumpf_sec = DeciderSec::trumpfs_in_descending_order(veceschlag);
@@ -119,9 +119,9 @@ impl<FarbeDesignator> TTrumpfDecider for STrumpfDeciderFarbe<FarbeDesignator>
         FarbeDesignator::farbe() == card.farbe()
     }
     fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> Vec<SCard> {
-        ESchlag::all_values().iter()
-            .filter(|eschlag| !veceschlag.iter().any(|&eschlag_done| eschlag_done==**eschlag))
-            .map(|&eschlag| SCard::new(FarbeDesignator::farbe(), eschlag))
+        ESchlag::all_values()
+            .filter(|eschlag| !veceschlag.iter().any(|&eschlag_done| eschlag_done==*eschlag))
+            .map(|eschlag| SCard::new(FarbeDesignator::farbe(), eschlag))
             .collect()
     }
     fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering {
