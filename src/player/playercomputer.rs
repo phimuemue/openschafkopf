@@ -34,7 +34,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
                 )
             })
             .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
-            .max_by_key(|&(_rules, f_payout_avg)| f_payout_avg as isize) // TODO f64 no Ord => what to do?
+            .max_by_key(|&(_rules, f_payout_avg)| f_payout_avg as isize) // TODO rust: Use max_by
             .map(|(rules, _f_payout_avg)| rules)
     }
 

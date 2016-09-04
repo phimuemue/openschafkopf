@@ -52,7 +52,7 @@ impl TRules for SRulesRamsch {
                         vecstich.iter()
                             .map(|stich| stich[eplayerindex])
                             .filter(|card| self.is_trumpf(*card))
-                            // TODO: introduce max_by_cmp
+                            // TODO rust: use max_by
                             .fold1(|card_fst, card_snd| STrumpfDeciderRamsch::better_trumpf(card_fst, card_snd))
                     )})
                     .fold1(|paireplayerindexocard_fst, paireplayerindexocard_snd| {
