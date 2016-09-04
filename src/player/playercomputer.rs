@@ -40,12 +40,11 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
 
     fn ask_for_stoss(
         &self,
-        _eplayerindex: EPlayerIndex,
-        _rules: &TRules,
-        _hand: &SHand,
+        eplayerindex: EPlayerIndex,
+        rules: &TRules,
+        hand: &SHand,
         _vecstoss: &Vec<SStoss>,
     ) -> bool {
-        // TODO implement a stoss decision strategy
-        true
+        self.m_ai.rank_rules(hand, eplayerindex, rules, /*n_tests_per_rules*/ 100) > 10f64 // TODO determine sensible threshold
     }
 }
