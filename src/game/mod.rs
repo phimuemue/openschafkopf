@@ -117,7 +117,7 @@ impl<'rules> SGamePreparations<'rules> {
 }
 
 pub struct SPreGame<'rules> {
-    m_eplayerindex_first : EPlayerIndex,
+    pub m_eplayerindex_first : EPlayerIndex,
     pub m_ahand : [SHand; 4],
     pub m_rules : &'rules TRules,
     pub m_vecstoss : Vec<SStoss>,
