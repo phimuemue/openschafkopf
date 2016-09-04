@@ -24,6 +24,16 @@ impl<ActiveSinglePlayCore> fmt::Display for SRulesActiveSinglePlay<ActiveSingleP
 impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCore> 
     where ActiveSinglePlayCore: TTrumpfDecider,
 {
+    fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool {
+        assert!(
+            vecstoss.iter()
+                .enumerate()
+                .all(|(i_stoss, stoss)| (i_stoss%2==0) == (stoss.m_eplayerindex!=self.m_eplayerindex))
+        );
+        assert_eq!(hand.cards().len(), 8);
+        (eplayerindex==self.m_eplayerindex)==(vecstoss.len()%2==1)
+    }
+
     fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
         ActiveSinglePlayCore::trumpf_or_farbe(card)
     }

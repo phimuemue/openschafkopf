@@ -310,6 +310,7 @@ fn test_is_compatible_with_game_so_far() {
             }),
             m_rules : rules,
             m_vecstich : vec![SStich::new(eplayerindex_first)],
+            m_vecstoss : vec![], // TODO implement tests for SStoss
         };
         let mut vecpaireplayerindextrumpforfarbe_frei = Vec::new();
         for testaction in vectestaction {

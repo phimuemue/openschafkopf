@@ -20,6 +20,10 @@ pub enum ESchneiderSchwarz {
     Schwarz,
 }
 
+pub struct SStoss {
+    pub m_eplayerindex : EPlayerIndex,
+}
+
 pub fn points_to_schneiderschwarz_and_winners<FnIsPlayerParty, Rules>(
     vecstich: &Vec<SStich>,
     rules: &Rules,
@@ -67,6 +71,8 @@ pub trait TRules : fmt::Display {
     fn can_be_played(&self, _hand: &SHand) -> bool {
         true // probably, only Rufspiel is prevented in some cases
     }
+
+    fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool;
 
     fn is_trumpf(&self, card: SCard) -> bool {
         VTrumpfOrFarbe::Trumpf == self.trumpf_or_farbe(card)
@@ -202,6 +208,7 @@ pub mod test_rules {
             }),
             m_rules: rules,
             m_vecstich: vec![SStich::new(0)], // TODO: parametrize w.r.t. eplayerindex_first
+            m_vecstoss: vec![], // TODO implement tests for SStoss
         };
         for (i_stich, &(eplayerindex_first_in_stich, str_stich)) in vecpaireplayerindexstr_stich.iter().enumerate() {
             println!("Stich {}: {}", i_stich, str_stich);

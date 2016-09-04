@@ -87,7 +87,7 @@ impl<'rules> SGamePreparations<'rules> {
     }
 
     // TODO: extend return value to support stock, etc.
-    pub fn determine_rules(self) -> Option<SGame<'rules>> {
+    pub fn determine_rules(self) -> Option<SPreGame<'rules>> {
         // TODO: find sensible way to deal with multiple game announcements (currently, we choose highest priority)
         let orules_actively_played = self.m_vecgameannouncement.iter()
             .map(|gameannouncement| gameannouncement.m_opairrulespriority)
@@ -99,10 +99,11 @@ impl<'rules> SGamePreparations<'rules> {
             });
         let eplayerindex_first = self.m_eplayerindex_first;
         let create_game = move |ahand, rules| {
-            Some(SGame {
+            Some(SPreGame {
                 m_ahand : ahand,
                 m_rules : rules,
-                m_vecstich : vec![SStich::new(eplayerindex_first)],
+                m_eplayerindex_first : eplayerindex_first,
+                m_vecstoss : vec![],
             })
         };
         if let Some(rules) = orules_actively_played {
@@ -115,9 +116,50 @@ impl<'rules> SGamePreparations<'rules> {
     }
 }
 
+pub struct SPreGame<'rules> {
+    m_eplayerindex_first : EPlayerIndex,
+    pub m_ahand : [SHand; 4],
+    pub m_rules : &'rules TRules,
+    pub m_vecstoss : Vec<SStoss>,
+}
+
+impl<'rules> SPreGame<'rules> {
+    pub fn which_player_can_do_something(&self) -> Vec<EPlayerIndex> {
+        if self.m_vecstoss.len() < 4 {
+            (0..4)
+                .map(|eplayerindex| (eplayerindex + self.m_eplayerindex_first) % 4)
+                .filter(|eplayerindex| self.m_rules.stoss_allowed(*eplayerindex, &self.m_vecstoss, &self.m_ahand[*eplayerindex]))
+                .collect()
+        } else {
+            vec![]
+        }
+    }
+
+    pub fn stoss(&mut self, eplayerindex_stoss: EPlayerIndex) -> Result<(), &'static str> {
+        if !self.which_player_can_do_something().into_iter()
+            .any(|eplayerindex| eplayerindex==eplayerindex_stoss)
+        {
+            return Err("Stoss not allowed for specified eplayerindex");
+        }
+        self.m_vecstoss.push(SStoss{m_eplayerindex : eplayerindex_stoss});
+        Ok(())
+    }
+
+    // TODO: extend return value to support stock, etc.
+    pub fn finish(self) -> SGame<'rules> {
+        SGame {
+            m_ahand : self.m_ahand,
+            m_rules : self.m_rules,
+            m_vecstich : vec![SStich::new(self.m_eplayerindex_first)],
+            m_vecstoss : self.m_vecstoss,
+        }
+    }
+}
+
 pub struct SGame<'rules> {
     pub m_ahand : [SHand; 4],
     pub m_rules : &'rules TRules,
+    pub m_vecstoss : Vec<SStoss>,
     pub m_vecstich : Vec<SStich>,
 }
 
@@ -189,7 +231,10 @@ impl<'rules> SGame<'rules> {
 
     pub fn payout(&self) -> [isize; 4] {
         assert!(self.which_player_can_do_something().is_none());
-        self.m_rules.payout(&self.m_vecstich)
+        let an_payout_raw = self.m_rules.payout(&self.m_vecstich);
+        create_playerindexmap(|eplayerindex| {
+            an_payout_raw[eplayerindex] * 2isize.pow(self.m_vecstoss.len() as u32)
+        })
     }
 
     pub fn completed_stichs(&self) -> &[SStich] {

@@ -17,4 +17,12 @@ pub trait TPlayer {
         vecgameannouncement: &Vec<SGameAnnouncement>,
         vecrulegroup: &'rules Vec<SRuleGroup>
     ) -> Option<&'rules TRules>;
+
+    fn ask_for_stoss(
+        &self,
+        eplayerindex: EPlayerIndex,
+        rules: &TRules,
+        hand: &SHand,
+        vecstoss: &Vec<SStoss>,
+    ) -> bool;
 }

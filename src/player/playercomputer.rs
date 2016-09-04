@@ -37,4 +37,15 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
             .max_by_key(|&(_rules, f_payout_avg)| f_payout_avg as isize) // TODO f64 no Ord => what to do?
             .map(|(rules, _f_payout_avg)| rules)
     }
+
+    fn ask_for_stoss(
+        &self,
+        _eplayerindex: EPlayerIndex,
+        _rules: &TRules,
+        _hand: &SHand,
+        _vecstoss: &Vec<SStoss>,
+    ) -> bool {
+        // TODO implement a stoss decision strategy
+        true
+    }
 }

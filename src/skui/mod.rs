@@ -145,6 +145,7 @@ pub fn print_game_announcements(vecgameannouncement: &[SGameAnnouncement]) {
 }
 
 pub fn print_game_info(game: &SGame) {
+    // TODO print info about stoss
     do_in_window(
         ESkUiWindow::GameInfo,
         |ncwin| {

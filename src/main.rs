@@ -103,7 +103,20 @@ fn main() {
             gamepreparations.announce_game(eplayerindex, orules).unwrap();
         }
         skui::logln("Asked players if they want to play. Determining rules");
-        if let Some(mut game) = gamepreparations.determine_rules() {
+        if let Some(mut pregame) = gamepreparations.determine_rules() {
+            while let Some(eplayerindex_stoss) = pregame.which_player_can_do_something().into_iter()
+                .find(|eplayerindex| {
+                    vecplayer[*eplayerindex].ask_for_stoss( // TODO unify interfaces
+                        *eplayerindex,
+                        pregame.m_rules,
+                        &pregame.m_ahand[*eplayerindex],
+                        &pregame.m_vecstoss,
+                    )
+                })
+            {
+                pregame.stoss(eplayerindex_stoss).unwrap();
+            }
+            let mut game = pregame.finish();
             while let Some(eplayerindex)=game.which_player_can_do_something() {
                 let (txcard, rxcard) = mpsc::channel::<SCard>();
                 vecplayer[eplayerindex].take_control(

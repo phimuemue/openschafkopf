@@ -111,4 +111,32 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
         }
         return None;
     }
+
+    fn ask_for_stoss(
+        &self,
+        _eplayerindex: EPlayerIndex,
+        rules: &TRules,
+        hand: &SHand,
+        vecstoss: &Vec<SStoss>,
+    ) -> bool {
+        // TODO improve output
+        let vecb_stoss = vec![false, true];
+        skui::ask_for_alternative(
+            &vecb_stoss,
+            skui::choose_alternative_from_list_key_bindings(),
+            |_| true, // all alternatives allowed
+            |ncwin, i_b_stoss_chosen, ob_stoss_suggest| {
+                assert!(ob_stoss_suggest.is_none());
+                skui::wprintln(ncwin, &format!("{} / {} until now. Stoss?", rules, vecstoss.len()));
+                skui::print_hand(hand.cards(), None);
+                for (i_b_stoss, b_stoss) in vecb_stoss.iter().enumerate() {
+                    skui::wprintln(ncwin, &format!("{} {}",
+                        if i_b_stoss==i_b_stoss_chosen {"*"} else {" "},
+                        if *b_stoss {"Yes"} else {"No"},
+                    ));
+                }
+            },
+            || None, // TODO implement suggestions
+        ).clone()
+    }
 }

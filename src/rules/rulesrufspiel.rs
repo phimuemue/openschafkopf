@@ -45,6 +45,12 @@ impl TRules for SRulesRufspiel {
         STrumpfDeciderRufspiel::trumpf_or_farbe(card)
     }
 
+    fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool {
+        assert_eq!(hand.cards().len(), 8);
+        assert!(eplayerindex!=self.m_eplayerindex || !hand.contains(self.rufsau()));
+        (eplayerindex==self.m_eplayerindex || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
+    }
+
     fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
         assert_eq!(vecstich.len(), 8);
         let eplayerindex_coplayer = vecstich.iter()

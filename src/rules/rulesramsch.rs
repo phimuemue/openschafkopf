@@ -19,6 +19,12 @@ pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag<
     SFarbeDesignatorHerz>>>;
 
 impl TRules for SRulesRamsch {
+    fn stoss_allowed(&self, _eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool {
+        assert!(vecstoss.is_empty());
+        assert_eq!(hand.cards().len(), 8);
+        false
+    }
+
     fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
         STrumpfDeciderRamsch::trumpf_or_farbe(card)
     }
