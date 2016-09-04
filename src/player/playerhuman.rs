@@ -121,7 +121,6 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
         vecstoss: &Vec<SStoss>,
         txb: mpsc::Sender<bool>,
     ) {
-        // TODO improve output
         let vecb_stoss = vec![false, true];
         txb.send(skui::ask_for_alternative(
             &vecb_stoss,
@@ -130,7 +129,11 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
             |ncwin, i_b_stoss_chosen, ob_stoss_suggest| {
                 assert!(ob_stoss_suggest.is_none());
                 skui::print_game_info(rules, vecstoss);
-                skui::print_hand(hand.cards(), None);
+                {
+                    let mut veccard = hand.cards().clone();
+                    rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
+                    skui::print_hand(&veccard, None);
+                }
                 for (i_b_stoss, b_stoss) in vecb_stoss.iter().enumerate() {
                     skui::wprintln(ncwin, &format!("{} {} {}",
                         if i_b_stoss==i_b_stoss_chosen {"*"} else {" "},
