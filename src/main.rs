@@ -95,23 +95,28 @@ fn main() {
         );
         while let Some(eplayerindex) = gamepreparations.which_player_can_do_something() {
             skui::logln(&format!("Asking player {} for game", eplayerindex));
-            let orules = vecplayer[eplayerindex].ask_for_game(
+            let (txorules, rxorules) = mpsc::channel::<Option<_>>();
+            vecplayer[eplayerindex].ask_for_game(
                 &gamepreparations.m_ahand[eplayerindex],
                 &gamepreparations.m_vecgameannouncement,
-                &gamepreparations.m_ruleset.m_avecrulegroup[eplayerindex]
+                &gamepreparations.m_ruleset.m_avecrulegroup[eplayerindex],
+                txorules.clone()
             );
-            gamepreparations.announce_game(eplayerindex, orules).unwrap();
+            gamepreparations.announce_game(eplayerindex, rxorules.recv().unwrap()).unwrap();
         }
         skui::logln("Asked players if they want to play. Determining rules");
         if let Some(mut pregame) = gamepreparations.determine_rules() {
             while let Some(eplayerindex_stoss) = pregame.which_player_can_do_something().into_iter()
                 .find(|eplayerindex| {
-                    vecplayer[*eplayerindex].ask_for_stoss( // TODO unify interfaces
+                    let (txb_stoss, rxb_stoss) = mpsc::channel::<bool>();
+                    vecplayer[*eplayerindex].ask_for_stoss(
                         *eplayerindex,
                         pregame.m_rules,
                         &pregame.m_ahand[*eplayerindex],
                         &pregame.m_vecstoss,
-                    )
+                        txb_stoss,
+                    );
+                    rxb_stoss.recv().unwrap()
                 })
             {
                 pregame.stoss(eplayerindex_stoss).unwrap();
@@ -123,8 +128,7 @@ fn main() {
                     &game,
                     txcard.clone()
                 );
-                let card_played = rxcard.recv().unwrap();
-                game.zugeben(card_played, eplayerindex).unwrap();
+                game.zugeben(rxcard.recv().unwrap(), eplayerindex).unwrap();
             }
             skui::logln("Results");
             for eplayerindex in 0..4 {

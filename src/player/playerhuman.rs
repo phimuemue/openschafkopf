@@ -69,7 +69,7 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
         }
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SHand, vecgameannouncement : &Vec<SGameAnnouncement>, vecrulegroup: &'rules Vec<SRuleGroup>) -> Option<&'rules TRules> {
+    fn ask_for_game<'rules>(&self, hand: &SHand, vecgameannouncement : &Vec<SGameAnnouncement>, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TRules>>) {
         skui::print_game_announcements(vecgameannouncement);
         let vecorulegroup : Vec<Option<&SRuleGroup>> = Some(None).into_iter()
             .chain(
@@ -106,10 +106,11 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
                 },
                 |i_orules_chosen| vecorules[i_orules_chosen]
             ) {
-                return Some(rules);
+                txorules.send(Some(rules)).unwrap();
+                return;
             }
         }
-        return None;
+        txorules.send(None).unwrap();
     }
 
     fn ask_for_stoss(
@@ -118,10 +119,11 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
         rules: &TRules,
         hand: &SHand,
         vecstoss: &Vec<SStoss>,
-    ) -> bool {
+        txb: mpsc::Sender<bool>,
+    ) {
         // TODO improve output
         let vecb_stoss = vec![false, true];
-        skui::ask_for_alternative(
+        txb.send(skui::ask_for_alternative(
             &vecb_stoss,
             skui::choose_alternative_from_list_key_bindings(),
             |_| true, // all alternatives allowed
@@ -137,6 +139,6 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
                 }
             },
             || None, // TODO implement suggestions
-        ).clone()
+        ).clone()).unwrap()
     }
 }

@@ -16,10 +16,10 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         txcard.send(self.m_ai.suggest_card(game)).ok();
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SHand, _ : &Vec<SGameAnnouncement>, vecrulegroup: &'rules Vec<SRuleGroup>) -> Option<&'rules TRules> {
+    fn ask_for_game<'rules>(&self, hand: &SHand, _ : &Vec<SGameAnnouncement>, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TRules>>) {
         // TODO: implement a more intelligent decision strategy
         let n_tests_per_rules = 50;
-        allowed_rules(vecrulegroup).iter()
+        txorules.send(allowed_rules(vecrulegroup).iter()
             .filter(|rules| rules.can_be_played(hand))
             .filter(|rules| {
                 4 <= hand.cards().iter()
@@ -35,7 +35,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
             })
             .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
             .max_by_key(|&(_rules, f_payout_avg)| f_payout_avg as isize) // TODO rust: Use max_by
-            .map(|(rules, _f_payout_avg)| rules)
+            .map(|(rules, _f_payout_avg)| rules)).unwrap();
     }
 
     fn ask_for_stoss(
@@ -44,7 +44,10 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         rules: &TRules,
         hand: &SHand,
         _vecstoss: &Vec<SStoss>,
-    ) -> bool {
-        self.m_ai.rank_rules(hand, eplayerindex, rules, /*n_tests_per_rules*/ 100) > 10f64 // TODO determine sensible threshold
+        txb: mpsc::Sender<bool>,
+    ) {
+        txb.send(
+            self.m_ai.rank_rules(hand, eplayerindex, rules, /*n_tests_per_rules*/ 100) > 10f64 // TODO determine sensible threshold
+        ).unwrap()
     }
 }
