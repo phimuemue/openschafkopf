@@ -51,21 +51,20 @@ impl TRules for SRulesRufspiel {
         (eplayerindex==self.m_eplayerindex || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }
 
-    fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
-        assert_eq!(vecstich.len(), 8);
-        let eplayerindex_coplayer = vecstich.iter()
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4] {
+        let eplayerindex_coplayer = gamefinishedstiche.get().iter()
             .flat_map(|stich| stich.indices_and_cards())
             .find(|&(_, card)| card==self.rufsau())
             .map(|(eplayerindex, _)| eplayerindex)
             .unwrap();
         let (eschneiderschwarz, ab_winner) = points_to_schneiderschwarz_and_winners(
-            vecstich,
+            gamefinishedstiche.get(),
             self,
             /*fn_is_player_party*/|eplayerindex| {
                 eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer
             },
         );
-        let n_laufende = STrumpfDeciderRufspiel::count_laufende(vecstich, &ab_winner);
+        let n_laufende = STrumpfDeciderRufspiel::count_laufende(gamefinishedstiche.get(), &ab_winner);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_rufspiel_default*/ 20 
              + { match eschneiderschwarz {

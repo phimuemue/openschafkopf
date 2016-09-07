@@ -42,16 +42,15 @@ impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCor
         Some(self.m_eplayerindex)
     }
 
-    fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
-        assert_eq!(vecstich.len(), 8);
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4] {
         let (eschneiderschwarz, ab_winner) = points_to_schneiderschwarz_and_winners(
-            vecstich,
+            gamefinishedstiche.get(),
             self,
             /*fn_is_player_party*/ |eplayerindex| {
                 eplayerindex==self.m_eplayerindex
             },
         );
-        let n_laufende = ActiveSinglePlayCore::count_laufende(vecstich, &ab_winner);
+        let n_laufende = ActiveSinglePlayCore::count_laufende(gamefinishedstiche.get(), &ab_winner);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_solo*/ 50
              + { match eschneiderschwarz {

@@ -231,7 +231,7 @@ impl<'rules> SGame<'rules> {
 
     pub fn payout(&self) -> [isize; 4] {
         assert!(self.which_player_can_do_something().is_none());
-        let an_payout_raw = self.m_rules.payout(&self.m_vecstich);
+        let an_payout_raw = self.m_rules.payout(&SGameFinishedStiche::new(&self.m_vecstich));
         create_playerindexmap(|eplayerindex| {
             an_payout_raw[eplayerindex] * 2isize.pow(self.m_vecstoss.len() as u32)
         })

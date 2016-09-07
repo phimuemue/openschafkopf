@@ -33,9 +33,9 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4] {
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4] {
         let an_points = create_playerindexmap(|eplayerindex| {
-            self.points_per_player(vecstich, eplayerindex)
+            self.points_per_player(gamefinishedstiche.get(), eplayerindex)
         });
         let n_points_max = an_points.iter().max().unwrap().clone();
         let veceplayerindex_most_points = (0..4)
@@ -49,7 +49,7 @@ impl TRules for SRulesRamsch {
                 veceplayerindex_most_points.into_iter()
                     .map(|eplayerindex| {(
                         eplayerindex,
-                        vecstich.iter()
+                        gamefinishedstiche.get().iter()
                             .map(|stich| stich[eplayerindex])
                             .filter(|card| self.is_trumpf(*card))
                             // TODO rust: use max_by

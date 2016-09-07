@@ -24,6 +24,23 @@ pub struct SStoss {
     pub m_eplayerindex : EPlayerIndex,
 }
 
+pub struct SGameFinishedStiche<'vecstich> {
+    m_vecstich: &'vecstich Vec<SStich>,
+}
+
+impl<'vecstich> SGameFinishedStiche<'vecstich> {
+    pub fn new(vecstich: &Vec<SStich>) -> SGameFinishedStiche {
+        assert_eq!(vecstich.len(), 8);
+        assert!(vecstich.iter().all(|stich| 4==stich.size()));
+        SGameFinishedStiche {
+            m_vecstich : vecstich,
+        }
+    }
+    pub fn get(&self) -> &Vec<SStich> {
+        self.m_vecstich
+    }
+}
+
 pub fn points_to_schneiderschwarz_and_winners<FnIsPlayerParty, Rules>(
     vecstich: &Vec<SStich>,
     rules: &Rules,
@@ -101,7 +118,7 @@ pub trait TRules : fmt::Display {
             .sum()
     }
 
-    fn payout(&self, vecstich: &Vec<SStich>) -> [isize; 4];
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4];
 
     fn all_allowed_cards(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
