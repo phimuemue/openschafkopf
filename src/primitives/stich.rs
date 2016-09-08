@@ -37,20 +37,20 @@ impl PartialEq for SStich {
 impl Eq for SStich {}
 
 pub struct StichIterator<'stich> {
-    m_eplayerindex : EPlayerIndex,
+    m_i_offset : usize,
     m_stich: &'stich SStich,
 }
 
 impl<'stich> Iterator for StichIterator<'stich> {
     type Item = (EPlayerIndex, SCard);
     fn next(&mut self) -> Option<(EPlayerIndex, SCard)> {
-        if self.m_eplayerindex==self.m_stich.size() {
+        if self.m_i_offset==self.m_stich.size() {
             return None;
         }
         else {
-            let eplayerindex = (self.m_stich.m_eplayerindex_first + self.m_eplayerindex)%4;
+            let eplayerindex = (self.m_stich.m_eplayerindex_first + self.m_i_offset)%4;
             let pairicard = (eplayerindex, self.m_stich[eplayerindex]);
-            self.m_eplayerindex = self.m_eplayerindex + 1;
+            self.m_i_offset = self.m_i_offset + 1;
             return Some(pairicard);
         }
     }
@@ -106,7 +106,7 @@ impl SStich {
     }
     pub fn indices_and_cards(&self) -> StichIterator {
         StichIterator {
-            m_eplayerindex: 0,
+            m_i_offset: 0,
             m_stich: self
         }
     }
