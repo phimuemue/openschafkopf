@@ -4,6 +4,9 @@ pub mod rulesramsch;
 pub mod ruleset;
 mod trumpfdecider;
 
+#[cfg(test)]
+mod tests;
+
 use primitives::*;
 use std::cmp::Ordering;
 use std::fmt;
@@ -202,50 +205,5 @@ pub fn compare_farbcards_same_color(card_fst: SCard, card_snd: SCard) -> Orderin
         Ordering::Less
     } else {
         Ordering::Greater
-    }
-}
-
-#[cfg(test)]
-pub mod test_rules {
-    use rules;
-    use primitives::*;
-    pub fn test_rules(
-        str_info: &str,
-        rules: &rules::TRules,
-        astr_hand: [&str; 4],
-        veceplayerindex_stoss: Vec<EPlayerIndex>,
-        vecpaireplayerindexstr_stich: [(EPlayerIndex, &str); 8],
-        an_payout: [isize; 4],
-    ) {
-        use game;
-        use util::cardvectorparser;
-        println!("Testing rules: {}", str_info);
-        let mut pregame = game::SPreGame {
-            m_eplayerindex_first: 0, // TODO parametrize w.r.t. eplayerindex_first
-            m_ahand : create_playerindexmap(|eplayerindex| {
-                SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex]).unwrap())
-            }),
-            m_rules: rules,
-            m_vecstoss: vec![],
-        };
-        for eplayerindex_stoss in veceplayerindex_stoss {
-            pregame.stoss(eplayerindex_stoss).unwrap();
-        }
-        let mut game = pregame.finish();
-        for (i_stich, &(eplayerindex_first_in_stich, str_stich)) in vecpaireplayerindexstr_stich.iter().enumerate() {
-            println!("Stich {}: {}", i_stich, str_stich);
-            assert_eq!(Some(eplayerindex_first_in_stich), game.which_player_can_do_something());
-            assert_eq!(4, cardvectorparser::parse_cards::<Vec<_>>(str_stich).unwrap().len());
-            for card in cardvectorparser::parse_cards::<Vec<_>>(str_stich).unwrap() {
-                assert!(game.which_player_can_do_something().is_some());
-                let eplayerindex = game.which_player_can_do_something().unwrap();
-                println!("{}, {}", card, eplayerindex);
-                game.zugeben(card, eplayerindex).unwrap();
-            }
-        }
-        for (i_stich, stich) in game.m_vecstich.iter().enumerate() {
-            println!("Stich {}: {}", i_stich, stich);
-        }
-        assert_eq!(game.payout(), an_payout);
     }
 }
