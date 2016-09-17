@@ -69,15 +69,15 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
                                 .collect()
                         )
                     } else if str_l=="solo" {
-                        create_rulegroup("Solo", all_rulessolo(eplayerindex))
+                        create_rulegroup("Solo", all_rulessolo(eplayerindex, /*i_prioindex*/0))
                     } else if str_l=="farbwenz" {
-                        create_rulegroup("Farbwenz", all_rulesfarbwenz(eplayerindex))
+                        create_rulegroup("Farbwenz", all_rulesfarbwenz(eplayerindex, /*i_prioindex*/2))
                     } else if str_l=="wenz" {
-                        create_rulegroup("Wenz", all_ruleswenz(eplayerindex))
+                        create_rulegroup("Wenz", all_ruleswenz(eplayerindex, /*i_prioindex*/1))
                     } else if str_l=="farbgeier" {
-                        create_rulegroup("Farbgeier", all_rulesfarbgeier(eplayerindex))
+                        create_rulegroup("Farbgeier", all_rulesfarbgeier(eplayerindex, /*i_prioindex*/4))
                     } else if str_l=="geier" {
-                        create_rulegroup("geier", all_rulesgeier(eplayerindex))
+                        create_rulegroup("geier", all_rulesgeier(eplayerindex, /*i_prioindex*/3))
                     } else {
                         None
                     }

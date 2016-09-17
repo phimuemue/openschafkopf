@@ -31,6 +31,9 @@ impl SRulesRufspiel {
 }
 
 impl TActivelyPlayableRules for SRulesRufspiel {
+    fn priority(&self) -> VGameAnnouncementPriority {
+        VGameAnnouncementPriority::RufspielLike
+    }
 }
 
 impl TRules for SRulesRufspiel {

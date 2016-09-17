@@ -68,7 +68,7 @@ impl<'rules> SGamePreparations<'rules> {
         }
     }
 
-    pub fn announce_game(&mut self, eplayerindex: EPlayerIndex, orules: Option<&'rules TRules>) -> Result<(), &'static str> {
+    pub fn announce_game(&mut self, eplayerindex: EPlayerIndex, orules: Option<&'rules TActivelyPlayableRules>) -> Result<(), &'static str> {
         if Some(eplayerindex)!=self.which_player_can_do_something() {
             return Err("Wrong player index");
         }
@@ -77,10 +77,7 @@ impl<'rules> SGamePreparations<'rules> {
         }
         self.m_vecgameannouncement.push(SGameAnnouncement{
             m_eplayerindex : eplayerindex,
-            m_opairrulespriority : orules.map(|rules| (
-                rules,
-                0 // priority, TODO determine priority
-            )),
+            m_orules : orules,
         });
         assert!(!self.m_vecgameannouncement.is_empty());
         Ok(())
@@ -89,14 +86,6 @@ impl<'rules> SGamePreparations<'rules> {
     // TODO: extend return value to support stock, etc.
     pub fn determine_rules(self) -> Option<SPreGame<'rules>> {
         // TODO: find sensible way to deal with multiple game announcements (currently, we choose highest priority)
-        let orules_actively_played = self.m_vecgameannouncement.iter()
-            .map(|gameannouncement| gameannouncement.m_opairrulespriority)
-            .max_by_key(|opairrulespriority| opairrulespriority.map(|(_orules, priority)| priority)) 
-            .unwrap()
-            .map(|(rules, _priority)| {
-                assert!(rules.playerindex().is_some());
-                rules
-            });
         let eplayerindex_first = self.m_eplayerindex_first;
         let create_game = move |ahand, rules| {
             Some(SPreGame {
@@ -106,8 +95,18 @@ impl<'rules> SGamePreparations<'rules> {
                 m_vecstoss : vec![],
             })
         };
-        if let Some(rules) = orules_actively_played {
-            create_game(self.m_ahand, rules)
+        let vecrules_announced : Vec<&TActivelyPlayableRules> = self.m_vecgameannouncement.into_iter()
+            .filter_map(|gameannouncement| gameannouncement.m_orules)
+            .collect();
+        if 0<vecrules_announced.len() {
+            let prio_best = vecrules_announced.iter()
+                .map(|rules| rules.priority())
+                .max()
+                .unwrap();
+            let rules_actively_played = vecrules_announced.into_iter()
+                .find(|rules| rules.priority()==prio_best)
+                .unwrap();
+            create_game(self.m_ahand, rules_actively_played.as_rules())
         } else if let Some(ref rulesramsch) = self.m_ruleset.m_orulesramsch {
             create_game(self.m_ahand, rulesramsch.as_ref())
         } else {
@@ -163,11 +162,9 @@ pub struct SGame<'rules> {
     pub m_vecstich : Vec<SStich>,
 }
 
-pub type SGameAnnouncementPriority = isize;
-
 pub struct SGameAnnouncement<'rules> {
     pub m_eplayerindex : EPlayerIndex,
-    pub m_opairrulespriority : Option<(&'rules TRules, SGameAnnouncementPriority)>,
+    pub m_orules: Option<&'rules TActivelyPlayableRules>,
 }
 
 impl<'rules> SGame<'rules> {

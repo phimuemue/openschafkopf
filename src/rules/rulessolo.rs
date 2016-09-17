@@ -11,6 +11,7 @@ pub struct SRulesActiveSinglePlay<ActiveSinglePlayCore>
     pub m_str_name: String,
     pub m_eplayerindex : EPlayerIndex, // TODO should be static
     pub m_core : PhantomData<ActiveSinglePlayCore>,
+    pub m_i_prioindex : isize,
 }
 
 impl<ActiveSinglePlayCore> fmt::Display for SRulesActiveSinglePlay<ActiveSinglePlayCore> 
@@ -23,7 +24,11 @@ impl<ActiveSinglePlayCore> fmt::Display for SRulesActiveSinglePlay<ActiveSingleP
 
 impl<ActiveSinglePlayCore> TActivelyPlayableRules for SRulesActiveSinglePlay<ActiveSinglePlayCore>
     where ActiveSinglePlayCore: TTrumpfDecider
-{}
+{
+    fn priority(&self) -> VGameAnnouncementPriority {
+        VGameAnnouncementPriority::SinglePlayLike(self.m_i_prioindex)
+    }
+}
 
 impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCore> 
     where ActiveSinglePlayCore: TTrumpfDecider,
@@ -105,29 +110,30 @@ impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCor
 impl<ActiveSinglePlayCore> SRulesActiveSinglePlay<ActiveSinglePlayCore>
     where ActiveSinglePlayCore: TTrumpfDecider,
 {
-    pub fn new(eplayerindex: EPlayerIndex, str_rulename: &str) -> SRulesActiveSinglePlay<ActiveSinglePlayCore> {
+    pub fn new(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> SRulesActiveSinglePlay<ActiveSinglePlayCore> {
         SRulesActiveSinglePlay::<ActiveSinglePlayCore> {
             m_eplayerindex: eplayerindex,
             m_core: PhantomData::<ActiveSinglePlayCore>,
+            m_i_prioindex: i_prioindex,
             m_str_name: str_rulename.to_string(),
         }
     }
 }
 
-pub fn sololike<CoreType>(eplayerindex: EPlayerIndex, str_rulename: &str) -> Box<TActivelyPlayableRules> 
+pub fn sololike<CoreType>(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> Box<TActivelyPlayableRules> 
     where CoreType: TTrumpfDecider,
           CoreType: 'static,
 {
-    Box::new(SRulesActiveSinglePlay::<CoreType>::new(eplayerindex, str_rulename)) as Box<TActivelyPlayableRules>
+    Box::new(SRulesActiveSinglePlay::<CoreType>::new(eplayerindex, i_prioindex, str_rulename)) as Box<TActivelyPlayableRules>
 }
 
 macro_rules! generate_sololike_farbe {
-    ($eplayerindex: ident, $coretype: ident, $rulename: expr) => {
+    ($eplayerindex: ident, $coretype: ident, $i_prioindex: expr, $rulename: expr) => {
         vec! [
-            sololike::<$coretype<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>> ($eplayerindex, &format!("Eichel-{}", $rulename)),
-            sololike::<$coretype<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>   ($eplayerindex, &format!("Gras-{}", $rulename)),
-            sololike::<$coretype<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>   ($eplayerindex, &format!("Herz-{}", $rulename)),
-            sololike::<$coretype<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>($eplayerindex, &format!("Schelln-{}", $rulename)),
+            sololike::<$coretype<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>> ($eplayerindex, $i_prioindex, &format!("Eichel-{}", $rulename)),
+            sololike::<$coretype<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>   ($eplayerindex, $i_prioindex, &format!("Gras-{}", $rulename)),
+            sololike::<$coretype<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>   ($eplayerindex, $i_prioindex, &format!("Herz-{}", $rulename)),
+            sololike::<$coretype<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>($eplayerindex, $i_prioindex, &format!("Schelln-{}", $rulename)),
         ]
     }
 }
@@ -136,17 +142,17 @@ pub type SCoreSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<
     SSchlagDesignatorOber, STrumpfDeciderSchlag<
     SSchlagDesignatorUnter, TrumpfFarbDecider>>;
 
-pub fn all_rulessolo(eplayerindex: EPlayerIndex) -> Vec<Box<TActivelyPlayableRules>> {
-    generate_sololike_farbe!(eplayerindex, SCoreSolo, "Solo")
+pub fn all_rulessolo(eplayerindex: EPlayerIndex, i_prioindex: isize) -> Vec<Box<TActivelyPlayableRules>> {
+    generate_sololike_farbe!(eplayerindex, SCoreSolo, i_prioindex, "Solo")
 }
 
 macro_rules! generate_sololike_farbe_and_farblos {
     ($coretype: ident, $rulename: expr, $fn_all_farbe: ident, $fn_all_farblos: ident) => {
-        pub fn $fn_all_farbe(eplayerindex: EPlayerIndex) -> Vec<Box<TActivelyPlayableRules>> { 
-            generate_sololike_farbe!(eplayerindex, $coretype, $rulename)
+        pub fn $fn_all_farbe(eplayerindex: EPlayerIndex, i_prioindex: isize) -> Vec<Box<TActivelyPlayableRules>> { 
+            generate_sololike_farbe!(eplayerindex, $coretype, i_prioindex, $rulename)
         }
-        pub fn $fn_all_farblos(eplayerindex: EPlayerIndex) -> Vec<Box<TActivelyPlayableRules>> {
-            vec![sololike::<$coretype<STrumpfDeciderNoTrumpf>>(eplayerindex, $rulename)]
+        pub fn $fn_all_farblos(eplayerindex: EPlayerIndex, i_prioindex: isize) -> Vec<Box<TActivelyPlayableRules>> {
+            vec![sololike::<$coretype<STrumpfDeciderNoTrumpf>>(eplayerindex, i_prioindex, $rulename)]
         }
     }
 }

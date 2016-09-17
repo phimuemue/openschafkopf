@@ -14,7 +14,7 @@ pub struct SPlayerHuman<'ai> {
 
 fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(hand: &SHand, vect : &'t Vec<T>, fn_format: FnFormat, fn_choose: FnChoose) -> &'t T
     where FnFormat: Fn(&T) -> String,
-          FnChoose: Fn(usize) -> Option<&'t TRules>
+          FnChoose: Fn(usize) -> Option<&'t TActivelyPlayableRules>
 {
     &skui::ask_for_alternative(
         vect,
@@ -69,7 +69,7 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
         }
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SHand, vecgameannouncement : &Vec<SGameAnnouncement>, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TRules>>) {
+    fn ask_for_game<'rules>(&self, hand: &SHand, vecgameannouncement : &Vec<SGameAnnouncement>, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
         skui::print_game_announcements(vecgameannouncement);
         let vecorulegroup : Vec<Option<&SRuleGroup>> = Some(None).into_iter()
             .chain(
@@ -87,20 +87,20 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
                 &None => "Nothing".to_string(),
                 &Some(rulegroup) => rulegroup.m_str_name.clone(),
             },
-            |i_orulegroup_chosen| vecorulegroup[i_orulegroup_chosen].map(|rulegroup| rulegroup.m_vecrules[0].as_ref().as_rules()),
+            |i_orulegroup_chosen| vecorulegroup[i_orulegroup_chosen].map(|rulegroup| rulegroup.m_vecrules[0].as_ref()),
         )
         {
-            let vecorules : Vec<Option<&TRules>> = Some(None).into_iter()
+            let vecorules : Vec<Option<&TActivelyPlayableRules>> = Some(None).into_iter()
                 .chain(
                     rulegroup.m_vecrules.iter()
                         .filter(|rules| rules.can_be_played(hand))
-                        .map(|rules| Some(rules.as_ref().as_rules().clone()))
+                        .map(|rules| Some(rules.as_ref()))
                 )
                 .collect();
             if let &Some(rules) = choose_ruleset_or_rules(
                 hand,
                 &vecorules,
-                |orules : &Option<&TRules>| match orules {
+                |orules : &Option<&TActivelyPlayableRules>| match orules {
                     &None => "Back".to_string(),
                     &Some(ref rules) => rules.to_string()
                 },

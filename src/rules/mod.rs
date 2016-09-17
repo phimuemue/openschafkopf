@@ -202,7 +202,30 @@ impl<Rules: TRules> TAsRules for Rules {
     }
 }
 
+#[derive(PartialEq, Eq)]
+pub enum VGameAnnouncementPriority {
+    RufspielLike,
+    SinglePlayLike(isize), // lower index means higher priority
+}
+
+impl PartialOrd for VGameAnnouncementPriority {
+    fn partial_cmp(&self, priority: &VGameAnnouncementPriority) -> Option<Ordering> {
+        Some(match (self, priority) {
+            (&VGameAnnouncementPriority::RufspielLike, _) => Ordering::Less,
+            (_, &VGameAnnouncementPriority::RufspielLike) => Ordering::Greater,
+            (&VGameAnnouncementPriority::SinglePlayLike(n_prio_lhs), &VGameAnnouncementPriority::SinglePlayLike(n_prio_rhs)) => n_prio_rhs.cmp(&n_prio_lhs), // Note lower index means higher priority
+        })
+    }
+}
+
+impl Ord for VGameAnnouncementPriority {
+    fn cmp(&self, priority: &VGameAnnouncementPriority) -> Ordering {
+        self.partial_cmp(priority).unwrap()
+    }
+}
+
 pub trait TActivelyPlayableRules : TRules {
+    fn priority(&self) -> VGameAnnouncementPriority;
 }
 
 pub fn compare_farbcards_same_color(card_fst: SCard, card_snd: SCard) -> Ordering {

@@ -134,10 +134,10 @@ pub fn print_game_announcements(vecgameannouncement: &[SGameAnnouncement]) {
         do_in_window(
             ESkUiWindow::PlayerInfo(gameannouncement.m_eplayerindex),
             |ncwin| {
-                if gameannouncement.m_opairrulespriority.is_none() {
+                if gameannouncement.m_orules.is_none() {
                     wprint(ncwin, &format!("{}: Nothing", gameannouncement.m_eplayerindex));
                 } else {
-                    wprint(ncwin, &format!("{}: {}", gameannouncement.m_eplayerindex, gameannouncement.m_opairrulespriority.as_ref().unwrap().0.to_string()));
+                    wprint(ncwin, &format!("{}: {}", gameannouncement.m_eplayerindex, gameannouncement.m_orules.as_ref().unwrap().to_string()));
                 }
                 ncurses::wrefresh(ncwin);
             }

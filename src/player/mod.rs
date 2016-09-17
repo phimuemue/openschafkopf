@@ -16,7 +16,7 @@ pub trait TPlayer {
         hand: &SHand,
         vecgameannouncement: &Vec<SGameAnnouncement>,
         vecrulegroup: &'rules Vec<SRuleGroup>,
-        txorules: mpsc::Sender<Option<&'rules TRules>>
+        txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>
     );
 
     fn ask_for_stoss(
