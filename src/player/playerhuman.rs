@@ -87,14 +87,14 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
                 &None => "Nothing".to_string(),
                 &Some(rulegroup) => rulegroup.m_str_name.clone(),
             },
-            |i_orulegroup_chosen| vecorulegroup[i_orulegroup_chosen].map(|rulegroup| rulegroup.m_vecrules[0].as_ref()),
+            |i_orulegroup_chosen| vecorulegroup[i_orulegroup_chosen].map(|rulegroup| rulegroup.m_vecrules[0].as_ref().as_rules()),
         )
         {
             let vecorules : Vec<Option<&TRules>> = Some(None).into_iter()
                 .chain(
                     rulegroup.m_vecrules.iter()
                         .filter(|rules| rules.can_be_played(hand))
-                        .map(|rules| Some(rules.as_ref().clone()))
+                        .map(|rules| Some(rules.as_ref().as_rules().clone()))
                 )
                 .collect();
             if let &Some(rules) = choose_ruleset_or_rules(

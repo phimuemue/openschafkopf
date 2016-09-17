@@ -4,7 +4,6 @@
 * "graphical" output (possibly via libaa/libcaca) (possibly by augmenting/impriving ask_for_alternative)
 * simplify count_runnings: consider only highest trumpf per party
 * &Box<X> => &X
-* introduce actively_playable_rules (shall be offered by what currently is called "all_allowed_rules")
 * fix graphical output (currently, it is often cleared when ai is running)
 * add indication to show that ai is working
 * clean up mess introduced by SAiCheating-Commit

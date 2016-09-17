@@ -21,6 +21,10 @@ impl<ActiveSinglePlayCore> fmt::Display for SRulesActiveSinglePlay<ActiveSingleP
     }
 }
 
+impl<ActiveSinglePlayCore> TActivelyPlayableRules for SRulesActiveSinglePlay<ActiveSinglePlayCore>
+    where ActiveSinglePlayCore: TTrumpfDecider
+{}
+
 impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCore> 
     where ActiveSinglePlayCore: TTrumpfDecider,
 {
@@ -110,11 +114,11 @@ impl<ActiveSinglePlayCore> SRulesActiveSinglePlay<ActiveSinglePlayCore>
     }
 }
 
-pub fn sololike<CoreType>(eplayerindex: EPlayerIndex, str_rulename: &str) -> Box<TRules> 
+pub fn sololike<CoreType>(eplayerindex: EPlayerIndex, str_rulename: &str) -> Box<TActivelyPlayableRules> 
     where CoreType: TTrumpfDecider,
           CoreType: 'static,
 {
-    Box::new(SRulesActiveSinglePlay::<CoreType>::new(eplayerindex, str_rulename)) as Box<TRules>
+    Box::new(SRulesActiveSinglePlay::<CoreType>::new(eplayerindex, str_rulename)) as Box<TActivelyPlayableRules>
 }
 
 macro_rules! generate_sololike_farbe {
@@ -132,16 +136,16 @@ pub type SCoreSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<
     SSchlagDesignatorOber, STrumpfDeciderSchlag<
     SSchlagDesignatorUnter, TrumpfFarbDecider>>;
 
-pub fn all_rulessolo(eplayerindex: EPlayerIndex) -> Vec<Box<TRules>> {
+pub fn all_rulessolo(eplayerindex: EPlayerIndex) -> Vec<Box<TActivelyPlayableRules>> {
     generate_sololike_farbe!(eplayerindex, SCoreSolo, "Solo")
 }
 
 macro_rules! generate_sololike_farbe_and_farblos {
     ($coretype: ident, $rulename: expr, $fn_all_farbe: ident, $fn_all_farblos: ident) => {
-        pub fn $fn_all_farbe(eplayerindex: EPlayerIndex) -> Vec<Box<TRules>> { 
+        pub fn $fn_all_farbe(eplayerindex: EPlayerIndex) -> Vec<Box<TActivelyPlayableRules>> { 
             generate_sololike_farbe!(eplayerindex, $coretype, $rulename)
         }
-        pub fn $fn_all_farblos(eplayerindex: EPlayerIndex) -> Vec<Box<TRules>> {
+        pub fn $fn_all_farblos(eplayerindex: EPlayerIndex) -> Vec<Box<TActivelyPlayableRules>> {
             vec![sololike::<$coretype<STrumpfDeciderNoTrumpf>>(eplayerindex, $rulename)]
         }
     }

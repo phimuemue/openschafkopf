@@ -26,16 +26,16 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
                     .filter(|&card| rules.is_trumpf(*card))
                     .count()
             })
-            .map(|&rules| {
+            .map(|rules| {
                 let eplayerindex_fixed = rules.playerindex().unwrap(); 
                 (
                     rules,
-                    self.m_ai.rank_rules(hand, eplayerindex_fixed, rules, n_tests_per_rules)
+                    self.m_ai.rank_rules(hand, eplayerindex_fixed, rules.as_rules(), n_tests_per_rules)
                 )
             })
             .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
             .max_by_key(|&(_rules, f_payout_avg)| f_payout_avg as isize) // TODO rust: Use max_by
-            .map(|(rules, _f_payout_avg)| rules)).unwrap();
+            .map(|(rules, _f_payout_avg)| rules.as_rules())).unwrap();
     }
 
     fn ask_for_stoss(

@@ -30,6 +30,9 @@ impl SRulesRufspiel {
     }
 }
 
+impl TActivelyPlayableRules for SRulesRufspiel {
+}
+
 impl TRules for SRulesRufspiel {
     fn can_be_played(&self, hand: &SHand) -> bool {
         let it = || {hand.cards().iter().filter(|&card| self.is_ruffarbe(*card))};

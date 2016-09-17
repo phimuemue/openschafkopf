@@ -70,7 +70,7 @@ fn main() {
                 {
                     println!("{}: {}",
                         rules,
-                        ai.rank_rules(&hand_fixed, eplayerindex_fixed, rules.clone(), 100)
+                        ai.rank_rules(&hand_fixed, eplayerindex_fixed, rules.as_rules().clone(), 100)
                     );
                 }
             } else {

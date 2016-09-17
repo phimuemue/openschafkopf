@@ -82,7 +82,7 @@ pub fn points_to_schneiderschwarz_and_winners<FnIsPlayerParty, Rules>(
     )
 }
 
-pub trait TRules : fmt::Display {
+pub trait TRules : fmt::Display + TAsRules {
 
     fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe;
 
@@ -188,6 +188,21 @@ pub trait TRules : fmt::Display {
             }
         });
     }
+}
+
+// TODO Rust: Objects should be upcastable to supertraits
+// https://github.com/rust-lang/rust/issues/5665
+pub trait TAsRules {
+    fn as_rules(&self) -> &TRules;
+}
+
+impl<Rules: TRules> TAsRules for Rules {
+    fn as_rules(&self) -> &TRules {
+        self
+    }
+}
+
+pub trait TActivelyPlayableRules : TRules {
 }
 
 pub fn compare_farbcards_same_color(card_fst: SCard, card_snd: SCard) -> Ordering {

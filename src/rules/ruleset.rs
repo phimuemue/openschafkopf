@@ -13,7 +13,7 @@ use std::collections::HashSet;
 
 pub struct SRuleGroup {
     pub m_str_name : String,
-    pub m_vecrules : Vec<Box<TRules>>,
+    pub m_vecrules : Vec<Box<TActivelyPlayableRules>>,
 }
 
 pub struct SRuleSet {
@@ -21,11 +21,11 @@ pub struct SRuleSet {
     pub m_orulesramsch : Option<Box<TRules>>,
 }
 
-pub fn allowed_rules(vecrulegroup: &Vec<SRuleGroup>) -> Vec<&TRules> {
+pub fn allowed_rules(vecrulegroup: &Vec<SRuleGroup>) -> Vec<&TActivelyPlayableRules> {
     vecrulegroup.iter().flat_map(|rulegroup| rulegroup.m_vecrules.iter().map(|rules| rules.as_ref())).collect()
 }
 
-pub fn create_rulegroup (str_name: &str, vecrules: Vec<Box<TRules>>) -> Option<SRuleGroup> {
+pub fn create_rulegroup (str_name: &str, vecrules: Vec<Box<TActivelyPlayableRules>>) -> Option<SRuleGroup> {
     Some(SRuleGroup{
         m_str_name: str_name.to_string(),
         m_vecrules: vecrules
@@ -65,7 +65,7 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
                             "Rufspiel", 
                             EFarbe::all_values()
                                 .filter(|efarbe| EFarbe::Herz!=*efarbe)
-                                .map(|efarbe| Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TRules>)
+                                .map(|efarbe| Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TActivelyPlayableRules>)
                                 .collect()
                         )
                     } else if str_l=="solo" {
