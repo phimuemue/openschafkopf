@@ -101,7 +101,7 @@ impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCor
 impl<ActiveSinglePlayCore> SRulesActiveSinglePlay<ActiveSinglePlayCore>
     where ActiveSinglePlayCore: TTrumpfDecider,
 {
-    fn new(eplayerindex: EPlayerIndex, str_rulename: &str) -> SRulesActiveSinglePlay<ActiveSinglePlayCore> {
+    pub fn new(eplayerindex: EPlayerIndex, str_rulename: &str) -> SRulesActiveSinglePlay<ActiveSinglePlayCore> {
         SRulesActiveSinglePlay::<ActiveSinglePlayCore> {
             m_eplayerindex: eplayerindex,
             m_core: PhantomData::<ActiveSinglePlayCore>,

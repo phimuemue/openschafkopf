@@ -17,22 +17,22 @@ vecpairstrdictstrfnGame = [
         "Sauspiel auf die Hundsgfickte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln}"%(eplayerindex),
     }),
     ("farbwenz", {
-        "Eichel-Farbwenz" : lambda eplayerindex: "*sololike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>>(%d, \"Eichel-Wenz\")"%(eplayerindex),
-        "Gras-Farbwenz" : lambda eplayerindex: "*sololike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>(%d, \"Gras-Wenz\")"%(eplayerindex),
-        "Herz-Farbwenz" : lambda eplayerindex: "*sololike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>(%d, \"Herz-Wenz\")"%(eplayerindex),
-        "Schelln-Farbwenz" : lambda eplayerindex: "*sololike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>(%d, \"Schelln-Wenz\")"%(eplayerindex),
+        "Eichel-Farbwenz" : lambda eplayerindex: "SRulesActiveSinglePlay::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>>::new(%d, \"Eichel-Wenz\")"%(eplayerindex),
+        "Gras-Farbwenz" : lambda eplayerindex: "SRulesActiveSinglePlay::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>::new(%d, \"Gras-Wenz\")"%(eplayerindex),
+        "Herz-Farbwenz" : lambda eplayerindex: "SRulesActiveSinglePlay::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>::new(%d, \"Herz-Wenz\")"%(eplayerindex),
+        "Schelln-Farbwenz" : lambda eplayerindex: "SRulesActiveSinglePlay::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>::new(%d, \"Schelln-Wenz\")"%(eplayerindex),
     }),
     ("wenz", {
-        "Wenz" : lambda eplayerindex: "*sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>>(%d, \"Wenz\")"%(eplayerindex),
+        "Wenz" : lambda eplayerindex: "SRulesActiveSinglePlay::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>>::new(%d, \"Wenz\")"%(eplayerindex),
     }),
     ("solo", {
-        "Eichel-Solo" : lambda eplayerindex: "*sololike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>>(%d, \"Eichel-Solo\")"%(eplayerindex),
-        "Gras-Solo" : lambda eplayerindex: "*sololike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>(%d, \"Gras-Solo\")"%(eplayerindex),
-        "Herz-Solo" : lambda eplayerindex: "*sololike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>(%d, \"Herz-Solo\")"%(eplayerindex),
-        "Schelln-Solo" : lambda eplayerindex: "*sololike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>(%d, \"Schelln-Solo\")"%(eplayerindex),
+        "Eichel-Solo" : lambda eplayerindex: "SRulesActiveSinglePlay::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>>::new(%d, \"Eichel-Solo\")"%(eplayerindex),
+        "Gras-Solo" : lambda eplayerindex: "SRulesActiveSinglePlay::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>::new(%d, \"Gras-Solo\")"%(eplayerindex),
+        "Herz-Solo" : lambda eplayerindex: "SRulesActiveSinglePlay::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>::new(%d, \"Herz-Solo\")"%(eplayerindex),
+        "Schelln-Solo" : lambda eplayerindex: "SRulesActiveSinglePlay::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>::new(%d, \"Schelln-Solo\")"%(eplayerindex),
     }),
     ("geier", {
-        "Geier" : lambda eplayerindex: "*sololike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>>(%d, \"Geier\")"%(eplayerindex),
+        "Geier" : lambda eplayerindex: "SRulesActiveSinglePlay::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>>::new(%d, \"Geier\")"%(eplayerindex),
     }),
     ("ramsch", {
         "Ramscch" : lambda eplayerindex: "SRulesRamsch"%(eplayerindex),
