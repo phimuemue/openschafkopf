@@ -5,33 +5,33 @@ use std::fmt;
 use std::cmp::Ordering;
 use std::marker::PhantomData;
 
-pub struct SRulesSoloLike<ActiveSinglePlayCore> 
-    where ActiveSinglePlayCore: TTrumpfDecider,
+pub struct SRulesSoloLike<TrumpfDecider> 
+    where TrumpfDecider: TTrumpfDecider,
 {
     pub m_str_name: String,
     pub m_eplayerindex : EPlayerIndex, // TODO should be static
-    pub m_core : PhantomData<ActiveSinglePlayCore>,
+    pub m_trumpfdecider : PhantomData<TrumpfDecider>,
     pub m_i_prioindex : isize,
 }
 
-impl<ActiveSinglePlayCore> fmt::Display for SRulesSoloLike<ActiveSinglePlayCore> 
-    where ActiveSinglePlayCore: TTrumpfDecider,
+impl<TrumpfDecider> fmt::Display for SRulesSoloLike<TrumpfDecider> 
+    where TrumpfDecider: TTrumpfDecider,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.m_str_name)
     }
 }
 
-impl<ActiveSinglePlayCore> TActivelyPlayableRules for SRulesSoloLike<ActiveSinglePlayCore>
-    where ActiveSinglePlayCore: TTrumpfDecider
+impl<TrumpfDecider> TActivelyPlayableRules for SRulesSoloLike<TrumpfDecider>
+    where TrumpfDecider: TTrumpfDecider
 {
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::SinglePlayLike(self.m_i_prioindex)
     }
 }
 
-impl<ActiveSinglePlayCore> TRules for SRulesSoloLike<ActiveSinglePlayCore> 
-    where ActiveSinglePlayCore: TTrumpfDecider,
+impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider> 
+    where TrumpfDecider: TTrumpfDecider,
 {
     fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool {
         assert!(
@@ -44,7 +44,7 @@ impl<ActiveSinglePlayCore> TRules for SRulesSoloLike<ActiveSinglePlayCore>
     }
 
     fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        ActiveSinglePlayCore::trumpf_or_farbe(card)
+        TrumpfDecider::trumpf_or_farbe(card)
     }
 
     fn playerindex(&self) -> Option<EPlayerIndex> {
@@ -59,7 +59,7 @@ impl<ActiveSinglePlayCore> TRules for SRulesSoloLike<ActiveSinglePlayCore>
                 eplayerindex==self.m_eplayerindex
             },
         );
-        let n_laufende = ActiveSinglePlayCore::count_laufende(gamefinishedstiche.get(), &ab_winner);
+        let n_laufende = TrumpfDecider::count_laufende(gamefinishedstiche.get(), &ab_winner);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_solo*/ 50
              + { match eschneiderschwarz {
@@ -103,17 +103,17 @@ impl<ActiveSinglePlayCore> TRules for SRulesSoloLike<ActiveSinglePlayCore>
     }
 
     fn compare_in_stich_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
-        ActiveSinglePlayCore::compare_trumpfcards_solo(card_fst, card_snd)
+        TrumpfDecider::compare_trumpfcards_solo(card_fst, card_snd)
     }
 }
 
-impl<ActiveSinglePlayCore> SRulesSoloLike<ActiveSinglePlayCore>
-    where ActiveSinglePlayCore: TTrumpfDecider,
+impl<TrumpfDecider> SRulesSoloLike<TrumpfDecider>
+    where TrumpfDecider: TTrumpfDecider,
 {
-    pub fn new(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> SRulesSoloLike<ActiveSinglePlayCore> {
-        SRulesSoloLike::<ActiveSinglePlayCore> {
+    pub fn new(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> SRulesSoloLike<TrumpfDecider> {
+        SRulesSoloLike::<TrumpfDecider> {
             m_eplayerindex: eplayerindex,
-            m_core: PhantomData::<ActiveSinglePlayCore>,
+            m_trumpfdecider: PhantomData::<TrumpfDecider>,
             m_i_prioindex: i_prioindex,
             m_str_name: str_rulename.to_string(),
         }
