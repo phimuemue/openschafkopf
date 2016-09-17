@@ -1,7 +1,7 @@
 * Move tests into own files/modules
 * implement more rules
 * split CStich into CStichComplete and CStichCurrent
-* "graphical" output (possibly via libaa/libcaca) (possibly by augmenting/impriving ask_for_alternative)
+* "graphical" output (possibly via libaa/libcaca/termimage) (possibly by augmenting/impriving ask_for_alternative)
 * simplify count_runnings: consider only highest trumpf per party
 * &Box<X> => &X
 * fix graphical output (currently, it is often cleared when ai is running)
