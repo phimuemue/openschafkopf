@@ -5,7 +5,7 @@ use std::fmt;
 use std::cmp::Ordering;
 use std::marker::PhantomData;
 
-pub struct SRulesActiveSinglePlay<ActiveSinglePlayCore> 
+pub struct SRulesSoloLike<ActiveSinglePlayCore> 
     where ActiveSinglePlayCore: TTrumpfDecider,
 {
     pub m_str_name: String,
@@ -14,7 +14,7 @@ pub struct SRulesActiveSinglePlay<ActiveSinglePlayCore>
     pub m_i_prioindex : isize,
 }
 
-impl<ActiveSinglePlayCore> fmt::Display for SRulesActiveSinglePlay<ActiveSinglePlayCore> 
+impl<ActiveSinglePlayCore> fmt::Display for SRulesSoloLike<ActiveSinglePlayCore> 
     where ActiveSinglePlayCore: TTrumpfDecider,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -22,7 +22,7 @@ impl<ActiveSinglePlayCore> fmt::Display for SRulesActiveSinglePlay<ActiveSingleP
     }
 }
 
-impl<ActiveSinglePlayCore> TActivelyPlayableRules for SRulesActiveSinglePlay<ActiveSinglePlayCore>
+impl<ActiveSinglePlayCore> TActivelyPlayableRules for SRulesSoloLike<ActiveSinglePlayCore>
     where ActiveSinglePlayCore: TTrumpfDecider
 {
     fn priority(&self) -> VGameAnnouncementPriority {
@@ -30,7 +30,7 @@ impl<ActiveSinglePlayCore> TActivelyPlayableRules for SRulesActiveSinglePlay<Act
     }
 }
 
-impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCore> 
+impl<ActiveSinglePlayCore> TRules for SRulesSoloLike<ActiveSinglePlayCore> 
     where ActiveSinglePlayCore: TTrumpfDecider,
 {
     fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool {
@@ -107,11 +107,11 @@ impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCor
     }
 }
 
-impl<ActiveSinglePlayCore> SRulesActiveSinglePlay<ActiveSinglePlayCore>
+impl<ActiveSinglePlayCore> SRulesSoloLike<ActiveSinglePlayCore>
     where ActiveSinglePlayCore: TTrumpfDecider,
 {
-    pub fn new(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> SRulesActiveSinglePlay<ActiveSinglePlayCore> {
-        SRulesActiveSinglePlay::<ActiveSinglePlayCore> {
+    pub fn new(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> SRulesSoloLike<ActiveSinglePlayCore> {
+        SRulesSoloLike::<ActiveSinglePlayCore> {
             m_eplayerindex: eplayerindex,
             m_core: PhantomData::<ActiveSinglePlayCore>,
             m_i_prioindex: i_prioindex,
@@ -124,7 +124,7 @@ pub fn sololike<CoreType>(eplayerindex: EPlayerIndex, i_prioindex: isize, str_ru
     where CoreType: TTrumpfDecider,
           CoreType: 'static,
 {
-    Box::new(SRulesActiveSinglePlay::<CoreType>::new(eplayerindex, i_prioindex, str_rulename)) as Box<TActivelyPlayableRules>
+    Box::new(SRulesSoloLike::<CoreType>::new(eplayerindex, i_prioindex, str_rulename)) as Box<TActivelyPlayableRules>
 }
 
 macro_rules! generate_sololike_farbe {
