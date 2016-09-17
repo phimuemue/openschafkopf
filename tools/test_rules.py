@@ -1,5 +1,5 @@
 import sys
-import glob
+import os
 from bs4 import BeautifulSoup
 
 def CardString(strCardRaw):
@@ -10,32 +10,43 @@ def CardString(strCardRaw):
     assert(strCardRaw[1] in "789zuoka")
     return strCardRaw
 
-dictstrfnGame = {
-    #"Sauspiel auf die Alte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Eichel}"%(eplayerindex),
-    #"Sauspiel auf die Blaue" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Gras}"%(eplayerindex),
-    #"Sauspiel auf die Hundsgfickte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln}"%(eplayerindex),
+vecpairstrdictstrfnGame = [
+    ("rufspiel", {
+        "Sauspiel auf die Alte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Eichel}"%(eplayerindex),
+        "Sauspiel auf die Blaue" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Gras}"%(eplayerindex),
+        "Sauspiel auf die Hundsgfickte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln}"%(eplayerindex),
+    }),
+    ("farbwenz", {
+        "Eichel-Farbwenz" : lambda eplayerindex: "*sololike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>>(%d, \"Eichel-Wenz\")"%(eplayerindex),
+        "Gras-Farbwenz" : lambda eplayerindex: "*sololike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>(%d, \"Gras-Wenz\")"%(eplayerindex),
+        "Herz-Farbwenz" : lambda eplayerindex: "*sololike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>(%d, \"Herz-Wenz\")"%(eplayerindex),
+        "Schelln-Farbwenz" : lambda eplayerindex: "*sololike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>(%d, \"Schelln-Wenz\")"%(eplayerindex),
+    }),
+    ("wenz", {
+        "Wenz" : lambda eplayerindex: "*sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>>(%d, \"Wenz\")"%(eplayerindex),
+    }),
+    ("solo", {
+        "Eichel-Solo" : lambda eplayerindex: "*sololike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>>(%d, \"Eichel-Solo\")"%(eplayerindex),
+        "Gras-Solo" : lambda eplayerindex: "*sololike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>(%d, \"Gras-Solo\")"%(eplayerindex),
+        "Herz-Solo" : lambda eplayerindex: "*sololike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>(%d, \"Herz-Solo\")"%(eplayerindex),
+        "Schelln-Solo" : lambda eplayerindex: "*sololike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>(%d, \"Schelln-Solo\")"%(eplayerindex),
+    }),
+    ("geier", {
+        "Geier" : lambda eplayerindex: "*sololike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>>(%d, \"Geier\")"%(eplayerindex),
+    }),
+    ("ramsch", {
+        "Ramscch" : lambda eplayerindex: "SRulesRamsch"%(eplayerindex),
+    }),
+]
 
-    "Eichel-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, \"Eichel-Solo\")"%(eplayerindex),
-    "Gras-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, \"Gras-Solo\")"%(eplayerindex),
-    "Herz-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, \"Herz-Solo\")"%(eplayerindex),
-    "Schelln-Solo" : lambda eplayerindex: "*generate_sololike!(%d, SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, \"Schelln-Solo\")"%(eplayerindex),
-
-    #"Wenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderNoTrumpf>, \"Wenz\")"%(eplayerindex),
-    #"Eichel-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, \"Eichel-Wenz\")"%(eplayerindex),
-    #"Gras-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, \"Gras-Wenz\")"%(eplayerindex),
-    #"Herz-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, \"Herz-Wenz\")"%(eplayerindex),
-    #"Schelln-Farbwenz" : lambda eplayerindex: "*generate_sololike!(%d, SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, \"Schelln-Wenz\")"%(eplayerindex),
-
-    #"Geier" : lambda eplayerindex: "SRulesGeier"%(eplayerindex),
-    #"Eichel-Farbgeier" : lambda eplayerindex: "SRulesFarbgeier{EFarbe::Eichel, %d}"%(eplayerindex),
-    #"Gras-Farbgeier" : lambda eplayerindex: "SRulesFarbgeier{EFarbe::Gras, %d}"%(eplayerindex),
-    #"Herz-Farbgeier" : lambda eplayerindex: "SRulesFarbgeier{EFarbe::Herz, %d}"%(eplayerindex),
-    #"Schelln-Farbgeier" : lambda eplayerindex: "SRulesFarbgeier{EFarbe::Schelln, %d}"%(eplayerindex),
-
-    #"Ramscch" : lambda eplayerindex: "SRulesRamsch"%(eplayerindex),
-}
-
-def OpenFileParseGame(strFile):
+def OpenFileParseGame(strFile, dictstrfnGame):
+    strResult = ""
+    def AppendToResultNoNewline(str):
+        nonlocal strResult
+        strResult = strResult + str
+    def AppendToResult(str):
+        nonlocal strResult
+        strResult = strResult + str + "\n"
     with open(strFile) as fileHtml:
         soup = BeautifulSoup(fileHtml.read(), "html.parser")
         divplayers = soup.find(class_="players")
@@ -52,27 +63,37 @@ def OpenFileParseGame(strFile):
             if h1Game.startswith(strGame):
                 break
         else:
-            return
-        print("test_rules(")
-        print("    \"%s\","%(strFile))
+            return None
+        AppendToResult("test_rules(")
+        AppendToResult("    \"%s\","%(strFile))
         for strGame in dictstrfnGame:
             if h1Game.startswith(strGame):
                 assert(not bGameFound)
                 bGameFound = True
-                print("    &%s,"%(dictstrfnGame[strGame](dictstreplayerindex[h1Game.rsplit(" ")[-1]])))
-        print("    [", end="")
-        for eplayerindex, divHand in enumerate(soup.find_all(class_="show-hand")):
+                AppendToResult("    &%s,"%(dictstrfnGame[strGame](dictstreplayerindex[h1Game.rsplit(" ")[-1]])))
+        AppendToResultNoNewline("    [")
+        hands = soup.find_all(class_="show-hand")
+        if len(hands)==0:
+            return "// %s has wrong format"%strFile
+        assert(len(hands)==4)
+        for eplayerindex, divHand in enumerate(hands):
             vecspancard = divHand.find_all("span")
             if len(vecspancard)!=8:
-                print("Error in file: len(vecspancard)!=8")
-                return
-            print("\"%s\"," % (" ".join([CardString(spancard["class"][3]) for spancard in vecspancard])), end="")
-        print("],")
-        print("    vec![", end="")
+                if len(vecspancard)==6:
+                    return "// %s // TODO kurze Karte"%strFile
+                if len(vecspancard)==0:
+                    return "// %s has wrong format"%strFile
+                else:
+                    assert(False)
+                AppendToResult("Error in file: len(vecspancard)!=8")
+                return strResult
+            AppendToResultNoNewline("\"%s\"," % (" ".join([CardString(spancard["class"][3]) for spancard in vecspancard])))
+        AppendToResult("],")
+        AppendToResultNoNewline("    vec![")
         for aKontraRetour in soup.find(text="Kontra und Retour").find_parent("tr").find_all("a", href=True):
-            print("%s,"%dictstreplayerindex[aKontraRetour.contents[0]], end="")
-        print("],")
-        print("    [", end="")
+            AppendToResultNoNewline("%s,"%dictstreplayerindex[aKontraRetour.contents[0]])
+        AppendToResult("],")
+        AppendToResultNoNewline("    [")
         for divtrickcontainer in soup.find_all(class_="content_full trick-container"):
             for divtricks in divtrickcontainer.find_all(class_="tricks"):
                 vecdivcard = divtricks.find_all("div")
@@ -82,11 +103,11 @@ def OpenFileParseGame(strFile):
                     assert(len(vecstrClass)==3 and vecstrClass[-1] in ["highlighted", ""])
                     assert(vecstrClass[0]=="card")
                     assert(vecstrClass[1].startswith("position"))
-                print("(%d, \"%s\")," %(
+                AppendToResultNoNewline("(%d, \"%s\")," %(
                     dictstreplayerindex[divtricks.find_all("div")[0].find("a")[strDataUsername]],
                     " ".join(CardString(divcard.find_all("span")[-1]["class"][-1]) for divcard in vecdivcard)
-                ), end="")
-        print("],")
+                ))
+        AppendToResult("],")
         dictnnPayout = {}
         anPayout = []
         for eplayerindex, divplayer in enumerate(vecdivplayer):
@@ -96,7 +117,6 @@ def OpenFileParseGame(strFile):
                 anPayout.append(int(strPayoutRaw[3:].replace(",", "")))
             else:
                 anPayout.append(int(strPayoutRaw[2:].replace(",", "")))
-
         assert(4==len(anPayout))
         nPayoutSum = sum(anPayout)
         if 0!=nPayoutSum:
@@ -109,13 +129,25 @@ def OpenFileParseGame(strFile):
                     anPayout[eplayerindex] = int(anPayout[eplayerindex] + nPayoutSum/nWinningPlayers)
         assert(4==len(anPayout))
         assert(0==sum(anPayout))
-        print("    [%s],"%", ".join([str(nPayout) for nPayout in anPayout]))
-        print(");")
+        AppendToResult("    [%s],"%", ".join([str(nPayout) for nPayout in anPayout]))
+        AppendToResult(");")
+    return strResult
 
-strGlob = sys.argv[1]
+strDir = sys.argv[1]
 
-#print(list(glob.glob(strGlob)))
+vecstrFile = []
+for (strRoot, vecStrDir, vecstrFileRaw) in os.walk(strDir):
+    for (strFile) in vecstrFileRaw:
+        vecstrFile.append(strRoot + "/" + strFile)
+vecstrFile.sort()
 
-for strFile in glob.glob(strGlob):
-    OpenFileParseGame(strFile)
+for (strGame, dictstrfnGame) in vecpairstrdictstrfnGame:
+    print("\n#[test]")
+    print("fn test_rules%s() {"%strGame)
+    for strFile in vecstrFile:
+        ostr = OpenFileParseGame(strFile, dictstrfnGame)
+        if ostr:
+            for strLine in ostr.splitlines():
+                print("    "+strLine)
+    print("}")
 
