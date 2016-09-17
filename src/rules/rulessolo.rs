@@ -98,15 +98,23 @@ impl<ActiveSinglePlayCore> TRules for SRulesActiveSinglePlay<ActiveSinglePlayCor
     }
 }
 
+impl<ActiveSinglePlayCore> SRulesActiveSinglePlay<ActiveSinglePlayCore>
+    where ActiveSinglePlayCore: TTrumpfDecider,
+{
+    fn new(eplayerindex: EPlayerIndex, str_rulename: &str) -> SRulesActiveSinglePlay<ActiveSinglePlayCore> {
+        SRulesActiveSinglePlay::<ActiveSinglePlayCore> {
+            m_eplayerindex: eplayerindex,
+            m_core: PhantomData::<ActiveSinglePlayCore>,
+            m_str_name: str_rulename.to_string(),
+        }
+    }
+}
+
 pub fn sololike<CoreType>(eplayerindex: EPlayerIndex, str_rulename: &str) -> Box<TRules> 
     where CoreType: TTrumpfDecider,
           CoreType: 'static,
 {
-    Box::new(SRulesActiveSinglePlay::<CoreType> {
-        m_eplayerindex: eplayerindex,
-        m_core: PhantomData::<CoreType>,
-        m_str_name: str_rulename.to_string(),
-    }) as Box<TRules>
+    Box::new(SRulesActiveSinglePlay::<CoreType>::new(eplayerindex, str_rulename)) as Box<TRules>
 }
 
 macro_rules! generate_sololike_farbe {
