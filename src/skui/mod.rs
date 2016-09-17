@@ -36,7 +36,7 @@ pub fn log(_s: &str) {
 fn print_string_with_nc_colors(ncwin: ncurses::WINDOW, color_fg: i16, color_bg: i16, str_output: &str) {
     let i_color_pair = color_fg * 8 + color_bg;
     ncurses::init_pair(i_color_pair, color_fg, color_bg);
-    let nccolorpair = ncurses::COLOR_PAIR(i_color_pair) as i32;
+    let nccolorpair = ncurses::COLOR_PAIR(i_color_pair);
     ncurses::wattron(ncwin, nccolorpair);
     wprint(ncwin, str_output);
     ncurses::wattroff(ncwin, nccolorpair);
