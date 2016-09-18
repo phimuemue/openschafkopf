@@ -61,14 +61,14 @@ pub fn forever_rand_hands(vecstich: &[SStich], hand_fixed: SHand, eplayerindex_f
     SForeverRandHands {
         m_eplayerindex_fixed : eplayerindex_fixed,
         m_ahand : {
-            let mut vecocard = unplayed_cards(vecstich, &hand_fixed);
-            assert!(vecocard.iter().filter(|ocard| ocard.is_some()).count()>=3*hand_fixed.cards().len());
+            let mut veccard_unplayed = unplayed_cards(vecstich, &hand_fixed);
+            assert!(veccard_unplayed.len()>=3*hand_fixed.cards().len());
             let n_size = hand_fixed.cards().len();
             create_playerindexmap(|eplayerindex| {
                 if eplayerindex==eplayerindex_fixed {
                     hand_fixed.clone()
                 } else {
-                    random_hand(n_size, &mut vecocard)
+                    random_hand(n_size, &mut veccard_unplayed)
                 }
             })
         }
@@ -106,9 +106,7 @@ impl Iterator for SAllHands {
 }
 
 pub fn all_possible_hands(vecstich: &[SStich], hand_fixed: SHand, eplayerindex_fixed: EPlayerIndex) -> SAllHands {
-    let veccard_unknown = unplayed_cards(vecstich, &hand_fixed).into_iter()
-        .filter_map(|ocard| ocard)
-        .collect::<Vec<_>>();
+    let veccard_unknown = unplayed_cards(vecstich, &hand_fixed);
     let n_cards_total = veccard_unknown.len();
     assert_eq!(n_cards_total%3, 0);
     let n_cards_per_player = n_cards_total / 3;

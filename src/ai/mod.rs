@@ -35,21 +35,15 @@ pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
     mem::swap(vecstich, &mut vecstich_sample);
 }
 
-pub fn unplayed_cards(vecstich: &[SStich], hand_fixed: &SHand) -> Vec<Option<SCard>> {
+pub fn unplayed_cards(vecstich: &[SStich], hand_fixed: &SHand) -> Vec<SCard> {
     SCard::all_values().into_iter()
-        .map(|card| 
-             if 
-                 hand_fixed.contains(card)
-                 || vecstich.iter().any(|stich|
-                    stich.indices_and_cards().any(|(_eplayerindex, card_played)|
-                        card_played==card
-                    )
-                 )
-             {
-                 None
-             } else {
-                 Some(card)
-             }
+        .filter(|card| 
+             !hand_fixed.contains(*card)
+             && !vecstich.iter().any(|stich|
+                stich.indices_and_cards().any(|(_eplayerindex, card_played)|
+                    card_played==*card
+                )
+             )
         )
         .collect()
 }
@@ -69,9 +63,7 @@ fn test_unplayed_cards() {
     let veccard_unplayed = unplayed_cards(
         &vecstich,
         &SHand::new_from_vec(cardvectorparser::parse_cards("gk sk").unwrap())
-    ).into_iter()
-    .filter_map(|ocard| ocard)
-    .collect::<Vec<_>>();
+    );
     let veccard_unplayed_check = cardvectorparser::parse_cards::<Vec<_>>("gz e7 sz h9 ez gu").unwrap();
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
     assert!(veccard_unplayed.iter().all(|card| veccard_unplayed_check.contains(card)));
