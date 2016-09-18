@@ -4,8 +4,6 @@ use primitives::card::*;
 use self::combine::*;
 use std::iter::FromIterator;
 
-// TODO: enable parsing stuff like egho gazk9 s7
-
 pub fn parse_cards<C>(str_cards: &str) -> Option<C>
     where C: FromIterator<SCard>
 {
