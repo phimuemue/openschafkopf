@@ -22,7 +22,7 @@ pub trait TAi {
         );
         assert!(1<=veccard_allowed.len());
         if 1==veccard_allowed.len() {
-            veccard_allowed.first().unwrap().clone()
+            veccard_allowed[0]
         } else {
             self.internal_suggest_card(game)
         }
