@@ -33,7 +33,7 @@ pub trait TTrumpfDecider {
         let laufende_relevant = |card: &SCard| {
             ab_winner[mapcardeplayerindex[*card]]
         };
-        let b_might_have_lauf = laufende_relevant(veccard_trumpf.first().unwrap());
+        let b_might_have_lauf = laufende_relevant(&veccard_trumpf[0]);
         veccard_trumpf.iter()
             .take_while(|card| b_might_have_lauf==laufende_relevant(card))
             .count() as isize
