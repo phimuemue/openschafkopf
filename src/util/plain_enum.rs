@@ -62,13 +62,7 @@ macro_rules! plain_enum {
 
         impl quickcheck::Arbitrary for $enumname {
             fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> $enumname {
-                $enumname::all_values()
-                    .nth(
-                        g.gen_range(
-                            0,
-                            $enumname::all_values().count()
-                        )
-                    ).unwrap()
+                $enumname::from_usize(g.gen_range(0, $enumname::ubound_usize()))
             }
         }
     }
