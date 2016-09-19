@@ -243,7 +243,7 @@ pub fn ask_for_alternative<'vect, T, FnFilter, FnCallback, FnSuggest>(
                 }
                 ncurses::erase();
             }
-            vect.into_iter().nth(i_alternative).unwrap().1
+            vect[i_alternative].1
         }
     )
 }
