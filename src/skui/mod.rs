@@ -151,10 +151,11 @@ pub fn print_game_info(rules: &TRules, vecstoss: &Vec<SStoss>) {
         |ncwin| {
             wprint(ncwin, &format!("{}", rules));
             if let Some(eplayerindex) = rules.playerindex() {
-                wprint(ncwin, &format!(", played by {}. Stoesse: ", eplayerindex));
-                for stoss in vecstoss {
-                    wprint(ncwin, &format!("{},", stoss.m_eplayerindex));
-                }
+                wprint(ncwin, &format!(", played by {}", eplayerindex));
+            }
+            wprint(ncwin, &". Stoesse: ");
+            for stoss in vecstoss {
+                wprint(ncwin, &format!("{},", stoss.m_eplayerindex));
             }
             ncurses::wrefresh(ncwin);
         }
