@@ -50,8 +50,8 @@ impl Iterator for SForeverRandHands {
             }
             let card_swap = self.m_ahand[eplayerindex_swap].cards()[i_hand_swap];
             let card_rand = self.m_ahand[eplayerindex_rand].cards()[i_hand_rand];
-            *self.m_ahand[eplayerindex_swap].cards_mut().get_mut(i_hand_swap).unwrap() = card_rand;
-            *self.m_ahand[eplayerindex_rand].cards_mut().get_mut(i_hand_rand).unwrap() = card_swap;
+            self.m_ahand[eplayerindex_swap].cards_mut()[i_hand_swap] = card_rand;
+            self.m_ahand[eplayerindex_rand].cards_mut()[i_hand_rand] = card_swap;
         }
         Some(create_playerindexmap(|eplayerindex| self.m_ahand[eplayerindex].clone()))
     }
