@@ -78,10 +78,10 @@ impl SCard {
     pub fn schlag(&self) -> ESchlag {
         unsafe{(mem::transmute((self.m_n_internalrepresentation % 8) as usize))}
     }
-    pub fn all_values() -> Vec<SCard> { // TODO Rust: return iterator once we can specify that return type is an iterator
+    pub fn values() -> Vec<SCard> { // TODO Rust: return iterator once we can specify that return type is an iterator
         return iproduct!(
-            EFarbe::all_values(),
-            ESchlag::all_values()
+            EFarbe::values(),
+            ESchlag::values()
         )
         .map(|(efarbe, eschlag)| SCard::new(efarbe, eschlag))
         .collect()
@@ -96,14 +96,14 @@ impl quickcheck::Arbitrary for SCard {
 
 #[test]
 fn test_farbe_schlag_enumerators() {
-    assert_eq!(EFarbe::all_values().count(), 4);
-    assert_eq!(ESchlag::all_values().count(), 8);
+    assert_eq!(EFarbe::values().count(), 4);
+    assert_eq!(ESchlag::values().count(), 8);
 }
 
 #[test]
 fn test_card_ctor() {
-    for efarbe in EFarbe::all_values() {
-        for eschlag in ESchlag::all_values() {
+    for efarbe in EFarbe::values() {
+        for eschlag in ESchlag::values() {
             assert_eq!(SCard::new(efarbe, eschlag).farbe(), efarbe);
             assert_eq!(SCard::new(efarbe, eschlag).schlag(), eschlag);
         }

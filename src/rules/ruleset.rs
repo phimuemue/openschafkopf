@@ -63,7 +63,7 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
                     if str_l=="rufspiel" {
                         create_rulegroup(
                             "Rufspiel", 
-                            EFarbe::all_values()
+                            EFarbe::values()
                                 .filter(|efarbe| EFarbe::Herz!=*efarbe)
                                 .map(|efarbe| Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TActivelyPlayableRules>)
                                 .collect()

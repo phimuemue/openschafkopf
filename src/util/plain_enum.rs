@@ -10,7 +10,7 @@ macro_rules! enum_seq_len {
 pub trait TPlainEnum : Sized {
     fn from_usize(u: usize) -> Self;
     fn ubound_usize() -> usize;
-    fn all_values() -> SEnumIterator<Self> {
+    fn values() -> SEnumIterator<Self> {
         SEnumIterator{
             m_phantom: PhantomData,
             m_i_e: 0,
@@ -77,6 +77,6 @@ plain_enum!{ETest {
 fn test_plain_enum() {
     assert_eq!(3, enum_seq_len!(1, E1, E2, E3,));
     assert_eq!(3, ETest::ubound_usize());
-    assert_eq!(vec![ETest::E1, ETest::E2, ETest::E3], ETest::all_values().collect::<Vec<_>>());
+    assert_eq!(vec![ETest::E1, ETest::E2, ETest::E3], ETest::values().collect::<Vec<_>>());
 }
 
