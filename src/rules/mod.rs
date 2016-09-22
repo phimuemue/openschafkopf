@@ -126,7 +126,7 @@ pub trait TRules : fmt::Display + TAsRules {
     fn all_allowed_cards(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
         assert!(vecstich.last().unwrap().size()<4);
-        if vecstich.last().unwrap().empty() {
+        if 0==vecstich.last().unwrap().size() {
             self.all_allowed_cards_first_in_stich(vecstich, hand)
         } else {
             self.all_allowed_cards_within_stich(vecstich, hand)

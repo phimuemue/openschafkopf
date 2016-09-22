@@ -77,9 +77,6 @@ impl SStich {
             .take(n_size)
             .all(|((i1, c1), (i2, c2))| i1==i2 && c1==c2)
     }
-    pub fn empty(&self) -> bool {
-        self.size() == 0
-    }
     pub fn first_player_index(&self) -> EPlayerIndex {
         self.m_eplayerindex_first
     }
