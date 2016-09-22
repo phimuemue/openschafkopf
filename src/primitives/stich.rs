@@ -25,7 +25,7 @@ pub fn create_playerindexmap<T, F>(mut func: F) -> [T; 4]
 pub struct SStich {
     pub m_eplayerindex_first: EPlayerIndex,
     m_n_size: usize,
-    pub m_acard: [SCard; 4],
+    m_acard: [SCard; 4],
 }
 
 impl PartialEq for SStich {

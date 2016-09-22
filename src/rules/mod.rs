@@ -145,7 +145,7 @@ pub trait TRules : fmt::Display + TAsRules {
     fn winner_index(&self, stich: &SStich) -> EPlayerIndex {
         let mut eplayerindex_best = stich.m_eplayerindex_first;
         for (eplayerindex, card) in stich.indices_and_cards().skip(1) {
-            if Ordering::Less==self.compare_in_stich(stich.m_acard[eplayerindex_best], card) {
+            if Ordering::Less==self.compare_in_stich(stich[eplayerindex_best], card) {
                 eplayerindex_best = eplayerindex;
             }
         }
