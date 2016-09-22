@@ -2,6 +2,7 @@ use primitives::card::*;
 use std::fmt;
 use std::mem;
 use std::ptr;
+use arrayvec::ArrayVec;
 
 use std::ops::Index;
 
@@ -24,14 +25,13 @@ pub fn create_playerindexmap<T, F>(mut func: F) -> [T; 4]
 #[derive(Clone)]
 pub struct SStich {
     pub m_eplayerindex_first: EPlayerIndex,
-    m_n_size: usize,
-    m_acard: [SCard; 4],
+    m_veccard: ArrayVec<[SCard; 4]>,
 }
 
 impl PartialEq for SStich {
     fn eq(&self, stich_other: &SStich) -> bool {
         self.size()==stich_other.size()
-        && self.equal_up_to_size(stich_other, self.m_n_size)
+        && self.equal_up_to_size(stich_other, self.size())
     }
 }
 impl Eq for SStich {}
@@ -60,7 +60,7 @@ impl Index<EPlayerIndex> for SStich {
     type Output = SCard;
     fn index<'a>(&'a self, eplayerindex : EPlayerIndex) -> &'a SCard {
         assert!(self.valid_index(eplayerindex));
-        &self.m_acard[eplayerindex]
+        &self.m_veccard[(eplayerindex+4-self.m_eplayerindex_first)%4] // TODO improve (possibly when EPlayerIndex is plain_enum)
     }
 }
 
@@ -68,8 +68,7 @@ impl SStich {
     pub fn new(eplayerindex_first: EPlayerIndex) -> SStich {
         SStich {
             m_eplayerindex_first : eplayerindex_first,
-            m_n_size: 0,
-            m_acard: [SCard::new(EFarbe::Eichel, ESchlag::S7); 4]
+            m_veccard: ArrayVec::new(),
         }
     }
     pub fn equal_up_to_size(&self, stich_other: &SStich, n_size: usize) -> bool {
@@ -79,7 +78,7 @@ impl SStich {
             .all(|((i1, c1), (i2, c2))| i1==i2 && c1==c2)
     }
     pub fn empty(&self) -> bool {
-        self.m_n_size == 0
+        self.size() == 0
     }
     pub fn first_player_index(&self) -> EPlayerIndex {
         self.m_eplayerindex_first
@@ -88,17 +87,15 @@ impl SStich {
         (self.first_player_index() + self.size()) % 4
     }
     pub fn size(&self) -> usize {
-        self.m_n_size
+        self.m_veccard.len()
     }
     pub fn zugeben(&mut self, card: SCard) {
-        assert!(self.m_n_size<4);
-        let eplayerindex = (self.m_eplayerindex_first + self.m_n_size)%4;
-        self.m_acard[eplayerindex] = card; // sad: can not inline eplayerindex (borrowing)
-        self.m_n_size = self.m_n_size + 1;
+        assert!(self.size()<4);
+        self.m_veccard.push(card);
     }
     pub fn undo_most_recent_card(&mut self) {
-        assert!(0 < self.m_n_size);
-        self.m_n_size = self.m_n_size - 1;
+        assert!(0 < self.size());
+        self.m_veccard.pop();
     }
 
     pub fn first_card(&self) -> SCard {
@@ -112,14 +109,14 @@ impl SStich {
     }
     fn valid_index(&self, eplayerindex: EPlayerIndex) -> bool {
         if eplayerindex >= self.m_eplayerindex_first {
-            self.m_n_size > eplayerindex-self.m_eplayerindex_first
+            self.size() > eplayerindex-self.m_eplayerindex_first
         } else {
-            self.m_n_size > 4-self.m_eplayerindex_first+eplayerindex
+            self.size() > 4-self.m_eplayerindex_first+eplayerindex
         }
     }
     pub fn get(&self, eplayerindex: EPlayerIndex) -> Option<SCard> {
         if self.valid_index(eplayerindex) {
-            Some(self.m_acard[eplayerindex])
+            Some(self[eplayerindex])
         } else {
             None
         }
