@@ -16,7 +16,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         txcard.send(self.m_ai.suggest_card(game)).ok();
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SHand, _ : &Vec<SGameAnnouncement>, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
+    fn ask_for_game<'rules>(&self, hand: &SHand, _ : &SGameAnnouncements, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
         // TODO: implement a more intelligent decision strategy
         let n_tests_per_rules = 50;
         txorules.send(allowed_rules(vecrulegroup).iter()

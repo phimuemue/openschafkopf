@@ -98,7 +98,7 @@ fn main() {
             let (txorules, rxorules) = mpsc::channel::<Option<_>>();
             vecplayer[eplayerindex].ask_for_game(
                 &gamepreparations.m_ahand[eplayerindex],
-                &gamepreparations.m_vecgameannouncement,
+                &gamepreparations.m_gameannouncements,
                 &gamepreparations.m_ruleset.m_avecrulegroup[eplayerindex],
                 txorules.clone()
             );

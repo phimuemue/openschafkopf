@@ -129,15 +129,15 @@ pub fn print_vecstich(vecstich: &[SStich]) {
     );
 }
 
-pub fn print_game_announcements(vecgameannouncement: &[SGameAnnouncement]) {
-    for gameannouncement in vecgameannouncement {
+pub fn print_game_announcements(gameannouncements: &SGameAnnouncements) {
+    for (eplayerindex, orules) in gameannouncements.iter() {
         do_in_window(
-            ESkUiWindow::PlayerInfo(gameannouncement.m_eplayerindex),
+            ESkUiWindow::PlayerInfo(eplayerindex),
             |ncwin| {
-                if let Some(rules) = gameannouncement.m_orules {
-                    wprint(ncwin, &format!("{}: {}", gameannouncement.m_eplayerindex, rules.to_string()));
+                if let &Some(rules) = orules {
+                    wprint(ncwin, &format!("{}: {}", eplayerindex, rules.to_string()));
                 } else {
-                    wprint(ncwin, &format!("{}: Nothing", gameannouncement.m_eplayerindex));
+                    wprint(ncwin, &format!("{}: Nothing", eplayerindex));
                 }
                 ncurses::wrefresh(ncwin);
             }

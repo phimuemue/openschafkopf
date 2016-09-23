@@ -116,6 +116,7 @@ impl<T> SPlayersInRound<T> {
             m_playersinround: self
         }
     }
+    // TODO fn into_iter(self) -> SPlayersInRoundIntoIterator
     fn valid_index(&self, eplayerindex: EPlayerIndex) -> bool {
         if eplayerindex >= self.m_eplayerindex_first {
             self.size() > eplayerindex-self.m_eplayerindex_first

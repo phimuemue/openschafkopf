@@ -14,7 +14,7 @@ pub trait TPlayer {
     fn ask_for_game<'rules>(
         &self,
         hand: &SHand,
-        vecgameannouncement: &Vec<SGameAnnouncement>,
+        gameannouncements: &SGameAnnouncements,
         vecrulegroup: &'rules Vec<SRuleGroup>,
         txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>
     );

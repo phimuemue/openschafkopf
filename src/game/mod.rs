@@ -8,11 +8,12 @@ use skui;
 
 use rand::{self, Rng};
 
+pub type SGameAnnouncements<'rules> = SPlayersInRound<Option<&'rules TActivelyPlayableRules>>;
+
 pub struct SGamePreparations<'rules> {
     pub m_ahand : [SHand; 4],
     pub m_ruleset : &'rules SRuleSet,
-    m_eplayerindex_first : EPlayerIndex,
-    pub m_vecgameannouncement : Vec<SGameAnnouncement<'rules>>,
+    pub m_gameannouncements : SGameAnnouncements<'rules>,
 }
 
 pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
@@ -49,16 +50,15 @@ impl<'rules> SGamePreparations<'rules> {
                 ahand
             },
             m_ruleset : ruleset,
-            m_eplayerindex_first : eplayerindex_first,
-            m_vecgameannouncement : Vec::new(),
+            m_gameannouncements : SGameAnnouncements::new(eplayerindex_first),
         }
     }
 
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
-        if self.m_vecgameannouncement.len() == 4 {
+        if self.m_gameannouncements.size() == 4 {
             return None;
         } else {
-            return Some((self.m_eplayerindex_first + self.m_vecgameannouncement.len()) % 4);
+            return Some(self.m_gameannouncements.current_player_index());
         }
     }
 
@@ -69,18 +69,15 @@ impl<'rules> SGamePreparations<'rules> {
         if orules.map_or(false, |rules| Some(eplayerindex)!=rules.playerindex()) {
             return Err("Only actively playable rules can be announced");
         }
-        self.m_vecgameannouncement.push(SGameAnnouncement{
-            m_eplayerindex : eplayerindex,
-            m_orules : orules,
-        });
-        assert!(!self.m_vecgameannouncement.is_empty());
+        self.m_gameannouncements.push(orules);
+        assert!(0<self.m_gameannouncements.size());
         Ok(())
     }
 
     // TODO: extend return value to support stock, etc.
     pub fn determine_rules(self) -> Option<SPreGame<'rules>> {
         // TODO: find sensible way to deal with multiple game announcements (currently, we choose highest priority)
-        let eplayerindex_first = self.m_eplayerindex_first;
+        let eplayerindex_first = self.m_gameannouncements.first_player_index();
         let create_game = move |ahand, rules| {
             Some(SPreGame {
                 m_ahand : ahand,
@@ -89,8 +86,8 @@ impl<'rules> SGamePreparations<'rules> {
                 m_vecstoss : vec![],
             })
         };
-        let vecrules_announced : Vec<&TActivelyPlayableRules> = self.m_vecgameannouncement.into_iter()
-            .filter_map(|gameannouncement| gameannouncement.m_orules)
+        let vecrules_announced : Vec<&TActivelyPlayableRules> = self.m_gameannouncements.iter()
+            .filter_map(|(_eplayerindex, orules)| orules.clone())
             .collect();
         if 0<vecrules_announced.len() {
             let prio_best = vecrules_announced.iter()
@@ -154,11 +151,6 @@ pub struct SGame<'rules> {
     pub m_rules : &'rules TRules,
     pub m_vecstoss : Vec<SStoss>,
     pub m_vecstich : Vec<SStich>,
-}
-
-pub struct SGameAnnouncement<'rules> {
-    pub m_eplayerindex : EPlayerIndex,
-    pub m_orules: Option<&'rules TActivelyPlayableRules>,
 }
 
 impl<'rules> SGame<'rules> {

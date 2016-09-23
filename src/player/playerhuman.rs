@@ -69,8 +69,8 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
         }
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SHand, vecgameannouncement : &Vec<SGameAnnouncement>, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
-        skui::print_game_announcements(vecgameannouncement);
+    fn ask_for_game<'rules>(&self, hand: &SHand, gameannouncements : &SGameAnnouncements, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
+        skui::print_game_announcements(gameannouncements);
         let vecorulegroup : Vec<Option<&SRuleGroup>> = Some(None).into_iter()
             .chain(
                 vecrulegroup.iter()
