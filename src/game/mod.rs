@@ -33,11 +33,7 @@ impl SDealCards {
 
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
         // TODO make doublings adjustable (possibly within SRuleSet)
-        if self.m_doublings.size() == 4 {
-            return None;
-        } else {
-            return Some(self.m_doublings.current_player_index());
-        }
+        self.m_doublings.current_player_index()
     }
 
     pub fn first_hand_for(&self, eplayerindex: EPlayerIndex) -> &[SCard] {
@@ -98,11 +94,7 @@ pub fn random_hands() -> [SHand; 4] {
 
 impl<'rules> SGamePreparations<'rules> {
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
-        if self.m_gameannouncements.size() == 4 {
-            return None;
-        } else {
-            return Some(self.m_gameannouncements.current_player_index());
-        }
+        self.m_gameannouncements.current_player_index()
     }
 
     pub fn announce_game(&mut self, eplayerindex: EPlayerIndex, orules: Option<&'rules TActivelyPlayableRules>) -> Result<(), &'static str> {
@@ -202,11 +194,7 @@ pub struct SGame<'rules> {
 
 impl<'rules> SGame<'rules> {
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
-        if 8==self.m_vecstich.len() && 4==self.m_vecstich.last().unwrap().size() {
-            None
-        } else {
-            Some(self.m_vecstich.last().unwrap().current_player_index())
-        }
+        self.m_vecstich.last().unwrap().current_player_index()
     }
 
     pub fn zugeben(&mut self, card_played: SCard, eplayerindex: EPlayerIndex) -> Result<(), &'static str> {

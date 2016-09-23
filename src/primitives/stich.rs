@@ -91,8 +91,12 @@ impl<T> SPlayersInRound<T> {
     pub fn first_player_index(&self) -> EPlayerIndex {
         self.m_eplayerindex_first
     }
-    pub fn current_player_index(&self) -> EPlayerIndex {
-        (self.first_player_index() + self.size()) % 4
+    pub fn current_player_index(&self) -> Option<EPlayerIndex> {
+        if self.size()==4 {
+            None
+        } else {
+            Some((self.first_player_index() + self.size()) % 4)
+        }
     }
     pub fn size(&self) -> usize {
         self.m_veccard.len()

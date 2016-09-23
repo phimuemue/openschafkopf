@@ -150,7 +150,7 @@ impl TAi for SAiCheating {
             &stich_current,
             /*n_branches*/2
         );
-        possible_payouts(game.m_rules, &susp, &mut vecstich_complete_mut, stich_current.current_player_index()).into_iter()
+        possible_payouts(game.m_rules, &susp, &mut vecstich_complete_mut, stich_current.current_player_index().unwrap()).into_iter()
             .max_by_key(|&(_card, n_payout)| n_payout)
             .unwrap()
             .0
@@ -243,7 +243,7 @@ impl TAi for SAiSimulating {
         let mut vecstich_complete_mut = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
         let ref stich_current = game.m_vecstich.last().unwrap();
         assert!(stich_current.size()<4);
-        let eplayerindex_fixed = stich_current.current_player_index();
+        let eplayerindex_fixed = stich_current.current_player_index().unwrap();
         let ref hand_fixed = game.m_ahand[eplayerindex_fixed];
         assert!(!hand_fixed.cards().is_empty());
         let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&game.m_vecstich, hand_fixed);
