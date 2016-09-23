@@ -15,8 +15,10 @@ pub fn test_rules(
     use game;
     use util::cardvectorparser;
     println!("Testing rules: {}", str_info);
+    let eplayerindex_first = 0; // TODO parametrize w.r.t. eplayerindex_first
     let mut pregame = game::SPreGame {
-        m_eplayerindex_first: 0, // TODO parametrize w.r.t. eplayerindex_first
+        m_doublings : game::SDoublings::new(eplayerindex_first),
+        m_eplayerindex_first: eplayerindex_first, 
         m_ahand : create_playerindexmap(|eplayerindex| {
             SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex]).unwrap())
         }),

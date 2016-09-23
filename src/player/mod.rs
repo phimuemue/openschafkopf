@@ -9,6 +9,12 @@ use game::*;
 use std::sync::mpsc;
 
 pub trait TPlayer {
+    fn ask_for_doubling(
+        &self,
+        veccard: &[SCard],
+        txb_doubling: mpsc::Sender<bool>,
+    );
+
     fn take_control(&mut self, game: &SGame, txcard: mpsc::Sender<SCard>);
     // TODO: players need information about who already wants to play
     fn ask_for_game<'rules>(
@@ -22,6 +28,7 @@ pub trait TPlayer {
     fn ask_for_stoss(
         &self,
         eplayerindex: EPlayerIndex,
+        doublings: &SDoublings,
         rules: &TRules,
         hand: &SHand,
         vecstoss: &Vec<SStoss>,

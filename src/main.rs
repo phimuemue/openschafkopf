@@ -89,10 +89,16 @@ fn main() {
     ];
     let mut accountbalance = SAccountBalance::new();
     for i_game in 0..clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4) {
-        let mut gamepreparations = SGamePreparations::new(
-            &ruleset,
-            /*eplayerindex_first*/i_game % 4,
-        );
+        let mut dealcards = SDealCards::new(/*eplayerindex_first*/i_game % 4);
+        while let Some(eplayerindex) = dealcards.which_player_can_do_something() {
+            let (txb_doubling, rxb_doubling) = mpsc::channel::<bool>();
+            vecplayer[eplayerindex].ask_for_doubling(
+                dealcards.first_hand_for(eplayerindex),
+                txb_doubling.clone(),
+            );
+            dealcards.announce_doubling(eplayerindex, rxb_doubling.recv().unwrap()).unwrap();
+        }
+        let mut gamepreparations = dealcards.finish_dealing(&ruleset);
         while let Some(eplayerindex) = gamepreparations.which_player_can_do_something() {
             skui::logln(&format!("Asking player {} for game", eplayerindex));
             let (txorules, rxorules) = mpsc::channel::<Option<_>>();
@@ -111,6 +117,7 @@ fn main() {
                     let (txb_stoss, rxb_stoss) = mpsc::channel::<bool>();
                     vecplayer[*eplayerindex].ask_for_stoss(
                         *eplayerindex,
+                        &pregame.m_doublings,
                         pregame.m_rules,
                         &pregame.m_ahand[*eplayerindex],
                         &pregame.m_vecstoss,

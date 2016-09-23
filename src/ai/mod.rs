@@ -297,6 +297,7 @@ fn test_is_compatible_with_game_so_far() {
     }
     let test_game = |astr_hand: [&'static str; 4], rules: &TRules, eplayerindex_first, vectestaction: Vec<VTestAction>| {
         let mut game = game::SGame {
+            m_doublings : SDoublings::new(eplayerindex_first),
             m_ahand : create_playerindexmap(|eplayerindex| {
                 SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex]).unwrap())
             }),

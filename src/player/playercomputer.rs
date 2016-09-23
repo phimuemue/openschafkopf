@@ -12,6 +12,25 @@ pub struct SPlayerComputer<'ai> {
 }
 
 impl<'ai> TPlayer for SPlayerComputer<'ai> {
+    fn ask_for_doubling(
+        &self,
+        veccard: &[SCard],
+        txb_doubling: mpsc::Sender<bool>,
+    ) {
+        txb_doubling.send(
+            veccard.iter()
+                .filter(|card| {
+                    ESchlag::Ober==card.schlag() || ESchlag::Unter==card.schlag() || EFarbe::Herz==card.farbe()
+                })
+                .count() >= 3
+            || EFarbe::values().any(|efarbe| {
+                4==veccard.iter()
+                    .filter(|card| efarbe==card.farbe())
+                    .count()
+            })
+        ).ok(); // TODO more intelligent doubling strategy
+    }
+
     fn take_control(&mut self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         txcard.send(self.m_ai.suggest_card(game)).ok();
     }
@@ -41,6 +60,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
     fn ask_for_stoss(
         &self,
         eplayerindex: EPlayerIndex,
+        _doublings: &SDoublings,
         rules: &TRules,
         hand: &SHand,
         _vecstoss: &Vec<SStoss>,

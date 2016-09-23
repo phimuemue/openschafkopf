@@ -8,10 +8,69 @@ use skui;
 
 use rand::{self, Rng};
 
+pub type SDoublings = SPlayersInRound<bool>;
+
+pub struct SDealCards {
+    m_ahand : [SHand; 4],
+    m_doublings : SDoublings,
+}
+
+impl SDealCards {
+    pub fn new(eplayerindex_first: EPlayerIndex) -> SDealCards {
+        SDealCards {
+            m_ahand : {
+                let ahand = random_hands();
+                skui::logln("Preparing game");
+                for hand in ahand.iter() {
+                    skui::log(&format!("{} |", hand));
+                }
+                skui::logln("");
+                ahand
+            },
+            m_doublings: SDoublings::new(eplayerindex_first),
+        }
+    }
+
+    pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
+        // TODO make doublings adjustable (possibly within SRuleSet)
+        if self.m_doublings.size() == 4 {
+            return None;
+        } else {
+            return Some(self.m_doublings.current_player_index());
+        }
+    }
+
+    pub fn first_hand_for(&self, eplayerindex: EPlayerIndex) -> &[SCard] {
+        &self.m_ahand[eplayerindex].cards()[0..4]
+    }
+
+    pub fn announce_doubling(&mut self, eplayerindex: EPlayerIndex, b_doubling: bool) -> Result<(), &'static str> {
+        if Some(eplayerindex)!=self.which_player_can_do_something() {
+            return Err("Wrong player index");
+        }
+        self.m_doublings.push(b_doubling);
+        assert!(0<self.m_doublings.size());
+        Ok(())
+    }
+
+    pub fn finish_dealing(self, ruleset: &SRuleSet) -> SGamePreparations {
+        let eplayerindex_first = self.m_doublings.first_player_index();
+        SGamePreparations {
+            m_ahand : self.m_ahand,
+            m_doublings : self.m_doublings,
+            m_ruleset : ruleset,
+            m_gameannouncements : SGameAnnouncements::new(eplayerindex_first),
+        }
+    }
+
+
+}
+
 pub type SGameAnnouncements<'rules> = SPlayersInRound<Option<&'rules TActivelyPlayableRules>>;
 
 pub struct SGamePreparations<'rules> {
     pub m_ahand : [SHand; 4],
+    m_doublings : SDoublings,
     pub m_ruleset : &'rules SRuleSet,
     pub m_gameannouncements : SGameAnnouncements<'rules>,
 }
@@ -38,22 +97,6 @@ pub fn random_hands() -> [SHand; 4] {
 }
 
 impl<'rules> SGamePreparations<'rules> {
-    pub fn new(ruleset : &'rules SRuleSet, eplayerindex_first: EPlayerIndex) -> SGamePreparations<'rules> {
-        SGamePreparations {
-            m_ahand : {
-                let ahand = random_hands();
-                skui::logln("Preparing game");
-                for hand in ahand.iter() {
-                    skui::log(&format!("{} |", hand));
-                }
-                skui::logln("");
-                ahand
-            },
-            m_ruleset : ruleset,
-            m_gameannouncements : SGameAnnouncements::new(eplayerindex_first),
-        }
-    }
-
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
         if self.m_gameannouncements.size() == 4 {
             return None;
@@ -78,9 +121,10 @@ impl<'rules> SGamePreparations<'rules> {
     pub fn determine_rules(self) -> Option<SPreGame<'rules>> {
         // TODO: find sensible way to deal with multiple game announcements (currently, we choose highest priority)
         let eplayerindex_first = self.m_gameannouncements.first_player_index();
-        let create_game = move |ahand, rules| {
+        let create_game = move |ahand, doublings, rules| {
             Some(SPreGame {
                 m_ahand : ahand,
+                m_doublings : doublings,
                 m_rules : rules,
                 m_eplayerindex_first : eplayerindex_first,
                 m_vecstoss : vec![],
@@ -97,9 +141,9 @@ impl<'rules> SGamePreparations<'rules> {
             let rules_actively_played = vecrules_announced.into_iter()
                 .find(|rules| rules.priority()==prio_best)
                 .unwrap();
-            create_game(self.m_ahand, rules_actively_played.as_rules())
+            create_game(self.m_ahand, self.m_doublings, rules_actively_played.as_rules())
         } else if let Some(ref rulesramsch) = self.m_ruleset.m_orulesramsch {
-            create_game(self.m_ahand, rulesramsch.as_ref())
+            create_game(self.m_ahand, self.m_doublings, rulesramsch.as_ref())
         } else {
             None
         }
@@ -109,6 +153,7 @@ impl<'rules> SGamePreparations<'rules> {
 pub struct SPreGame<'rules> {
     pub m_eplayerindex_first : EPlayerIndex,
     pub m_ahand : [SHand; 4],
+    pub m_doublings : SDoublings,
     pub m_rules : &'rules TRules,
     pub m_vecstoss : Vec<SStoss>,
 }
@@ -139,15 +184,17 @@ impl<'rules> SPreGame<'rules> {
     pub fn finish(self) -> SGame<'rules> {
         SGame {
             m_ahand : self.m_ahand,
+            m_doublings : self.m_doublings,
             m_rules : self.m_rules,
-            m_vecstich : vec![SStich::new(self.m_eplayerindex_first)],
             m_vecstoss : self.m_vecstoss,
+            m_vecstich : vec![SStich::new(self.m_eplayerindex_first)],
         }
     }
 }
 
 pub struct SGame<'rules> {
     pub m_ahand : [SHand; 4],
+    pub m_doublings : SDoublings,
     pub m_rules : &'rules TRules,
     pub m_vecstoss : Vec<SStoss>,
     pub m_vecstich : Vec<SStich>,
@@ -216,7 +263,9 @@ impl<'rules> SGame<'rules> {
         assert!(self.which_player_can_do_something().is_none());
         let an_payout_raw = self.m_rules.payout(&SGameFinishedStiche::new(&self.m_vecstich));
         create_playerindexmap(|eplayerindex| {
-            an_payout_raw[eplayerindex] * 2isize.pow(self.m_vecstoss.len() as u32)
+            an_payout_raw[eplayerindex] 
+                * 2isize.pow(self.m_vecstoss.len() as u32)
+                * 2isize.pow(self.m_doublings.iter().filter(|&(_eplayerindex, &b_doubling)| b_doubling).count() as u32)
         })
     }
 
