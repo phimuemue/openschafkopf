@@ -183,7 +183,7 @@ impl<'rules> SGame<'rules> {
             let ref mut hand = self.m_ahand[eplayerindex];
             assert!(self.m_rules.card_is_allowed(&self.m_vecstich, hand, card_played));
             hand.play_card(card_played);
-            self.m_vecstich.last_mut().unwrap().zugeben(card_played);
+            self.m_vecstich.last_mut().unwrap().push(card_played);
         }
         for eplayerindex in 0..4 {
             skui::logln(&format!("Hand {}: {}", eplayerindex, self.m_ahand[eplayerindex]));

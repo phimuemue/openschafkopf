@@ -28,7 +28,7 @@ pub trait TTrumpfDecider {
     fn count_laufende(vecstich: &Vec<SStich>, ab_winner: &[bool; 4]) -> isize {
         let veccard_trumpf = Self::trumpfs_in_descending_order(Vec::new());
         let mapcardeplayerindex = SCardMap::<EPlayerIndex>::new_from_pairs(
-            vecstich.iter().flat_map(|stich| stich.indices_and_cards())
+            vecstich.iter().flat_map(|stich| stich.iter())
         );
         let laufende_relevant = |card: &SCard| {
             ab_winner[mapcardeplayerindex[*card]]

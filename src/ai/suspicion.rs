@@ -135,10 +135,10 @@ impl SSuspicion {
                 ($i_raw : expr, $func: expr) => {
                     // TODO use equivalent card optimization
                     for card in rules.all_allowed_cards(vecstich, &self.m_ahand[player_index($i_raw)]) {
-                        vecstich.last_mut().unwrap().zugeben(card);
+                        vecstich.last_mut().unwrap().push(card);
                         assert!(card==vecstich.last().unwrap()[player_index($i_raw)]);
                         $func;
-                        vecstich.last_mut().unwrap().undo_most_recent_card();
+                        vecstich.last_mut().unwrap().undo_most_recent();
                     }
                 };
             };
@@ -212,8 +212,8 @@ impl SSuspicion {
             .filter(|susptrans| { // only consider successors compatible with current stich_given so far
                 assert_eq!(susptrans.m_susp.hand_size()+1, self.hand_size());
                 ostich_given.as_ref().map_or(true, |stich_given| {
-                    stich_given.indices_and_cards()
-                        .zip(susptrans.m_stich.indices_and_cards())
+                    stich_given.iter()
+                        .zip(susptrans.m_stich.iter())
                         .all(|((i_current_stich, card_current_stich), (i_susp_stich, card_susp_stich))| {
                             assert_eq!(i_current_stich, i_susp_stich);
                             card_current_stich==card_susp_stich
@@ -227,7 +227,7 @@ impl SSuspicion {
                 })
             })
             .group_by(|&(susptrans, _n_payout)| { // other players may play inconveniently for eplayerindex...
-                susptrans.m_stich.indices_and_cards()
+                susptrans.m_stich.iter()
                     .take_while(|&(eplayerindex_stich, _card)| eplayerindex_stich != eplayerindex)
                     .map(|(_eplayerindex, card)| card)
                     .collect::<Vec<_>>();

@@ -138,7 +138,7 @@ fn test_all_possible_hands() {
         .map(|str_stich| {
             let mut stich = SStich::new(/*eplayerindex should not be relevant*/0);
             for card in cardvectorparser::parse_cards::<Vec<_>>(str_stich).unwrap() {
-                stich.zugeben(card.clone());
+                stich.push(card.clone());
             }
             stich
         })

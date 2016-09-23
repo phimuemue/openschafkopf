@@ -40,8 +40,8 @@ pub fn unplayed_cards(vecstich: &[SStich], hand_fixed: &SHand) -> Vec<SCard> {
         .filter(|card| 
              !hand_fixed.contains(*card)
              && !vecstich.iter().any(|stich|
-                stich.indices_and_cards().any(|(_eplayerindex, card_played)|
-                    card_played==*card
+                stich.iter().any(|(_eplayerindex, card_played)|
+                    card_played==card
                 )
              )
         )
@@ -55,7 +55,7 @@ fn test_unplayed_cards() {
         .map(|str_stich| {
             let mut stich = SStich::new(/*eplayerindex should not be relevant*/0);
             for card in cardvectorparser::parse_cards::<Vec<_>>(str_stich).unwrap() {
-                stich.zugeben(card.clone());
+                stich.push(card.clone());
             }
             stich
         })
@@ -141,7 +141,7 @@ impl TAi for SAiCheating {
             game.m_rules,
             create_playerindexmap(|eplayerindex|
                 SHand::new_from_vec(
-                    stich_current.get(eplayerindex).into_iter()
+                    stich_current.get(eplayerindex).cloned().into_iter()
                         .chain(game.m_ahand[eplayerindex].cards().iter().cloned())
                         .collect()
                 )
@@ -162,20 +162,20 @@ fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
     let ref stich_current = game.m_vecstich.last().unwrap();
     assert!(stich_current.size()<4);
     // hands must contain respective cards from stich_current...
-    stich_current.indices_and_cards()
-        .all(|(eplayerindex, card)| ahand[eplayerindex].contains(card))
+    stich_current.iter()
+        .all(|(eplayerindex, card)| ahand[eplayerindex].contains(*card))
     // ... and must not contain other cards preventing farbe/trumpf frei
     && {
         let mut vecstich_complete_and_current_stich = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
         vecstich_complete_and_current_stich.push(SStich::new(stich_current.first_player_index()));
-        stich_current.indices_and_cards()
+        stich_current.iter()
             .all(|(eplayerindex, card_played)| {
                 let b_valid = game.m_rules.card_is_allowed(
                     &vecstich_complete_and_current_stich,
                     &ahand[eplayerindex],
-                    card_played
+                    *card_played
                 );
-                vecstich_complete_and_current_stich.last_mut().unwrap().zugeben(card_played);
+                vecstich_complete_and_current_stich.last_mut().unwrap().push(*card_played);
                 b_valid
             })
     }
@@ -193,15 +193,15 @@ fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
         let mut b_valid_up_to_now = true;
         'loopstich: for stich in game.completed_stichs().iter() {
             vecstich_simulate.push(SStich::new(stich.m_eplayerindex_first));
-            for (eplayerindex, card) in stich.indices_and_cards() {
+            for (eplayerindex, card) in stich.iter() {
                 if game.m_rules.card_is_allowed(
                     &vecstich_simulate,
                     &ahand_simulate[eplayerindex],
-                    card
+                    *card
                 ) {
-                    assert!(ahand_simulate[eplayerindex].contains(card));
-                    ahand_simulate[eplayerindex].play_card(card);
-                    vecstich_simulate.last_mut().unwrap().zugeben(card);
+                    assert!(ahand_simulate[eplayerindex].contains(*card));
+                    ahand_simulate[eplayerindex].play_card(*card);
+                    vecstich_simulate.last_mut().unwrap().push(*card);
                 } else {
                     b_valid_up_to_now = false;
                     break 'loopstich;

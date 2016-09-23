@@ -59,8 +59,8 @@ impl TRules for SRulesRufspiel {
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4] {
         let eplayerindex_coplayer = gamefinishedstiche.get().iter()
-            .flat_map(|stich| stich.indices_and_cards())
-            .find(|&(_, card)| card==self.rufsau())
+            .flat_map(|stich| stich.iter())
+            .find(|&(_, card)| *card==self.rufsau())
             .map(|(eplayerindex, _)| eplayerindex)
             .unwrap();
         let (eschneiderschwarz, ab_winner) = points_to_schneiderschwarz_and_winners(
@@ -98,13 +98,13 @@ impl TRules for SRulesRufspiel {
                     if b_rufsau_known_before_stich {
                         // already known
                         true
-                    } else if self.is_ruffarbe(stich.first_card()) {
+                    } else if self.is_ruffarbe(*stich.first()) {
                         // gesucht or weggelaufen
                         true
                     } else {
                         // We explicitly traverse all cards because it may be allowed 
                         // (by exotic rules) to schmier rufsau even if not gesucht.
-                        stich.indices_and_cards().any(|(_, card)| card==self.rufsau())
+                        stich.iter().any(|(_, card)| *card==self.rufsau())
                     }
                 } )
         {
@@ -132,7 +132,7 @@ impl TRules for SRulesRufspiel {
         if hand.cards().len()<=1 {
             hand.cards().clone()
         } else {
-            let card_first = vecstich.last().unwrap().first_card();
+            let card_first = *vecstich.last().unwrap().first();
             if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) {
                 // special case: gesucht
                 // TODO Consider the following distribution of cards:

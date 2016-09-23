@@ -116,7 +116,7 @@ pub fn print_vecstich(vecstich: &[SStich]) {
                     wprint(ncwin, if eplayerindex==stich.first_player_index() { ">" } else { " " });
                     match stich.get(eplayerindex) {
                         None => {wprint(ncwin, "..")},
-                        Some(card) => {print_card_with_farbe(ncwin, card)},
+                        Some(card) => {print_card_with_farbe(ncwin, *card)},
                     };
                 };
                 let n_card_width = 2;

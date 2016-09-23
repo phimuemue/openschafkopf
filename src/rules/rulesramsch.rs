@@ -90,7 +90,7 @@ impl TRules for SRulesRamsch {
 
     fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
-        let card_first = vecstich.last().unwrap().first_card();
+        let card_first = *vecstich.last().unwrap().first();
         let veccard_allowed : SHandVector = hand.cards().iter()
             .filter(|&&card| self.trumpf_or_farbe(card)==self.trumpf_or_farbe(card_first))
             .cloned()

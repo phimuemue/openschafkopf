@@ -23,59 +23,70 @@ pub fn create_playerindexmap<T, F>(mut func: F) -> [T; 4]
 }
 
 #[derive(Clone)]
-pub struct SStich {
+pub struct SPlayersInRound<T> {
     pub m_eplayerindex_first: EPlayerIndex,
-    m_veccard: ArrayVec<[SCard; 4]>,
+    m_veccard: ArrayVec<[T; 4]>,
 }
 
-impl PartialEq for SStich {
-    fn eq(&self, stich_other: &SStich) -> bool {
-        self.size()==stich_other.size()
-        && self.equal_up_to_size(stich_other, self.size())
+impl<T> PartialEq for SPlayersInRound<T>
+    where T: PartialEq,
+{
+    fn eq(&self, playersinround_other: &SPlayersInRound<T>) -> bool {
+        self.size()==playersinround_other.size()
+        && self.equal_up_to_size(playersinround_other, self.size())
     }
 }
-impl Eq for SStich {}
+impl<T> Eq for SPlayersInRound<T> 
+    where T: Eq,
+{}
 
-pub struct StichIterator<'stich> {
+pub struct SPlayersInRoundIterator<'playersinround, T> 
+    where T: 'playersinround
+{
     m_i_offset : usize,
-    m_stich: &'stich SStich,
+    m_playersinround: &'playersinround SPlayersInRound<T>,
 }
 
-impl<'stich> Iterator for StichIterator<'stich> {
-    type Item = (EPlayerIndex, SCard);
-    fn next(&mut self) -> Option<(EPlayerIndex, SCard)> {
-        if self.m_i_offset==self.m_stich.size() {
+impl<'playersinround, T> Iterator for SPlayersInRoundIterator<'playersinround, T> {
+    type Item = (EPlayerIndex, &'playersinround T);
+    fn next(&mut self) -> Option<(EPlayerIndex, &'playersinround T)> {
+        if self.m_i_offset==self.m_playersinround.size() {
             return None;
         }
         else {
-            let eplayerindex = (self.m_stich.m_eplayerindex_first + self.m_i_offset)%4;
-            let pairicard = (eplayerindex, self.m_stich[eplayerindex]);
+            let eplayerindex = (self.m_playersinround.m_eplayerindex_first + self.m_i_offset)%4;
+            let pairicard = (eplayerindex, &self.m_playersinround[eplayerindex]);
             self.m_i_offset = self.m_i_offset + 1;
             return Some(pairicard);
         }
     }
 }
 
-impl Index<EPlayerIndex> for SStich {
-    type Output = SCard;
-    fn index<'a>(&'a self, eplayerindex : EPlayerIndex) -> &'a SCard {
+impl<T> Index<EPlayerIndex> for SPlayersInRound<T> {
+    type Output = T;
+    fn index<'a>(&'a self, eplayerindex : EPlayerIndex) -> &'a T {
         assert!(self.valid_index(eplayerindex));
         &self.m_veccard[(eplayerindex+4-self.m_eplayerindex_first)%4] // TODO improve (possibly when EPlayerIndex is plain_enum)
     }
 }
 
-impl SStich {
-    pub fn new(eplayerindex_first: EPlayerIndex) -> SStich {
-        SStich {
+impl<T> SPlayersInRound<T>
+    where T: PartialEq,
+{
+    pub fn equal_up_to_size(&self, playersinround_other: &SPlayersInRound<T>, n_size: usize) -> bool {
+        self.iter()
+            .zip(playersinround_other.iter())
+            .take(n_size)
+            .all(|((i1, c1), (i2, c2))| i1==i2 && c1==c2)
+    }
+}
+
+impl<T> SPlayersInRound<T> {
+    pub fn new(eplayerindex_first: EPlayerIndex) -> SPlayersInRound<T> {
+        SPlayersInRound {
             m_eplayerindex_first : eplayerindex_first,
             m_veccard: ArrayVec::new(),
         }
-    }
-    pub fn equal_up_to_size(&self, stich_other: &SStich, n_size: usize) -> bool {
-        self.indices_and_cards()
-            .zip(stich_other.indices_and_cards())
-            .take(n_size)
-            .all(|((i1, c1), (i2, c2))| i1==i2 && c1==c2)
     }
     pub fn first_player_index(&self) -> EPlayerIndex {
         self.m_eplayerindex_first
@@ -86,22 +97,23 @@ impl SStich {
     pub fn size(&self) -> usize {
         self.m_veccard.len()
     }
-    pub fn zugeben(&mut self, card: SCard) {
+    pub fn push(&mut self, t: T) {
         assert!(self.size()<4);
-        self.m_veccard.push(card);
+        self.m_veccard.push(t);
     }
-    pub fn undo_most_recent_card(&mut self) {
+    pub fn undo_most_recent(&mut self) {
         assert!(0 < self.size());
         self.m_veccard.pop();
     }
 
-    pub fn first_card(&self) -> SCard {
-        self[self.m_eplayerindex_first]
+    pub fn first(&self) -> &T {
+        assert!(0 < self.size());
+        &self[self.m_eplayerindex_first]
     }
-    pub fn indices_and_cards(&self) -> StichIterator {
-        StichIterator {
+    pub fn iter(&self) -> SPlayersInRoundIterator<T> {
+        SPlayersInRoundIterator {
             m_i_offset: 0,
-            m_stich: self
+            m_playersinround: self
         }
     }
     fn valid_index(&self, eplayerindex: EPlayerIndex) -> bool {
@@ -111,14 +123,16 @@ impl SStich {
             self.size() > 4-self.m_eplayerindex_first+eplayerindex
         }
     }
-    pub fn get(&self, eplayerindex: EPlayerIndex) -> Option<SCard> {
+    pub fn get(&self, eplayerindex: EPlayerIndex) -> Option<&T> {
         if self.valid_index(eplayerindex) {
-            Some(self[eplayerindex])
+            Some(&self[eplayerindex])
         } else {
             None
         }
     }
 }
+
+pub type SStich = SPlayersInRound<SCard>;
 
 impl fmt::Display for SStich {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -147,24 +161,24 @@ fn test_stich() {
             for n_size in 0..5 {
                 let mut stich = SStich::new(eplayerindex_first);
                 for i_card in 0..n_size {
-                    stich.zugeben(veccard[i_card]);
+                    stich.push(veccard[i_card]);
                 }
                 assert_eq!(stich.size(), n_size);
                 assert_eq!(stich.first_player_index(), eplayerindex_first);
-                assert_eq!(stich.size(), stich.indices_and_cards().count());
-                for (eplayerindex, card) in stich.indices_and_cards() {
+                assert_eq!(stich.size(), stich.iter().count());
+                for (eplayerindex, card) in stich.iter() {
                     assert_eq!(stich.get(eplayerindex), Some(card));
-                    assert_eq!(stich[eplayerindex], card);
+                    assert_eq!(stich[eplayerindex], *card);
                 }
             }
         }
     }
     {
         let mut stich = SStich::new(2);
-        stich.zugeben(SCard::new(EFarbe::Eichel, ESchlag::Unter));
-        stich.zugeben(SCard::new(EFarbe::Gras, ESchlag::S7));
+        stich.push(SCard::new(EFarbe::Eichel, ESchlag::Unter));
+        stich.push(SCard::new(EFarbe::Gras, ESchlag::S7));
         assert!(stich[2]==SCard::new(EFarbe::Eichel, ESchlag::Unter));
         assert!(stich[3]==SCard::new(EFarbe::Gras, ESchlag::S7));
-        assert_eq!(stich.indices_and_cards().count(), 2);
+        assert_eq!(stich.iter().count(), 2);
     }
 }

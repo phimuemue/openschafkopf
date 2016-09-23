@@ -115,15 +115,15 @@ pub struct SCardMap<T> {
 }
 
 impl <T> SCardMap<T> {
-    pub fn new_from_pairs<ItPair>(itpairtcard : ItPair) -> SCardMap<T>
-        where ItPair : Iterator<Item=(T, SCard)>
+    pub fn new_from_pairs<'card, ItPair>(itpairtcard : ItPair) -> SCardMap<T>
+        where ItPair : Iterator<Item=(T, &'card SCard)>
     {
         let mut mapcardt : SCardMap<T>;
         unsafe {
             mapcardt = mem::uninitialized();
         }
         for (t, card) in itpairtcard {
-            mapcardt[card] = t;
+            mapcardt[*card] = t;
         }
         mapcardt
     }
