@@ -89,6 +89,12 @@ def OpenFileParseGame(strFile, dictstrfnGame):
                 return strResult
             AppendToResultNoNewline("\"%s\"," % (" ".join([CardString(spancard["class"][3]) for spancard in vecspancard])))
         AppendToResult("],")
+        # doubling
+        AppendToResultNoNewline("    vec![")
+        for aKlopfer in soup.find(text="Klopfer").find_parent("tr").find_all("a", href=True):
+            AppendToResultNoNewline("%s,"%dictstreplayerindex[aKlopfer.contents[0]])
+        AppendToResult("],")
+        # Stoss (Kontra etc)
         AppendToResultNoNewline("    vec![")
         for aKontraRetour in soup.find(text="Kontra und Retour").find_parent("tr").find_all("a", href=True):
             AppendToResultNoNewline("%s,"%dictstreplayerindex[aKontraRetour.contents[0]])

@@ -11,8 +11,8 @@ use rand::{self, Rng};
 pub type SDoublings = SPlayersInRound<bool>;
 
 pub struct SDealCards {
-    m_ahand : [SHand; 4],
-    m_doublings : SDoublings,
+    pub m_ahand : [SHand; 4],
+    pub m_doublings : SDoublings,
 }
 
 impl SDealCards {
