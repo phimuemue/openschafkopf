@@ -39,12 +39,16 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
             Ok(file) => file,
         };
         // TODO: make creation of ruleset file adjustable
-        file.write_all(b"rufspiel\n").unwrap();
-        file.write_all(b"solo\n").unwrap();
-        file.write_all(b"farbwenz\n").unwrap();
-        file.write_all(b"wenz\n").unwrap();
-        file.write_all(b"farbgeier\n").unwrap();
-        file.write_all(b"geier\n").unwrap();
+        for str_rules in [
+            "rufspiel",
+            "solo",
+            "farbwenz",
+            "wenz",
+            "farbgeier",
+            "geier",
+        ].iter() {
+            file.write_all(str_rules.as_bytes()).unwrap();
+        }
     }
     let vecstr_rule_name = {
         assert!(path.exists()); 
