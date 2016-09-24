@@ -37,8 +37,8 @@ impl TActivelyPlayableRules for SRulesRufspiel {
 }
 
 impl TRules for SRulesRufspiel {
-    fn can_be_played(&self, hand: &SHand) -> bool {
-        let it = || {hand.cards().iter().filter(|&card| self.is_ruffarbe(*card))};
+    fn can_be_played(&self, hand: &SFullHand) -> bool {
+        let it = || {hand.get().cards().iter().filter(|&card| self.is_ruffarbe(*card))};
         it().all(|card| card.schlag()!=ESchlag::Ass)
         && 0<it().count()
     }

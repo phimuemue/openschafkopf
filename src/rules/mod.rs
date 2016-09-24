@@ -27,6 +27,22 @@ pub struct SStoss {
     pub m_eplayerindex : EPlayerIndex,
 }
 
+pub struct SFullHand<'hand> {
+    m_hand: &'hand SHand,
+}
+
+impl<'hand> SFullHand<'hand> {
+    pub fn new(hand: &SHand) -> SFullHand {
+        assert_eq!(hand.cards().len(), 8);
+        SFullHand {
+            m_hand : hand,
+        }
+    }
+    pub fn get(&self) -> &SHand {
+        self.m_hand
+    }
+}
+
 pub struct SGameFinishedStiche<'vecstich> {
     m_vecstich: &'vecstich Vec<SStich>,
 }
@@ -88,7 +104,7 @@ pub trait TRules : fmt::Display + TAsRules {
 
     fn playerindex(&self) -> Option<EPlayerIndex>;
 
-    fn can_be_played(&self, _hand: &SHand) -> bool {
+    fn can_be_played(&self, _hand: &SFullHand) -> bool {
         true // probably, only Rufspiel is prevented in some cases
     }
 

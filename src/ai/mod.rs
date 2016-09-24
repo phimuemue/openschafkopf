@@ -14,7 +14,7 @@ use std::fs;
 use std::mem;
 
 pub trait TAi {
-    fn rank_rules(&self, hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
+    fn rank_rules(&self, hand_fixed: &SFullHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
     fn suggest_card(&self, game: &SGame) -> SCard {
         let veccard_allowed = game.m_rules.all_allowed_cards(
             &game.m_vecstich,
@@ -125,7 +125,7 @@ fn possible_payouts(rules: &TRules, susp: &SSuspicion, mut vecstich_complete_pay
 pub struct SAiCheating {}
 
 impl TAi for SAiCheating {
-    fn rank_rules (&self, hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
+    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
         // TODO: adjust interface to get whole game
         SAiSimulating{}.rank_rules(hand_fixed, eplayerindex_fixed, rules, n_tests)
     }
@@ -190,10 +190,8 @@ fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
             }
         }
         assert_ahand_same_size(&ahand_simulate);
-        assert_eq!(8, ahand_simulate[0].cards().len());
-
         game.m_rules.playerindex().map_or(true, |eplayerindex_active|
-            game.m_rules.can_be_played(&ahand_simulate[eplayerindex_active])
+            game.m_rules.can_be_played(&SFullHand::new(&ahand_simulate[eplayerindex_active]))
         )
         && {
             let mut b_valid_up_to_now = true;
@@ -222,15 +220,15 @@ fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
 
 
 impl TAi for SAiSimulating {
-    fn rank_rules (&self, hand_fixed: &SHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
+    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
         (0..n_tests)
             .map(|_i_test| {
-                let mut vecocard = unplayed_cards(&Vec::new(), hand_fixed);
+                let mut vecocard = unplayed_cards(&Vec::new(), hand_fixed.get());
                 let mut susp = SSuspicion::new_from_raw(
                     eplayerindex_fixed,
                     create_playerindexmap(|eplayerindex| {
                         if eplayerindex_fixed==eplayerindex {
-                            hand_fixed.clone()
+                            hand_fixed.get().clone()
                         } else {
                             random_hand(8, &mut vecocard)
                         }

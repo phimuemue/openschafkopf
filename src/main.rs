@@ -18,6 +18,7 @@ mod skui;
 use game::*;
 use std::sync::mpsc;
 use primitives::*;
+use rules::SFullHand; // TODO clean up modules
 use rules::ruleset::*;
 use ai::*;
 use std::path::Path;
@@ -66,11 +67,11 @@ fn main() {
                 let eplayerindex_fixed = 0;
                 println!("Hand: {}", hand_fixed);
                 for rules in allowed_rules(&ruleset.m_avecrulegroup[eplayerindex_fixed]).iter() 
-                    .filter(|rules| rules.can_be_played(&hand_fixed))
+                    .filter(|rules| rules.can_be_played(&SFullHand::new(&hand_fixed)))
                 {
                     println!("{}: {}",
                         rules,
-                        ai.rank_rules(&hand_fixed, eplayerindex_fixed, rules.as_rules().clone(), 100)
+                        ai.rank_rules(&SFullHand::new(&hand_fixed), eplayerindex_fixed, rules.as_rules().clone(), 100)
                     );
                 }
             } else {
@@ -103,7 +104,7 @@ fn main() {
             skui::logln(&format!("Asking player {} for game", eplayerindex));
             let (txorules, rxorules) = mpsc::channel::<Option<_>>();
             vecplayer[eplayerindex].ask_for_game(
-                &gamepreparations.m_ahand[eplayerindex],
+                &SFullHand::new(&gamepreparations.m_ahand[eplayerindex]),
                 &gamepreparations.m_gameannouncements,
                 &gamepreparations.m_ruleset.m_avecrulegroup[eplayerindex],
                 txorules.clone()

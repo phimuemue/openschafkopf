@@ -94,7 +94,7 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
         }
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SHand, gameannouncements : &SGameAnnouncements, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
+    fn ask_for_game<'rules>(&self, hand: &SFullHand, gameannouncements : &SGameAnnouncements, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
         skui::print_game_announcements(gameannouncements);
         let vecorulegroup : Vec<Option<&SRuleGroup>> = Some(None).into_iter()
             .chain(
@@ -106,7 +106,7 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
             )
             .collect();
         while let &Some(rulegroup) = choose_ruleset_or_rules(
-            hand,
+            hand.get(),
             &vecorulegroup,
             |orulegroup : &Option<&SRuleGroup>| match orulegroup {
                 &None => "Nothing".to_string(),
@@ -123,7 +123,7 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
                 )
                 .collect();
             if let &Some(rules) = choose_ruleset_or_rules(
-                hand,
+                hand.get(),
                 &vecorules,
                 |orules : &Option<&TActivelyPlayableRules>| match orules {
                     &None => "Back".to_string(),

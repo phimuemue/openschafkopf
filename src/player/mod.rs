@@ -19,7 +19,7 @@ pub trait TPlayer {
     // TODO: players need information about who already wants to play
     fn ask_for_game<'rules>(
         &self,
-        hand: &SHand,
+        hand: &SFullHand,
         gameannouncements: &SGameAnnouncements,
         vecrulegroup: &'rules Vec<SRuleGroup>,
         txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>

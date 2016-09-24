@@ -35,13 +35,13 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         txcard.send(self.m_ai.suggest_card(game)).ok();
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SHand, _ : &SGameAnnouncements, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
+    fn ask_for_game<'rules>(&self, hand: &SFullHand, _ : &SGameAnnouncements, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
         // TODO: implement a more intelligent decision strategy
         let n_tests_per_rules = 50;
         txorules.send(allowed_rules(vecrulegroup).iter()
             .filter(|rules| rules.can_be_played(hand))
             .filter(|rules| {
-                4 <= hand.cards().iter()
+                4 <= hand.get().cards().iter()
                     .filter(|&card| rules.is_trumpf(*card))
                     .count()
             })
@@ -67,7 +67,12 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         txb: mpsc::Sender<bool>,
     ) {
         txb.send(
-            self.m_ai.rank_rules(hand, eplayerindex, rules, /*n_tests_per_rules*/ 100) > 10f64 // TODO determine sensible threshold
+            self.m_ai.rank_rules(
+                &SFullHand::new(hand), // TODO support stoss during game
+                eplayerindex,
+                rules,
+                /*n_tests_per_rules*/ 100
+            ) > 10f64 // TODO determine sensible threshold
         ).unwrap()
     }
 }
