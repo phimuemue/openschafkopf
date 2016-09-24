@@ -2,7 +2,8 @@ pub mod rulesrufspiel;
 pub mod rulessolo;
 pub mod rulesramsch;
 pub mod ruleset;
-mod trumpfdecider;
+pub mod trumpfdecider;
+pub mod wrappers;
 
 #[cfg(test)]
 mod tests;
@@ -10,6 +11,7 @@ mod tests;
 use primitives::*;
 use std::cmp::Ordering;
 use std::fmt;
+pub use rules::wrappers::*;
 
 #[derive(PartialEq, Eq, Hash)]
 pub enum VTrumpfOrFarbe {
@@ -25,39 +27,6 @@ pub enum ESchneiderSchwarz {
 
 pub struct SStoss {
     pub m_eplayerindex : EPlayerIndex,
-}
-
-pub struct SFullHand<'hand> {
-    m_hand: &'hand SHand,
-}
-
-impl<'hand> SFullHand<'hand> {
-    pub fn new(hand: &SHand) -> SFullHand {
-        assert_eq!(hand.cards().len(), 8);
-        SFullHand {
-            m_hand : hand,
-        }
-    }
-    pub fn get(&self) -> &SHand {
-        self.m_hand
-    }
-}
-
-pub struct SGameFinishedStiche<'vecstich> {
-    m_vecstich: &'vecstich Vec<SStich>,
-}
-
-impl<'vecstich> SGameFinishedStiche<'vecstich> {
-    pub fn new(vecstich: &Vec<SStich>) -> SGameFinishedStiche {
-        assert_eq!(vecstich.len(), 8);
-        assert!(vecstich.iter().all(|stich| 4==stich.size()));
-        SGameFinishedStiche {
-            m_vecstich : vecstich,
-        }
-    }
-    pub fn get(&self) -> &Vec<SStich> {
-        self.m_vecstich
-    }
 }
 
 pub fn points_to_schneiderschwarz_and_winners<FnIsPlayerParty, Rules>(

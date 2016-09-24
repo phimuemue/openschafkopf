@@ -18,8 +18,8 @@ mod skui;
 use game::*;
 use std::sync::mpsc;
 use primitives::*;
-use rules::SFullHand; // TODO clean up modules
 use rules::ruleset::*;
+use rules::wrappers::*;
 use ai::*;
 use std::path::Path;
 use player::*;
