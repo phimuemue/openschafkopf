@@ -189,26 +189,34 @@ fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
                 ahand_simulate[eplayerindex].cards_mut().push(stich[eplayerindex]);
             }
         }
-        let mut vecstich_simulate = Vec::new();
-        let mut b_valid_up_to_now = true;
-        'loopstich: for stich in game.completed_stichs().iter() {
-            vecstich_simulate.push(SStich::new(stich.m_eplayerindex_first));
-            for (eplayerindex, card) in stich.iter() {
-                if game.m_rules.card_is_allowed(
-                    &vecstich_simulate,
-                    &ahand_simulate[eplayerindex],
-                    *card
-                ) {
-                    assert!(ahand_simulate[eplayerindex].contains(*card));
-                    ahand_simulate[eplayerindex].play_card(*card);
-                    vecstich_simulate.last_mut().unwrap().push(*card);
-                } else {
-                    b_valid_up_to_now = false;
-                    break 'loopstich;
+        assert_ahand_same_size(&ahand_simulate);
+        assert_eq!(8, ahand_simulate[0].cards().len());
+
+        game.m_rules.playerindex().map_or(true, |eplayerindex_active|
+            game.m_rules.can_be_played(&ahand_simulate[eplayerindex_active])
+        )
+        && {
+            let mut b_valid_up_to_now = true;
+            let mut vecstich_simulate = Vec::new();
+            'loopstich: for stich in game.completed_stichs().iter() {
+                vecstich_simulate.push(SStich::new(stich.m_eplayerindex_first));
+                for (eplayerindex, card) in stich.iter() {
+                    if game.m_rules.card_is_allowed(
+                        &vecstich_simulate,
+                        &ahand_simulate[eplayerindex],
+                        *card
+                    ) {
+                        assert!(ahand_simulate[eplayerindex].contains(*card));
+                        ahand_simulate[eplayerindex].play_card(*card);
+                        vecstich_simulate.last_mut().unwrap().push(*card);
+                    } else {
+                        b_valid_up_to_now = false;
+                        break 'loopstich;
+                    }
                 }
             }
+            b_valid_up_to_now
         }
-        b_valid_up_to_now
     }
 }
 
@@ -294,6 +302,7 @@ fn test_is_compatible_with_game_so_far() {
     enum VTestAction {
         PlayStich(&'static str),
         AssertFrei(EPlayerIndex, VTrumpfOrFarbe),
+        AssertNotFrei(EPlayerIndex, VTrumpfOrFarbe),
     }
     let test_game = |astr_hand: [&'static str; 4], rules: &TRules, eplayerindex_first, vectestaction: Vec<VTestAction>| {
         let mut game = game::SGame {
@@ -307,6 +316,7 @@ fn test_is_compatible_with_game_so_far() {
         };
         let mut vecpaireplayerindextrumpforfarbe_frei = Vec::new();
         for testaction in vectestaction {
+            let mut oassertnotfrei = None;
             match testaction {
                 VTestAction::PlayStich(str_stich) => {
                     for card in cardvectorparser::parse_cards::<Vec<_>>(str_stich).unwrap() {
@@ -317,6 +327,9 @@ fn test_is_compatible_with_game_so_far() {
                 VTestAction::AssertFrei(eplayerindex, trumpforfarbe) => {
                     vecpaireplayerindextrumpforfarbe_frei.push((eplayerindex, trumpforfarbe));
                 },
+                VTestAction::AssertNotFrei(eplayerindex, trumpforfarbe) => {
+                    oassertnotfrei = Some((eplayerindex, trumpforfarbe));
+                }
             }
             for ahand in forever_rand_hands(
                 game.completed_stichs(),
@@ -332,6 +345,9 @@ fn test_is_compatible_with_game_so_far() {
                 for &(eplayerindex, ref trumpforfarbe) in vecpaireplayerindextrumpforfarbe_frei.iter() {
                     assert!(!ahand[eplayerindex].contains_pred(|card| *trumpforfarbe==game.m_rules.trumpf_or_farbe(*card)));
                 }
+                if let Some((eplayerindex_not_frei, ref trumpforfarbe))=oassertnotfrei {
+                    assert!(ahand[eplayerindex_not_frei].contains_pred(|card| *trumpforfarbe==game.m_rules.trumpf_or_farbe(*card)));
+                }
             }
         }
     };
@@ -340,8 +356,11 @@ fn test_is_compatible_with_game_so_far() {
         &SRulesRufspiel {m_eplayerindex: 1, m_efarbe: EFarbe::Gras},
         /*eplayerindex_first*/ 2,
         vec![
+            VTestAction::AssertNotFrei(1, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
             VTestAction::PlayStich("h9 hu h8 eu"),
+            VTestAction::AssertNotFrei(1, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
             VTestAction::PlayStich("h7 e7 ha su"),
+            VTestAction::AssertNotFrei(1, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
             VTestAction::AssertFrei(2, VTrumpfOrFarbe::Trumpf),
             VTestAction::PlayStich("g7 g8 ga so"),
             VTestAction::AssertFrei(3, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
@@ -355,6 +374,7 @@ fn test_is_compatible_with_game_so_far() {
         &SRulesRufspiel {m_eplayerindex: 0, m_efarbe: EFarbe::Schelln},
         /*eplayerindex_first*/ 1,
         vec![
+            VTestAction::AssertNotFrei(0, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
             VTestAction::PlayStich("s9 sk hz sz"),
             VTestAction::AssertFrei(0, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
             VTestAction::AssertFrei(2, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
