@@ -112,13 +112,11 @@ impl<'rules> SGamePreparations<'rules> {
     // TODO: extend return value to support stock, etc.
     pub fn determine_rules(self) -> Option<SPreGame<'rules>> {
         // TODO: find sensible way to deal with multiple game announcements (currently, we choose highest priority)
-        let eplayerindex_first = self.m_gameannouncements.first_player_index();
         let create_game = move |ahand, doublings, rules| {
             Some(SPreGame {
                 m_ahand : ahand,
                 m_doublings : doublings,
                 m_rules : rules,
-                m_eplayerindex_first : eplayerindex_first,
                 m_vecstoss : vec![],
             })
         };
@@ -145,7 +143,6 @@ impl<'rules> SGamePreparations<'rules> {
 pub struct SPreGame<'rules> {
     pub m_ahand : [SHand; 4],
     pub m_doublings : SDoublings,
-    pub m_eplayerindex_first : EPlayerIndex,
     pub m_rules : &'rules TRules,
     pub m_vecstoss : Vec<SStoss>,
 }
@@ -154,7 +151,7 @@ impl<'rules> SPreGame<'rules> {
     pub fn which_player_can_do_something(&self) -> Vec<EPlayerIndex> {
         if self.m_vecstoss.len() < 4 {
             (0..4)
-                .map(|eplayerindex| (eplayerindex + self.m_eplayerindex_first) % 4)
+                .map(|eplayerindex| (eplayerindex + self.m_doublings.first_player_index()) % 4)
                 .filter(|eplayerindex| self.m_rules.stoss_allowed(*eplayerindex, &self.m_vecstoss, &self.m_ahand[*eplayerindex]))
                 .collect()
         } else {
@@ -174,12 +171,13 @@ impl<'rules> SPreGame<'rules> {
 
     // TODO: extend return value to support stock, etc.
     pub fn finish(self) -> SGame<'rules> {
+        let eplayerindex_first = self.m_doublings.first_player_index();
         SGame {
             m_ahand : self.m_ahand,
             m_doublings : self.m_doublings,
             m_rules : self.m_rules,
             m_vecstoss : self.m_vecstoss,
-            m_vecstich : vec![SStich::new(self.m_eplayerindex_first)],
+            m_vecstich : vec![SStich::new(eplayerindex_first)],
         }
     }
 }

@@ -27,7 +27,6 @@ pub fn test_rules(
             }
             doublings
         },
-        m_eplayerindex_first: eplayerindex_first, 
         m_ahand : create_playerindexmap(|eplayerindex| {
             SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex]).unwrap())
         }),
