@@ -9,7 +9,6 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use std::io::BufReader;
-use std::collections::HashSet;
 
 pub struct SRuleGroup {
     pub m_str_name : String,
@@ -47,17 +46,17 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
         file.write_all(b"farbgeier\n").unwrap();
         file.write_all(b"geier\n").unwrap();
     }
-    let setstr_rule_name = {
+    let vecstr_rule_name = {
         assert!(path.exists()); 
         let file = match File::open(&path) {
             Err(why) => panic!("Could not open {}: {}", path.display(), Error::description(&why)),
             Ok(file) => file,
         };
-        BufReader::new(&file).lines().map(|str| str.unwrap()).collect::<HashSet<_>>()
+        BufReader::new(&file).lines().map(|str| str.unwrap()).collect::<Vec<_>>()
     };
     SRuleSet {
         m_avecrulegroup : create_playerindexmap(|eplayerindex| {
-            setstr_rule_name.iter()
+            vecstr_rule_name.iter()
                 .filter_map(|str_l| {
                     println!("allowing {} for {}", str_l, eplayerindex);
                     if str_l=="rufspiel" {
@@ -85,7 +84,7 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
                 .collect()
         }),
         m_orulesramsch : { 
-            if setstr_rule_name.contains("ramsch") {
+            if vecstr_rule_name.contains(&"ramsch".to_string()) {
                 Some(Box::new(SRulesRamsch{}))
             } else {
                 None
