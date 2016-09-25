@@ -221,19 +221,10 @@ fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
 
 impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
-        (0..n_tests)
-            .map(|_i_test| {
-                let mut veccard = unplayed_cards(&Vec::new(), hand_fixed.get());
-                let mut susp = SSuspicion::new_from_raw(
-                    eplayerindex_fixed,
-                    create_playerindexmap(|eplayerindex| {
-                        if eplayerindex_fixed==eplayerindex {
-                            hand_fixed.get().clone()
-                        } else {
-                            random_hand(8, &mut veccard)
-                        }
-                    })
-                );
+        forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get().clone(), eplayerindex_fixed)
+            .take(n_tests)
+            .map(|ahand| {
+                let mut susp = SSuspicion::new_from_raw(eplayerindex_fixed, ahand);
                 susp.compute_successors(rules, &mut Vec::new(), &|_vecstich_complete, vecstich_successor| {
                     assert!(!vecstich_successor.is_empty());
                     random_sample_from_vec(vecstich_successor, 1);
