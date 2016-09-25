@@ -223,14 +223,14 @@ impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
         (0..n_tests)
             .map(|_i_test| {
-                let mut vecocard = unplayed_cards(&Vec::new(), hand_fixed.get());
+                let mut veccard = unplayed_cards(&Vec::new(), hand_fixed.get());
                 let mut susp = SSuspicion::new_from_raw(
                     eplayerindex_fixed,
                     create_playerindexmap(|eplayerindex| {
                         if eplayerindex_fixed==eplayerindex {
                             hand_fixed.get().clone()
                         } else {
-                            random_hand(8, &mut vecocard)
+                            random_hand(8, &mut veccard)
                         }
                     })
                 );
