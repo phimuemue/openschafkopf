@@ -26,7 +26,7 @@ impl SRulesRufspiel {
     }
 
     fn is_ruffarbe(&self, card: SCard) -> bool {
-        VTrumpfOrFarbe::Farbe(self.m_efarbe)==self.trumpf_or_farbe(card)
+        VTrumpfOrFarbe::Farbe(self.m_efarbe)==self.trumpforfarbe(card)
     }
 }
 
@@ -47,8 +47,8 @@ impl TRules for SRulesRufspiel {
         Some(self.m_eplayerindex)
     }
 
-    fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        STrumpfDeciderRufspiel::trumpf_or_farbe(card)
+    fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
+        STrumpfDeciderRufspiel::trumpforfarbe(card)
     }
 
     fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool {
@@ -149,7 +149,7 @@ impl TRules for SRulesRufspiel {
                 let veccard_allowed : SHandVector = hand.cards().iter()
                     .filter(|&&card| 
                         self.rufsau()!=card 
-                        && self.trumpf_or_farbe(card)==self.trumpf_or_farbe(card_first)
+                        && self.trumpforfarbe(card)==self.trumpforfarbe(card_first)
                     )
                     .cloned()
                     .collect();

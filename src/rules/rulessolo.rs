@@ -43,8 +43,8 @@ impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider>
         (eplayerindex==self.m_eplayerindex)==(vecstoss.len()%2==1)
     }
 
-    fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        TrumpfDecider::trumpf_or_farbe(card)
+    fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
+        TrumpfDecider::trumpforfarbe(card)
     }
 
     fn playerindex(&self) -> Option<EPlayerIndex> {
@@ -92,7 +92,7 @@ impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider>
         assert!(!vecstich.is_empty());
         let card_first = *vecstich.last().unwrap().first();
         let veccard_allowed : SHandVector = hand.cards().iter()
-            .filter(|&&card| self.trumpf_or_farbe(card)==self.trumpf_or_farbe(card_first))
+            .filter(|&&card| self.trumpforfarbe(card)==self.trumpforfarbe(card_first))
             .cloned()
             .collect();
         if veccard_allowed.is_empty() {

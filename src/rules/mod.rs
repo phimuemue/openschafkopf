@@ -69,7 +69,7 @@ pub fn points_to_schneiderschwarz_and_winners<FnIsPlayerParty, Rules>(
 
 pub trait TRules : fmt::Display + TAsRules {
 
-    fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe;
+    fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
 
     fn playerindex(&self) -> Option<EPlayerIndex>;
 
@@ -80,7 +80,7 @@ pub trait TRules : fmt::Display + TAsRules {
     fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool;
 
     fn is_trumpf(&self, card: SCard) -> bool {
-        VTrumpfOrFarbe::Trumpf == self.trumpf_or_farbe(card)
+        VTrumpfOrFarbe::Trumpf == self.trumpforfarbe(card)
     }
 
     fn points_card(&self, card: SCard) -> isize {
@@ -159,7 +159,7 @@ pub trait TRules : fmt::Display + TAsRules {
 
     fn sort_cards_first_trumpf_then_farbe(&self, veccard: &mut [SCard]) {
         veccard.sort_by(|&card_lhs, &card_rhs| {
-            match(self.trumpf_or_farbe(card_lhs), self.trumpf_or_farbe(card_rhs)) {
+            match(self.trumpforfarbe(card_lhs), self.trumpforfarbe(card_rhs)) {
                 (VTrumpfOrFarbe::Farbe(efarbe_lhs), VTrumpfOrFarbe::Farbe(efarbe_rhs)) => {
                     if efarbe_lhs==efarbe_rhs {
                         self.compare_in_stich_farbe(card_rhs, card_lhs)

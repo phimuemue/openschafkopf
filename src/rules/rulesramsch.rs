@@ -25,8 +25,8 @@ impl TRules for SRulesRamsch {
         false
     }
 
-    fn trumpf_or_farbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        STrumpfDeciderRamsch::trumpf_or_farbe(card)
+    fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
+        STrumpfDeciderRamsch::trumpforfarbe(card)
     }
 
     fn playerindex(&self) -> Option<EPlayerIndex> {
@@ -92,7 +92,7 @@ impl TRules for SRulesRamsch {
         assert!(!vecstich.is_empty());
         let card_first = *vecstich.last().unwrap().first();
         let veccard_allowed : SHandVector = hand.cards().iter()
-            .filter(|&&card| self.trumpf_or_farbe(card)==self.trumpf_or_farbe(card_first))
+            .filter(|&&card| self.trumpforfarbe(card)==self.trumpforfarbe(card_first))
             .cloned()
             .collect();
         if veccard_allowed.is_empty() {

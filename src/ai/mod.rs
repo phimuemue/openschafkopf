@@ -332,10 +332,10 @@ fn test_is_compatible_with_game_so_far() {
                     println!("{}: {}", eplayerindex, ahand[eplayerindex]);
                 }
                 for &(eplayerindex, ref trumpforfarbe) in vecpaireplayerindextrumpforfarbe_frei.iter() {
-                    assert!(!ahand[eplayerindex].contains_pred(|card| *trumpforfarbe==game.m_rules.trumpf_or_farbe(*card)));
+                    assert!(!ahand[eplayerindex].contains_pred(|card| *trumpforfarbe==game.m_rules.trumpforfarbe(*card)));
                 }
                 if let Some((eplayerindex_not_frei, ref trumpforfarbe))=oassertnotfrei {
-                    assert!(ahand[eplayerindex_not_frei].contains_pred(|card| *trumpforfarbe==game.m_rules.trumpf_or_farbe(*card)));
+                    assert!(ahand[eplayerindex_not_frei].contains_pred(|card| *trumpforfarbe==game.m_rules.trumpforfarbe(*card)));
                 }
             }
         }

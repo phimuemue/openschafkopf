@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 use std::marker::PhantomData;
 
 pub trait TTrumpfDecider {
-    fn trumpf_or_farbe(card: SCard) -> VTrumpfOrFarbe {
+    fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
         if Self::is_trumpf(card) {
             VTrumpfOrFarbe::Trumpf
         } else {
