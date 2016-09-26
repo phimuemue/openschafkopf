@@ -14,7 +14,7 @@ use std::fs;
 use std::mem;
 
 pub trait TAi {
-    fn rank_rules(&self, hand_fixed: &SFullHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
+    fn rank_rules(&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
     fn suggest_card(&self, game: &SGame) -> SCard {
         let veccard_allowed = game.m_rules.all_allowed_cards(
             &game.m_vecstich,
@@ -125,9 +125,9 @@ fn possible_payouts(rules: &TRules, susp: &SSuspicion, mut vecstich_complete_pay
 pub struct SAiCheating {}
 
 impl TAi for SAiCheating {
-    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
+    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
         // TODO: adjust interface to get whole game
-        SAiSimulating{}.rank_rules(hand_fixed, eplayerindex_fixed, rules, n_tests)
+        SAiSimulating{}.rank_rules(hand_fixed, eplayerindex_first, eplayerindex_rank, rules, n_tests)
     }
 
     fn internal_suggest_card(&self, game: &SGame) -> SCard {
@@ -220,16 +220,16 @@ fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
 
 
 impl TAi for SAiSimulating {
-    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_fixed: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
-        forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get().clone(), eplayerindex_fixed)
+    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
+        forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get().clone(), eplayerindex_rank)
             .take(n_tests)
             .map(|ahand| {
-                let mut susp = SSuspicion::new_from_raw(eplayerindex_fixed, ahand);
+                let mut susp = SSuspicion::new_from_raw(eplayerindex_first, ahand);
                 susp.compute_successors(rules, &mut Vec::new(), &|_vecstich_complete, vecstich_successor| {
                     assert!(!vecstich_successor.is_empty());
                     random_sample_from_vec(vecstich_successor, 1);
                 });
-                susp.min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex_fixed)
+                susp.min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex_rank)
             })
             .sum::<isize>() as f64
             / n_tests as f64

@@ -64,14 +64,14 @@ fn main() {
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
         if let Some(str_hand) = subcommand_matches.value_of("hand") {
             if let Some(hand_fixed) = util::cardvectorparser::parse_cards(str_hand).map(|veccard| SHand::new_from_vec(veccard)) {
-                let eplayerindex_fixed = 0;
+                let eplayerindex_rank = 0;
                 println!("Hand: {}", hand_fixed);
-                for rules in allowed_rules(&ruleset.m_avecrulegroup[eplayerindex_fixed]).iter() 
+                for rules in allowed_rules(&ruleset.m_avecrulegroup[eplayerindex_rank]).iter() 
                     .filter(|rules| rules.can_be_played(&SFullHand::new(&hand_fixed)))
                 {
                     println!("{}: {}",
                         rules,
-                        ai.rank_rules(&SFullHand::new(&hand_fixed), eplayerindex_fixed, rules.as_rules().clone(), 100)
+                        ai.rank_rules(&SFullHand::new(&hand_fixed), /*eplayerindex_first, TODO: make adjustable*/0, eplayerindex_rank, rules.as_rules().clone(), 100)
                     );
                 }
             } else {

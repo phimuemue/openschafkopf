@@ -35,7 +35,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         txcard.send(self.m_ai.suggest_card(game)).ok();
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SFullHand, _ : &SGameAnnouncements, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
+    fn ask_for_game<'rules>(&self, hand: &SFullHand, gameannouncements : &SGameAnnouncements, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
         // TODO: implement a more intelligent decision strategy
         let n_tests_per_rules = 50;
         txorules.send(allowed_rules(vecrulegroup).iter()
@@ -46,10 +46,10 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
                     .count()
             })
             .map(|rules| {
-                let eplayerindex_fixed = rules.playerindex().unwrap(); 
+                let eplayerindex_rank = rules.playerindex().unwrap(); 
                 (
                     rules,
-                    self.m_ai.rank_rules(hand, eplayerindex_fixed, rules.as_rules(), n_tests_per_rules)
+                    self.m_ai.rank_rules(hand, /*eplayerindex_first*/gameannouncements.first_player_index(), eplayerindex_rank, rules.as_rules(), n_tests_per_rules)
                 )
             })
             .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
@@ -60,7 +60,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
     fn ask_for_stoss(
         &self,
         eplayerindex: EPlayerIndex,
-        _doublings: &SDoublings,
+        doublings: &SDoublings,
         rules: &TRules,
         hand: &SHand,
         _vecstoss: &Vec<SStoss>,
@@ -69,7 +69,8 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         txb.send(
             self.m_ai.rank_rules(
                 &SFullHand::new(hand), // TODO support stoss during game
-                eplayerindex,
+                /*eplayerindex_first*/doublings.first_player_index(),
+                /*eplayerindex_rank*/eplayerindex,
                 rules,
                 /*n_tests_per_rules*/ 100
             ) > 10f64 // TODO determine sensible threshold
