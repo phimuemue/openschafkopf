@@ -232,9 +232,11 @@ impl SSuspicion {
                     .map(|(_eplayerindex, card)| card)
                     .collect::<Vec<_>>();
             })
+            .into_iter()
             .map(|(_stich_key_before_eplayerindex, grpsusptransn_before_eplayerindex)| {
                 grpsusptransn_before_eplayerindex.into_iter()
                     .group_by(|&(susptrans, _n_payout)| susptrans.m_stich[eplayerindex])
+                    .into_iter()
                     .map(|(_stich_key_eplayerindex, grpsusptransn_eplayerindex)| {
                         // in this group, we need the worst case if other players play badly
                         grpsusptransn_eplayerindex.into_iter().min_by_key(|&(_susptrans, n_payout)| n_payout).unwrap()
