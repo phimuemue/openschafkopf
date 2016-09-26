@@ -3,7 +3,9 @@ use player::*;
 use rules::*;
 use rules::ruleset::*;
 use game::*;
-use ai::TAi;
+use ai::*;
+use ai::handiterators::forever_rand_hands;
+use ai::suspicion::SSuspicion;
 
 use std::sync::mpsc;
 
@@ -66,14 +68,44 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         _vecstoss: &Vec<SStoss>,
         txb: mpsc::Sender<bool>,
     ) {
+        let n_tests_per_rules = 50;
+        let mut vecpairahandf_suspicion = forever_rand_hands(/*vecstich*/&Vec::new(), hand.clone(), eplayerindex)
+            .take(2*n_tests_per_rules)
+            .map(|ahand| {
+                let f_rank_rules = rules.playerindex().map_or(0f64, |eplayerindex_active| {
+                    if eplayerindex!=eplayerindex_active {
+                        self.m_ai.rank_rules(
+                            &SFullHand::new(&ahand[eplayerindex_active]),
+                            /*eplayerindex_first*/doublings.first_player_index(),
+                            /*eplayerindex_rank*/eplayerindex_active,
+                            rules,
+                            /*n_tests*/10
+                        )
+                    } else {
+                        0f64
+                    }
+                });
+                (ahand, f_rank_rules)
+            })
+            .collect::<Vec<_>>();
+        vecpairahandf_suspicion.sort_by(|&(ref _ahand_l, f_rank_l), &(ref _ahand_r, f_rank_r)|
+            f_rank_r.partial_cmp(&f_rank_l).unwrap()
+        );
+        vecpairahandf_suspicion.truncate(n_tests_per_rules);
+        assert_eq!(n_tests_per_rules, vecpairahandf_suspicion.len());
         txb.send(
-            self.m_ai.rank_rules(
-                &SFullHand::new(hand), // TODO support stoss during game
-                /*eplayerindex_first*/doublings.first_player_index(),
-                /*eplayerindex_rank*/eplayerindex,
-                rules,
-                /*n_tests_per_rules*/ 100
-            ) > 10f64 // TODO determine sensible threshold
+            vecpairahandf_suspicion.into_iter()
+                .map(|(ahand, _f_rank_rules)| {
+                    let mut susp = SSuspicion::new_from_raw(doublings.first_player_index(), ahand);
+                    susp.compute_successors(rules, &mut Vec::new(), &|_vecstich_complete, vecstich_successor| {
+                        assert!(!vecstich_successor.is_empty());
+                        random_sample_from_vec(vecstich_successor, 1);
+                    });
+                    susp.min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex)
+                })
+                .sum::<isize>() as f64
+                / (n_tests_per_rules) as f64
+                > 10f64
         ).unwrap()
     }
 }
