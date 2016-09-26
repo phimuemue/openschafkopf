@@ -51,7 +51,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
                 let eplayerindex_rank = rules.playerindex().unwrap(); 
                 (
                     rules,
-                    self.m_ai.rank_rules(hand, /*eplayerindex_first*/gameannouncements.first_player_index(), eplayerindex_rank, rules.as_rules(), n_tests_per_rules)
+                    self.m_ai.rank_rules(hand, /*eplayerindex_first*/gameannouncements.first_playerindex(), eplayerindex_rank, rules.as_rules(), n_tests_per_rules)
                 )
             })
             .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
@@ -76,7 +76,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
                     if eplayerindex!=eplayerindex_active {
                         self.m_ai.rank_rules(
                             &SFullHand::new(&ahand[eplayerindex_active]),
-                            /*eplayerindex_first*/doublings.first_player_index(),
+                            /*eplayerindex_first*/doublings.first_playerindex(),
                             /*eplayerindex_rank*/eplayerindex_active,
                             rules,
                             /*n_tests*/10
@@ -96,7 +96,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         txb.send(
             vecpairahandf_suspicion.into_iter()
                 .map(|(ahand, _f_rank_rules)| {
-                    let mut susp = SSuspicion::new_from_raw(doublings.first_player_index(), ahand);
+                    let mut susp = SSuspicion::new_from_raw(doublings.first_playerindex(), ahand);
                     susp.compute_successors(rules, &mut Vec::new(), &|_vecstich_complete, vecstich_successor| {
                         assert!(!vecstich_successor.is_empty());
                         random_sample_from_vec(vecstich_successor, 1);

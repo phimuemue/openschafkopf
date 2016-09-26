@@ -88,14 +88,14 @@ impl<T> SPlayersInRound<T> {
             m_veccard: ArrayVec::new(),
         }
     }
-    pub fn first_player_index(&self) -> EPlayerIndex {
+    pub fn first_playerindex(&self) -> EPlayerIndex {
         self.m_eplayerindex_first
     }
-    pub fn current_player_index(&self) -> Option<EPlayerIndex> {
+    pub fn current_playerindex(&self) -> Option<EPlayerIndex> {
         if self.size()==4 {
             None
         } else {
-            Some((self.first_player_index() + self.size()) % 4)
+            Some((self.first_playerindex() + self.size()) % 4)
         }
     }
     pub fn size(&self) -> usize {
@@ -169,7 +169,7 @@ fn test_stich() {
                     stich.push(veccard[i_card]);
                 }
                 assert_eq!(stich.size(), n_size);
-                assert_eq!(stich.first_player_index(), eplayerindex_first);
+                assert_eq!(stich.first_playerindex(), eplayerindex_first);
                 assert_eq!(stich.size(), stich.iter().count());
                 for (eplayerindex, card) in stich.iter() {
                     assert_eq!(stich.get(eplayerindex), Some(card));

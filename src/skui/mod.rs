@@ -113,7 +113,7 @@ pub fn print_vecstich(vecstich: &[SStich]) {
                 let n_y = 1;
                 let print_card = |eplayerindex, (n_y, n_x)| {
                     ncurses::wmove(ncwin, n_y, n_x);
-                    wprint(ncwin, if eplayerindex==stich.first_player_index() { ">" } else { " " });
+                    wprint(ncwin, if eplayerindex==stich.first_playerindex() { ">" } else { " " });
                     match stich.get(eplayerindex) {
                         None => {wprint(ncwin, "..")},
                         Some(card) => {print_card_with_farbe(ncwin, *card)},

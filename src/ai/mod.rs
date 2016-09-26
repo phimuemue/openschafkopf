@@ -78,7 +78,7 @@ fn suspicion_from_hands_respecting_stich_current(
     n_branches: usize
 ) -> SSuspicion {
     assert_ahand_same_size(&ahand);
-    let mut susp = SSuspicion::new_from_raw(stich_current.first_player_index(), ahand);
+    let mut susp = SSuspicion::new_from_raw(stich_current.first_playerindex(), ahand);
     let n_stich_complete = vecstich_complete_mut.len();
     susp.compute_successors(
         rules,
@@ -150,7 +150,7 @@ impl TAi for SAiCheating {
             &stich_current,
             /*n_branches*/2
         );
-        possible_payouts(game.m_rules, &susp, &mut vecstich_complete_mut, stich_current.current_player_index().unwrap()).into_iter()
+        possible_payouts(game.m_rules, &susp, &mut vecstich_complete_mut, stich_current.current_playerindex().unwrap()).into_iter()
             .max_by_key(|&(_card, n_payout)| n_payout)
             .unwrap()
             .0
@@ -167,7 +167,7 @@ fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
     // ... and must not contain other cards preventing farbe/trumpf frei
     && {
         let mut vecstich_complete_and_current_stich = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
-        vecstich_complete_and_current_stich.push(SStich::new(stich_current.first_player_index()));
+        vecstich_complete_and_current_stich.push(SStich::new(stich_current.first_playerindex()));
         stich_current.iter()
             .all(|(eplayerindex, card_played)| {
                 let b_valid = game.m_rules.card_is_allowed(
@@ -240,7 +240,7 @@ impl TAi for SAiSimulating {
         let mut vecstich_complete_mut = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
         let ref stich_current = game.m_vecstich.last().unwrap();
         assert!(stich_current.size()<4);
-        let eplayerindex_fixed = stich_current.current_player_index().unwrap();
+        let eplayerindex_fixed = stich_current.current_playerindex().unwrap();
         let ref hand_fixed = game.m_ahand[eplayerindex_fixed];
         assert!(!hand_fixed.cards().is_empty());
         let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&game.m_vecstich, hand_fixed);

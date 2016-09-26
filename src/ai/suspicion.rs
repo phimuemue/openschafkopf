@@ -130,13 +130,13 @@ impl SSuspicion {
         let mut vecstich_successor : Vec<SStich> = Vec::new();
         push_pop_vecstich(vecstich, SStich::new(self.m_eplayerindex_first), |vecstich| {
             let eplayerindex_first = self.m_eplayerindex_first;
-            let player_index = move |i_raw: usize| {(eplayerindex_first + i_raw) % 4};
+            let offset_to_playerindex = move |i_offset: usize| {(eplayerindex_first + i_offset) % 4};
             macro_rules! traverse_valid_cards {
-                ($i_raw : expr, $func: expr) => {
+                ($i_offset : expr, $func: expr) => {
                     // TODO use equivalent card optimization
-                    for card in rules.all_allowed_cards(vecstich, &self.m_ahand[player_index($i_raw)]) {
+                    for card in rules.all_allowed_cards(vecstich, &self.m_ahand[offset_to_playerindex($i_offset)]) {
                         vecstich.last_mut().unwrap().push(card);
-                        assert!(card==vecstich.last().unwrap()[player_index($i_raw)]);
+                        assert!(card==vecstich.last().unwrap()[offset_to_playerindex($i_offset)]);
                         $func;
                         vecstich.last_mut().unwrap().undo_most_recent();
                     }

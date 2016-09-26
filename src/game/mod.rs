@@ -33,7 +33,7 @@ impl SDealCards {
 
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
         // TODO make doublings adjustable (possibly within SRuleSet)
-        self.m_doublings.current_player_index()
+        self.m_doublings.current_playerindex()
     }
 
     pub fn first_hand_for(&self, eplayerindex: EPlayerIndex) -> &[SCard] {
@@ -50,7 +50,7 @@ impl SDealCards {
     }
 
     pub fn finish_dealing(self, ruleset: &SRuleSet) -> SGamePreparations {
-        let eplayerindex_first = self.m_doublings.first_player_index();
+        let eplayerindex_first = self.m_doublings.first_playerindex();
         SGamePreparations {
             m_ahand : self.m_ahand,
             m_doublings : self.m_doublings,
@@ -94,7 +94,7 @@ pub fn random_hands() -> [SHand; 4] {
 
 impl<'rules> SGamePreparations<'rules> {
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
-        self.m_gameannouncements.current_player_index()
+        self.m_gameannouncements.current_playerindex()
     }
 
     pub fn announce_game(&mut self, eplayerindex: EPlayerIndex, orules: Option<&'rules TActivelyPlayableRules>) -> Result<(), &'static str> {
@@ -151,7 +151,7 @@ impl<'rules> SPreGame<'rules> {
     pub fn which_player_can_do_something(&self) -> Vec<EPlayerIndex> {
         if self.m_vecstoss.len() < 4 {
             (0..4)
-                .map(|eplayerindex| (eplayerindex + self.m_doublings.first_player_index()) % 4)
+                .map(|eplayerindex| (eplayerindex + self.m_doublings.first_playerindex()) % 4)
                 .filter(|eplayerindex| self.m_rules.stoss_allowed(*eplayerindex, &self.m_vecstoss, &self.m_ahand[*eplayerindex]))
                 .collect()
         } else {
@@ -171,7 +171,7 @@ impl<'rules> SPreGame<'rules> {
 
     // TODO: extend return value to support stock, etc.
     pub fn finish(self) -> SGame<'rules> {
-        let eplayerindex_first = self.m_doublings.first_player_index();
+        let eplayerindex_first = self.m_doublings.first_playerindex();
         SGame {
             m_ahand : self.m_ahand,
             m_doublings : self.m_doublings,
@@ -192,7 +192,7 @@ pub struct SGame<'rules> {
 
 impl<'rules> SGame<'rules> {
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
-        self.m_vecstich.last().unwrap().current_player_index()
+        self.m_vecstich.last().unwrap().current_playerindex()
     }
 
     pub fn zugeben(&mut self, card_played: SCard, eplayerindex: EPlayerIndex) -> Result<(), &'static str> {
