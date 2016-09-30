@@ -31,8 +31,8 @@ pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<SStich>, stich: SStich, fun
 }
 
 impl SSuspicionTransition {
-    fn new(susp: &SSuspicion, stich: SStich, rules: &TRules) -> SSuspicionTransition {
-        let susp = SSuspicion::new_from_susp(susp, &stich, rules);
+    fn new(susp: &SSuspicion, stich: SStich) -> SSuspicionTransition {
+        let susp = SSuspicion::new_from_susp(susp, &stich);
         SSuspicionTransition {
             m_stich : stich,
             m_susp : susp
@@ -78,7 +78,6 @@ impl SSuspicionTransition {
 
 pub struct SSuspicion {
     m_vecsusptrans : Vec<SSuspicionTransition>,
-    m_eplayerindex_first : EPlayerIndex,
     m_ahand : [SHand; 4],
 }
 
@@ -99,10 +98,9 @@ impl SSuspicion {
     {
         let mut susp = SSuspicion {
             m_vecsusptrans: Vec::new(),
-            m_eplayerindex_first : eplayerindex_first,
             m_ahand : ahand
         };
-        susp.compute_successors(rules, vecstich, &func_filter_successors);
+        susp.compute_successors(eplayerindex_first, rules, vecstich, &func_filter_successors);
         susp
     }
 
@@ -116,12 +114,9 @@ impl SSuspicion {
         }
     }
 
-    fn new_from_susp(&self, stich: &SStich, rules: &TRules) -> Self {
-        //println!("new_from_susp {}", stich);
-        //println!("wi: {}", rules.winner_index(stich));
+    fn new_from_susp(&self, stich: &SStich) -> Self {
         SSuspicion {
             m_vecsusptrans: Vec::new(),
-            m_eplayerindex_first : rules.winner_index(stich),
             m_ahand : create_playerindexmap(|eplayerindex| {
                 self.m_ahand[eplayerindex].new_from_hand(stich[eplayerindex])
             })
@@ -133,13 +128,12 @@ impl SSuspicion {
         self.m_ahand[0].cards().len()
     }
 
-    fn compute_successors<FuncFilterSuccessors>(&mut self, rules: &TRules, vecstich: &mut Vec<SStich>, func_filter_successors: &FuncFilterSuccessors)
+    fn compute_successors<FuncFilterSuccessors>(&mut self, eplayerindex_first: EPlayerIndex, rules: &TRules, vecstich: &mut Vec<SStich>, func_filter_successors: &FuncFilterSuccessors)
         where FuncFilterSuccessors : Fn(&Vec<SStich> /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
     {
         assert_eq!(self.m_vecsusptrans.len(), 0); // currently, we have no caching
         let mut vecstich_successor : Vec<SStich> = Vec::new();
-        push_pop_vecstich(vecstich, SStich::new(self.m_eplayerindex_first), |vecstich| {
-            let eplayerindex_first = self.m_eplayerindex_first;
+        push_pop_vecstich(vecstich, SStich::new(eplayerindex_first), |vecstich| {
             let offset_to_playerindex = move |i_offset: usize| {(eplayerindex_first + i_offset) % 4};
             macro_rules! traverse_valid_cards {
                 ($i_offset : expr, $func: expr) => {
@@ -168,9 +162,10 @@ impl SSuspicion {
         }
         self.m_vecsusptrans = vecstich_successor.into_iter()
             .map(|stich| {
-                let mut susptrans = SSuspicionTransition::new(self, stich.clone(), rules);
+                let mut susptrans = SSuspicionTransition::new(self, stich.clone());
+                let eplayerindex_first_susp = rules.winner_index(&stich);
                 push_pop_vecstich(vecstich, stich, |vecstich| {
-                    susptrans.m_susp.compute_successors(rules, vecstich, func_filter_successors);
+                    susptrans.m_susp.compute_successors(eplayerindex_first_susp, rules, vecstich, func_filter_successors);
                 });
                 susptrans
             })
