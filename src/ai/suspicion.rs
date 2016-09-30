@@ -83,7 +83,7 @@ pub struct SSuspicion {
 
 impl SSuspicion {
 
-    pub fn suspicion_tranitions(&self) -> &Vec<SSuspicionTransition> {
+    pub fn suspicion_transitions(&self) -> &Vec<SSuspicionTransition> {
         &self.m_vecsusptrans
     }
 

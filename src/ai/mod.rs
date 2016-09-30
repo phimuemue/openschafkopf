@@ -100,7 +100,7 @@ fn suspicion_from_hands_respecting_stich_current(
             }
         }
     );
-    assert!(susp.suspicion_tranitions().len() <= susp.count_leaves());
+    assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
     if let Err(_) = susp.print_suspicion(8, 0, rules, vecstich_complete_mut, Some(stich_current.clone()), &mut fs::File::create(&"suspicion.txt").unwrap()) {
         // TODO: what shall be done on error?
     }
@@ -108,7 +108,7 @@ fn suspicion_from_hands_respecting_stich_current(
 }
 
 fn possible_payouts(rules: &TRules, susp: &SSuspicion, mut vecstich_complete_payout: &mut Vec<SStich>, eplayerindex_fixed: EPlayerIndex) -> Vec<(SCard, isize)> { // TODO Rust: return iterator
-    susp.suspicion_tranitions().iter()
+    susp.suspicion_transitions().iter()
         .map(|susptrans| {
             let n_payout = push_pop_vecstich(&mut vecstich_complete_payout, susptrans.stich().clone(), |mut vecstich_complete_payout| {
                 susptrans.suspicion().min_reachable_payout(
