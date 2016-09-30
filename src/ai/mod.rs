@@ -78,9 +78,10 @@ fn suspicion_from_hands_respecting_stich_current(
     n_branches: usize
 ) -> SSuspicion {
     assert_ahand_same_size(&ahand);
-    let mut susp = SSuspicion::new_from_raw(stich_current.first_playerindex(), ahand);
     let n_stich_complete = vecstich_complete_mut.len();
-    susp.compute_successors(
+    let susp = SSuspicion::new(
+        stich_current.first_playerindex(),
+        ahand,
         rules,
         &mut vecstich_complete_mut,
         &|vecstich_complete_successor: &Vec<SStich>, vecstich_successor: &mut Vec<SStich>| {
@@ -224,12 +225,16 @@ impl TAi for SAiSimulating {
         forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get().clone(), eplayerindex_rank)
             .take(n_tests)
             .map(|ahand| {
-                let mut susp = SSuspicion::new_from_raw(eplayerindex_first, ahand);
-                susp.compute_successors(rules, &mut Vec::new(), &|_vecstich_complete, vecstich_successor| {
-                    assert!(!vecstich_successor.is_empty());
-                    random_sample_from_vec(vecstich_successor, 1);
-                });
-                susp.min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex_rank)
+                SSuspicion::new(
+                    eplayerindex_first,
+                    ahand,
+                    rules,
+                    &mut Vec::new(),
+                    |_vecstich_complete, vecstich_successor| {
+                        assert!(!vecstich_successor.is_empty());
+                        random_sample_from_vec(vecstich_successor, 1);
+                    }
+                ).min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex_rank)
             })
             .sum::<isize>() as f64
             / n_tests as f64

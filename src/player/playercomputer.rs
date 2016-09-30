@@ -96,12 +96,16 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         txb.send(
             vecpairahandf_suspicion.into_iter()
                 .map(|(ahand, _f_rank_rules)| {
-                    let mut susp = SSuspicion::new_from_raw(doublings.first_playerindex(), ahand);
-                    susp.compute_successors(rules, &mut Vec::new(), &|_vecstich_complete, vecstich_successor| {
-                        assert!(!vecstich_successor.is_empty());
-                        random_sample_from_vec(vecstich_successor, 1);
-                    });
-                    susp.min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex)
+                    SSuspicion::new(
+                        doublings.first_playerindex(),
+                        ahand,
+                        rules,
+                        &mut Vec::new(),
+                        |_vecstich_complete, vecstich_successor| {
+                            assert!(!vecstich_successor.is_empty());
+                            random_sample_from_vec(vecstich_successor, 1);
+                        }
+                    ).min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex)
                 })
                 .sum::<isize>() as f64
                 / (n_tests_per_rules) as f64

@@ -88,12 +88,22 @@ impl SSuspicion {
         &self.m_vecsusptrans
     }
 
-    pub fn new_from_raw(eplayerindex_first: EPlayerIndex, ahand: [SHand; 4]) -> Self {
-        SSuspicion {
+    pub fn new<FuncFilterSuccessors>(
+        eplayerindex_first: EPlayerIndex,
+        ahand: [SHand; 4],
+        rules: &TRules,
+        vecstich: &mut Vec<SStich>,
+        func_filter_successors: FuncFilterSuccessors,
+    ) -> Self 
+        where FuncFilterSuccessors : Fn(&Vec<SStich> /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
+    {
+        let mut susp = SSuspicion {
             m_vecsusptrans: Vec::new(),
             m_eplayerindex_first : eplayerindex_first,
             m_ahand : ahand
-        }
+        };
+        susp.compute_successors(rules, vecstich, &func_filter_successors);
+        susp
     }
 
     pub fn count_leaves(&self) -> usize {
@@ -123,7 +133,7 @@ impl SSuspicion {
         self.m_ahand[0].cards().len()
     }
 
-    pub fn compute_successors<FuncFilterSuccessors>(&mut self, rules: &TRules, vecstich: &mut Vec<SStich>, func_filter_successors: &FuncFilterSuccessors)
+    fn compute_successors<FuncFilterSuccessors>(&mut self, rules: &TRules, vecstich: &mut Vec<SStich>, func_filter_successors: &FuncFilterSuccessors)
         where FuncFilterSuccessors : Fn(&Vec<SStich> /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
     {
         assert_eq!(self.m_vecsusptrans.len(), 0); // currently, we have no caching
