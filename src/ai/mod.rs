@@ -219,6 +219,38 @@ fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
     }
 }
 
+fn determine_best_card<HandsIterator>(game: &SGame, eplayerindex_fixed: EPlayerIndex, itahand: HandsIterator) -> SCard
+    where HandsIterator: Iterator<Item=[SHand; 4]>
+{
+    let mut vecstich_complete_mut = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
+    let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&game.m_vecstich, &game.m_ahand[eplayerindex_fixed]);
+    let mapcardpayout = itahand
+        .map(|ahand| suspicion_from_hands_respecting_stich_current(
+            game.m_rules,
+            ahand,
+            &mut vecstich_complete_mut,
+            &game.m_vecstich.last().unwrap(),
+            /*n_branches*/1
+        ))
+        .fold(
+            // aggregate n_payout per card in some way
+            HashMap::from_iter(
+                veccard_allowed_fixed.iter()
+                    .map(|card| (card.clone(), 0)) // TODO Option<isize> more convenient?
+            ),
+            |mut mapcardpayout: HashMap<SCard, isize>, susp| {
+                for (card, n_payout) in possible_payouts(game.m_rules, &susp, &mut game.completed_stichs().iter().cloned().collect(), eplayerindex_fixed) {
+                    let n_payout_acc = mapcardpayout[&card];
+                    *mapcardpayout.get_mut(&card).unwrap() = n_payout_acc + n_payout;
+                }
+                mapcardpayout
+            }
+        );
+    veccard_allowed_fixed.into_iter()
+        .max_by_key(|card| mapcardpayout[card])
+        .unwrap()
+        .clone()
+}
 
 impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
@@ -242,49 +274,27 @@ impl TAi for SAiSimulating {
 
     fn internal_suggest_card(&self, game: &SGame) -> SCard {
         let n_tests = 10;
-        let mut vecstich_complete_mut = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
         let ref stich_current = game.m_vecstich.last().unwrap();
         assert!(stich_current.size()<4);
         let eplayerindex_fixed = stich_current.current_playerindex().unwrap();
         let ref hand_fixed = game.m_ahand[eplayerindex_fixed];
         assert!(!hand_fixed.cards().is_empty());
-        let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&game.m_vecstich, hand_fixed);
-        let vecahand : Vec<[SHand; 4]>= { if hand_fixed.cards().len()<=2 {
-            all_possible_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
-                .filter(|ahand| is_compatible_with_game_so_far(ahand, game))
-                .collect()
+        if hand_fixed.cards().len()<=2 {
+            determine_best_card(
+                game,
+                eplayerindex_fixed,
+                all_possible_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
+                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game))
+            )
         } else {
-            forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
-                .filter(|ahand| is_compatible_with_game_so_far(ahand, game))
-                .take(n_tests)
-                .collect()
-        }};
-        let mapcardpayout = vecahand.into_iter()
-            .map(|ahand| suspicion_from_hands_respecting_stich_current(
-                game.m_rules,
-                ahand,
-                &mut vecstich_complete_mut,
-                &stich_current,
-                /*n_branches*/1
-            ))
-            .fold(
-                // aggregate n_payout per card in some way
-                HashMap::from_iter(
-                    veccard_allowed_fixed.iter()
-                        .map(|card| (card.clone(), 0)) // TODO Option<isize> more convenient?
-                ),
-                |mut mapcardpayout: HashMap<SCard, isize>, susp| {
-                    for (card, n_payout) in possible_payouts(game.m_rules, &susp, &mut game.completed_stichs().iter().cloned().collect(), eplayerindex_fixed) {
-                        let n_payout_acc = mapcardpayout[&card];
-                        *mapcardpayout.get_mut(&card).unwrap() = n_payout_acc + n_payout;
-                    }
-                    mapcardpayout
-                }
-            );
-        veccard_allowed_fixed.into_iter()
-            .max_by_key(|card| mapcardpayout[card])
-            .unwrap()
-            .clone()
+            determine_best_card(
+                game,
+                eplayerindex_fixed,
+                forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
+                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game))
+                    .take(n_tests)
+            )
+        }
     }
 }
 
