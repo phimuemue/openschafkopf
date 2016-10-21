@@ -70,43 +70,6 @@ fn test_unplayed_cards() {
     assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
 }
 
-fn suspicion_from_hands_respecting_stich_current(
-    rules: &TRules,
-    ahand: [SHand; 4],
-    mut vecstich_complete_mut: &mut Vec<SStich>,
-    stich_current: &SStich,
-    n_branches: usize
-) -> SSuspicion {
-    assert_ahand_same_size(&ahand);
-    let n_stich_complete = vecstich_complete_mut.len();
-    let susp = SSuspicion::new(
-        stich_current.first_playerindex(),
-        ahand,
-        rules,
-        &mut vecstich_complete_mut,
-        &|vecstich_complete_successor: &Vec<SStich>, vecstich_successor: &mut Vec<SStich>| {
-            assert!(!vecstich_successor.is_empty());
-            if vecstich_complete_successor.len()==n_stich_complete {
-                vecstich_successor.retain(|stich_successor| {
-                    assert!(stich_successor.size()==4);
-                    stich_current.equal_up_to_size(stich_successor, stich_current.size())
-                });
-                assert!(!vecstich_successor.is_empty());
-            } else if n_stich_complete < 6 {
-                // TODO: maybe keep more than one successor stich
-                random_sample_from_vec(vecstich_successor, n_branches);
-            } else {
-                // if vecstich_complete_successor>=6, we hope that we can compute everything
-            }
-        }
-    );
-    assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
-    if let Err(_) = susp.print_suspicion(8, 0, rules, vecstich_complete_mut, Some(stich_current.clone()), &mut fs::File::create(&"suspicion.txt").unwrap()) {
-        // TODO: what shall be done on error?
-    }
-    susp
-}
-
 fn possible_payouts(rules: &TRules, susp: &SSuspicion, mut vecstich_complete_payout: &mut Vec<SStich>, eplayerindex_fixed: EPlayerIndex) -> Vec<(SCard, isize)> { // TODO Rust: return iterator
     susp.suspicion_transitions().iter()
         .map(|susptrans| {
@@ -211,16 +174,40 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
     where HandsIterator: Iterator<Item=[SHand; 4]>
 {
     let mut vecstich_complete_mut = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
-    let eplayerindex_fixed = game.current_stich().current_playerindex().unwrap();
+    let ref stich_current = game.current_stich();
+    let eplayerindex_fixed = stich_current.current_playerindex().unwrap();
     let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&game.m_vecstich, &game.m_ahand[eplayerindex_fixed]);
     let mapcardpayout = itahand
-        .map(|ahand| suspicion_from_hands_respecting_stich_current(
-            game.m_rules,
-            ahand,
-            &mut vecstich_complete_mut,
-            &game.current_stich(),
-            n_branches
-        ))
+        .map(|ahand| {
+            assert_ahand_same_size(&ahand);
+            let n_stich_complete = vecstich_complete_mut.len();
+            let susp = SSuspicion::new(
+                stich_current.first_playerindex(),
+                ahand,
+                game.m_rules,
+                &mut vecstich_complete_mut,
+                &|vecstich_complete_successor: &Vec<SStich>, vecstich_successor: &mut Vec<SStich>| {
+                    assert!(!vecstich_successor.is_empty());
+                    if vecstich_complete_successor.len()==n_stich_complete {
+                        vecstich_successor.retain(|stich_successor| {
+                            assert!(stich_successor.size()==4);
+                            stich_current.equal_up_to_size(stich_successor, stich_current.size())
+                        });
+                        assert!(!vecstich_successor.is_empty());
+                    } else if n_stich_complete < 6 {
+                        // TODO: maybe keep more than one successor stich
+                        random_sample_from_vec(vecstich_successor, n_branches);
+                    } else {
+                        // if vecstich_complete_successor>=6, we hope that we can compute everything
+                    }
+                }
+            );
+            assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
+            if let Err(_) = susp.print_suspicion(8, 0, game.m_rules, &mut vecstich_complete_mut, Some((*stich_current).clone()), &mut fs::File::create(&"suspicion.txt").unwrap()) {
+                // TODO: what shall be done on error?
+            }
+            susp
+        })
         .fold(
             // aggregate n_payout per card in some way
             HashMap::from_iter(
