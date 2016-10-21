@@ -64,7 +64,7 @@ impl TRules for SRulesRufspiel {
             .map(|(eplayerindex, _)| eplayerindex)
             .unwrap();
         let (eschneiderschwarz, ab_winner) = points_to_schneiderschwarz_and_winners(
-            gamefinishedstiche.get(),
+            gamefinishedstiche,
             self,
             /*fn_is_player_party*/|eplayerindex| {
                 eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer

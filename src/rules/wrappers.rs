@@ -31,6 +31,7 @@ impl<'vecstich> SGameFinishedStiche<'vecstich> {
         }
     }
     pub fn get(&self) -> &Vec<SStich> {
+        assert_eq!(self.m_vecstich.len(), 8);
         self.m_vecstich
     }
 }

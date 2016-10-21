@@ -53,7 +53,7 @@ impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider>
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4] {
         let (eschneiderschwarz, ab_winner) = points_to_schneiderschwarz_and_winners(
-            gamefinishedstiche.get(),
+            gamefinishedstiche,
             self,
             /*fn_is_player_party*/ |eplayerindex| {
                 eplayerindex==self.m_eplayerindex
