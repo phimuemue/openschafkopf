@@ -70,22 +70,6 @@ fn test_unplayed_cards() {
     assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
 }
 
-fn possible_payouts(rules: &TRules, susp: &SSuspicion, mut vecstich_complete_payout: &mut Vec<SStich>, eplayerindex_fixed: EPlayerIndex) -> Vec<(SCard, isize)> { // TODO Rust: return iterator
-    susp.suspicion_transitions().iter()
-        .map(|susptrans| {
-            let n_payout = push_pop_vecstich(&mut vecstich_complete_payout, susptrans.stich().clone(), |mut vecstich_complete_payout| {
-                susptrans.suspicion().min_reachable_payout(
-                    rules,
-                    &mut vecstich_complete_payout,
-                    None,
-                    eplayerindex_fixed
-                )
-            });
-            (susptrans.stich()[eplayerindex_fixed], n_payout)
-        })
-        .collect()
-}
-
 pub struct SAiCheating {}
 
 impl TAi for SAiCheating {
@@ -215,7 +199,20 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                     .map(|card| (card.clone(), 0)) // TODO Option<isize> more convenient?
             ),
             |mut mapcardpayout: HashMap<SCard, isize>, susp| {
-                for (card, n_payout) in possible_payouts(game.m_rules, &susp, &mut game.completed_stichs().iter().cloned().collect(), eplayerindex_fixed) {
+                let mut vecstich_complete_payout = game.completed_stichs().iter().cloned().collect();
+                for (card, n_payout) in susp.suspicion_transitions().iter()
+                    .map(|susptrans| {
+                        let n_payout = push_pop_vecstich(&mut vecstich_complete_payout, susptrans.stich().clone(), |mut vecstich_complete_payout| {
+                            susptrans.suspicion().min_reachable_payout(
+                                game.m_rules,
+                                &mut vecstich_complete_payout,
+                                None,
+                                eplayerindex_fixed
+                            )
+                        });
+                        (susptrans.stich()[eplayerindex_fixed], n_payout)
+                    })
+                {
                     let n_payout_acc = mapcardpayout[&card];
                     *mapcardpayout.get_mut(&card).unwrap() = n_payout_acc + n_payout;
                 }
