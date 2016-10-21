@@ -70,7 +70,7 @@ impl TRules for SRulesRufspiel {
                 eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer
             },
         );
-        let n_laufende = STrumpfDeciderRufspiel::count_laufende(gamefinishedstiche.get(), &ab_winner);
+        let n_laufende = STrumpfDeciderRufspiel::count_laufende(gamefinishedstiche, &ab_winner);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_rufspiel_default*/ 20 
              + { match eschneiderschwarz {

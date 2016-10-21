@@ -59,7 +59,7 @@ impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider>
                 eplayerindex==self.m_eplayerindex
             },
         );
-        let n_laufende = TrumpfDecider::count_laufende(gamefinishedstiche.get(), &ab_winner);
+        let n_laufende = TrumpfDecider::count_laufende(gamefinishedstiche, &ab_winner);
         create_playerindexmap(|eplayerindex| {
             (/*n_payout_solo*/ 50
              + { match eschneiderschwarz {
