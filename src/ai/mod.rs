@@ -132,26 +132,17 @@ impl TAi for SAiCheating {
     }
 
     fn internal_suggest_card(&self, game: &SGame) -> SCard {
-        let mut vecstich_complete_mut = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
-        let stich_current = game.current_stich().clone();
-        assert!(stich_current.size()<4);
-        let susp = suspicion_from_hands_respecting_stich_current(
-            game.m_rules,
-            create_playerindexmap(|eplayerindex|
+        determine_best_card(
+            game,
+            Some(create_playerindexmap(|eplayerindex|
                 SHand::new_from_vec(
-                    stich_current.get(eplayerindex).cloned().into_iter()
+                    game.current_stich().get(eplayerindex).cloned().into_iter()
                         .chain(game.m_ahand[eplayerindex].cards().iter().cloned())
                         .collect()
                 )
-            ),
-            &mut vecstich_complete_mut,
-            &stich_current,
-            /*n_branches*/2
-        );
-        possible_payouts(game.m_rules, &susp, &mut vecstich_complete_mut, stich_current.current_playerindex().unwrap()).into_iter()
-            .max_by_key(|&(_card, n_payout)| n_payout)
-            .unwrap()
-            .0
+            )).into_iter(),
+            /*n_branches*/1,
+        )
     }
 }
 
@@ -216,10 +207,11 @@ fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
     }
 }
 
-fn determine_best_card<HandsIterator>(game: &SGame, eplayerindex_fixed: EPlayerIndex, itahand: HandsIterator) -> SCard
+fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize) -> SCard
     where HandsIterator: Iterator<Item=[SHand; 4]>
 {
     let mut vecstich_complete_mut = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
+    let eplayerindex_fixed = game.current_stich().current_playerindex().unwrap();
     let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&game.m_vecstich, &game.m_ahand[eplayerindex_fixed]);
     let mapcardpayout = itahand
         .map(|ahand| suspicion_from_hands_respecting_stich_current(
@@ -227,7 +219,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, eplayerindex_fixed: EPlayerI
             ahand,
             &mut vecstich_complete_mut,
             &game.current_stich(),
-            /*n_branches*/1
+            n_branches
         ))
         .fold(
             // aggregate n_payout per card in some way
@@ -279,17 +271,17 @@ impl TAi for SAiSimulating {
         if hand_fixed.cards().len()<=2 {
             determine_best_card(
                 game,
-                eplayerindex_fixed,
                 all_possible_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
-                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game))
+                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game)),
+                /*n_branches*/2,
             )
         } else {
             determine_best_card(
                 game,
-                eplayerindex_fixed,
                 forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game))
-                    .take(n_tests)
+                    .take(n_tests),
+                /*n_branches*/2,
             )
         }
     }
