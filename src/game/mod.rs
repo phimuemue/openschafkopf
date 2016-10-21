@@ -242,7 +242,7 @@ impl<'rules> SGame<'rules> {
     }
 
     pub fn points_per_player(&self, eplayerindex: EPlayerIndex) -> isize {
-        self.m_rules.points_per_player(&self.m_vecstich, eplayerindex)
+        self.m_rules.points_per_player(&SGameFinishedStiche::new(&self.m_vecstich), eplayerindex)
     }
 
     pub fn payout(&self) -> [isize; 4] {

@@ -35,7 +35,7 @@ impl TRules for SRulesRamsch {
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4] {
         let an_points = create_playerindexmap(|eplayerindex| {
-            self.points_per_player(gamefinishedstiche.get(), eplayerindex)
+            self.points_per_player(gamefinishedstiche, eplayerindex)
         });
         let n_points_max = an_points.iter().max().unwrap().clone();
         let veceplayerindex_most_points = (0..4)

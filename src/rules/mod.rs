@@ -98,8 +98,8 @@ pub trait TRules : fmt::Display + TAsRules {
             .map(|(_, card)| self.points_card(*card))
             .sum()
     }
-    fn points_per_player(&self, vecstich: &Vec<SStich>, eplayerindex: EPlayerIndex) -> isize {
-        vecstich.iter()
+    fn points_per_player(&self, gamefinishedstiche: &SGameFinishedStiche, eplayerindex: EPlayerIndex) -> isize {
+        gamefinishedstiche.get().iter()
             .filter(|stich| eplayerindex==self.winner_index(stich))
             .map(|stich| self.points_stich(stich))
             .sum()
