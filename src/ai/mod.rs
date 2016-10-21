@@ -132,10 +132,7 @@ impl TAi for SAiCheating {
     }
 
     fn internal_suggest_card(&self, game: &SGame) -> SCard {
-        let mut vecstich_complete_mut = game.m_vecstich.iter()
-            .filter(|stich| stich.size()==4)
-            .cloned()
-            .collect::<Vec<_>>();
+        let mut vecstich_complete_mut = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
         let stich_current = game.current_stich().clone();
         assert!(stich_current.size()<4);
         let susp = suspicion_from_hands_respecting_stich_current(
