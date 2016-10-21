@@ -136,7 +136,7 @@ impl TAi for SAiCheating {
             .filter(|stich| stich.size()==4)
             .cloned()
             .collect::<Vec<_>>();
-        let stich_current = game.m_vecstich.last().unwrap().clone();
+        let stich_current = game.current_stich().clone();
         assert!(stich_current.size()<4);
         let susp = suspicion_from_hands_respecting_stich_current(
             game.m_rules,
@@ -160,7 +160,7 @@ impl TAi for SAiCheating {
 
 pub struct SAiSimulating {}
 fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
-    let ref stich_current = game.m_vecstich.last().unwrap();
+    let ref stich_current = game.current_stich();
     assert!(stich_current.size()<4);
     // hands must contain respective cards from stich_current...
     stich_current.iter()
@@ -229,7 +229,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, eplayerindex_fixed: EPlayerI
             game.m_rules,
             ahand,
             &mut vecstich_complete_mut,
-            &game.m_vecstich.last().unwrap(),
+            &game.current_stich(),
             /*n_branches*/1
         ))
         .fold(
@@ -274,7 +274,7 @@ impl TAi for SAiSimulating {
 
     fn internal_suggest_card(&self, game: &SGame) -> SCard {
         let n_tests = 10;
-        let ref stich_current = game.m_vecstich.last().unwrap();
+        let ref stich_current = game.current_stich();
         assert!(stich_current.size()<4);
         let eplayerindex_fixed = stich_current.current_playerindex().unwrap();
         let ref hand_fixed = game.m_ahand[eplayerindex_fixed];

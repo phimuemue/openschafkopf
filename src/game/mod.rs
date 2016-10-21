@@ -192,7 +192,12 @@ pub struct SGame<'rules> {
 
 impl<'rules> SGame<'rules> {
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
-        self.m_vecstich.last().unwrap().current_playerindex()
+        self.current_stich().current_playerindex()
+    }
+
+    pub fn current_stich(&self) -> &SStich {
+        assert!(!self.m_vecstich.is_empty());
+        self.m_vecstich.last().unwrap()
     }
 
     pub fn zugeben(&mut self, card_played: SCard, eplayerindex: EPlayerIndex) -> Result<(), &'static str> {
@@ -208,12 +213,13 @@ impl<'rules> SGame<'rules> {
             let ref mut hand = self.m_ahand[eplayerindex];
             assert!(self.m_rules.card_is_allowed(&self.m_vecstich, hand, card_played));
             hand.play_card(card_played);
+            assert!(!self.m_vecstich.is_empty());
             self.m_vecstich.last_mut().unwrap().push(card_played);
         }
         for eplayerindex in 0..4 {
             skui::logln(&format!("Hand {}: {}", eplayerindex, self.m_ahand[eplayerindex]));
         }
-        if 4==self.m_vecstich.last().unwrap().size() {
+        if 4==self.current_stich().size() {
             if 8==self.m_vecstich.len() { // TODO kurze Karte?
                 skui::logln("Game finished.");
                 skui::print_vecstich(&self.m_vecstich);
@@ -221,7 +227,7 @@ impl<'rules> SGame<'rules> {
             } else {
                 // TODO: all players should have to acknowledge the current stich in some way
                 let eplayerindex_last_stich = {
-                    let stich = self.m_vecstich.last().unwrap();
+                    let stich = self.current_stich();
                     skui::logln(&format!("Stich: {}", stich));
                     let eplayerindex_last_stich = self.m_rules.winner_index(stich);
                     skui::logln(&format!("{} made by {}, ({} points)",
@@ -232,7 +238,7 @@ impl<'rules> SGame<'rules> {
                     eplayerindex_last_stich
                 };
                 skui::logln(&format!("Opening new stich starting at {}", eplayerindex_last_stich));
-                assert!(self.m_vecstich.is_empty() || 4==self.m_vecstich.last().unwrap().size());
+                assert!(self.m_vecstich.is_empty() || 4==self.current_stich().size());
                 self.m_vecstich.push(SStich::new(eplayerindex_last_stich));
                 Ok(())
             }
@@ -256,7 +262,7 @@ impl<'rules> SGame<'rules> {
     }
 
     pub fn completed_stichs(&self) -> &[SStich] {
-        assert!(self.m_vecstich.last().unwrap().size()<4);
+        assert!(self.current_stich().size()<4);
         assert_eq!(self.m_vecstich[0..self.m_vecstich.len()-1].len(), self.m_vecstich.len()-1);
         assert!(self.m_vecstich[0..self.m_vecstich.len()-1].iter().all(|stich| stich.size()==4));
         &self.m_vecstich[0..self.m_vecstich.len()-1]
