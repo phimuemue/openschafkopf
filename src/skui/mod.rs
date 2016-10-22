@@ -5,7 +5,7 @@ use rules::*;
 
 pub fn init_ui() {
     ncurses::initscr();
-    ncurses::keypad(ncurses::stdscr, true);
+    ncurses::keypad(ncurses::stdscr(), true);
     ncurses::noecho();
     ncurses::start_color();
 }
@@ -68,7 +68,7 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
     let (n_height, n_width) = {
         let mut n_height = 0;
         let mut n_width = 0;
-        ncurses::getmaxyx(ncurses::stdscr, &mut n_height, &mut n_width);
+        ncurses::getmaxyx(ncurses::stdscr(), &mut n_height, &mut n_width);
         (n_height, n_width)
     };
     let create_fullwidth_window = |n_top, n_bottom| {
