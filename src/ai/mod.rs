@@ -16,6 +16,7 @@ use crossbeam;
 use std::sync::{Arc, Mutex};
 use std::ops::AddAssign;
 use std::ops::Deref;
+use std::cmp;
 
 pub trait TAi {
     fn rank_rules(&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
@@ -224,7 +225,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                     })
                 {
                     let n_payout_acc = mapcardpayout[&card];
-                    *mapcardpayout.get_mut(&card).unwrap() = n_payout_acc + n_payout;
+                    *mapcardpayout.get_mut(&card).unwrap() = cmp::min(n_payout_acc, n_payout);
                 }
                 mapcardpayout
             }
