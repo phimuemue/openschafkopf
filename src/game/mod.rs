@@ -18,15 +18,7 @@ pub struct SDealCards {
 impl SDealCards {
     pub fn new(eplayerindex_first: EPlayerIndex) -> SDealCards {
         SDealCards {
-            m_ahand : {
-                let ahand = random_hands();
-                skui::logln("Preparing game");
-                for hand in ahand.iter() {
-                    skui::log(&format!("{} |", hand));
-                }
-                skui::logln("");
-                ahand
-            },
+            m_ahand : random_hands(),
             m_doublings: SDoublings::new(eplayerindex_first),
         }
     }

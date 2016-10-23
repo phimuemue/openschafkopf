@@ -29,10 +29,6 @@ pub fn logln(_s: &str) {
     ncurses::refresh();
 }
 
-pub fn log(_s: &str) {
-    ncurses::refresh();
-}
-
 fn print_string_with_nc_colors(ncwin: ncurses::WINDOW, color_fg: i16, color_bg: i16, str_output: &str) {
     let i_color_pair = color_fg * 8 + color_bg;
     ncurses::init_pair(i_color_pair, color_fg, color_bg);
