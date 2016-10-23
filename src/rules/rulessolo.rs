@@ -23,7 +23,8 @@ impl<TrumpfDecider> fmt::Display for SRulesSoloLike<TrumpfDecider>
 }
 
 impl<TrumpfDecider> TActivelyPlayableRules for SRulesSoloLike<TrumpfDecider>
-    where TrumpfDecider: TTrumpfDecider
+    where TrumpfDecider: TTrumpfDecider,
+          TrumpfDecider: Sync,
 {
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::SinglePlayLike(self.m_i_prioindex)
@@ -32,6 +33,7 @@ impl<TrumpfDecider> TActivelyPlayableRules for SRulesSoloLike<TrumpfDecider>
 
 impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider> 
     where TrumpfDecider: TTrumpfDecider,
+          TrumpfDecider: Sync,
 {
     fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool {
         assert!(
@@ -123,6 +125,7 @@ impl<TrumpfDecider> SRulesSoloLike<TrumpfDecider>
 pub fn sololike<CoreType>(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> Box<TActivelyPlayableRules> 
     where CoreType: TTrumpfDecider,
           CoreType: 'static,
+          CoreType: Sync,
 {
     Box::new(SRulesSoloLike::<CoreType>::new(eplayerindex, i_prioindex, str_rulename)) as Box<TActivelyPlayableRules>
 }

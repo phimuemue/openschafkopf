@@ -66,7 +66,7 @@ pub fn points_to_schneiderschwarz_and_winners<FnIsPlayerParty, Rules>(
     )
 }
 
-pub trait TRules : fmt::Display + TAsRules {
+pub trait TRules : fmt::Display + TAsRules + Sync {
 
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
 

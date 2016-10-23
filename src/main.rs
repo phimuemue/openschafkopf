@@ -5,6 +5,7 @@ extern crate itertools;
 extern crate permutohedron;
 extern crate clap;
 extern crate arrayvec;
+extern crate crossbeam;
 
 #[macro_use]
 mod util;

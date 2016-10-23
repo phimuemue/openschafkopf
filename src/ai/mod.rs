@@ -12,6 +12,10 @@ use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::fs;
 use std::mem;
+use crossbeam;
+use std::sync::{Arc, Mutex};
+use std::ops::AddAssign;
+use std::ops::Deref;
 
 pub trait TAi {
     fn rank_rules(&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
@@ -157,41 +161,47 @@ fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
 fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize) -> SCard
     where HandsIterator: Iterator<Item=[SHand; 4]>
 {
-    let mut vecstich_complete_mut = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
     let ref stich_current = game.current_stich();
     let eplayerindex_fixed = stich_current.current_playerindex().unwrap();
-    let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&game.m_vecstich, &game.m_ahand[eplayerindex_fixed]);
-    let mapcardpayout = itahand
-        .map(|ahand| {
-            assert_ahand_same_size(&ahand);
-            let n_stich_complete = vecstich_complete_mut.len();
-            let susp = SSuspicion::new(
-                stich_current.first_playerindex(),
-                ahand,
-                game.m_rules,
-                &mut vecstich_complete_mut,
-                &|vecstich_complete_successor: &Vec<SStich>, vecstich_successor: &mut Vec<SStich>| {
-                    assert!(!vecstich_successor.is_empty());
-                    if vecstich_complete_successor.len()==n_stich_complete {
-                        vecstich_successor.retain(|stich_successor| {
-                            assert!(stich_successor.size()==4);
-                            stich_current.equal_up_to_size(stich_successor, stich_current.size())
-                        });
+    let vecsusp = Arc::new(Mutex::new(Vec::new()));
+    crossbeam::scope(|scope| {
+        for ahand in itahand {
+            let vecsusp = vecsusp.clone();
+            scope.spawn(move || {
+                assert_ahand_same_size(&ahand);
+                let mut vecstich_complete_mut = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
+                let n_stich_complete = vecstich_complete_mut.len();
+                let susp = SSuspicion::new(
+                    stich_current.first_playerindex(),
+                    ahand,
+                    game.m_rules,
+                    &mut vecstich_complete_mut,
+                    &|vecstich_complete_successor: &Vec<SStich>, vecstich_successor: &mut Vec<SStich>| {
                         assert!(!vecstich_successor.is_empty());
-                    } else if n_stich_complete < 6 {
-                        // TODO: maybe keep more than one successor stich
-                        random_sample_from_vec(vecstich_successor, n_branches);
-                    } else {
-                        // if vecstich_complete_successor>=6, we hope that we can compute everything
+                        if vecstich_complete_successor.len()==n_stich_complete {
+                            vecstich_successor.retain(|stich_successor| {
+                                assert!(stich_successor.size()==4);
+                                stich_current.equal_up_to_size(stich_successor, stich_current.size())
+                            });
+                            assert!(!vecstich_successor.is_empty());
+                        } else if n_stich_complete < 6 {
+                            // TODO: maybe keep more than one successor stich
+                            random_sample_from_vec(vecstich_successor, n_branches);
+                        } else {
+                            // if vecstich_complete_successor>=6, we hope that we can compute everything
+                        }
                     }
+                );
+                assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
+                if let Err(_) = susp.print_suspicion(8, 0, game.m_rules, &mut vecstich_complete_mut, Some((*stich_current).clone()), &mut fs::File::create(&"suspicion.txt").unwrap()) {
+                    // TODO: what shall be done on error?
                 }
-            );
-            assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
-            if let Err(_) = susp.print_suspicion(8, 0, game.m_rules, &mut vecstich_complete_mut, Some((*stich_current).clone()), &mut fs::File::create(&"suspicion.txt").unwrap()) {
-                // TODO: what shall be done on error?
-            }
-            susp
-        })
+                vecsusp.lock().unwrap().push(susp);
+            });
+        }
+    });
+    let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&game.m_vecstich, &game.m_ahand[eplayerindex_fixed]);
+    let mapcardpayout = vecsusp.lock().unwrap().iter()
         .fold(
             // aggregate n_payout per card in some way
             HashMap::from_iter(
@@ -227,22 +237,29 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
 
 impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
-        forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get().clone(), eplayerindex_rank)
-            .take(n_tests)
-            .map(|ahand| {
-                SSuspicion::new(
-                    eplayerindex_first,
-                    ahand,
-                    rules,
-                    &mut Vec::new(),
-                    |_vecstich_complete, vecstich_successor| {
-                        assert!(!vecstich_successor.is_empty());
-                        random_sample_from_vec(vecstich_successor, 1);
-                    }
-                ).min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex_rank)
-            })
-            .sum::<isize>() as f64
-            / n_tests as f64
+        let n_payout_sum = Arc::new(Mutex::new(0isize));
+        crossbeam::scope(|scope| {
+            for ahand in forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get().clone(), eplayerindex_rank).take(n_tests) {
+                let n_payout_sum = n_payout_sum.clone();
+                scope.spawn(move || {
+                    let n_payout = 
+                        SSuspicion::new(
+                            eplayerindex_first,
+                            ahand,
+                            rules,
+                            &mut Vec::new(),
+                            |_vecstich_complete, vecstich_successor| {
+                                assert!(!vecstich_successor.is_empty());
+                                random_sample_from_vec(vecstich_successor, 1);
+                            }
+                        ).min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex_rank)
+                    ;
+                    n_payout_sum.lock().unwrap().add_assign(n_payout);
+                });
+            }
+        });
+        let n_payout_sum = *n_payout_sum.lock().unwrap().deref();
+        (n_payout_sum as f64) / (n_tests as f64)
     }
 
     fn internal_suggest_card(&self, game: &SGame) -> SCard {
