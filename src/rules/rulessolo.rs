@@ -1,6 +1,7 @@
 use primitives::*;
 use rules::*;
 use rules::trumpfdecider::*;
+use rules::payoutdecider::*;
 use std::fmt;
 use std::cmp::Ordering;
 use std::marker::PhantomData;
@@ -54,36 +55,21 @@ impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider>
     }
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4] {
-        let (eschneiderschwarz, ab_winner) = points_to_schneiderschwarz_and_winners(
-            gamefinishedstiche,
+        SPayoutDeciderPointBased::<TrumpfDecider>::payout(
             self,
+            gamefinishedstiche,
             /*fn_is_player_party*/ |eplayerindex| {
                 eplayerindex==self.m_eplayerindex
             },
-        );
-        let n_laufende = TrumpfDecider::count_laufende(gamefinishedstiche, &ab_winner);
-        create_playerindexmap(|eplayerindex| {
-            (/*n_payout_solo*/ 50
-             + { match eschneiderschwarz {
-                 ESchneiderSchwarz::Nothing => 0,
-                 ESchneiderSchwarz::Schneider => 10,
-                 ESchneiderSchwarz::Schwarz => 20,
-             }}
-             + {if n_laufende<3 {0} else {n_laufende}} * 10
-            ) * {
-                if ab_winner[eplayerindex] {
-                    1
-                } else {
-                    -1
-                }
-            } * {
+            /*fn_player_multiplier*/ |eplayerindex| {
                 if self.m_eplayerindex==eplayerindex {
                     3
                 } else {
                     1
                 }
-            }
-        } )
+            },
+            /*n_payout_base*/50,
+        )
     }
 
     fn all_allowed_cards_first_in_stich(&self, _vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {

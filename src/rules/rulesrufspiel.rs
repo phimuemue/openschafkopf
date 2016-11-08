@@ -1,6 +1,7 @@
 use primitives::*;
 use rules::*;
 use rules::trumpfdecider::*;
+use rules::payoutdecider::*;
 use std::fmt;
 use std::cmp::Ordering;
 
@@ -63,30 +64,15 @@ impl TRules for SRulesRufspiel {
             .find(|&(_, card)| *card==self.rufsau())
             .map(|(eplayerindex, _)| eplayerindex)
             .unwrap();
-        let (eschneiderschwarz, ab_winner) = points_to_schneiderschwarz_and_winners(
-            gamefinishedstiche,
+        SPayoutDeciderPointBased::<STrumpfDeciderRufspiel>::payout(
             self,
+            gamefinishedstiche,
             /*fn_is_player_party*/|eplayerindex| {
                 eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer
             },
-        );
-        let n_laufende = STrumpfDeciderRufspiel::count_laufende(gamefinishedstiche, &ab_winner);
-        create_playerindexmap(|eplayerindex| {
-            (/*n_payout_rufspiel_default*/ 20 
-             + { match eschneiderschwarz {
-                 ESchneiderSchwarz::Nothing => 0,
-                 ESchneiderSchwarz::Schneider => 10,
-                 ESchneiderSchwarz::Schwarz => 20,
-             }}
-             + {if n_laufende<3 {0} else {n_laufende}} * 10
-            ) * {
-                if ab_winner[eplayerindex] {
-                    1
-                } else {
-                    -1
-                }
-            }
-        } )
+            /*fn_player_multiplier*/ |_eplayerindex| 1, // everyone pays/gets the same
+            /*n_payout_base*/20,
+        )
     }
 
     fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {

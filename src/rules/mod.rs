@@ -3,6 +3,7 @@ pub mod rulessolo;
 pub mod rulesramsch;
 pub mod ruleset;
 pub mod trumpfdecider;
+pub mod payoutdecider;
 pub mod wrappers;
 
 #[cfg(test)]
@@ -36,43 +37,6 @@ pub enum ESchneiderSchwarz {
 
 pub struct SStoss {
     pub m_eplayerindex : EPlayerIndex,
-}
-
-pub fn points_to_schneiderschwarz_and_winners<FnIsPlayerParty, Rules>(
-    gamefinishedstiche: &SGameFinishedStiche,
-    rules: &Rules,
-    fn_is_player_party: FnIsPlayerParty,
-) -> (ESchneiderSchwarz, [bool; 4])
-    where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
-          Rules: TRules,
-{
-    let n_points_player_party : isize = gamefinishedstiche.get().iter()
-        .filter(|stich| fn_is_player_party(rules.winner_index(stich)))
-        .map(|stich| rules.points_stich(stich))
-        .sum();
-    let b_player_party_wins = n_points_player_party>=61;
-    (
-        if b_player_party_wins {
-            if gamefinishedstiche.get().iter().all(|stich| fn_is_player_party(rules.winner_index(stich))) {
-                ESchneiderSchwarz::Schwarz
-            } else if n_points_player_party>90 {
-                ESchneiderSchwarz::Schneider
-            } else {
-                ESchneiderSchwarz::Nothing
-            }
-        } else {
-            if gamefinishedstiche.get().iter().all(|stich| !fn_is_player_party(rules.winner_index(stich))) {
-                ESchneiderSchwarz::Schwarz
-            } else if n_points_player_party<=30 {
-                ESchneiderSchwarz::Schneider
-            } else {
-                ESchneiderSchwarz::Nothing
-            }
-        },
-        create_playerindexmap(|eplayerindex| {
-            fn_is_player_party(eplayerindex)==b_player_party_wins
-        })
-    )
 }
 
 pub trait TRules : fmt::Display + TAsRules + Sync {
