@@ -19,6 +19,15 @@ pub enum VTrumpfOrFarbe {
     Farbe (EFarbe),
 }
 
+impl VTrumpfOrFarbe {
+    pub fn is_trumpf(&self) -> bool {
+        match self {
+            &VTrumpfOrFarbe::Trumpf => true,
+            &VTrumpfOrFarbe::Farbe(_efarbe) => false,
+        }
+    }
+}
+
 pub enum ESchneiderSchwarz {
     Nothing,
     Schneider,
@@ -77,10 +86,6 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
     }
 
     fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool;
-
-    fn is_trumpf(&self, card: SCard) -> bool {
-        VTrumpfOrFarbe::Trumpf == self.trumpforfarbe(card)
-    }
 
     fn points_card(&self, card: SCard) -> isize {
         // by default, we assume that we use the usual points
@@ -148,7 +153,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
 
     fn compare_in_stich(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
         assert!(card_fst!=card_snd);
-        match (self.is_trumpf(card_fst), self.is_trumpf(card_snd)) {
+        match (self.trumpforfarbe(card_fst).is_trumpf(), self.trumpforfarbe(card_snd).is_trumpf()) {
             (true, false) => Ordering::Greater,
             (false, true) => Ordering::Less,
             (true, true) => self.compare_in_stich_trumpf(card_fst, card_snd),

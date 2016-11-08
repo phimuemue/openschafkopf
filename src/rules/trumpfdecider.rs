@@ -4,17 +4,11 @@ use std::cmp::Ordering;
 use std::marker::PhantomData;
 
 pub trait TTrumpfDecider {
-    fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
-        if Self::is_trumpf(card) {
-            VTrumpfOrFarbe::Trumpf
-        } else {
-            VTrumpfOrFarbe::Farbe(card.farbe())
-        }
-    }
+    fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe;
 
     fn better_trumpf(card_fst: SCard, card_snd: SCard) -> SCard {
-        assert!(Self::is_trumpf(card_fst));
-        assert!(Self::is_trumpf(card_snd));
+        assert!(Self::trumpforfarbe(card_fst).is_trumpf());
+        assert!(Self::trumpforfarbe(card_snd).is_trumpf());
         if Ordering::Less==Self::compare_trumpfcards_solo(card_fst, card_snd) {
             card_snd
         } else {
@@ -22,7 +16,6 @@ pub trait TTrumpfDecider {
         }
     }
 
-    fn is_trumpf(card: SCard) -> bool;
     fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>) -> Vec<SCard>;
     fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering;
     fn count_laufende(gamefinishedstiche: &SGameFinishedStiche, ab_winner: &[bool; 4]) -> isize {
@@ -42,8 +35,8 @@ pub trait TTrumpfDecider {
 
 pub struct STrumpfDeciderNoTrumpf {}
 impl TTrumpfDecider for STrumpfDeciderNoTrumpf {
-    fn is_trumpf(_card: SCard) -> bool {
-        false
+    fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
+        VTrumpfOrFarbe::Farbe(card.farbe())
     }
     fn trumpfs_in_descending_order(mut _veceschlag: Vec<ESchlag>) -> Vec<SCard> {
         Vec::new()
@@ -67,8 +60,12 @@ impl<SchlagDesignator, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<Schla
     where DeciderSec: TTrumpfDecider,
           SchlagDesignator: TSchlagDesignator,
 {
-    fn is_trumpf(card: SCard) -> bool {
-        SchlagDesignator::schlag() == card.schlag() || DeciderSec::is_trumpf(card)
+    fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
+        if SchlagDesignator::schlag() == card.schlag() {
+            VTrumpfOrFarbe::Trumpf
+        } else {
+            DeciderSec::trumpforfarbe(card)
+        }
     }
     fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>) -> Vec<SCard> {
         let mut veccard_trumpf : Vec<_> = EFarbe::values()
@@ -115,8 +112,12 @@ pub struct STrumpfDeciderFarbe<FarbeDesignator> {
 impl<FarbeDesignator> TTrumpfDecider for STrumpfDeciderFarbe<FarbeDesignator> 
     where FarbeDesignator: TFarbeDesignator,
 {
-    fn is_trumpf(card: SCard) -> bool {
-        FarbeDesignator::farbe() == card.farbe()
+    fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
+        if FarbeDesignator::farbe() == card.farbe() {
+            VTrumpfOrFarbe::Trumpf
+        } else {
+            VTrumpfOrFarbe::Farbe(card.farbe())
+        }
     }
     fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> Vec<SCard> {
         ESchlag::values()
@@ -125,8 +126,8 @@ impl<FarbeDesignator> TTrumpfDecider for STrumpfDeciderFarbe<FarbeDesignator>
             .collect()
     }
     fn compare_trumpfcards_solo(card_fst: SCard, card_snd: SCard) -> Ordering {
-        assert!(Self::is_trumpf(card_fst));
-        assert!(Self::is_trumpf(card_snd));
+        assert!(Self::trumpforfarbe(card_fst).is_trumpf());
+        assert!(Self::trumpforfarbe(card_snd).is_trumpf());
         compare_farbcards_same_color(card_fst, card_snd)
     }
 }

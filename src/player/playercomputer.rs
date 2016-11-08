@@ -44,7 +44,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
             .filter(|rules| rules.can_be_played(hand))
             .filter(|rules| {
                 4 <= hand.get().cards().iter()
-                    .filter(|&card| rules.is_trumpf(*card))
+                    .filter(|&card| rules.trumpforfarbe(*card).is_trumpf())
                     .count()
             })
             .map(|rules| {

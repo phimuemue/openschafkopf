@@ -51,7 +51,7 @@ impl TRules for SRulesRamsch {
                         eplayerindex,
                         gamefinishedstiche.get().iter()
                             .map(|stich| stich[eplayerindex])
-                            .filter(|card| self.is_trumpf(*card))
+                            .filter(|card| self.trumpforfarbe(*card).is_trumpf())
                             // TODO rust: use max_by
                             .fold1(|card_fst, card_snd| STrumpfDeciderRamsch::better_trumpf(card_fst, card_snd))
                     )})
