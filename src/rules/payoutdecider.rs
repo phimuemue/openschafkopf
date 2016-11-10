@@ -28,6 +28,11 @@ impl<TrumpfDecider> SPayoutDeciderPointBased<TrumpfDecider>
             .map(|stich| rules.points_stich(stich))
             .sum();
         let b_player_party_wins = n_points_player_party>=61;
+        enum ESchneiderSchwarz {
+            Nothing,
+            Schneider,
+            Schwarz,
+        }
         let eschneiderschwarz = 
             if b_player_party_wins {
                 if gamefinishedstiche.get().iter().all(|stich| fn_is_player_party(rules.winner_index(stich))) {

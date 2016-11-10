@@ -29,12 +29,6 @@ impl VTrumpfOrFarbe {
     }
 }
 
-pub enum ESchneiderSchwarz {
-    Nothing,
-    Schneider,
-    Schwarz,
-}
-
 pub struct SStoss {
     pub m_eplayerindex : EPlayerIndex,
 }
