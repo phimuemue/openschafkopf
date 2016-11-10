@@ -108,21 +108,21 @@ impl<TrumpfDecider> SRulesSoloLike<TrumpfDecider>
     }
 }
 
-pub fn sololike<CoreType>(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> Box<TActivelyPlayableRules> 
-    where CoreType: TTrumpfDecider,
-          CoreType: 'static,
-          CoreType: Sync,
+pub fn sololike<TrumpfDecider>(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> Box<TActivelyPlayableRules> 
+    where TrumpfDecider: TTrumpfDecider,
+          TrumpfDecider: 'static,
+          TrumpfDecider: Sync,
 {
-    Box::new(SRulesSoloLike::<CoreType>::new(eplayerindex, i_prioindex, str_rulename)) as Box<TActivelyPlayableRules>
+    Box::new(SRulesSoloLike::<TrumpfDecider>::new(eplayerindex, i_prioindex, str_rulename)) as Box<TActivelyPlayableRules>
 }
 
 macro_rules! generate_sololike_farbe {
-    ($eplayerindex: ident, $coretype: ident, $i_prioindex: expr, $rulename: expr) => {
+    ($eplayerindex: ident, $trumpfdecider: ident, $i_prioindex: expr, $rulename: expr) => {
         vec! [
-            sololike::<$coretype<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>> ($eplayerindex, $i_prioindex, &format!("Eichel-{}", $rulename)),
-            sololike::<$coretype<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>   ($eplayerindex, $i_prioindex, &format!("Gras-{}", $rulename)),
-            sololike::<$coretype<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>   ($eplayerindex, $i_prioindex, &format!("Herz-{}", $rulename)),
-            sololike::<$coretype<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>($eplayerindex, $i_prioindex, &format!("Schelln-{}", $rulename)),
+            sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>> ($eplayerindex, $i_prioindex, &format!("Eichel-{}", $rulename)),
+            sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>   ($eplayerindex, $i_prioindex, &format!("Gras-{}", $rulename)),
+            sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>   ($eplayerindex, $i_prioindex, &format!("Herz-{}", $rulename)),
+            sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>($eplayerindex, $i_prioindex, &format!("Schelln-{}", $rulename)),
         ]
     }
 }
@@ -136,12 +136,12 @@ pub fn all_rulessolo(eplayerindex: EPlayerIndex, i_prioindex: isize) -> Vec<Box<
 }
 
 macro_rules! generate_sololike_farbe_and_farblos {
-    ($coretype: ident, $rulename: expr, $fn_all_farbe: ident, $fn_all_farblos: ident) => {
+    ($trumpfdecider: ident, $rulename: expr, $fn_all_farbe: ident, $fn_all_farblos: ident) => {
         pub fn $fn_all_farbe(eplayerindex: EPlayerIndex, i_prioindex: isize) -> Vec<Box<TActivelyPlayableRules>> { 
-            generate_sololike_farbe!(eplayerindex, $coretype, i_prioindex, $rulename)
+            generate_sololike_farbe!(eplayerindex, $trumpfdecider, i_prioindex, $rulename)
         }
         pub fn $fn_all_farblos(eplayerindex: EPlayerIndex, i_prioindex: isize) -> Vec<Box<TActivelyPlayableRules>> {
-            vec![sololike::<$coretype<STrumpfDeciderNoTrumpf>>(eplayerindex, i_prioindex, $rulename)]
+            vec![sololike::<$trumpfdecider<STrumpfDeciderNoTrumpf>>(eplayerindex, i_prioindex, $rulename)]
         }
     }
 }
