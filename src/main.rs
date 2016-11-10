@@ -139,10 +139,6 @@ fn main() {
                 );
                 game.zugeben(rxcard.recv().unwrap(), eplayerindex).unwrap();
             }
-            skui::logln("Results");
-            for eplayerindex in 0..4 {
-                skui::logln(&format!("Player {}: {} points", eplayerindex, game.points_per_player(eplayerindex)));
-            }
             accountbalance.apply_payout(&game.payout());
         }
         skui::print_account_balance(&accountbalance);

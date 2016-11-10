@@ -239,10 +239,6 @@ impl<'rules> SGame<'rules> {
         }
     }
 
-    pub fn points_per_player(&self, eplayerindex: EPlayerIndex) -> isize {
-        self.m_rules.points_per_player(&SGameFinishedStiche::new(&self.m_vecstich), eplayerindex)
-    }
-
     pub fn payout(&self) -> [isize; 4] {
         assert!(self.which_player_can_do_something().is_none());
         let an_payout_raw = self.m_rules.payout(&SGameFinishedStiche::new(&self.m_vecstich));

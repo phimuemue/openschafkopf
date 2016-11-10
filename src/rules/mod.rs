@@ -67,12 +67,6 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
             .map(|(_, card)| self.points_card(*card))
             .sum()
     }
-    fn points_per_player(&self, gamefinishedstiche: &SGameFinishedStiche, eplayerindex: EPlayerIndex) -> isize {
-        gamefinishedstiche.get().iter()
-            .filter(|stich| eplayerindex==self.winner_index(stich))
-            .map(|stich| self.points_stich(stich))
-            .sum()
-    }
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4];
 
