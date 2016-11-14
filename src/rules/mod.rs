@@ -94,7 +94,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
         eplayerindex_best
     }
 
-    fn compare_in_stich_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering;
+    fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering;
 
     fn compare_in_stich_farbe(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
         if card_fst.farbe() != card_snd.farbe() {
@@ -109,7 +109,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
         match (self.trumpforfarbe(card_fst).is_trumpf(), self.trumpforfarbe(card_snd).is_trumpf()) {
             (true, false) => Ordering::Greater,
             (false, true) => Ordering::Less,
-            (true, true) => self.compare_in_stich_trumpf(card_fst, card_snd),
+            (true, true) => self.compare_trumpf(card_fst, card_snd),
             (false, false) => self.compare_in_stich_farbe(card_fst, card_snd),
         }
     }

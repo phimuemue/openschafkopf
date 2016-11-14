@@ -57,7 +57,7 @@ impl TRules for SRulesRamsch {
                             .fold1(|card_fst, card_snd| {
                                 assert!(self.trumpforfarbe(card_fst).is_trumpf());
                                 assert!(self.trumpforfarbe(card_snd).is_trumpf());
-                                if Ordering::Less==self.compare_in_stich_trumpf(card_fst, card_snd) {
+                                if Ordering::Less==self.compare_trumpf(card_fst, card_snd) {
                                     card_snd
                                 } else {
                                     card_fst
@@ -67,7 +67,7 @@ impl TRules for SRulesRamsch {
                     .fold1(|paireplayerindexocard_fst, paireplayerindexocard_snd| {
                         match (paireplayerindexocard_fst.1, paireplayerindexocard_snd.1) {
                             (Some(card_trumpf_fst), Some(card_trumpf_snd)) => {
-                                if Ordering::Less==self.compare_in_stich_trumpf(card_trumpf_fst, card_trumpf_snd) {
+                                if Ordering::Less==self.compare_trumpf(card_trumpf_fst, card_trumpf_snd) {
                                     paireplayerindexocard_snd
                                 } else {
                                     paireplayerindexocard_fst
