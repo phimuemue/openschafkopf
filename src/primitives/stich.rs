@@ -143,13 +143,13 @@ impl fmt::Display for SStich {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for eplayerindex in 0..4 {
             if eplayerindex==self.m_eplayerindex_first {
-                try!(write!(f, ">"));
+                write!(f, ">")?;
             } else {
-                try!(write!(f, " "));
+                write!(f, " ")?;
             }
             match self.get(eplayerindex) {
-                None => {try!(write!(f, "__"));}
-                Some(card) => {try!(write!(f, "{}", card));}
+                None => {write!(f, "__")?;}
+                Some(card) => {write!(f, "{}", card)?;}
             }
         }
         write!(f, "")
