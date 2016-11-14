@@ -132,3 +132,13 @@ impl<FarbeDesignator> TTrumpfDecider for STrumpfDeciderFarbe<FarbeDesignator>
     }
 }
 
+macro_rules! impl_rules_trumpf {
+    ($trumpfdecider: ident) => {
+        fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
+            $trumpfdecider::trumpforfarbe(card)
+        }
+        fn compare_in_stich_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
+            $trumpfdecider::compare_trumpfcards_solo(card_fst, card_snd)
+        }
+    }
+}

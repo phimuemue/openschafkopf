@@ -36,6 +36,8 @@ impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider>
     where TrumpfDecider: TTrumpfDecider,
           TrumpfDecider: Sync,
 {
+    impl_rules_trumpf!(TrumpfDecider);
+
     fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool {
         assert!(
             vecstoss.iter()
@@ -44,10 +46,6 @@ impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider>
         );
         assert_eq!(hand.cards().len(), 8);
         (eplayerindex==self.m_eplayerindex)==(vecstoss.len()%2==1)
-    }
-
-    fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        TrumpfDecider::trumpforfarbe(card)
     }
 
     fn playerindex(&self) -> Option<EPlayerIndex> {
@@ -88,10 +86,6 @@ impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider>
         } else {
             veccard_allowed
         }
-    }
-
-    fn compare_in_stich_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
-        TrumpfDecider::compare_trumpfcards_solo(card_fst, card_snd)
     }
 }
 

@@ -19,14 +19,12 @@ pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag<
     SFarbeDesignatorHerz>>>;
 
 impl TRules for SRulesRamsch {
+    impl_rules_trumpf!(STrumpfDeciderRamsch);
+
     fn stoss_allowed(&self, _eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool {
         assert!(vecstoss.is_empty());
         assert_eq!(hand.cards().len(), 8);
         false
-    }
-
-    fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        STrumpfDeciderRamsch::trumpforfarbe(card)
     }
 
     fn playerindex(&self) -> Option<EPlayerIndex> {
@@ -103,9 +101,5 @@ impl TRules for SRulesRamsch {
         } else {
             veccard_allowed
         }
-    }
-
-    fn compare_in_stich_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
-        STrumpfDeciderRamsch::compare_trumpfcards_solo(card_fst, card_snd)
     }
 }

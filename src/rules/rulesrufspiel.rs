@@ -38,6 +38,8 @@ impl TActivelyPlayableRules for SRulesRufspiel {
 }
 
 impl TRules for SRulesRufspiel {
+    impl_rules_trumpf!(STrumpfDeciderRufspiel);
+
     fn can_be_played(&self, hand: &SFullHand) -> bool {
         let it = || {hand.get().cards().iter().filter(|&card| self.is_ruffarbe(*card))};
         it().all(|card| card.schlag()!=ESchlag::Ass)
@@ -46,10 +48,6 @@ impl TRules for SRulesRufspiel {
 
     fn playerindex(&self) -> Option<EPlayerIndex> {
         Some(self.m_eplayerindex)
-    }
-
-    fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        STrumpfDeciderRufspiel::trumpforfarbe(card)
     }
 
     fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool {
@@ -146,10 +144,6 @@ impl TRules for SRulesRufspiel {
                 }
             }
         }
-    }
-
-    fn compare_in_stich_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
-        STrumpfDeciderRufspiel::compare_trumpfcards_solo(card_fst, card_snd)
     }
 
 }

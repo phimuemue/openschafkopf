@@ -1,8 +1,9 @@
+#[macro_use]
+pub mod trumpfdecider;
 pub mod rulesrufspiel;
 pub mod rulessolo;
 pub mod rulesramsch;
 pub mod ruleset;
-pub mod trumpfdecider;
 pub mod payoutdecider;
 pub mod wrappers;
 
