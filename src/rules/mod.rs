@@ -35,8 +35,11 @@ pub struct SStoss {
 }
 
 pub trait TRules : fmt::Display + TAsRules + Sync {
-
+    // TTrumpfDecider
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
+    fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering;
+    fn count_laufende(&self, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &[bool; 4]) -> isize;
+
 
     fn playerindex(&self) -> Option<EPlayerIndex>;
 
@@ -93,8 +96,6 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
         }
         eplayerindex_best
     }
-
-    fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering;
 
     fn compare_in_stich_farbe(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
         if card_fst.farbe() != card_snd.farbe() {

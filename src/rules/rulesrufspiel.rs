@@ -62,7 +62,7 @@ impl TRules for SRulesRufspiel {
             .find(|&(_, card)| *card==self.rufsau())
             .map(|(eplayerindex, _)| eplayerindex)
             .unwrap();
-        SPayoutDeciderPointBased::<STrumpfDeciderRufspiel>::payout(
+        SPayoutDeciderPointBased::payout(
             self,
             gamefinishedstiche,
             /*fn_is_player_party*/|eplayerindex| {

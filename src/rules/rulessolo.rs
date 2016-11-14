@@ -53,7 +53,7 @@ impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider>
     }
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4] {
-        SPayoutDeciderPointBased::<TrumpfDecider>::payout(
+        SPayoutDeciderPointBased::payout(
             self,
             gamefinishedstiche,
             /*fn_is_player_party*/ |eplayerindex| {

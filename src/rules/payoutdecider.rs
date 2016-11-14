@@ -1,17 +1,9 @@
 use primitives::*;
 use rules::*;
-use rules::trumpfdecider::*;
-use std::marker::PhantomData;
 
-pub struct SPayoutDeciderPointBased<TrumpfDecider>
-    where TrumpfDecider: TTrumpfDecider
-{
-    m_trumpfdecider : PhantomData<TrumpfDecider>,
-}
+pub struct SPayoutDeciderPointBased {}
 
-impl<TrumpfDecider> SPayoutDeciderPointBased<TrumpfDecider>
-    where TrumpfDecider: TTrumpfDecider,
-{
+impl SPayoutDeciderPointBased {
     pub fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         rules: &Rules,
         gamefinishedstiche: &SGameFinishedStiche,
@@ -54,7 +46,7 @@ impl<TrumpfDecider> SPayoutDeciderPointBased<TrumpfDecider>
         let ab_winner = create_playerindexmap(|eplayerindex| {
             fn_is_player_party(eplayerindex)==b_player_party_wins
         });
-        let n_laufende = TrumpfDecider::count_laufende(gamefinishedstiche, &ab_winner);
+        let n_laufende = rules.count_laufende(gamefinishedstiche, &ab_winner);
         let n_payout_single_player = 
             n_payout_base
             + { match eschneiderschwarz {
