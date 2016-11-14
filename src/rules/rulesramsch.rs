@@ -54,7 +54,15 @@ impl TRules for SRulesRamsch {
                             .map(|stich| stich[eplayerindex])
                             .filter(|card| self.trumpforfarbe(*card).is_trumpf())
                             // TODO rust: use max_by
-                            .fold1(|card_fst, card_snd| STrumpfDeciderRamsch::better_trumpf(card_fst, card_snd))
+                            .fold1(|card_fst, card_snd| {
+                                assert!(self.trumpforfarbe(card_fst).is_trumpf());
+                                assert!(self.trumpforfarbe(card_snd).is_trumpf());
+                                if Ordering::Less==self.compare_in_stich_trumpf(card_fst, card_snd) {
+                                    card_snd
+                                } else {
+                                    card_fst
+                                }
+                            })
                     )})
                     .fold1(|paireplayerindexocard_fst, paireplayerindexocard_snd| {
                         match (paireplayerindexocard_fst.1, paireplayerindexocard_snd.1) {
