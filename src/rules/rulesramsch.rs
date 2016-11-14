@@ -32,12 +32,14 @@ impl TRules for SRulesRamsch {
     }
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4] {
-        let an_points = create_playerindexmap(|eplayerindex| {
-            gamefinishedstiche.get().iter()
-                .filter(|stich| eplayerindex==self.winner_index(stich))
-                .map(|stich| self.points_stich(stich))
-                .sum::<isize>()
-        });
+        let an_points = gamefinishedstiche.get().iter()
+            .fold(
+                create_playerindexmap(|_eplayerindex| 0),
+                |mut an_points_accu, stich| {
+                    an_points_accu[self.winner_index(stich)] += self.points_stich(stich);
+                    an_points_accu
+                }
+            );
         let n_points_max = an_points.iter().max().unwrap().clone();
         let veceplayerindex_most_points = (0..4)
             .filter(|eplayerindex| n_points_max==an_points[*eplayerindex])
