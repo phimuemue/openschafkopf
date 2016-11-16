@@ -3,6 +3,7 @@ use rules::*;
 use rules::rulesrufspiel::*;
 use rules::rulessolo::*;
 use rules::rulesramsch::*;
+use rules::trumpfdecider::*;
 
 use std::error::Error;
 use std::fs::File;
@@ -62,6 +63,16 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
         m_avecrulegroup : create_playerindexmap(|eplayerindex| {
             vecstr_rule_name.iter()
                 .filter_map(|str_l| {
+                    macro_rules! generate_sololike_farbe {
+                        ($eplayerindex: ident, $trumpfdecider: ident, $i_prioindex: expr, $rulename: expr) => {
+                            vec! [
+                                sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>> ($eplayerindex, $i_prioindex, &format!("Eichel-{}", $rulename)),
+                                sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>   ($eplayerindex, $i_prioindex, &format!("Gras-{}", $rulename)),
+                                sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>   ($eplayerindex, $i_prioindex, &format!("Herz-{}", $rulename)),
+                                sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>($eplayerindex, $i_prioindex, &format!("Schelln-{}", $rulename)),
+                            ]
+                        }
+                    }
                     println!("allowing {} for {}", str_l, eplayerindex);
                     if str_l=="rufspiel" {
                         create_rulegroup(
@@ -72,15 +83,15 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
                                 .collect()
                         )
                     } else if str_l=="solo" {
-                        create_rulegroup("Solo", all_rulessolo(eplayerindex, /*i_prioindex*/0, "Solo"))
+                        create_rulegroup("Solo", generate_sololike_farbe!(eplayerindex, SCoreSolo, /*i_prioindex*/0, "Solo"))
                     } else if str_l=="farbwenz" {
-                        create_rulegroup("Farbwenz", all_rulesfarbwenz(eplayerindex, /*i_prioindex*/2, "Wenz"))
+                        create_rulegroup("Farbwenz", generate_sololike_farbe!(eplayerindex, SCoreGenericWenz, /*i_prioindex*/2, "Wenz"))
                     } else if str_l=="wenz" {
-                        create_rulegroup("Wenz", all_ruleswenz(eplayerindex, /*i_prioindex*/1, "Wenz"))
+                        create_rulegroup("Wenz", vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>>(eplayerindex, /*i_prioindex*/1, "Wenz")])
                     } else if str_l=="farbgeier" {
-                        create_rulegroup("Farbgeier", all_rulesfarbgeier(eplayerindex, /*i_prioindex*/4, "Geier"))
+                        create_rulegroup("Farbgeier", generate_sololike_farbe!(eplayerindex, SCoreGenericGeier, /*i_prioindex*/4, "Geier"))
                     } else if str_l=="geier" {
-                        create_rulegroup("Geier", all_rulesgeier(eplayerindex, /*i_prioindex*/3, "Geier"))
+                        create_rulegroup("Geier", vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>>(eplayerindex, /*i_prioindex*/3, "Geier")])
                     } else {
                         None
                     }

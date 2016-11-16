@@ -110,43 +110,10 @@ pub fn sololike<TrumpfDecider>(eplayerindex: EPlayerIndex, i_prioindex: isize, s
     Box::new(SRulesSoloLike::<TrumpfDecider>::new(eplayerindex, i_prioindex, str_rulename)) as Box<TActivelyPlayableRules>
 }
 
-macro_rules! generate_sololike_farbe {
-    ($eplayerindex: ident, $trumpfdecider: ident, $i_prioindex: expr, $rulename: expr) => {
-        vec! [
-            sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>> ($eplayerindex, $i_prioindex, &format!("Eichel-{}", $rulename)),
-            sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>   ($eplayerindex, $i_prioindex, &format!("Gras-{}", $rulename)),
-            sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>   ($eplayerindex, $i_prioindex, &format!("Herz-{}", $rulename)),
-            sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>($eplayerindex, $i_prioindex, &format!("Schelln-{}", $rulename)),
-        ]
-    }
-}
-
 pub type SCoreSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<
     SSchlagDesignatorOber, STrumpfDeciderSchlag<
     SSchlagDesignatorUnter, TrumpfFarbDecider>>;
-
-pub fn all_rulessolo(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> Vec<Box<TActivelyPlayableRules>> {
-    generate_sololike_farbe!(eplayerindex, SCoreSolo, i_prioindex, str_rulename)
-}
-
-macro_rules! generate_sololike_farbe_and_farblos {
-    ($trumpfdecider: ident, $fn_all_farbe: ident, $fn_all_farblos: ident) => {
-        pub fn $fn_all_farbe(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> Vec<Box<TActivelyPlayableRules>> { 
-            generate_sololike_farbe!(eplayerindex, $trumpfdecider, i_prioindex, str_rulename)
-        }
-        pub fn $fn_all_farblos(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> Vec<Box<TActivelyPlayableRules>> {
-            vec![sololike::<$trumpfdecider<STrumpfDeciderNoTrumpf>>(eplayerindex, i_prioindex, str_rulename)]
-        }
-    }
-}
-
 pub type SCoreGenericWenz<TrumpfFarbDecider> = STrumpfDeciderSchlag<
     SSchlagDesignatorUnter, TrumpfFarbDecider>;
-
-generate_sololike_farbe_and_farblos!(SCoreGenericWenz, all_rulesfarbwenz, all_ruleswenz);
-
 pub type SCoreGenericGeier<TrumpfFarbDecider> = STrumpfDeciderSchlag<
     SSchlagDesignatorOber, TrumpfFarbDecider>;
-
-generate_sololike_farbe_and_farblos!(SCoreGenericGeier, all_rulesfarbgeier, all_rulesgeier);
-
