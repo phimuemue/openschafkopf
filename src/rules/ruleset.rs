@@ -56,7 +56,6 @@ fn read_sololike<PayoutDecider>(str_l: &str, eplayerindex: EPlayerIndex, i_prioi
         }
     }
     if str_l=="solo" {
-	// TODO Sie
         let str_rulename = internal_rulename("Solo");
         create_rulegroup(&str_rulename, generate_sololike_farbe!(eplayerindex, SCoreSolo, /*i_prioindex*/priority(0), &str_rulename))
     } else if str_l=="farbwenz" {
@@ -126,6 +125,12 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
             }
             for rulegroup in vecstr_rule_name.iter().filter_map(|str_l| read_sololike::<SPayoutDeciderTout>(str_l, eplayerindex, /*i_prioindex_offset*/0, " Tout")) {
                 vecrulegroup.push(rulegroup);
+            }
+            if vecstr_rule_name.contains(&"solo".to_string()) {
+                vecrulegroup.push(create_rulegroup(
+                    "Sie",
+                    vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, /*i_prioindex*/-100,&"Sie")]
+                ).unwrap())
             }
             vecrulegroup
         }),
