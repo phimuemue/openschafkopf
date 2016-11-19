@@ -17,22 +17,22 @@ vecpairstrdictstrfnGame = [
         "Sauspiel auf die Hundsgfickte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln}"%(eplayerindex),
     }),
     ("farbwenz", {
-        "Eichel-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>>::new(%d, /*i_prioindex*/-1, \"Eichel-Wenz\")"%(eplayerindex),
-        "Gras-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>::new(%d, /*i_prioindex*/-1, \"Gras-Wenz\")"%(eplayerindex),
-        "Herz-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>::new(%d, /*i_prioindex*/-1, \"Herz-Wenz\")"%(eplayerindex),
-        "Schelln-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>::new(%d, /*i_prioindex*/-1, \"Schelln-Wenz\")"%(eplayerindex),
+        "Eichel-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, /*i_prioindex*/-1, \"Eichel-Wenz\")"%(eplayerindex),
+        "Gras-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, /*i_prioindex*/-1, \"Gras-Wenz\")"%(eplayerindex),
+        "Herz-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, /*i_prioindex*/-1, \"Herz-Wenz\")"%(eplayerindex),
+        "Schelln-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, /*i_prioindex*/-1, \"Schelln-Wenz\")"%(eplayerindex),
     }),
     ("wenz", {
-        "Wenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>>::new(%d, /*i_prioindex*/-1, \"Wenz\")"%(eplayerindex),
+        "Wenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, /*i_prioindex*/-1, \"Wenz\")"%(eplayerindex),
     }),
     ("solo", {
-        "Eichel-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>>::new(%d, /*i_prioindex*/-1, \"Eichel-Solo\")"%(eplayerindex),
-        "Gras-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>>::new(%d, /*i_prioindex*/-1, \"Gras-Solo\")"%(eplayerindex),
-        "Herz-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>>::new(%d, /*i_prioindex*/-1, \"Herz-Solo\")"%(eplayerindex),
-        "Schelln-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>>::new(%d, /*i_prioindex*/-1, \"Schelln-Solo\")"%(eplayerindex),
+        "Eichel-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, /*i_prioindex*/-1, \"Eichel-Solo\")"%(eplayerindex),
+        "Gras-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, /*i_prioindex*/-1, \"Gras-Solo\")"%(eplayerindex),
+        "Herz-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, /*i_prioindex*/-1, \"Herz-Solo\")"%(eplayerindex),
+        "Schelln-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, /*i_prioindex*/-1, \"Schelln-Solo\")"%(eplayerindex),
     }),
     ("geier", {
-        "Geier" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>>::new(%d, /*i_prioindex*/-1, \"Geier\")"%(eplayerindex),
+        "Geier" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, /*i_prioindex*/-1, \"Geier\")"%(eplayerindex),
     }),
     ("ramsch", {
         "Ramscch" : lambda eplayerindex: "SRulesRamsch"%(eplayerindex),

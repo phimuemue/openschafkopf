@@ -6,35 +6,42 @@ use std::fmt;
 use std::cmp::Ordering;
 use std::marker::PhantomData;
 
-pub struct SRulesSoloLike<TrumpfDecider> 
+pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
+          PayoutDecider: TPayoutDecider,
 {
     pub m_str_name: String,
     pub m_eplayerindex : EPlayerIndex, // TODO should be static
     pub m_trumpfdecider : PhantomData<TrumpfDecider>,
+    pub m_payoutdecider : PhantomData<PayoutDecider>,
     pub m_i_prioindex : isize,
 }
 
-impl<TrumpfDecider> fmt::Display for SRulesSoloLike<TrumpfDecider> 
+impl<TrumpfDecider, PayoutDecider> fmt::Display for SRulesSoloLike<TrumpfDecider, PayoutDecider> 
     where TrumpfDecider: TTrumpfDecider,
+          PayoutDecider: TPayoutDecider,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.m_str_name)
     }
 }
 
-impl<TrumpfDecider> TActivelyPlayableRules for SRulesSoloLike<TrumpfDecider>
+impl<TrumpfDecider, PayoutDecider> TActivelyPlayableRules for SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
           TrumpfDecider: Sync,
+          PayoutDecider: TPayoutDecider,
+          PayoutDecider: Sync,
 {
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::SinglePlayLike(self.m_i_prioindex)
     }
 }
 
-impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider> 
+impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, PayoutDecider> 
     where TrumpfDecider: TTrumpfDecider,
           TrumpfDecider: Sync,
+          PayoutDecider: TPayoutDecider,
+          PayoutDecider: Sync,
 {
     impl_rules_trumpf!(TrumpfDecider);
 
@@ -53,7 +60,7 @@ impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider>
     }
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4] {
-        SPayoutDeciderPointBased::payout(
+        PayoutDecider::payout(
             self,
             gamefinishedstiche,
             /*fn_is_player_party*/ |eplayerindex| {
@@ -89,25 +96,30 @@ impl<TrumpfDecider> TRules for SRulesSoloLike<TrumpfDecider>
     }
 }
 
-impl<TrumpfDecider> SRulesSoloLike<TrumpfDecider>
+impl<TrumpfDecider, PayoutDecider> SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
+          PayoutDecider: TPayoutDecider,
 {
-    pub fn new(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> SRulesSoloLike<TrumpfDecider> {
-        SRulesSoloLike::<TrumpfDecider> {
+    pub fn new(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
+        SRulesSoloLike::<TrumpfDecider, PayoutDecider> {
             m_eplayerindex: eplayerindex,
             m_trumpfdecider: PhantomData::<TrumpfDecider>,
+            m_payoutdecider: PhantomData::<PayoutDecider>,
             m_i_prioindex: i_prioindex,
             m_str_name: str_rulename.to_string(),
         }
     }
 }
 
-pub fn sololike<TrumpfDecider>(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> Box<TActivelyPlayableRules> 
+pub fn sololike<TrumpfDecider, PayoutDecider>(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> Box<TActivelyPlayableRules> 
     where TrumpfDecider: TTrumpfDecider,
           TrumpfDecider: 'static,
           TrumpfDecider: Sync,
+          PayoutDecider: TPayoutDecider,
+          PayoutDecider: 'static,
+          PayoutDecider: Sync,
 {
-    Box::new(SRulesSoloLike::<TrumpfDecider>::new(eplayerindex, i_prioindex, str_rulename)) as Box<TActivelyPlayableRules>
+    Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(eplayerindex, i_prioindex, str_rulename)) as Box<TActivelyPlayableRules>
 }
 
 pub type SCoreSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<
