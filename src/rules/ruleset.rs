@@ -33,17 +33,14 @@ pub fn create_rulegroup (str_name: &str, vecrules: Vec<Box<TActivelyPlayableRule
     })
 }
 
-fn read_sololike<PayoutDecider>(str_l: &str, eplayerindex: EPlayerIndex, i_prioindex_offset: isize, str_rulename_suffix: &str) -> Option<SRuleGroup>
+fn read_sololike<PayoutDecider, FnPrio>(str_l: &str, eplayerindex: EPlayerIndex, fn_prio: FnPrio, str_rulename_suffix: &str) -> Option<SRuleGroup>
     where PayoutDecider: TPayoutDecider,
           PayoutDecider: Sync,
           PayoutDecider: 'static,
+          FnPrio: Fn(isize) -> VGameAnnouncementPriority,
 {
     let internal_rulename = |str_rulename| {
         format!("{}{}", str_rulename, str_rulename_suffix)
-    };
-    let priority = |i_prioindex| {
-        // TODO introduce different kind of priority for Tout
-        i_prioindex + i_prioindex_offset
     };
     macro_rules! generate_sololike_farbe {
         ($eplayerindex: ident, $trumpfdecider: ident, $i_prioindex: expr, $rulename: expr) => {
@@ -57,17 +54,17 @@ fn read_sololike<PayoutDecider>(str_l: &str, eplayerindex: EPlayerIndex, i_prioi
     }
     if str_l=="solo" {
         let str_rulename = internal_rulename("Solo");
-        create_rulegroup(&str_rulename, generate_sololike_farbe!(eplayerindex, SCoreSolo, /*i_prioindex*/priority(0), &str_rulename))
+        create_rulegroup(&str_rulename, generate_sololike_farbe!(eplayerindex, SCoreSolo, fn_prio(0), &str_rulename))
     } else if str_l=="farbwenz" {
-        create_rulegroup(&internal_rulename("Farbwenz"), generate_sololike_farbe!(eplayerindex, SCoreGenericWenz, /*i_prioindex*/priority(2), &internal_rulename("Wenz")))
+        create_rulegroup(&internal_rulename("Farbwenz"), generate_sololike_farbe!(eplayerindex, SCoreGenericWenz, fn_prio(-2), &internal_rulename("Wenz")))
     } else if str_l=="wenz" {
         let str_rulename = internal_rulename("Wenz");
-        create_rulegroup(&str_rulename, vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, PayoutDecider>(eplayerindex, /*i_prioindex*/priority(1),&str_rulename)])
+        create_rulegroup(&str_rulename, vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, PayoutDecider>(eplayerindex, fn_prio(-1),&str_rulename)])
     } else if str_l=="farbgeier" {
-        create_rulegroup(&internal_rulename("Farbgeier"), generate_sololike_farbe!(eplayerindex, SCoreGenericGeier, /*i_prioindex*/priority(4), &internal_rulename("Geier")))
+        create_rulegroup(&internal_rulename("Farbgeier"), generate_sololike_farbe!(eplayerindex, SCoreGenericGeier, fn_prio(-4), &internal_rulename("Geier")))
     } else if str_l=="geier" {
         let str_rulename = internal_rulename("Geier");
-        create_rulegroup(&str_rulename, vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, PayoutDecider>(eplayerindex, /*i_prioindex*/priority(3),&str_rulename)])
+        create_rulegroup(&str_rulename, vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, PayoutDecider>(eplayerindex, fn_prio(-3),&str_rulename)])
     } else {
         None
     }
@@ -120,16 +117,16 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
             {
                 vecrulegroup.push(rulegroup);
             }
-            for rulegroup in vecstr_rule_name.iter().filter_map(|str_l| read_sololike::<SPayoutDeciderPointBased>(str_l, eplayerindex, /*i_prioindex_offset*/100, "")) {
+            for rulegroup in vecstr_rule_name.iter().filter_map(|str_l| read_sololike::<SPayoutDeciderPointBased,_>(str_l, eplayerindex, |i_prioindex| VGameAnnouncementPriority::SoloLikeSimple(i_prioindex), "")) {
                 vecrulegroup.push(rulegroup);
             }
-            for rulegroup in vecstr_rule_name.iter().filter_map(|str_l| read_sololike::<SPayoutDeciderTout>(str_l, eplayerindex, /*i_prioindex_offset*/0, " Tout")) {
+            for rulegroup in vecstr_rule_name.iter().filter_map(|str_l| read_sololike::<SPayoutDeciderTout,_>(str_l, eplayerindex, |i_prioindex| VGameAnnouncementPriority::SoloTout(i_prioindex), " Tout")) {
                 vecrulegroup.push(rulegroup);
             }
             if vecstr_rule_name.contains(&"solo".to_string()) {
                 vecrulegroup.push(create_rulegroup(
                     "Sie",
-                    vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, /*i_prioindex*/-100,&"Sie")]
+                    vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie")]
                 ).unwrap())
             }
             vecrulegroup

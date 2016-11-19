@@ -14,7 +14,7 @@ pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider>
     pub m_eplayerindex : EPlayerIndex, // TODO should be static
     pub m_trumpfdecider : PhantomData<TrumpfDecider>,
     pub m_payoutdecider : PhantomData<PayoutDecider>,
-    pub m_i_prioindex : isize,
+    pub m_prio : VGameAnnouncementPriority,
 }
 
 impl<TrumpfDecider, PayoutDecider> fmt::Display for SRulesSoloLike<TrumpfDecider, PayoutDecider> 
@@ -33,7 +33,7 @@ impl<TrumpfDecider, PayoutDecider> TActivelyPlayableRules for SRulesSoloLike<Tru
           PayoutDecider: Sync,
 {
     fn priority(&self) -> VGameAnnouncementPriority {
-        VGameAnnouncementPriority::SinglePlayLike(self.m_i_prioindex)
+        self.m_prio.clone()
     }
 }
 
@@ -100,18 +100,18 @@ impl<TrumpfDecider, PayoutDecider> SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
           PayoutDecider: TPayoutDecider,
 {
-    pub fn new(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
+    pub fn new(eplayerindex: EPlayerIndex, prio: VGameAnnouncementPriority, str_rulename: &str) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
         SRulesSoloLike::<TrumpfDecider, PayoutDecider> {
             m_eplayerindex: eplayerindex,
             m_trumpfdecider: PhantomData::<TrumpfDecider>,
             m_payoutdecider: PhantomData::<PayoutDecider>,
-            m_i_prioindex: i_prioindex,
+            m_prio: prio,
             m_str_name: str_rulename.to_string(),
         }
     }
 }
 
-pub fn sololike<TrumpfDecider, PayoutDecider>(eplayerindex: EPlayerIndex, i_prioindex: isize, str_rulename: &str) -> Box<TActivelyPlayableRules> 
+pub fn sololike<TrumpfDecider, PayoutDecider>(eplayerindex: EPlayerIndex, prio: VGameAnnouncementPriority, str_rulename: &str) -> Box<TActivelyPlayableRules> 
     where TrumpfDecider: TTrumpfDecider,
           TrumpfDecider: 'static,
           TrumpfDecider: Sync,
@@ -119,7 +119,7 @@ pub fn sololike<TrumpfDecider, PayoutDecider>(eplayerindex: EPlayerIndex, i_prio
           PayoutDecider: 'static,
           PayoutDecider: Sync,
 {
-    Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(eplayerindex, i_prioindex, str_rulename)) as Box<TActivelyPlayableRules>
+    Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(eplayerindex, prio, str_rulename)) as Box<TActivelyPlayableRules>
 }
 
 pub type SCoreSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<

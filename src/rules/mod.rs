@@ -145,18 +145,27 @@ impl<Rules: TRules> TAsRules for Rules {
     }
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub enum VGameAnnouncementPriority {
     RufspielLike,
-    SinglePlayLike(isize), // lower index means higher priority
+    SoloLikeSimple(isize),
+    SoloTout(isize),
+    SoloSie,
 }
 
 impl PartialOrd for VGameAnnouncementPriority {
     fn partial_cmp(&self, priority: &VGameAnnouncementPriority) -> Option<Ordering> {
+        use self::VGameAnnouncementPriority::*;
         Some(match (self, priority) {
-            (&VGameAnnouncementPriority::RufspielLike, _) => Ordering::Less,
-            (_, &VGameAnnouncementPriority::RufspielLike) => Ordering::Greater,
-            (&VGameAnnouncementPriority::SinglePlayLike(n_prio_lhs), &VGameAnnouncementPriority::SinglePlayLike(n_prio_rhs)) => n_prio_rhs.cmp(&n_prio_lhs), // Note lower index means higher priority
+            // only state "equal"- and "less"-cases explitly; cover all "greater"-cases at the end
+            (&RufspielLike, &RufspielLike) => Ordering::Equal,
+            (&RufspielLike, _) => Ordering::Less,
+            (&SoloLikeSimple(i_prio_lhs), &SoloLikeSimple(i_prio_rhs)) => i_prio_lhs.cmp(&i_prio_rhs),
+            (&SoloLikeSimple(_), _) => Ordering::Less,
+            (&SoloTout(i_prio_lhs), &SoloTout(i_prio_rhs)) => i_prio_lhs.cmp(&i_prio_rhs),
+            (&SoloTout(_), _) => Ordering::Less,
+            (&SoloSie, &SoloSie) => Ordering::Equal,
+            (_, _) => Ordering::Greater,
         })
     }
 }
