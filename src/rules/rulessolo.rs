@@ -59,7 +59,7 @@ impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, Payo
         Some(self.m_eplayerindex)
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4] {
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> SPlayerIndexMap<isize> {
         PayoutDecider::payout(
             self,
             gamefinishedstiche,

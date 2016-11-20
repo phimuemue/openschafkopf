@@ -8,11 +8,11 @@ use rules::payoutdecider::*;
 pub fn test_rules(
     str_info: &str,
     rules: &TRules,
-    astr_hand: [&str; 4],
+    astr_hand: SPlayerIndexMap<&str>,
     veceplayerindex_doubling: Vec<EPlayerIndex>,
     veceplayerindex_stoss: Vec<EPlayerIndex>,
     vecpaireplayerindexstr_stich: [(EPlayerIndex, &str); 8],
-    an_payout: [isize; 4],
+    an_payout: SPlayerIndexMap<isize>,
 ) {
     use game;
     use util::cardvectorparser;

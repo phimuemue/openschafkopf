@@ -5,12 +5,12 @@ use arrayvec::ArrayVec;
 use std::ops::Index;
 
 pub type EPlayerIndex = usize; // TODO: would a real enum be more adequate?
+pub type SPlayerIndexMap<T> = [T; 4]; // TODO: introduce generic enummap
 
-// TODO: introduce generic enummap
-pub fn create_playerindexmap<T, F>(mut func: F) -> [T; 4]
+pub fn create_playerindexmap<T, F>(mut func: F) -> SPlayerIndexMap<T>
     where F:FnMut(EPlayerIndex)->T
 {
-    let mut at : [T; 4];
+    let mut at : SPlayerIndexMap<T>;
     unsafe {
         at = mem::uninitialized();
         for eplayerindex in 0..4 {

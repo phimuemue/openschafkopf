@@ -11,12 +11,12 @@ use rand::{self, Rng};
 
 pub struct SForeverRandHands {
     m_eplayerindex_fixed : EPlayerIndex,
-    m_ahand: [SHand; 4],
+    m_ahand: SPlayerIndexMap<SHand>,
 }
 
 impl Iterator for SForeverRandHands {
-    type Item = [SHand; 4];
-    fn next(&mut self) -> Option<[SHand; 4]> {
+    type Item = SPlayerIndexMap<SHand>;
+    fn next(&mut self) -> Option<SPlayerIndexMap<SHand>> {
         assert_ahand_same_size(&self.m_ahand);
         let n_len_hand = self.m_ahand[0].cards().len();
         let mut rng = rand::thread_rng();
@@ -84,8 +84,8 @@ pub struct SAllHands {
 }
 
 impl Iterator for SAllHands {
-    type Item = [SHand; 4];
-    fn next(&mut self) -> Option<[SHand; 4]> {
+    type Item = SPlayerIndexMap<SHand>;
+    fn next(&mut self) -> Option<SPlayerIndexMap<SHand>> {
         if self.m_b_valid {
             let ahand = create_playerindexmap(|eplayerindex| {
                 if self.m_eplayerindex_fixed==eplayerindex {

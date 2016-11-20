@@ -18,7 +18,7 @@ pub struct SRuleGroup {
 }
 
 pub struct SRuleSet {
-    pub m_avecrulegroup : [Vec<SRuleGroup>; 4],
+    pub m_avecrulegroup : SPlayerIndexMap<Vec<SRuleGroup>>,
     pub m_orulesramsch : Option<Box<TRules>>,
 }
 

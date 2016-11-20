@@ -31,7 +31,7 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4] {
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> SPlayerIndexMap<isize> {
         let an_points = gamefinishedstiche.get().iter()
             .fold(
                 create_playerindexmap(|_eplayerindex| 0),

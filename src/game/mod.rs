@@ -11,7 +11,7 @@ use rand::{self, Rng};
 pub type SDoublings = SPlayersInRound<bool>;
 
 pub struct SDealCards {
-    pub m_ahand : [SHand; 4],
+    pub m_ahand : SPlayerIndexMap<SHand>,
     pub m_doublings : SDoublings,
 }
 
@@ -57,7 +57,7 @@ impl SDealCards {
 pub type SGameAnnouncements<'rules> = SPlayersInRound<Option<&'rules TActivelyPlayableRules>>;
 
 pub struct SGamePreparations<'rules> {
-    pub m_ahand : [SHand; 4],
+    pub m_ahand : SPlayerIndexMap<SHand>,
     m_doublings : SDoublings,
     pub m_ruleset : &'rules SRuleSet,
     pub m_gameannouncements : SGameAnnouncements<'rules>,
@@ -76,7 +76,7 @@ pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
     })
 }
 
-pub fn random_hands() -> [SHand; 4] {
+pub fn random_hands() -> SPlayerIndexMap<SHand> {
     let mut veccard : Vec<_> = SCard::values().into_iter().collect();
     assert!(veccard.len()==32);
     create_playerindexmap(move |_eplayerindex|
@@ -133,7 +133,7 @@ impl<'rules> SGamePreparations<'rules> {
 }
 
 pub struct SPreGame<'rules> {
-    pub m_ahand : [SHand; 4],
+    pub m_ahand : SPlayerIndexMap<SHand>,
     pub m_doublings : SDoublings,
     pub m_rules : &'rules TRules,
     pub m_vecstoss : Vec<SStoss>,
@@ -175,7 +175,7 @@ impl<'rules> SPreGame<'rules> {
 }
 
 pub struct SGame<'rules> {
-    pub m_ahand : [SHand; 4],
+    pub m_ahand : SPlayerIndexMap<SHand>,
     pub m_doublings : SDoublings,
     pub m_rules : &'rules TRules,
     pub m_vecstoss : Vec<SStoss>,
@@ -239,7 +239,7 @@ impl<'rules> SGame<'rules> {
         }
     }
 
-    pub fn payout(&self) -> [isize; 4] {
+    pub fn payout(&self) -> SPlayerIndexMap<isize> {
         assert!(self.which_player_can_do_something().is_none());
         let an_payout_raw = self.m_rules.payout(&SGameFinishedStiche::new(&self.m_vecstich));
         create_playerindexmap(|eplayerindex| {

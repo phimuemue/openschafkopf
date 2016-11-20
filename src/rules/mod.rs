@@ -38,7 +38,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
     // TTrumpfDecider
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
     fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering;
-    fn count_laufende(&self, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &[bool; 4]) -> isize;
+    fn count_laufende(&self, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SPlayerIndexMap<bool>) -> isize;
 
 
     fn playerindex(&self) -> Option<EPlayerIndex>;
@@ -66,7 +66,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
             .sum()
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> [isize; 4];
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> SPlayerIndexMap<isize>;
 
     fn all_allowed_cards(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());

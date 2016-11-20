@@ -99,7 +99,7 @@ impl TAi for SAiCheating {
 }
 
 pub struct SAiSimulating {}
-fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
+fn is_compatible_with_game_so_far(ahand: &SPlayerIndexMap<SHand>, game: &SGame) -> bool {
     let ref stich_current = game.current_stich();
     assert!(stich_current.size()<4);
     // hands must contain respective cards from stich_current...
@@ -160,7 +160,7 @@ fn is_compatible_with_game_so_far(ahand: &[SHand; 4], game: &SGame) -> bool {
 }
 
 fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize) -> SCard
-    where HandsIterator: Iterator<Item=[SHand; 4]>
+    where HandsIterator: Iterator<Item=SPlayerIndexMap<SHand>>
 {
     let ref stich_current = game.current_stich();
     let eplayerindex_fixed = stich_current.current_playerindex().unwrap();
@@ -299,7 +299,7 @@ fn test_is_compatible_with_game_so_far() {
         AssertFrei(EPlayerIndex, VTrumpfOrFarbe),
         AssertNotFrei(EPlayerIndex, VTrumpfOrFarbe),
     }
-    let test_game = |astr_hand: [&'static str; 4], rules: &TRules, eplayerindex_first, vectestaction: Vec<VTestAction>| {
+    let test_game = |astr_hand: SPlayerIndexMap<&'static str>, rules: &TRules, eplayerindex_first, vectestaction: Vec<VTestAction>| {
         let mut game = game::SGame {
             m_doublings : SDoublings::new(eplayerindex_first),
             m_ahand : create_playerindexmap(|eplayerindex| {

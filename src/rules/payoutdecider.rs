@@ -8,7 +8,7 @@ pub trait TPayoutDecider {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         n_payout_base: isize,
-    ) -> [isize; 4]
+    ) -> SPlayerIndexMap<isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules;
@@ -23,7 +23,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         n_payout_base: isize,
-    ) -> [isize; 4]
+    ) -> SPlayerIndexMap<isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules,
@@ -75,14 +75,14 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
 
 const N_PAYOUT_PER_LAUFENDE : isize = 10;
 
-fn payout_laufende<Rules>(rules: &Rules, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &[bool; 4]) -> isize 
+fn payout_laufende<Rules>(rules: &Rules, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SPlayerIndexMap<bool>) -> isize 
     where Rules: TRules,
 {
     let n_laufende = rules.count_laufende(gamefinishedstiche, ab_winner);
     (if n_laufende<3 {0} else {n_laufende}) * N_PAYOUT_PER_LAUFENDE
 }
 
-fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_player_multiplier: FnPlayerMultiplier, ab_winner: &[bool; 4]) -> [isize; 4] 
+fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_player_multiplier: FnPlayerMultiplier, ab_winner: &SPlayerIndexMap<bool>) -> SPlayerIndexMap<isize> 
     where FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
 {
     create_playerindexmap(|eplayerindex| {
@@ -107,7 +107,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         n_payout_base: isize,
-    ) -> [isize; 4]
+    ) -> SPlayerIndexMap<isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules,
@@ -134,7 +134,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         n_payout_base: isize,
-    ) -> [isize; 4]
+    ) -> SPlayerIndexMap<isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules,

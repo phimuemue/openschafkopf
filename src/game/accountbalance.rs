@@ -3,7 +3,7 @@
 use primitives::eplayerindex::*;
 
 pub struct SAccountBalance {
-    m_an : [isize; 4],
+    m_an : SPlayerIndexMap<isize>,
     m_n_stock : isize,
 }
 
@@ -19,7 +19,7 @@ impl SAccountBalance {
         assert_eq!(self.m_n_stock + self.m_an.iter().sum::<isize>(), 0);
     }
 
-    pub fn apply_payout(&mut self, an_payout: &[isize; 4]) {
+    pub fn apply_payout(&mut self, an_payout: &SPlayerIndexMap<isize>) {
         self.assert_invariant();
         for eplayerindex in 0..4 {
             self.m_an[eplayerindex] = self.m_an[eplayerindex] + an_payout[eplayerindex];
