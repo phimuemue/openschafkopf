@@ -15,6 +15,18 @@ use std::cmp::Ordering;
 use std::fmt;
 pub use rules::wrappers::*;
 
+pub fn current_stich(vecstich: &Vec<SStich>) -> &SStich {
+    assert!(!vecstich.is_empty());
+    vecstich.last().unwrap()
+}
+
+pub fn completed_stichs(vecstich: &Vec<SStich>) -> &[SStich] {
+    assert!(current_stich(vecstich).size()<4);
+    assert_eq!(vecstich[0..vecstich.len()-1].len(), vecstich.len()-1);
+    assert!(vecstich[0..vecstich.len()-1].iter().all(|stich| stich.size()==4));
+    &vecstich[0..vecstich.len()-1]
+}
+
 #[derive(PartialEq, Eq, Hash)]
 pub enum VTrumpfOrFarbe {
     Trumpf,
