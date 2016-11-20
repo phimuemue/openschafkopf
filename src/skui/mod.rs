@@ -177,7 +177,7 @@ pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &Vec<SS
 
 pub fn account_balance_string(accountbalance: &SAccountBalance) -> String {
     let mut str = "".to_string();
-    for eplayerindex in 0..4 {
+    for eplayerindex in eplayerindex_values() {
         str = str + &format!("{}: {} | ", eplayerindex, accountbalance.get_player(eplayerindex));
     }
     str = str + &format!("Stock: {}", accountbalance.get_stock());

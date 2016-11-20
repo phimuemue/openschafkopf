@@ -184,11 +184,11 @@ impl SSuspicion {
         if n_maxlevel < n_level {
             Ok(())
         } else {
-            for eplayerindex in 0..4 {
+            for eplayerindex in eplayerindex_values() {
                 file_output.write_all(&format!("{} | ", self.m_ahand[eplayerindex]).as_bytes())?;
             }
             file_output.write_all(b", min payouts: ")?;
-            for _eplayerindex in 0..4 {
+            for _eplayerindex in eplayerindex_values() {
                 file_output.write_all(&format!("TODO: payout").as_bytes())?;
             }
             file_output.write_all(b"\n")?;

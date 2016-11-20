@@ -1,5 +1,6 @@
 use std::mem;
 use std::ptr;
+use std::ops;
 use arrayvec::ArrayVec;
 
 use std::ops::Index;
@@ -7,13 +8,17 @@ use std::ops::Index;
 pub type EPlayerIndex = usize; // TODO: would a real enum be more adequate?
 pub type SPlayerIndexMap<T> = [T; 4]; // TODO: introduce generic enummap
 
+pub fn eplayerindex_values() -> ops::Range<EPlayerIndex> {
+    0..4
+}
+
 pub fn create_playerindexmap<T, F>(mut func: F) -> SPlayerIndexMap<T>
     where F:FnMut(EPlayerIndex)->T
 {
     let mut at : SPlayerIndexMap<T>;
     unsafe {
         at = mem::uninitialized();
-        for eplayerindex in 0..4 {
+        for eplayerindex in eplayerindex_values() {
             ptr::write(&mut at[eplayerindex], func(eplayerindex)); // ptr::write prevents dropping uninitialized memory
         }
     }

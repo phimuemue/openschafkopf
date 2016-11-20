@@ -41,7 +41,7 @@ impl TRules for SRulesRamsch {
                 }
             );
         let n_points_max = an_points.iter().max().unwrap().clone();
-        let veceplayerindex_most_points = (0..4)
+        let veceplayerindex_most_points = eplayerindex_values()
             .filter(|eplayerindex| n_points_max==an_points[*eplayerindex])
             .collect::<Vec<_>>();
         let n_price = 10;

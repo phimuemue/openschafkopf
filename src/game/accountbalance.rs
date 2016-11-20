@@ -21,7 +21,7 @@ impl SAccountBalance {
 
     pub fn apply_payout(&mut self, an_payout: &SPlayerIndexMap<isize>) {
         self.assert_invariant();
-        for eplayerindex in 0..4 {
+        for eplayerindex in eplayerindex_values() {
             self.m_an[eplayerindex] = self.m_an[eplayerindex] + an_payout[eplayerindex];
         }
         self.assert_invariant();

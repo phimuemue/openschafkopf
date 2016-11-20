@@ -29,7 +29,7 @@ impl SDealCards {
     }
 
     pub fn first_hand_for(&self, eplayerindex: EPlayerIndex) -> &[SCard] {
-        &self.m_ahand[eplayerindex].cards()[0..4]
+        &self.m_ahand[eplayerindex].cards()[eplayerindex_values()]
     }
 
     pub fn announce_doubling(&mut self, eplayerindex: EPlayerIndex, b_doubling: bool) -> Result<(), &'static str> {
@@ -142,7 +142,7 @@ pub struct SPreGame<'rules> {
 impl<'rules> SPreGame<'rules> {
     pub fn which_player_can_do_something(&self) -> Vec<EPlayerIndex> {
         if self.m_vecstoss.len() < 4 {
-            (0..4)
+            eplayerindex_values()
                 .map(|eplayerindex| (eplayerindex + self.m_doublings.first_playerindex()) % 4)
                 .filter(|eplayerindex| self.m_rules.stoss_allowed(*eplayerindex, &self.m_vecstoss, &self.m_ahand[*eplayerindex]))
                 .collect()
@@ -208,7 +208,7 @@ impl<'rules> SGame<'rules> {
             assert!(!self.m_vecstich.is_empty());
             self.m_vecstich.last_mut().unwrap().push(card_played);
         }
-        for eplayerindex in 0..4 {
+        for eplayerindex in eplayerindex_values() {
             skui::logln(&format!("Hand {}: {}", eplayerindex, self.m_ahand[eplayerindex]));
         }
         if 4==self.current_stich().size() {
