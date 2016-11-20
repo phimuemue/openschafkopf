@@ -23,7 +23,7 @@ pub fn create_playerindexmap<T, F>(mut func: F) -> [T; 4]
 #[derive(Clone)]
 pub struct SPlayersInRound<T> {
     pub m_eplayerindex_first: EPlayerIndex,
-    m_veccard: ArrayVec<[T; 4]>,
+    m_vect: ArrayVec<[T; 4]>,
 }
 
 impl<T> PartialEq for SPlayersInRound<T>
@@ -64,7 +64,7 @@ impl<T> Index<EPlayerIndex> for SPlayersInRound<T> {
     type Output = T;
     fn index<'a>(&'a self, eplayerindex : EPlayerIndex) -> &'a T {
         assert!(self.valid_index(eplayerindex));
-        &self.m_veccard[(eplayerindex+4-self.m_eplayerindex_first)%4] // TODO improve (possibly when EPlayerIndex is plain_enum)
+        &self.m_vect[(eplayerindex+4-self.m_eplayerindex_first)%4] // TODO improve (possibly when EPlayerIndex is plain_enum)
     }
 }
 
@@ -83,7 +83,7 @@ impl<T> SPlayersInRound<T> {
     pub fn new(eplayerindex_first: EPlayerIndex) -> SPlayersInRound<T> {
         SPlayersInRound {
             m_eplayerindex_first : eplayerindex_first,
-            m_veccard: ArrayVec::new(),
+            m_vect: ArrayVec::new(),
         }
     }
     pub fn first_playerindex(&self) -> EPlayerIndex {
@@ -97,15 +97,15 @@ impl<T> SPlayersInRound<T> {
         }
     }
     pub fn size(&self) -> usize {
-        self.m_veccard.len()
+        self.m_vect.len()
     }
     pub fn push(&mut self, t: T) {
         assert!(self.size()<4);
-        self.m_veccard.push(t);
+        self.m_vect.push(t);
     }
     pub fn undo_most_recent(&mut self) {
         assert!(0 < self.size());
-        self.m_veccard.pop();
+        self.m_vect.pop();
     }
 
     pub fn first(&self) -> &T {
