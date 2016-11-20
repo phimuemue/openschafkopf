@@ -76,9 +76,9 @@ impl TRules for SRulesRufspiel {
     fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
         if // do we already know who had the rufsau?
-            !vecstich.iter()
-                .take_while(|stich| 4==stich.size()) // process full stichs
+            !completed_stichs(vecstich).iter()
                 .fold(/*b_rufsau_known_initial*/false, |b_rufsau_known_before_stich, stich| {
+                    assert_eq!(stich.size(), 4); // completed_stichs should only process full stichs
                     if b_rufsau_known_before_stich {
                         // already known
                         true
