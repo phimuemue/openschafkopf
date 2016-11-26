@@ -11,6 +11,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use std::io::BufReader;
+use std::collections::HashSet;
 
 pub struct SRuleGroup {
     pub m_str_name : String,
@@ -24,50 +25,6 @@ pub struct SRuleSet {
 
 pub fn allowed_rules(vecrulegroup: &Vec<SRuleGroup>) -> Vec<&TActivelyPlayableRules> {
     vecrulegroup.iter().flat_map(|rulegroup| rulegroup.m_vecrules.iter().map(|rules| rules.as_ref())).collect()
-}
-
-pub fn create_rulegroup (str_name: &str, vecrules: Vec<Box<TActivelyPlayableRules>>) -> Option<SRuleGroup> {
-    Some(SRuleGroup{
-        m_str_name: str_name.to_string(),
-        m_vecrules: vecrules
-    })
-}
-
-fn read_sololike<PayoutDecider, FnPrio>(str_l: &str, eplayerindex: EPlayerIndex, fn_prio: FnPrio, str_rulename_suffix: &str) -> Option<SRuleGroup>
-    where PayoutDecider: TPayoutDecider,
-          PayoutDecider: Sync,
-          PayoutDecider: 'static,
-          FnPrio: Fn(isize) -> VGameAnnouncementPriority,
-{
-    let internal_rulename = |str_rulename| {
-        format!("{}{}", str_rulename, str_rulename_suffix)
-    };
-    macro_rules! generate_sololike_farbe {
-        ($eplayerindex: ident, $trumpfdecider: ident, $i_prioindex: expr, $rulename: expr) => {
-            vec! [
-                sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, PayoutDecider> ($eplayerindex, $i_prioindex, &format!("Eichel-{}", $rulename)),
-                sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, PayoutDecider>   ($eplayerindex, $i_prioindex, &format!("Gras-{}", $rulename)),
-                sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, PayoutDecider>   ($eplayerindex, $i_prioindex, &format!("Herz-{}", $rulename)),
-                sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, PayoutDecider>($eplayerindex, $i_prioindex, &format!("Schelln-{}", $rulename)),
-            ]
-        }
-    }
-    if str_l=="solo" {
-        let str_rulename = internal_rulename("Solo");
-        create_rulegroup(&str_rulename, generate_sololike_farbe!(eplayerindex, SCoreSolo, fn_prio(0), &str_rulename))
-    } else if str_l=="farbwenz" {
-        create_rulegroup(&internal_rulename("Farbwenz"), generate_sololike_farbe!(eplayerindex, SCoreGenericWenz, fn_prio(-2), &internal_rulename("Wenz")))
-    } else if str_l=="wenz" {
-        let str_rulename = internal_rulename("Wenz");
-        create_rulegroup(&str_rulename, vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, PayoutDecider>(eplayerindex, fn_prio(-1),&str_rulename)])
-    } else if str_l=="farbgeier" {
-        create_rulegroup(&internal_rulename("Farbgeier"), generate_sololike_farbe!(eplayerindex, SCoreGenericGeier, fn_prio(-4), &internal_rulename("Geier")))
-    } else if str_l=="geier" {
-        let str_rulename = internal_rulename("Geier");
-        create_rulegroup(&str_rulename, vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, PayoutDecider>(eplayerindex, fn_prio(-3),&str_rulename)])
-    } else {
-        None
-    }
 }
 
 pub fn read_ruleset(path: &Path) -> SRuleSet {
@@ -89,55 +46,67 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
             file.write_all(str_rules.as_bytes()).unwrap();
         }
     }
-    let vecstr_rule_name = {
+    let setstr_rule_name = {
         assert!(path.exists()); 
         let file = match File::open(&path) {
             Err(why) => panic!("Could not open {}: {}", path.display(), Error::description(&why)),
             Ok(file) => file,
         };
-        BufReader::new(&file).lines().map(|str| str.unwrap()).collect::<Vec<_>>()
+        BufReader::new(&file).lines().map(|str| str.unwrap()).collect::<HashSet<_>>()
     };
     SRuleSet {
         m_avecrulegroup : create_playerindexmap(|eplayerindex| {
             let mut vecrulegroup = Vec::new();
-            for rulegroup in vecstr_rule_name.iter()
-                .filter_map(|str_l| {
-                    if str_l=="rufspiel" {
-                        create_rulegroup(
-                            "Rufspiel", 
-                            EFarbe::values()
-                                .filter(|efarbe| EFarbe::Herz!=*efarbe)
-                                .map(|efarbe| Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TActivelyPlayableRules>)
-                                .collect()
-                        )
-                    } else {
-                        None
-                    }
-                })
             {
-                vecrulegroup.push(rulegroup);
-            }
-            for rulegroup in vecstr_rule_name.iter().filter_map(|str_l| read_sololike::<SPayoutDeciderPointBased,_>(str_l, eplayerindex, |i_prioindex| VGameAnnouncementPriority::SoloLikeSimple(i_prioindex), "")) {
-                vecrulegroup.push(rulegroup);
-            }
-            for rulegroup in vecstr_rule_name.iter().filter_map(|str_l| read_sololike::<SPayoutDeciderTout,_>(str_l, eplayerindex, |i_prioindex| VGameAnnouncementPriority::SoloTout(i_prioindex), " Tout")) {
-                vecrulegroup.push(rulegroup);
-            }
-            if vecstr_rule_name.contains(&"solo".to_string()) {
-                vecrulegroup.push(create_rulegroup(
-                    "Sie",
-                    vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie")]
-                ).unwrap())
+                let mut create_rulegroup = |str_rule_name_file: &str, str_group_name: &str, vecrules| {
+                    if setstr_rule_name.contains(&str_rule_name_file.to_string()) {
+                        vecrulegroup.push(SRuleGroup{
+                            m_str_name: str_group_name.to_string(),
+                            m_vecrules: vecrules
+                        });
+                    }
+                };
+                create_rulegroup(
+                    "rufspiel",
+                    "Rufspiel", 
+                    EFarbe::values()
+                        .filter(|efarbe| EFarbe::Herz!=*efarbe)
+                        .map(|efarbe| Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TActivelyPlayableRules>)
+                        .collect()
+                );
+                macro_rules! read_sololike {
+                    ($payoutdecider: ident, $fn_prio: expr, $str_rulename_suffix: expr) => {
+                        let internal_rulename = |str_rulename| {
+                            format!("{}{}", str_rulename, $str_rulename_suffix)
+                        };
+                        macro_rules! generate_sololike_farbe {
+                            ($eplayerindex: ident, $trumpfdecider: ident, $i_prioindex: expr, $rulename: expr) => {
+                                vec! [
+                                    sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, $payoutdecider> ($eplayerindex, $i_prioindex, &format!("Eichel-{}", $rulename)),
+                                    sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, $payoutdecider>   ($eplayerindex, $i_prioindex, &format!("Gras-{}", $rulename)),
+                                    sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, $payoutdecider>   ($eplayerindex, $i_prioindex, &format!("Herz-{}", $rulename)),
+                                    sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, $payoutdecider>($eplayerindex, $i_prioindex, &format!("Schelln-{}", $rulename)),
+                                ]
+                            }
+                        }
+                        let str_rulename = internal_rulename("Solo");
+                        create_rulegroup("solo", &str_rulename, generate_sololike_farbe!(eplayerindex, SCoreSolo, $fn_prio(0), &str_rulename));
+                        let str_rulename = internal_rulename("Wenz");
+                        create_rulegroup("wenz", &str_rulename, vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-1),&str_rulename)]);
+                        create_rulegroup("farbwenz", &internal_rulename("Farbwenz"), generate_sololike_farbe!(eplayerindex, SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz")));
+                        let str_rulename = internal_rulename("Geier");
+                        create_rulegroup("geier", &str_rulename, vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-3),&str_rulename)]);
+                        create_rulegroup("farbgeier", &internal_rulename("Farbgeier"), generate_sololike_farbe!(eplayerindex, SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier")));
+                    }
+                }
+                read_sololike!(SPayoutDeciderPointBased, |i_prioindex| VGameAnnouncementPriority::SoloLikeSimple(i_prioindex), "");
+                read_sololike!(SPayoutDeciderTout, |i_prioindex| VGameAnnouncementPriority::SoloTout(i_prioindex), " Tout");
+                create_rulegroup("solo", "Sie", vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie")]);
             }
             vecrulegroup
         }),
-        m_orulesramsch : { 
-            if vecstr_rule_name.contains(&"ramsch".to_string()) {
-                Some(Box::new(SRulesRamsch{}))
-            } else {
-                None
-            }
-        },
+        m_orulesramsch : setstr_rule_name.get(&"ramsch".to_string())
+            .map(|_str_rule_name| Box::new(SRulesRamsch{}) as Box<TRules>),
     }
 }
 
