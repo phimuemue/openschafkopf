@@ -15,7 +15,7 @@ pub trait TPlayer {
         txb_doubling: mpsc::Sender<bool>,
     );
 
-    fn take_control(&mut self, game: &SGame, n_stock: isize, txcard: mpsc::Sender<SCard>);
+    fn take_control(&mut self, game: &SGame, txcard: mpsc::Sender<SCard>);
     // TODO: players need information about who already wants to play
     fn ask_for_game<'rules>(
         &self,

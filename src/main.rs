@@ -108,7 +108,7 @@ fn main() {
             );
             dealcards.announce_doubling(eplayerindex, rxb_doubling.recv().unwrap()).unwrap();
         }
-        let mut gamepreparations = dealcards.finish_dealing(&ruleset);
+        let mut gamepreparations = dealcards.finish_dealing(&ruleset, accountbalance.get_stock());
         while let Some(eplayerindex) = gamepreparations.which_player_can_do_something() {
             skui::logln(&format!("Asking player {} for game", eplayerindex));
             let (txorules, rxorules) = mpsc::channel::<Option<_>>();
@@ -116,7 +116,7 @@ fn main() {
                 &SFullHand::new(&gamepreparations.m_ahand[eplayerindex]),
                 &gamepreparations.m_gameannouncements,
                 &gamepreparations.m_ruleset.m_avecrulegroup[eplayerindex],
-                accountbalance.get_stock(),
+                gamepreparations.m_n_stock,
                 txorules.clone()
             );
             gamepreparations.announce_game(eplayerindex, rxorules.recv().unwrap()).unwrap();
@@ -133,7 +133,7 @@ fn main() {
                             pregame.m_rules,
                             &pregame.m_ahand[*eplayerindex],
                             &pregame.m_vecstoss,
-                            accountbalance.get_stock(),
+                            pregame.m_n_stock,
                             txb_stoss,
                         );
                         rxb_stoss.recv().unwrap()
@@ -146,15 +146,11 @@ fn main() {
                     let (txcard, rxcard) = mpsc::channel::<SCard>();
                     vecplayer[eplayerindex].take_control(
                         &game,
-                        accountbalance.get_stock(),
                         txcard.clone()
                     );
                     game.zugeben(rxcard.recv().unwrap(), eplayerindex).unwrap();
                 }
-                {
-                    let n_stock = accountbalance.get_stock();
-                    accountbalance.apply_payout(&game.payout(n_stock));
-                }
+                accountbalance.apply_payout(&game.payout());
             },
             VStockOrT::Stock(n_stock) => {
                 // TODO Rules must we respect doublings?

@@ -33,8 +33,8 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         ).ok(); // TODO more intelligent doubling strategy
     }
 
-    fn take_control(&mut self, game: &SGame, n_stock: isize, txcard: mpsc::Sender<SCard>) {
-        txcard.send(self.m_ai.suggest_card(game, n_stock)).ok();
+    fn take_control(&mut self, game: &SGame, txcard: mpsc::Sender<SCard>) {
+        txcard.send(self.m_ai.suggest_card(game)).ok();
     }
 
     fn ask_for_game<'rules>(&self, hand: &SFullHand, gameannouncements : &SGameAnnouncements, vecrulegroup: &'rules Vec<SRuleGroup>, n_stock: isize, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {

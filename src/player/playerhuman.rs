@@ -66,7 +66,7 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
         ).clone()).unwrap()
     }
 
-    fn take_control(&mut self, game: &SGame, n_stock: isize, txcard: mpsc::Sender<SCard>) {
+    fn take_control(&mut self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         skui::print_vecstich(&game.m_vecstich);
         let hand = {
             let mut hand = game.m_ahand[game.which_player_can_do_something().unwrap()].clone();
@@ -86,7 +86,7 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
                     skui::print_hand(hand.cards(), Some(i_card_chosen));
                     skui::print_game_info(game.m_rules, &game.m_doublings, &game.m_vecstoss);
                 },
-                || {Some(self.m_ai.suggest_card(game, n_stock))}
+                || {Some(self.m_ai.suggest_card(game))}
             ).clone()
         ) {
             Ok(_) => (),

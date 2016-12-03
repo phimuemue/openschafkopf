@@ -40,13 +40,14 @@ impl SDealCards {
         Ok(())
     }
 
-    pub fn finish_dealing(self, ruleset: &SRuleSet) -> SGamePreparations {
+    pub fn finish_dealing(self, ruleset: &SRuleSet, n_stock: isize) -> SGamePreparations {
         let eplayerindex_first = self.m_doublings.first_playerindex();
         SGamePreparations {
             m_ahand : self.m_ahand,
             m_doublings : self.m_doublings,
             m_ruleset : ruleset,
             m_gameannouncements : SGameAnnouncements::new(eplayerindex_first),
+            m_n_stock: n_stock,
         }
     }
 
@@ -60,6 +61,7 @@ pub struct SGamePreparations<'rules> {
     m_doublings : SDoublings,
     pub m_ruleset : &'rules SRuleSet,
     pub m_gameannouncements : SGameAnnouncements<'rules>,
+    pub m_n_stock : isize,
 }
 
 pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
@@ -102,12 +104,13 @@ impl<'rules> SGamePreparations<'rules> {
 
     pub fn determine_rules(self) -> VStockOrT<SPreGame<'rules>> {
         // TODO: find sensible way to deal with multiple game announcements (currently, we choose highest priority)
-        let create_game = move |ahand, doublings, rules| {
+        let create_game = move |ahand, doublings, n_stock, rules| {
             VStockOrT::OrT(SPreGame {
                 m_ahand : ahand,
                 m_doublings : doublings,
                 m_rules : rules,
                 m_vecstoss : vec![],
+                m_n_stock : n_stock,
             })
         };
         let vecrules_announced : Vec<&TActivelyPlayableRules> = self.m_gameannouncements.iter()
@@ -121,11 +124,11 @@ impl<'rules> SGamePreparations<'rules> {
             let rules_actively_played = vecrules_announced.into_iter()
                 .find(|rules| rules.priority()==prio_best)
                 .unwrap();
-            create_game(self.m_ahand, self.m_doublings, rules_actively_played.as_rules())
+            create_game(self.m_ahand, self.m_doublings, self.m_n_stock, rules_actively_played.as_rules())
         } else {
             match self.m_ruleset.m_stockorramsch {
                 VStockOrT::OrT(ref rulesramsch) => {
-                    create_game(self.m_ahand, self.m_doublings, rulesramsch.as_ref())
+                    create_game(self.m_ahand, self.m_doublings, self.m_n_stock, rulesramsch.as_ref())
                 },
                 VStockOrT::Stock(n_stock) => {
                     VStockOrT::Stock(n_stock)
@@ -140,6 +143,7 @@ pub struct SPreGame<'rules> {
     pub m_doublings : SDoublings,
     pub m_rules : &'rules TRules,
     pub m_vecstoss : Vec<SStoss>,
+    pub m_n_stock : isize,
 }
 
 impl<'rules> SPreGame<'rules> {
@@ -171,6 +175,7 @@ impl<'rules> SPreGame<'rules> {
             m_doublings : self.m_doublings,
             m_rules : self.m_rules,
             m_vecstoss : self.m_vecstoss,
+            m_n_stock : self.m_n_stock,
             m_vecstich : vec![SStich::new(eplayerindex_first)],
         }
     }
@@ -181,6 +186,7 @@ pub struct SGame<'rules> {
     pub m_doublings : SDoublings,
     pub m_rules : &'rules TRules,
     pub m_vecstoss : Vec<SStoss>,
+    pub m_n_stock : isize,
     pub m_vecstich : Vec<SStich>,
 }
 
@@ -240,13 +246,13 @@ impl<'rules> SGame<'rules> {
         }
     }
 
-    pub fn payout(&self, n_stock: isize) -> SAccountBalance {
+    pub fn payout(&self) -> SAccountBalance {
         assert!(self.which_player_can_do_something().is_none());
         self.m_rules.payout(
             &SGameFinishedStiche::new(&self.m_vecstich),
             /*n_stoss*/ self.m_vecstoss.len(),
             /*n_doubling*/ self.m_doublings.iter().filter(|&(_eplayerindex, &b_doubling)| b_doubling).count(),
-            n_stock,
+            self.m_n_stock,
         )
     }
 
