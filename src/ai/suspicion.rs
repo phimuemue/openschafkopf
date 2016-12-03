@@ -204,14 +204,16 @@ impl SSuspicion {
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
         ostich_given: Option<SStich>,
-        eplayerindex: EPlayerIndex
+        eplayerindex: EPlayerIndex,
+        n_stoss: usize,
+        n_doubling: usize,
     ) -> isize {
         let vecstich_backup = vecstich.clone();
         assert!(ostich_given.as_ref().map_or(true, |stich| stich.size() < 4));
         assert!(vecstich.iter().all(|stich| stich.size()==4));
         assert_eq!(vecstich.len()+self.hand_size(), 8);
         if 0==self.hand_size() {
-            return rules.payout(&SGameFinishedStiche::new(vecstich))[eplayerindex];
+            return rules.payout(&SGameFinishedStiche::new(vecstich), n_stoss, n_doubling)[eplayerindex];
         }
         let n_payout = self.m_vecsusptrans.iter()
             .filter(|susptrans| { // only consider successors compatible with current stich_given so far
@@ -228,7 +230,7 @@ impl SSuspicion {
             .map(|susptrans| {
                 assert_eq!(susptrans.m_stich.size(), 4);
                 push_pop_vecstich(vecstich, susptrans.m_stich.clone(), |vecstich| {
-                    (susptrans, susptrans.m_susp.min_reachable_payout(rules, vecstich, None, eplayerindex))
+                    (susptrans, susptrans.m_susp.min_reachable_payout(rules, vecstich, None, eplayerindex, n_stoss, n_doubling))
                 })
             })
             .group_by(|&(susptrans, _n_payout)| { // other players may play inconveniently for eplayerindex...

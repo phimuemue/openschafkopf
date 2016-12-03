@@ -240,12 +240,11 @@ impl<'rules> SGame<'rules> {
 
     pub fn payout(&self) -> SPlayerIndexMap<isize> {
         assert!(self.which_player_can_do_something().is_none());
-        let an_payout_raw = self.m_rules.payout(&SGameFinishedStiche::new(&self.m_vecstich));
-        create_playerindexmap(|eplayerindex| {
-            an_payout_raw[eplayerindex] 
-                * 2isize.pow(self.m_vecstoss.len() as u32)
-                * 2isize.pow(self.m_doublings.iter().filter(|&(_eplayerindex, &b_doubling)| b_doubling).count() as u32)
-        })
+        self.m_rules.payout(
+            &SGameFinishedStiche::new(&self.m_vecstich),
+            /*n_stoss*/ self.m_vecstoss.len(),
+            /*n_doubling*/ self.m_doublings.iter().filter(|&(_eplayerindex, &b_doubling)| b_doubling).count()
+        )
     }
 
     pub fn completed_stichs(&self) -> &[SStich] {

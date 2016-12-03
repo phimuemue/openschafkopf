@@ -1,6 +1,7 @@
 use primitives::*;
 use rules::*;
 use rules::trumpfdecider::*;
+use rules::payoutdecider::SStossDoublingPayoutDecider;
 use std::fmt;
 use std::cmp::Ordering;
 use itertools::Itertools;
@@ -31,7 +32,7 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche) -> SPlayerIndexMap<isize> {
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize) -> SPlayerIndexMap<isize> {
         let an_points = gamefinishedstiche.get().iter()
             .fold(
                 create_playerindexmap(|_eplayerindex| 0),
@@ -86,13 +87,20 @@ impl TRules for SRulesRamsch {
                     .0
             }
         };
-        create_playerindexmap(|eplayerindex| {
-            if eplayerindex_loser==eplayerindex {
-                -3 * n_price
-            } else {
-                n_price
-            }
-        })
+        SStossDoublingPayoutDecider::payout(
+            create_playerindexmap(|eplayerindex| {
+                if eplayerindex_loser==eplayerindex {
+                    -3 * n_price
+                } else {
+                    n_price
+                }
+            }),
+            {
+                assert_eq!(n_stoss, 0); // SRulesRamsch does not allow stoss
+                0
+            },
+            n_doubling,
+        )
     }
 
     fn all_allowed_cards_first_in_stich(&self, _vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {

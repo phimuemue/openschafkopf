@@ -222,7 +222,9 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                                 game.m_rules,
                                 &mut vecstich_complete_payout,
                                 None,
-                                eplayerindex_fixed
+                                eplayerindex_fixed,
+                                /*n_stoss*/ game.m_vecstoss.len(),
+                                /*n_doubling*/ game.m_doublings.iter().filter(|&(_eplayerindex, &b_doubling)| b_doubling).count(),
                             )
                         });
                         (susptrans.stich()[eplayerindex_fixed], n_payout)
@@ -257,7 +259,14 @@ impl TAi for SAiSimulating {
                                 assert!(!vecstich_successor.is_empty());
                                 random_sample_from_vec(vecstich_successor, 1);
                             }
-                        ).min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex_rank)
+                        ).min_reachable_payout(
+                            rules,
+                            &mut Vec::new(),
+                            None,
+                            eplayerindex_rank,
+                            /*n_stoss*/ 0, // TODO do we need n_stoss from somewhere?
+                            /*n_doubling*/ 0, // TODO do we need n_doubling from somewhere?
+                        )
                     ;
                     n_payout_sum.lock().unwrap().add_assign(n_payout);
                 });

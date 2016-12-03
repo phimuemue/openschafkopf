@@ -65,7 +65,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         doublings: &SDoublings,
         rules: &TRules,
         hand: &SHand,
-        _vecstoss: &Vec<SStoss>,
+        vecstoss: &Vec<SStoss>,
         txb: mpsc::Sender<bool>,
     ) {
         let n_tests_per_rules = 50;
@@ -106,7 +106,14 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
                             assert!(!vecstich_successor.is_empty());
                             random_sample_from_vec(vecstich_successor, 1);
                         }
-                    ).min_reachable_payout(rules, &mut Vec::new(), None, eplayerindex)
+                    ).min_reachable_payout(
+                        rules,
+                        &mut Vec::new(),
+                        None,
+                        eplayerindex,
+                        /*n_stoss*/ vecstoss.len(),
+                        /*n_doubling*/doublings.iter().filter(|&(_eplayerindex, &b_doubling)| b_doubling).count(),
+                    )
                 })
                 .sum::<isize>() as f64
                 / (n_tests_per_rules) as f64

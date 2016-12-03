@@ -1,6 +1,15 @@
 use primitives::*;
 use rules::*;
 
+pub struct SStossDoublingPayoutDecider {}
+impl SStossDoublingPayoutDecider {
+    pub fn payout(an_payout_raw: SPlayerIndexMap<isize>, n_stoss: usize, n_doubling: usize) -> SPlayerIndexMap<isize> {
+        create_playerindexmap(|eplayerindex| {
+            an_payout_raw[eplayerindex] * 2isize.pow((n_stoss + n_doubling) as u32)
+        })
+    }
+}
+
 pub trait TPayoutDecider {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         rules: &Rules,
