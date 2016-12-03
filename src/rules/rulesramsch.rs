@@ -32,7 +32,7 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize) -> SAccountBalance {
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, _n_stock: isize) -> SAccountBalance {
         let an_points = gamefinishedstiche.get().iter()
             .fold(
                 create_playerindexmap(|_eplayerindex| 0),

@@ -237,12 +237,13 @@ impl<'rules> SGame<'rules> {
         }
     }
 
-    pub fn payout(&self) -> SAccountBalance {
+    pub fn payout(&self, n_stock: isize) -> SAccountBalance {
         assert!(self.which_player_can_do_something().is_none());
         self.m_rules.payout(
             &SGameFinishedStiche::new(&self.m_vecstich),
             /*n_stoss*/ self.m_vecstoss.len(),
-            /*n_doubling*/ self.m_doublings.iter().filter(|&(_eplayerindex, &b_doubling)| b_doubling).count()
+            /*n_doubling*/ self.m_doublings.iter().filter(|&(_eplayerindex, &b_doubling)| b_doubling).count(),
+            n_stock,
         )
     }
 

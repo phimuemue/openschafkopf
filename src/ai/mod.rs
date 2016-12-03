@@ -19,8 +19,8 @@ use std::ops::Deref;
 use std::cmp;
 
 pub trait TAi {
-    fn rank_rules(&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64;
-    fn suggest_card(&self, game: &SGame) -> SCard {
+    fn rank_rules(&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_stock: isize, n_tests: usize) -> f64;
+    fn suggest_card(&self, game: &SGame, n_stock: isize) -> SCard {
         let veccard_allowed = game.m_rules.all_allowed_cards(
             &game.m_vecstich,
             &game.m_ahand[game.which_player_can_do_something().unwrap()]
@@ -29,10 +29,10 @@ pub trait TAi {
         if 1==veccard_allowed.len() {
             veccard_allowed[0]
         } else {
-            self.internal_suggest_card(game)
+            self.internal_suggest_card(game, n_stock)
         }
     }
-    fn internal_suggest_card(&self, game: &SGame) -> SCard;
+    fn internal_suggest_card(&self, game: &SGame, n_stock: isize) -> SCard;
 }
 
 pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
@@ -78,14 +78,15 @@ fn test_unplayed_cards() {
 pub struct SAiCheating {}
 
 impl TAi for SAiCheating {
-    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
+    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_stock: isize, n_tests: usize) -> f64 {
         // TODO: adjust interface to get whole game
-        SAiSimulating{}.rank_rules(hand_fixed, eplayerindex_first, eplayerindex_rank, rules, n_tests)
+        SAiSimulating{}.rank_rules(hand_fixed, eplayerindex_first, eplayerindex_rank, rules, n_stock, n_tests)
     }
 
-    fn internal_suggest_card(&self, game: &SGame) -> SCard {
+    fn internal_suggest_card(&self, game: &SGame, n_stock: isize) -> SCard {
         determine_best_card(
             game,
+            n_stock,
             Some(create_playerindexmap(|eplayerindex|
                 SHand::new_from_vec(
                     game.current_stich().get(eplayerindex).cloned().into_iter()
@@ -163,7 +164,7 @@ pub fn is_compatible_with_game_so_far(
     }
 }
 
-fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize) -> SCard
+fn determine_best_card<HandsIterator>(game: &SGame, n_stock: isize, itahand: HandsIterator, n_branches: usize) -> SCard
     where HandsIterator: Iterator<Item=SPlayerIndexMap<SHand>>
 {
     let ref stich_current = game.current_stich();
@@ -225,6 +226,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                                 eplayerindex_fixed,
                                 /*n_stoss*/ game.m_vecstoss.len(),
                                 /*n_doubling*/ game.m_doublings.iter().filter(|&(_eplayerindex, &b_doubling)| b_doubling).count(),
+                                n_stock,
                             )
                         });
                         (susptrans.stich()[eplayerindex_fixed], n_payout)
@@ -243,7 +245,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
 }
 
 impl TAi for SAiSimulating {
-    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_tests: usize) -> f64 {
+    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_stock: isize, n_tests: usize) -> f64 {
         let n_payout_sum = Arc::new(Mutex::new(0isize));
         crossbeam::scope(|scope| {
             for ahand in forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get().clone(), eplayerindex_rank).take(n_tests) {
@@ -266,6 +268,7 @@ impl TAi for SAiSimulating {
                             eplayerindex_rank,
                             /*n_stoss*/ 0, // TODO do we need n_stoss from somewhere?
                             /*n_doubling*/ 0, // TODO do we need n_doubling from somewhere?
+                            n_stock,
                         )
                     ;
                     n_payout_sum.lock().unwrap().add_assign(n_payout);
@@ -276,7 +279,7 @@ impl TAi for SAiSimulating {
         (n_payout_sum as f64) / (n_tests as f64)
     }
 
-    fn internal_suggest_card(&self, game: &SGame) -> SCard {
+    fn internal_suggest_card(&self, game: &SGame, n_stock: isize) -> SCard {
         let n_tests = 10;
         let ref stich_current = game.current_stich();
         assert!(stich_current.size()<4);
@@ -286,6 +289,7 @@ impl TAi for SAiSimulating {
         if hand_fixed.cards().len()<=2 {
             determine_best_card(
                 game,
+                n_stock,
                 all_possible_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules, &game.m_vecstich)),
                 /*n_branches*/2,
@@ -293,6 +297,7 @@ impl TAi for SAiSimulating {
         } else {
             determine_best_card(
                 game,
+                n_stock,
                 forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules, &game.m_vecstich))
                     .take(n_tests),

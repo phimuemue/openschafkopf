@@ -59,7 +59,7 @@ impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, Payo
         Some(self.m_eplayerindex)
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize) -> SAccountBalance {
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, _n_stock: isize) -> SAccountBalance {
         SAccountBalance::new(
             SStossDoublingPayoutDecider::payout(
                 PayoutDecider::payout(

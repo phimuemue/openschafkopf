@@ -79,7 +79,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
             .sum()
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize) -> SAccountBalance;
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, n_stock: isize) -> SAccountBalance;
 
     fn all_allowed_cards(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());

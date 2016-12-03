@@ -73,7 +73,14 @@ fn main() {
                 {
                     println!("{}: {}",
                         rules,
-                        ai.rank_rules(&SFullHand::new(&hand_fixed), /*eplayerindex_first, TODO: make adjustable*/0, eplayerindex_rank, rules.as_rules().clone(), 100)
+                        ai.rank_rules(
+                            &SFullHand::new(&hand_fixed),
+                            /*eplayerindex_first, TODO: make adjustable*/0,
+                            eplayerindex_rank,
+                            rules.as_rules().clone(),
+                            /*n_stock*/0, // assume no stock in subcommand rank-rules
+                            100
+                        )
                     );
                 }
             } else {
@@ -109,6 +116,7 @@ fn main() {
                 &SFullHand::new(&gamepreparations.m_ahand[eplayerindex]),
                 &gamepreparations.m_gameannouncements,
                 &gamepreparations.m_ruleset.m_avecrulegroup[eplayerindex],
+                accountbalance.get_stock(),
                 txorules.clone()
             );
             gamepreparations.announce_game(eplayerindex, rxorules.recv().unwrap()).unwrap();
@@ -124,6 +132,7 @@ fn main() {
                         pregame.m_rules,
                         &pregame.m_ahand[*eplayerindex],
                         &pregame.m_vecstoss,
+                        accountbalance.get_stock(),
                         txb_stoss,
                     );
                     rxb_stoss.recv().unwrap()
@@ -136,11 +145,15 @@ fn main() {
                 let (txcard, rxcard) = mpsc::channel::<SCard>();
                 vecplayer[eplayerindex].take_control(
                     &game,
+                    accountbalance.get_stock(),
                     txcard.clone()
                 );
                 game.zugeben(rxcard.recv().unwrap(), eplayerindex).unwrap();
             }
-            accountbalance.apply_payout(&game.payout());
+            {
+                let n_stock = accountbalance.get_stock();
+                accountbalance.apply_payout(&game.payout(n_stock));
+            }
         }
         skui::print_account_balance(&accountbalance);
     }

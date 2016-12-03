@@ -56,7 +56,7 @@ impl TRules for SRulesRufspiel {
         (eplayerindex==self.m_eplayerindex || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize) -> SAccountBalance {
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, _n_stock: isize) -> SAccountBalance {
         let eplayerindex_coplayer = gamefinishedstiche.get().iter()
             .flat_map(|stich| stich.iter())
             .find(|&(_, card)| *card==self.rufsau())

@@ -33,11 +33,11 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         ).ok(); // TODO more intelligent doubling strategy
     }
 
-    fn take_control(&mut self, game: &SGame, txcard: mpsc::Sender<SCard>) {
-        txcard.send(self.m_ai.suggest_card(game)).ok();
+    fn take_control(&mut self, game: &SGame, n_stock: isize, txcard: mpsc::Sender<SCard>) {
+        txcard.send(self.m_ai.suggest_card(game, n_stock)).ok();
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SFullHand, gameannouncements : &SGameAnnouncements, vecrulegroup: &'rules Vec<SRuleGroup>, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
+    fn ask_for_game<'rules>(&self, hand: &SFullHand, gameannouncements : &SGameAnnouncements, vecrulegroup: &'rules Vec<SRuleGroup>, n_stock: isize, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
         // TODO: implement a more intelligent decision strategy
         let n_tests_per_rules = 50;
         txorules.send(allowed_rules(vecrulegroup).iter()
@@ -51,7 +51,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
                 let eplayerindex_rank = rules.playerindex().unwrap(); 
                 (
                     rules,
-                    self.m_ai.rank_rules(hand, /*eplayerindex_first*/gameannouncements.first_playerindex(), eplayerindex_rank, rules.as_rules(), n_tests_per_rules)
+                    self.m_ai.rank_rules(hand, /*eplayerindex_first*/gameannouncements.first_playerindex(), eplayerindex_rank, rules.as_rules(), n_stock, n_tests_per_rules)
                 )
             })
             .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
@@ -66,6 +66,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         rules: &TRules,
         hand: &SHand,
         vecstoss: &Vec<SStoss>,
+        n_stock: isize,
         txb: mpsc::Sender<bool>,
     ) {
         let n_tests_per_rules = 50;
@@ -80,6 +81,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
                             /*eplayerindex_first*/doublings.first_playerindex(),
                             /*eplayerindex_rank*/eplayerindex_active,
                             rules,
+                            n_stock,
                             /*n_tests*/10
                         )
                     } else {
@@ -113,6 +115,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
                         eplayerindex,
                         /*n_stoss*/ vecstoss.len(),
                         /*n_doubling*/doublings.iter().filter(|&(_eplayerindex, &b_doubling)| b_doubling).count(),
+                        n_stock,
                     )
                 })
                 .sum::<isize>() as f64
