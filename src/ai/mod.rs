@@ -99,19 +99,23 @@ impl TAi for SAiCheating {
 }
 
 pub struct SAiSimulating {}
-fn is_compatible_with_game_so_far(ahand: &SPlayerIndexMap<SHand>, game: &SGame) -> bool {
-    let ref stich_current = game.current_stich();
+fn is_compatible_with_game_so_far(
+    ahand: &SPlayerIndexMap<SHand>,
+    rules: &TRules,
+    vecstich: &Vec<SStich>,
+) -> bool {
+    let ref stich_current = current_stich(vecstich);
     assert!(stich_current.size()<4);
     // hands must contain respective cards from stich_current...
     stich_current.iter()
         .all(|(eplayerindex, card)| ahand[eplayerindex].contains(*card))
     // ... and must not contain other cards preventing farbe/trumpf frei
     && {
-        let mut vecstich_complete_and_current_stich = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
+        let mut vecstich_complete_and_current_stich = completed_stichs(vecstich).iter().cloned().collect::<Vec<_>>();
         vecstich_complete_and_current_stich.push(SStich::new(stich_current.first_playerindex()));
         stich_current.iter()
             .all(|(eplayerindex, card_played)| {
-                let b_valid = game.m_rules.card_is_allowed(
+                let b_valid = rules.card_is_allowed(
                     &vecstich_complete_and_current_stich,
                     &ahand[eplayerindex],
                     *card_played
@@ -125,22 +129,22 @@ fn is_compatible_with_game_so_far(ahand: &SPlayerIndexMap<SHand>, game: &SGame) 
         let mut ahand_simulate = create_playerindexmap(|eplayerindex| {
             ahand[eplayerindex].clone()
         });
-        for stich in game.completed_stichs().iter().rev() {
+        for stich in completed_stichs(vecstich).iter().rev() {
             for eplayerindex in eplayerindex_values() {
                 ahand_simulate[eplayerindex].cards_mut().push(stich[eplayerindex]);
             }
         }
         assert_ahand_same_size(&ahand_simulate);
-        game.m_rules.playerindex().map_or(true, |eplayerindex_active|
-            game.m_rules.can_be_played(&SFullHand::new(&ahand_simulate[eplayerindex_active]))
+        rules.playerindex().map_or(true, |eplayerindex_active|
+            rules.can_be_played(&SFullHand::new(&ahand_simulate[eplayerindex_active]))
         )
         && {
             let mut b_valid_up_to_now = true;
             let mut vecstich_simulate = Vec::new();
-            'loopstich: for stich in game.completed_stichs().iter() {
+            'loopstich: for stich in completed_stichs(vecstich).iter() {
                 vecstich_simulate.push(SStich::new(stich.m_eplayerindex_first));
                 for (eplayerindex, card) in stich.iter() {
-                    if game.m_rules.card_is_allowed(
+                    if rules.card_is_allowed(
                         &vecstich_simulate,
                         &ahand_simulate[eplayerindex],
                         *card
@@ -274,14 +278,14 @@ impl TAi for SAiSimulating {
             determine_best_card(
                 game,
                 all_possible_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
-                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game)),
+                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules, &game.m_vecstich)),
                 /*n_branches*/2,
             )
         } else {
             determine_best_card(
                 game,
                 forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
-                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game))
+                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules, &game.m_vecstich))
                     .take(n_tests),
                 /*n_branches*/2,
             )
@@ -331,7 +335,7 @@ fn test_is_compatible_with_game_so_far() {
                 game.m_ahand[game.which_player_can_do_something().unwrap()].clone(),
                 game.which_player_can_do_something().unwrap()
             )
-                .filter(|ahand| is_compatible_with_game_so_far(ahand, &game))
+                .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules, &game.m_vecstich))
                 .take(100)
             {
                 for eplayerindex in eplayerindex_values() {
