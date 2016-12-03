@@ -70,15 +70,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
     ) {
         let n_tests_per_rules = 50;
         let mut vecpairahandf_suspicion = forever_rand_hands(/*vecstich*/&Vec::new(), hand.clone(), eplayerindex)
-            .filter(|ahand| {
-                // TODO use is_compatible_with_game_so_far
-                rules.playerindex().map_or(
-                    true, // no active player => rule can be played
-                    |eplayerindex_active| {
-                        rules.can_be_played(&SFullHand::new(&ahand[eplayerindex_active])) // can active player actually play with the hand suspected
-                    }
-                )
-            })
+            .filter(|ahand| is_compatible_with_game_so_far(ahand, rules, /*vecstich*/&vec![SStich::new(doublings.m_eplayerindex_first)])) // stoss currently only in SPreGame
             .take(2*n_tests_per_rules)
             .map(|ahand| {
                 let f_rank_rules = rules.playerindex().map_or(0f64, |eplayerindex_active| {

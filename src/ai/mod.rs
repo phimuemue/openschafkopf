@@ -99,7 +99,7 @@ impl TAi for SAiCheating {
 }
 
 pub struct SAiSimulating {}
-fn is_compatible_with_game_so_far(
+pub fn is_compatible_with_game_so_far(
     ahand: &SPlayerIndexMap<SHand>,
     rules: &TRules,
     vecstich: &Vec<SStich>,
