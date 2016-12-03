@@ -17,7 +17,6 @@ mod ai;
 mod skui;
 
 use game::*;
-use game::accountbalance::SAccountBalance;
 use std::sync::mpsc;
 use primitives::*;
 use rules::ruleset::*;

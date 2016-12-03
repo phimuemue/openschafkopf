@@ -14,7 +14,6 @@ use primitives::*;
 use std::cmp::Ordering;
 use std::fmt;
 pub use rules::wrappers::*;
-pub use game::accountbalance::SAccountBalance;
 
 pub fn current_stich(vecstich: &Vec<SStich>) -> &SStich {
     assert!(!vecstich.is_empty());
