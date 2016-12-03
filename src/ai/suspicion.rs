@@ -213,7 +213,7 @@ impl SSuspicion {
         assert!(vecstich.iter().all(|stich| stich.size()==4));
         assert_eq!(vecstich.len()+self.hand_size(), 8);
         if 0==self.hand_size() {
-            return rules.payout(&SGameFinishedStiche::new(vecstich), n_stoss, n_doubling)[eplayerindex];
+            return rules.payout(&SGameFinishedStiche::new(vecstich), n_stoss, n_doubling).get_player(eplayerindex);
         }
         let n_payout = self.m_vecsusptrans.iter()
             .filter(|susptrans| { // only consider successors compatible with current stich_given so far

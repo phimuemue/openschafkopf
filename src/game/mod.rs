@@ -1,5 +1,4 @@
 pub mod accountbalance;
-pub use self::accountbalance::*;
 
 use primitives::*;
 use rules::*;
@@ -238,7 +237,7 @@ impl<'rules> SGame<'rules> {
         }
     }
 
-    pub fn payout(&self) -> SPlayerIndexMap<isize> {
+    pub fn payout(&self) -> SAccountBalance {
         assert!(self.which_player_can_do_something().is_none());
         self.m_rules.payout(
             &SGameFinishedStiche::new(&self.m_vecstich),

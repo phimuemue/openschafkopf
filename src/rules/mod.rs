@@ -14,6 +14,7 @@ use primitives::*;
 use std::cmp::Ordering;
 use std::fmt;
 pub use rules::wrappers::*;
+pub use game::accountbalance::SAccountBalance;
 
 pub fn current_stich(vecstich: &Vec<SStich>) -> &SStich {
     assert!(!vecstich.is_empty());
@@ -78,7 +79,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
             .sum()
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize) -> SPlayerIndexMap<isize>;
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize) -> SAccountBalance;
 
     fn all_allowed_cards(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());

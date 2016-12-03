@@ -8,10 +8,10 @@ pub struct SAccountBalance {
 }
 
 impl SAccountBalance {
-    pub fn new() -> SAccountBalance {
+    pub fn new(an: SPlayerIndexMap<isize>, n_stock: isize) -> SAccountBalance {
         SAccountBalance {
-            m_an : [0, 0, 0, 0],
-            m_n_stock : 0,
+            m_an : an,
+            m_n_stock : n_stock,
         }
     }
 
@@ -19,11 +19,13 @@ impl SAccountBalance {
         assert_eq!(self.m_n_stock + self.m_an.iter().sum::<isize>(), 0);
     }
 
-    pub fn apply_payout(&mut self, an_payout: &SPlayerIndexMap<isize>) {
+    pub fn apply_payout(&mut self, accountbalance: &SAccountBalance) {
+        accountbalance.assert_invariant();
         self.assert_invariant();
         for eplayerindex in eplayerindex_values() {
-            self.m_an[eplayerindex] = self.m_an[eplayerindex] + an_payout[eplayerindex];
+            self.m_an[eplayerindex] = self.m_an[eplayerindex] + accountbalance.get_player(eplayerindex);
         }
+        self.m_n_stock = self.m_n_stock + accountbalance.get_stock();
         self.assert_invariant();
     }
 

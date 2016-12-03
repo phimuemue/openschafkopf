@@ -56,25 +56,28 @@ impl TRules for SRulesRufspiel {
         (eplayerindex==self.m_eplayerindex || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize) -> SPlayerIndexMap<isize> {
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize) -> SAccountBalance {
         let eplayerindex_coplayer = gamefinishedstiche.get().iter()
             .flat_map(|stich| stich.iter())
             .find(|&(_, card)| *card==self.rufsau())
             .map(|(eplayerindex, _)| eplayerindex)
             .unwrap();
         assert!(self.m_eplayerindex!=eplayerindex_coplayer, "self.m_eplayerindex==eplayerindex_coplayer=={}", eplayerindex_coplayer);
-        SStossDoublingPayoutDecider::payout(
-            SPayoutDeciderPointBased::payout(
-                self,
-                gamefinishedstiche,
-                /*fn_is_player_party*/|eplayerindex| {
-                    eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer
-                },
-                /*fn_player_multiplier*/ |_eplayerindex| 1, // everyone pays/gets the same
-                /*n_payout_base*/20,
+        SAccountBalance::new(
+            SStossDoublingPayoutDecider::payout(
+                SPayoutDeciderPointBased::payout(
+                    self,
+                    gamefinishedstiche,
+                    /*fn_is_player_party*/|eplayerindex| {
+                        eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer
+                    },
+                    /*fn_player_multiplier*/ |_eplayerindex| 1, // everyone pays/gets the same
+                    /*n_payout_base*/20,
+                ),
+                n_stoss,
+                n_doubling,
             ),
-            n_stoss,
-            n_doubling,
+            0, // TODO incorporate stock
         )
     }
 

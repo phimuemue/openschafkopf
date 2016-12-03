@@ -32,7 +32,7 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize) -> SPlayerIndexMap<isize> {
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize) -> SAccountBalance {
         let an_points = gamefinishedstiche.get().iter()
             .fold(
                 create_playerindexmap(|_eplayerindex| 0),
@@ -87,19 +87,22 @@ impl TRules for SRulesRamsch {
                     .0
             }
         };
-        SStossDoublingPayoutDecider::payout(
-            create_playerindexmap(|eplayerindex| {
-                if eplayerindex_loser==eplayerindex {
-                    -3 * n_price
-                } else {
-                    n_price
-                }
-            }),
-            {
-                assert_eq!(n_stoss, 0); // SRulesRamsch does not allow stoss
-                0
-            },
-            n_doubling,
+        SAccountBalance::new(
+            SStossDoublingPayoutDecider::payout(
+                create_playerindexmap(|eplayerindex| {
+                    if eplayerindex_loser==eplayerindex {
+                        -3 * n_price
+                    } else {
+                        n_price
+                    }
+                }),
+                {
+                    assert_eq!(n_stoss, 0); // SRulesRamsch does not allow stoss
+                    0
+                },
+                n_doubling,
+            ),
+            0,
         )
     }
 

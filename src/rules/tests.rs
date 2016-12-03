@@ -52,7 +52,9 @@ pub fn test_rules(
     for (i_stich, stich) in game.m_vecstich.iter().enumerate() {
         println!("Stich {}: {}", i_stich, stich);
     }
-    assert_eq!(game.payout(), an_payout);
+    let accountbalance_payout = game.payout();
+    // TODO test stock
+    assert_eq!(create_playerindexmap(|eplayerindex| accountbalance_payout.get_player(eplayerindex)), an_payout);
 }
 
 #[test]

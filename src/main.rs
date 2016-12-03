@@ -17,6 +17,7 @@ mod ai;
 mod skui;
 
 use game::*;
+use game::accountbalance::SAccountBalance;
 use std::sync::mpsc;
 use primitives::*;
 use rules::ruleset::*;
@@ -89,7 +90,7 @@ fn main() {
         Box::new(SPlayerComputer{m_ai : ai.as_ref()}),
         Box::new(SPlayerComputer{m_ai : ai.as_ref()})
     ];
-    let mut accountbalance = SAccountBalance::new();
+    let mut accountbalance = SAccountBalance::new(create_playerindexmap(|_eplayerindex| 0), 0);
     for i_game in 0..clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4) {
         let mut dealcards = SDealCards::new(/*eplayerindex_first*/i_game % 4);
         while let Some(eplayerindex) = dealcards.which_player_can_do_something() {
