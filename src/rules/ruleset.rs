@@ -18,9 +18,14 @@ pub struct SRuleGroup {
     pub m_vecrules : Vec<Box<TActivelyPlayableRules>>,
 }
 
+pub enum VStockOrT<T> {
+    Stock(/*n_stock*/isize), // number must be positive, but use isize since it is essentially a payment
+    OrT(T),
+}
+
 pub struct SRuleSet {
     pub m_avecrulegroup : SPlayerIndexMap<Vec<SRuleGroup>>,
-    pub m_orulesramsch : Option<Box<TRules>>,
+    pub m_stockorramsch : VStockOrT<Box<TRules>>,
 }
 
 pub fn allowed_rules(vecrulegroup: &Vec<SRuleGroup>) -> Vec<&TActivelyPlayableRules> {
@@ -105,8 +110,16 @@ pub fn read_ruleset(path: &Path) -> SRuleSet {
             }
             vecrulegroup
         }),
-        m_orulesramsch : setstr_rule_name.get(&"ramsch".to_string())
-            .map(|_str_rule_name| Box::new(SRulesRamsch{}) as Box<TRules>),
+        m_stockorramsch : {
+            if setstr_rule_name.contains("ramsch") {
+                assert!(!setstr_rule_name.contains("stock"));
+                VStockOrT::OrT(Box::new(SRulesRamsch{}) as Box<TRules>)
+            } else if setstr_rule_name.contains("stock") {
+                VStockOrT::Stock(10) // TODO make adjustable
+            } else {
+                VStockOrT::Stock(0) // represent "no stock" by using a zero stock payment
+            }
+        }
     }
 }
 

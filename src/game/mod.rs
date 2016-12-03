@@ -100,11 +100,10 @@ impl<'rules> SGamePreparations<'rules> {
         Ok(())
     }
 
-    // TODO: extend return value to support stock, etc.
-    pub fn determine_rules(self) -> Option<SPreGame<'rules>> {
+    pub fn determine_rules(self) -> VStockOrT<SPreGame<'rules>> {
         // TODO: find sensible way to deal with multiple game announcements (currently, we choose highest priority)
         let create_game = move |ahand, doublings, rules| {
-            Some(SPreGame {
+            VStockOrT::OrT(SPreGame {
                 m_ahand : ahand,
                 m_doublings : doublings,
                 m_rules : rules,
@@ -123,10 +122,15 @@ impl<'rules> SGamePreparations<'rules> {
                 .find(|rules| rules.priority()==prio_best)
                 .unwrap();
             create_game(self.m_ahand, self.m_doublings, rules_actively_played.as_rules())
-        } else if let Some(ref rulesramsch) = self.m_ruleset.m_orulesramsch {
-            create_game(self.m_ahand, self.m_doublings, rulesramsch.as_ref())
         } else {
-            None
+            match self.m_ruleset.m_stockorramsch {
+                VStockOrT::OrT(ref rulesramsch) => {
+                    create_game(self.m_ahand, self.m_doublings, rulesramsch.as_ref())
+                },
+                VStockOrT::Stock(n_stock) => {
+                    VStockOrT::Stock(n_stock)
+                }
+            }
         }
     }
 }
@@ -160,7 +164,6 @@ impl<'rules> SPreGame<'rules> {
         Ok(())
     }
 
-    // TODO: extend return value to support stock, etc.
     pub fn finish(self) -> SGame<'rules> {
         let eplayerindex_first = self.m_doublings.first_playerindex();
         SGame {

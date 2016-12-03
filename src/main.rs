@@ -122,37 +122,46 @@ fn main() {
             gamepreparations.announce_game(eplayerindex, rxorules.recv().unwrap()).unwrap();
         }
         skui::logln("Asked players if they want to play. Determining rules");
-        if let Some(mut pregame) = gamepreparations.determine_rules() {
-            while let Some(eplayerindex_stoss) = pregame.which_player_can_do_something().into_iter()
-                .find(|eplayerindex| {
-                    let (txb_stoss, rxb_stoss) = mpsc::channel::<bool>();
-                    vecplayer[*eplayerindex].ask_for_stoss(
-                        *eplayerindex,
-                        &pregame.m_doublings,
-                        pregame.m_rules,
-                        &pregame.m_ahand[*eplayerindex],
-                        &pregame.m_vecstoss,
+        match gamepreparations.determine_rules() {
+            VStockOrT::OrT(mut pregame) => {
+                while let Some(eplayerindex_stoss) = pregame.which_player_can_do_something().into_iter()
+                    .find(|eplayerindex| {
+                        let (txb_stoss, rxb_stoss) = mpsc::channel::<bool>();
+                        vecplayer[*eplayerindex].ask_for_stoss(
+                            *eplayerindex,
+                            &pregame.m_doublings,
+                            pregame.m_rules,
+                            &pregame.m_ahand[*eplayerindex],
+                            &pregame.m_vecstoss,
+                            accountbalance.get_stock(),
+                            txb_stoss,
+                        );
+                        rxb_stoss.recv().unwrap()
+                    })
+                {
+                    pregame.stoss(eplayerindex_stoss).unwrap();
+                }
+                let mut game = pregame.finish();
+                while let Some(eplayerindex)=game.which_player_can_do_something() {
+                    let (txcard, rxcard) = mpsc::channel::<SCard>();
+                    vecplayer[eplayerindex].take_control(
+                        &game,
                         accountbalance.get_stock(),
-                        txb_stoss,
+                        txcard.clone()
                     );
-                    rxb_stoss.recv().unwrap()
-                })
-            {
-                pregame.stoss(eplayerindex_stoss).unwrap();
-            }
-            let mut game = pregame.finish();
-            while let Some(eplayerindex)=game.which_player_can_do_something() {
-                let (txcard, rxcard) = mpsc::channel::<SCard>();
-                vecplayer[eplayerindex].take_control(
-                    &game,
-                    accountbalance.get_stock(),
-                    txcard.clone()
-                );
-                game.zugeben(rxcard.recv().unwrap(), eplayerindex).unwrap();
-            }
-            {
-                let n_stock = accountbalance.get_stock();
-                accountbalance.apply_payout(&game.payout(n_stock));
+                    game.zugeben(rxcard.recv().unwrap(), eplayerindex).unwrap();
+                }
+                {
+                    let n_stock = accountbalance.get_stock();
+                    accountbalance.apply_payout(&game.payout(n_stock));
+                }
+            },
+            VStockOrT::Stock(n_stock) => {
+                // TODO Rules must we respect doublings?
+                accountbalance.apply_payout(&SAccountBalance::new(
+                    create_playerindexmap(|_eplayerindex| -n_stock),
+                    4*n_stock,
+                ));
             }
         }
         skui::print_account_balance(&accountbalance);
