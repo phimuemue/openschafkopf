@@ -9,10 +9,12 @@ pub struct SAccountBalance {
 
 impl SAccountBalance {
     pub fn new(an: SPlayerIndexMap<isize>, n_stock: isize) -> SAccountBalance {
-        SAccountBalance {
+        let accountbalance = SAccountBalance {
             m_an : an,
             m_n_stock : n_stock,
-        }
+        };
+        accountbalance.assert_invariant();
+        accountbalance
     }
 
     fn assert_invariant(&self) {
