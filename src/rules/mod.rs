@@ -157,35 +157,36 @@ impl<Rules: TRules> TAsRules for Rules {
     }
 }
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(PartialEq, Eq, Clone, PartialOrd, Ord)]
 pub enum VGameAnnouncementPriority {
+    // state priorities in ascending order
     RufspielLike,
     SoloLikeSimple(isize),
     SoloTout(isize),
     SoloSie,
 }
 
-impl PartialOrd for VGameAnnouncementPriority {
-    fn partial_cmp(&self, priority: &VGameAnnouncementPriority) -> Option<Ordering> {
-        use self::VGameAnnouncementPriority::*;
-        Some(match (self, priority) {
-            // only state "equal"- and "less"-cases explitly; cover all "greater"-cases at the end
-            (&RufspielLike, &RufspielLike) => Ordering::Equal,
-            (&RufspielLike, _) => Ordering::Less,
-            (&SoloLikeSimple(i_prio_lhs), &SoloLikeSimple(i_prio_rhs)) => i_prio_lhs.cmp(&i_prio_rhs),
-            (&SoloLikeSimple(_), _) => Ordering::Less,
-            (&SoloTout(i_prio_lhs), &SoloTout(i_prio_rhs)) => i_prio_lhs.cmp(&i_prio_rhs),
-            (&SoloTout(_), _) => Ordering::Less,
-            (&SoloSie, &SoloSie) => Ordering::Equal,
-            (_, _) => Ordering::Greater,
-        })
-    }
-}
-
-impl Ord for VGameAnnouncementPriority {
-    fn cmp(&self, priority: &VGameAnnouncementPriority) -> Ordering {
-        self.partial_cmp(priority).unwrap()
-    }
+#[test]
+fn test_gameannouncementprio() {
+    use self::VGameAnnouncementPriority::*;
+    assert!(RufspielLike==RufspielLike);
+    assert!(RufspielLike<SoloLikeSimple(0));
+    assert!(RufspielLike<SoloTout(0));
+    assert!(RufspielLike<SoloSie);
+    assert!(SoloLikeSimple(0)>RufspielLike);
+    assert!(SoloLikeSimple(0)==SoloLikeSimple(0));
+    assert!(SoloLikeSimple(0)<SoloTout(0));
+    assert!(SoloLikeSimple(0)<SoloSie);
+    assert!(SoloTout(0)>RufspielLike);
+    assert!(SoloTout(0)>SoloLikeSimple(0));
+    assert!(SoloTout(0)==SoloTout(0));
+    assert!(SoloTout(0)<SoloSie);
+    assert!(SoloSie>RufspielLike);
+    assert!(SoloSie>SoloLikeSimple(0));
+    assert!(SoloSie>SoloTout(0));
+    assert!(SoloSie==SoloSie);
+    assert!(SoloLikeSimple(0)<SoloLikeSimple(1));
+    assert!(SoloTout(0)<SoloTout(1));
 }
 
 pub trait TActivelyPlayableRules : TRules {
