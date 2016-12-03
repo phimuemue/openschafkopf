@@ -56,29 +56,54 @@ impl TRules for SRulesRufspiel {
         (eplayerindex==self.m_eplayerindex || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, _n_stock: isize) -> SAccountBalance {
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, n_stock: isize) -> SAccountBalance {
         let eplayerindex_coplayer = gamefinishedstiche.get().iter()
             .flat_map(|stich| stich.iter())
             .find(|&(_, card)| *card==self.rufsau())
             .map(|(eplayerindex, _)| eplayerindex)
             .unwrap();
         assert!(self.m_eplayerindex!=eplayerindex_coplayer, "self.m_eplayerindex==eplayerindex_coplayer=={}", eplayerindex_coplayer);
-        SAccountBalance::new(
-            SStossDoublingPayoutDecider::payout(
-                SPayoutDeciderPointBased::payout(
-                    self,
-                    gamefinishedstiche,
-                    /*fn_is_player_party*/|eplayerindex| {
-                        eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer
-                    },
-                    /*fn_player_multiplier*/ |_eplayerindex| 1, // everyone pays/gets the same
-                    /*n_payout_base*/20,
-                ),
-                n_stoss,
-                n_doubling,
+        macro_rules! fn_is_player_party {
+            () => {|eplayerindex| {
+                eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer
+            }}
+        }
+        let an_payout_no_stock = SStossDoublingPayoutDecider::payout(
+            SPayoutDeciderPointBased::payout(
+                self,
+                gamefinishedstiche,
+                fn_is_player_party!(),
+                /*fn_player_multiplier*/ |_eplayerindex| 1, // everyone pays/gets the same
+                /*n_payout_base*/20,
             ),
-            0, // TODO incorporate stock
-        )
+            n_stoss,
+            n_doubling,
+        );
+        assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
+        assert_eq!(an_payout_no_stock[self.m_eplayerindex], an_payout_no_stock[eplayerindex_coplayer]);
+        assert_eq!(
+            an_payout_no_stock.iter()
+                .filter(|&n_payout_no_stock| 0<*n_payout_no_stock)
+                .count(),
+            2
+        );
+        assert_eq!(n_stock%2, 0);
+        let n_stock_per_player = n_stock/2;
+        if /*b_player_party_wins*/ 0<an_payout_no_stock[self.m_eplayerindex] {
+            SAccountBalance::new(
+                create_playerindexmap(|eplayerindex|
+                    an_payout_no_stock[eplayerindex] + if fn_is_player_party!()(eplayerindex) { n_stock_per_player } else {0}
+                ),
+                -n_stock
+            )
+        } else {
+            SAccountBalance::new(
+                create_playerindexmap(|eplayerindex|
+                    an_payout_no_stock[eplayerindex] - if fn_is_player_party!()(eplayerindex) { n_stock_per_player } else {0}
+                ),
+                n_stock
+            )
+        }
     }
 
     fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
