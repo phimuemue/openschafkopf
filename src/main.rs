@@ -3,6 +3,7 @@ extern crate ncurses;
 #[macro_use]
 extern crate itertools;
 extern crate permutohedron;
+#[macro_use]
 extern crate clap;
 extern crate arrayvec;
 extern crate crossbeam;
@@ -46,6 +47,10 @@ fn main() {
                 .long("hand")
                 .default_value("")
             )
+            .arg(clap::Arg::with_name("pos")
+                 .long("position")
+                 .default_value("0")
+            )
         )
         .get_matches();
 
@@ -65,7 +70,7 @@ fn main() {
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
         if let Some(str_hand) = subcommand_matches.value_of("hand") {
             if let Some(hand_fixed) = util::cardvectorparser::parse_cards(str_hand).map(|veccard| SHand::new_from_vec(veccard)) {
-                let eplayerindex_rank = 0;
+                let eplayerindex_rank = value_t!(subcommand_matches.value_of("pos"), EPlayerIndex).unwrap_or(0);
                 println!("Hand: {}", hand_fixed);
                 for rules in allowed_rules(&ruleset.m_avecrulegroup[eplayerindex_rank]).iter() 
                     .filter(|rules| rules.can_be_played(&SFullHand::new(&hand_fixed)))
@@ -74,7 +79,7 @@ fn main() {
                         rules,
                         ai.rank_rules(
                             &SFullHand::new(&hand_fixed),
-                            /*eplayerindex_first, TODO: make adjustable*/0,
+                            0,
                             eplayerindex_rank,
                             rules.as_rules().clone(),
                             /*n_stock*/0, // assume no stock in subcommand rank-rules
