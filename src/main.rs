@@ -148,7 +148,7 @@ fn main() {
                 let mut game = pregame.finish();
                 while let Some(eplayerindex)=game.which_player_can_do_something() {
                     let (txcard, rxcard) = mpsc::channel::<SCard>();
-                    vecplayer[eplayerindex].take_control(
+                    vecplayer[eplayerindex].ask_for_card(
                         &game,
                         txcard.clone()
                     );
