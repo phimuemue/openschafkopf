@@ -34,6 +34,7 @@ impl TRules for SRulesRamsch {
     }
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, _n_stock: isize) -> SAccountBalance {
+        // TODO rules Durchmarsch
         let an_points = gamefinishedstiche.get().iter()
             .fold(
                 create_playerindexmap(|_eplayerindex| 0),
@@ -46,7 +47,6 @@ impl TRules for SRulesRamsch {
         let veceplayerindex_most_points = eplayerindex_values()
             .filter(|eplayerindex| n_points_max==an_points[*eplayerindex])
             .collect::<Vec<_>>();
-        let n_price = 10;
         let eplayerindex_loser : EPlayerIndex = {
             if 1==veceplayerindex_most_points.len() {
                 veceplayerindex_most_points[0]
@@ -88,6 +88,7 @@ impl TRules for SRulesRamsch {
                     .0
             }
         };
+        let n_price = 10;
         SAccountBalance::new(
             SStossDoublingPayoutDecider::payout(
                 create_playerindexmap(|eplayerindex| {
