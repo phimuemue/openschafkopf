@@ -66,7 +66,7 @@ impl<'ai> TPlayer for SPlayerHuman<'ai> {
         ).clone()).unwrap()
     }
 
-    fn ask_for_card(&mut self, game: &SGame, txcard: mpsc::Sender<SCard>) {
+    fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         skui::print_vecstich(&game.m_vecstich);
         let hand = {
             let mut hand = game.m_ahand[game.which_player_can_do_something().unwrap()].clone();

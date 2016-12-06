@@ -33,7 +33,7 @@ impl<'ai> TPlayer for SPlayerComputer<'ai> {
         ).ok(); // TODO more intelligent doubling strategy
     }
 
-    fn ask_for_card(&mut self, game: &SGame, txcard: mpsc::Sender<SCard>) {
+    fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         txcard.send(self.m_ai.suggest_card(game)).ok();
     }
 
