@@ -226,13 +226,7 @@ impl<'rules> SGame<'rules> {
                 let eplayerindex_last_stich = {
                     let stich = self.current_stich();
                     skui::logln(&format!("Stich: {}", stich));
-                    let eplayerindex_last_stich = self.m_rules.winner_index(stich);
-                    skui::logln(&format!("{} made by {}, ({} points)",
-                        stich,
-                        eplayerindex_last_stich,
-                        self.m_rules.points_stich(stich)
-                    ));
-                    eplayerindex_last_stich
+                    self.m_rules.winner_index(stich)
                 };
                 skui::logln(&format!("Opening new stich starting at {}", eplayerindex_last_stich));
                 assert!(self.m_vecstich.is_empty() || 4==self.current_stich().size());
