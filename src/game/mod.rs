@@ -8,8 +8,8 @@ use rand::{self, Rng};
 pub type SDoublings = SPlayersInRound<bool>;
 
 pub struct SDealCards {
-    pub m_ahand : SPlayerIndexMap<SHand>,
-    pub m_doublings : SDoublings,
+    m_ahand : SPlayerIndexMap<SHand>,
+    m_doublings : SDoublings,
 }
 
 impl SDealCards {
