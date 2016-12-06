@@ -6,6 +6,7 @@ pub mod rulesramsch;
 pub mod ruleset;
 pub mod payoutdecider;
 pub mod wrappers;
+mod card_points;
 
 #[cfg(test)]
 mod tests;
@@ -60,23 +61,6 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
     }
 
     fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool;
-
-    fn points_card(&self, card: SCard) -> isize {
-        // by default, we assume that we use the usual points
-        match card.schlag() {
-            ESchlag::S7 | ESchlag::S8 | ESchlag::S9 => 0,
-            ESchlag::Unter => 2,
-            ESchlag::Ober => 3,
-            ESchlag::Koenig => 4,
-            ESchlag::Zehn => 10,
-            ESchlag::Ass => 11,
-        }
-    }
-    fn points_stich(&self, stich: &SStich) -> isize {
-        stich.iter()
-            .map(|(_, card)| self.points_card(*card))
-            .sum()
-    }
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, n_stock: isize) -> SAccountBalance;
 

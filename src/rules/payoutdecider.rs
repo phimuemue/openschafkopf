@@ -1,5 +1,6 @@
 use primitives::*;
 use rules::*;
+use rules::card_points::*;
 
 pub struct SStossDoublingPayoutDecider {}
 impl SStossDoublingPayoutDecider {
@@ -39,7 +40,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
     {
         let n_points_player_party : isize = gamefinishedstiche.get().iter()
             .filter(|stich| fn_is_player_party(rules.winner_index(stich)))
-            .map(|stich| rules.points_stich(stich))
+            .map(|stich| points_stich(stich))
             .sum();
         let b_player_party_wins = n_points_player_party>=61;
         enum ESchneiderSchwarz {

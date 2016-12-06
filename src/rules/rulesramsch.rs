@@ -2,6 +2,7 @@ use primitives::*;
 use rules::*;
 use rules::trumpfdecider::*;
 use rules::payoutdecider::SStossDoublingPayoutDecider;
+use rules::card_points::*;
 use std::fmt;
 use std::cmp::Ordering;
 use itertools::Itertools;
@@ -37,7 +38,7 @@ impl TRules for SRulesRamsch {
             .fold(
                 create_playerindexmap(|_eplayerindex| 0),
                 |mut an_points_accu, stich| {
-                    an_points_accu[self.winner_index(stich)] += self.points_stich(stich);
+                    an_points_accu[self.winner_index(stich)] += points_stich(stich);
                     an_points_accu
                 }
             );
