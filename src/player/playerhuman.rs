@@ -8,8 +8,8 @@ use ai::*;
 
 use std::sync::mpsc;
 
-pub struct SPlayerHuman<'ai> {
-    pub m_ai : &'ai TAi,
+pub struct SPlayerHuman {
+    pub m_ai : Box<TAi>,
 }
 
 fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(hand: &SHand, vect : &'t Vec<T>, fn_format: FnFormat, fn_choose: FnChoose) -> &'t T
@@ -40,7 +40,7 @@ fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(hand: &SHand, vect : &'t V
     )
 }
 
-impl<'ai> TPlayer for SPlayerHuman<'ai> {
+impl TPlayer for SPlayerHuman {
     fn ask_for_doubling(
         &self,
         veccard: &[SCard],

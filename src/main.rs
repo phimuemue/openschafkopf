@@ -54,13 +54,13 @@ fn main() {
         )
         .get_matches();
 
-    let ai : Box<TAi> = {
+    let ai = || {
         match clapmatches.value_of("ai").unwrap().as_ref() {
-            "cheating" => Box::new(ai::SAiCheating{}),
-            "simulating" => Box::new(ai::SAiSimulating{}),
+            "cheating" => Box::new(ai::SAiCheating{}) as Box<TAi>,
+            "simulating" => Box::new(ai::SAiSimulating{}) as Box<TAi>,
             _ => {
                 println!("Warning: AI not recognized. Defaulting to 'cheating'");
-                Box::new(ai::SAiCheating{})
+                Box::new(ai::SAiCheating{}) as Box<TAi>
             }
         }
     };
@@ -77,7 +77,7 @@ fn main() {
                 {
                     println!("{}: {}",
                         rules,
-                        ai.rank_rules(
+                        ai().rank_rules(
                             &SFullHand::new(&hand_fixed),
                             0,
                             eplayerindex_rank,
@@ -96,10 +96,10 @@ fn main() {
 
     skui::init_ui();
     let vecplayer : Vec<Box<TPlayer>> = vec![
-        Box::new(SPlayerHuman{m_ai : ai.as_ref()}),
-        Box::new(SPlayerComputer{m_ai : ai.as_ref()}),
-        Box::new(SPlayerComputer{m_ai : ai.as_ref()}),
-        Box::new(SPlayerComputer{m_ai : ai.as_ref()})
+        Box::new(SPlayerHuman{m_ai : ai()}),
+        Box::new(SPlayerComputer{m_ai : ai()}),
+        Box::new(SPlayerComputer{m_ai : ai()}),
+        Box::new(SPlayerComputer{m_ai : ai()})
     ];
     let mut accountbalance = SAccountBalance::new(create_playerindexmap(|_eplayerindex| 0), 0);
     for i_game in 0..clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4) {

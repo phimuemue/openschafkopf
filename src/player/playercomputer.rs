@@ -9,11 +9,11 @@ use ai::suspicion::SSuspicion;
 
 use std::sync::mpsc;
 
-pub struct SPlayerComputer<'ai> {
-    pub m_ai : &'ai TAi,
+pub struct SPlayerComputer {
+    pub m_ai : Box<TAi>,
 }
 
-impl<'ai> TPlayer for SPlayerComputer<'ai> {
+impl TPlayer for SPlayerComputer {
     fn ask_for_doubling(
         &self,
         veccard: &[SCard],
