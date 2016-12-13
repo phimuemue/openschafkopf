@@ -65,7 +65,7 @@ fn main() {
         }
     };
 
-    let ruleset = read_ruleset(Path::new(clapmatches.value_of("rulesetpath").unwrap()));
+    let ruleset = SRuleSet::from_file(Path::new(clapmatches.value_of("rulesetpath").unwrap()));
 
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
         if let Some(str_hand) = subcommand_matches.value_of("hand") {
