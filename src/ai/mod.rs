@@ -80,7 +80,10 @@ pub struct SAiCheating {}
 impl TAi for SAiCheating {
     fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_stock: isize, n_tests: usize) -> f64 {
         // TODO: adjust interface to get whole game
-        SAiSimulating{}.rank_rules(hand_fixed, eplayerindex_first, eplayerindex_rank, rules, n_stock, n_tests)
+        SAiSimulating::new(
+            /*n_suggest_card_branches*/2,
+            /*n_suggest_card_samples*/10,
+        ).rank_rules(hand_fixed, eplayerindex_first, eplayerindex_rank, rules, n_stock, n_tests)
     }
 
     fn internal_suggest_card(&self, game: &SGame) -> SCard {
@@ -98,7 +101,6 @@ impl TAi for SAiCheating {
     }
 }
 
-pub struct SAiSimulating {}
 pub fn is_compatible_with_game_so_far(
     ahand: &SPlayerIndexMap<SHand>,
     rules: &TRules,
@@ -243,6 +245,18 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
         .clone()
 }
 
+pub struct SAiSimulating {
+    m_n_suggest_card_branches: usize,
+    m_n_suggest_card_samples: usize,
+}
+impl SAiSimulating {
+    pub fn new(n_suggest_card_branches: usize, n_suggest_card_samples: usize) -> SAiSimulating {
+        SAiSimulating {
+            m_n_suggest_card_branches: n_suggest_card_branches,
+            m_n_suggest_card_samples: n_suggest_card_samples,
+        }
+    }
+}
 impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_stock: isize, n_tests: usize) -> f64 {
         let n_payout_sum = Arc::new(Mutex::new(0isize));
@@ -279,7 +293,6 @@ impl TAi for SAiSimulating {
     }
 
     fn internal_suggest_card(&self, game: &SGame) -> SCard {
-        let n_tests = 10;
         let ref stich_current = game.current_stich();
         assert!(stich_current.size()<4);
         let eplayerindex_fixed = stich_current.current_playerindex().unwrap();
@@ -290,15 +303,15 @@ impl TAi for SAiSimulating {
                 game,
                 all_possible_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules, &game.m_vecstich)),
-                /*n_branches*/2,
+                self.m_n_suggest_card_branches,
             )
         } else {
             determine_best_card(
                 game,
                 forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), eplayerindex_fixed)
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules, &game.m_vecstich))
-                    .take(n_tests),
-                /*n_branches*/2,
+                    .take(self.m_n_suggest_card_samples),
+                self.m_n_suggest_card_branches,
             )
         }
     }
