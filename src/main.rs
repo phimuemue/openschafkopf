@@ -100,12 +100,13 @@ fn main() {
 
     skui::init_ui();
     let accountbalance = game_loop(
-        &[
-            Box::new(SPlayerHuman{m_ai : ai()}),
-            Box::new(SPlayerComputer{m_ai: ai()}) as Box<TPlayer>,
-            Box::new(SPlayerComputer{m_ai: ai()}) as Box<TPlayer>,
-            Box::new(SPlayerComputer{m_ai: ai()}) as Box<TPlayer>,
-        ],
+        &create_playerindexmap(|eplayerindex| -> Box<TPlayer> {
+            if 0==eplayerindex {
+                Box::new(SPlayerHuman{m_ai : ai()})
+            } else {
+                Box::new(SPlayerComputer{m_ai: ai()})
+            }
+        }),
         /*n_games*/ clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4),
         &ruleset,
     );
@@ -185,12 +186,15 @@ fn game_loop(aplayer: &SPlayerIndexMap<Box<TPlayer>>, n_games: usize, ruleset: &
 #[test]
 fn test_game_loop() {
     game_loop(
-        &[
-            Box::new(SPlayerComputer{m_ai: Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/1))}),
-            Box::new(SPlayerComputer{m_ai: Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/1))}),
-            Box::new(SPlayerComputer{m_ai: Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1, /*n_samples_per_rules*/1))}),
-            Box::new(SPlayerComputer{m_ai: Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1, /*n_samples_per_rules*/1))}),
-        ],
+        &create_playerindexmap(|eplayerindex| -> Box<TPlayer> {
+            Box::new(SPlayerComputer{m_ai: {
+                if eplayerindex<2 {
+                    Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/1))
+                } else {
+                    Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1, /*n_samples_per_rules*/1))
+                }
+            }})
+        }),
         /*n_games*/4,
         &SRuleSet::from_strings(
             ["rufspiel", "solo", "ramsch", "wenz"].iter().map(|str| str.to_string())
