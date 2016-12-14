@@ -100,11 +100,11 @@ fn main() {
 
     skui::init_ui();
     let accountbalance = game_loop(
-        &vec![
+        &[
             Box::new(SPlayerHuman{m_ai : ai()}),
-            Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50)),
-            Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50)),
-            Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50))
+            Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50)) as Box<TPlayer>,
+            Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50)) as Box<TPlayer>,
+            Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50)) as Box<TPlayer>,
         ],
         /*n_games*/ clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4),
         &ruleset,
@@ -113,13 +113,13 @@ fn main() {
     println!("Results: {}", skui::account_balance_string(&accountbalance));
 }
 
-fn game_loop(vecplayer: &Vec<Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
+fn game_loop(aplayer: &SPlayerIndexMap<Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
     let mut accountbalance = SAccountBalance::new(create_playerindexmap(|_eplayerindex| 0), 0);
     for i_game in 0..n_games {
         let mut dealcards = SDealCards::new(/*eplayerindex_first*/i_game % 4);
         while let Some(eplayerindex) = dealcards.which_player_can_do_something() {
             let (txb_doubling, rxb_doubling) = mpsc::channel::<bool>();
-            vecplayer[eplayerindex].ask_for_doubling(
+            aplayer[eplayerindex].ask_for_doubling(
                 dealcards.first_hand_for(eplayerindex),
                 txb_doubling.clone(),
             );
@@ -129,7 +129,7 @@ fn game_loop(vecplayer: &Vec<Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) 
         while let Some(eplayerindex) = gamepreparations.which_player_can_do_something() {
             skui::logln(&format!("Asking player {} for game", eplayerindex));
             let (txorules, rxorules) = mpsc::channel::<Option<_>>();
-            vecplayer[eplayerindex].ask_for_game(
+            aplayer[eplayerindex].ask_for_game(
                 &SFullHand::new(&gamepreparations.m_ahand[eplayerindex]),
                 &gamepreparations.m_gameannouncements,
                 &gamepreparations.m_ruleset.m_avecrulegroup[eplayerindex],
@@ -144,7 +144,7 @@ fn game_loop(vecplayer: &Vec<Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) 
                 while let Some(eplayerindex_stoss) = pregame.which_player_can_do_something().into_iter()
                     .find(|eplayerindex| {
                         let (txb_stoss, rxb_stoss) = mpsc::channel::<bool>();
-                        vecplayer[*eplayerindex].ask_for_stoss(
+                        aplayer[*eplayerindex].ask_for_stoss(
                             *eplayerindex,
                             &pregame.m_doublings,
                             pregame.m_rules,
@@ -161,7 +161,7 @@ fn game_loop(vecplayer: &Vec<Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) 
                 let mut game = pregame.finish();
                 while let Some(eplayerindex)=game.which_player_can_do_something() {
                     let (txcard, rxcard) = mpsc::channel::<SCard>();
-                    vecplayer[eplayerindex].ask_for_card(
+                    aplayer[eplayerindex].ask_for_card(
                         &game,
                         txcard.clone()
                     );
@@ -185,7 +185,7 @@ fn game_loop(vecplayer: &Vec<Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) 
 #[test]
 fn test_game_loop() {
     game_loop(
-        &vec![
+        &[
             Box::new(SPlayerComputer::new(Box::new(ai::SAiCheating{}), /*n_samples_per_rules*/1)),
             Box::new(SPlayerComputer::new(Box::new(ai::SAiCheating{}), /*n_samples_per_rules*/1)),
             Box::new(SPlayerComputer::new(Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1)), /*n_samples_per_rules*/1)),
