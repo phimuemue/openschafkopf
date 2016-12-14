@@ -56,15 +56,16 @@ fn main() {
 
     let ai = || {
         match clapmatches.value_of("ai").unwrap().as_ref() {
-            "cheating" => Box::new(ai::SAiCheating{}) as Box<TAi>,
+            "cheating" => Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/50)) as Box<TAi>,
             "simulating" => 
                 Box::new(ai::SAiSimulating::new(
                     /*n_suggest_card_branches*/2,
                     /*n_suggest_card_samples*/10,
+                    /*n_rank_rules_samples*/50,
                 )) as Box<TAi>,
             _ => {
                 println!("Warning: AI not recognized. Defaulting to 'cheating'");
-                Box::new(ai::SAiCheating{}) as Box<TAi>
+                Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/50)) as Box<TAi>
             }
         }
     };
@@ -87,7 +88,6 @@ fn main() {
                             eplayerindex_rank,
                             rules.as_rules().clone(),
                             /*n_stock*/0, // assume no stock in subcommand rank-rules
-                            100
                         )
                     );
                 }
@@ -102,9 +102,9 @@ fn main() {
     let accountbalance = game_loop(
         &[
             Box::new(SPlayerHuman{m_ai : ai()}),
-            Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50)) as Box<TPlayer>,
-            Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50)) as Box<TPlayer>,
-            Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50)) as Box<TPlayer>,
+            Box::new(SPlayerComputer{m_ai: ai()}) as Box<TPlayer>,
+            Box::new(SPlayerComputer{m_ai: ai()}) as Box<TPlayer>,
+            Box::new(SPlayerComputer{m_ai: ai()}) as Box<TPlayer>,
         ],
         /*n_games*/ clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4),
         &ruleset,
@@ -186,10 +186,10 @@ fn game_loop(aplayer: &SPlayerIndexMap<Box<TPlayer>>, n_games: usize, ruleset: &
 fn test_game_loop() {
     game_loop(
         &[
-            Box::new(SPlayerComputer::new(Box::new(ai::SAiCheating{}), /*n_samples_per_rules*/1)),
-            Box::new(SPlayerComputer::new(Box::new(ai::SAiCheating{}), /*n_samples_per_rules*/1)),
-            Box::new(SPlayerComputer::new(Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1)), /*n_samples_per_rules*/1)),
-            Box::new(SPlayerComputer::new(Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1)), /*n_samples_per_rules*/1)),
+            Box::new(SPlayerComputer{m_ai: Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/1))}),
+            Box::new(SPlayerComputer{m_ai: Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/1))}),
+            Box::new(SPlayerComputer{m_ai: Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1, /*n_samples_per_rules*/1))}),
+            Box::new(SPlayerComputer{m_ai: Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1, /*n_samples_per_rules*/1))}),
         ],
         /*n_games*/4,
         &SRuleSet::from_strings(

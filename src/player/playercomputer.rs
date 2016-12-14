@@ -11,16 +11,6 @@ use std::sync::mpsc;
 
 pub struct SPlayerComputer {
     pub m_ai : Box<TAi>,
-    m_n_samples_per_rules: usize, // TODO move to TAi
-}
-
-impl SPlayerComputer {
-    pub fn new(ai: Box<TAi>, n_samples_per_rules: usize) -> SPlayerComputer {
-        SPlayerComputer {
-            m_ai: ai,
-            m_n_samples_per_rules: n_samples_per_rules,
-        }
-    }
 }
 
 impl TPlayer for SPlayerComputer {
@@ -60,7 +50,7 @@ impl TPlayer for SPlayerComputer {
                 let eplayerindex_rank = rules.playerindex().unwrap(); 
                 (
                     rules,
-                    self.m_ai.rank_rules(hand, /*eplayerindex_first*/gameannouncements.first_playerindex(), eplayerindex_rank, rules.as_rules(), n_stock, self.m_n_samples_per_rules)
+                    self.m_ai.rank_rules(hand, /*eplayerindex_first*/gameannouncements.first_playerindex(), eplayerindex_rank, rules.as_rules(), n_stock)
                 )
             })
             .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
@@ -78,9 +68,10 @@ impl TPlayer for SPlayerComputer {
         n_stock: isize,
         txb: mpsc::Sender<bool>,
     ) {
+        let n_samples_per_stoss = 5; // TODO move to ai, make adjustable
         let mut vecpairahandf_suspicion = forever_rand_hands(/*vecstich*/&Vec::new(), hand.clone(), eplayerindex)
             .filter(|ahand| is_compatible_with_game_so_far(ahand, rules, /*vecstich*/&vec![SStich::new(doublings.m_eplayerindex_first)])) // stoss currently only in SPreGame
-            .take(2*self.m_n_samples_per_rules)
+            .take(2*n_samples_per_stoss)
             .map(|ahand| {
                 let f_rank_rules = rules.playerindex().map_or(0f64, |eplayerindex_active| {
                     if eplayerindex!=eplayerindex_active {
@@ -90,7 +81,6 @@ impl TPlayer for SPlayerComputer {
                             /*eplayerindex_rank*/eplayerindex_active,
                             rules,
                             n_stock,
-                            /*n_tests*/10
                         )
                     } else {
                         0f64
@@ -102,8 +92,8 @@ impl TPlayer for SPlayerComputer {
         vecpairahandf_suspicion.sort_by(|&(ref _ahand_l, f_rank_l), &(ref _ahand_r, f_rank_r)|
             f_rank_r.partial_cmp(&f_rank_l).unwrap()
         );
-        vecpairahandf_suspicion.truncate(self.m_n_samples_per_rules);
-        assert_eq!(self.m_n_samples_per_rules, vecpairahandf_suspicion.len());
+        vecpairahandf_suspicion.truncate(n_samples_per_stoss);
+        assert_eq!(n_samples_per_stoss, vecpairahandf_suspicion.len());
         txb.send(
             vecpairahandf_suspicion.into_iter()
                 .map(|(ahand, _f_rank_rules)| {
@@ -127,7 +117,7 @@ impl TPlayer for SPlayerComputer {
                     )
                 })
                 .sum::<isize>() as f64
-                / (self.m_n_samples_per_rules) as f64
+                / (n_samples_per_stoss) as f64
                 > 10f64
         ).unwrap()
     }

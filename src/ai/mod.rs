@@ -19,7 +19,7 @@ use std::ops::Deref;
 use std::cmp;
 
 pub trait TAi {
-    fn rank_rules(&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_stock: isize, n_tests: usize) -> f64;
+    fn rank_rules(&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64;
     fn suggest_card(&self, game: &SGame) -> SCard {
         let veccard_allowed = game.m_rules.all_allowed_cards(
             &game.m_vecstich,
@@ -75,15 +75,26 @@ fn test_unplayed_cards() {
     assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
 }
 
-pub struct SAiCheating {}
+pub struct SAiCheating {
+    m_n_rank_rules_samples: usize,
+}
+
+impl SAiCheating {
+    pub fn new(n_rank_rules_samples: usize) -> SAiCheating {
+        SAiCheating {
+            m_n_rank_rules_samples: n_rank_rules_samples,
+        }
+    }
+}
 
 impl TAi for SAiCheating {
-    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_stock: isize, n_tests: usize) -> f64 {
+    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
         // TODO: adjust interface to get whole game
         SAiSimulating::new(
             /*n_suggest_card_branches*/2,
             /*n_suggest_card_samples*/10,
-        ).rank_rules(hand_fixed, eplayerindex_first, eplayerindex_rank, rules, n_stock, n_tests)
+            self.m_n_rank_rules_samples,
+        ).rank_rules(hand_fixed, eplayerindex_first, eplayerindex_rank, rules, n_stock)
     }
 
     fn internal_suggest_card(&self, game: &SGame) -> SCard {
@@ -248,20 +259,22 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
 pub struct SAiSimulating {
     m_n_suggest_card_branches: usize,
     m_n_suggest_card_samples: usize,
+    m_n_rank_rules_samples: usize,
 }
 impl SAiSimulating {
-    pub fn new(n_suggest_card_branches: usize, n_suggest_card_samples: usize) -> SAiSimulating {
+    pub fn new(n_suggest_card_branches: usize, n_suggest_card_samples: usize, n_rank_rules_samples: usize) -> SAiSimulating {
         SAiSimulating {
             m_n_suggest_card_branches: n_suggest_card_branches,
             m_n_suggest_card_samples: n_suggest_card_samples,
+            m_n_rank_rules_samples: n_rank_rules_samples,
         }
     }
 }
 impl TAi for SAiSimulating {
-    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_stock: isize, n_tests: usize) -> f64 {
+    fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
         let n_payout_sum = Arc::new(Mutex::new(0isize));
         crossbeam::scope(|scope| {
-            for ahand in forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get().clone(), eplayerindex_rank).take(n_tests) {
+            for ahand in forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get().clone(), eplayerindex_rank).take(self.m_n_rank_rules_samples) {
                 let n_payout_sum = n_payout_sum.clone();
                 scope.spawn(move || {
                     let n_payout = 
@@ -289,7 +302,7 @@ impl TAi for SAiSimulating {
             }
         });
         let n_payout_sum = *n_payout_sum.lock().unwrap().deref();
-        (n_payout_sum as f64) / (n_tests as f64)
+        (n_payout_sum as f64) / (self.m_n_rank_rules_samples as f64)
     }
 
     fn internal_suggest_card(&self, game: &SGame) -> SCard {
