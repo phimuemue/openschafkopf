@@ -99,14 +99,23 @@ fn main() {
     }
 
     skui::init_ui();
-    let vecplayer : Vec<Box<TPlayer>> = vec![
-        Box::new(SPlayerHuman{m_ai : ai()}),
-        Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50)),
-        Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50)),
-        Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50))
-    ];
+    let accountbalance = game_loop(
+        &vec![
+            Box::new(SPlayerHuman{m_ai : ai()}),
+            Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50)),
+            Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50)),
+            Box::new(SPlayerComputer::new(ai(), /*n_samples_per_rules*/50))
+        ],
+        /*n_games*/ clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4),
+        &ruleset,
+    );
+    skui::end_ui();
+    println!("Results: {}", skui::account_balance_string(&accountbalance));
+}
+
+fn game_loop(vecplayer: &Vec<Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
     let mut accountbalance = SAccountBalance::new(create_playerindexmap(|_eplayerindex| 0), 0);
-    for i_game in 0..clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4) {
+    for i_game in 0..n_games {
         let mut dealcards = SDealCards::new(/*eplayerindex_first*/i_game % 4);
         while let Some(eplayerindex) = dealcards.which_player_can_do_something() {
             let (txb_doubling, rxb_doubling) = mpsc::channel::<bool>();
@@ -170,6 +179,21 @@ fn main() {
         }
         skui::print_account_balance(&accountbalance);
     }
-    skui::end_ui();
-    println!("Results: {}", skui::account_balance_string(&accountbalance));
+    accountbalance
+}
+
+#[test]
+fn test_game_loop() {
+    game_loop(
+        &vec![
+            Box::new(SPlayerComputer::new(Box::new(ai::SAiCheating{}), /*n_samples_per_rules*/1)),
+            Box::new(SPlayerComputer::new(Box::new(ai::SAiCheating{}), /*n_samples_per_rules*/1)),
+            Box::new(SPlayerComputer::new(Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1)), /*n_samples_per_rules*/1)),
+            Box::new(SPlayerComputer::new(Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1)), /*n_samples_per_rules*/1)),
+        ],
+        /*n_games*/4,
+        &SRuleSet::from_strings(
+            ["rufspiel", "solo", "ramsch", "wenz"].iter().map(|str| str.to_string())
+        ),
+    );
 }

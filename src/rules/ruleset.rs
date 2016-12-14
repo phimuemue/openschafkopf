@@ -33,7 +33,7 @@ pub fn allowed_rules(vecrulegroup: &Vec<SRuleGroup>) -> Vec<&TActivelyPlayableRu
 }
 
 impl SRuleSet {
-    fn from_strings<ItStrRule>(itstr_rule_name: ItStrRule) -> SRuleSet 
+    pub fn from_strings<ItStrRule>(itstr_rule_name: ItStrRule) -> SRuleSet 
         where ItStrRule: Iterator<Item=String>
     {
         let setstr_rule_name = itstr_rule_name.collect::<HashSet<_>>();
