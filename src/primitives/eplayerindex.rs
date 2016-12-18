@@ -1,5 +1,3 @@
-use std::mem;
-use std::ptr;
 use std::ops;
 use arrayvec::ArrayVec;
 
@@ -15,14 +13,7 @@ pub fn eplayerindex_values() -> ops::Range<EPlayerIndex> {
 pub fn create_playerindexmap<T, F>(mut func: F) -> SPlayerIndexMap<T>
     where F:FnMut(EPlayerIndex)->T
 {
-    let mut at : SPlayerIndexMap<T>;
-    unsafe {
-        at = mem::uninitialized();
-        for eplayerindex in eplayerindex_values() {
-            ptr::write(&mut at[eplayerindex], func(eplayerindex)); // ptr::write prevents dropping uninitialized memory
-        }
-    }
-    at
+    [func(0), func(1), func(2), func(3)]
 }
 
 #[derive(Clone)]
