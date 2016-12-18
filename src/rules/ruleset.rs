@@ -1,3 +1,5 @@
+extern crate toml;
+
 use primitives::*;
 use rules::*;
 use rules::rulesrufspiel::*;
@@ -10,8 +12,6 @@ use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use std::io::BufReader;
-use std::collections::HashSet;
 
 pub struct SRuleGroup {
     pub m_str_name : String,
@@ -33,20 +33,20 @@ pub fn allowed_rules(vecrulegroup: &Vec<SRuleGroup>) -> Vec<&TActivelyPlayableRu
 }
 
 impl SRuleSet {
-    pub fn from_strings<ItStrRule>(itstr_rule_name: ItStrRule) -> SRuleSet 
-        where ItStrRule: Iterator<Item=String>
-    {
-        let setstr_rule_name = itstr_rule_name.collect::<HashSet<_>>();
+    pub fn from_string(str_toml: &str) -> SRuleSet {
+        let tomltbl : toml::Value = str_toml.parse().unwrap(); // TODO error handling
         SRuleSet {
             m_avecrulegroup : create_playerindexmap(|eplayerindex| {
                 let mut vecrulegroup = Vec::new();
                 {
                     let mut create_rulegroup = |str_rule_name_file: &str, str_group_name: &str, vecrules| {
-                        if setstr_rule_name.contains(&str_rule_name_file.to_string()) {
-                            vecrulegroup.push(SRuleGroup{
-                                m_str_name: str_group_name.to_string(),
-                                m_vecrules: vecrules
-                            });
+                        if let Some(tomlval_active_rules) = tomltbl.lookup("activerules") {
+                            if tomlval_active_rules.lookup(&str_rule_name_file).is_some() {
+                                vecrulegroup.push(SRuleGroup{
+                                    m_str_name: str_group_name.to_string(),
+                                    m_vecrules: vecrules
+                                });
+                            }
                         }
                     };
                     create_rulegroup(
@@ -89,10 +89,10 @@ impl SRuleSet {
                 vecrulegroup
             }),
             m_stockorramsch : {
-                if setstr_rule_name.contains("ramsch") {
-                    assert!(!setstr_rule_name.contains("stock"));
+                if tomltbl.lookup("noactive.ramsch").is_some() {
+                    assert!(tomltbl.lookup("noactive.stock").is_none()); // TODO what to do in those cases? Better option to model alternatives? Allow stock *and+ ramsch at the same time?
                     VStockOrT::OrT(Box::new(SRulesRamsch{}) as Box<TRules>)
-                } else if setstr_rule_name.contains("stock") {
+                } else if tomltbl.lookup("noactive.stock").is_some() {
                     VStockOrT::Stock(10) // TODO make adjustable
                 } else {
                     VStockOrT::Stock(0) // represent "no stock" by using a zero stock payment
@@ -110,22 +110,24 @@ impl SRuleSet {
             };
             // TODO: make creation of ruleset file adjustable
             for str_rules in [
-                "rufspiel",
-                "solo",
-                "farbwenz",
-                "wenz",
-                "farbgeier",
-                "geier",
+                "[activerules.rufspiel]",
+                "[activerules.solo]",
+                "[activerules.farbwenz]",
+                "[activerules.wenz]",
+                "[activerules.farbgeier]",
+                "[activerules.geier]",
             ].iter() {
                 file.write_all(str_rules.as_bytes()).unwrap();
             }
         }
         assert!(path.exists()); 
-        let file = match File::open(&path) {
+        let mut file = match File::open(&path) {
             Err(why) => panic!("Could not open {}: {}", path.display(), Error::description(&why)),
             Ok(file) => file,
         };
-        Self::from_strings(BufReader::new(&file).lines().map(|str| str.unwrap()))
+        let mut str_toml = String::new();
+        file.read_to_string(&mut str_toml).unwrap(); // TODO error handling
+        Self::from_string(&str_toml)
     }
 }
 

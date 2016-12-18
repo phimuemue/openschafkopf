@@ -196,8 +196,11 @@ fn test_game_loop() {
             }})
         }),
         /*n_games*/4,
-        &SRuleSet::from_strings(
-            ["rufspiel", "solo", "ramsch", "wenz"].iter().map(|str| str.to_string())
-        ),
+        &SRuleSet::from_string(r"
+            [activerules.rufspiel]
+            [activerules.solo]
+            [activerules.wenz]
+            [noactive.ramsch]
+        "),
     );
 }
