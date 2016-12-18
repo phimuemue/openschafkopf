@@ -26,7 +26,9 @@ impl SDealCards {
     }
 
     pub fn first_hand_for(&self, eplayerindex: EPlayerIndex) -> &[SCard] {
-        &self.m_ahand[eplayerindex].cards()[eplayerindex_values()]
+        let ref veccard = self.m_ahand[eplayerindex].cards();
+        assert_eq!(veccard.len(), 8);
+        &veccard[0..veccard.len()/2]
     }
 
     pub fn announce_doubling(&mut self, eplayerindex: EPlayerIndex, b_doubling: bool) -> Result<(), &'static str> {
