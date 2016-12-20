@@ -3,13 +3,13 @@ use arrayvec::ArrayVec;
 
 use std::ops::Index;
 
-pub type EPlayerIndex = usize; // TODO: would a real enum be more adequate?
-pub type SPlayerIndexMap<T> = [T; 4]; // TODO: introduce generic enummap
+pub type EPlayerIndex = usize; // TODO plain_enum
+pub type SPlayerIndexMap<T> = [T; 4]; // TODO plain_enum
 
-pub fn eplayerindex_values() -> ops::Range<EPlayerIndex> {
+pub fn eplayerindex_values() -> ops::Range<EPlayerIndex> { // TODO plain_enum
     0..4
 }
-pub fn eplayerindex_wrapping_add(eplayerindex: EPlayerIndex, n_offset: usize) -> EPlayerIndex {
+pub fn eplayerindex_wrapping_add(eplayerindex: EPlayerIndex, n_offset: usize) -> EPlayerIndex { // TODO plain_enum
     (eplayerindex + n_offset) % 4
 }
 
