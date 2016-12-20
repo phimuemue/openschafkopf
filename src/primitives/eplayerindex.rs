@@ -9,6 +9,9 @@ pub type SPlayerIndexMap<T> = [T; 4]; // TODO: introduce generic enummap
 pub fn eplayerindex_values() -> ops::Range<EPlayerIndex> {
     0..4
 }
+pub fn eplayerindex_wrapping_add(eplayerindex: EPlayerIndex, n_offset: usize) -> EPlayerIndex {
+    (eplayerindex + n_offset) % 4
+}
 
 pub fn create_playerindexmap<T, F>(mut func: F) -> SPlayerIndexMap<T>
     where F:FnMut(EPlayerIndex)->T
@@ -48,7 +51,7 @@ impl<'playersinround, T> Iterator for SPlayersInRoundIterator<'playersinround, T
             return None;
         }
         else {
-            let eplayerindex = (self.m_playersinround.m_eplayerindex_first + self.m_i_offset)%4;
+            let eplayerindex = eplayerindex_wrapping_add(self.m_playersinround.m_eplayerindex_first, self.m_i_offset);
             let pairicard = (eplayerindex, &self.m_playersinround[eplayerindex]);
             self.m_i_offset = self.m_i_offset + 1;
             return Some(pairicard);
@@ -89,7 +92,7 @@ impl<T> SPlayersInRound<T> {
         if self.size()==4 {
             None
         } else {
-            Some((self.first_playerindex() + self.size()) % 4)
+            Some(eplayerindex_wrapping_add(self.first_playerindex(), self.size()))
         }
     }
     pub fn size(&self) -> usize {

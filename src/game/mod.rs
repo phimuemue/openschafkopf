@@ -150,7 +150,7 @@ impl<'rules> SPreGame<'rules> {
     pub fn which_player_can_do_something(&self) -> Vec<EPlayerIndex> {
         if self.m_vecstoss.len() < 4 {
             eplayerindex_values()
-                .map(|eplayerindex| (eplayerindex + self.m_doublings.first_playerindex()) % 4)
+                .map(|eplayerindex| eplayerindex_wrapping_add(eplayerindex, self.m_doublings.first_playerindex()))
                 .filter(|eplayerindex| self.m_rules.stoss_allowed(*eplayerindex, &self.m_vecstoss, &self.m_ahand[*eplayerindex]))
                 .collect()
         } else {
