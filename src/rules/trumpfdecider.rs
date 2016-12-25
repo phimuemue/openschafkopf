@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 pub trait TTrumpfDecider {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe;
 
-    fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>) -> Vec<SCard>;
+    fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> Vec<SCard>;
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering;
     fn count_laufende(gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SPlayerIndexMap<bool>) -> isize {
         let veccard_trumpf = Self::trumpfs_in_descending_order(Vec::new());
