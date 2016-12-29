@@ -53,7 +53,7 @@ impl<'playersinround, T> Iterator for SPlayersInRoundIterator<'playersinround, T
         else {
             let eplayerindex = eplayerindex_wrapping_add(self.m_playersinround.m_eplayerindex_first, self.m_i_offset);
             let pairicard = (eplayerindex, &self.m_playersinround[eplayerindex]);
-            self.m_i_offset = self.m_i_offset + 1;
+            self.m_i_offset += 1;
             Some(pairicard)
         }
     }

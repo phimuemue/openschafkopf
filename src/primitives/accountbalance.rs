@@ -25,9 +25,9 @@ impl SAccountBalance {
         accountbalance.assert_invariant();
         self.assert_invariant();
         for eplayerindex in eplayerindex_values() {
-            self.m_an[eplayerindex] = self.m_an[eplayerindex] + accountbalance.get_player(eplayerindex);
+            self.m_an[eplayerindex] += accountbalance.get_player(eplayerindex);
         }
-        self.m_n_stock = self.m_n_stock + accountbalance.get_stock();
+        self.m_n_stock += accountbalance.get_stock();
         self.assert_invariant();
     }
 

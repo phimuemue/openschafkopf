@@ -30,7 +30,7 @@ impl<E> Iterator for SEnumIterator<E>
     type Item = E;
     fn next(&mut self) -> Option<E> {
         let i_e = self.m_i_e;
-        self.m_i_e = self.m_i_e + 1;
+        self.m_i_e += 1;
         if i_e!=E::ubound_usize() {
             Some(E::from_usize(i_e))
         } else {

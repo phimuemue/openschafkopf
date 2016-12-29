@@ -243,11 +243,11 @@ pub fn ask_for_alternative<T, FnFilter, FnCallback, FnSuggest>(
                     ncurses::werase(ncwin);
                     if ch==askforalternativekeybindings.m_key_prev {
                         if 0<i_alternative {
-                            i_alternative = i_alternative - 1
+                            i_alternative -= 1
                         }
                     } else if ch== askforalternativekeybindings.m_key_next {
                         if i_alternative<vect.len()-1 {
-                            i_alternative = i_alternative + 1
+                            i_alternative += 1
                         }
                     } else if ch==askforalternativekeybindings.m_key_suggest {
                         ot_suggest = fn_suggest();
