@@ -189,7 +189,7 @@ impl SSuspicion {
             }
             file_output.write_all(b", min payouts: ")?;
             for _eplayerindex in eplayerindex_values() {
-                file_output.write_all(format!("TODO: payout").as_bytes())?;
+                file_output.write_all("TODO: payout".as_bytes())?;
             }
             file_output.write_all(b"\n")?;
             for susptrans in self.m_vecsusptrans.iter() {
