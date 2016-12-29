@@ -14,8 +14,7 @@ use std::fs;
 use std::mem;
 use crossbeam;
 use std::sync::{Arc, Mutex};
-use std::ops::AddAssign;
-use std::ops::Deref;
+use std::sync::atomic::{AtomicIsize, Ordering};
 use std::cmp;
 
 pub trait TAi {
@@ -272,7 +271,7 @@ impl SAiSimulating {
 }
 impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
-        let n_payout_sum = Arc::new(Mutex::new(0isize));
+        let n_payout_sum = Arc::new(AtomicIsize::new(0));
         crossbeam::scope(|scope| {
             for ahand in forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get().clone(), eplayerindex_rank).take(self.m_n_rank_rules_samples) {
                 let n_payout_sum = n_payout_sum.clone();
@@ -297,11 +296,11 @@ impl TAi for SAiSimulating {
                             n_stock,
                         )
                     ;
-                    n_payout_sum.lock().unwrap().add_assign(n_payout);
+                    n_payout_sum.fetch_add(n_payout, Ordering::SeqCst);
                 });
             }
         });
-        let n_payout_sum = *n_payout_sum.lock().unwrap().deref();
+        let n_payout_sum = n_payout_sum.load(Ordering::SeqCst);
         (n_payout_sum as f64) / (self.m_n_rank_rules_samples as f64)
     }
 
