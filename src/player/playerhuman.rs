@@ -16,7 +16,7 @@ fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(hand: &SHand, vect : &'t V
     where FnFormat: Fn(&T) -> String,
           FnChoose: Fn(usize) -> Option<&'t TActivelyPlayableRules>
 {
-    &skui::ask_for_alternative(
+    skui::ask_for_alternative(
         vect,
         skui::choose_alternative_from_list_key_bindings(),
         |_ot| {true},
@@ -54,7 +54,7 @@ impl TPlayer for SPlayerHuman {
             |ncwin, i_b_doubling_chosen, ob_doubling_suggest| {
                 assert!(ob_doubling_suggest.is_none());
                 // TODO show who else already doubled
-                skui::print_hand(&veccard, None);
+                skui::print_hand(veccard, None);
                 for (i_b_doubling, b_doubling) in vecb_doubling.iter().enumerate() {
                     skui::wprintln(ncwin, &format!("{} {}",
                         if i_b_doubling==i_b_doubling_chosen {"*"} else {" "},
@@ -76,7 +76,7 @@ impl TPlayer for SPlayerHuman {
         let veccard_allowed = game.m_rules.all_allowed_cards(&game.m_vecstich, &hand);
         match txcard.send(
             skui::ask_for_alternative(
-                &hand.cards(),
+                hand.cards(),
                 skui::choose_card_from_hand_key_bindings(),
                 |card| {veccard_allowed.iter().any(|card_allowed| card_allowed==card)},
                 |ncwin, i_card_chosen, ocard_suggest| {
@@ -127,7 +127,7 @@ impl TPlayer for SPlayerHuman {
                 &vecorules,
                 |orules : &Option<&TActivelyPlayableRules>| match orules {
                     &None => "Back".to_string(),
-                    &Some(ref rules) => rules.to_string()
+                    &Some(rules) => rules.to_string()
                 },
                 |i_orules_chosen| vecorules[i_orules_chosen]
             ) {

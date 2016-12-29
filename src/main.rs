@@ -126,7 +126,7 @@ fn game_loop(aplayer: &SPlayerIndexMap<Box<TPlayer>>, n_games: usize, ruleset: &
             );
             dealcards.announce_doubling(eplayerindex, rxb_doubling.recv().unwrap()).unwrap();
         }
-        let mut gamepreparations = dealcards.finish_dealing(&ruleset, accountbalance.get_stock());
+        let mut gamepreparations = dealcards.finish_dealing(ruleset, accountbalance.get_stock());
         while let Some(eplayerindex) = gamepreparations.which_player_can_do_something() {
             skui::logln(&format!("Asking player {} for game", eplayerindex));
             let (txorules, rxorules) = mpsc::channel::<Option<_>>();

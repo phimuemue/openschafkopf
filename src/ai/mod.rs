@@ -117,7 +117,7 @@ pub fn is_compatible_with_game_so_far(
     rules: &TRules,
     vecstich: &Vec<SStich>,
 ) -> bool {
-    let ref stich_current = current_stich(vecstich);
+    let stich_current = current_stich(vecstich);
     assert!(stich_current.size()<4);
     // hands must contain respective cards from stich_current...
     stich_current.iter()
@@ -179,7 +179,7 @@ pub fn is_compatible_with_game_so_far(
 fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize) -> SCard
     where HandsIterator: Iterator<Item=SPlayerIndexMap<SHand>>
 {
-    let ref stich_current = game.current_stich();
+    let stich_current = game.current_stich();
     let eplayerindex_fixed = stich_current.current_playerindex().unwrap();
     let vecsusp = Arc::new(Mutex::new(Vec::new()));
     crossbeam::scope(|scope| {
@@ -306,7 +306,7 @@ impl TAi for SAiSimulating {
     }
 
     fn internal_suggest_card(&self, game: &SGame) -> SCard {
-        let ref stich_current = game.current_stich();
+        let stich_current = game.current_stich();
         assert!(stich_current.size()<4);
         let eplayerindex_fixed = stich_current.current_playerindex().unwrap();
         let ref hand_fixed = game.m_ahand[eplayerindex_fixed];

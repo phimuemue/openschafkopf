@@ -26,7 +26,7 @@ impl SDealCards {
     }
 
     pub fn first_hand_for(&self, eplayerindex: EPlayerIndex) -> &[SCard] {
-        let ref veccard = self.m_ahand[eplayerindex].cards();
+        let veccard = self.m_ahand[eplayerindex].cards();
         assert_eq!(veccard.len(), 8);
         &veccard[0..veccard.len()/2]
     }

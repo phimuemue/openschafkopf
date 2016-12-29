@@ -62,7 +62,7 @@ impl SSuspicionTransition {
                 for _ in 0..n_level+1 {
                     file_output.write_all(b" ")?;
                 }
-                file_output.write_all(&format!("{} : ", self.m_stich).as_bytes())?;
+                file_output.write_all(format!("{} : ", self.m_stich).as_bytes())?;
                 if 1<self.m_susp.hand_size() {
                     self.m_susp.print_suspicion(n_maxlevel, n_level, rules, vecstich, ostich_given, &mut file_output)?;
                 } else {
@@ -185,11 +185,11 @@ impl SSuspicion {
             Ok(())
         } else {
             for eplayerindex in eplayerindex_values() {
-                file_output.write_all(&format!("{} | ", self.m_ahand[eplayerindex]).as_bytes())?;
+                file_output.write_all(format!("{} | ", self.m_ahand[eplayerindex]).as_bytes())?;
             }
             file_output.write_all(b", min payouts: ")?;
             for _eplayerindex in eplayerindex_values() {
-                file_output.write_all(&format!("TODO: payout").as_bytes())?;
+                file_output.write_all(format!("TODO: payout").as_bytes())?;
             }
             file_output.write_all(b"\n")?;
             for susptrans in self.m_vecsusptrans.iter() {

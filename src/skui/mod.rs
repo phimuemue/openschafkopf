@@ -158,14 +158,14 @@ pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &Vec<SS
                 }
             };
             print_special(
-                &". Doublings: ",
+                ". Doublings: ",
                 &doublings.iter()
                     .filter(|&(_eplayerindex, b_doubling)| *b_doubling)
                     .map(|(eplayerindex, _b_doubling)| eplayerindex)
                     .collect()
             );
             print_special(
-                &". Stoesse: ",
+                ". Stoesse: ",
                 &vecstoss.iter()
                     .map(|stoss| stoss.m_eplayerindex)
                     .collect()
@@ -233,7 +233,7 @@ pub fn ask_for_alternative<T, FnFilter, FnCallback, FnSuggest>(
         ESkUiWindow::Interaction,
         |ncwin| {
             let mut ot_suggest = None;
-            let vect = vect.into_iter().enumerate().filter(|&(_i_t, ref t)| fn_filter(&t)).collect::<Vec<_>>();
+            let vect = vect.into_iter().enumerate().filter(|&(_i_t, t)| fn_filter(t)).collect::<Vec<_>>();
             assert!(0<vect.len());
             let mut i_alternative = 0; // initially, point to 0th alternative
             fn_callback(ncwin, vect[i_alternative].0, &ot_suggest);
