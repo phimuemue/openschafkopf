@@ -36,9 +36,9 @@ pub enum VTrumpfOrFarbe {
 
 impl VTrumpfOrFarbe {
     pub fn is_trumpf(&self) -> bool {
-        match self {
-            &VTrumpfOrFarbe::Trumpf => true,
-            &VTrumpfOrFarbe::Farbe(_efarbe) => false,
+        match *self {
+            VTrumpfOrFarbe::Trumpf => true,
+            VTrumpfOrFarbe::Farbe(_efarbe) => false,
         }
     }
 }

@@ -130,7 +130,7 @@ pub fn print_game_announcements(gameannouncements: &SGameAnnouncements) {
         do_in_window(
             ESkUiWindow::PlayerInfo(eplayerindex),
             |ncwin| {
-                if let &Some(rules) = orules {
+                if let Some(rules) = *orules {
                     wprint(ncwin, &format!("{}: {}", eplayerindex, rules.to_string()));
                 } else {
                     wprint(ncwin, &format!("{}: Nothing", eplayerindex));

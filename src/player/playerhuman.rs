@@ -108,9 +108,9 @@ impl TPlayer for SPlayerHuman {
         while let &Some(rulegroup) = choose_ruleset_or_rules(
             hand.get(),
             &vecorulegroup,
-            |orulegroup : &Option<&SRuleGroup>| match orulegroup {
-                &None => "Nothing".to_string(),
-                &Some(rulegroup) => rulegroup.m_str_name.clone(),
+            |orulegroup : &Option<&SRuleGroup>| match *orulegroup {
+                None => "Nothing".to_string(),
+                Some(rulegroup) => rulegroup.m_str_name.clone(),
             },
             |i_orulegroup_chosen| vecorulegroup[i_orulegroup_chosen].map(|rulegroup| rulegroup.m_vecrules[0].as_ref()),
         )
@@ -125,9 +125,9 @@ impl TPlayer for SPlayerHuman {
             if let &Some(rules) = choose_ruleset_or_rules(
                 hand.get(),
                 &vecorules,
-                |orules : &Option<&TActivelyPlayableRules>| match orules {
-                    &None => "Back".to_string(),
-                    &Some(rules) => rules.to_string()
+                |orules : &Option<&TActivelyPlayableRules>| match *orules {
+                    None => "Back".to_string(),
+                    Some(rules) => rules.to_string()
                 },
                 |i_orules_chosen| vecorules[i_orules_chosen]
             ) {
