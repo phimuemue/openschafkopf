@@ -15,7 +15,7 @@ impl SHand {
             m_veccard : self
                 .m_veccard
                 .iter()
-                .map(|x| x.clone())
+                .cloned()
                 .filter(|&card| card!=card_played)
                 .collect()
         }
