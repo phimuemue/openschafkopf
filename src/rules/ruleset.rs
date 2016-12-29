@@ -109,14 +109,14 @@ impl SRuleSet {
                 Ok(file) => file,
             };
             // TODO: make creation of ruleset file adjustable
-            for str_rules in [
+            for str_rules in &[
                 "[activerules.rufspiel]",
                 "[activerules.solo]",
                 "[activerules.farbwenz]",
                 "[activerules.wenz]",
                 "[activerules.farbgeier]",
                 "[activerules.geier]",
-            ].iter() {
+            ] {
                 file.write_all(str_rules.as_bytes()).unwrap();
             }
         }

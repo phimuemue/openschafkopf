@@ -192,7 +192,7 @@ impl SSuspicion {
                 file_output.write_all("TODO: payout".as_bytes())?;
             }
             file_output.write_all(b"\n")?;
-            for susptrans in self.m_vecsusptrans.iter() {
+            for susptrans in &self.m_vecsusptrans {
                 susptrans.print_suspiciontransition(n_maxlevel, n_level+1, rules, vecstich, ostich_given.clone(), &mut file_output)?;
             }
             Ok(())
