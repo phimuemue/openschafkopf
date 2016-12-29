@@ -102,7 +102,7 @@ impl TPlayer for SPlayerHuman {
                     .filter(|rulegroup| rulegroup.m_vecrules.iter()
                         .any(|rules| rules.can_be_played(hand))
                     )
-                    .map(|rulegroup| Some(rulegroup))
+                    .map(Some)
             )
             .collect();
         while let &Some(rulegroup) = choose_ruleset_or_rules(
