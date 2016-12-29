@@ -211,7 +211,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                     }
                 );
                 assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
-                if let Err(_) = susp.print_suspicion(8, 0, game.m_rules, &mut vecstich_complete_mut, Some((*stich_current).clone()), &mut fs::File::create(&"suspicion.txt").unwrap()) {
+                if susp.print_suspicion(8, 0, game.m_rules, &mut vecstich_complete_mut, Some((*stich_current).clone()), &mut fs::File::create(&"suspicion.txt").unwrap()).is_err() {
                     // TODO: what shall be done on error?
                 }
                 vecsusp.lock().unwrap().push(susp);
