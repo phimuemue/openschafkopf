@@ -61,7 +61,7 @@ impl<'playersinround, T> Iterator for SPlayersInRoundIterator<'playersinround, T
 
 impl<T> Index<EPlayerIndex> for SPlayersInRound<T> {
     type Output = T;
-    fn index<'a>(&'a self, eplayerindex : EPlayerIndex) -> &'a T {
+    fn index(&self, eplayerindex : EPlayerIndex) -> &T {
         assert!(self.valid_index(eplayerindex));
         &self.m_vect[(eplayerindex+4-self.m_eplayerindex_first)%4] // TODO improve (possibly when EPlayerIndex is plain_enum)
     }
