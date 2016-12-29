@@ -80,7 +80,7 @@ impl TPlayer for SPlayerHuman {
                 skui::choose_card_from_hand_key_bindings(),
                 |card| {veccard_allowed.iter().any(|card_allowed| card_allowed==card)},
                 |ncwin, i_card_chosen, ocard_suggest| {
-                    if let &Some(card) = ocard_suggest {
+                    if let Some(card) = *ocard_suggest {
                         skui::wprintln(ncwin, &format!("AI: {}", card));
                     }
                     skui::print_hand(hand.cards(), Some(i_card_chosen));
@@ -105,7 +105,7 @@ impl TPlayer for SPlayerHuman {
                     .map(Some)
             )
             .collect();
-        while let &Some(rulegroup) = choose_ruleset_or_rules(
+        while let Some(rulegroup) = *choose_ruleset_or_rules(
             hand.get(),
             &vecorulegroup,
             |orulegroup : &Option<&SRuleGroup>| match *orulegroup {
@@ -122,7 +122,7 @@ impl TPlayer for SPlayerHuman {
                         .map(|rules| Some(rules.as_ref()))
                 )
                 .collect();
-            if let &Some(rules) = choose_ruleset_or_rules(
+            if let Some(rules) = *choose_ruleset_or_rules(
                 hand.get(),
                 &vecorules,
                 |orules : &Option<&TActivelyPlayableRules>| match *orules {
