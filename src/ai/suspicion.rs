@@ -238,7 +238,7 @@ impl SSuspicion {
                 susptrans.m_stich.iter()
                     .take_while(|&(eplayerindex_stich, _card)| eplayerindex_stich != eplayerindex)
                     .map(|(_eplayerindex, card)| card)
-                    .collect::<Vec<_>>();
+                    .collect::<Vec<_>>()
             })
             .into_iter()
             .map(|(_stich_key_before_eplayerindex, grpsusptransn_before_eplayerindex)| {
