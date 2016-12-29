@@ -105,7 +105,7 @@ impl SSuspicion {
     }
 
     pub fn count_leaves(&self) -> usize {
-        if self.m_vecsusptrans.len()==0 {
+        if self.m_vecsusptrans.is_empty() {
             1
         } else {
             self.m_vecsusptrans.iter()
