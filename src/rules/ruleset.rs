@@ -41,7 +41,7 @@ impl SRuleSet {
                 {
                     let mut create_rulegroup = |str_rule_name_file: &str, str_group_name: &str, vecrules| {
                         if let Some(tomlval_active_rules) = tomltbl.lookup("activerules") {
-                            if tomlval_active_rules.lookup(&str_rule_name_file).is_some() {
+                            if tomlval_active_rules.lookup(str_rule_name_file).is_some() {
                                 vecrulegroup.push(SRuleGroup{
                                     m_str_name: str_group_name.to_string(),
                                     m_vecrules: vecrules
