@@ -43,39 +43,20 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
             .map(|stich| points_stich(stich))
             .sum();
         let b_player_party_wins = n_points_player_party>=61;
-        enum ESchneiderSchwarz {
-            Nothing,
-            Schneider,
-            Schwarz,
-        }
-        let eschneiderschwarz = 
-            if b_player_party_wins {
-                if gamefinishedstiche.get().iter().all(|stich| fn_is_player_party(rules.winner_index(stich))) {
-                    ESchneiderSchwarz::Schwarz
-                } else if n_points_player_party>90 {
-                    ESchneiderSchwarz::Schneider
-                } else {
-                    ESchneiderSchwarz::Nothing
-                }
-            } else {
-                if gamefinishedstiche.get().iter().all(|stich| !fn_is_player_party(rules.winner_index(stich))) {
-                    ESchneiderSchwarz::Schwarz
-                } else if n_points_player_party<=30 {
-                    ESchneiderSchwarz::Schneider
-                } else {
-                    ESchneiderSchwarz::Nothing
-                }
-            };
         let ab_winner = create_playerindexmap(|eplayerindex| {
             fn_is_player_party(eplayerindex)==b_player_party_wins
         });
         internal_payout(
             /*n_payout_single_player*/ n_payout_base
-                + { match eschneiderschwarz {
-                    ESchneiderSchwarz::Nothing => 0,
-                    ESchneiderSchwarz::Schneider => 10,
-                    ESchneiderSchwarz::Schwarz => 20,
-                }}
+                + { 
+                    if gamefinishedstiche.get().iter().all(|stich| b_player_party_wins==fn_is_player_party(rules.winner_index(stich))) {
+                        20 // schwarz
+                    } else if (b_player_party_wins && n_points_player_party>90) || (!b_player_party_wins && n_points_player_party<=30) {
+                        10 // schneider
+                    } else {
+                        0 // "nothing", i.e. neither schneider nor schwarz
+                    }
+                }
                 + payout_laufende(rules, gamefinishedstiche, &ab_winner),
             fn_player_multiplier,
             &ab_winner,
