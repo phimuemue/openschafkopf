@@ -79,7 +79,7 @@ impl SCard {
         unsafe{(mem::transmute((self.m_n_internalrepresentation % 8) as usize))}
     }
     pub fn values() -> Vec<SCard> { // TODO Rust: return iterator once we can specify that return type is an iterator
-        return iproduct!(
+        iproduct!(
             EFarbe::values(),
             ESchlag::values()
         )

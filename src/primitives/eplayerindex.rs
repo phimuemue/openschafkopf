@@ -48,13 +48,13 @@ impl<'playersinround, T> Iterator for SPlayersInRoundIterator<'playersinround, T
     type Item = (EPlayerIndex, &'playersinround T);
     fn next(&mut self) -> Option<(EPlayerIndex, &'playersinround T)> {
         if self.m_i_offset==self.m_playersinround.size() {
-            return None;
+            None
         }
         else {
             let eplayerindex = eplayerindex_wrapping_add(self.m_playersinround.m_eplayerindex_first, self.m_i_offset);
             let pairicard = (eplayerindex, &self.m_playersinround[eplayerindex]);
             self.m_i_offset = self.m_i_offset + 1;
-            return Some(pairicard);
+            Some(pairicard)
         }
     }
 }
