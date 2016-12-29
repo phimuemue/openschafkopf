@@ -309,7 +309,7 @@ impl TAi for SAiSimulating {
         let stich_current = game.current_stich();
         assert!(stich_current.size()<4);
         let eplayerindex_fixed = stich_current.current_playerindex().unwrap();
-        let ref hand_fixed = game.m_ahand[eplayerindex_fixed];
+        let hand_fixed = &game.m_ahand[eplayerindex_fixed];
         assert!(!hand_fixed.cards().is_empty());
         if hand_fixed.cards().len()<=2 {
             determine_best_card(

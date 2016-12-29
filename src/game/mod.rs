@@ -209,7 +209,7 @@ impl<'rules> SGame<'rules> {
             return Err("card not contained in player's hand");
         }
         {
-            let ref mut hand = self.m_ahand[eplayerindex];
+            let hand = &mut self.m_ahand[eplayerindex];
             assert!(self.m_rules.card_is_allowed(&self.m_vecstich, hand, card_played));
             hand.play_card(card_played);
             assert!(!self.m_vecstich.is_empty());
