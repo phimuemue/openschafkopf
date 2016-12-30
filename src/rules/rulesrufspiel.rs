@@ -75,7 +75,7 @@ impl TRules for SRulesRufspiel {
                 fn_is_player_party!(),
                 /*fn_player_multiplier*/ |_eplayerindex| 1, // everyone pays/gets the same
                 /*n_payout_base*/20,
-                /*n_payout_lauf*/10,
+                &SLaufendeParams::new(10, 3),
             ),
             n_stoss,
             n_doubling,

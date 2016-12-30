@@ -11,6 +11,11 @@ impl SStossDoublingPayoutDecider {
     }
 }
 
+pub struct SLaufendeParams {
+    m_n_payout_per_lauf : isize,
+    m_n_lauf_lbound : usize,
+}
+
 pub trait TPayoutDecider {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         rules: &Rules,
@@ -18,7 +23,7 @@ pub trait TPayoutDecider {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         n_payout_base: isize,
-        n_payout_lauf: isize,
+        laufendeparams: &SLaufendeParams,
     ) -> SPlayerIndexMap<isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
@@ -34,7 +39,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         n_payout_base: isize,
-        n_payout_lauf: isize,
+        laufendeparams: &SLaufendeParams,
     ) -> SPlayerIndexMap<isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
@@ -59,18 +64,26 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
                         0 // "nothing", i.e. neither schneider nor schwarz
                     }
                 }
-                + payout_laufende(rules, gamefinishedstiche, &ab_winner, n_payout_lauf),
+                + laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner),
             fn_player_multiplier,
             &ab_winner,
         )
     }
 }
 
-fn payout_laufende<Rules>(rules: &Rules, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SPlayerIndexMap<bool>, n_payout_lauf: isize) -> isize 
-    where Rules: TRules,
-{
-    let n_laufende = rules.count_laufende(gamefinishedstiche, ab_winner);
-    (if n_laufende<3 {0} else {n_laufende} as isize) * n_payout_lauf
+impl SLaufendeParams {
+    pub fn new(n_payout_per_lauf: isize, n_lauf_lbound: usize) -> SLaufendeParams {
+        SLaufendeParams {
+            m_n_payout_per_lauf : n_payout_per_lauf,
+            m_n_lauf_lbound : n_lauf_lbound,
+        }
+    }
+    pub fn payout_laufende<Rules>(&self, rules: &Rules, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SPlayerIndexMap<bool>) -> isize 
+        where Rules: TRules,
+    {
+        let n_laufende = rules.count_laufende(gamefinishedstiche, ab_winner);
+        (if n_laufende<self.m_n_lauf_lbound {0} else {n_laufende} as isize) * self.m_n_payout_per_lauf
+    }
 }
 
 fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_player_multiplier: FnPlayerMultiplier, ab_winner: &SPlayerIndexMap<bool>) -> SPlayerIndexMap<isize> 
@@ -98,7 +111,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         n_payout_base: isize,
-        n_payout_lauf: isize,
+        laufendeparams: &SLaufendeParams,
     ) -> SPlayerIndexMap<isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
@@ -110,7 +123,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
             fn_is_player_party(eplayerindex)==b_player_party_wins
         });
         internal_payout(
-            /*n_payout_single_player*/ (n_payout_base + payout_laufende(rules, gamefinishedstiche, &ab_winner, n_payout_lauf)) * 2,
+            /*n_payout_single_player*/ (n_payout_base + laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner)) * 2,
             fn_player_multiplier,
             &ab_winner,
         )
@@ -126,7 +139,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         n_payout_base: isize,
-        n_payout_lauf: isize,
+        laufendeparams: &SLaufendeParams,
     ) -> SPlayerIndexMap<isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
@@ -142,7 +155,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
             + {
                 assert_eq!(8, gamefinishedstiche.get().len()); // TODO Kurze Karte supports Sie?
                 gamefinishedstiche.get().len() as isize
-            } * n_payout_lauf) * 4,
+            } * laufendeparams.m_n_payout_per_lauf) * 4,
             fn_player_multiplier,
             /*ab_winner*/ &create_playerindexmap(|eplayerindex| {
                 fn_is_player_party(eplayerindex)==b_player_party_wins
