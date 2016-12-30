@@ -67,21 +67,26 @@ impl SRuleSet {
                                 format!("{}{}", str_rulename, $str_rulename_suffix)
                             };
                             macro_rules! generate_sololike_farbe {
-                                ($eplayerindex: ident, $trumpfdecider: ident, $i_prioindex: expr, $rulename: expr, $laufendeparams: expr) => {
+                                ($trumpfdecider: ident, $i_prioindex: expr, $rulename: expr, $laufendeparams: expr) => {{
+                                    macro_rules! internal_generate_sololike_farbe {
+                                        ($farbedesignator: ident) => {
+                                            sololike::<$trumpfdecider<STrumpfDeciderFarbe<$farbedesignator>>, $payoutdecider> (eplayerindex, $i_prioindex, &format!("{}-{}", $farbedesignator::farbe(), $rulename), $laufendeparams)
+                                        }
+                                    }
                                     vec! [
-                                        sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, $payoutdecider> ($eplayerindex, $i_prioindex, &format!("Eichel-{}", $rulename), $laufendeparams),
-                                        sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, $payoutdecider>   ($eplayerindex, $i_prioindex, &format!("Gras-{}", $rulename), $laufendeparams),
-                                        sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, $payoutdecider>   ($eplayerindex, $i_prioindex, &format!("Herz-{}", $rulename), $laufendeparams),
-                                        sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, $payoutdecider>($eplayerindex, $i_prioindex, &format!("Schelln-{}", $rulename), $laufendeparams),
+                                        internal_generate_sololike_farbe!(SFarbeDesignatorEichel),
+                                        internal_generate_sololike_farbe!(SFarbeDesignatorGras),
+                                        internal_generate_sololike_farbe!(SFarbeDesignatorHerz),
+                                        internal_generate_sololike_farbe!(SFarbeDesignatorSchelln),
                                     ]
-                                }
+                                }}
                             }
                             let str_rulename = internal_rulename("Solo");
                             // TODO make Laufende adjustable
                             create_rulegroup(
                                 "solo",
                                 &str_rulename,
-                                generate_sololike_farbe!(eplayerindex, SCoreSolo, $fn_prio(0), &str_rulename, SLaufendeParams::new(10, 3))
+                                generate_sololike_farbe!(SCoreSolo, $fn_prio(0), &str_rulename, SLaufendeParams::new(10, 3))
                             );
                             let str_rulename = internal_rulename("Wenz");
                             create_rulegroup(
@@ -92,7 +97,7 @@ impl SRuleSet {
                             create_rulegroup(
                                 "farbwenz",
                                 &internal_rulename("Farbwenz"),
-                                generate_sololike_farbe!(eplayerindex, SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz"), SLaufendeParams::new(10, 3))
+                                generate_sololike_farbe!(SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz"), SLaufendeParams::new(10, 3))
                             );
                             let str_rulename = internal_rulename("Geier");
                             create_rulegroup(
@@ -103,7 +108,7 @@ impl SRuleSet {
                             create_rulegroup(
                                 "farbgeier",
                                 &internal_rulename("Farbgeier"),
-                                generate_sololike_farbe!(eplayerindex, SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"), SLaufendeParams::new(10, 3))
+                                generate_sololike_farbe!(SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"), SLaufendeParams::new(10, 3))
                             );
                         }
                     }
