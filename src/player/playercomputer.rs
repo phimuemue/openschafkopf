@@ -64,7 +64,7 @@ impl TPlayer for SPlayerComputer {
         doublings: &SDoublings,
         rules: &TRules,
         hand: &SHand,
-        vecstoss: &Vec<SStoss>,
+        vecstoss: &[SStoss],
         n_stock: isize,
         txb: mpsc::Sender<bool>,
     ) {

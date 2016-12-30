@@ -141,7 +141,7 @@ pub fn print_game_announcements(gameannouncements: &SGameAnnouncements) {
     }
 }
 
-pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &Vec<SStoss>) {
+pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &[SStoss]) {
     do_in_window(
         ESkUiWindow::GameInfo,
         |ncwin| {
@@ -149,7 +149,7 @@ pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &Vec<SS
             if let Some(eplayerindex) = rules.playerindex() {
                 wprint(ncwin, &format!(", played by {}", eplayerindex));
             }
-            let print_special = |str_special, veceplayerindex: &Vec<EPlayerIndex>| {
+            let print_special = |str_special, veceplayerindex: Vec<EPlayerIndex>| {
                 if !veceplayerindex.is_empty() {
                     wprint(ncwin, str_special);
                     for eplayerindex in veceplayerindex {
@@ -159,14 +159,14 @@ pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &Vec<SS
             };
             print_special(
                 ". Doublings: ",
-                &doublings.iter()
+                doublings.iter()
                     .filter(|&(_eplayerindex, b_doubling)| *b_doubling)
                     .map(|(eplayerindex, _b_doubling)| eplayerindex)
                     .collect()
             );
             print_special(
                 ". Stoesse: ",
-                &vecstoss.iter()
+                vecstoss.iter()
                     .map(|stoss| stoss.m_eplayerindex)
                     .collect()
             );

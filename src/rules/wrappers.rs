@@ -19,18 +19,18 @@ impl<'hand> SFullHand<'hand> {
 }
 
 pub struct SGameFinishedStiche<'vecstich> {
-    m_vecstich: &'vecstich Vec<SStich>,
+    m_vecstich: &'vecstich [SStich],
 }
 
 impl<'vecstich> SGameFinishedStiche<'vecstich> {
-    pub fn new(vecstich: &Vec<SStich>) -> SGameFinishedStiche {
+    pub fn new(vecstich: &[SStich]) -> SGameFinishedStiche {
         assert_eq!(vecstich.len(), 8);
         assert!(vecstich.iter().all(|stich| 4==stich.size()));
         SGameFinishedStiche {
             m_vecstich : vecstich,
         }
     }
-    pub fn get(&self) -> &Vec<SStich> {
+    pub fn get(&self) -> &[SStich] {
         assert_eq!(self.m_vecstich.len(), 8);
         self.m_vecstich
     }

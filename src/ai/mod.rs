@@ -114,7 +114,7 @@ impl TAi for SAiCheating {
 pub fn is_compatible_with_game_so_far(
     ahand: &SPlayerIndexMap<SHand>,
     rules: &TRules,
-    vecstich: &Vec<SStich>,
+    vecstich: &[SStich],
 ) -> bool {
     let stich_current = current_stich(vecstich);
     assert!(stich_current.size()<4);
@@ -193,7 +193,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                     ahand,
                     game.m_rules,
                     &mut vecstich_complete_mut,
-                    &|vecstich_complete_successor: &Vec<SStich>, vecstich_successor: &mut Vec<SStich>| {
+                    &|vecstich_complete_successor: &[SStich], vecstich_successor: &mut Vec<SStich>| {
                         assert!(!vecstich_successor.is_empty());
                         if vecstich_complete_successor.len()==n_stich_complete {
                             vecstich_successor.retain(|stich_successor| {

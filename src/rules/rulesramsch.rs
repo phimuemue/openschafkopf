@@ -23,7 +23,7 @@ pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag<
 impl TRules for SRulesRamsch {
     impl_rules_trumpf!(STrumpfDeciderRamsch);
 
-    fn stoss_allowed(&self, _eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool {
+    fn stoss_allowed(&self, _eplayerindex: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {
         assert!(vecstoss.is_empty());
         assert_eq!(hand.cards().len(), 8);
         false
@@ -108,11 +108,11 @@ impl TRules for SRulesRamsch {
         )
     }
 
-    fn all_allowed_cards_first_in_stich(&self, _vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
+    fn all_allowed_cards_first_in_stich(&self, _vecstich: &[SStich], hand: &SHand) -> SHandVector {
         hand.cards().clone()
     }
 
-    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
+    fn all_allowed_cards_within_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
         let card_first = *vecstich.last().unwrap().first();
         let veccard_allowed : SHandVector = hand.cards().iter()

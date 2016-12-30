@@ -94,7 +94,7 @@ impl SSuspicion {
         vecstich: &mut Vec<SStich>,
         func_filter_successors: FuncFilterSuccessors,
     ) -> Self 
-        where FuncFilterSuccessors : Fn(&Vec<SStich> /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
+        where FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
     {
         let mut susp = SSuspicion {
             m_vecsusptrans: Vec::new(),
@@ -129,7 +129,7 @@ impl SSuspicion {
     }
 
     fn compute_successors<FuncFilterSuccessors>(&mut self, eplayerindex_first: EPlayerIndex, rules: &TRules, vecstich: &mut Vec<SStich>, func_filter_successors: &FuncFilterSuccessors)
-        where FuncFilterSuccessors : Fn(&Vec<SStich> /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
+        where FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
     {
         assert_eq!(self.m_vecsusptrans.len(), 0); // currently, we have no caching
         let mut vecstich_successor : Vec<SStich> = Vec::new();

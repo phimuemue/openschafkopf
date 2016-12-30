@@ -50,7 +50,7 @@ impl TRules for SRulesRufspiel {
         Some(self.m_eplayerindex)
     }
 
-    fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool {
+    fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {
         assert_eq!(hand.cards().len(), 8);
         assert!(eplayerindex!=self.m_eplayerindex || !hand.contains(self.rufsau()));
         (eplayerindex==self.m_eplayerindex || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
@@ -106,7 +106,7 @@ impl TRules for SRulesRufspiel {
         }
     }
 
-    fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
+    fn all_allowed_cards_first_in_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
         if // do we already know who had the rufsau?
             !completed_stichs(vecstich).iter()
@@ -144,7 +144,7 @@ impl TRules for SRulesRufspiel {
         }
     }
 
-    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
+    fn all_allowed_cards_within_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
         if hand.cards().len()<=1 {
             hand.cards().clone()

@@ -16,12 +16,12 @@ use std::cmp::Ordering;
 use std::fmt;
 pub use rules::wrappers::*;
 
-pub fn current_stich(vecstich: &Vec<SStich>) -> &SStich {
+pub fn current_stich(vecstich: &[SStich]) -> &SStich {
     assert!(!vecstich.is_empty());
     vecstich.last().unwrap()
 }
 
-pub fn completed_stichs(vecstich: &Vec<SStich>) -> &[SStich] {
+pub fn completed_stichs(vecstich: &[SStich]) -> &[SStich] {
     assert!(current_stich(vecstich).size()<4);
     assert_eq!(vecstich[0..vecstich.len()-1].len(), vecstich.len()-1);
     assert!(vecstich[0..vecstich.len()-1].iter().all(|stich| stich.size()==4));
@@ -60,11 +60,11 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
         true // probably, only Rufspiel is prevented in some cases
     }
 
-    fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &Vec<SStoss>, hand: &SHand) -> bool;
+    fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, n_stock: isize) -> SAccountBalance;
 
-    fn all_allowed_cards(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector {
+    fn all_allowed_cards(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
         assert!(vecstich.last().unwrap().size()<4);
         if 0==vecstich.last().unwrap().size() {
@@ -74,11 +74,11 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
         }
     }
 
-    fn all_allowed_cards_first_in_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector;
+    fn all_allowed_cards_first_in_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector;
 
-    fn all_allowed_cards_within_stich(&self, vecstich: &Vec<SStich>, hand: &SHand) -> SHandVector;
+    fn all_allowed_cards_within_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector;
 
-    fn card_is_allowed(&self, vecstich: &Vec<SStich>, hand: &SHand, card: SCard) -> bool {
+    fn card_is_allowed(&self, vecstich: &[SStich], hand: &SHand, card: SCard) -> bool {
         self.all_allowed_cards(vecstich, hand).into_iter()
             .any(|card_iterated| card_iterated==card)
     }

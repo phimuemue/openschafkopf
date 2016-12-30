@@ -28,7 +28,7 @@ pub struct SRuleSet {
     pub m_stockorramsch : VStockOrT<Box<TRules>>,
 }
 
-pub fn allowed_rules(vecrulegroup: &Vec<SRuleGroup>) -> Vec<&TActivelyPlayableRules> {
+pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> Vec<&TActivelyPlayableRules> {
     vecrulegroup.iter().flat_map(|rulegroup| rulegroup.m_vecrules.iter().map(|rules| rules.as_ref())).collect()
 }
 

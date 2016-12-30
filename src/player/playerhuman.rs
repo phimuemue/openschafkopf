@@ -144,7 +144,7 @@ impl TPlayer for SPlayerHuman {
         doublings: &SDoublings,
         rules: &TRules,
         hand: &SHand,
-        vecstoss: &Vec<SStoss>,
+        vecstoss: &[SStoss],
         _n_stock: isize,
         txb: mpsc::Sender<bool>,
     ) {
