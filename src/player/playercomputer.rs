@@ -70,7 +70,7 @@ impl TPlayer for SPlayerComputer {
     ) {
         let n_samples_per_stoss = 5; // TODO move to ai, make adjustable
         let mut vecpairahandf_suspicion = forever_rand_hands(/*vecstich*/&Vec::new(), hand.clone(), eplayerindex)
-            .filter(|ahand| is_compatible_with_game_so_far(ahand, rules, /*vecstich*/&vec![SStich::new(doublings.m_eplayerindex_first)])) // stoss currently only in SPreGame
+            .filter(|ahand| is_compatible_with_game_so_far(ahand, rules, /*vecstich*/&[SStich::new(doublings.m_eplayerindex_first)])) // stoss currently only in SPreGame
             .take(2*n_samples_per_stoss)
             .map(|ahand| {
                 let f_rank_rules = rules.playerindex().map_or(0f64, |eplayerindex_active| {
