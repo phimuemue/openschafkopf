@@ -8,7 +8,7 @@ pub trait TTrumpfDecider {
 
     fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> Vec<SCard>;
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering;
-    fn count_laufende(gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SPlayerIndexMap<bool>) -> isize {
+    fn count_laufende(gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SPlayerIndexMap<bool>) -> usize {
         let veccard_trumpf = Self::trumpfs_in_descending_order(Vec::new());
         let mapcardeplayerindex = SCardMap::<EPlayerIndex>::new_from_pairs(
             gamefinishedstiche.get().iter().flat_map(|stich| stich.iter())
@@ -19,7 +19,7 @@ pub trait TTrumpfDecider {
         let b_might_have_lauf = laufende_relevant(&veccard_trumpf[0]);
         veccard_trumpf.iter()
             .take_while(|card| b_might_have_lauf==laufende_relevant(card))
-            .count() as isize
+            .count()
     }
 }
 
@@ -130,7 +130,7 @@ macro_rules! impl_rules_trumpf {
         fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
             $trumpfdecider::compare_trumpf(card_fst, card_snd)
         }
-        fn count_laufende(&self, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SPlayerIndexMap<bool>) -> isize {
+        fn count_laufende(&self, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SPlayerIndexMap<bool>) -> usize {
             $trumpfdecider::count_laufende(gamefinishedstiche, ab_winner)
         }
     }

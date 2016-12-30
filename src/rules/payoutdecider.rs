@@ -70,7 +70,7 @@ fn payout_laufende<Rules>(rules: &Rules, gamefinishedstiche: &SGameFinishedStich
     where Rules: TRules,
 {
     let n_laufende = rules.count_laufende(gamefinishedstiche, ab_winner);
-    (if n_laufende<3 {0} else {n_laufende}) * n_payout_lauf
+    (if n_laufende<3 {0} else {n_laufende} as isize) * n_payout_lauf
 }
 
 fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_player_multiplier: FnPlayerMultiplier, ab_winner: &SPlayerIndexMap<bool>) -> SPlayerIndexMap<isize> 
