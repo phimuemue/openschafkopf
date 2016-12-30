@@ -12,7 +12,7 @@ pub struct SPlayerHuman {
     pub m_ai : Box<TAi>,
 }
 
-fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(hand: &SHand, vect : &'t Vec<T>, fn_format: FnFormat, fn_choose: FnChoose) -> &'t T
+fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(hand: &SHand, vect : &'t [T], fn_format: FnFormat, fn_choose: FnChoose) -> &'t T
     where FnFormat: Fn(&T) -> String,
           FnChoose: Fn(usize) -> Option<&'t TActivelyPlayableRules>
 {
@@ -94,7 +94,7 @@ impl TPlayer for SPlayerHuman {
         }
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SFullHand, gameannouncements : &SGameAnnouncements, vecrulegroup: &'rules Vec<SRuleGroup>, _n_stock: isize, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
+    fn ask_for_game<'rules>(&self, hand: &SFullHand, gameannouncements : &SGameAnnouncements, vecrulegroup: &'rules [SRuleGroup], _n_stock: isize, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
         skui::print_game_announcements(gameannouncements);
         let vecorulegroup : Vec<Option<&SRuleGroup>> = Some(None).into_iter()
             .chain(

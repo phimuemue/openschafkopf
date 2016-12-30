@@ -21,7 +21,7 @@ pub trait TPlayer {
         &self,
         hand: &SFullHand,
         gameannouncements: &SGameAnnouncements,
-        vecrulegroup: &'rules Vec<SRuleGroup>,
+        vecrulegroup: &'rules [SRuleGroup],
         n_stock: isize,
         txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>
     );
