@@ -114,7 +114,7 @@ impl<'rules> SGamePreparations<'rules> {
             })
         };
         let vecrules_announced : Vec<&TActivelyPlayableRules> = self.m_gameannouncements.iter()
-            .filter_map(|(_eplayerindex, orules)| orules.clone())
+            .filter_map(|(_eplayerindex, orules)| *orules)
             .collect();
         if 0<vecrules_announced.len() {
             let prio_best = vecrules_announced.iter()

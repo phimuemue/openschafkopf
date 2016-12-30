@@ -43,9 +43,9 @@ impl TRules for SRulesRamsch {
                     an_points_accu
                 }
             );
-        let n_points_max = an_points.iter().max().unwrap().clone();
+        let n_points_max = an_points.iter().max().unwrap();
         let veceplayerindex_most_points = eplayerindex_values()
-            .filter(|eplayerindex| n_points_max==an_points[*eplayerindex])
+            .filter(|eplayerindex| n_points_max==&an_points[*eplayerindex])
             .collect::<Vec<_>>();
         let eplayerindex_loser : EPlayerIndex = {
             if 1==veceplayerindex_most_points.len() {

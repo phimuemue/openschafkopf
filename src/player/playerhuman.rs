@@ -47,7 +47,7 @@ impl TPlayer for SPlayerHuman {
         txb_doubling: mpsc::Sender<bool>,
     ) {
         let vecb_doubling = vec![false, true];
-        txb_doubling.send(skui::ask_for_alternative(
+        txb_doubling.send(*skui::ask_for_alternative(
             &vecb_doubling,
             skui::choose_alternative_from_list_key_bindings(),
             |_| true, // all alternatives allowed
@@ -63,7 +63,7 @@ impl TPlayer for SPlayerHuman {
                 }
             },
             || None, // TODO implement suggestions
-        ).clone()).unwrap()
+        )).unwrap()
     }
 
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
@@ -75,7 +75,7 @@ impl TPlayer for SPlayerHuman {
         };
         let veccard_allowed = game.m_rules.all_allowed_cards(&game.m_vecstich, &hand);
         match txcard.send(
-            skui::ask_for_alternative(
+            *skui::ask_for_alternative(
                 hand.cards(),
                 skui::choose_card_from_hand_key_bindings(),
                 |card| {veccard_allowed.iter().any(|card_allowed| card_allowed==card)},
@@ -87,7 +87,7 @@ impl TPlayer for SPlayerHuman {
                     skui::print_game_info(game.m_rules, &game.m_doublings, &game.m_vecstoss);
                 },
                 || {Some(self.m_ai.suggest_card(game))}
-            ).clone()
+            )
         ) {
             Ok(_) => (),
             Err(_) => unimplemented!(), // we possibly want to be able to deal with "blocked" plays (timeout etc.)
@@ -149,7 +149,7 @@ impl TPlayer for SPlayerHuman {
         txb: mpsc::Sender<bool>,
     ) {
         let vecb_stoss = vec![false, true];
-        txb.send(skui::ask_for_alternative(
+        txb.send(*skui::ask_for_alternative(
             &vecb_stoss,
             skui::choose_alternative_from_list_key_bindings(),
             |_| true, // all alternatives allowed
@@ -176,6 +176,6 @@ impl TPlayer for SPlayerHuman {
                 }
             },
             || None, // TODO implement suggestions
-        ).clone()).unwrap()
+        )).unwrap()
     }
 }

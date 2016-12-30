@@ -223,7 +223,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
             // aggregate n_payout per card in some way
             HashMap::from_iter(
                 veccard_allowed_fixed.iter()
-                    .map(|card| (card.clone(), 0)) // TODO Option<isize> more convenient?
+                    .map(|card| (*card, 0)) // TODO Option<isize> more convenient?
             ),
             |mut mapcardpayout: HashMap<SCard, isize>, susp| {
                 let mut vecstich_complete_payout = game.completed_stichs().iter().cloned().collect();
@@ -252,7 +252,6 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
     veccard_allowed_fixed.into_iter()
         .max_by_key(|card| mapcardpayout[card])
         .unwrap()
-        .clone()
 }
 
 pub struct SAiSimulating {

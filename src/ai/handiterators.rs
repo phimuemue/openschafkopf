@@ -93,7 +93,7 @@ impl Iterator for SAllHands {
                 } else {
                     SHand::new_from_vec(self.m_veceplayerindex.iter().enumerate()
                         .filter(|&(_i, eplayerindex_susp)| *eplayerindex_susp == eplayerindex)
-                        .map(|(i, _eplayerindex_susp)| self.m_veccard_unknown[i.clone()]).collect())
+                        .map(|(i, _eplayerindex_susp)| self.m_veccard_unknown[i]).collect())
                 }
             });
             self.m_b_valid = self.m_veceplayerindex[..].next_permutation();
