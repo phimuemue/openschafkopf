@@ -76,6 +76,7 @@ impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, Payo
                         }
                     },
                     /*n_payout_base*/50,
+                    /*n_payout_lauf*/10,
                 ),
                 n_stoss,
                 n_doubling,
