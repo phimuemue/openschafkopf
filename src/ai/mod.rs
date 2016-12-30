@@ -9,7 +9,7 @@ use ai::handiterators::*;
 
 use rand;
 use std::collections::HashMap;
-use std::iter::FromIterator;
+use std::collections::hash_map::Entry;
 use std::fs;
 use std::mem;
 use crossbeam;
@@ -221,10 +221,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
     let mapcardpayout = vecsusp.lock().unwrap().iter()
         .fold(
             // aggregate n_payout per card in some way
-            HashMap::from_iter(
-                veccard_allowed_fixed.iter()
-                    .map(|card| (*card, 0)) // TODO Option<isize> more convenient?
-            ),
+            HashMap::new(),
             |mut mapcardpayout: HashMap<SCard, isize>, susp| {
                 let mut vecstich_complete_payout = game.completed_stichs().iter().cloned().collect();
                 for (card, n_payout) in susp.suspicion_transitions().iter()
@@ -243,8 +240,16 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                         (susptrans.stich()[eplayerindex_fixed], n_payout)
                     })
                 {
-                    let n_payout_acc = mapcardpayout[&card];
-                    *mapcardpayout.get_mut(&card).unwrap() = cmp::min(n_payout_acc, n_payout);
+                    match mapcardpayout.entry(card) {
+                        Entry::Occupied(mut occentry) => {
+                            let n_payout_acc = *occentry.get();
+                            occentry.insert(cmp::min(n_payout_acc, n_payout));
+                        }
+                        Entry::Vacant(vacentry) => {
+                            vacentry.insert(n_payout);
+                        }
+                    }
+                    assert!(!mapcardpayout.is_empty());
                 }
                 mapcardpayout
             }
