@@ -15,6 +15,7 @@ pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider>
     pub m_trumpfdecider : PhantomData<TrumpfDecider>,
     pub m_payoutdecider : PhantomData<PayoutDecider>,
     pub m_prio : VGameAnnouncementPriority,
+    m_laufendeparams : SLaufendeParams,
 }
 
 impl<TrumpfDecider, PayoutDecider> fmt::Display for SRulesSoloLike<TrumpfDecider, PayoutDecider> 
@@ -76,7 +77,7 @@ impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, Payo
                         }
                     },
                     /*n_payout_base*/50,
-                    &SLaufendeParams::new(10, 3),
+                    &self.m_laufendeparams,
                 ),
                 n_stoss,
                 n_doubling,
@@ -115,6 +116,7 @@ impl<TrumpfDecider, PayoutDecider> SRulesSoloLike<TrumpfDecider, PayoutDecider>
             m_payoutdecider: PhantomData::<PayoutDecider>,
             m_prio: prio,
             m_str_name: str_rulename.to_string(),
+            m_laufendeparams : SLaufendeParams::new(10, 3),
         }
     }
 }

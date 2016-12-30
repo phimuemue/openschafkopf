@@ -54,7 +54,11 @@ impl SRuleSet {
                         "Rufspiel", 
                         EFarbe::values()
                             .filter(|efarbe| EFarbe::Herz!=*efarbe)
-                            .map(|efarbe| Box::new(SRulesRufspiel{m_eplayerindex: eplayerindex, m_efarbe: efarbe}) as Box<TActivelyPlayableRules>)
+                            .map(|efarbe| Box::new(SRulesRufspiel{
+                                m_eplayerindex: eplayerindex,
+                                m_efarbe: efarbe,
+                                m_laufendeparams: SLaufendeParams::new(10, 3),
+                            }) as Box<TActivelyPlayableRules>)
                             .collect()
                     );
                     macro_rules! read_sololike {

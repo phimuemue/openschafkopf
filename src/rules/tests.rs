@@ -59,7 +59,7 @@ pub fn test_rules(
 fn test_rulesrufspiel() {
     test_rules(
         "../../testdata/games/10.html",
-        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Eichel},
+        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["ho so gu su ek ga s9 s7","go hk h8 h7 ea sa sk s8","eu hu ha ez e7 gz g9 g8","eo hz h9 e9 e8 gk g7 sz",],
         vec![],
         vec![],
@@ -68,7 +68,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/14.html",
-        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Eichel},
+        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["ho hu ha h8 ez e9 sa s9","eu h7 e8 gk g9 g7 sk s8","go so gu hz h9 e7 ga g8","eo su hk ea ek gz sz s7",],
         vec![],
         vec![],
@@ -77,7 +77,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/16.html",
-        &SRulesRufspiel{m_eplayerindex: 2, m_efarbe: EFarbe::Schelln},
+        &SRulesRufspiel{m_eplayerindex: 2, m_efarbe: EFarbe::Schelln, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["gu su hk e9 e8 e7 ga sz","so hu hz h8 ez g9 g8 s7","eo go ha h9 h7 sk s9 s8","ho eu ea ek gz gk g7 sa",],
         vec![],
         vec![],
@@ -86,7 +86,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/19.html",
-        &SRulesRufspiel{m_eplayerindex: 1, m_efarbe: EFarbe::Gras},
+        &SRulesRufspiel{m_eplayerindex: 1, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["go gu ga gz g9 sz s9 s8","ho hu hk h8 h7 gk sa s7","eo so eu ha ea e9 e8 sk","su hz h9 ez ek e7 g8 g7",],
         vec![],
         vec![],
@@ -95,7 +95,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/2.html",
-        &SRulesRufspiel{m_eplayerindex: 2, m_efarbe: EFarbe::Gras},
+        &SRulesRufspiel{m_eplayerindex: 2, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["gu su hz h7 ek ga gk s7","hk ez e9 e8 e7 g7 s9 s8","go so hu ha ea gz sa sk","eo ho eu h9 h8 g9 g8 sz",],
         vec![],
         vec![3,0,],
@@ -104,7 +104,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/21.html",
-        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Schelln},
+        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Schelln, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["hk h7 ez e9 e7 gk g8 sk","go gu ea ek e8 gz sa s7","ho so eu hz h8 g7 sz s8","eo hu su ha h9 ga g9 s9",],
         vec![],
         vec![],
@@ -113,7 +113,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/22.html",
-        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Gras},
+        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["eo eu hu ha hk g7 sz s8","ho ez e9 e7 gz gk g9 sa","go so hz h9 ek e8 sk s9","gu su h8 h7 ea ga g8 s7",],
         vec![],
         vec![],
@@ -122,7 +122,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/26.html",
-        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Schelln},
+        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Schelln, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["eo ho hz h9 h8 ga gk s8","hu su hk ea e7 gz sa sz","go so eu gu e8 g9 s9 s7","ha h7 ez ek e9 g8 g7 sk",],
         vec![],
         vec![],
@@ -131,7 +131,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/29.html",
-        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Eichel},
+        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["so su ha hz h7 ek e9 sz","go hk h8 e7 gz g9 sa s7","eo eu h9 ez ga gk sk s8","ho gu hu ea e8 g8 g7 s9",],
         vec![],
         vec![],
@@ -140,7 +140,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/30.html",
-        &SRulesRufspiel{m_eplayerindex: 1, m_efarbe: EFarbe::Gras},
+        &SRulesRufspiel{m_eplayerindex: 1, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["ha ea ez e8 e7 ga gk sk","eu hu su hz h8 h7 g9 g7","eo ho gu hk e9 gz sa s9","go so h9 ek g8 sz s8 s7",],
         vec![],
         vec![],
@@ -149,7 +149,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/31.html",
-        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Schelln},
+        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Schelln, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["eo hz h9 e8 ga gk sk s9","gu hu ez ek e7 gz g9 s7","ho so su ha e9 g8 g7 sa","go eu hk h8 h7 ea sz s8",],
         vec![],
         vec![],
@@ -158,7 +158,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/32.html",
-        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Gras},
+        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["eo go ho hz h7 e9 gz sa","so gu hu hk h8 ea ez g7","su e8 gk g9 g8 sk s9 s7","eu ha h9 ek e7 ga sz s8",],
         vec![],
         vec![],
@@ -167,7 +167,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/33.html",
-        &SRulesRufspiel{m_eplayerindex: 2, m_efarbe: EFarbe::Gras},
+        &SRulesRufspiel{m_eplayerindex: 2, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["so eu su h7 ek g7 sk s8","eo h9 ea ez e9 e8 g8 s7","go ho gu ha hz g9 sa sz","hu hk h8 e7 ga gz gk s9",],
         vec![],
         vec![],
@@ -176,7 +176,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/35.html",
-        &SRulesRufspiel{m_eplayerindex: 2, m_efarbe: EFarbe::Gras},
+        &SRulesRufspiel{m_eplayerindex: 2, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["eo so eu h7 e7 gk g9 g8","gu hu ek e8 ga sz s9 s7","go ho su hz hk h8 gz s8","ha h9 ea ez e9 g7 sa sk",],
         vec![],
         vec![],
@@ -185,7 +185,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/36.html",
-        &SRulesRufspiel{m_eplayerindex: 1, m_efarbe: EFarbe::Eichel},
+        &SRulesRufspiel{m_eplayerindex: 1, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["so e9 ga g9 g8 sa sz s9","eo gu hz h9 h8 h7 ez s7","go eu hu su hk ek gk sk","ho ha ea e8 e7 gz g7 s8",],
         vec![],
         vec![],
@@ -194,7 +194,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/38.html",
-        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Gras},
+        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["su ha ez e9 e7 gk g9 s8","go gu hu h9 g7 sz s9 s7","eo so eu ek ga gz sa sk","ho hz hk h8 h7 ea e8 g8",],
         vec![],
         vec![],
@@ -203,7 +203,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/40.html",
-        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Eichel},
+        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["go so eu ha h9 e9 sa s9","eo ho hz ek e7 g9 g8 g7","gu hk h8 ez gz gk sz sk","hu su h7 ea e8 ga s8 s7",],
         vec![],
         vec![],
@@ -212,7 +212,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/41.html",
-        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Eichel},
+        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["eo gu hu ez gz g8 g7 sz","su hk h9 ea e7 g9 s9 s8","so eu ha h8 ek e9 sk s7","go ho hz h7 e8 ga gk sa",],
         vec![],
         vec![],
@@ -221,7 +221,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/43.html",
-        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Gras},
+        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["hz h9 ea ek g9 sz sk s9","eo su ha h8 ga gz sa s7","so gu h7 e9 e7 gk g8 s8","go ho eu hu hk ez e8 g7",],
         vec![],
         vec![],
@@ -230,7 +230,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/45.html",
-        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Schelln},
+        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Schelln, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["ho hu su h9 e9 e8 gk sk","ha hz h7 ea ez ga sa s9","so eu gu ek e7 gz g9 s7","eo go hk h8 g8 g7 sz s8",],
         vec![],
         vec![],
@@ -239,7 +239,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/46.html",
-        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Schelln},
+        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Schelln, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["ho so eu hu h8 ga g8 s8","go ha hz h7 ea ek s9 s7","gu su h9 e9 gz g9 g7 sz","eo hk ez e8 e7 gk sa sk",],
         vec![],
         vec![],
@@ -248,7 +248,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/47.html",
-        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Gras},
+        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["ho h9 e7 ga gz g9 sz s9","go so eu ea e9 g8 sk s8","gu su hk h8 h7 ez ek e8","eo hu ha hz gk g7 sa s7",],
         vec![],
         vec![],
@@ -257,7 +257,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/48.html",
-        &SRulesRufspiel{m_eplayerindex: 2, m_efarbe: EFarbe::Eichel},
+        &SRulesRufspiel{m_eplayerindex: 2, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["eu ha h8 ea e8 e7 ga g7","eo hk ez ek sz s9 s8 s7","go so gu hu h9 h7 e9 sa","ho su hz gz gk g9 g8 sk",],
         vec![],
         vec![],
@@ -266,7 +266,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/49.html",
-        &SRulesRufspiel{m_eplayerindex: 1, m_efarbe: EFarbe::Gras},
+        &SRulesRufspiel{m_eplayerindex: 1, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["h9 h8 ez e8 g8 sk s9 s8","eo so gu ha hk e9 gk s7","eu hu su hz h7 gz g9 sz","go ho ea ek e7 ga g7 sa",],
         vec![],
         vec![],
@@ -275,7 +275,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/5.html",
-        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Eichel},
+        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["go so eu h9 ez gz sa s9","hu su ha hz e9 e7 g9 s8","hk h8 ek e8 g7 sz sk s7","eo ho gu h7 ea ga gk g8",],
         vec![],
         vec![],
@@ -284,7 +284,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/50.html",
-        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Schelln},
+        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Schelln, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["ho so gu gk g9 sa s9 s7","ha ea ez ek e9 gz g8 g7","hu hk h9 h7 e8 e7 ga sz","eo go eu su hz h8 sk s8",],
         vec![],
         vec![],
@@ -293,7 +293,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/51.html",
-        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Gras},
+        &SRulesRufspiel{m_eplayerindex: 3, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["eu su h9 ea gz g9 sz sk","eo ho gu h7 ez g8 g7 s8","go ek e9 e7 ga sa s9 s7","so hu ha hz hk h8 e8 gk",],
         vec![],
         vec![],
@@ -302,7 +302,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/53.html",
-        &SRulesRufspiel{m_eplayerindex: 1, m_efarbe: EFarbe::Gras},
+        &SRulesRufspiel{m_eplayerindex: 1, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["so ez ek e7 ga sz sk s8","go hu ha hz hk h8 e9 gk","eo gu h9 h7 g8 sa s9 s7","ho eu su ea e8 gz g9 g7",],
         vec![],
         vec![],
@@ -311,7 +311,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/55.html",
-        &SRulesRufspiel{m_eplayerindex: 2, m_efarbe: EFarbe::Eichel},
+        &SRulesRufspiel{m_eplayerindex: 2, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["su hk h7 ek ga gz g9 g7","go so eu ez e8 gk g8 sz","ho gu hu ha hz h8 e7 s7","eo h9 ea e9 sa sk s9 s8",],
         vec![],
         vec![],
@@ -320,7 +320,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/6.html",
-        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Eichel},
+        &SRulesRufspiel{m_eplayerindex: 0, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)},
         ["eo go so ha hk ek gz g9","su h9 e9 e8 gk g7 s9 s8","ho eu hu h8 ez e7 ga sz","gu hz h7 ea g8 sa sk s7",],
         vec![],
         vec![],

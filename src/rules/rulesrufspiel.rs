@@ -8,6 +8,7 @@ use std::cmp::Ordering;
 pub struct SRulesRufspiel {
     pub m_eplayerindex : EPlayerIndex,
     pub m_efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
+    pub m_laufendeparams : SLaufendeParams,
 }
 
 impl fmt::Display for SRulesRufspiel {
@@ -75,7 +76,7 @@ impl TRules for SRulesRufspiel {
                 fn_is_player_party!(),
                 /*fn_player_multiplier*/ |_eplayerindex| 1, // everyone pays/gets the same
                 /*n_payout_base*/20,
-                &SLaufendeParams::new(10, 3),
+                &self.m_laufendeparams,
             ),
             n_stoss,
             n_doubling,

@@ -12,9 +12,9 @@ def CardString(strCardRaw):
 
 vecpairstrdictstrfnGame = [
     ("rufspiel", {
-        "Sauspiel auf die Alte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Eichel}"%(eplayerindex),
-        "Sauspiel auf die Blaue" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Gras}"%(eplayerindex),
-        "Sauspiel auf die Hundsgfickte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln}"%(eplayerindex),
+        "Sauspiel auf die Alte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
+        "Sauspiel auf die Blaue" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
+        "Sauspiel auf die Hundsgfickte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
     }),
     ("farbwenz", {
         "Eichel-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Wenz\")"%(eplayerindex),
