@@ -67,28 +67,53 @@ impl SRuleSet {
                                 format!("{}{}", str_rulename, $str_rulename_suffix)
                             };
                             macro_rules! generate_sololike_farbe {
-                                ($eplayerindex: ident, $trumpfdecider: ident, $i_prioindex: expr, $rulename: expr) => {
+                                ($eplayerindex: ident, $trumpfdecider: ident, $i_prioindex: expr, $rulename: expr, $laufendeparams: expr) => {
                                     vec! [
-                                        sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, $payoutdecider> ($eplayerindex, $i_prioindex, &format!("Eichel-{}", $rulename)),
-                                        sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, $payoutdecider>   ($eplayerindex, $i_prioindex, &format!("Gras-{}", $rulename)),
-                                        sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, $payoutdecider>   ($eplayerindex, $i_prioindex, &format!("Herz-{}", $rulename)),
-                                        sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, $payoutdecider>($eplayerindex, $i_prioindex, &format!("Schelln-{}", $rulename)),
+                                        sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, $payoutdecider> ($eplayerindex, $i_prioindex, &format!("Eichel-{}", $rulename), $laufendeparams),
+                                        sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, $payoutdecider>   ($eplayerindex, $i_prioindex, &format!("Gras-{}", $rulename), $laufendeparams),
+                                        sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, $payoutdecider>   ($eplayerindex, $i_prioindex, &format!("Herz-{}", $rulename), $laufendeparams),
+                                        sololike::<$trumpfdecider<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, $payoutdecider>($eplayerindex, $i_prioindex, &format!("Schelln-{}", $rulename), $laufendeparams),
                                     ]
                                 }
                             }
                             let str_rulename = internal_rulename("Solo");
-                            create_rulegroup("solo", &str_rulename, generate_sololike_farbe!(eplayerindex, SCoreSolo, $fn_prio(0), &str_rulename));
+                            // TODO make Laufende adjustable
+                            create_rulegroup(
+                                "solo",
+                                &str_rulename,
+                                generate_sololike_farbe!(eplayerindex, SCoreSolo, $fn_prio(0), &str_rulename, SLaufendeParams::new(10, 3))
+                            );
                             let str_rulename = internal_rulename("Wenz");
-                            create_rulegroup("wenz", &str_rulename, vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-1),&str_rulename)]);
-                            create_rulegroup("farbwenz", &internal_rulename("Farbwenz"), generate_sololike_farbe!(eplayerindex, SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz")));
+                            create_rulegroup(
+                                "wenz",
+                                &str_rulename,
+                                vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-1),&str_rulename, SLaufendeParams::new(10, 3))]
+                            );
+                            create_rulegroup(
+                                "farbwenz",
+                                &internal_rulename("Farbwenz"),
+                                generate_sololike_farbe!(eplayerindex, SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz"), SLaufendeParams::new(10, 3))
+                            );
                             let str_rulename = internal_rulename("Geier");
-                            create_rulegroup("geier", &str_rulename, vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-3),&str_rulename)]);
-                            create_rulegroup("farbgeier", &internal_rulename("Farbgeier"), generate_sololike_farbe!(eplayerindex, SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier")));
+                            create_rulegroup(
+                                "geier",
+                                &str_rulename,
+                                vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-3),&str_rulename, SLaufendeParams::new(10, 3))]
+                            );
+                            create_rulegroup(
+                                "farbgeier",
+                                &internal_rulename("Farbgeier"),
+                                generate_sololike_farbe!(eplayerindex, SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"), SLaufendeParams::new(10, 3))
+                            );
                         }
                     }
                     read_sololike!(SPayoutDeciderPointBased, |i_prioindex| VGameAnnouncementPriority::SoloLikeSimple(i_prioindex), "");
                     read_sololike!(SPayoutDeciderTout, |i_prioindex| VGameAnnouncementPriority::SoloTout(i_prioindex), " Tout");
-                    create_rulegroup("solo", "Sie", vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie")]);
+                    create_rulegroup(
+                        "solo",
+                        "Sie",
+                        vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie", SLaufendeParams::new(10, 3))]
+                    );
                 }
                 vecrulegroup
             }),

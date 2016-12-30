@@ -17,22 +17,22 @@ vecpairstrdictstrfnGame = [
         "Sauspiel auf die Hundsgfickte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
     }),
     ("farbwenz", {
-        "Eichel-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Wenz\")"%(eplayerindex),
-        "Gras-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Gras-Wenz\")"%(eplayerindex),
-        "Herz-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Herz-Wenz\")"%(eplayerindex),
-        "Schelln-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Schelln-Wenz\")"%(eplayerindex),
+        "Eichel-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Wenz\", SLaufendeParams::new(10, 3))"%(eplayerindex),
+        "Gras-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Gras-Wenz\", SLaufendeParams::new(10, 3))"%(eplayerindex),
+        "Herz-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Herz-Wenz\", SLaufendeParams::new(10, 3))"%(eplayerindex),
+        "Schelln-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Schelln-Wenz\", SLaufendeParams::new(10, 3))"%(eplayerindex),
     }),
     ("wenz", {
-        "Wenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Wenz\")"%(eplayerindex),
+        "Wenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Wenz\", SLaufendeParams::new(10, 2))"%(eplayerindex),
     }),
     ("solo", {
-        "Eichel-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Solo\")"%(eplayerindex),
-        "Gras-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Gras-Solo\")"%(eplayerindex),
-        "Herz-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Herz-Solo\")"%(eplayerindex),
-        "Schelln-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Schelln-Solo\")"%(eplayerindex),
+        "Eichel-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Solo\", SLaufendeParams::new(10, 3))"%(eplayerindex),
+        "Gras-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Gras-Solo\", SLaufendeParams::new(10, 3))"%(eplayerindex),
+        "Herz-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Herz-Solo\", SLaufendeParams::new(10, 3))"%(eplayerindex),
+        "Schelln-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Schelln-Solo\", SLaufendeParams::new(10, 3))"%(eplayerindex),
     }),
     ("geier", {
-        "Geier" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Geier\")"%(eplayerindex),
+        "Geier" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Geier\", SLaufendeParams::new(10, 2))"%(eplayerindex),
     }),
     ("ramsch", {
         "Ramscch" : lambda eplayerindex: "SRulesRamsch"%(eplayerindex),
