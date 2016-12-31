@@ -20,9 +20,9 @@ def solo_payout(tarif):
 
 vecpairstrdictstrfnGame = [
     ("rufspiel", {
-        "Sauspiel auf die Alte" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
-        "Sauspiel auf die Blaue" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
-        "Sauspiel auf die Hundsgfickte" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
+        "Sauspiel auf die Alte" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Eichel, m_n_payout_base: 20, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
+        "Sauspiel auf die Blaue" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
+        "Sauspiel auf die Hundsgfickte" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln, m_n_payout_base: 20, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
     }),
     ("farbwenz", {
         "Eichel-Farbwenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Wenz\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),

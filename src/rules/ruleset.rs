@@ -57,6 +57,7 @@ impl SRuleSet {
                             .map(|efarbe| Box::new(SRulesRufspiel{
                                 m_eplayerindex: eplayerindex,
                                 m_efarbe: efarbe,
+                                m_n_payout_base: 20,
                                 m_laufendeparams: SLaufendeParams::new(10, 3),
                             }) as Box<TActivelyPlayableRules>)
                             .collect()
