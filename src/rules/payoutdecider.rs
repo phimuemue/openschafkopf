@@ -23,6 +23,7 @@ pub trait TPayoutDecider {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         n_payout_base: isize,
+        n_payout_schneider_schwarz: isize,
         laufendeparams: &SLaufendeParams,
     ) -> SPlayerIndexMap<isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
@@ -39,6 +40,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         n_payout_base: isize,
+        n_payout_schneider_schwarz: isize,
         laufendeparams: &SLaufendeParams,
     ) -> SPlayerIndexMap<isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
@@ -57,9 +59,9 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
             /*n_payout_single_player*/ n_payout_base
                 + { 
                     if gamefinishedstiche.get().iter().all(|stich| b_player_party_wins==fn_is_player_party(rules.winner_index(stich))) {
-                        20 // schwarz
+                        2*n_payout_schneider_schwarz // schwarz
                     } else if (b_player_party_wins && n_points_player_party>90) || (!b_player_party_wins && n_points_player_party<=30) {
-                        10 // schneider
+                        n_payout_schneider_schwarz // schneider
                     } else {
                         0 // "nothing", i.e. neither schneider nor schwarz
                     }
@@ -111,12 +113,14 @@ impl TPayoutDecider for SPayoutDeciderTout {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         n_payout_base: isize,
+        _n_payout_schneider_schwarz: isize,
         laufendeparams: &SLaufendeParams,
     ) -> SPlayerIndexMap<isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules,
     {
+        // TODO optionally count schneider/schwarz
         let b_player_party_wins = gamefinishedstiche.get().iter()
             .all(|stich| fn_is_player_party(rules.winner_index(stich)));
         let ab_winner = create_playerindexmap(|eplayerindex| {
@@ -139,12 +143,14 @@ impl TPayoutDecider for SPayoutDeciderSie {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         n_payout_base: isize,
+        _n_payout_schneider_schwarz: isize,
         laufendeparams: &SLaufendeParams,
     ) -> SPlayerIndexMap<isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules,
     {
+        // TODO optionally count schneider/schwarz
         let b_player_party_wins = gamefinishedstiche.get().iter()
             .all(|stich| {
                 let eplayerindex_stich_winner = rules.winner_index(stich);

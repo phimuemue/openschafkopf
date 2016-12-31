@@ -10,6 +10,14 @@ def CardString(strCardRaw):
     assert(strCardRaw[1] in "789zuoka")
     return strCardRaw
 
+def solo_payout_schneider_schwarz(tarif):
+    if not tarif:
+        return 10
+    if len(tarif)==3:
+        return tarif[0]
+    assert(len(tarif)==2)
+    return tarif[0]
+
 def solo_payout(tarif):
     if not tarif:
         return 50
@@ -20,27 +28,27 @@ def solo_payout(tarif):
 
 vecpairstrdictstrfnGame = [
     ("rufspiel", {
-        "Sauspiel auf die Alte" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Eichel, m_n_payout_base: 20, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
-        "Sauspiel auf die Blaue" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
-        "Sauspiel auf die Hundsgfickte" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln, m_n_payout_base: 20, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
+        "Sauspiel auf die Alte" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Eichel, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
+        "Sauspiel auf die Blaue" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
+        "Sauspiel auf die Hundsgfickte" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
     }),
     ("farbwenz", {
-        "Eichel-Farbwenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Wenz\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
-        "Gras-Farbwenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Gras-Wenz\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
-        "Herz-Farbwenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Herz-Wenz\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
-        "Schelln-Farbwenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Schelln-Wenz\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
+        "Eichel-Farbwenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Wenz\", /*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Gras-Farbwenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Gras-Wenz\", /*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Herz-Farbwenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Herz-Wenz\", /*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Schelln-Farbwenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Schelln-Wenz\", /*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
     }),
     ("wenz", {
-        "Wenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Wenz\", /*n_payout_base*/%d, SLaufendeParams::new(10, 2))"%(eplayerindex, solo_payout(tarif)),
+        "Wenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Wenz\", /*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 2))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
     }),
     ("solo", {
-        "Eichel-Solo" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Solo\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
-        "Gras-Solo" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Gras-Solo\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
-        "Herz-Solo" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Herz-Solo\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
-        "Schelln-Solo" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Schelln-Solo\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
+        "Eichel-Solo" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Solo\", /*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Gras-Solo" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Gras-Solo\", /*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Herz-Solo" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Herz-Solo\", /*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Schelln-Solo" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Schelln-Solo\", /*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
     }),
     ("geier", {
-        "Geier" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Geier\", /*n_payout_base*/%d, SLaufendeParams::new(10, 2))"%(eplayerindex, solo_payout(tarif)),
+        "Geier" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Geier\", /*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 2))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
     }),
     ("ramsch", {
         "Ramscch" : lambda eplayerindex, tarif: "SRulesRamsch"%(eplayerindex),

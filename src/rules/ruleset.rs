@@ -58,6 +58,7 @@ impl SRuleSet {
                                 m_eplayerindex: eplayerindex,
                                 m_efarbe: efarbe,
                                 m_n_payout_base: 20,
+                                m_n_payout_schneider_schwarz: 10,
                                 m_laufendeparams: SLaufendeParams::new(10, 3),
                             }) as Box<TActivelyPlayableRules>)
                             .collect()
@@ -68,10 +69,10 @@ impl SRuleSet {
                                 format!("{}{}", str_rulename, $str_rulename_suffix)
                             };
                             macro_rules! generate_sololike_farbe {
-                                ($trumpfdecider: ident, $i_prioindex: expr, $rulename: expr, $n_payout_base: expr, $laufendeparams: expr) => {{
+                                ($trumpfdecider: ident, $i_prioindex: expr, $rulename: expr, $n_payout_base: expr, $n_payout_schneider_schwarz: expr, $laufendeparams: expr) => {{
                                     macro_rules! internal_generate_sololike_farbe {
                                         ($farbedesignator: ident) => {
-                                            sololike::<$trumpfdecider<STrumpfDeciderFarbe<$farbedesignator>>, $payoutdecider> (eplayerindex, $i_prioindex, &format!("{}-{}", $farbedesignator::farbe(), $rulename), $n_payout_base, $laufendeparams)
+                                            sololike::<$trumpfdecider<STrumpfDeciderFarbe<$farbedesignator>>, $payoutdecider> (eplayerindex, $i_prioindex, &format!("{}-{}", $farbedesignator::farbe(), $rulename), $n_payout_base, $n_payout_schneider_schwarz, $laufendeparams)
                                         }
                                     }
                                     vec! [
@@ -85,32 +86,33 @@ impl SRuleSet {
                             let str_rulename = internal_rulename("Solo");
                             // TODO make Laufende adjustable
                             // TODO make n_payout_base adjustable
+                            // TODO make n_payout_schneider_schwarz
                             create_rulegroup(
                                 "solo",
                                 &str_rulename,
-                                generate_sololike_farbe!(SCoreSolo, $fn_prio(0), &str_rulename, /*n_payout_base*/50, SLaufendeParams::new(10, 3))
+                                generate_sololike_farbe!(SCoreSolo, $fn_prio(0), &str_rulename, /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3))
                             );
                             let str_rulename = internal_rulename("Wenz");
                             create_rulegroup(
                                 "wenz",
                                 &str_rulename,
-                                vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-1),&str_rulename, /*n_payout_base*/50, SLaufendeParams::new(10, 3))]
+                                vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-1),&str_rulename, /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3))]
                             );
                             create_rulegroup(
                                 "farbwenz",
                                 &internal_rulename("Farbwenz"),
-                                generate_sololike_farbe!(SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz"), /*n_payout_base*/50, SLaufendeParams::new(10, 3))
+                                generate_sololike_farbe!(SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz"), /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3))
                             );
                             let str_rulename = internal_rulename("Geier");
                             create_rulegroup(
                                 "geier",
                                 &str_rulename,
-                                vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-3),&str_rulename, /*n_payout_base*/50, SLaufendeParams::new(10, 3))]
+                                vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-3),&str_rulename, /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3))]
                             );
                             create_rulegroup(
                                 "farbgeier",
                                 &internal_rulename("Farbgeier"),
-                                generate_sololike_farbe!(SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"), /*n_payout_base*/50, SLaufendeParams::new(10, 3))
+                                generate_sololike_farbe!(SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"), /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3))
                             );
                         }
                     }
@@ -119,7 +121,7 @@ impl SRuleSet {
                     create_rulegroup(
                         "solo",
                         "Sie",
-                        vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie", /*n_payout_base*/50, SLaufendeParams::new(10, 3))]
+                        vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3))]
                     );
                 }
                 vecrulegroup
