@@ -124,8 +124,10 @@ impl SRuleSet {
             }),
             m_stockorramsch : {
                 if tomltbl.lookup("noactive.ramsch").is_some() {
-                    assert!(tomltbl.lookup("noactive.stock").is_none()); // TODO what to do in those cases? Better option to model alternatives? Allow stock *and+ ramsch at the same time?
-                    VStockOrT::OrT(Box::new(SRulesRamsch{}) as Box<TRules>)
+                    assert!(tomltbl.lookup("noactive.stock").is_none()); // TODO what to do in those cases? Better option to model alternatives? Allow stock *and* ramsch at the same time?
+                    VStockOrT::OrT(Box::new(SRulesRamsch{
+                        m_n_price: 10,
+                    }) as Box<TRules>) // TODO make adjustable
                 } else if tomltbl.lookup("noactive.stock").is_some() {
                     VStockOrT::Stock(10) // TODO make adjustable
                 } else {

@@ -7,7 +7,9 @@ use std::fmt;
 use std::cmp::Ordering;
 use itertools::Itertools;
 
-pub struct SRulesRamsch {}
+pub struct SRulesRamsch {
+    pub m_n_price : isize,
+}
 
 impl fmt::Display for SRulesRamsch {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -88,14 +90,13 @@ impl TRules for SRulesRamsch {
                     .0
             }
         };
-        let n_price = 10;
         SAccountBalance::new(
             SStossDoublingPayoutDecider::payout(
                 create_playerindexmap(|eplayerindex| {
                     if eplayerindex_loser==eplayerindex {
-                        -3 * n_price
+                        -3 * self.m_n_price
                     } else {
-                        n_price
+                        self.m_n_price
                     }
                 }),
                 {
