@@ -10,32 +10,40 @@ def CardString(strCardRaw):
     assert(strCardRaw[1] in "789zuoka")
     return strCardRaw
 
+def solo_payout(tarif):
+    if not tarif:
+        return 50
+    if len(tarif)==3:
+        return tarif[2]
+    assert(len(tarif)==2)
+    return tarif[1]
+
 vecpairstrdictstrfnGame = [
     ("rufspiel", {
-        "Sauspiel auf die Alte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
-        "Sauspiel auf die Blaue" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
-        "Sauspiel auf die Hundsgfickte" : lambda eplayerindex: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
+        "Sauspiel auf die Alte" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Eichel, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
+        "Sauspiel auf die Blaue" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Gras, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
+        "Sauspiel auf die Hundsgfickte" : lambda eplayerindex, tarif: "SRulesRufspiel{m_eplayerindex: %d, m_efarbe: EFarbe::Schelln, m_laufendeparams: SLaufendeParams::new(10, 3)}"%(eplayerindex),
     }),
     ("farbwenz", {
-        "Eichel-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Wenz\", SLaufendeParams::new(10, 3))"%(eplayerindex),
-        "Gras-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Gras-Wenz\", SLaufendeParams::new(10, 3))"%(eplayerindex),
-        "Herz-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Herz-Wenz\", SLaufendeParams::new(10, 3))"%(eplayerindex),
-        "Schelln-Farbwenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Schelln-Wenz\", SLaufendeParams::new(10, 3))"%(eplayerindex),
+        "Eichel-Farbwenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Wenz\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
+        "Gras-Farbwenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Gras-Wenz\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
+        "Herz-Farbwenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Herz-Wenz\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
+        "Schelln-Farbwenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Schelln-Wenz\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
     }),
     ("wenz", {
-        "Wenz" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Wenz\", SLaufendeParams::new(10, 2))"%(eplayerindex),
+        "Wenz" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Wenz\", /*n_payout_base*/%d, SLaufendeParams::new(10, 2))"%(eplayerindex, solo_payout(tarif)),
     }),
     ("solo", {
-        "Eichel-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Solo\", SLaufendeParams::new(10, 3))"%(eplayerindex),
-        "Gras-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Gras-Solo\", SLaufendeParams::new(10, 3))"%(eplayerindex),
-        "Herz-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Herz-Solo\", SLaufendeParams::new(10, 3))"%(eplayerindex),
-        "Schelln-Solo" : lambda eplayerindex: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Schelln-Solo\", SLaufendeParams::new(10, 3))"%(eplayerindex),
+        "Eichel-Solo" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Eichel-Solo\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
+        "Gras-Solo" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Gras-Solo\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
+        "Herz-Solo" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Herz-Solo\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
+        "Schelln-Solo" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Schelln-Solo\", /*n_payout_base*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif)),
     }),
     ("geier", {
-        "Geier" : lambda eplayerindex: "SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Geier\", SLaufendeParams::new(10, 2))"%(eplayerindex),
+        "Geier" : lambda eplayerindex, tarif: "SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(%d, VGameAnnouncementPriority::SoloLikeSimple(0), \"Geier\", /*n_payout_base*/%d, SLaufendeParams::new(10, 2))"%(eplayerindex, solo_payout(tarif)),
     }),
     ("ramsch", {
-        "Ramscch" : lambda eplayerindex: "SRulesRamsch"%(eplayerindex),
+        "Ramscch" : lambda eplayerindex, tarif: "SRulesRamsch"%(eplayerindex),
     }),
 ]
 
@@ -66,11 +74,15 @@ def OpenFileParseGame(strFile, dictstrfnGame):
             return None
         AppendToResult("test_rules(")
         AppendToResult("    \"%s\","%(strFile))
+        tarif = soup.find(text="Tarif")
+        if tarif:
+            tarif = soup.find(text="Tarif").find_parent("tr").find("td").contents[0].strip().split(" ", 1)[1].replace(",","").split(" / ")
+            tarif = [int(n) for n in tarif]
         for strGame in dictstrfnGame:
             if h1Game.startswith(strGame):
                 assert(not bGameFound)
                 bGameFound = True
-                AppendToResult("    &%s,"%(dictstrfnGame[strGame](dictstreplayerindex[h1Game.rsplit(" ")[-1]])))
+                AppendToResult("    &%s,"%(dictstrfnGame[strGame](dictstreplayerindex[h1Game.rsplit(" ")[-1]], tarif if tarif else [10, 20, 50])))
         AppendToResultNoNewline("    [")
         hands = soup.find_all(class_="show-hand")
         if len(hands)==0:
