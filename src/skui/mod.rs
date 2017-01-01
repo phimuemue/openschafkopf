@@ -45,7 +45,7 @@ fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: SCard) {
         (ncurses::COLOR_RED, ncurses::COLOR_BLACK),
         (ncurses::COLOR_CYAN, ncurses::COLOR_BLACK),
     ];
-    let i_paircolor = card.farbe() as usize;
+    let i_paircolor = card.farbe().to_usize();
     print_string_with_nc_colors(ncwin, vecpaircolorcolor[i_paircolor].0, vecpaircolorcolor[i_paircolor].1, &format!("{}", card));
 }
 

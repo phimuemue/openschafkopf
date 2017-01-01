@@ -73,10 +73,10 @@ impl SCard {
         SCard{m_n_internalrepresentation : efarbe as i8 * 8 + eschlag as i8}
     }
     pub fn farbe(&self) -> EFarbe {
-        unsafe{(mem::transmute((self.m_n_internalrepresentation / 8) as usize))}
+        EFarbe::from_usize((self.m_n_internalrepresentation / 8) as usize)
     }
     pub fn schlag(&self) -> ESchlag {
-        unsafe{(mem::transmute((self.m_n_internalrepresentation % 8) as usize))}
+        ESchlag::from_usize((self.m_n_internalrepresentation % 8) as usize)
     }
     pub fn values() -> Vec<SCard> { // TODO Rust: return iterator once we can specify that return type is an iterator
         iproduct!(
