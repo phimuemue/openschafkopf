@@ -75,7 +75,7 @@ macro_rules! impl_TAsNum {
                       Dest: TAsNumInternal<Self>,
                       Dest: Debug,
             {
-                debug_assert!(self.is_safely_convertible());
+                debug_assert!(self.is_safely_convertible(), "{} not safely convertible", self);
                 self.assert_convertible_back::<Dest>();
                 self.as_num_internal()
             }
