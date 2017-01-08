@@ -40,14 +40,13 @@ fn print_string_with_nc_colors(ncwin: ncurses::WINDOW, color_fg: i16, color_bg: 
 }
 
 fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: SCard) {
-    let vecpaircolorcolor = vec! [ // TODO lib: enummap!
-        (ncurses::COLOR_YELLOW, ncurses::COLOR_BLACK),
-        (ncurses::COLOR_GREEN, ncurses::COLOR_BLACK),
-        (ncurses::COLOR_RED, ncurses::COLOR_BLACK),
-        (ncurses::COLOR_CYAN, ncurses::COLOR_BLACK),
-    ];
-    let i_paircolor = card.farbe().to_usize();
-    print_string_with_nc_colors(ncwin, vecpaircolorcolor[i_paircolor].0, vecpaircolorcolor[i_paircolor].1, &format!("{}", card));
+    let paircolorcolor = { match card.farbe() {
+        EFarbe::Eichel => (ncurses::COLOR_YELLOW, ncurses::COLOR_BLACK),
+        EFarbe::Gras => (ncurses::COLOR_GREEN, ncurses::COLOR_BLACK),
+        EFarbe::Herz => (ncurses::COLOR_RED, ncurses::COLOR_BLACK),
+        EFarbe::Schelln => (ncurses::COLOR_CYAN, ncurses::COLOR_BLACK),
+    }};
+    print_string_with_nc_colors(ncwin, paircolorcolor.0, paircolorcolor.1, &format!("{}", card));
 }
 
 enum ESkUiWindow {
