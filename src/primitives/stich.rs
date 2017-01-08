@@ -44,11 +44,11 @@ fn test_stich() {
         }
     }
     {
-        let mut stich = SStich::new(2);
+        let mut stich = SStich::new(EPlayerIndex::EPI2);
         stich.push(SCard::new(EFarbe::Eichel, ESchlag::Unter));
         stich.push(SCard::new(EFarbe::Gras, ESchlag::S7));
-        assert!(stich[2]==SCard::new(EFarbe::Eichel, ESchlag::Unter));
-        assert!(stich[3]==SCard::new(EFarbe::Gras, ESchlag::S7));
+        assert!(stich[EPlayerIndex::EPI2]==SCard::new(EFarbe::Eichel, ESchlag::Unter));
+        assert!(stich[EPlayerIndex::EPI3]==SCard::new(EFarbe::Gras, ESchlag::S7));
         assert_eq!(stich.iter().count(), 2);
     }
 }

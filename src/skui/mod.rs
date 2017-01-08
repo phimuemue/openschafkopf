@@ -78,16 +78,18 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
     };
     let ncwin = match skuiwin {
         ESkUiWindow::PlayerInfo(eplayerindex) => {
-            if 0==eplayerindex {
-                create_fullwidth_window(n_height-2, n_height-1)
-            } else {
-                assert!(1==eplayerindex || 2==eplayerindex || 3==eplayerindex);
-                ncurses::newwin(
-                    1, // height
-                    24, // width
-                    0, // y
-                    ((eplayerindex - 1)*25).as_num() // x
-                )
+            match eplayerindex {
+                EPlayerIndex::EPI0 => {
+                    create_fullwidth_window(n_height-2, n_height-1)
+                },
+                EPlayerIndex::EPI1 | EPlayerIndex::EPI2 | EPlayerIndex::EPI3 => {
+                    ncurses::newwin(
+                        1, // height
+                        24, // width
+                        0, // y
+                        ((eplayerindex.to_usize() - 1)*25).as_num() // x
+                    )
+                }
             }
         },
         ESkUiWindow::Stich => {create_fullwidth_window(1, 6)},
@@ -117,10 +119,10 @@ pub fn print_vecstich(vecstich: &[SStich]) {
                     };
                 };
                 let n_card_width = 2;
-                print_card(0, (n_y+1, n_x));
-                print_card(1, (n_y, n_x-n_card_width));
-                print_card(2, (n_y-1, n_x));
-                print_card(3, (n_y, n_x+n_card_width));
+                print_card(EPlayerIndex::EPI0, (n_y+1, n_x));
+                print_card(EPlayerIndex::EPI1, (n_y, n_x-n_card_width));
+                print_card(EPlayerIndex::EPI2, (n_y-1, n_x));
+                print_card(EPlayerIndex::EPI3, (n_y, n_x+n_card_width));
             }
         }
     );

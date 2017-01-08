@@ -12,7 +12,7 @@ pub struct SSuspicionTransition {
 }
 
 pub fn assert_ahand_same_size(ahand: &SPlayerIndexMap<SHand>) {
-    let n_len_hand = ahand[0].cards().len();
+    let n_len_hand = ahand[EPlayerIndex::EPI0].cards().len();
     assert!(ahand.iter().all(|hand| hand.cards().len()==n_len_hand));
 }
 
@@ -125,7 +125,7 @@ impl SSuspicion {
 
     fn hand_size(&self) -> usize {
         assert_ahand_same_size(&self.m_ahand);
-        self.m_ahand[0].cards().len()
+        self.m_ahand[EPlayerIndex::EPI0].cards().len()
     }
 
     fn compute_successors<FuncFilterSuccessors>(&mut self, eplayerindex_first: EPlayerIndex, rules: &TRules, vecstich: &mut Vec<SStich>, func_filter_successors: &FuncFilterSuccessors)

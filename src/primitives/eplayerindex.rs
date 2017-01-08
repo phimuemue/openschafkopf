@@ -1,22 +1,30 @@
-use std::ops;
 use arrayvec::ArrayVec;
 
 use std::ops::Index;
+use std::fmt;
+use util::plain_enum::*;
 
-pub type EPlayerIndex = usize; // TODO plain_enum
-pub type SPlayerIndexMap<T> = [T; 4]; // TODO plain_enum
+plain_enum_mod!(modeplayerindex, EPlayerIndex {
+    EPI0, EPI1, EPI2, EPI3,
+});
+impl fmt::Display for EPlayerIndex {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_usize())
+    }
+}
+pub type SPlayerIndexMap<T> = modeplayerindex::Map<T>;
 
-pub fn eplayerindex_values() -> ops::Range<EPlayerIndex> { // TODO plain_enum
-    0..4
+pub fn eplayerindex_values() -> SEnumIterator<EPlayerIndex> { // TODO plain_enum
+    EPlayerIndex::values()
 }
 pub fn eplayerindex_wrapping_add(eplayerindex: EPlayerIndex, n_offset: usize) -> EPlayerIndex { // TODO plain_enum
-    (eplayerindex + n_offset) % 4
+    EPlayerIndex::from_usize((eplayerindex.to_usize() + n_offset) % 4)
 }
 
-pub fn create_playerindexmap<T, F>(mut func: F) -> SPlayerIndexMap<T>
+pub fn create_playerindexmap<T, F>(func: F) -> SPlayerIndexMap<T>
     where F:FnMut(EPlayerIndex)->T
 {
-    [func(0), func(1), func(2), func(3)]
+    EPlayerIndex::map_from_fn(func)
 }
 
 #[derive(Clone)]
@@ -63,7 +71,7 @@ impl<T> Index<EPlayerIndex> for SPlayersInRound<T> {
     type Output = T;
     fn index(&self, eplayerindex : EPlayerIndex) -> &T {
         assert!(self.valid_index(eplayerindex));
-        &self.m_vect[(eplayerindex+4-self.m_eplayerindex_first)%4] // TODO improve (possibly when EPlayerIndex is plain_enum)
+        &self.m_vect[(eplayerindex_wrapping_add(eplayerindex, 4-self.m_eplayerindex_first.to_usize())).to_usize()] // TODO improve (possibly when EPlayerIndex is plain_enum)
     }
 }
 
@@ -120,9 +128,9 @@ impl<T> SPlayersInRound<T> {
     // TODO fn into_iter(self) -> SPlayersInRoundIntoIterator
     fn valid_index(&self, eplayerindex: EPlayerIndex) -> bool {
         if eplayerindex >= self.m_eplayerindex_first {
-            self.size() > eplayerindex-self.m_eplayerindex_first
+            self.size() > eplayerindex.to_usize()-self.m_eplayerindex_first.to_usize()
         } else {
-            self.size() > 4-self.m_eplayerindex_first+eplayerindex
+            self.size() > 4-self.m_eplayerindex_first.to_usize()+eplayerindex.to_usize()
         }
     }
     pub fn get(&self, eplayerindex: EPlayerIndex) -> Option<&T> {

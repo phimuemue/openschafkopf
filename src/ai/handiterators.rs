@@ -18,7 +18,7 @@ impl Iterator for SForeverRandHands {
     type Item = SPlayerIndexMap<SHand>;
     fn next(&mut self) -> Option<SPlayerIndexMap<SHand>> {
         assert_ahand_same_size(&self.m_ahand);
-        let n_len_hand = self.m_ahand[0].cards().len();
+        let n_len_hand = self.m_ahand[EPlayerIndex::EPI0].cards().len();
         let mut rng = rand::thread_rng();
         for i_card in 0..3*n_len_hand {
             let i_rand = rng.gen_range(0, 3*n_len_hand - i_card);
@@ -29,19 +29,18 @@ impl Iterator for SForeverRandHands {
                     // eplayerindex_fixed==2 => 0..15, 24..31 valid
                     // eplayerindex_fixed==3 => 0..23  valid
                     let i_valid = {
-                        if i_rand < self.m_eplayerindex_fixed*n_len_hand {
+                        if i_rand < self.m_eplayerindex_fixed.to_usize()*n_len_hand {
                             i_rand
                         } else {
                             i_rand + n_len_hand
                         }
                     };
-                    (i_valid/n_len_hand, i_valid%n_len_hand)
+                    (EPlayerIndex::from_usize(i_valid/n_len_hand), i_valid%n_len_hand)
                 };
                 (convert_to_idxs(i_card), convert_to_idxs(i_rand))
             };
             {
                 let assert_valid = |eplayerindex, i_hand| {
-                    assert!(eplayerindex<4);
                     assert!(i_hand<n_len_hand);
                     assert!(eplayerindex!=self.m_eplayerindex_fixed);
                 };
@@ -115,13 +114,13 @@ pub fn all_possible_hands(vecstich: &[SStich], hand_fixed: SHand, eplayerindex_f
         m_veccard_unknown: veccard_unknown,
         m_veceplayerindex: (0..n_cards_total)
             .map(|i| {
-                let eplayerindex = i/n_cards_per_player;
-                assert!(eplayerindex<=2);
-                if eplayerindex<eplayerindex_fixed {
-                    eplayerindex
+                let n_eplayerindex = i/n_cards_per_player;
+                assert!(n_eplayerindex<=2);
+                EPlayerIndex::from_usize(if n_eplayerindex<eplayerindex_fixed.to_usize() {
+                    n_eplayerindex
                 } else {
-                    eplayerindex + 1
-                }
+                    n_eplayerindex + 1
+                })
                 
             })
             .collect(),
@@ -136,7 +135,7 @@ fn test_all_possible_hands() {
     // TODO improve test
     let vecstich = ["g7 g8 ga g9", "s8 ho s7 s9", "h7 hk hu su", "eo go hz h8", "e9 ek e8 ea", "sa eu so ha"].into_iter()
         .map(|str_stich| {
-            let mut stich = SStich::new(/*eplayerindex should not be relevant*/0);
+            let mut stich = SStich::new(/*eplayerindex should not be relevant*/EPlayerIndex::EPI0);
             for card in cardvectorparser::parse_cards::<Vec<_>>(str_stich).unwrap() {
                 stich.push(card.clone());
             }
@@ -146,7 +145,7 @@ fn test_all_possible_hands() {
     let vecahand = all_possible_hands(
         &vecstich,
         SHand::new_from_vec(cardvectorparser::parse_cards("gk sk").unwrap()),
-        0, // eplayerindex_fixed
+        EPlayerIndex::EPI0, // eplayerindex_fixed
     ).collect::<Vec<_>>();
     assert_eq!(vecahand.len(), 90); // 6 cards are unknown, distributed among three other players, i.e. binomial(6,2)*binomial(4,2)=90 possibilities
 }

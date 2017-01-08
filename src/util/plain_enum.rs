@@ -17,6 +17,15 @@ pub trait TPlainEnum : Sized {
     }
 }
 
+macro_rules! acc_arr {
+    ($func: ident, [$($acc: expr,)*], []) => {
+        [$($acc,)*]
+    };
+    ($func: ident, [$($acc: expr,)*], [$enumval: ident, $($enumvals: ident,)*]) => {
+        acc_arr!($func, [$($acc,)* $func($enumval),], [$($enumvals,)*])
+    };
+}
+
 #[derive(Clone)]
 pub struct SEnumIterator<E> where E: TPlainEnum {
     m_phantom : PhantomData<E>,
@@ -45,6 +54,7 @@ macro_rules! plain_enum_mod {
     } ) => {
         mod $modname {
             use util::plain_enum::*;
+            use std::slice;
             extern crate quickcheck;
             #[repr(usize)]
             #[derive(PartialEq, Eq, Debug, Copy, Clone, PartialOrd, Ord, Hash)]
@@ -52,9 +62,11 @@ macro_rules! plain_enum_mod {
                 $($enumvals,)*
             }
 
+            const ENUMSIZE : usize = enum_seq_len!(1, $($enumvals,)*);
+
             impl TPlainEnum for $enumname {
                 fn ubound_usize() -> usize {
-                    enum_seq_len!(1, $($enumvals,)*)
+                    ENUMSIZE
                 }
                 fn from_usize(u: usize) -> Self {
                     use std::mem;
@@ -64,10 +76,51 @@ macro_rules! plain_enum_mod {
                     self as usize
                 }
             }
+            impl $enumname {
+                #[allow(dead_code)]
+                pub fn map_from_fn<F, T>(mut func: F) -> Map<T>
+                    where F: FnMut($enumname) -> T,
+                {
+                    use self::$enumname::*;
+                    Map::from_raw(acc_arr!(func, [], [$($enumvals,)*]))
+                }
+                #[allow(dead_code)]
+                pub fn map_from_raw<T>(at: [T; ENUMSIZE]) -> Map<T> {
+                    Map::from_raw(at)
+                }
+            }
 
             impl quickcheck::Arbitrary for $enumname {
                 fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> $enumname {
-                    $enumname::from_usize(g.gen_range(0, $enumname::ubound_usize()))
+                    $enumname::from_usize(g.gen_range(0, ENUMSIZE))
+                }
+            }
+
+            use std::ops::{Index, IndexMut};
+            #[derive(PartialEq, Debug)]
+            pub struct Map<T> {
+                m_at : [T; ENUMSIZE],
+            }
+            impl<T> Index<$enumname> for Map<T> {
+                type Output = T;
+                fn index(&self, e : $enumname) -> &T {
+                    &self.m_at[e.to_usize()]
+                }
+            }
+            impl<T> IndexMut<$enumname> for Map<T> {
+                fn index_mut(&mut self, e : $enumname) -> &mut Self::Output {
+                    &mut self.m_at[e.to_usize()]
+                }
+            }
+            impl<T> Map<T> {
+                #[allow(dead_code)]
+                pub fn iter(&self) -> slice::Iter<T> {
+                    self.m_at.iter()
+                }
+                pub fn from_raw(at: [T; ENUMSIZE]) -> Map<T> {
+                    Map {
+                        m_at : at,
+                    }
                 }
             }
         }

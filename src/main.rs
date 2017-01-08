@@ -75,7 +75,11 @@ fn main() {
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
         if let Some(str_hand) = subcommand_matches.value_of("hand") {
             if let Some(hand_fixed) = util::cardvectorparser::parse_cards(str_hand).map(SHand::new_from_vec) {
-                let eplayerindex_rank = value_t!(subcommand_matches.value_of("pos"), EPlayerIndex).unwrap_or(0);
+                let eplayerindex_rank = value_t!(subcommand_matches.value_of("pos"), usize).ok()
+                    .map_or(
+                        EPlayerIndex::EPI0,
+                        |n| EPlayerIndex::from_usize(n) // TODO error handling, probably introduce checked_from_usize
+                    );
                 println!("Hand: {}", hand_fixed);
                 for rules in allowed_rules(&ruleset.m_avecrulegroup[eplayerindex_rank]).iter() 
                     .filter(|rules| rules.can_be_played(&SFullHand::new(&hand_fixed)))
@@ -84,7 +88,7 @@ fn main() {
                         rules,
                         ai().rank_rules(
                             &SFullHand::new(&hand_fixed),
-                            0,
+                            EPlayerIndex::EPI0,
                             eplayerindex_rank,
                             rules.as_rules().clone(),
                             /*n_stock*/0, // assume no stock in subcommand rank-rules
@@ -101,7 +105,7 @@ fn main() {
     skui::init_ui();
     let accountbalance = game_loop(
         &create_playerindexmap(|eplayerindex| -> Box<TPlayer> {
-            if 0==eplayerindex {
+            if EPlayerIndex::EPI0==eplayerindex {
                 Box::new(SPlayerHuman{m_ai : ai()})
             } else {
                 Box::new(SPlayerComputer{m_ai: ai()})
@@ -117,7 +121,7 @@ fn main() {
 fn game_loop(aplayer: &SPlayerIndexMap<Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
     let mut accountbalance = SAccountBalance::new(create_playerindexmap(|_eplayerindex| 0), 0);
     for i_game in 0..n_games {
-        let mut dealcards = SDealCards::new(/*eplayerindex_first*/i_game % 4);
+        let mut dealcards = SDealCards::new(/*eplayerindex_first*/EPlayerIndex::from_usize(i_game % 4)); // TODO plain_enum wrapped_from_usize
         while let Some(eplayerindex) = dealcards.which_player_can_do_something() {
             let (txb_doubling, rxb_doubling) = mpsc::channel::<bool>();
             aplayer[eplayerindex].ask_for_doubling(
@@ -188,7 +192,7 @@ fn test_game_loop() {
     game_loop(
         &create_playerindexmap(|eplayerindex| -> Box<TPlayer> {
             Box::new(SPlayerComputer{m_ai: {
-                if eplayerindex<2 {
+                if eplayerindex<EPlayerIndex::EPI2 {
                     Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/1))
                 } else {
                     Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1, /*n_samples_per_rules*/1))
