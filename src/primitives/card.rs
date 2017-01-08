@@ -6,7 +6,7 @@ use std::ops::{Index, IndexMut};
 pub use util::plain_enum::*;
 use util::*;
 
-plain_enum!{EFarbe {
+plain_enum_mod!{modefarbe, EFarbe {
     Eichel,
     Gras,
     Herz,
@@ -24,7 +24,7 @@ impl fmt::Display for EFarbe {
     }
 }
 
-plain_enum!{ESchlag {
+plain_enum_mod!{modeschlag, ESchlag {
     Ass,
     Zehn,
     Koenig,
