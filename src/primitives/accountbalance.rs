@@ -1,6 +1,7 @@
 // this stores the how much money each player currently has
 
 use primitives::eplayerindex::*;
+use util::plain_enum::TPlainEnum;
 
 pub struct SAccountBalance {
     m_an : SPlayerIndexMap<isize>,
@@ -24,7 +25,7 @@ impl SAccountBalance {
     pub fn apply_payout(&mut self, accountbalance: &SAccountBalance) {
         accountbalance.assert_invariant();
         self.assert_invariant();
-        for eplayerindex in eplayerindex_values() {
+        for eplayerindex in EPlayerIndex::values() {
             self.m_an[eplayerindex] += accountbalance.get_player(eplayerindex);
         }
         self.m_n_stock += accountbalance.get_stock();

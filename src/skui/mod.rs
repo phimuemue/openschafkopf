@@ -180,7 +180,7 @@ pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &[SStos
 
 pub fn account_balance_string(accountbalance: &SAccountBalance) -> String {
     let mut str = "".to_string();
-    for eplayerindex in eplayerindex_values() {
+    for eplayerindex in EPlayerIndex::values() {
         str = str + &format!("{}: {} | ", eplayerindex, accountbalance.get_player(eplayerindex));
     }
     str = str + &format!("Stock: {}", accountbalance.get_stock());

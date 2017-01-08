@@ -149,7 +149,7 @@ pub struct SPreGame<'rules> {
 impl<'rules> SPreGame<'rules> {
     pub fn which_player_can_do_something(&self) -> Vec<EPlayerIndex> {
         if self.m_vecstoss.len() < 4 {
-            eplayerindex_values()
+            EPlayerIndex::values()
                 .map(|eplayerindex| eplayerindex_wrapping_add(eplayerindex, self.m_doublings.first_playerindex().to_usize()))
                 .filter(|eplayerindex| self.m_rules.stoss_allowed(*eplayerindex, &self.m_vecstoss, &self.m_ahand[*eplayerindex]))
                 .collect()
@@ -215,7 +215,7 @@ impl<'rules> SGame<'rules> {
             assert!(!self.m_vecstich.is_empty());
             self.m_vecstich.last_mut().unwrap().push(card_played);
         }
-        for eplayerindex in eplayerindex_values() {
+        for eplayerindex in EPlayerIndex::values() {
             skui::logln(&format!("Hand {}: {}", eplayerindex, self.m_ahand[eplayerindex]));
         }
         if 4==self.current_stich().size() {

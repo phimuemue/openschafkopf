@@ -143,7 +143,7 @@ pub fn is_compatible_with_game_so_far(
             ahand[eplayerindex].clone()
         });
         for stich in completed_stichs(vecstich).iter().rev() {
-            for eplayerindex in eplayerindex_values() {
+            for eplayerindex in EPlayerIndex::values() {
                 ahand_simulate[eplayerindex].cards_mut().push(stich[eplayerindex]);
             }
         }
@@ -381,7 +381,7 @@ fn test_is_compatible_with_game_so_far() {
                 .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules, &game.m_vecstich))
                 .take(100)
             {
-                for eplayerindex in eplayerindex_values() {
+                for eplayerindex in EPlayerIndex::values() {
                     println!("{}: {}", eplayerindex, ahand[eplayerindex]);
                 }
                 for &(eplayerindex, ref trumpforfarbe) in vecpaireplayerindextrumpforfarbe_frei.iter() {

@@ -14,9 +14,6 @@ impl fmt::Display for EPlayerIndex {
 }
 pub type SPlayerIndexMap<T> = modeplayerindex::Map<T>;
 
-pub fn eplayerindex_values() -> SEnumIterator<EPlayerIndex> { // TODO plain_enum
-    EPlayerIndex::values()
-}
 pub fn eplayerindex_wrapping_add(eplayerindex: EPlayerIndex, n_offset: usize) -> EPlayerIndex { // TODO plain_enum
     EPlayerIndex::from_usize((eplayerindex.to_usize() + n_offset) % 4)
 }
