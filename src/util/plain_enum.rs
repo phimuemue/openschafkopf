@@ -8,6 +8,7 @@ macro_rules! enum_seq_len {
 pub trait TPlainEnum : Sized {
     fn from_usize(u: usize) -> Self;
     fn wrapped_from_usize(u: usize) -> Self;
+    fn wrapped_difference(self, e_other: Self) -> usize;
     fn to_usize(self) -> usize;
     fn ubound_usize() -> usize;
     fn values() -> SEnumIterator<Self> {
@@ -76,6 +77,9 @@ macro_rules! plain_enum_mod {
                 }
                 fn wrapped_from_usize(u: usize) -> Self {
                     Self::from_usize(u % ENUMSIZE)
+                }
+                fn wrapped_difference(self, e_other: Self) -> usize {
+                    (self.to_usize() + ENUMSIZE - e_other.to_usize()) % ENUMSIZE
                 }
                 fn to_usize(self) -> usize {
                     self as usize

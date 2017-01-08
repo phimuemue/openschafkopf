@@ -64,7 +64,7 @@ impl<T> Index<EPlayerIndex> for SPlayersInRound<T> {
     type Output = T;
     fn index(&self, eplayerindex : EPlayerIndex) -> &T {
         assert!(self.valid_index(eplayerindex));
-        &self.m_vect[eplayerindex.wrapping_add(4-self.m_eplayerindex_first.to_usize()).to_usize()] // TODO improve (possibly when EPlayerIndex is plain_enum)
+        &self.m_vect[eplayerindex.wrapped_difference(self.m_eplayerindex_first)]
     }
 }
 
