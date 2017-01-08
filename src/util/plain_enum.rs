@@ -6,7 +6,9 @@ macro_rules! enum_seq_len {
 }
 
 pub trait TPlainEnum : Sized {
+    fn valid_usize(u: usize) -> bool;
     fn from_usize(u: usize) -> Self;
+    fn checked_from_usize(u: usize) -> Option<Self>;
     fn wrapped_from_usize(u: usize) -> Self;
     fn wrapped_difference(self, e_other: Self) -> usize;
     fn to_usize(self) -> usize;
@@ -71,9 +73,20 @@ macro_rules! plain_enum_mod {
                 fn ubound_usize() -> usize {
                     ENUMSIZE
                 }
+                fn valid_usize(u: usize) -> bool {
+                    u < ENUMSIZE
+                }
                 fn from_usize(u: usize) -> Self {
                     use std::mem;
+                    debug_assert!(Self::valid_usize(u));
                     unsafe{mem::transmute(u)}
+                }
+                fn checked_from_usize(u: usize) -> Option<Self> {
+                    if Self::valid_usize(u) {
+                        Some(Self::from_usize(u))
+                    } else {
+                        None
+                    }
                 }
                 fn wrapped_from_usize(u: usize) -> Self {
                     Self::from_usize(u % ENUMSIZE)

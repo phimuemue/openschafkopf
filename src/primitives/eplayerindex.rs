@@ -3,6 +3,7 @@ use arrayvec::ArrayVec;
 use std::ops::Index;
 use std::fmt;
 use util::plain_enum::*;
+use std::str::FromStr;
 
 plain_enum_mod!(modeplayerindex, EPlayerIndex {
     EPI0, EPI1, EPI2, EPI3,
@@ -10,6 +11,16 @@ plain_enum_mod!(modeplayerindex, EPlayerIndex {
 impl fmt::Display for EPlayerIndex {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.to_usize())
+    }
+}
+impl FromStr for EPlayerIndex {
+    type Err = &'static str;
+    fn from_str(str_eplayerindex: &str) -> Result<Self, Self::Err> {
+        usize::from_str(str_eplayerindex).ok()
+            .and_then(|n_eplayerindex| {
+                EPlayerIndex::checked_from_usize(n_eplayerindex)
+            })
+            .ok_or("Could not convert to EPlayerIndex")
     }
 }
 pub type SPlayerIndexMap<T> = modeplayerindex::Map<T>;
