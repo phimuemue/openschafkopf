@@ -21,7 +21,7 @@ pub fn test_rules(
     let mut pregame = game::SPreGame {
         m_doublings : {
             let mut doublings = game::SDoublings::new(eplayerindex_first);
-            for eplayerindex_doubling in EPlayerIndex::values().map(|eplayerindex| eplayerindex_wrapping_add(eplayerindex, eplayerindex_first.to_usize())) {
+            for eplayerindex_doubling in EPlayerIndex::values().map(|eplayerindex| eplayerindex.wrapping_add(eplayerindex_first.to_usize())) {
                 doublings.push(/*b_doubling*/vecn_doubling.contains(&eplayerindex_doubling.to_usize()));
             }
             doublings

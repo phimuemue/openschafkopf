@@ -15,6 +15,7 @@ pub trait TPlainEnum : Sized {
             m_i_e: 0,
         }
     }
+    fn wrapping_add(self, n_offset: usize) -> Self;
 }
 
 macro_rules! acc_arr {
@@ -74,6 +75,9 @@ macro_rules! plain_enum_mod {
                 }
                 fn to_usize(self) -> usize {
                     self as usize
+                }
+                fn wrapping_add(self, n_offset: usize) -> Self {
+                    Self::from_usize((self.to_usize() + n_offset) % ENUMSIZE)
                 }
             }
             impl $enumname {

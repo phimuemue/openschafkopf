@@ -14,10 +14,6 @@ impl fmt::Display for EPlayerIndex {
 }
 pub type SPlayerIndexMap<T> = modeplayerindex::Map<T>;
 
-pub fn eplayerindex_wrapping_add(eplayerindex: EPlayerIndex, n_offset: usize) -> EPlayerIndex { // TODO plain_enum
-    EPlayerIndex::from_usize((eplayerindex.to_usize() + n_offset) % 4)
-}
-
 pub fn create_playerindexmap<T, F>(func: F) -> SPlayerIndexMap<T>
     where F:FnMut(EPlayerIndex)->T
 {
@@ -56,7 +52,7 @@ impl<'playersinround, T> Iterator for SPlayersInRoundIterator<'playersinround, T
             None
         }
         else {
-            let eplayerindex = eplayerindex_wrapping_add(self.m_playersinround.m_eplayerindex_first, self.m_i_offset);
+            let eplayerindex = self.m_playersinround.m_eplayerindex_first.wrapping_add(self.m_i_offset);
             let pairicard = (eplayerindex, &self.m_playersinround[eplayerindex]);
             self.m_i_offset += 1;
             Some(pairicard)
@@ -68,7 +64,7 @@ impl<T> Index<EPlayerIndex> for SPlayersInRound<T> {
     type Output = T;
     fn index(&self, eplayerindex : EPlayerIndex) -> &T {
         assert!(self.valid_index(eplayerindex));
-        &self.m_vect[(eplayerindex_wrapping_add(eplayerindex, 4-self.m_eplayerindex_first.to_usize())).to_usize()] // TODO improve (possibly when EPlayerIndex is plain_enum)
+        &self.m_vect[eplayerindex.wrapping_add(4-self.m_eplayerindex_first.to_usize()).to_usize()] // TODO improve (possibly when EPlayerIndex is plain_enum)
     }
 }
 
@@ -97,7 +93,7 @@ impl<T> SPlayersInRound<T> {
         if self.size()==4 {
             None
         } else {
-            Some(eplayerindex_wrapping_add(self.first_playerindex(), self.size()))
+            Some(self.first_playerindex().wrapping_add(self.size()))
         }
     }
     pub fn size(&self) -> usize {

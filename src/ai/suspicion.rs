@@ -134,7 +134,7 @@ impl SSuspicion {
         assert_eq!(self.m_vecsusptrans.len(), 0); // currently, we have no caching
         let mut vecstich_successor : Vec<SStich> = Vec::new();
         push_pop_vecstich(vecstich, SStich::new(eplayerindex_first), |vecstich| {
-            let offset_to_playerindex = move |i_offset: usize| {eplayerindex_wrapping_add(eplayerindex_first, i_offset)};
+            let offset_to_playerindex = move |i_offset: usize| {eplayerindex_first.wrapping_add(i_offset)};
             macro_rules! traverse_valid_cards {
                 ($i_offset : expr, $func: expr) => {
                     // TODO use equivalent card optimization
