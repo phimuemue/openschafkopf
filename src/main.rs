@@ -121,7 +121,7 @@ fn main() {
 fn game_loop(aplayer: &SPlayerIndexMap<Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
     let mut accountbalance = SAccountBalance::new(create_playerindexmap(|_eplayerindex| 0), 0);
     for i_game in 0..n_games {
-        let mut dealcards = SDealCards::new(/*eplayerindex_first*/EPlayerIndex::from_usize(i_game % 4)); // TODO plain_enum wrapped_from_usize
+        let mut dealcards = SDealCards::new(/*eplayerindex_first*/EPlayerIndex::wrapped_from_usize(i_game));
         while let Some(eplayerindex) = dealcards.which_player_can_do_something() {
             let (txb_doubling, rxb_doubling) = mpsc::channel::<bool>();
             aplayer[eplayerindex].ask_for_doubling(

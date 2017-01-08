@@ -7,6 +7,7 @@ macro_rules! enum_seq_len {
 
 pub trait TPlainEnum : Sized {
     fn from_usize(u: usize) -> Self;
+    fn wrapped_from_usize(u: usize) -> Self;
     fn to_usize(self) -> usize;
     fn ubound_usize() -> usize;
     fn values() -> SEnumIterator<Self> {
@@ -72,6 +73,9 @@ macro_rules! plain_enum_mod {
                 fn from_usize(u: usize) -> Self {
                     use std::mem;
                     unsafe{mem::transmute(u)}
+                }
+                fn wrapped_from_usize(u: usize) -> Self {
+                    Self::from_usize(u % ENUMSIZE)
                 }
                 fn to_usize(self) -> usize {
                     self as usize
