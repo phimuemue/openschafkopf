@@ -4,6 +4,7 @@ use std::fmt;
 use std::mem;
 use std::ops::{Index, IndexMut};
 pub use util::plain_enum::*;
+use util::*;
 
 plain_enum!{EFarbe {
     Eichel,
@@ -70,13 +71,13 @@ impl fmt::Display for SCard {
 
 impl SCard {
     pub fn new(efarbe : EFarbe, eschlag : ESchlag) -> SCard {
-        SCard{m_n_internalrepresentation : efarbe as i8 * 8 + eschlag as i8}
+        SCard{m_n_internalrepresentation : (efarbe.to_usize() * 8 + eschlag.to_usize()).as_num()}
     }
     pub fn farbe(&self) -> EFarbe {
-        EFarbe::from_usize((self.m_n_internalrepresentation / 8) as usize)
+        EFarbe::from_usize((self.m_n_internalrepresentation / 8).as_num())
     }
     pub fn schlag(&self) -> ESchlag {
-        ESchlag::from_usize((self.m_n_internalrepresentation % 8) as usize)
+        ESchlag::from_usize((self.m_n_internalrepresentation % 8).as_num())
     }
     pub fn values() -> Vec<SCard> { // TODO Rust: return iterator once we can specify that return type is an iterator
         iproduct!(
@@ -133,12 +134,12 @@ impl <T> Index<SCard> for SCardMap<T> {
     type Output = T;
 
     fn index(&self, card: SCard) -> &T {
-        &self.m_at[card.m_n_internalrepresentation as usize]
+        &self.m_at[card.m_n_internalrepresentation.as_num::<usize>()]
     }
 }
 
 impl <T> IndexMut<SCard> for SCardMap<T> {
     fn index_mut(&mut self, card: SCard) -> &mut Self::Output {
-        &mut self.m_at[card.m_n_internalrepresentation as usize]
+        &mut self.m_at[card.m_n_internalrepresentation.as_num::<usize>()]
     }
 }

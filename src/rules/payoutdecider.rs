@@ -1,12 +1,13 @@
 use primitives::*;
 use rules::*;
 use rules::card_points::*;
+use util::*;
 
 pub struct SStossDoublingPayoutDecider {}
 impl SStossDoublingPayoutDecider {
     pub fn payout(an_payout_raw: SPlayerIndexMap<isize>, n_stoss: usize, n_doubling: usize) -> SPlayerIndexMap<isize> {
         create_playerindexmap(|eplayerindex| {
-            an_payout_raw[eplayerindex] * 2isize.pow((n_stoss + n_doubling) as u32)
+            an_payout_raw[eplayerindex] * 2isize.pow((n_stoss + n_doubling).as_num())
         })
     }
 }
@@ -84,7 +85,7 @@ impl SLaufendeParams {
         where Rules: TRules,
     {
         let n_laufende = rules.count_laufende(gamefinishedstiche, ab_winner);
-        (if n_laufende<self.m_n_lauf_lbound {0} else {n_laufende} as isize) * self.m_n_payout_per_lauf
+        (if n_laufende<self.m_n_lauf_lbound {0} else {n_laufende}).as_num::<isize>() * self.m_n_payout_per_lauf
     }
 }
 
@@ -160,7 +161,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
             /*n_payout_single_player*/ (n_payout_base
             + {
                 assert_eq!(8, gamefinishedstiche.get().len()); // TODO Kurze Karte supports Sie?
-                gamefinishedstiche.get().len() as isize
+                gamefinishedstiche.get().len().as_num::<isize>()
             } * laufendeparams.m_n_payout_per_lauf) * 4,
             fn_player_multiplier,
             /*ab_winner*/ &create_playerindexmap(|eplayerindex| {

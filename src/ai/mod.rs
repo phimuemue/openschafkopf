@@ -16,6 +16,7 @@ use crossbeam;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::cmp;
+use util::*;
 
 pub trait TAi {
     fn rank_rules(&self, hand_fixed: &SFullHand, eplayerindex_first: EPlayerIndex, eplayerindex_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64;
@@ -305,7 +306,7 @@ impl TAi for SAiSimulating {
             }
         });
         let n_payout_sum = n_payout_sum.load(Ordering::SeqCst);
-        (n_payout_sum as f64) / (self.m_n_rank_rules_samples as f64)
+        (n_payout_sum.as_num::<f64>()) / (self.m_n_rank_rules_samples.as_num::<f64>())
     }
 
     fn internal_suggest_card(&self, game: &SGame) -> SCard {

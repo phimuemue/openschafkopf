@@ -2,6 +2,7 @@ use primitives::*;
 use game::*;
 use ncurses;
 use rules::*;
+use util::*;
 
 pub fn init_ui() {
     ncurses::initscr();
@@ -85,7 +86,7 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
                     1, // height
                     24, // width
                     0, // y
-                    (eplayerindex as i32 - 1)*25 // x
+                    ((eplayerindex - 1)*25).as_num() // x
                 )
             }
         },
@@ -105,7 +106,7 @@ pub fn print_vecstich(vecstich: &[SStich]) {
         ESkUiWindow::Stich,
         |ncwin| {
             for (i_stich, stich) in vecstich.iter().enumerate() {
-                let n_x = (i_stich as i32)*10+3;
+                let n_x = (i_stich*10+3).as_num();
                 let n_y = 1;
                 let print_card = |eplayerindex, (n_y, n_x)| {
                     ncurses::wmove(ncwin, n_y, n_x);
@@ -270,8 +271,8 @@ pub fn print_hand(veccard: &[SCard], oi_card: Option<usize>) {
             for (i, card) in veccard.iter().enumerate() {
                 let n_card_width = 10;
                 ncurses::wmove(ncwin,
-                    /*n_y*/ {if is_oi_card(i) { 0 } else { 1 }} as i32,
-                    /*n_x*/ n_card_width * i as i32
+                    /*n_y*/ if is_oi_card(i) { 0i32 } else { 1i32 },
+                    /*n_x*/ (n_card_width * i).as_num()
                 );
                 wprint(ncwin, " +--");
                 print_card_with_farbe(ncwin, *card);

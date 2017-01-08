@@ -6,6 +6,7 @@ use game::*;
 use ai::*;
 use ai::handiterators::forever_rand_hands;
 use ai::suspicion::SSuspicion;
+use util::*;
 
 use std::sync::mpsc;
 
@@ -54,7 +55,7 @@ impl TPlayer for SPlayerComputer {
                 )
             })
             .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
-            .max_by_key(|&(_rules, f_payout_avg)| f_payout_avg as isize) // TODO rust: Use max_by
+            .max_by_key(|&(_rules, f_payout_avg)| f_payout_avg.floor().as_num::<isize>()) // TODO rust: Use max_by
             .map(|(rules, _f_payout_avg)| *rules)).unwrap();
     }
 
@@ -116,8 +117,8 @@ impl TPlayer for SPlayerComputer {
                         n_stock,
                     )
                 })
-                .sum::<isize>() as f64
-                / (n_samples_per_stoss) as f64
+                .sum::<isize>().as_num::<f64>()
+                / n_samples_per_stoss.as_num::<f64>()
                 > 10f64
         ).unwrap()
     }
