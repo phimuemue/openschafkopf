@@ -7,6 +7,7 @@ use rules::rulessolo::*;
 use rules::rulesramsch::*;
 use rules::trumpfdecider::*;
 use rules::payoutdecider::*;
+use util::as_num::*;
 
 use std::error::Error;
 use std::fs::File;
@@ -35,6 +36,22 @@ pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> Vec<&TActivelyPlayableRules
 impl SRuleSet {
     pub fn from_string(str_toml: &str) -> Result<SRuleSet, Vec<toml::ParserError>> {
         str_toml.parse::<toml::Value>().map(|tomltbl| {
+            let read_payout = |str_payout, n_payout_default| -> isize {
+                if let Some(n_payout) = tomltbl.lookup(str_payout).and_then(|tomlval| tomlval.as_integer()).map(TAsNum::as_num) {
+                    if 0<n_payout {
+                        n_payout
+                    } else {
+                        println!("Found {} with invalid value {}. Defaulting to {}.", str_payout, n_payout, n_payout_default);
+                        n_payout_default
+                    }
+                } else {
+                    println!("Could not find {}, defaulting to {}.", str_payout, n_payout_default);
+                    n_payout_default
+                }
+            };
+            let n_payout_rufspiel = read_payout("rufspiel-price", 20);
+            let n_payout_schneider_schwarz_lauf = read_payout("extras-price", 10);
+            let n_payout_single = read_payout("solo-price", 50);
             SRuleSet {
                 m_avecrulegroup : create_playerindexmap(|eplayerindex| {
                     let mut vecrulegroup = Vec::new();
@@ -57,9 +74,9 @@ impl SRuleSet {
                                 .map(|efarbe| Box::new(SRulesRufspiel{
                                     m_eplayerindex: eplayerindex,
                                     m_efarbe: efarbe,
-                                    m_n_payout_base: 20,
-                                    m_n_payout_schneider_schwarz: 10,
-                                    m_laufendeparams: SLaufendeParams::new(10, 3),
+                                    m_n_payout_base: n_payout_rufspiel,
+                                    m_n_payout_schneider_schwarz: n_payout_schneider_schwarz_lauf,
+                                    m_laufendeparams: SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3),
                                 }) as Box<TActivelyPlayableRules>)
                                 .collect()
                         );
@@ -85,34 +102,33 @@ impl SRuleSet {
                                 }
                                 let str_rulename = internal_rulename("Solo");
                                 // TODO make Laufende adjustable
-                                // TODO make n_payout_base adjustable
-                                // TODO make n_payout_schneider_schwarz
+                                // TODO? make n_payout_base adjustable, n_payout_schneider_schwarz adjustable on a per-game basis?
                                 create_rulegroup(
                                     "solo",
                                     &str_rulename,
-                                    generate_sololike_farbe!(SCoreSolo, $fn_prio(0), &str_rulename, /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3))
+                                    generate_sololike_farbe!(SCoreSolo, $fn_prio(0), &str_rulename, /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3))
                                 );
                                 let str_rulename = internal_rulename("Wenz");
                                 create_rulegroup(
                                     "wenz",
                                     &str_rulename,
-                                    vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-1),&str_rulename, /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3))]
+                                    vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-1),&str_rulename, /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3))]
                                 );
                                 create_rulegroup(
                                     "farbwenz",
                                     &internal_rulename("Farbwenz"),
-                                    generate_sololike_farbe!(SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz"), /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3))
+                                    generate_sololike_farbe!(SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz"), /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3))
                                 );
                                 let str_rulename = internal_rulename("Geier");
                                 create_rulegroup(
                                     "geier",
                                     &str_rulename,
-                                    vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-3),&str_rulename, /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3))]
+                                    vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-3),&str_rulename, /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3))]
                                 );
                                 create_rulegroup(
                                     "farbgeier",
                                     &internal_rulename("Farbgeier"),
-                                    generate_sololike_farbe!(SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"), /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3))
+                                    generate_sololike_farbe!(SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"), /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3))
                                 );
                             }
                         }
@@ -121,7 +137,7 @@ impl SRuleSet {
                         create_rulegroup(
                             "solo",
                             "Sie",
-                            vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3))]
+                            vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie", /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3))]
                         );
                     }
                     vecrulegroup
@@ -130,10 +146,10 @@ impl SRuleSet {
                     if tomltbl.lookup("noactive.ramsch").is_some() {
                         assert!(tomltbl.lookup("noactive.stock").is_none()); // TODO what to do in those cases? Better option to model alternatives? Allow stock *and* ramsch at the same time?
                         VStockOrT::OrT(Box::new(SRulesRamsch{
-                            m_n_price: 10,
+                            m_n_price: n_payout_schneider_schwarz_lauf,
                         }) as Box<TRules>) // TODO make adjustable
                     } else if tomltbl.lookup("noactive.stock").is_some() {
-                        VStockOrT::Stock(10) // TODO make adjustable
+                        VStockOrT::Stock(n_payout_rufspiel) // TODO make adjustable
                     } else {
                         VStockOrT::Stock(0) // represent "no stock" by using a zero stock payment
                     }
