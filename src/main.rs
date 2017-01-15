@@ -32,7 +32,7 @@ fn main() {
     let clapmatches = clap::App::new("schafkopf")
         .arg(clap::Arg::with_name("rulesetpath")
             .long("ruleset")
-            .default_value(".schafkopfruleset")
+            .default_value("ruleset_default.toml")
         )
         .arg(clap::Arg::with_name("numgames")
             .long("numgames")
