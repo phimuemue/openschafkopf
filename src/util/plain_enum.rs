@@ -1,4 +1,5 @@
-use std::marker::PhantomData;
+use std::iter;
+use std::ops;
 
 macro_rules! enum_seq_len {
     ($n: expr, $enumval: ident,) => ($n);
@@ -13,11 +14,9 @@ pub trait TPlainEnum : Sized {
     fn wrapped_difference(self, e_other: Self) -> usize;
     fn to_usize(self) -> usize;
     fn ubound_usize() -> usize;
-    fn values() -> SEnumIterator<Self> {
-        SEnumIterator{
-            m_phantom: PhantomData,
-            m_i_e: 0,
-        }
+    fn values() -> iter::Map<ops::Range<usize>, fn(usize) -> Self> {
+        (0..Self::ubound_usize())
+            .map(Self::from_usize)
     }
     fn wrapping_add(self, n_offset: usize) -> Self;
 }
@@ -29,27 +28,6 @@ macro_rules! acc_arr {
     ($func: ident, [$($acc: expr,)*], [$enumval: ident, $($enumvals: ident,)*]) => {
         acc_arr!($func, [$($acc,)* $func($enumval),], [$($enumvals,)*])
     };
-}
-
-#[derive(Clone)]
-pub struct SEnumIterator<E> where E: TPlainEnum {
-    m_phantom : PhantomData<E>,
-    m_i_e : usize,
-}
-
-impl<E> Iterator for SEnumIterator<E>
-    where E: TPlainEnum
-{
-    type Item = E;
-    fn next(&mut self) -> Option<E> {
-        let i_e = self.m_i_e;
-        self.m_i_e += 1;
-        if i_e!=E::ubound_usize() {
-            Some(E::from_usize(i_e))
-        } else {
-            None
-        }
-    }
 }
 
 #[macro_export]
