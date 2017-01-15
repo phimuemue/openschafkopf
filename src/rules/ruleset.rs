@@ -36,19 +36,20 @@ pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> Vec<&TActivelyPlayableRules
 impl SRuleSet {
     pub fn from_string(str_toml: &str) -> Result<SRuleSet, Vec<toml::ParserError>> {
         str_toml.parse::<toml::Value>().map(|tomltbl| {
-            let read_payout = |str_payout, n_payout_default| -> isize {
-                if let Some(n_payout) = tomltbl.lookup(str_payout).and_then(|tomlval| tomlval.as_integer()).map(TAsNum::as_num) {
-                    if 0<n_payout {
-                        n_payout
+            let read_int = |str_key: &str, n_default, n_ubound| {
+                if let Some(n) = tomltbl.lookup(str_key).and_then(|tomlval| tomlval.as_integer()) {
+                    if n_ubound<=n {
+                        n
                     } else {
-                        println!("Found {} with invalid value {}. Defaulting to {}.", str_payout, n_payout, n_payout_default);
-                        n_payout_default
+                        println!("Found {} with invalid value {}. Defaulting to {}.", str_key, n, n_default);
+                        n_default
                     }
                 } else {
-                    println!("Could not find {}, defaulting to {}.", str_payout, n_payout_default);
-                    n_payout_default
+                    println!("Could not find {}, defaulting to {}.", str_key, n_default);
+                    n_default
                 }
             };
+            let read_payout = |str_payout, n_payout_default| read_int(str_payout, n_payout_default, 1).as_num::<isize>();
             let n_payout_rufspiel = read_payout("rufspiel-price", 20);
             let n_payout_schneider_schwarz_lauf = read_payout("extras-price", 10);
             let n_payout_single = read_payout("solo-price", 50);
@@ -66,6 +67,7 @@ impl SRuleSet {
                                 }
                             }
                         };
+                        let read_lauf = |str_game| read_int(&format!("activerules.{}.lauf", str_game), 3, 0).as_num::<usize>();
                         create_rulegroup(
                             "rufspiel",
                             "Rufspiel", 
@@ -76,10 +78,11 @@ impl SRuleSet {
                                     m_efarbe: efarbe,
                                     m_n_payout_base: n_payout_rufspiel,
                                     m_n_payout_schneider_schwarz: n_payout_schneider_schwarz_lauf,
-                                    m_laufendeparams: SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3),
+                                    m_laufendeparams: SLaufendeParams::new(n_payout_schneider_schwarz_lauf, read_lauf("rufspiel")),
                                 }) as Box<TActivelyPlayableRules>)
                                 .collect()
                         );
+                        // TODO improve interface to reduce boilerplate
                         macro_rules! read_sololike {
                             ($payoutdecider: ident, $fn_prio: expr, $str_rulename_suffix: expr) => {
                                 let internal_rulename = |str_rulename| {
@@ -101,34 +104,33 @@ impl SRuleSet {
                                     }}
                                 }
                                 let str_rulename = internal_rulename("Solo");
-                                // TODO make Laufende adjustable
                                 // TODO? make n_payout_base adjustable, n_payout_schneider_schwarz adjustable on a per-game basis?
                                 create_rulegroup(
                                     "solo",
                                     &str_rulename,
-                                    generate_sololike_farbe!(SCoreSolo, $fn_prio(0), &str_rulename, /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3))
+                                    generate_sololike_farbe!(SCoreSolo, $fn_prio(0), &str_rulename, /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, read_lauf("solo")))
                                 );
                                 let str_rulename = internal_rulename("Wenz");
                                 create_rulegroup(
                                     "wenz",
                                     &str_rulename,
-                                    vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-1),&str_rulename, /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3))]
+                                    vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-1),&str_rulename, /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, read_lauf("wenz")))]
                                 );
                                 create_rulegroup(
                                     "farbwenz",
                                     &internal_rulename("Farbwenz"),
-                                    generate_sololike_farbe!(SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz"), /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3))
+                                    generate_sololike_farbe!(SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz"), /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, read_lauf("farbwenz")))
                                 );
                                 let str_rulename = internal_rulename("Geier");
                                 create_rulegroup(
                                     "geier",
                                     &str_rulename,
-                                    vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-3),&str_rulename, /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3))]
+                                    vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-3),&str_rulename, /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, read_lauf("geier")))]
                                 );
                                 create_rulegroup(
                                     "farbgeier",
                                     &internal_rulename("Farbgeier"),
-                                    generate_sololike_farbe!(SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"), /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3))
+                                    generate_sololike_farbe!(SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"), /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, read_lauf("farbgeier")))
                                 );
                             }
                         }
@@ -137,7 +139,7 @@ impl SRuleSet {
                         create_rulegroup(
                             "solo",
                             "Sie",
-                            vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie", /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, 3))]
+                            vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie", /*n_payout_base*/n_payout_single, /*n_payout_schneider_schwarz*/n_payout_schneider_schwarz_lauf, SLaufendeParams::new(n_payout_schneider_schwarz_lauf, read_lauf("solo")))]
                         );
                     }
                     vecrulegroup
