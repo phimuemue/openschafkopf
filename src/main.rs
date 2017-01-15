@@ -70,48 +70,53 @@ fn main() {
         }
     };
 
-    let ruleset = SRuleSet::from_file(Path::new(clapmatches.value_of("rulesetpath").unwrap()));
-
-    if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
-        if let Some(str_hand) = subcommand_matches.value_of("hand") {
-            if let Some(hand_fixed) = util::cardvectorparser::parse_cards(str_hand).map(SHand::new_from_vec) {
-                let eplayerindex_rank = value_t!(subcommand_matches.value_of("pos"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
-                println!("Hand: {}", hand_fixed);
-                for rules in allowed_rules(&ruleset.m_avecrulegroup[eplayerindex_rank]).iter() 
-                    .filter(|rules| rules.can_be_played(&SFullHand::new(&hand_fixed)))
-                {
-                    println!("{}: {}",
-                        rules,
-                        ai().rank_rules(
-                            &SFullHand::new(&hand_fixed),
-                            EPlayerIndex::EPI0,
-                            eplayerindex_rank,
-                            rules.as_rules().clone(),
-                            /*n_stock*/0, // assume no stock in subcommand rank-rules
-                        )
-                    );
+    match SRuleSet::from_file(Path::new(clapmatches.value_of("rulesetpath").unwrap())) {
+        Ok(ruleset) => {
+            if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
+                if let Some(str_hand) = subcommand_matches.value_of("hand") {
+                    if let Some(hand_fixed) = util::cardvectorparser::parse_cards(str_hand).map(SHand::new_from_vec) {
+                        let eplayerindex_rank = value_t!(subcommand_matches.value_of("pos"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
+                        println!("Hand: {}", hand_fixed);
+                        for rules in allowed_rules(&ruleset.m_avecrulegroup[eplayerindex_rank]).iter() 
+                            .filter(|rules| rules.can_be_played(&SFullHand::new(&hand_fixed)))
+                        {
+                            println!("{}: {}",
+                                rules,
+                                ai().rank_rules(
+                                    &SFullHand::new(&hand_fixed),
+                                    EPlayerIndex::EPI0,
+                                    eplayerindex_rank,
+                                    rules.as_rules().clone(),
+                                    /*n_stock*/0, // assume no stock in subcommand rank-rules
+                                )
+                            );
+                        }
+                    } else {
+                        println!("Could not convert \"{}\" to cards.", str_hand);
+                    }
                 }
-            } else {
-                println!("Could not convert \"{}\" to cards.", str_hand);
+                return;
             }
-        }
-        return;
-    }
 
-    skui::init_ui();
-    let accountbalance = game_loop(
-        &create_playerindexmap(|eplayerindex| -> Box<TPlayer> {
-            if EPlayerIndex::EPI0==eplayerindex {
-                Box::new(SPlayerHuman{m_ai : ai()})
-            } else {
-                Box::new(SPlayerComputer{m_ai: ai()})
-            }
-        }),
-        /*n_games*/ clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4),
-        &ruleset,
-    );
-    skui::end_ui();
-    println!("Results: {}", skui::account_balance_string(&accountbalance));
+            skui::init_ui();
+            let accountbalance = game_loop(
+                &create_playerindexmap(|eplayerindex| -> Box<TPlayer> {
+                    if EPlayerIndex::EPI0==eplayerindex {
+                        Box::new(SPlayerHuman{m_ai : ai()})
+                    } else {
+                        Box::new(SPlayerComputer{m_ai: ai()})
+                    }
+                }),
+                /*n_games*/ clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4),
+                &ruleset,
+            );
+            skui::end_ui();
+            println!("Results: {}", skui::account_balance_string(&accountbalance));
+        },
+        Err(str_err) => {
+            println!("{}", str_err);
+        },
+    }
 }
 
 fn game_loop(aplayer: &SPlayerIndexMap<Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
@@ -201,6 +206,6 @@ fn test_game_loop() {
             [activerules.solo]
             [activerules.wenz]
             [noactive.ramsch]
-        "),
+        ").unwrap(),
     );
 }
