@@ -98,9 +98,11 @@ impl SRuleSet {
                                 .map(|efarbe| Box::new(SRulesRufspiel{
                                     m_eplayerindex: eplayerindex,
                                     m_efarbe: efarbe,
-                                    m_n_payout_base: n_payout_rufspiel,
-                                    m_n_payout_schneider_schwarz: n_payout_schneider_schwarz_lauf,
-                                    m_laufendeparams: SLaufendeParams::new(n_payout_schneider_schwarz_lauf, read_lauf("rufspiel")),
+                                    m_payoutdeciderparams: SPayoutDeciderParams::new(
+                                        n_payout_rufspiel,
+                                        n_payout_schneider_schwarz_lauf,
+                                        SLaufendeParams::new(n_payout_schneider_schwarz_lauf, read_lauf("rufspiel")),
+                                    )
                                 }) as Box<TActivelyPlayableRules>)
                                 .collect()
                         );

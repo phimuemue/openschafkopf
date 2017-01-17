@@ -395,7 +395,7 @@ fn test_is_compatible_with_game_so_far() {
     };
     test_game(
         ["h8 su g7 s7 gu eo gk s9", "eu h7 g8 sa ho sz hk hz", "h9 e7 ga gz g9 e9 ek ea", "hu ha so s8 go e8 sk ez"],
-        &SRulesRufspiel {m_eplayerindex: EPlayerIndex::EPI1, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &SRulesRufspiel {m_eplayerindex: EPlayerIndex::EPI1, m_efarbe: EFarbe::Gras, m_payoutdeciderparams: SPayoutDeciderParams::new(/*n_payout_base*/ 20, /*n_payout_schneider_schwarz*/ 10, SLaufendeParams::new(10, 3))},
         /*eplayerindex_first*/ EPlayerIndex::EPI2,
         vec![
             VTestAction::AssertNotFrei(EPlayerIndex::EPI1, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
@@ -413,7 +413,7 @@ fn test_is_compatible_with_game_so_far() {
     );
     test_game(
         ["sz ga hk g8 ea e8 g9 e7", "s7 gz h7 ho g7 sa s8 s9", "e9 ek gu go gk su sk hu", "so ez eo h9 hz h8 ha eu"],
-        &SRulesRufspiel {m_eplayerindex: EPlayerIndex::EPI0, m_efarbe: EFarbe::Schelln, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &SRulesRufspiel {m_eplayerindex: EPlayerIndex::EPI0, m_efarbe: EFarbe::Schelln, m_payoutdeciderparams: SPayoutDeciderParams::new(/*n_payout_base*/ 20, /*n_payout_schneider_schwarz*/ 10, SLaufendeParams::new(10, 3))},
         /*eplayerindex_first*/ EPlayerIndex::EPI1,
         vec![
             VTestAction::AssertNotFrei(EPlayerIndex::EPI0, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),

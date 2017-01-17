@@ -63,9 +63,11 @@ fn rulesrufspiel_new_test(eplayerindex: EPlayerIndex, efarbe: EFarbe, n_payout_b
     SRulesRufspiel{
         m_eplayerindex: eplayerindex,
         m_efarbe: efarbe,
-        m_n_payout_base: n_payout_base,
-        m_n_payout_schneider_schwarz: n_payout_schneider_schwarz,
-        m_laufendeparams: laufendeparams,
+        m_payoutdeciderparams : SPayoutDeciderParams::new(
+            n_payout_base,
+            n_payout_schneider_schwarz,
+            laufendeparams,
+        ),
     }
 }
 
@@ -78,9 +80,11 @@ fn rulessololike_new_test<TrumpfDecider, PayoutDecider>(eplayerindex: EPlayerInd
         eplayerindex,
         VGameAnnouncementPriority::SoloLikeSimple(0),
         "-", // should not matter within those tests
-        n_payout_base,
-        n_payout_schneider_schwarz,
-        laufendeparams,
+        SPayoutDeciderParams::new(
+            n_payout_base,
+            n_payout_schneider_schwarz,
+            laufendeparams,
+        ),
     )
 }
 

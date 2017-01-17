@@ -8,9 +8,7 @@ use std::cmp::Ordering;
 pub struct SRulesRufspiel {
     pub m_eplayerindex : EPlayerIndex,
     pub m_efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
-    pub m_n_payout_base : isize,
-    pub m_n_payout_schneider_schwarz : isize,
-    pub m_laufendeparams : SLaufendeParams,
+    pub m_payoutdeciderparams: SPayoutDeciderParams,
 }
 
 impl fmt::Display for SRulesRufspiel {
@@ -77,9 +75,7 @@ impl TRules for SRulesRufspiel {
                 gamefinishedstiche,
                 fn_is_player_party!(),
                 /*fn_player_multiplier*/ |_eplayerindex| 1, // everyone pays/gets the same
-                self.m_n_payout_base,
-                self.m_n_payout_schneider_schwarz,
-                &self.m_laufendeparams,
+                &self.m_payoutdeciderparams,
             ),
             n_stoss,
             n_doubling,
