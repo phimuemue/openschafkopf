@@ -120,7 +120,7 @@ impl<TrumpfDecider, PayoutDecider> SRulesSoloLike<TrumpfDecider, PayoutDecider>
     }
 }
 
-pub fn sololike<TrumpfDecider, PayoutDecider>(eplayerindex: EPlayerIndex, prio: VGameAnnouncementPriority, str_rulename: &str, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Box<TActivelyPlayableRules> 
+pub fn sololike<TrumpfDecider, PayoutDecider>(eplayerindex: EPlayerIndex, prio: VGameAnnouncementPriority, str_rulename: &str, payoutdeciderparams: SPayoutDeciderParams) -> Box<TActivelyPlayableRules> 
     where TrumpfDecider: TTrumpfDecider,
           TrumpfDecider: 'static,
           TrumpfDecider: Sync,
@@ -128,7 +128,7 @@ pub fn sololike<TrumpfDecider, PayoutDecider>(eplayerindex: EPlayerIndex, prio: 
           PayoutDecider: 'static,
           PayoutDecider: Sync,
 {
-    Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(eplayerindex, prio, str_rulename, SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams))) as Box<TActivelyPlayableRules>
+    Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(eplayerindex, prio, str_rulename, payoutdeciderparams)) as Box<TActivelyPlayableRules>
 }
 
 pub type SCoreSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<
