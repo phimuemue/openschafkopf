@@ -36,6 +36,10 @@ pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> Vec<&TActivelyPlayableRules
 impl SRuleSet {
     pub fn from_string(str_toml: &str) -> Result<SRuleSet, Vec<toml::ParserError>> {
         str_toml.parse::<toml::Value>().and_then(|tomltbl| {
+            // TODO TOML input
+            // * some eintries in toml file may be dependent/related to each other (e.g. stock with rufspiel price)
+            // * should we support/hardwire default values anyway or should we possibly require
+            //   that all values are specified in the TOML file (and return Err(...) if not)?
             let read_int = |str_key: &str, n_default, n_ubound| {
                 if let Some(n) = tomltbl.lookup(str_key).and_then(|tomlval| tomlval.as_integer()) {
                     if n_ubound<=n {
@@ -61,11 +65,11 @@ impl SRuleSet {
                 },
                 (true, false) => {
                     VStockOrT::OrT(Box::new(SRulesRamsch{
-                        m_n_price: n_payout_schneider_schwarz_lauf,
-                    }) as Box<TRules>) // TODO make adjustable
+                        m_n_price: read_int("noactive.ramsch.price", 10, 1).as_num(),
+                    }) as Box<TRules>)
                 },
                 (false, true) => {
-                    VStockOrT::Stock(n_payout_rufspiel) // TODO make adjustable
+                    VStockOrT::Stock(read_int("noactive.stock.price", 20, 1).as_num())
                 },
                 (false, false) => {
                     VStockOrT::Stock(0) // represent "no stock" by using a zero stock payment
