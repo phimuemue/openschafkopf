@@ -164,8 +164,8 @@ impl SRuleSet {
                                 );
                             }
                         }
-                        read_sololike!(SPayoutDeciderPointBased, |i_prioindex| VGameAnnouncementPriority::SoloLikeSimple(i_prioindex), "");
-                        read_sololike!(SPayoutDeciderTout, |i_prioindex| VGameAnnouncementPriority::SoloTout(i_prioindex), " Tout");
+                        read_sololike!(SPayoutDeciderPointBased, VGameAnnouncementPriority::SoloLikeSimple, "");
+                        read_sololike!(SPayoutDeciderTout, VGameAnnouncementPriority::SoloTout, " Tout");
                         create_rulegroup(
                             "solo",
                             "Sie",
