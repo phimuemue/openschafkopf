@@ -58,11 +58,37 @@ pub fn test_rules(
     assert_eq!(create_playerindexmap(|eplayerindex| accountbalance_payout.get_player(eplayerindex)), EPlayerIndex::map_from_raw(an_payout));
 }
 
+fn rulesrufspiel_new_test(eplayerindex: EPlayerIndex, efarbe: EFarbe, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesRufspiel {
+    // Do not inline this function into SRulesRufspiel. It serves as a bridge between actual implementation and the data we extract for the test suite.
+    SRulesRufspiel{
+        m_eplayerindex: eplayerindex,
+        m_efarbe: efarbe,
+        m_n_payout_base: n_payout_base,
+        m_n_payout_schneider_schwarz: n_payout_schneider_schwarz,
+        m_laufendeparams: laufendeparams,
+    }
+}
+
+fn rulessololike_new_test<TrumpfDecider, PayoutDecider>(eplayerindex: EPlayerIndex, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider>
+    where TrumpfDecider: TTrumpfDecider,
+          PayoutDecider: TPayoutDecider,
+{
+    // Do not inline this function. It serves as a bridge between actual implementation and the data we extract for the test suite.
+    SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(
+        eplayerindex,
+        VGameAnnouncementPriority::SoloLikeSimple(0),
+        "-", // should not matter within those tests
+        n_payout_base,
+        n_payout_schneider_schwarz,
+        laufendeparams,
+    )
+}
+
 #[test]
 fn test_rulesrufspiel() {
     test_rules(
         "../../testdata/games/10.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI0, m_efarbe: EFarbe::Eichel, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
         ["ho so gu su ek ga s9 s7","go hk h8 h7 ea sa sk s8","eu hu ha ez e7 gz g9 g8","eo hz h9 e9 e8 gk g7 sz",],
         vec![],
         vec![],
@@ -71,7 +97,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/14.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI0, m_efarbe: EFarbe::Eichel, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
         ["ho hu ha h8 ez e9 sa s9","eu h7 e8 gk g9 g7 sk s8","go so gu hz h9 e7 ga g8","eo su hk ea ek gz sz s7",],
         vec![],
         vec![],
@@ -80,7 +106,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/16.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI2, m_efarbe: EFarbe::Schelln, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI2, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
         ["gu su hk e9 e8 e7 ga sz","so hu hz h8 ez g9 g8 s7","eo go ha h9 h7 sk s9 s8","ho eu ea ek gz gk g7 sa",],
         vec![],
         vec![],
@@ -89,7 +115,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/19.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI1, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI1, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
         ["go gu ga gz g9 sz s9 s8","ho hu hk h8 h7 gk sa s7","eo so eu ha ea e9 e8 sk","su hz h9 ez ek e7 g8 g7",],
         vec![],
         vec![],
@@ -98,7 +124,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/2.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI2, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI2, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
         ["gu su hz h7 ek ga gk s7","hk ez e9 e8 e7 g7 s9 s8","go so hu ha ea gz sa sk","eo ho eu h9 h8 g9 g8 sz",],
         vec![],
         vec![3,0,],
@@ -107,7 +133,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/21.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI3, m_efarbe: EFarbe::Schelln, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
         ["hk h7 ez e9 e7 gk g8 sk","go gu ea ek e8 gz sa s7","ho so eu hz h8 g7 sz s8","eo hu su ha h9 ga g9 s9",],
         vec![],
         vec![],
@@ -116,7 +142,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/22.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI0, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
         ["eo eu hu ha hk g7 sz s8","ho ez e9 e7 gz gk g9 sa","go so hz h9 ek e8 sk s9","gu su h8 h7 ea ga g8 s7",],
         vec![],
         vec![],
@@ -125,7 +151,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/26.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI0, m_efarbe: EFarbe::Schelln, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
         ["eo ho hz h9 h8 ga gk s8","hu su hk ea e7 gz sa sz","go so eu gu e8 g9 s9 s7","ha h7 ez ek e9 g8 g7 sk",],
         vec![],
         vec![],
@@ -134,7 +160,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/29.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI0, m_efarbe: EFarbe::Eichel, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
         ["so su ha hz h7 ek e9 sz","go hk h8 e7 gz g9 sa s7","eo eu h9 ez ga gk sk s8","ho gu hu ea e8 g8 g7 s9",],
         vec![],
         vec![],
@@ -143,7 +169,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/30.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI1, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI1, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
         ["ha ea ez e8 e7 ga gk sk","eu hu su hz h8 h7 g9 g7","eo ho gu hk e9 gz sa s9","go so h9 ek g8 sz s8 s7",],
         vec![],
         vec![],
@@ -152,7 +178,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/31.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI3, m_efarbe: EFarbe::Schelln, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
         ["eo hz h9 e8 ga gk sk s9","gu hu ez ek e7 gz g9 s7","ho so su ha e9 g8 g7 sa","go eu hk h8 h7 ea sz s8",],
         vec![],
         vec![],
@@ -161,7 +187,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/32.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI0, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
         ["eo go ho hz h7 e9 gz sa","so gu hu hk h8 ea ez g7","su e8 gk g9 g8 sk s9 s7","eu ha h9 ek e7 ga sz s8",],
         vec![],
         vec![],
@@ -170,7 +196,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/33.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI2, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI2, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
         ["so eu su h7 ek g7 sk s8","eo h9 ea ez e9 e8 g8 s7","go ho gu ha hz g9 sa sz","hu hk h8 e7 ga gz gk s9",],
         vec![],
         vec![],
@@ -179,7 +205,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/35.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI2, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI2, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
         ["eo so eu h7 e7 gk g9 g8","gu hu ek e8 ga sz s9 s7","go ho su hz hk h8 gz s8","ha h9 ea ez e9 g7 sa sk",],
         vec![],
         vec![],
@@ -188,7 +214,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/36.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI1, m_efarbe: EFarbe::Eichel, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI1, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
         ["so e9 ga g9 g8 sa sz s9","eo gu hz h9 h8 h7 ez s7","go eu hu su hk ek gk sk","ho ha ea e8 e7 gz g7 s8",],
         vec![],
         vec![],
@@ -197,7 +223,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/38.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI3, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
         ["su ha ez e9 e7 gk g9 s8","go gu hu h9 g7 sz s9 s7","eo so eu ek ga gz sa sk","ho hz hk h8 h7 ea e8 g8",],
         vec![],
         vec![],
@@ -206,7 +232,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/40.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI0, m_efarbe: EFarbe::Eichel, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
         ["go so eu ha h9 e9 sa s9","eo ho hz ek e7 g9 g8 g7","gu hk h8 ez gz gk sz sk","hu su h7 ea e8 ga s8 s7",],
         vec![],
         vec![],
@@ -215,7 +241,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/41.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI3, m_efarbe: EFarbe::Eichel, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
         ["eo gu hu ez gz g8 g7 sz","su hk h9 ea e7 g9 s9 s8","so eu ha h8 ek e9 sk s7","go ho hz h7 e8 ga gk sa",],
         vec![],
         vec![],
@@ -224,7 +250,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/43.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI3, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
         ["hz h9 ea ek g9 sz sk s9","eo su ha h8 ga gz sa s7","so gu h7 e9 e7 gk g8 s8","go ho eu hu hk ez e8 g7",],
         vec![],
         vec![],
@@ -233,7 +259,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/45.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI3, m_efarbe: EFarbe::Schelln, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
         ["ho hu su h9 e9 e8 gk sk","ha hz h7 ea ez ga sa s9","so eu gu ek e7 gz g9 s7","eo go hk h8 g8 g7 sz s8",],
         vec![],
         vec![],
@@ -242,7 +268,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/46.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI0, m_efarbe: EFarbe::Schelln, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
         ["ho so eu hu h8 ga g8 s8","go ha hz h7 ea ek s9 s7","gu su h9 e9 gz g9 g7 sz","eo hk ez e8 e7 gk sa sk",],
         vec![],
         vec![],
@@ -251,7 +277,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/47.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI3, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
         ["ho h9 e7 ga gz g9 sz s9","go so eu ea e9 g8 sk s8","gu su hk h8 h7 ez ek e8","eo hu ha hz gk g7 sa s7",],
         vec![],
         vec![],
@@ -260,7 +286,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/48.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI2, m_efarbe: EFarbe::Eichel, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI2, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
         ["eu ha h8 ea e8 e7 ga g7","eo hk ez ek sz s9 s8 s7","go so gu hu h9 h7 e9 sa","ho su hz gz gk g9 g8 sk",],
         vec![],
         vec![],
@@ -269,7 +295,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/49.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI1, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI1, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
         ["h9 h8 ez e8 g8 sk s9 s8","eo so gu ha hk e9 gk s7","eu hu su hz h7 gz g9 sz","go ho ea ek e7 ga g7 sa",],
         vec![],
         vec![],
@@ -278,7 +304,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/5.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI0, m_efarbe: EFarbe::Eichel, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
         ["go so eu h9 ez gz sa s9","hu su ha hz e9 e7 g9 s8","hk h8 ek e8 g7 sz sk s7","eo ho gu h7 ea ga gk g8",],
         vec![],
         vec![],
@@ -287,7 +313,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/50.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI3, m_efarbe: EFarbe::Schelln, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
         ["ho so gu gk g9 sa s9 s7","ha ea ez ek e9 gz g8 g7","hu hk h9 h7 e8 e7 ga sz","eo go eu su hz h8 sk s8",],
         vec![],
         vec![],
@@ -296,7 +322,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/51.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI3, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
         ["eu su h9 ea gz g9 sz sk","eo ho gu h7 ez g8 g7 s8","go ek e9 e7 ga sa s9 s7","so hu ha hz hk h8 e8 gk",],
         vec![],
         vec![],
@@ -305,7 +331,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/53.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI1, m_efarbe: EFarbe::Gras, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI1, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
         ["so ez ek e7 ga sz sk s8","go hu ha hz hk h8 e9 gk","eo gu h9 h7 g8 sa s9 s7","ho eu su ea e8 gz g9 g7",],
         vec![],
         vec![],
@@ -314,7 +340,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/55.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI2, m_efarbe: EFarbe::Eichel, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI2, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
         ["su hk h7 ek ga gz g9 g7","go so eu ez e8 gk g8 sz","ho gu hu ha hz h8 e7 s7","eo h9 ea e9 sa sk s9 s8",],
         vec![],
         vec![],
@@ -323,7 +349,7 @@ fn test_rulesrufspiel() {
     );
     test_rules(
         "../../testdata/games/6.html",
-        &SRulesRufspiel{m_eplayerindex: EPlayerIndex::EPI0, m_efarbe: EFarbe::Eichel, m_n_payout_base: 20, m_n_payout_schneider_schwarz: 10, m_laufendeparams: SLaufendeParams::new(10, 3)},
+        &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
         ["eo go so ha hk ek gz g9","su h9 e9 e8 gk g7 s9 s8","ho eu hu h8 ez e7 ga sz","gu hz h7 ea g8 sa sk s7",],
         vec![],
         vec![],
@@ -336,7 +362,7 @@ fn test_rulesrufspiel() {
 fn test_rulesfarbwenz() {
     test_rules(
         "../../testdata/games/11.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["ga g9 ez e8 hz h9 h8 sk","ek eo e9 e7 ha hk sz s8","su gk go g7 ea h7 so s9","eu gu hu gz g8 ho sa s7",],
         vec![],
         vec![],
@@ -345,7 +371,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/12.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eu ha hz h9 h7 ga gz g8","hu ek eo e9 go g9 g7 sk","su ho ea ez e8 e7 s9 s7","gu hk h8 gk sa sz so s8",],
         vec![],
         vec![],
@@ -354,7 +380,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/15.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["hk ez e8 gk g7 sk so s9","gu ha hz ho h7 ek sa s8","eu h8 eo e9 e7 ga g9 s7","hu su h9 ea gz go g8 sz",],
         vec![],
         vec![],
@@ -363,7 +389,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/17.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["su ga gz go g8 ea ek ha","eu gu gk g7 e8 hk so s7","hu g9 ho h8 h7 sa s9 s8","ez eo e9 e7 hz h9 sz sk",],
         vec![],
         vec![],
@@ -372,7 +398,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/23.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["gu hu g9 ek e9 e8 e7 hk","go ez ha hz h9 h7 sz s8","eu ga gz gk g7 ea sa s9","su g8 eo ho h8 sk so s7",],
         vec![],
         vec![],
@@ -381,7 +407,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/25.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["gu hu ga gk g7 ha h7 sa","eu ea ez e7 ho h8 sz s8","gz go g9 g8 eo h9 s9 s7","su ek e9 e8 hz hk sk so",],
         vec![],
         vec![],
@@ -390,7 +416,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/37.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["gu hu ga g9 hz hk so s9","ea gz g7 ho h9 sk s8 s7","su eo e9 gk go g8 ha h8","eu ez ek e8 e7 h7 sa sz",],
         vec![],
         vec![],
@@ -399,7 +425,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/4.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["gu ha hz hk h9 h7 ek ga","eu ho h8 gz g8 sa s8 s7","hu ea e9 go g9 sz sk so","su ez eo e8 e7 gk g7 s9",],
         vec![],
         vec![],
@@ -408,7 +434,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/54.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eu ha hk ho h9 g9 sa s9","hu h7 e7 go g8 g7 so s8","gu h8 ez e9 e8 gz sk s7","su hz ea ek eo ga gk sz",],
         vec![],
         vec![],
@@ -417,7 +443,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/9.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderTout>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderTout>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["h8 ez e9 e8 ga gz gk g7","eu gu hu su ha hk h9 sa","ho ea ek eo sz sk s8 s7","hz h7 e7 go g9 g8 so s9",],
         vec![],
         vec![],
@@ -431,7 +457,7 @@ fn test_rulesfarbwenz() {
     // ../../testdata/games/farbwenz/7.html // TODO kurze Karte
     test_rules(
         "../../testdata/games/farbwenz/8.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["su gk go eo e8 h7 sz s8","eu gu hu e7 hz h8 s9 s7","gz g9 g8 g7 ea ek ha sa","ga ez e9 hk ho h9 sk so",],
         vec![3,1,],
         vec![1,],
@@ -440,7 +466,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/farbwenz/9.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["gu su ea ek e9 e8 e7 s7","eu hu gk g9 g8 sa so s8","ga go hz hk ho h8 sz sk","ez eo gz g7 ha h9 h7 s9",],
         vec![],
         vec![],
@@ -453,7 +479,7 @@ fn test_rulesfarbwenz() {
 fn test_ruleswenz() {
     test_rules(
         "../../testdata/games/13.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["eu hu ga gz ha hz sa s9","gu go g7 hk h7 sk so s8","su ek eo gk g9 g8 ho sz","ea ez e9 e8 e7 h9 h8 s7",],
         vec![],
         vec![],
@@ -462,7 +488,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/52.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["ek e9 e7 gk go g8 ha hk","hu ez eo e8 hz h9 sz so","gz g9 g7 ho h7 sk s9 s8","eu gu su ea ga h8 sa s7",],
         vec![],
         vec![],
@@ -471,7 +497,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/8.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["hu su ea ez e9 hz sa s8","gu ek g9 g8 sk so s9 s7","eu ga gk g7 ho h9 h7 sz","eo e8 e7 gz go ha hk h8",],
         vec![],
         vec![],
@@ -481,7 +507,7 @@ fn test_ruleswenz() {
     // ../../testdata/games/wenz/1.html // TODO kurze Karte
     test_rules(
         "../../testdata/games/wenz/10.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["ez ek gk go ho h9 sz s7","gu eo g8 g7 hz h8 so s8","ea e9 e8 ga g9 ha h7 sa","eu hu su e7 gz hk sk s9",],
         vec![],
         vec![],
@@ -492,7 +518,7 @@ fn test_ruleswenz() {
     // ../../testdata/games/wenz/12.html // TODO kurze Karte
     test_rules(
         "../../testdata/games/wenz/13.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["eo ga gz gk ha ho h9 sz","su e8 g7 hz sk so s9 s7","gu hu ea ez ek e9 go g9","eu e7 g8 hk h8 h7 sa s8",],
         vec![1,],
         vec![],
@@ -502,7 +528,7 @@ fn test_ruleswenz() {
     // ../../testdata/games/wenz/14.html // TODO kurze Karte
     test_rules(
         "../../testdata/games/wenz/2.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["eo e7 ga ho h7 sk s9 s8","eu su gk g8 g7 ha hz sa","gu hu ez ek e8 hk h9 so","ea e9 gz go g9 h8 sz s7",],
         vec![1,],
         vec![],
@@ -511,7 +537,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/3.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["eo e9 gz g7 ho h7 sz s9","eu gu hu ek ga go hk sa","su ez gk ha h9 h8 sk s7","ea e8 e7 g9 g8 hz so s8",],
         vec![],
         vec![],
@@ -522,7 +548,7 @@ fn test_ruleswenz() {
     // ../../testdata/games/wenz/5.html // TODO kurze Karte
     test_rules(
         "../../testdata/games/wenz/6.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["ek e8 e7 gz g9 hk sz so","eu hu gk go g8 ho h7 s8","gu su ez eo h9 h8 sk s7","ea e9 ga g7 ha hz sa s9",],
         vec![2,],
         vec![],
@@ -531,7 +557,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/7.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["ez ek gk go ho h9 sz s7","gu eo g8 g7 hz h8 so s8","ea e9 e8 ga g9 ha h7 sa","eu hu su e7 gz hk sk s9",],
         vec![],
         vec![],
@@ -540,7 +566,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/8.html",
-        &SRulesSoloLike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Wenz", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["eu su gz g9 hz ho h7 sa","hu e7 ga gk ha hk so s7","ea ez ek g8 h9 h8 s9 s8","gu eo e9 e8 go g7 sz sk",],
         vec![],
         vec![],
@@ -554,7 +580,7 @@ fn test_ruleswenz() {
 fn test_rulessolo() {
     test_rules(
         "../../testdata/games/28.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go ho gz g7 ea ez hk","so eu hu ga gk ha sa s9","gu su g9 g8 e9 h8 sk s7","ek e8 e7 hz h9 h7 sz s8",],
         vec![],
         vec![],
@@ -563,7 +589,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/34.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo ho gu hu ek e9 ha h7","go so eu su e7 g7 hk sz","ez e8 ga g9 g8 h9 sk s8","ea gz gk hz h8 sa s9 s7",],
         vec![],
         vec![],
@@ -572,7 +598,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/7.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["su ga hz h8 h7 sa s9 s7","go hu g8 ez ek e8 e7 s8","eo so gu gz gk g9 ha hk","ho eu g7 ea e9 h9 sz sk",],
         vec![],
         vec![],
@@ -581,7 +607,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/1-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo so hu su hk h8 h7 g7","ho hz e7 gk g8 sa s9 s7","gu ha ea ek ga gz g9 sz","go eu h9 ez e9 e8 sk s8",],
         vec![],
         vec![],
@@ -591,7 +617,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/10-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/100-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo eu ez ga g7 hz hk sa","so gu ea gk g9 h8 sz sk","ek gz ha h9 h7 s9 s8 s7","go ho hu su e9 e8 e7 g8",],
         vec![],
         vec![],
@@ -600,7 +626,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/104-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["hu ea ek e9 e8 e7 sa s9","so ha ez gz gk g8 g7 sz","gu su hz h9 ga sk s8 s7","eo go ho eu hk h8 h7 g9",],
         vec![],
         vec![],
@@ -609,7 +635,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/105-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["so ek g7 hz hk h7 sk s8","eu hu e7 ga g8 h8 sz s9","ho ea ez gz g9 h9 sa s7","eo go gu su e9 e8 gk ha",],
         vec![],
         vec![],
@@ -619,7 +645,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/106-gras-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/109-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo ho so eu gu hk e7 g8","go h8 e8 gz gk g9 g7 sz","hu ha h9 ea ek ga s9 s8","su hz h7 ez e9 sa sk s7",],
         vec![],
         vec![],
@@ -629,7 +655,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/11-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/111-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo hu ez e9 e8 ga gz sa","ho gu su hk h9 ea sz s9","go so eu ha hz h8 h7 gk","ek e7 g9 g8 g7 sk s8 s7",],
         vec![],
         vec![],
@@ -639,7 +665,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/112-gras-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/113-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["hz hk ek e7 ga g9 sa sk","go h8 ez e8 gk g8 s9 s8","eo so eu hu ha h9 h7 s7","ho gu su ea e9 gz g7 sz",],
         vec![],
         vec![],
@@ -648,7 +674,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/114-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go eu gu ez e9 e8 s7","hu su e7 g8 ha h8 h7 sz","ho so gk hz hk h9 s9 s8","ea ek ga gz g9 g7 sa sk",],
         vec![],
         vec![],
@@ -658,7 +684,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/116-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/119-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["so eu ek e8 e7 gz gk sz","ho gu su hk h9 h8 sa s9","eo go hu ea ez e9 ga h7","g9 g8 g7 ha hz sk s8 s7",],
         vec![],
         vec![],
@@ -669,7 +695,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/122-gras-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/123-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["e9 gk g8 ha h7 sa sz s8","go ho eu ea ek e8 e7 hk","eo so hu su gz g9 h9 h8","gu ez ga g7 hz sk s9 s7",],
         vec![],
         vec![2,],
@@ -678,7 +704,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/124-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go so eu gu hk h7 sa","h8 ea ez e9 e8 ga g9 s9","ha e7 gz g8 g7 sz s8 s7","ho hu su hz h9 ek gk sk",],
         vec![],
         vec![],
@@ -688,7 +714,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/126-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/127-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go g9 g7 ea e9 ha h9","eu ga gz e8 e7 hz hk s7","ho so gu hu su h8 sz sk","gk g8 ez ek h7 sa s9 s8",],
         vec![],
         vec![],
@@ -698,7 +724,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/128-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/129-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go so hu gk g8 e7 s9","g7 ez e8 ha hz h9 sk s8","eu gu su ga gz ea ek h8","ho g9 e9 hk h7 sa sz s7",],
         vec![],
         vec![],
@@ -708,7 +734,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/13-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/130-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go hu gk g9 g7 h8 sa","gu gz g8 e8 e7 hk sz s9","eu su ga ez e9 h9 h7 s8","ho so ea ek ha hz sk s7",],
         vec![],
         vec![],
@@ -717,7 +743,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/131-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["hz ek e9 e8 ga gz g8 s8","eu h7 ea ez gk g7 sk s7","eo ho so gu hu ha hk sz","go su h9 h8 e7 g9 sa s9",],
         vec![],
         vec![],
@@ -726,7 +752,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/132-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["su ea ez ek e9 gz sz s8","so eu hk g9 g7 sk s9 s7","go gu h8 e7 ga gk g8 sa","eo ho hu ha hz h9 h7 e8",],
         vec![],
         vec![],
@@ -736,7 +762,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/134-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/135-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["so su ea e7 ha hz h9 sk","ho eu gu gz gk h7 sa s9","ek g9 g8 g7 hk h8 s8 s7","eo go hu ez e9 e8 ga sz",],
         vec![],
         vec![],
@@ -745,7 +771,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/137-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["gu gk g9 ea e8 e7 sz sk","eu hu ek e9 ha h8 s9 s8","eo go so gz g8 g7 h9 h7","ho su ga ez hz hk sa s7",],
         vec![],
         vec![],
@@ -754,7 +780,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/139-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go gu g7 ea e7 hk h9 s9","eu hu gz e9 ha h8 h7 s7","eo ho so su ga gk g8 ek","g9 ez e8 hz sa sz sk s8",],
         vec![],
         vec![],
@@ -763,7 +789,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/142-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["gu su g7 ea e9 sa sz s8","eo go ho so hu ga g9 e8","g8 ez e7 ha hz hk s9 s7","eu gz gk ek h9 h8 h7 sk",],
         vec![],
         vec![],
@@ -772,7 +798,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/143-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo ho so gu hu gk g7 h9","eu gz ea hz hk sa sz sk","ga g8 e9 e7 ha h8 h7 s9","go su g9 ez ek e8 s8 s7",],
         vec![],
         vec![],
@@ -782,7 +808,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/144-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/146-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["ho so su ea ek e8 ha hz","eo go eu e9 gk g7 hk sz","g9 g8 h9 h8 h7 sa sk s8","gu hu ez e7 ga gz s9 s7",],
         vec![],
         vec![],
@@ -791,7 +817,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/149-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go ho so eu gu hk h8 g8","su h9 ez e8 e7 ga sz s8","eo hu ha h7 ek gk sk s9","hz ea e9 gz g9 g7 sa s7",],
         vec![],
         vec![],
@@ -801,7 +827,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/15-herz-solo.html // TODO kurze Karte
     test_rules(
         "../../testdata/games/solo/150-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["so eu g9 ez e7 hz hk sa","eo go gu hu gz g7 ea e8","su ga gk ek h9 h8 sk s9","ho g8 e9 ha h7 sz s8 s7",],
         vec![],
         vec![],
@@ -810,7 +836,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/151-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["hu gk g9 g8 e9 ha h9 h8","eo so gu ga gz g7 sz s8","go eu su ez ek h7 s9 s7","ho ea e8 e7 hz hk sa sk",],
         vec![],
         vec![],
@@ -821,7 +847,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/154-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/155-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go so eu gu h8 ea s9","hk h9 ez e9 gk g7 sa s7","su ha h7 ek g9 g8 sk s8","ho hu hz e8 e7 ga gz sz",],
         vec![],
         vec![],
@@ -830,7 +856,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/156-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["e9 e8 ga hz hk h8 h7 s8","hu su gz gk g9 sz sk s7","eo ho eu ea ez ek e7 sa","go so gu g8 g7 ha h9 s9",],
         vec![],
         vec![],
@@ -839,7 +865,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/157-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go su e9 e8 g7 ha hz","ea e7 ga gk g9 h8 sk s8","ho so gu ek gz g8 hk sz","eu hu ez h9 h7 sa s9 s7",],
         vec![],
         vec![],
@@ -848,7 +874,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/159-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["so eu e7 gz gk g9 g7 sa","eo go ho hu su ha h7 ek","hk h9 ez e9 g8 sz s9 s7","gu hz h8 ea e8 ga sk s8",],
         vec![],
         vec![],
@@ -857,7 +883,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/160-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eu gu g8 ea hk h8 sa s9","ga e9 e8 e7 h9 sz sk s8","eo go ho hu su gk g9 ez","so gz g7 ek ha hz h7 s7",],
         vec![],
         vec![],
@@ -866,7 +892,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/161-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go eu h9 ea e8 e7 g9 s9","so gu ez e9 g8 sz sk s7","su ha hz hk h7 ga gz g7","eo ho hu h8 ek gk sa s8",],
         vec![],
         vec![],
@@ -875,7 +901,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/162-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["e7 g9 g7 hz h8 sa sz s7","go ho hu su ea ez e8 ha","ek ga gz gk h9 sk s9 s8","eo so eu gu e9 g8 hk h7",],
         vec![],
         vec![3,],
@@ -885,7 +911,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/163-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/164-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go so hu ek e9 hz hk","ho ea ez e7 h8 sz sk s7","gu ga gz g9 g7 ha h9 sa","eu su e8 gk g8 h7 s9 s8",],
         vec![0,],
         vec![],
@@ -895,7 +921,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/165-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/166-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["ho so hu su ga g9 ea ha","go gz gk ez e7 sa s9 s8","eu gu g8 g7 e9 e8 hz h7","eo ek hk h9 h8 sz sk s7",],
         vec![],
         vec![],
@@ -904,7 +930,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/168-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["su gz gk ez e9 e7 hz sk","so g8 ea e8 ha h7 sa s7","eo hu ek h9 h8 sz s9 s8","go ho eu gu ga g9 g7 hk",],
         vec![],
         vec![],
@@ -916,7 +942,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/171-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/172-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["so hu ea ez e7 h7 sz s9","eu gu ga gz g8 hk h8 s7","g7 ek e9 e8 h9 sa sk s8","eo go ho su gk g9 ha hz",],
         vec![],
         vec![],
@@ -925,7 +951,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/173-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go ho eu ea ez e9 g9 ha","so hu su e8 hz h8 s8 s7","ga gz gk g8 g7 hk sz s9","eo gu ek e7 h9 h7 sa sk",],
         vec![],
         vec![],
@@ -934,7 +960,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/174-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["hu su ek ga h9 h8 h7 sz","eo go gu ea e8 e7 g8 sa","ho eu e9 gk g7 ha sk s9","so ez gz g9 hz hk s8 s7",],
         vec![],
         vec![],
@@ -946,7 +972,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/178-gras-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/179-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["hu su hz ea e8 ga gz s7","gu ha h8 ez ek g9 sz s8","h9 h7 e9 e7 gk g8 sk s9","eo go ho so eu hk g7 sa",],
         vec![],
         vec![],
@@ -955,7 +981,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/18-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go ho so gu ek g7 h8","hu su ea ez e9 g8 h7 sk","eu e7 ga gk hz hk sa s7","e8 gz g9 ha h9 sz s9 s8",],
         vec![],
         vec![],
@@ -964,7 +990,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/180-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eu ea e8 h8 sz s9 s8 s7","ho so gu su gk g9 g8 ha","eo hu ez e9 e7 hk sa sk","go ga gz g7 ek hz h9 h7",],
         vec![],
         vec![],
@@ -973,7 +999,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/181-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go hu e8 gz hz h9 sz s7","ho gk g8 g7 ha h8 sa s9","so eu gu ea ez ek ga s8","eo su e9 e7 g9 hk h7 sk",],
         vec![],
         vec![],
@@ -982,7 +1008,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/182-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["ho so eu hu su e7 ga ha","gu e9 g8 g7 hz sz sk s8","ez e8 gz gk hk h8 h7 s7","eo go ea ek g9 h9 sa s9",],
         vec![],
         vec![],
@@ -991,7 +1017,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/183-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["ho so su ea ez e8 e7 s8","ek g9 ha h8 h7 sa sz sk","eo go eu gu hu g7 h9 s7","e9 ga gz gk g8 hz hk s9",],
         vec![],
         vec![2,],
@@ -1000,7 +1026,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/184-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go ho so eu ga g8 g7 sk","g9 ha hz h9 sz s9 s8 s7","eo hu su gz gk h8 h7 sa","gu ea ez ek e9 e8 e7 hk",],
         vec![],
         vec![2,],
@@ -1028,7 +1054,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/201-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/202-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["ho hu ga ez e7 hk h9 s8","eo go so eu gz gk g8 h7","gu su ek e8 ha hz sa sk","g9 g7 ea e9 h8 sz s9 s7",],
         vec![],
         vec![],
@@ -1037,7 +1063,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/203-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go so gu ez e9 g7 ha sz","ek ga g9 g8 h9 h8 sa s8","e7 gz gk hz hk h7 sk s9","eo ho eu hu su ea e8 s7",],
         vec![],
         vec![],
@@ -1047,7 +1073,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/204-gras-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/205-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go ek e8 gk g8 g7 hz h8","eu hu ea g9 h9 h7 sa s9","su gz ha hk sz sk s8 s7","eo ho so gu ez e9 e7 ga",],
         vec![],
         vec![],
@@ -1058,7 +1084,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/207-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/209-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["ez g9 g7 ha h9 h8 sa s8","so eu gu su ek e9 e8 e7","eo ga gz gk g8 hk sz s7","go ho hu ea hz h7 sk s9",],
         vec![],
         vec![],
@@ -1069,7 +1095,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/210-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/211-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo so eu hu ek e9 e7 sa","go ho su ez h9 h8 h7 sz","gu ea gz gk g9 hk s9 s8","e8 ga g8 g7 ha hz sk s7",],
         vec![],
         vec![],
@@ -1078,7 +1104,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/213-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go ho su ha hk sz s9 s7","so eu g7 ez e7 sa sk s8","eo gu ga gz gk g9 g8 h9","hu ea ek e9 e8 hz h8 h7",],
         vec![],
         vec![],
@@ -1087,7 +1113,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/215-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go ho so eu hk h9 h7 gk","eo hu su hz e7 g8 g7 s9","h8 ek e8 ga gz sz s8 s7","gu ha ea ez e9 g9 sa sk",],
         vec![],
         vec![],
@@ -1096,7 +1122,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/216-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eu hu ha ez e8 e7 sz s8","go ek gz gk sa sk s9 s7","ho hz h9 h7 ga g9 g8 g7","eo so gu su hk h8 ea e9",],
         vec![],
         vec![],
@@ -1105,7 +1131,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/217-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["so hu e7 ga g7 h9 sz s8","e8 gk g9 g8 hk h8 h7 s7","eo go ho eu su ea ez ha","gu ek e9 gz hz sa sk s9",],
         vec![],
         vec![],
@@ -1114,7 +1140,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/219-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["su ga hz h8 h7 sa s9 s7","go hu g8 ez ek e8 e7 s8","eo so gu gz gk g9 ha hk","ho eu g7 ea e9 h9 sz sk",],
         vec![],
         vec![],
@@ -1123,7 +1149,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/22-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["gu e8 gz g8 g7 ha sz s8","hu g9 hz h9 h8 sa s9 s7","eo su ea ek e7 gk hk h7","go ho so eu ez e9 ga sk",],
         vec![],
         vec![2,],
@@ -1132,7 +1158,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/220-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go ho gz g7 ea ez hk","so eu hu ga gk ha sa s9","gu su g9 g8 e9 h8 sk s7","ek e8 e7 hz h9 h7 sz s8",],
         vec![],
         vec![],
@@ -1141,7 +1167,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/221-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo ho gu hu ek e9 ha h7","go so eu su e7 g7 hk sz","ez e8 ga g9 g8 h9 sk s8","ea gz gk hz h8 sa s9 s7",],
         vec![],
         vec![],
@@ -1151,7 +1177,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/23-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/25-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go ho so hu ga g8 ha s9","gz g9 g7 ea ez h9 h8 s7","eo eu gu e8 e7 hz hk s8","su gk ek e9 h7 sa sz sk",],
         vec![],
         vec![],
@@ -1160,7 +1186,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/26-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo ho gu ga g9 ea e8 ha","go su g8 ez e7 hk sa s9","so hu gz g7 e9 hz h7 sz","eu gk ek h9 h8 sk s8 s7",],
         vec![],
         vec![],
@@ -1170,7 +1196,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/27-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/29-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["hu hk h9 e9 gk g7 sk s9","ez ek e7 gz g9 g8 sa sz","ho su ha h7 ea e8 s8 s7","eo go so eu gu hz h8 ga",],
         vec![],
         vec![],
@@ -1179,7 +1205,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/30-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["so ga g9 e7 hk h9 h8 s9","eu gu ek hz h7 sz s8 s7","ho su gk g7 ez e9 e8 sk","eo go hu gz g8 ea ha sa",],
         vec![],
         vec![],
@@ -1188,7 +1214,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/31-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go gu ek e9 g7 sz sk s9","ho eu h7 ez ga gk g8 sa","su hz h9 e8 gz g9 s8 s7","eo so hu ha hk h8 ea e7",],
         vec![],
         vec![],
@@ -1197,7 +1223,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/32-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go gu ea e9 e7 g9 sa","su ez ek e8 ga g7 h9 s8","ho eu hu gk g8 ha h8 sz","so gz hz hk h7 sk s9 s7",],
         vec![],
         vec![],
@@ -1207,7 +1233,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/34-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/36-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go h8 ea ek e8 gk sk s8","eo eu su ha hz hk h9 sa","so h7 ez e7 ga gz g9 sz","ho gu hu e9 g8 g7 s9 s7",],
         vec![],
         vec![],
@@ -1216,7 +1242,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/37-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["hu su ga e9 e7 h8 h7 s9","ho so g9 g7 ez ha hk s8","gu ek e8 hz h9 sa sz sk","eo go eu gz gk g8 ea s7",],
         vec![],
         vec![],
@@ -1225,7 +1251,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/38-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go so gu ga gz g9 g8 ha","ho hu ez e7 hk sa sk s9","eo eu ea e9 e8 h9 h8 s7","su gk g7 ek hz h7 sz s8",],
         vec![],
         vec![],
@@ -1235,7 +1261,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/39-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/4-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go ho so g9 g7 ea s7","hu su ga ez e9 e7 hz h7","eu gk g8 ek ha h8 sa s9","gu gz e8 hk h9 sz sk s8",],
         vec![],
         vec![],
@@ -1244,7 +1270,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/40-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["gu hu su h8 ea e7 ga g8","so h9 ez e8 g9 g7 sz s7","ha hz ek gz gk sa sk s9","eo go ho eu hk h7 e9 s8",],
         vec![],
         vec![],
@@ -1253,7 +1279,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/41-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["so hu su ez e8 ga ha sa","go ek g9 hk h8 sz s9 s7","eo ho e9 gk hz h9 h7 sk","eu gu ea e7 gz g8 g7 s8",],
         vec![],
         vec![],
@@ -1262,7 +1288,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/44-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eu gz ea ek e7 sa s9 s8","eo go ho so gu gk e8 hk","hu su g9 g7 ha hz h9 sk","ga g8 ez e9 h8 h7 sz s7",],
         vec![],
         vec![],
@@ -1272,7 +1298,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/46-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/49-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eu hu ha h7 e8 e7 ga g9","ez gz g7 sa sz sk s9 s8","su hz hk h9 h8 ea ek e9","eo go ho so gu gk g8 s7",],
         vec![],
         vec![3,],
@@ -1283,7 +1309,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/50-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/51-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo ho su ez e9 ga ha hk","so hu ek e8 g9 g8 hz s9","gu e7 h9 h7 sa sk s8 s7","go eu ea gz gk g7 h8 sz",],
         vec![],
         vec![],
@@ -1293,7 +1319,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/52-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/53-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo ho eu ea e9 e8 g9 sa","gu hu su e7 ga gz sk s8","ez ek gk ha h8 h7 sz s9","go so g8 g7 hz hk h9 s7",],
         vec![],
         vec![],
@@ -1302,7 +1328,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/54-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eu g9 ez hz h9 s9 s8 s7","go so gu su ea e7 hk h8","ho g7 ek e8 h7 sa sz sk","eo hu ga gz gk g8 e9 ha",],
         vec![],
         vec![],
@@ -1311,7 +1337,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/55-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go so gu gk g9 g8 e9","ga g7 ez ek e7 ha h7 sk","eu hu su gz h9 h8 sa s7","ho ea e8 hz hk sz s9 s8",],
         vec![],
         vec![],
@@ -1320,7 +1346,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/57-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eu ez gz g9 g7 hz h9 h7","eo ho hu su ea e9 e7 s7","go ek ga h8 sz sk s9 s8","so gu e8 gk g8 ha hk sa",],
         vec![],
         vec![],
@@ -1329,7 +1355,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/58-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["ho eu ez e7 gz g8 sa sz","hu e9 g9 ha hk h8 h7 s9","so gu gk g7 hz h9 sk s7","eo go su ea ek e8 ga s8",],
         vec![],
         vec![],
@@ -1338,7 +1364,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/59-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go eu h8 ek e7 gk s8","ho hu h9 g9 g8 sz sk s9","so gu su ha hz h7 ea ga","hk ez e9 e8 gz g7 sa s7",],
         vec![],
         vec![],
@@ -1347,7 +1373,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/6-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go hk ea e7 g9 g8 g7 s9","ha hz h7 e8 gz sz sk s8","ho eu hu ez ek e9 sa s7","eo so gu su h9 h8 ga gk",],
         vec![],
         vec![],
@@ -1360,7 +1386,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/66-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/67-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go ho eu gu su g9 g7","so g8 e9 e8 ha h8 sk s9","hu gz gk ea ez ek hz hk","ga e7 h9 h7 sa sz s8 s7",],
         vec![],
         vec![],
@@ -1369,7 +1395,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/68-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go g8 ea e9 e8 e7 ha s8","so g9 hk h9 h7 sk s9 s7","eo ho gu su gz gk g7 hz","eu hu ga ez ek h8 sa sz",],
         vec![],
         vec![],
@@ -1379,7 +1405,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/7-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/70-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go hu ez e7 h8 sz sk s7","eu gz g7 e9 ha h9 sa s8","eo so gu su ga gk g9 e8","ho g8 ea ek hz hk h7 s9",],
         vec![],
         vec![],
@@ -1388,7 +1414,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/72-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go eu gu g9 g8 ea s7","so gz ek e7 ha hk h7 sa","ho ga ez e9 hz h9 h8 s8","hu su gk g7 e8 sz sk s9",],
         vec![],
         vec![],
@@ -1397,7 +1423,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/73-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eu h8 ez ek e9 ga gk s9","hu hk h7 gz g8 g7 sk s8","eo go su hz ea e7 sa s7","ho so gu ha h9 e8 g9 sz",],
         vec![],
         vec![],
@@ -1406,7 +1432,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/74-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eu ea e8 ga g7 sa sz s9","go gu e7 gz g9 h7 sk s7","ek e9 gk g8 hz h9 h8 s8","eo ho so hu su ez ha hk",],
         vec![],
         vec![],
@@ -1419,7 +1445,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/81-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/82-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["gu ga gk ea ez e7 sk s7","so g9 g8 e9 ha hz h8 s8","hu su e8 hk h9 h7 sz s9","eo go ho eu gz g7 ek sa",],
         vec![],
         vec![],
@@ -1429,7 +1455,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/83-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/84-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["so eu gu su g9 g8 h9 sa","ho e9 hk h8 sz sk s8 s7","eo go hu ea ez ek e7 ga","e8 gz gk g7 ha hz h7 s9",],
         vec![],
         vec![],
@@ -1438,7 +1464,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/86-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo ez ga hz hk sa s9 s8","go eu e8 e7 g7 ha h9 sz","ho hu su gz gk g9 h8 s7","so gu ea ek e9 g8 h7 sk",],
         vec![],
         vec![],
@@ -1447,7 +1473,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/87-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["go so eu hu gz gk ek sa","gu g8 e9 e7 ha hz h9 h7","eo ho g9 g7 ez e8 h8 sz","su ga ea hk sk s9 s8 s7",],
         vec![],
         vec![],
@@ -1456,7 +1482,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/9-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo eu hz hk h9 ga sa s7","gu e9 e8 e7 gk g7 sz sk","go ho h8 ea ez ek gz s9","so hu su ha h7 g9 g8 s8",],
         vec![],
         vec![],
@@ -1469,7 +1495,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/93-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/94-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["hu su e8 g9 sz sk s9 s8","eo go ho so eu ek e7 h7","gu ea ga gz ha hz hk h9","ez e9 gk g8 g7 h8 sa s7",],
         vec![],
         vec![],
@@ -1478,7 +1504,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/96-herz-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Herz-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["h7 ea ez ek e9 e7 gk sz","gu hk e8 ga gz g8 s9 s8","ho ha hz h8 g7 sa sk s7","eo go so eu hu su h9 g9",],
         vec![],
         vec![],
@@ -1487,7 +1513,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/97-gras-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Gras-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["eo go ho eu ga g9 e8 sa","hu gz gk g7 ek e9 s9 s8","so gu su e7 hz h9 h8 s7","g8 ea ez ha hk h7 sz sk",],
         vec![],
         vec![],
@@ -1496,7 +1522,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/98-eichel-solo.html",
-        &SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Eichel-Solo", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
+        &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
         ["ho eu hu ez e9 e7 sa sk","so gu su e8 gz g9 h9 s7","eo ek g7 hz hk h8 h7 s9","go ea ga gk g8 ha sz s8",],
         vec![],
         vec![],
@@ -1509,7 +1535,7 @@ fn test_rulessolo() {
 fn test_rulesgeier() {
     test_rules(
         "../../testdata/games/39.html",
-        &SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Geier", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["eo ez eu gk g9 h8 su s9","go ho e7 gz g8 hk hu s7","so ea ek ga g7 ha sa sz","e9 e8 gu hz h9 h7 sk s8",],
         vec![],
         vec![],
@@ -1518,7 +1544,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/42.html",
-        &SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI2, VGameAnnouncementPriority::SoloLikeSimple(0), "Geier", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["e9 e7 ga gz hu h8 s9 s8","go ek gu g9 h7 sa sz s7","eo ho ea ez g8 ha hz hk","so eu e8 gk g7 h9 sk su",],
         vec![],
         vec![],
@@ -1527,7 +1553,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/1.html",
-        &SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Geier", /*n_payout_base*/200, /*n_payout_schneider_schwarz*/50, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/200, /*n_payout_schneider_schwarz*/50, SLaufendeParams::new(10, 2)),
         ["eo so ea eu e7 g8 sa s7","go ho ha hk h9 sz sk s9","ez e9 e8 gk gu g9 h7 su","ek ga gz g7 hz hu h8 s8",],
         vec![],
         vec![],
@@ -1536,7 +1562,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/10.html",
-        &SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Geier", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["go e9 e7 gz hk h7 su s7","so ek g9 g7 h9 sk s9 s8","ho e8 gk gu g8 hz hu sz","eo ea ez eu ga ha h8 sa",],
         vec![],
         vec![],
@@ -1545,7 +1571,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/2.html",
-        &SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Geier", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["eo ho so ez e9 gz gk sa","go eu ga g8 hu h9 h8 s9","ea g9 g7 ha hz h7 sz sk","ek e8 e7 gu hk su s8 s7",],
         vec![],
         vec![],
@@ -1554,7 +1580,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/3.html",
-        &SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderTout>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Geier", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderTout>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["eo so ea ez sa sz su s9","e8 e7 g7 ha hz h7 s8 s7","ho ga gz gk g9 g8 hu h9","go ek eu e9 gu hk h8 sk",],
         vec![],
         vec![],
@@ -1563,7 +1589,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/4.html",
-        &SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Geier", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["eo ea gz gk g9 hu sa s7","ek eu ga g7 hz hk h8 s9","gu g8 ha h7 sz sk su s8","go ho so ez e9 e8 e7 h9",],
         vec![],
         vec![],
@@ -1572,7 +1598,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/5.html",
-        &SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Geier", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["ho so ea ez ga h9 sa s7","eo gz g7 ha hz hu h8 su","ek e8 e7 g9 g8 hk h7 sk","go eu e9 gk gu sz s9 s8",],
         vec![3,0,1,],
         vec![],
@@ -1582,7 +1608,7 @@ fn test_rulesgeier() {
     // ../../testdata/games/geier/6.html // TODO kurze Karte
     test_rules(
         "../../testdata/games/geier/7.html",
-        &SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI3, VGameAnnouncementPriority::SoloLikeSimple(0), "Geier", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["gz gk ha hk hu h8 h7 s8","eu e9 e7 gu g8 g7 sz su","go so ek ga g9 h9 sk s7","eo ho ea ez e8 hz sa s9",],
         vec![3,1,],
         vec![],
@@ -1591,7 +1617,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/8.html",
-        &SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI0, VGameAnnouncementPriority::SoloLikeSimple(0), "Geier", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["eo so ea eu e9 e8 e7 g9","go ho ek ga g7 ha hk h7","gk g8 hu h9 h8 sz s9 s7","ez gz gu hz sa sk su s8",],
         vec![],
         vec![],
@@ -1600,7 +1626,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/9.html",
-        &SRulesSoloLike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>::new(EPlayerIndex::EPI1, VGameAnnouncementPriority::SoloLikeSimple(0), "Geier", /*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
+        &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
         ["ho e8 gu g8 hz hu s9 s7","eo go so ez ek e9 hk h8","gz g9 g7 ha h9 sa sk su","ea eu e7 ga gk h7 sz s8",],
         vec![],
         vec![],
