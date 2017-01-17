@@ -35,7 +35,7 @@ pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> Vec<&TActivelyPlayableRules
 
 impl SRuleSet {
     pub fn from_string(str_toml: &str) -> Result<SRuleSet, Vec<toml::ParserError>> {
-        str_toml.parse::<toml::Value>().map(|tomltbl| {
+        str_toml.parse::<toml::Value>().and_then(|tomltbl| {
             let read_int = |str_key: &str, n_default, n_ubound| {
                 if let Some(n) = tomltbl.lookup(str_key).and_then(|tomlval| tomlval.as_integer()) {
                     if n_ubound<=n {
@@ -53,7 +53,25 @@ impl SRuleSet {
             let n_payout_rufspiel = read_payout("rufspiel-price", 20);
             let n_payout_schneider_schwarz_lauf = read_payout("extras-price", 10);
             let n_payout_single = read_payout("solo-price", 50);
-            SRuleSet {
+            let stockorramsch = match (tomltbl.lookup("noactive.ramsch").is_some(), tomltbl.lookup("noactive.stock").is_some()) {
+                (true, true) => {
+                    // TODO error_chain
+                    // TODO rules: Better alternatives? Allow stock *and* ramsch at the same time?
+                    return Err(Vec::new());
+                },
+                (true, false) => {
+                    VStockOrT::OrT(Box::new(SRulesRamsch{
+                        m_n_price: n_payout_schneider_schwarz_lauf,
+                    }) as Box<TRules>) // TODO make adjustable
+                },
+                (false, true) => {
+                    VStockOrT::Stock(n_payout_rufspiel) // TODO make adjustable
+                },
+                (false, false) => {
+                    VStockOrT::Stock(0) // represent "no stock" by using a zero stock payment
+                }
+            };
+            Ok(SRuleSet {
                 m_avecrulegroup : create_playerindexmap(|eplayerindex| {
                     let mut vecrulegroup = Vec::new();
                     {
@@ -144,19 +162,8 @@ impl SRuleSet {
                     }
                     vecrulegroup
                 }),
-                m_stockorramsch : {
-                    if tomltbl.lookup("noactive.ramsch").is_some() {
-                        assert!(tomltbl.lookup("noactive.stock").is_none()); // TODO what to do in those cases? Better option to model alternatives? Allow stock *and* ramsch at the same time?
-                        VStockOrT::OrT(Box::new(SRulesRamsch{
-                            m_n_price: n_payout_schneider_schwarz_lauf,
-                        }) as Box<TRules>) // TODO make adjustable
-                    } else if tomltbl.lookup("noactive.stock").is_some() {
-                        VStockOrT::Stock(n_payout_rufspiel) // TODO make adjustable
-                    } else {
-                        VStockOrT::Stock(0) // represent "no stock" by using a zero stock payment
-                    }
-                }
-            }
+                m_stockorramsch : stockorramsch,
+            })
         })
     }
 
