@@ -212,10 +212,14 @@ fn test_game_loop() {
         }),
         /*n_games*/4,
         &SRuleSet::from_string(r"
-            [activerules.rufspiel]
-            [activerules.solo]
-            [activerules.wenz]
-            [noactive.ramsch]
+            base-price=10
+            solo-price=50
+            lauf-min=3
+            [rufspiel]
+            [solo]
+            [wenz]
+            [ramsch]
+            price=10
         ").unwrap(),
     );
 }
