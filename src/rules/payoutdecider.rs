@@ -12,11 +12,13 @@ impl SStossDoublingPayoutDecider {
     }
 }
 
+#[derive(Clone)]
 pub struct SLaufendeParams {
     m_n_payout_per_lauf : isize,
     m_n_lauf_lbound : usize,
 }
 
+#[derive(Clone)]
 pub struct SPayoutDeciderParams {
     pub m_n_payout_base : isize,
     pub m_n_payout_schneider_schwarz : isize,

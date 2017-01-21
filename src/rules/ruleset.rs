@@ -38,164 +38,152 @@ impl SRuleSet {
     pub fn from_string(str_toml: &str) -> Result<SRuleSet> {
         let tomltbl = toml::Parser::new(str_toml).parse().map(|tomltbl| toml::Value::Table(tomltbl))
             .ok_or("Parsing error.")?;
-        // TODO TOML input
-        // * some eintries in toml file may be dependent/related to each other (e.g. stock with rufspiel price)
-        // * should we support/hardwire default values anyway or should we possibly require
-        //   that all values are specified in the TOML file (and return Err(...) if not)?
-        let read_int = |str_key: &str, n_default, n_ubound| {
+        let read_int = |str_key: &str| -> Result<i64> {
             if let Some(n) = tomltbl.lookup(str_key).and_then(|tomlval| tomlval.as_integer()) {
-                if n_ubound<=n {
-                    n
+                if 0<=n {
+                    Ok(n)
                 } else {
-                    println!("Found {} with invalid value {}. Defaulting to {}.", str_key, n, n_default);
-                    n_default
+                    bail!(format!("Found {} with invalid value {}. Must be at least 0.", str_key, n));
                 }
             } else {
-                println!("Could not find {}, defaulting to {}.", str_key, n_default);
-                n_default
+                bail!(format!("Could not find {}.", str_key));
             }
         };
-        let read_payout = |str_payout, n_payout_default| read_int(str_payout, n_payout_default, 1).as_num::<isize>();
-        let n_payout_rufspiel = read_payout("rufspiel-price", 20);
-        let n_payout_schneider_schwarz_lauf = read_payout("extras-price", 10);
-        let n_payout_single = read_payout("solo-price", 50);
-        let stockorramsch = match (tomltbl.lookup("noactive.ramsch").is_some(), tomltbl.lookup("noactive.stock").is_some()) {
+        let fallback = |str_not_found: &str, str_fallback: &str| {
+            println!("Did not find {}. Falling back to {}.", str_not_found, str_fallback);
+            read_int(str_fallback)
+        };
+        let stockorramsch = match (tomltbl.lookup("ramsch").is_some(), tomltbl.lookup("stock").is_some()) {
             (true, true) => {
                 // TODO rules: Better alternatives? Allow stock *and* ramsch at the same time?
-                bail!("Currently, having both Ramsch and Stock is not supported.");
+                bail!("Currently, having both Ramsch and Stock is not supported.")
             },
             (true, false) => {
-                VStockOrT::OrT(Box::new(SRulesRamsch{
-                    m_n_price: read_int("noactive.ramsch.price", 10, 1).as_num(),
-                }) as Box<TRules>)
+                read_int("ramsch.price").map(|n_price|
+                    VStockOrT::OrT(Box::new(SRulesRamsch{
+                        m_n_price: n_price.as_num(),
+                    }) as Box<TRules>)
+                )
             },
             (false, true) => {
-                VStockOrT::Stock(read_int("noactive.stock.price", 20, 1).as_num())
+                read_int("stock.price").or_else(|_err| fallback("stock.price", "base-price")).map(|n_price| VStockOrT::Stock(n_price.as_num()))
             },
             (false, false) => {
-                VStockOrT::Stock(0) // represent "no stock" by using a zero stock payment
+                Ok(VStockOrT::Stock(0)) // represent "no stock" by using a zero stock payment
             }
-        };
-        Ok(SRuleSet {
-            m_avecrulegroup : create_playerindexmap(|eplayerindex| {
-                let mut vecrulegroup = Vec::new();
-                {
-                    let mut create_rulegroup = |str_rule_name_file: &str, str_group_name: &str, vecrules| {
-                        if let Some(tomlval_active_rules) = tomltbl.lookup("activerules") {
-                            if tomlval_active_rules.lookup(str_rule_name_file).is_some() {
-                                vecrulegroup.push(SRuleGroup{
-                                    m_str_name: str_group_name.to_string(),
-                                    m_vecrules: vecrules
-                                });
-                            }
-                        }
-                    };
-                    let read_lauf = |str_game: &str| read_int(&format!("activerules.{}.lauf", str_game), 3, 0).as_num::<usize>();
-                    create_rulegroup(
-                        "rufspiel",
-                        "Rufspiel", 
-                        EFarbe::values()
-                            .filter(|efarbe| EFarbe::Herz!=*efarbe)
-                            .map(|efarbe| Box::new(SRulesRufspiel{
-                                m_eplayerindex: eplayerindex,
-                                m_efarbe: efarbe,
-                                m_payoutdeciderparams: SPayoutDeciderParams::new(
-                                    n_payout_rufspiel,
-                                    n_payout_schneider_schwarz_lauf,
-                                    SLaufendeParams::new(n_payout_schneider_schwarz_lauf, read_lauf("rufspiel")),
-                                )
-                            }) as Box<TActivelyPlayableRules>)
-                            .collect()
-                    );
-                    // TODO? make n_payout_base adjustable, n_payout_schneider_schwarz adjustable on a per-game basis?
-                    let payoutparams_sololike = |str_rulename: &str| {
-                        SPayoutDeciderParams::new(
-                            n_payout_single,
-                            n_payout_schneider_schwarz_lauf,
-                            SLaufendeParams::new(n_payout_schneider_schwarz_lauf, read_lauf(str_rulename)),
-                        )
-                    };
-                    macro_rules! read_sololike {
-                        ($payoutdecider: ident, $fn_prio: expr, $str_rulename_suffix: expr) => {
-                            let internal_rulename = |str_rulename| {
-                                format!("{}{}", str_rulename, $str_rulename_suffix)
-                            };
-                            macro_rules! generate_sololike_farbe {
-                                ($trumpfdecider: ident, $i_prioindex: expr, $rulename: expr, $payoutparams: expr) => {{
-                                    macro_rules! internal_generate_sololike_farbe {
-                                        ($farbedesignator: ident) => {
-                                            sololike::<$trumpfdecider<STrumpfDeciderFarbe<$farbedesignator>>, $payoutdecider> (eplayerindex, $i_prioindex, &format!("{}-{}", $farbedesignator::farbe(), $rulename), $payoutparams)
-                                        }
-                                    }
-                                    vec! [
-                                        internal_generate_sololike_farbe!(SFarbeDesignatorEichel),
-                                        internal_generate_sololike_farbe!(SFarbeDesignatorGras),
-                                        internal_generate_sololike_farbe!(SFarbeDesignatorHerz),
-                                        internal_generate_sololike_farbe!(SFarbeDesignatorSchelln),
-                                    ]
-                                }}
-                            }
-                            let str_rulename = internal_rulename("Solo");
-                            create_rulegroup(
-                                "solo",
-                                &str_rulename,
-                                generate_sololike_farbe!(SCoreSolo, $fn_prio(0), &str_rulename, payoutparams_sololike("solo"))
-                            );
-                            let str_rulename = internal_rulename("Wenz");
-                            create_rulegroup(
-                                "wenz",
-                                &str_rulename,
-                                vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-1),&str_rulename, payoutparams_sololike("wenz"))]
-                            );
-                            create_rulegroup(
-                                "farbwenz",
-                                &internal_rulename("Farbwenz"),
-                                generate_sololike_farbe!(SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz"), payoutparams_sololike("farbwenz"))
-                            );
-                            let str_rulename = internal_rulename("Geier");
-                            create_rulegroup(
-                                "geier",
-                                &str_rulename,
-                                vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-3),&str_rulename, payoutparams_sololike("geier"))]
-                            );
-                            create_rulegroup(
-                                "farbgeier",
-                                &internal_rulename("Farbgeier"),
-                                generate_sololike_farbe!(SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"), payoutparams_sololike("farbgeier"))
-                            );
-                        }
-                    }
-                    read_sololike!(SPayoutDeciderPointBased, VGameAnnouncementPriority::SoloLikeSimple, "");
-                    read_sololike!(SPayoutDeciderTout, VGameAnnouncementPriority::SoloTout, " Tout");
-                    create_rulegroup(
-                        "solo",
-                        "Sie",
-                        vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie", payoutparams_sololike("solo"))]
-                    );
+        }?;
+        let mut avecrulegroup = create_playerindexmap(|_eplayerindex| Vec::new());
+        for eplayerindex in EPlayerIndex::values() {
+            let ref mut vecrulegroup = avecrulegroup[eplayerindex];
+            let payoutparams_active = |str_game: &str, str_base_price_fallback: &str| -> Result<SPayoutDeciderParams> {
+                let n_payout_extra = read_int(&format!("{}.extra", str_game)).or_else(|_err| fallback(&format!("{}.extra", str_game), "base-price"))?;
+                let n_payout_base = read_int(&format!("{}.price", str_game)).or_else(|_err| fallback(&format!("{}.price", str_game), str_base_price_fallback))?;
+                let n_lauf_lbound = read_int(&format!("{}.lauf-price", str_game)).or_else(|_err| fallback(&format!("{}.lauf-price", str_game), "lauf-min"))?;
+                Ok(SPayoutDeciderParams::new(
+                    n_payout_base.as_num(),
+                    /*n_payout_schneider_schwarz*/n_payout_extra.as_num(),
+                    SLaufendeParams::new(
+                        /*n_payout_per_lauf*/n_payout_extra.as_num(),
+                        n_lauf_lbound.as_num(),
+                    ),
+                ))
+            };
+            macro_rules! create_rulegroup {($str_rule_name_file: expr, $str_base_price_fallback: expr, $str_group_name: expr, $fn_rules: expr) => {
+                if tomltbl.lookup($str_rule_name_file).is_some() {
+                    let payoutparams = payoutparams_active($str_rule_name_file, $str_base_price_fallback)?;
+                    let res : Result<_> = Ok(vecrulegroup.push(SRuleGroup{
+                        m_str_name: $str_group_name.to_string(),
+                        m_vecrules: ($fn_rules(payoutparams.clone())),
+                    }));
+                    res
+                } else {
+                    Ok(())
                 }
-                vecrulegroup
-            }),
+            }};
+            macro_rules! create_rulegroup_sololike {($str_rule_name_file: expr, $str_group_name: expr, $fn_rules: expr) => {
+                create_rulegroup!($str_rule_name_file, "solo-price", $str_group_name, $fn_rules)
+            }};
+            create_rulegroup!(
+                "rufspiel",
+                "base-price",
+                "Rufspiel", 
+                |payoutparams: SPayoutDeciderParams| {
+                    EFarbe::values()
+                        .filter(|efarbe| EFarbe::Herz!=*efarbe)
+                        .map(|efarbe| Box::new(SRulesRufspiel{
+                            m_eplayerindex: eplayerindex,
+                            m_efarbe: efarbe,
+                            m_payoutdeciderparams: payoutparams.clone(),
+                        }) as Box<TActivelyPlayableRules>)
+                        .collect()
+                }
+            )?;
+            macro_rules! read_sololike {
+                ($payoutdecider: ident, $fn_prio: expr, $str_rulename_suffix: expr) => {
+                    let internal_rulename = |str_rulename| {
+                        format!("{}{}", str_rulename, $str_rulename_suffix)
+                    };
+                    macro_rules! generate_sololike_farbe {
+                        ($trumpfdecider: ident, $i_prioindex: expr, $rulename: expr, $payoutparams: expr) => {{
+                            macro_rules! internal_generate_sololike_farbe {
+                                ($farbedesignator: ident) => {
+                                    sololike::<$trumpfdecider<STrumpfDeciderFarbe<$farbedesignator>>, $payoutdecider> (eplayerindex, $i_prioindex, &format!("{}-{}", $farbedesignator::farbe(), $rulename), $payoutparams)
+                                }
+                            }
+                            vec! [
+                                internal_generate_sololike_farbe!(SFarbeDesignatorEichel),
+                                internal_generate_sololike_farbe!(SFarbeDesignatorGras),
+                                internal_generate_sololike_farbe!(SFarbeDesignatorHerz),
+                                internal_generate_sololike_farbe!(SFarbeDesignatorSchelln),
+                            ]
+                        }}
+                    }
+                    let str_rulename = internal_rulename("Solo");
+                    create_rulegroup_sololike!(
+                        "solo",
+                        &str_rulename,
+                        |payoutparams: SPayoutDeciderParams| generate_sololike_farbe!(SCoreSolo, $fn_prio(0), &str_rulename, payoutparams.clone())
+                    )?;
+                    let str_rulename = internal_rulename("Wenz");
+                    create_rulegroup_sololike!(
+                        "wenz",
+                        &str_rulename,
+                        |payoutparams| vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-1),&str_rulename, payoutparams)]
+                    )?;
+                    create_rulegroup_sololike!(
+                        "farbwenz",
+                        &internal_rulename("Farbwenz"),
+                        |payoutparams: SPayoutDeciderParams| generate_sololike_farbe!(SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz"), payoutparams.clone())
+                    )?;
+                    let str_rulename = internal_rulename("Geier");
+                    create_rulegroup_sololike!(
+                        "geier",
+                        &str_rulename,
+                        |payoutparams| vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-3),&str_rulename, payoutparams)]
+                    )?;
+                    create_rulegroup_sololike!(
+                        "farbgeier",
+                        &internal_rulename("Farbgeier"),
+                        |payoutparams: SPayoutDeciderParams| generate_sololike_farbe!(SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"), payoutparams.clone())
+                    )?;
+                }
+            }
+            read_sololike!(SPayoutDeciderPointBased, VGameAnnouncementPriority::SoloLikeSimple, "");
+            read_sololike!(SPayoutDeciderTout, VGameAnnouncementPriority::SoloTout, " Tout");
+            create_rulegroup_sololike!(
+                "solo",
+                "Sie",
+                &|payoutparams| vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie", payoutparams)]
+            )?;
+        }
+        Ok(SRuleSet {
+            m_avecrulegroup : avecrulegroup,
             m_stockorramsch : stockorramsch,
         })
     }
 
     pub fn from_file(path: &Path) -> Result<SRuleSet> {
-        if !path.exists() {
-            println!("File {} not found. Creating it.", path.display());
-            let mut file = File::create(&path)?;
-            // TODO: make creation of ruleset file adjustable
-            for str_rules in &[
-                "[activerules.rufspiel]",
-                "[activerules.solo]",
-                "[activerules.farbwenz]",
-                "[activerules.wenz]",
-                "[activerules.farbgeier]",
-                "[activerules.geier]",
-            ] {
-                file.write_all(str_rules.as_bytes()).unwrap();
-            }
-        }
-        assert!(path.exists()); 
+        // TODO? ruleset creation wizard
         let mut file = File::open(&path)?;
         let mut str_toml = String::new();
         let _n_bytes = file.read_to_string(&mut str_toml)?;
