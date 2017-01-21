@@ -80,7 +80,7 @@ pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
 pub fn random_hands() -> SPlayerIndexMap<SHand> {
     let mut veccard : Vec<_> = SCard::values().into_iter().collect();
     assert!(veccard.len()==32);
-    create_playerindexmap(move |_eplayerindex|
+    EPlayerIndex::map_from_fn(move |_eplayerindex|
         random_hand(8, &mut veccard)
     )
 }

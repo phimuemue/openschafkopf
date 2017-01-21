@@ -110,7 +110,7 @@ fn main() {
 
             skui::init_ui();
             let accountbalance = game_loop(
-                &create_playerindexmap(|eplayerindex| -> Box<TPlayer> {
+                &EPlayerIndex::map_from_fn(|eplayerindex| -> Box<TPlayer> {
                     if EPlayerIndex::EPI0==eplayerindex {
                         Box::new(SPlayerHuman{m_ai : ai()})
                     } else {
@@ -130,7 +130,7 @@ fn main() {
 }
 
 fn game_loop(aplayer: &SPlayerIndexMap<Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
-    let mut accountbalance = SAccountBalance::new(create_playerindexmap(|_eplayerindex| 0), 0);
+    let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_eplayerindex| 0), 0);
     for i_game in 0..n_games {
         let mut dealcards = SDealCards::new(/*eplayerindex_first*/EPlayerIndex::wrapped_from_usize(i_game));
         while let Some(eplayerindex) = dealcards.which_player_can_do_something() {
@@ -188,7 +188,7 @@ fn game_loop(aplayer: &SPlayerIndexMap<Box<TPlayer>>, n_games: usize, ruleset: &
             VStockOrT::Stock(n_stock) => {
                 // TODO Rules must we respect doublings?
                 accountbalance.apply_payout(&SAccountBalance::new(
-                    create_playerindexmap(|_eplayerindex| -n_stock),
+                    EPlayerIndex::map_from_fn(|_eplayerindex| -n_stock),
                     4*n_stock,
                 ));
             }
@@ -201,7 +201,7 @@ fn game_loop(aplayer: &SPlayerIndexMap<Box<TPlayer>>, n_games: usize, ruleset: &
 #[test]
 fn test_game_loop() {
     game_loop(
-        &create_playerindexmap(|eplayerindex| -> Box<TPlayer> {
+        &EPlayerIndex::map_from_fn(|eplayerindex| -> Box<TPlayer> {
             Box::new(SPlayerComputer{m_ai: {
                 if eplayerindex<EPlayerIndex::EPI2 {
                     Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/1))

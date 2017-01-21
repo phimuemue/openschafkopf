@@ -6,7 +6,7 @@ use util::*;
 pub struct SStossDoublingPayoutDecider {}
 impl SStossDoublingPayoutDecider {
     pub fn payout(an_payout_raw: SPlayerIndexMap<isize>, n_stoss: usize, n_doubling: usize) -> SPlayerIndexMap<isize> {
-        create_playerindexmap(|eplayerindex| {
+        EPlayerIndex::map_from_fn(|eplayerindex| {
             an_payout_raw[eplayerindex] * 2isize.pow((n_stoss + n_doubling).as_num())
         })
     }
@@ -67,7 +67,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
             .map(|stich| points_stich(stich))
             .sum();
         let b_player_party_wins = n_points_player_party>=61;
-        let ab_winner = create_playerindexmap(|eplayerindex| {
+        let ab_winner = EPlayerIndex::map_from_fn(|eplayerindex| {
             fn_is_player_party(eplayerindex)==b_player_party_wins
         });
         internal_payout(
@@ -106,7 +106,7 @@ impl SLaufendeParams {
 fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_player_multiplier: FnPlayerMultiplier, ab_winner: &SPlayerIndexMap<bool>) -> SPlayerIndexMap<isize> 
     where FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
 {
-    create_playerindexmap(|eplayerindex| {
+    EPlayerIndex::map_from_fn(|eplayerindex| {
         n_payout_single_player 
         * {
             if ab_winner[eplayerindex] {
@@ -136,7 +136,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
         // TODO optionally count schneider/schwarz
         let b_player_party_wins = gamefinishedstiche.get().iter()
             .all(|stich| fn_is_player_party(rules.winner_index(stich)));
-        let ab_winner = create_playerindexmap(|eplayerindex| {
+        let ab_winner = EPlayerIndex::map_from_fn(|eplayerindex| {
             fn_is_player_party(eplayerindex)==b_player_party_wins
         });
         internal_payout(
@@ -174,7 +174,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
                 gamefinishedstiche.get().len().as_num::<isize>()
             } * payoutdeciderparams.m_laufendeparams.m_n_payout_per_lauf) * 4,
             fn_player_multiplier,
-            /*ab_winner*/ &create_playerindexmap(|eplayerindex| {
+            /*ab_winner*/ &EPlayerIndex::map_from_fn(|eplayerindex| {
                 fn_is_player_party(eplayerindex)==b_player_party_wins
             })
         )

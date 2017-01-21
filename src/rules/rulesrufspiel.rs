@@ -92,14 +92,14 @@ impl TRules for SRulesRufspiel {
         let n_stock_per_player = n_stock/2;
         if /*b_player_party_wins*/ 0<an_payout_no_stock[self.m_eplayerindex] {
             SAccountBalance::new(
-                create_playerindexmap(|eplayerindex|
+                EPlayerIndex::map_from_fn(|eplayerindex|
                     an_payout_no_stock[eplayerindex] + if fn_is_player_party!()(eplayerindex) { n_stock_per_player } else {0}
                 ),
                 -n_stock
             )
         } else {
             SAccountBalance::new(
-                create_playerindexmap(|eplayerindex|
+                EPlayerIndex::map_from_fn(|eplayerindex|
                     an_payout_no_stock[eplayerindex] - if fn_is_player_party!()(eplayerindex) { n_stock_per_player } else {0}
                 ),
                 n_stock

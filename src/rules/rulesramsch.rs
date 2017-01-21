@@ -39,7 +39,7 @@ impl TRules for SRulesRamsch {
         // TODO rules Durchmarsch
         let an_points = gamefinishedstiche.get().iter()
             .fold(
-                create_playerindexmap(|_eplayerindex| 0),
+                EPlayerIndex::map_from_fn(|_eplayerindex| 0),
                 |mut an_points_accu, stich| {
                     an_points_accu[self.winner_index(stich)] += points_stich(stich);
                     an_points_accu
@@ -92,7 +92,7 @@ impl TRules for SRulesRamsch {
         };
         SAccountBalance::new(
             SStossDoublingPayoutDecider::payout(
-                create_playerindexmap(|eplayerindex| {
+                EPlayerIndex::map_from_fn(|eplayerindex| {
                     if eplayerindex_loser==eplayerindex {
                         -3 * self.m_n_price
                     } else {

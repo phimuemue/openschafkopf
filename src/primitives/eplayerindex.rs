@@ -25,12 +25,6 @@ impl FromStr for EPlayerIndex {
 }
 pub type SPlayerIndexMap<T> = modeplayerindex::Map<T>;
 
-pub fn create_playerindexmap<T, F>(func: F) -> SPlayerIndexMap<T>
-    where F:FnMut(EPlayerIndex)->T
-{
-    EPlayerIndex::map_from_fn(func)
-}
-
 #[derive(Clone)]
 pub struct SPlayersInRound<T> {
     pub m_eplayerindex_first: EPlayerIndex,

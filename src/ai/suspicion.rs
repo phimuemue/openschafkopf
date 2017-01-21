@@ -117,7 +117,7 @@ impl SSuspicion {
     fn new_from_susp(&self, stich: &SStich) -> Self {
         SSuspicion {
             m_vecsusptrans: Vec::new(),
-            m_ahand : create_playerindexmap(|eplayerindex| {
+            m_ahand : EPlayerIndex::map_from_fn(|eplayerindex| {
                 self.m_ahand[eplayerindex].new_from_hand(stich[eplayerindex])
             })
         }

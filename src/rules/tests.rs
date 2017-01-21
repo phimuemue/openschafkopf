@@ -26,7 +26,7 @@ pub fn test_rules(
             }
             doublings
         },
-        m_ahand : create_playerindexmap(|eplayerindex| {
+        m_ahand : EPlayerIndex::map_from_fn(|eplayerindex| {
             SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex.to_usize()]).unwrap())
         }),
         m_rules: rules,
@@ -55,7 +55,7 @@ pub fn test_rules(
         println!("Stich {}: {}", i_stich, stich);
     }
     let accountbalance_payout = game.payout();
-    assert_eq!(create_playerindexmap(|eplayerindex| accountbalance_payout.get_player(eplayerindex)), EPlayerIndex::map_from_raw(an_payout));
+    assert_eq!(EPlayerIndex::map_from_fn(|eplayerindex| accountbalance_payout.get_player(eplayerindex)), EPlayerIndex::map_from_raw(an_payout));
 }
 
 fn rulesrufspiel_new_test(eplayerindex: EPlayerIndex, efarbe: EFarbe, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesRufspiel {

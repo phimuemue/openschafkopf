@@ -52,7 +52,7 @@ impl Iterator for SForeverRandHands {
             self.m_ahand[eplayerindex_swap].cards_mut()[i_hand_swap] = card_rand;
             self.m_ahand[eplayerindex_rand].cards_mut()[i_hand_rand] = card_swap;
         }
-        Some(create_playerindexmap(|eplayerindex| self.m_ahand[eplayerindex].clone()))
+        Some(EPlayerIndex::map_from_fn(|eplayerindex| self.m_ahand[eplayerindex].clone()))
     }
 }
 
@@ -63,7 +63,7 @@ pub fn forever_rand_hands(vecstich: &[SStich], hand_fixed: SHand, eplayerindex_f
             let mut veccard_unplayed = unplayed_cards(vecstich, &hand_fixed);
             assert!(veccard_unplayed.len()>=3*hand_fixed.cards().len());
             let n_size = hand_fixed.cards().len();
-            create_playerindexmap(|eplayerindex| {
+            EPlayerIndex::map_from_fn(|eplayerindex| {
                 if eplayerindex==eplayerindex_fixed {
                     hand_fixed.clone()
                 } else {
@@ -86,7 +86,7 @@ impl Iterator for SAllHands {
     type Item = SPlayerIndexMap<SHand>;
     fn next(&mut self) -> Option<SPlayerIndexMap<SHand>> {
         if self.m_b_valid {
-            let ahand = create_playerindexmap(|eplayerindex| {
+            let ahand = EPlayerIndex::map_from_fn(|eplayerindex| {
                 if self.m_eplayerindex_fixed==eplayerindex {
                     self.m_hand_known.clone()
                 } else {

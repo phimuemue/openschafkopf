@@ -72,7 +72,7 @@ impl SRuleSet {
                 Ok(VStockOrT::Stock(0)) // represent "no stock" by using a zero stock payment
             }
         }?;
-        let mut avecrulegroup = create_playerindexmap(|_eplayerindex| Vec::new());
+        let mut avecrulegroup = EPlayerIndex::map_from_fn(|_eplayerindex| Vec::new());
         for eplayerindex in EPlayerIndex::values() {
             let ref mut vecrulegroup = avecrulegroup[eplayerindex];
             let payoutparams_active = |str_game: &str, str_base_price_fallback: &str| -> Result<SPayoutDeciderParams> {

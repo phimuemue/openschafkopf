@@ -100,7 +100,7 @@ impl TAi for SAiCheating {
     fn internal_suggest_card(&self, game: &SGame) -> SCard {
         determine_best_card(
             game,
-            Some(create_playerindexmap(|eplayerindex|
+            Some(EPlayerIndex::map_from_fn(|eplayerindex|
                 SHand::new_from_vec(
                     game.current_stich().get(eplayerindex).cloned().into_iter()
                         .chain(game.m_ahand[eplayerindex].cards().iter().cloned())
@@ -139,7 +139,7 @@ pub fn is_compatible_with_game_so_far(
     }
     && {
         assert_ahand_same_size(ahand);
-        let mut ahand_simulate = create_playerindexmap(|eplayerindex| {
+        let mut ahand_simulate = EPlayerIndex::map_from_fn(|eplayerindex| {
             ahand[eplayerindex].clone()
         });
         for stich in completed_stichs(vecstich).iter().rev() {
@@ -348,7 +348,7 @@ fn test_is_compatible_with_game_so_far() {
     let test_game = |astr_hand: [&'static str; 4], rules: &TRules, eplayerindex_first, vectestaction: Vec<VTestAction>| {
         let mut game = game::SGame {
             m_doublings : SDoublings::new(eplayerindex_first),
-            m_ahand : create_playerindexmap(|eplayerindex| {
+            m_ahand : EPlayerIndex::map_from_fn(|eplayerindex| {
                 SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex.to_usize()]).unwrap())
             }),
             m_rules : rules,
