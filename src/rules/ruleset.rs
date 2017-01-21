@@ -36,8 +36,7 @@ pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> Vec<&TActivelyPlayableRules
 
 impl SRuleSet {
     pub fn from_string(str_toml: &str) -> Result<SRuleSet> {
-        let tomltbl = toml::Parser::new(str_toml).parse().map(|tomltbl| toml::Value::Table(tomltbl))
-            .ok_or("Parsing error.")?;
+        let tomltbl = toml::Parser::new(str_toml).parse().map(toml::Value::Table).ok_or("Parsing error.")?;
         let read_int = |str_key: &str| -> Result<i64> {
             if let Some(n) = tomltbl.lookup(str_key).and_then(|tomlval| tomlval.as_integer()) {
                 if 0<=n {
