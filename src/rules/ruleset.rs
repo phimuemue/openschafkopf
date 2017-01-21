@@ -90,11 +90,10 @@ impl SRuleSet {
             macro_rules! create_rulegroup {($str_rule_name_file: expr, $str_base_price_fallback: expr, $str_group_name: expr, $fn_rules: expr) => {
                 if tomltbl.lookup($str_rule_name_file).is_some() {
                     let payoutparams = payoutparams_active($str_rule_name_file, $str_base_price_fallback)?;
-                    let res : Result<_> = Ok(vecrulegroup.push(SRuleGroup{
+                    Ok(vecrulegroup.push(SRuleGroup{
                         m_str_name: $str_group_name.to_string(),
                         m_vecrules: ($fn_rules(payoutparams.clone())),
-                    }));
-                    res
+                    })) as Result<_>
                 } else {
                     Ok(())
                 }
