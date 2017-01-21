@@ -74,7 +74,7 @@ impl SRuleSet {
         }?;
         let mut avecrulegroup = EPlayerIndex::map_from_fn(|_eplayerindex| Vec::new());
         for eplayerindex in EPlayerIndex::values() {
-            let ref mut vecrulegroup = avecrulegroup[eplayerindex];
+            let vecrulegroup = &mut avecrulegroup[eplayerindex];
             let payoutparams_active = |str_game: &str, str_base_price_fallback: &str| -> Result<SPayoutDeciderParams> {
                 let n_payout_extra = read_int(&format!("{}.extra", str_game)).or_else(|_err| fallback(&format!("{}.extra", str_game), "base-price"))?;
                 let n_payout_base = read_int(&format!("{}.price", str_game)).or_else(|_err| fallback(&format!("{}.price", str_game), str_base_price_fallback))?;
