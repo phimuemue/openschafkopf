@@ -113,17 +113,9 @@ impl TRules for SRulesRufspiel {
             !completed_stichs(vecstich).iter()
                 .fold(/*b_rufsau_known_initial*/false, |b_rufsau_known_before_stich, stich| {
                     assert_eq!(stich.size(), 4); // completed_stichs should only process full stichs
-                    if b_rufsau_known_before_stich {
-                        // already known
-                        true
-                    } else if self.is_ruffarbe(*stich.first()) {
-                        // gesucht or weggelaufen
-                        true
-                    } else {
-                        // We explicitly traverse all cards because it may be allowed 
-                        // (by exotic rules) to schmier rufsau even if not gesucht.
-                        stich.iter().any(|(_, card)| *card==self.rufsau())
-                    }
+                    b_rufsau_known_before_stich // already known
+                    || self.is_ruffarbe(*stich.first()) // gesucht or weggelaufen
+                    || stich.iter().any(|(_, card)| *card==self.rufsau()) // We explicitly traverse all cards because it may be allowed (by exotic rules) to schmier rufsau even if not gesucht.
                 } )
         {
             // Remark: Player must have 4 cards of ruffarbe on his hand *at this point of time* (i.e. not only at the beginning!)
