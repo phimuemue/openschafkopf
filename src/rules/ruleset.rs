@@ -7,7 +7,7 @@ use rules::rulessolo::*;
 use rules::rulesramsch::*;
 use rules::trumpfdecider::*;
 use rules::payoutdecider::*;
-use util::as_num::*;
+use util::*;
 
 use std::fs::File;
 use std::io::prelude::*;
