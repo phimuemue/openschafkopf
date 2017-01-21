@@ -77,7 +77,7 @@ impl TRules for SRulesRamsch {
         let no_durchmarsch_payout = || {
             let eplayerindex_loser : EPlayerIndex = {
                 if 1==veceplayerindex_most_points.len() {
-                    veceplayerindex_most_points[0].clone()
+                    veceplayerindex_most_points[0]
                 } else {
                     veceplayerindex_most_points.iter().cloned()
                         .map(|eplayerindex| {(
@@ -118,10 +118,10 @@ impl TRules for SRulesRamsch {
             };
             apply_doubling_stoss_stock(eplayerindex_loser, -1)
         };
-        let the_one_eplayerindex = || {
+        let the_one_eplayerindex = || -> EPlayerIndex {
             assert!(*n_points_max>=61);
             assert_eq!(1, veceplayerindex_most_points.len());
-            veceplayerindex_most_points[0].clone()
+            veceplayerindex_most_points[0]
         };
         let possibly_durchmarsch = |b_durchmarsch| {
             if b_durchmarsch {
