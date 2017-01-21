@@ -7,6 +7,8 @@ extern crate permutohedron;
 extern crate clap;
 extern crate arrayvec;
 extern crate crossbeam;
+#[macro_use]
+extern crate error_chain;
 
 #[macro_use]
 mod util;
@@ -27,6 +29,14 @@ use std::path::Path;
 use player::*;
 use player::playerhuman::*;
 use player::playercomputer::*;
+
+mod errors {
+    error_chain!{
+        foreign_links {
+            Io(::std::io::Error);
+        }
+    }
+}
 
 fn main() {
     let clapmatches = clap::App::new("schafkopf")
