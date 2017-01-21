@@ -2,6 +2,7 @@ use primitives::*;
 use rules::*;
 use rules::rulesrufspiel::*;
 use rules::rulessolo::*;
+use rules::rulesramsch::*;
 use rules::trumpfdecider::*;
 use rules::payoutdecider::*;
 
@@ -1641,4 +1642,67 @@ fn test_rulesgeier() {
 
 #[test]
 fn test_rulesramsch() {
+    test_rules(
+        "0 has durchmarsch all",
+        &SRulesRamsch {
+            m_n_price: 10,
+            m_durchmarsch: VDurchmarsch::All,
+        },
+        ["eo eu ha ea ga sa e8 h8","go gu hz ez gz sz e7 h7","ho hu hk ek gk sk g8 s8","so su h9 e9 g9 s9 g7 s7",],
+        vec![],
+        vec![],
+        [
+            (0, "eo go ho so"),
+            (0, "eu gu hu su"),
+            (0, "ha hz hk h9"),
+            (0, "ea ez ek e9"),
+            (0, "ga gz gk g9"),
+            (0, "sa sz sk s9"),
+            (0, "e8 e7 g8 g7"),
+            (0, "h8 h7 s8 s7"),
+        ],
+        [30, -10, -10, -10],
+    );
+    test_rules(
+        "0 has durchmarsch 120",
+        &SRulesRamsch {
+            m_n_price: 10,
+            m_durchmarsch: VDurchmarsch::AtLeast(120),
+        },
+        ["eo eu ha ea ga sa e8 h8","go gu hz ez gz sz e7 h7","ho hu hk ek gk sk g8 s8","so su h9 e9 g9 s9 g7 s7",],
+        vec![],
+        vec![],
+        [
+            (0, "eo go ho so"),
+            (0, "eu gu hu su"),
+            (0, "ha hz hk h9"),
+            (0, "ea ez ek e9"),
+            (0, "ga gz gk g9"),
+            (0, "sa sz sk s9"),
+            (0, "e8 e7 g8 g7"),
+            (0, "h8 h7 s8 s7"),
+        ],
+        [30, -10, -10, -10],
+    );
+    test_rules(
+        "0 has 120, but no durchmarsch",
+        &SRulesRamsch {
+            m_n_price: 10,
+            m_durchmarsch: VDurchmarsch::All,
+        },
+        ["eo eu ha ea ga sa e8 h7","go gu hz ez gz sz e7 h8","ho hu hk ek gk sk g8 s8","so su h9 e9 g9 s9 g7 s7",],
+        vec![],
+        vec![],
+        [
+            (0, "eo go ho so"),
+            (0, "eu gu hu su"),
+            (0, "ha hz hk h9"),
+            (0, "ea ez ek e9"),
+            (0, "ga gz gk g9"),
+            (0, "sa sz sk s9"),
+            (0, "e8 e7 g8 g7"),
+            (0, "h7 h8 s8 s7"),
+        ],
+        [-30, 10, 10, 10],
+    );
 }

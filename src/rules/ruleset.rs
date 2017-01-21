@@ -58,9 +58,20 @@ impl SRuleSet {
                 bail!("Currently, having both Ramsch and Stock is not supported.")
             },
             (true, false) => {
+                let durchmarsch = (match tomltbl.lookup("ramsch.durchmarsch") {
+                    None => Ok(VDurchmarsch::None),
+                    Some(&toml::Value::String(ref str_durchmarsch)) if "all"==str_durchmarsch => {
+                        Ok(VDurchmarsch::All)
+                    },
+                    Some(&toml::Value::Integer(n_durchmarsch)) if 61<=n_durchmarsch && n_durchmarsch<=120 => {
+                        Ok(VDurchmarsch::AtLeast(n_durchmarsch.as_num()))
+                    },
+                    _ => bail!("Invalid value for ramsch.durchmarsch. \"All\" or a number in [61; 120] is supported.")
+                } as Result<_>)?;
                 read_int("ramsch.price").map(|n_price|
                     VStockOrT::OrT(Box::new(SRulesRamsch{
                         m_n_price: n_price.as_num(),
+                        m_durchmarsch: durchmarsch,
                     }) as Box<TRules>)
                 )
             },
