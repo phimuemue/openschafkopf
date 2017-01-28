@@ -3,7 +3,6 @@ extern crate quickcheck;
 use std::fmt;
 use std::mem;
 use std::ops::{Index, IndexMut};
-pub use util::plain_enum::*;
 use util::*;
 
 plain_enum_mod!{modefarbe, EFarbe {

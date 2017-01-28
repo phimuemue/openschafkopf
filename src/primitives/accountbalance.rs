@@ -1,15 +1,15 @@
 // this stores the how much money each player currently has
 
 use primitives::eplayerindex::*;
-use util::plain_enum::TPlainEnum;
+use util::*;
 
 pub struct SAccountBalance {
-    m_an : SPlayerIndexMap<isize>,
+    m_an : SEnumMap<EPlayerIndex, isize>,
     m_n_stock : isize,
 }
 
 impl SAccountBalance {
-    pub fn new(an: SPlayerIndexMap<isize>, n_stock: isize) -> SAccountBalance {
+    pub fn new(an: SEnumMap<EPlayerIndex, isize>, n_stock: isize) -> SAccountBalance {
         let accountbalance = SAccountBalance {
             m_an : an,
             m_n_stock : n_stock,

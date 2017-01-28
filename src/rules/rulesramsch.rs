@@ -6,6 +6,7 @@ use rules::card_points::*;
 use std::fmt;
 use std::cmp::Ordering;
 use itertools::Itertools;
+use util::*;
 
 pub enum VDurchmarsch {
     None,

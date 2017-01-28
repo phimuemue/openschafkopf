@@ -30,6 +30,7 @@ use std::path::Path;
 use player::*;
 use player::playerhuman::*;
 use player::playercomputer::*;
+use util::*;
 
 mod errors {
     error_chain!{
@@ -130,7 +131,7 @@ fn main() {
     }
 }
 
-fn game_loop(aplayer: &SPlayerIndexMap<Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
+fn game_loop(aplayer: &SEnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
     let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_eplayerindex| 0), 0);
     for i_game in 0..n_games {
         let mut dealcards = SDealCards::new(/*eplayerindex_first*/EPlayerIndex::wrapped_from_usize(i_game));

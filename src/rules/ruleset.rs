@@ -26,7 +26,7 @@ pub enum VStockOrT<T> {
 }
 
 pub struct SRuleSet {
-    pub m_avecrulegroup : SPlayerIndexMap<Vec<SRuleGroup>>,
+    pub m_avecrulegroup : SEnumMap<EPlayerIndex, Vec<SRuleGroup>>,
     pub m_stockorramsch : VStockOrT<Box<TRules>>,
 }
 

@@ -21,6 +21,12 @@ pub trait TPlainEnum : Sized {
     fn wrapping_add(self, n_offset: usize) -> Self;
 }
 
+pub trait TEnumMapType<T> : TPlainEnum {
+    type MapType;
+}
+
+pub type SEnumMap<PlainEnum, T> where PlainEnum: TEnumMapType<T> = PlainEnum::MapType;
+
 macro_rules! acc_arr {
     ($func: ident, [$($acc: expr,)*], []) => {
         [$($acc,)*]
@@ -79,6 +85,7 @@ macro_rules! plain_enum_mod {
                     Self::from_usize((self.to_usize() + n_offset) % ENUMSIZE)
                 }
             }
+
             impl $enumname {
                 #[allow(dead_code)]
                 pub fn map_from_fn<F, T>(mut func: F) -> Map<T>
@@ -97,6 +104,10 @@ macro_rules! plain_enum_mod {
                 fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> $enumname {
                     $enumname::from_usize(g.gen_range(0, ENUMSIZE))
                 }
+            }
+
+            impl<T> TEnumMapType<T> for $enumname {
+                type MapType = Map<T>;
             }
 
             use std::ops::{Index, IndexMut};

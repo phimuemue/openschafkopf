@@ -2,13 +2,14 @@ use primitives::*;
 use rules::*;
 use rules::ruleset::*;
 use skui;
+use util::*;
 
 use rand::{self, Rng};
 
 pub type SDoublings = SPlayersInRound<bool>;
 
 pub struct SDealCards {
-    m_ahand : SPlayerIndexMap<SHand>,
+    m_ahand : SEnumMap<EPlayerIndex, SHand>,
     m_doublings : SDoublings,
 }
 
@@ -57,7 +58,7 @@ impl SDealCards {
 pub type SGameAnnouncements<'rules> = SPlayersInRound<Option<&'rules TActivelyPlayableRules>>;
 
 pub struct SGamePreparations<'rules> {
-    pub m_ahand : SPlayerIndexMap<SHand>,
+    pub m_ahand : SEnumMap<EPlayerIndex, SHand>,
     m_doublings : SDoublings,
     pub m_ruleset : &'rules SRuleSet,
     pub m_gameannouncements : SGameAnnouncements<'rules>,
@@ -77,7 +78,7 @@ pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
     })
 }
 
-pub fn random_hands() -> SPlayerIndexMap<SHand> {
+pub fn random_hands() -> SEnumMap<EPlayerIndex, SHand> {
     let mut veccard : Vec<_> = SCard::values().into_iter().collect();
     assert!(veccard.len()==32);
     EPlayerIndex::map_from_fn(move |_eplayerindex|
@@ -139,7 +140,7 @@ impl<'rules> SGamePreparations<'rules> {
 }
 
 pub struct SPreGame<'rules> {
-    pub m_ahand : SPlayerIndexMap<SHand>,
+    pub m_ahand : SEnumMap<EPlayerIndex, SHand>,
     pub m_doublings : SDoublings,
     pub m_rules : &'rules TRules,
     pub m_vecstoss : Vec<SStoss>,
@@ -182,7 +183,7 @@ impl<'rules> SPreGame<'rules> {
 }
 
 pub struct SGame<'rules> {
-    pub m_ahand : SPlayerIndexMap<SHand>,
+    pub m_ahand : SEnumMap<EPlayerIndex, SHand>,
     pub m_doublings : SDoublings,
     pub m_rules : &'rules TRules,
     pub m_vecstoss : Vec<SStoss>,

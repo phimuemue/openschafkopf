@@ -15,6 +15,7 @@ use primitives::*;
 use std::cmp::Ordering;
 use std::fmt;
 pub use rules::wrappers::*;
+use util::*;
 
 pub fn current_stich(vecstich: &[SStich]) -> &SStich {
     assert!(!vecstich.is_empty());
@@ -52,7 +53,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
     // TTrumpfDecider
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
     fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering;
-    fn count_laufende(&self, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SPlayerIndexMap<bool>) -> usize;
+    fn count_laufende(&self, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SEnumMap<EPlayerIndex, bool>) -> usize;
 
 
     fn playerindex(&self) -> Option<EPlayerIndex>;

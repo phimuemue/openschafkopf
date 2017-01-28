@@ -113,7 +113,7 @@ impl TAi for SAiCheating {
 }
 
 pub fn is_compatible_with_game_so_far(
-    ahand: &SPlayerIndexMap<SHand>,
+    ahand: &SEnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
     vecstich: &[SStich],
 ) -> bool {
@@ -177,7 +177,7 @@ pub fn is_compatible_with_game_so_far(
 }
 
 fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize) -> SCard
-    where HandsIterator: Iterator<Item=SPlayerIndexMap<SHand>>
+    where HandsIterator: Iterator<Item=SEnumMap<EPlayerIndex, SHand>>
 {
     let stich_current = game.current_stich();
     let eplayerindex_fixed = stich_current.current_playerindex().unwrap();

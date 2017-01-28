@@ -4,6 +4,7 @@ use rules::trumpfdecider::*;
 use rules::payoutdecider::*;
 use std::fmt;
 use std::cmp::Ordering;
+use util::*;
 
 pub struct SRulesRufspiel {
     pub m_eplayerindex : EPlayerIndex,

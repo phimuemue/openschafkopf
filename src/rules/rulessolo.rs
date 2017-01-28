@@ -5,6 +5,7 @@ use rules::payoutdecider::*;
 use std::fmt;
 use std::cmp::Ordering;
 use std::marker::PhantomData;
+use util::*;
 
 pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,

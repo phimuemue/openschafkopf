@@ -5,6 +5,7 @@ use rules::rulessolo::*;
 use rules::rulesramsch::*;
 use rules::trumpfdecider::*;
 use rules::payoutdecider::*;
+use util::*;
 
 pub fn test_rules(
     str_info: &str,

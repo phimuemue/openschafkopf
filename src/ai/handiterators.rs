@@ -1,5 +1,6 @@
 use primitives::*;
 use game::*;
+use util::*;
 
 use permutohedron::LexicalPermutation;
 use ai::*;
@@ -11,12 +12,12 @@ use rand::{self, Rng};
 
 pub struct SForeverRandHands {
     m_eplayerindex_fixed : EPlayerIndex,
-    m_ahand: SPlayerIndexMap<SHand>,
+    m_ahand: SEnumMap<EPlayerIndex, SHand>,
 }
 
 impl Iterator for SForeverRandHands {
-    type Item = SPlayerIndexMap<SHand>;
-    fn next(&mut self) -> Option<SPlayerIndexMap<SHand>> {
+    type Item = SEnumMap<EPlayerIndex, SHand>;
+    fn next(&mut self) -> Option<SEnumMap<EPlayerIndex, SHand>> {
         assert_ahand_same_size(&self.m_ahand);
         let n_len_hand = self.m_ahand[EPlayerIndex::EPI0].cards().len();
         let mut rng = rand::thread_rng();
@@ -83,8 +84,8 @@ pub struct SAllHands {
 }
 
 impl Iterator for SAllHands {
-    type Item = SPlayerIndexMap<SHand>;
-    fn next(&mut self) -> Option<SPlayerIndexMap<SHand>> {
+    type Item = SEnumMap<EPlayerIndex, SHand>;
+    fn next(&mut self) -> Option<SEnumMap<EPlayerIndex, SHand>> {
         if self.m_b_valid {
             let ahand = EPlayerIndex::map_from_fn(|eplayerindex| {
                 if self.m_eplayerindex_fixed==eplayerindex {

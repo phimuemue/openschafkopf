@@ -23,7 +23,6 @@ impl FromStr for EPlayerIndex {
             .ok_or("Could not convert to EPlayerIndex")
     }
 }
-pub type SPlayerIndexMap<T> = modeplayerindex::Map<T>;
 
 #[derive(Clone)]
 pub struct SPlayersInRound<T> {

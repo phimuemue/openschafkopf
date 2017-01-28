@@ -1,6 +1,7 @@
 use primitives::*;
 use rules::*;
 use itertools::Itertools;
+use util::*;
 
 use std::fs;
 use std::io::Write;
@@ -11,7 +12,7 @@ pub struct SSuspicionTransition {
     m_susp : SSuspicion,
 }
 
-pub fn assert_ahand_same_size(ahand: &SPlayerIndexMap<SHand>) {
+pub fn assert_ahand_same_size(ahand: &SEnumMap<EPlayerIndex, SHand>) {
     let n_len_hand = ahand[EPlayerIndex::EPI0].cards().len();
     assert!(ahand.iter().all(|hand| hand.cards().len()==n_len_hand));
 }
@@ -78,7 +79,7 @@ impl SSuspicionTransition {
 
 pub struct SSuspicion {
     m_vecsusptrans : Vec<SSuspicionTransition>,
-    m_ahand : SPlayerIndexMap<SHand>,
+    m_ahand : SEnumMap<EPlayerIndex, SHand>,
 }
 
 impl SSuspicion {
@@ -89,7 +90,7 @@ impl SSuspicion {
 
     pub fn new<FuncFilterSuccessors>(
         eplayerindex_first: EPlayerIndex,
-        ahand: SPlayerIndexMap<SHand>,
+        ahand: SEnumMap<EPlayerIndex, SHand>,
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
         func_filter_successors: FuncFilterSuccessors,
