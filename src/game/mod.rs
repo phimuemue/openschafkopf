@@ -17,7 +17,13 @@ pub struct SDealCards {
 impl SDealCards {
     pub fn new(eplayerindex_first: EPlayerIndex) -> SDealCards {
         SDealCards {
-            m_ahand : random_hands(),
+            m_ahand : {
+                let mut veccard : Vec<_> = SCard::values().into_iter().collect();
+                assert!(veccard.len()==32);
+                EPlayerIndex::map_from_fn(move |_eplayerindex|
+                    random_hand(8, &mut veccard)
+                )
+            },
             m_doublings: SDoublings::new(eplayerindex_first),
         }
     }
@@ -77,14 +83,6 @@ pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
         assert_eq!(veccard_hand.len(), n_size);
         veccard_hand
     })
-}
-
-pub fn random_hands() -> SEnumMap<EPlayerIndex, SHand> {
-    let mut veccard : Vec<_> = SCard::values().into_iter().collect();
-    assert!(veccard.len()==32);
-    EPlayerIndex::map_from_fn(move |_eplayerindex|
-        random_hand(8, &mut veccard)
-    )
 }
 
 impl<'rules> SGamePreparations<'rules> {
