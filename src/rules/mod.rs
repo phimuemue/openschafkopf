@@ -48,7 +48,6 @@ pub struct SStoss {
     pub m_eplayerindex : EPlayerIndex,
 }
 
-// TODO? separate TRules into TRules and TRulesInternal so that only functions of TRules need to be virtual?
 pub trait TRules : fmt::Display + TAsRules + Sync {
     // TTrumpfDecider
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
