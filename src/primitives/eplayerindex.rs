@@ -2,7 +2,7 @@ use arrayvec::ArrayVec;
 
 use std::ops::Index;
 use std::fmt;
-use util::plain_enum::*;
+use util::*;
 use std::str::FromStr;
 
 plain_enum_mod!(modeplayerindex, EPlayerIndex {
