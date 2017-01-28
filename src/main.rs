@@ -86,7 +86,7 @@ fn main() {
         Ok(ruleset) => {
             if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
                 if let Some(str_hand) = subcommand_matches.value_of("hand") {
-                    if let Some(hand_fixed) = util::cardvectorparser::parse_cards(str_hand).map(SHand::new_from_vec) {
+                    if let Some(hand_fixed) = cardvector::parse_cards(str_hand).map(SHand::new_from_vec) {
                         let eplayerindex_rank = value_t!(subcommand_matches.value_of("pos"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
                         println!("Hand: {}", hand_fixed);
                         for rules in allowed_rules(&ruleset.m_avecrulegroup[eplayerindex_rank]).iter() 

@@ -55,11 +55,11 @@ pub fn unplayed_cards(vecstich: &[SStich], hand_fixed: &SHand) -> Vec<SCard> {
 
 #[test]
 fn test_unplayed_cards() {
-    use util::cardvectorparser;
+    use primitives::cardvector::parse_cards;
     let vecstich = ["g7 g8 ga g9", "s8 ho s7 s9", "h7 hk hu su", "eo go hz h8", "e9 ek e8 ea", "sa eu so ha"].into_iter()
         .map(|str_stich| {
             let mut stich = SStich::new(/*eplayerindex should not be relevant*/EPlayerIndex::EPI0);
-            for card in cardvectorparser::parse_cards::<Vec<_>>(str_stich).unwrap() {
+            for card in parse_cards::<Vec<_>>(str_stich).unwrap() {
                 stich.push(card.clone());
             }
             stich
@@ -67,9 +67,9 @@ fn test_unplayed_cards() {
         .collect::<Vec<_>>();
     let veccard_unplayed = unplayed_cards(
         &vecstich,
-        &SHand::new_from_vec(cardvectorparser::parse_cards("gk sk").unwrap())
+        &SHand::new_from_vec(parse_cards("gk sk").unwrap())
     );
-    let veccard_unplayed_check = cardvectorparser::parse_cards::<Vec<_>>("gz e7 sz h9 ez gu").unwrap();
+    let veccard_unplayed_check = parse_cards::<Vec<_>>("gz e7 sz h9 ez gu").unwrap();
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
     assert!(veccard_unplayed.iter().all(|card| veccard_unplayed_check.contains(card)));
     assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
@@ -338,7 +338,7 @@ impl TAi for SAiSimulating {
 fn test_is_compatible_with_game_so_far() {
     use rules::rulesrufspiel::*;
     use rules::payoutdecider::*;
-    use util::cardvectorparser;
+    use primitives::cardvector::parse_cards;
     use game;
     enum VTestAction {
         PlayStich(&'static str),
@@ -349,7 +349,7 @@ fn test_is_compatible_with_game_so_far() {
         let mut game = game::SGame {
             m_doublings : SDoublings::new(eplayerindex_first),
             m_ahand : EPlayerIndex::map_from_fn(|eplayerindex| {
-                SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex.to_usize()]).unwrap())
+                SHand::new_from_vec(parse_cards(astr_hand[eplayerindex.to_usize()]).unwrap())
             }),
             m_rules : rules,
             m_vecstich : vec![SStich::new(eplayerindex_first)],
@@ -361,7 +361,7 @@ fn test_is_compatible_with_game_so_far() {
             let mut oassertnotfrei = None;
             match testaction {
                 VTestAction::PlayStich(str_stich) => {
-                    for card in cardvectorparser::parse_cards::<Vec<_>>(str_stich).unwrap() {
+                    for card in parse_cards::<Vec<_>>(str_stich).unwrap() {
                         let eplayerindex = game.which_player_can_do_something().unwrap();
                         game.zugeben(card, eplayerindex).unwrap();
                     }

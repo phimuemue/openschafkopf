@@ -1,5 +1,4 @@
-use primitives::card::*;
-use primitives::eplayerindex::*;
+use primitives::*;
 use std::fmt;
 use util::*;
 
@@ -26,8 +25,7 @@ impl fmt::Display for SStich {
 fn test_stich() {
     // TODO? use quicktest or similar
     {
-        use util::cardvectorparser;
-        let veccard = cardvectorparser::parse_cards::<Vec<_>>("e7 e8 e9 ek").unwrap();
+        let veccard = cardvector::parse_cards::<Vec<_>>("e7 e8 e9 ek").unwrap();
         for eplayerindex_first in EPlayerIndex::values() {
             for n_size in 0..5 {
                 let mut stich = SStich::new(eplayerindex_first);

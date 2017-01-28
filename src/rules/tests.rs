@@ -17,7 +17,7 @@ pub fn test_rules(
     an_payout: [isize; 4],
 ) {
     use game;
-    use util::cardvectorparser;
+    use primitives::cardvector::parse_cards;
     println!("Testing rules: {}", str_info);
     let eplayerindex_first = EPlayerIndex::EPI0; // TODO parametrize w.r.t. eplayerindex_first
     let mut pregame = game::SPreGame {
@@ -29,7 +29,7 @@ pub fn test_rules(
             doublings
         },
         m_ahand : EPlayerIndex::map_from_fn(|eplayerindex| {
-            SHand::new_from_vec(cardvectorparser::parse_cards(astr_hand[eplayerindex.to_usize()]).unwrap())
+            SHand::new_from_vec(parse_cards(astr_hand[eplayerindex.to_usize()]).unwrap())
         }),
         m_rules: rules,
         m_n_stock: 0, // TODO test stock
@@ -45,8 +45,8 @@ pub fn test_rules(
     {
         println!("Stich {}: {}", i_stich, str_stich);
         assert_eq!(Some(eplayerindex_first_in_stich), game.which_player_can_do_something());
-        assert_eq!(4, cardvectorparser::parse_cards::<Vec<_>>(str_stich).unwrap().len());
-        for card in cardvectorparser::parse_cards::<Vec<_>>(str_stich).unwrap() {
+        assert_eq!(4, parse_cards::<Vec<_>>(str_stich).unwrap().len());
+        for card in parse_cards::<Vec<_>>(str_stich).unwrap() {
             assert!(game.which_player_can_do_something().is_some());
             let eplayerindex = game.which_player_can_do_something().unwrap();
             println!("{}, {}", card, eplayerindex);
