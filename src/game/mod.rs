@@ -3,6 +3,7 @@ use rules::*;
 use rules::ruleset::*;
 use skui;
 use util::*;
+use errors::*;
 
 use rand::{self, Rng};
 
@@ -32,9 +33,9 @@ impl SDealCards {
         &veccard[0..veccard.len()/2]
     }
 
-    pub fn announce_doubling(&mut self, eplayerindex: EPlayerIndex, b_doubling: bool) -> Result<(), &'static str> {
+    pub fn announce_doubling(&mut self, eplayerindex: EPlayerIndex, b_doubling: bool) -> Result<()> {
         if Some(eplayerindex)!=self.which_player_can_do_something() {
-            return Err("Wrong player index");
+            bail!("Wrong player index");
         }
         self.m_doublings.push(b_doubling);
         assert!(0<self.m_doublings.size());
@@ -91,12 +92,12 @@ impl<'rules> SGamePreparations<'rules> {
         self.m_gameannouncements.current_playerindex()
     }
 
-    pub fn announce_game(&mut self, eplayerindex: EPlayerIndex, orules: Option<&'rules TActivelyPlayableRules>) -> Result<(), &'static str> {
+    pub fn announce_game(&mut self, eplayerindex: EPlayerIndex, orules: Option<&'rules TActivelyPlayableRules>) -> Result<()> {
         if Some(eplayerindex)!=self.which_player_can_do_something() {
-            return Err("Wrong player index");
+            bail!("Wrong player index");
         }
         if orules.map_or(false, |rules| Some(eplayerindex)!=rules.playerindex()) {
-            return Err("Only actively playable rules can be announced");
+            bail!("Only actively playable rules can be announced");
         }
         self.m_gameannouncements.push(orules);
         assert!(0<self.m_gameannouncements.size());
@@ -159,11 +160,11 @@ impl<'rules> SPreGame<'rules> {
         }
     }
 
-    pub fn stoss(&mut self, eplayerindex_stoss: EPlayerIndex) -> Result<(), &'static str> {
+    pub fn stoss(&mut self, eplayerindex_stoss: EPlayerIndex) -> Result<()> {
         if !self.which_player_can_do_something().into_iter()
             .any(|eplayerindex| eplayerindex==eplayerindex_stoss)
         {
-            return Err("Stoss not allowed for specified eplayerindex");
+            bail!("Stoss not allowed for specified eplayerindex");
         }
         self.m_vecstoss.push(SStoss{m_eplayerindex : eplayerindex_stoss});
         Ok(())
@@ -200,14 +201,14 @@ impl<'rules> SGame<'rules> {
         current_stich(&self.m_vecstich)
     }
 
-    pub fn zugeben(&mut self, card_played: SCard, eplayerindex: EPlayerIndex) -> Result<(), &'static str> {
+    pub fn zugeben(&mut self, card_played: SCard, eplayerindex: EPlayerIndex) -> Result<()> {
         // returns the EPlayerIndex of the player who is the next in row to do something
         skui::logln(&format!("Player {} wants to play {}", eplayerindex, card_played));
         if Some(eplayerindex)!=self.which_player_can_do_something() {
-            return Err("Wrong player index");
+            bail!("Wrong player index");
         }
         if !self.m_ahand[eplayerindex].contains(card_played) {
-            return Err("card not contained in player's hand");
+            bail!("card not contained in player's hand");
         }
         {
             let hand = &mut self.m_ahand[eplayerindex];
