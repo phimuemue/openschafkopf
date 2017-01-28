@@ -4,6 +4,7 @@ use std::ops::Index;
 use std::fmt;
 use util::*;
 use std::str::FromStr;
+use std::slice;
 
 plain_enum_mod!(modeplayerindex, EPlayerIndex {
     EPI0, EPI1, EPI2, EPI3,
@@ -42,25 +43,22 @@ impl<T> Eq for SPlayersInRound<T>
     where T: Eq,
 {}
 
-pub struct SPlayersInRoundIterator<'playersinround, T> 
-    where T: 'playersinround
+pub struct SPlayersInRoundIterator<InternalIter>
+    where InternalIter: Iterator,
 {
-    m_i_offset : usize,
-    m_playersinround: &'playersinround SPlayersInRound<T>,
+    m_iter: InternalIter,
+    m_n_eplayerindex: usize,
 }
 
-impl<'playersinround, T> Iterator for SPlayersInRoundIterator<'playersinround, T> {
-    type Item = (EPlayerIndex, &'playersinround T);
-    fn next(&mut self) -> Option<(EPlayerIndex, &'playersinround T)> {
-        if self.m_i_offset==self.m_playersinround.size() {
-            None
-        }
-        else {
-            let eplayerindex = self.m_playersinround.m_eplayerindex_first.wrapping_add(self.m_i_offset);
-            let pairicard = (eplayerindex, &self.m_playersinround[eplayerindex]);
-            self.m_i_offset += 1;
-            Some(pairicard)
-        }
+impl<InternalIter> Iterator for SPlayersInRoundIterator<InternalIter>
+    where InternalIter: Iterator,
+{
+    type Item = (EPlayerIndex, InternalIter::Item);
+    fn next(&mut self) -> Option<(EPlayerIndex, InternalIter::Item)> {
+        let item_next = self.m_iter.next()
+            .map(|t| (EPlayerIndex::wrapped_from_usize(self.m_n_eplayerindex), t));
+        self.m_n_eplayerindex = self.m_n_eplayerindex+1;
+        item_next
     }
 }
 
@@ -116,10 +114,10 @@ impl<T> SPlayersInRound<T> {
         assert!(0 < self.size());
         &self[self.m_eplayerindex_first]
     }
-    pub fn iter(&self) -> SPlayersInRoundIterator<T> {
+    pub fn iter(&self) -> SPlayersInRoundIterator<slice::Iter<T>> {
         SPlayersInRoundIterator {
-            m_i_offset: 0,
-            m_playersinround: self
+            m_iter: self.m_vect.iter(),
+            m_n_eplayerindex: self.m_eplayerindex_first.to_usize(),
         }
     }
     fn valid_index(&self, eplayerindex: EPlayerIndex) -> bool {
