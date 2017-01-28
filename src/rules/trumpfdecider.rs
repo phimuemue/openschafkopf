@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 use std::marker::PhantomData;
 use util::*;
 
-pub trait TTrumpfDecider {
+pub trait TTrumpfDecider : Sync + 'static {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe;
 
     fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> Vec<SCard>;
@@ -37,7 +37,7 @@ impl TTrumpfDecider for STrumpfDeciderNoTrumpf {
     }
 }
 
-pub trait TSchlagDesignator {fn schlag() -> ESchlag;}
+pub trait TSchlagDesignator : Sync + 'static {fn schlag() -> ESchlag;}
 pub struct SSchlagDesignatorOber {}
 pub struct SSchlagDesignatorUnter {}
 impl TSchlagDesignator for SSchlagDesignatorOber { fn schlag() -> ESchlag {ESchlag::Ober} }
@@ -87,7 +87,7 @@ impl<SchlagDesignator, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<Schla
     }
 }
 
-pub trait TFarbeDesignator {fn farbe() -> EFarbe;}
+pub trait TFarbeDesignator : Sync + 'static {fn farbe() -> EFarbe;}
 pub struct SFarbeDesignatorEichel {}
 impl TFarbeDesignator for SFarbeDesignatorEichel { fn farbe() -> EFarbe {EFarbe::Eichel} }
 pub struct SFarbeDesignatorGras {}

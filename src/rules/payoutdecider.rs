@@ -35,7 +35,7 @@ impl SPayoutDeciderParams {
     }
 }
 
-pub trait TPayoutDecider {
+pub trait TPayoutDecider : Sync + 'static {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         rules: &Rules,
         gamefinishedstiche: &SGameFinishedStiche,

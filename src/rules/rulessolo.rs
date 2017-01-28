@@ -30,9 +30,7 @@ impl<TrumpfDecider, PayoutDecider> fmt::Display for SRulesSoloLike<TrumpfDecider
 
 impl<TrumpfDecider, PayoutDecider> TActivelyPlayableRules for SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
-          TrumpfDecider: Sync,
           PayoutDecider: TPayoutDecider,
-          PayoutDecider: Sync,
 {
     fn priority(&self) -> VGameAnnouncementPriority {
         self.m_prio.clone()
@@ -41,9 +39,7 @@ impl<TrumpfDecider, PayoutDecider> TActivelyPlayableRules for SRulesSoloLike<Tru
 
 impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, PayoutDecider> 
     where TrumpfDecider: TTrumpfDecider,
-          TrumpfDecider: Sync,
           PayoutDecider: TPayoutDecider,
-          PayoutDecider: Sync,
 {
     impl_rules_trumpf!(TrumpfDecider);
 
@@ -123,11 +119,7 @@ impl<TrumpfDecider, PayoutDecider> SRulesSoloLike<TrumpfDecider, PayoutDecider>
 
 pub fn sololike<TrumpfDecider, PayoutDecider>(eplayerindex: EPlayerIndex, prio: VGameAnnouncementPriority, str_rulename: &str, payoutdeciderparams: SPayoutDeciderParams) -> Box<TActivelyPlayableRules> 
     where TrumpfDecider: TTrumpfDecider,
-          TrumpfDecider: 'static,
-          TrumpfDecider: Sync,
           PayoutDecider: TPayoutDecider,
-          PayoutDecider: 'static,
-          PayoutDecider: Sync,
 {
     Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(eplayerindex, prio, str_rulename, payoutdeciderparams)) as Box<TActivelyPlayableRules>
 }
