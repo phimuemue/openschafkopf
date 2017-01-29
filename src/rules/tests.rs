@@ -19,51 +19,51 @@ pub fn test_rules(
     use game;
     use primitives::cardvector::parse_cards;
     println!("Testing rules: {}", str_info);
-    let eplayerindex_first = EPlayerIndex::EPI0; // TODO parametrize w.r.t. eplayerindex_first
+    let epi_first = EPlayerIndex::EPI0; // TODO parametrize w.r.t. epi_first
     let mut pregame = game::SPreGame {
         m_doublings : {
-            let mut doublings = game::SDoublings::new(eplayerindex_first);
-            for eplayerindex_doubling in EPlayerIndex::values().map(|eplayerindex| eplayerindex.wrapping_add(eplayerindex_first.to_usize())) {
-                doublings.push(/*b_doubling*/vecn_doubling.contains(&eplayerindex_doubling.to_usize()));
+            let mut doublings = game::SDoublings::new(epi_first);
+            for epi_doubling in EPlayerIndex::values().map(|epi| epi.wrapping_add(epi_first.to_usize())) {
+                doublings.push(/*b_doubling*/vecn_doubling.contains(&epi_doubling.to_usize()));
             }
             doublings
         },
-        m_ahand : EPlayerIndex::map_from_fn(|eplayerindex| {
-            SHand::new_from_vec(parse_cards(astr_hand[eplayerindex.to_usize()]).unwrap())
+        m_ahand : EPlayerIndex::map_from_fn(|epi| {
+            SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
         }),
         m_rules: rules,
         m_n_stock: 0, // TODO test stock
         m_vecstoss: vec![],
     };
-    for n_eplayerindex_stoss in vecn_stoss {
-        pregame.stoss(EPlayerIndex::from_usize(n_eplayerindex_stoss)).unwrap();
+    for n_epi_stoss in vecn_stoss {
+        pregame.stoss(EPlayerIndex::from_usize(n_epi_stoss)).unwrap();
     }
     let mut game = pregame.finish();
-    for (i_stich, (eplayerindex_first_in_stich, str_stich)) in vecpairnstr_stich.iter()
-        .map(|&(n_eplayerindex, str_stich)| (EPlayerIndex::from_usize(n_eplayerindex), str_stich))
+    for (i_stich, (epi_first_in_stich, str_stich)) in vecpairnstr_stich.iter()
+        .map(|&(n_epi, str_stich)| (EPlayerIndex::from_usize(n_epi), str_stich))
         .enumerate()
     {
         println!("Stich {}: {}", i_stich, str_stich);
-        assert_eq!(Some(eplayerindex_first_in_stich), game.which_player_can_do_something());
+        assert_eq!(Some(epi_first_in_stich), game.which_player_can_do_something());
         assert_eq!(4, parse_cards::<Vec<_>>(str_stich).unwrap().len());
         for card in parse_cards::<Vec<_>>(str_stich).unwrap() {
             assert!(game.which_player_can_do_something().is_some());
-            let eplayerindex = game.which_player_can_do_something().unwrap();
-            println!("{}, {}", card, eplayerindex);
-            game.zugeben(card, eplayerindex).unwrap();
+            let epi = game.which_player_can_do_something().unwrap();
+            println!("{}, {}", card, epi);
+            game.zugeben(card, epi).unwrap();
         }
     }
     for (i_stich, stich) in game.m_vecstich.iter().enumerate() {
         println!("Stich {}: {}", i_stich, stich);
     }
     let accountbalance_payout = game.payout();
-    assert_eq!(EPlayerIndex::map_from_fn(|eplayerindex| accountbalance_payout.get_player(eplayerindex)), EPlayerIndex::map_from_raw(an_payout));
+    assert_eq!(EPlayerIndex::map_from_fn(|epi| accountbalance_payout.get_player(epi)), EPlayerIndex::map_from_raw(an_payout));
 }
 
-fn rulesrufspiel_new_test(eplayerindex: EPlayerIndex, efarbe: EFarbe, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesRufspiel {
+fn rulesrufspiel_new_test(epi: EPlayerIndex, efarbe: EFarbe, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesRufspiel {
     // Do not inline this function into SRulesRufspiel. It serves as a bridge between actual implementation and the data we extract for the test suite.
     SRulesRufspiel{
-        m_eplayerindex: eplayerindex,
+        m_epi: epi,
         m_efarbe: efarbe,
         m_payoutdeciderparams : SPayoutDeciderParams::new(
             n_payout_base,
@@ -73,13 +73,13 @@ fn rulesrufspiel_new_test(eplayerindex: EPlayerIndex, efarbe: EFarbe, n_payout_b
     }
 }
 
-fn rulessololike_new_test<TrumpfDecider, PayoutDecider>(eplayerindex: EPlayerIndex, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider>
+fn rulessololike_new_test<TrumpfDecider, PayoutDecider>(epi: EPlayerIndex, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
           PayoutDecider: TPayoutDecider,
 {
     // Do not inline this function. It serves as a bridge between actual implementation and the data we extract for the test suite.
     SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(
-        eplayerindex,
+        epi,
         VGameAnnouncementPriority::SoloLikeSimple(0),
         "-", // should not matter within those tests
         SPayoutDeciderParams::new(

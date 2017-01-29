@@ -12,7 +12,7 @@ pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider>
           PayoutDecider: TPayoutDecider,
 {
     pub m_str_name: String,
-    pub m_eplayerindex : EPlayerIndex, // TODO should be static
+    pub m_epi : EPlayerIndex, // TODO should be static
     pub m_trumpfdecider : PhantomData<TrumpfDecider>,
     pub m_payoutdecider : PhantomData<PayoutDecider>,
     pub m_prio : VGameAnnouncementPriority,
@@ -43,18 +43,18 @@ impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, Payo
 {
     impl_rules_trumpf!(TrumpfDecider);
 
-    fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {
+    fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {
         assert!(
             vecstoss.iter()
                 .enumerate()
-                .all(|(i_stoss, stoss)| (i_stoss%2==0) == (stoss.m_eplayerindex!=self.m_eplayerindex))
+                .all(|(i_stoss, stoss)| (i_stoss%2==0) == (stoss.m_epi!=self.m_epi))
         );
         assert_eq!(hand.cards().len(), 8);
-        (eplayerindex==self.m_eplayerindex)==(vecstoss.len()%2==1)
+        (epi==self.m_epi)==(vecstoss.len()%2==1)
     }
 
     fn playerindex(&self) -> Option<EPlayerIndex> {
-        Some(self.m_eplayerindex)
+        Some(self.m_epi)
     }
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, _n_stock: isize) -> SAccountBalance {
@@ -63,11 +63,11 @@ impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, Payo
                 PayoutDecider::payout(
                     self,
                     gamefinishedstiche,
-                    /*fn_is_player_party*/ |eplayerindex| {
-                        eplayerindex==self.m_eplayerindex
+                    /*fn_is_player_party*/ |epi| {
+                        epi==self.m_epi
                     },
-                    /*fn_player_multiplier*/ |eplayerindex| {
-                        if self.m_eplayerindex==eplayerindex {
+                    /*fn_player_multiplier*/ |epi| {
+                        if self.m_epi==epi {
                             3
                         } else {
                             1
@@ -105,9 +105,9 @@ impl<TrumpfDecider, PayoutDecider> SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
           PayoutDecider: TPayoutDecider,
 {
-    pub fn new(eplayerindex: EPlayerIndex, prio: VGameAnnouncementPriority, str_rulename: &str, payoutdeciderparams: SPayoutDeciderParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
+    pub fn new(epi: EPlayerIndex, prio: VGameAnnouncementPriority, str_rulename: &str, payoutdeciderparams: SPayoutDeciderParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
         SRulesSoloLike::<TrumpfDecider, PayoutDecider> {
-            m_eplayerindex: eplayerindex,
+            m_epi: epi,
             m_trumpfdecider: PhantomData::<TrumpfDecider>,
             m_payoutdecider: PhantomData::<PayoutDecider>,
             m_prio: prio,
@@ -117,11 +117,11 @@ impl<TrumpfDecider, PayoutDecider> SRulesSoloLike<TrumpfDecider, PayoutDecider>
     }
 }
 
-pub fn sololike<TrumpfDecider, PayoutDecider>(eplayerindex: EPlayerIndex, prio: VGameAnnouncementPriority, str_rulename: &str, payoutdeciderparams: SPayoutDeciderParams) -> Box<TActivelyPlayableRules> 
+pub fn sololike<TrumpfDecider, PayoutDecider>(epi: EPlayerIndex, prio: VGameAnnouncementPriority, str_rulename: &str, payoutdeciderparams: SPayoutDeciderParams) -> Box<TActivelyPlayableRules> 
     where TrumpfDecider: TTrumpfDecider,
           PayoutDecider: TPayoutDecider,
 {
-    Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(eplayerindex, prio, str_rulename, payoutdeciderparams)) as Box<TActivelyPlayableRules>
+    Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(epi, prio, str_rulename, payoutdeciderparams)) as Box<TActivelyPlayableRules>
 }
 
 pub type SCoreSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<

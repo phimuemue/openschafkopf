@@ -25,16 +25,16 @@ impl SAccountBalance {
     pub fn apply_payout(&mut self, accountbalance: &SAccountBalance) {
         accountbalance.assert_invariant();
         self.assert_invariant();
-        for eplayerindex in EPlayerIndex::values() {
-            self.m_an[eplayerindex] += accountbalance.get_player(eplayerindex);
+        for epi in EPlayerIndex::values() {
+            self.m_an[epi] += accountbalance.get_player(epi);
         }
         self.m_n_stock += accountbalance.get_stock();
         self.assert_invariant();
     }
 
-    pub fn get_player(&self, eplayerindex : EPlayerIndex) -> isize {
+    pub fn get_player(&self, epi : EPlayerIndex) -> isize {
         self.assert_invariant();
-        self.m_an[eplayerindex]
+        self.m_an[epi]
     }
 
     pub fn get_stock(&self) -> isize {

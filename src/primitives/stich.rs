@@ -6,13 +6,13 @@ pub type SStich = SPlayersInRound<SCard>;
 
 impl fmt::Display for SStich {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for eplayerindex in EPlayerIndex::values() {
-            if eplayerindex==self.m_eplayerindex_first {
+        for epi in EPlayerIndex::values() {
+            if epi==self.m_epi_first {
                 write!(f, ">")?;
             } else {
                 write!(f, " ")?;
             }
-            match self.get(eplayerindex) {
+            match self.get(epi) {
                 None => {write!(f, "__")?;}
                 Some(card) => {write!(f, "{}", card)?;}
             }
@@ -26,18 +26,18 @@ fn test_stich() {
     // TODO? use quicktest or similar
     {
         let veccard = cardvector::parse_cards::<Vec<_>>("e7 e8 e9 ek").unwrap();
-        for eplayerindex_first in EPlayerIndex::values() {
+        for epi_first in EPlayerIndex::values() {
             for n_size in 0..5 {
-                let mut stich = SStich::new(eplayerindex_first);
+                let mut stich = SStich::new(epi_first);
                 for i_card in 0..n_size {
                     stich.push(veccard[i_card]);
                 }
                 assert_eq!(stich.size(), n_size);
-                assert_eq!(stich.first_playerindex(), eplayerindex_first);
+                assert_eq!(stich.first_playerindex(), epi_first);
                 assert_eq!(stich.size(), stich.iter().count());
-                for (eplayerindex, card) in stich.iter() {
-                    assert_eq!(stich.get(eplayerindex), Some(card));
-                    assert_eq!(stich[eplayerindex], *card);
+                for (epi, card) in stich.iter() {
+                    assert_eq!(stich.get(epi), Some(card));
+                    assert_eq!(stich[epi], *card);
                 }
             }
         }

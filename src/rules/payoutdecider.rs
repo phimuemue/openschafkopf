@@ -6,8 +6,8 @@ use util::*;
 pub struct SStossDoublingPayoutDecider {}
 impl SStossDoublingPayoutDecider {
     pub fn payout(an_payout_raw: SEnumMap<EPlayerIndex, isize>, n_stoss: usize, n_doubling: usize) -> SEnumMap<EPlayerIndex, isize> {
-        EPlayerIndex::map_from_fn(|eplayerindex| {
-            an_payout_raw[eplayerindex] * 2isize.pow((n_stoss + n_doubling).as_num())
+        EPlayerIndex::map_from_fn(|epi| {
+            an_payout_raw[epi] * 2isize.pow((n_stoss + n_doubling).as_num())
         })
     }
 }
@@ -67,8 +67,8 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
             .map(|stich| points_stich(stich))
             .sum();
         let b_player_party_wins = n_points_player_party>=61;
-        let ab_winner = EPlayerIndex::map_from_fn(|eplayerindex| {
-            fn_is_player_party(eplayerindex)==b_player_party_wins
+        let ab_winner = EPlayerIndex::map_from_fn(|epi| {
+            fn_is_player_party(epi)==b_player_party_wins
         });
         internal_payout(
             /*n_payout_single_player*/ payoutdeciderparams.m_n_payout_base
@@ -106,16 +106,16 @@ impl SLaufendeParams {
 fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_player_multiplier: FnPlayerMultiplier, ab_winner: &SEnumMap<EPlayerIndex, bool>) -> SEnumMap<EPlayerIndex, isize> 
     where FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
 {
-    EPlayerIndex::map_from_fn(|eplayerindex| {
+    EPlayerIndex::map_from_fn(|epi| {
         n_payout_single_player 
         * {
-            if ab_winner[eplayerindex] {
+            if ab_winner[epi] {
                 1
             } else {
                 -1
             }
         }
-        * fn_player_multiplier(eplayerindex)
+        * fn_player_multiplier(epi)
     })
 }
 
@@ -136,8 +136,8 @@ impl TPayoutDecider for SPayoutDeciderTout {
         // TODO optionally count schneider/schwarz
         let b_player_party_wins = gamefinishedstiche.get().iter()
             .all(|stich| fn_is_player_party(rules.winner_index(stich)));
-        let ab_winner = EPlayerIndex::map_from_fn(|eplayerindex| {
-            fn_is_player_party(eplayerindex)==b_player_party_wins
+        let ab_winner = EPlayerIndex::map_from_fn(|epi| {
+            fn_is_player_party(epi)==b_player_party_wins
         });
         internal_payout(
             /*n_payout_single_player*/ (payoutdeciderparams.m_n_payout_base + payoutdeciderparams.m_laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner)) * 2,
@@ -164,8 +164,8 @@ impl TPayoutDecider for SPayoutDeciderSie {
         // TODO optionally count schneider/schwarz
         let b_player_party_wins = gamefinishedstiche.get().iter()
             .all(|stich| {
-                let eplayerindex_stich_winner = rules.winner_index(stich);
-                rules.trumpforfarbe(stich[eplayerindex_stich_winner]).is_trumpf() && fn_is_player_party(eplayerindex_stich_winner)
+                let epi_stich_winner = rules.winner_index(stich);
+                rules.trumpforfarbe(stich[epi_stich_winner]).is_trumpf() && fn_is_player_party(epi_stich_winner)
             });
         internal_payout(
             /*n_payout_single_player*/ (payoutdeciderparams.m_n_payout_base
@@ -174,8 +174,8 @@ impl TPayoutDecider for SPayoutDeciderSie {
                 gamefinishedstiche.get().len().as_num::<isize>()
             } * payoutdeciderparams.m_laufendeparams.m_n_payout_per_lauf) * 4,
             fn_player_multiplier,
-            /*ab_winner*/ &EPlayerIndex::map_from_fn(|eplayerindex| {
-                fn_is_player_party(eplayerindex)==b_player_party_wins
+            /*ab_winner*/ &EPlayerIndex::map_from_fn(|epi| {
+                fn_is_player_party(epi)==b_player_party_wins
             })
         )
     }

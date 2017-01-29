@@ -76,8 +76,8 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
         )
     };
     let ncwin = match skuiwin {
-        ESkUiWindow::PlayerInfo(eplayerindex) => {
-            match eplayerindex {
+        ESkUiWindow::PlayerInfo(epi) => {
+            match epi {
                 EPlayerIndex::EPI0 => {
                     create_fullwidth_window(n_height-2, n_height-1)
                 },
@@ -86,7 +86,7 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
                         1, // height
                         24, // width
                         0, // y
-                        ((eplayerindex.to_usize() - 1)*25).as_num() // x
+                        ((epi.to_usize() - 1)*25).as_num() // x
                     )
                 }
             }
@@ -109,10 +109,10 @@ pub fn print_vecstich(vecstich: &[SStich]) {
             for (i_stich, stich) in vecstich.iter().enumerate() {
                 let n_x = (i_stich*10+3).as_num();
                 let n_y = 1;
-                let print_card = |eplayerindex, (n_y, n_x)| {
+                let print_card = |epi, (n_y, n_x)| {
                     ncurses::wmove(ncwin, n_y, n_x);
-                    wprint(ncwin, if eplayerindex==stich.first_playerindex() { ">" } else { " " });
-                    match stich.get(eplayerindex) {
+                    wprint(ncwin, if epi==stich.first_playerindex() { ">" } else { " " });
+                    match stich.get(epi) {
                         None => {wprint(ncwin, "..")},
                         Some(card) => {print_card_with_farbe(ncwin, *card)},
                     };
@@ -128,14 +128,14 @@ pub fn print_vecstich(vecstich: &[SStich]) {
 }
 
 pub fn print_game_announcements(gameannouncements: &SGameAnnouncements) {
-    for (eplayerindex, orules) in gameannouncements.iter() {
+    for (epi, orules) in gameannouncements.iter() {
         do_in_window(
-            ESkUiWindow::PlayerInfo(eplayerindex),
+            ESkUiWindow::PlayerInfo(epi),
             |ncwin| {
                 if let Some(rules) = *orules {
-                    wprint(ncwin, &format!("{}: {}", eplayerindex, rules.to_string()));
+                    wprint(ncwin, &format!("{}: {}", epi, rules.to_string()));
                 } else {
-                    wprint(ncwin, &format!("{}: Nothing", eplayerindex));
+                    wprint(ncwin, &format!("{}: Nothing", epi));
                 }
                 ncurses::wrefresh(ncwin);
             }
@@ -148,28 +148,28 @@ pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &[SStos
         ESkUiWindow::GameInfo,
         |ncwin| {
             wprint(ncwin, &format!("{}", rules));
-            if let Some(eplayerindex) = rules.playerindex() {
-                wprint(ncwin, &format!(", played by {}", eplayerindex));
+            if let Some(epi) = rules.playerindex() {
+                wprint(ncwin, &format!(", played by {}", epi));
             }
-            let print_special = |str_special, veceplayerindex: Vec<EPlayerIndex>| {
-                if !veceplayerindex.is_empty() {
+            let print_special = |str_special, vecepi: Vec<EPlayerIndex>| {
+                if !vecepi.is_empty() {
                     wprint(ncwin, str_special);
-                    for eplayerindex in veceplayerindex {
-                        wprint(ncwin, &format!("{},", eplayerindex));
+                    for epi in vecepi {
+                        wprint(ncwin, &format!("{},", epi));
                     }
                 }
             };
             print_special(
                 ". Doublings: ",
                 doublings.iter()
-                    .filter(|&(_eplayerindex, b_doubling)| *b_doubling)
-                    .map(|(eplayerindex, _b_doubling)| eplayerindex)
+                    .filter(|&(_epi, b_doubling)| *b_doubling)
+                    .map(|(epi, _b_doubling)| epi)
                     .collect()
             );
             print_special(
                 ". Stoesse: ",
                 vecstoss.iter()
-                    .map(|stoss| stoss.m_eplayerindex)
+                    .map(|stoss| stoss.m_epi)
                     .collect()
             );
             ncurses::wrefresh(ncwin);
@@ -179,8 +179,8 @@ pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &[SStos
 
 pub fn account_balance_string(accountbalance: &SAccountBalance) -> String {
     let mut str = "".to_string();
-    for eplayerindex in EPlayerIndex::values() {
-        str = str + &format!("{}: {} | ", eplayerindex, accountbalance.get_player(eplayerindex));
+    for epi in EPlayerIndex::values() {
+        str = str + &format!("{}: {} | ", epi, accountbalance.get_player(epi));
     }
     str = str + &format!("Stock: {}", accountbalance.get_stock());
     str

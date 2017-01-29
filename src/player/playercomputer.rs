@@ -48,10 +48,10 @@ impl TPlayer for SPlayerComputer {
                     .count()
             })
             .map(|rules| {
-                let eplayerindex_rank = rules.playerindex().unwrap(); 
+                let epi_rank = rules.playerindex().unwrap(); 
                 (
                     rules,
-                    self.m_ai.rank_rules(hand, /*eplayerindex_first*/gameannouncements.first_playerindex(), eplayerindex_rank, rules.as_rules(), n_stock)
+                    self.m_ai.rank_rules(hand, /*epi_first*/gameannouncements.first_playerindex(), epi_rank, rules.as_rules(), n_stock)
                 )
             })
             .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
@@ -61,7 +61,7 @@ impl TPlayer for SPlayerComputer {
 
     fn ask_for_stoss(
         &self,
-        eplayerindex: EPlayerIndex,
+        epi: EPlayerIndex,
         doublings: &SDoublings,
         rules: &TRules,
         hand: &SHand,
@@ -70,16 +70,16 @@ impl TPlayer for SPlayerComputer {
         txb: mpsc::Sender<bool>,
     ) {
         let n_samples_per_stoss = 5; // TODO move to ai, make adjustable
-        let mut vecpairahandf_suspicion = forever_rand_hands(/*vecstich*/&Vec::new(), hand.clone(), eplayerindex)
-            .filter(|ahand| is_compatible_with_game_so_far(ahand, rules, /*vecstich*/&[SStich::new(doublings.m_eplayerindex_first)])) // stoss currently only in SPreGame
+        let mut vecpairahandf_suspicion = forever_rand_hands(/*vecstich*/&Vec::new(), hand.clone(), epi)
+            .filter(|ahand| is_compatible_with_game_so_far(ahand, rules, /*vecstich*/&[SStich::new(doublings.m_epi_first)])) // stoss currently only in SPreGame
             .take(2*n_samples_per_stoss)
             .map(|ahand| {
-                let f_rank_rules = rules.playerindex().map_or(0f64, |eplayerindex_active| {
-                    if eplayerindex!=eplayerindex_active {
+                let f_rank_rules = rules.playerindex().map_or(0f64, |epi_active| {
+                    if epi!=epi_active {
                         self.m_ai.rank_rules(
-                            &SFullHand::new(&ahand[eplayerindex_active]),
-                            /*eplayerindex_first*/doublings.first_playerindex(),
-                            /*eplayerindex_rank*/eplayerindex_active,
+                            &SFullHand::new(&ahand[epi_active]),
+                            /*epi_first*/doublings.first_playerindex(),
+                            /*epi_rank*/epi_active,
                             rules,
                             n_stock,
                         )
@@ -111,9 +111,9 @@ impl TPlayer for SPlayerComputer {
                         rules,
                         &mut Vec::new(),
                         None,
-                        eplayerindex,
+                        epi,
                         /*n_stoss*/ vecstoss.len(),
-                        /*n_doubling*/doublings.iter().filter(|&(_eplayerindex, &b_doubling)| b_doubling).count(),
+                        /*n_doubling*/doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),
                         n_stock,
                     )
                 })

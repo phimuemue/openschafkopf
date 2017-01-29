@@ -11,11 +11,11 @@ pub trait TTrumpfDecider : Sync + 'static {
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering;
     fn count_laufende(gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SEnumMap<EPlayerIndex, bool>) -> usize {
         let veccard_trumpf = Self::trumpfs_in_descending_order(Vec::new());
-        let mapcardeplayerindex = SCardMap::<EPlayerIndex>::new_from_pairs(
+        let mapcardepi = SCardMap::<EPlayerIndex>::new_from_pairs(
             gamefinishedstiche.get().iter().flat_map(|stich| stich.iter())
         );
         let laufende_relevant = |card: &SCard| {
-            ab_winner[mapcardeplayerindex[*card]]
+            ab_winner[mapcardepi[*card]]
         };
         let b_might_have_lauf = laufende_relevant(&veccard_trumpf[0]);
         veccard_trumpf.iter()

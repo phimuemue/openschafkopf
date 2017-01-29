@@ -82,9 +82,9 @@ impl SRuleSet {
                 Ok(VStockOrT::Stock(0)) // represent "no stock" by using a zero stock payment
             }
         }?;
-        let mut avecrulegroup = EPlayerIndex::map_from_fn(|_eplayerindex| Vec::new());
-        for eplayerindex in EPlayerIndex::values() {
-            let vecrulegroup = &mut avecrulegroup[eplayerindex];
+        let mut avecrulegroup = EPlayerIndex::map_from_fn(|_epi| Vec::new());
+        for epi in EPlayerIndex::values() {
+            let vecrulegroup = &mut avecrulegroup[epi];
             let payoutparams_active = |str_game: &str, str_base_price_fallback: &str| -> Result<SPayoutDeciderParams> {
                 let n_payout_extra = read_int(&format!("{}.extra", str_game)).or_else(|_err| fallback(&format!("{}.extra", str_game), "base-price"))?;
                 let n_payout_base = read_int(&format!("{}.price", str_game)).or_else(|_err| fallback(&format!("{}.price", str_game), str_base_price_fallback))?;
@@ -120,7 +120,7 @@ impl SRuleSet {
                     EFarbe::values()
                         .filter(|efarbe| EFarbe::Herz!=*efarbe)
                         .map(|efarbe| Box::new(SRulesRufspiel{
-                            m_eplayerindex: eplayerindex,
+                            m_epi: epi,
                             m_efarbe: efarbe,
                             m_payoutdeciderparams: payoutparams.clone(),
                         }) as Box<TActivelyPlayableRules>)
@@ -136,7 +136,7 @@ impl SRuleSet {
                         ($trumpfdecider: ident, $i_prioindex: expr, $rulename: expr, $payoutparams: expr) => {{
                             macro_rules! internal_generate_sololike_farbe {
                                 ($farbedesignator: ident) => {
-                                    sololike::<$trumpfdecider<STrumpfDeciderFarbe<$farbedesignator>>, $payoutdecider> (eplayerindex, $i_prioindex, &format!("{}-{}", $farbedesignator::farbe(), $rulename), $payoutparams)
+                                    sololike::<$trumpfdecider<STrumpfDeciderFarbe<$farbedesignator>>, $payoutdecider> (epi, $i_prioindex, &format!("{}-{}", $farbedesignator::farbe(), $rulename), $payoutparams)
                                 }
                             }
                             vec! [
@@ -157,7 +157,7 @@ impl SRuleSet {
                     create_rulegroup_sololike!(
                         "wenz",
                         &str_rulename,
-                        |payoutparams| vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-1),&str_rulename, payoutparams)]
+                        |payoutparams| vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(epi, $fn_prio(-1),&str_rulename, payoutparams)]
                     )?;
                     create_rulegroup_sololike!(
                         "farbwenz",
@@ -168,7 +168,7 @@ impl SRuleSet {
                     create_rulegroup_sololike!(
                         "geier",
                         &str_rulename,
-                        |payoutparams| vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(eplayerindex, $fn_prio(-3),&str_rulename, payoutparams)]
+                        |payoutparams| vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(epi, $fn_prio(-3),&str_rulename, payoutparams)]
                     )?;
                     create_rulegroup_sololike!(
                         "farbgeier",
@@ -182,7 +182,7 @@ impl SRuleSet {
             create_rulegroup_sololike!(
                 "solo",
                 "Sie",
-                &|payoutparams| vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(eplayerindex, VGameAnnouncementPriority::SoloSie ,&"Sie", payoutparams)]
+                &|payoutparams| vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(epi, VGameAnnouncementPriority::SoloSie ,&"Sie", payoutparams)]
             )?;
         }
         Ok(SRuleSet {

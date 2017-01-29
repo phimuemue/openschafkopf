@@ -6,7 +6,7 @@ use util::*;
 use std::str::FromStr;
 use std::slice;
 
-plain_enum_mod!(modeplayerindex, EPlayerIndex {
+plain_enum_mod!(modepi, EPlayerIndex {
     EPI0, EPI1, EPI2, EPI3,
 });
 impl fmt::Display for EPlayerIndex {
@@ -16,10 +16,10 @@ impl fmt::Display for EPlayerIndex {
 }
 impl FromStr for EPlayerIndex {
     type Err = &'static str;
-    fn from_str(str_eplayerindex: &str) -> Result<Self, Self::Err> {
-        usize::from_str(str_eplayerindex).ok()
-            .and_then(|n_eplayerindex| {
-                EPlayerIndex::checked_from_usize(n_eplayerindex)
+    fn from_str(str_epi: &str) -> Result<Self, Self::Err> {
+        usize::from_str(str_epi).ok()
+            .and_then(|n_epi| {
+                EPlayerIndex::checked_from_usize(n_epi)
             })
             .ok_or("Could not convert to EPlayerIndex")
     }
@@ -27,7 +27,7 @@ impl FromStr for EPlayerIndex {
 
 #[derive(Clone)]
 pub struct SPlayersInRound<T> {
-    pub m_eplayerindex_first: EPlayerIndex,
+    pub m_epi_first: EPlayerIndex,
     m_vect: ArrayVec<[T; 4]>,
 }
 
@@ -47,7 +47,7 @@ pub struct SPlayersInRoundIterator<InternalIter>
     where InternalIter: Iterator,
 {
     m_iter: InternalIter,
-    m_n_eplayerindex: usize,
+    m_n_epi: usize,
 }
 
 impl<InternalIter> Iterator for SPlayersInRoundIterator<InternalIter>
@@ -56,17 +56,17 @@ impl<InternalIter> Iterator for SPlayersInRoundIterator<InternalIter>
     type Item = (EPlayerIndex, InternalIter::Item);
     fn next(&mut self) -> Option<(EPlayerIndex, InternalIter::Item)> {
         let item_next = self.m_iter.next()
-            .map(|t| (EPlayerIndex::wrapped_from_usize(self.m_n_eplayerindex), t));
-        self.m_n_eplayerindex = self.m_n_eplayerindex+1;
+            .map(|t| (EPlayerIndex::wrapped_from_usize(self.m_n_epi), t));
+        self.m_n_epi = self.m_n_epi+1;
         item_next
     }
 }
 
 impl<T> Index<EPlayerIndex> for SPlayersInRound<T> {
     type Output = T;
-    fn index(&self, eplayerindex : EPlayerIndex) -> &T {
-        assert!(self.valid_index(eplayerindex));
-        &self.m_vect[eplayerindex.wrapped_difference(self.m_eplayerindex_first)]
+    fn index(&self, epi : EPlayerIndex) -> &T {
+        assert!(self.valid_index(epi));
+        &self.m_vect[epi.wrapped_difference(self.m_epi_first)]
     }
 }
 
@@ -82,14 +82,14 @@ impl<T> SPlayersInRound<T>
 }
 
 impl<T> SPlayersInRound<T> {
-    pub fn new(eplayerindex_first: EPlayerIndex) -> SPlayersInRound<T> {
+    pub fn new(epi_first: EPlayerIndex) -> SPlayersInRound<T> {
         SPlayersInRound {
-            m_eplayerindex_first : eplayerindex_first,
+            m_epi_first : epi_first,
             m_vect: ArrayVec::new(),
         }
     }
     pub fn first_playerindex(&self) -> EPlayerIndex {
-        self.m_eplayerindex_first
+        self.m_epi_first
     }
     pub fn current_playerindex(&self) -> Option<EPlayerIndex> {
         if self.size()==4 {
@@ -112,24 +112,24 @@ impl<T> SPlayersInRound<T> {
 
     pub fn first(&self) -> &T {
         assert!(0 < self.size());
-        &self[self.m_eplayerindex_first]
+        &self[self.m_epi_first]
     }
     pub fn iter(&self) -> SPlayersInRoundIterator<slice::Iter<T>> {
         SPlayersInRoundIterator {
             m_iter: self.m_vect.iter(),
-            m_n_eplayerindex: self.m_eplayerindex_first.to_usize(),
+            m_n_epi: self.m_epi_first.to_usize(),
         }
     }
-    fn valid_index(&self, eplayerindex: EPlayerIndex) -> bool {
-        if eplayerindex >= self.m_eplayerindex_first {
-            self.size() > eplayerindex.to_usize()-self.m_eplayerindex_first.to_usize()
+    fn valid_index(&self, epi: EPlayerIndex) -> bool {
+        if epi >= self.m_epi_first {
+            self.size() > epi.to_usize()-self.m_epi_first.to_usize()
         } else {
-            self.size() > 4-self.m_eplayerindex_first.to_usize()+eplayerindex.to_usize()
+            self.size() > 4-self.m_epi_first.to_usize()+epi.to_usize()
         }
     }
-    pub fn get(&self, eplayerindex: EPlayerIndex) -> Option<&T> {
-        if self.valid_index(eplayerindex) {
-            Some(&self[eplayerindex])
+    pub fn get(&self, epi: EPlayerIndex) -> Option<&T> {
+        if self.valid_index(epi) {
+            Some(&self[epi])
         } else {
             None
         }

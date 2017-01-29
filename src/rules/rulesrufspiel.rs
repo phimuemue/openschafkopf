@@ -7,14 +7,14 @@ use std::cmp::Ordering;
 use util::*;
 
 pub struct SRulesRufspiel {
-    pub m_eplayerindex : EPlayerIndex,
+    pub m_epi : EPlayerIndex,
     pub m_efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
     pub m_payoutdeciderparams: SPayoutDeciderParams,
 }
 
 impl fmt::Display for SRulesRufspiel {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Rufspiel mit der {}-Sau von {}", self.m_efarbe, self.m_eplayerindex)
+        write!(f, "Rufspiel mit der {}-Sau von {}", self.m_efarbe, self.m_epi)
     }
 }
 
@@ -49,25 +49,25 @@ impl TRules for SRulesRufspiel {
     }
 
     fn playerindex(&self) -> Option<EPlayerIndex> {
-        Some(self.m_eplayerindex)
+        Some(self.m_epi)
     }
 
-    fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {
+    fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {
         assert_eq!(hand.cards().len(), 8);
-        assert!(eplayerindex!=self.m_eplayerindex || !hand.contains(self.rufsau()));
-        (eplayerindex==self.m_eplayerindex || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
+        assert!(epi!=self.m_epi || !hand.contains(self.rufsau()));
+        (epi==self.m_epi || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, n_stock: isize) -> SAccountBalance {
-        let eplayerindex_coplayer = gamefinishedstiche.get().iter()
+        let epi_coplayer = gamefinishedstiche.get().iter()
             .flat_map(|stich| stich.iter())
             .find(|&(_, card)| *card==self.rufsau())
-            .map(|(eplayerindex, _)| eplayerindex)
+            .map(|(epi, _)| epi)
             .unwrap();
-        assert!(self.m_eplayerindex!=eplayerindex_coplayer, "self.m_eplayerindex==eplayerindex_coplayer=={}", eplayerindex_coplayer);
+        assert!(self.m_epi!=epi_coplayer, "self.m_epi==epi_coplayer=={}", epi_coplayer);
         macro_rules! fn_is_player_party {
-            () => {|eplayerindex| {
-                eplayerindex==self.m_eplayerindex || eplayerindex==eplayerindex_coplayer
+            () => {|epi| {
+                epi==self.m_epi || epi==epi_coplayer
             }}
         }
         let an_payout_no_stock = SStossDoublingPayoutDecider::payout(
@@ -75,14 +75,14 @@ impl TRules for SRulesRufspiel {
                 self,
                 gamefinishedstiche,
                 fn_is_player_party!(),
-                /*fn_player_multiplier*/ |_eplayerindex| 1, // everyone pays/gets the same
+                /*fn_player_multiplier*/ |_epi| 1, // everyone pays/gets the same
                 &self.m_payoutdeciderparams,
             ),
             n_stoss,
             n_doubling,
         );
         assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
-        assert_eq!(an_payout_no_stock[self.m_eplayerindex], an_payout_no_stock[eplayerindex_coplayer]);
+        assert_eq!(an_payout_no_stock[self.m_epi], an_payout_no_stock[epi_coplayer]);
         assert_eq!(
             an_payout_no_stock.iter()
                 .filter(|&n_payout_no_stock| 0<*n_payout_no_stock)
@@ -91,17 +91,17 @@ impl TRules for SRulesRufspiel {
         );
         assert_eq!(n_stock%2, 0);
         let n_stock_per_player = n_stock/2;
-        if /*b_player_party_wins*/ 0<an_payout_no_stock[self.m_eplayerindex] {
+        if /*b_player_party_wins*/ 0<an_payout_no_stock[self.m_epi] {
             SAccountBalance::new(
-                EPlayerIndex::map_from_fn(|eplayerindex|
-                    an_payout_no_stock[eplayerindex] + if fn_is_player_party!()(eplayerindex) { n_stock_per_player } else {0}
+                EPlayerIndex::map_from_fn(|epi|
+                    an_payout_no_stock[epi] + if fn_is_player_party!()(epi) { n_stock_per_player } else {0}
                 ),
                 -n_stock
             )
         } else {
             SAccountBalance::new(
-                EPlayerIndex::map_from_fn(|eplayerindex|
-                    an_payout_no_stock[eplayerindex] - if fn_is_player_party!()(eplayerindex) { n_stock_per_player } else {0}
+                EPlayerIndex::map_from_fn(|epi|
+                    an_payout_no_stock[epi] - if fn_is_player_party!()(epi) { n_stock_per_player } else {0}
                 ),
                 n_stock
             )

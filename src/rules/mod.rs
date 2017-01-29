@@ -45,7 +45,7 @@ impl VTrumpfOrFarbe {
 }
 
 pub struct SStoss {
-    pub m_eplayerindex : EPlayerIndex,
+    pub m_epi : EPlayerIndex,
 }
 
 pub trait TRules : fmt::Display + TAsRules + Sync {
@@ -61,7 +61,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
         true // probably, only Rufspiel is prevented in some cases
     }
 
-    fn stoss_allowed(&self, eplayerindex: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
+    fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, n_stock: isize) -> SAccountBalance;
 
@@ -85,13 +85,13 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
     }
 
     fn winner_index(&self, stich: &SStich) -> EPlayerIndex {
-        let mut eplayerindex_best = stich.m_eplayerindex_first;
-        for (eplayerindex, card) in stich.iter().skip(1) {
-            if Ordering::Less==self.compare_in_stich(stich[eplayerindex_best], *card) {
-                eplayerindex_best = eplayerindex;
+        let mut epi_best = stich.m_epi_first;
+        for (epi, card) in stich.iter().skip(1) {
+            if Ordering::Less==self.compare_in_stich(stich[epi_best], *card) {
+                epi_best = epi;
             }
         }
-        eplayerindex_best
+        epi_best
     }
 
     fn compare_in_stich_farbe(&self, card_fst: SCard, card_snd: SCard) -> Ordering {

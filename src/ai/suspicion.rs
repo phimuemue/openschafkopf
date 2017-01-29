@@ -89,7 +89,7 @@ impl SSuspicion {
     }
 
     pub fn new<FuncFilterSuccessors>(
-        eplayerindex_first: EPlayerIndex,
+        epi_first: EPlayerIndex,
         ahand: SEnumMap<EPlayerIndex, SHand>,
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
@@ -101,7 +101,7 @@ impl SSuspicion {
             m_vecsusptrans: Vec::new(),
             m_ahand : ahand
         };
-        susp.compute_successors(eplayerindex_first, rules, vecstich, &func_filter_successors);
+        susp.compute_successors(epi_first, rules, vecstich, &func_filter_successors);
         susp
     }
 
@@ -118,8 +118,8 @@ impl SSuspicion {
     fn new_from_susp(&self, stich: &SStich) -> Self {
         SSuspicion {
             m_vecsusptrans: Vec::new(),
-            m_ahand : EPlayerIndex::map_from_fn(|eplayerindex| {
-                self.m_ahand[eplayerindex].new_from_hand(stich[eplayerindex])
+            m_ahand : EPlayerIndex::map_from_fn(|epi| {
+                self.m_ahand[epi].new_from_hand(stich[epi])
             })
         }
     }
@@ -129,13 +129,13 @@ impl SSuspicion {
         self.m_ahand[EPlayerIndex::EPI0].cards().len()
     }
 
-    fn compute_successors<FuncFilterSuccessors>(&mut self, eplayerindex_first: EPlayerIndex, rules: &TRules, vecstich: &mut Vec<SStich>, func_filter_successors: &FuncFilterSuccessors)
+    fn compute_successors<FuncFilterSuccessors>(&mut self, epi_first: EPlayerIndex, rules: &TRules, vecstich: &mut Vec<SStich>, func_filter_successors: &FuncFilterSuccessors)
         where FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
     {
         assert_eq!(self.m_vecsusptrans.len(), 0); // currently, we have no caching
         let mut vecstich_successor : Vec<SStich> = Vec::new();
-        push_pop_vecstich(vecstich, SStich::new(eplayerindex_first), |vecstich| {
-            let offset_to_playerindex = move |i_offset: usize| {eplayerindex_first.wrapping_add(i_offset)};
+        push_pop_vecstich(vecstich, SStich::new(epi_first), |vecstich| {
+            let offset_to_playerindex = move |i_offset: usize| {epi_first.wrapping_add(i_offset)};
             macro_rules! traverse_valid_cards {
                 ($i_offset : expr, $func: expr) => {
                     // TODO use equivalent card optimization
@@ -164,9 +164,9 @@ impl SSuspicion {
         self.m_vecsusptrans = vecstich_successor.into_iter()
             .map(|stich| {
                 let mut susptrans = SSuspicionTransition::new(self, stich.clone());
-                let eplayerindex_first_susp = rules.winner_index(&stich);
+                let epi_first_susp = rules.winner_index(&stich);
                 push_pop_vecstich(vecstich, stich, |vecstich| {
-                    susptrans.m_susp.compute_successors(eplayerindex_first_susp, rules, vecstich, func_filter_successors);
+                    susptrans.m_susp.compute_successors(epi_first_susp, rules, vecstich, func_filter_successors);
                 });
                 susptrans
             })
@@ -185,11 +185,11 @@ impl SSuspicion {
         if n_maxlevel < n_level {
             Ok(())
         } else {
-            for eplayerindex in EPlayerIndex::values() {
-                file_output.write_all(format!("{} | ", self.m_ahand[eplayerindex]).as_bytes())?;
+            for epi in EPlayerIndex::values() {
+                file_output.write_all(format!("{} | ", self.m_ahand[epi]).as_bytes())?;
             }
             file_output.write_all(b", min payouts: ")?;
-            for _eplayerindex in EPlayerIndex::values() {
+            for _epi in EPlayerIndex::values() {
                 file_output.write_all(b"TODO: payout")?;
             }
             file_output.write_all(b"\n")?;
@@ -205,7 +205,7 @@ impl SSuspicion {
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
         ostich_given: Option<SStich>,
-        eplayerindex: EPlayerIndex,
+        epi: EPlayerIndex,
         n_stoss: usize,
         n_doubling: usize,
         n_stock: isize,
@@ -215,7 +215,7 @@ impl SSuspicion {
         assert!(vecstich.iter().all(|stich| stich.size()==4));
         assert_eq!(vecstich.len()+self.hand_size(), 8);
         if 0==self.hand_size() {
-            return rules.payout(&SGameFinishedStiche::new(vecstich), n_stoss, n_doubling, n_stock).get_player(eplayerindex);
+            return rules.payout(&SGameFinishedStiche::new(vecstich), n_stoss, n_doubling, n_stock).get_player(epi);
         }
         let n_payout = self.m_vecsusptrans.iter()
             .filter(|susptrans| { // only consider successors compatible with current stich_given so far
@@ -232,23 +232,23 @@ impl SSuspicion {
             .map(|susptrans| {
                 assert_eq!(susptrans.m_stich.size(), 4);
                 push_pop_vecstich(vecstich, susptrans.m_stich.clone(), |vecstich| {
-                    (susptrans, susptrans.m_susp.min_reachable_payout(rules, vecstich, None, eplayerindex, n_stoss, n_doubling, n_stock))
+                    (susptrans, susptrans.m_susp.min_reachable_payout(rules, vecstich, None, epi, n_stoss, n_doubling, n_stock))
                 })
             })
-            .group_by(|&(susptrans, _n_payout)| { // other players may play inconveniently for eplayerindex...
+            .group_by(|&(susptrans, _n_payout)| { // other players may play inconveniently for epi...
                 susptrans.m_stich.iter()
-                    .take_while(|&(eplayerindex_stich, _card)| eplayerindex_stich != eplayerindex)
-                    .map(|(_eplayerindex, card)| card)
+                    .take_while(|&(epi_stich, _card)| epi_stich != epi)
+                    .map(|(_epi, card)| card)
                     .collect::<Vec<_>>()
             })
             .into_iter()
-            .map(|(_stich_key_before_eplayerindex, grpsusptransn_before_eplayerindex)| {
-                grpsusptransn_before_eplayerindex.into_iter()
-                    .group_by(|&(susptrans, _n_payout)| susptrans.m_stich[eplayerindex])
+            .map(|(_stich_key_before_epi, grpsusptransn_before_epi)| {
+                grpsusptransn_before_epi.into_iter()
+                    .group_by(|&(susptrans, _n_payout)| susptrans.m_stich[epi])
                     .into_iter()
-                    .map(|(_stich_key_eplayerindex, grpsusptransn_eplayerindex)| {
+                    .map(|(_stich_key_epi, grpsusptransn_epi)| {
                         // in this group, we need the worst case if other players play badly
-                        grpsusptransn_eplayerindex.into_iter().min_by_key(|&(_susptrans, n_payout)| n_payout).unwrap()
+                        grpsusptransn_epi.into_iter().min_by_key(|&(_susptrans, n_payout)| n_payout).unwrap()
                     })
                     .max_by_key(|&(_susptrans, n_payout)| n_payout)
                     .unwrap()

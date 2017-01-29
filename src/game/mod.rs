@@ -15,16 +15,16 @@ pub struct SDealCards {
 }
 
 impl SDealCards {
-    pub fn new(eplayerindex_first: EPlayerIndex) -> SDealCards {
+    pub fn new(epi_first: EPlayerIndex) -> SDealCards {
         SDealCards {
             m_ahand : {
                 let mut veccard : Vec<_> = SCard::values().into_iter().collect();
                 assert!(veccard.len()==32);
-                EPlayerIndex::map_from_fn(move |_eplayerindex|
+                EPlayerIndex::map_from_fn(move |_epi|
                     random_hand(8, &mut veccard)
                 )
             },
-            m_doublings: SDoublings::new(eplayerindex_first),
+            m_doublings: SDoublings::new(epi_first),
         }
     }
 
@@ -33,14 +33,14 @@ impl SDealCards {
         self.m_doublings.current_playerindex()
     }
 
-    pub fn first_hand_for(&self, eplayerindex: EPlayerIndex) -> &[SCard] {
-        let veccard = self.m_ahand[eplayerindex].cards();
+    pub fn first_hand_for(&self, epi: EPlayerIndex) -> &[SCard] {
+        let veccard = self.m_ahand[epi].cards();
         assert_eq!(veccard.len(), 8);
         &veccard[0..veccard.len()/2]
     }
 
-    pub fn announce_doubling(&mut self, eplayerindex: EPlayerIndex, b_doubling: bool) -> Result<()> {
-        if Some(eplayerindex)!=self.which_player_can_do_something() {
+    pub fn announce_doubling(&mut self, epi: EPlayerIndex, b_doubling: bool) -> Result<()> {
+        if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
         self.m_doublings.push(b_doubling);
@@ -49,12 +49,12 @@ impl SDealCards {
     }
 
     pub fn finish_dealing(self, ruleset: &SRuleSet, n_stock: isize) -> SGamePreparations {
-        let eplayerindex_first = self.m_doublings.first_playerindex();
+        let epi_first = self.m_doublings.first_playerindex();
         SGamePreparations {
             m_ahand : self.m_ahand,
             m_doublings : self.m_doublings,
             m_ruleset : ruleset,
-            m_gameannouncements : SGameAnnouncements::new(eplayerindex_first),
+            m_gameannouncements : SGameAnnouncements::new(epi_first),
             m_n_stock: n_stock,
         }
     }
@@ -90,11 +90,11 @@ impl<'rules> SGamePreparations<'rules> {
         self.m_gameannouncements.current_playerindex()
     }
 
-    pub fn announce_game(&mut self, eplayerindex: EPlayerIndex, orules: Option<&'rules TActivelyPlayableRules>) -> Result<()> {
-        if Some(eplayerindex)!=self.which_player_can_do_something() {
+    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<&'rules TActivelyPlayableRules>) -> Result<()> {
+        if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
-        if orules.map_or(false, |rules| Some(eplayerindex)!=rules.playerindex()) {
+        if orules.map_or(false, |rules| Some(epi)!=rules.playerindex()) {
             bail!("Only actively playable rules can be announced");
         }
         self.m_gameannouncements.push(orules);
@@ -114,7 +114,7 @@ impl<'rules> SGamePreparations<'rules> {
             })
         };
         let vecrules_announced : Vec<&TActivelyPlayableRules> = self.m_gameannouncements.iter()
-            .filter_map(|(_eplayerindex, orules)| *orules)
+            .filter_map(|(_epi, orules)| *orules)
             .collect();
         if 0<vecrules_announced.len() {
             let prio_best = vecrules_announced.iter()
@@ -150,33 +150,33 @@ impl<'rules> SPreGame<'rules> {
     pub fn which_player_can_do_something(&self) -> Vec<EPlayerIndex> {
         if self.m_vecstoss.len() < 4 {
             EPlayerIndex::values()
-                .map(|eplayerindex| eplayerindex.wrapping_add(self.m_doublings.first_playerindex().to_usize()))
-                .filter(|eplayerindex| self.m_rules.stoss_allowed(*eplayerindex, &self.m_vecstoss, &self.m_ahand[*eplayerindex]))
+                .map(|epi| epi.wrapping_add(self.m_doublings.first_playerindex().to_usize()))
+                .filter(|epi| self.m_rules.stoss_allowed(*epi, &self.m_vecstoss, &self.m_ahand[*epi]))
                 .collect()
         } else {
             vec![]
         }
     }
 
-    pub fn stoss(&mut self, eplayerindex_stoss: EPlayerIndex) -> Result<()> {
+    pub fn stoss(&mut self, epi_stoss: EPlayerIndex) -> Result<()> {
         if !self.which_player_can_do_something().into_iter()
-            .any(|eplayerindex| eplayerindex==eplayerindex_stoss)
+            .any(|epi| epi==epi_stoss)
         {
-            bail!("Stoss not allowed for specified eplayerindex");
+            bail!("Stoss not allowed for specified epi");
         }
-        self.m_vecstoss.push(SStoss{m_eplayerindex : eplayerindex_stoss});
+        self.m_vecstoss.push(SStoss{m_epi : epi_stoss});
         Ok(())
     }
 
     pub fn finish(self) -> SGame<'rules> {
-        let eplayerindex_first = self.m_doublings.first_playerindex();
+        let epi_first = self.m_doublings.first_playerindex();
         SGame {
             m_ahand : self.m_ahand,
             m_doublings : self.m_doublings,
             m_rules : self.m_rules,
             m_vecstoss : self.m_vecstoss,
             m_n_stock : self.m_n_stock,
-            m_vecstich : vec![SStich::new(eplayerindex_first)],
+            m_vecstich : vec![SStich::new(epi_first)],
         }
     }
 }
@@ -199,24 +199,24 @@ impl<'rules> SGame<'rules> {
         current_stich(&self.m_vecstich)
     }
 
-    pub fn zugeben(&mut self, card_played: SCard, eplayerindex: EPlayerIndex) -> Result<()> {
+    pub fn zugeben(&mut self, card_played: SCard, epi: EPlayerIndex) -> Result<()> {
         // returns the EPlayerIndex of the player who is the next in row to do something
-        skui::logln(&format!("Player {} wants to play {}", eplayerindex, card_played));
-        if Some(eplayerindex)!=self.which_player_can_do_something() {
+        skui::logln(&format!("Player {} wants to play {}", epi, card_played));
+        if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
-        if !self.m_ahand[eplayerindex].contains(card_played) {
+        if !self.m_ahand[epi].contains(card_played) {
             bail!("card not contained in player's hand");
         }
         {
-            let hand = &mut self.m_ahand[eplayerindex];
+            let hand = &mut self.m_ahand[epi];
             assert!(self.m_rules.card_is_allowed(&self.m_vecstich, hand, card_played));
             hand.play_card(card_played);
             assert!(!self.m_vecstich.is_empty());
             self.m_vecstich.last_mut().unwrap().push(card_played);
         }
-        for eplayerindex in EPlayerIndex::values() {
-            skui::logln(&format!("Hand {}: {}", eplayerindex, self.m_ahand[eplayerindex]));
+        for epi in EPlayerIndex::values() {
+            skui::logln(&format!("Hand {}: {}", epi, self.m_ahand[epi]));
         }
         if 4==self.current_stich().size() {
             if 8==self.m_vecstich.len() { // TODO kurze Karte?
@@ -225,14 +225,14 @@ impl<'rules> SGame<'rules> {
                 Ok(())
             } else {
                 // TODO: all players should have to acknowledge the current stich in some way
-                let eplayerindex_last_stich = {
+                let epi_last_stich = {
                     let stich = self.current_stich();
                     skui::logln(&format!("Stich: {}", stich));
                     self.m_rules.winner_index(stich)
                 };
-                skui::logln(&format!("Opening new stich starting at {}", eplayerindex_last_stich));
+                skui::logln(&format!("Opening new stich starting at {}", epi_last_stich));
                 assert!(self.m_vecstich.is_empty() || 4==self.current_stich().size());
-                self.m_vecstich.push(SStich::new(eplayerindex_last_stich));
+                self.m_vecstich.push(SStich::new(epi_last_stich));
                 Ok(())
             }
         } else {
@@ -245,7 +245,7 @@ impl<'rules> SGame<'rules> {
         self.m_rules.payout(
             &SGameFinishedStiche::new(&self.m_vecstich),
             /*n_stoss*/ self.m_vecstoss.len(),
-            /*n_doubling*/ self.m_doublings.iter().filter(|&(_eplayerindex, &b_doubling)| b_doubling).count(),
+            /*n_doubling*/ self.m_doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),
             self.m_n_stock,
         )
     }

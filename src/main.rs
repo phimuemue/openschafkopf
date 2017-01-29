@@ -87,9 +87,9 @@ fn main() {
             if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
                 if let Some(str_hand) = subcommand_matches.value_of("hand") {
                     if let Some(hand_fixed) = cardvector::parse_cards(str_hand).map(SHand::new_from_vec) {
-                        let eplayerindex_rank = value_t!(subcommand_matches.value_of("pos"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
+                        let epi_rank = value_t!(subcommand_matches.value_of("pos"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
                         println!("Hand: {}", hand_fixed);
-                        for rules in allowed_rules(&ruleset.m_avecrulegroup[eplayerindex_rank]).iter() 
+                        for rules in allowed_rules(&ruleset.m_avecrulegroup[epi_rank]).iter() 
                             .filter(|rules| rules.can_be_played(&SFullHand::new(&hand_fixed)))
                         {
                             println!("{}: {}",
@@ -97,7 +97,7 @@ fn main() {
                                 ai().rank_rules(
                                     &SFullHand::new(&hand_fixed),
                                     EPlayerIndex::EPI0,
-                                    eplayerindex_rank,
+                                    epi_rank,
                                     rules.as_rules().clone(),
                                     /*n_stock*/0, // assume no stock in subcommand rank-rules
                                 )
@@ -112,8 +112,8 @@ fn main() {
 
             skui::init_ui();
             let accountbalance = game_loop(
-                &EPlayerIndex::map_from_fn(|eplayerindex| -> Box<TPlayer> {
-                    if EPlayerIndex::EPI0==eplayerindex {
+                &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
+                    if EPlayerIndex::EPI0==epi {
                         Box::new(SPlayerHuman{m_ai : ai()})
                     } else {
                         Box::new(SPlayerComputer{m_ai: ai()})
@@ -132,41 +132,41 @@ fn main() {
 }
 
 fn game_loop(aplayer: &SEnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
-    let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_eplayerindex| 0), 0);
+    let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_epi| 0), 0);
     for i_game in 0..n_games {
-        let mut dealcards = SDealCards::new(/*eplayerindex_first*/EPlayerIndex::wrapped_from_usize(i_game));
-        while let Some(eplayerindex) = dealcards.which_player_can_do_something() {
+        let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game));
+        while let Some(epi) = dealcards.which_player_can_do_something() {
             let (txb_doubling, rxb_doubling) = mpsc::channel::<bool>();
-            aplayer[eplayerindex].ask_for_doubling(
-                dealcards.first_hand_for(eplayerindex),
+            aplayer[epi].ask_for_doubling(
+                dealcards.first_hand_for(epi),
                 txb_doubling.clone(),
             );
-            dealcards.announce_doubling(eplayerindex, rxb_doubling.recv().unwrap()).unwrap();
+            dealcards.announce_doubling(epi, rxb_doubling.recv().unwrap()).unwrap();
         }
         let mut gamepreparations = dealcards.finish_dealing(ruleset, accountbalance.get_stock());
-        while let Some(eplayerindex) = gamepreparations.which_player_can_do_something() {
-            skui::logln(&format!("Asking player {} for game", eplayerindex));
+        while let Some(epi) = gamepreparations.which_player_can_do_something() {
+            skui::logln(&format!("Asking player {} for game", epi));
             let (txorules, rxorules) = mpsc::channel::<Option<_>>();
-            aplayer[eplayerindex].ask_for_game(
-                &SFullHand::new(&gamepreparations.m_ahand[eplayerindex]),
+            aplayer[epi].ask_for_game(
+                &SFullHand::new(&gamepreparations.m_ahand[epi]),
                 &gamepreparations.m_gameannouncements,
-                &gamepreparations.m_ruleset.m_avecrulegroup[eplayerindex],
+                &gamepreparations.m_ruleset.m_avecrulegroup[epi],
                 gamepreparations.m_n_stock,
                 txorules.clone()
             );
-            gamepreparations.announce_game(eplayerindex, rxorules.recv().unwrap()).unwrap();
+            gamepreparations.announce_game(epi, rxorules.recv().unwrap()).unwrap();
         }
         skui::logln("Asked players if they want to play. Determining rules");
         match gamepreparations.determine_rules() {
             VStockOrT::OrT(mut pregame) => {
-                while let Some(eplayerindex_stoss) = pregame.which_player_can_do_something().into_iter()
-                    .find(|eplayerindex| {
+                while let Some(epi_stoss) = pregame.which_player_can_do_something().into_iter()
+                    .find(|epi| {
                         let (txb_stoss, rxb_stoss) = mpsc::channel::<bool>();
-                        aplayer[*eplayerindex].ask_for_stoss(
-                            *eplayerindex,
+                        aplayer[*epi].ask_for_stoss(
+                            *epi,
                             &pregame.m_doublings,
                             pregame.m_rules,
-                            &pregame.m_ahand[*eplayerindex],
+                            &pregame.m_ahand[*epi],
                             &pregame.m_vecstoss,
                             pregame.m_n_stock,
                             txb_stoss,
@@ -174,23 +174,23 @@ fn game_loop(aplayer: &SEnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rul
                         rxb_stoss.recv().unwrap()
                     })
                 {
-                    pregame.stoss(eplayerindex_stoss).unwrap();
+                    pregame.stoss(epi_stoss).unwrap();
                 }
                 let mut game = pregame.finish();
-                while let Some(eplayerindex)=game.which_player_can_do_something() {
+                while let Some(epi)=game.which_player_can_do_something() {
                     let (txcard, rxcard) = mpsc::channel::<SCard>();
-                    aplayer[eplayerindex].ask_for_card(
+                    aplayer[epi].ask_for_card(
                         &game,
                         txcard.clone()
                     );
-                    game.zugeben(rxcard.recv().unwrap(), eplayerindex).unwrap();
+                    game.zugeben(rxcard.recv().unwrap(), epi).unwrap();
                 }
                 accountbalance.apply_payout(&game.payout());
             },
             VStockOrT::Stock(n_stock) => {
                 // TODO Rules must we respect doublings?
                 accountbalance.apply_payout(&SAccountBalance::new(
-                    EPlayerIndex::map_from_fn(|_eplayerindex| -n_stock),
+                    EPlayerIndex::map_from_fn(|_epi| -n_stock),
                     4*n_stock,
                 ));
             }
@@ -203,9 +203,9 @@ fn game_loop(aplayer: &SEnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rul
 #[test]
 fn test_game_loop() {
     game_loop(
-        &EPlayerIndex::map_from_fn(|eplayerindex| -> Box<TPlayer> {
+        &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
             Box::new(SPlayerComputer{m_ai: {
-                if eplayerindex<EPlayerIndex::EPI2 {
+                if epi<EPlayerIndex::EPI2 {
                     Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/1))
                 } else {
                     Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1, /*n_samples_per_rules*/1))

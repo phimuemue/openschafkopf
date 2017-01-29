@@ -140,7 +140,7 @@ impl TPlayer for SPlayerHuman {
 
     fn ask_for_stoss(
         &self,
-        _eplayerindex: EPlayerIndex,
+        _epi: EPlayerIndex,
         doublings: &SDoublings,
         rules: &TRules,
         hand: &SHand,
