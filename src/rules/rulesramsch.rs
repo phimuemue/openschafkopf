@@ -86,15 +86,10 @@ impl TRules for SRulesRamsch {
                             gamefinishedstiche.get().iter()
                                 .map(|stich| stich[epi])
                                 .filter(|card| self.trumpforfarbe(*card).is_trumpf())
-                                // TODO rust: use max_by
-                                .fold1(|card_fst, card_snd| {
-                                    assert!(self.trumpforfarbe(card_fst).is_trumpf());
-                                    assert!(self.trumpforfarbe(card_snd).is_trumpf());
-                                    if Ordering::Less==self.compare_trumpf(card_fst, card_snd) {
-                                        card_snd
-                                    } else {
-                                        card_fst
-                                    }
+                                .max_by(|card_fst, card_snd| {
+                                    assert!(self.trumpforfarbe(*card_fst).is_trumpf());
+                                    assert!(self.trumpforfarbe(*card_snd).is_trumpf());
+                                    self.compare_trumpf(*card_fst, *card_snd)
                                 })
                         )})
                         .fold1(|pairepiocard_fst, pairepiocard_snd| {

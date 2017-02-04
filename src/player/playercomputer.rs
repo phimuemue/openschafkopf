@@ -55,7 +55,11 @@ impl TPlayer for SPlayerComputer {
                 )
             })
             .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
-            .max_by_key(|&(_rules, f_payout_avg)| f_payout_avg.floor().as_num::<isize>()) // TODO rust: Use max_by
+            .max_by(|&(_rules_lhs, f_payout_avg_lhs), &(_rules_rhs, f_payout_avg_rhs)| {
+                assert!(!f_payout_avg_lhs.is_nan());
+                assert!(!f_payout_avg_rhs.is_nan());
+                f_payout_avg_lhs.partial_cmp(&f_payout_avg_rhs).unwrap()
+            })
             .map(|(rules, _f_payout_avg)| *rules)).unwrap();
     }
 
