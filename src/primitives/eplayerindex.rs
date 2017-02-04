@@ -57,7 +57,7 @@ impl<InternalIter> Iterator for SPlayersInRoundIterator<InternalIter>
     fn next(&mut self) -> Option<(EPlayerIndex, InternalIter::Item)> {
         let item_next = self.m_iter.next()
             .map(|t| (EPlayerIndex::wrapped_from_usize(self.m_n_epi), t));
-        self.m_n_epi = self.m_n_epi+1;
+        self.m_n_epi += 1;
         item_next
     }
 }
