@@ -12,7 +12,7 @@ pub struct SSuspicionTransition {
     m_susp : SSuspicion,
 }
 
-pub fn assert_ahand_same_size(ahand: &SEnumMap<EPlayerIndex, SHand>) {
+pub fn assert_ahand_same_size(ahand: &EnumMap<EPlayerIndex, SHand>) {
     let n_len_hand = ahand[EPlayerIndex::EPI0].cards().len();
     assert!(ahand.iter().all(|hand| hand.cards().len()==n_len_hand));
 }
@@ -79,7 +79,7 @@ impl SSuspicionTransition {
 
 pub struct SSuspicion {
     m_vecsusptrans : Vec<SSuspicionTransition>,
-    m_ahand : SEnumMap<EPlayerIndex, SHand>,
+    m_ahand : EnumMap<EPlayerIndex, SHand>,
 }
 
 impl SSuspicion {
@@ -90,7 +90,7 @@ impl SSuspicion {
 
     pub fn new<FuncFilterSuccessors>(
         epi_first: EPlayerIndex,
-        ahand: SEnumMap<EPlayerIndex, SHand>,
+        ahand: EnumMap<EPlayerIndex, SHand>,
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
         func_filter_successors: FuncFilterSuccessors,

@@ -52,7 +52,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
     // TTrumpfDecider
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
     fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering;
-    fn count_laufende(&self, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SEnumMap<EPlayerIndex, bool>) -> usize;
+    fn count_laufende(&self, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize;
 
 
     fn playerindex(&self) -> Option<EPlayerIndex>;

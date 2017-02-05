@@ -11,6 +11,8 @@ extern crate crossbeam;
 extern crate error_chain;
 extern crate as_num;
 #[macro_use]
+extern crate plain_enum;
+#[macro_use]
 extern crate derive_new;
 
 #[macro_use]
@@ -133,7 +135,7 @@ fn main() {
     }
 }
 
-fn game_loop(aplayer: &SEnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
+fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
     let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_epi| 0), 0);
     for i_game in 0..n_games {
         let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game));

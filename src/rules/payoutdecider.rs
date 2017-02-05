@@ -5,7 +5,7 @@ use util::*;
 
 pub struct SStossDoublingPayoutDecider {}
 impl SStossDoublingPayoutDecider {
-    pub fn payout(an_payout_raw: SEnumMap<EPlayerIndex, isize>, n_stoss: usize, n_doubling: usize) -> SEnumMap<EPlayerIndex, isize> {
+    pub fn payout(an_payout_raw: EnumMap<EPlayerIndex, isize>, n_stoss: usize, n_doubling: usize) -> EnumMap<EPlayerIndex, isize> {
         EPlayerIndex::map_from_fn(|epi| {
             an_payout_raw[epi] * 2isize.pow((n_stoss + n_doubling).as_num())
         })
@@ -32,7 +32,7 @@ pub trait TPayoutDecider : Sync + 'static {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         payoutdeciderparams: &SPayoutDeciderParams,
-    ) -> SEnumMap<EPlayerIndex, isize>
+    ) -> EnumMap<EPlayerIndex, isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules;
@@ -47,7 +47,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         payoutdeciderparams: &SPayoutDeciderParams,
-    ) -> SEnumMap<EPlayerIndex, isize>
+    ) -> EnumMap<EPlayerIndex, isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules,
@@ -79,7 +79,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
 }
 
 impl SLaufendeParams {
-    pub fn payout_laufende<Rules>(&self, rules: &Rules, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SEnumMap<EPlayerIndex, bool>) -> isize 
+    pub fn payout_laufende<Rules>(&self, rules: &Rules, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> isize 
         where Rules: TRules,
     {
         let n_laufende = rules.count_laufende(gamefinishedstiche, ab_winner);
@@ -87,7 +87,7 @@ impl SLaufendeParams {
     }
 }
 
-fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_player_multiplier: FnPlayerMultiplier, ab_winner: &SEnumMap<EPlayerIndex, bool>) -> SEnumMap<EPlayerIndex, isize> 
+fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_player_multiplier: FnPlayerMultiplier, ab_winner: &EnumMap<EPlayerIndex, bool>) -> EnumMap<EPlayerIndex, isize> 
     where FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
 {
     EPlayerIndex::map_from_fn(|epi| {
@@ -112,7 +112,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         payoutdeciderparams: &SPayoutDeciderParams,
-    ) -> SEnumMap<EPlayerIndex, isize>
+    ) -> EnumMap<EPlayerIndex, isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules,
@@ -140,7 +140,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
         payoutdeciderparams: &SPayoutDeciderParams,
-    ) -> SEnumMap<EPlayerIndex, isize>
+    ) -> EnumMap<EPlayerIndex, isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules,

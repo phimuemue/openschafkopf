@@ -88,12 +88,6 @@ impl SCard {
     }
 }
 
-impl quickcheck::Arbitrary for SCard {
-    fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> SCard {
-        SCard::new(EFarbe::arbitrary(g), ESchlag::arbitrary(g))
-    }
-}
-
 #[test]
 fn test_farbe_schlag_enumerators() {
     assert_eq!(EFarbe::values().count(), 4);

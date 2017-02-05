@@ -10,7 +10,7 @@ use rand::{self, Rng};
 pub type SDoublings = SPlayersInRound<bool>;
 
 pub struct SDealCards {
-    m_ahand : SEnumMap<EPlayerIndex, SHand>,
+    m_ahand : EnumMap<EPlayerIndex, SHand>,
     m_doublings : SDoublings,
 }
 
@@ -65,7 +65,7 @@ impl SDealCards {
 pub type SGameAnnouncements<'rules> = SPlayersInRound<Option<&'rules TActivelyPlayableRules>>;
 
 pub struct SGamePreparations<'rules> {
-    pub m_ahand : SEnumMap<EPlayerIndex, SHand>,
+    pub m_ahand : EnumMap<EPlayerIndex, SHand>,
     m_doublings : SDoublings,
     pub m_ruleset : &'rules SRuleSet,
     pub m_gameannouncements : SGameAnnouncements<'rules>,
@@ -139,7 +139,7 @@ impl<'rules> SGamePreparations<'rules> {
 }
 
 pub struct SPreGame<'rules> {
-    pub m_ahand : SEnumMap<EPlayerIndex, SHand>,
+    pub m_ahand : EnumMap<EPlayerIndex, SHand>,
     pub m_doublings : SDoublings,
     pub m_rules : &'rules TRules,
     pub m_vecstoss : Vec<SStoss>,
@@ -182,7 +182,7 @@ impl<'rules> SPreGame<'rules> {
 }
 
 pub struct SGame<'rules> {
-    pub m_ahand : SEnumMap<EPlayerIndex, SHand>,
+    pub m_ahand : EnumMap<EPlayerIndex, SHand>,
     pub m_doublings : SDoublings,
     pub m_rules : &'rules TRules,
     pub m_vecstoss : Vec<SStoss>,

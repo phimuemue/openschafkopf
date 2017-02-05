@@ -4,12 +4,12 @@ use primitives::eplayerindex::*;
 use util::*;
 
 pub struct SAccountBalance {
-    m_an : SEnumMap<EPlayerIndex, isize>,
+    m_an : EnumMap<EPlayerIndex, isize>,
     m_n_stock : isize,
 }
 
 impl SAccountBalance {
-    pub fn new(an: SEnumMap<EPlayerIndex, isize>, n_stock: isize) -> SAccountBalance {
+    pub fn new(an: EnumMap<EPlayerIndex, isize>, n_stock: isize) -> SAccountBalance {
         let accountbalance = SAccountBalance {
             m_an : an,
             m_n_stock : n_stock,
