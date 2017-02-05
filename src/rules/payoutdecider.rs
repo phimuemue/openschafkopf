@@ -12,27 +12,17 @@ impl SStossDoublingPayoutDecider {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, new)]
 pub struct SLaufendeParams {
     m_n_payout_per_lauf : isize,
     m_n_lauf_lbound : usize,
 }
 
-#[derive(Clone)]
+#[derive(Clone, new)]
 pub struct SPayoutDeciderParams {
     pub m_n_payout_base : isize,
     pub m_n_payout_schneider_schwarz : isize,
     pub m_laufendeparams : SLaufendeParams,
-}
-
-impl SPayoutDeciderParams {
-    pub fn new(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SPayoutDeciderParams {
-        SPayoutDeciderParams {
-            m_n_payout_base : n_payout_base,
-            m_n_payout_schneider_schwarz : n_payout_schneider_schwarz,
-            m_laufendeparams : laufendeparams,
-        }
-    }
 }
 
 pub trait TPayoutDecider : Sync + 'static {
@@ -89,12 +79,6 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
 }
 
 impl SLaufendeParams {
-    pub fn new(n_payout_per_lauf: isize, n_lauf_lbound: usize) -> SLaufendeParams {
-        SLaufendeParams {
-            m_n_payout_per_lauf : n_payout_per_lauf,
-            m_n_lauf_lbound : n_lauf_lbound,
-        }
-    }
     pub fn payout_laufende<Rules>(&self, rules: &Rules, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &SEnumMap<EPlayerIndex, bool>) -> isize 
         where Rules: TRules,
     {

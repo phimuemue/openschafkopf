@@ -75,16 +75,9 @@ fn test_unplayed_cards() {
     assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
 }
 
+#[derive(new)]
 pub struct SAiCheating {
     m_n_rank_rules_samples: usize,
-}
-
-impl SAiCheating {
-    pub fn new(n_rank_rules_samples: usize) -> SAiCheating {
-        SAiCheating {
-            m_n_rank_rules_samples: n_rank_rules_samples,
-        }
-    }
 }
 
 impl TAi for SAiCheating {
@@ -260,20 +253,13 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
         .unwrap()
 }
 
+#[derive(new)]
 pub struct SAiSimulating {
     m_n_suggest_card_branches: usize,
     m_n_suggest_card_samples: usize,
     m_n_rank_rules_samples: usize,
 }
-impl SAiSimulating {
-    pub fn new(n_suggest_card_branches: usize, n_suggest_card_samples: usize, n_rank_rules_samples: usize) -> SAiSimulating {
-        SAiSimulating {
-            m_n_suggest_card_branches: n_suggest_card_branches,
-            m_n_suggest_card_samples: n_suggest_card_samples,
-            m_n_rank_rules_samples: n_rank_rules_samples,
-        }
-    }
-}
+
 impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: &SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
         let n_payout_sum = Arc::new(AtomicIsize::new(0));

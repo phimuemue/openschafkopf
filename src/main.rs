@@ -10,6 +10,8 @@ extern crate crossbeam;
 #[macro_use]
 extern crate error_chain;
 extern crate as_num;
+#[macro_use]
+extern crate derive_new;
 
 #[macro_use]
 mod util;
