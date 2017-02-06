@@ -119,11 +119,11 @@ impl SRuleSet {
                 |payoutparams: SPayoutDeciderParams| {
                     EFarbe::values()
                         .filter(|efarbe| EFarbe::Herz!=*efarbe)
-                        .map(|efarbe| Box::new(SRulesRufspiel{
-                            m_epi: epi,
-                            m_efarbe: efarbe,
-                            m_payoutdeciderparams: payoutparams.clone(),
-                        }) as Box<TActivelyPlayableRules>)
+                        .map(|efarbe| Box::new(SRulesRufspiel::new(
+                            epi,
+                            efarbe,
+                            payoutparams.clone(),
+                        )) as Box<TActivelyPlayableRules>)
                         .collect()
                 }
             )?;

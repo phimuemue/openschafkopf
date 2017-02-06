@@ -62,15 +62,15 @@ pub fn test_rules(
 
 fn rulesrufspiel_new_test(epi: EPlayerIndex, efarbe: EFarbe, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesRufspiel {
     // Do not inline this function into SRulesRufspiel. It serves as a bridge between actual implementation and the data we extract for the test suite.
-    SRulesRufspiel{
-        m_epi: epi,
-        m_efarbe: efarbe,
-        m_payoutdeciderparams : SPayoutDeciderParams::new(
+    SRulesRufspiel::new(
+        epi,
+        efarbe,
+        SPayoutDeciderParams::new(
             n_payout_base,
             n_payout_schneider_schwarz,
             laufendeparams,
         ),
-    }
+    )
 }
 
 fn rulessololike_new_test<TrumpfDecider, PayoutDecider>(epi: EPlayerIndex, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider>

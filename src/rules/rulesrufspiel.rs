@@ -6,10 +6,11 @@ use std::fmt;
 use std::cmp::Ordering;
 use util::*;
 
+#[derive(new)]
 pub struct SRulesRufspiel {
-    pub m_epi : EPlayerIndex,
-    pub m_efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
-    pub m_payoutdeciderparams: SPayoutDeciderParams,
+    m_epi : EPlayerIndex,
+    m_efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
+    m_payoutdeciderparams: SPayoutDeciderParams,
 }
 
 impl fmt::Display for SRulesRufspiel {
