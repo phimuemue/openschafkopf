@@ -138,7 +138,7 @@ fn main() {
 fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
     let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_epi| 0), 0);
     for i_game in 0..n_games {
-        let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game));
+        let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset);
         while let Some(epi) = dealcards.which_player_can_do_something() {
             let (txb_doubling, rxb_doubling) = mpsc::channel::<bool>();
             aplayer[epi].ask_for_doubling(
@@ -192,7 +192,6 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                 accountbalance.apply_payout(&game.payout());
             },
             VStockOrT::Stock(n_stock) => {
-                // TODO Rules must we respect doublings?
                 accountbalance.apply_payout(&SAccountBalance::new(
                     EPlayerIndex::map_from_fn(|_epi| -n_stock),
                     4*n_stock,

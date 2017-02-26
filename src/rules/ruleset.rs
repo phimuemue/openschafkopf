@@ -25,9 +25,16 @@ pub enum VStockOrT<T> {
     OrT(T),
 }
 
+pub enum EDoublingScope {
+    Games,
+    GamesAndStock,
+}
+
+#[derive(new)]
 pub struct SRuleSet {
     pub m_avecrulegroup : EnumMap<EPlayerIndex, Vec<SRuleGroup>>,
     pub m_stockorramsch : VStockOrT<Box<TRules>>,
+    pub m_oedoublingscope : Option<EDoublingScope>,
 }
 
 pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> Vec<&TActivelyPlayableRules> {
@@ -185,10 +192,25 @@ impl SRuleSet {
                 &|payoutparams| vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(epi, VGameAnnouncementPriority::SoloSie ,&"Sie", payoutparams)]
             )?;
         }
-        Ok(SRuleSet {
-            m_avecrulegroup : avecrulegroup,
-            m_stockorramsch : stockorramsch,
-        })
+        Ok(SRuleSet::new(
+            avecrulegroup,
+            stockorramsch,
+            tomltbl.lookup("doubling").map(|tomlval_doubling | {
+                if let Some(str_doubling_stock)=tomlval_doubling.lookup("stock").and_then(|tomlval| tomlval.as_str()) {
+                    if "yes"==str_doubling_stock {
+                        EDoublingScope::GamesAndStock
+                    } else {
+                        if "no"!=str_doubling_stock {
+                            println!("doubling.stock has invalid value '{}'. Falling back to 'no'", str_doubling_stock);
+                        }
+                        EDoublingScope::Games
+                    }
+                } else {
+                    println!("doubling.stock not specified; falling back to 'stock=yes'");
+                    EDoublingScope::GamesAndStock
+                }
+            })
+        ))
     }
 
     pub fn from_file(path: &Path) -> Result<SRuleSet> {

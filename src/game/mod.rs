@@ -9,13 +9,14 @@ use rand::{self, Rng};
 
 pub type SDoublings = SPlayersInRound<bool>;
 
-pub struct SDealCards {
+pub struct SDealCards<'rules> {
     m_ahand : EnumMap<EPlayerIndex, SHand>,
     m_doublings : SDoublings,
+    m_ruleset : &'rules SRuleSet,
 }
 
-impl SDealCards {
-    pub fn new(epi_first: EPlayerIndex) -> SDealCards {
+impl<'rules> SDealCards<'rules> {
+    pub fn new(epi_first: EPlayerIndex, ruleset: &SRuleSet) -> SDealCards {
         SDealCards {
             m_ahand : {
                 let mut veccard : Vec<_> = SCard::values().into_iter().collect();
@@ -25,12 +26,14 @@ impl SDealCards {
                 )
             },
             m_doublings: SDoublings::new(epi_first),
+            m_ruleset: ruleset,
         }
     }
 
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
-        // TODO make doublings adjustable (possibly within SRuleSet)
-        self.m_doublings.current_playerindex()
+        self.m_ruleset.m_oedoublingscope.as_ref().and_then(|_edoublingscope|
+            self.m_doublings.current_playerindex()
+        )
     }
 
     pub fn first_hand_for(&self, epi: EPlayerIndex) -> &[SCard] {
@@ -49,6 +52,7 @@ impl SDealCards {
     }
 
     pub fn finish_dealing(self, ruleset: &SRuleSet, n_stock: isize) -> SGamePreparations {
+        assert!(self.which_player_can_do_something().is_none());
         let epi_first = self.m_doublings.first_playerindex();
         SGamePreparations {
             m_ahand : self.m_ahand,
@@ -131,7 +135,14 @@ impl<'rules> SGamePreparations<'rules> {
                     create_game(self.m_ahand, self.m_doublings, self.m_n_stock, rulesramsch.as_ref())
                 },
                 VStockOrT::Stock(n_stock) => {
-                    VStockOrT::Stock(n_stock)
+                    VStockOrT::Stock(match self.m_ruleset.m_oedoublingscope {
+                        None | Some(EDoublingScope::Games) => n_stock,
+                        Some(EDoublingScope::GamesAndStock) => {
+                            n_stock * 2isize.pow(
+                                self.m_doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count().as_num()
+                            )
+                        }
+                    })
                 }
             }
         }
