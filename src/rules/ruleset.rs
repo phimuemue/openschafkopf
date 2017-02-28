@@ -76,10 +76,9 @@ impl SRuleSet {
                     _ => bail!("Invalid value for ramsch.durchmarsch. \"All\" or a number in [61; 120] is supported.")
                 } as Result<_>)?;
                 read_int("ramsch.price").map(|n_price|
-                    VStockOrT::OrT(Box::new(SRulesRamsch{
-                        m_n_price: n_price.as_num(),
-                        m_durchmarsch: durchmarsch,
-                    }) as Box<TRules>)
+                    VStockOrT::OrT(Box::new(
+                        SRulesRamsch::new(n_price.as_num(), durchmarsch)
+                    ) as Box<TRules>)
                 )
             },
             (false, true) => {

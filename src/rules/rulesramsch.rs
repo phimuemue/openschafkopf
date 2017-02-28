@@ -14,9 +14,10 @@ pub enum VDurchmarsch {
     AtLeast(isize),
 }
 
+#[derive(new)]
 pub struct SRulesRamsch {
-    pub m_n_price : isize,
-    pub m_durchmarsch : VDurchmarsch,
+    m_n_price : isize,
+    m_durchmarsch : VDurchmarsch,
 }
 
 impl fmt::Display for SRulesRamsch {

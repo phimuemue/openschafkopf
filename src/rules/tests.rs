@@ -1645,10 +1645,7 @@ fn test_rulesgeier() {
 fn test_rulesramsch() {
     test_rules(
         "0 has durchmarsch all",
-        &SRulesRamsch {
-            m_n_price: 10,
-            m_durchmarsch: VDurchmarsch::All,
-        },
+        &SRulesRamsch::new(10, VDurchmarsch::All),
         ["eo eu ha ea ga sa e8 h8","go gu hz ez gz sz e7 h7","ho hu hk ek gk sk g8 s8","so su h9 e9 g9 s9 g7 s7",],
         vec![],
         vec![],
@@ -1666,10 +1663,7 @@ fn test_rulesramsch() {
     );
     test_rules(
         "0 has durchmarsch 120",
-        &SRulesRamsch {
-            m_n_price: 10,
-            m_durchmarsch: VDurchmarsch::AtLeast(120),
-        },
+        &SRulesRamsch::new(10, VDurchmarsch::AtLeast(120)),
         ["eo eu ha ea ga sa e8 h8","go gu hz ez gz sz e7 h7","ho hu hk ek gk sk g8 s8","so su h9 e9 g9 s9 g7 s7",],
         vec![],
         vec![],
@@ -1687,10 +1681,7 @@ fn test_rulesramsch() {
     );
     test_rules(
         "0 has 120, but no durchmarsch",
-        &SRulesRamsch {
-            m_n_price: 10,
-            m_durchmarsch: VDurchmarsch::All,
-        },
+        &SRulesRamsch::new(10, VDurchmarsch::All),
         ["eo eu ha ea ga sa e8 h7","go gu hz ez gz sz e7 h8","ho hu hk ek gk sk g8 s8","so su h9 e9 g9 s9 g7 s7",],
         vec![],
         vec![],
