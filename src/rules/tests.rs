@@ -31,7 +31,7 @@ pub fn test_rules(
         m_ahand : EPlayerIndex::map_from_fn(|epi| {
             SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
         }),
-        m_rules: rules,
+        m_rules: rules.box_clone(),
         m_n_stock: 0, // TODO test stock
         m_vecstoss: vec![],
     };

@@ -8,13 +8,14 @@ use std::cmp::Ordering;
 use itertools::Itertools;
 use util::*;
 
+#[derive(Clone)]
 pub enum VDurchmarsch {
     None,
     All,
     AtLeast(isize),
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct SRulesRamsch {
     m_n_price : isize,
     m_durchmarsch : VDurchmarsch,
@@ -32,6 +33,7 @@ pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag<
     SFarbeDesignatorHerz>>>;
 
 impl TRules for SRulesRamsch {
+    box_clone_impl_by_clone!(TRules);
     impl_rules_trumpf!(STrumpfDeciderRamsch);
 
     fn stoss_allowed(&self, _epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {

@@ -49,6 +49,8 @@ pub struct SStoss {
 }
 
 pub trait TRules : fmt::Display + TAsRules + Sync {
+    box_clone_require!(TRules);
+
     // TTrumpfDecider
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
     fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering;
@@ -129,6 +131,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
         });
     }
 }
+box_clone_impl_box!(TRules);
 
 // TODO Rust: Objects should be upcastable to supertraits
 // https://github.com/rust-lang/rust/issues/5665

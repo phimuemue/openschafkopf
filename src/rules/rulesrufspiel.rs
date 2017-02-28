@@ -6,7 +6,7 @@ use std::fmt;
 use std::cmp::Ordering;
 use util::*;
 
-#[derive(new)]
+#[derive(Clone, new)]
 pub struct SRulesRufspiel {
     m_epi : EPlayerIndex,
     m_efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
@@ -41,6 +41,7 @@ impl TActivelyPlayableRules for SRulesRufspiel {
 }
 
 impl TRules for SRulesRufspiel {
+    box_clone_impl_by_clone!(TRules);
     impl_rules_trumpf!(STrumpfDeciderRufspiel);
 
     fn can_be_played(&self, hand: &SFullHand) -> bool {

@@ -84,7 +84,7 @@ impl TPlayer for SPlayerHuman {
                         skui::wprintln(ncwin, &format!("AI: {}", card));
                     }
                     skui::print_hand(hand.cards(), Some(i_card_chosen));
-                    skui::print_game_info(game.m_rules, &game.m_doublings, &game.m_vecstoss);
+                    skui::print_game_info(game.m_rules.as_ref(), &game.m_doublings, &game.m_vecstoss);
                 },
                 || {Some(self.m_ai.suggest_card(game))}
             )

@@ -7,6 +7,7 @@ use std::cmp::Ordering;
 use std::marker::PhantomData;
 use util::*;
 
+#[derive(Clone)]
 pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
           PayoutDecider: TPayoutDecider,
@@ -41,6 +42,7 @@ impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, Payo
     where TrumpfDecider: TTrumpfDecider,
           PayoutDecider: TPayoutDecider,
 {
+    box_clone_impl_by_clone!(TRules);
     impl_rules_trumpf!(TrumpfDecider);
 
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {

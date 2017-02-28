@@ -106,7 +106,7 @@ impl<'rules> SGamePreparations<'rules> {
         Ok(())
     }
 
-    pub fn determine_rules(self) -> VStockOrT<SPreGame<'rules>> {
+    pub fn determine_rules(self) -> VStockOrT<SPreGame> {
         // TODO: find sensible way to deal with multiple game announcements (currently, we choose highest priority)
         let create_game = move |ahand, doublings, n_stock, rules| {
             VStockOrT::OrT(SPreGame {
@@ -128,11 +128,11 @@ impl<'rules> SGamePreparations<'rules> {
             let rules_actively_played = vecrules_announced.into_iter()
                 .find(|rules| rules.priority()==prio_best)
                 .unwrap();
-            create_game(self.m_ahand, self.m_doublings, self.m_n_stock, rules_actively_played.as_rules())
+            create_game(self.m_ahand, self.m_doublings, self.m_n_stock, rules_actively_played.box_clone())
         } else {
             match self.m_ruleset.m_stockorramsch {
                 VStockOrT::OrT(ref rulesramsch) => {
-                    create_game(self.m_ahand, self.m_doublings, self.m_n_stock, rulesramsch.as_ref())
+                    create_game(self.m_ahand, self.m_doublings, self.m_n_stock, rulesramsch.box_clone())
                 },
                 VStockOrT::Stock(n_stock) => {
                     VStockOrT::Stock(match self.m_ruleset.m_oedoublingscope {
@@ -149,15 +149,15 @@ impl<'rules> SGamePreparations<'rules> {
     }
 }
 
-pub struct SPreGame<'rules> {
+pub struct SPreGame {
     pub m_ahand : EnumMap<EPlayerIndex, SHand>,
     pub m_doublings : SDoublings,
-    pub m_rules : &'rules TRules,
+    pub m_rules : Box<TRules>,
     pub m_vecstoss : Vec<SStoss>,
     pub m_n_stock : isize,
 }
 
-impl<'rules> SPreGame<'rules> {
+impl SPreGame {
     pub fn which_player_can_do_something(&self) -> Vec<EPlayerIndex> {
         if self.m_vecstoss.len() < 4 {
             EPlayerIndex::values()
@@ -179,7 +179,7 @@ impl<'rules> SPreGame<'rules> {
         Ok(())
     }
 
-    pub fn finish(self) -> SGame<'rules> {
+    pub fn finish(self) -> SGame {
         let epi_first = self.m_doublings.first_playerindex();
         SGame {
             m_ahand : self.m_ahand,
@@ -192,16 +192,16 @@ impl<'rules> SPreGame<'rules> {
     }
 }
 
-pub struct SGame<'rules> {
+pub struct SGame {
     pub m_ahand : EnumMap<EPlayerIndex, SHand>,
     pub m_doublings : SDoublings,
-    pub m_rules : &'rules TRules,
+    pub m_rules : Box<TRules>,
     pub m_vecstoss : Vec<SStoss>,
     pub m_n_stock : isize,
     pub m_vecstich : Vec<SStich>,
 }
 
-impl<'rules> SGame<'rules> {
+impl SGame {
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
         self.current_stich().current_playerindex()
     }

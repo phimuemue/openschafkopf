@@ -169,7 +169,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                         aplayer[*epi].ask_for_stoss(
                             *epi,
                             &pregame.m_doublings,
-                            pregame.m_rules,
+                            pregame.m_rules.as_ref(),
                             &pregame.m_ahand[*epi],
                             &pregame.m_vecstoss,
                             pregame.m_n_stock,

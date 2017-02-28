@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 use std::marker::PhantomData;
 use util::*;
 
-pub trait TTrumpfDecider : Sync + 'static {
+pub trait TTrumpfDecider : Sync + 'static + Clone {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe;
 
     fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> Vec<SCard>;
@@ -24,6 +24,7 @@ pub trait TTrumpfDecider : Sync + 'static {
     }
 }
 
+#[derive(Clone)]
 pub struct STrumpfDeciderNoTrumpf {}
 impl TTrumpfDecider for STrumpfDeciderNoTrumpf {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
@@ -37,12 +38,15 @@ impl TTrumpfDecider for STrumpfDeciderNoTrumpf {
     }
 }
 
-pub trait TSchlagDesignator : Sync + 'static {fn schlag() -> ESchlag;}
+pub trait TSchlagDesignator : Sync + 'static + Clone {fn schlag() -> ESchlag;}
+#[derive(Clone)]
 pub struct SSchlagDesignatorOber {}
+#[derive(Clone)]
 pub struct SSchlagDesignatorUnter {}
 impl TSchlagDesignator for SSchlagDesignatorOber { fn schlag() -> ESchlag {ESchlag::Ober} }
 impl TSchlagDesignator for SSchlagDesignatorUnter { fn schlag() -> ESchlag {ESchlag::Unter} }
 
+#[derive(Clone)]
 pub struct STrumpfDeciderSchlag<SchlagDesignator, DeciderSec> {
     m_schlagdesignator: PhantomData<SchlagDesignator>,
     m_decidersec: PhantomData<DeciderSec>,
@@ -87,16 +91,21 @@ impl<SchlagDesignator, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<Schla
     }
 }
 
-pub trait TFarbeDesignator : Sync + 'static {fn farbe() -> EFarbe;}
+pub trait TFarbeDesignator : Sync + 'static + Clone {fn farbe() -> EFarbe;}
+#[derive(Clone)]
 pub struct SFarbeDesignatorEichel {}
 impl TFarbeDesignator for SFarbeDesignatorEichel { fn farbe() -> EFarbe {EFarbe::Eichel} }
+#[derive(Clone)]
 pub struct SFarbeDesignatorGras {}
 impl TFarbeDesignator for SFarbeDesignatorGras { fn farbe() -> EFarbe {EFarbe::Gras} }
+#[derive(Clone)]
 pub struct SFarbeDesignatorHerz {}
 impl TFarbeDesignator for SFarbeDesignatorHerz { fn farbe() -> EFarbe {EFarbe::Herz} }
+#[derive(Clone)]
 pub struct SFarbeDesignatorSchelln {}
 impl TFarbeDesignator for SFarbeDesignatorSchelln { fn farbe() -> EFarbe {EFarbe::Schelln} }
 
+#[derive(Clone)]
 pub struct STrumpfDeciderFarbe<FarbeDesignator> {
     m_farbedesignator: PhantomData<FarbeDesignator>,
 }

@@ -185,7 +185,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                 let susp = SSuspicion::new(
                     stich_current.first_playerindex(),
                     ahand,
-                    game.m_rules,
+                    game.m_rules.as_ref(),
                     &mut vecstich_complete_mut,
                     &|vecstich_complete_successor: &[SStich], vecstich_successor: &mut Vec<SStich>| {
                         assert!(!vecstich_successor.is_empty());
@@ -204,7 +204,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                     }
                 );
                 assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
-                if susp.print_suspicion(8, 0, game.m_rules, &mut vecstich_complete_mut, Some((*stich_current).clone()), &mut fs::File::create(&"suspicion.txt").unwrap()).is_err() {
+                if susp.print_suspicion(8, 0, game.m_rules.as_ref(), &mut vecstich_complete_mut, Some((*stich_current).clone()), &mut fs::File::create(&"suspicion.txt").unwrap()).is_err() {
                     // TODO: what shall be done on error?
                 }
                 vecsusp.lock().unwrap().push(susp);
@@ -222,7 +222,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                     .map(|susptrans| {
                         let n_payout = push_pop_vecstich(&mut vecstich_complete_payout, susptrans.stich().clone(), |mut vecstich_complete_payout| {
                             susptrans.suspicion().min_reachable_payout(
-                                game.m_rules,
+                                game.m_rules.as_ref(),
                                 &mut vecstich_complete_payout,
                                 None,
                                 epi_fixed,
@@ -305,14 +305,14 @@ impl TAi for SAiSimulating {
             determine_best_card(
                 game,
                 all_possible_hands(game.completed_stichs(), hand_fixed.clone(), epi_fixed)
-                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules, &game.m_vecstich)),
+                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules.as_ref(), &game.m_vecstich)),
                 self.m_n_suggest_card_branches,
             )
         } else {
             determine_best_card(
                 game,
                 forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), epi_fixed)
-                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules, &game.m_vecstich))
+                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules.as_ref(), &game.m_vecstich))
                     .take(self.m_n_suggest_card_samples),
                 self.m_n_suggest_card_branches,
             )
@@ -337,7 +337,7 @@ fn test_is_compatible_with_game_so_far() {
             m_ahand : EPlayerIndex::map_from_fn(|epi| {
                 SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
             }),
-            m_rules : rules,
+            m_rules : rules.box_clone(),
             m_vecstich : vec![SStich::new(epi_first)],
             m_n_stock: 0,
             m_vecstoss : vec![], // TODO implement tests for SStoss
@@ -364,7 +364,7 @@ fn test_is_compatible_with_game_so_far() {
                 game.m_ahand[game.which_player_can_do_something().unwrap()].clone(),
                 game.which_player_can_do_something().unwrap()
             )
-                .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules, &game.m_vecstich))
+                .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules.as_ref(), &game.m_vecstich))
                 .take(100)
             {
                 for epi in EPlayerIndex::values() {

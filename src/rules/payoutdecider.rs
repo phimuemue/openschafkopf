@@ -3,6 +3,7 @@ use rules::*;
 use rules::card_points::*;
 use util::*;
 
+#[derive(Clone)]
 pub struct SStossDoublingPayoutDecider {}
 impl SStossDoublingPayoutDecider {
     pub fn payout(an_payout_raw: EnumMap<EPlayerIndex, isize>, n_stoss: usize, n_doubling: usize) -> EnumMap<EPlayerIndex, isize> {
@@ -25,7 +26,7 @@ pub struct SPayoutDeciderParams {
     pub m_laufendeparams : SLaufendeParams,
 }
 
-pub trait TPayoutDecider : Sync + 'static {
+pub trait TPayoutDecider : Sync + 'static + Clone {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         rules: &Rules,
         gamefinishedstiche: &SGameFinishedStiche,
@@ -38,6 +39,7 @@ pub trait TPayoutDecider : Sync + 'static {
               Rules: TRules;
 }
 
+#[derive(Clone)]
 pub struct SPayoutDeciderPointBased {}
 
 impl TPayoutDecider for SPayoutDeciderPointBased {
@@ -103,6 +105,7 @@ fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_player_
     })
 }
 
+#[derive(Clone)]
 pub struct SPayoutDeciderTout {}
 
 impl TPayoutDecider for SPayoutDeciderTout {
@@ -131,6 +134,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
     }
 }
 
+#[derive(Clone)]
 pub struct SPayoutDeciderSie {}
 
 impl TPayoutDecider for SPayoutDeciderSie {
