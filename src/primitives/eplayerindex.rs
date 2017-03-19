@@ -1,3 +1,4 @@
+use arrayvec;
 use arrayvec::ArrayVec;
 
 use std::ops::Index;
@@ -117,6 +118,12 @@ impl<T> SPlayersInRound<T> {
     pub fn iter(&self) -> SPlayersInRoundIterator<slice::Iter<T>> {
         SPlayersInRoundIterator {
             m_iter: self.m_vect.iter(),
+            m_n_epi: self.m_epi_first.to_usize(),
+        }
+    }
+    pub fn into_iter(self) -> SPlayersInRoundIterator<arrayvec::IntoIter<[T; 4]>> {
+        SPlayersInRoundIterator {
+            m_iter: self.m_vect.into_iter(),
             m_n_epi: self.m_epi_first.to_usize(),
         }
     }

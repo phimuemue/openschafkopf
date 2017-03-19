@@ -117,8 +117,8 @@ impl<'rules> SGamePreparations<'rules> {
                 m_n_stock : n_stock,
             })
         };
-        let vecrules_announced : Vec<&TActivelyPlayableRules> = self.m_gameannouncements.iter()
-            .filter_map(|(_epi, orules)| *orules)
+        let vecrules_announced : Vec<&TActivelyPlayableRules> = self.m_gameannouncements.into_iter()
+            .filter_map(|(_epi, orules)| orules)
             .collect();
         if 0<vecrules_announced.len() {
             let prio_best = vecrules_announced.iter()
