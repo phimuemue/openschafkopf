@@ -174,7 +174,7 @@ impl SRuleSet {
                     create_rulegroup_sololike!(
                         "geier",
                         &str_rulename,
-                        |payoutparams| vec![sololike::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, $payoutdecider>(epi, $fn_prio(-3),&str_rulename, payoutparams)]
+                        |payoutparams| vec![sololike::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, $payoutdecider>(epi, $fn_prio(-3),&str_rulename, payoutparams)]
                     )?;
                     create_rulegroup_sololike!(
                         "farbgeier",
