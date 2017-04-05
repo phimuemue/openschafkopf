@@ -27,6 +27,7 @@ mod skui;
 use game::*;
 use std::sync::mpsc;
 use primitives::*;
+use rules::TActivelyPlayableRules; // TODO improve trait-object behaviour
 use rules::ruleset::*;
 use rules::wrappers::*;
 use ai::*;
@@ -158,7 +159,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                 gamepreparations.m_n_stock,
                 txorules.clone()
             );
-            gamepreparations.announce_game(epi, rxorules.recv().unwrap()).unwrap();
+            gamepreparations.announce_game(epi, rxorules.recv().unwrap().map(|rules| TActivelyPlayableRules::box_clone(rules))).unwrap();
         }
         skui::logln("Asked players if they want to play. Determining rules");
         match gamepreparations.determine_rules() {

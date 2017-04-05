@@ -35,6 +35,7 @@ impl SRulesRufspiel {
 }
 
 impl TActivelyPlayableRules for SRulesRufspiel {
+    box_clone_impl_by_clone!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::RufspielLike
     }

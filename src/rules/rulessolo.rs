@@ -33,6 +33,7 @@ impl<TrumpfDecider, PayoutDecider> TActivelyPlayableRules for SRulesSoloLike<Tru
     where TrumpfDecider: TTrumpfDecider,
           PayoutDecider: TPayoutDecider,
 {
+    box_clone_impl_by_clone!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority {
         self.m_prio.clone()
     }

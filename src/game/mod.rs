@@ -66,13 +66,13 @@ impl<'rules> SDealCards<'rules> {
 
 }
 
-pub type SGameAnnouncements<'rules> = SPlayersInRound<Option<&'rules TActivelyPlayableRules>>;
+pub type SGameAnnouncements = SPlayersInRound<Option<Box<TActivelyPlayableRules>>>;
 
 pub struct SGamePreparations<'rules> {
     pub m_ahand : EnumMap<EPlayerIndex, SHand>,
     m_doublings : SDoublings,
     pub m_ruleset : &'rules SRuleSet,
-    pub m_gameannouncements : SGameAnnouncements<'rules>,
+    pub m_gameannouncements : SGameAnnouncements,
     pub m_n_stock : isize,
 }
 
@@ -94,11 +94,11 @@ impl<'rules> SGamePreparations<'rules> {
         self.m_gameannouncements.current_playerindex()
     }
 
-    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<&'rules TActivelyPlayableRules>) -> Result<()> {
+    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<TActivelyPlayableRules>>) -> Result<()> {
         if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
-        if orules.map_or(false, |rules| Some(epi)!=rules.playerindex()) {
+        if orules.as_ref().map_or(false, |rules| Some(epi)!=rules.playerindex()) {
             bail!("Only actively playable rules can be announced");
         }
         self.m_gameannouncements.push(orules);
@@ -117,7 +117,7 @@ impl<'rules> SGamePreparations<'rules> {
                 m_n_stock : n_stock,
             })
         };
-        let vecrules_announced : Vec<&TActivelyPlayableRules> = self.m_gameannouncements.into_iter()
+        let vecrules_announced : Vec<Box<TActivelyPlayableRules>> = self.m_gameannouncements.into_iter()
             .filter_map(|(_epi, orules)| orules)
             .collect();
         if 0<vecrules_announced.len() {
@@ -128,7 +128,7 @@ impl<'rules> SGamePreparations<'rules> {
             let rules_actively_played = vecrules_announced.into_iter()
                 .find(|rules| rules.priority()==prio_best)
                 .unwrap();
-            create_game(self.m_ahand, self.m_doublings, self.m_n_stock, rules_actively_played.box_clone())
+            create_game(self.m_ahand, self.m_doublings, self.m_n_stock, rules_actively_played.as_rules().box_clone())
         } else {
             match self.m_ruleset.m_stockorramsch {
                 VStockOrT::OrT(ref rulesramsch) => {

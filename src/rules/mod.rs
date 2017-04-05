@@ -178,8 +178,10 @@ fn test_gameannouncementprio() {
 }
 
 pub trait TActivelyPlayableRules : TRules {
+    box_clone_require!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority;
 }
+box_clone_impl_box!(TActivelyPlayableRules);
 
 pub fn compare_farbcards_same_color(card_fst: SCard, card_snd: SCard) -> Ordering {
     let get_schlag_value = |card: SCard| { match card.schlag() {
