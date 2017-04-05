@@ -121,12 +121,6 @@ impl<T> SPlayersInRound<T> {
             m_n_epi: self.m_epi_first.to_usize(),
         }
     }
-    pub fn into_iter(self) -> SPlayersInRoundIterator<arrayvec::IntoIter<[T; 4]>> {
-        SPlayersInRoundIterator {
-            m_iter: self.m_vect.into_iter(),
-            m_n_epi: self.m_epi_first.to_usize(),
-        }
-    }
     fn valid_index(&self, epi: EPlayerIndex) -> bool {
         if epi >= self.m_epi_first {
             self.size() > epi.to_usize()-self.m_epi_first.to_usize()
@@ -139,6 +133,17 @@ impl<T> SPlayersInRound<T> {
             Some(&self[epi])
         } else {
             None
+        }
+    }
+}
+
+impl<T> IntoIterator for SPlayersInRound<T> {
+    type Item = (EPlayerIndex, T);
+    type IntoIter = SPlayersInRoundIterator<arrayvec::IntoIter<[T; 4]>>;
+    fn into_iter(self) -> Self::IntoIter {
+        SPlayersInRoundIterator {
+            m_iter: self.m_vect.into_iter(),
+            m_n_epi: self.m_epi_first.to_usize(),
         }
     }
 }
