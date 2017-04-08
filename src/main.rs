@@ -14,6 +14,7 @@ extern crate as_num;
 extern crate plain_enum;
 #[macro_use]
 extern crate derive_new;
+extern crate toml;
 
 #[macro_use]
 mod util;
@@ -41,6 +42,7 @@ mod errors {
     error_chain!{
         foreign_links {
             Io(::std::io::Error);
+            TomlErr(::toml::de::Error);
         }
     }
 }

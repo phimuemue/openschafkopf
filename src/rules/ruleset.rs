@@ -1,5 +1,3 @@
-extern crate toml;
-
 use primitives::*;
 use rules::*;
 use rules::rulesrufspiel::*;
@@ -13,6 +11,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
+use toml;
 use errors::*;
 
 pub struct SRuleGroup {
@@ -43,9 +42,9 @@ pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> Vec<&TActivelyPlayableRules
 
 impl SRuleSet {
     pub fn from_string(str_toml: &str) -> Result<SRuleSet> {
-        let tomltbl = toml::Parser::new(str_toml).parse().map(toml::Value::Table).ok_or("Parsing error.")?;
-        let read_int = |str_key: &str| -> Result<i64> {
-            if let Some(n) = tomltbl.lookup(str_key).and_then(|tomlval| tomlval.as_integer()) {
+        let tomltbl = str_toml.parse::<toml::Value>()?;
+        let read_int = |tomlval: &toml::Value, str_key: &str| -> Result<i64> {
+            if let Some(n) = tomlval.get(str_key).and_then(|tomlval| tomlval.as_integer()) {
                 if 0<=n {
                     Ok(n)
                 } else {
@@ -57,15 +56,15 @@ impl SRuleSet {
         };
         let fallback = |str_not_found: &str, str_fallback: &str| {
             println!("Did not find {}. Falling back to {}.", str_not_found, str_fallback);
-            read_int(str_fallback)
+            read_int(&tomltbl, str_fallback)
         };
-        let stockorramsch = match (tomltbl.lookup("ramsch").is_some(), tomltbl.lookup("stock").is_some()) {
-            (true, true) => {
+        let stockorramsch = match (tomltbl.get("ramsch"), tomltbl.get("stock")) {
+            (Some(_), Some(_)) => {
                 // TODO rules: Better alternatives? Allow stock *and* ramsch at the same time?
                 bail!("Currently, having both Ramsch and Stock is not supported.")
             },
-            (true, false) => {
-                let durchmarsch = (match tomltbl.lookup("ramsch.durchmarsch") {
+            (Some(val_ramsch), None) => {
+                let durchmarsch = (match val_ramsch.get("durchmarsch") {
                     None => Ok(VDurchmarsch::None),
                     Some(&toml::Value::String(ref str_durchmarsch)) if "all"==str_durchmarsch => {
                         Ok(VDurchmarsch::All)
@@ -75,26 +74,26 @@ impl SRuleSet {
                     },
                     _ => bail!("Invalid value for ramsch.durchmarsch. \"All\" or a number in [61; 120] is supported.")
                 } as Result<_>)?;
-                read_int("ramsch.price").map(|n_price|
+                read_int(&val_ramsch, "price").map(|n_price|
                     VStockOrT::OrT(Box::new(
                         SRulesRamsch::new(n_price.as_num(), durchmarsch)
                     ) as Box<TRules>)
                 )
             },
-            (false, true) => {
-                read_int("stock.price").or_else(|_err| fallback("stock.price", "base-price")).map(|n_price| VStockOrT::Stock(n_price.as_num()))
+            (None, Some(val_stock)) => {
+                read_int(&val_stock, "price").or_else(|_err| fallback("stock.price", "base-price")).map(|n_price| VStockOrT::Stock(n_price.as_num()))
             },
-            (false, false) => {
+            (None, None) => {
                 Ok(VStockOrT::Stock(0)) // represent "no stock" by using a zero stock payment
             }
         }?;
         let mut avecrulegroup = EPlayerIndex::map_from_fn(|_epi| Vec::new());
         for epi in EPlayerIndex::values() {
             let vecrulegroup = &mut avecrulegroup[epi];
-            let payoutparams_active = |str_game: &str, str_base_price_fallback: &str| -> Result<SPayoutDeciderParams> {
-                let n_payout_extra = read_int(&format!("{}.extra", str_game)).or_else(|_err| fallback(&format!("{}.extra", str_game), "base-price"))?;
-                let n_payout_base = read_int(&format!("{}.price", str_game)).or_else(|_err| fallback(&format!("{}.price", str_game), str_base_price_fallback))?;
-                let n_lauf_lbound = read_int(&format!("{}.lauf-price", str_game)).or_else(|_err| fallback(&format!("{}.lauf-price", str_game), "lauf-min"))?;
+            let payoutparams_active = |tomlval_game: &toml::Value, str_game: &str, str_base_price_fallback: &str| -> Result<SPayoutDeciderParams> {
+                let n_payout_extra = read_int(tomlval_game, ("extra")).or_else(|_err| fallback(&format!("{}.extra", str_game), "base-price"))?;
+                let n_payout_base = read_int(tomlval_game, ("price")).or_else(|_err| fallback(&format!("{}.price", str_game), str_base_price_fallback))?;
+                let n_lauf_lbound = read_int(tomlval_game, ("lauf-price")).or_else(|_err| fallback(&format!("{}.lauf-price", str_game), "lauf-min"))?;
                 Ok(SPayoutDeciderParams::new(
                     n_payout_base.as_num(),
                     /*n_payout_schneider_schwarz*/n_payout_extra.as_num(),
@@ -105,8 +104,8 @@ impl SRuleSet {
                 ))
             };
             macro_rules! create_rulegroup {($str_rule_name_file: expr, $str_base_price_fallback: expr, $str_group_name: expr, $fn_rules: expr) => {
-                if tomltbl.lookup($str_rule_name_file).is_some() {
-                    let payoutparams = payoutparams_active($str_rule_name_file, $str_base_price_fallback)?;
+                if let Some(tomlval_game) = tomltbl.get($str_rule_name_file) {
+                    let payoutparams = payoutparams_active(tomlval_game, $str_rule_name_file, $str_base_price_fallback)?;
                     Ok(vecrulegroup.push(SRuleGroup{
                         m_str_name: $str_group_name.to_string(),
                         m_vecrules: ($fn_rules(payoutparams.clone())),
@@ -194,8 +193,8 @@ impl SRuleSet {
         Ok(SRuleSet::new(
             avecrulegroup,
             stockorramsch,
-            tomltbl.lookup("doubling").map(|tomlval_doubling | {
-                if let Some(str_doubling_stock)=tomlval_doubling.lookup("stock").and_then(|tomlval| tomlval.as_str()) {
+            tomltbl.get("doubling").map(|tomlval_doubling | {
+                if let Some(str_doubling_stock)=tomlval_doubling.get("stock").and_then(|tomlval| tomlval.as_str()) {
                     if "yes"==str_doubling_stock {
                         EDoublingScope::GamesAndStock
                     } else {
