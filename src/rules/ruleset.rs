@@ -90,14 +90,14 @@ impl SRuleSet {
                     },
                     _ => bail!("Invalid value for ramsch.durchmarsch. \"All\" or a number in [61; 120] is supported.")
                 } as Result<_>)?;
-                read_int(&val_ramsch, "price").map(|n_price|
+                read_int(val_ramsch, "price").map(|n_price|
                     VStockOrT::OrT(Box::new(
                         SRulesRamsch::new(n_price.as_num(), durchmarsch)
                     ) as Box<TRules>)
                 )
             },
             (None, Some(val_stock)) => {
-                read_int(&val_stock, "price").or_else(|_err| fallback("stock.price", "base-price")).map(|n_price| VStockOrT::Stock(n_price.as_num()))
+                read_int(val_stock, "price").or_else(|_err| fallback("stock.price", "base-price")).map(|n_price| VStockOrT::Stock(n_price.as_num()))
             },
             (None, None) => {
                 Ok(VStockOrT::Stock(0)) // represent "no stock" by using a zero stock payment
