@@ -67,7 +67,7 @@ impl<T> Index<EPlayerIndex> for SPlayersInRound<T> {
     type Output = T;
     fn index(&self, epi : EPlayerIndex) -> &T {
         assert!(self.valid_index(epi));
-        &self.m_vect[epi.wrapped_difference(self.m_epi_first)]
+        &self.m_vect[self.position(epi)]
     }
 }
 
@@ -121,12 +121,11 @@ impl<T> SPlayersInRound<T> {
             m_n_epi: self.m_epi_first.to_usize(),
         }
     }
+    fn position(&self, epi: EPlayerIndex) -> usize {
+        epi.wrapped_difference(self.m_epi_first)
+    }
     fn valid_index(&self, epi: EPlayerIndex) -> bool {
-        if epi >= self.m_epi_first {
-            self.size() > epi.to_usize()-self.m_epi_first.to_usize()
-        } else {
-            self.size() > 4-self.m_epi_first.to_usize()+epi.to_usize()
-        }
+        self.position(epi)<self.size()
     }
     pub fn get(&self, epi: EPlayerIndex) -> Option<&T> {
         if self.valid_index(epi) {
