@@ -38,7 +38,15 @@ impl TPlayer for SPlayerComputer {
         txcard.send(self.m_ai.suggest_card(game)).ok();
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SFullHand, gameannouncements : &SGameAnnouncements, vecrulegroup: &'rules [SRuleGroup], n_stock: isize, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
+    fn ask_for_game<'rules>(
+        &self,
+        hand: &SFullHand,
+        gameannouncements : &SGameAnnouncements,
+        vecrulegroup: &'rules [SRuleGroup],
+        n_stock: isize,
+        _opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
+        txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>
+    ) {
         // TODO: implement a more intelligent decision strategy
         txorules.send(allowed_rules(vecrulegroup).iter()
             .filter(|rules| rules.can_be_played(hand))

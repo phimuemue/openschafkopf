@@ -19,6 +19,22 @@ pub struct SRuleGroup {
     pub m_vecrules : Vec<Box<TActivelyPlayableRules>>,
 }
 
+impl SRuleGroup {
+    pub fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<SRuleGroup> {
+        let vecrules_steigered = self.m_vecrules.iter()
+            .filter_map(|rules| rules.with_higher_prio_than(prio, ebid))
+            .collect::<Vec<_>>();
+        if 0<vecrules_steigered.len() {
+            Some(SRuleGroup {
+                m_str_name: self.m_str_name.clone(),
+                m_vecrules: vecrules_steigered,
+            })
+        } else {
+            None
+        }
+    }
+}
+
 pub enum VStockOrT<T> {
     Stock(/*n_stock*/isize), // number must be positive, but use isize since it is essentially a payment
     OrT(T),

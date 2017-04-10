@@ -145,7 +145,7 @@ impl<Rules: TRules> TAsRules for Rules {
     }
 }
 
-#[derive(PartialEq, Eq, Clone, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, Clone, PartialOrd, Ord, Debug)] // TODO impl Display
 pub enum VGameAnnouncementPriority {
     // state priorities in ascending order
     RufspielLike,
@@ -177,9 +177,15 @@ fn test_gameannouncementprio() {
     assert!(SoloTout(0)<SoloTout(1));
 }
 
+plain_enum_mod!(modebid, EBid {
+    AtLeast,
+    Higher,
+});
+
 pub trait TActivelyPlayableRules : TRules {
     box_clone_require!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority;
+    fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<TActivelyPlayableRules>>;
 }
 box_clone_impl_box!(TActivelyPlayableRules);
 

@@ -37,6 +37,17 @@ impl<TrumpfDecider, PayoutDecider> TActivelyPlayableRules for SRulesSoloLike<Tru
     fn priority(&self) -> VGameAnnouncementPriority {
         self.m_prio.clone()
     }
+    fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<TActivelyPlayableRules>> {
+        // TODO? move m_prio into PayoutDecider
+        if match ebid {
+            EBid::AtLeast => {prio<=&self.m_prio},
+            EBid::Higher => {prio<&self.m_prio},
+        } {
+            Some(TActivelyPlayableRules::box_clone(self))
+        } else {
+            None
+        }
+    }
 }
 
 impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, PayoutDecider> 

@@ -39,6 +39,9 @@ impl TActivelyPlayableRules for SRulesRufspiel {
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::RufspielLike
     }
+    fn with_higher_prio_than(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Box<TActivelyPlayableRules>> {
+        None // SRulesRufspiel supports only RufspielLike
+    }
 }
 
 impl TRules for SRulesRufspiel {

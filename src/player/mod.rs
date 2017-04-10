@@ -23,6 +23,7 @@ pub trait TPlayer {
         gameannouncements: &SGameAnnouncements,
         vecrulegroup: &'rules [SRuleGroup],
         n_stock: isize,
+        opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>
     );
 

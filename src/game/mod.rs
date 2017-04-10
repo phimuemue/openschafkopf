@@ -6,6 +6,7 @@ use util::*;
 use errors::*;
 
 use rand::{self, Rng};
+use std::mem;
 
 pub type SDoublings = SPlayersInRound<bool>;
 
@@ -89,6 +90,13 @@ pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
     })
 }
 
+pub enum VGamePreparationsFinish<'rules> {
+    DetermineRules(SDetermineRules<'rules>),
+    DirectGame(SPreGame),
+    Stock(/*n_stock*/isize),
+
+}
+
 impl<'rules> SGamePreparations<'rules> {
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
         self.m_gameannouncements.current_playerindex()
@@ -106,36 +114,31 @@ impl<'rules> SGamePreparations<'rules> {
         Ok(())
     }
 
-    pub fn determine_rules(self) -> VStockOrT<SPreGame> {
-        // TODO: find sensible way to deal with multiple game announcements (currently, we choose highest priority)
-        let create_game = move |ahand, doublings, n_stock, rules| {
-            VStockOrT::OrT(SPreGame {
-                m_ahand : ahand,
-                m_doublings : doublings,
-                m_rules : rules,
-                m_vecstoss : vec![],
-                m_n_stock : n_stock,
-            })
-        };
-        let vecrules_announced : Vec<Box<TActivelyPlayableRules>> = self.m_gameannouncements.into_iter()
-            .filter_map(|(_epi, orules)| orules)
+    pub fn finish(self) -> VGamePreparationsFinish<'rules> {
+        let vecpairepirules : Vec<(_, Box<TActivelyPlayableRules>)> = self.m_gameannouncements.into_iter()
+            .filter_map(|(epi, orules)| orules.map(|rules| (epi, rules)))
             .collect();
-        if 0<vecrules_announced.len() {
-            let prio_best = vecrules_announced.iter()
-                .map(|rules| rules.priority())
-                .max()
-                .unwrap();
-            let rules_actively_played = vecrules_announced.into_iter()
-                .find(|rules| rules.priority()==prio_best)
-                .unwrap();
-            create_game(self.m_ahand, self.m_doublings, self.m_n_stock, rules_actively_played.as_rules().box_clone())
+        if !vecpairepirules.is_empty() {
+            VGamePreparationsFinish::DetermineRules(SDetermineRules::new(
+                self.m_ahand,
+                self.m_doublings,
+                self.m_ruleset,
+                vecpairepirules,
+                self.m_n_stock,
+            ))
         } else {
             match self.m_ruleset.m_stockorramsch {
                 VStockOrT::OrT(ref rulesramsch) => {
-                    create_game(self.m_ahand, self.m_doublings, self.m_n_stock, rulesramsch.box_clone())
+                    VGamePreparationsFinish::DirectGame(SPreGame {
+                        m_ahand: self.m_ahand,
+                        m_doublings: self.m_doublings,
+                        m_rules: rulesramsch.clone(),
+                        m_vecstoss: Vec::new(),
+                        m_n_stock: self.m_n_stock,
+                    })
                 },
                 VStockOrT::Stock(n_stock) => {
-                    VStockOrT::Stock(match self.m_ruleset.m_oedoublingscope {
+                    VGamePreparationsFinish::Stock(match self.m_ruleset.m_oedoublingscope {
                         None | Some(EDoublingScope::Games) => n_stock,
                         Some(EDoublingScope::GamesAndStock) => {
                             n_stock * 2isize.pow(
@@ -145,6 +148,111 @@ impl<'rules> SGamePreparations<'rules> {
                     })
                 }
             }
+        }
+    }
+}
+
+pub struct SDetermineRules<'rules> {
+    pub m_ahand : EnumMap<EPlayerIndex, SHand>,
+    pub m_doublings : SDoublings,
+    pub m_ruleset : &'rules SRuleSet,
+    pub m_vecpairepirules_queued : Vec<(EPlayerIndex, Box<TActivelyPlayableRules>)>,
+    pub m_n_stock : isize,
+    m_pairepirules_current_bid : (EPlayerIndex, Box<TActivelyPlayableRules>),
+}
+
+impl<'rules> SDetermineRules<'rules> {
+    /*
+        Example:
+        0: Rufspiel, 1: Wenz, 2: Farbwenz, 3: Rufspiel
+        m_vecpairepirules_queued | m_pairepirules_current_bid
+        0r 1w 2fw                | 3r EBid::AtLeast (indicating that 2fw needs a prio of at least the one offered by 3)
+        => ask 2, and tell him that 3 offers r
+        => if 2 announces game, we get 0r 1w 3r | 2fw EBid::Higher (indicating that 3 has to offer a strictly better prio)
+           otherwise we get 0r 1w | 3r EBid::AtLeast
+        => continue until m_vecpairepirules_queued is empty
+    */
+
+    pub fn new(
+        ahand : EnumMap<EPlayerIndex, SHand>,
+        doublings : SDoublings,
+        ruleset: &SRuleSet,
+        mut vecpaireplayerindexrules_queued : Vec<(EPlayerIndex, Box<TActivelyPlayableRules>)>,
+        n_stock : isize,
+    ) -> SDetermineRules {
+        assert!(!vecpaireplayerindexrules_queued.is_empty());
+        let pairepirules_current_bid = vecpaireplayerindexrules_queued.pop().unwrap();
+        SDetermineRules {
+            m_ahand : ahand,
+            m_doublings : doublings,
+            m_ruleset : ruleset,
+            m_n_stock : n_stock,
+            m_vecpairepirules_queued : vecpaireplayerindexrules_queued,
+            m_pairepirules_current_bid : pairepirules_current_bid,
+        }
+    }
+
+    pub fn which_player_can_do_something(&self) -> Option<(EPlayerIndex, Vec<SRuleGroup>)> {
+        self.m_vecpairepirules_queued.last().as_ref().map(|&&(epi, ref _rules)| (
+            epi,
+            self.m_ruleset.m_avecrulegroup[epi].iter()
+                .filter_map(|rulegroup| rulegroup.with_higher_prio_than(
+                    &self.currently_offered_prio().1,
+                    {
+                        assert!(epi!=self.m_pairepirules_current_bid.0);
+                        let doublings = &self.m_doublings;
+                        if doublings.position(epi) < doublings.position(self.m_pairepirules_current_bid.0) {
+                            EBid::AtLeast
+                        } else {
+                            EBid::Higher
+                        }
+                    }
+                ))
+                .collect()
+        ))
+    }
+
+    pub fn currently_offered_prio(&self) -> (EPlayerIndex, VGameAnnouncementPriority) {
+        (self.m_pairepirules_current_bid.0, self.m_pairepirules_current_bid.1.priority())
+    }
+
+    pub fn announce_game(&mut self, epi: EPlayerIndex, rules: Box<TActivelyPlayableRules>) -> Result<()> {
+        if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
+            bail!("announce_game not allowed for specified EPlayerIndex");
+        }
+        if rules.priority()<self.currently_offered_prio().1 {
+            bail!("announced rules' priority must be at least as large as the latest announced priority");
+        }
+        assert!(epi!=self.m_pairepirules_current_bid.0);
+        assert!(!self.m_vecpairepirules_queued.is_empty());
+        let epi_check = self.m_vecpairepirules_queued.pop().unwrap().0;
+        assert_eq!(epi, epi_check);
+        let mut pairepirules_current_bid = (epi, rules);
+        mem::swap(&mut self.m_pairepirules_current_bid, &mut pairepirules_current_bid);
+        self.m_vecpairepirules_queued.push(pairepirules_current_bid);
+        assert_eq!(epi, self.m_pairepirules_current_bid.0);
+        Ok(())
+    }
+
+    pub fn resign(&mut self, epi: EPlayerIndex) -> Result<()> {
+        if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
+            bail!("announce_game not allowed for specified EPlayerIndex");
+        }
+        assert!(!self.m_vecpairepirules_queued.is_empty());
+        let paireplayerindexorules = self.m_vecpairepirules_queued.pop().unwrap();
+        assert_eq!(epi, paireplayerindexorules.0);
+        Ok(())
+    }
+
+    pub fn finish(self) -> SPreGame {
+        assert!(self.which_player_can_do_something().is_none());
+        assert!(self.m_vecpairepirules_queued.is_empty());
+        SPreGame {
+            m_ahand: self.m_ahand,
+            m_doublings: self.m_doublings,
+            m_rules: self.m_pairepirules_current_bid.1.as_rules().box_clone(),
+            m_vecstoss: Vec::new(),
+            m_n_stock: self.m_n_stock,
         }
     }
 }

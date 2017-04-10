@@ -121,7 +121,7 @@ impl<T> SPlayersInRound<T> {
             m_n_epi: self.m_epi_first.to_usize(),
         }
     }
-    fn position(&self, epi: EPlayerIndex) -> usize {
+    pub fn position(&self, epi: EPlayerIndex) -> usize {
         epi.wrapped_difference(self.m_epi_first)
     }
     fn valid_index(&self, epi: EPlayerIndex) -> bool {

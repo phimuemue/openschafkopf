@@ -12,7 +12,13 @@ pub struct SPlayerHuman {
     pub m_ai : Box<TAi>,
 }
 
-fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(hand: &SHand, vect : &'t [T], fn_format: FnFormat, fn_choose: FnChoose) -> &'t T
+fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(
+    hand: &SHand,
+    vect : &'t [T],
+    fn_format: FnFormat,
+    fn_choose: FnChoose,
+    opairepiprio: &Option<(EPlayerIndex, VGameAnnouncementPriority)>,
+) -> &'t T
     where FnFormat: Fn(&T) -> String,
           FnChoose: Fn(usize) -> Option<&'t TActivelyPlayableRules>
 {
@@ -23,6 +29,9 @@ fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(hand: &SHand, vect : &'t [
         |ncwin, i_ot_chosen, _ot_suggest| {
             assert!(_ot_suggest.is_none());
             skui::wprintln(ncwin, &format!("Your cards: {}. What do you want to play?", hand));
+            if let Some(ref pairepiprio) = *opairepiprio {
+                skui::wprintln(ncwin, &format!("{} offers {:?}", pairepiprio.0, pairepiprio.1));
+            }
             for (i_t, t) in vect.iter().enumerate() {
                 skui::wprintln(ncwin, &format!("{} {} ({})",
                     if i_t==i_ot_chosen {"*"} else {" "},
@@ -94,7 +103,15 @@ impl TPlayer for SPlayerHuman {
         }
     }
 
-    fn ask_for_game<'rules>(&self, hand: &SFullHand, gameannouncements : &SGameAnnouncements, vecrulegroup: &'rules [SRuleGroup], _n_stock: isize, txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>) {
+    fn ask_for_game<'rules>(
+        &self,
+        hand: &SFullHand,
+        gameannouncements : &SGameAnnouncements,
+        vecrulegroup: &'rules [SRuleGroup],
+        _n_stock: isize,
+        opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
+        txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>,
+    ) {
         skui::print_game_announcements(gameannouncements);
         let vecorulegroup : Vec<Option<&SRuleGroup>> = Some(None).into_iter()
             .chain(
@@ -113,6 +130,7 @@ impl TPlayer for SPlayerHuman {
                 Some(rulegroup) => rulegroup.m_str_name.clone(),
             },
             |i_orulegroup_chosen| vecorulegroup[i_orulegroup_chosen].map(|rulegroup| rulegroup.m_vecrules[0].as_ref()),
+            &opairepiprio,
         )
         {
             let vecorules : Vec<Option<&TActivelyPlayableRules>> = Some(None).into_iter()
@@ -129,7 +147,8 @@ impl TPlayer for SPlayerHuman {
                     None => "Back".to_string(),
                     Some(rules) => rules.to_string()
                 },
-                |i_orules_chosen| vecorules[i_orules_chosen]
+                |i_orules_chosen| vecorules[i_orules_chosen],
+                &opairepiprio,
             ) {
                 txorules.send(Some(rules)).unwrap();
                 return;

@@ -159,12 +159,40 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                 &gamepreparations.m_gameannouncements,
                 &gamepreparations.m_ruleset.m_avecrulegroup[epi],
                 gamepreparations.m_n_stock,
+                None,
                 txorules.clone()
             );
             gamepreparations.announce_game(epi, rxorules.recv().unwrap().map(|rules| TActivelyPlayableRules::box_clone(rules))).unwrap();
         }
         skui::logln("Asked players if they want to play. Determining rules");
-        match gamepreparations.determine_rules() {
+        let stockorpregame = match gamepreparations.finish() {
+            VGamePreparationsFinish::DetermineRules(mut determinerules) => {
+                while let Some((epi, vecrulegroup_steigered))=determinerules.which_player_can_do_something() {
+                    let (txorules, rxorules) = mpsc::channel::<Option<_>>();
+                    aplayer[epi].ask_for_game(
+                        &SFullHand::new(&determinerules.m_ahand[epi]),
+                        /*gameannouncements*/&SPlayersInRound::new(determinerules.m_doublings.first_playerindex()),
+                        &vecrulegroup_steigered,
+                        determinerules.m_n_stock,
+                        Some(determinerules.currently_offered_prio()),
+                        txorules.clone()
+                    );
+                    if let Some(rules) = rxorules.recv().unwrap() {
+                        determinerules.announce_game(epi, TActivelyPlayableRules::box_clone(rules)).unwrap();
+                    } else {
+                        determinerules.resign(epi).unwrap();
+                    }
+                }
+                VStockOrT::OrT(determinerules.finish())
+            },
+            VGamePreparationsFinish::DirectGame(pregame) => {
+                VStockOrT::OrT(pregame)
+            },
+            VGamePreparationsFinish::Stock(n_stock) => {
+                VStockOrT::Stock(n_stock)
+            }
+        };
+        match stockorpregame {
             VStockOrT::OrT(mut pregame) => {
                 while let Some(epi_stoss) = pregame.which_player_can_do_something().into_iter()
                     .find(|epi| {
