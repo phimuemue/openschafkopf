@@ -124,7 +124,7 @@ impl SRuleSet {
                     let payoutparams = payoutparams_active(tomlval_game, $str_rule_name_file, $str_base_price_fallback)?;
                     Ok(vecrulegroup.push(SRuleGroup{
                         m_str_name: $str_group_name.to_string(),
-                        m_vecrules: ($fn_rules(payoutparams.clone())),
+                        m_vecrules: ($fn_rules(payoutparams)),
                     })) as Result<_>
                 } else {
                     Ok(())
