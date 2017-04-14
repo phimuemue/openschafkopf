@@ -136,17 +136,15 @@ impl SSuspicion {
         let mut vecstich_successor : Vec<SStich> = Vec::new();
         push_pop_vecstich(vecstich, SStich::new(epi_first), |vecstich| {
             let offset_to_playerindex = move |i_offset: usize| {epi_first.wrapping_add(i_offset)};
-            macro_rules! traverse_valid_cards {
-                ($i_offset : expr, $func: expr) => {
-                    // TODO use equivalent card optimization
-                    for card in rules.all_allowed_cards(vecstich, &self.m_ahand[offset_to_playerindex($i_offset)]) {
-                        vecstich.last_mut().unwrap().push(card);
-                        assert!(card==vecstich.last().unwrap()[offset_to_playerindex($i_offset)]);
-                        $func;
-                        vecstich.last_mut().unwrap().undo_most_recent();
-                    }
-                };
-            };
+            macro_rules! traverse_valid_cards {($i_offset : expr, $func: expr) => {
+                // TODO use equivalent card optimization
+                for card in rules.all_allowed_cards(vecstich, &self.m_ahand[offset_to_playerindex($i_offset)]) {
+                    vecstich.last_mut().unwrap().push(card);
+                    assert!(card==vecstich.last().unwrap()[offset_to_playerindex($i_offset)]);
+                    $func;
+                    vecstich.last_mut().unwrap().undo_most_recent();
+                }
+            };};
             traverse_valid_cards!(0, { // TODO: more efficient to explicitly handle first card?
                 traverse_valid_cards!(1, {
                     traverse_valid_cards!(2, {

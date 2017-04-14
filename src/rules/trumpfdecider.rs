@@ -132,16 +132,14 @@ impl<FarbeDesignator> TTrumpfDecider for STrumpfDeciderFarbe<FarbeDesignator>
     }
 }
 
-macro_rules! impl_rules_trumpf {
-    ($trumpfdecider: ident) => {
-        fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
-            $trumpfdecider::trumpforfarbe(card)
-        }
-        fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
-            $trumpfdecider::compare_trumpf(card_fst, card_snd)
-        }
-        fn count_laufende(&self, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize {
-            $trumpfdecider::count_laufende(gamefinishedstiche, ab_winner)
-        }
+macro_rules! impl_rules_trumpf {($trumpfdecider: ident) => {
+    fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
+        $trumpfdecider::trumpforfarbe(card)
     }
-}
+    fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
+        $trumpfdecider::compare_trumpf(card_fst, card_snd)
+    }
+    fn count_laufende(&self, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize {
+        $trumpfdecider::count_laufende(gamefinishedstiche, ab_winner)
+    }
+}}
