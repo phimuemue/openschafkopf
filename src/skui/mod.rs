@@ -30,15 +30,6 @@ pub fn logln(_s: &str) {
     ncurses::refresh();
 }
 
-fn print_string_with_nc_colors(ncwin: ncurses::WINDOW, color_fg: i16, color_bg: i16, str_output: &str) {
-    let i_color_pair = color_fg * 8 + color_bg;
-    ncurses::init_pair(i_color_pair, color_fg, color_bg);
-    let nccolorpair = ncurses::COLOR_PAIR(i_color_pair);
-    ncurses::wattron(ncwin, nccolorpair);
-    wprint(ncwin, str_output);
-    ncurses::wattroff(ncwin, nccolorpair);
-}
-
 fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: SCard) {
     let paircolorcolor = { match card.farbe() {
         EFarbe::Eichel => (ncurses::COLOR_YELLOW, ncurses::COLOR_BLACK),
@@ -46,7 +37,12 @@ fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: SCard) {
         EFarbe::Herz => (ncurses::COLOR_RED, ncurses::COLOR_BLACK),
         EFarbe::Schelln => (ncurses::COLOR_CYAN, ncurses::COLOR_BLACK),
     }};
-    print_string_with_nc_colors(ncwin, paircolorcolor.0, paircolorcolor.1, &format!("{}", card));
+    let i_color_pair = paircolorcolor.0 * 8 + paircolorcolor.1;
+    ncurses::init_pair(i_color_pair, paircolorcolor.0, paircolorcolor.1);
+    let nccolorpair = ncurses::COLOR_PAIR(i_color_pair);
+    ncurses::wattron(ncwin, nccolorpair);
+    wprint(ncwin, &format!("{}", card));
+    ncurses::wattroff(ncwin, nccolorpair);
 }
 
 enum ESkUiWindow {
