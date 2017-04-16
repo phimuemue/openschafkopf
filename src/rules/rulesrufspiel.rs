@@ -6,11 +6,11 @@ use std::fmt;
 use std::cmp::Ordering;
 use util::*;
 
-#[derive(Clone, new)]
+#[derive(Clone)]
 pub struct SRulesRufspiel {
     m_epi : EPlayerIndex,
     m_efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
-    m_payoutdeciderparams: SPayoutDeciderParams,
+    m_payoutdecider: SPayoutDeciderPointBased,
 }
 
 impl fmt::Display for SRulesRufspiel {
@@ -25,6 +25,14 @@ pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag<
     SFarbeDesignatorHerz>>>;
 
 impl SRulesRufspiel {
+    pub fn new(epi: EPlayerIndex, efarbe: EFarbe, payoutdeciderparams: SPayoutDeciderParams) -> SRulesRufspiel {
+        SRulesRufspiel {
+            m_epi: epi,
+            m_efarbe: efarbe,
+            m_payoutdecider: SPayoutDeciderPointBased::new(payoutdeciderparams),
+        }
+    }
+
     fn rufsau(&self) -> SCard {
         SCard::new(self.m_efarbe, ESchlag::Ass)
     }
@@ -77,12 +85,11 @@ impl TRules for SRulesRufspiel {
             }}
         }
         let an_payout_no_stock = SStossDoublingPayoutDecider::payout(
-            SPayoutDeciderPointBased::payout(
+            self.m_payoutdecider.payout(
                 self,
                 gamefinishedstiche,
                 fn_is_player_party!(),
                 /*fn_player_multiplier*/ |_epi| 1, // everyone pays/gets the same
-                &self.m_payoutdeciderparams,
             ),
             n_stoss,
             n_doubling,

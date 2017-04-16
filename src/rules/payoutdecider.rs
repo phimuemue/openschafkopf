@@ -27,12 +27,13 @@ pub struct SPayoutDeciderParams {
 }
 
 pub trait TPayoutDecider : Sync + 'static + Clone {
+    fn new(payoutdeciderparams: SPayoutDeciderParams) -> Self;
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
+        &self,
         rules: &Rules,
         gamefinishedstiche: &SGameFinishedStiche,
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
-        payoutdeciderparams: &SPayoutDeciderParams,
     ) -> EnumMap<EPlayerIndex, isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
@@ -40,15 +41,27 @@ pub trait TPayoutDecider : Sync + 'static + Clone {
 }
 
 #[derive(Clone)]
-pub struct SPayoutDeciderPointBased {}
+pub struct SPayoutDeciderPointBased {
+    m_n_payout_base : isize,
+    m_n_payout_schneider_schwarz : isize,
+    m_laufendeparams : SLaufendeParams,
+}
 
 impl TPayoutDecider for SPayoutDeciderPointBased {
+    fn new(payoutdeciderparams: SPayoutDeciderParams) -> Self {
+        SPayoutDeciderPointBased {
+            m_n_payout_base: payoutdeciderparams.m_n_payout_base,
+            m_n_payout_schneider_schwarz: payoutdeciderparams.m_n_payout_schneider_schwarz,
+            m_laufendeparams: payoutdeciderparams.m_laufendeparams,
+        }
+    }
+
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
+        &self,
         rules: &Rules,
         gamefinishedstiche: &SGameFinishedStiche,
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
-        payoutdeciderparams: &SPayoutDeciderParams,
     ) -> EnumMap<EPlayerIndex, isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
@@ -63,17 +76,17 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
             fn_is_player_party(epi)==b_player_party_wins
         });
         internal_payout(
-            /*n_payout_single_player*/ payoutdeciderparams.m_n_payout_base
+            /*n_payout_single_player*/ self.m_n_payout_base
                 + { 
                     if gamefinishedstiche.get().iter().all(|stich| b_player_party_wins==fn_is_player_party(rules.winner_index(stich))) {
-                        2*payoutdeciderparams.m_n_payout_schneider_schwarz // schwarz
+                        2*self.m_n_payout_schneider_schwarz // schwarz
                     } else if (b_player_party_wins && n_points_player_party>90) || (!b_player_party_wins && n_points_player_party<=30) {
-                        payoutdeciderparams.m_n_payout_schneider_schwarz // schneider
+                        self.m_n_payout_schneider_schwarz // schneider
                     } else {
                         0 // "nothing", i.e. neither schneider nor schwarz
                     }
                 }
-                + payoutdeciderparams.m_laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner),
+                + self.m_laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner),
             fn_player_multiplier,
             &ab_winner,
         )
@@ -106,15 +119,25 @@ fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_player_
 }
 
 #[derive(Clone)]
-pub struct SPayoutDeciderTout {}
+pub struct SPayoutDeciderTout {
+    m_n_payout_base : isize,
+    m_laufendeparams : SLaufendeParams,
+}
 
 impl TPayoutDecider for SPayoutDeciderTout {
+    fn new(payoutdeciderparams: SPayoutDeciderParams) -> Self {
+        SPayoutDeciderTout {
+            m_n_payout_base: payoutdeciderparams.m_n_payout_base,
+            m_laufendeparams: payoutdeciderparams.m_laufendeparams,
+        }
+    }
+
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
+        &self,
         rules: &Rules,
         gamefinishedstiche: &SGameFinishedStiche,
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
-        payoutdeciderparams: &SPayoutDeciderParams,
     ) -> EnumMap<EPlayerIndex, isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
@@ -127,7 +150,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
             fn_is_player_party(epi)==b_player_party_wins
         });
         internal_payout(
-            /*n_payout_single_player*/ (payoutdeciderparams.m_n_payout_base + payoutdeciderparams.m_laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner)) * 2,
+            /*n_payout_single_player*/ (self.m_n_payout_base + self.m_laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner)) * 2,
             fn_player_multiplier,
             &ab_winner,
         )
@@ -135,15 +158,25 @@ impl TPayoutDecider for SPayoutDeciderTout {
 }
 
 #[derive(Clone)]
-pub struct SPayoutDeciderSie {}
+pub struct SPayoutDeciderSie {
+    m_n_payout_base : isize,
+    m_laufendeparams : SLaufendeParams,
+}
 
 impl TPayoutDecider for SPayoutDeciderSie {
+    fn new(payoutdeciderparams: SPayoutDeciderParams) -> Self {
+        SPayoutDeciderSie {
+            m_n_payout_base: payoutdeciderparams.m_n_payout_base,
+            m_laufendeparams: payoutdeciderparams.m_laufendeparams,
+        }
+    }
+
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
+        &self,
         rules: &Rules,
         gamefinishedstiche: &SGameFinishedStiche,
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
-        payoutdeciderparams: &SPayoutDeciderParams,
     ) -> EnumMap<EPlayerIndex, isize>
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
@@ -156,11 +189,11 @@ impl TPayoutDecider for SPayoutDeciderSie {
                 rules.trumpforfarbe(stich[epi_stich_winner]).is_trumpf() && fn_is_player_party(epi_stich_winner)
             });
         internal_payout(
-            /*n_payout_single_player*/ (payoutdeciderparams.m_n_payout_base
+            /*n_payout_single_player*/ (self.m_n_payout_base
             + {
                 assert_eq!(8, gamefinishedstiche.get().len()); // TODO Kurze Karte supports Sie?
                 gamefinishedstiche.get().len().as_num::<isize>()
-            } * payoutdeciderparams.m_laufendeparams.m_n_payout_per_lauf) * 4,
+            } * self.m_laufendeparams.m_n_payout_per_lauf) * 4,
             fn_player_multiplier,
             /*ab_winner*/ &EPlayerIndex::map_from_fn(|epi| {
                 fn_is_player_party(epi)==b_player_party_wins

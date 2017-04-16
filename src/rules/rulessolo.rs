@@ -15,9 +15,8 @@ pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider>
     pub m_str_name: String,
     pub m_epi : EPlayerIndex, // TODO should be static
     pub m_trumpfdecider : PhantomData<TrumpfDecider>,
-    pub m_payoutdecider : PhantomData<PayoutDecider>,
+    m_payoutdecider: PayoutDecider,
     pub m_prio : VGameAnnouncementPriority,
-    m_payoutdeciderparams : SPayoutDeciderParams,
 }
 
 impl<TrumpfDecider, PayoutDecider> fmt::Display for SRulesSoloLike<TrumpfDecider, PayoutDecider> 
@@ -74,7 +73,7 @@ impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, Payo
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, _n_stock: isize) -> SAccountBalance {
         SAccountBalance::new(
             SStossDoublingPayoutDecider::payout(
-                PayoutDecider::payout(
+                self.m_payoutdecider.payout(
                     self,
                     gamefinishedstiche,
                     /*fn_is_player_party*/ |epi| {
@@ -87,7 +86,6 @@ impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, Payo
                             1
                         }
                     },
-                    &self.m_payoutdeciderparams,
                 ),
                 n_stoss,
                 n_doubling,
@@ -123,10 +121,9 @@ impl<TrumpfDecider, PayoutDecider> SRulesSoloLike<TrumpfDecider, PayoutDecider>
         SRulesSoloLike::<TrumpfDecider, PayoutDecider> {
             m_epi: epi,
             m_trumpfdecider: PhantomData::<TrumpfDecider>,
-            m_payoutdecider: PhantomData::<PayoutDecider>,
+            m_payoutdecider: PayoutDecider::new(payoutdeciderparams),
             m_prio: prio,
             m_str_name: str_rulename.to_string(),
-            m_payoutdeciderparams : payoutdeciderparams,
         }
     }
 }
