@@ -106,25 +106,21 @@ impl SRuleSet {
         let mut avecrulegroup = EPlayerIndex::map_from_fn(|_epi| Vec::new());
         for epi in EPlayerIndex::values() {
             let vecrulegroup = &mut avecrulegroup[epi];
-            let payoutparams_active = |tomlval_game: &toml::Value, str_game: &str, str_base_price_fallback: &str| -> Result<SPayoutDeciderParams> {
-                let n_payout_extra = read_int(tomlval_game, ("extra")).or_else(|_err| fallback(&format!("{}.extra", str_game), "base-price"))?;
-                let n_payout_base = read_int(tomlval_game, ("price")).or_else(|_err| fallback(&format!("{}.price", str_game), str_base_price_fallback))?;
-                let n_lauf_lbound = read_int(tomlval_game, ("lauf-price")).or_else(|_err| fallback(&format!("{}.lauf-price", str_game), "lauf-min"))?;
-                Ok(SPayoutDeciderParams::new(
-                    n_payout_base.as_num(),
-                    /*n_payout_schneider_schwarz*/n_payout_extra.as_num(),
-                    SLaufendeParams::new(
-                        /*n_payout_per_lauf*/n_payout_extra.as_num(),
-                        n_lauf_lbound.as_num(),
-                    ),
-                ))
-            };
             macro_rules! create_rulegroup {($str_rule_name_file: expr, $str_base_price_fallback: expr, $str_group_name: expr, $fn_rules: expr) => {
                 if let Some(tomlval_game) = tomltbl.get($str_rule_name_file) {
-                    let payoutparams = payoutparams_active(tomlval_game, $str_rule_name_file, $str_base_price_fallback)?;
+                    let n_payout_extra = read_int(tomlval_game, ("extra")).or_else(|_err| fallback(&format!("{}.extra", $str_rule_name_file), "base-price"))?;
+                    let n_payout_base = read_int(tomlval_game, ("price")).or_else(|_err| fallback(&format!("{}.price", $str_rule_name_file), $str_base_price_fallback))?;
+                    let n_lauf_lbound = read_int(tomlval_game, ("lauf-price")).or_else(|_err| fallback(&format!("{}.lauf-price", $str_rule_name_file), "lauf-min"))?;
                     Ok(vecrulegroup.push(SRuleGroup{
                         m_str_name: $str_group_name.to_string(),
-                        m_vecrules: ($fn_rules(payoutparams)),
+                        m_vecrules: ($fn_rules(SPayoutDeciderParams::new(
+                            n_payout_base.as_num(),
+                            /*n_payout_schneider_schwarz*/n_payout_extra.as_num(),
+                            SLaufendeParams::new(
+                                /*n_payout_per_lauf*/n_payout_extra.as_num(),
+                                n_lauf_lbound.as_num(),
+                            ),
+                        ))),
                     })) as Result<_>
                 } else {
                     Ok(())
