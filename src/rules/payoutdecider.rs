@@ -45,15 +45,25 @@ pub struct SPayoutDeciderPointBased {
     m_n_payout_base : isize,
     m_n_payout_schneider_schwarz : isize,
     m_laufendeparams : SLaufendeParams,
+    m_n_points_player_to_win: isize,
 }
 
-impl TPayoutDecider for SPayoutDeciderPointBased {
-    fn new(payoutdeciderparams: SPayoutDeciderParams) -> Self {
+impl SPayoutDeciderPointBased {
+    fn internal_new(payoutdeciderparams: SPayoutDeciderParams, n_points_player_to_win: isize) -> SPayoutDeciderPointBased {
+        assert!(61<=n_points_player_to_win);
+        assert!(n_points_player_to_win<=120);
         SPayoutDeciderPointBased {
             m_n_payout_base: payoutdeciderparams.m_n_payout_base,
             m_n_payout_schneider_schwarz: payoutdeciderparams.m_n_payout_schneider_schwarz,
             m_laufendeparams: payoutdeciderparams.m_laufendeparams,
+            m_n_points_player_to_win: n_points_player_to_win,
         }
+    }
+}
+
+impl TPayoutDecider for SPayoutDeciderPointBased {
+    fn new(payoutdeciderparams: SPayoutDeciderParams) -> Self {
+        Self::internal_new(payoutdeciderparams, 61)
     }
 
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
@@ -71,7 +81,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
             .filter(|stich| fn_is_player_party(rules.winner_index(stich)))
             .map(|stich| points_stich(stich))
             .sum();
-        let b_player_party_wins = n_points_player_party>=61;
+        let b_player_party_wins = n_points_player_party>=self.m_n_points_player_to_win;
         let ab_winner = EPlayerIndex::map_from_fn(|epi| {
             fn_is_player_party(epi)==b_player_party_wins
         });
