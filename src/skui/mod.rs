@@ -216,13 +216,13 @@ pub fn choose_alternative_from_list_key_bindings() -> SAskForAlternativeKeyBindi
     }
 }
 
-pub fn ask_for_alternative<T, FnFilter, FnCallback, FnSuggest>(
-    vect: &[T],
-    askforalternativekeybindings: SAskForAlternativeKeyBindings,
+pub fn ask_for_alternative<'vect, T, FnFilter, FnCallback, FnSuggest>(
+    vect: &'vect [T],
+    askforalternativekeybindings: &SAskForAlternativeKeyBindings,
     fn_filter: FnFilter,
     fn_callback: FnCallback,
     fn_suggest: FnSuggest
-) -> &T 
+) -> &'vect T
     where FnFilter : Fn(&T) -> bool,
           FnCallback : Fn(ncurses::WINDOW, usize, &Option<T>),
           FnSuggest : Fn() -> Option<T>

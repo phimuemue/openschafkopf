@@ -24,7 +24,7 @@ fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(
 {
     skui::ask_for_alternative(
         vect,
-        skui::choose_alternative_from_list_key_bindings(),
+        &skui::choose_alternative_from_list_key_bindings(),
         |_ot| {true},
         |ncwin, i_ot_chosen, _ot_suggest| {
             assert!(_ot_suggest.is_none());
@@ -58,7 +58,7 @@ impl TPlayer for SPlayerHuman {
         let vecb_doubling = vec![false, true];
         txb_doubling.send(*skui::ask_for_alternative(
             &vecb_doubling,
-            skui::choose_alternative_from_list_key_bindings(),
+            &skui::choose_alternative_from_list_key_bindings(),
             |_| true, // all alternatives allowed
             |ncwin, i_b_doubling_chosen, ob_doubling_suggest| {
                 assert!(ob_doubling_suggest.is_none());
@@ -86,7 +86,7 @@ impl TPlayer for SPlayerHuman {
         match txcard.send(
             *skui::ask_for_alternative(
                 hand.cards(),
-                skui::choose_card_from_hand_key_bindings(),
+                &skui::choose_card_from_hand_key_bindings(),
                 |card| {veccard_allowed.iter().any(|card_allowed| card_allowed==card)},
                 |ncwin, i_card_chosen, ocard_suggest| {
                     if let Some(card) = *ocard_suggest {
@@ -170,7 +170,7 @@ impl TPlayer for SPlayerHuman {
         let vecb_stoss = vec![false, true];
         txb.send(*skui::ask_for_alternative(
             &vecb_stoss,
-            skui::choose_alternative_from_list_key_bindings(),
+            &skui::choose_alternative_from_list_key_bindings(),
             |_| true, // all alternatives allowed
             |ncwin, i_b_stoss_chosen, ob_stoss_suggest| {
                 assert!(ob_stoss_suggest.is_none());
