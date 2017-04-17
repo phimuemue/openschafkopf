@@ -21,7 +21,7 @@ impl<'rules> SDealCards<'rules> {
         SDealCards {
             m_ahand : {
                 let mut veccard : Vec<_> = SCard::values().into_iter().collect();
-                assert!(veccard.len()==32);
+                assert_eq!(veccard.len(), 32);
                 EPlayerIndex::map_from_fn(move |_epi|
                     random_hand(8, &mut veccard)
                 )
@@ -199,7 +199,7 @@ impl<'rules> SDetermineRules<'rules> {
                 .filter_map(|rulegroup| rulegroup.with_higher_prio_than(
                     &self.currently_offered_prio().1,
                     {
-                        assert!(epi!=self.m_pairepirules_current_bid.0);
+                        assert_ne!(epi, self.m_pairepirules_current_bid.0);
                         let doublings = &self.m_doublings;
                         if doublings.position(epi) < doublings.position(self.m_pairepirules_current_bid.0) {
                             EBid::AtLeast
@@ -223,7 +223,7 @@ impl<'rules> SDetermineRules<'rules> {
         if rules.priority()<self.currently_offered_prio().1 {
             bail!("announced rules' priority must be at least as large as the latest announced priority");
         }
-        assert!(epi!=self.m_pairepirules_current_bid.0);
+        assert_ne!(epi, self.m_pairepirules_current_bid.0);
         assert!(!self.m_vecpairepirules_queued.is_empty());
         let epi_check = self.m_vecpairepirules_queued.pop().unwrap().0;
         assert_eq!(epi, epi_check);

@@ -43,7 +43,7 @@ impl Iterator for SForeverRandHands {
             {
                 let assert_valid = |epi, i_hand| {
                     assert!(i_hand<n_len_hand);
-                    assert!(epi!=self.m_epi_fixed);
+                    assert_ne!(epi, self.m_epi_fixed);
                 };
                 assert_valid(epi_swap, i_hand_swap);
                 assert_valid(epi_rand, i_hand_rand);

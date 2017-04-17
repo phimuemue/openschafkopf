@@ -79,7 +79,7 @@ impl TRules for SRulesRufspiel {
             .find(|&(_, card)| *card==self.rufsau())
             .map(|(epi, _)| epi)
             .unwrap();
-        assert!(self.m_epi!=epi_coplayer, "self.m_epi==epi_coplayer=={}", epi_coplayer);
+        assert_ne!(self.m_epi, epi_coplayer);
         macro_rules! fn_is_player_party {
             () => {|epi| {
                 epi==self.m_epi || epi==epi_coplayer

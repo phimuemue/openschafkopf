@@ -105,7 +105,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
     }
 
     fn compare_in_stich(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
-        assert!(card_fst!=card_snd);
+        assert_ne!(card_fst, card_snd);
         match (self.trumpforfarbe(card_fst).is_trumpf(), self.trumpforfarbe(card_snd).is_trumpf()) {
             (true, false) => Ordering::Greater,
             (false, true) => Ordering::Less,

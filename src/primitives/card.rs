@@ -14,11 +14,11 @@ plain_enum_mod!{modefarbe, EFarbe {
 
 impl fmt::Display for EFarbe {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", match self {
-            &EFarbe::Eichel => "Eichel",
-            &EFarbe::Gras => "Gras",
-            &EFarbe::Herz => "Herz",
-            &EFarbe::Schelln => "Schelln",
+        write!(f, "{}", match *self {
+            EFarbe::Eichel => "Eichel",
+            EFarbe::Gras => "Gras",
+            EFarbe::Herz => "Herz",
+            EFarbe::Schelln => "Schelln",
         } )
     }
 }

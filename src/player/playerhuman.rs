@@ -35,7 +35,7 @@ fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(
             for (i_t, t) in vect.iter().enumerate() {
                 skui::wprintln(ncwin, &format!("{} {} ({})",
                     if i_t==i_ot_chosen {"*"} else {" "},
-                    fn_format(&t),
+                    fn_format(t),
                     i_t
                 ));
             }

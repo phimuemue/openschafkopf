@@ -198,7 +198,7 @@ impl SRuleSet {
             create_rulegroup_sololike!(
                 "solo",
                 "Sie",
-                &|payoutparams| vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(epi, /*prioparams*/() ,&"Sie", payoutparams)]
+                &|payoutparams| vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(epi, /*prioparams*/() ,"Sie", payoutparams)]
             )?;
         }
         Ok(SRuleSet::new(
