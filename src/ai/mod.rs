@@ -191,7 +191,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                         assert!(!vecstich_successor.is_empty());
                         if vecstich_complete_successor.len()==n_stich_complete {
                             vecstich_successor.retain(|stich_successor| {
-                                assert!(stich_successor.size()==4);
+                                assert_eq!(stich_successor.size(), 4);
                                 stich_current.equal_up_to_size(stich_successor, stich_current.size())
                             });
                             assert!(!vecstich_successor.is_empty());

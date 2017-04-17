@@ -105,7 +105,7 @@ fn main() {
                                     &SFullHand::new(&hand_fixed),
                                     EPlayerIndex::EPI0,
                                     epi_rank,
-                                    rules.as_rules().clone(),
+                                    rules.as_rules(),
                                     /*n_stock*/0, // assume no stock in subcommand rank-rules
                                 )
                             );
