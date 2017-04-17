@@ -1,0 +1,12 @@
+# adapted from https://bitbucket.org/atlassian/pipelines-examples-rust/src/0e1f7f9ef8ac85423adc8236e2df0600c33ffd44/bitbucket-pipelines.yml?at=master
+image: atlassianlabs/buildpack-deps-rust
+
+pipelines:
+  branches:
+    master:
+      - step:
+          script:
+            - echo "Updates to rustup"                ; rustup self update
+            - echo "Update Rust toolchain"            ; rustup update
+            - echo "cargo check"                      ; cargo check
+            - echo "cargo test"                       ; cargo test
