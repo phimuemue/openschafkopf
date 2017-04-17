@@ -117,7 +117,7 @@ pub fn is_compatible_with_game_so_far(
         .all(|(epi, card)| ahand[epi].contains(*card))
     // ... and must not contain other cards preventing farbe/trumpf frei
     && {
-        let mut vecstich_complete_and_current_stich = completed_stichs(vecstich).iter().cloned().collect::<Vec<_>>();
+        let mut vecstich_complete_and_current_stich = completed_stichs(vecstich).to_vec();
         vecstich_complete_and_current_stich.push(SStich::new(stich_current.first_playerindex()));
         stich_current.iter()
             .all(|(epi, card_played)| {
@@ -180,7 +180,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
             let vecsusp = vecsusp.clone();
             scope.spawn(move || {
                 assert_ahand_same_size(&ahand);
-                let mut vecstich_complete_mut = game.completed_stichs().iter().cloned().collect::<Vec<_>>();
+                let mut vecstich_complete_mut = game.completed_stichs().to_vec();
                 let n_stich_complete = vecstich_complete_mut.len();
                 let susp = SSuspicion::new(
                     stich_current.first_playerindex(),
@@ -217,7 +217,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
             // aggregate n_payout per card in some way
             HashMap::new(),
             |mut mapcardpayout: HashMap<SCard, isize>, susp| {
-                let mut vecstich_complete_payout = game.completed_stichs().iter().cloned().collect();
+                let mut vecstich_complete_payout = game.completed_stichs().to_vec();
                 for (card, n_payout) in susp.suspicion_transitions().iter()
                     .map(|susptrans| {
                         let n_payout = push_pop_vecstich(&mut vecstich_complete_payout, susptrans.stich().clone(), |mut vecstich_complete_payout| {
