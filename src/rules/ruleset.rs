@@ -194,11 +194,11 @@ impl SRuleSet {
                 )?;
             }}
             read_sololike!(SPayoutDeciderPointBased, VGameAnnouncementPriority::SoloLikeSimple, "");
-            read_sololike!(SPayoutDeciderTout, VGameAnnouncementPriority::SoloTout, " Tout");
+            read_sololike!(SPayoutDeciderTout, |x|x, " Tout");
             create_rulegroup_sololike!(
                 "solo",
                 "Sie",
-                &|payoutparams| vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(epi, VGameAnnouncementPriority::SoloSie ,&"Sie", payoutparams)]
+                &|payoutparams| vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(epi, /*prioparams*/() ,&"Sie", payoutparams)]
             )?;
         }
         Ok(SRuleSet::new(

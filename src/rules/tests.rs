@@ -73,14 +73,28 @@ fn rulesrufspiel_new_test(epi: EPlayerIndex, efarbe: EFarbe, n_payout_base: isiz
     )
 }
 
+trait TPayoutDeciderDefaultPrioParams : TPayoutDecider {
+    fn default_prioparams() -> Self::PrioParams;
+}
+impl TPayoutDeciderDefaultPrioParams for SPayoutDeciderPointBased {
+    fn default_prioparams() -> Self::PrioParams {
+        VGameAnnouncementPriority::SoloLikeSimple(0)
+    }
+}
+impl TPayoutDeciderDefaultPrioParams for SPayoutDeciderTout {
+    fn default_prioparams() -> Self::PrioParams {
+        0
+    }
+}
+
 fn rulessololike_new_test<TrumpfDecider, PayoutDecider>(epi: EPlayerIndex, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
-          PayoutDecider: TPayoutDecider,
+          PayoutDecider: TPayoutDeciderDefaultPrioParams,
 {
     // Do not inline this function. It serves as a bridge between actual implementation and the data we extract for the test suite.
     SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(
         epi,
-        VGameAnnouncementPriority::SoloLikeSimple(0),
+        PayoutDecider::default_prioparams(),
         "-", // should not matter within those tests
         SPayoutDeciderParams::new(
             n_payout_base,

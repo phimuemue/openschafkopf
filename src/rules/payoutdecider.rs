@@ -27,7 +27,8 @@ pub struct SPayoutDeciderParams {
 }
 
 pub trait TPayoutDecider : Sync + 'static + Clone {
-    fn new(payoutdeciderparams: SPayoutDeciderParams) -> Self;
+    type PrioParams;
+    fn new(payoutdeciderparams: SPayoutDeciderParams, prioparams: Self::PrioParams) -> Self;
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         &self,
         rules: &Rules,
@@ -38,6 +39,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone {
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules;
+    fn priority(&self) -> VGameAnnouncementPriority;
 }
 
 #[derive(Clone)]
@@ -46,10 +48,11 @@ pub struct SPayoutDeciderPointBased {
     m_n_payout_schneider_schwarz : isize,
     m_laufendeparams : SLaufendeParams,
     m_n_points_player_to_win: isize,
+    m_prio: VGameAnnouncementPriority,
 }
 
 impl SPayoutDeciderPointBased {
-    fn internal_new(payoutdeciderparams: SPayoutDeciderParams, n_points_player_to_win: isize) -> SPayoutDeciderPointBased {
+    fn internal_new(payoutdeciderparams: SPayoutDeciderParams, n_points_player_to_win: isize, prio: VGameAnnouncementPriority) -> SPayoutDeciderPointBased {
         assert!(61<=n_points_player_to_win);
         assert!(n_points_player_to_win<=120);
         SPayoutDeciderPointBased {
@@ -57,13 +60,19 @@ impl SPayoutDeciderPointBased {
             m_n_payout_schneider_schwarz: payoutdeciderparams.m_n_payout_schneider_schwarz,
             m_laufendeparams: payoutdeciderparams.m_laufendeparams,
             m_n_points_player_to_win: n_points_player_to_win,
+            m_prio: prio,
         }
     }
 }
 
 impl TPayoutDecider for SPayoutDeciderPointBased {
-    fn new(payoutdeciderparams: SPayoutDeciderParams) -> Self {
-        Self::internal_new(payoutdeciderparams, 61)
+    type PrioParams = VGameAnnouncementPriority;
+    fn new(payoutdeciderparams: SPayoutDeciderParams, prio: VGameAnnouncementPriority) -> Self {
+        Self::internal_new(payoutdeciderparams, 61, prio)
+    }
+
+    fn priority(&self) -> VGameAnnouncementPriority {
+        self.m_prio.clone()
     }
 
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
@@ -132,13 +141,20 @@ fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_player_
 pub struct SPayoutDeciderTout {
     m_n_payout_base : isize,
     m_laufendeparams : SLaufendeParams,
+    m_i_prio: isize,
 }
 
 impl TPayoutDecider for SPayoutDeciderTout {
-    fn new(payoutdeciderparams: SPayoutDeciderParams) -> Self {
+    type PrioParams = isize;
+    fn priority(&self) -> VGameAnnouncementPriority {
+        VGameAnnouncementPriority::SoloTout(self.m_i_prio)
+    }
+
+    fn new(payoutdeciderparams: SPayoutDeciderParams, i_prio: isize) -> Self {
         SPayoutDeciderTout {
             m_n_payout_base: payoutdeciderparams.m_n_payout_base,
             m_laufendeparams: payoutdeciderparams.m_laufendeparams,
+            m_i_prio: i_prio,
         }
     }
 
@@ -174,11 +190,17 @@ pub struct SPayoutDeciderSie {
 }
 
 impl TPayoutDecider for SPayoutDeciderSie {
-    fn new(payoutdeciderparams: SPayoutDeciderParams) -> Self {
+    type PrioParams = ();
+
+    fn new(payoutdeciderparams: SPayoutDeciderParams, _prioparams: ()) -> Self {
         SPayoutDeciderSie {
             m_n_payout_base: payoutdeciderparams.m_n_payout_base,
             m_laufendeparams: payoutdeciderparams.m_laufendeparams,
         }
+    }
+
+    fn priority(&self) -> VGameAnnouncementPriority {
+        VGameAnnouncementPriority::SoloSie
     }
 
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
