@@ -264,7 +264,7 @@ impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: &SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
         let n_payout_sum = Arc::new(AtomicIsize::new(0));
         crossbeam::scope(|scope| {
-            for ahand in forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get().clone(), epi_rank).take(self.m_n_rank_rules_samples) {
+            for ahand in forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get(), epi_rank).take(self.m_n_rank_rules_samples) {
                 let n_payout_sum = n_payout_sum.clone();
                 scope.spawn(move || {
                     let n_payout = 
@@ -311,7 +311,7 @@ impl TAi for SAiSimulating {
         } else {
             determine_best_card(
                 game,
-                forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), epi_fixed)
+                forever_rand_hands(game.completed_stichs(), hand_fixed, epi_fixed)
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules.as_ref(), &game.m_vecstich))
                     .take(self.m_n_suggest_card_samples),
                 self.m_n_suggest_card_branches,
@@ -361,7 +361,7 @@ fn test_is_compatible_with_game_so_far() {
             }
             for ahand in forever_rand_hands(
                 game.completed_stichs(),
-                game.m_ahand[game.which_player_can_do_something().unwrap()].clone(),
+                &game.m_ahand[game.which_player_can_do_something().unwrap()],
                 game.which_player_can_do_something().unwrap()
             )
                 .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules.as_ref(), &game.m_vecstich))
