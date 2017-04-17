@@ -45,7 +45,7 @@ fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: SCard) {
     ncurses::wattroff(ncwin, nccolorpair);
 }
 
-enum ESkUiWindow {
+enum VSkUiWindow {
     Stich,
     Interaction,
     Hand,
@@ -54,7 +54,7 @@ enum ESkUiWindow {
     AccountBalance,
 }
 
-fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
+fn do_in_window<FnDo, RetVal>(skuiwin: &VSkUiWindow, fn_do: FnDo) -> RetVal
     where FnDo: FnOnce(ncurses::WINDOW) -> RetVal
 {
     let (n_height, n_width) = {
@@ -71,8 +71,8 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
             0 // x
         )
     };
-    let ncwin = match skuiwin {
-        ESkUiWindow::PlayerInfo(epi) => {
+    let ncwin = match *skuiwin {
+        VSkUiWindow::PlayerInfo(epi) => {
             match epi {
                 EPlayerIndex::EPI0 => {
                     create_fullwidth_window(n_height-2, n_height-1)
@@ -87,11 +87,11 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
                 }
             }
         },
-        ESkUiWindow::Stich => {create_fullwidth_window(1, 6)},
-        ESkUiWindow::Hand => {create_fullwidth_window(6, 17)},
-        ESkUiWindow::Interaction => {create_fullwidth_window(17, n_height-3)},
-        ESkUiWindow::GameInfo => {create_fullwidth_window(n_height-3, n_height-2)}
-        ESkUiWindow::AccountBalance => {create_fullwidth_window(n_height-2, n_height-1)}
+        VSkUiWindow::Stich => {create_fullwidth_window(1, 6)},
+        VSkUiWindow::Hand => {create_fullwidth_window(6, 17)},
+        VSkUiWindow::Interaction => {create_fullwidth_window(17, n_height-3)},
+        VSkUiWindow::GameInfo => {create_fullwidth_window(n_height-3, n_height-2)}
+        VSkUiWindow::AccountBalance => {create_fullwidth_window(n_height-2, n_height-1)}
     };
     let retval = fn_do(ncwin);
     ncurses::delwin(ncwin);
@@ -100,7 +100,7 @@ fn do_in_window<FnDo, RetVal>(skuiwin: ESkUiWindow, fn_do: FnDo) -> RetVal
 
 pub fn print_vecstich(vecstich: &[SStich]) {
     do_in_window(
-        ESkUiWindow::Stich,
+        &VSkUiWindow::Stich,
         |ncwin| {
             for (i_stich, stich) in vecstich.iter().enumerate() {
                 let n_x = (i_stich*10+3).as_num();
@@ -126,7 +126,7 @@ pub fn print_vecstich(vecstich: &[SStich]) {
 pub fn print_game_announcements(gameannouncements: &SGameAnnouncements) {
     for (epi, orules) in gameannouncements.iter() {
         do_in_window(
-            ESkUiWindow::PlayerInfo(epi),
+            &VSkUiWindow::PlayerInfo(epi),
             |ncwin| {
                 if let Some(ref rules) = *orules {
                     wprint(ncwin, &format!("{}: {}", epi, rules.to_string()));
@@ -141,7 +141,7 @@ pub fn print_game_announcements(gameannouncements: &SGameAnnouncements) {
 
 pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &[SStoss]) {
     do_in_window(
-        ESkUiWindow::GameInfo,
+        &VSkUiWindow::GameInfo,
         |ncwin| {
             wprint(ncwin, &format!("{}", rules));
             if let Some(epi) = rules.playerindex() {
@@ -184,7 +184,7 @@ pub fn account_balance_string(accountbalance: &SAccountBalance) -> String {
 
 pub fn print_account_balance(accountbalance : &SAccountBalance) {
     do_in_window(
-        ESkUiWindow::AccountBalance,
+        &VSkUiWindow::AccountBalance,
         |ncwin| {
             wprint(ncwin, &account_balance_string(accountbalance));
         }
@@ -228,7 +228,7 @@ pub fn ask_for_alternative<'vect, T, FnFilter, FnCallback, FnSuggest>(
           FnSuggest : Fn() -> Option<T>
 {
     do_in_window(
-        ESkUiWindow::Interaction,
+        &VSkUiWindow::Interaction,
         |ncwin| {
             let mut ot_suggest = None;
             let vect = vect.into_iter().enumerate().filter(|&(_i_t, t)| fn_filter(t)).collect::<Vec<_>>();
@@ -262,7 +262,7 @@ pub fn ask_for_alternative<'vect, T, FnFilter, FnCallback, FnSuggest>(
 
 pub fn print_hand(veccard: &[SCard], oi_card: Option<usize>) {
     do_in_window(
-        ESkUiWindow::Hand,
+        &VSkUiWindow::Hand,
         |ncwin| {
             let is_oi_card = |i| { oi_card.map_or(false, |i_card| i==i_card) };
             for (i, card) in veccard.iter().enumerate() {
