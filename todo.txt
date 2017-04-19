@@ -1,3 +1,9 @@
+* TODO work on stuff in todo.txt
+* (Text-based) UI for arbitrary EPlayerIndex (useful to test behaviour with more than one CPlayerHuman)
+* Implement Bettel
+* Implement Hochzeit
+* AI suspicion debugging facility: Export suspicion tree to expandable/collapsible HTML page
+* Maybe something like payout_hint is useful to prune suspicion tree
 * Move tests into own files/modules
 * implement more rules
 * split CStich into CStichComplete and CStichCurrent
