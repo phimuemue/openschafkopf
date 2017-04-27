@@ -40,6 +40,9 @@ pub trait TPayoutDecider : Sync + 'static + Clone {
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules;
     fn priority(&self) -> VGameAnnouncementPriority;
+    fn to_string(&self) -> String { // TODO? impl Display
+        "".to_string()
+    }
 }
 
 #[derive(Clone)]
