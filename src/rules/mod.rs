@@ -192,8 +192,11 @@ pub trait TActivelyPlayableRules : TRules {
         } {
             Some(TActivelyPlayableRules::box_clone(self))
         } else {
-            None
+            self.with_increased_prio(prio, ebid)
         }
+    }
+    fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Box<TActivelyPlayableRules>> {
+        None
     }
 }
 box_clone_impl_box!(TActivelyPlayableRules);
