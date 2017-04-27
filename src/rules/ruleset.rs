@@ -193,7 +193,11 @@ impl SRuleSet {
                     vecrules_farbe!(SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"))
                 )?;
             }}
-            read_sololike!(SPayoutDeciderPointBased, VGameAnnouncementPriority::SoloLikeSimple, "");
+            if tomltbl.get("steigern").is_some() {
+                read_sololike!(SPayoutDeciderPointBased, |_i_prio| VGameAnnouncementPriority::SoloLikeSteigern(61), "");
+            } else {
+                read_sololike!(SPayoutDeciderPointBased, VGameAnnouncementPriority::SoloLikeSimple, "");
+            }
             read_sololike!(SPayoutDeciderTout, |x|x, " Tout");
             create_rulegroup_sololike!(
                 "solo",

@@ -35,6 +35,10 @@ impl<TrumpfDecider, PayoutDecider> TActivelyPlayableRules for SRulesSoloLike<Tru
     fn priority(&self) -> VGameAnnouncementPriority {
         self.m_payoutdecider.priority()
     }
+    fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<TActivelyPlayableRules>> {
+        self.m_payoutdecider.with_increased_prio(prio, ebid)
+            .map(|payoutdecider| Box::new(Self::internal_new(self.m_epi, &self.m_str_name, payoutdecider)) as Box<TActivelyPlayableRules>)
+    }
 }
 
 impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, PayoutDecider> 

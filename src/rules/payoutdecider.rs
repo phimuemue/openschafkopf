@@ -40,6 +40,9 @@ pub trait TPayoutDecider : Sync + 'static + Clone {
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules;
     fn priority(&self) -> VGameAnnouncementPriority;
+    fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Self> {
+        None
+    }
     fn to_string(&self) -> String { // TODO? impl Display
         "".to_string()
     }
@@ -50,7 +53,6 @@ pub struct SPayoutDeciderPointBased {
     m_n_payout_base : isize,
     m_n_payout_schneider_schwarz : isize,
     m_laufendeparams : SLaufendeParams,
-    m_n_points_player_to_win: isize,
     m_prio: VGameAnnouncementPriority,
 }
 
@@ -62,7 +64,6 @@ impl SPayoutDeciderPointBased {
             m_n_payout_base: payoutdeciderparams.m_n_payout_base,
             m_n_payout_schneider_schwarz: payoutdeciderparams.m_n_payout_schneider_schwarz,
             m_laufendeparams: payoutdeciderparams.m_laufendeparams,
-            m_n_points_player_to_win: n_points_player_to_win,
             m_prio: prio,
         }
     }
@@ -93,7 +94,12 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
             .filter(|stich| fn_is_player_party(rules.winner_index(stich)))
             .map(|stich| points_stich(stich))
             .sum();
-        let b_player_party_wins = n_points_player_party>=self.m_n_points_player_to_win;
+        use self::VGameAnnouncementPriority::*;
+        let b_player_party_wins = n_points_player_party >= match self.priority() {
+            RufspielLike | SoloLikeSimple(_) => 61,
+            SoloLikeSteigern(n_points) => n_points,
+            SoloTout(_) | SoloSie => panic!("Unexpected priority in SPayoutDeciderPointBased"),
+        };
         let ab_winner = EPlayerIndex::map_from_fn(|epi| {
             fn_is_player_party(epi)==b_player_party_wins
         });
@@ -112,6 +118,30 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
             fn_player_multiplier,
             &ab_winner,
         )
+    }
+
+    fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Self> {
+        use self::VGameAnnouncementPriority::*;
+        if let (SoloLikeSteigern(_), &SoloLikeSteigern(n_points_player_to_win_steigered)) = (self.priority(), prio) {
+            let n_points_to_win = n_points_player_to_win_steigered + match ebid {
+                EBid::AtLeast => 0,
+                EBid::Higher => 10, // TODO custom steps
+            };
+            if n_points_to_win<=120 {
+                let mut payoutdecider = self.clone();
+                payoutdecider.m_prio = SoloLikeSteigern(n_points_to_win);
+                return Some(payoutdecider)
+            }
+        }
+        None
+    }
+    fn to_string(&self) -> String {
+        if let VGameAnnouncementPriority::SoloLikeSteigern(n_points_player_to_win) = self.m_prio {
+            if 61<n_points_player_to_win {
+                return format!(" for {}", n_points_player_to_win)
+            }
+        }
+        "".to_string()
     }
 }
 

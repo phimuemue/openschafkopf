@@ -150,6 +150,7 @@ pub enum VGameAnnouncementPriority {
     // state priorities in ascending order
     RufspielLike,
     SoloLikeSimple(isize),
+    SoloLikeSteigern(isize),
     SoloTout(isize),
     SoloSie,
 }
