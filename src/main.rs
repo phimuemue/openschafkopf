@@ -247,26 +247,41 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
 
 #[test]
 fn test_game_loop() {
-    game_loop(
-        &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
-            Box::new(SPlayerComputer{m_ai: {
-                if epi<EPlayerIndex::EPI2 {
-                    Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/1))
-                } else {
-                    Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1, /*n_samples_per_rules*/1))
-                }
-            }})
-        }),
-        /*n_games*/4,
-        &SRuleSet::from_string(r"
-            base-price=10
-            solo-price=50
-            lauf-min=3
-            [rufspiel]
-            [solo]
-            [wenz]
-            [ramsch]
-            price=10
-        ").unwrap(),
-    );
+    // TODO more ruleset (parsing) tests
+    for str_ruleset in [
+        r"
+        base-price=10
+        solo-price=50
+        lauf-min=3
+        [rufspiel]
+        [solo]
+        [wenz]
+        [doubling]
+        price=10
+        ",
+        r"
+        base-price=10
+        solo-price=50
+        lauf-min=3
+        [solo]
+        [wenz]
+        [ramsch]
+        price=10
+        [steigern]
+        ",
+    ].into_iter() {
+        game_loop(
+            &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
+                Box::new(SPlayerComputer{m_ai: {
+                    if epi<EPlayerIndex::EPI2 {
+                        Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/1))
+                    } else {
+                        Box::new(ai::SAiSimulating::new(/*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1, /*n_samples_per_rules*/1))
+                    }
+                }})
+            }),
+            /*n_games*/4,
+            &SRuleSet::from_string(str_ruleset).unwrap(),
+        );
+    }
 }
