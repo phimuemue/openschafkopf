@@ -74,6 +74,7 @@ impl SRuleSet {
             println!("Did not find {}. Falling back to {}.", str_not_found, str_fallback);
             read_int(&tomltbl, str_fallback)
         };
+        // TODO rules: "Der Alte muss"
         let stockorramsch = match (tomltbl.get("ramsch"), tomltbl.get("stock")) {
             (Some(_), Some(_)) => {
                 // TODO rules: Better alternatives? Allow stock *and* ramsch at the same time?
