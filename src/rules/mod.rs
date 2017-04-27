@@ -185,7 +185,16 @@ plain_enum_mod!(modebid, EBid {
 pub trait TActivelyPlayableRules : TRules {
     box_clone_require!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority;
-    fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<TActivelyPlayableRules>>;
+    fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<TActivelyPlayableRules>> {
+        if match ebid {
+            EBid::AtLeast => {prio<=&self.priority()},
+            EBid::Higher => {prio<&self.priority()},
+        } {
+            Some(TActivelyPlayableRules::box_clone(self))
+        } else {
+            None
+        }
+    }
 }
 box_clone_impl_box!(TActivelyPlayableRules);
 

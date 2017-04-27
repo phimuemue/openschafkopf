@@ -48,9 +48,6 @@ impl TActivelyPlayableRules for SRulesRufspiel {
         assert_eq!(VGameAnnouncementPriority::RufspielLike, self.m_payoutdecider.priority());
         self.m_payoutdecider.priority()
     }
-    fn with_higher_prio_than(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Box<TActivelyPlayableRules>> {
-        None // SRulesRufspiel supports only RufspielLike
-    }
 }
 
 impl TRules for SRulesRufspiel {
