@@ -105,13 +105,16 @@ impl<TrumpfDecider, PayoutDecider> SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
           PayoutDecider: TPayoutDecider,
 {
-    pub fn new(epi: EPlayerIndex, prioparams: PayoutDecider::PrioParams, str_rulename: &str, payoutdeciderparams: SPayoutDeciderParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
+    fn internal_new(epi: EPlayerIndex, str_rulename: &str, payoutdecider: PayoutDecider) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
         SRulesSoloLike::<TrumpfDecider, PayoutDecider> {
             m_epi: epi,
             m_trumpfdecider: PhantomData::<TrumpfDecider>,
-            m_payoutdecider: PayoutDecider::new(payoutdeciderparams, prioparams),
+            m_payoutdecider: payoutdecider,
             m_str_name: str_rulename.to_string(),
         }
+    }
+    pub fn new(epi: EPlayerIndex, prioparams: PayoutDecider::PrioParams, str_rulename: &str, payoutdeciderparams: SPayoutDeciderParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
+        Self::internal_new(epi, str_rulename, PayoutDecider::new(payoutdeciderparams, prioparams))
     }
 }
 
