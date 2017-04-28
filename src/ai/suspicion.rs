@@ -85,7 +85,7 @@ impl SSuspicion {
         ahand: EnumMap<EPlayerIndex, SHand>,
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
-        func_filter_successors: FuncFilterSuccessors,
+        func_filter_successors: &FuncFilterSuccessors,
     ) -> Self 
         where FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
     {
