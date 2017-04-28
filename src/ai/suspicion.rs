@@ -33,7 +33,12 @@ pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<SStich>, stich: SStich, fun
 
 impl SSuspicionTransition {
     fn new(susp: &SSuspicion, stich: SStich) -> SSuspicionTransition {
-        let susp = SSuspicion::new_from_susp(susp, &stich);
+        let susp = SSuspicion {
+            m_vecsusptrans: Vec::new(),
+            m_ahand : EPlayerIndex::map_from_fn(|epi| {
+                susp.m_ahand[epi].new_from_hand(stich[epi])
+            })
+        };
         SSuspicionTransition {
             m_stich : stich,
             m_susp : susp
@@ -112,15 +117,6 @@ impl SSuspicion {
             self.m_vecsusptrans.iter()
                 .map(|susptrans| susptrans.m_susp.count_leaves())
                 .sum()
-        }
-    }
-
-    fn new_from_susp(&self, stich: &SStich) -> Self {
-        SSuspicion {
-            m_vecsusptrans: Vec::new(),
-            m_ahand : EPlayerIndex::map_from_fn(|epi| {
-                self.m_ahand[epi].new_from_hand(stich[epi])
-            })
         }
     }
 
