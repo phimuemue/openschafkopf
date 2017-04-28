@@ -97,21 +97,6 @@ impl SSuspicion {
         susp
     }
 
-    pub fn count_leaves(&self) -> usize {
-        if self.m_vecsusptrans.is_empty() {
-            1
-        } else {
-            self.m_vecsusptrans.iter()
-                .map(|susptrans| susptrans.m_susp.count_leaves())
-                .sum()
-        }
-    }
-
-    fn hand_size(&self) -> usize {
-        assert_ahand_same_size(&self.m_ahand);
-        self.m_ahand[EPlayerIndex::EPI0].cards().len()
-    }
-
     fn compute_successors<FuncFilterSuccessors>(&mut self, epi_first: EPlayerIndex, rules: &TRules, vecstich: &mut Vec<SStich>, func_filter_successors: &FuncFilterSuccessors)
         where FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
     {
@@ -162,6 +147,21 @@ impl SSuspicion {
                 })
             })
             .collect();
+    }
+
+    pub fn count_leaves(&self) -> usize {
+        if self.m_vecsusptrans.is_empty() {
+            1
+        } else {
+            self.m_vecsusptrans.iter()
+                .map(|susptrans| susptrans.m_susp.count_leaves())
+                .sum()
+        }
+    }
+
+    fn hand_size(&self) -> usize {
+        assert_ahand_same_size(&self.m_ahand);
+        self.m_ahand[EPlayerIndex::EPI0].cards().len()
     }
 
     pub fn print_suspicion(
