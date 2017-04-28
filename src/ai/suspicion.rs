@@ -93,20 +93,12 @@ impl SSuspicion {
             m_vecsusptrans: Vec::new(),
             m_ahand : ahand
         };
-        susp.compute_successors(epi_first, rules, vecstich, &func_filter_successors);
-        susp
-    }
-
-    fn compute_successors<FuncFilterSuccessors>(&mut self, epi_first: EPlayerIndex, rules: &TRules, vecstich: &mut Vec<SStich>, func_filter_successors: &FuncFilterSuccessors)
-        where FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
-    {
-        assert_eq!(self.m_vecsusptrans.len(), 0); // currently, we have no caching
         let mut vecstich_successor : Vec<SStich> = Vec::new();
         push_pop_vecstich(vecstich, SStich::new(epi_first), |vecstich| {
             let offset_to_playerindex = move |i_offset: usize| {epi_first.wrapping_add(i_offset)};
             macro_rules! traverse_valid_cards {($i_offset : expr, $func: expr) => {
                 // TODO use equivalent card optimization
-                for card in rules.all_allowed_cards(vecstich, &self.m_ahand[offset_to_playerindex($i_offset)]) {
+                for card in rules.all_allowed_cards(vecstich, &susp.m_ahand[offset_to_playerindex($i_offset)]) {
                     vecstich.last_mut().unwrap().push(card);
                     assert_eq!(card, vecstich.last().unwrap()[offset_to_playerindex($i_offset)]);
                     $func;
@@ -127,26 +119,26 @@ impl SSuspicion {
             func_filter_successors(vecstich, &mut vecstich_successor);
             assert!(!vecstich_successor.is_empty());
         }
-        self.m_vecsusptrans = vecstich_successor.into_iter()
+        susp.m_vecsusptrans = vecstich_successor.into_iter()
             .map(|stich| {
                 let epi_first_susp = rules.winner_index(&stich);
                 push_pop_vecstich(vecstich, stich.clone(), |vecstich| {
                     SSuspicionTransition {
                         m_stich : stich.clone(),
-                        m_susp : {
-                            let mut susp = SSuspicion {
-                                m_vecsusptrans: Vec::new(),
-                                m_ahand : EPlayerIndex::map_from_fn(|epi| {
-                                    self.m_ahand[epi].new_from_hand(stich[epi])
-                                })
-                            };
-                            susp.compute_successors(epi_first_susp, rules, vecstich, func_filter_successors);
-                            susp
-                        }
+                        m_susp : SSuspicion::new(
+                            epi_first_susp,
+                            EPlayerIndex::map_from_fn(|epi| {
+                                susp.m_ahand[epi].new_from_hand(stich[epi])
+                            }),
+                            rules,
+                            vecstich,
+                            func_filter_successors
+                        )
                     }
                 })
             })
             .collect();
+        susp
     }
 
     pub fn count_leaves(&self) -> usize {
