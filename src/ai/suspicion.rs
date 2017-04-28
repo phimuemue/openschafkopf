@@ -39,34 +39,6 @@ impl SSuspicionTransition {
     pub fn suspicion(&self) -> &SSuspicion {
         &self.m_susp
     }
-
-    fn print_suspiciontransition(
-        &self,
-        n_maxlevel: usize,
-        n_level: usize,
-        rules: &TRules,
-        vecstich: &mut Vec<SStich>,
-        ostich_given: Option<SStich>,
-        mut file_output: &mut fs::File,
-    ) -> io::Result<()> {
-        if n_level<=n_maxlevel {
-            push_pop_vecstich(vecstich, self.m_stich.clone(), |vecstich| {
-                assert_eq!(vecstich.len()+self.m_susp.hand_size(), 8);
-                for _ in 0..n_level+1 {
-                    file_output.write_all(b" ")?;
-                }
-                file_output.write_all(format!("{} : ", self.m_stich).as_bytes())?;
-                if 1<self.m_susp.hand_size() {
-                    self.m_susp.print_suspicion(n_maxlevel, n_level, rules, vecstich, ostich_given, &mut file_output)?;
-                } else {
-                    file_output.write_all(b"\n")?;
-                }
-                Ok(())
-            })
-        } else {
-            Ok(())
-        }
-    }
 }
 
 pub struct SSuspicion {
@@ -174,7 +146,23 @@ impl SSuspicion {
             }
             file_output.write_all(b"\n")?;
             for susptrans in &self.m_vecsusptrans {
-                susptrans.print_suspiciontransition(n_maxlevel, n_level+1, rules, vecstich, ostich_given.clone(), &mut file_output)?;
+                if (n_level+1)<=n_maxlevel {
+                    push_pop_vecstich(vecstich, susptrans.m_stich.clone(), |vecstich| -> io::Result<()>{
+                        assert_eq!(vecstich.len()+susptrans.m_susp.hand_size(), 8);
+                        for _ in 0..n_level+2 {
+                            file_output.write_all(b" ")?;
+                        }
+                        file_output.write_all(format!("{} : ", susptrans.m_stich).as_bytes())?;
+                        if 1<susptrans.m_susp.hand_size() {
+                            susptrans.m_susp.print_suspicion(n_maxlevel, (n_level+1), rules, vecstich, ostich_given.clone(), &mut file_output)?;
+                        } else {
+                            file_output.write_all(b"\n")?;
+                        }
+                        Ok(())
+                    })
+                } else {
+                    Ok(())
+                }?
             }
             Ok(())
         }
