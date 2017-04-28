@@ -144,16 +144,13 @@ impl SSuspicion {
         }
         self.m_vecsusptrans = vecstich_successor.into_iter()
             .map(|stich| {
-                let mut susptrans = {
-                    let susp = SSuspicion {
+                let mut susptrans = SSuspicionTransition {
+                    m_stich : stich.clone(),
+                    m_susp : SSuspicion {
                         m_vecsusptrans: Vec::new(),
                         m_ahand : EPlayerIndex::map_from_fn(|epi| {
                             self.m_ahand[epi].new_from_hand(stich[epi])
                         })
-                    };
-                    SSuspicionTransition {
-                        m_stich : stich.clone(),
-                        m_susp : susp
                     }
                 };
                 let epi_first_susp = rules.winner_index(&stich);
