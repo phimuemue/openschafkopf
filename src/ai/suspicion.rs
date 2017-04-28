@@ -122,19 +122,17 @@ impl SSuspicion {
         susp.m_vecsusptrans = vecstich_successor.into_iter()
             .map(|stich| {
                 let epi_first_susp = rules.winner_index(&stich);
-                push_pop_vecstich(vecstich, stich.clone(), |vecstich| {
-                    SSuspicionTransition {
-                        m_stich : stich.clone(),
-                        m_susp : SSuspicion::new(
-                            epi_first_susp,
-                            EPlayerIndex::map_from_fn(|epi| {
-                                susp.m_ahand[epi].new_from_hand(stich[epi])
-                            }),
-                            rules,
-                            vecstich,
-                            func_filter_successors
-                        )
-                    }
+                push_pop_vecstich(vecstich, stich.clone(), |vecstich| SSuspicionTransition {
+                    m_stich : stich.clone(),
+                    m_susp : SSuspicion::new(
+                        epi_first_susp,
+                        EPlayerIndex::map_from_fn(|epi| {
+                            susp.m_ahand[epi].new_from_hand(stich[epi])
+                        }),
+                        rules,
+                        vecstich,
+                        func_filter_successors
+                    ),
                 })
             })
             .collect();
