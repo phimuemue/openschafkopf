@@ -32,19 +32,6 @@ pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<SStich>, stich: SStich, fun
 }
 
 impl SSuspicionTransition {
-    fn new(susp: &SSuspicion, stich: SStich) -> SSuspicionTransition {
-        let susp = SSuspicion {
-            m_vecsusptrans: Vec::new(),
-            m_ahand : EPlayerIndex::map_from_fn(|epi| {
-                susp.m_ahand[epi].new_from_hand(stich[epi])
-            })
-        };
-        SSuspicionTransition {
-            m_stich : stich,
-            m_susp : susp
-        }
-    }
-
     pub fn stich(&self) -> &SStich {
         &self.m_stich
     }
@@ -157,7 +144,18 @@ impl SSuspicion {
         }
         self.m_vecsusptrans = vecstich_successor.into_iter()
             .map(|stich| {
-                let mut susptrans = SSuspicionTransition::new(self, stich.clone());
+                let mut susptrans = {
+                    let susp = SSuspicion {
+                        m_vecsusptrans: Vec::new(),
+                        m_ahand : EPlayerIndex::map_from_fn(|epi| {
+                            self.m_ahand[epi].new_from_hand(stich[epi])
+                        })
+                    };
+                    SSuspicionTransition {
+                        m_stich : stich.clone(),
+                        m_susp : susp
+                    }
+                };
                 let epi_first_susp = rules.winner_index(&stich);
                 push_pop_vecstich(vecstich, stich, |vecstich| {
                     susptrans.m_susp.compute_successors(epi_first_susp, rules, vecstich, func_filter_successors);
