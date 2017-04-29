@@ -204,13 +204,20 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                     }
                 );
                 assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
-                if susp.print_suspicion(8, 0, game.rules.as_ref(), &mut vecstich_complete_mut, &mut fs::File::create(&"suspicion.html").unwrap()).is_err() {
-                    // TODO: what shall be done on error?
-                }
                 vecsusp.lock().unwrap().push(susp);
             });
         }
     });
+    for susp in vecsusp.lock().unwrap().iter() {
+        // TODO error handling
+        susp.print_suspicion(
+            8,
+            0,
+            game.rules.as_ref(),
+            &mut game.completed_stichs().to_vec(),
+            &mut fs::File::create(&"suspicion.html").unwrap()
+        ).unwrap();
+    }
     let veccard_allowed_fixed = game.rules.all_allowed_cards(&game.vecstich, &game.ahand[epi_fixed]);
     let mapcardpayout = vecsusp.lock().unwrap().iter()
         .fold(
