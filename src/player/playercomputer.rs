@@ -11,7 +11,7 @@ use util::*;
 use std::sync::mpsc;
 
 pub struct SPlayerComputer {
-    pub m_ai : Box<TAi>,
+    pub ai : Box<TAi>,
 }
 
 impl TPlayer for SPlayerComputer {
@@ -35,7 +35,7 @@ impl TPlayer for SPlayerComputer {
     }
 
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
-        txcard.send(self.m_ai.suggest_card(game)).ok();
+        txcard.send(self.ai.suggest_card(game)).ok();
     }
 
     fn ask_for_game<'rules>(
@@ -59,7 +59,7 @@ impl TPlayer for SPlayerComputer {
                 let epi_rank = rules.playerindex().unwrap(); 
                 (
                     rules,
-                    self.m_ai.rank_rules(hand, /*epi_first*/gameannouncements.first_playerindex(), epi_rank, rules.as_rules(), n_stock)
+                    self.ai.rank_rules(hand, /*epi_first*/gameannouncements.first_playerindex(), epi_rank, rules.as_rules(), n_stock)
                 )
             })
             .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
@@ -83,12 +83,12 @@ impl TPlayer for SPlayerComputer {
     ) {
         let n_samples_per_stoss = 5; // TODO move to ai, make adjustable
         let mut vecpairahandf_suspicion = forever_rand_hands(/*vecstich*/&Vec::new(), hand, epi)
-            .filter(|ahand| is_compatible_with_game_so_far(ahand, rules, /*vecstich*/&[SStich::new(doublings.m_epi_first)])) // stoss currently only in SPreGame
+            .filter(|ahand| is_compatible_with_game_so_far(ahand, rules, /*vecstich*/&[SStich::new(doublings.epi_first)])) // stoss currently only in SPreGame
             .take(2*n_samples_per_stoss)
             .map(|ahand| {
                 let f_rank_rules = rules.playerindex().map_or(0f64, |epi_active| {
                     if epi!=epi_active {
-                        self.m_ai.rank_rules(
+                        self.ai.rank_rules(
                             &SFullHand::new(&ahand[epi_active]),
                             /*epi_first*/doublings.first_playerindex(),
                             /*epi_rank*/epi_active,

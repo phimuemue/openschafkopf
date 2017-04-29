@@ -96,7 +96,7 @@ fn main() {
                     if let Some(hand_fixed) = cardvector::parse_cards(str_hand).map(SHand::new_from_vec) {
                         let epi_rank = value_t!(subcommand_matches.value_of("pos"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
                         println!("Hand: {}", hand_fixed);
-                        for rules in allowed_rules(&ruleset.m_avecrulegroup[epi_rank]).iter() 
+                        for rules in allowed_rules(&ruleset.avecrulegroup[epi_rank]).iter() 
                             .filter(|rules| rules.can_be_played(&SFullHand::new(&hand_fixed)))
                         {
                             println!("{}: {}",
@@ -121,9 +121,9 @@ fn main() {
             let accountbalance = game_loop(
                 &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
                     if EPlayerIndex::EPI0==epi {
-                        Box::new(SPlayerHuman{m_ai : ai()})
+                        Box::new(SPlayerHuman{ai : ai()})
                     } else {
-                        Box::new(SPlayerComputer{m_ai: ai()})
+                        Box::new(SPlayerComputer{ai: ai()})
                     }
                 }),
                 /*n_games*/ clapmatches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4),
@@ -164,10 +164,10 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
             skui::logln(&format!("Asking player {} for game", epi));
             let orules = communicate_via_channel(|txorules| {
                 aplayer[epi].ask_for_game(
-                    &SFullHand::new(&gamepreparations.m_ahand[epi]),
-                    &gamepreparations.m_gameannouncements,
-                    &gamepreparations.m_ruleset.m_avecrulegroup[epi],
-                    gamepreparations.m_n_stock,
+                    &SFullHand::new(&gamepreparations.ahand[epi]),
+                    &gamepreparations.gameannouncements,
+                    &gamepreparations.ruleset.avecrulegroup[epi],
+                    gamepreparations.n_stock,
                     None,
                     txorules
                 );
@@ -180,10 +180,10 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                 while let Some((epi, vecrulegroup_steigered))=determinerules.which_player_can_do_something() {
                     if let Some(rules) = communicate_via_channel(|txorules| {
                         aplayer[epi].ask_for_game(
-                            &SFullHand::new(&determinerules.m_ahand[epi]),
-                            /*gameannouncements*/&SPlayersInRound::new(determinerules.m_doublings.first_playerindex()),
+                            &SFullHand::new(&determinerules.ahand[epi]),
+                            /*gameannouncements*/&SPlayersInRound::new(determinerules.doublings.first_playerindex()),
                             &vecrulegroup_steigered,
-                            determinerules.m_n_stock,
+                            determinerules.n_stock,
                             Some(determinerules.currently_offered_prio()),
                             txorules
                         );
@@ -209,11 +209,11 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                         communicate_via_channel(|txb_stoss| {
                             aplayer[*epi].ask_for_stoss(
                                 *epi,
-                                &pregame.m_doublings,
-                                pregame.m_rules.as_ref(),
-                                &pregame.m_ahand[*epi],
-                                &pregame.m_vecstoss,
-                                pregame.m_n_stock,
+                                &pregame.doublings,
+                                pregame.rules.as_ref(),
+                                &pregame.ahand[*epi],
+                                &pregame.vecstoss,
+                                pregame.n_stock,
                                 txb_stoss,
                             );
                         })
@@ -272,7 +272,7 @@ fn test_game_loop() {
     ].into_iter() {
         game_loop(
             &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
-                Box::new(SPlayerComputer{m_ai: {
+                Box::new(SPlayerComputer{ai: {
                     if epi<EPlayerIndex::EPI2 {
                         Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/1))
                     } else {

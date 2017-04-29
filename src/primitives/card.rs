@@ -42,7 +42,7 @@ impl fmt::Display for ESchlag {
 
 #[derive(PartialEq, Eq, Clone, Copy, Hash, Debug)]
 pub struct SCard {
-    m_n_internalrepresentation : i8,
+    n_internalrepresentation : i8,
 }
 
 impl fmt::Display for SCard {
@@ -70,13 +70,13 @@ impl fmt::Display for SCard {
 
 impl SCard {
     pub fn new(efarbe : EFarbe, eschlag : ESchlag) -> SCard {
-        SCard{m_n_internalrepresentation : (efarbe.to_usize() * 8 + eschlag.to_usize()).as_num()}
+        SCard{n_internalrepresentation : (efarbe.to_usize() * 8 + eschlag.to_usize()).as_num()}
     }
     pub fn farbe(&self) -> EFarbe {
-        EFarbe::from_usize((self.m_n_internalrepresentation / 8).as_num())
+        EFarbe::from_usize((self.n_internalrepresentation / 8).as_num())
     }
     pub fn schlag(&self) -> ESchlag {
-        ESchlag::from_usize((self.m_n_internalrepresentation % 8).as_num())
+        ESchlag::from_usize((self.n_internalrepresentation % 8).as_num())
     }
     pub fn values() -> Vec<SCard> { // TODO Rust: return iterator once we can specify that return type is an iterator
         iproduct!(
@@ -105,7 +105,7 @@ fn test_card_ctor() {
 }
 
 pub struct SCardMap<T> {
-    m_at : [T; 32],
+    at : [T; 32],
 }
 
 impl <T> SCardMap<T> {
@@ -127,12 +127,12 @@ impl <T> Index<SCard> for SCardMap<T> {
     type Output = T;
 
     fn index(&self, card: SCard) -> &T {
-        &self.m_at[card.m_n_internalrepresentation.as_num::<usize>()]
+        &self.at[card.n_internalrepresentation.as_num::<usize>()]
     }
 }
 
 impl <T> IndexMut<SCard> for SCardMap<T> {
     fn index_mut(&mut self, card: SCard) -> &mut Self::Output {
-        &mut self.m_at[card.m_n_internalrepresentation.as_num::<usize>()]
+        &mut self.at[card.n_internalrepresentation.as_num::<usize>()]
     }
 }

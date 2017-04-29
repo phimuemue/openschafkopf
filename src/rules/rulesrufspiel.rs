@@ -8,14 +8,14 @@ use util::*;
 
 #[derive(Clone)]
 pub struct SRulesRufspiel {
-    m_epi : EPlayerIndex,
-    m_efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
-    m_payoutdecider: SPayoutDeciderPointBased,
+    epi : EPlayerIndex,
+    efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
+    payoutdecider: SPayoutDeciderPointBased,
 }
 
 impl fmt::Display for SRulesRufspiel {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Rufspiel mit der {}-Sau von {}", self.m_efarbe, self.m_epi)
+        write!(f, "Rufspiel mit der {}-Sau von {}", self.efarbe, self.epi)
     }
 }
 
@@ -27,26 +27,26 @@ pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag<
 impl SRulesRufspiel {
     pub fn new(epi: EPlayerIndex, efarbe: EFarbe, payoutdeciderparams: SPayoutDeciderParams) -> SRulesRufspiel {
         SRulesRufspiel {
-            m_epi: epi,
-            m_efarbe: efarbe,
-            m_payoutdecider: SPayoutDeciderPointBased::new(payoutdeciderparams, VGameAnnouncementPriority::RufspielLike),
+            epi: epi,
+            efarbe: efarbe,
+            payoutdecider: SPayoutDeciderPointBased::new(payoutdeciderparams, VGameAnnouncementPriority::RufspielLike),
         }
     }
 
     fn rufsau(&self) -> SCard {
-        SCard::new(self.m_efarbe, ESchlag::Ass)
+        SCard::new(self.efarbe, ESchlag::Ass)
     }
 
     fn is_ruffarbe(&self, card: SCard) -> bool {
-        VTrumpfOrFarbe::Farbe(self.m_efarbe)==self.trumpforfarbe(card)
+        VTrumpfOrFarbe::Farbe(self.efarbe)==self.trumpforfarbe(card)
     }
 }
 
 impl TActivelyPlayableRules for SRulesRufspiel {
     box_clone_impl_by_clone!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority {
-        assert_eq!(VGameAnnouncementPriority::RufspielLike, self.m_payoutdecider.priority());
-        self.m_payoutdecider.priority()
+        assert_eq!(VGameAnnouncementPriority::RufspielLike, self.payoutdecider.priority());
+        self.payoutdecider.priority()
     }
 }
 
@@ -61,13 +61,13 @@ impl TRules for SRulesRufspiel {
     }
 
     fn playerindex(&self) -> Option<EPlayerIndex> {
-        Some(self.m_epi)
+        Some(self.epi)
     }
 
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {
         assert_eq!(hand.cards().len(), 8);
-        assert!(epi!=self.m_epi || !hand.contains(self.rufsau()));
-        (epi==self.m_epi || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
+        assert!(epi!=self.epi || !hand.contains(self.rufsau()));
+        (epi==self.epi || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, n_stock: isize) -> SAccountBalance {
@@ -76,14 +76,14 @@ impl TRules for SRulesRufspiel {
             .find(|&(_, card)| *card==self.rufsau())
             .map(|(epi, _)| epi)
             .unwrap();
-        assert_ne!(self.m_epi, epi_coplayer);
+        assert_ne!(self.epi, epi_coplayer);
         macro_rules! fn_is_player_party {
             () => {|epi| {
-                epi==self.m_epi || epi==epi_coplayer
+                epi==self.epi || epi==epi_coplayer
             }}
         }
         let an_payout_no_stock = SStossDoublingPayoutDecider::payout(
-            self.m_payoutdecider.payout(
+            self.payoutdecider.payout(
                 self,
                 gamefinishedstiche,
                 fn_is_player_party!(),
@@ -93,7 +93,7 @@ impl TRules for SRulesRufspiel {
             n_doubling,
         );
         assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
-        assert_eq!(an_payout_no_stock[self.m_epi], an_payout_no_stock[epi_coplayer]);
+        assert_eq!(an_payout_no_stock[self.epi], an_payout_no_stock[epi_coplayer]);
         assert_eq!(
             an_payout_no_stock.iter()
                 .filter(|&n_payout_no_stock| 0<*n_payout_no_stock)
@@ -102,7 +102,7 @@ impl TRules for SRulesRufspiel {
         );
         assert_eq!(n_stock%2, 0);
         let n_stock_per_player = n_stock/2;
-        if /*b_player_party_wins*/ 0<an_payout_no_stock[self.m_epi] {
+        if /*b_player_party_wins*/ 0<an_payout_no_stock[self.epi] {
             SAccountBalance::new(
                 EPlayerIndex::map_from_fn(|epi|
                     an_payout_no_stock[epi] + if fn_is_player_party!()(epi) { n_stock_per_player } else {0}

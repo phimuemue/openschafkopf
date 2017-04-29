@@ -8,8 +8,8 @@ use std::io::Write;
 use std::io;
 
 pub struct SSuspicionTransition {
-    m_stich : SStich,
-    m_susp : SSuspicion,
+    stich : SStich,
+    susp : SSuspicion,
 }
 
 pub fn assert_ahand_same_size(ahand: &EnumMap<EPlayerIndex, SHand>) {
@@ -33,23 +33,23 @@ pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<SStich>, stich: SStich, fun
 
 impl SSuspicionTransition {
     pub fn stich(&self) -> &SStich {
-        &self.m_stich
+        &self.stich
     }
 
     pub fn suspicion(&self) -> &SSuspicion {
-        &self.m_susp
+        &self.susp
     }
 }
 
 pub struct SSuspicion {
-    m_vecsusptrans : Vec<SSuspicionTransition>,
-    m_ahand : EnumMap<EPlayerIndex, SHand>,
+    vecsusptrans : Vec<SSuspicionTransition>,
+    ahand : EnumMap<EPlayerIndex, SHand>,
 }
 
 impl SSuspicion {
 
     pub fn suspicion_transitions(&self) -> &[SSuspicionTransition] {
-        &self.m_vecsusptrans
+        &self.vecsusptrans
     }
 
     pub fn new<FuncFilterSuccessors>(
@@ -91,8 +91,8 @@ impl SSuspicion {
             .map(|stich| {
                 let epi_first_susp = rules.winner_index(&stich);
                 push_pop_vecstich(vecstich, stich.clone(), |vecstich| SSuspicionTransition {
-                    m_stich : stich.clone(),
-                    m_susp : SSuspicion::new(
+                    stich : stich.clone(),
+                    susp : SSuspicion::new(
                         epi_first_susp,
                         EPlayerIndex::map_from_fn(|epi| {
                             ahand[epi].new_from_hand(stich[epi])
@@ -105,24 +105,24 @@ impl SSuspicion {
             })
             .collect();
         SSuspicion {
-            m_vecsusptrans: vecsusptrans,
-            m_ahand : ahand,
+            vecsusptrans: vecsusptrans,
+            ahand : ahand,
         }
     }
 
     pub fn count_leaves(&self) -> usize {
-        if self.m_vecsusptrans.is_empty() {
+        if self.vecsusptrans.is_empty() {
             1
         } else {
-            self.m_vecsusptrans.iter()
-                .map(|susptrans| susptrans.m_susp.count_leaves())
+            self.vecsusptrans.iter()
+                .map(|susptrans| susptrans.susp.count_leaves())
                 .sum()
         }
     }
 
     fn hand_size(&self) -> usize {
-        assert_ahand_same_size(&self.m_ahand);
-        self.m_ahand[EPlayerIndex::EPI0].cards().len()
+        assert_ahand_same_size(&self.ahand);
+        self.ahand[EPlayerIndex::EPI0].cards().len()
     }
 
     pub fn print_suspicion(
@@ -135,22 +135,22 @@ impl SSuspicion {
     ) -> io::Result<()> {
         if n_level < n_level_end {
             for epi in EPlayerIndex::values() {
-                file_output.write_all(format!("{} | ", self.m_ahand[epi]).as_bytes())?;
+                file_output.write_all(format!("{} | ", self.ahand[epi]).as_bytes())?;
             }
             file_output.write_all(b", min payouts: ")?;
             for _epi in EPlayerIndex::values() {
                 file_output.write_all(b"TODO: payout")?;
             }
             file_output.write_all(b"\n")?;
-            for susptrans in &self.m_vecsusptrans {
-                push_pop_vecstich(vecstich, susptrans.m_stich.clone(), |vecstich| -> io::Result<()>{
-                    assert_eq!(vecstich.len()+susptrans.m_susp.hand_size(), 8);
+            for susptrans in &self.vecsusptrans {
+                push_pop_vecstich(vecstich, susptrans.stich.clone(), |vecstich| -> io::Result<()>{
+                    assert_eq!(vecstich.len()+susptrans.susp.hand_size(), 8);
                     for _ in 0..n_level+1 {
                         file_output.write_all(b" ")?;
                     }
-                    file_output.write_all(format!("{} : ", susptrans.m_stich).as_bytes())?;
-                    if 1<susptrans.m_susp.hand_size() {
-                        susptrans.m_susp.print_suspicion(n_level_end, (n_level+1), rules, vecstich, &mut file_output)?;
+                    file_output.write_all(format!("{} : ", susptrans.stich).as_bytes())?;
+                    if 1<susptrans.susp.hand_size() {
+                        susptrans.susp.print_suspicion(n_level_end, (n_level+1), rules, vecstich, &mut file_output)?;
                     } else {
                         file_output.write_all(b"\n")?;
                     }
@@ -180,12 +180,12 @@ impl SSuspicion {
         if 0==self.hand_size() {
             return rules.payout(&SGameFinishedStiche::new(vecstich), n_stoss, n_doubling, n_stock).get_player(epi);
         }
-        let n_payout = self.m_vecsusptrans.iter()
+        let n_payout = self.vecsusptrans.iter()
             .filter(|susptrans| { // only consider successors compatible with current stich_given so far
-                assert_eq!(susptrans.m_susp.hand_size()+1, self.hand_size());
+                assert_eq!(susptrans.susp.hand_size()+1, self.hand_size());
                 ostich_given.as_ref().map_or(true, |stich_given| {
                     stich_given.iter()
-                        .zip(susptrans.m_stich.iter())
+                        .zip(susptrans.stich.iter())
                         .all(|((i_current_stich, card_current_stich), (i_susp_stich, card_susp_stich))| {
                             assert_eq!(i_current_stich, i_susp_stich);
                             card_current_stich==card_susp_stich
@@ -193,13 +193,13 @@ impl SSuspicion {
                 })
             })
             .map(|susptrans| {
-                assert_eq!(susptrans.m_stich.size(), 4);
-                push_pop_vecstich(vecstich, susptrans.m_stich.clone(), |vecstich| {
-                    (susptrans, susptrans.m_susp.min_reachable_payout(rules, vecstich, None, epi, n_stoss, n_doubling, n_stock))
+                assert_eq!(susptrans.stich.size(), 4);
+                push_pop_vecstich(vecstich, susptrans.stich.clone(), |vecstich| {
+                    (susptrans, susptrans.susp.min_reachable_payout(rules, vecstich, None, epi, n_stoss, n_doubling, n_stock))
                 })
             })
             .group_by(|&(susptrans, _n_payout)| { // other players may play inconveniently for epi...
-                susptrans.m_stich.iter()
+                susptrans.stich.iter()
                     .take_while(|&(epi_stich, _card)| epi_stich != epi)
                     .map(|(_epi, card)| card)
                     .collect::<Vec<_>>()
@@ -207,7 +207,7 @@ impl SSuspicion {
             .into_iter()
             .map(|(_stich_key_before_epi, grpsusptransn_before_epi)| {
                 grpsusptransn_before_epi.into_iter()
-                    .group_by(|&(susptrans, _n_payout)| susptrans.m_stich[epi])
+                    .group_by(|&(susptrans, _n_payout)| susptrans.stich[epi])
                     .into_iter()
                     .map(|(_stich_key_epi, grpsusptransn_epi)| {
                         // in this group, we need the worst case if other players play badly

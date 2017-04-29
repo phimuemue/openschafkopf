@@ -11,15 +11,15 @@ use rand::{self, Rng};
 
 
 pub struct SForeverRandHands {
-    m_epi_fixed : EPlayerIndex,
-    m_ahand: EnumMap<EPlayerIndex, SHand>,
+    epi_fixed : EPlayerIndex,
+    ahand: EnumMap<EPlayerIndex, SHand>,
 }
 
 impl Iterator for SForeverRandHands {
     type Item = EnumMap<EPlayerIndex, SHand>;
     fn next(&mut self) -> Option<EnumMap<EPlayerIndex, SHand>> {
-        assert_ahand_same_size(&self.m_ahand);
-        let n_len_hand = self.m_ahand[EPlayerIndex::EPI0].cards().len();
+        assert_ahand_same_size(&self.ahand);
+        let n_len_hand = self.ahand[EPlayerIndex::EPI0].cards().len();
         let mut rng = rand::thread_rng();
         for i_card in 0..3*n_len_hand {
             let i_rand = rng.gen_range(0, 3*n_len_hand - i_card);
@@ -30,7 +30,7 @@ impl Iterator for SForeverRandHands {
                     // epi_fixed==2 => 0..15, 24..31 valid
                     // epi_fixed==3 => 0..23  valid
                     let i_valid = {
-                        if i_rand < self.m_epi_fixed.to_usize()*n_len_hand {
+                        if i_rand < self.epi_fixed.to_usize()*n_len_hand {
                             i_rand
                         } else {
                             i_rand + n_len_hand
@@ -43,24 +43,24 @@ impl Iterator for SForeverRandHands {
             {
                 let assert_valid = |epi, i_hand| {
                     assert!(i_hand<n_len_hand);
-                    assert_ne!(epi, self.m_epi_fixed);
+                    assert_ne!(epi, self.epi_fixed);
                 };
                 assert_valid(epi_swap, i_hand_swap);
                 assert_valid(epi_rand, i_hand_rand);
             }
-            let card_swap = self.m_ahand[epi_swap].cards()[i_hand_swap];
-            let card_rand = self.m_ahand[epi_rand].cards()[i_hand_rand];
-            self.m_ahand[epi_swap].cards_mut()[i_hand_swap] = card_rand;
-            self.m_ahand[epi_rand].cards_mut()[i_hand_rand] = card_swap;
+            let card_swap = self.ahand[epi_swap].cards()[i_hand_swap];
+            let card_rand = self.ahand[epi_rand].cards()[i_hand_rand];
+            self.ahand[epi_swap].cards_mut()[i_hand_swap] = card_rand;
+            self.ahand[epi_rand].cards_mut()[i_hand_rand] = card_swap;
         }
-        Some(EPlayerIndex::map_from_fn(|epi| self.m_ahand[epi].clone()))
+        Some(EPlayerIndex::map_from_fn(|epi| self.ahand[epi].clone()))
     }
 }
 
 pub fn forever_rand_hands(vecstich: &[SStich], hand_fixed: &SHand, epi_fixed: EPlayerIndex) -> SForeverRandHands {
     SForeverRandHands {
-        m_epi_fixed : epi_fixed,
-        m_ahand : {
+        epi_fixed : epi_fixed,
+        ahand : {
             let mut veccard_unplayed = unplayed_cards(vecstich, hand_fixed);
             assert!(veccard_unplayed.len()>=3*hand_fixed.cards().len());
             let n_size = hand_fixed.cards().len();
@@ -76,30 +76,30 @@ pub fn forever_rand_hands(vecstich: &[SStich], hand_fixed: &SHand, epi_fixed: EP
 }
 
 pub struct SAllHands {
-    m_epi_fixed : EPlayerIndex,
-    m_veccard_unknown: Vec<SCard>,
-    m_vecepi: Vec<EPlayerIndex>,
-    m_hand_known: SHand,
-    m_b_valid: bool,
+    epi_fixed : EPlayerIndex,
+    veccard_unknown: Vec<SCard>,
+    vecepi: Vec<EPlayerIndex>,
+    hand_known: SHand,
+    b_valid: bool,
 }
 
 impl Iterator for SAllHands {
     type Item = EnumMap<EPlayerIndex, SHand>;
     fn next(&mut self) -> Option<EnumMap<EPlayerIndex, SHand>> {
-        if self.m_b_valid {
+        if self.b_valid {
             let ahand = EPlayerIndex::map_from_fn(|epi| {
-                if self.m_epi_fixed==epi {
-                    self.m_hand_known.clone()
+                if self.epi_fixed==epi {
+                    self.hand_known.clone()
                 } else {
-                    SHand::new_from_vec(self.m_vecepi.iter().enumerate()
+                    SHand::new_from_vec(self.vecepi.iter().enumerate()
                         .filter(|&(_i, epi_susp)| *epi_susp == epi)
-                        .map(|(i, _epi_susp)| self.m_veccard_unknown[i]).collect())
+                        .map(|(i, _epi_susp)| self.veccard_unknown[i]).collect())
                 }
             });
-            self.m_b_valid = self.m_vecepi[..].next_permutation();
+            self.b_valid = self.vecepi[..].next_permutation();
             Some(ahand)
         } else {
-            assert!(!self.m_vecepi[..].next_permutation());
+            assert!(!self.vecepi[..].next_permutation());
             None
         }
     }
@@ -111,9 +111,9 @@ pub fn all_possible_hands(vecstich: &[SStich], hand_fixed: SHand, epi_fixed: EPl
     assert_eq!(n_cards_total%3, 0);
     let n_cards_per_player = n_cards_total / 3;
     SAllHands {
-        m_epi_fixed : epi_fixed,
-        m_veccard_unknown: veccard_unknown,
-        m_vecepi: (0..n_cards_total)
+        epi_fixed : epi_fixed,
+        veccard_unknown: veccard_unknown,
+        vecepi: (0..n_cards_total)
             .map(|i| {
                 let n_epi = i/n_cards_per_player;
                 assert!(n_epi<=2);
@@ -125,8 +125,8 @@ pub fn all_possible_hands(vecstich: &[SStich], hand_fixed: SHand, epi_fixed: EPl
                 
             })
             .collect(),
-        m_hand_known: hand_fixed,
-        m_b_valid: true, // in the beginning, there should be a valid assignment of cards to players
+        hand_known: hand_fixed,
+        b_valid: true, // in the beginning, there should be a valid assignment of cards to players
     }
 }
 

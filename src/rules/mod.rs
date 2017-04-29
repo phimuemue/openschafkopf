@@ -45,7 +45,7 @@ impl VTrumpfOrFarbe {
 }
 
 pub struct SStoss {
-    pub m_epi : EPlayerIndex,
+    pub epi : EPlayerIndex,
 }
 
 pub trait TRules : fmt::Display + TAsRules + Sync {
@@ -87,7 +87,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
     }
 
     fn winner_index(&self, stich: &SStich) -> EPlayerIndex {
-        let mut epi_best = stich.m_epi_first;
+        let mut epi_best = stich.epi_first;
         for (epi, card) in stich.iter().skip(1) {
             if Ordering::Less==self.compare_in_stich(stich[epi_best], *card) {
                 epi_best = epi;

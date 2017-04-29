@@ -48,8 +48,8 @@ impl TSchlagDesignator for SSchlagDesignatorUnter { fn schlag() -> ESchlag {ESch
 
 #[derive(Clone)]
 pub struct STrumpfDeciderSchlag<SchlagDesignator, DeciderSec> {
-    m_schlagdesignator: PhantomData<SchlagDesignator>,
-    m_decidersec: PhantomData<DeciderSec>,
+    schlagdesignator: PhantomData<SchlagDesignator>,
+    decidersec: PhantomData<DeciderSec>,
 }
 impl<SchlagDesignator, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<SchlagDesignator, DeciderSec> 
     where DeciderSec: TTrumpfDecider,
@@ -107,7 +107,7 @@ impl TFarbeDesignator for SFarbeDesignatorSchelln { fn farbe() -> EFarbe {EFarbe
 
 #[derive(Clone)]
 pub struct STrumpfDeciderFarbe<FarbeDesignator> {
-    m_farbedesignator: PhantomData<FarbeDesignator>,
+    farbedesignator: PhantomData<FarbeDesignator>,
 }
 impl<FarbeDesignator> TTrumpfDecider for STrumpfDeciderFarbe<FarbeDesignator> 
     where FarbeDesignator: TFarbeDesignator,

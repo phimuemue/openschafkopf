@@ -165,7 +165,7 @@ pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &[SStos
             print_special(
                 ". Stoesse: ",
                 vecstoss.iter()
-                    .map(|stoss| stoss.m_epi)
+                    .map(|stoss| stoss.epi)
                     .collect()
             );
             ncurses::wrefresh(ncwin);
@@ -192,27 +192,27 @@ pub fn print_account_balance(accountbalance : &SAccountBalance) {
 }
 
 pub struct SAskForAlternativeKeyBindings {
-    m_key_prev : i32,
-    m_key_next : i32,
-    m_key_choose : i32,
-    m_key_suggest : i32,
+    key_prev : i32,
+    key_next : i32,
+    key_choose : i32,
+    key_suggest : i32,
 }
 
 pub fn choose_card_from_hand_key_bindings() -> SAskForAlternativeKeyBindings {
     SAskForAlternativeKeyBindings {
-        m_key_prev : ncurses::KEY_LEFT,
-        m_key_next : ncurses::KEY_RIGHT,
-        m_key_choose : ncurses::KEY_UP,
-        m_key_suggest : '?' as i32,
+        key_prev : ncurses::KEY_LEFT,
+        key_next : ncurses::KEY_RIGHT,
+        key_choose : ncurses::KEY_UP,
+        key_suggest : '?' as i32,
     }
 }
 
 pub fn choose_alternative_from_list_key_bindings() -> SAskForAlternativeKeyBindings {
     SAskForAlternativeKeyBindings {
-        m_key_prev : ncurses::KEY_UP,
-        m_key_next : ncurses::KEY_DOWN,
-        m_key_choose : ncurses::KEY_RIGHT,
-        m_key_suggest : '?' as i32,
+        key_prev : ncurses::KEY_UP,
+        key_next : ncurses::KEY_DOWN,
+        key_choose : ncurses::KEY_RIGHT,
+        key_suggest : '?' as i32,
     }
 }
 
@@ -236,18 +236,18 @@ pub fn ask_for_alternative<'vect, T, FnFilter, FnCallback, FnSuggest>(
             let mut i_alternative = 0; // initially, point to 0th alternative
             fn_callback(ncwin, vect[i_alternative].0, &ot_suggest);
             if 1<vect.len() {
-                let mut ch = askforalternativekeybindings.m_key_prev;
-                while ch!=askforalternativekeybindings.m_key_choose {
+                let mut ch = askforalternativekeybindings.key_prev;
+                while ch!=askforalternativekeybindings.key_choose {
                     ncurses::werase(ncwin);
-                    if ch==askforalternativekeybindings.m_key_prev {
+                    if ch==askforalternativekeybindings.key_prev {
                         if 0<i_alternative {
                             i_alternative -= 1
                         }
-                    } else if ch== askforalternativekeybindings.m_key_next {
+                    } else if ch== askforalternativekeybindings.key_next {
                         if i_alternative<vect.len()-1 {
                             i_alternative += 1
                         }
-                    } else if ch==askforalternativekeybindings.m_key_suggest {
+                    } else if ch==askforalternativekeybindings.key_suggest {
                         ot_suggest = fn_suggest();
                     }
                     fn_callback(ncwin, vect[i_alternative].0, &ot_suggest);

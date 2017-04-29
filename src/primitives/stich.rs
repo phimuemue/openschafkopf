@@ -7,7 +7,7 @@ pub type SStich = SPlayersInRound<SCard>;
 impl fmt::Display for SStich {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for epi in EPlayerIndex::values() {
-            if epi==self.m_epi_first {
+            if epi==self.epi_first {
                 write!(f, ">")?;
             } else {
                 write!(f, " ")?;

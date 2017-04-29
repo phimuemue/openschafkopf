@@ -15,19 +15,19 @@ use toml;
 use errors::*;
 
 pub struct SRuleGroup {
-    pub m_str_name : String,
-    pub m_vecrules : Vec<Box<TActivelyPlayableRules>>,
+    pub str_name : String,
+    pub vecrules : Vec<Box<TActivelyPlayableRules>>,
 }
 
 impl SRuleGroup {
     pub fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<SRuleGroup> {
-        let vecrules_steigered = self.m_vecrules.iter()
+        let vecrules_steigered = self.vecrules.iter()
             .filter_map(|rules| rules.with_higher_prio_than(prio, ebid))
             .collect::<Vec<_>>();
         if 0<vecrules_steigered.len() {
             Some(SRuleGroup {
-                m_str_name: self.m_str_name.clone(),
-                m_vecrules: vecrules_steigered,
+                str_name: self.str_name.clone(),
+                vecrules: vecrules_steigered,
             })
         } else {
             None
@@ -47,13 +47,13 @@ pub enum EDoublingScope {
 
 #[derive(new)]
 pub struct SRuleSet {
-    pub m_avecrulegroup : EnumMap<EPlayerIndex, Vec<SRuleGroup>>,
-    pub m_stockorramsch : VStockOrT<Box<TRules>>,
-    pub m_oedoublingscope : Option<EDoublingScope>,
+    pub avecrulegroup : EnumMap<EPlayerIndex, Vec<SRuleGroup>>,
+    pub stockorramsch : VStockOrT<Box<TRules>>,
+    pub oedoublingscope : Option<EDoublingScope>,
 }
 
 pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> Vec<&TActivelyPlayableRules> {
-    vecrulegroup.iter().flat_map(|rulegroup| rulegroup.m_vecrules.iter().map(|rules| rules.as_ref())).collect()
+    vecrulegroup.iter().flat_map(|rulegroup| rulegroup.vecrules.iter().map(|rules| rules.as_ref())).collect()
 }
 
 impl SRuleSet {
@@ -113,8 +113,8 @@ impl SRuleSet {
                     let n_payout_base = read_int(tomlval_game, ("price")).or_else(|_err| fallback(&format!("{}.price", $str_rule_name_file), $str_base_price_fallback))?;
                     let n_lauf_lbound = read_int(tomlval_game, ("lauf-price")).or_else(|_err| fallback(&format!("{}.lauf-price", $str_rule_name_file), "lauf-min"))?;
                     Ok(vecrulegroup.push(SRuleGroup{
-                        m_str_name: $str_group_name.to_string(),
-                        m_vecrules: ($fn_rules(SPayoutDeciderParams::new(
+                        str_name: $str_group_name.to_string(),
+                        vecrules: ($fn_rules(SPayoutDeciderParams::new(
                             n_payout_base.as_num(),
                             /*n_payout_schneider_schwarz*/n_payout_extra.as_num(),
                             SLaufendeParams::new(

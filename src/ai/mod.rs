@@ -21,9 +21,9 @@ use util::*;
 pub trait TAi {
     fn rank_rules(&self, hand_fixed: &SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64;
     fn suggest_card(&self, game: &SGame) -> SCard {
-        let veccard_allowed = game.m_rules.all_allowed_cards(
-            &game.m_vecstich,
-            &game.m_ahand[game.which_player_can_do_something().unwrap()]
+        let veccard_allowed = game.rules.all_allowed_cards(
+            &game.vecstich,
+            &game.ahand[game.which_player_can_do_something().unwrap()]
         );
         assert!(1<=veccard_allowed.len());
         if 1==veccard_allowed.len() {
@@ -77,7 +77,7 @@ fn test_unplayed_cards() {
 
 #[derive(new)]
 pub struct SAiCheating {
-    m_n_rank_rules_samples: usize,
+    n_rank_rules_samples: usize,
 }
 
 impl TAi for SAiCheating {
@@ -86,7 +86,7 @@ impl TAi for SAiCheating {
         SAiSimulating::new(
             /*n_suggest_card_branches*/2,
             /*n_suggest_card_samples*/10,
-            self.m_n_rank_rules_samples,
+            self.n_rank_rules_samples,
         ).rank_rules(hand_fixed, epi_first, epi_rank, rules, n_stock)
     }
 
@@ -96,7 +96,7 @@ impl TAi for SAiCheating {
             Some(EPlayerIndex::map_from_fn(|epi|
                 SHand::new_from_vec(
                     game.current_stich().get(epi).cloned().into_iter()
-                        .chain(game.m_ahand[epi].cards().iter().cloned())
+                        .chain(game.ahand[epi].cards().iter().cloned())
                         .collect()
                 )
             )).into_iter(),
@@ -148,7 +148,7 @@ pub fn is_compatible_with_game_so_far(
             let mut b_valid_up_to_now = true;
             let mut vecstich_simulate = Vec::new();
             'loopstich: for stich in completed_stichs(vecstich).iter() {
-                vecstich_simulate.push(SStich::new(stich.m_epi_first));
+                vecstich_simulate.push(SStich::new(stich.epi_first));
                 for (epi, card) in stich.iter() {
                     if rules.card_is_allowed(
                         &vecstich_simulate,
@@ -185,7 +185,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                 let susp = SSuspicion::new(
                     stich_current.first_playerindex(),
                     ahand,
-                    game.m_rules.as_ref(),
+                    game.rules.as_ref(),
                     &mut vecstich_complete_mut,
                     &|vecstich_complete_successor: &[SStich], vecstich_successor: &mut Vec<SStich>| {
                         assert!(!vecstich_successor.is_empty());
@@ -204,14 +204,14 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                     }
                 );
                 assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
-                if susp.print_suspicion(8, 0, game.m_rules.as_ref(), &mut vecstich_complete_mut, &mut fs::File::create(&"suspicion.txt").unwrap()).is_err() {
+                if susp.print_suspicion(8, 0, game.rules.as_ref(), &mut vecstich_complete_mut, &mut fs::File::create(&"suspicion.txt").unwrap()).is_err() {
                     // TODO: what shall be done on error?
                 }
                 vecsusp.lock().unwrap().push(susp);
             });
         }
     });
-    let veccard_allowed_fixed = game.m_rules.all_allowed_cards(&game.m_vecstich, &game.m_ahand[epi_fixed]);
+    let veccard_allowed_fixed = game.rules.all_allowed_cards(&game.vecstich, &game.ahand[epi_fixed]);
     let mapcardpayout = vecsusp.lock().unwrap().iter()
         .fold(
             // aggregate n_payout per card in some way
@@ -222,13 +222,13 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                     .map(|susptrans| {
                         let n_payout = push_pop_vecstich(&mut vecstich_complete_payout, susptrans.stich().clone(), |mut vecstich_complete_payout| {
                             susptrans.suspicion().min_reachable_payout(
-                                game.m_rules.as_ref(),
+                                game.rules.as_ref(),
                                 &mut vecstich_complete_payout,
                                 None,
                                 epi_fixed,
-                                /*n_stoss*/ game.m_vecstoss.len(),
-                                /*n_doubling*/ game.m_doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),
-                                game.m_n_stock,
+                                /*n_stoss*/ game.vecstoss.len(),
+                                /*n_doubling*/ game.doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),
+                                game.n_stock,
                             )
                         });
                         (susptrans.stich()[epi_fixed], n_payout)
@@ -255,16 +255,16 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
 
 #[derive(new)]
 pub struct SAiSimulating {
-    m_n_suggest_card_branches: usize,
-    m_n_suggest_card_samples: usize,
-    m_n_rank_rules_samples: usize,
+    n_suggest_card_branches: usize,
+    n_suggest_card_samples: usize,
+    n_rank_rules_samples: usize,
 }
 
 impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: &SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
         let n_payout_sum = Arc::new(AtomicIsize::new(0));
         crossbeam::scope(|scope| {
-            for ahand in forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get(), epi_rank).take(self.m_n_rank_rules_samples) {
+            for ahand in forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get(), epi_rank).take(self.n_rank_rules_samples) {
                 let n_payout_sum = n_payout_sum.clone();
                 scope.spawn(move || {
                     let n_payout = 
@@ -292,29 +292,29 @@ impl TAi for SAiSimulating {
             }
         });
         let n_payout_sum = n_payout_sum.load(Ordering::SeqCst);
-        (n_payout_sum.as_num::<f64>()) / (self.m_n_rank_rules_samples.as_num::<f64>())
+        (n_payout_sum.as_num::<f64>()) / (self.n_rank_rules_samples.as_num::<f64>())
     }
 
     fn internal_suggest_card(&self, game: &SGame) -> SCard {
         let stich_current = game.current_stich();
         assert!(stich_current.size()<4);
         let epi_fixed = stich_current.current_playerindex().unwrap();
-        let hand_fixed = &game.m_ahand[epi_fixed];
+        let hand_fixed = &game.ahand[epi_fixed];
         assert!(!hand_fixed.cards().is_empty());
         if hand_fixed.cards().len()<=2 {
             determine_best_card(
                 game,
                 all_possible_hands(game.completed_stichs(), hand_fixed.clone(), epi_fixed)
-                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules.as_ref(), &game.m_vecstich)),
-                self.m_n_suggest_card_branches,
+                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich)),
+                self.n_suggest_card_branches,
             )
         } else {
             determine_best_card(
                 game,
                 forever_rand_hands(game.completed_stichs(), hand_fixed, epi_fixed)
-                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules.as_ref(), &game.m_vecstich))
-                    .take(self.m_n_suggest_card_samples),
-                self.m_n_suggest_card_branches,
+                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
+                    .take(self.n_suggest_card_samples),
+                self.n_suggest_card_branches,
             )
         }
     }
@@ -333,14 +333,14 @@ fn test_is_compatible_with_game_so_far() {
     }
     let test_game = |astr_hand: [&'static str; 4], rules: &TRules, epi_first, vectestaction: Vec<VTestAction>| {
         let mut game = game::SGame {
-            m_doublings : SDoublings::new(epi_first),
-            m_ahand : EPlayerIndex::map_from_fn(|epi| {
+            doublings : SDoublings::new(epi_first),
+            ahand : EPlayerIndex::map_from_fn(|epi| {
                 SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
             }),
-            m_rules : rules.box_clone(),
-            m_vecstich : vec![SStich::new(epi_first)],
-            m_n_stock: 0,
-            m_vecstoss : vec![], // TODO implement tests for SStoss
+            rules : rules.box_clone(),
+            vecstich : vec![SStich::new(epi_first)],
+            n_stock: 0,
+            vecstoss : vec![], // TODO implement tests for SStoss
         };
         let mut vecpairepitrumpforfarbe_frei = Vec::new();
         for testaction in vectestaction {
@@ -361,20 +361,20 @@ fn test_is_compatible_with_game_so_far() {
             }
             for ahand in forever_rand_hands(
                 game.completed_stichs(),
-                &game.m_ahand[game.which_player_can_do_something().unwrap()],
+                &game.ahand[game.which_player_can_do_something().unwrap()],
                 game.which_player_can_do_something().unwrap()
             )
-                .filter(|ahand| is_compatible_with_game_so_far(ahand, game.m_rules.as_ref(), &game.m_vecstich))
+                .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
                 .take(100)
             {
                 for epi in EPlayerIndex::values() {
                     println!("{}: {}", epi, ahand[epi]);
                 }
                 for &(epi, ref trumpforfarbe) in vecpairepitrumpforfarbe_frei.iter() {
-                    assert!(!ahand[epi].contains_pred(|card| *trumpforfarbe==game.m_rules.trumpforfarbe(*card)));
+                    assert!(!ahand[epi].contains_pred(|card| *trumpforfarbe==game.rules.trumpforfarbe(*card)));
                 }
                 if let Some((epi_not_frei, ref trumpforfarbe))=oassertnotfrei {
-                    assert!(ahand[epi_not_frei].contains_pred(|card| *trumpforfarbe==game.m_rules.trumpforfarbe(*card)));
+                    assert!(ahand[epi_not_frei].contains_pred(|card| *trumpforfarbe==game.rules.trumpforfarbe(*card)));
                 }
             }
         }

@@ -9,7 +9,7 @@ use ai::*;
 use std::sync::mpsc;
 
 pub struct SPlayerHuman {
-    pub m_ai : Box<TAi>,
+    pub ai : Box<TAi>,
 }
 
 fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(
@@ -76,13 +76,13 @@ impl TPlayer for SPlayerHuman {
     }
 
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
-        skui::print_vecstich(&game.m_vecstich);
+        skui::print_vecstich(&game.vecstich);
         let hand = {
-            let mut hand = game.m_ahand[game.which_player_can_do_something().unwrap()].clone();
-            game.m_rules.sort_cards_first_trumpf_then_farbe(hand.cards_mut());
+            let mut hand = game.ahand[game.which_player_can_do_something().unwrap()].clone();
+            game.rules.sort_cards_first_trumpf_then_farbe(hand.cards_mut());
             hand
         };
-        let veccard_allowed = game.m_rules.all_allowed_cards(&game.m_vecstich, &hand);
+        let veccard_allowed = game.rules.all_allowed_cards(&game.vecstich, &hand);
         match txcard.send(
             *skui::ask_for_alternative(
                 hand.cards(),
@@ -93,9 +93,9 @@ impl TPlayer for SPlayerHuman {
                         skui::wprintln(ncwin, &format!("AI: {}", card));
                     }
                     skui::print_hand(hand.cards(), Some(i_card_chosen));
-                    skui::print_game_info(game.m_rules.as_ref(), &game.m_doublings, &game.m_vecstoss);
+                    skui::print_game_info(game.rules.as_ref(), &game.doublings, &game.vecstoss);
                 },
-                || {Some(self.m_ai.suggest_card(game))}
+                || {Some(self.ai.suggest_card(game))}
             )
         ) {
             Ok(_) => (),
@@ -116,7 +116,7 @@ impl TPlayer for SPlayerHuman {
         let vecorulegroup : Vec<Option<&SRuleGroup>> = Some(None).into_iter()
             .chain(
                 vecrulegroup.iter()
-                    .filter(|rulegroup| rulegroup.m_vecrules.iter()
+                    .filter(|rulegroup| rulegroup.vecrules.iter()
                         .any(|rules| rules.can_be_played(hand))
                     )
                     .map(Some)
@@ -127,15 +127,15 @@ impl TPlayer for SPlayerHuman {
             &vecorulegroup,
             |orulegroup : &Option<&SRuleGroup>| match *orulegroup {
                 None => "Nothing".to_string(),
-                Some(rulegroup) => rulegroup.m_str_name.clone(),
+                Some(rulegroup) => rulegroup.str_name.clone(),
             },
-            |i_orulegroup_chosen| vecorulegroup[i_orulegroup_chosen].map(|rulegroup| rulegroup.m_vecrules[0].as_ref()),
+            |i_orulegroup_chosen| vecorulegroup[i_orulegroup_chosen].map(|rulegroup| rulegroup.vecrules[0].as_ref()),
             &opairepiprio,
         )
         {
             let vecorules : Vec<Option<&TActivelyPlayableRules>> = Some(None).into_iter()
                 .chain(
-                    rulegroup.m_vecrules.iter()
+                    rulegroup.vecrules.iter()
                         .filter(|rules| rules.can_be_played(hand))
                         .map(|rules| Some(rules.as_ref()))
                 )

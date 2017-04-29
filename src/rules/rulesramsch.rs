@@ -17,8 +17,8 @@ pub enum VDurchmarsch {
 
 #[derive(new, Clone)]
 pub struct SRulesRamsch {
-    m_n_price : isize,
-    m_durchmarsch : VDurchmarsch,
+    n_price : isize,
+    durchmarsch : VDurchmarsch,
 }
 
 impl fmt::Display for SRulesRamsch {
@@ -52,9 +52,9 @@ impl TRules for SRulesRamsch {
                 SStossDoublingPayoutDecider::payout(
                     EPlayerIndex::map_from_fn(|epi| {
                         if epi_single==epi {
-                            3 * self.m_n_price * n_factor_single
+                            3 * self.n_price * n_factor_single
                         } else {
-                            -self.m_n_price * n_factor_single
+                            -self.n_price * n_factor_single
                         }
                     }),
                     {
@@ -129,7 +129,7 @@ impl TRules for SRulesRamsch {
                 no_durchmarsch_payout()
             }
         };
-        match self.m_durchmarsch {
+        match self.durchmarsch {
             VDurchmarsch::All if 120==*n_points_max =>
                 possibly_durchmarsch(gamefinishedstiche.get().iter().all(|stich| self.winner_index(stich)==the_one_epi())),
             VDurchmarsch::All | VDurchmarsch::None =>

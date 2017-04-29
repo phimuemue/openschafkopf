@@ -21,19 +21,19 @@ pub fn test_rules(
     println!("Testing rules: {}", str_info);
     let epi_first = EPlayerIndex::EPI0; // TODO parametrize w.r.t. epi_first
     let mut pregame = game::SPreGame {
-        m_doublings : {
+        doublings : {
             let mut doublings = game::SDoublings::new(epi_first);
             for epi_doubling in EPlayerIndex::values().map(|epi| epi.wrapping_add(epi_first.to_usize())) {
                 doublings.push(/*b_doubling*/vecn_doubling.contains(&epi_doubling.to_usize()));
             }
             doublings
         },
-        m_ahand : EPlayerIndex::map_from_fn(|epi| {
+        ahand : EPlayerIndex::map_from_fn(|epi| {
             SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
         }),
-        m_rules: rules.box_clone(),
-        m_n_stock: 0, // TODO test stock
-        m_vecstoss: vec![],
+        rules: rules.box_clone(),
+        n_stock: 0, // TODO test stock
+        vecstoss: vec![],
     };
     for n_epi_stoss in vecn_stoss {
         pregame.stoss(EPlayerIndex::from_usize(n_epi_stoss)).unwrap();
@@ -53,7 +53,7 @@ pub fn test_rules(
             game.zugeben(card, epi).unwrap();
         }
     }
-    for (i_stich, stich) in game.m_vecstich.iter().enumerate() {
+    for (i_stich, stich) in game.vecstich.iter().enumerate() {
         println!("Stich {}: {}", i_stich, stich);
     }
     let accountbalance_payout = game.payout();
