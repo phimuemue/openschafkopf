@@ -122,7 +122,6 @@ impl TPlayer for SPlayerComputer {
                     ).min_reachable_payout(
                         rules,
                         &mut Vec::new(),
-                        None,
                         epi,
                         /*n_stoss*/ vecstoss.len(),
                         /*n_doubling*/doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),

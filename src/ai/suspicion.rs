@@ -227,35 +227,22 @@ impl SSuspicion {
         &self,
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
-        ostich_given: Option<SStich>,
         epi: EPlayerIndex,
         n_stoss: usize,
         n_doubling: usize,
         n_stock: isize,
     ) -> isize {
         let vecstich_backup = vecstich.clone();
-        assert!(ostich_given.as_ref().map_or(true, |stich| stich.size() < 4));
         assert!(vecstich.iter().all(|stich| stich.size()==4));
         assert_eq!(vecstich.len()+self.hand_size(), 8);
         if 0==self.hand_size() {
             return rules.payout(&SGameFinishedStiche::new(vecstich), n_stoss, n_doubling, n_stock).get_player(epi);
         }
         let n_payout = self.vecsusptrans.iter()
-            .filter(|susptrans| { // only consider successors compatible with current stich_given so far
-                assert_eq!(susptrans.susp.hand_size()+1, self.hand_size());
-                ostich_given.as_ref().map_or(true, |stich_given| {
-                    stich_given.iter()
-                        .zip(susptrans.stich.iter())
-                        .all(|((i_current_stich, card_current_stich), (i_susp_stich, card_susp_stich))| {
-                            assert_eq!(i_current_stich, i_susp_stich);
-                            card_current_stich==card_susp_stich
-                        })
-                })
-            })
             .map(|susptrans| {
                 assert_eq!(susptrans.stich.size(), 4);
                 push_pop_vecstich(vecstich, susptrans.stich.clone(), |vecstich| {
-                    (susptrans, susptrans.susp.min_reachable_payout(rules, vecstich, None, epi, n_stoss, n_doubling, n_stock))
+                    (susptrans, susptrans.susp.min_reachable_payout(rules, vecstich, epi, n_stoss, n_doubling, n_stock))
                 })
             })
             .group_by(|&(susptrans, _n_payout)| { // other players may play inconveniently for epi...
