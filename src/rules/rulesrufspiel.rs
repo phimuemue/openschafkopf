@@ -168,12 +168,11 @@ impl TRules for SRulesRufspiel {
                 // Is player 0 obliged to play GA? We implement it this way for now.
                 Some(self.rufsau()).into_iter().collect()
             } else {
-                let veccard_allowed : SHandVector = hand.cards().iter()
-                    .filter(|&&card| 
+                let veccard_allowed : SHandVector = hand.cards().iter().cloned()
+                    .filter(|&card| 
                         self.rufsau()!=card 
                         && self.trumpforfarbe(card)==self.trumpforfarbe(card_first)
                     )
-                    .cloned()
                     .collect();
                 if veccard_allowed.is_empty() {
                     hand.cards().iter().cloned().filter(|&card| self.rufsau()!=card).collect()
