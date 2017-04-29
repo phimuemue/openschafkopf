@@ -148,7 +148,7 @@ impl SSuspicion {
         n_level_end: usize,
         n_level: usize,
         rules: &TRules,
-        vecstich: &mut Vec<SStich>, // TODO use vecstich or omit parameter
+        vecstich: &mut Vec<SStich>,
         mut file_output: &mut fs::File,
     ) -> io::Result<()> {
         if n_level < n_level_end {
