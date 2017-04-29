@@ -35,7 +35,7 @@ impl TPlayer for SPlayerComputer {
     }
 
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
-        txcard.send(self.ai.suggest_card(game)).ok();
+        txcard.send(self.ai.suggest_card(game, /*ofile_output*/None)).ok();
     }
 
     fn ask_for_game<'rules>(

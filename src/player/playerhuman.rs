@@ -7,6 +7,7 @@ use skui;
 use ai::*;
 
 use std::sync::mpsc;
+use std::fs;
 
 pub struct SPlayerHuman {
     pub ai : Box<TAi>,
@@ -95,7 +96,7 @@ impl TPlayer for SPlayerHuman {
                     skui::print_hand(hand.cards(), Some(i_card_chosen));
                     skui::print_game_info(game.rules.as_ref(), &game.doublings, &game.vecstoss);
                 },
-                || {Some(self.ai.suggest_card(game))}
+                || {Some(self.ai.suggest_card(game, /*ofile_output*/Some(fs::File::create(&"suspicion.html").unwrap())))}
             )
         ) {
             Ok(_) => (),

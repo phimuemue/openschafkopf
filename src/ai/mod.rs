@@ -20,7 +20,7 @@ use util::*;
 
 pub trait TAi {
     fn rank_rules(&self, hand_fixed: &SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64;
-    fn suggest_card(&self, game: &SGame) -> SCard {
+    fn suggest_card(&self, game: &SGame, ofile_output: Option<fs::File>) -> SCard {
         let veccard_allowed = game.rules.all_allowed_cards(
             &game.vecstich,
             &game.ahand[game.which_player_can_do_something().unwrap()]
@@ -29,10 +29,10 @@ pub trait TAi {
         if 1==veccard_allowed.len() {
             veccard_allowed[0]
         } else {
-            self.internal_suggest_card(game)
+            self.internal_suggest_card(game, ofile_output)
         }
     }
-    fn internal_suggest_card(&self, game: &SGame) -> SCard;
+    fn internal_suggest_card(&self, game: &SGame, ofile_output: Option<fs::File>) -> SCard;
 }
 
 pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
@@ -90,7 +90,7 @@ impl TAi for SAiCheating {
         ).rank_rules(hand_fixed, epi_first, epi_rank, rules, n_stock)
     }
 
-    fn internal_suggest_card(&self, game: &SGame) -> SCard {
+    fn internal_suggest_card(&self, game: &SGame, ofile_output: Option<fs::File>) -> SCard {
         determine_best_card(
             game,
             Some(EPlayerIndex::map_from_fn(|epi|
@@ -101,6 +101,7 @@ impl TAi for SAiCheating {
                 )
             )).into_iter(),
             /*n_branches*/1,
+            ofile_output,
         )
     }
 }
@@ -169,7 +170,7 @@ pub fn is_compatible_with_game_so_far(
     }
 }
 
-fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize) -> SCard
+fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize, ofile_output: Option<fs::File>) -> SCard
     where HandsIterator: Iterator<Item=EnumMap<EPlayerIndex, SHand>>
 {
     let stich_current = game.current_stich();
@@ -208,15 +209,17 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
             });
         }
     });
-    for susp in vecsusp.lock().unwrap().iter() {
-        // TODO error handling
-        susp.print_suspicion(
-            8,
-            0,
-            game.rules.as_ref(),
-            &mut game.completed_stichs().to_vec(),
-            &mut fs::File::create(&"suspicion.html").unwrap()
-        ).unwrap();
+    if let Some(mut file_output) = ofile_output {
+        for susp in vecsusp.lock().unwrap().iter() {
+            // TODO error handling
+            susp.print_suspicion(
+                8,
+                0,
+                game.rules.as_ref(),
+                &mut game.completed_stichs().to_vec(),
+                &mut file_output,
+            ).unwrap();
+        }
     }
     let veccard_allowed_fixed = game.rules.all_allowed_cards(&game.vecstich, &game.ahand[epi_fixed]);
     let mapcardpayout = vecsusp.lock().unwrap().iter()
@@ -302,7 +305,7 @@ impl TAi for SAiSimulating {
         (n_payout_sum.as_num::<f64>()) / (self.n_rank_rules_samples.as_num::<f64>())
     }
 
-    fn internal_suggest_card(&self, game: &SGame) -> SCard {
+    fn internal_suggest_card(&self, game: &SGame, ofile_output: Option<fs::File>) -> SCard {
         let stich_current = game.current_stich();
         assert!(stich_current.size()<4);
         let epi_fixed = stich_current.current_playerindex().unwrap();
@@ -314,6 +317,7 @@ impl TAi for SAiSimulating {
                 all_possible_hands(game.completed_stichs(), hand_fixed.clone(), epi_fixed)
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich)),
                 self.n_suggest_card_branches,
+                ofile_output,
             )
         } else {
             determine_best_card(
@@ -322,6 +326,7 @@ impl TAi for SAiSimulating {
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
+                ofile_output,
             )
         }
     }
