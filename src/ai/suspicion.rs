@@ -7,6 +7,8 @@ use std::fs;
 use std::io::Write;
 use std::io;
 use std::fmt;
+use rand;
+use rand::Rng;
 
 pub struct SSuspicionTransition {
     stich : SStich,
@@ -152,8 +154,15 @@ impl SSuspicion {
         mut file_output: &mut fs::File,
     ) -> io::Result<()> {
         if n_level < n_level_end {
-            file_output.write_all(b"<li>\n")?;
-            file_output.write_all(b"<table><tr>\n")?;
+            let str_item_id = format!("{}{}",
+                n_level,
+                rand::thread_rng().gen_ascii_chars().take(16).collect::<String>(), // we simply assume no collisions here
+            );
+            file_output.write_all(format!("<li><<input type=\"checkbox\" id=\"{}\" />>\n", str_item_id).as_bytes())?;
+            file_output.write_all(format!("<label for=\"{}\">{} direct successors<table><tr>\n",
+                str_item_id,
+                self.vecsusptrans.len(),
+            ).as_bytes())?;
             assert_eq!(vecstich.len()+self.hand_size(), 8);
             let output_card = |card: SCard, b_border| {
                 let (n_width, n_height) = (336 / ESchlag::ubound_usize().as_num::<isize>(), 232 / EFarbe::ubound_usize().as_num::<isize>());
@@ -214,7 +223,7 @@ impl SSuspicion {
                     /*n_stock*/0, // dummy value
                 )),
             ).as_bytes())?;
-            file_output.write_all(b"</tr></table>\n")?;
+            file_output.write_all(b"</tr></table></label>\n")?;
             if 1<self.hand_size() {
                 file_output.write_all(b"<ul>\n")?;
                 for susptrans in &self.vecsusptrans {

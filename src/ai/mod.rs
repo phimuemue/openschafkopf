@@ -16,6 +16,7 @@ use crossbeam;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::cmp;
+use std::io::Write;
 use util::*;
 
 pub trait TAi {
@@ -210,6 +211,17 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
         }
     });
     if let Some(mut file_output) = ofile_output {
+        // TODO improve error handling; encapsulate usage of file_output in one single place
+        file_output.write_all(
+            b"<style>
+            input + label + ul {
+                display: none;
+            }
+            input:checked + label + ul {
+                display: block;
+            }
+            </style>"
+        ).unwrap();
         for susp in vecsusp.lock().unwrap().iter() {
             // TODO error handling
             susp.print_suspicion(
