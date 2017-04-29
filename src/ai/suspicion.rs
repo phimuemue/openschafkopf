@@ -205,7 +205,14 @@ impl SSuspicion {
                         .map(|card| output_card(card, /*b_border*/false))
                         .join("")
                 }),
-                Self::player_table(|_epi| "payout TODO"),
+                Self::player_table(|epi| self.min_reachable_payout(
+                    rules,
+                    &mut vecstich.clone(),
+                    epi,
+                    /*n_stoss*/0, // dummy value
+                    /*n_doubling*/0, // dummy value
+                    /*n_stock*/0, // dummy value
+                )),
             ).as_bytes())?;
             file_output.write_all(b"</tr></table>\n")?;
             if !&self.vecsusptrans.is_empty() {
