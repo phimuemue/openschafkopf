@@ -131,7 +131,6 @@ impl SSuspicion {
         n_level: usize,
         rules: &TRules,
         vecstich: &mut Vec<SStich>, // TODO use vecstich or omit parameter
-        ostich_given: Option<SStich>, // TODO use ostich_given or omit parameter
         mut file_output: &mut fs::File,
     ) -> io::Result<()> {
         if n_level < n_level_end {
@@ -151,7 +150,7 @@ impl SSuspicion {
                     }
                     file_output.write_all(format!("{} : ", susptrans.m_stich).as_bytes())?;
                     if 1<susptrans.m_susp.hand_size() {
-                        susptrans.m_susp.print_suspicion(n_level_end, (n_level+1), rules, vecstich, ostich_given.clone(), &mut file_output)?;
+                        susptrans.m_susp.print_suspicion(n_level_end, (n_level+1), rules, vecstich, &mut file_output)?;
                     } else {
                         file_output.write_all(b"\n")?;
                     }
