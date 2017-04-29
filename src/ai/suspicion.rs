@@ -6,6 +6,7 @@ use util::*;
 use std::fs;
 use std::io::Write;
 use std::io;
+use std::fmt;
 
 pub struct SSuspicionTransition {
     stich : SStich,
@@ -125,6 +126,23 @@ impl SSuspicion {
         self.ahand[EPlayerIndex::EPI0].cards().len()
     }
 
+    fn player_table<T, FnPerPlayer>(fn_per_player: FnPerPlayer) -> String // TODO Rust generic closures
+        where FnPerPlayer: Fn(EPlayerIndex) -> T,
+              T: fmt::Display,
+    {
+        format!(
+            "<table>
+              <tr><td align=\"center\" colspan=\"2\"><br>{}<br></td></tr>
+              <tr><td>{}</td><td>{}</td></tr>
+              <tr><td align=\"center\" colspan=\"2\">{}</td></tr>
+            </table>\n",
+            fn_per_player(EPlayerIndex::EPI2),
+            fn_per_player(EPlayerIndex::EPI1),
+            fn_per_player(EPlayerIndex::EPI3),
+            fn_per_player(EPlayerIndex::EPI0),
+        )
+    }
+
     pub fn print_suspicion(
         &self,
         n_level_end: usize,
@@ -134,30 +152,70 @@ impl SSuspicion {
         mut file_output: &mut fs::File,
     ) -> io::Result<()> {
         if n_level < n_level_end {
-            for epi in EPlayerIndex::values() {
-                file_output.write_all(format!("{} | ", self.ahand[epi]).as_bytes())?;
+            file_output.write_all(b"<li>\n")?;
+            file_output.write_all(b"<table><tr>\n")?;
+            assert_eq!(vecstich.len()+self.hand_size(), 8);
+            let output_card = |card: SCard, b_border| {
+                let (n_width, n_height) = (336 / ESchlag::ubound_usize().as_num::<isize>(), 232 / EFarbe::ubound_usize().as_num::<isize>());
+                format!(
+                    "<div style=\"
+                        margin: 0;
+                        padding: 0;
+                        width:{};
+                        height:{};
+                        display:inline-block;
+                        background-image:url(https://www.sauspiel.de/images/redesign/cards/by/card-icons@2x.png);
+                        background-position-x:{}px;
+                        background-position-y:{}px;
+                        border:{};
+                    \"></div>",
+                    n_width,
+                    n_height,
+                    // Do not use Enum::to_usize. Sauspiel's representation does not necessarily match ours.
+                    -n_width * match card.schlag() {
+                        ESchlag::Ass => 0,
+                        ESchlag::Zehn => 1,
+                        ESchlag::Koenig => 2,
+                        ESchlag::Ober => 3,
+                        ESchlag::Unter => 4,
+                        ESchlag::S9 => 5,
+                        ESchlag::S8 => 6,
+                        ESchlag::S7 => 7,
+                    },
+                    -n_height * match card.farbe() {
+                        EFarbe::Eichel => 0,
+                        EFarbe::Gras => 1,
+                        EFarbe::Herz => 2,
+                        EFarbe::Schelln => 3,
+                    },
+                    if b_border {"solid"} else {"none"},
+                )
+            };
+            for stich in vecstich.iter() {
+                file_output.write_all(b"<td>\n")?;
+                file_output.write_all(Self::player_table(|epi| output_card(stich[epi], epi==stich.first_playerindex())).as_bytes())?;
+                file_output.write_all(b"</td>\n")?;
             }
-            file_output.write_all(b", min payouts: ")?;
-            for _epi in EPlayerIndex::values() {
-                file_output.write_all(b"TODO: payout")?;
+            file_output.write_all(format!(
+                "<td>{}</td> <td>{}</td>\n",
+                Self::player_table(|epi| {
+                    self.ahand[epi].cards().iter()
+                        .map(|card| output_card(*card, /*b_border*/false))
+                        .join("")
+                }),
+                Self::player_table(|_epi| "payout TODO"),
+            ).as_bytes())?;
+            file_output.write_all(b"</tr></table>\n")?;
+            if !&self.vecsusptrans.is_empty() {
+                file_output.write_all(b"<ul>\n")?;
+                for susptrans in &self.vecsusptrans {
+                    push_pop_vecstich(vecstich, susptrans.stich.clone(), |vecstich| {
+                        susptrans.susp.print_suspicion(n_level_end, (n_level+1), rules, vecstich, &mut file_output)
+                    })?;
+                }
+                file_output.write_all(b"</ul>\n")?;
             }
-            file_output.write_all(b"\n")?;
-            for susptrans in &self.vecsusptrans {
-                push_pop_vecstich(vecstich, susptrans.stich.clone(), |vecstich| -> io::Result<()>{
-                    assert_eq!(vecstich.len()+susptrans.susp.hand_size(), 8);
-                    for _ in 0..n_level+1 {
-                        file_output.write_all(b" ")?;
-                    }
-                    file_output.write_all(format!("{} : ", susptrans.stich).as_bytes())?;
-                    if 1<susptrans.susp.hand_size() {
-                        susptrans.susp.print_suspicion(n_level_end, (n_level+1), rules, vecstich, &mut file_output)?;
-                    } else {
-                        file_output.write_all(b"\n")?;
-                    }
-                    Ok(())
-                })?
-            }
-            Ok(())
+            file_output.write_all(b"</li>\n")
         } else {
             Ok(())
         }
