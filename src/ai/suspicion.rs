@@ -199,8 +199,10 @@ impl SSuspicion {
             file_output.write_all(format!(
                 "<td>{}</td> <td>{}</td>\n",
                 Self::player_table(|epi| {
-                    self.ahand[epi].cards().iter()
-                        .map(|card| output_card(*card, /*b_border*/false))
+                    let mut veccard = self.ahand[epi].cards().clone();
+                    rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
+                    veccard.into_iter()
+                        .map(|card| output_card(card, /*b_border*/false))
                         .join("")
                 }),
                 Self::player_table(|_epi| "payout TODO"),
