@@ -20,10 +20,10 @@ impl<'rules> SDealCards<'rules> {
     pub fn new(epi_first: EPlayerIndex, ruleset: &SRuleSet) -> SDealCards {
         SDealCards {
             ahand : {
-                let mut veccard : Vec<_> = SCard::values().into_iter().collect();
-                assert_eq!(veccard.len(), 32);
+                let mut veccard : Vec<_> = SCard::values(ruleset.ekurzlang).into_iter().collect();
+                assert_eq!(veccard.len(), EPlayerIndex::ubound_usize()*ruleset.ekurzlang.cards_per_player());
                 EPlayerIndex::map_from_fn(move |_epi|
-                    random_hand(8, &mut veccard)
+                    random_hand(ruleset.ekurzlang.cards_per_player(), &mut veccard)
                 )
             },
             doublings: SDoublings::new(epi_first),
@@ -39,7 +39,7 @@ impl<'rules> SDealCards<'rules> {
 
     pub fn first_hand_for(&self, epi: EPlayerIndex) -> &[SCard] {
         let veccard = self.ahand[epi].cards();
-        assert_eq!(veccard.len(), 8);
+        assert_eq!(veccard.len(), self.ruleset.ekurzlang.cards_per_player());
         &veccard[0..veccard.len()/2]
     }
 
@@ -246,6 +246,7 @@ impl<'rules> SDetermineRules<'rules> {
     pub fn finish(self) -> SPreGame {
         assert!(self.which_player_can_do_something().is_none());
         assert!(self.vecpairepirules_queued.is_empty());
+        assert_eq!(self.ruleset.ekurzlang, EKurzLang::from_cards_per_player(self.ahand[EPlayerIndex::EPI0].cards().len()));
         SPreGame::new(
             self.ahand,
             self.doublings,
@@ -325,6 +326,14 @@ impl SGame {
         current_stich(&self.vecstich)
     }
 
+    fn kurzlang(&self) -> EKurzLang { // TODO assert invariant regarding ahand/vecstich/ekurzlang
+        let cards_per_player = |epi| {
+            self.vecstich.iter().filter(|stich| stich.get(epi).is_some()).count() + self.ahand[epi].cards().len()
+        };
+        assert!(EPlayerIndex::values().all(|epi| cards_per_player(epi)==cards_per_player(EPlayerIndex::EPI0)));
+        EKurzLang::from_cards_per_player(cards_per_player(EPlayerIndex::EPI0))
+    }
+
     pub fn zugeben(&mut self, card_played: SCard, epi: EPlayerIndex) -> Result<()> {
         // returns the EPlayerIndex of the player who is the next in row to do something
         skui::logln(&format!("Player {} wants to play {}", epi, card_played));
@@ -345,7 +354,7 @@ impl SGame {
             skui::logln(&format!("Hand {}: {}", epi, self.ahand[epi]));
         }
         if 4==self.current_stich().size() {
-            if 8==self.vecstich.len() { // TODO kurze Karte?
+            if self.kurzlang().cards_per_player()==self.vecstich.len() {
                 skui::logln("Game finished.");
                 skui::print_vecstich(&self.vecstich);
                 Ok(())
@@ -369,7 +378,7 @@ impl SGame {
     pub fn payout(&self) -> SAccountBalance {
         assert!(self.which_player_can_do_something().is_none());
         self.rules.payout(
-            &SGameFinishedStiche::new(&self.vecstich),
+            &SGameFinishedStiche::new(&self.vecstich, self.kurzlang()),
             /*n_stoss*/ self.vecstoss.len(),
             /*n_doubling*/ self.doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),
             self.n_stock,

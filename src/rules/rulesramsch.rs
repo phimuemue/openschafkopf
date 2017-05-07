@@ -38,7 +38,7 @@ impl TRules for SRulesRamsch {
 
     fn stoss_allowed(&self, _epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {
         assert!(vecstoss.is_empty());
-        assert_eq!(hand.cards().len(), 8);
+        EKurzLang::from_cards_per_player(hand.cards().len());
         false
     }
 

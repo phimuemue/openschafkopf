@@ -18,7 +18,9 @@ pub trait TTrumpfDecider : Sync + 'static + Clone {
             ab_winner[mapcardepi[*card]]
         };
         let b_might_have_lauf = laufende_relevant(&veccard_trumpf[0]);
+        let ekurzlang = EKurzLang::from_cards_per_player(gamefinishedstiche.get().len());
         veccard_trumpf.iter()
+            .filter(|&card| ekurzlang.supports_card(*card))
             .take_while(|card| b_might_have_lauf==laufende_relevant(card))
             .count()
     }

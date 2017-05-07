@@ -252,11 +252,26 @@ impl TPayoutDecider for SPayoutDeciderSie {
             .all(|stich| {
                 let epi_stich_winner = rules.winner_index(stich);
                 rules.trumpforfarbe(stich[epi_stich_winner]).is_trumpf() && fn_is_player_party(epi_stich_winner)
-            });
+            })
+            && match EKurzLang::from_cards_per_player(gamefinishedstiche.get().len()) {
+                EKurzLang::Lang => true,
+                EKurzLang::Kurz => {
+                    gamefinishedstiche.get().iter()
+                        .all(|stich| {
+                            let epi_stich_winner = rules.winner_index(stich);
+                            let card = stich[epi_stich_winner];
+                            assert!(rules.trumpforfarbe(card).is_trumpf());
+                            card.schlag()==ESchlag::Ober || {
+                                assert_eq!(card.schlag(), ESchlag::Unter);
+                                card.farbe()==EFarbe::Eichel || card.farbe()==EFarbe::Gras
+                            }
+                        })
+                },
+            }
+        ;
         internal_payout(
             /*n_payout_single_player*/ (self.n_payout_base
             + {
-                assert_eq!(8, gamefinishedstiche.get().len()); // TODO Kurze Karte supports Sie?
                 gamefinishedstiche.get().len().as_num::<isize>()
             } * self.laufendeparams.n_payout_per_lauf) * 4,
             fn_player_multiplier,

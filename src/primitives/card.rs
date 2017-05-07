@@ -39,6 +39,35 @@ impl fmt::Display for ESchlag {
     }
 }
 
+plain_enum_mod!{modekurzlang, EKurzLang {
+    Kurz,
+    Lang,
+}}
+
+impl EKurzLang {
+    pub fn cards_per_player(&self) -> usize {
+        match *self {
+            EKurzLang::Kurz => 6,
+            EKurzLang::Lang => 8,
+        }
+    }
+
+    pub fn from_cards_per_player(n_cards_per_player: usize) -> EKurzLang {
+        match n_cards_per_player {
+            6 => EKurzLang::Kurz,
+            8 => EKurzLang::Lang,
+            _ => panic!("Cannot convert {} to EKurzLang.", n_cards_per_player),
+        }
+    }
+
+    pub fn supports_card(&self, card: SCard) -> bool {
+        match *self {
+            EKurzLang::Lang => true,
+            EKurzLang::Kurz => card.schlag()!=ESchlag::S7 && card.schlag()!=ESchlag::S8,
+        }
+    }
+}
+
 #[derive(PartialEq, Eq, Clone, Copy, Hash, Debug)]
 pub struct SCard {
     n_internalrepresentation : u8,
@@ -77,12 +106,20 @@ impl SCard {
     pub fn schlag(&self) -> ESchlag {
         ESchlag::from_usize(self.n_internalrepresentation.as_num::<usize>() % ESchlag::ubound_usize())
     }
-    pub fn values() -> Vec<SCard> { // TODO Rust: return iterator once we can specify that return type is an iterator
+    pub fn values(ekurzlang: EKurzLang) -> Vec<SCard> { // TODO Rust: return iterator once we can specify that return type is an iterator
         iproduct!(
             EFarbe::values(),
             ESchlag::values()
         )
-        .map(|(efarbe, eschlag)| SCard::new(efarbe, eschlag))
+        .filter_map(|(efarbe, eschlag)| {
+            match ekurzlang { // prefer matching on custom enums over simple if/else
+                EKurzLang::Kurz => if ESchlag::S7==eschlag || ESchlag::S8==eschlag {
+                    return None;
+                },
+                EKurzLang::Lang => (),
+            }
+            Some(SCard::new(efarbe, eschlag))
+        })
         .collect()
     }
 }

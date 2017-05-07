@@ -97,12 +97,12 @@ fn main() {
                         let epi_rank = value_t!(subcommand_matches.value_of("pos"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
                         println!("Hand: {}", hand_fixed);
                         for rules in allowed_rules(&ruleset.avecrulegroup[epi_rank]).iter() 
-                            .filter(|rules| rules.can_be_played(&SFullHand::new(&hand_fixed)))
+                            .filter(|rules| rules.can_be_played(&SFullHand::new(&hand_fixed, ruleset.ekurzlang)))
                         {
                             println!("{}: {}",
                                 rules,
                                 ai().rank_rules(
-                                    &SFullHand::new(&hand_fixed),
+                                    &SFullHand::new(&hand_fixed, ruleset.ekurzlang),
                                     EPlayerIndex::EPI0,
                                     epi_rank,
                                     rules.as_rules(),
@@ -164,7 +164,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
             skui::logln(&format!("Asking player {} for game", epi));
             let orules = communicate_via_channel(|txorules| {
                 aplayer[epi].ask_for_game(
-                    &SFullHand::new(&gamepreparations.ahand[epi]),
+                    &SFullHand::new(&gamepreparations.ahand[epi], ruleset.ekurzlang),
                     &gamepreparations.gameannouncements,
                     &gamepreparations.ruleset.avecrulegroup[epi],
                     gamepreparations.n_stock,
@@ -180,7 +180,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                 while let Some((epi, vecrulegroup_steigered))=determinerules.which_player_can_do_something() {
                     if let Some(rules) = communicate_via_channel(|txorules| {
                         aplayer[epi].ask_for_game(
-                            &SFullHand::new(&determinerules.ahand[epi]),
+                            &SFullHand::new(&determinerules.ahand[epi], ruleset.ekurzlang),
                             /*gameannouncements*/&SPlayersInRound::new(determinerules.doublings.first_playerindex()),
                             &vecrulegroup_steigered,
                             determinerules.n_stock,

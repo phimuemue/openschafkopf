@@ -163,7 +163,7 @@ impl SSuspicion {
                 str_item_id,
                 self.vecsusptrans.len(),
             ).as_bytes())?;
-            assert_eq!(vecstich.len()+self.hand_size(), 8);
+            EKurzLang::from_cards_per_player(vecstich.len()+self.hand_size());
             let output_card = |card: SCard, b_border| {
                 let (n_width, n_height) = (336 / ESchlag::ubound_usize().as_num::<isize>(), 232 / EFarbe::ubound_usize().as_num::<isize>());
                 format!(
@@ -252,9 +252,16 @@ impl SSuspicion {
     ) -> isize {
         let vecstich_backup = vecstich.clone();
         assert!(vecstich.iter().all(|stich| stich.size()==4));
-        assert_eq!(vecstich.len()+self.hand_size(), 8);
         if 0==self.hand_size() {
-            return rules.payout(&SGameFinishedStiche::new(vecstich), n_stoss, n_doubling, n_stock).get_player(epi);
+            return rules.payout(
+                &SGameFinishedStiche::new(
+                    vecstich,
+                    EKurzLang::from_cards_per_player(vecstich.len()+self.hand_size())
+                ),
+                n_stoss,
+                n_doubling,
+                n_stock,
+            ).get_player(epi);
         }
         let n_payout = self.vecsusptrans.iter()
             .map(|susptrans| {

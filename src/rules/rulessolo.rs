@@ -54,7 +54,7 @@ impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, Payo
                 .enumerate()
                 .all(|(i_stoss, stoss)| (i_stoss%2==0) == (stoss.epi!=self.epi))
         );
-        assert_eq!(hand.cards().len(), 8);
+        EKurzLang::from_cards_per_player(hand.cards().len());
         (epi==self.epi)==(vecstoss.len()%2==1)
     }
 

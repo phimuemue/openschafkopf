@@ -50,6 +50,7 @@ pub struct SRuleSet {
     pub avecrulegroup : EnumMap<EPlayerIndex, Vec<SRuleGroup>>,
     pub stockorramsch : VStockOrT<Box<TRules>>,
     pub oedoublingscope : Option<EDoublingScope>,
+    pub ekurzlang : EKurzLang,
 }
 
 pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> Vec<&TActivelyPlayableRules> {
@@ -223,7 +224,8 @@ impl SRuleSet {
                     println!("doubling.stock not specified; falling back to 'stock=yes'");
                     EDoublingScope::GamesAndStock
                 }
-            })
+            }),
+            EKurzLang::Lang, // TODO make customizeable
         ))
     }
 

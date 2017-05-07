@@ -65,7 +65,7 @@ impl TRules for SRulesRufspiel {
     }
 
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {
-        assert_eq!(hand.cards().len(), 8);
+        EKurzLang::from_cards_per_player(hand.cards().len());
         assert!(epi!=self.epi || !hand.contains(self.rufsau()));
         (epi==self.epi || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }

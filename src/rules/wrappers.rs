@@ -7,8 +7,8 @@ pub struct SFullHand<'hand> {
 }
 
 impl<'hand> SFullHand<'hand> {
-    pub fn new(hand: &SHand) -> SFullHand {
-        assert_eq!(hand.cards().len(), 8);
+    pub fn new(hand: &SHand, ekurzlang: EKurzLang) -> SFullHand {
+        assert_eq!(hand.cards().len(), ekurzlang.cards_per_player());
         SFullHand {
             hand : hand,
         }
@@ -23,15 +23,14 @@ pub struct SGameFinishedStiche<'vecstich> {
 }
 
 impl<'vecstich> SGameFinishedStiche<'vecstich> {
-    pub fn new(vecstich: &[SStich]) -> SGameFinishedStiche {
-        assert_eq!(vecstich.len(), 8);
+    pub fn new(vecstich: &[SStich], ekurzlang: EKurzLang) -> SGameFinishedStiche {
+        assert_eq!(vecstich.len(), ekurzlang.cards_per_player());
         assert!(vecstich.iter().all(|stich| 4==stich.size()));
         SGameFinishedStiche {
             vecstich : vecstich,
         }
     }
     pub fn get(&self) -> &[SStich] {
-        assert_eq!(self.vecstich.len(), 8);
         self.vecstich
     }
 }

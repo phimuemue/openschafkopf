@@ -89,7 +89,7 @@ impl TPlayer for SPlayerComputer {
                 let f_rank_rules = rules.playerindex().map_or(0f64, |epi_active| {
                     if epi!=epi_active {
                         self.ai.rank_rules(
-                            &SFullHand::new(&ahand[epi_active]),
+                            &SFullHand::new(&ahand[epi_active], EKurzLang::from_cards_per_player(hand.cards().len())),
                             /*epi_first*/doublings.first_playerindex(),
                             /*epi_rank*/epi_active,
                             rules,

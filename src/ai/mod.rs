@@ -43,7 +43,7 @@ pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
 
 pub fn unplayed_cards(vecstich: &[SStich], hand_fixed: &SHand) -> Vec<SCard> {
     assert!(vecstich.iter().all(|stich| 4==stich.size()));
-    SCard::values().into_iter()
+    SCard::values(EKurzLang::from_cards_per_player(vecstich.len() + hand_fixed.cards().len())).into_iter()
         .filter(|card| 
              !hand_fixed.contains(*card)
              && !vecstich.iter().any(|stich|
@@ -145,7 +145,16 @@ pub fn is_compatible_with_game_so_far(
         }
         assert_ahand_same_size(&ahand_simulate);
         rules.playerindex().map_or(true, |epi_active|
-            rules.can_be_played(&SFullHand::new(&ahand_simulate[epi_active]))
+            rules.can_be_played(&SFullHand::new(
+                &ahand_simulate[epi_active],
+                {
+                    let cards_per_player = |epi| {
+                        completed_stichs(vecstich).len() + ahand[epi].cards().len()
+                    };
+                    assert!(EPlayerIndex::values().all(|epi| cards_per_player(epi)==cards_per_player(EPlayerIndex::EPI0)));
+                    EKurzLang::from_cards_per_player(cards_per_player(EPlayerIndex::EPI0))
+                },
+            ))
         )
         && {
             let mut b_valid_up_to_now = true;
@@ -355,11 +364,12 @@ fn test_is_compatible_with_game_so_far() {
         AssertNotFrei(EPlayerIndex, VTrumpfOrFarbe),
     }
     let test_game = |astr_hand: [&'static str; 4], rules: &TRules, epi_first, vectestaction: Vec<VTestAction>| {
+        let ahand = EPlayerIndex::map_from_fn(|epi| {
+            SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
+        });
         let mut game = game::SGame {
             doublings : SDoublings::new(epi_first),
-            ahand : EPlayerIndex::map_from_fn(|epi| {
-                SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
-            }),
+            ahand,
             rules : rules.box_clone(),
             vecstich : vec![SStich::new(epi_first)],
             n_stock: 0,
