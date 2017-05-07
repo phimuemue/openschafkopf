@@ -18,3 +18,6 @@ error-chain = "0"
 derive-new = "0"
 as_num = { git = "https://github.com/phimuemue/rs_as_num" }
 plain_enum = { git = "https://github.com/phimuemue/rs_plain_enum" }
+
+[profile.release]
+lto = true
