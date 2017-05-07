@@ -70,13 +70,13 @@ impl fmt::Display for SCard {
 
 impl SCard {
     pub fn new(efarbe : EFarbe, eschlag : ESchlag) -> SCard {
-        SCard{n_internalrepresentation : (efarbe.to_usize() * 8 + eschlag.to_usize()).as_num()}
+        SCard{n_internalrepresentation : (efarbe.to_usize() * ESchlag::ubound_usize() + eschlag.to_usize()).as_num()}
     }
     pub fn farbe(&self) -> EFarbe {
-        EFarbe::from_usize((self.n_internalrepresentation / 8).as_num())
+        EFarbe::from_usize(self.n_internalrepresentation.as_num::<usize>() / ESchlag::ubound_usize())
     }
     pub fn schlag(&self) -> ESchlag {
-        ESchlag::from_usize((self.n_internalrepresentation % 8).as_num())
+        ESchlag::from_usize(self.n_internalrepresentation.as_num::<usize>() % ESchlag::ubound_usize())
     }
     pub fn values() -> Vec<SCard> { // TODO Rust: return iterator once we can specify that return type is an iterator
         iproduct!(
