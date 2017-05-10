@@ -129,13 +129,12 @@ impl<'rules> SGamePreparations<'rules> {
         } else {
             match self.ruleset.stockorramsch {
                 VStockOrT::OrT(ref rulesramsch) => {
-                    VGamePreparationsFinish::DirectGame(SPreGame {
-                        ahand: self.ahand,
-                        doublings: self.doublings,
-                        rules: rulesramsch.clone(),
-                        vecstoss: Vec::new(),
-                        n_stock: self.n_stock,
-                    })
+                    VGamePreparationsFinish::DirectGame(SPreGame::new(
+                        self.ahand,
+                        self.doublings,
+                        rulesramsch.clone(),
+                        self.n_stock,
+                    ))
                 },
                 VStockOrT::Stock(n_stock) => {
                     VGamePreparationsFinish::Stock(match self.ruleset.oedoublingscope {
@@ -247,13 +246,12 @@ impl<'rules> SDetermineRules<'rules> {
     pub fn finish(self) -> SPreGame {
         assert!(self.which_player_can_do_something().is_none());
         assert!(self.vecpairepirules_queued.is_empty());
-        SPreGame {
-            ahand: self.ahand,
-            doublings: self.doublings,
-            rules: self.pairepirules_current_bid.1.as_rules().box_clone(),
-            vecstoss: Vec::new(),
-            n_stock: self.n_stock,
-        }
+        SPreGame::new(
+            self.ahand,
+            self.doublings,
+            self.pairepirules_current_bid.1.as_rules().box_clone(),
+            self.n_stock,
+        )
     }
 }
 
@@ -266,6 +264,15 @@ pub struct SPreGame {
 }
 
 impl SPreGame {
+    pub fn new(
+        ahand : EnumMap<EPlayerIndex, SHand>,
+        doublings : SDoublings,
+        rules : Box<TRules>,
+        n_stock : isize,
+    ) -> SPreGame {
+        let vecstoss = Vec::new();
+        SPreGame {ahand, doublings, rules, vecstoss, n_stock}
+    }
     pub fn which_player_can_do_something(&self) -> Vec<EPlayerIndex> {
         if self.vecstoss.len() < 4 {
             EPlayerIndex::values()

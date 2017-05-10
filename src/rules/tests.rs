@@ -20,21 +20,20 @@ pub fn test_rules(
     use primitives::cardvector::parse_cards;
     println!("Testing rules: {}", str_info);
     let epi_first = EPlayerIndex::EPI0; // TODO parametrize w.r.t. epi_first
-    let mut pregame = game::SPreGame {
-        doublings : {
+    let mut pregame = game::SPreGame::new(
+        EPlayerIndex::map_from_fn(|epi| {
+            SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
+        }),
+        {
             let mut doublings = game::SDoublings::new(epi_first);
             for epi_doubling in EPlayerIndex::values().map(|epi| epi.wrapping_add(epi_first.to_usize())) {
                 doublings.push(/*b_doubling*/vecn_doubling.contains(&epi_doubling.to_usize()));
             }
             doublings
         },
-        ahand : EPlayerIndex::map_from_fn(|epi| {
-            SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
-        }),
-        rules: rules.box_clone(),
-        n_stock: 0, // TODO test stock
-        vecstoss: vec![],
-    };
+        rules.box_clone(),
+        /*n_stock*/ 0, // TODO test stock
+    );
     for n_epi_stoss in vecn_stoss {
         pregame.stoss(EPlayerIndex::from_usize(n_epi_stoss)).unwrap();
     }
