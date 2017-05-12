@@ -42,6 +42,7 @@ pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
 }
 
 pub fn unplayed_cards(vecstich: &[SStich], hand_fixed: &SHand) -> Vec<SCard> {
+    assert!(vecstich.iter().all(|stich| 4==stich.size()));
     SCard::values().into_iter()
         .filter(|card| 
              !hand_fixed.contains(*card)
