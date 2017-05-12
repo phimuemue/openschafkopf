@@ -98,9 +98,7 @@ def OpenFileParseGame(strFile, dictstrfnGame):
         assert(len(hands)==4)
         for eplayerindex, divHand in enumerate(hands):
             vecspancard = divHand.find_all("span")
-            if len(vecspancard)!=8:
-                if len(vecspancard)==6:
-                    return "// %s // TODO kurze Karte"%strFile
+            if len(vecspancard)!=8 and len(vecspancard)!=6:
                 if len(vecspancard)==0:
                     return "// %s has wrong format"%strFile
                 else:
@@ -119,7 +117,7 @@ def OpenFileParseGame(strFile, dictstrfnGame):
         for aKontraRetour in soup.find(text="Kontra und Retour").find_parent("tr").find_all("a", href=True):
             AppendToResultNoNewline("%s,"%dictstreplayerindex[aKontraRetour.contents[0]])
         AppendToResult("],")
-        AppendToResultNoNewline("    [")
+        AppendToResultNoNewline("    &[")
         for divtrickcontainer in soup.find_all(class_="content_full trick-container"):
             for divtricks in divtrickcontainer.find_all(class_="tricks"):
                 vecdivcard = divtricks.find_all("div")
