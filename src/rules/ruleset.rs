@@ -225,7 +225,12 @@ impl SRuleSet {
                     EDoublingScope::GamesAndStock
                 }
             }),
-            EKurzLang::Lang, // TODO make customizeable
+            if let Some("kurz") = tomltbl.get("deck").and_then(|tomlval_kurzlang| tomlval_kurzlang.as_str()) {
+                EKurzLang::Kurz
+            } else {
+                // TODO possibly better error reporting
+                EKurzLang::Lang
+            },
         ))
     }
 
