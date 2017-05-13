@@ -1,8 +1,7 @@
 extern crate quickcheck;
 
 use std::fmt;
-use std::mem;
-use std::ops::{Index, IndexMut};
+use std::ops::Index;
 use util::*;
 
 plain_enum_mod!{modefarbe, EFarbe {
@@ -105,21 +104,24 @@ fn test_card_ctor() {
 }
 
 pub struct SCardMap<T> {
-    at : [T; 32],
+    aot : [Option<T>; 32],
 }
 
 impl <T> SCardMap<T> {
+    // TODO implement FromIterator
     pub fn new_from_pairs<'card, ItPair>(itpairtcard : ItPair) -> SCardMap<T>
-        where ItPair : Iterator<Item=(T, &'card SCard)>
+        where ItPair : Iterator<Item=(T, &'card SCard)>,
     {
-        let mut mapcardt : SCardMap<T>;
-        unsafe {
-            mapcardt = mem::uninitialized();
+        SCardMap {
+            aot : {
+                // TODO rust? Can't we just write [None; 32]
+                let mut aot = [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None];
+                for (t, card) in itpairtcard {
+                    aot[card.n_internalrepresentation.as_num::<usize>()] = Some(t);
+                }
+                aot
+            }
         }
-        for (t, card) in itpairtcard {
-            mapcardt[*card] = t;
-        }
-        mapcardt
     }
 }
 
@@ -127,12 +129,6 @@ impl <T> Index<SCard> for SCardMap<T> {
     type Output = T;
 
     fn index(&self, card: SCard) -> &T {
-        &self.at[card.n_internalrepresentation.as_num::<usize>()]
-    }
-}
-
-impl <T> IndexMut<SCard> for SCardMap<T> {
-    fn index_mut(&mut self, card: SCard) -> &mut Self::Output {
-        &mut self.at[card.n_internalrepresentation.as_num::<usize>()]
+        self.aot[card.n_internalrepresentation.as_num::<usize>()].as_ref().unwrap()
     }
 }
