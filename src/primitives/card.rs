@@ -2,6 +2,7 @@ extern crate quickcheck;
 
 use std::fmt;
 use std::ops::Index;
+use std::iter::FromIterator;
 use util::*;
 
 plain_enum_mod!{modefarbe, EFarbe {
@@ -144,16 +145,13 @@ pub struct SCardMap<T> {
     aot : [Option<T>; 32],
 }
 
-impl <T> SCardMap<T> {
-    // TODO implement FromIterator
-    pub fn new_from_pairs<'card, ItPair>(itpairtcard : ItPair) -> SCardMap<T>
-        where ItPair : Iterator<Item=(T, &'card SCard)>,
-    {
+impl<T> FromIterator<(SCard, T)> for SCardMap<T> {
+    fn from_iter<ItPairCardT: IntoIterator<Item=(SCard, T)>>(itpaircardt : ItPairCardT) -> SCardMap<T> {
         SCardMap {
             aot : {
                 // TODO rust? Can't we just write [None; 32]
                 let mut aot = [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None];
-                for (t, card) in itpairtcard {
+                for (card, t) in itpaircardt {
                     aot[card.n_internalrepresentation.as_num::<usize>()] = Some(t);
                 }
                 aot

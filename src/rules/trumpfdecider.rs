@@ -11,9 +11,10 @@ pub trait TTrumpfDecider : Sync + 'static + Clone {
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering;
     fn count_laufende(gamefinishedstiche: &SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize {
         let veccard_trumpf = Self::trumpfs_in_descending_order(Vec::new());
-        let mapcardepi = SCardMap::<EPlayerIndex>::new_from_pairs(
-            gamefinishedstiche.get().iter().flat_map(|stich| stich.iter())
-        );
+        let mapcardepi = gamefinishedstiche.get().iter()
+            .flat_map(|stich| stich.iter())
+            .map(|(epi, card)| (card.clone(), epi))
+            .collect::<SCardMap<_>>();
         let laufende_relevant = |card: &SCard| {
             ab_winner[mapcardepi[*card]]
         };
