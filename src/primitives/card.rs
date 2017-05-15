@@ -1,5 +1,3 @@
-extern crate quickcheck;
-
 use std::fmt;
 use std::ops::Index;
 use std::iter::FromIterator;

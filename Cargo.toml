@@ -5,7 +5,6 @@ authors = ["philipp"]
 
 [dependencies]
 combine = "1"
-quickcheck = "0"
 rand = "0"
 ncurses = "5"
 itertools = "0"
