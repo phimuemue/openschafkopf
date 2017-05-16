@@ -85,7 +85,7 @@ impl<T> SPlayersInRound<T>
 impl<T> SPlayersInRound<T> {
     pub fn new(epi_first: EPlayerIndex) -> SPlayersInRound<T> {
         SPlayersInRound {
-            epi_first : epi_first,
+            epi_first,
             vect: ArrayVec::new(),
         }
     }

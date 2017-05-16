@@ -21,7 +21,7 @@ impl SHand {
         }
     }
     pub fn new_from_vec(veccard: SHandVector) -> SHand {
-        SHand {veccard : veccard}
+        SHand {veccard}
     }
     pub fn contains(&self, card_check: SCard) -> bool {
         self.contains_pred(|&card| card==card_check)

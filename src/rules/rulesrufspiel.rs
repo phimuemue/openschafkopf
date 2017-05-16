@@ -27,8 +27,8 @@ pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag<
 impl SRulesRufspiel {
     pub fn new(epi: EPlayerIndex, efarbe: EFarbe, payoutdeciderparams: SPayoutDeciderParams) -> SRulesRufspiel {
         SRulesRufspiel {
-            epi: epi,
-            efarbe: efarbe,
+            epi,
+            efarbe,
             payoutdecider: SPayoutDeciderPointBased::new(payoutdeciderparams, VGameAnnouncementPriority::RufspielLike),
         }
     }

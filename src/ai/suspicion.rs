@@ -108,8 +108,8 @@ impl SSuspicion {
             })
             .collect();
         SSuspicion {
-            vecsusptrans: vecsusptrans,
-            ahand : ahand,
+            vecsusptrans,
+            ahand,
         }
     }
 

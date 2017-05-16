@@ -110,9 +110,9 @@ impl<TrumpfDecider, PayoutDecider> SRulesSoloLike<TrumpfDecider, PayoutDecider>
 {
     fn internal_new(epi: EPlayerIndex, str_rulename: &str, payoutdecider: PayoutDecider) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
         SRulesSoloLike::<TrumpfDecider, PayoutDecider> {
-            epi: epi,
+            epi,
             trumpfdecider: PhantomData::<TrumpfDecider>,
-            payoutdecider: payoutdecider,
+            payoutdecider,
             str_name: str_rulename.to_string(),
         }
     }

@@ -10,7 +10,7 @@ impl<'hand> SFullHand<'hand> {
     pub fn new(hand: &SHand, ekurzlang: EKurzLang) -> SFullHand {
         assert_eq!(hand.cards().len(), ekurzlang.cards_per_player());
         SFullHand {
-            hand : hand,
+            hand,
         }
     }
     pub fn get(&self) -> &SHand {
@@ -27,7 +27,7 @@ impl<'vecstich> SGameFinishedStiche<'vecstich> {
         assert_eq!(vecstich.len(), ekurzlang.cards_per_player());
         assert!(vecstich.iter().all(|stich| 4==stich.size()));
         SGameFinishedStiche {
-            vecstich : vecstich,
+            vecstich,
         }
     }
     pub fn get(&self) -> &[SStich] {

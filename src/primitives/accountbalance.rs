@@ -11,8 +11,8 @@ pub struct SAccountBalance {
 impl SAccountBalance {
     pub fn new(an: EnumMap<EPlayerIndex, isize>, n_stock: isize) -> SAccountBalance {
         let accountbalance = SAccountBalance {
-            an : an,
-            n_stock : n_stock,
+            an,
+            n_stock,
         };
         accountbalance.assert_invariant();
         accountbalance

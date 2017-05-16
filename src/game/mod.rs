@@ -27,7 +27,7 @@ impl<'rules> SDealCards<'rules> {
                 )
             },
             doublings: SDoublings::new(epi_first),
-            ruleset: ruleset,
+            ruleset,
         }
     }
 
@@ -58,9 +58,9 @@ impl<'rules> SDealCards<'rules> {
         SGamePreparations {
             ahand : self.ahand,
             doublings : self.doublings,
-            ruleset : ruleset,
+            ruleset,
             gameannouncements : SGameAnnouncements::new(epi_first),
-            n_stock: n_stock,
+            n_stock,
         }
     }
 
@@ -182,12 +182,12 @@ impl<'rules> SDetermineRules<'rules> {
         assert!(!vecpaireplayerindexrules_queued.is_empty());
         let pairepirules_current_bid = vecpaireplayerindexrules_queued.pop().unwrap();
         SDetermineRules {
-            ahand : ahand,
-            doublings : doublings,
-            ruleset : ruleset,
-            n_stock : n_stock,
+            ahand,
+            doublings,
+            ruleset,
+            n_stock,
             vecpairepirules_queued : vecpaireplayerindexrules_queued,
-            pairepirules_current_bid : pairepirules_current_bid,
+            pairepirules_current_bid,
         }
     }
 

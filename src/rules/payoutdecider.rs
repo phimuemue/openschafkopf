@@ -62,7 +62,7 @@ impl SPayoutDeciderPointBased {
             n_payout_base: payoutdeciderparams.n_payout_base,
             n_payout_schneider_schwarz: payoutdeciderparams.n_payout_schneider_schwarz,
             laufendeparams: payoutdeciderparams.laufendeparams,
-            prio: prio,
+            prio,
         }
     }
 }
@@ -183,7 +183,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
         SPayoutDeciderTout {
             n_payout_base: payoutdeciderparams.n_payout_base,
             laufendeparams: payoutdeciderparams.laufendeparams,
-            i_prio: i_prio,
+            i_prio,
         }
     }
 

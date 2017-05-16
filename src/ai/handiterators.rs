@@ -59,7 +59,7 @@ impl Iterator for SForeverRandHands {
 
 pub fn forever_rand_hands(vecstich: &[SStich], hand_fixed: &SHand, epi_fixed: EPlayerIndex) -> SForeverRandHands {
     SForeverRandHands {
-        epi_fixed : epi_fixed,
+        epi_fixed,
         ahand : {
             let mut veccard_unplayed = unplayed_cards(vecstich, hand_fixed);
             assert!(veccard_unplayed.len()>=3*hand_fixed.cards().len());
@@ -111,8 +111,8 @@ pub fn all_possible_hands(vecstich: &[SStich], hand_fixed: SHand, epi_fixed: EPl
     assert_eq!(n_cards_total%3, 0);
     let n_cards_per_player = n_cards_total / 3;
     SAllHands {
-        epi_fixed : epi_fixed,
-        veccard_unknown: veccard_unknown,
+        epi_fixed,
+        veccard_unknown,
         vecepi: (0..n_cards_total)
             .map(|i| {
                 let n_epi = i/n_cards_per_player;
