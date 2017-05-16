@@ -14,6 +14,7 @@ mod tests;
 use primitives::*;
 use std::cmp::Ordering;
 use std::fmt;
+use std::fmt::Display;
 pub use rules::wrappers::*;
 use util::*;
 
@@ -153,6 +154,17 @@ pub enum VGameAnnouncementPriority {
     SoloLikeSteigern(isize),
     SoloTout(isize),
     SoloSie,
+}
+
+impl Display for VGameAnnouncementPriority {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let VGameAnnouncementPriority::SoloLikeSteigern(n_points_player_to_win) = *self {
+            if 61<n_points_player_to_win {
+                return write!(f, " for {}", n_points_player_to_win);
+            }
+        }
+        write!(f, "{:?}", self)
+    }
 }
 
 #[test]

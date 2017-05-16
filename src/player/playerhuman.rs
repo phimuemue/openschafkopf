@@ -31,7 +31,7 @@ fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(
             assert!(_ot_suggest.is_none());
             skui::wprintln(ncwin, &format!("Your cards: {}. What do you want to play?", hand));
             if let Some(ref pairepiprio) = *opairepiprio {
-                skui::wprintln(ncwin, &format!("{} offers {:?}", pairepiprio.0, pairepiprio.1));
+                skui::wprintln(ncwin, &format!("{} offers {}", pairepiprio.0, pairepiprio.1)); // TODO what to display here?
             }
             for (i_t, t) in vect.iter().enumerate() {
                 skui::wprintln(ncwin, &format!("{} {} ({})",

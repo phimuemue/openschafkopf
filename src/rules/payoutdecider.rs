@@ -137,12 +137,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
 
 impl Display for SPayoutDeciderPointBased {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let VGameAnnouncementPriority::SoloLikeSteigern(n_points_player_to_win) = self.prio {
-            if 61<n_points_player_to_win {
-                return write!(f, " for {}", n_points_player_to_win);
-            }
-        }
-        write!(f, "")
+        write!(f, "{}", self.prio)
     }
 }
 
