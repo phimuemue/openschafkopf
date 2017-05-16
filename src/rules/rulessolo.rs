@@ -23,7 +23,7 @@ impl<TrumpfDecider, PayoutDecider> fmt::Display for SRulesSoloLike<TrumpfDecider
           PayoutDecider: TPayoutDecider,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", self.str_name, self.payoutdecider.to_string())
+        write!(f, "{}{}", self.str_name, self.payoutdecider)
     }
 }
 

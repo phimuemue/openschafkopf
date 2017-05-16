@@ -129,7 +129,7 @@ pub fn print_game_announcements(gameannouncements: &SGameAnnouncements) {
             &VSkUiWindow::PlayerInfo(epi),
             |ncwin| {
                 if let Some(ref rules) = *orules {
-                    wprint(ncwin, &format!("{}: {}", epi, rules.to_string()));
+                    wprint(ncwin, &format!("{}: {}", epi, rules));
                 } else {
                     wprint(ncwin, &format!("{}: Nothing", epi));
                 }
