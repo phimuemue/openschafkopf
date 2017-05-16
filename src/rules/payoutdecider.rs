@@ -2,6 +2,7 @@ use primitives::*;
 use rules::*;
 use rules::card_points::*;
 use util::*;
+use std::fmt::Display;
 
 #[derive(Clone)]
 pub struct SStossDoublingPayoutDecider {}
@@ -26,7 +27,7 @@ pub struct SPayoutDeciderParams {
     pub laufendeparams : SLaufendeParams,
 }
 
-pub trait TPayoutDecider : Sync + 'static + Clone {
+pub trait TPayoutDecider : Sync + 'static + Clone + Display {
     type PrioParams;
     fn new(payoutdeciderparams: SPayoutDeciderParams, prioparams: Self::PrioParams) -> Self;
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
@@ -42,9 +43,6 @@ pub trait TPayoutDecider : Sync + 'static + Clone {
     fn priority(&self) -> VGameAnnouncementPriority;
     fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Self> {
         None
-    }
-    fn to_string(&self) -> String { // TODO? impl Display
-        "".to_string()
     }
 }
 
@@ -135,13 +133,16 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
         }
         None
     }
-    fn to_string(&self) -> String {
+}
+
+impl Display for SPayoutDeciderPointBased {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let VGameAnnouncementPriority::SoloLikeSteigern(n_points_player_to_win) = self.prio {
             if 61<n_points_player_to_win {
-                return format!(" for {}", n_points_player_to_win)
+                return write!(f, " for {}", n_points_player_to_win);
             }
         }
-        "".to_string()
+        write!(f, "")
     }
 }
 
@@ -215,6 +216,11 @@ impl TPayoutDecider for SPayoutDeciderTout {
         )
     }
 }
+impl Display for SPayoutDeciderTout {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "")
+    }
+}
 
 #[derive(Clone)]
 pub struct SPayoutDeciderSie {
@@ -279,5 +285,11 @@ impl TPayoutDecider for SPayoutDeciderSie {
                 fn_is_player_party(epi)==b_player_party_wins
             })
         )
+    }
+}
+
+impl Display for SPayoutDeciderSie {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "")
     }
 }
