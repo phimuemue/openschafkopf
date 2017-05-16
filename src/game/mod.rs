@@ -359,7 +359,6 @@ impl SGame {
                 skui::print_vecstich(&self.vecstich);
                 Ok(())
             } else {
-                // TODO: all players should have to acknowledge the current stich in some way
                 let epi_last_stich = {
                     let stich = self.current_stich();
                     skui::logln(&format!("Stich: {}", stich));
