@@ -3,6 +3,7 @@ use game::*;
 use ncurses;
 use rules::*;
 use util::*;
+use itertools::Itertools;
 
 pub fn init_ui() {
     ncurses::initscr();
@@ -174,12 +175,10 @@ pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &[SStos
 }
 
 pub fn account_balance_string(accountbalance: &SAccountBalance) -> String {
-    let mut str = "".to_string();
-    for epi in EPlayerIndex::values() {
-        str = str + &format!("{}: {} | ", epi, accountbalance.get_player(epi));
-    }
-    str = str + &format!("Stock: {}", accountbalance.get_stock());
-    str
+    EPlayerIndex::values()
+        .map(|epi| format!("{}: {} | ", epi, accountbalance.get_player(epi)))
+        .join("")
+        + &format!("Stock: {}", accountbalance.get_stock())
 }
 
 pub fn print_account_balance(accountbalance : &SAccountBalance) {
