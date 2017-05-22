@@ -9,7 +9,7 @@ use util::*;
 #[derive(Clone)]
 pub struct SRulesRufspiel {
     epi : EPlayerIndex,
-    efarbe : EFarbe, // TODO possibly wrap with ENonHerzFarbe or similar
+    efarbe : EFarbe,
     payoutdecider: SPayoutDeciderPointBased,
 }
 
@@ -26,6 +26,7 @@ pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag<
 
 impl SRulesRufspiel {
     pub fn new(epi: EPlayerIndex, efarbe: EFarbe, payoutdeciderparams: SPayoutDeciderParams) -> SRulesRufspiel {
+        assert_ne!(efarbe, EFarbe::Herz);
         SRulesRufspiel {
             epi,
             efarbe,
