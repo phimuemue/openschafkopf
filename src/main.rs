@@ -247,29 +247,64 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
 
 #[test]
 fn test_game_loop() {
-    // TODO more ruleset (parsing) tests
-    for str_ruleset in [
-        r"
-        base-price=10
-        solo-price=50
-        lauf-min=3
-        [rufspiel]
-        [solo]
-        [wenz]
-        [doubling]
-        price=10
-        ",
-        r"
-        base-price=10
-        solo-price=50
-        lauf-min=3
-        [solo]
-        [wenz]
-        [ramsch]
-        price=10
-        [steigern]
-        ",
-    ].into_iter() {
+    let mut rng = rand::thread_rng();
+    for ruleset in rand::sample(
+        &mut rng,
+        iproduct!(
+            [10, 20].into_iter(), // n_base_price
+            [50, 100].into_iter(), // n_solo_price
+            [2, 3].into_iter(), // n_lauf_min
+            [ // str_allowed_games
+                r"
+                [rufspiel]
+                [solo]
+                [wenz]
+                lauf-min=2
+                ",
+                r"
+                [solo]
+                [farbwenz]
+                [wenz]
+                [geier]
+                ",
+            ].into_iter(),
+            [ // str_no_active_game
+                r"[ramsch]
+                price=20
+                ",
+                r"[ramsch]
+                price=50
+                durchmarsch = 75",
+                r#"[ramsch]
+                price=50
+                durchmarsch = "all""#,
+                r"[stock]",
+                r"[stock]
+                price=30",
+                r"",
+            ].into_iter(),
+            [ // str_extras
+                r"[steigern]",
+                r"[doubling]",
+                r#"deck = "kurz""#,
+            ].into_iter()
+        )
+            .map(|(n_base_price, n_solo_price, n_lauf_min, str_allowed_games, str_no_active_game, str_extras)| {
+                let str_ruleset = format!(
+                    "base-price={}
+                    solo-price={}
+                    lauf-min={}
+                    {}
+                    {}
+                    {}",
+                    n_base_price, n_solo_price, n_lauf_min, str_allowed_games, str_no_active_game, str_extras
+                );
+                println!("{}", str_ruleset);
+                SRuleSet::from_string(&str_ruleset).unwrap()
+            }),
+            1,
+        )
+    {
         game_loop(
             &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
                 Box::new(SPlayerComputer{ai: {
@@ -281,7 +316,7 @@ fn test_game_loop() {
                 }})
             }),
             /*n_games*/4,
-            &SRuleSet::from_string(str_ruleset).unwrap(),
+            &ruleset,
         );
     }
 }
