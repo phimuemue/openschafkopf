@@ -77,7 +77,7 @@ impl<SchlagDesignator, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<Schla
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering {
         match (SchlagDesignator::schlag()==card_fst.schlag(), SchlagDesignator::schlag()==card_snd.schlag()) {
             (true, true) => {
-                // TODO static_assert not available in rust, right?
+                // TODORUST static_assert not available in rust, right?
                 assert!(EFarbe::Eichel < EFarbe::Gras, "Farb-Sorting can't be used here");
                 assert!(EFarbe::Gras < EFarbe::Herz, "Farb-Sorting can't be used here");
                 assert!(EFarbe::Herz < EFarbe::Schelln, "Farb-Sorting can't be used here");

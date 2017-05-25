@@ -134,7 +134,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
 }
 box_clone_impl_box!(TRules);
 
-// TODO Rust: Objects should be upcastable to supertraits
+// TODORUST Objects should be upcastable to supertraits
 // https://github.com/rust-lang/rust/issues/5665
 pub trait TAsRules {
     fn as_rules(&self) -> &TRules;

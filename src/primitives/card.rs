@@ -105,7 +105,7 @@ impl SCard {
     pub fn schlag(&self) -> ESchlag {
         ESchlag::from_usize(self.n_internalrepresentation.as_num::<usize>() % ESchlag::ubound_usize())
     }
-    pub fn values(ekurzlang: EKurzLang) -> Vec<SCard> { // TODO Rust: return iterator once we can specify that return type is an iterator
+    pub fn values(ekurzlang: EKurzLang) -> Vec<SCard> { // TODORUST return iterator once we can specify that return type is an iterator
         iproduct!(
             EFarbe::values(),
             ESchlag::values()
@@ -147,7 +147,7 @@ impl<T> FromIterator<(SCard, T)> for SCardMap<T> {
     fn from_iter<ItPairCardT: IntoIterator<Item=(SCard, T)>>(itpaircardt : ItPairCardT) -> SCardMap<T> {
         SCardMap {
             aot : {
-                // TODO rust? Can't we just write [None; 32]
+                // TODORUST Can't we just write [None; 32]
                 let mut aot = [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None];
                 for (card, t) in itpaircardt {
                     aot[card.n_internalrepresentation.as_num::<usize>()] = Some(t);

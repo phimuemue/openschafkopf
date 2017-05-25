@@ -132,7 +132,7 @@ impl SSuspicion {
         self.ahand[EPlayerIndex::EPI0].cards().len()
     }
 
-    fn player_table<T, FnPerPlayer>(fn_per_player: FnPerPlayer) -> String // TODO Rust generic closures
+    fn player_table<T, FnPerPlayer>(fn_per_player: FnPerPlayer) -> String // TODORUST generic closures
         where FnPerPlayer: Fn(EPlayerIndex) -> T,
               T: fmt::Display,
     {
