@@ -158,7 +158,7 @@ impl TRules for SRulesRufspiel {
             let card_first = *vecstich.last().unwrap().first();
             if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) {
                 // special case: gesucht
-                // TODO Rules Consider the following distribution of cards:
+                // TODO Consider the following distribution of cards:
                 // 0: GA GZ GK G8 ...   <- opens first stich
                 // 1, 2: ..             <- mainly irrelevant
                 // 3: G7 G9 ...         <- plays with GA

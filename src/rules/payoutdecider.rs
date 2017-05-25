@@ -123,7 +123,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
         if let (SoloLikeSteigern(_), &SoloLikeSteigern(n_points_player_to_win_steigered)) = (self.priority(), prio) {
             let n_points_to_win = n_points_player_to_win_steigered + match ebid {
                 EBid::AtLeast => 0,
-                EBid::Higher => 10, // TODO custom steps
+                EBid::Higher => 10, // TODORULES custom steps
             };
             if n_points_to_win<=120 {
                 let mut payoutdecider = self.clone();
@@ -198,7 +198,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules,
     {
-        // TODO optionally count schneider/schwarz
+        // TODORULES optionally count schneider/schwarz
         let b_player_party_wins = gamefinishedstiche.get().iter()
             .all(|stich| fn_is_player_party(rules.winner_index(stich)));
         let ab_winner = EPlayerIndex::map_from_fn(|epi| {
@@ -248,7 +248,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules,
     {
-        // TODO optionally count schneider/schwarz
+        // TODORULES optionally count schneider/schwarz
         let b_player_party_wins = gamefinishedstiche.get().iter()
             .all(|stich| {
                 let epi_stich_winner = rules.winner_index(stich);
