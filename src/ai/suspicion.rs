@@ -76,7 +76,11 @@ impl SSuspicion {
                     vecstich.last_mut().unwrap().undo_most_recent();
                 }
             };};
-            traverse_valid_cards!(0, { // TODO: more efficient to explicitly handle first card?
+            // It seems that this nested loop is the ai's bottleneck
+            // because it is currently designed to be generic for all rules.
+            // It may be more performant to have TRules::all_possible_stichs
+            // so that we can implement rule-specific optimizations.
+            traverse_valid_cards!(0, {
                 traverse_valid_cards!(1, {
                     traverse_valid_cards!(2, {
                         traverse_valid_cards!(3, {
