@@ -124,10 +124,9 @@ impl TRules for SRulesRufspiel {
         assert!(!vecstich.is_empty());
         if // do we already know who had the rufsau?
             !completed_stichs(vecstich).iter()
-                .fold(/*b_rufsau_known_initial*/false, |b_rufsau_known_before_stich, stich| {
+                .any(|stich| {
                     assert_eq!(stich.size(), 4); // completed_stichs should only process full stichs
-                    b_rufsau_known_before_stich // already known
-                    || self.is_ruffarbe(*stich.first()) // gesucht or weggelaufen
+                    self.is_ruffarbe(*stich.first()) // gesucht or weggelaufen
                     || stich.iter().any(|(_, card)| *card==self.rufsau()) // We explicitly traverse all cards because it may be allowed (by exotic rules) to schmier rufsau even if not gesucht.
                 } )
         {
