@@ -326,7 +326,7 @@ impl SGame {
         current_stich(&self.vecstich)
     }
 
-    fn kurzlang(&self) -> EKurzLang { // TODO assert invariant regarding ahand/vecstich/ekurzlang
+    fn kurzlang(&self) -> EKurzLang {
         let cards_per_player = |epi| {
             self.vecstich.iter().filter(|stich| stich.get(epi).is_some()).count() + self.ahand[epi].cards().len()
         };
