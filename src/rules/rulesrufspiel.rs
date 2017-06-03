@@ -151,34 +151,30 @@ impl TRules for SRulesRufspiel {
 
     fn all_allowed_cards_within_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
+        assert!(vecstich.last().unwrap().size()<4);
+        assert!(vecstich.last().unwrap().current_playerindex().is_some());
         if hand.cards().len()<=1 {
             hand.cards().clone()
         } else {
             let card_first = *vecstich.last().unwrap().first();
             if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) {
-                // special case: gesucht
-                // TODO Consider the following distribution of cards:
-                // 0: GA GZ GK G8 ...   <- opens first stich
-                // 1, 2: ..             <- mainly irrelevant
-                // 3: G7 G9 ...         <- plays with GA
-                // The first two stichs are as follows:
-                //      e7        ..
-                //   e9   g9    ..  >g7
-                //     >g8        ..
-                // Is player 0 obliged to play GA? We implement it this way for now.
-                Some(self.rufsau()).into_iter().collect()
-            } else {
-                let veccard_allowed : SHandVector = hand.cards().iter().cloned()
-                    .filter(|&card| 
-                        self.rufsau()!=card 
-                        && self.trumpforfarbe(card)==self.trumpforfarbe(card_first)
-                    )
-                    .collect();
-                if veccard_allowed.is_empty() {
-                    hand.cards().iter().cloned().filter(|&card| self.rufsau()!=card).collect()
-                } else {
-                    veccard_allowed
+                let epi = vecstich.last().unwrap().current_playerindex().unwrap();
+                if completed_stichs(vecstich).iter()
+                    .all(|stich| epi!=stich.first_playerindex() || !self.is_ruffarbe(*stich.first())) // not already weggelaufen
+                {
+                    return Some(self.rufsau()).into_iter().collect()
                 }
+            }
+            let veccard_allowed : SHandVector = hand.cards().iter().cloned()
+                .filter(|&card| 
+                    self.rufsau()!=card 
+                    && self.trumpforfarbe(card)==self.trumpforfarbe(card_first)
+                )
+                .collect();
+            if veccard_allowed.is_empty() {
+                hand.cards().iter().cloned().filter(|&card| self.rufsau()!=card).collect()
+            } else {
+                veccard_allowed
             }
         }
     }
