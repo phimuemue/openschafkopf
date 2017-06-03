@@ -137,7 +137,19 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
 
 impl Display for SPayoutDeciderPointBased {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.prio)
+        use self::VGameAnnouncementPriority::*;
+        match self.priority() {
+            RufspielLike | SoloLikeSimple(_) => Ok(()), // no special indication required
+            SoloLikeSteigern(n_points) => {
+                assert!(61<=n_points);
+                if n_points<61 {
+                    write!(f, "for {}", n_points)
+                } else {
+                    Ok(())
+                }
+            },
+            SoloTout(_) | SoloSie => panic!("Unexpected priority in SPayoutDeciderPointBased"),
+        }
     }
 }
 
