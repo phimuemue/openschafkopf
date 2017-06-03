@@ -13,7 +13,7 @@ pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider>
           PayoutDecider: TPayoutDecider,
 {
     pub str_name: String,
-    pub epi : EPlayerIndex, // TODO should be static
+    pub epi : EPlayerIndex,
     pub trumpfdecider : PhantomData<TrumpfDecider>,
     payoutdecider: PayoutDecider,
 }
