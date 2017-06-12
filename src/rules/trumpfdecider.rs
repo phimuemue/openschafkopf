@@ -13,7 +13,7 @@ pub trait TTrumpfDecider : Sync + 'static + Clone {
         let veccard_trumpf = Self::trumpfs_in_descending_order(Vec::new());
         let mapcardepi = gamefinishedstiche.get().iter()
             .flat_map(|stich| stich.iter())
-            .map(|(epi, card)| (card.clone(), epi))
+            .map(|(epi, card)| (*card, epi))
             .collect::<SCardMap<_>>();
         let laufende_relevant = |card: &SCard| {
             ab_winner[mapcardepi[*card]]
