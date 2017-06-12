@@ -282,7 +282,7 @@ impl SSuspicion {
             })
             .into_iter()
             .map(|(_stich_key_before_epi, grpsusptransn_before_epi)| {
-                grpsusptransn_before_epi.into_iter()
+                grpsusptransn_before_epi.collect::<Vec<_>>().into_iter() // TODORUST collect should not be necessary here; https://github.com/rust-lang/rust/issues/42552#issuecomment-307504100
                     .group_by(|&(susptrans, _n_payout)| susptrans.stich[epi])
                     .into_iter()
                     .map(|(_stich_key_epi, grpsusptransn_epi)| {
