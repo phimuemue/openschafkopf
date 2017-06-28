@@ -52,16 +52,18 @@ impl<'rules> SDealCards<'rules> {
         Ok(())
     }
 
-    pub fn finish_dealing(self, ruleset: &SRuleSet, n_stock: isize) -> SGamePreparations {
-        assert!(self.which_player_can_do_something().is_none());
+    pub fn finish_dealing(self, ruleset: &SRuleSet, n_stock: isize) -> Result<SGamePreparations> {
+        if let Some(epi) = self.which_player_can_do_something() {
+            bail!(format!("{} still could announce doubling", epi));
+        }
         let epi_first = self.doublings.first_playerindex();
-        SGamePreparations {
+        Ok(SGamePreparations {
             ahand : self.ahand,
             doublings : self.doublings,
             ruleset,
             gameannouncements : SGameAnnouncements::new(epi_first),
             n_stock,
-        }
+        })
     }
 
 
@@ -243,16 +245,18 @@ impl<'rules> SDetermineRules<'rules> {
         Ok(())
     }
 
-    pub fn finish(self) -> SPreGame {
-        assert!(self.which_player_can_do_something().is_none());
+    pub fn finish(self) -> Result<SPreGame> {
+        if let Some((epi, _)) = self.which_player_can_do_something() {
+            bail!(format!("{} still could do something", epi));
+        }
         assert!(self.vecpairepirules_queued.is_empty());
         assert_eq!(self.ruleset.ekurzlang, EKurzLang::from_cards_per_player(self.ahand[EPlayerIndex::EPI0].cards().len()));
-        SPreGame::new(
+        Ok(SPreGame::new(
             self.ahand,
             self.doublings,
             self.pairepirules_current_bid.1.as_rules().box_clone(),
             self.n_stock,
-        )
+        ))
     }
 }
 

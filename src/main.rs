@@ -159,7 +159,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
             });
             dealcards.announce_doubling(epi, b_doubling).unwrap();
         }
-        let mut gamepreparations = dealcards.finish_dealing(ruleset, accountbalance.get_stock());
+        let mut gamepreparations = dealcards.finish_dealing(ruleset, accountbalance.get_stock()).unwrap();
         while let Some(epi) = gamepreparations.which_player_can_do_something() {
             skui::logln(&format!("Asking player {} for game", epi));
             let orules = communicate_via_channel(|txorules| {
@@ -193,7 +193,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                         determinerules.resign(epi).unwrap();
                     }
                 }
-                VStockOrT::OrT(determinerules.finish())
+                VStockOrT::OrT(determinerules.finish().unwrap())
             },
             VGamePreparationsFinish::DirectGame(pregame) => {
                 VStockOrT::OrT(pregame)
