@@ -16,8 +16,7 @@ pub struct SSuspicionTransition {
 }
 
 pub fn assert_ahand_same_size(ahand: &EnumMap<EPlayerIndex, SHand>) {
-    let n_len_hand = ahand[EPlayerIndex::EPI0].cards().len();
-    assert!(ahand.iter().all(|hand| hand.cards().len()==n_len_hand)); // TODOITERTOOLS use all_equal
+    assert!(ahand.iter().map(|hand| hand.cards().len()).all_equal());
 }
 
 
