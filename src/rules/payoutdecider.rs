@@ -54,23 +54,15 @@ pub struct SPayoutDeciderPointBased {
     prio: VGameAnnouncementPriority,
 }
 
-impl SPayoutDeciderPointBased {
-    fn internal_new(payoutdeciderparams: SPayoutDeciderParams, n_points_player_to_win: isize, prio: VGameAnnouncementPriority) -> SPayoutDeciderPointBased {
-        assert!(61<=n_points_player_to_win);
-        assert!(n_points_player_to_win<=120);
+impl TPayoutDecider for SPayoutDeciderPointBased {
+    type PrioParams = VGameAnnouncementPriority;
+    fn new(payoutdeciderparams: SPayoutDeciderParams, prio: VGameAnnouncementPriority) -> Self {
         SPayoutDeciderPointBased {
             n_payout_base: payoutdeciderparams.n_payout_base,
             n_payout_schneider_schwarz: payoutdeciderparams.n_payout_schneider_schwarz,
             laufendeparams: payoutdeciderparams.laufendeparams,
             prio,
         }
-    }
-}
-
-impl TPayoutDecider for SPayoutDeciderPointBased {
-    type PrioParams = VGameAnnouncementPriority;
-    fn new(payoutdeciderparams: SPayoutDeciderParams, prio: VGameAnnouncementPriority) -> Self {
-        Self::internal_new(payoutdeciderparams, 61, prio)
     }
 
     fn priority(&self) -> VGameAnnouncementPriority {
