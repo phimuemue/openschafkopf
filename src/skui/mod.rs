@@ -100,78 +100,69 @@ fn do_in_window<FnDo, RetVal>(skuiwin: &VSkUiWindow, fn_do: FnDo) -> RetVal
 }
 
 pub fn print_vecstich(vecstich: &[SStich]) {
-    do_in_window(
-        &VSkUiWindow::Stich,
-        |ncwin| {
-            for (i_stich, stich) in vecstich.iter().enumerate() {
-                let n_x = (i_stich*10+3).as_num();
-                let n_y = 1;
-                let print_card = |epi, (n_y, n_x)| {
-                    ncurses::wmove(ncwin, n_y, n_x);
-                    wprint(ncwin, if epi==stich.first_playerindex() { ">" } else { " " });
-                    match stich.get(epi) {
-                        None => {wprint(ncwin, "..")},
-                        Some(card) => {print_card_with_farbe(ncwin, *card)},
-                    };
+    do_in_window(&VSkUiWindow::Stich, |ncwin| {
+        for (i_stich, stich) in vecstich.iter().enumerate() {
+            let n_x = (i_stich*10+3).as_num();
+            let n_y = 1;
+            let print_card = |epi, (n_y, n_x)| {
+                ncurses::wmove(ncwin, n_y, n_x);
+                wprint(ncwin, if epi==stich.first_playerindex() { ">" } else { " " });
+                match stich.get(epi) {
+                    None => {wprint(ncwin, "..")},
+                    Some(card) => {print_card_with_farbe(ncwin, *card)},
                 };
-                let n_card_width = 2;
-                print_card(EPlayerIndex::EPI0, (n_y+1, n_x));
-                print_card(EPlayerIndex::EPI1, (n_y, n_x-n_card_width));
-                print_card(EPlayerIndex::EPI2, (n_y-1, n_x));
-                print_card(EPlayerIndex::EPI3, (n_y, n_x+n_card_width));
-            }
+            };
+            let n_card_width = 2;
+            print_card(EPlayerIndex::EPI0, (n_y+1, n_x));
+            print_card(EPlayerIndex::EPI1, (n_y, n_x-n_card_width));
+            print_card(EPlayerIndex::EPI2, (n_y-1, n_x));
+            print_card(EPlayerIndex::EPI3, (n_y, n_x+n_card_width));
         }
-    );
+    });
 }
 
 pub fn print_game_announcements(gameannouncements: &SGameAnnouncements) {
     for (epi, orules) in gameannouncements.iter() {
-        do_in_window(
-            &VSkUiWindow::PlayerInfo(epi),
-            |ncwin| {
-                if let Some(ref rules) = *orules {
-                    wprint(ncwin, &format!("{}: {}", epi, rules));
-                } else {
-                    wprint(ncwin, &format!("{}: Nothing", epi));
-                }
-                ncurses::wrefresh(ncwin);
+        do_in_window(&VSkUiWindow::PlayerInfo(epi), |ncwin| {
+            if let Some(ref rules) = *orules {
+                wprint(ncwin, &format!("{}: {}", epi, rules));
+            } else {
+                wprint(ncwin, &format!("{}: Nothing", epi));
             }
-        );
+            ncurses::wrefresh(ncwin);
+        });
     }
 }
 
 pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &[SStoss]) {
-    do_in_window(
-        &VSkUiWindow::GameInfo,
-        |ncwin| {
-            wprint(ncwin, &format!("{}", rules));
-            if let Some(epi) = rules.playerindex() {
-                wprint(ncwin, &format!(", played by {}", epi));
-            }
-            let print_special = |str_special, vecepi: Vec<EPlayerIndex>| {
-                if !vecepi.is_empty() {
-                    wprint(ncwin, str_special);
-                    for epi in vecepi {
-                        wprint(ncwin, &format!("{},", epi));
-                    }
-                }
-            };
-            print_special(
-                ". Doublings: ",
-                doublings.iter()
-                    .filter(|&(_epi, b_doubling)| *b_doubling)
-                    .map(|(epi, _b_doubling)| epi)
-                    .collect()
-            );
-            print_special(
-                ". Stoesse: ",
-                vecstoss.iter()
-                    .map(|stoss| stoss.epi)
-                    .collect()
-            );
-            ncurses::wrefresh(ncwin);
+    do_in_window(&VSkUiWindow::GameInfo, |ncwin| {
+        wprint(ncwin, &format!("{}", rules));
+        if let Some(epi) = rules.playerindex() {
+            wprint(ncwin, &format!(", played by {}", epi));
         }
-    )
+        let print_special = |str_special, vecepi: Vec<EPlayerIndex>| {
+            if !vecepi.is_empty() {
+                wprint(ncwin, str_special);
+                for epi in vecepi {
+                    wprint(ncwin, &format!("{},", epi));
+                }
+            }
+        };
+        print_special(
+            ". Doublings: ",
+            doublings.iter()
+                .filter(|&(_epi, b_doubling)| *b_doubling)
+                .map(|(epi, _b_doubling)| epi)
+                .collect()
+        );
+        print_special(
+            ". Stoesse: ",
+            vecstoss.iter()
+                .map(|stoss| stoss.epi)
+                .collect()
+        );
+        ncurses::wrefresh(ncwin);
+    })
 }
 
 pub fn account_balance_string(accountbalance: &SAccountBalance) -> String {
@@ -182,12 +173,9 @@ pub fn account_balance_string(accountbalance: &SAccountBalance) -> String {
 }
 
 pub fn print_account_balance(accountbalance : &SAccountBalance) {
-    do_in_window(
-        &VSkUiWindow::AccountBalance,
-        |ncwin| {
-            wprint(ncwin, &account_balance_string(accountbalance));
-        }
-    )
+    do_in_window(&VSkUiWindow::AccountBalance, |ncwin| {
+        wprint(ncwin, &account_balance_string(accountbalance));
+    })
 }
 
 pub struct SAskForAlternativeKeyBindings {
@@ -226,55 +214,49 @@ pub fn ask_for_alternative<'vect, T, FnFilter, FnCallback, FnSuggest>(
           FnCallback : Fn(ncurses::WINDOW, usize, &Option<T>),
           FnSuggest : Fn() -> Option<T>
 {
-    do_in_window(
-        &VSkUiWindow::Interaction,
-        |ncwin| {
-            let mut ot_suggest = None;
-            let vect = vect.into_iter().enumerate().filter(|&(_i_t, t)| fn_filter(t)).collect::<Vec<_>>();
-            assert!(0<vect.len());
-            let mut i_alternative = 0; // initially, point to 0th alternative
-            fn_callback(ncwin, vect[i_alternative].0, &ot_suggest);
-            if 1<vect.len() {
-                let mut ch = askforalternativekeybindings.key_prev;
-                while ch!=askforalternativekeybindings.key_choose {
-                    ncurses::werase(ncwin);
-                    if ch==askforalternativekeybindings.key_prev {
-                        if 0<i_alternative {
-                            i_alternative -= 1
-                        }
-                    } else if ch== askforalternativekeybindings.key_next {
-                        if i_alternative<vect.len()-1 {
-                            i_alternative += 1
-                        }
-                    } else if ch==askforalternativekeybindings.key_suggest {
-                        ot_suggest = fn_suggest();
+    do_in_window(&VSkUiWindow::Interaction, |ncwin| {
+        let mut ot_suggest = None;
+        let vect = vect.into_iter().enumerate().filter(|&(_i_t, t)| fn_filter(t)).collect::<Vec<_>>();
+        assert!(0<vect.len());
+        let mut i_alternative = 0; // initially, point to 0th alternative
+        fn_callback(ncwin, vect[i_alternative].0, &ot_suggest);
+        if 1<vect.len() {
+            let mut ch = askforalternativekeybindings.key_prev;
+            while ch!=askforalternativekeybindings.key_choose {
+                ncurses::werase(ncwin);
+                if ch==askforalternativekeybindings.key_prev {
+                    if 0<i_alternative {
+                        i_alternative -= 1
                     }
-                    fn_callback(ncwin, vect[i_alternative].0, &ot_suggest);
-                    ch = ncurses::getch();
+                } else if ch== askforalternativekeybindings.key_next {
+                    if i_alternative<vect.len()-1 {
+                        i_alternative += 1
+                    }
+                } else if ch==askforalternativekeybindings.key_suggest {
+                    ot_suggest = fn_suggest();
                 }
-                ncurses::erase();
+                fn_callback(ncwin, vect[i_alternative].0, &ot_suggest);
+                ch = ncurses::getch();
             }
-            vect[i_alternative].1
+            ncurses::erase();
         }
-    )
+        vect[i_alternative].1
+    })
 }
 
 pub fn print_hand(veccard: &[SCard], oi_card: Option<usize>) {
-    do_in_window(
-        &VSkUiWindow::Hand,
-        |ncwin| {
-            let is_oi_card = |i| { oi_card.map_or(false, |i_card| i==i_card) };
-            for (i, card) in veccard.iter().enumerate() {
-                let n_card_width = 10;
-                ncurses::wmove(ncwin,
-                    /*n_y*/ if is_oi_card(i) { 0i32 } else { 1i32 },
-                    /*n_x*/ (n_card_width * i).as_num()
-                );
-                wprint(ncwin, " +--");
-                print_card_with_farbe(ncwin, *card);
-                wprint(ncwin, "--+ ");
-            }
-            ncurses::refresh();
+    do_in_window(&VSkUiWindow::Hand, |ncwin| {
+        let is_oi_card = |i| { oi_card.map_or(false, |i_card| i==i_card) };
+        for (i, card) in veccard.iter().enumerate() {
+            let n_card_width = 10;
+            ncurses::wmove(ncwin,
+                /*n_y*/ if is_oi_card(i) { 0i32 } else { 1i32 },
+                /*n_x*/ (n_card_width * i).as_num()
+            );
+            wprint(ncwin, " +--");
+            print_card_with_farbe(ncwin, *card);
+            wprint(ncwin, "--+ ");
         }
-    );
+        ncurses::refresh();
+    });
 }
