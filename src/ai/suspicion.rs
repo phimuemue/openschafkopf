@@ -221,8 +221,7 @@ impl SSuspicion {
                     rules,
                     &mut vecstich.clone(),
                     epi,
-                    /*n_stoss*/0, // dummy value
-                    /*n_doubling*/0, // dummy value
+                    /*tpln_stoss_doubling*/(0, 0), // dummy values
                     /*n_stock*/0, // dummy value
                 )),
             ).as_bytes())?;
@@ -249,8 +248,7 @@ impl SSuspicion {
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
         epi: EPlayerIndex,
-        n_stoss: usize,
-        n_doubling: usize,
+        tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
     ) -> isize {
         let vecstich_backup = vecstich.clone();
@@ -261,8 +259,7 @@ impl SSuspicion {
                     vecstich,
                     EKurzLang::from_cards_per_player(vecstich.len()+self.hand_size())
                 ),
-                n_stoss,
-                n_doubling,
+                tpln_stoss_doubling,
                 n_stock,
             ).get_player(epi);
         }
@@ -270,7 +267,7 @@ impl SSuspicion {
             .map(|susptrans| {
                 assert_eq!(susptrans.stich.size(), 4);
                 push_pop_vecstich(vecstich, susptrans.stich.clone(), |vecstich| {
-                    (susptrans, susptrans.susp.min_reachable_payout(rules, vecstich, epi, n_stoss, n_doubling, n_stock))
+                    (susptrans, susptrans.susp.min_reachable_payout(rules, vecstich, epi, tpln_stoss_doubling, n_stock))
                 })
             })
             .group_by(|&(susptrans, _n_payout)| { // other players may play inconveniently for epi...

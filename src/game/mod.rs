@@ -382,8 +382,7 @@ impl SGame {
         assert!(self.which_player_can_do_something().is_none());
         self.rules.payout(
             &SGameFinishedStiche::new(&self.vecstich, self.kurzlang()),
-            /*n_stoss*/ self.vecstoss.len(),
-            /*n_doubling*/ self.doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),
+            stoss_and_doublings(&self.vecstoss, &self.doublings),
             self.n_stock,
         )
     }
@@ -391,4 +390,11 @@ impl SGame {
     pub fn completed_stichs(&self) -> &[SStich] {
         completed_stichs(&self.vecstich)
     }
+}
+
+pub fn stoss_and_doublings(vecstoss: &[SStoss], doublings: &SDoublings) -> (usize, usize) {
+    (
+        vecstoss.len(),
+        doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),
+    )
 }

@@ -46,7 +46,7 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, _n_stock: isize) -> SAccountBalance {
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> SAccountBalance {
         let apply_doubling_stoss_stock = |epi_single, n_factor_single| {
             SAccountBalance::new(
                 SStossDoublingPayoutDecider::payout(
@@ -58,10 +58,9 @@ impl TRules for SRulesRamsch {
                         }
                     }),
                     {
-                        assert_eq!(n_stoss, 0); // SRulesRamsch does not allow stoss
-                        0
+                        assert_eq!(tpln_stoss_doubling.0, 0); // SRulesRamsch does not allow stoss
+                        tpln_stoss_doubling
                     },
-                    n_doubling,
                 ),
                 0,
             )

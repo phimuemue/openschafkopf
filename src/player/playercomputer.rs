@@ -123,8 +123,7 @@ impl TPlayer for SPlayerComputer {
                         rules,
                         &mut Vec::new(),
                         epi,
-                        /*n_stoss*/ vecstoss.len(),
-                        /*n_doubling*/doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),
+                        stoss_and_doublings(&vecstoss, &doublings),
                         n_stock,
                     )
                 })

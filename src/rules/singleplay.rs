@@ -13,7 +13,7 @@ macro_rules! impl_single_play {() => {
         (epi==self.epi)==(vecstoss.len()%2==1)
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, _n_stock: isize) -> SAccountBalance {
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> SAccountBalance {
         SAccountBalance::new(
             SStossDoublingPayoutDecider::payout(
                 self.payoutdecider.payout(
@@ -30,8 +30,7 @@ macro_rules! impl_single_play {() => {
                         }
                     },
                 ),
-                n_stoss,
-                n_doubling,
+                tpln_stoss_doubling,
             ),
             0,
         )

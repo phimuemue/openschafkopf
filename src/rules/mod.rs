@@ -68,7 +68,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
 
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, n_stock: isize) -> SAccountBalance;
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> SAccountBalance;
 
     fn all_allowed_cards(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());

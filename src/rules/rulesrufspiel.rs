@@ -71,7 +71,7 @@ impl TRules for SRulesRufspiel {
         (epi==self.epi || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, n_stock: isize) -> SAccountBalance {
+    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> SAccountBalance {
         let epi_coplayer = gamefinishedstiche.get().iter()
             .flat_map(|stich| stich.iter())
             .find(|&(_, card)| *card==self.rufsau())
@@ -90,8 +90,7 @@ impl TRules for SRulesRufspiel {
                 fn_is_player_party!(),
                 /*fn_player_multiplier*/ |_epi| 1, // everyone pays/gets the same
             ),
-            n_stoss,
-            n_doubling,
+            tpln_stoss_doubling,
         );
         assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
         assert_eq!(an_payout_no_stock[self.epi], an_payout_no_stock[epi_coplayer]);

@@ -257,8 +257,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                                 game.rules.as_ref(),
                                 &mut vecstich_complete_payout,
                                 epi_fixed,
-                                /*n_stoss*/ game.vecstoss.len(),
-                                /*n_doubling*/ game.doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),
+                                stoss_and_doublings(&game.vecstoss, &game.doublings),
                                 game.n_stock,
                             )
                         });
@@ -312,8 +311,7 @@ impl TAi for SAiSimulating {
                             rules,
                             &mut Vec::new(),
                             epi_rank,
-                            /*n_stoss*/ 0, // TODO do we need n_stoss from somewhere?
-                            /*n_doubling*/ 0, // TODO do we need n_doubling from somewhere?
+                            /*tpln_stoss_doubling*/(0, 0), // // TODO do we need tpln_stoss_doubling from somewhere? 
                             n_stock,
                         )
                     ;
