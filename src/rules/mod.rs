@@ -32,7 +32,7 @@ pub fn completed_stichs(vecstich: &[SStich]) -> &[SStich] {
     &vecstich[0..vecstich.len()-1]
 }
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub enum VTrumpfOrFarbe {
     Trumpf,
     Farbe (EFarbe),
@@ -114,12 +114,10 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
         epi_best
     }
 
-    fn compare_in_stich_farbe(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
-        if card_fst.farbe() != card_snd.farbe() {
-            Ordering::Greater
-        } else {
-            compare_farbcards_same_color(card_fst, card_snd)
-        }
+    fn compare_in_stich_same_farbe(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
+        assert_eq!(self.trumpforfarbe(card_fst), self.trumpforfarbe(card_snd));
+        assert_eq!(card_fst.farbe(), card_snd.farbe());
+        compare_farbcards_same_color(card_fst, card_snd)
     }
 
     fn compare_in_stich(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
@@ -128,7 +126,13 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
             (true, false) => Ordering::Greater,
             (false, true) => Ordering::Less,
             (true, true) => self.compare_trumpf(card_fst, card_snd),
-            (false, false) => self.compare_in_stich_farbe(card_fst, card_snd),
+            (false, false) => {
+                if card_fst.farbe() != card_snd.farbe() {
+                    Ordering::Greater
+                } else {
+                    self.compare_in_stich_same_farbe(card_fst, card_snd)
+                }
+            }
         }
     }
 
@@ -137,7 +141,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
             match(self.trumpforfarbe(card_lhs), self.trumpforfarbe(card_rhs)) {
                 (VTrumpfOrFarbe::Farbe(efarbe_lhs), VTrumpfOrFarbe::Farbe(efarbe_rhs)) => {
                     if efarbe_lhs==efarbe_rhs {
-                        self.compare_in_stich_farbe(card_rhs, card_lhs)
+                        self.compare_in_stich_same_farbe(card_rhs, card_lhs)
                     } else {
                         efarbe_lhs.cmp(&efarbe_rhs)
                     }
