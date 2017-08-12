@@ -8,15 +8,15 @@ combine = "1"
 rand = "0"
 ncurses = "5"
 itertools = "0"
+plain_enum = "0"
 permutohedron = "0"
 clap = "2"
 arrayvec = "0"
 crossbeam = "0"
 toml = "0"
+as_num = "0"
 error-chain = "0"
 derive-new = "0"
-as_num = { git = "https://github.com/phimuemue/rs_as_num" }
-plain_enum = { git = "https://github.com/phimuemue/rs_plain_enum" }
 
 [profile.release]
 lto = true
