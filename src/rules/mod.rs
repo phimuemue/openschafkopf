@@ -79,7 +79,19 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
 
     fn all_allowed_cards_first_in_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector;
 
-    fn all_allowed_cards_within_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector;
+    fn all_allowed_cards_within_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
+        // probably in most cases, only the first card of the current stich is decisive
+        assert!(!vecstich.is_empty());
+        let card_first = *vecstich.last().unwrap().first();
+        let veccard_allowed : SHandVector = hand.cards().iter().cloned()
+            .filter(|&card| self.trumpforfarbe(card)==self.trumpforfarbe(card_first))
+            .collect();
+        if veccard_allowed.is_empty() {
+            hand.cards().clone()
+        } else {
+            veccard_allowed
+        }
+    }
 
     fn card_is_allowed(&self, vecstich: &[SStich], hand: &SHand, card: SCard) -> bool {
         self.all_allowed_cards(vecstich, hand).into_iter()
