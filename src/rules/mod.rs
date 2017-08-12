@@ -77,7 +77,10 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
         }
     }
 
-    fn all_allowed_cards_first_in_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector;
+    fn all_allowed_cards_first_in_stich(&self, _vecstich: &[SStich], hand: &SHand) -> SHandVector {
+        // probably in most cases, every card can be played
+        hand.cards().clone()
+    }
 
     fn all_allowed_cards_within_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         // probably in most cases, only the first card of the current stich is decisive

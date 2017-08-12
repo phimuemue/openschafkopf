@@ -140,8 +140,4 @@ impl TRules for SRulesRamsch {
             },
         }
     }
-
-    fn all_allowed_cards_first_in_stich(&self, _vecstich: &[SStich], hand: &SHand) -> SHandVector {
-        hand.cards().clone()
-    }
 }
