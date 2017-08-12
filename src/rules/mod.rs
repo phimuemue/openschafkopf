@@ -213,9 +213,5 @@ pub fn compare_farbcards_same_color(card_fst: SCard, card_snd: SCard) -> Orderin
         ESchlag::Zehn => 6,
         ESchlag::Ass => 7,
     } };
-    if get_schlag_value(card_fst) < get_schlag_value(card_snd) {
-        Ordering::Less
-    } else {
-        Ordering::Greater
-    }
+    get_schlag_value(card_fst).cmp(&get_schlag_value(card_snd))
 }
