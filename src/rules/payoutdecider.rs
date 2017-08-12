@@ -154,7 +154,7 @@ impl SLaufendeParams {
     }
 }
 
-fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_player_multiplier: FnPlayerMultiplier, ab_winner: &EnumMap<EPlayerIndex, bool>) -> EnumMap<EPlayerIndex, isize> 
+pub fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_player_multiplier: FnPlayerMultiplier, ab_winner: &EnumMap<EPlayerIndex, bool>) -> EnumMap<EPlayerIndex, isize> 
     where FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
 {
     EPlayerIndex::map_from_fn(|epi| {

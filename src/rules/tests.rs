@@ -3,6 +3,7 @@ use rules::*;
 use rules::rulesrufspiel::*;
 use rules::rulessolo::*;
 use rules::rulesramsch::*;
+use rules::rulesbettel::*;
 use rules::trumpfdecider::*;
 use rules::payoutdecider::*;
 use util::*;
@@ -1821,5 +1822,45 @@ fn test_rulesramsch() {
             (0, "h7 h8 s8 s7"),
         ],
         [-30, 10, 10, 10],
+    );
+}
+
+#[test]
+fn test_rulesbettel() {
+    test_rules(
+        "3 wins Bettel",
+        &SRulesBettel::new(EPlayerIndex::EPI3, /*i_prio*/0, /*n_payout_base*/10),
+        ["eo eu ha ea ga sa e8 h8","go gu hz ez gz sz e7 h7","ho hu hk ek gk sk g8 s8","so su h9 e9 g9 s9 g7 s7",],
+        vec![],
+        vec![],
+        &[
+            (0, "eo ez ek e9"),
+            (2, "ho h9 ha hz"),
+            (0, "h8 h7 hu so"),
+            (2, "g8 g9 ga go"),
+            (0, "e8 e7 gk su"),
+            (0, "sa sz sk s9"),
+            (0, "eu gz hk s7"),
+            (0, "ea gu s8 g7"),
+        ],
+        [-10, -10, -10, 30],
+    );
+    test_rules(
+        "2 looses Bettel",
+        &SRulesBettel::new(EPlayerIndex::EPI2, /*i_prio*/0, /*n_payout_base*/10),
+        ["eo eu ha ea ga sa e8 h8","go gu hz ez gz sz e7 h7","ho hu hk ek gk sk g8 s8","so su h9 e9 g9 s9 g7 s7",],
+        vec![],
+        vec![],
+        &[
+            (0, "eo ez ek e9"),
+            (2, "ho h9 ha hz"),
+            (0, "h8 h7 hu so"),
+            (2, "g8 g9 ga go"),
+            (0, "e8 e7 gk su"),
+            (0, "sa sz sk s9"),
+            (0, "eu gz hk s7"),
+            (0, "ea gu s8 g7"),
+        ],
+        [10, 10, -30, 10],
     );
 }

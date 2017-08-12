@@ -2,6 +2,7 @@ use primitives::*;
 use rules::*;
 use rules::rulesrufspiel::*;
 use rules::rulessolo::*;
+use rules::rulesbettel::*;
 use rules::rulesramsch::*;
 use rules::trumpfdecider::*;
 use rules::payoutdecider::*;
@@ -205,6 +206,18 @@ impl SRuleSet {
                 "solo",
                 "Sie",
                 &|payoutparams| vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(epi, /*prioparams*/() ,"Sie", payoutparams)]
+            )?;
+            create_rulegroup!(
+                "bettel",
+                "base-price",
+                "Bettel",
+                |payoutparams: SPayoutDeciderParams| { // TODO is it wise to have SPayoutDeciderParams for Bettel?
+                    vec![Box::new(SRulesBettel::new(
+                        epi,
+                        /*i_prio, large negative number to make less important than any sololike*/-999999,
+                        payoutparams.n_payout_base,
+                    )) as Box<TActivelyPlayableRules>]
+                }
             )?;
         }
         Ok(SRuleSet::new(

@@ -267,6 +267,11 @@ fn test_game_loop() {
                 [wenz]
                 [geier]
                 ",
+                r"
+                [solo]
+                [wenz]
+                [bettel]
+                ",
             ].into_iter(),
             [ // str_no_active_game
                 r"[ramsch]

@@ -3,6 +3,7 @@ pub mod trumpfdecider;
 pub mod rulesrufspiel;
 pub mod rulessolo;
 pub mod rulesramsch;
+pub mod rulesbettel;
 pub mod ruleset;
 pub mod payoutdecider;
 pub mod wrappers;
