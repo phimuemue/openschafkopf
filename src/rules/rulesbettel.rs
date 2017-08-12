@@ -4,11 +4,21 @@ use rules::trumpfdecider::*;
 use rules::payoutdecider::{SStossDoublingPayoutDecider, internal_payout};
 use util::*;
 
-#[derive(Clone, new)]
+#[derive(Clone)]
 pub struct SRulesBettel {
     epi : EPlayerIndex,
-    m_i_prio : isize,
-    n_payout_base : isize,
+    i_prio : isize,
+    payoutdecider : SPayoutDeciderBettel,
+}
+
+impl SRulesBettel {
+    pub fn new(epi: EPlayerIndex, i_prio: isize, n_payout_base: isize) -> SRulesBettel {
+        SRulesBettel{
+            epi,
+            i_prio,
+            payoutdecider: SPayoutDeciderBettel{n_payout_base},
+        }
+    }
 }
 
 impl fmt::Display for SRulesBettel {
@@ -20,52 +30,43 @@ impl fmt::Display for SRulesBettel {
 impl TActivelyPlayableRules for SRulesBettel {
     box_clone_impl_by_clone!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority {
-        VGameAnnouncementPriority::SoloLikeSimple(self.m_i_prio)
+        VGameAnnouncementPriority::SoloLikeSimple(self.i_prio)
+    }
+}
+
+#[derive(Clone)]
+struct SPayoutDeciderBettel { // TODO clean up and use TPayoutDecider
+    n_payout_base : isize,
+}
+
+impl SPayoutDeciderBettel {
+    fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
+        &self,
+        rules: &Rules,
+        gamefinishedstiche: &SGameFinishedStiche,
+        fn_is_player_party: FnIsPlayerParty,
+        fn_player_multiplier: FnPlayerMultiplier,
+    ) -> EnumMap<EPlayerIndex, isize>
+        where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
+              FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
+              Rules: TRules
+    {
+        let b_player_party_wins = gamefinishedstiche.get().iter()
+            .all(|stich| !fn_is_player_party(rules.winner_index(stich)));
+        internal_payout(
+            /*n_payout_single_player*/ self.n_payout_base,
+            fn_player_multiplier,
+            /*ab_winner*/ &EPlayerIndex::map_from_fn(|epi| {
+                fn_is_player_party(epi)==b_player_party_wins
+            })
+        )
     }
 }
 
 impl TRules for SRulesBettel {
     box_clone_impl_by_clone!(TRules);
     impl_rules_trumpf!(STrumpfDeciderNoTrumpf);
-
-    fn playerindex(&self) -> Option<EPlayerIndex> {
-        Some(self.epi)
-    }
-
-    fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {
-        assert!(
-            vecstoss.iter()
-                .enumerate()
-                .all(|(i_stoss, stoss)| (i_stoss%2==0) == (stoss.epi!=self.epi))
-        );
-        EKurzLang::from_cards_per_player(hand.cards().len());
-        (epi==self.epi)==(vecstoss.len()%2==1)
-    }
-
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, n_stoss: usize, n_doubling: usize, _n_stock: isize) -> SAccountBalance {
-        let b_player_party_wins = gamefinishedstiche.get().iter()
-            .all(|stich| self.epi!=self.winner_index(stich));
-        SAccountBalance::new(
-            SStossDoublingPayoutDecider::payout(
-                internal_payout(
-                    /*n_payout_single_player*/ self.n_payout_base,
-                    /*fn_player_multiplier*/ |epi| {
-                        if self.epi==epi {
-                            3
-                        } else {
-                            1
-                        }
-                    },
-                    /*ab_winner*/ &EPlayerIndex::map_from_fn(|epi| {
-                        (self.epi==epi)==b_player_party_wins
-                    })
-                ),
-                n_stoss,
-                n_doubling,
-            ),
-            0
-        )
-    }
+    impl_single_play!();
 
     // TODORULES Grasober like bettel, i.e. Stichzwang
     // fn all_allowed_cards_within_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector;

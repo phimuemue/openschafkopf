@@ -1,5 +1,7 @@
 #[macro_use]
 pub mod trumpfdecider;
+#[macro_use]
+pub mod singleplay;
 pub mod rulesrufspiel;
 pub mod rulessolo;
 pub mod rulesramsch;
