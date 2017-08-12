@@ -214,7 +214,7 @@ impl SRuleSet {
                 |payoutparams: SPayoutDeciderParams| { // TODO is it wise to have SPayoutDeciderParams for Bettel?
                     vec![Box::new(SRulesBettel::new(
                         epi,
-                        /*i_prio, large negative number to make less important than any sololike*/-999999,
+                        /*i_prio, large negative number to make less important than any sololike*/-999_999,
                         payoutparams.n_payout_base,
                     )) as Box<TActivelyPlayableRules>]
                 }
