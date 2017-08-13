@@ -8,6 +8,18 @@ This is a work in progress, aiming to model the game Schafkopf in a robust and e
 
 [![asciicast](https://asciinema.org/a/q8IiXdkHZAnRvkC8yL4eOt6Gf.png)](https://asciinema.org/a/q8IiXdkHZAnRvkC8yL4eOt6Gf)
 
+## Getting started
+
+You need the rust programming language to build OpenSchafkopf (see https://www.rust-lang.org/en-US/install.html).
+
+```
+curl https://sh.rustup.rs -sSf | sh
+git clone https://github.com/openschafkopf/openschafkopf.git
+cd openschafkopf
+cargo build --release
+./target/release/openschafkopf
+```
+
 ## Supported variants
 
 * Rufspiel
@@ -18,14 +30,11 @@ This is a work in progress, aiming to model the game Schafkopf in a robust and e
 * Farbgeier
 * Tout/Sie
 * Bettel
-
 * Ramsch
 * Stock
-
 * Schneider/Schwarz
 * Laufende (adjustible per variant)
 * Stoss
 * Doppeln
-
 * Steigern
 * Kurze Karte/Lange Karte
