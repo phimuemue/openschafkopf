@@ -6,6 +6,8 @@
 
 This is a work in progress, aiming to model the game Schafkopf in a robust and extensible manner. Moreover, it aims to provide an AI playing the game. As of now, it does *not* provide any fancy user interface, but instead relies on the command line.
 
+[![asciicast](https://asciinema.org/a/q8IiXdkHZAnRvkC8yL4eOt6Gf.png)](https://asciinema.org/a/q8IiXdkHZAnRvkC8yL4eOt6Gf)
+
 ## Supported variants
 
 * Rufspiel
