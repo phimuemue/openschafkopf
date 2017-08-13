@@ -48,28 +48,18 @@ mod errors {
 }
 
 fn main() {
+    let clap_arg = |str_long, str_default| {
+        clap::Arg::with_name(str_long)
+            .long(str_long)
+            .default_value(str_default)
+    };
     let clapmatches = clap::App::new("schafkopf")
-        .arg(clap::Arg::with_name("rulesetpath")
-            .long("ruleset")
-            .default_value("ruleset_default.toml")
-        )
-        .arg(clap::Arg::with_name("numgames")
-            .long("numgames")
-            .default_value("4")
-        )
-        .arg(clap::Arg::with_name("ai")
-            .long("ai")
-            .default_value("cheating")
-        )
+        .arg(clap_arg("ruleset", "ruleset_default.toml"))
+        .arg(clap_arg("numgames", "4"))
+        .arg(clap_arg("ai", "cheating"))
         .subcommand(clap::SubCommand::with_name("rank-rules")
-            .arg(clap::Arg::with_name("hand")
-                .long("hand")
-                .default_value("")
-            )
-            .arg(clap::Arg::with_name("pos")
-                 .long("position")
-                 .default_value("0")
-            )
+            .arg(clap_arg("hand", ""))
+            .arg(clap_arg("position", "0"))
         )
         .get_matches();
 
@@ -89,12 +79,12 @@ fn main() {
         }
     };
 
-    match SRuleSet::from_file(Path::new(clapmatches.value_of("rulesetpath").unwrap())) {
+    match SRuleSet::from_file(Path::new(clapmatches.value_of("ruleset").unwrap())) {
         Ok(ruleset) => {
             if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
                 if let Some(str_hand) = subcommand_matches.value_of("hand") {
                     if let Some(hand_fixed) = cardvector::parse_cards(str_hand).map(SHand::new_from_vec) {
-                        let epi_rank = value_t!(subcommand_matches.value_of("pos"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
+                        let epi_rank = value_t!(subcommand_matches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
                         println!("Hand: {}", hand_fixed);
                         for rules in allowed_rules(&ruleset.avecrulegroup[epi_rank]).iter() 
                             .filter(|rules| rules.can_be_played(&SFullHand::new(&hand_fixed, ruleset.ekurzlang)))
