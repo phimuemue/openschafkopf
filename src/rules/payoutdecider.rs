@@ -48,9 +48,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone + Display {
 
 #[derive(Clone)]
 pub struct SPayoutDeciderPointBased {
-    n_payout_base : isize,
-    n_payout_schneider_schwarz : isize,
-    laufendeparams : SLaufendeParams,
+    payoutdeciderparams : SPayoutDeciderParams,
     prio: VGameAnnouncementPriority,
 }
 
@@ -58,9 +56,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
     type PrioParams = VGameAnnouncementPriority;
     fn new(payoutdeciderparams: SPayoutDeciderParams, prio: VGameAnnouncementPriority) -> Self {
         SPayoutDeciderPointBased {
-            n_payout_base: payoutdeciderparams.n_payout_base,
-            n_payout_schneider_schwarz: payoutdeciderparams.n_payout_schneider_schwarz,
-            laufendeparams: payoutdeciderparams.laufendeparams,
+            payoutdeciderparams,
             prio,
         }
     }
@@ -94,17 +90,17 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
             fn_is_player_party(epi)==b_player_party_wins
         });
         internal_payout(
-            /*n_payout_single_player*/ self.n_payout_base
+            /*n_payout_single_player*/ self.payoutdeciderparams.n_payout_base
                 + { 
                     if gamefinishedstiche.get().iter().all(|stich| b_player_party_wins==fn_is_player_party(rules.winner_index(stich))) {
-                        2*self.n_payout_schneider_schwarz // schwarz
+                        2*self.payoutdeciderparams.n_payout_schneider_schwarz // schwarz
                     } else if (b_player_party_wins && n_points_player_party>90) || (!b_player_party_wins && n_points_player_party<=30) {
-                        self.n_payout_schneider_schwarz // schneider
+                        self.payoutdeciderparams.n_payout_schneider_schwarz // schneider
                     } else {
                         0 // "nothing", i.e. neither schneider nor schwarz
                     }
                 }
-                + self.laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner),
+                + self.payoutdeciderparams.laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner),
             fn_player_multiplier,
             &ab_winner,
         )
@@ -172,8 +168,7 @@ pub fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_pla
 
 #[derive(Clone)]
 pub struct SPayoutDeciderTout {
-    n_payout_base : isize,
-    laufendeparams : SLaufendeParams,
+    payoutdeciderparams : SPayoutDeciderParams,
     i_prio: isize,
 }
 
@@ -185,8 +180,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
 
     fn new(payoutdeciderparams: SPayoutDeciderParams, i_prio: isize) -> Self {
         SPayoutDeciderTout {
-            n_payout_base: payoutdeciderparams.n_payout_base,
-            laufendeparams: payoutdeciderparams.laufendeparams,
+            payoutdeciderparams,
             i_prio,
         }
     }
@@ -209,7 +203,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
             fn_is_player_party(epi)==b_player_party_wins
         });
         internal_payout(
-            /*n_payout_single_player*/ (self.n_payout_base + self.laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner)) * 2,
+            /*n_payout_single_player*/ (self.payoutdeciderparams.n_payout_base + self.payoutdeciderparams.laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner)) * 2,
             fn_player_multiplier,
             &ab_winner,
         )
@@ -223,8 +217,7 @@ impl Display for SPayoutDeciderTout {
 
 #[derive(Clone)]
 pub struct SPayoutDeciderSie {
-    n_payout_base : isize,
-    laufendeparams : SLaufendeParams,
+    payoutdeciderparams : SPayoutDeciderParams,
 }
 
 impl TPayoutDecider for SPayoutDeciderSie {
@@ -232,8 +225,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
 
     fn new(payoutdeciderparams: SPayoutDeciderParams, _prioparams: ()) -> Self {
         SPayoutDeciderSie {
-            n_payout_base: payoutdeciderparams.n_payout_base,
-            laufendeparams: payoutdeciderparams.laufendeparams,
+            payoutdeciderparams,
         }
     }
 
@@ -275,10 +267,10 @@ impl TPayoutDecider for SPayoutDeciderSie {
             }
         ;
         internal_payout(
-            /*n_payout_single_player*/ (self.n_payout_base
+            /*n_payout_single_player*/ (self.payoutdeciderparams.n_payout_base
             + {
                 gamefinishedstiche.get().len().as_num::<isize>()
-            } * self.laufendeparams.n_payout_per_lauf) * 4,
+            } * self.payoutdeciderparams.laufendeparams.n_payout_per_lauf) * 4,
             fn_player_multiplier,
             /*ab_winner*/ &EPlayerIndex::map_from_fn(|epi| {
                 fn_is_player_party(epi)==b_player_party_wins
