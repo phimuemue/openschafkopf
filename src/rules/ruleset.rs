@@ -46,11 +46,17 @@ pub enum EDoublingScope {
     GamesAndStock,
 }
 
+#[derive(Clone, new)]
+pub struct SStossParams {
+    pub n_stoss_max : usize,
+}
+
 #[derive(new)]
 pub struct SRuleSet {
     pub avecrulegroup : EnumMap<EPlayerIndex, Vec<SRuleGroup>>,
     pub stockorramsch : VStockOrT<Box<TRules>>,
     pub oedoublingscope : Option<EDoublingScope>,
+    pub ostossparams : Option<SStossParams>,
     pub ekurzlang : EKurzLang,
 }
 
@@ -237,6 +243,21 @@ impl SRuleSet {
                     println!("doubling.stock not specified; falling back to 'stock=yes'");
                     EDoublingScope::GamesAndStock
                 }
+            }),
+            tomltbl.get("stoss").map(|tomlval_stoss| {
+                let n_stoss_max_default = 4;
+                SStossParams::new(
+                    tomlval_stoss.get("max")
+                        .and_then(|tomlval| tomlval.as_integer())
+                        .map_or(n_stoss_max_default, |n_stoss_max| {
+                            if n_stoss_max<=0 {
+                                println!("stoss.max less than 0. Defaulting to {}.", n_stoss_max_default);
+                                n_stoss_max_default
+                            } else {
+                                n_stoss_max.as_num::<usize>()
+                            }
+                        })
+                )
             }),
             if let Some("kurz") = tomltbl.get("deck").and_then(|tomlval_kurzlang| tomlval_kurzlang.as_str()) {
                 EKurzLang::Kurz

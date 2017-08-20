@@ -365,14 +365,16 @@ fn test_is_compatible_with_game_so_far() {
         let ahand = EPlayerIndex::map_from_fn(|epi| {
             SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
         });
-        let mut game = game::SGame {
-            doublings : SDoublings::new(epi_first),
+        use rules::ruleset::*;
+        let mut game = game::SGame::new(
             ahand,
-            rules : rules.box_clone(),
-            vecstich : vec![SStich::new(epi_first)],
-            n_stock: 0,
-            vecstoss : vec![], // TODO implement tests for SStoss
-        };
+            SDoublings::new(epi_first),
+            Some(SStossParams::new( // TODO implement tests for SStoss
+                /*n_stoss_max*/ 4,
+            )),
+            rules.box_clone(),
+            /*n_stock*/ 0,
+        );
         let mut vecpairepitrumpforfarbe_frei = Vec::new();
         for testaction in vectestaction {
             let mut oassertnotfrei = None;

@@ -1,5 +1,6 @@
 use primitives::*;
 use rules::*;
+use rules::ruleset::*;
 use rules::rulesrufspiel::*;
 use rules::rulessolo::*;
 use rules::rulesramsch::*;
@@ -32,6 +33,9 @@ pub fn test_rules(
             }
             doublings
         },
+        Some(SStossParams::new(
+            /*n_stoss_max*/4,
+        )),
         rules.box_clone(),
         /*n_stock*/ 0, // TODO test stock
     );

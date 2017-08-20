@@ -134,6 +134,7 @@ impl<'rules> SGamePreparations<'rules> {
                     VGamePreparationsFinish::DirectGame(SGame::new(
                         self.ahand,
                         self.doublings,
+                        self.ruleset.ostossparams.clone(),
                         rulesramsch.clone(),
                         self.n_stock,
                     ))
@@ -254,6 +255,7 @@ impl<'rules> SDetermineRules<'rules> {
         Ok(SGame::new(
             self.ahand,
             self.doublings,
+            self.ruleset.ostossparams.clone(),
             self.pairepirules_current_bid.1.as_rules().box_clone(),
             self.n_stock,
         ))
@@ -265,6 +267,7 @@ pub struct SGame {
     pub doublings : SDoublings,
     pub rules : Box<TRules>,
     pub vecstoss : Vec<SStoss>,
+    ostossparams : Option<SStossParams>,
     pub n_stock : isize,
     pub vecstich : Vec<SStich>,
 }
@@ -275,6 +278,7 @@ impl SGame {
     pub fn new(
         ahand : EnumMap<EPlayerIndex, SHand>,
         doublings : SDoublings,
+        ostossparams : Option<SStossParams>,
         rules : Box<TRules>,
         n_stock : isize,
     ) -> SGame {
@@ -284,6 +288,7 @@ impl SGame {
             doublings,
             rules,
             vecstoss: Vec::new(),
+            ostossparams,
             n_stock,
             vecstich: vec![SStich::new(epi_first)],
         }
@@ -292,15 +297,19 @@ impl SGame {
     pub fn which_player_can_do_something(&self) -> Option<SGameAction> {
         self.current_stich().current_playerindex().map(|epi_current| (
             epi_current,
-            if 1==self.vecstich.len() && 0==self.vecstich[0].size() // TODORULES Adjustable latest time of stoss
-                && self.vecstoss.len() < 4 // TODORULES Adjustable max stoss count
-            {
-                EPlayerIndex::values()
-                    .map(|epi| epi.wrapping_add(self.doublings.first_playerindex().to_usize()))
-                    .filter(|epi| {
-                        self.rules.stoss_allowed(*epi, &self.vecstoss, &self.ahand[*epi])
-                    })
-                    .collect()
+            if let Some(ref stossparams) = self.ostossparams {
+                if 1==self.vecstich.len() && 0==self.vecstich[0].size() // TODORULES Adjustable latest time of stoss
+                    && self.vecstoss.len() < stossparams.n_stoss_max
+                {
+                    EPlayerIndex::values()
+                        .map(|epi| epi.wrapping_add(self.doublings.first_playerindex().to_usize()))
+                        .filter(|epi| {
+                            self.rules.stoss_allowed(*epi, &self.vecstoss, &self.ahand[*epi])
+                        })
+                        .collect()
+                } else {
+                    Vec::new()
+                }
             } else {
                 Vec::new()
             },

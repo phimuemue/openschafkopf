@@ -284,6 +284,10 @@ fn test_game_loop() {
                 r"[steigern]",
                 r"[doubling]",
                 r#"deck = "kurz""#,
+                r"[stoss]",
+                r"[stoss]
+                max=3
+                ",
             ].into_iter()
         )
             .map(|(n_base_price, n_solo_price, n_lauf_min, str_allowed_games, str_no_active_game, str_extras)| {
