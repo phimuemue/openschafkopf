@@ -259,11 +259,13 @@ impl SRuleSet {
                         })
                 )
             }),
-            if let Some("kurz") = tomltbl.get("deck").and_then(|tomlval_kurzlang| tomlval_kurzlang.as_str()) {
-                EKurzLang::Kurz
-            } else {
-                // TODO possibly better error reporting
-                EKurzLang::Lang
+            match tomltbl.get("deck").and_then(|tomlval_kurzlang| tomlval_kurzlang.as_str()) {
+                Some("kurz") => EKurzLang::Kurz,
+                None | Some("lang") => EKurzLang::Lang,
+                Some(str_kurzlang) => {
+                    println!("{} is not a valid value for 'deck' (supported values: kurz, lang). Defaulting to 'lang'", str_kurzlang);
+                    EKurzLang::Lang
+                },
             },
         ))
     }
