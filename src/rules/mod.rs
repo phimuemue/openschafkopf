@@ -9,7 +9,7 @@ pub mod rulesbettel;
 pub mod ruleset;
 pub mod payoutdecider;
 pub mod wrappers;
-mod card_points;
+pub mod card_points;
 
 #[cfg(test)]
 mod tests;
@@ -19,6 +19,7 @@ use std::cmp::Ordering;
 use std::fmt;
 pub use rules::wrappers::*;
 use util::*;
+use ai::rulespecific::*;
 
 pub fn current_stich(vecstich: &[SStich]) -> &SStich {
     assert!(!vecstich.is_empty());
@@ -151,6 +152,10 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
                 }
             }
         });
+    }
+
+    fn rulespecific_ai<'rules>(&'rules self) -> Option<Box<TRuleSpecificAI + 'rules>> {
+        None
     }
 }
 box_clone_impl_box!(TRules);

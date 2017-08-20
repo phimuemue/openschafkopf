@@ -5,6 +5,7 @@ use rules::payoutdecider::*;
 use std::fmt;
 use std::cmp::Ordering;
 use util::*;
+use ai::rulespecific::airufspiel::*;
 
 #[derive(Clone)]
 pub struct SRulesRufspiel {
@@ -34,7 +35,7 @@ impl SRulesRufspiel {
         }
     }
 
-    fn rufsau(&self) -> SCard {
+    pub fn rufsau(&self) -> SCard {
         SCard::new(self.efarbe, ESchlag::Ass)
     }
 
@@ -178,4 +179,7 @@ impl TRules for SRulesRufspiel {
         }
     }
 
+    fn rulespecific_ai<'rules>(&'rules self) -> Option<Box<TRuleSpecificAI + 'rules>> {
+        Some(Box::new(SAIRufspiel::new(self)))
+    }
 }

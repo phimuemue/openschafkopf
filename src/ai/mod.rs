@@ -1,5 +1,6 @@
 pub mod suspicion;
 pub mod handiterators;
+pub mod rulespecific;
 
 use primitives::*;
 use rules::*;
@@ -29,6 +30,10 @@ pub trait TAi {
         assert!(1<=veccard_allowed.len());
         if 1==veccard_allowed.len() {
             veccard_allowed[0]
+        } else if let Some(card) = game.rules.rulespecific_ai()
+            .and_then(|airulespecific| airulespecific.suggest_card(game))
+        {
+            card
         } else {
             self.internal_suggest_card(game, ofile_output)
         }
