@@ -79,7 +79,7 @@ impl TPlayer for SPlayerHuman {
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         skui::print_vecstich(&game.vecstich);
         let hand = {
-            let mut hand = game.ahand[game.which_player_can_do_something().unwrap()].clone();
+            let mut hand = game.ahand[game.which_player_can_do_something().unwrap().0].clone();
             game.rules.sort_cards_first_trumpf_then_farbe(hand.cards_mut());
             hand
         };

@@ -21,7 +21,7 @@ pub fn test_rules(
     use primitives::cardvector::parse_cards;
     println!("Testing rules: {}", str_info);
     let epi_first = EPlayerIndex::EPI0; // TODO parametrize w.r.t. epi_first
-    let mut pregame = game::SPreGame::new(
+    let mut game = game::SGame::new(
         EPlayerIndex::map_from_fn(|epi| {
             SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
         }),
@@ -36,19 +36,18 @@ pub fn test_rules(
         /*n_stock*/ 0, // TODO test stock
     );
     for n_epi_stoss in vecn_stoss {
-        pregame.stoss(EPlayerIndex::from_usize(n_epi_stoss)).unwrap();
+        game.stoss(EPlayerIndex::from_usize(n_epi_stoss)).unwrap();
     }
-    let mut game = pregame.finish();
     for (i_stich, (epi_first_in_stich, str_stich)) in vecpairnstr_stich.iter()
         .map(|&(n_epi, str_stich)| (EPlayerIndex::from_usize(n_epi), str_stich))
         .enumerate()
     {
         println!("Stich {}: {}", i_stich, str_stich);
-        assert_eq!(Some(epi_first_in_stich), game.which_player_can_do_something());
+        assert_eq!(Some(epi_first_in_stich), game.which_player_can_do_something().map(|gameaction| gameaction.0));
         assert_eq!(4, parse_cards::<Vec<_>>(str_stich).unwrap().len());
         for card in parse_cards::<Vec<_>>(str_stich).unwrap() {
             assert!(game.which_player_can_do_something().is_some());
-            let epi = game.which_player_can_do_something().unwrap();
+            let epi = game.which_player_can_do_something().unwrap().0;
             println!("{}, {}", card, epi);
             game.zugeben(card, epi).unwrap();
         }

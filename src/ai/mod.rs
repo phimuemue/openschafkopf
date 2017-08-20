@@ -24,7 +24,7 @@ pub trait TAi {
     fn suggest_card(&self, game: &SGame, ofile_output: Option<fs::File>) -> SCard {
         let veccard_allowed = game.rules.all_allowed_cards(
             &game.vecstich,
-            &game.ahand[game.which_player_can_do_something().unwrap()]
+            &game.ahand[game.which_player_can_do_something().unwrap().0]
         );
         assert!(1<=veccard_allowed.len());
         if 1==veccard_allowed.len() {
@@ -379,7 +379,7 @@ fn test_is_compatible_with_game_so_far() {
             match testaction {
                 VTestAction::PlayStich(str_stich) => {
                     for card in parse_cards::<Vec<_>>(str_stich).unwrap() {
-                        let epi = game.which_player_can_do_something().unwrap();
+                        let epi = game.which_player_can_do_something().unwrap().0;
                         game.zugeben(card, epi).unwrap();
                     }
                 },
@@ -392,8 +392,8 @@ fn test_is_compatible_with_game_so_far() {
             }
             for ahand in forever_rand_hands(
                 game.completed_stichs(),
-                &game.ahand[game.which_player_can_do_something().unwrap()],
-                game.which_player_can_do_something().unwrap()
+                &game.ahand[game.which_player_can_do_something().unwrap().0],
+                game.which_player_can_do_something().unwrap().0
             )
                 .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
                 .take(100)

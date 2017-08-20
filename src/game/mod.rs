@@ -94,7 +94,7 @@ pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
 
 pub enum VGamePreparationsFinish<'rules> {
     DetermineRules(SDetermineRules<'rules>),
-    DirectGame(SPreGame),
+    DirectGame(SGame),
     Stock(/*n_stock*/isize),
 
 }
@@ -131,7 +131,7 @@ impl<'rules> SGamePreparations<'rules> {
         } else {
             match self.ruleset.stockorramsch {
                 VStockOrT::OrT(ref rulesramsch) => {
-                    VGamePreparationsFinish::DirectGame(SPreGame::new(
+                    VGamePreparationsFinish::DirectGame(SGame::new(
                         self.ahand,
                         self.doublings,
                         rulesramsch.clone(),
@@ -245,69 +245,18 @@ impl<'rules> SDetermineRules<'rules> {
         Ok(())
     }
 
-    pub fn finish(self) -> Result<SPreGame> {
+    pub fn finish(self) -> Result<SGame> {
         if let Some((epi, _)) = self.which_player_can_do_something() {
             bail!(format!("{} still could do something", epi));
         }
         assert!(self.vecpairepirules_queued.is_empty());
         assert_eq!(self.ruleset.ekurzlang, EKurzLang::from_cards_per_player(self.ahand[EPlayerIndex::EPI0].cards().len()));
-        Ok(SPreGame::new(
+        Ok(SGame::new(
             self.ahand,
             self.doublings,
             self.pairepirules_current_bid.1.as_rules().box_clone(),
             self.n_stock,
         ))
-    }
-}
-
-pub struct SPreGame {
-    pub ahand : EnumMap<EPlayerIndex, SHand>,
-    pub doublings : SDoublings,
-    pub rules : Box<TRules>,
-    pub vecstoss : Vec<SStoss>,
-    pub n_stock : isize,
-}
-
-impl SPreGame {
-    pub fn new(
-        ahand : EnumMap<EPlayerIndex, SHand>,
-        doublings : SDoublings,
-        rules : Box<TRules>,
-        n_stock : isize,
-    ) -> SPreGame {
-        SPreGame {ahand, doublings, rules, vecstoss: Vec::new(), n_stock}
-    }
-    pub fn which_player_can_do_something(&self) -> Vec<EPlayerIndex> {
-        if self.vecstoss.len() < 4 {
-            EPlayerIndex::values()
-                .map(|epi| epi.wrapping_add(self.doublings.first_playerindex().to_usize()))
-                .filter(|epi| self.rules.stoss_allowed(*epi, &self.vecstoss, &self.ahand[*epi]))
-                .collect()
-        } else {
-            vec![]
-        }
-    }
-
-    pub fn stoss(&mut self, epi_stoss: EPlayerIndex) -> Result<()> {
-        if !self.which_player_can_do_something().into_iter()
-            .any(|epi| epi==epi_stoss)
-        {
-            bail!("Stoss not allowed for specified epi");
-        }
-        self.vecstoss.push(SStoss{epi : epi_stoss});
-        Ok(())
-    }
-
-    pub fn finish(self) -> SGame {
-        let epi_first = self.doublings.first_playerindex();
-        SGame {
-            ahand : self.ahand,
-            doublings : self.doublings,
-            rules : self.rules,
-            vecstoss : self.vecstoss,
-            n_stock : self.n_stock,
-            vecstich : vec![SStich::new(epi_first)],
-        }
     }
 }
 
@@ -320,9 +269,42 @@ pub struct SGame {
     pub vecstich : Vec<SStich>,
 }
 
+type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
+
 impl SGame {
-    pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
-        self.current_stich().current_playerindex()
+    pub fn new(
+        ahand : EnumMap<EPlayerIndex, SHand>,
+        doublings : SDoublings,
+        rules : Box<TRules>,
+        n_stock : isize,
+    ) -> SGame {
+        let epi_first = doublings.first_playerindex();
+        SGame {
+            ahand,
+            doublings,
+            rules,
+            vecstoss: Vec::new(),
+            n_stock,
+            vecstich: vec![SStich::new(epi_first)],
+        }
+    }
+
+    pub fn which_player_can_do_something(&self) -> Option<SGameAction> {
+        self.current_stich().current_playerindex().map(|epi_current| (
+            epi_current,
+            if 1==self.vecstich.len() && 0==self.vecstich[0].size() // TODORULES Adjustable latest time of stoss
+                && self.vecstoss.len() < 4 // TODORULES Adjustable max stoss count
+            {
+                EPlayerIndex::values()
+                    .map(|epi| epi.wrapping_add(self.doublings.first_playerindex().to_usize()))
+                    .filter(|epi| {
+                        self.rules.stoss_allowed(*epi, &self.vecstoss, &self.ahand[*epi])
+                    })
+                    .collect()
+            } else {
+                Vec::new()
+            },
+        ))
     }
 
     pub fn current_stich(&self) -> &SStich {
@@ -337,10 +319,23 @@ impl SGame {
         EKurzLang::from_cards_per_player(cards_per_player(EPlayerIndex::EPI0))
     }
 
+    pub fn stoss(&mut self, epi_stoss: EPlayerIndex) -> Result<()> {
+        match self.which_player_can_do_something() {
+            None => bail!("Game already ended."),
+            Some(gameaction) => {
+                if !gameaction.1.iter().any(|&epi| epi==epi_stoss) {
+                    bail!(format!("Stoss not allowed for specified epi {:?}", gameaction.1));
+                }
+                self.vecstoss.push(SStoss{epi : epi_stoss});
+                Ok(())
+            }
+        }
+    }
+
     pub fn zugeben(&mut self, card_played: SCard, epi: EPlayerIndex) -> Result<()> {
         // returns the EPlayerIndex of the player who is the next in row to do something
         skui::logln(&format!("Player {} wants to play {}", epi, card_played));
-        if Some(epi)!=self.which_player_can_do_something() {
+        if Some(epi)!=self.which_player_can_do_something().map(|gameaction| gameaction.0) {
             bail!("Wrong player index");
         }
         if !self.ahand[epi].contains(card_played) {

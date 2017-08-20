@@ -165,7 +165,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
             gamepreparations.announce_game(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules))).unwrap();
         }
         skui::logln("Asked players if they want to play. Determining rules");
-        let stockorpregame = match gamepreparations.finish() {
+        let stockorgame = match gamepreparations.finish() {
             VGamePreparationsFinish::DetermineRules(mut determinerules) => {
                 while let Some((epi, vecrulegroup_steigered))=determinerules.which_player_can_do_something() {
                     if let Some(rules) = communicate_via_channel(|txorules| {
@@ -185,41 +185,43 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                 }
                 VStockOrT::OrT(determinerules.finish().unwrap())
             },
-            VGamePreparationsFinish::DirectGame(pregame) => {
-                VStockOrT::OrT(pregame)
+            VGamePreparationsFinish::DirectGame(game) => {
+                VStockOrT::OrT(game)
             },
             VGamePreparationsFinish::Stock(n_stock) => {
                 VStockOrT::Stock(n_stock)
             }
         };
-        match stockorpregame {
-            VStockOrT::OrT(mut pregame) => {
-                while let Some(epi_stoss) = pregame.which_player_can_do_something().into_iter()
-                    .find(|epi| {
-                        communicate_via_channel(|txb_stoss| {
-                            aplayer[*epi].ask_for_stoss(
-                                *epi,
-                                &pregame.doublings,
-                                pregame.rules.as_ref(),
-                                &pregame.ahand[*epi],
-                                &pregame.vecstoss,
-                                pregame.n_stock,
-                                txb_stoss,
-                            );
-                        })
-                    })
-                {
-                    pregame.stoss(epi_stoss).unwrap();
-                }
-                let mut game = pregame.finish();
-                while let Some(epi)=game.which_player_can_do_something() {
+        match stockorgame {
+            VStockOrT::OrT(mut game) => {
+                while let Some(gameaction)=game.which_player_can_do_something() {
+                    if !gameaction.1.is_empty() {
+                        if let Some(epi_stoss) = gameaction.1.iter()
+                            .find(|epi| {
+                                communicate_via_channel(|txb_stoss| {
+                                    aplayer[**epi].ask_for_stoss(
+                                        **epi,
+                                        &game.doublings,
+                                        game.rules.as_ref(),
+                                        &game.ahand[**epi],
+                                        &game.vecstoss,
+                                        game.n_stock,
+                                        txb_stoss,
+                                    );
+                                })
+                            })
+                        {
+                            game.stoss(*epi_stoss).unwrap();
+                            continue;
+                        }
+                    }
                     let card = communicate_via_channel(|txcard| {
-                        aplayer[epi].ask_for_card(
+                        aplayer[gameaction.0].ask_for_card(
                             &game,
                             txcard.clone()
                         );
                     });
-                    game.zugeben(card, epi).unwrap();
+                    game.zugeben(card, gameaction.0).unwrap();
                 }
                 accountbalance.apply_payout(&game.payout());
             },
