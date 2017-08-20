@@ -275,8 +275,7 @@ impl SPreGame {
         rules : Box<TRules>,
         n_stock : isize,
     ) -> SPreGame {
-        let vecstoss = Vec::new();
-        SPreGame {ahand, doublings, rules, vecstoss, n_stock}
+        SPreGame {ahand, doublings, rules, vecstoss: Vec::new(), n_stock}
     }
     pub fn which_player_can_do_something(&self) -> Vec<EPlayerIndex> {
         if self.vecstoss.len() < 4 {
