@@ -41,13 +41,13 @@ impl TTrumpfDecider for STrumpfDeciderNoTrumpf {
     }
 }
 
-pub trait TSchlagDesignator : Sync + 'static + Clone {fn schlag() -> ESchlag;}
+pub trait TSchlagDesignator : Sync + 'static + Clone {const SCHLAG : ESchlag;}
 #[derive(Clone)]
 pub struct SSchlagDesignatorOber {}
 #[derive(Clone)]
 pub struct SSchlagDesignatorUnter {}
-impl TSchlagDesignator for SSchlagDesignatorOber { fn schlag() -> ESchlag {ESchlag::Ober} }
-impl TSchlagDesignator for SSchlagDesignatorUnter { fn schlag() -> ESchlag {ESchlag::Unter} }
+impl TSchlagDesignator for SSchlagDesignatorOber { const SCHLAG : ESchlag = ESchlag::Ober; }
+impl TSchlagDesignator for SSchlagDesignatorUnter { const SCHLAG : ESchlag = ESchlag::Unter; }
 
 #[derive(Clone)]
 pub struct STrumpfDeciderSchlag<SchlagDesignator, DeciderSec> {
@@ -59,7 +59,7 @@ impl<SchlagDesignator, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<Schla
           SchlagDesignator: TSchlagDesignator,
 {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
-        if SchlagDesignator::schlag() == card.schlag() {
+        if SchlagDesignator::SCHLAG == card.schlag() {
             VTrumpfOrFarbe::Trumpf
         } else {
             DeciderSec::trumpforfarbe(card)
@@ -67,15 +67,15 @@ impl<SchlagDesignator, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<Schla
     }
     fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>) -> Vec<SCard> {
         let mut veccard_trumpf : Vec<_> = EFarbe::values()
-            .map(|efarbe| SCard::new(efarbe, SchlagDesignator::schlag()))
+            .map(|efarbe| SCard::new(efarbe, SchlagDesignator::SCHLAG))
             .collect();
-        veceschlag.push(SchlagDesignator::schlag());
+        veceschlag.push(SchlagDesignator::SCHLAG);
         let mut veccard_trumpf_sec = DeciderSec::trumpfs_in_descending_order(veceschlag);
         veccard_trumpf.append(&mut veccard_trumpf_sec);
         veccard_trumpf
     }
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering {
-        match (SchlagDesignator::schlag()==card_fst.schlag(), SchlagDesignator::schlag()==card_snd.schlag()) {
+        match (SchlagDesignator::SCHLAG==card_fst.schlag(), SchlagDesignator::SCHLAG==card_snd.schlag()) {
             (true, true) => {
                 // TODORUST static_assert not available in rust, right?
                 assert!(EFarbe::Eichel < EFarbe::Gras, "Farb-Sorting can't be used here");
@@ -94,19 +94,19 @@ impl<SchlagDesignator, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<Schla
     }
 }
 
-pub trait TFarbeDesignator : Sync + 'static + Clone {fn farbe() -> EFarbe;}
+pub trait TFarbeDesignator : Sync + 'static + Clone {const FARBE : EFarbe;}
 #[derive(Clone)]
 pub struct SFarbeDesignatorEichel {}
-impl TFarbeDesignator for SFarbeDesignatorEichel { fn farbe() -> EFarbe {EFarbe::Eichel} }
+impl TFarbeDesignator for SFarbeDesignatorEichel { const FARBE : EFarbe = EFarbe::Eichel; }
 #[derive(Clone)]
 pub struct SFarbeDesignatorGras {}
-impl TFarbeDesignator for SFarbeDesignatorGras { fn farbe() -> EFarbe {EFarbe::Gras} }
+impl TFarbeDesignator for SFarbeDesignatorGras { const FARBE : EFarbe = EFarbe::Gras; }
 #[derive(Clone)]
 pub struct SFarbeDesignatorHerz {}
-impl TFarbeDesignator for SFarbeDesignatorHerz { fn farbe() -> EFarbe {EFarbe::Herz} }
+impl TFarbeDesignator for SFarbeDesignatorHerz { const FARBE : EFarbe = EFarbe::Herz; }
 #[derive(Clone)]
 pub struct SFarbeDesignatorSchelln {}
-impl TFarbeDesignator for SFarbeDesignatorSchelln { fn farbe() -> EFarbe {EFarbe::Schelln} }
+impl TFarbeDesignator for SFarbeDesignatorSchelln { const FARBE : EFarbe = EFarbe::Schelln; }
 
 #[derive(Clone)]
 pub struct STrumpfDeciderFarbe<FarbeDesignator> {
@@ -116,7 +116,7 @@ impl<FarbeDesignator> TTrumpfDecider for STrumpfDeciderFarbe<FarbeDesignator>
     where FarbeDesignator: TFarbeDesignator,
 {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
-        if FarbeDesignator::farbe() == card.farbe() {
+        if FarbeDesignator::FARBE == card.farbe() {
             VTrumpfOrFarbe::Trumpf
         } else {
             VTrumpfOrFarbe::Farbe(card.farbe())
@@ -125,7 +125,7 @@ impl<FarbeDesignator> TTrumpfDecider for STrumpfDeciderFarbe<FarbeDesignator>
     fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> Vec<SCard> {
         ESchlag::values()
             .filter(|eschlag| !veceschlag.iter().any(|&eschlag_done| eschlag_done==*eschlag))
-            .map(|eschlag| SCard::new(FarbeDesignator::farbe(), eschlag))
+            .map(|eschlag| SCard::new(FarbeDesignator::FARBE, eschlag))
             .collect()
     }
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering {

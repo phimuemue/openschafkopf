@@ -160,7 +160,7 @@ impl SRuleSet {
                 macro_rules! vecrules_farbe {($trumpfdecider: ident, $i_prioindex: expr, $rulename: expr) => {
                     |payoutparams: SPayoutDeciderParams| {
                         macro_rules! internal_generate_sololike_farbe {($farbedesignator: ident) => {
-                            sololike::<$trumpfdecider<STrumpfDeciderFarbe<$farbedesignator>>, $payoutdecider> (epi, $i_prioindex, &format!("{}-{}", $farbedesignator::farbe(), $rulename), payoutparams.clone())
+                            sololike::<$trumpfdecider<STrumpfDeciderFarbe<$farbedesignator>>, $payoutdecider> (epi, $i_prioindex, &format!("{}-{}", $farbedesignator::FARBE, $rulename), payoutparams.clone())
                         }}
                         vec! [
                             internal_generate_sololike_farbe!(SFarbeDesignatorEichel),
