@@ -229,6 +229,9 @@ pub trait TActivelyPlayableRules : TRules {
     fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Box<TActivelyPlayableRules>> {
         None
     }
+    fn active_playerindex(&self) -> EPlayerIndex {
+        verify!(self.playerindex()).unwrap()
+    }
 }
 box_clone_impl_box!(TActivelyPlayableRules);
 

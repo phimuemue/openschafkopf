@@ -16,7 +16,7 @@ impl<'rules> TRuleSpecificAI for SAIRufspiel<'rules> {
         let epi = game.which_player_can_do_something().unwrap().0;
         let rules = self.rules;
         // suchen
-        if epi!=rules.playerindex().unwrap() && 1==game.vecstich.len() && 0==game.current_stich().size() {
+        if epi!=rules.active_playerindex() && 1==game.vecstich.len() && 0==game.current_stich().size() {
             let hand = &game.ahand[epi];
             if !hand.contains(rules.rufsau()) {
                 let veccard_ruffarbe : Vec<_> = hand.cards().iter().cloned()

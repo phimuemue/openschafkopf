@@ -56,7 +56,7 @@ impl TPlayer for SPlayerComputer {
                     .count()
             })
             .map(|rules| {
-                let epi_rank = rules.playerindex().unwrap(); 
+                let epi_rank = rules.active_playerindex(); 
                 (
                     rules,
                     self.ai.rank_rules(hand, /*epi_first*/gameannouncements.first_playerindex(), epi_rank, rules.as_rules(), n_stock)
