@@ -102,7 +102,7 @@ impl TPlayer for SPlayerComputer {
                 (ahand, f_rank_rules)
             })
             .collect::<Vec<_>>();
-        vecpairahandf_suspicion.sort_by(|&(ref _ahand_l, f_rank_l), &(ref _ahand_r, f_rank_r)|
+        vecpairahandf_suspicion.sort_unstable_by(|&(ref _ahand_l, f_rank_l), &(ref _ahand_r, f_rank_r)|
             f_rank_r.partial_cmp(&f_rank_l).unwrap()
         );
         vecpairahandf_suspicion.truncate(n_samples_per_stoss);

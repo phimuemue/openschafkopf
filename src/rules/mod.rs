@@ -141,7 +141,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
     }
 
     fn sort_cards_first_trumpf_then_farbe(&self, veccard: &mut [SCard]) {
-        veccard.sort_by(|&card_lhs, &card_rhs| {
+        veccard.sort_unstable_by(|&card_lhs, &card_rhs| {
             match(self.trumpforfarbe(card_lhs), self.trumpforfarbe(card_rhs)) {
                 (VTrumpfOrFarbe::Farbe(efarbe_lhs), VTrumpfOrFarbe::Farbe(efarbe_rhs)) => {
                     if efarbe_lhs==efarbe_rhs {
