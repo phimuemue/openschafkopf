@@ -156,14 +156,12 @@ impl TRules for SRulesRufspiel {
         if hand.cards().len()<=1 {
             hand.cards().clone()
         } else {
+            let epi = vecstich.last().unwrap().current_playerindex().unwrap();
+            let b_weggelaufen = completed_stichs(vecstich).iter()
+                .any(|stich| epi==stich.first_playerindex() && self.is_ruffarbe(*stich.first()));
             let card_first = *vecstich.last().unwrap().first();
-            if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) {
-                let epi = vecstich.last().unwrap().current_playerindex().unwrap();
-                if completed_stichs(vecstich).iter()
-                    .all(|stich| epi!=stich.first_playerindex() || !self.is_ruffarbe(*stich.first())) // not already weggelaufen
-                {
-                    return Some(self.rufsau()).into_iter().collect()
-                }
+            if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) && !b_weggelaufen {
+                return Some(self.rufsau()).into_iter().collect()
             }
             let veccard_allowed : SHandVector = hand.cards().iter().cloned()
                 .filter(|&card| 
@@ -172,7 +170,11 @@ impl TRules for SRulesRufspiel {
                 )
                 .collect();
             if veccard_allowed.is_empty() {
-                hand.cards().iter().cloned().filter(|&card| self.rufsau()!=card).collect()
+                if b_weggelaufen {
+                    hand.cards().iter().cloned().collect()
+                } else {
+                    hand.cards().iter().cloned().filter(|&card| self.rufsau()!=card).collect()
+                }
             } else {
                 veccard_allowed
             }
