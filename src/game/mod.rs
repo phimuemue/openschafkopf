@@ -355,7 +355,7 @@ impl SGame {
             assert!(self.rules.card_is_allowed(&self.vecstich, hand, card_played));
             hand.play_card(card_played);
             assert!(!self.vecstich.is_empty());
-            self.vecstich.last_mut().unwrap().push(card_played);
+            current_stich_mut(&mut self.vecstich).push(card_played);
         }
         for epi in EPlayerIndex::values() {
             skui::logln(&format!("Hand {}: {}", epi, self.ahand[epi]));

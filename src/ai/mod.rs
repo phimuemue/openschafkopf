@@ -134,7 +134,7 @@ pub fn is_compatible_with_game_so_far(
                     &ahand[epi],
                     *card_played
                 );
-                vecstich_complete_and_current_stich.last_mut().unwrap().push(*card_played);
+                current_stich_mut(&mut vecstich_complete_and_current_stich).push(*card_played);
                 b_valid
             })
     }
@@ -174,7 +174,7 @@ pub fn is_compatible_with_game_so_far(
                     ) {
                         assert!(ahand_simulate[epi].contains(*card));
                         ahand_simulate[epi].play_card(*card);
-                        vecstich_simulate.last_mut().unwrap().push(*card);
+                        current_stich_mut(&mut vecstich_simulate).push(*card);
                     } else {
                         b_valid_up_to_now = false;
                         break 'loopstich;

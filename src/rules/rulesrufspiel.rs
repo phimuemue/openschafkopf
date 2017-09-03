@@ -151,15 +151,15 @@ impl TRules for SRulesRufspiel {
 
     fn all_allowed_cards_within_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
-        assert!(vecstich.last().unwrap().size()<4);
-        assert!(vecstich.last().unwrap().current_playerindex().is_some());
+        assert!(current_stich(vecstich).size()<4);
+        assert!(current_stich(vecstich).current_playerindex().is_some());
         if hand.cards().len()<=1 {
             hand.cards().clone()
         } else {
-            let epi = vecstich.last().unwrap().current_playerindex().unwrap();
+            let epi = current_stich(vecstich).current_playerindex().unwrap();
             let b_weggelaufen = completed_stichs(vecstich).iter()
                 .any(|stich| epi==stich.first_playerindex() && self.is_ruffarbe(*stich.first()));
-            let card_first = *vecstich.last().unwrap().first();
+            let card_first = *current_stich(vecstich).first();
             if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) && !b_weggelaufen {
                 return Some(self.rufsau()).into_iter().collect()
             }

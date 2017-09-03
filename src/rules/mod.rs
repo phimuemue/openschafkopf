@@ -21,9 +21,12 @@ pub use rules::wrappers::*;
 use util::*;
 use ai::rulespecific::*;
 
+pub fn current_stich_mut(vecstich: &mut [SStich]) -> &mut SStich {
+    verify!(vecstich.last_mut()).unwrap()
+}
+
 pub fn current_stich(vecstich: &[SStich]) -> &SStich {
-    assert!(!vecstich.is_empty());
-    vecstich.last().unwrap()
+    verify!(vecstich.last()).unwrap()
 }
 
 pub fn completed_stichs(vecstich: &[SStich]) -> &[SStich] {
@@ -73,8 +76,8 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
 
     fn all_allowed_cards(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
-        assert!(vecstich.last().unwrap().size()<4);
-        if 0==vecstich.last().unwrap().size() {
+        assert!(current_stich(vecstich).size()<4);
+        if 0==current_stich(vecstich).size() {
             self.all_allowed_cards_first_in_stich(vecstich, hand)
         } else {
             self.all_allowed_cards_within_stich(vecstich, hand)
@@ -89,7 +92,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
     fn all_allowed_cards_within_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         // probably in most cases, only the first card of the current stich is decisive
         assert!(!vecstich.is_empty());
-        let card_first = *vecstich.last().unwrap().first();
+        let card_first = *current_stich(vecstich).first();
         let veccard_allowed : SHandVector = hand.cards().iter().cloned()
             .filter(|&card| self.trumpforfarbe(card)==self.trumpforfarbe(card_first))
             .collect();

@@ -69,10 +69,10 @@ impl SSuspicion {
             macro_rules! traverse_valid_cards {($i_offset : expr, $func: expr) => {
                 // TODO use equivalent card optimization
                 for card in rules.all_allowed_cards(vecstich, &ahand[offset_to_playerindex($i_offset)]) {
-                    vecstich.last_mut().unwrap().push(card);
-                    assert_eq!(card, vecstich.last().unwrap()[offset_to_playerindex($i_offset)]);
+                    current_stich_mut(vecstich).push(card);
+                    assert_eq!(card, current_stich(vecstich)[offset_to_playerindex($i_offset)]);
                     $func;
-                    vecstich.last_mut().unwrap().undo_most_recent();
+                    current_stich_mut(vecstich).undo_most_recent();
                 }
             };};
             // It seems that this nested loop is the ai's bottleneck
@@ -83,7 +83,7 @@ impl SSuspicion {
                 traverse_valid_cards!(1, {
                     traverse_valid_cards!(2, {
                         traverse_valid_cards!(3, {
-                            vecstich_successor.push(vecstich.last().unwrap().clone());
+                            vecstich_successor.push(current_stich(vecstich).clone());
                         } );
                     } );
                 } );
