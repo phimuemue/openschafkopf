@@ -179,17 +179,17 @@ impl<'rules> SDetermineRules<'rules> {
         ahand : EnumMap<EPlayerIndex, SHand>,
         doublings : SDoublings,
         ruleset: &SRuleSet,
-        mut vecpaireplayerindexrules_queued : Vec<(EPlayerIndex, Box<TActivelyPlayableRules>)>,
+        mut vecpairepirules_queued : Vec<(EPlayerIndex, Box<TActivelyPlayableRules>)>,
         n_stock : isize,
     ) -> SDetermineRules {
-        assert!(!vecpaireplayerindexrules_queued.is_empty());
-        let pairepirules_current_bid = vecpaireplayerindexrules_queued.pop().unwrap();
+        assert!(!vecpairepirules_queued.is_empty());
+        let pairepirules_current_bid = vecpairepirules_queued.pop().unwrap();
         SDetermineRules {
             ahand,
             doublings,
             ruleset,
             n_stock,
-            vecpairepirules_queued : vecpaireplayerindexrules_queued,
+            vecpairepirules_queued,
             pairepirules_current_bid,
         }
     }
