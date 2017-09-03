@@ -55,6 +55,30 @@ pub struct SStoss {
     pub epi : EPlayerIndex,
 }
 
+fn all_allowed_cards_within_stich_distinguish_farbe_frei<Rules, Result, FnFarbeFrei, FnFarbeNotFrei>(
+    rules: &Rules,
+    vecstich: &[SStich],
+    hand: &SHand,
+    fn_farbe_frei: FnFarbeFrei,
+    fn_farbe_not_frei: FnFarbeNotFrei,
+) -> Result
+    where 
+        Rules: TRules + ?Sized,
+        FnFarbeFrei: Fn() -> Result,
+        FnFarbeNotFrei: Fn(SHandVector) -> Result,
+{
+    assert!(!vecstich.is_empty());
+    let card_first = *current_stich(vecstich).first();
+    let veccard_same_farbe : SHandVector = hand.cards().iter().cloned()
+        .filter(|&card| rules.trumpforfarbe(card)==rules.trumpforfarbe(card_first))
+        .collect();
+    if veccard_same_farbe.is_empty() {
+        fn_farbe_frei()
+    } else {
+        fn_farbe_not_frei(veccard_same_farbe)
+    }
+}
+
 pub trait TRules : fmt::Display + TAsRules + Sync {
     box_clone_require!(TRules);
 
@@ -91,16 +115,13 @@ pub trait TRules : fmt::Display + TAsRules + Sync {
 
     fn all_allowed_cards_within_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         // probably in most cases, only the first card of the current stich is decisive
-        assert!(!vecstich.is_empty());
-        let card_first = *current_stich(vecstich).first();
-        let veccard_allowed : SHandVector = hand.cards().iter().cloned()
-            .filter(|&card| self.trumpforfarbe(card)==self.trumpforfarbe(card_first))
-            .collect();
-        if veccard_allowed.is_empty() {
-            hand.cards().clone()
-        } else {
-            veccard_allowed
-        }
+        all_allowed_cards_within_stich_distinguish_farbe_frei(
+            self,
+            vecstich,
+            hand,
+            /*fn_farbe_frei*/|| hand.cards().clone(),
+            /*fn_farbe_not_frei*/|veccard_same_farbe| veccard_same_farbe
+        )
     }
 
     fn card_is_allowed(&self, vecstich: &[SStich], hand: &SHand, card: SCard) -> bool {

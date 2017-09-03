@@ -264,6 +264,12 @@ fn test_game_loop() {
                 [wenz]
                 [bettel]
                 ",
+                r"
+                [solo]
+                [wenz]
+                [bettel]
+                stichzwang=true
+                ",
             ].into_iter(),
             [ // str_no_active_game
                 r"[ramsch]

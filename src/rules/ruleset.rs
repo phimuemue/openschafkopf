@@ -213,18 +213,32 @@ impl SRuleSet {
                 "Sie",
                 &|payoutparams| vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(epi, /*prioparams*/() ,"Sie", payoutparams)]
             )?;
-            create_rulegroup!(
-                "bettel",
-                "base-price",
-                "Bettel",
-                |payoutparams: SPayoutDeciderParams| { // TODO is it wise to have SPayoutDeciderParams for Bettel?
-                    vec![Box::new(SRulesBettel::new(
-                        epi,
-                        /*i_prio, large negative number to make less important than any sololike*/-999_999,
-                        payoutparams.n_payout_base,
-                    )) as Box<TActivelyPlayableRules>]
+            { // Bettel
+                let str_rule_name_file = "bettel";
+                if let Some(tomlval_bettel) = tomltbl.get(str_rule_name_file) {
+                    let n_payout_base = read_int(tomlval_bettel, ("price"))
+                        .or_else(|_err| 
+                            fallback(&format!("{}.price", str_rule_name_file), /*str_base_price_fallback*/"base-price")
+                        )?;
+                    fn push_bettel<BettelAllAllowedCardsWithinStich>(vecrulegroup: &mut Vec<SRuleGroup>, epi: EPlayerIndex, n_payout_base: isize)
+                        where BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich,
+                    {
+                        vecrulegroup.push(SRuleGroup{
+                            str_name: "Bettel".to_string(),
+                            vecrules: vec![Box::new(SRulesBettel::<BettelAllAllowedCardsWithinStich>::new(
+                                epi,
+                                /*i_prio, large negative number to make less important than any sololike*/-999_999,
+                                n_payout_base.as_num::<isize>(),
+                            )) as Box<TActivelyPlayableRules>],
+                        });
+                    }
+                    if Some(true) == tomlval_bettel.get("stichzwang").and_then(|tomlval| tomlval.as_bool()) {
+                        push_bettel::<SBettelAllAllowedCardsWithinStichStichzwang>(vecrulegroup, epi, n_payout_base.as_num::<isize>());
+                    } else {
+                        push_bettel::<SBettelAllAllowedCardsWithinStichNormal>(vecrulegroup, epi, n_payout_base.as_num::<isize>());
+                    }
                 }
-            )?;
+            }
         }
         Ok(SRuleSet::new(
             avecrulegroup,

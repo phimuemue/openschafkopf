@@ -1881,7 +1881,7 @@ fn test_rulesramsch() {
 fn test_rulesbettel() {
     test_rules_manual(
         "3 wins Bettel",
-        &SRulesBettel::new(EPlayerIndex::EPI3, /*i_prio*/0, /*n_payout_base*/10),
+        &SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>::new(EPlayerIndex::EPI3, /*i_prio*/0, /*n_payout_base*/10),
         vec![],
         vec![],
         &[
@@ -1898,7 +1898,7 @@ fn test_rulesbettel() {
     );
     test_rules_manual(
         "2 looses Bettel",
-        &SRulesBettel::new(EPlayerIndex::EPI2, /*i_prio*/0, /*n_payout_base*/10),
+        &SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>::new(EPlayerIndex::EPI2, /*i_prio*/0, /*n_payout_base*/10),
         vec![],
         vec![],
         &[
