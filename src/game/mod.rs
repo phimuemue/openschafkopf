@@ -117,16 +117,17 @@ impl<'rules> SGamePreparations<'rules> {
     }
 
     pub fn finish(self) -> VGamePreparationsFinish<'rules> {
-        let vecpairepirules : Vec<(_, Box<TActivelyPlayableRules>)> = self.gameannouncements.into_iter()
+        let mut vecpairepirules : Vec<(_, Box<TActivelyPlayableRules>)> = self.gameannouncements.into_iter()
             .filter_map(|(epi, orules)| orules.map(|rules| (epi, rules)))
             .collect();
-        if !vecpairepirules.is_empty() {
+        if let Some(pairepirules_current_bid) = vecpairepirules.pop() {
             VGamePreparationsFinish::DetermineRules(SDetermineRules::new(
                 self.ahand,
                 self.doublings,
                 self.ruleset,
                 vecpairepirules,
                 self.n_stock,
+                pairepirules_current_bid,
             ))
         } else {
             match self.ruleset.stockorramsch {
@@ -154,6 +155,7 @@ impl<'rules> SGamePreparations<'rules> {
     }
 }
 
+#[derive(new)]
 pub struct SDetermineRules<'rules> {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,
@@ -174,25 +176,6 @@ impl<'rules> SDetermineRules<'rules> {
            otherwise we get 0r 1w | 3r EBid::AtLeast
         => continue until self.vecpairepirules_queued is empty
     */
-
-    pub fn new(
-        ahand : EnumMap<EPlayerIndex, SHand>,
-        doublings : SDoublings,
-        ruleset: &SRuleSet,
-        mut vecpairepirules_queued : Vec<(EPlayerIndex, Box<TActivelyPlayableRules>)>,
-        n_stock : isize,
-    ) -> SDetermineRules {
-        assert!(!vecpairepirules_queued.is_empty());
-        let pairepirules_current_bid = vecpairepirules_queued.pop().unwrap();
-        SDetermineRules {
-            ahand,
-            doublings,
-            ruleset,
-            n_stock,
-            vecpairepirules_queued,
-            pairepirules_current_bid,
-        }
-    }
 
     pub fn which_player_can_do_something(&self) -> Option<(EPlayerIndex, Vec<SRuleGroup>)> {
         self.vecpairepirules_queued.last().as_ref().map(|&&(epi, ref _rules)| (
