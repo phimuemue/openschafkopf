@@ -1,3 +1,4 @@
+use util::*;
 use primitives::*;
 use game::*;
 use rules::*;
@@ -23,8 +24,8 @@ impl<'rules> TRuleSpecificAI for SAIRufspiel<'rules> {
                     .collect();
                 match veccard_ruffarbe.len() {
                     0 => return None,
-                    1 | 2 => return veccard_ruffarbe.into_iter().min_by_key(|&card| points_card(card)),
-                    3 | 4 => return veccard_ruffarbe.into_iter().max_by_key(|&card| points_card(card)),
+                    1 | 2 => return verify!(veccard_ruffarbe.into_iter().min_by_key(|&card| points_card(card))),
+                    3 | 4 => return verify!(veccard_ruffarbe.into_iter().max_by_key(|&card| points_card(card))),
                     _ => panic!("Found too many ruffarbe cards"),
                 }
             }
