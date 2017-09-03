@@ -1,4 +1,5 @@
 use primitives::*;
+use primitives::cardvector::parse_cards;
 use rules::*;
 use rules::ruleset::*;
 use rules::rulesrufspiel::*;
@@ -9,23 +10,20 @@ use rules::trumpfdecider::*;
 use rules::payoutdecider::*;
 use util::*;
 
-pub fn test_rules(
+fn internal_test_rules(
     str_info: &str,
     rules: &TRules,
-    astr_hand: [&str; 4],
+    ahand: EnumMap<EPlayerIndex, SHand>,
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
-    vecpairnstr_stich: &[(usize, &str)],
+    vecstich_test: &[SStich],
     an_payout: [isize; 4],
 ) {
     use game;
-    use primitives::cardvector::parse_cards;
     println!("Testing rules: {}", str_info);
     let epi_first = EPlayerIndex::EPI0; // TODO parametrize w.r.t. epi_first
     let mut game = game::SGame::new(
-        EPlayerIndex::map_from_fn(|epi| {
-            SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
-        }),
+        ahand,
         {
             let mut doublings = game::SDoublings::new(epi_first);
             for epi_doubling in EPlayerIndex::values().map(|epi| epi.wrapping_add(epi_first.to_usize())) {
@@ -42,25 +40,79 @@ pub fn test_rules(
     for n_epi_stoss in vecn_stoss {
         game.stoss(EPlayerIndex::from_usize(n_epi_stoss)).unwrap();
     }
-    for (i_stich, (epi_first_in_stich, str_stich)) in vecpairnstr_stich.iter()
-        .map(|&(n_epi, str_stich)| (EPlayerIndex::from_usize(n_epi), str_stich))
-        .enumerate()
-    {
-        println!("Stich {}: {}", i_stich, str_stich);
-        assert_eq!(Some(epi_first_in_stich), game.which_player_can_do_something().map(|gameaction| gameaction.0));
-        assert_eq!(4, parse_cards::<Vec<_>>(str_stich).unwrap().len());
-        for card in parse_cards::<Vec<_>>(str_stich).unwrap() {
-            assert!(game.which_player_can_do_something().is_some());
-            let epi = game.which_player_can_do_something().unwrap().0;
+    for (i_stich, stich) in vecstich_test.iter().enumerate() {
+        println!("Stich {}: {}", i_stich, stich);
+        assert_eq!(Some(stich.first_playerindex()), game.which_player_can_do_something().map(|gameaction| gameaction.0));
+        for (epi, card) in stich.iter() {
+            assert_eq!(Some(epi), game.which_player_can_do_something().map(|gameaction| gameaction.0));
             println!("{}, {}", card, epi);
-            game.zugeben(card, epi).unwrap();
+            game.zugeben(*card, epi).unwrap();
         }
     }
     for (i_stich, stich) in game.vecstich.iter().enumerate() {
+        assert_eq!(stich, &vecstich_test[i_stich]);
         println!("Stich {}: {}", i_stich, stich);
     }
     let accountbalance_payout = game.payout();
     assert_eq!(EPlayerIndex::map_from_fn(|epi| accountbalance_payout.get_player(epi)), EPlayerIndex::map_from_raw(an_payout));
+}
+
+fn make_stich_vector(vecpairnstr_stich: &[(usize, &str)]) -> Vec<SStich> {
+    vecpairnstr_stich.iter()
+        .map(|&(n_epi, str_stich)| {
+            let mut stich = SStich::new(EPlayerIndex::from_usize(n_epi));
+            let veccard = parse_cards::<Vec<_>>(str_stich).unwrap();
+            assert_eq!(4, veccard.len());
+            for card in veccard {
+                stich.push(card);
+            }
+            stich
+        })
+        .collect()
+}
+
+pub fn test_rules(
+    str_info: &str,
+    rules: &TRules,
+    astr_hand: [&str; 4],
+    vecn_doubling: Vec<usize>,
+    vecn_stoss: Vec<usize>,
+    vecpairnstr_stich: &[(usize, &str)],
+    an_payout: [isize; 4],
+) {
+    internal_test_rules(
+        str_info,
+        rules,
+        EPlayerIndex::map_from_fn(|epi| {
+            SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
+        }),
+        vecn_doubling,
+        vecn_stoss,
+        &make_stich_vector(vecpairnstr_stich),
+        an_payout,
+    );
+}
+
+pub fn test_rules_manual(
+    str_info: &str,
+    rules: &TRules,
+    vecn_doubling: Vec<usize>,
+    vecn_stoss: Vec<usize>,
+    vecpairnstr_stich: &[(usize, &str)],
+    an_payout: [isize; 4],
+) {
+    let vecstich = make_stich_vector(vecpairnstr_stich);
+    internal_test_rules(
+        str_info,
+        rules,
+        EPlayerIndex::map_from_fn(|epi|
+            SHand::new_from_vec(vecstich.iter().map(|stich| stich[epi]).collect())
+        ),
+        vecn_doubling,
+        vecn_stoss,
+        &vecstich,
+        an_payout,
+    );
 }
 
 fn rulesrufspiel_new_test(epi: EPlayerIndex, efarbe: EFarbe, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesRufspiel {
@@ -1772,10 +1824,9 @@ fn test_rulesgeier() {
 
 #[test]
 fn test_rulesramsch() {
-    test_rules(
+    test_rules_manual(
         "0 has durchmarsch all",
         &SRulesRamsch::new(10, VDurchmarsch::All),
-        ["eo eu ha ea ga sa e8 h8","go gu hz ez gz sz e7 h7","ho hu hk ek gk sk g8 s8","so su h9 e9 g9 s9 g7 s7",],
         vec![],
         vec![],
         &[
@@ -1790,10 +1841,9 @@ fn test_rulesramsch() {
         ],
         [30, -10, -10, -10],
     );
-    test_rules(
+    test_rules_manual(
         "0 has durchmarsch 120",
         &SRulesRamsch::new(10, VDurchmarsch::AtLeast(120)),
-        ["eo eu ha ea ga sa e8 h8","go gu hz ez gz sz e7 h7","ho hu hk ek gk sk g8 s8","so su h9 e9 g9 s9 g7 s7",],
         vec![],
         vec![],
         &[
@@ -1808,10 +1858,9 @@ fn test_rulesramsch() {
         ],
         [30, -10, -10, -10],
     );
-    test_rules(
+    test_rules_manual(
         "0 has 120, but no durchmarsch",
         &SRulesRamsch::new(10, VDurchmarsch::All),
-        ["eo eu ha ea ga sa e8 h7","go gu hz ez gz sz e7 h8","ho hu hk ek gk sk g8 s8","so su h9 e9 g9 s9 g7 s7",],
         vec![],
         vec![],
         &[
@@ -1830,10 +1879,9 @@ fn test_rulesramsch() {
 
 #[test]
 fn test_rulesbettel() {
-    test_rules(
+    test_rules_manual(
         "3 wins Bettel",
         &SRulesBettel::new(EPlayerIndex::EPI3, /*i_prio*/0, /*n_payout_base*/10),
-        ["eo eu ha ea ga sa e8 h8","go gu hz ez gz sz e7 h7","ho hu hk ek gk sk g8 s8","so su h9 e9 g9 s9 g7 s7",],
         vec![],
         vec![],
         &[
@@ -1848,10 +1896,9 @@ fn test_rulesbettel() {
         ],
         [-10, -10, -10, 30],
     );
-    test_rules(
+    test_rules_manual(
         "2 looses Bettel",
         &SRulesBettel::new(EPlayerIndex::EPI2, /*i_prio*/0, /*n_payout_base*/10),
-        ["eo eu ha ea ga sa e8 h8","go gu hz ez gz sz e7 h7","ho hu hk ek gk sk g8 s8","so su h9 e9 g9 s9 g7 s7",],
         vec![],
         vec![],
         &[
