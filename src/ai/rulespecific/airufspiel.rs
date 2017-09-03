@@ -22,10 +22,12 @@ impl<'rules> TRuleSpecificAI for SAIRufspiel<'rules> {
                 let veccard_ruffarbe : Vec<_> = hand.cards().iter().cloned()
                     .filter(|&card| rules.trumpforfarbe(card)==rules.trumpforfarbe(rules.rufsau()))
                     .collect();
-                match veccard_ruffarbe.len() {
-                    0 => return None,
-                    1 | 2 => return verify!(veccard_ruffarbe.into_iter().min_by_key(|&card| points_card(card))),
-                    3 | 4 => return verify!(veccard_ruffarbe.into_iter().max_by_key(|&card| points_card(card))),
+                match (veccard_ruffarbe.len(), game.kurzlang()) {
+                    (0, _kurzlang) => return None,
+                    (1, _kurzlang) => return Some(veccard_ruffarbe[0]),
+                    (2, EKurzLang::Kurz) => return verify!(veccard_ruffarbe.into_iter().max_by_key(|&card| points_card(card))),
+                    (2, EKurzLang::Lang) => return verify!(veccard_ruffarbe.into_iter().min_by_key(|&card| points_card(card))),
+                    (3, EKurzLang::Lang) | (4, EKurzLang::Lang) => return verify!(veccard_ruffarbe.into_iter().max_by_key(|&card| points_card(card))),
                     _ => panic!("Found too many ruffarbe cards"),
                 }
             }
