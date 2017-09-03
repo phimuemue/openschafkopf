@@ -97,13 +97,13 @@ impl fmt::Display for SCard {
 
 impl SCard {
     pub fn new(efarbe : EFarbe, eschlag : ESchlag) -> SCard {
-        SCard{n_internalrepresentation : (efarbe.to_usize() * ESchlag::ubound_usize() + eschlag.to_usize()).as_num()}
+        SCard{n_internalrepresentation : (efarbe.to_usize() * ESchlag::SIZE + eschlag.to_usize()).as_num()}
     }
     pub fn farbe(&self) -> EFarbe {
-        EFarbe::from_usize(self.n_internalrepresentation.as_num::<usize>() / ESchlag::ubound_usize())
+        EFarbe::from_usize(self.n_internalrepresentation.as_num::<usize>() / ESchlag::SIZE)
     }
     pub fn schlag(&self) -> ESchlag {
-        ESchlag::from_usize(self.n_internalrepresentation.as_num::<usize>() % ESchlag::ubound_usize())
+        ESchlag::from_usize(self.n_internalrepresentation.as_num::<usize>() % ESchlag::SIZE)
     }
     pub fn values(ekurzlang: EKurzLang) -> Vec<SCard> { // TODORUST return iterator once we can specify that return type is an iterator
         iproduct!(

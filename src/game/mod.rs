@@ -21,7 +21,7 @@ impl<'rules> SDealCards<'rules> {
         SDealCards {
             ahand : {
                 let mut veccard : Vec<_> = SCard::values(ruleset.ekurzlang).into_iter().collect();
-                assert_eq!(veccard.len(), EPlayerIndex::ubound_usize()*ruleset.ekurzlang.cards_per_player());
+                assert_eq!(veccard.len(), EPlayerIndex::SIZE*ruleset.ekurzlang.cards_per_player());
                 EPlayerIndex::map_from_fn(move |_epi|
                     random_hand(ruleset.ekurzlang.cards_per_player(), &mut veccard)
                 )

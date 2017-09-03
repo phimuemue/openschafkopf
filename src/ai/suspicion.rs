@@ -168,7 +168,7 @@ impl SSuspicion {
             ).as_bytes())?;
             EKurzLang::from_cards_per_player(vecstich.len()+self.hand_size());
             let output_card = |card: SCard, b_border| {
-                let (n_width, n_height) = (336 / ESchlag::ubound_usize().as_num::<isize>(), 232 / EFarbe::ubound_usize().as_num::<isize>());
+                let (n_width, n_height) = (336 / ESchlag::SIZE.as_num::<isize>(), 232 / EFarbe::SIZE.as_num::<isize>());
                 format!(
                     "<div style=\"
                         margin: 0;
