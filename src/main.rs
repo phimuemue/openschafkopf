@@ -15,6 +15,9 @@ extern crate plain_enum;
 #[macro_use]
 extern crate derive_new;
 extern crate toml;
+#[macro_use]
+extern crate log;
+extern crate env_logger;
 
 #[macro_use]
 mod util;
@@ -48,6 +51,7 @@ mod errors {
 }
 
 fn main() {
+    verify!(env_logger::init()).unwrap(); // ok; this is the only initialization of env_logger
     let clap_arg = |str_long, str_default| {
         clap::Arg::with_name(str_long)
             .long(str_long)
@@ -151,7 +155,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
         }
         let mut gamepreparations = dealcards.finish_dealing(ruleset, accountbalance.get_stock()).unwrap();
         while let Some(epi) = gamepreparations.which_player_can_do_something() {
-            skui::logln(&format!("Asking player {} for game", epi));
+            info!("Asking player {} for game", epi);
             let orules = communicate_via_channel(|txorules| {
                 aplayer[epi].ask_for_game(
                     &SFullHand::new(&gamepreparations.ahand[epi], ruleset.ekurzlang),
@@ -164,7 +168,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
             });
             gamepreparations.announce_game(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules))).unwrap();
         }
-        skui::logln("Asked players if they want to play. Determining rules");
+        info!("Asked players if they want to play. Determining rules");
         let stockorgame = match gamepreparations.finish() {
             VGamePreparationsFinish::DetermineRules(mut determinerules) => {
                 while let Some((epi, vecrulegroup_steigered))=determinerules.which_player_can_do_something() {

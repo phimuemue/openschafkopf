@@ -8,6 +8,12 @@ impl<T> TVerifiableByVerifyMacro for Option<T> {
     }
 }
 
+impl<TOk, TErr> TVerifiableByVerifyMacro for Result<TOk, TErr> {
+    fn is_verify_true(&self) -> bool {
+        self.is_ok()
+    }
+}
+
 macro_rules! verify {($e: expr) => {
     {
         let e = $e;

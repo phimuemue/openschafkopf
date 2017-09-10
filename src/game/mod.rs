@@ -1,7 +1,6 @@
 use primitives::*;
 use rules::*;
 use rules::ruleset::*;
-use skui;
 use util::*;
 use errors::*;
 
@@ -326,7 +325,7 @@ impl SGame {
 
     pub fn zugeben(&mut self, card_played: SCard, epi: EPlayerIndex) -> Result<()> {
         // returns the EPlayerIndex of the player who is the next in row to do something
-        skui::logln(&format!("Player {} wants to play {}", epi, card_played));
+        info!("Player {} wants to play {}", epi, card_played);
         if Some(epi)!=self.which_player_can_do_something().map(|gameaction| gameaction.0) {
             bail!("Wrong player index");
         }
@@ -341,20 +340,19 @@ impl SGame {
             current_stich_mut(&mut self.vecstich).push(card_played);
         }
         for epi in EPlayerIndex::values() {
-            skui::logln(&format!("Hand {}: {}", epi, self.ahand[epi]));
+            info!("Hand {}: {}", epi, self.ahand[epi]);
         }
         if 4==self.current_stich().size() {
             if self.kurzlang().cards_per_player()==self.vecstich.len() {
-                skui::logln("Game finished.");
-                skui::print_vecstich(&self.vecstich);
+                info!("Game finished.");
                 Ok(())
             } else {
                 let epi_last_stich = {
                     let stich = self.current_stich();
-                    skui::logln(&format!("Stich: {}", stich));
+                    info!("Stich: {}", stich);
                     self.rules.winner_index(stich)
                 };
-                skui::logln(&format!("Opening new stich starting at {}", epi_last_stich));
+                info!("Opening new stich starting at {}", epi_last_stich);
                 assert!(self.vecstich.is_empty() || 4==self.current_stich().size());
                 self.vecstich.push(SStich::new(epi_last_stich));
                 Ok(())

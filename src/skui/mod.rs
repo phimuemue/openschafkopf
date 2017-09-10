@@ -27,10 +27,6 @@ fn wprint(ncwin: ncurses::WINDOW, s: &str) {
     ncurses::wrefresh(ncwin);
 }
 
-pub fn logln(_s: &str) {
-    ncurses::refresh();
-}
-
 fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: SCard) {
     let paircolorcolor = { match card.farbe() {
         EFarbe::Eichel => (ncurses::COLOR_YELLOW, ncurses::COLOR_BLACK),
@@ -94,7 +90,9 @@ fn do_in_window<FnDo, RetVal>(skuiwin: &VSkUiWindow, fn_do: FnDo) -> RetVal
         VSkUiWindow::GameInfo => {create_fullwidth_window(n_height-3, n_height-2)}
         VSkUiWindow::AccountBalance => {create_fullwidth_window(n_height-2, n_height-1)}
     };
+    ncurses::werase(ncwin);
     let retval = fn_do(ncwin);
+    ncurses::wrefresh(ncwin);
     ncurses::delwin(ncwin);
     retval
 }
@@ -129,7 +127,6 @@ pub fn print_game_announcements(gameannouncements: &SGameAnnouncements) {
             } else {
                 wprint(ncwin, &format!("{}: Nothing", epi));
             }
-            ncurses::wrefresh(ncwin);
         });
     }
 }
@@ -161,7 +158,6 @@ pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &[SStos
                 .map(|stoss| stoss.epi)
                 .collect()
         );
-        ncurses::wrefresh(ncwin);
     })
 }
 
@@ -220,10 +216,10 @@ pub fn ask_for_alternative<'vect, T, FnFilter, FnCallback, FnSuggest>(
         assert!(0<vect.len());
         let mut i_alternative = 0; // initially, point to 0th alternative
         fn_callback(ncwin, vect[i_alternative].0, &ot_suggest);
+        ncurses::refresh();
         if 1<vect.len() {
             let mut ch = askforalternativekeybindings.key_prev;
             while ch!=askforalternativekeybindings.key_choose {
-                ncurses::werase(ncwin);
                 if ch==askforalternativekeybindings.key_prev {
                     if 0<i_alternative {
                         i_alternative -= 1
@@ -235,11 +231,13 @@ pub fn ask_for_alternative<'vect, T, FnFilter, FnCallback, FnSuggest>(
                 } else if ch==askforalternativekeybindings.key_suggest {
                     ot_suggest = fn_suggest();
                 }
+                ncurses::werase(ncwin);
                 fn_callback(ncwin, vect[i_alternative].0, &ot_suggest);
+                ncurses::refresh();
                 ch = ncurses::getch();
             }
-            ncurses::erase();
         }
+        ncurses::werase(ncwin);
         vect[i_alternative].1
     })
 }
@@ -257,6 +255,5 @@ pub fn print_hand(veccard: &[SCard], oi_card: Option<usize>) {
             print_card_with_farbe(ncwin, *card);
             wprint(ncwin, "--+ ");
         }
-        ncurses::refresh();
     });
 }

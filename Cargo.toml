@@ -17,6 +17,8 @@ toml = "0"
 as_num = "0"
 error-chain = "0"
 derive-new = "0"
+log = "0"
+env_logger = "0"
 
 [profile.release]
 lto = true
