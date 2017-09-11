@@ -153,7 +153,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
             });
             dealcards.announce_doubling(epi, b_doubling).unwrap();
         }
-        let mut gamepreparations = dealcards.finish_dealing(ruleset, accountbalance.get_stock()).unwrap();
+        let mut gamepreparations = dealcards.finish_dealing(accountbalance.get_stock()).unwrap();
         while let Some(epi) = gamepreparations.which_player_can_do_something() {
             info!("Asking player {} for game", epi);
             let orules = communicate_via_channel(|txorules| {

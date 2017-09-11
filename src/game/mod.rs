@@ -51,7 +51,7 @@ impl<'rules> SDealCards<'rules> {
         Ok(())
     }
 
-    pub fn finish_dealing(self, ruleset: &SRuleSet, n_stock: isize) -> Result<SGamePreparations> {
+    pub fn finish_dealing(self, n_stock: isize) -> Result<SGamePreparations<'rules>> {
         if let Some(epi) = self.which_player_can_do_something() {
             bail!(format!("{} still could announce doubling", epi));
         }
@@ -59,7 +59,7 @@ impl<'rules> SDealCards<'rules> {
         Ok(SGamePreparations {
             ahand : self.ahand,
             doublings : self.doublings,
-            ruleset,
+            ruleset: self.ruleset,
             gameannouncements : SGameAnnouncements::new(epi_first),
             n_stock,
         })
