@@ -151,7 +151,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                     txb_doubling
                 );
             });
-            dealcards.announce_doubling(epi, b_doubling).unwrap();
+            dealcards.command(VCommand::AnnounceDoubling(epi, b_doubling)).unwrap();
         }
         let mut gamepreparations = dealcards.finish(accountbalance.get_stock()).unwrap();
         while let Some(epi) = gamepreparations.which_player_can_do_something() {
@@ -166,13 +166,13 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                     txorules
                 );
             });
-            gamepreparations.announce_game(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules))).unwrap();
+            gamepreparations.command(VCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules)))).unwrap();
         }
         info!("Asked players if they want to play. Determining rules");
         let stockorgame = match gamepreparations.finish() {
             VGamePreparationsFinish::DetermineRules(mut determinerules) => {
                 while let Some((epi, vecrulegroup_steigered))=determinerules.which_player_can_do_something() {
-                    if let Some(rules) = communicate_via_channel(|txorules| {
+                    let orules = communicate_via_channel(|txorules| {
                         aplayer[epi].ask_for_game(
                             &SFullHand::new(&determinerules.ahand[epi], ruleset.ekurzlang),
                             /*gameannouncements*/&SPlayersInRound::new(determinerules.doublings.first_playerindex()),
@@ -181,11 +181,8 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                             Some(determinerules.currently_offered_prio()),
                             txorules
                         );
-                    }) {
-                        determinerules.announce_game(epi, TActivelyPlayableRules::box_clone(rules)).unwrap();
-                    } else {
-                        determinerules.resign(epi).unwrap();
-                    }
+                    });
+                    determinerules.command(VCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules)))).unwrap();
                 }
                 VStockOrT::OrT(determinerules.finish().unwrap())
             },
@@ -215,7 +212,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                                 })
                             })
                         {
-                            game.stoss(*epi_stoss).unwrap();
+                            game.command(VCommand::Stoss(*epi_stoss)).unwrap();
                             continue;
                         }
                     }
@@ -225,7 +222,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                             txcard.clone()
                         );
                     });
-                    game.zugeben(card, gameaction.0).unwrap();
+                    game.command(VCommand::Zugeben(gameaction.0, card)).unwrap();
                 }
                 accountbalance.apply_payout(&game.payout().unwrap());
             },

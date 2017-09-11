@@ -7,6 +7,13 @@ use errors;
 use rand::{self, Rng};
 use std::mem;
 
+pub enum VCommand {
+    AnnounceDoubling(EPlayerIndex, bool),
+    AnnounceGame(EPlayerIndex, Option<Box<TActivelyPlayableRules>>),
+    Stoss(EPlayerIndex),
+    Zugeben(EPlayerIndex, SCard),
+}
+
 pub type SDoublings = SPlayersInRound<bool>;
 
 #[derive(Debug)]
@@ -41,6 +48,14 @@ impl<'rules> SDealCards<'rules> {
         let veccard = self.ahand[epi].cards();
         assert_eq!(veccard.len(), self.ruleset.ekurzlang.cards_per_player());
         &veccard[0..veccard.len()/2]
+    }
+
+    pub fn command(&mut self, cmd: VCommand) -> errors::Result<()> {
+        if let VCommand::AnnounceDoubling(epi, b_doubling) = cmd {
+            self.announce_doubling(epi, b_doubling)
+        } else {
+            bail!("Invalid command")
+        }
     }
 
     pub fn announce_doubling(&mut self, epi: EPlayerIndex, b_doubling: bool) -> errors::Result<()> {
@@ -100,6 +115,14 @@ pub enum VGamePreparationsFinish<'rules> {
 impl<'rules> SGamePreparations<'rules> {
     pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
         self.gameannouncements.current_playerindex()
+    }
+
+    pub fn command(&mut self, cmd: VCommand) -> errors::Result<()> {
+        if let VCommand::AnnounceGame(epi, orules) = cmd {
+            self.announce_game(epi, orules)
+        } else {
+            bail!("Invalid command")
+        }
     }
 
     pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<TActivelyPlayableRules>>) -> errors::Result<()> {
@@ -197,6 +220,18 @@ impl<'rules> SDetermineRules<'rules> {
 
     pub fn currently_offered_prio(&self) -> (EPlayerIndex, VGameAnnouncementPriority) {
         (self.pairepirules_current_bid.0, self.pairepirules_current_bid.1.priority())
+    }
+
+    pub fn command(&mut self, cmd: VCommand) -> errors::Result<()> {
+        if let VCommand::AnnounceGame(epi, orules) = cmd {
+            if let Some(rules) = orules {
+                self.announce_game(epi, rules)
+            } else {
+                self.resign(epi)
+            }
+        } else {
+            bail!("Invalid command")
+        }
     }
 
     pub fn announce_game(&mut self, epi: EPlayerIndex, rules: Box<TActivelyPlayableRules>) -> errors::Result<()> {
@@ -307,6 +342,14 @@ impl SGame {
         };
         assert!(EPlayerIndex::values().all(|epi| cards_per_player(epi)==cards_per_player(EPlayerIndex::EPI0)));
         EKurzLang::from_cards_per_player(cards_per_player(EPlayerIndex::EPI0))
+    }
+
+    pub fn command(&mut self, cmd: VCommand) -> errors::Result<()> {
+        match cmd {
+            VCommand::Stoss(epi) => self.stoss(epi),
+            VCommand::Zugeben(epi, card) => self.zugeben(card, epi),
+            _ => bail!("Invalid command"),
+        }
     }
 
     pub fn stoss(&mut self, epi_stoss: EPlayerIndex) -> errors::Result<()> {
