@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 use std::marker::PhantomData;
 use util::*;
 
-pub trait TTrumpfDecider : Sync + 'static + Clone {
+pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe;
 
     fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> Vec<SCard>;
@@ -27,7 +27,7 @@ pub trait TTrumpfDecider : Sync + 'static + Clone {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct STrumpfDeciderNoTrumpf {}
 impl TTrumpfDecider for STrumpfDeciderNoTrumpf {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
@@ -41,15 +41,15 @@ impl TTrumpfDecider for STrumpfDeciderNoTrumpf {
     }
 }
 
-pub trait TSchlagDesignator : Sync + 'static + Clone {const SCHLAG : ESchlag;}
-#[derive(Clone)]
+pub trait TSchlagDesignator : Sync + 'static + Clone + fmt::Debug {const SCHLAG : ESchlag;}
+#[derive(Clone, Debug)]
 pub struct SSchlagDesignatorOber {}
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SSchlagDesignatorUnter {}
 impl TSchlagDesignator for SSchlagDesignatorOber { const SCHLAG : ESchlag = ESchlag::Ober; }
 impl TSchlagDesignator for SSchlagDesignatorUnter { const SCHLAG : ESchlag = ESchlag::Unter; }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct STrumpfDeciderSchlag<SchlagDesignator, DeciderSec> {
     schlagdesignator: PhantomData<SchlagDesignator>,
     decidersec: PhantomData<DeciderSec>,
@@ -94,21 +94,21 @@ impl<SchlagDesignator, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<Schla
     }
 }
 
-pub trait TFarbeDesignator : Sync + 'static + Clone {const FARBE : EFarbe;}
-#[derive(Clone)]
+pub trait TFarbeDesignator : Sync + 'static + Clone + fmt::Debug {const FARBE : EFarbe;}
+#[derive(Clone, Debug)]
 pub struct SFarbeDesignatorEichel {}
 impl TFarbeDesignator for SFarbeDesignatorEichel { const FARBE : EFarbe = EFarbe::Eichel; }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SFarbeDesignatorGras {}
 impl TFarbeDesignator for SFarbeDesignatorGras { const FARBE : EFarbe = EFarbe::Gras; }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SFarbeDesignatorHerz {}
 impl TFarbeDesignator for SFarbeDesignatorHerz { const FARBE : EFarbe = EFarbe::Herz; }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SFarbeDesignatorSchelln {}
 impl TFarbeDesignator for SFarbeDesignatorSchelln { const FARBE : EFarbe = EFarbe::Schelln; }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct STrumpfDeciderFarbe<FarbeDesignator> {
     farbedesignator: PhantomData<FarbeDesignator>,
 }

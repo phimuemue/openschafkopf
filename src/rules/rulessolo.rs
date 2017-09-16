@@ -7,7 +7,7 @@ use std::cmp::Ordering;
 use std::marker::PhantomData;
 use util::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
           PayoutDecider: TPayoutDecider,

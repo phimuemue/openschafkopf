@@ -79,7 +79,7 @@ fn all_allowed_cards_within_stich_distinguish_farbe_frei<Rules, Result, FnFarbeF
     }
 }
 
-pub trait TRules : fmt::Display + TAsRules + Sync {
+pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
     box_clone_require!(TRules);
 
     // TTrumpfDecider

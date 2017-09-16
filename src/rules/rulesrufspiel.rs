@@ -7,7 +7,7 @@ use std::cmp::Ordering;
 use util::*;
 use ai::rulespecific::airufspiel::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SRulesRufspiel {
     epi : EPlayerIndex,
     efarbe : EFarbe,

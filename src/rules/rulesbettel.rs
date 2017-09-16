@@ -5,11 +5,11 @@ use rules::payoutdecider::{SStossDoublingPayoutDecider, internal_payout};
 use std::marker::PhantomData;
 use util::*;
 
-pub trait TBettelAllAllowedCardsWithinStich : Sync + 'static + Clone {
+pub trait TBettelAllAllowedCardsWithinStich : Sync + 'static + Clone + fmt::Debug {
     fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, vecstich: &[SStich], hand: &SHand) -> SHandVector;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SRulesBettel<BettelAllAllowedCardsWithinStich>
     where BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich,
 {
@@ -49,7 +49,7 @@ impl<BettelAllAllowedCardsWithinStich> TActivelyPlayableRules for SRulesBettel<B
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct SPayoutDeciderBettel { // TODO clean up and use TPayoutDecider
     n_payout_base : isize,
 }
@@ -78,9 +78,9 @@ impl SPayoutDeciderBettel {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SBettelAllAllowedCardsWithinStichNormal {}
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SBettelAllAllowedCardsWithinStichStichzwang {}
 
 impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichNormal {

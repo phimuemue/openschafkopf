@@ -14,20 +14,20 @@ impl SStossDoublingPayoutDecider {
     }
 }
 
-#[derive(Clone, new)]
+#[derive(Clone, new, Debug)]
 pub struct SLaufendeParams {
     n_payout_per_lauf : isize,
     n_lauf_lbound : usize,
 }
 
-#[derive(Clone, new)]
+#[derive(Clone, new, Debug)]
 pub struct SPayoutDeciderParams {
     pub n_payout_base : isize,
     pub n_payout_schneider_schwarz : isize,
     pub laufendeparams : SLaufendeParams,
 }
 
-pub trait TPayoutDecider : Sync + 'static + Clone + Display {
+pub trait TPayoutDecider : Sync + 'static + Clone + Display + fmt::Debug {
     type PrioParams;
     fn new(payoutdeciderparams: SPayoutDeciderParams, prioparams: Self::PrioParams) -> Self;
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
@@ -46,7 +46,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone + Display {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SPayoutDeciderPointBased {
     payoutdeciderparams : SPayoutDeciderParams,
     prio: VGameAnnouncementPriority,
@@ -166,7 +166,7 @@ pub fn internal_payout<FnPlayerMultiplier>(n_payout_single_player: isize, fn_pla
     })
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SPayoutDeciderTout {
     payoutdeciderparams : SPayoutDeciderParams,
     i_prio: isize,
@@ -215,7 +215,7 @@ impl Display for SPayoutDeciderTout {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SPayoutDeciderSie {
     payoutdeciderparams : SPayoutDeciderParams,
 }

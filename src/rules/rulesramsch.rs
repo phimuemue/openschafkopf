@@ -8,14 +8,14 @@ use std::cmp::Ordering;
 use itertools::Itertools;
 use util::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum VDurchmarsch {
     None,
     All,
     AtLeast(isize),
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug)]
 pub struct SRulesRamsch {
     n_price : isize,
     durchmarsch : VDurchmarsch,

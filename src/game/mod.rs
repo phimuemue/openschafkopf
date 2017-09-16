@@ -2,13 +2,14 @@ use primitives::*;
 use rules::*;
 use rules::ruleset::*;
 use util::*;
-use errors::*;
+use errors;
 
 use rand::{self, Rng};
 use std::mem;
 
 pub type SDoublings = SPlayersInRound<bool>;
 
+#[derive(Debug)]
 pub struct SDealCards<'rules> {
     ahand : EnumMap<EPlayerIndex, SHand>,
     doublings : SDoublings,
@@ -42,7 +43,7 @@ impl<'rules> SDealCards<'rules> {
         &veccard[0..veccard.len()/2]
     }
 
-    pub fn announce_doubling(&mut self, epi: EPlayerIndex, b_doubling: bool) -> Result<()> {
+    pub fn announce_doubling(&mut self, epi: EPlayerIndex, b_doubling: bool) -> errors::Result<()> {
         if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
@@ -51,9 +52,9 @@ impl<'rules> SDealCards<'rules> {
         Ok(())
     }
 
-    pub fn finish_dealing(self, n_stock: isize) -> Result<SGamePreparations<'rules>> {
-        if let Some(epi) = self.which_player_can_do_something() {
-            bail!(format!("{} still could announce doubling", epi));
+    pub fn finish_dealing(self, n_stock: isize) -> Result<SGamePreparations<'rules>, SDealCards<'rules>> {
+        if let Some(_epi) = self.which_player_can_do_something() {
+            bail!(self);
         }
         let epi_first = self.doublings.first_playerindex();
         Ok(SGamePreparations {
@@ -64,8 +65,6 @@ impl<'rules> SDealCards<'rules> {
             n_stock,
         })
     }
-
-
 }
 
 pub type SGameAnnouncements = SPlayersInRound<Option<Box<TActivelyPlayableRules>>>;
@@ -103,7 +102,7 @@ impl<'rules> SGamePreparations<'rules> {
         self.gameannouncements.current_playerindex()
     }
 
-    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<TActivelyPlayableRules>>) -> Result<()> {
+    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<TActivelyPlayableRules>>) -> errors::Result<()> {
         if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
@@ -154,7 +153,7 @@ impl<'rules> SGamePreparations<'rules> {
     }
 }
 
-#[derive(new)]
+#[derive(new, Debug)]
 pub struct SDetermineRules<'rules> {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,
@@ -200,7 +199,7 @@ impl<'rules> SDetermineRules<'rules> {
         (self.pairepirules_current_bid.0, self.pairepirules_current_bid.1.priority())
     }
 
-    pub fn announce_game(&mut self, epi: EPlayerIndex, rules: Box<TActivelyPlayableRules>) -> Result<()> {
+    pub fn announce_game(&mut self, epi: EPlayerIndex, rules: Box<TActivelyPlayableRules>) -> errors::Result<()> {
         if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
             bail!("announce_game not allowed for specified EPlayerIndex");
         }
@@ -218,7 +217,7 @@ impl<'rules> SDetermineRules<'rules> {
         Ok(())
     }
 
-    pub fn resign(&mut self, epi: EPlayerIndex) -> Result<()> {
+    pub fn resign(&mut self, epi: EPlayerIndex) -> errors::Result<()> {
         if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
             bail!("announce_game not allowed for specified EPlayerIndex");
         }
@@ -228,9 +227,9 @@ impl<'rules> SDetermineRules<'rules> {
         Ok(())
     }
 
-    pub fn finish(self) -> Result<SGame> {
-        if let Some((epi, _)) = self.which_player_can_do_something() {
-            bail!(format!("{} still could do something", epi));
+    pub fn finish(self) -> Result<SGame, SDetermineRules<'rules>> {
+        if let Some((_epi, _)) = self.which_player_can_do_something() {
+            bail!(self);
         }
         assert!(self.vecpairepirules_queued.is_empty());
         assert_eq!(self.ruleset.ekurzlang, EKurzLang::from_cards_per_player(self.ahand[EPlayerIndex::EPI0].cards().len()));
@@ -310,7 +309,7 @@ impl SGame {
         EKurzLang::from_cards_per_player(cards_per_player(EPlayerIndex::EPI0))
     }
 
-    pub fn stoss(&mut self, epi_stoss: EPlayerIndex) -> Result<()> {
+    pub fn stoss(&mut self, epi_stoss: EPlayerIndex) -> errors::Result<()> {
         match self.which_player_can_do_something() {
             None => bail!("Game already ended."),
             Some(gameaction) => {
@@ -323,7 +322,7 @@ impl SGame {
         }
     }
 
-    pub fn zugeben(&mut self, card_played: SCard, epi: EPlayerIndex) -> Result<()> {
+    pub fn zugeben(&mut self, card_played: SCard, epi: EPlayerIndex) -> errors::Result<()> {
         // returns the EPlayerIndex of the player who is the next in row to do something
         info!("Player {} wants to play {}", epi, card_played);
         if Some(epi)!=self.which_player_can_do_something().map(|gameaction| gameaction.0) {

@@ -15,6 +15,7 @@ use std::path::Path;
 use toml;
 use errors::*;
 
+#[derive(Debug)]
 pub struct SRuleGroup {
     pub str_name : String,
     pub vecrules : Vec<Box<TActivelyPlayableRules>>,
@@ -36,22 +37,24 @@ impl SRuleGroup {
     }
 }
 
+#[derive(Debug)]
 pub enum VStockOrT<T> {
     Stock(/*n_stock*/isize), // number must be positive, but use isize since it is essentially a payment
     OrT(T),
 }
 
+#[derive(Debug)]
 pub enum EDoublingScope {
     Games,
     GamesAndStock,
 }
 
-#[derive(Clone, new)]
+#[derive(Clone, new, Debug)]
 pub struct SStossParams {
     pub n_stoss_max : usize,
 }
 
-#[derive(new)]
+#[derive(new, Debug)]
 pub struct SRuleSet {
     pub avecrulegroup : EnumMap<EPlayerIndex, Vec<SRuleGroup>>,
     pub stockorramsch : VStockOrT<Box<TRules>>,
