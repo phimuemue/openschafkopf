@@ -361,13 +361,15 @@ impl SGame {
         }
     }
 
-    pub fn payout(&self) -> SAccountBalance {
-        assert!(self.which_player_can_do_something().is_none());
-        self.rules.payout(
+    pub fn payout(&self) -> errors::Result<SAccountBalance> {
+        if !self.which_player_can_do_something().is_none() {
+            bail!("which_player_can_do_something is not none")
+        }
+        Ok(self.rules.payout(
             &SGameFinishedStiche::new(&self.vecstich, self.kurzlang()),
             stoss_and_doublings(&self.vecstoss, &self.doublings),
             self.n_stock,
-        )
+        ))
     }
 
     pub fn completed_stichs(&self) -> &[SStich] {
