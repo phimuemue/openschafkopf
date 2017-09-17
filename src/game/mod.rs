@@ -52,7 +52,7 @@ impl<'rules> SDealCards<'rules> {
         Ok(())
     }
 
-    pub fn finish_dealing(self, n_stock: isize) -> Result<SGamePreparations<'rules>, SDealCards<'rules>> {
+    pub fn finish(self, n_stock: isize) -> Result<SGamePreparations<'rules>, SDealCards<'rules>> {
         if let Some(_epi) = self.which_player_can_do_something() {
             bail!(self);
         }
