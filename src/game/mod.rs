@@ -84,6 +84,7 @@ impl<'rules> SDealCards<'rules> {
 
 pub type SGameAnnouncements = SPlayersInRound<Option<Box<TActivelyPlayableRules>>>;
 
+#[derive(Debug)]
 pub struct SGamePreparations<'rules> {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     doublings : SDoublings,
@@ -137,11 +138,14 @@ impl<'rules> SGamePreparations<'rules> {
         Ok(())
     }
 
-    pub fn finish(self) -> VGamePreparationsFinish<'rules> {
+    pub fn finish(self) -> Result<VGamePreparationsFinish<'rules>, Self> {
+        if let Some(_epi) = self.which_player_can_do_something() {
+            bail!(self);
+        }
         let mut vecpairepirules : Vec<(_, Box<TActivelyPlayableRules>)> = self.gameannouncements.into_iter()
             .filter_map(|(epi, orules)| orules.map(|rules| (epi, rules)))
             .collect();
-        if let Some(pairepirules_current_bid) = vecpairepirules.pop() {
+        Ok(if let Some(pairepirules_current_bid) = vecpairepirules.pop() {
             VGamePreparationsFinish::DetermineRules(SDetermineRules::new(
                 self.ahand,
                 self.doublings,
@@ -172,7 +176,7 @@ impl<'rules> SGamePreparations<'rules> {
                     })
                 }
             }
-        }
+        })
     }
 }
 

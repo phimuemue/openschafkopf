@@ -169,7 +169,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
             gamepreparations.command(VCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules)))).unwrap();
         }
         info!("Asked players if they want to play. Determining rules");
-        let stockorgame = match gamepreparations.finish() {
+        let stockorgame = match gamepreparations.finish().unwrap() {
             VGamePreparationsFinish::DetermineRules(mut determinerules) => {
                 while let Some((epi, vecrulegroup_steigered))=determinerules.which_player_can_do_something() {
                     let orules = communicate_via_channel(|txorules| {
