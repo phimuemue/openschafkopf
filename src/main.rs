@@ -213,16 +213,16 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                             })
                         {
                             game.command(VCommand::Stoss(*epi_stoss)).unwrap();
-                            continue;
                         }
+                    } else {
+                        let card = communicate_via_channel(|txcard| {
+                            aplayer[gameaction.0].ask_for_card(
+                                &game,
+                                txcard.clone()
+                            );
+                        });
+                        game.command(VCommand::Zugeben(gameaction.0, card)).unwrap();
                     }
-                    let card = communicate_via_channel(|txcard| {
-                        aplayer[gameaction.0].ask_for_card(
-                            &game,
-                            txcard.clone()
-                        );
-                    });
-                    game.command(VCommand::Zugeben(gameaction.0, card)).unwrap();
                 }
                 accountbalance.apply_payout(&game.payout().unwrap());
             },
