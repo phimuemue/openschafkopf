@@ -143,7 +143,7 @@ fn communicate_via_channel<T, Func>(f: Func) -> T
 fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
     let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_epi| 0), 0);
     for i_game in 0..n_games {
-        let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset);
+        let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset, accountbalance.get_stock());
         while let Some(epi) = dealcards.which_player_can_do_something() {
             let b_doubling = communicate_via_channel(|txb_doubling| {
                 aplayer[epi].ask_for_doubling(
@@ -153,7 +153,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
             });
             dealcards.command(VCommand::AnnounceDoubling(epi, b_doubling)).unwrap();
         }
-        let mut gamepreparations = dealcards.finish(accountbalance.get_stock()).unwrap();
+        let mut gamepreparations = dealcards.finish().unwrap();
         while let Some(epi) = gamepreparations.which_player_can_do_something() {
             info!("Asking player {} for game", epi);
             let orules = communicate_via_channel(|txorules| {
@@ -169,7 +169,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
             gamepreparations.command(VCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules)))).unwrap();
         }
         info!("Asked players if they want to play. Determining rules");
-        let stockorgame = match gamepreparations.finish(()).unwrap() {
+        let stockorgame = match gamepreparations.finish().unwrap() {
             VGamePreparationsFinish::DetermineRules(mut determinerules) => {
                 while let Some((epi, vecrulegroup_steigered))=determinerules.which_player_can_do_something() {
                     let orules = communicate_via_channel(|txorules| {
@@ -184,7 +184,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                     });
                     determinerules.command(VCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules)))).unwrap();
                 }
-                VStockOrT::OrT(determinerules.finish(()).unwrap())
+                VStockOrT::OrT(determinerules.finish().unwrap())
             },
             VGamePreparationsFinish::DirectGame(game) => {
                 VStockOrT::OrT(game)
@@ -224,7 +224,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                         game.command(VCommand::Zugeben(gameaction.0, card)).unwrap();
                     }
                 }
-                accountbalance.apply_payout(&game.finish(()).unwrap());
+                accountbalance.apply_payout(&game.finish().unwrap());
             },
             VStockOrT::Stock(n_stock) => {
                 accountbalance.apply_payout(&SAccountBalance::new(

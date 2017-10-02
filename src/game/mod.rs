@@ -7,9 +7,9 @@ use errors;
 use rand::{self, Rng};
 use std::mem;
 
-pub trait TGamePhase<ActivePlayerInfo, Finish, FinishParam> : Sized {
+pub trait TGamePhase<ActivePlayerInfo, Finish> : Sized {
     fn which_player_can_do_something(&self) -> Option<ActivePlayerInfo>;
-    fn finish(self, finishparam: FinishParam) -> Result<Finish, Self>;
+    fn finish(self) -> Result<Finish, Self>;
 }
 
 pub enum VCommand {
@@ -26,16 +26,17 @@ pub struct SDealCards<'rules> {
     ahand : EnumMap<EPlayerIndex, SHand>,
     doublings : SDoublings,
     ruleset : &'rules SRuleSet,
+    n_stock : isize,
 }
 
-impl<'rules> TGamePhase<EPlayerIndex, SGamePreparations<'rules>, isize> for SDealCards<'rules> {
+impl<'rules> TGamePhase<EPlayerIndex, SGamePreparations<'rules>> for SDealCards<'rules> {
     fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
         self.ruleset.oedoublingscope.as_ref().and_then(|_edoublingscope|
             self.doublings.current_playerindex()
         )
     }
 
-    fn finish(self, n_stock: isize) -> Result<SGamePreparations<'rules>, Self> {
+    fn finish(self) -> Result<SGamePreparations<'rules>, Self> {
         if let Some(_epi) = self.which_player_can_do_something() {
             bail!(self);
         }
@@ -45,13 +46,13 @@ impl<'rules> TGamePhase<EPlayerIndex, SGamePreparations<'rules>, isize> for SDea
             doublings : self.doublings,
             ruleset: self.ruleset,
             gameannouncements : SGameAnnouncements::new(epi_first),
-            n_stock,
+            n_stock: self.n_stock,
         })
     }
 }
 
 impl<'rules> SDealCards<'rules> {
-    pub fn new(epi_first: EPlayerIndex, ruleset: &SRuleSet) -> SDealCards {
+    pub fn new(epi_first: EPlayerIndex, ruleset: &SRuleSet, n_stock: isize) -> SDealCards {
         SDealCards {
             ahand : {
                 let mut veccard : Vec<_> = SCard::values(ruleset.ekurzlang).into_iter().collect();
@@ -62,6 +63,7 @@ impl<'rules> SDealCards<'rules> {
             },
             doublings: SDoublings::new(epi_first),
             ruleset,
+            n_stock,
         }
     }
 
@@ -120,12 +122,12 @@ pub enum VGamePreparationsFinish<'rules> {
 
 }
 
-impl<'rules> TGamePhase<EPlayerIndex, VGamePreparationsFinish<'rules>, ()> for SGamePreparations<'rules> {
+impl<'rules> TGamePhase<EPlayerIndex, VGamePreparationsFinish<'rules>> for SGamePreparations<'rules> {
     fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
         self.gameannouncements.current_playerindex()
     }
 
-    fn finish(self, _: ()) -> Result<VGamePreparationsFinish<'rules>, Self> {
+    fn finish(self) -> Result<VGamePreparationsFinish<'rules>, Self> {
         if let Some(_epi) = self.which_player_can_do_something() {
             bail!(self);
         }
@@ -199,7 +201,7 @@ pub struct SDetermineRules<'rules> {
     pairepirules_current_bid : (EPlayerIndex, Box<TActivelyPlayableRules>),
 }
 
-impl<'rules> TGamePhase<(EPlayerIndex, Vec<SRuleGroup>), SGame, ()> for SDetermineRules<'rules> {
+impl<'rules> TGamePhase<(EPlayerIndex, Vec<SRuleGroup>), SGame> for SDetermineRules<'rules> {
     /*
         Example:
         0: Rufspiel, 1: Wenz, 2: Farbwenz, 3: Rufspiel
@@ -230,7 +232,7 @@ impl<'rules> TGamePhase<(EPlayerIndex, Vec<SRuleGroup>), SGame, ()> for SDetermi
         ))
     }
 
-    fn finish(self, _:()) -> Result<SGame, SDetermineRules<'rules>> {
+    fn finish(self) -> Result<SGame, SDetermineRules<'rules>> {
         if let Some((_epi, _)) = self.which_player_can_do_something() {
             bail!(self);
         }
@@ -305,7 +307,7 @@ pub struct SGame {
 
 type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
 
-impl TGamePhase<SGameAction, SAccountBalance, ()> for SGame {
+impl TGamePhase<SGameAction, SAccountBalance> for SGame {
     fn which_player_can_do_something(&self) -> Option<SGameAction> {
         self.current_stich().current_playerindex().map(|epi_current| (
             epi_current,
@@ -328,7 +330,7 @@ impl TGamePhase<SGameAction, SAccountBalance, ()> for SGame {
         ))
     }
 
-    fn finish(self, _:()) -> Result<SAccountBalance, Self> {
+    fn finish(self) -> Result<SAccountBalance, Self> {
         if !self.which_player_can_do_something().is_none() {
             bail!(self)
         }
