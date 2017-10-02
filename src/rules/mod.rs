@@ -51,6 +51,7 @@ impl VTrumpfOrFarbe {
     }
 }
 
+#[derive(Debug)]
 pub struct SStoss {
     pub epi : EPlayerIndex,
 }

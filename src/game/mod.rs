@@ -7,6 +7,11 @@ use errors;
 use rand::{self, Rng};
 use std::mem;
 
+pub trait TGamePhase<ActivePlayerInfo, Finish, FinishParam> : Sized {
+    fn which_player_can_do_something(&self) -> Option<ActivePlayerInfo>;
+    fn finish(self, finishparam: FinishParam) -> Result<Finish, Self>;
+}
+
 pub enum VCommand {
     AnnounceDoubling(EPlayerIndex, bool),
     AnnounceGame(EPlayerIndex, Option<Box<TActivelyPlayableRules>>),
@@ -23,6 +28,28 @@ pub struct SDealCards<'rules> {
     ruleset : &'rules SRuleSet,
 }
 
+impl<'rules> TGamePhase<EPlayerIndex, SGamePreparations<'rules>, isize> for SDealCards<'rules> {
+    fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
+        self.ruleset.oedoublingscope.as_ref().and_then(|_edoublingscope|
+            self.doublings.current_playerindex()
+        )
+    }
+
+    fn finish(self, n_stock: isize) -> Result<SGamePreparations<'rules>, Self> {
+        if let Some(_epi) = self.which_player_can_do_something() {
+            bail!(self);
+        }
+        let epi_first = self.doublings.first_playerindex();
+        Ok(SGamePreparations {
+            ahand : self.ahand,
+            doublings : self.doublings,
+            ruleset: self.ruleset,
+            gameannouncements : SGameAnnouncements::new(epi_first),
+            n_stock,
+        })
+    }
+}
+
 impl<'rules> SDealCards<'rules> {
     pub fn new(epi_first: EPlayerIndex, ruleset: &SRuleSet) -> SDealCards {
         SDealCards {
@@ -36,12 +63,6 @@ impl<'rules> SDealCards<'rules> {
             doublings: SDoublings::new(epi_first),
             ruleset,
         }
-    }
-
-    pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
-        self.ruleset.oedoublingscope.as_ref().and_then(|_edoublingscope|
-            self.doublings.current_playerindex()
-        )
     }
 
     pub fn first_hand_for(&self, epi: EPlayerIndex) -> &[SCard] {
@@ -65,20 +86,6 @@ impl<'rules> SDealCards<'rules> {
         self.doublings.push(b_doubling);
         assert!(0<self.doublings.size());
         Ok(())
-    }
-
-    pub fn finish(self, n_stock: isize) -> Result<SGamePreparations<'rules>, SDealCards<'rules>> {
-        if let Some(_epi) = self.which_player_can_do_something() {
-            bail!(self);
-        }
-        let epi_first = self.doublings.first_playerindex();
-        Ok(SGamePreparations {
-            ahand : self.ahand,
-            doublings : self.doublings,
-            ruleset: self.ruleset,
-            gameannouncements : SGameAnnouncements::new(epi_first),
-            n_stock,
-        })
     }
 }
 
@@ -113,32 +120,12 @@ pub enum VGamePreparationsFinish<'rules> {
 
 }
 
-impl<'rules> SGamePreparations<'rules> {
-    pub fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
+impl<'rules> TGamePhase<EPlayerIndex, VGamePreparationsFinish<'rules>, ()> for SGamePreparations<'rules> {
+    fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
         self.gameannouncements.current_playerindex()
     }
 
-    pub fn command(&mut self, cmd: VCommand) -> errors::Result<()> {
-        if let VCommand::AnnounceGame(epi, orules) = cmd {
-            self.announce_game(epi, orules)
-        } else {
-            bail!("Invalid command")
-        }
-    }
-
-    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<TActivelyPlayableRules>>) -> errors::Result<()> {
-        if Some(epi)!=self.which_player_can_do_something() {
-            bail!("Wrong player index");
-        }
-        if orules.as_ref().map_or(false, |rules| Some(epi)!=rules.playerindex()) {
-            bail!("Only actively playable rules can be announced");
-        }
-        self.gameannouncements.push(orules);
-        assert!(0<self.gameannouncements.size());
-        Ok(())
-    }
-
-    pub fn finish(self) -> Result<VGamePreparationsFinish<'rules>, Self> {
+    fn finish(self, _: ()) -> Result<VGamePreparationsFinish<'rules>, Self> {
         if let Some(_epi) = self.which_player_can_do_something() {
             bail!(self);
         }
@@ -180,6 +167,28 @@ impl<'rules> SGamePreparations<'rules> {
     }
 }
 
+impl<'rules> SGamePreparations<'rules> {
+    pub fn command(&mut self, cmd: VCommand) -> errors::Result<()> {
+        if let VCommand::AnnounceGame(epi, orules) = cmd {
+            self.announce_game(epi, orules)
+        } else {
+            bail!("Invalid command")
+        }
+    }
+
+    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<TActivelyPlayableRules>>) -> errors::Result<()> {
+        if Some(epi)!=self.which_player_can_do_something() {
+            bail!("Wrong player index");
+        }
+        if orules.as_ref().map_or(false, |rules| Some(epi)!=rules.playerindex()) {
+            bail!("Only actively playable rules can be announced");
+        }
+        self.gameannouncements.push(orules);
+        assert!(0<self.gameannouncements.size());
+        Ok(())
+    }
+}
+
 #[derive(new, Debug)]
 pub struct SDetermineRules<'rules> {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
@@ -190,7 +199,7 @@ pub struct SDetermineRules<'rules> {
     pairepirules_current_bid : (EPlayerIndex, Box<TActivelyPlayableRules>),
 }
 
-impl<'rules> SDetermineRules<'rules> {
+impl<'rules> TGamePhase<(EPlayerIndex, Vec<SRuleGroup>), SGame, ()> for SDetermineRules<'rules> {
     /*
         Example:
         0: Rufspiel, 1: Wenz, 2: Farbwenz, 3: Rufspiel
@@ -201,8 +210,7 @@ impl<'rules> SDetermineRules<'rules> {
            otherwise we get 0r 1w | 3r EBid::AtLeast
         => continue until self.vecpairepirules_queued is empty
     */
-
-    pub fn which_player_can_do_something(&self) -> Option<(EPlayerIndex, Vec<SRuleGroup>)> {
+    fn which_player_can_do_something(&self) -> Option<(EPlayerIndex, Vec<SRuleGroup>)> {
         self.vecpairepirules_queued.last().as_ref().map(|&&(epi, ref _rules)| (
             epi,
             self.ruleset.avecrulegroup[epi].iter()
@@ -222,6 +230,23 @@ impl<'rules> SDetermineRules<'rules> {
         ))
     }
 
+    fn finish(self, _:()) -> Result<SGame, SDetermineRules<'rules>> {
+        if let Some((_epi, _)) = self.which_player_can_do_something() {
+            bail!(self);
+        }
+        assert!(self.vecpairepirules_queued.is_empty());
+        assert_eq!(self.ruleset.ekurzlang, EKurzLang::from_cards_per_player(self.ahand[EPlayerIndex::EPI0].cards().len()));
+        Ok(SGame::new(
+            self.ahand,
+            self.doublings,
+            self.ruleset.ostossparams.clone(),
+            self.pairepirules_current_bid.1.as_rules().box_clone(),
+            self.n_stock,
+        ))
+    }
+}
+
+impl<'rules> SDetermineRules<'rules> {
     pub fn currently_offered_prio(&self) -> (EPlayerIndex, VGameAnnouncementPriority) {
         (self.pairepirules_current_bid.0, self.pairepirules_current_bid.1.priority())
     }
@@ -265,23 +290,9 @@ impl<'rules> SDetermineRules<'rules> {
         assert_eq!(epi, paireplayerindexorules.0);
         Ok(())
     }
-
-    pub fn finish(self) -> Result<SGame, SDetermineRules<'rules>> {
-        if let Some((_epi, _)) = self.which_player_can_do_something() {
-            bail!(self);
-        }
-        assert!(self.vecpairepirules_queued.is_empty());
-        assert_eq!(self.ruleset.ekurzlang, EKurzLang::from_cards_per_player(self.ahand[EPlayerIndex::EPI0].cards().len()));
-        Ok(SGame::new(
-            self.ahand,
-            self.doublings,
-            self.ruleset.ostossparams.clone(),
-            self.pairepirules_current_bid.1.as_rules().box_clone(),
-            self.n_stock,
-        ))
-    }
 }
 
+#[derive(Debug)]
 pub struct SGame {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,
@@ -294,27 +305,8 @@ pub struct SGame {
 
 type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
 
-impl SGame {
-    pub fn new(
-        ahand : EnumMap<EPlayerIndex, SHand>,
-        doublings : SDoublings,
-        ostossparams : Option<SStossParams>,
-        rules : Box<TRules>,
-        n_stock : isize,
-    ) -> SGame {
-        let epi_first = doublings.first_playerindex();
-        SGame {
-            ahand,
-            doublings,
-            rules,
-            vecstoss: Vec::new(),
-            ostossparams,
-            n_stock,
-            vecstich: vec![SStich::new(epi_first)],
-        }
-    }
-
-    pub fn which_player_can_do_something(&self) -> Option<SGameAction> {
+impl TGamePhase<SGameAction, SAccountBalance, ()> for SGame {
+    fn which_player_can_do_something(&self) -> Option<SGameAction> {
         self.current_stich().current_playerindex().map(|epi_current| (
             epi_current,
             if let Some(ref stossparams) = self.ostossparams {
@@ -334,6 +326,38 @@ impl SGame {
                 Vec::new()
             },
         ))
+    }
+
+    fn finish(self, _:()) -> Result<SAccountBalance, Self> {
+        if !self.which_player_can_do_something().is_none() {
+            bail!(self)
+        }
+        Ok(self.rules.payout(
+            &SGameFinishedStiche::new(&self.vecstich, self.kurzlang()),
+            stoss_and_doublings(&self.vecstoss, &self.doublings),
+            self.n_stock,
+        ))
+    }
+}
+
+impl SGame {
+    pub fn new(
+        ahand : EnumMap<EPlayerIndex, SHand>,
+        doublings : SDoublings,
+        ostossparams : Option<SStossParams>,
+        rules : Box<TRules>,
+        n_stock : isize,
+    ) -> SGame {
+        let epi_first = doublings.first_playerindex();
+        SGame {
+            ahand,
+            doublings,
+            rules,
+            vecstoss: Vec::new(),
+            ostossparams,
+            n_stock,
+            vecstich: vec![SStich::new(epi_first)],
+        }
     }
 
     pub fn current_stich(&self) -> &SStich {
@@ -406,17 +430,6 @@ impl SGame {
         } else {
             Ok(())
         }
-    }
-
-    pub fn payout(&self) -> errors::Result<SAccountBalance> {
-        if !self.which_player_can_do_something().is_none() {
-            bail!("which_player_can_do_something is not none")
-        }
-        Ok(self.rules.payout(
-            &SGameFinishedStiche::new(&self.vecstich, self.kurzlang()),
-            stoss_and_doublings(&self.vecstoss, &self.doublings),
-            self.n_stock,
-        ))
     }
 
     pub fn completed_stichs(&self) -> &[SStich] {

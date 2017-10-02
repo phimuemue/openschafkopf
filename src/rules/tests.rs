@@ -19,13 +19,13 @@ fn internal_test_rules(
     vecstich_test: &[SStich],
     an_payout: [isize; 4],
 ) {
-    use game;
+    use game::*;
     println!("Testing rules: {}", str_info);
     let epi_first = EPlayerIndex::EPI0; // TODO parametrize w.r.t. epi_first
-    let mut game = game::SGame::new(
+    let mut game = SGame::new(
         ahand,
         {
-            let mut doublings = game::SDoublings::new(epi_first);
+            let mut doublings = SDoublings::new(epi_first);
             for epi_doubling in EPlayerIndex::values().map(|epi| epi.wrapping_add(epi_first.to_usize())) {
                 doublings.push(/*b_doubling*/vecn_doubling.contains(&epi_doubling.to_usize()));
             }
@@ -53,7 +53,7 @@ fn internal_test_rules(
         assert_eq!(stich, &vecstich_test[i_stich]);
         println!("Stich {}: {}", i_stich, stich);
     }
-    let accountbalance_payout = game.payout().unwrap();
+    let accountbalance_payout = game.finish(()).unwrap();
     assert_eq!(EPlayerIndex::map_from_fn(|epi| accountbalance_payout.get_player(epi)), EPlayerIndex::map_from_raw(an_payout));
 }
 
