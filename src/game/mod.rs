@@ -9,7 +9,14 @@ use std::mem;
 
 pub trait TGamePhase<ActivePlayerInfo, Finish> : Sized {
     fn which_player_can_do_something(&self) -> Option<ActivePlayerInfo>;
-    fn finish(self) -> Result<Finish, Self>;
+    fn finish_success(self) -> Finish;
+
+    fn finish(self) -> Result<Finish, Self> {
+        if let Some(_) = self.which_player_can_do_something() {
+            bail!(self)
+        }
+        Ok(self.finish_success())
+    }
 }
 
 pub enum VCommand {
@@ -36,18 +43,15 @@ impl<'rules> TGamePhase<EPlayerIndex, SGamePreparations<'rules>> for SDealCards<
         )
     }
 
-    fn finish(self) -> Result<SGamePreparations<'rules>, Self> {
-        if let Some(_epi) = self.which_player_can_do_something() {
-            bail!(self);
-        }
+    fn finish_success(self) -> SGamePreparations<'rules> {
         let epi_first = self.doublings.first_playerindex();
-        Ok(SGamePreparations {
+        SGamePreparations {
             ahand : self.ahand,
             doublings : self.doublings,
             ruleset: self.ruleset,
             gameannouncements : SGameAnnouncements::new(epi_first),
             n_stock: self.n_stock,
-        })
+        }
     }
 }
 
@@ -127,14 +131,11 @@ impl<'rules> TGamePhase<EPlayerIndex, VGamePreparationsFinish<'rules>> for SGame
         self.gameannouncements.current_playerindex()
     }
 
-    fn finish(self) -> Result<VGamePreparationsFinish<'rules>, Self> {
-        if let Some(_epi) = self.which_player_can_do_something() {
-            bail!(self);
-        }
+    fn finish_success(self) -> VGamePreparationsFinish<'rules> {
         let mut vecpairepirules : Vec<(_, Box<TActivelyPlayableRules>)> = self.gameannouncements.into_iter()
             .filter_map(|(epi, orules)| orules.map(|rules| (epi, rules)))
             .collect();
-        Ok(if let Some(pairepirules_current_bid) = vecpairepirules.pop() {
+        if let Some(pairepirules_current_bid) = vecpairepirules.pop() {
             VGamePreparationsFinish::DetermineRules(SDetermineRules::new(
                 self.ahand,
                 self.doublings,
@@ -165,7 +166,7 @@ impl<'rules> TGamePhase<EPlayerIndex, VGamePreparationsFinish<'rules>> for SGame
                     })
                 }
             }
-        })
+        }
     }
 }
 
@@ -232,19 +233,16 @@ impl<'rules> TGamePhase<(EPlayerIndex, Vec<SRuleGroup>), SGame> for SDetermineRu
         ))
     }
 
-    fn finish(self) -> Result<SGame, SDetermineRules<'rules>> {
-        if let Some((_epi, _)) = self.which_player_can_do_something() {
-            bail!(self);
-        }
+    fn finish_success(self) -> SGame {
         assert!(self.vecpairepirules_queued.is_empty());
         assert_eq!(self.ruleset.ekurzlang, EKurzLang::from_cards_per_player(self.ahand[EPlayerIndex::EPI0].cards().len()));
-        Ok(SGame::new(
+        SGame::new(
             self.ahand,
             self.doublings,
             self.ruleset.ostossparams.clone(),
             self.pairepirules_current_bid.1.as_rules().box_clone(),
             self.n_stock,
-        ))
+        )
     }
 }
 
@@ -330,15 +328,12 @@ impl TGamePhase<SGameAction, SAccountBalance> for SGame {
         ))
     }
 
-    fn finish(self) -> Result<SAccountBalance, Self> {
-        if !self.which_player_can_do_something().is_none() {
-            bail!(self)
-        }
-        Ok(self.rules.payout(
+    fn finish_success(self) -> SAccountBalance {
+        self.rules.payout(
             &SGameFinishedStiche::new(&self.vecstich, self.kurzlang()),
             stoss_and_doublings(&self.vecstoss, &self.doublings),
             self.n_stock,
-        ))
+        )
     }
 }
 
