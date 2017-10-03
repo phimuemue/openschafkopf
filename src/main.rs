@@ -224,7 +224,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                         game.command(VCommand::Zugeben(gameaction.0, card)).unwrap();
                     }
                 }
-                accountbalance.apply_payout(&game.finish().unwrap());
+                accountbalance.apply_payout(&game.finish().unwrap().accountbalance);
             },
             VStockOrT::Stock(n_stock) => {
                 accountbalance.apply_payout(&SAccountBalance::new(

@@ -305,7 +305,7 @@ pub struct SGame {
 
 type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
 
-impl TGamePhase<SGameAction, SAccountBalance> for SGame {
+impl TGamePhase<SGameAction, SGameResult> for SGame {
     fn which_player_can_do_something(&self) -> Option<SGameAction> {
         self.current_stich().current_playerindex().map(|epi_current| (
             epi_current,
@@ -328,12 +328,14 @@ impl TGamePhase<SGameAction, SAccountBalance> for SGame {
         ))
     }
 
-    fn finish_success(self) -> SAccountBalance {
-        self.rules.payout(
-            &SGameFinishedStiche::new(&self.vecstich, self.kurzlang()),
-            stoss_and_doublings(&self.vecstoss, &self.doublings),
-            self.n_stock,
-        )
+    fn finish_success(self) -> SGameResult {
+        SGameResult {
+            accountbalance : self.rules.payout(
+                &SGameFinishedStiche::new(&self.vecstich, self.kurzlang()),
+                stoss_and_doublings(&self.vecstoss, &self.doublings),
+                self.n_stock,
+            ),
+        }
     }
 }
 
@@ -431,6 +433,20 @@ impl SGame {
 
     pub fn completed_stichs(&self) -> &[SStich] {
         completed_stichs(&self.vecstich)
+    }
+}
+
+pub struct SGameResult {
+    // TODO store all information about finished game
+    pub accountbalance : SAccountBalance,
+}
+
+impl TGamePhase<(), SGameResult> for SGameResult { // "absorbing state"
+    fn which_player_can_do_something(&self) -> Option<()> {
+        Some(())
+    }
+    fn finish_success(self) -> SGameResult {
+        self
     }
 }
 

@@ -53,7 +53,7 @@ fn internal_test_rules(
         assert_eq!(stich, &vecstich_test[i_stich]);
         println!("Stich {}: {}", i_stich, stich);
     }
-    let accountbalance_payout = game.finish().unwrap();
+    let accountbalance_payout = game.finish().unwrap().accountbalance;
     assert_eq!(EPlayerIndex::map_from_fn(|epi| accountbalance_payout.get_player(epi)), EPlayerIndex::map_from_raw(an_payout));
 }
 
