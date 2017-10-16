@@ -97,7 +97,7 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichNorm
 impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStichzwang {
     fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
-        let ref stich = current_stich(vecstich);
+        let stich = current_stich(vecstich);
         let card_highest = stich[rulesbettel.winner_index(stich)];
         all_allowed_cards_within_stich_distinguish_farbe_frei(
             rulesbettel,
