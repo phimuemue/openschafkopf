@@ -194,7 +194,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
     let vecsusp = Arc::new(Mutex::new(Vec::new()));
     crossbeam::scope(|scope| {
         for ahand in itahand {
-            let vecsusp = vecsusp.clone();
+            let vecsusp = Arc::clone(&vecsusp);
             scope.spawn(move || {
                 assert_ahand_same_size(&ahand);
                 let mut vecstich_complete_mut = game.completed_stichs().to_vec();
@@ -300,7 +300,7 @@ impl TAi for SAiSimulating {
         let n_payout_sum = Arc::new(AtomicIsize::new(0));
         crossbeam::scope(|scope| {
             for ahand in forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get(), epi_rank).take(self.n_rank_rules_samples) {
-                let n_payout_sum = n_payout_sum.clone();
+                let n_payout_sum = Arc::clone(&n_payout_sum);
                 scope.spawn(move || {
                     let n_payout = 
                         SSuspicion::new(
