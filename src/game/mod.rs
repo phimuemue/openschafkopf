@@ -12,7 +12,7 @@ pub trait TGamePhase<ActivePlayerInfo, Finish> : Sized {
     fn finish_success(self) -> Finish;
 
     fn finish(self) -> Result<Finish, Self> {
-        if let Some(_) = self.which_player_can_do_something() {
+        if self.which_player_can_do_something().is_some() {
             bail!(self)
         }
         Ok(self.finish_success())
