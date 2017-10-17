@@ -22,7 +22,7 @@ pub trait TGamePhase<ActivePlayerInfo, Finish> : Sized {
 pub enum VCommand {
     AnnounceDoubling(EPlayerIndex, bool),
     AnnounceGame(EPlayerIndex, Option<Box<TActivelyPlayableRules>>),
-    Stoss(EPlayerIndex),
+    Stoss(EPlayerIndex, bool),
     Zugeben(EPlayerIndex, SCard),
 }
 
@@ -373,7 +373,7 @@ impl SGame {
 
     pub fn command(&mut self, cmd: VCommand) -> errors::Result<()> {
         match cmd {
-            VCommand::Stoss(epi) => self.stoss(epi),
+            VCommand::Stoss(epi, b_stoss) if b_stoss => self.stoss(epi),
             VCommand::Zugeben(epi, card) => self.zugeben(card, epi),
             _ => bail!("Invalid command"),
         }

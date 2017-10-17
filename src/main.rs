@@ -212,7 +212,7 @@ fn game_loop(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, rule
                                 })
                             })
                         {
-                            game.command(VCommand::Stoss(*epi_stoss)).unwrap();
+                            game.command(VCommand::Stoss(*epi_stoss, /*b_stoss*/true)).unwrap();
                         }
                     } else {
                         let card = communicate_via_channel(|txcard| {
