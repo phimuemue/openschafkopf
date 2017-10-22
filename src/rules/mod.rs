@@ -36,7 +36,7 @@ pub fn completed_stichs(vecstich: &[SStich]) -> &[SStich] {
     &vecstich[0..vecstich.len()-1]
 }
 
-#[derive(PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum VTrumpfOrFarbe {
     Trumpf,
     Farbe (EFarbe),
