@@ -303,7 +303,7 @@ pub struct SGame {
     pub vecstich : Vec<SStich>,
 }
 
-type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
+pub type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
 
 impl TGamePhase<SGameAction, SGameResult> for SGame {
     fn which_player_can_do_something(&self) -> Option<SGameAction> {
