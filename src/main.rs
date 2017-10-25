@@ -221,14 +221,14 @@ fn game_loop<FnDealcards, FnGamePreparations, FnDetermineRules, FnGame>(
     ruleset: &SRuleSet,
 ) -> SAccountBalance
     where
-    FnDealcards: FnMut(EPlayerIndex, &SDealCards, mpsc::Sender<VCommand>),
-    FnGamePreparations: FnMut(EPlayerIndex, &SGamePreparations, mpsc::Sender<VCommand>),
-    FnDetermineRules: FnMut((EPlayerIndex, Vec<SRuleGroup>), &SDetermineRules, mpsc::Sender<VCommand>),
-    FnGame: FnMut(SGameAction, &SGame, mpsc::Sender<VCommand>),
+    FnDealcards: FnMut(EPlayerIndex, &SDealCards, mpsc::Sender<VGameCommand>),
+    FnGamePreparations: FnMut(EPlayerIndex, &SGamePreparations, mpsc::Sender<VGameCommand>),
+    FnDetermineRules: FnMut((EPlayerIndex, Vec<SRuleGroup>), &SDetermineRules, mpsc::Sender<VGameCommand>),
+    FnGame: FnMut(SGameAction, &SGame, mpsc::Sender<VGameCommand>),
 {
     let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_epi| 0), 0);
     for i_game in 0..n_games {
-        let (txcmd, rxcmd) = mpsc::channel::<VCommand>();
+        let (txcmd, rxcmd) = mpsc::channel::<VGameCommand>();
         let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset, accountbalance.get_stock());
         while let Some(epi) = dealcards.which_player_can_do_something() {
             fn_dealcards(epi, &dealcards, txcmd.clone());
