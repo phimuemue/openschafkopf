@@ -194,16 +194,16 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                     })
                 {
                     txcmd.send(VCommand::Stoss(*epi_stoss, /*b_stoss*/true)).unwrap();
+                    return;
                 }
-            } else {
-                let card = communicate_via_channel(|txcard| {
-                    aplayer[gameaction.0].ask_for_card(
-                        &game,
-                        txcard.clone()
-                    );
-                });
-                txcmd.send(VCommand::Zugeben(gameaction.0, card)).unwrap();
             }
+            let card = communicate_via_channel(|txcard| {
+                aplayer[gameaction.0].ask_for_card(
+                    &game,
+                    txcard.clone()
+                );
+            });
+            txcmd.send(VCommand::Zugeben(gameaction.0, card)).unwrap();
         },
         n_games,
         ruleset,
