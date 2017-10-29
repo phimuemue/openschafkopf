@@ -404,7 +404,9 @@ impl SGame {
         }
         {
             let hand = &mut self.ahand[epi];
-            assert!(self.rules.card_is_allowed(&self.vecstich, hand, card_played));
+            if !self.rules.card_is_allowed(&self.vecstich, hand, card_played) {
+                bail!("{} is not allowed");
+            }
             hand.play_card(card_played);
             assert!(!self.vecstich.is_empty());
             current_stich_mut(&mut self.vecstich).push(card_played);
