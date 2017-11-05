@@ -84,7 +84,7 @@ impl TPlayer for SPlayerHuman {
             hand
         };
         let veccard_allowed = game.rules.all_allowed_cards(&game.vecstich, &hand);
-        match txcard.send(
+        if txcard.send(
             *skui::ask_for_alternative(
                 hand.cards(),
                 &skui::choose_card_from_hand_key_bindings(),
@@ -98,9 +98,8 @@ impl TPlayer for SPlayerHuman {
                 },
                 || {Some(self.ai.suggest_card(game, /*ofile_output*/Some(fs::File::create(&"suspicion.html").unwrap())))}
             )
-        ) {
-            Ok(_) => (),
-            Err(_) => unimplemented!(), // we possibly want to be able to deal with "blocked" plays (timeout etc.)
+        ).is_err() {
+            unimplemented!() // we possibly want to be able to deal with "blocked" plays (timeout etc.)
         }
     }
 
