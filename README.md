@@ -17,7 +17,7 @@ curl https://sh.rustup.rs -sSf | sh
 git clone https://github.com/openschafkopf/openschafkopf.git
 cd openschafkopf
 cargo build --release
-./target/release/openschafkopf
+./target/release/openschafkopf cli
 ```
 
 ## Supported variants
