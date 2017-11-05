@@ -199,7 +199,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
             }
             let card = communicate_via_channel(|txcard| {
                 aplayer[gameaction.0].ask_for_card(
-                    &game,
+                    game,
                     txcard.clone()
                 );
             });
