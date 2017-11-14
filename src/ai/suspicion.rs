@@ -54,6 +54,8 @@ impl SSuspicion {
         &self.vecsusptrans
     }
 
+
+    // TODO Maybe something like payout_hint is useful to prune suspicion tree
     pub fn new<FuncFilterSuccessors>(
         epi_first: EPlayerIndex,
         ahand: EnumMap<EPlayerIndex, SHand>,

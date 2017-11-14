@@ -5,6 +5,9 @@ use rules::*;
 use util::*;
 use itertools::Itertools;
 
+// TODO TUI for arbitrary EPlayerIndex (possibly useful to test behaviour with more than one CPlayerHuman)
+// TODO do we update output too often?
+
 pub fn init_ui() {
     ncurses::initscr();
     ncurses::keypad(ncurses::stdscr(), true);

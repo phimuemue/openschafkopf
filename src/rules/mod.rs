@@ -3,6 +3,7 @@ pub mod trumpfdecider;
 #[macro_use]
 pub mod singleplay;
 pub mod rulesrufspiel;
+// TODORULES implement Hochzeit
 pub mod rulessolo;
 pub mod rulesramsch;
 pub mod rulesbettel;
