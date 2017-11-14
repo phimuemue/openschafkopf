@@ -26,8 +26,7 @@ impl FromStr for EPlayerIndex {
     }
 }
 
-#[derive(Clone)]
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SPlayersInRound<T> {
     pub epi_first: EPlayerIndex,
     vect: ArrayVec<[T; 4]>,
