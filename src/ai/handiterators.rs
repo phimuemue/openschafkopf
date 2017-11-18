@@ -53,7 +53,7 @@ impl Iterator for SForeverRandHands {
             self.ahand[epi_swap].cards_mut()[i_hand_swap] = card_rand;
             self.ahand[epi_rand].cards_mut()[i_hand_rand] = card_swap;
         }
-        Some(EPlayerIndex::map_from_fn(|epi| self.ahand[epi].clone()))
+        Some(self.ahand.clone())
     }
 }
 

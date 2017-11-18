@@ -140,9 +140,7 @@ pub fn is_compatible_with_game_so_far(
     }
     && {
         assert_ahand_same_size(ahand);
-        let mut ahand_simulate = EPlayerIndex::map_from_fn(|epi| {
-            ahand[epi].clone()
-        });
+        let mut ahand_simulate = ahand.clone();
         for stich in completed_stichs(vecstich).iter().rev() {
             for epi in EPlayerIndex::values() {
                 ahand_simulate[epi].cards_mut().push(stich[epi]);
