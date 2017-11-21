@@ -123,13 +123,15 @@ impl TRules for SRulesRufspiel {
     fn all_allowed_cards_first_in_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
         if // do we already know who had the rufsau?
-            !completed_stichs(vecstich).iter()
+            completed_stichs(vecstich).iter()
                 .any(|stich| {
                     assert_eq!(stich.size(), 4); // completed_stichs should only process full stichs
                     self.is_ruffarbe(*stich.first()) // gesucht or weggelaufen
                     || stich.iter().any(|(_, card)| *card==self.rufsau()) // We explicitly traverse all cards because it may be allowed (by exotic rules) to schmier rufsau even if not gesucht.
                 } )
         {
+            hand.cards().clone()
+        } else {
             // Remark: Player must have 4 cards of ruffarbe on his hand *at this point of time* (i.e. not only at the beginning!)
             if !hand.contains(self.rufsau()) 
                 || 4 <= hand.cards().iter()
@@ -141,11 +143,8 @@ impl TRules for SRulesRufspiel {
                 hand.cards().iter()
                     .cloned()
                     .filter(|&card| !self.is_ruffarbe(card) || self.rufsau()==card)
-                    .collect::<SHandVector>()
+                    .collect()
             }
-        }
-        else {
-            hand.cards().clone()
         }
     }
 
@@ -171,7 +170,7 @@ impl TRules for SRulesRufspiel {
                 .collect();
             if veccard_allowed.is_empty() {
                 if b_weggelaufen {
-                    hand.cards().iter().cloned().collect()
+                    hand.cards().clone()
                 } else {
                     hand.cards().iter().cloned().filter(|&card| self.rufsau()!=card).collect()
                 }
