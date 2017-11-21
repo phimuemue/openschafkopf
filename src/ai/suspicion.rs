@@ -133,23 +133,6 @@ impl SSuspicion {
         self.ahand[EPlayerIndex::EPI0].cards().len()
     }
 
-    fn player_table<T, FnPerPlayer>(fn_per_player: FnPerPlayer) -> String // TODORUST generic closures
-        where FnPerPlayer: Fn(EPlayerIndex) -> T,
-              T: fmt::Display,
-    {
-        format!(
-            "<table>
-              <tr><td align=\"center\" colspan=\"2\"><br>{}<br></td></tr>
-              <tr><td>{}</td><td>{}</td></tr>
-              <tr><td align=\"center\" colspan=\"2\">{}</td></tr>
-            </table>\n",
-            fn_per_player(EPlayerIndex::EPI2),
-            fn_per_player(EPlayerIndex::EPI1),
-            fn_per_player(EPlayerIndex::EPI3),
-            fn_per_player(EPlayerIndex::EPI0),
-        )
-    }
-
     pub fn print_suspicion(
         &self,
         n_level_end: usize,
@@ -205,21 +188,37 @@ impl SSuspicion {
                     if b_border {"solid"} else {"none"},
                 )
             };
+            fn player_table<T, FnPerPlayer>(fn_per_player: FnPerPlayer) -> String
+                where FnPerPlayer: Fn(EPlayerIndex) -> T,
+                      T: fmt::Display,
+            {
+                format!(
+                    "<table>
+                      <tr><td align=\"center\" colspan=\"2\"><br>{}<br></td></tr>
+                      <tr><td>{}</td><td>{}</td></tr>
+                      <tr><td align=\"center\" colspan=\"2\">{}</td></tr>
+                    </table>\n",
+                    fn_per_player(EPlayerIndex::EPI2),
+                    fn_per_player(EPlayerIndex::EPI1),
+                    fn_per_player(EPlayerIndex::EPI3),
+                    fn_per_player(EPlayerIndex::EPI0),
+                )
+            }
             for stich in vecstich.iter() {
                 file_output.write_all(b"<td>\n")?;
-                file_output.write_all(Self::player_table(|epi| output_card(stich[epi], epi==stich.first_playerindex())).as_bytes())?;
+                file_output.write_all(player_table(|epi| output_card(stich[epi], epi==stich.first_playerindex())).as_bytes())?;
                 file_output.write_all(b"</td>\n")?;
             }
             file_output.write_all(format!(
                 "<td>{}</td> <td>{}</td>\n",
-                Self::player_table(|epi| {
+                player_table(|epi| {
                     let mut veccard = self.ahand[epi].cards().clone();
                     rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
                     veccard.into_iter()
                         .map(|card| output_card(card, /*b_border*/false))
                         .join("")
                 }),
-                Self::player_table(|epi| self.min_reachable_payout(
+                player_table(|epi| self.min_reachable_payout(
                     rules,
                     &mut vecstich.clone(),
                     epi,
