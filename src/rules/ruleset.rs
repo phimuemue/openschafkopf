@@ -86,6 +86,7 @@ impl SRuleSet {
             read_int(&tomltbl, str_fallback)
         };
         // TODORULES "Der Alte muss"
+        // TODORULES Kreuzspiel as alternative to Ramsch
         let stockorramsch = match (tomltbl.get("ramsch"), tomltbl.get("stock")) {
             (Some(_), Some(_)) => {
                 // TODORULES Better alternatives? Allow stock *and* ramsch at the same time?
