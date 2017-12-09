@@ -6,11 +6,14 @@ use util::*;
 use rand::{self, Rng};
 use std::mem;
 
-pub trait TGamePhase<ActivePlayerInfo, Finish> : Sized {
-    fn which_player_can_do_something(&self) -> Option<ActivePlayerInfo>;
-    fn finish_success(self) -> Finish;
+pub trait TGamePhase : Sized {
+    type ActivePlayerInfo;
+    type Finish;
 
-    fn finish(self) -> Result<Finish, Self> {
+    fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo>;
+    fn finish_success(self) -> Self::Finish;
+
+    fn finish(self) -> Result<Self::Finish, Self> {
         if self.which_player_can_do_something().is_some() {
             Err(self)
         } else {
@@ -36,14 +39,17 @@ pub struct SDealCards<'rules> {
     n_stock : isize,
 }
 
-impl<'rules> TGamePhase<EPlayerIndex, SGamePreparations<'rules>> for SDealCards<'rules> {
-    fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
+impl<'rules> TGamePhase for SDealCards<'rules> {
+    type ActivePlayerInfo = EPlayerIndex;
+    type Finish = SGamePreparations<'rules>;
+
+    fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         self.ruleset.oedoublingscope.as_ref().and_then(|_edoublingscope|
             self.doublings.current_playerindex()
         )
     }
 
-    fn finish_success(self) -> SGamePreparations<'rules> {
+    fn finish_success(self) -> Self::Finish {
         let epi_first = self.doublings.first_playerindex();
         SGamePreparations {
             ahand : self.ahand,
@@ -126,12 +132,15 @@ pub enum VGamePreparationsFinish<'rules> {
 
 }
 
-impl<'rules> TGamePhase<EPlayerIndex, VGamePreparationsFinish<'rules>> for SGamePreparations<'rules> {
-    fn which_player_can_do_something(&self) -> Option<EPlayerIndex> {
+impl<'rules> TGamePhase for SGamePreparations<'rules> {
+    type ActivePlayerInfo = EPlayerIndex;
+    type Finish = VGamePreparationsFinish<'rules>;
+
+    fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         self.gameannouncements.current_playerindex()
     }
 
-    fn finish_success(self) -> VGamePreparationsFinish<'rules> {
+    fn finish_success(self) -> Self::Finish {
         let mut vecpairepirules : Vec<(_, Box<TActivelyPlayableRules>)> = self.gameannouncements.into_iter()
             .filter_map(|(epi, orules)| orules.map(|rules| (epi, rules)))
             .collect();
@@ -202,7 +211,10 @@ pub struct SDetermineRules<'rules> {
     pairepirules_current_bid : (EPlayerIndex, Box<TActivelyPlayableRules>),
 }
 
-impl<'rules> TGamePhase<(EPlayerIndex, Vec<SRuleGroup>), SGame> for SDetermineRules<'rules> {
+impl<'rules> TGamePhase for SDetermineRules<'rules> {
+    type ActivePlayerInfo = (EPlayerIndex, Vec<SRuleGroup>);
+    type Finish = SGame;
+
     /*
         Example:
         0: Rufspiel, 1: Wenz, 2: Farbwenz, 3: Rufspiel
@@ -213,7 +225,7 @@ impl<'rules> TGamePhase<(EPlayerIndex, Vec<SRuleGroup>), SGame> for SDetermineRu
            otherwise we get 0r 1w | 3r EBid::AtLeast
         => continue until self.vecpairepirules_queued is empty
     */
-    fn which_player_can_do_something(&self) -> Option<(EPlayerIndex, Vec<SRuleGroup>)> {
+    fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         self.vecpairepirules_queued.last().as_ref().map(|&&(epi, ref _rules)| (
             epi,
             self.ruleset.avecrulegroup[epi].iter()
@@ -233,7 +245,7 @@ impl<'rules> TGamePhase<(EPlayerIndex, Vec<SRuleGroup>), SGame> for SDetermineRu
         ))
     }
 
-    fn finish_success(self) -> SGame {
+    fn finish_success(self) -> Self::Finish {
         assert!(self.vecpairepirules_queued.is_empty());
         assert_eq!(self.ruleset.ekurzlang, EKurzLang::from_cards_per_player(self.ahand[EPlayerIndex::EPI0].cards().len()));
         SGame::new(
@@ -305,8 +317,11 @@ pub struct SGame {
 
 pub type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
 
-impl TGamePhase<SGameAction, SGameResult> for SGame {
-    fn which_player_can_do_something(&self) -> Option<SGameAction> {
+impl TGamePhase for SGame {
+    type ActivePlayerInfo = SGameAction;
+    type Finish = SGameResult;
+
+    fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         self.current_stich().current_playerindex().map(|epi_current| (
             epi_current,
             if let Some(ref stossparams) = self.ostossparams {
@@ -328,7 +343,7 @@ impl TGamePhase<SGameAction, SGameResult> for SGame {
         ))
     }
 
-    fn finish_success(self) -> SGameResult {
+    fn finish_success(self) -> Self::Finish {
         SGameResult {
             accountbalance : self.rules.payout(
                 &SGameFinishedStiche::new(&self.vecstich, self.kurzlang()),
@@ -443,11 +458,14 @@ pub struct SGameResult {
     pub accountbalance : SAccountBalance,
 }
 
-impl TGamePhase<(), SGameResult> for SGameResult { // "absorbing state"
-    fn which_player_can_do_something(&self) -> Option<()> {
+impl TGamePhase for SGameResult { // "absorbing state"
+    type ActivePlayerInfo = ();
+    type Finish = SGameResult;
+
+    fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         Some(())
     }
-    fn finish_success(self) -> SGameResult {
+    fn finish_success(self) -> Self::Finish {
         self
     }
 }
