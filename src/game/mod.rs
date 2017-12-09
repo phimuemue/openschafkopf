@@ -19,13 +19,12 @@ pub trait TGamePhase<ActivePlayerInfo, Finish> : Sized {
     }
 }
 
-pub enum VCommand<ActivelyPlayableRules> {
+pub enum VGameCommand {
     AnnounceDoubling(EPlayerIndex, bool),
-    AnnounceGame(EPlayerIndex, Option<ActivelyPlayableRules>),
+    AnnounceGame(EPlayerIndex, Option<Box<TActivelyPlayableRules>>),
     Stoss(EPlayerIndex, bool),
     Zugeben(EPlayerIndex, SCard),
 }
-pub type VGameCommand = VCommand<Box<TActivelyPlayableRules>>;
 
 pub type SDoublings = SPlayersInRound<bool>;
 
@@ -79,7 +78,7 @@ impl<'rules> SDealCards<'rules> {
     }
 
     pub fn command(&mut self, gamecmd: VGameCommand) -> Result<(), Error> {
-        if let VCommand::AnnounceDoubling(epi, b_doubling) = gamecmd {
+        if let VGameCommand::AnnounceDoubling(epi, b_doubling) = gamecmd {
             self.announce_doubling(epi, b_doubling)
         } else {
             bail!("Invalid command")
@@ -173,7 +172,7 @@ impl<'rules> TGamePhase<EPlayerIndex, VGamePreparationsFinish<'rules>> for SGame
 
 impl<'rules> SGamePreparations<'rules> {
     pub fn command(&mut self, gamecmd: VGameCommand) -> Result<(), Error> {
-        if let VCommand::AnnounceGame(epi, orules) = gamecmd {
+        if let VGameCommand::AnnounceGame(epi, orules) = gamecmd {
             self.announce_game(epi, orules)
         } else {
             bail!("Invalid command")
@@ -253,7 +252,7 @@ impl<'rules> SDetermineRules<'rules> {
     }
 
     pub fn command(&mut self, gamecmd: VGameCommand) -> Result<(), Error> {
-        if let VCommand::AnnounceGame(epi, orules) = gamecmd {
+        if let VGameCommand::AnnounceGame(epi, orules) = gamecmd {
             if let Some(rules) = orules {
                 self.announce_game(epi, rules)
             } else {
@@ -374,8 +373,8 @@ impl SGame {
 
     pub fn command(&mut self, gamecmd: VGameCommand) -> Result<(), Error> {
         match gamecmd {
-            VCommand::Stoss(epi, b_stoss) if b_stoss => self.stoss(epi),
-            VCommand::Zugeben(epi, card) => self.zugeben(card, epi),
+            VGameCommand::Stoss(epi, b_stoss) if b_stoss => self.stoss(epi),
+            VGameCommand::Zugeben(epi, card) => self.zugeben(card, epi),
             _ => bail!("Invalid command"),
         }
     }

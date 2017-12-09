@@ -139,7 +139,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                     txb_doubling
                 );
             });
-            txcmd.send(VCommand::AnnounceDoubling(epi, b_doubling)).unwrap();
+            txcmd.send(VGameCommand::AnnounceDoubling(epi, b_doubling)).unwrap();
         },
         /*fn_gamepreparations*/|epi, gamepreparations, txcmd| {
             let orules = communicate_via_channel(|txorules| {
@@ -152,7 +152,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                     txorules
                 );
             });
-            txcmd.send(VCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules)))).unwrap();
+            txcmd.send(VGameCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules)))).unwrap();
         },
         /*fn_determinerules*/|(epi, vecrulegroup_steigered), determinerules, txcmd|{
             let orules = communicate_via_channel(|txorules| {
@@ -165,7 +165,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                     txorules
                 );
             });
-            txcmd.send(VCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules)))).unwrap();
+            txcmd.send(VGameCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules)))).unwrap();
         },
         /*fn_game*/|gameaction, game, txcmd| {
             if !gameaction.1.is_empty() {
@@ -184,7 +184,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                         })
                     })
                 {
-                    txcmd.send(VCommand::Stoss(*epi_stoss, /*b_stoss*/true)).unwrap();
+                    txcmd.send(VGameCommand::Stoss(*epi_stoss, /*b_stoss*/true)).unwrap();
                     return;
                 }
             }
@@ -194,7 +194,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                     txcard.clone()
                 );
             });
-            txcmd.send(VCommand::Zugeben(gameaction.0, card)).unwrap();
+            txcmd.send(VGameCommand::Zugeben(gameaction.0, card)).unwrap();
         },
         n_games,
         ruleset,
