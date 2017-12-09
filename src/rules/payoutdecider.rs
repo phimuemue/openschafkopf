@@ -7,7 +7,7 @@ use std::fmt::Display;
 #[derive(Clone)]
 pub struct SStossDoublingPayoutDecider {}
 impl SStossDoublingPayoutDecider {
-    pub fn payout(an_payout_raw: EnumMap<EPlayerIndex, isize>, (n_stoss, n_doubling): (usize, usize)) -> EnumMap<EPlayerIndex, isize> {
+    pub fn payout(an_payout_raw: &EnumMap<EPlayerIndex, isize>, (n_stoss, n_doubling): (usize, usize)) -> EnumMap<EPlayerIndex, isize> {
         EPlayerIndex::map_from_fn(|epi| {
             an_payout_raw[epi] * 2isize.pow((n_stoss + n_doubling).as_num())
         })

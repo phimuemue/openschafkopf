@@ -85,7 +85,7 @@ impl TRules for SRulesRufspiel {
             }}
         }
         let an_payout_no_stock = SStossDoublingPayoutDecider::payout(
-            self.payoutdecider.payout(
+            &self.payoutdecider.payout(
                 self,
                 gamefinishedstiche,
                 fn_is_player_party!(),
@@ -129,22 +129,18 @@ impl TRules for SRulesRufspiel {
                     self.is_ruffarbe(*stich.first()) // gesucht or weggelaufen
                     || stich.iter().any(|(_, card)| *card==self.rufsau()) // We explicitly traverse all cards because it may be allowed (by exotic rules) to schmier rufsau even if not gesucht.
                 } )
+            // Remark: Player must have 4 cards of ruffarbe on his hand *at this point of time* (i.e. not only at the beginning!)
+            || !hand.contains(self.rufsau()) 
+            || 4 <= hand.cards().iter()
+                .filter(|&card| self.is_ruffarbe(*card))
+                .count()
         {
             hand.cards().clone()
         } else {
-            // Remark: Player must have 4 cards of ruffarbe on his hand *at this point of time* (i.e. not only at the beginning!)
-            if !hand.contains(self.rufsau()) 
-                || 4 <= hand.cards().iter()
-                    .filter(|&card| self.is_ruffarbe(*card))
-                    .count()
-            {
-                hand.cards().clone()
-            } else {
-                hand.cards().iter()
-                    .cloned()
-                    .filter(|&card| !self.is_ruffarbe(card) || self.rufsau()==card)
-                    .collect()
-            }
+            hand.cards().iter()
+                .cloned()
+                .filter(|&card| !self.is_ruffarbe(card) || self.rufsau()==card)
+                .collect()
         }
     }
 

@@ -50,7 +50,7 @@ impl TRules for SRulesRamsch {
         let apply_doubling_stoss_stock = |epi_single, n_factor_single| {
             SAccountBalance::new(
                 SStossDoublingPayoutDecider::payout(
-                    EPlayerIndex::map_from_fn(|epi| {
+                    &EPlayerIndex::map_from_fn(|epi| {
                         if epi_single==epi {
                             3 * self.n_price * n_factor_single
                         } else {
