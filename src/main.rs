@@ -8,7 +8,7 @@ extern crate clap;
 extern crate arrayvec;
 extern crate crossbeam;
 #[macro_use]
-extern crate error_chain;
+extern crate failure;
 extern crate as_num;
 #[macro_use]
 extern crate plain_enum;
@@ -40,15 +40,6 @@ use player::*;
 use player::playerhuman::*;
 use player::playercomputer::*;
 use util::*;
-
-mod errors {
-    error_chain!{
-        foreign_links {
-            Io(::std::io::Error);
-            TomlErr(::toml::de::Error);
-        }
-    }
-}
 
 fn main() {
     verify!(env_logger::init()).unwrap(); // ok; this is the only initialization of env_logger

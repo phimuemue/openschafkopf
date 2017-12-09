@@ -6,3 +6,4 @@ pub use self::verify::*;
 #[macro_use]
 pub mod box_clone;
 pub use self::box_clone::*;
+pub use failure::Error;

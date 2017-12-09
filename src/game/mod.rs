@@ -2,7 +2,6 @@ use primitives::*;
 use rules::*;
 use rules::ruleset::*;
 use util::*;
-use errors;
 
 use rand::{self, Rng};
 use std::mem;
@@ -13,9 +12,10 @@ pub trait TGamePhase<ActivePlayerInfo, Finish> : Sized {
 
     fn finish(self) -> Result<Finish, Self> {
         if self.which_player_can_do_something().is_some() {
-            bail!(self)
+            Err(self)
+        } else {
+            Ok(self.finish_success())
         }
-        Ok(self.finish_success())
     }
 }
 
@@ -78,7 +78,7 @@ impl<'rules> SDealCards<'rules> {
         &veccard[0..veccard.len()/2]
     }
 
-    pub fn command(&mut self, gamecmd: VGameCommand) -> errors::Result<()> {
+    pub fn command(&mut self, gamecmd: VGameCommand) -> Result<(), Error> {
         if let VCommand::AnnounceDoubling(epi, b_doubling) = gamecmd {
             self.announce_doubling(epi, b_doubling)
         } else {
@@ -86,7 +86,7 @@ impl<'rules> SDealCards<'rules> {
         }
     }
 
-    pub fn announce_doubling(&mut self, epi: EPlayerIndex, b_doubling: bool) -> errors::Result<()> {
+    pub fn announce_doubling(&mut self, epi: EPlayerIndex, b_doubling: bool) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
@@ -172,7 +172,7 @@ impl<'rules> TGamePhase<EPlayerIndex, VGamePreparationsFinish<'rules>> for SGame
 }
 
 impl<'rules> SGamePreparations<'rules> {
-    pub fn command(&mut self, gamecmd: VGameCommand) -> errors::Result<()> {
+    pub fn command(&mut self, gamecmd: VGameCommand) -> Result<(), Error> {
         if let VCommand::AnnounceGame(epi, orules) = gamecmd {
             self.announce_game(epi, orules)
         } else {
@@ -180,7 +180,7 @@ impl<'rules> SGamePreparations<'rules> {
         }
     }
 
-    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<TActivelyPlayableRules>>) -> errors::Result<()> {
+    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<TActivelyPlayableRules>>) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
@@ -252,7 +252,7 @@ impl<'rules> SDetermineRules<'rules> {
         (self.pairepirules_current_bid.0, self.pairepirules_current_bid.1.priority())
     }
 
-    pub fn command(&mut self, gamecmd: VGameCommand) -> errors::Result<()> {
+    pub fn command(&mut self, gamecmd: VGameCommand) -> Result<(), Error> {
         if let VCommand::AnnounceGame(epi, orules) = gamecmd {
             if let Some(rules) = orules {
                 self.announce_game(epi, rules)
@@ -264,7 +264,7 @@ impl<'rules> SDetermineRules<'rules> {
         }
     }
 
-    pub fn announce_game(&mut self, epi: EPlayerIndex, rules: Box<TActivelyPlayableRules>) -> errors::Result<()> {
+    pub fn announce_game(&mut self, epi: EPlayerIndex, rules: Box<TActivelyPlayableRules>) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
             bail!("announce_game not allowed for specified EPlayerIndex");
         }
@@ -282,7 +282,7 @@ impl<'rules> SDetermineRules<'rules> {
         Ok(())
     }
 
-    pub fn resign(&mut self, epi: EPlayerIndex) -> errors::Result<()> {
+    pub fn resign(&mut self, epi: EPlayerIndex) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
             bail!("announce_game not allowed for specified EPlayerIndex");
         }
@@ -372,7 +372,7 @@ impl SGame {
         EKurzLang::from_cards_per_player(cards_per_player(EPlayerIndex::EPI0))
     }
 
-    pub fn command(&mut self, gamecmd: VGameCommand) -> errors::Result<()> {
+    pub fn command(&mut self, gamecmd: VGameCommand) -> Result<(), Error> {
         match gamecmd {
             VCommand::Stoss(epi, b_stoss) if b_stoss => self.stoss(epi),
             VCommand::Zugeben(epi, card) => self.zugeben(card, epi),
@@ -380,7 +380,7 @@ impl SGame {
         }
     }
 
-    pub fn stoss(&mut self, epi_stoss: EPlayerIndex) -> errors::Result<()> {
+    pub fn stoss(&mut self, epi_stoss: EPlayerIndex) -> Result<(), Error> {
         match self.which_player_can_do_something() {
             None => bail!("Game already ended."),
             Some(gameaction) => {
@@ -393,7 +393,7 @@ impl SGame {
         }
     }
 
-    pub fn zugeben(&mut self, card_played: SCard, epi: EPlayerIndex) -> errors::Result<()> {
+    pub fn zugeben(&mut self, card_played: SCard, epi: EPlayerIndex) -> Result<(), Error> {
         // returns the EPlayerIndex of the player who is the next in row to do something
         info!("Player {} wants to play {}", epi, card_played);
         if Some(epi)!=self.which_player_can_do_something().map(|gameaction| gameaction.0) {

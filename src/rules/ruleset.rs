@@ -13,7 +13,6 @@ use std::io::prelude::*;
 use std::path::Path;
 
 use toml;
-use errors::*;
 
 #[derive(Debug)]
 pub struct SRuleGroup {
@@ -68,9 +67,9 @@ pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> Vec<&TActivelyPlayableRules
 }
 
 impl SRuleSet {
-    pub fn from_string(str_toml: &str) -> Result<SRuleSet> {
+    pub fn from_string(str_toml: &str) -> Result<SRuleSet, Error> {
         let tomltbl = str_toml.parse::<toml::Value>()?;
-        let read_int = |tomlval: &toml::Value, str_key: &str| -> Result<i64> {
+        let read_int = |tomlval: &toml::Value, str_key: &str| -> Result<i64, Error> {
             if let Some(n) = tomlval.get(str_key).and_then(|tomlval| tomlval.as_integer()) {
                 if 0<=n {
                     Ok(n)
@@ -102,7 +101,7 @@ impl SRuleSet {
                         Ok(VDurchmarsch::AtLeast(n_durchmarsch.as_num()))
                     },
                     _ => bail!("Invalid value for ramsch.durchmarsch. \"All\" or a number in [61; 120] is supported.")
-                } as Result<_>)?;
+                } as Result<_, Error>)?;
                 read_int(val_ramsch, "price").map(|n_price|
                     VStockOrT::OrT(Box::new(
                         SRulesRamsch::new(n_price.as_num(), durchmarsch)
@@ -134,7 +133,7 @@ impl SRuleSet {
                                 n_lauf_lbound.as_num(),
                             ),
                         ))),
-                    })) as Result<_>
+                    })) as Result<_, Error>
                 } else {
                     Ok(())
                 }
@@ -288,7 +287,7 @@ impl SRuleSet {
         ))
     }
 
-    pub fn from_file(path: &Path) -> Result<SRuleSet> {
+    pub fn from_file(path: &Path) -> Result<SRuleSet, Error> {
         // TODO? ruleset creation wizard
         let mut file = File::open(&path)?;
         let mut str_toml = String::new();
