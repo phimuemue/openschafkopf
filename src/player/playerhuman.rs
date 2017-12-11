@@ -96,7 +96,7 @@ impl TPlayer for SPlayerHuman {
                     skui::print_hand(hand.cards(), Some(i_card_chosen));
                     skui::print_game_info(game.rules.as_ref(), &game.doublings, &game.vecstoss);
                 },
-                || {Some(self.ai.suggest_card(game, /*ofile_output*/Some(fs::File::create(&"suspicion.html").unwrap())))}
+                || Some(self.ai.suggest_card(game, /*ofile_output*/Some(fs::File::create(&"suspicion.html").unwrap())))
             )
         ).is_err() {
             unimplemented!() // we possibly want to be able to deal with "blocked" plays (timeout etc.)

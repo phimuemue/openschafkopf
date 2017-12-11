@@ -79,16 +79,14 @@ impl TRules for SRulesRufspiel {
             .map(|(epi, _)| epi)
             .unwrap();
         assert_ne!(self.epi, epi_coplayer);
-        macro_rules! fn_is_player_party {
-            () => {|epi| {
-                epi==self.epi || epi==epi_coplayer
-            }}
-        }
+        let mapepib_player_party = EPlayerIndex::map_from_fn(|epi|
+            epi==self.epi || epi==epi_coplayer
+        );
         let an_payout_no_stock = SStossDoublingPayoutDecider::payout(
             &self.payoutdecider.payout(
                 self,
                 gamefinishedstiche,
-                fn_is_player_party!(),
+                |epi| mapepib_player_party[epi],
                 /*fn_player_multiplier*/ |_epi| 1, // everyone pays/gets the same
             ),
             tpln_stoss_doubling,
@@ -106,14 +104,14 @@ impl TRules for SRulesRufspiel {
         if /*b_player_party_wins*/ 0<an_payout_no_stock[self.epi] {
             SAccountBalance::new(
                 EPlayerIndex::map_from_fn(|epi|
-                    an_payout_no_stock[epi] + if fn_is_player_party!()(epi) { n_stock_per_player } else {0}
+                    an_payout_no_stock[epi] + if mapepib_player_party[epi] { n_stock_per_player } else {0}
                 ),
                 -n_stock
             )
         } else {
             SAccountBalance::new(
                 EPlayerIndex::map_from_fn(|epi|
-                    an_payout_no_stock[epi] - if fn_is_player_party!()(epi) { n_stock_per_player } else {0}
+                    an_payout_no_stock[epi] - if mapepib_player_party[epi] { n_stock_per_player } else {0}
                 ),
                 n_stock
             )

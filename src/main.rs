@@ -63,7 +63,7 @@ fn main() {
         )
         .get_matches();
     let ai = |subcommand_matches: &clap::ArgMatches| {
-        match subcommand_matches.value_of("ai").unwrap().as_ref() {
+        match subcommand_matches.value_of("ai").unwrap() {
             "cheating" => Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/50)) as Box<TAi>,
             "simulating" => 
                 Box::new(ai::SAiSimulating::new(
