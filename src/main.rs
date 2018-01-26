@@ -42,7 +42,7 @@ use player::playercomputer::*;
 use util::*;
 
 fn main() {
-    verify!(env_logger::init()).unwrap(); // ok; this is the only initialization of env_logger
+    env_logger::init();
     let clap_arg = |str_long, str_default| {
         clap::Arg::with_name(str_long)
             .long(str_long)
