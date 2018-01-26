@@ -270,7 +270,7 @@ fn game_loop<FnDealcards, FnGamePreparations, FnDetermineRules, FnGame>(
 #[test]
 fn test_game_loop() {
     let mut rng = rand::thread_rng();
-    for ruleset in rand::sample(
+    for ruleset in verify!(rand::seq::sample_iter(
         &mut rng,
         iproduct!(
             [10, 20].into_iter(), // n_base_price
@@ -340,7 +340,7 @@ fn test_game_loop() {
                 SRuleSet::from_string(&str_ruleset).unwrap()
             }),
             1,
-        )
+        )).unwrap()
     {
         game_loop_cli(
             &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {

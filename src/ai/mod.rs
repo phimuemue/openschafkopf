@@ -42,7 +42,10 @@ pub trait TAi {
 }
 
 pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
-    let mut vecstich_sample = rand::sample(&mut rand::thread_rng(), vecstich.iter().cloned(), n_size);
+    let mut vecstich_sample = match rand::seq::sample_iter(&mut rand::thread_rng(), vecstich.iter().cloned(), n_size) {
+        Ok(vecstich) => vecstich,
+        Err(vecstich) => vecstich,
+    };
     mem::swap(vecstich, &mut vecstich_sample);
 }
 
