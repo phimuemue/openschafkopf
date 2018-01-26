@@ -75,9 +75,9 @@ pub fn sololike<TrumpfDecider, PayoutDecider>(epi: EPlayerIndex, prioparams: Pay
 }
 
 pub type SCoreSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<
-    SSchlagDesignatorOber, STrumpfDeciderSchlag<
-    SSchlagDesignatorUnter, TrumpfFarbDecider>>;
+    SStaticSchlagOber, STrumpfDeciderSchlag<
+    SStaticSchlagUnter, TrumpfFarbDecider>>;
 pub type SCoreGenericWenz<TrumpfFarbDecider> = STrumpfDeciderSchlag<
-    SSchlagDesignatorUnter, TrumpfFarbDecider>;
+    SStaticSchlagUnter, TrumpfFarbDecider>;
 pub type SCoreGenericGeier<TrumpfFarbDecider> = STrumpfDeciderSchlag<
-    SSchlagDesignatorOber, TrumpfFarbDecider>;
+    SStaticSchlagOber, TrumpfFarbDecider>;

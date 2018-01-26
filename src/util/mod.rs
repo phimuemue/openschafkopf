@@ -7,3 +7,6 @@ pub use self::verify::*;
 pub mod box_clone;
 pub use self::box_clone::*;
 pub use failure::Error;
+#[macro_use]
+pub mod staticvalue;
+pub use self::staticvalue::*;

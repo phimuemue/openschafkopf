@@ -28,9 +28,9 @@ impl fmt::Display for SRulesRamsch {
 }
 
 pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag<
-    SSchlagDesignatorOber, STrumpfDeciderSchlag<
-    SSchlagDesignatorUnter, STrumpfDeciderFarbe<
-    SFarbeDesignatorHerz>>>;
+    SStaticSchlagOber, STrumpfDeciderSchlag<
+    SStaticSchlagUnter, STrumpfDeciderFarbe<
+    SStaticFarbeHerz>>>;
 
 impl TRules for SRulesRamsch {
     box_clone_impl_by_clone!(TRules);

@@ -10,6 +10,11 @@ plain_enum_mod!{modefarbe, EFarbe {
     Schelln,
 }}
 
+define_static_value!(pub SStaticFarbeEichel, EFarbe, EFarbe::Eichel);
+define_static_value!(pub SStaticFarbeGras, EFarbe, EFarbe::Gras);
+define_static_value!(pub SStaticFarbeHerz, EFarbe, EFarbe::Herz);
+define_static_value!(pub SStaticFarbeSchelln, EFarbe, EFarbe::Schelln);
+
 impl fmt::Display for EFarbe {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", match *self {
@@ -31,6 +36,9 @@ plain_enum_mod!{modeschlag, ESchlag {
     S8,
     S7,
 }}
+
+define_static_value!(pub SStaticSchlagOber, ESchlag, ESchlag::Ober);
+define_static_value!(pub SStaticSchlagUnter, ESchlag, ESchlag::Unter);
 
 impl fmt::Display for ESchlag {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

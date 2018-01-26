@@ -162,14 +162,14 @@ impl SRuleSet {
                 };
                 macro_rules! vecrules_farbe {($trumpfdecider: ident, $i_prioindex: expr, $rulename: expr) => {
                     |payoutparams: SPayoutDeciderParams| {
-                        macro_rules! internal_generate_sololike_farbe {($farbedesignator: ident) => {
-                            sololike::<$trumpfdecider<STrumpfDeciderFarbe<$farbedesignator>>, $payoutdecider> (epi, $i_prioindex, &format!("{}-{}", $farbedesignator::FARBE, $rulename), payoutparams.clone())
+                        macro_rules! internal_generate_sololike_farbe {($staticfarbe: ident) => {
+                            sololike::<$trumpfdecider<STrumpfDeciderFarbe<$staticfarbe>>, $payoutdecider> (epi, $i_prioindex, &format!("{}-{}", $staticfarbe::VALUE, $rulename), payoutparams.clone())
                         }}
                         vec! [
-                            internal_generate_sololike_farbe!(SFarbeDesignatorEichel),
-                            internal_generate_sololike_farbe!(SFarbeDesignatorGras),
-                            internal_generate_sololike_farbe!(SFarbeDesignatorHerz),
-                            internal_generate_sololike_farbe!(SFarbeDesignatorSchelln),
+                            internal_generate_sololike_farbe!(SStaticFarbeEichel),
+                            internal_generate_sololike_farbe!(SStaticFarbeGras),
+                            internal_generate_sololike_farbe!(SStaticFarbeHerz),
+                            internal_generate_sololike_farbe!(SStaticFarbeSchelln),
                         ]
                     }
                 }}
