@@ -155,8 +155,7 @@ impl<T> FromIterator<(SCard, T)> for SCardMap<T> {
     fn from_iter<ItPairCardT: IntoIterator<Item=(SCard, T)>>(itpaircardt : ItPairCardT) -> SCardMap<T> {
         SCardMap {
             aot : {
-                // TODORUST Can't we just write [None; 32]
-                let mut aot = [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None];
+                let mut aot : [_; 32] = Default::default();
                 for (card, t) in itpaircardt {
                     aot[card.n_internalrepresentation.as_num::<usize>()] = Some(t);
                 }
