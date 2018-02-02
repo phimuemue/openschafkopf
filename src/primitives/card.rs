@@ -113,7 +113,7 @@ impl SCard {
     pub fn schlag(&self) -> ESchlag {
         ESchlag::from_usize(self.n_internalrepresentation.as_num::<usize>() % ESchlag::SIZE)
     }
-    pub fn values(ekurzlang: EKurzLang) -> Vec<SCard> { // TODORUST return iterator once we can specify that return type is an iterator
+    pub fn values(ekurzlang: EKurzLang) -> return_impl!(Vec<SCard>) {
         iproduct!(
             EFarbe::values(),
             ESchlag::values()

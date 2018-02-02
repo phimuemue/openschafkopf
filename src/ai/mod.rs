@@ -49,7 +49,7 @@ pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
     mem::swap(vecstich, &mut vecstich_sample);
 }
 
-pub fn unplayed_cards(vecstich: &[SStich], hand_fixed: &SHand) -> Vec<SCard> {
+pub fn unplayed_cards(vecstich: &[SStich], hand_fixed: &SHand) -> return_impl!(Vec<SCard>) {
     assert!(vecstich.iter().all(|stich| 4==stich.size()));
     SCard::values(EKurzLang::from_cards_per_player(vecstich.len() + hand_fixed.cards().len())).into_iter()
         .filter(|card| 

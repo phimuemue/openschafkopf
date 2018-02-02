@@ -7,7 +7,7 @@ use util::*;
 pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe;
 
-    fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> Vec<SCard>;
+    fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> return_impl!(Vec<SCard>);
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering;
     fn count_laufende(gamefinishedstiche: &SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize {
         let veccard_trumpf = Self::trumpfs_in_descending_order(Vec::new());
@@ -33,7 +33,7 @@ impl TTrumpfDecider for STrumpfDeciderNoTrumpf {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
         VTrumpfOrFarbe::Farbe(card.farbe())
     }
-    fn trumpfs_in_descending_order(mut _veceschlag: Vec<ESchlag>) -> Vec<SCard> {
+    fn trumpfs_in_descending_order(mut _veceschlag: Vec<ESchlag>) -> return_impl!(Vec<SCard>) {
         Vec::new()
     }
     fn compare_trumpf(_card_fst: SCard, _card_snd: SCard) -> Ordering {
@@ -57,7 +57,7 @@ impl<StaticSchlag, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<StaticSch
             DeciderSec::trumpforfarbe(card)
         }
     }
-    fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>) -> Vec<SCard> {
+    fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>) -> return_impl!(Vec<SCard>) {
         let mut veccard_trumpf : Vec<_> = EFarbe::values()
             .map(|efarbe| SCard::new(efarbe, StaticSchlag::VALUE))
             .collect();
@@ -99,7 +99,7 @@ impl<StaticFarbe> TTrumpfDecider for STrumpfDeciderFarbe<StaticFarbe>
             VTrumpfOrFarbe::Farbe(card.farbe())
         }
     }
-    fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> Vec<SCard> {
+    fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> return_impl!(Vec<SCard>) {
         ESchlag::values()
             .filter(|eschlag| !veceschlag.iter().any(|&eschlag_done| eschlag_done==*eschlag))
             .map(|eschlag| SCard::new(StaticFarbe::VALUE, eschlag))

@@ -15,3 +15,6 @@ pub use self::staticvalue::*;
 macro_rules! static_assert{($assert_name:ident($($args:tt)*)) => {
     $assert_name!($($args)*)
 }}
+
+// TODORUST return impl
+macro_rules! return_impl{($t:ty) => { $t }}
