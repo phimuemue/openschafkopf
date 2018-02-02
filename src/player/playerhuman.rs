@@ -5,6 +5,7 @@ use rules::ruleset::*;
 use game::*;
 use skui;
 use ai::*;
+use util::*;
 
 use std::sync::mpsc;
 use std::fs;
@@ -77,7 +78,7 @@ impl TPlayer for SPlayerHuman {
     }
 
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
-        skui::print_vecstich(&game.vecstich);
+        skui::print_vecstich(verify!(game.current_stich().current_playerindex()).unwrap(), &game.vecstich);
         let hand = {
             let mut hand = game.ahand[game.which_player_can_do_something().unwrap().0].clone();
             game.rules.sort_cards_first_trumpf_then_farbe(hand.cards_mut());
@@ -105,6 +106,7 @@ impl TPlayer for SPlayerHuman {
 
     fn ask_for_game<'rules>(
         &self,
+        epi: EPlayerIndex,
         hand: &SFullHand,
         gameannouncements : &SGameAnnouncements,
         vecrulegroup: &'rules [SRuleGroup],
@@ -112,7 +114,7 @@ impl TPlayer for SPlayerHuman {
         opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>,
     ) {
-        skui::print_game_announcements(gameannouncements);
+        skui::print_game_announcements(epi, gameannouncements);
         let vecorulegroup : Vec<Option<&SRuleGroup>> = Some(None).into_iter()
             .chain(
                 vecrulegroup.iter()

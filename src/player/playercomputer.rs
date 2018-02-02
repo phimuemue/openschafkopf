@@ -40,6 +40,7 @@ impl TPlayer for SPlayerComputer {
 
     fn ask_for_game<'rules>(
         &self,
+        _epi: EPlayerIndex,
         hand: &SFullHand,
         gameannouncements : &SGameAnnouncements,
         vecrulegroup: &'rules [SRuleGroup],

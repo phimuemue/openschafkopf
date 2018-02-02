@@ -19,6 +19,7 @@ pub trait TPlayer {
     // TODO: players need information about who already wants to play
     fn ask_for_game<'rules>(
         &self,
+        epi: EPlayerIndex,
         hand: &SFullHand,
         gameannouncements: &SGameAnnouncements,
         vecrulegroup: &'rules [SRuleGroup],

@@ -5,7 +5,6 @@ use rules::*;
 use util::*;
 use itertools::Itertools;
 
-// TODO TUI for arbitrary EPlayerIndex (possibly useful to test behaviour with more than one CPlayerHuman)
 // TODO do we update output too often?
 
 pub fn init_ui() {
@@ -45,11 +44,26 @@ fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: SCard) {
     ncurses::wattroff(ncwin, nccolorpair);
 }
 
+plain_enum_mod!{moderelativeplayerposition, ERelativePlayerPosition {
+    Myself,
+    Left,
+    VisAVis,
+    Right,
+}}
+
+impl EPlayerIndex {
+    fn to_relativeplayerposition(&self, epi_myself: EPlayerIndex) -> ERelativePlayerPosition {
+        // TODORUST static_assert not available in rust, right?
+        assert_eq!(EPlayerIndex::SIZE, ERelativePlayerPosition::SIZE);
+        ERelativePlayerPosition::from_usize(self.wrapped_difference(epi_myself))
+    }
+}
+
 enum VSkUiWindow {
     Stich,
     Interaction,
     Hand,
-    PlayerInfo (EPlayerIndex),
+    PlayerInfo (ERelativePlayerPosition),
     GameInfo,
     AccountBalance,
 }
@@ -72,17 +86,17 @@ fn do_in_window<FnDo, RetVal>(skuiwin: &VSkUiWindow, fn_do: FnDo) -> RetVal
         )
     };
     let ncwin = match *skuiwin {
-        VSkUiWindow::PlayerInfo(epi) => {
-            match epi {
-                EPlayerIndex::EPI0 => {
+        VSkUiWindow::PlayerInfo(erelativeplayerpos) => {
+            match erelativeplayerpos {
+                ERelativePlayerPosition::Myself => {
                     create_fullwidth_window(n_height-2, n_height-1)
                 },
-                EPlayerIndex::EPI1 | EPlayerIndex::EPI2 | EPlayerIndex::EPI3 => {
+                ERelativePlayerPosition::Left | ERelativePlayerPosition::VisAVis | ERelativePlayerPosition::Right => {
                     ncurses::newwin(
                         1, // height
                         24, // width
                         0, // y
-                        ((epi.to_usize() - 1)*25).as_num() // x
+                        ((erelativeplayerpos.to_usize() - 1)*25).as_num() // x
                     )
                 }
             }
@@ -100,31 +114,35 @@ fn do_in_window<FnDo, RetVal>(skuiwin: &VSkUiWindow, fn_do: FnDo) -> RetVal
     retval
 }
 
-pub fn print_vecstich(vecstich: &[SStich]) {
+pub fn print_vecstich(epi_myself: EPlayerIndex, vecstich: &[SStich]) {
     do_in_window(&VSkUiWindow::Stich, |ncwin| {
         for (i_stich, stich) in vecstich.iter().enumerate() {
             let n_x = (i_stich*10+3).as_num();
             let n_y = 1;
-            let print_card = |epi, (n_y, n_x)| {
-                ncurses::wmove(ncwin, n_y, n_x);
+            let n_card_width = 2;
+            for epi in EPlayerIndex::values() {
+                let move_cursor = |n_y_inner, n_x_inner| {
+                    ncurses::wmove(ncwin, n_y_inner, n_x_inner);
+                };
+                match epi.to_relativeplayerposition(epi_myself) {
+                    ERelativePlayerPosition::Myself => move_cursor(n_y+1, n_x),
+                    ERelativePlayerPosition::Left => move_cursor(n_y, n_x-n_card_width),
+                    ERelativePlayerPosition::VisAVis => move_cursor(n_y-1, n_x),
+                    ERelativePlayerPosition::Right => move_cursor(n_y, n_x+n_card_width),
+                };
                 wprint(ncwin, if epi==stich.first_playerindex() { ">" } else { " " });
                 match stich.get(epi) {
                     None => {wprint(ncwin, "..")},
                     Some(card) => {print_card_with_farbe(ncwin, *card)},
                 };
-            };
-            let n_card_width = 2;
-            print_card(EPlayerIndex::EPI0, (n_y+1, n_x));
-            print_card(EPlayerIndex::EPI1, (n_y, n_x-n_card_width));
-            print_card(EPlayerIndex::EPI2, (n_y-1, n_x));
-            print_card(EPlayerIndex::EPI3, (n_y, n_x+n_card_width));
+            }
         }
     });
 }
 
-pub fn print_game_announcements(gameannouncements: &SGameAnnouncements) {
+pub fn print_game_announcements(epi_myself: EPlayerIndex, gameannouncements: &SGameAnnouncements) {
     for (epi, orules) in gameannouncements.iter() {
-        do_in_window(&VSkUiWindow::PlayerInfo(epi), |ncwin| {
+        do_in_window(&VSkUiWindow::PlayerInfo(epi.to_relativeplayerposition(epi_myself)), |ncwin| {
             if let Some(ref rules) = *orules {
                 wprint(ncwin, &format!("{}: {}", epi, rules));
             } else {

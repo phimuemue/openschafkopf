@@ -108,7 +108,7 @@ fn main() {
             skui::init_ui();
             let accountbalance = game_loop_cli(
                 &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
-                    if EPlayerIndex::EPI0==epi {
+                    if EPlayerIndex::EPI1==epi {
                         Box::new(SPlayerHuman{ai : ai(subcommand_matches)})
                     } else {
                         Box::new(SPlayerComputer{ai: ai(subcommand_matches)})
@@ -145,6 +145,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
         /*fn_gamepreparations*/|epi, gamepreparations, txcmd| {
             let orules = communicate_via_channel(|txorules| {
                 aplayer[epi].ask_for_game(
+                    epi,
                     &SFullHand::new(&gamepreparations.ahand[epi], ruleset.ekurzlang),
                     &gamepreparations.gameannouncements,
                     &gamepreparations.ruleset.avecrulegroup[epi],
@@ -158,6 +159,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
         /*fn_determinerules*/|(epi, vecrulegroup_steigered), determinerules, txcmd|{
             let orules = communicate_via_channel(|txorules| {
                 aplayer[epi].ask_for_game(
+                    epi,
                     &SFullHand::new(&determinerules.ahand[epi], ruleset.ekurzlang),
                     /*gameannouncements*/&SPlayersInRound::new(determinerules.doublings.first_playerindex()),
                     &vecrulegroup_steigered,
