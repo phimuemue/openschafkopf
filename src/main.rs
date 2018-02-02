@@ -92,7 +92,7 @@ fn main() {
                                 &SFullHand::new(&hand_fixed, ruleset.ekurzlang),
                                 EPlayerIndex::EPI0,
                                 epi_rank,
-                                rules.as_rules(),
+                                rules.upcast(),
                                 /*n_stock*/0, // assume no stock in subcommand rank-rules
                             )
                         );

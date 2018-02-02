@@ -252,7 +252,7 @@ impl<'rules> TGamePhase for SDetermineRules<'rules> {
             self.ahand,
             self.doublings,
             self.ruleset.ostossparams.clone(),
-            self.pairepirules_current_bid.1.as_rules().box_clone(),
+            self.pairepirules_current_bid.1.upcast().box_clone(),
             self.n_stock,
         )
     }

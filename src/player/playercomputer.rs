@@ -60,7 +60,7 @@ impl TPlayer for SPlayerComputer {
                 let epi_rank = rules.active_playerindex(); 
                 (
                     rules,
-                    self.ai.rank_rules(hand, /*epi_first*/gameannouncements.first_playerindex(), epi_rank, rules.as_rules(), n_stock)
+                    self.ai.rank_rules(hand, /*epi_first*/gameannouncements.first_playerindex(), epi_rank, rules.upcast(), n_stock)
                 )
             })
             .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
