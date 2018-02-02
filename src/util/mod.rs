@@ -10,3 +10,8 @@ pub use failure::Error;
 #[macro_use]
 pub mod staticvalue;
 pub use self::staticvalue::*;
+
+// TODORUST static_assert not available in rust
+macro_rules! static_assert{($assert_name:ident($($args:tt)*)) => {
+    $assert_name!($($args)*)
+}}

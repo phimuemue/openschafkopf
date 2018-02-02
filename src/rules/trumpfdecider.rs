@@ -69,10 +69,9 @@ impl<StaticSchlag, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<StaticSch
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering {
         match (StaticSchlag::VALUE==card_fst.schlag(), StaticSchlag::VALUE==card_snd.schlag()) {
             (true, true) => {
-                // TODORUST static_assert not available in rust, right?
-                assert!(EFarbe::Eichel < EFarbe::Gras, "Farb-Sorting can't be used here");
-                assert!(EFarbe::Gras < EFarbe::Herz, "Farb-Sorting can't be used here");
-                assert!(EFarbe::Herz < EFarbe::Schelln, "Farb-Sorting can't be used here");
+                static_assert!(assert(EFarbe::Eichel < EFarbe::Gras, "Farb-Sorting can't be used here"));
+                static_assert!(assert(EFarbe::Gras < EFarbe::Herz, "Farb-Sorting can't be used here"));
+                static_assert!(assert(EFarbe::Herz < EFarbe::Schelln, "Farb-Sorting can't be used here"));
                 if card_snd.farbe() < card_fst.farbe() {
                     Ordering::Less
                 } else {

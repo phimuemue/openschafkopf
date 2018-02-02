@@ -53,8 +53,7 @@ plain_enum_mod!{moderelativeplayerposition, ERelativePlayerPosition {
 
 impl EPlayerIndex {
     fn to_relativeplayerposition(&self, epi_myself: EPlayerIndex) -> ERelativePlayerPosition {
-        // TODORUST static_assert not available in rust, right?
-        assert_eq!(EPlayerIndex::SIZE, ERelativePlayerPosition::SIZE);
+        static_assert!(assert_eq(EPlayerIndex::SIZE, ERelativePlayerPosition::SIZE));
         ERelativePlayerPosition::from_usize(self.wrapped_difference(epi_myself))
     }
 }
