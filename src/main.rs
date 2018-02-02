@@ -105,6 +105,7 @@ fn main() {
     }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("cli") {
         if let Ok(ruleset) =SRuleSet::from_file(Path::new(subcommand_matches.value_of("ruleset").unwrap())) {
+            skui::init_ui();
             let accountbalance = game_loop_cli(
                 &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
                     if EPlayerIndex::EPI0==epi {
@@ -117,6 +118,7 @@ fn main() {
                 &ruleset,
             );
             println!("Results: {}", skui::account_balance_string(&accountbalance));
+            skui::end_ui();
         }
     }
 }
@@ -130,7 +132,6 @@ fn communicate_via_channel<T, Func>(f: Func) -> T
 }
 
 fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
-    skui::init_ui();
     let accountbalance = game_loop(
         /*fn_dealcards*/|epi, dealcards, txcmd| {
             let b_doubling = communicate_via_channel(|txb_doubling| {
@@ -199,7 +200,6 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
         n_games,
         ruleset,
     );
-    skui::end_ui();
     accountbalance
 }
 
