@@ -231,7 +231,7 @@ impl SSuspicion {
                 file_output.write_all(b"<ul>\n")?;
                 for susptrans in &self.vecsusptrans {
                     push_pop_vecstich(vecstich, susptrans.stich.clone(), |vecstich| {
-                        susptrans.susp.print_suspicion(n_level_end, (n_level+1), rules, vecstich, &mut file_output)
+                        susptrans.susp.print_suspicion(n_level_end, n_level+1, rules, vecstich, &mut file_output)
                     })?;
                 }
                 file_output.write_all(b"</ul>\n")?;

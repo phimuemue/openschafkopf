@@ -120,9 +120,9 @@ impl SRuleSet {
             let vecrulegroup = &mut avecrulegroup[epi];
             macro_rules! create_rulegroup {($str_rule_name_file: expr, $str_base_price_fallback: expr, $str_group_name: expr, $fn_rules: expr) => {
                 if let Some(tomlval_game) = tomltbl.get($str_rule_name_file) {
-                    let n_payout_extra = read_int(tomlval_game, ("extra")).or_else(|_err| fallback(&format!("{}.extra", $str_rule_name_file), "base-price"))?;
-                    let n_payout_base = read_int(tomlval_game, ("price")).or_else(|_err| fallback(&format!("{}.price", $str_rule_name_file), $str_base_price_fallback))?;
-                    let n_lauf_lbound = read_int(tomlval_game, ("lauf-min")).or_else(|_err| fallback(&format!("{}.lauf-min", $str_rule_name_file), "lauf-min"))?;
+                    let n_payout_extra = read_int(tomlval_game, "extra").or_else(|_err| fallback(&format!("{}.extra", $str_rule_name_file), "base-price"))?;
+                    let n_payout_base = read_int(tomlval_game, "price").or_else(|_err| fallback(&format!("{}.price", $str_rule_name_file), $str_base_price_fallback))?;
+                    let n_lauf_lbound = read_int(tomlval_game, "lauf-min").or_else(|_err| fallback(&format!("{}.lauf-min", $str_rule_name_file), "lauf-min"))?;
                     Ok(vecrulegroup.push(SRuleGroup{
                         str_name: $str_group_name.to_string(),
                         vecrules: ($fn_rules(SPayoutDeciderParams::new(
@@ -219,7 +219,7 @@ impl SRuleSet {
             { // Bettel
                 let str_rule_name_file = "bettel";
                 if let Some(tomlval_bettel) = tomltbl.get(str_rule_name_file) {
-                    let n_payout_base = read_int(tomlval_bettel, ("price"))
+                    let n_payout_base = read_int(tomlval_bettel, "price")
                         .or_else(|_err| 
                             fallback(&format!("{}.price", str_rule_name_file), /*str_base_price_fallback*/"base-price")
                         )?;
