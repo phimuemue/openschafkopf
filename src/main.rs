@@ -132,7 +132,7 @@ fn communicate_via_channel<T, Func>(f: Func) -> T
 }
 
 fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
-    let accountbalance = game_loop(
+    game_loop(
         /*fn_dealcards*/|epi, dealcards, txcmd| {
             let b_doubling = communicate_via_channel(|txb_doubling| {
                 aplayer[epi].ask_for_doubling(
@@ -201,8 +201,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
         },
         n_games,
         ruleset,
-    );
-    accountbalance
+    )
 }
 
 fn game_loop<FnDealcards, FnGamePreparations, FnDetermineRules, FnGame>(
