@@ -28,6 +28,7 @@ mod player;
 mod ai;
 mod skui;
 
+// TODO use nested import groups throughout codebase
 use game::*;
 use std::sync::mpsc;
 use primitives::*;
