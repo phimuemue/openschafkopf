@@ -231,8 +231,8 @@ pub trait TActivelyPlayableRules : TRules {
     fn priority(&self) -> VGameAnnouncementPriority;
     fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<TActivelyPlayableRules>> {
         if match ebid {
-            EBid::AtLeast => {prio<=&self.priority()},
-            EBid::Higher => {prio<&self.priority()},
+            EBid::AtLeast => {*prio<=self.priority()},
+            EBid::Higher => {*prio<self.priority()},
         } {
             Some(TActivelyPlayableRules::box_clone(self))
         } else {
