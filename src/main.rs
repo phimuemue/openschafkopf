@@ -28,18 +28,23 @@ mod player;
 mod ai;
 mod skui;
 
-// TODO use nested import groups throughout codebase
 use game::*;
-use std::sync::mpsc;
 use primitives::*;
-use rules::TActivelyPlayableRules; // TODO improve trait-object behaviour
-use rules::ruleset::*;
-use rules::wrappers::*;
+use rules::{
+    TActivelyPlayableRules, // TODO improve trait-object behaviour
+    ruleset::*,
+    wrappers::*,
+};
 use ai::*;
-use std::path::Path;
-use player::*;
-use player::playerhuman::*;
-use player::playercomputer::*;
+use std::{
+    path::Path,
+    sync::mpsc,
+};
+use player::{
+    *,
+    playerhuman::*,
+    playercomputer::*,
+};
 use util::*;
 
 fn main() {

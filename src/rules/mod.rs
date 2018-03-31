@@ -16,8 +16,10 @@ pub mod card_points;
 mod tests;
 
 use primitives::*;
-use std::cmp::Ordering;
-use std::fmt;
+use std::{
+    cmp::Ordering,
+    fmt,
+};
 pub use rules::wrappers::*;
 use util::*;
 use ai::rulespecific::*;

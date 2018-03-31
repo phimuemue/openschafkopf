@@ -1,14 +1,17 @@
 use primitives::*;
 use player::*;
-use rules::*;
-use rules::ruleset::*;
+use rules::{
+    *,
+    ruleset::*,
+};
 use game::*;
 use skui;
 use ai::*;
 use util::*;
-
-use std::sync::mpsc;
-use std::fs;
+use std::{
+    sync::mpsc,
+    fs,
+};
 
 pub struct SPlayerHuman {
     pub ai : Box<TAi>,

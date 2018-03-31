@@ -1,8 +1,9 @@
 use primitives::*;
-use rules::*;
-use rules::ruleset::*;
+use rules::{
+    *,
+    ruleset::*,
+};
 use util::*;
-
 use rand::{self, Rng};
 use std::mem;
 

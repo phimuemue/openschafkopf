@@ -1,9 +1,11 @@
 use util::*;
 use primitives::*;
 use game::*;
-use rules::*;
-use rules::rulesrufspiel::*;
-use rules::card_points::points_card;
+use rules::{
+    *,
+    rulesrufspiel::*,
+    card_points::points_card,
+};
 use ai::rulespecific::*;
 
 #[derive(new)]

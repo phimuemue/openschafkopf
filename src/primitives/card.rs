@@ -1,6 +1,8 @@
-use std::fmt;
-use std::ops::Index;
-use std::iter::FromIterator;
+use std::{
+    fmt,
+    ops::Index,
+    iter::FromIterator,
+};
 use util::*;
 
 plain_enum_mod!{modefarbe, EFarbe {

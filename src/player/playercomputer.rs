@@ -1,13 +1,16 @@
 use primitives::*;
 use player::*;
-use rules::*;
-use rules::ruleset::*;
+use rules::{
+    *,
+    ruleset::*,
+};
 use game::*;
-use ai::*;
-use ai::handiterators::forever_rand_hands;
-use ai::suspicion::SSuspicion;
+use ai::{
+    *,
+    handiterators::forever_rand_hands,
+    suspicion::SSuspicion,
+};
 use util::*;
-
 use std::sync::mpsc;
 
 pub struct SPlayerComputer {

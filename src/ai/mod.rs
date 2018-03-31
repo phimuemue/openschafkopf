@@ -5,19 +5,25 @@ pub mod rulespecific;
 use primitives::*;
 use rules::*;
 use game::*;
-use ai::suspicion::*;
-use ai::handiterators::*;
-
+use ai::{
+    suspicion::*,
+    handiterators::*,
+};
 use rand;
-use std::collections::HashMap;
-use std::collections::hash_map::Entry;
-use std::fs;
-use std::mem;
+use std::{
+    collections::{
+        HashMap, hash_map::Entry,
+    },
+    fs,
+    mem,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicIsize, Ordering},
+    },
+    cmp,
+    io::Write,
+};
 use crossbeam;
-use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicIsize, Ordering};
-use std::cmp;
-use std::io::Write;
 use util::*;
 
 pub trait TAi {

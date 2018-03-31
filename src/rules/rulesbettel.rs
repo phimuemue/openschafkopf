@@ -1,7 +1,9 @@
 use primitives::*;
-use rules::*;
-use rules::trumpfdecider::*;
-use rules::payoutdecider::{SStossDoublingPayoutDecider, internal_payout};
+use rules::{
+    *,
+    trumpfdecider::*,
+    payoutdecider::{SStossDoublingPayoutDecider, internal_payout},
+};
 use std::marker::PhantomData;
 use util::*;
 

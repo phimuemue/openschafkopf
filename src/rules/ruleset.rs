@@ -1,17 +1,19 @@
 use primitives::*;
-use rules::*;
-use rules::rulesrufspiel::*;
-use rules::rulessolo::*;
-use rules::rulesbettel::*;
-use rules::rulesramsch::*;
-use rules::trumpfdecider::*;
-use rules::payoutdecider::*;
+use rules::{
+    *,
+    rulesrufspiel::*,
+    rulessolo::*,
+    rulesbettel::*,
+    rulesramsch::*,
+    trumpfdecider::*,
+    payoutdecider::*,
+};
 use util::*;
-
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-
+use std::{
+    fs::File,
+    io::prelude::*,
+    path::Path,
+};
 use toml;
 
 #[derive(Debug)]

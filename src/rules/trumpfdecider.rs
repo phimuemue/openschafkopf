@@ -1,7 +1,9 @@
 use primitives::*;
 use rules::*;
-use std::cmp::Ordering;
-use std::marker::PhantomData;
+use std::{
+    cmp::Ordering,
+    marker::PhantomData,
+};
 use util::*;
 
 pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {

@@ -1,10 +1,14 @@
 use primitives::*;
-use rules::*;
-use rules::trumpfdecider::*;
-use rules::payoutdecider::*;
-use std::fmt;
-use std::cmp::Ordering;
-use std::marker::PhantomData;
+use rules::{
+    *,
+    trumpfdecider::*,
+    payoutdecider::*,
+};
+use std::{
+    fmt,
+    cmp::Ordering,
+    marker::PhantomData,
+};
 use util::*;
 
 #[derive(Clone, Debug)]

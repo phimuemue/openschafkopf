@@ -2,8 +2,10 @@ pub mod playercomputer;
 pub mod playerhuman;
 
 use primitives::*;
-use rules::*;
-use rules::ruleset::*;
+use rules::{
+    *,
+    ruleset::*,
+};
 use game::*;
 
 use std::sync::mpsc;

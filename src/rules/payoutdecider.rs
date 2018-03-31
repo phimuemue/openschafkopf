@@ -1,6 +1,8 @@
 use primitives::*;
-use rules::*;
-use rules::card_points::*;
+use rules::{
+    *,
+    card_points::*,
+};
 use util::*;
 use std::fmt::Display;
 

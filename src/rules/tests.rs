@@ -1,13 +1,17 @@
-use primitives::*;
-use primitives::cardvector::parse_cards;
-use rules::*;
-use rules::ruleset::*;
-use rules::rulesrufspiel::*;
-use rules::rulessolo::*;
-use rules::rulesramsch::*;
-use rules::rulesbettel::*;
-use rules::trumpfdecider::*;
-use rules::payoutdecider::*;
+use primitives::{
+    *,
+    cardvector::parse_cards,
+};
+use rules::{
+    *,
+    ruleset::*,
+    rulesrufspiel::*,
+    rulessolo::*,
+    rulesramsch::*,
+    rulesbettel::*,
+    trumpfdecider::*,
+    payoutdecider::*,
+};
 use util::*;
 
 fn internal_test_rules(

@@ -1,10 +1,14 @@
 use primitives::*;
-use rules::*;
-use rules::trumpfdecider::*;
-use rules::payoutdecider::SStossDoublingPayoutDecider;
-use rules::card_points::*;
-use std::fmt;
-use std::cmp::Ordering;
+use rules::{
+    *,
+    trumpfdecider::*,
+    payoutdecider::SStossDoublingPayoutDecider,
+    card_points::*,
+};
+use std::{
+    fmt,
+    cmp::Ordering,
+};
 use itertools::Itertools;
 use util::*;
 

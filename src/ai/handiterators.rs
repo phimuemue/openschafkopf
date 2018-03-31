@@ -1,12 +1,11 @@
 use primitives::*;
 use game::*;
 use util::*;
-
 use permutohedron::LexicalPermutation;
-use ai::*;
-
-use ai::suspicion::*;
-
+use ai::{
+    *,
+    suspicion::*,
+};
 use rand::{self, Rng};
 
 

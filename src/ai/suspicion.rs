@@ -2,13 +2,16 @@ use primitives::*;
 use rules::*;
 use itertools::Itertools;
 use util::*;
-
-use std::fs;
-use std::io::Write;
-use std::io;
-use std::fmt;
-use rand;
-use rand::Rng;
+use std::{
+    fs,
+    io::Write,
+    io,
+    fmt,
+};
+use rand::{
+    self,
+    Rng,
+};
 
 pub struct SSuspicionTransition {
     stich : SStich,
