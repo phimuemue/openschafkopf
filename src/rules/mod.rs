@@ -94,7 +94,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
 
     fn playerindex(&self) -> Option<EPlayerIndex>;
 
-    fn can_be_played(&self, _hand: &SFullHand) -> bool {
+    fn can_be_played(&self, _hand: SFullHand) -> bool {
         true // probably, only Rufspiel is prevented in some cases
     }
 

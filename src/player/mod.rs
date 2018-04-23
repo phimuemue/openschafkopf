@@ -22,7 +22,7 @@ pub trait TPlayer {
     fn ask_for_game<'rules>(
         &self,
         epi: EPlayerIndex,
-        hand: &SFullHand,
+        hand: SFullHand,
         gameannouncements: &SGameAnnouncements,
         vecrulegroup: &'rules [SRuleGroup],
         n_stock: isize,

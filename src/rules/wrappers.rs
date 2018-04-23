@@ -2,6 +2,7 @@ use primitives::*;
 
 // thin wrappers ensuring invariants
 
+#[derive(Copy, Clone)]
 pub struct SFullHand<'hand> {
     hand: &'hand SHand,
 }
@@ -18,6 +19,7 @@ impl<'hand> SFullHand<'hand> {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct SGameFinishedStiche<'vecstich> {
     vecstich: &'vecstich [SStich],
 }

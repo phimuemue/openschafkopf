@@ -27,7 +27,7 @@ use crossbeam;
 use util::*;
 
 pub trait TAi {
-    fn rank_rules(&self, hand_fixed: &SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64;
+    fn rank_rules(&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64;
     fn suggest_card(&self, game: &SGame, ofile_output: Option<fs::File>) -> SCard {
         let veccard_allowed = game.rules.all_allowed_cards(
             &game.vecstich,
@@ -96,7 +96,7 @@ pub struct SAiCheating {
 }
 
 impl TAi for SAiCheating {
-    fn rank_rules (&self, hand_fixed: &SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
+    fn rank_rules (&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
         // TODO: adjust interface to get whole game
         SAiSimulating::new(
             /*n_suggest_card_branches*/2,
@@ -156,7 +156,7 @@ pub fn is_compatible_with_game_so_far(
         }
         assert_ahand_same_size(&ahand_simulate);
         rules.playerindex().map_or(true, |epi_active|
-            rules.can_be_played(&SFullHand::new(
+            rules.can_be_played(SFullHand::new(
                 &ahand_simulate[epi_active],
                 {
                     let cards_per_player = |epi| {
@@ -302,7 +302,7 @@ pub struct SAiSimulating {
 }
 
 impl TAi for SAiSimulating {
-    fn rank_rules (&self, hand_fixed: &SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
+    fn rank_rules (&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
         let n_payout_sum = Arc::new(AtomicIsize::new(0));
         crossbeam::scope(|scope| {
             for ahand in forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get(), epi_rank).take(self.n_rank_rules_samples) {

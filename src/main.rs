@@ -90,12 +90,12 @@ fn main() {
                     let epi_rank = value_t!(subcommand_matches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
                     println!("Hand: {}", hand_fixed);
                     for rules in allowed_rules(&ruleset.avecrulegroup[epi_rank]).iter() 
-                        .filter(|rules| rules.can_be_played(&SFullHand::new(&hand_fixed, ruleset.ekurzlang)))
+                        .filter(|rules| rules.can_be_played(SFullHand::new(&hand_fixed, ruleset.ekurzlang)))
                     {
                         println!("{}: {}",
                             rules,
                             ai(subcommand_matches).rank_rules(
-                                &SFullHand::new(&hand_fixed, ruleset.ekurzlang),
+                                SFullHand::new(&hand_fixed, ruleset.ekurzlang),
                                 EPlayerIndex::EPI0,
                                 epi_rank,
                                 rules.upcast(),
@@ -152,7 +152,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
             let orules = communicate_via_channel(|txorules| {
                 aplayer[epi].ask_for_game(
                     epi,
-                    &SFullHand::new(&gamepreparations.ahand[epi], ruleset.ekurzlang),
+                    SFullHand::new(&gamepreparations.ahand[epi], ruleset.ekurzlang),
                     &gamepreparations.gameannouncements,
                     &gamepreparations.ruleset.avecrulegroup[epi],
                     gamepreparations.n_stock,
@@ -166,7 +166,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
             let orules = communicate_via_channel(|txorules| {
                 aplayer[epi].ask_for_game(
                     epi,
-                    &SFullHand::new(&determinerules.ahand[epi], ruleset.ekurzlang),
+                    SFullHand::new(&determinerules.ahand[epi], ruleset.ekurzlang),
                     /*gameannouncements*/&SPlayersInRound::new(determinerules.doublings.first_playerindex()),
                     &vecrulegroup_steigered,
                     determinerules.n_stock,

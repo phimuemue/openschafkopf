@@ -60,7 +60,7 @@ impl TRules for SRulesRufspiel {
     box_clone_impl_by_clone!(TRules);
     impl_rules_trumpf!(STrumpfDeciderRufspiel);
 
-    fn can_be_played(&self, hand: &SFullHand) -> bool {
+    fn can_be_played(&self, hand: SFullHand) -> bool {
         let it = || {hand.get().cards().iter().filter(|&card| self.is_ruffarbe(*card))};
         it().all(|card| card.schlag()!=ESchlag::Ass)
         && 0<it().count()

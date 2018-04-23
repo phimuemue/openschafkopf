@@ -110,7 +110,7 @@ impl TPlayer for SPlayerHuman {
     fn ask_for_game<'rules>(
         &self,
         epi: EPlayerIndex,
-        hand: &SFullHand,
+        hand: SFullHand,
         gameannouncements : &SGameAnnouncements,
         vecrulegroup: &'rules [SRuleGroup],
         _n_stock: isize,
