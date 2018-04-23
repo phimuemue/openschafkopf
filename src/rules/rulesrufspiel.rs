@@ -35,7 +35,7 @@ impl SRulesRufspiel {
         SRulesRufspiel {
             epi,
             efarbe,
-            payoutdecider: SPayoutDeciderPointBased::new(payoutparams, VGameAnnouncementPriority::RufspielLike),
+            payoutdecider: SPayoutDeciderPointBased::new(payoutparams, VGameAnnouncementPriorityPointBased::RufspielLike),
         }
     }
 
@@ -51,7 +51,7 @@ impl SRulesRufspiel {
 impl TActivelyPlayableRules for SRulesRufspiel {
     box_clone_impl_by_clone!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority {
-        assert_eq!(VGameAnnouncementPriority::RufspielLike, self.payoutdecider.priority());
+        assert_eq!(VGameAnnouncementPriority::PointBased(VGameAnnouncementPriorityPointBased::RufspielLike), self.payoutdecider.priority());
         self.payoutdecider.priority()
     }
 }

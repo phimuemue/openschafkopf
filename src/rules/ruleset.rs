@@ -208,9 +208,9 @@ impl SRuleSet {
                 )?;
             }}
             if tomltbl.get("steigern").is_some() {
-                read_sololike!(SPayoutDeciderPointBased, |_i_prio| VGameAnnouncementPriority::SoloLikeSteigern(61), "");
+                read_sololike!(SPayoutDeciderPointBased, |_i_prio| VGameAnnouncementPriorityPointBased::SoloSteigern(61), "");
             } else {
-                read_sololike!(SPayoutDeciderPointBased, VGameAnnouncementPriority::SoloLikeSimple, "");
+                read_sololike!(SPayoutDeciderPointBased, VGameAnnouncementPriorityPointBased::SoloSimple, "");
             }
             read_sololike!(SPayoutDeciderTout, |x|x, " Tout");
             create_rulegroup_sololike!(

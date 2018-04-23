@@ -138,7 +138,7 @@ trait TPayoutDeciderDefaultParams : TPayoutDecider {
 }
 impl TPayoutDeciderDefaultParams for SPayoutDeciderPointBased {
     fn default_prioparams() -> Self::PrioParams {
-        VGameAnnouncementPriority::SoloLikeSimple(0)
+        VGameAnnouncementPriorityPointBased::SoloSimple(0)
     }
     fn default_payoutparams(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self::PayoutParams {
         SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams)

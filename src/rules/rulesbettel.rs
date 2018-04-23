@@ -47,7 +47,7 @@ impl<BettelAllAllowedCardsWithinStich> TActivelyPlayableRules for SRulesBettel<B
 {
     box_clone_impl_by_clone!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority {
-        VGameAnnouncementPriority::SoloLikeSimple(self.i_prio)
+        VGameAnnouncementPriority::PointBased(VGameAnnouncementPriorityPointBased::SoloSimple(self.i_prio))
     }
 }
 
