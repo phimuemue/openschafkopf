@@ -132,34 +132,37 @@ fn rulesrufspiel_new_test(epi: EPlayerIndex, efarbe: EFarbe, n_payout_base: isiz
     )
 }
 
-trait TPayoutDeciderDefaultPrioParams : TPayoutDecider {
+trait TPayoutDeciderDefaultParams : TPayoutDecider {
     fn default_prioparams() -> Self::PrioParams;
+    fn default_payoutparams(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self::PayoutParams;
 }
-impl TPayoutDeciderDefaultPrioParams for SPayoutDeciderPointBased {
+impl TPayoutDeciderDefaultParams for SPayoutDeciderPointBased {
     fn default_prioparams() -> Self::PrioParams {
         VGameAnnouncementPriority::SoloLikeSimple(0)
     }
+    fn default_payoutparams(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self::PayoutParams {
+        SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams)
+    }
 }
-impl TPayoutDeciderDefaultPrioParams for SPayoutDeciderTout {
+impl TPayoutDeciderDefaultParams for SPayoutDeciderTout {
     fn default_prioparams() -> Self::PrioParams {
         0
+    }
+    fn default_payoutparams(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self::PayoutParams {
+        SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams)
     }
 }
 
 fn rulessololike_new_test<TrumpfDecider, PayoutDecider>(epi: EPlayerIndex, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
-          PayoutDecider: TPayoutDeciderDefaultPrioParams,
+          PayoutDecider: TPayoutDeciderDefaultParams,
 {
     // Do not inline this function. It serves as a bridge between actual implementation and the data we extract for the test suite.
     SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(
         epi,
         PayoutDecider::default_prioparams(),
         "-", // should not matter within those tests
-        SPayoutDeciderParams::new(
-            n_payout_base,
-            n_payout_schneider_schwarz,
-            laufendeparams,
-        ),
+        PayoutDecider::default_payoutparams(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
     )
 }
 

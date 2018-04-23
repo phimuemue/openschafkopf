@@ -30,12 +30,12 @@ pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag<
     SStaticFarbeHerz>>>;
 
 impl SRulesRufspiel {
-    pub fn new(epi: EPlayerIndex, efarbe: EFarbe, payoutdeciderparams: SPayoutDeciderParams) -> SRulesRufspiel {
+    pub fn new(epi: EPlayerIndex, efarbe: EFarbe, payoutparams: SPayoutDeciderParams) -> SRulesRufspiel {
         assert_ne!(efarbe, EFarbe::Herz);
         SRulesRufspiel {
             epi,
             efarbe,
-            payoutdecider: SPayoutDeciderPointBased::new(payoutdeciderparams, VGameAnnouncementPriority::RufspielLike),
+            payoutdecider: SPayoutDeciderPointBased::new(payoutparams, VGameAnnouncementPriority::RufspielLike),
         }
     }
 

@@ -66,16 +66,16 @@ impl<TrumpfDecider, PayoutDecider> SRulesSoloLike<TrumpfDecider, PayoutDecider>
             str_name: str_rulename.to_string(),
         }
     }
-    pub fn new(epi: EPlayerIndex, prioparams: PayoutDecider::PrioParams, str_rulename: &str, payoutdeciderparams: SPayoutDeciderParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
-        Self::internal_new(epi, str_rulename, PayoutDecider::new(payoutdeciderparams, prioparams))
+    pub fn new(epi: EPlayerIndex, prioparams: PayoutDecider::PrioParams, str_rulename: &str, payoutparams: PayoutDecider::PayoutParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
+        Self::internal_new(epi, str_rulename, PayoutDecider::new(payoutparams, prioparams))
     }
 }
 
-pub fn sololike<TrumpfDecider, PayoutDecider>(epi: EPlayerIndex, prioparams: PayoutDecider::PrioParams, str_rulename: &str, payoutdeciderparams: SPayoutDeciderParams) -> Box<TActivelyPlayableRules> 
+pub fn sololike<TrumpfDecider, PayoutDecider>(epi: EPlayerIndex, prioparams: PayoutDecider::PrioParams, str_rulename: &str, payoutparams: PayoutDecider::PayoutParams) -> Box<TActivelyPlayableRules> 
     where TrumpfDecider: TTrumpfDecider,
           PayoutDecider: TPayoutDecider,
 {
-    Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(epi, prioparams, str_rulename, payoutdeciderparams)) as Box<TActivelyPlayableRules>
+    Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(epi, prioparams, str_rulename, payoutparams)) as Box<TActivelyPlayableRules>
 }
 
 pub type SCoreSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<
