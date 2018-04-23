@@ -207,8 +207,19 @@ impl SRuleSet {
                     vecrules_farbe!(SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"))
                 )?;
             }}
-            if tomltbl.get("steigern").is_some() {
-                read_sololike!(SPayoutDeciderPointBased, |_i_prio| VGameAnnouncementPriorityPointBased::SoloSteigern{n_points_to_win: 61, n_step: 10}, "");
+            if let Some(tomlval_steigern) = tomltbl.get("steigern") {
+                let n_step = if let Some(n_step) = tomlval_steigern.get("step").and_then(|tomlval| tomlval.as_integer()) {
+                    if 0<n_step {
+                        n_step.as_num::<isize>()
+                    } else {
+                        println!("Negative steigern.steps not permitted.");
+                        10
+                    }
+                } else {
+                    println!("steigern.steps not specified");
+                    10
+                };
+                read_sololike!(SPayoutDeciderPointBased, |_i_prio| VGameAnnouncementPriorityPointBased::SoloSteigern{n_points_to_win: 61, n_step}, "");
             } else {
                 read_sololike!(SPayoutDeciderPointBased, VGameAnnouncementPriorityPointBased::SoloSimple, "");
             }

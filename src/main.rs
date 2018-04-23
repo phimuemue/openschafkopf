@@ -325,6 +325,9 @@ fn test_game_loop() {
             ].into_iter(),
             [ // str_extras
                 r"[steigern]",
+                r"[steigern]
+                step=15
+                ",
                 r"[doubling]",
                 r#"deck = "kurz""#,
                 r"[stoss]",
