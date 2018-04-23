@@ -195,7 +195,7 @@ pub enum VGameAnnouncementPriorityPointBased {
     // state priorities in ascending order
     RufspielLike,
     SoloSimple(isize),
-    SoloSteigern(isize),
+    SoloSteigern{n_points_to_win: isize, n_step: isize},
 }
 
 #[derive(PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]

@@ -208,7 +208,7 @@ impl SRuleSet {
                 )?;
             }}
             if tomltbl.get("steigern").is_some() {
-                read_sololike!(SPayoutDeciderPointBased, |_i_prio| VGameAnnouncementPriorityPointBased::SoloSteigern(61), "");
+                read_sololike!(SPayoutDeciderPointBased, |_i_prio| VGameAnnouncementPriorityPointBased::SoloSteigern{n_points_to_win: 61, n_step: 10}, "");
             } else {
                 read_sololike!(SPayoutDeciderPointBased, VGameAnnouncementPriorityPointBased::SoloSimple, "");
             }

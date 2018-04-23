@@ -88,7 +88,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
         use self::VGameAnnouncementPriorityPointBased::*;
         let b_player_party_wins = n_points_player_party >= match self.priopointbased {
             RufspielLike | SoloSimple(_) => 61,
-            SoloSteigern(n_points) => n_points,
+            SoloSteigern{n_points_to_win, ..} => n_points_to_win,
         };
         let ab_winner = EPlayerIndex::map_from_fn(|epi| {
             fn_is_player_party(epi)==b_player_party_wins
@@ -113,14 +113,14 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
     fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Self> {
         use self::VGameAnnouncementPriority::*;
         use self::VGameAnnouncementPriorityPointBased::*;
-        if let (PointBased(SoloSteigern(_)), &PointBased(SoloSteigern(n_points_player_to_win_steigered))) = (self.priority(), prio) {
-            let n_points_to_win = n_points_player_to_win_steigered + match ebid {
+        if let (PointBased(SoloSteigern{..}), &PointBased(SoloSteigern{n_points_to_win, n_step})) = (self.priority(), prio) {
+            let n_points_to_win_steigered = n_points_to_win + match ebid {
                 EBid::AtLeast => 0,
-                EBid::Higher => 10, // TODORULES custom steps
+                EBid::Higher => n_step,
             };
-            if n_points_to_win<=120 {
+            if n_points_to_win_steigered<=120 {
                 let mut payoutdecider = self.clone();
-                payoutdecider.priopointbased = SoloSteigern(n_points_to_win);
+                payoutdecider.priopointbased = SoloSteigern{n_points_to_win: n_points_to_win_steigered, n_step};
                 return Some(payoutdecider)
             }
         }
@@ -133,10 +133,10 @@ impl Display for SPayoutDeciderPointBased {
         use self::VGameAnnouncementPriorityPointBased::*;
         match self.priopointbased {
             RufspielLike | SoloSimple(_) => Ok(()), // no special indication required
-            SoloSteigern(n_points) => {
-                assert!(61<=n_points);
-                if n_points<61 {
-                    write!(f, "for {}", n_points)
+            SoloSteigern{n_points_to_win, ..} => {
+                assert!(61<=n_points_to_win);
+                if n_points_to_win<61 {
+                    write!(f, "for {}", n_points_to_win)
                 } else {
                     Ok(())
                 }
