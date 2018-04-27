@@ -77,7 +77,7 @@ impl TRules for SRulesRamsch {
                     an_points_accu
                 }
             );
-        let n_points_max = an_points.iter().max().unwrap();
+        let n_points_max = verify!(an_points.iter().max()).unwrap();
         let vecepi_most_points = EPlayerIndex::values()
             .filter(|epi| n_points_max==&an_points[*epi])
             .collect::<Vec<_>>();
@@ -86,7 +86,7 @@ impl TRules for SRulesRamsch {
                 if 1==vecepi_most_points.len() {
                     vecepi_most_points[0]
                 } else {
-                    vecepi_most_points.iter().cloned()
+                    verify!(vecepi_most_points.iter().cloned()
                         .map(|epi| {(
                             epi,
                             gamefinishedstiche.get().iter()
@@ -113,7 +113,7 @@ impl TRules for SRulesRamsch {
                                 // at least one of them must have had at least one trumpf.
                                 (None, None) => panic!("Two losing players with same points, but none of them with trumpf."),
                             }
-                        })
+                        }))
                         .unwrap()
                         .0
                 }

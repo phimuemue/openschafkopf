@@ -25,7 +25,7 @@ impl fmt::Display for SStich {
 fn test_stich() {
     // TODO? use quicktest or similar
     {
-        let veccard = cardvector::parse_cards::<Vec<_>>("e7 e8 e9 ek").unwrap();
+        let veccard = verify!(cardvector::parse_cards::<Vec<_>>("e7 e8 e9 ek")).unwrap();
         for epi_first in EPlayerIndex::values() {
             for n_size in 0..5 {
                 let mut stich = SStich::new(epi_first);

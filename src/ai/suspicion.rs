@@ -267,7 +267,7 @@ impl SSuspicion {
                 n_stock,
             ).get_player(epi);
         }
-        let n_payout = self.vecsusptrans.iter()
+        let n_payout = verify!(self.vecsusptrans.iter()
             .map(|susptrans| {
                 assert_eq!(susptrans.stich.size(), 4);
                 push_pop_vecstich(vecstich, susptrans.stich.clone(), |vecstich| {
@@ -282,17 +282,17 @@ impl SSuspicion {
             })
             .into_iter()
             .map(|(_stich_key_before_epi, grpsusptransn_before_epi)| {
-                grpsusptransn_before_epi.into_iter()
+                verify!(grpsusptransn_before_epi.into_iter()
                     .group_by(|&(susptrans, _n_payout)| susptrans.stich[epi])
                     .into_iter()
                     .map(|(_stich_key_epi, grpsusptransn_epi)| {
                         // in this group, we need the worst case if other players play badly
-                        grpsusptransn_epi.into_iter().min_by_key(|&(_susptrans, n_payout)| n_payout).unwrap()
+                        verify!(grpsusptransn_epi.into_iter().min_by_key(|&(_susptrans, n_payout)| n_payout)).unwrap()
                     })
-                    .max_by_key(|&(_susptrans, n_payout)| n_payout)
+                    .max_by_key(|&(_susptrans, n_payout)| n_payout))
                     .unwrap()
             })
-            .min_by_key(|&(_susptrans, n_payout)| n_payout)
+            .min_by_key(|&(_susptrans, n_payout)| n_payout))
             .unwrap()
             .1;
         assert!(vecstich_backup.iter().zip(vecstich.iter()).all(|(s1,s2)|s1.size()==s2.size()));

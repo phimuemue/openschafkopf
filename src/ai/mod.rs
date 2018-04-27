@@ -31,7 +31,7 @@ pub trait TAi {
     fn suggest_card(&self, game: &SGame, ofile_output: Option<fs::File>) -> SCard {
         let veccard_allowed = game.rules.all_allowed_cards(
             &game.vecstich,
-            &game.ahand[game.which_player_can_do_something().unwrap().0]
+            &game.ahand[verify!(game.which_player_can_do_something()).unwrap().0]
         );
         assert!(1<=veccard_allowed.len());
         if 1==veccard_allowed.len() {
@@ -74,7 +74,7 @@ fn test_unplayed_cards() {
     let vecstich = ["g7 g8 ga g9", "s8 ho s7 s9", "h7 hk hu su", "eo go hz h8", "e9 ek e8 ea", "sa eu so ha"].into_iter()
         .map(|str_stich| {
             let mut stich = SStich::new(/*epi should not be relevant*/EPlayerIndex::EPI0);
-            for card in parse_cards::<Vec<_>>(str_stich).unwrap() {
+            for card in verify!(parse_cards::<Vec<_>>(str_stich)).unwrap() {
                 stich.push(card.clone());
             }
             stich
@@ -82,9 +82,9 @@ fn test_unplayed_cards() {
         .collect::<Vec<_>>();
     let veccard_unplayed = unplayed_cards(
         &vecstich,
-        &SHand::new_from_vec(parse_cards("gk sk").unwrap())
+        &SHand::new_from_vec(verify!(parse_cards("gk sk")).unwrap())
     );
-    let veccard_unplayed_check = parse_cards::<Vec<_>>("gz e7 sz h9 ez gu").unwrap();
+    let veccard_unplayed_check = verify!(parse_cards::<Vec<_>>("gz e7 sz h9 ez gu")).unwrap();
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
     assert!(veccard_unplayed.iter().all(|card| veccard_unplayed_check.contains(card)));
     assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
@@ -196,7 +196,7 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
     where HandsIterator: Iterator<Item=EnumMap<EPlayerIndex, SHand>>
 {
     let stich_current = game.current_stich();
-    let epi_fixed = stich_current.current_playerindex().unwrap();
+    let epi_fixed = verify!(stich_current.current_playerindex()).unwrap();
     let vecsusp = Arc::new(Mutex::new(Vec::new()));
     crossbeam::scope(|scope| {
         for ahand in itahand {
@@ -227,13 +227,13 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                     }
                 );
                 assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
-                vecsusp.lock().unwrap().push(susp);
+                verify!(vecsusp.lock()).unwrap().push(susp);
             });
         }
     });
     if let Some(mut file_output) = ofile_output {
         // TODO improve error handling; encapsulate usage of file_output in one single place
-        file_output.write_all(
+        verify!(file_output.write_all(
             b"<style>
             input + label + ul {
                 display: none;
@@ -242,20 +242,20 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                 display: block;
             }
             </style>"
-        ).unwrap();
-        for susp in vecsusp.lock().unwrap().iter() {
+        )).unwrap();
+        for susp in verify!(vecsusp.lock()).unwrap().iter() {
             // TODO error handling
-            susp.print_suspicion(
+            verify!(susp.print_suspicion(
                 8,
                 0,
                 game.rules.as_ref(),
                 &mut game.completed_stichs().to_vec(),
                 &mut file_output,
-            ).unwrap();
+            )).unwrap();
         }
     }
     let veccard_allowed_fixed = game.rules.all_allowed_cards(&game.vecstich, &game.ahand[epi_fixed]);
-    let mapcardpayout = vecsusp.lock().unwrap().iter()
+    let mapcardpayout = verify!(vecsusp.lock()).unwrap().iter()
         .fold(
             // aggregate n_payout per card in some way
             HashMap::new(),
@@ -289,8 +289,8 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                 mapcardpayout
             }
         );
-    veccard_allowed_fixed.into_iter()
-        .max_by_key(|card| mapcardpayout[card])
+    verify!(veccard_allowed_fixed.into_iter()
+        .max_by_key(|card| mapcardpayout[card]))
         .unwrap()
 }
 
@@ -337,7 +337,7 @@ impl TAi for SAiSimulating {
     fn internal_suggest_card(&self, game: &SGame, ofile_output: Option<fs::File>) -> SCard {
         let stich_current = game.current_stich();
         assert!(stich_current.size()<4);
-        let epi_fixed = stich_current.current_playerindex().unwrap();
+        let epi_fixed = verify!(stich_current.current_playerindex()).unwrap();
         let hand_fixed = &game.ahand[epi_fixed];
         assert!(!hand_fixed.cards().is_empty());
         if hand_fixed.cards().len()<=2 {
@@ -374,7 +374,7 @@ fn test_is_compatible_with_game_so_far() {
     }
     let test_game = |astr_hand: [&'static str; 4], rules: &TRules, epi_first, vectestaction: Vec<VTestAction>| {
         let ahand = EPlayerIndex::map_from_fn(|epi| {
-            SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
+            SHand::new_from_vec(verify!(parse_cards(astr_hand[epi.to_usize()])).unwrap())
         });
         use rules::ruleset::*;
         let mut game = game::SGame::new(
@@ -391,9 +391,9 @@ fn test_is_compatible_with_game_so_far() {
             let mut oassertnotfrei = None;
             match testaction {
                 VTestAction::PlayStich(str_stich) => {
-                    for card in parse_cards::<Vec<_>>(str_stich).unwrap() {
-                        let epi = game.which_player_can_do_something().unwrap().0;
-                        game.zugeben(card, epi).unwrap();
+                    for card in verify!(parse_cards::<Vec<_>>(str_stich)).unwrap() {
+                        let epi = verify!(game.which_player_can_do_something()).unwrap().0;
+                        verify!(game.zugeben(card, epi)).unwrap();
                     }
                 },
                 VTestAction::AssertFrei(epi, trumpforfarbe) => {
@@ -405,8 +405,8 @@ fn test_is_compatible_with_game_so_far() {
             }
             for ahand in forever_rand_hands(
                 game.completed_stichs(),
-                &game.ahand[game.which_player_can_do_something().unwrap().0],
-                game.which_player_can_do_something().unwrap().0
+                &game.ahand[verify!(game.which_player_can_do_something()).unwrap().0],
+                verify!(game.which_player_can_do_something()).unwrap().0
             )
                 .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
                 .take(100)

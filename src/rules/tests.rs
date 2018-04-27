@@ -42,7 +42,7 @@ fn internal_test_rules(
         /*n_stock*/ 0, // TODO test stock
     );
     for n_epi_stoss in vecn_stoss {
-        game.stoss(EPlayerIndex::from_usize(n_epi_stoss)).unwrap();
+        verify!(game.stoss(EPlayerIndex::from_usize(n_epi_stoss))).unwrap();
     }
     for (i_stich, stich) in vecstich_test.iter().enumerate() {
         println!("Stich {}: {}", i_stich, stich);
@@ -50,14 +50,14 @@ fn internal_test_rules(
         for (epi, card) in stich.iter() {
             assert_eq!(Some(epi), game.which_player_can_do_something().map(|gameaction| gameaction.0));
             println!("{}, {}", card, epi);
-            game.zugeben(*card, epi).unwrap();
+            verify!(game.zugeben(*card, epi)).unwrap();
         }
     }
     for (i_stich, stich) in game.vecstich.iter().enumerate() {
         assert_eq!(stich, &vecstich_test[i_stich]);
         println!("Stich {}: {}", i_stich, stich);
     }
-    let accountbalance_payout = game.finish().unwrap().accountbalance;
+    let accountbalance_payout = verify!(game.finish()).unwrap().accountbalance;
     assert_eq!(EPlayerIndex::map_from_fn(|epi| accountbalance_payout.get_player(epi)), EPlayerIndex::map_from_raw(an_payout));
 }
 
@@ -65,7 +65,7 @@ fn make_stich_vector(vecpairnstr_stich: &[(usize, &str)]) -> Vec<SStich> {
     vecpairnstr_stich.iter()
         .map(|&(n_epi, str_stich)| {
             let mut stich = SStich::new(EPlayerIndex::from_usize(n_epi));
-            let veccard = parse_cards::<Vec<_>>(str_stich).unwrap();
+            let veccard = verify!(parse_cards::<Vec<_>>(str_stich)).unwrap();
             assert_eq!(4, veccard.len());
             for card in veccard {
                 stich.push(card);
@@ -88,7 +88,7 @@ pub fn test_rules(
         str_info,
         rules,
         EPlayerIndex::map_from_fn(|epi| {
-            SHand::new_from_vec(parse_cards(astr_hand[epi.to_usize()]).unwrap())
+            SHand::new_from_vec(verify!(parse_cards(astr_hand[epi.to_usize()])).unwrap())
         }),
         vecn_doubling,
         vecn_stoss,

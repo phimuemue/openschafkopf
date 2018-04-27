@@ -77,10 +77,10 @@ impl TRules for SRulesRufspiel {
     }
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> SAccountBalance {
-        let epi_coplayer = gamefinishedstiche.get().iter()
+        let epi_coplayer = verify!(gamefinishedstiche.get().iter()
             .flat_map(|stich| stich.iter())
             .find(|&(_, card)| *card==self.rufsau())
-            .map(|(epi, _)| epi)
+            .map(|(epi, _)| epi))
             .unwrap();
         assert_ne!(self.epi, epi_coplayer);
         let mapepib_player_party = EPlayerIndex::map_from_fn(|epi|
@@ -153,7 +153,7 @@ impl TRules for SRulesRufspiel {
         if hand.cards().len()<=1 {
             hand.cards().clone()
         } else {
-            let epi = current_stich(vecstich).current_playerindex().unwrap();
+            let epi = verify!(current_stich(vecstich).current_playerindex()).unwrap();
             let b_weggelaufen = completed_stichs(vecstich).iter()
                 .any(|stich| epi==stich.first_playerindex() && self.is_ruffarbe(*stich.first()));
             let card_first = *current_stich(vecstich).first();

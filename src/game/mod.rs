@@ -285,7 +285,7 @@ impl<'rules> SDetermineRules<'rules> {
         }
         assert_ne!(epi, self.pairepirules_current_bid.0);
         assert!(!self.vecpairepirules_queued.is_empty());
-        let epi_check = self.vecpairepirules_queued.pop().unwrap().0;
+        let epi_check = verify!(self.vecpairepirules_queued.pop()).unwrap().0;
         assert_eq!(epi, epi_check);
         let mut pairepirules_current_bid = (epi, rules);
         mem::swap(&mut self.pairepirules_current_bid, &mut pairepirules_current_bid);
@@ -299,7 +299,7 @@ impl<'rules> SDetermineRules<'rules> {
             bail!("announce_game not allowed for specified EPlayerIndex");
         }
         assert!(!self.vecpairepirules_queued.is_empty());
-        let paireplayerindexorules = self.vecpairepirules_queued.pop().unwrap();
+        let paireplayerindexorules = verify!(self.vecpairepirules_queued.pop()).unwrap();
         assert_eq!(epi, paireplayerindexorules.0);
         Ok(())
     }

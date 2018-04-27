@@ -134,7 +134,7 @@ fn test_all_possible_hands() {
     use primitives::cardvector::parse_cards;
     let str_to_stich = |str_stich| {
         let mut stich = SStich::new(/*epi should not be relevant*/EPlayerIndex::EPI0);
-        for card in parse_cards::<Vec<_>>(str_stich).unwrap() {
+        for card in verify!(parse_cards::<Vec<_>>(str_stich)).unwrap() {
             stich.push(card.clone());
         }
         stich
@@ -147,7 +147,7 @@ fn test_all_possible_hands() {
         assert_eq!(
             all_possible_hands(
                 &vecstich,
-                SHand::new_from_vec(parse_cards(str_hand).unwrap()),
+                SHand::new_from_vec(verify!(parse_cards(str_hand)).unwrap()),
                 EPlayerIndex::EPI0, // epi_fixed
             ).count(),
             n_count

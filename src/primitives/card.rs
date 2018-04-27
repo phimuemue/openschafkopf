@@ -171,6 +171,6 @@ impl <T> Index<SCard> for SCardMap<T> {
     type Output = T;
 
     fn index(&self, card: SCard) -> &T {
-        self.aot[card.n_internalrepresentation.as_num::<usize>()].as_ref().unwrap()
+        verify!(self.aot[card.n_internalrepresentation.as_num::<usize>()].as_ref()).unwrap()
     }
 }

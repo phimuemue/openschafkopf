@@ -61,7 +61,7 @@ impl TPlayer for SPlayerHuman {
         txb_doubling: mpsc::Sender<bool>,
     ) {
         let vecb_doubling = vec![false, true];
-        txb_doubling.send(*skui::ask_for_alternative(
+        verify!(txb_doubling.send(*skui::ask_for_alternative(
             &vecb_doubling,
             &skui::choose_alternative_from_list_key_bindings(),
             |_| true, // all alternatives allowed
@@ -77,13 +77,13 @@ impl TPlayer for SPlayerHuman {
                 }
             },
             || None, // TODO implement suggestions
-        )).unwrap()
+        ))).unwrap()
     }
 
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         skui::print_vecstich(verify!(game.current_stich().current_playerindex()).unwrap(), &game.vecstich);
         let hand = {
-            let mut hand = game.ahand[game.which_player_can_do_something().unwrap().0].clone();
+            let mut hand = game.ahand[verify!(game.which_player_can_do_something()).unwrap().0].clone();
             game.rules.sort_cards_first_trumpf_then_farbe(hand.cards_mut());
             hand
         };
@@ -100,7 +100,7 @@ impl TPlayer for SPlayerHuman {
                     skui::print_hand(hand.cards(), Some(i_card_chosen));
                     skui::print_game_info(game.rules.as_ref(), &game.doublings, &game.vecstoss);
                 },
-                || Some(self.ai.suggest_card(game, /*ofile_output*/Some(fs::File::create(&"suspicion.html").unwrap())))
+                || Some(self.ai.suggest_card(game, /*ofile_output*/Some(verify!(fs::File::create(&"suspicion.html")).unwrap())))
             )
         ).is_err() {
             unimplemented!() // we possibly want to be able to deal with "blocked" plays (timeout etc.)
@@ -155,11 +155,11 @@ impl TPlayer for SPlayerHuman {
                 |i_orules_chosen| vecorules[i_orules_chosen],
                 &opairepiprio,
             ) {
-                txorules.send(Some(rules)).unwrap();
+                verify!(txorules.send(Some(rules))).unwrap();
                 return;
             }
         }
-        txorules.send(None).unwrap();
+        verify!(txorules.send(None)).unwrap();
     }
 
     fn ask_for_stoss(
@@ -173,7 +173,7 @@ impl TPlayer for SPlayerHuman {
         txb: mpsc::Sender<bool>,
     ) {
         let vecb_stoss = vec![false, true];
-        txb.send(*skui::ask_for_alternative(
+        verify!(txb.send(*skui::ask_for_alternative(
             &vecb_stoss,
             &skui::choose_alternative_from_list_key_bindings(),
             |_| true, // all alternatives allowed
@@ -200,6 +200,6 @@ impl TPlayer for SPlayerHuman {
                 }
             },
             || None, // TODO implement suggestions
-        )).unwrap()
+        ))).unwrap()
     }
 }

@@ -69,7 +69,7 @@ fn main() {
         )
         .get_matches();
     let ai = |subcommand_matches: &clap::ArgMatches| {
-        match subcommand_matches.value_of("ai").unwrap() {
+        match verify!(subcommand_matches.value_of("ai")).unwrap() {
             "cheating" => Box::new(ai::SAiCheating::new(/*n_rank_rules_samples*/50)) as Box<TAi>,
             "simulating" => 
                 Box::new(ai::SAiSimulating::new(
@@ -84,7 +84,7 @@ fn main() {
         }
     };
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
-        if let Ok(ruleset) =SRuleSet::from_file(Path::new(subcommand_matches.value_of("ruleset").unwrap())) {
+        if let Ok(ruleset) =SRuleSet::from_file(Path::new(verify!(subcommand_matches.value_of("ruleset")).unwrap())) {
             if let Some(str_hand) = subcommand_matches.value_of("hand") {
                 if let Some(hand_fixed) = cardvector::parse_cards(str_hand).map(SHand::new_from_vec) {
                     let epi_rank = value_t!(subcommand_matches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
@@ -110,7 +110,7 @@ fn main() {
         }
     }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("cli") {
-        if let Ok(ruleset) =SRuleSet::from_file(Path::new(subcommand_matches.value_of("ruleset").unwrap())) {
+        if let Ok(ruleset) =SRuleSet::from_file(Path::new(verify!(subcommand_matches.value_of("ruleset")).unwrap())) {
             skui::init_ui();
             let accountbalance = game_loop_cli(
                 &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
@@ -120,7 +120,7 @@ fn main() {
                         Box::new(SPlayerComputer{ai: ai(subcommand_matches)})
                     }
                 }),
-                /*n_games*/ subcommand_matches.value_of("numgames").unwrap().parse::<usize>().unwrap_or(4),
+                /*n_games*/ verify!(subcommand_matches.value_of("numgames")).unwrap().parse::<usize>().unwrap_or(4),
                 &ruleset,
             );
             println!("Results: {}", skui::account_balance_string(&accountbalance));
@@ -134,7 +134,7 @@ fn communicate_via_channel<T, Func>(f: Func) -> T
 {
     let (txt, rxt) = mpsc::channel::<T>();
     f(txt.clone());
-    rxt.recv().unwrap()
+    verify!(rxt.recv()).unwrap()
 }
 
 fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
@@ -146,7 +146,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                     txb_doubling
                 );
             });
-            txcmd.send(VGameCommand::AnnounceDoubling(epi, b_doubling)).unwrap();
+            verify!(txcmd.send(VGameCommand::AnnounceDoubling(epi, b_doubling))).unwrap();
         },
         /*fn_gamepreparations*/|epi, gamepreparations, txcmd| {
             let orules = communicate_via_channel(|txorules| {
@@ -160,7 +160,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                     txorules
                 );
             });
-            txcmd.send(VGameCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules)))).unwrap();
+            verify!(txcmd.send(VGameCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules))))).unwrap();
         },
         /*fn_determinerules*/|(epi, vecrulegroup_steigered), determinerules, txcmd|{
             let orules = communicate_via_channel(|txorules| {
@@ -174,7 +174,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                     txorules
                 );
             });
-            txcmd.send(VGameCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules)))).unwrap();
+            verify!(txcmd.send(VGameCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules))))).unwrap();
         },
         /*fn_game*/|gameaction, game, txcmd| {
             if !gameaction.1.is_empty() {
@@ -193,7 +193,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                         })
                     })
                 {
-                    txcmd.send(VGameCommand::Stoss(*epi_stoss, /*b_stoss*/true)).unwrap();
+                    verify!(txcmd.send(VGameCommand::Stoss(*epi_stoss, /*b_stoss*/true))).unwrap();
                     return;
                 }
             }
@@ -203,7 +203,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                     txcard.clone()
                 );
             });
-            txcmd.send(VGameCommand::Zugeben(gameaction.0, card)).unwrap();
+            verify!(txcmd.send(VGameCommand::Zugeben(gameaction.0, card))).unwrap();
         },
         n_games,
         ruleset,
@@ -232,20 +232,20 @@ fn game_loop<FnDealcards, FnGamePreparations, FnDetermineRules, FnGame>(
             fn_dealcards(epi, &dealcards, txcmd.clone());
             verify!(dealcards.command(verify!(rxcmd.recv()).unwrap())).unwrap();
         }
-        let mut gamepreparations = dealcards.finish().unwrap();
+        let mut gamepreparations = verify!(dealcards.finish()).unwrap();
         while let Some(epi) = gamepreparations.which_player_can_do_something() {
             info!("Asking player {} for game", epi);
             fn_gamepreparations(epi, &gamepreparations, txcmd.clone());
             verify!(gamepreparations.command(verify!(rxcmd.recv()).unwrap())).unwrap();
         }
         info!("Asked players if they want to play. Determining rules");
-        let stockorgame = match gamepreparations.finish().unwrap() {
+        let stockorgame = match verify!(gamepreparations.finish()).unwrap() {
             VGamePreparationsFinish::DetermineRules(mut determinerules) => {
                 while let Some((epi, vecrulegroup_steigered))=determinerules.which_player_can_do_something() {
                     fn_determinerules((epi, vecrulegroup_steigered), &determinerules, txcmd.clone());
                     verify!(determinerules.command(verify!(rxcmd.recv()).unwrap())).unwrap();
                 }
-                VStockOrT::OrT(determinerules.finish().unwrap())
+                VStockOrT::OrT(verify!(determinerules.finish()).unwrap())
             },
             VGamePreparationsFinish::DirectGame(game) => {
                 VStockOrT::OrT(game)
@@ -260,7 +260,7 @@ fn game_loop<FnDealcards, FnGamePreparations, FnDetermineRules, FnGame>(
                     fn_game(gameaction, &game, txcmd.clone());
                     verify!(game.command(verify!(rxcmd.recv()).unwrap())).unwrap();
                 }
-                accountbalance.apply_payout(&game.finish().unwrap().accountbalance);
+                accountbalance.apply_payout(&verify!(game.finish()).unwrap().accountbalance);
             },
             VStockOrT::Stock(n_stock) => {
                 accountbalance.apply_payout(&SAccountBalance::new(
@@ -347,7 +347,7 @@ fn test_game_loop() {
                     n_base_price, n_solo_price, n_lauf_min, str_allowed_games, str_no_active_game, str_extras
                 );
                 println!("{}", str_ruleset);
-                SRuleSet::from_string(&str_ruleset).unwrap()
+                verify!(SRuleSet::from_string(&str_ruleset)).unwrap()
             }),
             1,
         )).unwrap()
