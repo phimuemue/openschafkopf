@@ -27,7 +27,7 @@ impl SRuleGroup {
         let vecrules_steigered = self.vecrules.iter()
             .filter_map(|rules| rules.with_higher_prio_than(prio, ebid))
             .collect::<Vec<_>>();
-        if 0<vecrules_steigered.len() {
+        if !vecrules_steigered.is_empty() {
             Some(SRuleGroup {
                 str_name: self.str_name.clone(),
                 vecrules: vecrules_steigered,

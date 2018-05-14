@@ -233,7 +233,7 @@ pub fn ask_for_alternative<'vect, T, FnFilter, FnCallback, FnSuggest>(
     do_in_window(&VSkUiWindow::Interaction, |ncwin| {
         let mut ot_suggest = None;
         let vect = vect.into_iter().enumerate().filter(|&(_i_t, t)| fn_filter(t)).collect::<Vec<_>>();
-        assert!(0<vect.len());
+        assert!(!vect.is_empty());
         let mut i_alternative = 0; // initially, point to 0th alternative
         fn_callback(ncwin, vect[i_alternative].0, &ot_suggest);
         ncurses::refresh();
