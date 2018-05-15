@@ -52,7 +52,7 @@ impl TPlayer for SPlayerComputer {
         txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>
     ) {
         // TODO: implement a more intelligent decision strategy
-        verify!(txorules.send(allowed_rules(vecrulegroup).iter()
+        verify!(txorules.send(allowed_rules(vecrulegroup)
             .filter(|rules| rules.can_be_played(hand))
             .filter(|rules| {
                 4 <= hand.get().cards().iter()
@@ -72,7 +72,7 @@ impl TPlayer for SPlayerComputer {
                 assert!(!f_payout_avg_rhs.is_nan());
                 verify!(f_payout_avg_lhs.partial_cmp(&f_payout_avg_rhs)).unwrap()
             })
-            .map(|(rules, _f_payout_avg)| *rules))).unwrap();
+            .map(|(rules, _f_payout_avg)| rules))).unwrap();
     }
 
     fn ask_for_stoss(

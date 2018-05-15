@@ -64,8 +64,8 @@ pub struct SRuleSet {
     pub ekurzlang : EKurzLang,
 }
 
-pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> return_impl!(Vec<&TActivelyPlayableRules>) {
-    vecrulegroup.iter().flat_map(|rulegroup| rulegroup.vecrules.iter().map(|rules| rules.as_ref())).collect()
+pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> impl Iterator<Item=&TActivelyPlayableRules> {
+    vecrulegroup.iter().flat_map(move |rulegroup| rulegroup.vecrules.iter().map(|rules| rules.as_ref()))
 }
 
 impl SRuleSet {
