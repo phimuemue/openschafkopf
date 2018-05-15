@@ -115,12 +115,12 @@ impl SCard {
     pub fn schlag(&self) -> ESchlag {
         ESchlag::from_usize(self.n_internalrepresentation.as_num::<usize>() % ESchlag::SIZE)
     }
-    pub fn values(ekurzlang: EKurzLang) -> return_impl!(Vec<SCard>) {
+    pub fn values(ekurzlang: EKurzLang) -> impl Iterator<Item=SCard> {
         iproduct!(
             EFarbe::values(),
             ESchlag::values()
         )
-        .filter_map(|(efarbe, eschlag)| {
+        .filter_map(move |(efarbe, eschlag)| {
             match ekurzlang { // prefer matching on custom enums over simple if/else
                 EKurzLang::Kurz => if ESchlag::S7==eschlag || ESchlag::S8==eschlag {
                     return None;
@@ -129,7 +129,6 @@ impl SCard {
             }
             Some(SCard::new(efarbe, eschlag))
         })
-        .collect()
     }
 }
 
