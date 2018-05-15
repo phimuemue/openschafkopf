@@ -54,10 +54,10 @@ pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
     mem::swap(vecstich, &mut vecstich_sample);
 }
 
-pub fn unplayed_cards(vecstich: &[SStich], hand_fixed: &SHand) -> return_impl!(Vec<SCard>) {
+pub fn unplayed_cards<'lifetime>(vecstich: &'lifetime [SStich], hand_fixed: &'lifetime SHand) -> impl Iterator<Item=SCard> + 'lifetime {
     assert!(vecstich.iter().all(|stich| 4==stich.size()));
     SCard::values(EKurzLang::from_cards_per_player(vecstich.len() + hand_fixed.cards().len())).into_iter()
-        .filter(|card| 
+        .filter(move |card| 
              !hand_fixed.contains(*card)
              && !vecstich.iter().any(|stich|
                 stich.iter().any(|(_epi, card_played)|
@@ -65,7 +65,6 @@ pub fn unplayed_cards(vecstich: &[SStich], hand_fixed: &SHand) -> return_impl!(V
                 )
              )
         )
-        .collect()
 }
 
 #[test]
@@ -80,10 +79,8 @@ fn test_unplayed_cards() {
             stich
         })
         .collect::<Vec<_>>();
-    let veccard_unplayed = unplayed_cards(
-        &vecstich,
-        &SHand::new_from_vec(verify!(parse_cards("gk sk")).unwrap())
-    );
+    let hand = &SHand::new_from_vec(verify!(parse_cards("gk sk")).unwrap());
+    let veccard_unplayed = unplayed_cards(&vecstich, &hand).collect::<Vec<_>>();
     let veccard_unplayed_check = verify!(parse_cards::<Vec<_>>("gz e7 sz h9 ez gu")).unwrap();
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
     assert!(veccard_unplayed.iter().all(|card| veccard_unplayed_check.contains(card)));
