@@ -52,27 +52,29 @@ impl TPlayer for SPlayerComputer {
         txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>
     ) {
         // TODO: implement a more intelligent decision strategy
-        verify!(txorules.send(allowed_rules(vecrulegroup)
-            .filter(|rules| rules.can_be_played(hand))
-            .filter(|rules| {
-                4 <= hand.get().cards().iter()
-                    .filter(|&card| rules.trumpforfarbe(*card).is_trumpf())
-                    .count()
-            })
-            .map(|rules| {
-                let epi_rank = rules.active_playerindex(); 
-                (
-                    rules,
-                    self.ai.rank_rules(hand, /*epi_first*/gameannouncements.first_playerindex(), epi_rank, rules.upcast(), n_stock)
+        verify!(txorules.send(verify!(allowed_rules(vecrulegroup)
+            .filter(|orules| orules.map_or(/*allow playing nothing*/true, |rules| rules.can_be_played(hand)))
+            .map(|orules| (
+                orules,
+                orules.map_or(
+                    0., // TODO how to rank None?
+                    |rules| self.ai.rank_rules(
+                        hand,
+                        /*epi_first*/gameannouncements.first_playerindex(),
+                        /*epi_rank*/rules.active_playerindex(),
+                        rules.upcast(),
+                        n_stock
+                    )
                 )
-            })
-            .filter(|&(_rules, f_payout_avg)| f_payout_avg > 10.) // TODO determine sensible threshold
-            .max_by(|&(_rules_lhs, f_payout_avg_lhs), &(_rules_rhs, f_payout_avg_rhs)| {
+            ))
+            .max_by(|&(_orules_lhs, f_payout_avg_lhs), &(_orules_rhs, f_payout_avg_rhs)| {
                 assert!(!f_payout_avg_lhs.is_nan());
                 assert!(!f_payout_avg_rhs.is_nan());
                 verify!(f_payout_avg_lhs.partial_cmp(&f_payout_avg_rhs)).unwrap()
-            })
-            .map(|(rules, _f_payout_avg)| rules))).unwrap();
+            }))
+            .unwrap()
+            .0
+        )).unwrap();
     }
 
     fn ask_for_stoss(

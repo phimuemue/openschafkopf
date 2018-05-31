@@ -118,48 +118,41 @@ impl TPlayer for SPlayerHuman {
         txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>,
     ) {
         skui::print_game_announcements(epi, gameannouncements);
-        let vecorulegroup : Vec<Option<&SRuleGroup>> = Some(None).into_iter()
-            .chain(
-                vecrulegroup.iter()
-                    .filter(|rulegroup| rulegroup.vecrules.iter()
-                        .any(|rules| rules.can_be_played(hand))
-                    )
-                    .map(Some)
+        let vecrulegroup : Vec<&SRuleGroup> = vecrulegroup.iter()
+            .filter(|rulegroup| rulegroup.vecorules.iter()
+                .any(|orules| orules.as_ref().map_or(true, |rules| rules.can_be_played(hand)))
             )
             .collect();
-        while let Some(rulegroup) = *choose_ruleset_or_rules(
-            hand.get(),
-            &vecorulegroup,
-            |orulegroup : &Option<&SRuleGroup>| match *orulegroup {
-                None => "Nothing".to_string(),
-                Some(rulegroup) => rulegroup.str_name.clone(),
-            },
-            |i_orulegroup_chosen| vecorulegroup[i_orulegroup_chosen].map(|rulegroup| rulegroup.vecrules[0].as_ref()),
-            &opairepiprio,
-        )
-        {
-            let vecorules : Vec<Option<&TActivelyPlayableRules>> = Some(None).into_iter()
+        loop {
+            let vecoorules : Vec<Option<Option<&TActivelyPlayableRules>>> = Some(None).into_iter() // stands for "back"
                 .chain(
-                    rulegroup.vecrules.iter()
-                        .filter(|rules| rules.can_be_played(hand))
-                        .map(|rules| Some(rules.as_ref()))
+                    choose_ruleset_or_rules(
+                        hand.get(),
+                        &vecrulegroup,
+                        |rulegroup| rulegroup.str_name.clone(),
+                        |i_rulegroup_chosen| vecrulegroup[i_rulegroup_chosen].vecorules[0].as_ref().map(|rules| rules.as_ref()),
+                        &opairepiprio,
+                    )
+                        .vecorules.iter()
+                        .filter(|orules| orules.as_ref().map_or(true, |rules| rules.can_be_played(hand)))
+                        .map(|orules| Some(orules.as_ref().map(|rules| rules.as_ref())))
                 )
                 .collect();
-            if let Some(rules) = *choose_ruleset_or_rules(
+            if let Some(orules) = *choose_ruleset_or_rules(
                 hand.get(),
-                &vecorules,
-                |orules : &Option<&TActivelyPlayableRules>| match *orules {
+                &vecoorules,
+                |oorules| match *oorules {
                     None => "Back".to_string(),
-                    Some(rules) => rules.to_string()
+                    Some(None) => "Nothing".to_string(),
+                    Some(Some(rules)) => rules.to_string()
                 },
-                |i_orules_chosen| vecorules[i_orules_chosen],
+                |i_oorules_chosen| vecoorules[i_oorules_chosen].and_then(|orules| orules),
                 &opairepiprio,
             ) {
-                verify!(txorules.send(Some(rules))).unwrap();
+                verify!(txorules.send(orules)).unwrap();
                 return;
             }
         }
-        verify!(txorules.send(None)).unwrap();
     }
 
     fn ask_for_stoss(

@@ -92,7 +92,11 @@ fn main() {
                     let epi_rank = value_t!(subcommand_matches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
                     println!("Hand: {}", hand_fixed);
                     for rules in allowed_rules(&ruleset.avecrulegroup[epi_rank])
-                        .filter(|rules| rules.can_be_played(SFullHand::new(&hand_fixed, ruleset.ekurzlang)))
+                        .filter(|orules| orules.map_or(
+                            /*do not rank nothing*/false,
+                            |rules| rules.can_be_played(SFullHand::new(&hand_fixed, ruleset.ekurzlang))
+                        ))
+                        .filter_map(|orules| orules)
                     {
                         println!("{}: {}",
                             rules,

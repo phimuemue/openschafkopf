@@ -19,18 +19,22 @@ use toml;
 #[derive(Debug)]
 pub struct SRuleGroup {
     pub str_name : String,
-    pub vecrules : Vec<Box<TActivelyPlayableRules>>,
+    pub vecorules : Vec<Option<Box<TActivelyPlayableRules>>>,
 }
 
 impl SRuleGroup {
     pub fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<SRuleGroup> {
-        let vecrules_steigered = self.vecrules.iter()
-            .filter_map(|rules| rules.with_higher_prio_than(prio, ebid))
+        let vecorules_steigered = self.vecorules.iter()
+            .filter_map(|orules| match orules.as_ref().map(|rules| rules.with_higher_prio_than(prio, ebid)) {
+                None => Some(None), // allow playing nothing
+                Some(None) => None, // steigern was impossible
+                Some(Some(rules_steigered)) => Some(Some(rules_steigered)), // steigern successful
+            })
             .collect::<Vec<_>>();
-        if !vecrules_steigered.is_empty() {
+        if !vecorules_steigered.is_empty() {
             Some(SRuleGroup {
                 str_name: self.str_name.clone(),
-                vecrules: vecrules_steigered,
+                vecorules: vecorules_steigered,
             })
         } else {
             None
@@ -64,8 +68,8 @@ pub struct SRuleSet {
     pub ekurzlang : EKurzLang,
 }
 
-pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> impl Iterator<Item=&TActivelyPlayableRules> {
-    vecrulegroup.iter().flat_map(move |rulegroup| rulegroup.vecrules.iter().map(|rules| rules.as_ref()))
+pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> impl Iterator<Item=Option<&TActivelyPlayableRules>> {
+    vecrulegroup.iter().flat_map(move |rulegroup| rulegroup.vecorules.iter().map(|orules| orules.as_ref().map(|rules| rules.as_ref())))
 }
 
 impl SRuleSet {
@@ -127,7 +131,7 @@ impl SRuleSet {
                     let n_lauf_lbound = read_int(tomlval_game, "lauf-min").or_else(|_err| fallback(&format!("{}.lauf-min", $str_rule_name_file), "lauf-min"))?;
                     Ok(vecrulegroup.push(SRuleGroup{
                         str_name: $str_group_name.to_string(),
-                        vecrules: ($fn_rules(SPayoutDeciderParams::new(
+                        vecorules: ($fn_rules(SPayoutDeciderParams::new(
                             n_payout_base.as_num(),
                             /*n_payout_schneider_schwarz*/n_payout_extra.as_num(),
                             SLaufendeParams::new(
@@ -143,6 +147,10 @@ impl SRuleSet {
             macro_rules! create_rulegroup_sololike {($str_rule_name_file: expr, $str_group_name: expr, $fn_rules: expr) => {
                 create_rulegroup!($str_rule_name_file, "solo-price", $str_group_name, $fn_rules)
             }};
+            vecrulegroup.push(SRuleGroup{
+                str_name: "Nothing".to_string(),
+                vecorules: vec![None],
+            });
             create_rulegroup!(
                 "rufspiel",
                 "base-price",
@@ -150,11 +158,11 @@ impl SRuleSet {
                 |payoutparams: SPayoutDeciderParams| {
                     EFarbe::values()
                         .filter(|efarbe| EFarbe::Herz!=*efarbe)
-                        .map(|efarbe| Box::new(SRulesRufspiel::new(
+                        .map(|efarbe| Some(Box::new(SRulesRufspiel::new(
                             epi,
                             efarbe,
                             payoutparams.clone(),
-                        )) as Box<TActivelyPlayableRules>)
+                        )) as Box<TActivelyPlayableRules>))
                         .collect()
                 }
             )?;
@@ -165,7 +173,7 @@ impl SRuleSet {
                 macro_rules! vecrules_farbe {($trumpfdecider: ident, $i_prioindex: expr, $rulename: expr) => {
                     |payoutparams: SPayoutDeciderParams| {
                         macro_rules! internal_generate_sololike_farbe {($staticfarbe: ident) => {
-                            sololike::<$trumpfdecider<STrumpfDeciderFarbe<$staticfarbe>>, $payoutdecider> (epi, $i_prioindex, &format!("{}-{}", $staticfarbe::VALUE, $rulename), payoutparams.clone())
+                            Some(sololike::<$trumpfdecider<STrumpfDeciderFarbe<$staticfarbe>>, $payoutdecider> (epi, $i_prioindex, &format!("{}-{}", $staticfarbe::VALUE, $rulename), payoutparams.clone()))
                         }}
                         vec! [
                             internal_generate_sololike_farbe!(SStaticFarbeEichel),
@@ -176,7 +184,7 @@ impl SRuleSet {
                     }
                 }}
                 macro_rules! vecrules_farblos {($trumpfdecider: ident, $i_prioindex: expr, $rulename: expr) => {
-                    |payoutparams| vec![sololike::<$trumpfdecider<STrumpfDeciderNoTrumpf>, $payoutdecider>(epi, $i_prioindex, $rulename, payoutparams)]
+                    |payoutparams| vec![Some(sololike::<$trumpfdecider<STrumpfDeciderNoTrumpf>, $payoutdecider>(epi, $i_prioindex, $rulename, payoutparams))]
                 }}
                 let str_rulename = internal_rulename("Solo");
                 create_rulegroup_sololike!(
@@ -227,7 +235,7 @@ impl SRuleSet {
             create_rulegroup_sololike!(
                 "solo",
                 "Sie",
-                &|payoutparams| vec![sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(epi, /*prioparams*/() ,"Sie", payoutparams)]
+                &|payoutparams| vec![Some(sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, SPayoutDeciderSie>(epi, /*prioparams*/() ,"Sie", payoutparams))]
             )?;
             { // Bettel
                 let str_rule_name_file = "bettel";
@@ -241,11 +249,11 @@ impl SRuleSet {
                     {
                         vecrulegroup.push(SRuleGroup{
                             str_name: "Bettel".to_string(),
-                            vecrules: vec![Box::new(SRulesBettel::<BettelAllAllowedCardsWithinStich>::new(
+                            vecorules: vec![Some(Box::new(SRulesBettel::<BettelAllAllowedCardsWithinStich>::new(
                                 epi,
                                 /*i_prio, large negative number to make less important than any sololike*/-999_999,
                                 n_payout_base.as_num::<isize>(),
-                            )) as Box<TActivelyPlayableRules>],
+                            )) as Box<TActivelyPlayableRules>)],
                         });
                     }
                     if Some(true) == tomlval_bettel.get("stichzwang").and_then(|tomlval| tomlval.as_bool()) {
