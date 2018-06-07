@@ -146,7 +146,6 @@ fn communicate_via_channel<T, Func>(f: Func) -> T
 fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
     let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_epi| 0), 0);
     for i_game in 0..n_games {
-        let (txcmd, rxcmd) = mpsc::channel::<VGameCommand>();
         let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset, accountbalance.get_stock());
         while let Some(epi) = dealcards.which_player_can_do_something() {
             let b_doubling = communicate_via_channel(|txb_doubling| {
@@ -155,8 +154,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                     txb_doubling
                 );
             });
-            verify!(txcmd.send(VGameCommand::AnnounceDoubling(epi, b_doubling))).unwrap();
-            verify!(dealcards.command(verify!(rxcmd.recv()).unwrap())).unwrap();
+            verify!(dealcards.announce_doubling(epi, b_doubling)).unwrap();
         }
         let mut gamepreparations = verify!(dealcards.finish()).unwrap();
         while let Some(epi) = gamepreparations.which_player_can_do_something() {
@@ -172,8 +170,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                     txorules
                 );
             });
-            verify!(txcmd.send(VGameCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules))))).unwrap();
-            verify!(gamepreparations.command(verify!(rxcmd.recv()).unwrap())).unwrap();
+            verify!(gamepreparations.announce_game(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules)))).unwrap();
         }
         info!("Asked players if they want to play. Determining rules");
         let stockorgame = match verify!(gamepreparations.finish()).unwrap() {
@@ -190,8 +187,11 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                             txorules
                         );
                     });
-                    verify!(txcmd.send(VGameCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules))))).unwrap();
-                    verify!(determinerules.command(verify!(rxcmd.recv()).unwrap())).unwrap();
+                    if let Some(rules) = orules.map(|rules| TActivelyPlayableRules::box_clone(rules)) {
+                        verify!(determinerules.announce_game(epi, rules)).unwrap();
+                    } else {
+                        verify!(determinerules.resign(epi)).unwrap();
+                    }
                 }
                 VStockOrT::OrT(verify!(determinerules.finish()).unwrap())
             },
@@ -222,7 +222,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                                     })
                                 })
                             {
-                                verify!(txcmd.send(VGameCommand::Stoss(*epi_stoss, /*b_stoss*/true))).unwrap();
+                                verify!(game.stoss(*epi_stoss)).unwrap();
                                 return;
                             }
                         }
@@ -232,9 +232,8 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                                 txcard.clone()
                             );
                         });
-                        verify!(txcmd.send(VGameCommand::Zugeben(gameaction.0, card))).unwrap();
+                        verify!(game.zugeben(card, gameaction.0)).unwrap();
                     }();
-                    verify!(game.command(verify!(rxcmd.recv()).unwrap())).unwrap();
                 }
                 accountbalance.apply_payout(&verify!(game.finish()).unwrap().accountbalance);
             },
