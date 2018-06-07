@@ -144,8 +144,11 @@ fn communicate_via_channel<T, Func>(f: Func) -> T
 }
 
 fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
-    game_loop(
-        /*fn_dealcards*/|epi, dealcards, txcmd| {
+    let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_epi| 0), 0);
+    for i_game in 0..n_games {
+        let (txcmd, rxcmd) = mpsc::channel::<VGameCommand>();
+        let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset, accountbalance.get_stock());
+        while let Some(epi) = dealcards.which_player_can_do_something() {
             let b_doubling = communicate_via_channel(|txb_doubling| {
                 aplayer[epi].ask_for_doubling(
                     dealcards.first_hand_for(epi),
@@ -153,8 +156,11 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                 );
             });
             verify!(txcmd.send(VGameCommand::AnnounceDoubling(epi, b_doubling))).unwrap();
-        },
-        /*fn_gamepreparations*/|epi, gamepreparations, txcmd| {
+            verify!(dealcards.command(verify!(rxcmd.recv()).unwrap())).unwrap();
+        }
+        let mut gamepreparations = verify!(dealcards.finish()).unwrap();
+        while let Some(epi) = gamepreparations.which_player_can_do_something() {
+            info!("Asking player {} for game", epi);
             let orules = communicate_via_channel(|txorules| {
                 aplayer[epi].ask_for_game(
                     epi,
@@ -167,88 +173,24 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
                 );
             });
             verify!(txcmd.send(VGameCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules))))).unwrap();
-        },
-        /*fn_determinerules*/|(epi, vecrulegroup_steigered), determinerules, txcmd|{
-            let orules = communicate_via_channel(|txorules| {
-                aplayer[epi].ask_for_game(
-                    epi,
-                    SFullHand::new(&determinerules.ahand[epi], ruleset.ekurzlang),
-                    /*gameannouncements*/&SPlayersInRound::new(determinerules.doublings.first_playerindex()),
-                    &vecrulegroup_steigered,
-                    determinerules.n_stock,
-                    Some(determinerules.currently_offered_prio()),
-                    txorules
-                );
-            });
-            verify!(txcmd.send(VGameCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules))))).unwrap();
-        },
-        /*fn_game*/|gameaction, game, txcmd| {
-            if !gameaction.1.is_empty() {
-                if let Some(epi_stoss) = gameaction.1.iter()
-                    .find(|epi| {
-                        communicate_via_channel(|txb_stoss| {
-                            aplayer[**epi].ask_for_stoss(
-                                **epi,
-                                &game.doublings,
-                                game.rules.as_ref(),
-                                &game.ahand[**epi],
-                                &game.vecstoss,
-                                game.n_stock,
-                                txb_stoss,
-                            );
-                        })
-                    })
-                {
-                    verify!(txcmd.send(VGameCommand::Stoss(*epi_stoss, /*b_stoss*/true))).unwrap();
-                    return;
-                }
-            }
-            let card = communicate_via_channel(|txcard| {
-                aplayer[gameaction.0].ask_for_card(
-                    game,
-                    txcard.clone()
-                );
-            });
-            verify!(txcmd.send(VGameCommand::Zugeben(gameaction.0, card))).unwrap();
-        },
-        n_games,
-        ruleset,
-    )
-}
-
-fn game_loop<FnDealcards, FnGamePreparations, FnDetermineRules, FnGame>(
-    mut fn_dealcards: FnDealcards,
-    mut fn_gamepreparations: FnGamePreparations,
-    mut fn_determinerules: FnDetermineRules,
-    mut fn_game: FnGame,
-    n_games: usize,
-    ruleset: &SRuleSet,
-) -> SAccountBalance
-    where
-    FnDealcards: FnMut(EPlayerIndex, &SDealCards, mpsc::Sender<VGameCommand>),
-    FnGamePreparations: FnMut(EPlayerIndex, &SGamePreparations, mpsc::Sender<VGameCommand>),
-    FnDetermineRules: FnMut((EPlayerIndex, Vec<SRuleGroup>), &SDetermineRules, mpsc::Sender<VGameCommand>),
-    FnGame: FnMut(SGameAction, &SGame, mpsc::Sender<VGameCommand>),
-{
-    let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_epi| 0), 0);
-    for i_game in 0..n_games {
-        let (txcmd, rxcmd) = mpsc::channel::<VGameCommand>();
-        let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset, accountbalance.get_stock());
-        while let Some(epi) = dealcards.which_player_can_do_something() {
-            fn_dealcards(epi, &dealcards, txcmd.clone());
-            verify!(dealcards.command(verify!(rxcmd.recv()).unwrap())).unwrap();
-        }
-        let mut gamepreparations = verify!(dealcards.finish()).unwrap();
-        while let Some(epi) = gamepreparations.which_player_can_do_something() {
-            info!("Asking player {} for game", epi);
-            fn_gamepreparations(epi, &gamepreparations, txcmd.clone());
             verify!(gamepreparations.command(verify!(rxcmd.recv()).unwrap())).unwrap();
         }
         info!("Asked players if they want to play. Determining rules");
         let stockorgame = match verify!(gamepreparations.finish()).unwrap() {
             VGamePreparationsFinish::DetermineRules(mut determinerules) => {
                 while let Some((epi, vecrulegroup_steigered))=determinerules.which_player_can_do_something() {
-                    fn_determinerules((epi, vecrulegroup_steigered), &determinerules, txcmd.clone());
+                    let orules = communicate_via_channel(|txorules| {
+                        aplayer[epi].ask_for_game(
+                            epi,
+                            SFullHand::new(&determinerules.ahand[epi], ruleset.ekurzlang),
+                            /*gameannouncements*/&SPlayersInRound::new(determinerules.doublings.first_playerindex()),
+                            &vecrulegroup_steigered,
+                            determinerules.n_stock,
+                            Some(determinerules.currently_offered_prio()),
+                            txorules
+                        );
+                    });
+                    verify!(txcmd.send(VGameCommand::AnnounceGame(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules))))).unwrap();
                     verify!(determinerules.command(verify!(rxcmd.recv()).unwrap())).unwrap();
                 }
                 VStockOrT::OrT(verify!(determinerules.finish()).unwrap())
@@ -263,7 +205,35 @@ fn game_loop<FnDealcards, FnGamePreparations, FnDetermineRules, FnGame>(
         match stockorgame {
             VStockOrT::OrT(mut game) => {
                 while let Some(gameaction)=game.which_player_can_do_something() {
-                    fn_game(gameaction, &game, txcmd.clone());
+                    || -> () { // TODO get rid of this closure
+                        if !gameaction.1.is_empty() {
+                            if let Some(epi_stoss) = gameaction.1.iter()
+                                .find(|epi| {
+                                    communicate_via_channel(|txb_stoss| {
+                                        aplayer[**epi].ask_for_stoss(
+                                            **epi,
+                                            &game.doublings,
+                                            game.rules.as_ref(),
+                                            &game.ahand[**epi],
+                                            &game.vecstoss,
+                                            game.n_stock,
+                                            txb_stoss,
+                                        );
+                                    })
+                                })
+                            {
+                                verify!(txcmd.send(VGameCommand::Stoss(*epi_stoss, /*b_stoss*/true))).unwrap();
+                                return;
+                            }
+                        }
+                        let card = communicate_via_channel(|txcard| {
+                            aplayer[gameaction.0].ask_for_card(
+                                &game,
+                                txcard.clone()
+                            );
+                        });
+                        verify!(txcmd.send(VGameCommand::Zugeben(gameaction.0, card))).unwrap();
+                    }();
                     verify!(game.command(verify!(rxcmd.recv()).unwrap())).unwrap();
                 }
                 accountbalance.apply_payout(&verify!(game.finish()).unwrap().accountbalance);
