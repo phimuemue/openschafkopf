@@ -54,8 +54,8 @@ plain_enum_mod!{modekurzlang, EKurzLang {
 }}
 
 impl EKurzLang {
-    pub fn cards_per_player(&self) -> usize {
-        match *self {
+    pub fn cards_per_player(self) -> usize {
+        match self {
             EKurzLang::Kurz => 6,
             EKurzLang::Lang => 8,
         }
@@ -69,8 +69,8 @@ impl EKurzLang {
         }
     }
 
-    pub fn supports_card(&self, card: SCard) -> bool {
-        match *self {
+    pub fn supports_card(self, card: SCard) -> bool {
+        match self {
             EKurzLang::Lang => true,
             EKurzLang::Kurz => card.schlag()!=ESchlag::S7 && card.schlag()!=ESchlag::S8,
         }
@@ -109,10 +109,10 @@ impl SCard {
     pub fn new(efarbe : EFarbe, eschlag : ESchlag) -> SCard {
         SCard{n_internalrepresentation : (efarbe.to_usize() * ESchlag::SIZE + eschlag.to_usize()).as_num()}
     }
-    pub fn farbe(&self) -> EFarbe {
+    pub fn farbe(self) -> EFarbe {
         EFarbe::from_usize(self.n_internalrepresentation.as_num::<usize>() / ESchlag::SIZE)
     }
-    pub fn schlag(&self) -> ESchlag {
+    pub fn schlag(self) -> ESchlag {
         ESchlag::from_usize(self.n_internalrepresentation.as_num::<usize>() % ESchlag::SIZE)
     }
     pub fn values(ekurzlang: EKurzLang) -> impl Iterator<Item=SCard> {

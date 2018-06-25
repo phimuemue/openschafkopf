@@ -10,7 +10,7 @@ impl<'hand> SFullHand<'hand> {
         assert_eq!(hand.cards().len(), ekurzlang.cards_per_player());
         SFullHand(hand)
     }
-    pub fn get(&self) -> &SHand {
+    pub fn get(self) -> &'hand SHand {
         self.0
     }
 }
