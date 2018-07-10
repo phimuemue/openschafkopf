@@ -165,7 +165,15 @@ impl<'rules> TGamePhase for SGamePreparations<'rules> {
     }
 }
 
+macro_rules! impl_fullhand { () => {
+    pub fn fullhand(&self, epi: EPlayerIndex) -> SFullHand {
+        SFullHand::new(&self.ahand[epi], self.ruleset.ekurzlang)
+    }
+}}
+
 impl<'rules> SGamePreparations<'rules> {
+    impl_fullhand!();
+
     pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<TActivelyPlayableRules>>) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
@@ -173,7 +181,7 @@ impl<'rules> SGamePreparations<'rules> {
         if orules.as_ref().map_or(false, |rules| Some(epi)!=rules.playerindex()) {
             bail!("Only actively playable rules can be announced");
         }
-        if !orules.as_ref().map_or(true, |rules| rules.can_be_played(SFullHand::new(&self.ahand[epi], self.ruleset.ekurzlang))) {
+        if !orules.as_ref().map_or(true, |rules| rules.can_be_played(self.fullhand(epi))) {
             bail!("Rules cannot be played. {}", self.ahand[epi]);
         }
         self.gameannouncements.push(orules);
@@ -240,6 +248,8 @@ impl<'rules> TGamePhase for SDetermineRules<'rules> {
 }
 
 impl<'rules> SDetermineRules<'rules> {
+    impl_fullhand!();
+
     pub fn currently_offered_prio(&self) -> (EPlayerIndex, VGameAnnouncementPriority) {
         (self.pairepirules_current_bid.0, self.pairepirules_current_bid.1.priority())
     }
@@ -251,7 +261,7 @@ impl<'rules> SDetermineRules<'rules> {
         if rules.priority()<self.currently_offered_prio().1 {
             bail!("announced rules' priority must be at least as large as the latest announced priority");
         }
-        if !rules.can_be_played(SFullHand::new(&self.ahand[epi], self.ruleset.ekurzlang)) {
+        if !rules.can_be_played(self.fullhand(epi)) {
             bail!("Rules cannot be played. {}", self.ahand[epi]);
         }
         assert_ne!(epi, self.pairepirules_current_bid.0);
