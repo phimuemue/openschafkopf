@@ -91,12 +91,8 @@ fn main() {
                 if let Some(hand_fixed) = cardvector::parse_cards(str_hand).map(SHand::new_from_vec) {
                     let epi_rank = value_t!(subcommand_matches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
                     println!("Hand: {}", hand_fixed);
-                    for rules in allowed_rules(&ruleset.avecrulegroup[epi_rank])
-                        .filter(|orules| orules.map_or(
-                            /*do not rank nothing*/false,
-                            |rules| rules.can_be_played(SFullHand::new(&hand_fixed, ruleset.ekurzlang))
-                        ))
-                        .filter_map(|orules| orules)
+                    for rules in allowed_rules(&ruleset.avecrulegroup[epi_rank], SFullHand::new(&hand_fixed, ruleset.ekurzlang))
+                        .filter_map(|orules| orules) // do not rank None
                     {
                         println!("{}: {}",
                             rules,

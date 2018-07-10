@@ -68,8 +68,10 @@ pub struct SRuleSet {
     pub ekurzlang : EKurzLang,
 }
 
-pub fn allowed_rules(vecrulegroup: &[SRuleGroup]) -> impl Iterator<Item=Option<&TActivelyPlayableRules>> {
-    vecrulegroup.iter().flat_map(move |rulegroup| rulegroup.vecorules.iter().map(|orules| orules.as_ref().map(|rules| rules.as_ref())))
+pub fn allowed_rules<'hand, 'rules : 'hand>(vecrulegroup: &'rules [SRuleGroup], hand: SFullHand<'hand>) -> impl Iterator<Item=Option<&'rules ('rules + TActivelyPlayableRules)>> + 'hand {
+    vecrulegroup.iter()
+        .flat_map(move |rulegroup| rulegroup.vecorules.iter().map(|orules| orules.as_ref().map(|rules| rules.as_ref())))
+        .filter(move |orules| orules.map_or(true, |rules| rules.can_be_played(hand)))
 }
 
 impl SRuleSet {

@@ -52,8 +52,7 @@ impl TPlayer for SPlayerComputer {
         txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>
     ) {
         // TODO: implement a more intelligent decision strategy
-        verify!(txorules.send(verify!(allowed_rules(vecrulegroup)
-            .filter(|orules| orules.map_or(/*allow playing nothing*/true, |rules| rules.can_be_played(hand)))
+        verify!(txorules.send(verify!(allowed_rules(vecrulegroup, hand)
             .map(|orules| (
                 orules,
                 orules.map_or(
