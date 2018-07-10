@@ -40,6 +40,11 @@ impl SRuleGroup {
             None
         }
     }
+
+    pub fn allowed_rules<'hand, 'rules : 'hand>(&'rules self, hand: SFullHand<'hand>) -> impl Iterator<Item=Option<&'rules ('rules + TActivelyPlayableRules)>> + 'hand {
+        self.vecorules.iter().map(|orules| orules.as_ref().map(|rules| rules.as_ref()))
+            .filter(move |orules| orules.map_or(true, |rules| rules.can_be_played(hand)))
+    }
 }
 
 #[derive(Debug)]
@@ -70,8 +75,7 @@ pub struct SRuleSet {
 
 pub fn allowed_rules<'hand, 'rules : 'hand>(vecrulegroup: &'rules [SRuleGroup], hand: SFullHand<'hand>) -> impl Iterator<Item=Option<&'rules ('rules + TActivelyPlayableRules)>> + 'hand {
     vecrulegroup.iter()
-        .flat_map(move |rulegroup| rulegroup.vecorules.iter().map(|orules| orules.as_ref().map(|rules| rules.as_ref())))
-        .filter(move |orules| orules.map_or(true, |rules| rules.can_be_played(hand)))
+        .flat_map(move |rulegroup| rulegroup.allowed_rules(hand))
 }
 
 impl SRuleSet {

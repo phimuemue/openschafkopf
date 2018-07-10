@@ -119,9 +119,7 @@ impl TPlayer for SPlayerHuman {
     ) {
         skui::print_game_announcements(epi, gameannouncements);
         let vecrulegroup : Vec<&SRuleGroup> = vecrulegroup.iter()
-            .filter(|rulegroup| rulegroup.vecorules.iter()
-                .any(|orules| orules.as_ref().map_or(true, |rules| rules.can_be_played(hand)))
-            )
+            .filter(|rulegroup| 0 < rulegroup.allowed_rules(hand).count())
             .collect();
         loop {
             let vecoorules : Vec<Option<Option<&TActivelyPlayableRules>>> = Some(None).into_iter() // stands for "back"
@@ -133,9 +131,8 @@ impl TPlayer for SPlayerHuman {
                         |i_rulegroup_chosen| vecrulegroup[i_rulegroup_chosen].vecorules[0].as_ref().map(|rules| rules.as_ref()),
                         &opairepiprio,
                     )
-                        .vecorules.iter()
-                        .filter(|orules| orules.as_ref().map_or(true, |rules| rules.can_be_played(hand)))
-                        .map(|orules| Some(orules.as_ref().map(|rules| rules.as_ref())))
+                        .allowed_rules(hand)
+                        .map(Some)
                 )
                 .collect();
             if let Some(orules) = *choose_ruleset_or_rules(
