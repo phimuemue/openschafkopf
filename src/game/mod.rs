@@ -173,6 +173,9 @@ impl<'rules> SGamePreparations<'rules> {
         if orules.as_ref().map_or(false, |rules| Some(epi)!=rules.playerindex()) {
             bail!("Only actively playable rules can be announced");
         }
+        if !orules.as_ref().map_or(true, |rules| rules.can_be_played(SFullHand::new(&self.ahand[epi], self.ruleset.ekurzlang))) {
+            bail!("Rules cannot be played. {}", self.ahand[epi]);
+        }
         self.gameannouncements.push(orules);
         assert!(0<self.gameannouncements.size());
         Ok(())
@@ -247,6 +250,9 @@ impl<'rules> SDetermineRules<'rules> {
         }
         if rules.priority()<self.currently_offered_prio().1 {
             bail!("announced rules' priority must be at least as large as the latest announced priority");
+        }
+        if !rules.can_be_played(SFullHand::new(&self.ahand[epi], self.ruleset.ekurzlang)) {
+            bail!("Rules cannot be played. {}", self.ahand[epi]);
         }
         assert_ne!(epi, self.pairepirules_current_bid.0);
         assert!(!self.vecpairepirules_queued.is_empty());
