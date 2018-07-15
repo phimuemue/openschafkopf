@@ -147,7 +147,7 @@ impl SSuspicion {
         if n_level < n_level_end {
             let str_item_id = format!("{}{}",
                 n_level,
-                rand::thread_rng().gen_ascii_chars().take(16).collect::<String>(), // we simply assume no collisions here
+                rand::thread_rng().sample_iter(&rand::distributions::Alphanumeric).take(16).collect::<String>(), // we simply assume no collisions here
             );
             file_output.write_all(format!("<li><<input type=\"checkbox\" id=\"{}\" />>\n", str_item_id).as_bytes())?;
             file_output.write_all(format!("<label for=\"{}\">{} direct successors<table><tr>\n",
