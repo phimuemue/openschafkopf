@@ -56,7 +56,14 @@ pub fn parse_cards<C>(str_cards: &str) -> Option<C>
 #[test]
 fn test_cardvectorparser() {
     use util::*;
-    let veccard = verify!(parse_cards::<Vec<_>>("ek gk hz hu s7")).unwrap();
-    assert_eq!(veccard.len(), 5);
-    assert!(veccard[1] == SCard::new(EFarbe::Gras, ESchlag::Koenig));
+    assert_eq!(
+        verify!(parse_cards::<Vec<_>>("ek gk hz hu s7")).unwrap(),
+        vec![
+            SCard::new(EFarbe::Eichel, ESchlag::Koenig),
+            SCard::new(EFarbe::Gras, ESchlag::Koenig),
+            SCard::new(EFarbe::Herz, ESchlag::Zehn),
+            SCard::new(EFarbe::Herz, ESchlag::Unter),
+            SCard::new(EFarbe::Schelln, ESchlag::S7),
+        ]
+    );
 }
