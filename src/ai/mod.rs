@@ -72,11 +72,7 @@ fn test_unplayed_cards() {
     use card::card_values::*;
     let vecstich = [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]].into_iter()
         .map(|acard| {
-            let mut stich = SStich::new(/*epi should not be relevant*/EPlayerIndex::EPI0);
-            for card in acard.into_iter() {
-                stich.push(*card);
-            }
-            stich
+            SStich::new_full(/*epi_first irrelevant*/EPlayerIndex::EPI0, *acard)
         })
         .collect::<Vec<_>>();
     let hand = &SHand::new_from_vec([GK, SK].into_iter().cloned().collect());

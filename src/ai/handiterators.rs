@@ -133,11 +133,7 @@ pub fn all_possible_hands(vecstich: &[SStich], hand_fixed: SHand, epi_fixed: EPl
 fn test_all_possible_hands() {
     use card::card_values::*;
     let acard_to_stich = |acard: [SCard; 4]| {
-        let mut stich = SStich::new(/*epi should not be relevant*/EPlayerIndex::EPI0);
-        for card in acard.into_iter() {
-            stich.push(*card);
-        }
-        stich
+        SStich::new_full(/*epi_first irrelevant*/EPlayerIndex::EPI0, acard)
     };
     let mut vecstich = [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8]].into_iter()
         .map(|acard| acard_to_stich(*acard))

@@ -92,6 +92,13 @@ impl<T> SPlayersInRound<T> {
             vect: ArrayVec::new(),
         }
     }
+    #[cfg(test)]
+    pub fn new_full(epi_first: EPlayerIndex, at: [T; 4]) -> SPlayersInRound<T> {
+        SPlayersInRound {
+            epi_first,
+            vect: ArrayVec::from(at),
+        }
+    }
     pub fn first_playerindex(&self) -> EPlayerIndex {
         self.epi_first
     }

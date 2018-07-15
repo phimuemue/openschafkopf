@@ -64,11 +64,7 @@ fn internal_test_rules(
 fn make_stich_vector(vecpairnacard_stich: &[(usize, [SCard; 4])]) -> Vec<SStich> {
     vecpairnacard_stich.iter()
         .map(|&(n_epi, acard)| {
-            let mut stich = SStich::new(EPlayerIndex::from_usize(n_epi));
-            for card in acard.iter() {
-                stich.push(*card);
-            }
-            stich
+            SStich::new_full(EPlayerIndex::from_usize(n_epi), acard)
         })
         .collect()
 }
