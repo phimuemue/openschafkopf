@@ -362,16 +362,16 @@ impl TAi for SAiSimulating {
 fn test_is_compatible_with_game_so_far() {
     use rules::rulesrufspiel::*;
     use rules::payoutdecider::*;
-    use primitives::cardvector::parse_cards;
+    use card::card_values::*;
     use game;
     enum VTestAction {
-        PlayStich(&'static str),
+        PlayStich([SCard; 4]),
         AssertFrei(EPlayerIndex, VTrumpfOrFarbe),
         AssertNotFrei(EPlayerIndex, VTrumpfOrFarbe),
     }
-    let test_game = |astr_hand: [&'static str; 4], rules: &TRules, epi_first, vectestaction: Vec<VTestAction>| {
+    let test_game = |aacard_hand: [[SCard; 8]; 4], rules: &TRules, epi_first, vectestaction: Vec<VTestAction>| {
         let ahand = EPlayerIndex::map_from_fn(|epi| {
-            SHand::new_from_vec(verify!(parse_cards(astr_hand[epi.to_usize()])).unwrap())
+            SHand::new_from_vec(aacard_hand[epi.to_usize()].into_iter().cloned().collect())
         });
         use rules::ruleset::*;
         let mut game = game::SGame::new(
@@ -387,10 +387,10 @@ fn test_is_compatible_with_game_so_far() {
         for testaction in vectestaction {
             let mut oassertnotfrei = None;
             match testaction {
-                VTestAction::PlayStich(str_stich) => {
-                    for card in verify!(parse_cards::<Vec<_>>(str_stich)).unwrap() {
+                VTestAction::PlayStich(acard) => {
+                    for card in acard.into_iter() {
                         let epi = verify!(game.which_player_can_do_something()).unwrap().0;
-                        verify!(game.zugeben(card, epi)).unwrap();
+                        verify!(game.zugeben(*card, epi)).unwrap();
                     }
                 },
                 VTestAction::AssertFrei(epi, trumpforfarbe) => {
@@ -421,30 +421,30 @@ fn test_is_compatible_with_game_so_far() {
         }
     };
     test_game(
-        ["h8 su g7 s7 gu eo gk s9", "eu h7 g8 sa ho sz hk hz", "h9 e7 ga gz g9 e9 ek ea", "hu ha so s8 go e8 sk ez"],
+        [[H8, SU, G7, S7, GU, EO, GK, S9], [EU, H7, G8, SA, HO, SZ, HK, HZ], [H9, E7, GA, GZ, G9, E9, EK, EA], [HU, HA, SO, S8, GO, E8, SK, EZ]],
         &SRulesRufspiel::new(EPlayerIndex::EPI1, EFarbe::Gras, SPayoutDeciderParams::new(/*n_payout_base*/ 20, /*n_payout_schneider_schwarz*/ 10, SLaufendeParams::new(10, 3))),
         /*epi_first*/ EPlayerIndex::EPI2,
         vec![
             VTestAction::AssertNotFrei(EPlayerIndex::EPI1, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
-            VTestAction::PlayStich("h9 hu h8 eu"),
+            VTestAction::PlayStich([H9, HU, H8, EU]),
             VTestAction::AssertNotFrei(EPlayerIndex::EPI1, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
-            VTestAction::PlayStich("h7 e7 ha su"),
+            VTestAction::PlayStich([H7, E7, HA, SU]),
             VTestAction::AssertNotFrei(EPlayerIndex::EPI1, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
             VTestAction::AssertFrei(EPlayerIndex::EPI2, VTrumpfOrFarbe::Trumpf),
-            VTestAction::PlayStich("g7 g8 ga so"),
+            VTestAction::PlayStich([G7, G8, GA, SO]),
             VTestAction::AssertFrei(EPlayerIndex::EPI3, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
-            VTestAction::PlayStich("s8 s7 sa gz"),
+            VTestAction::PlayStich([S8, S7, SA, GZ]),
             VTestAction::AssertFrei(EPlayerIndex::EPI2, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
             // Remaining stichs: "ho g9 go gu" "e8 eo sz e9" "gk hk ek sk" "hz ea ez s9"
         ]
     );
     test_game(
-        ["sz ga hk g8 ea e8 g9 e7", "s7 gz h7 ho g7 sa s8 s9", "e9 ek gu go gk su sk hu", "so ez eo h9 hz h8 ha eu"],
+        [[SZ, GA, HK, G8, EA, E8, G9, E7], [S7, GZ, H7, HO, G7, SA, S8, S9], [E9, EK, GU, GO, GK, SU, SK, HU], [SO, EZ, EO, H9, HZ, H8, HA, EU]],
         &SRulesRufspiel::new(EPlayerIndex::EPI0, EFarbe::Schelln, SPayoutDeciderParams::new(/*n_payout_base*/ 20, /*n_payout_schneider_schwarz*/ 10, SLaufendeParams::new(10, 3))),
         /*epi_first*/ EPlayerIndex::EPI1,
         vec![
             VTestAction::AssertNotFrei(EPlayerIndex::EPI0, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
-            VTestAction::PlayStich("s9 sk hz sz"),
+            VTestAction::PlayStich([S9, SK, HZ, SZ]),
             VTestAction::AssertFrei(EPlayerIndex::EPI0, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
             VTestAction::AssertFrei(EPlayerIndex::EPI2, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
             VTestAction::AssertFrei(EPlayerIndex::EPI3, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
