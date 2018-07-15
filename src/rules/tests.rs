@@ -97,9 +97,8 @@ pub fn test_rules<CardArrayKurzLang>(
     internal_test_rules(
         str_info,
         rules,
-        EPlayerIndex::map_from_fn(|epi| {
-            aacard_hand[epi.to_usize()].to_hand()
-        }),
+        EPlayerIndex::map_from_raw(aacard_hand)
+            .map(TCardArrayKurzLand::to_hand),
         vecn_doubling,
         vecn_stoss,
         &make_stich_vector(vecpairnacard_stich),

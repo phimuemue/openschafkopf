@@ -10,9 +10,9 @@ use std::fmt::Display;
 pub struct SStossDoublingPayoutDecider {}
 impl SStossDoublingPayoutDecider {
     pub fn payout(an_payout_raw: &EnumMap<EPlayerIndex, isize>, (n_stoss, n_doubling): (usize, usize)) -> EnumMap<EPlayerIndex, isize> {
-        EPlayerIndex::map_from_fn(|epi| {
-            an_payout_raw[epi] * 2isize.pow((n_stoss + n_doubling).as_num())
-        })
+        an_payout_raw.map(|n_payout_raw|
+            n_payout_raw * 2isize.pow((n_stoss + n_doubling).as_num())
+        )
     }
 }
 

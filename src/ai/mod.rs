@@ -366,9 +366,10 @@ fn test_is_compatible_with_game_so_far() {
         AssertNotFrei(EPlayerIndex, VTrumpfOrFarbe),
     }
     let test_game = |aacard_hand: [[SCard; 8]; 4], rules: &TRules, epi_first, vectestaction: Vec<VTestAction>| {
-        let ahand = EPlayerIndex::map_from_fn(|epi| {
-            SHand::new_from_vec(aacard_hand[epi.to_usize()].into_iter().cloned().collect())
-        });
+        let ahand = EPlayerIndex::map_from_raw(aacard_hand)
+            .map(|acard_hand|
+                SHand::new_from_vec(acard_hand.into_iter().cloned().collect())
+            );
         use rules::ruleset::*;
         let mut game = game::SGame::new(
             ahand,
