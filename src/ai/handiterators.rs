@@ -131,31 +131,31 @@ pub fn all_possible_hands(vecstich: &[SStich], hand_fixed: SHand, epi_fixed: EPl
 
 #[test]
 fn test_all_possible_hands() {
-    use primitives::cardvector::parse_cards;
-    let str_to_stich = |str_stich| {
+    use card::card_values::*;
+    let acard_to_stich = |acard: [SCard; 4]| {
         let mut stich = SStich::new(/*epi should not be relevant*/EPlayerIndex::EPI0);
-        for card in verify!(parse_cards::<Vec<_>>(str_stich)).unwrap() {
-            stich.push(card.clone());
+        for card in acard.into_iter() {
+            stich.push(*card);
         }
         stich
     };
-    let mut vecstich = ["g7 g8 ga g9", "s8 ho s7 s9", "h7 hk hu su", "eo go hz h8"].iter()
-        .map(|str_stich| str_to_stich(str_stich))
+    let mut vecstich = [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8]].into_iter()
+        .map(|acard| acard_to_stich(*acard))
         .collect::<Vec<_>>();
-    let mut add_stich_and_test = |str_stich, str_hand, n_count| {
-        vecstich.push(str_to_stich(str_stich));
+    let mut add_stich_and_test = |acard_stich, slccard_hand: &[SCard], n_count| {
+        vecstich.push(acard_to_stich(acard_stich));
         assert_eq!(
             all_possible_hands(
                 &vecstich,
-                SHand::new_from_vec(verify!(parse_cards(str_hand)).unwrap()),
+                SHand::new_from_vec(slccard_hand.iter().cloned().collect()),
                 EPlayerIndex::EPI0, // epi_fixed
             ).count(),
             n_count
         );
     };
     // 3*n unknown cards distributed among three players: binomial(3n,3)*binomial(2n,n) possibilities
-    add_stich_and_test("e9 ek e8 ea", "gk sk sa", 1680);
-    add_stich_and_test("sa eu so ha", "gk sk", 90);
-    add_stich_and_test("h9 gz gu gk", "sk", 6);
+    add_stich_and_test([E9, EK, E8, EA], &[GK, SK, SA], 1680);
+    add_stich_and_test([SA, EU, SO, HA], &[GK, SK], 90);
+    add_stich_and_test([H9, GZ, GU, GK], &[SK], 6);
 }
 
