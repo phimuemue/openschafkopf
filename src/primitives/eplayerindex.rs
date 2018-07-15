@@ -32,7 +32,7 @@ impl FromStr for EPlayerIndex {
 #[derive(Clone, Debug)]
 pub struct SPlayersInRound<T> {
     pub epi_first: EPlayerIndex,
-    vect: ArrayVec<[T; 4]>,
+    vect: ArrayVec<[T; EPlayerIndex::SIZE]>,
 }
 
 impl<T> PartialEq for SPlayersInRound<T>
@@ -93,7 +93,7 @@ impl<T> SPlayersInRound<T> {
         }
     }
     #[cfg(test)]
-    pub fn new_full(epi_first: EPlayerIndex, at: [T; 4]) -> SPlayersInRound<T> {
+    pub fn new_full(epi_first: EPlayerIndex, at: [T; EPlayerIndex::SIZE]) -> SPlayersInRound<T> {
         SPlayersInRound {
             epi_first,
             vect: ArrayVec::from(at),
@@ -103,7 +103,7 @@ impl<T> SPlayersInRound<T> {
         self.epi_first
     }
     pub fn current_playerindex(&self) -> Option<EPlayerIndex> {
-        if self.size()==4 {
+        if self.size()==EPlayerIndex::SIZE {
             None
         } else {
             Some(self.first_playerindex().wrapping_add(self.size()))
@@ -113,7 +113,7 @@ impl<T> SPlayersInRound<T> {
         self.vect.len()
     }
     pub fn push(&mut self, t: T) {
-        assert!(self.size()<4);
+        assert!(self.size()<EPlayerIndex::SIZE);
         self.vect.push(t);
     }
     pub fn undo_most_recent(&mut self) {
@@ -148,7 +148,7 @@ impl<T> SPlayersInRound<T> {
 
 impl<T> IntoIterator for SPlayersInRound<T> {
     type Item = (EPlayerIndex, T);
-    type IntoIter = SPlayersInRoundIterator<arrayvec::IntoIter<[T; 4]>>;
+    type IntoIter = SPlayersInRoundIterator<arrayvec::IntoIter<[T; EPlayerIndex::SIZE]>>;
     fn into_iter(self) -> Self::IntoIter {
         SPlayersInRoundIterator {
             iter: self.vect.into_iter(),
