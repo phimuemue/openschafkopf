@@ -105,9 +105,15 @@ impl fmt::Display for SCard {
     }
 }
 
+macro_rules! card_new_const {($efarbe: expr, $eschlag: expr) => { // TODORUST const fn
+    SCard{n_internalrepresentation : ($efarbe as usize * ESchlag::SIZE + $eschlag as usize) as u8}
+}}
+
 impl SCard {
     pub fn new(efarbe : EFarbe, eschlag : ESchlag) -> SCard {
-        SCard{n_internalrepresentation : (efarbe.to_usize() * ESchlag::SIZE + eschlag.to_usize()).as_num()}
+        let card = SCard{n_internalrepresentation : (efarbe.to_usize() * ESchlag::SIZE + eschlag.to_usize()).as_num()};
+        assert_eq!(card, card_new_const!(efarbe, eschlag));
+        card
     }
     pub fn farbe(self) -> EFarbe {
         EFarbe::from_usize(self.n_internalrepresentation.as_num::<usize>() / ESchlag::SIZE)
@@ -172,4 +178,19 @@ impl <T> Index<SCard> for SCardMap<T> {
     fn index(&self, card: SCard) -> &T {
         verify!(self.aot[card.n_internalrepresentation.as_num::<usize>()].as_ref()).unwrap()
     }
+}
+
+#[cfg(test)]
+pub mod card_values {
+    use card::*;
+    macro_rules! impl_card_val_internal {(($($card:ident,)*), ($($eschlag:ident,)*), $efarbe:ident) => {
+        $(pub const $card : SCard = card_new_const!(EFarbe::$efarbe, ESchlag::$eschlag);)*
+    }}
+    macro_rules! impl_card_val {(($($card:ident,)*), $efarbe:ident) => {
+        impl_card_val_internal!(($($card,)*), (S7, S8, S9, Zehn, Unter, Ober, Koenig, Ass,), $efarbe);
+    }}
+    impl_card_val!((E7, E8, E9, EZ, EU, EO, EK, EA,), Eichel);
+    impl_card_val!((G7, G8, G9, GZ, GU, GO, GK, GA,), Gras);
+    impl_card_val!((H7, H8, H9, HZ, HU, HO, HK, HA,), Herz);
+    impl_card_val!((S7, S8, S9, SZ, SU, SO, SK, SA,), Schelln);
 }

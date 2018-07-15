@@ -8,7 +8,7 @@ def CardString(strCardRaw):
     assert(len(strCardRaw)==2)
     assert(strCardRaw[0] in "eghs")
     assert(strCardRaw[1] in "789zuoka")
-    return strCardRaw
+    return strCardRaw.upper()
 
 def solo_payout_schneider_schwarz(tarif):
     if not tarif:
@@ -33,19 +33,19 @@ vecpairstrdictstrfnGame = [
         "Sauspiel auf die Hundsgfickte" : lambda eplayerindex, tarif: "rulesrufspiel_new_test(EPlayerIndex::EPI%d, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3))"%(eplayerindex),
     }),
     ("farbwenz", {
-        "Eichel-Farbwenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
-        "Gras-Farbwenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
-        "Herz-Farbwenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
-        "Schelln-Farbwenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Eichel-Farbwenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Gras-Farbwenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Herz-Farbwenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Schelln-Farbwenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeSchelln>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
     }),
     ("wenz", {
         "Wenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 2))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
     }),
     ("solo", {
-        "Eichel-Solo" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
-        "Gras-Solo" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
-        "Herz-Solo" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
-        "Schelln-Solo" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SFarbeDesignatorSchelln>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Eichel-Solo" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Gras-Solo" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Herz-Solo" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Schelln-Solo" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeSchelln>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
     }),
     ("geier", {
         "Geier" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 2))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
@@ -105,7 +105,7 @@ def OpenFileParseGame(strFile, dictstrfnGame):
                     assert(False)
                 AppendToResult("Error in file: len(vecspancard)!=8")
                 return strResult
-            AppendToResultNoNewline("\"%s\"," % (" ".join([CardString(spancard["class"][3]) for spancard in vecspancard])))
+            AppendToResultNoNewline("[%s]," % (",".join([CardString(spancard["class"][3]) for spancard in vecspancard])))
         AppendToResult("],")
         # doubling
         AppendToResultNoNewline("    vec![")
@@ -127,9 +127,9 @@ def OpenFileParseGame(strFile, dictstrfnGame):
                     assert(len(vecstrClass)==3 and vecstrClass[-1] in ["highlighted", ""])
                     assert(vecstrClass[0]=="card")
                     assert(vecstrClass[1].startswith("position"))
-                AppendToResultNoNewline("(%d, \"%s\")," %(
+                AppendToResultNoNewline("(%d, [%s])," %(
                     dictstreplayerindex[divtricks.find_all("div")[0].find("a")[strDataUsername]],
-                    " ".join(CardString(divcard.find_all("span")[-1]["class"][-1]) for divcard in vecdivcard)
+                    ",".join(CardString(divcard.find_all("span")[-1]["class"][-1]) for divcard in vecdivcard)
                 ))
         AppendToResult("],")
         dictnnPayout = {}

@@ -1,6 +1,6 @@
 use primitives::{
     *,
-    cardvector::parse_cards,
+    card::card_values::*
 };
 use rules::{
     *,
@@ -61,38 +61,52 @@ fn internal_test_rules(
     assert_eq!(EPlayerIndex::map_from_fn(|epi| accountbalance_payout.get_player(epi)), EPlayerIndex::map_from_raw(an_payout));
 }
 
-fn make_stich_vector(vecpairnstr_stich: &[(usize, &str)]) -> Vec<SStich> {
-    vecpairnstr_stich.iter()
-        .map(|&(n_epi, str_stich)| {
+fn make_stich_vector(vecpairnacard_stich: &[(usize, [SCard; 4])]) -> Vec<SStich> {
+    vecpairnacard_stich.iter()
+        .map(|&(n_epi, acard)| {
             let mut stich = SStich::new(EPlayerIndex::from_usize(n_epi));
-            let veccard = verify!(parse_cards::<Vec<_>>(str_stich)).unwrap();
-            assert_eq!(4, veccard.len());
-            for card in veccard {
-                stich.push(card);
+            for card in acard.iter() {
+                stich.push(*card);
             }
             stich
         })
         .collect()
 }
 
-pub fn test_rules(
+pub trait TCardArrayKurzLand {
+    fn to_hand(&self) -> SHand; // TODO take self instead of &self
+}
+impl TCardArrayKurzLand for [SCard; 6] {
+    fn to_hand(&self) -> SHand {
+        SHand::new_from_vec(self.into_iter().cloned().collect())
+    }
+}
+impl TCardArrayKurzLand for [SCard; 8] {
+    fn to_hand(&self) -> SHand {
+        SHand::new_from_vec(self.into_iter().cloned().collect())
+    }
+}
+
+pub fn test_rules<CardArrayKurzLang>(
     str_info: &str,
     rules: &TRules,
-    astr_hand: [&str; 4],
+    aacard_hand: [CardArrayKurzLang; 4],
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
-    vecpairnstr_stich: &[(usize, &str)],
+    vecpairnacard_stich: &[(usize, [SCard; 4])],
     an_payout: [isize; 4],
-) {
+)
+    where CardArrayKurzLang: TCardArrayKurzLand,
+{
     internal_test_rules(
         str_info,
         rules,
         EPlayerIndex::map_from_fn(|epi| {
-            SHand::new_from_vec(verify!(parse_cards(astr_hand[epi.to_usize()])).unwrap())
+            aacard_hand[epi.to_usize()].to_hand()
         }),
         vecn_doubling,
         vecn_stoss,
-        &make_stich_vector(vecpairnstr_stich),
+        &make_stich_vector(vecpairnacard_stich),
         an_payout,
     );
 }
@@ -102,10 +116,10 @@ pub fn test_rules_manual(
     rules: &TRules,
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
-    vecpairnstr_stich: &[(usize, &str)],
+    vecpairnacard_stich: &[(usize, [SCard; 4])],
     an_payout: [isize; 4],
 ) {
-    let vecstich = make_stich_vector(vecpairnstr_stich);
+    let vecstich = make_stich_vector(vecpairnacard_stich);
     internal_test_rules(
         str_info,
         rules,
@@ -171,271 +185,271 @@ fn test_rulesrufspiel() {
     test_rules(
         "../../testdata/games/10.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
-        ["ho so gu su ek ga s9 s7","go hk h8 h7 ea sa sk s8","eu hu ha ez e7 gz g9 g8","eo hz h9 e9 e8 gk g7 sz",],
+        [[HO,SO,GU,SU,EK,GA,S9,S7],[GO,HK,H8,H7,EA,SA,SK,S8],[EU,HU,HA,EZ,E7,GZ,G9,G8],[EO,HZ,H9,E9,E8,GK,G7,SZ],],
         vec![],
         vec![],
-        &[(0, "su go hu h9"),(1, "h8 ha eo gu"),(3, "e8 ek ea e7"),(1, "sa eu sz s7"),(2, "g9 g7 ga sk"),(0, "ho h7 g8 hz"),(0, "so hk ez e9"),(0, "s9 s8 gz gk"),],
+        &[(0, [SU,GO,HU,H9]),(1, [H8,HA,EO,GU]),(3, [E8,EK,EA,E7]),(1, [SA,EU,SZ,S7]),(2, [G9,G7,GA,SK]),(0, [HO,H7,G8,HZ]),(0, [SO,HK,EZ,E9]),(0, [S9,S8,GZ,GK]),],
         [20, 20, -20, -20],
     );
     test_rules(
         "../../testdata/games/14.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
-        ["ho hu ha h8 ez e9 sa s9","eu h7 e8 gk g9 g7 sk s8","go so gu hz h9 e7 ga g8","eo su hk ea ek gz sz s7",],
+        [[HO,HU,HA,H8,EZ,E9,SA,S9],[EU,H7,E8,GK,G9,G7,SK,S8],[GO,SO,GU,HZ,H9,E7,GA,G8],[EO,SU,HK,EA,EK,GZ,SZ,S7],],
         vec![],
         vec![],
-        &[(0, "h8 h7 gu eo"),(3, "hk hu eu hz"),(1, "e8 e7 ea ez"),(3, "su ho sk go"),(2, "so s7 ha gk"),(2, "ga gz e9 g7"),(2, "g8 sz s9 g9"),(1, "s8 h9 ek sa"),],
+        &[(0, [H8,H7,GU,EO]),(3, [HK,HU,EU,HZ]),(1, [E8,E7,EA,EZ]),(3, [SU,HO,SK,GO]),(2, [SO,S7,HA,GK]),(2, [GA,GZ,E9,G7]),(2, [G8,SZ,S9,G9]),(1, [S8,H9,EK,SA]),],
         [-30, 30, 30, -30],
     );
     test_rules(
         "../../testdata/games/16.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI2, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
-        ["gu su hk e9 e8 e7 ga sz","so hu hz h8 ez g9 g8 s7","eo go ha h9 h7 sk s9 s8","ho eu ea ek gz gk g7 sa",],
+        [[GU,SU,HK,E9,E8,E7,GA,SZ],[SO,HU,HZ,H8,EZ,G9,G8,S7],[EO,GO,HA,H9,H7,SK,S9,S8],[HO,EU,EA,EK,GZ,GK,G7,SA],],
         vec![],
         vec![],
-        &[(0, "sz s7 s8 sa"),(3, "ho hk h8 ha"),(3, "eu su so go"),(2, "eo gz gu hz"),(2, "h7 ek e7 hu"),(1, "g8 h9 gk ga"),(2, "sk g7 e8 g9"),(2, "s9 ea e9 ez"),],
+        &[(0, [SZ,S7,S8,SA]),(3, [HO,HK,H8,HA]),(3, [EU,SU,SO,GO]),(2, [EO,GZ,GU,HZ]),(2, [H7,EK,E7,HU]),(1, [G8,H9,GK,GA]),(2, [SK,G7,E8,G9]),(2, [S9,EA,E9,EZ]),],
         [-60, -60, 60, 60],
     );
     test_rules(
         "../../testdata/games/19.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI1, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
-        ["go gu ga gz g9 sz s9 s8","ho hu hk h8 h7 gk sa s7","eo so eu ha ea e9 e8 sk","su hz h9 ez ek e7 g8 g7",],
+        [[GO,GU,GA,GZ,G9,SZ,S9,S8],[HO,HU,HK,H8,H7,GK,SA,S7],[EO,SO,EU,HA,EA,E9,E8,SK],[SU,HZ,H9,EZ,EK,E7,G8,G7],],
         vec![],
         vec![],
-        &[(0, "go h7 eo hz"),(2, "sk su s8 s7"),(3, "g7 ga gk ha"),(2, "ea e7 gu sa"),(0, "g9 hu e9 g8"),(1, "ho eu h9 gz"),(1, "h8 so ez s9"),(2, "e8 ek sz hk"),],
+        &[(0, [GO,H7,EO,HZ]),(2, [SK,SU,S8,S7]),(3, [G7,GA,GK,HA]),(2, [EA,E7,GU,SA]),(0, [G9,HU,E9,G8]),(1, [HO,EU,H9,GZ]),(1, [H8,SO,EZ,S9]),(2, [E8,EK,SZ,HK]),],
         [-20, -20, 20, 20],
     );
     test_rules(
         "../../testdata/games/2.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI2, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
-        ["gu su hz h7 ek ga gk s7","hk ez e9 e8 e7 g7 s9 s8","go so hu ha ea gz sa sk","eo ho eu h9 h8 g9 g8 sz",],
+        [[GU,SU,HZ,H7,EK,GA,GK,S7],[HK,EZ,E9,E8,E7,G7,S9,S8],[GO,SO,HU,HA,EA,GZ,SA,SK],[EO,HO,EU,H9,H8,G9,G8,SZ],],
         vec![],
         vec![3,0,],
-        &[(0, "gu hk hu eu"),(3, "g9 ga g7 gz"),(0, "h7 s8 so h8"),(2, "ea h9 ek ez"),(3, "g8 gk s9 ha"),(2, "sa sz s7 e7"),(2, "sk ho su e8"),(3, "eo hz e9 go"),],
+        &[(0, [GU,HK,HU,EU]),(3, [G9,GA,G7,GZ]),(0, [H7,S8,SO,H8]),(2, [EA,H9,EK,EZ]),(3, [G8,GK,S9,HA]),(2, [SA,SZ,S7,E7]),(2, [SK,HO,SU,E8]),(3, [EO,HZ,E9,GO]),],
         [-80, 80, -80, 80],
     );
     test_rules(
         "../../testdata/games/21.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
-        ["hk h7 ez e9 e7 gk g8 sk","go gu ea ek e8 gz sa s7","ho so eu hz h8 g7 sz s8","eo hu su ha h9 ga g9 s9",],
+        [[HK,H7,EZ,E9,E7,GK,G8,SK],[GO,GU,EA,EK,E8,GZ,SA,S7],[HO,SO,EU,HZ,H8,G7,SZ,S8],[EO,HU,SU,HA,H9,GA,G9,S9],],
         vec![],
         vec![],
-        &[(0, "sk sa s8 s9"),(1, "go h8 ha hk"),(1, "gu eu eo h7"),(3, "su ez e8 so"),(2, "g7 ga g8 gz"),(3, "g9 gk s7 sz"),(0, "e7 ea ho h9"),(2, "hz hu e9 ek"),],
+        &[(0, [SK,SA,S8,S9]),(1, [GO,H8,HA,HK]),(1, [GU,EU,EO,H7]),(3, [SU,EZ,E8,SO]),(2, [G7,GA,G8,GZ]),(3, [G9,GK,S7,SZ]),(0, [E7,EA,HO,H9]),(2, [HZ,HU,E9,EK]),],
         [-20, 20, -20, 20],
     );
     test_rules(
         "../../testdata/games/22.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
-        ["eo eu hu ha hk g7 sz s8","ho ez e9 e7 gz gk g9 sa","go so hz h9 ek e8 sk s9","gu su h8 h7 ea ga g8 s7",],
+        [[EO,EU,HU,HA,HK,G7,SZ,S8],[HO,EZ,E9,E7,GZ,GK,G9,SA],[GO,SO,HZ,H9,EK,E8,SK,S9],[GU,SU,H8,H7,EA,GA,G8,S7],],
         vec![],
         vec![],
-        &[(0, "hk ho h9 h7"),(1, "gz hz ga g7"),(2, "e8 ea sz e7"),(3, "gu hu ez so"),(2, "s9 s7 s8 sa"),(1, "gk go g8 eo"),(0, "eu g9 ek h8"),(0, "ha e9 sk su"),],
+        &[(0, [HK,HO,H9,H7]),(1, [GZ,HZ,GA,G7]),(2, [E8,EA,SZ,E7]),(3, [GU,HU,EZ,SO]),(2, [S9,S7,S8,SA]),(1, [GK,GO,G8,EO]),(0, [EU,G9,EK,H8]),(0, [HA,E9,SK,SU]),],
         [-20, 20, 20, -20],
     );
     test_rules(
         "../../testdata/games/26.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
-        ["eo ho hz h9 h8 ga gk s8","hu su hk ea e7 gz sa sz","go so eu gu e8 g9 s9 s7","ha h7 ez ek e9 g8 g7 sk",],
+        [[EO,HO,HZ,H9,H8,GA,GK,S8],[HU,SU,HK,EA,E7,GZ,SA,SZ],[GO,SO,EU,GU,E8,G9,S9,S7],[HA,H7,EZ,EK,E9,G8,G7,SK],],
         vec![],
         vec![],
-        &[(0, "h8 su eu ha"),(2, "s7 sk s8 sa"),(1, "ea e8 e9 ga"),(1, "e7 g9 ek hz"),(0, "gk gz gu g7"),(2, "s9 h7 h9 sz"),(0, "eo hk so g8"),(0, "ho hu go ez"),],
+        &[(0, [H8,SU,EU,HA]),(2, [S7,SK,S8,SA]),(1, [EA,E8,E9,GA]),(1, [E7,G9,EK,HZ]),(0, [GK,GZ,GU,G7]),(2, [S9,H7,H9,SZ]),(0, [EO,HK,SO,G8]),(0, [HO,HU,GO,EZ]),],
         [20, 20, -20, -20],
     );
     test_rules(
         "../../testdata/games/29.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
-        ["so su ha hz h7 ek e9 sz","go hk h8 e7 gz g9 sa s7","eo eu h9 ez ga gk sk s8","ho gu hu ea e8 g8 g7 s9",],
+        [[SO,SU,HA,HZ,H7,EK,E9,SZ],[GO,HK,H8,E7,GZ,G9,SA,S7],[EO,EU,H9,EZ,GA,GK,SK,S8],[HO,GU,HU,EA,E8,G8,G7,S9],],
         vec![],
         vec![],
-        &[(0, "h7 go h9 hu"),(1, "e7 ez ea ek"),(3, "ho su h8 eo"),(2, "eu gu so hk"),(0, "e9 gz s8 e8"),(0, "sz sa sk s9"),(1, "g9 ga g7 ha"),(0, "hz s7 gk g8"),],
+        &[(0, [H7,GO,H9,HU]),(1, [E7,EZ,EA,EK]),(3, [HO,SU,H8,EO]),(2, [EU,GU,SO,HK]),(0, [E9,GZ,S8,E8]),(0, [SZ,SA,SK,S9]),(1, [G9,GA,G7,HA]),(0, [HZ,S7,GK,G8]),],
         [20, -20, -20, 20],
     );
     test_rules(
         "../../testdata/games/30.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI1, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
-        ["ha ea ez e8 e7 ga gk sk","eu hu su hz h8 h7 g9 g7","eo ho gu hk e9 gz sa s9","go so h9 ek g8 sz s8 s7",],
+        [[HA,EA,EZ,E8,E7,GA,GK,SK],[EU,HU,SU,HZ,H8,H7,G9,G7],[EO,HO,GU,HK,E9,GZ,SA,S9],[GO,SO,H9,EK,G8,SZ,S8,S7],],
         vec![],
         vec![],
-        &[(0, "ha h7 ho h9"),(2, "sa s8 sk hz"),(1, "h8 hk so e7"),(3, "g8 ga g7 gz"),(0, "gk g9 s9 ek"),(0, "e8 hu e9 go"),(3, "sz ea su gu"),(2, "eo s7 ez eu"),],
+        &[(0, [HA,H7,HO,H9]),(2, [SA,S8,SK,HZ]),(1, [H8,HK,SO,E7]),(3, [G8,GA,G7,GZ]),(0, [GK,G9,S9,EK]),(0, [E8,HU,E9,GO]),(3, [SZ,EA,SU,GU]),(2, [EO,S7,EZ,EU]),],
         [-60, -60, 60, 60],
     );
     test_rules(
         "../../testdata/games/31.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
-        ["eo hz h9 e8 ga gk sk s9","gu hu ez ek e7 gz g9 s7","ho so su ha e9 g8 g7 sa","go eu hk h8 h7 ea sz s8",],
+        [[EO,HZ,H9,E8,GA,GK,SK,S9],[GU,HU,EZ,EK,E7,GZ,G9,S7],[HO,SO,SU,HA,E9,G8,G7,SA],[GO,EU,HK,H8,H7,EA,SZ,S8],],
         vec![],
         vec![],
-        &[(0, "sk s7 sa sz"),(2, "ho h7 eo hu"),(0, "ga gz g7 hk"),(3, "go h9 gu ha"),(3, "ea e8 e7 e9"),(3, "s8 s9 g9 g8"),(0, "gk ek su h8"),(2, "so eu hz ez"),],
+        &[(0, [SK,S7,SA,SZ]),(2, [HO,H7,EO,HU]),(0, [GA,GZ,G7,HK]),(3, [GO,H9,GU,HA]),(3, [EA,E8,E7,E9]),(3, [S8,S9,G9,G8]),(0, [GK,EK,SU,H8]),(2, [SO,EU,HZ,EZ]),],
         [-30, -30, 30, 30],
     );
     test_rules(
         "../../testdata/games/32.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
-        ["eo go ho hz h7 e9 gz sa","so gu hu hk h8 ea ez g7","su e8 gk g9 g8 sk s9 s7","eu ha h9 ek e7 ga sz s8",],
+        [[EO,GO,HO,HZ,H7,E9,GZ,SA],[SO,GU,HU,HK,H8,EA,EZ,G7],[SU,E8,GK,G9,G8,SK,S9,S7],[EU,HA,H9,EK,E7,GA,SZ,S8],],
         vec![],
         vec![],
-        &[(0, "eo h8 su ha"),(0, "go hk e8 h9"),(0, "h7 so s9 eu"),(1, "g7 g8 ga gz"),(3, "ek e9 ea gk"),(1, "gu g9 sz ho"),(0, "sa hu sk s8"),(1, "ez s7 e7 hz"),],
+        &[(0, [EO,H8,SU,HA]),(0, [GO,HK,E8,H9]),(0, [H7,SO,S9,EU]),(1, [G7,G8,GA,GZ]),(3, [EK,E9,EA,GK]),(1, [GU,G9,SZ,HO]),(0, [SA,HU,SK,S8]),(1, [EZ,S7,E7,HZ]),],
         [50, -50, -50, 50],
     );
     test_rules(
         "../../testdata/games/33.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI2, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
-        ["so eu su h7 ek g7 sk s8","eo h9 ea ez e9 e8 g8 s7","go ho gu ha hz g9 sa sz","hu hk h8 e7 ga gz gk s9",],
+        [[SO,EU,SU,H7,EK,G7,SK,S8],[EO,H9,EA,EZ,E9,E8,G8,S7],[GO,HO,GU,HA,HZ,G9,SA,SZ],[HU,HK,H8,E7,GA,GZ,GK,S9],],
         vec![],
         vec![],
-        &[(0, "g7 g8 g9 ga"),(3, "hu h7 eo gu"),(1, "ea ha e7 ek"),(2, "go hk su h9"),(2, "ho h8 eu s7"),(2, "sa s9 s8 e8"),(2, "sz gk sk e9"),(2, "hz gz so ez"),],
+        &[(0, [G7,G8,G9,GA]),(3, [HU,H7,EO,GU]),(1, [EA,HA,E7,EK]),(2, [GO,HK,SU,H9]),(2, [HO,H8,EU,S7]),(2, [SA,S9,S8,E8]),(2, [SZ,GK,SK,E9]),(2, [HZ,GZ,SO,EZ]),],
         [-20, -20, 20, 20],
     );
     test_rules(
         "../../testdata/games/35.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI2, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
-        ["eo so eu h7 e7 gk g9 g8","gu hu ek e8 ga sz s9 s7","go ho su hz hk h8 gz s8","ha h9 ea ez e9 g7 sa sk",],
+        [[EO,SO,EU,H7,E7,GK,G9,G8],[GU,HU,EK,E8,GA,SZ,S9,S7],[GO,HO,SU,HZ,HK,H8,GZ,S8],[HA,H9,EA,EZ,E9,G7,SA,SK],],
         vec![],
         vec![],
-        &[(0, "gk ga gz g7"),(1, "gu h8 ha eu"),(0, "e7 ek hz e9"),(2, "ho h9 h7 hu"),(2, "su ea so e8"),(0, "g9 sz hk sk"),(2, "s8 sa g8 s7"),(3, "ez eo s9 go"),],
+        &[(0, [GK,GA,GZ,G7]),(1, [GU,H8,HA,EU]),(0, [E7,EK,HZ,E9]),(2, [HO,H9,H7,HU]),(2, [SU,EA,SO,E8]),(0, [G9,SZ,HK,SK]),(2, [S8,SA,G8,S7]),(3, [EZ,EO,S9,GO]),],
         [-20, 20, 20, -20],
     );
     test_rules(
         "../../testdata/games/36.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI1, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
-        ["so e9 ga g9 g8 sa sz s9","eo gu hz h9 h8 h7 ez s7","go eu hu su hk ek gk sk","ho ha ea e8 e7 gz g7 s8",],
+        [[SO,E9,GA,G9,G8,SA,SZ,S9],[EO,GU,HZ,H9,H8,H7,EZ,S7],[GO,EU,HU,SU,HK,EK,GK,SK],[HO,HA,EA,E8,E7,GZ,G7,S8],],
         vec![],
         vec![],
-        &[(0, "e9 ez ek ea"),(3, "ho so h7 go"),(2, "sk s8 sa s7"),(0, "ga hz gk gz"),(1, "eo su ha g9"),(1, "h8 hu g7 sz"),(2, "hk e7 s9 h9"),(2, "eu e8 g8 gu"),],
+        &[(0, [E9,EZ,EK,EA]),(3, [HO,SO,H7,GO]),(2, [SK,S8,SA,S7]),(0, [GA,HZ,GK,GZ]),(1, [EO,SU,HA,G9]),(1, [H8,HU,G7,SZ]),(2, [HK,E7,S9,H9]),(2, [EU,E8,G8,GU]),],
         [-20, 20, -20, 20],
     );
     test_rules(
         "../../testdata/games/38.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
-        ["su ha ez e9 e7 gk g9 s8","go gu hu h9 g7 sz s9 s7","eo so eu ek ga gz sa sk","ho hz hk h8 h7 ea e8 g8",],
+        [[SU,HA,EZ,E9,E7,GK,G9,S8],[GO,GU,HU,H9,G7,SZ,S9,S7],[EO,SO,EU,EK,GA,GZ,SA,SK],[HO,HZ,HK,H8,H7,EA,E8,G8],],
         vec![],
         vec![],
-        &[(0, "gk g7 ga g8"),(2, "eo hz su h9"),(2, "so h7 ha go"),(1, "s9 sa e8 s8"),(2, "eu hk g9 hu"),(2, "ek ea e7 gu"),(1, "sz sk h8 e9"),(3, "ho ez s7 gz"),],
+        &[(0, [GK,G7,GA,G8]),(2, [EO,HZ,SU,H9]),(2, [SO,H7,HA,GO]),(1, [S9,SA,E8,S8]),(2, [EU,HK,G9,HU]),(2, [EK,EA,E7,GU]),(1, [SZ,SK,H8,E9]),(3, [HO,EZ,S7,GZ]),],
         [-20, -20, 20, 20],
     );
     test_rules(
         "../../testdata/games/40.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
-        ["go so eu ha h9 e9 sa s9","eo ho hz ek e7 g9 g8 g7","gu hk h8 ez gz gk sz sk","hu su h7 ea e8 ga s8 s7",],
+        [[GO,SO,EU,HA,H9,E9,SA,S9],[EO,HO,HZ,EK,E7,G9,G8,G7],[GU,HK,H8,EZ,GZ,GK,SZ,SK],[HU,SU,H7,EA,E8,GA,S8,S7],],
         vec![],
         vec![],
-        &[(0, "h9 ho hk h7"),(1, "ek ez ea e9"),(3, "hu eu eo h8"),(1, "g7 gk ga s9"),(3, "su so hz gu"),(0, "go e7 gz e8"),(0, "ha g8 sk s7"),(0, "sa g9 sz s8"),],
+        &[(0, [H9,HO,HK,H7]),(1, [EK,EZ,EA,E9]),(3, [HU,EU,EO,H8]),(1, [G7,GK,GA,S9]),(3, [SU,SO,HZ,GU]),(0, [GO,E7,GZ,E8]),(0, [HA,G8,SK,S7]),(0, [SA,G9,SZ,S8]),],
         [30, -30, -30, 30],
     );
     test_rules(
         "../../testdata/games/41.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
-        ["eo gu hu ez gz g8 g7 sz","su hk h9 ea e7 g9 s9 s8","so eu ha h8 ek e9 sk s7","go ho hz h7 e8 ga gk sa",],
+        [[EO,GU,HU,EZ,GZ,G8,G7,SZ],[SU,HK,H9,EA,E7,G9,S9,S8],[SO,EU,HA,H8,EK,E9,SK,S7],[GO,HO,HZ,H7,E8,GA,GK,SA],],
         vec![],
         vec![],
-        &[(0, "ez ea e9 e8"),(1, "h9 eu h7 hu"),(2, "sk sa sz s8"),(3, "ho eo hk h8"),(0, "gz g9 so ga"),(2, "ek hz gu e7"),(0, "g7 su s7 gk"),(1, "s9 ha go g8"),],
+        &[(0, [EZ,EA,E9,E8]),(1, [H9,EU,H7,HU]),(2, [SK,SA,SZ,S8]),(3, [HO,EO,HK,H8]),(0, [GZ,G9,SO,GA]),(2, [EK,HZ,GU,E7]),(0, [G7,SU,S7,GK]),(1, [S9,HA,GO,G8]),],
         [-20, 20, -20, 20],
     );
     test_rules(
         "../../testdata/games/43.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
-        ["hz h9 ea ek g9 sz sk s9","eo su ha h8 ga gz sa s7","so gu h7 e9 e7 gk g8 s8","go ho eu hu hk ez e8 g7",],
+        [[HZ,H9,EA,EK,G9,SZ,SK,S9],[EO,SU,HA,H8,GA,GZ,SA,S7],[SO,GU,H7,E9,E7,GK,G8,S8],[GO,HO,EU,HU,HK,EZ,E8,G7],],
         vec![],
         vec![],
-        &[(0, "g9 ga g8 g7"),(1, "eo h7 hk h9"),(1, "sa s8 ez s9"),(1, "h8 gu ho hz"),(3, "e8 ea ha e7"),(1, "su so go ek"),(3, "eu sk gz e9"),(3, "hu sz s7 gk"),],
+        &[(0, [G9,GA,G8,G7]),(1, [EO,H7,HK,H9]),(1, [SA,S8,EZ,S9]),(1, [H8,GU,HO,HZ]),(3, [E8,EA,HA,E7]),(1, [SU,SO,GO,EK]),(3, [EU,SK,GZ,E9]),(3, [HU,SZ,S7,GK]),],
         [-70, 70, -70, 70],
     );
     test_rules(
         "../../testdata/games/45.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
-        ["ho hu su h9 e9 e8 gk sk","ha hz h7 ea ez ga sa s9","so eu gu ek e7 gz g9 s7","eo go hk h8 g8 g7 sz s8",],
+        [[HO,HU,SU,H9,E9,E8,GK,SK],[HA,HZ,H7,EA,EZ,GA,SA,S9],[SO,EU,GU,EK,E7,GZ,G9,S7],[EO,GO,HK,H8,G8,G7,SZ,S8],],
         vec![],
         vec![],
-        &[(0, "sk sa s7 sz"),(1, "ha gu go h9"),(3, "g8 gk ga g9"),(1, "ea e7 g7 e8"),(1, "ez ek eo e9"),(3, "s8 hu s9 gz"),(0, "su hz so h8"),(2, "eu hk ho h7"),],
+        &[(0, [SK,SA,S7,SZ]),(1, [HA,GU,GO,H9]),(3, [G8,GK,GA,G9]),(1, [EA,E7,G7,E8]),(1, [EZ,EK,EO,E9]),(3, [S8,HU,S9,GZ]),(0, [SU,HZ,SO,H8]),(2, [EU,HK,HO,H7]),],
         [-20, 20, -20, 20],
     );
     test_rules(
         "../../testdata/games/46.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
-        ["ho so eu hu h8 ga g8 s8","go ha hz h7 ea ek s9 s7","gu su h9 e9 gz g9 g7 sz","eo hk ez e8 e7 gk sa sk",],
+        [[HO,SO,EU,HU,H8,GA,G8,S8],[GO,HA,HZ,H7,EA,EK,S9,S7],[GU,SU,H9,E9,GZ,G9,G7,SZ],[EO,HK,EZ,E8,E7,GK,SA,SK],],
         vec![],
         vec![],
-        &[(0, "h8 ha su eo"),(3, "hk eu hz h9"),(0, "so go gu e7"),(1, "ea e9 ez hu"),(0, "ho h7 g7 gk"),(0, "ga ek g9 sk"),(0, "s8 s7 sz sa"),(3, "e8 g8 s9 gz"),],
+        &[(0, [H8,HA,SU,EO]),(3, [HK,EU,HZ,H9]),(0, [SO,GO,GU,E7]),(1, [EA,E9,EZ,HU]),(0, [HO,H7,G7,GK]),(0, [GA,EK,G9,SK]),(0, [S8,S7,SZ,SA]),(3, [E8,G8,S9,GZ]),],
         [30, -30, -30, 30],
     );
     test_rules(
         "../../testdata/games/47.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
-        ["ho h9 e7 ga gz g9 sz s9","go so eu ea e9 g8 sk s8","gu su hk h8 h7 ez ek e8","eo hu ha hz gk g7 sa s7",],
+        [[HO,H9,E7,GA,GZ,G9,SZ,S9],[GO,SO,EU,EA,E9,G8,SK,S8],[GU,SU,HK,H8,H7,EZ,EK,E8],[EO,HU,HA,HZ,GK,G7,SA,S7],],
         vec![],
         vec![],
-        &[(0, "ho go h7 hu"),(1, "g8 hk g7 ga"),(2, "ek ha e7 e9"),(3, "eo h9 eu h8"),(3, "sa s9 s8 su"),(2, "ez hz sz ea"),(3, "s7 g9 sk e8"),(1, "so gu gk gz"),],
+        &[(0, [HO,GO,H7,HU]),(1, [G8,HK,G7,GA]),(2, [EK,HA,E7,E9]),(3, [EO,H9,EU,H8]),(3, [SA,S9,S8,SU]),(2, [EZ,HZ,SZ,EA]),(3, [S7,G9,SK,E8]),(1, [SO,GU,GK,GZ]),],
         [20, -20, -20, 20],
     );
     test_rules(
         "../../testdata/games/48.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI2, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
-        ["eu ha h8 ea e8 e7 ga g7","eo hk ez ek sz s9 s8 s7","go so gu hu h9 h7 e9 sa","ho su hz gz gk g9 g8 sk",],
+        [[EU,HA,H8,EA,E8,E7,GA,G7],[EO,HK,EZ,EK,SZ,S9,S8,S7],[GO,SO,GU,HU,H9,H7,E9,SA],[HO,SU,HZ,GZ,GK,G9,G8,SK],],
         vec![],
         vec![],
-        &[(0, "ha eo h7 hz"),(1, "ek e9 su ea"),(3, "sk h8 s7 sa"),(0, "eu hk h9 ho"),(3, "g8 ga s8 hu"),(2, "go g9 g7 s9"),(2, "so gk e7 sz"),(2, "gu gz e8 ez"),],
+        &[(0, [HA,EO,H7,HZ]),(1, [EK,E9,SU,EA]),(3, [SK,H8,S7,SA]),(0, [EU,HK,H9,HO]),(3, [G8,GA,S8,HU]),(2, [GO,G9,G7,S9]),(2, [SO,GK,E7,SZ]),(2, [GU,GZ,E8,EZ]),],
         [20, -20, 20, -20],
     );
     test_rules(
         "../../testdata/games/49.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI1, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
-        ["h9 h8 ez e8 g8 sk s9 s8","eo so gu ha hk e9 gk s7","eu hu su hz h7 gz g9 sz","go ho ea ek e7 ga g7 sa",],
+        [[H9,H8,EZ,E8,G8,SK,S9,S8],[EO,SO,GU,HA,HK,E9,GK,S7],[EU,HU,SU,HZ,H7,GZ,G9,SZ],[GO,HO,EA,EK,E7,GA,G7,SA],],
         vec![],
         vec![],
-        &[(0, "g8 gk g9 ga"),(3, "go h8 ha h7"),(3, "ho h9 hk su"),(3, "sa s9 s7 sz"),(3, "ea ez e9 hz"),(2, "eu ek sk so"),(1, "gu hu e7 s8"),(1, "eo gz g7 e8"),],
+        &[(0, [G8,GK,G9,GA]),(3, [GO,H8,HA,H7]),(3, [HO,H9,HK,SU]),(3, [SA,S9,S7,SZ]),(3, [EA,EZ,E9,HZ]),(2, [EU,EK,SK,SO]),(1, [GU,HU,E7,S8]),(1, [EO,GZ,G7,E8]),],
         [-60, 60, -60, 60],
     );
     test_rules(
         "../../testdata/games/5.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
-        ["go so eu h9 ez gz sa s9","hu su ha hz e9 e7 g9 s8","hk h8 ek e8 g7 sz sk s7","eo ho gu h7 ea ga gk g8",],
+        [[GO,SO,EU,H9,EZ,GZ,SA,S9],[HU,SU,HA,HZ,E9,E7,G9,S8],[HK,H8,EK,E8,G7,SZ,SK,S7],[EO,HO,GU,H7,EA,GA,GK,G8],],
         vec![],
         vec![],
-        &[(0, "h9 su hk gu"),(3, "eo so hu h8"),(3, "ho eu hz g7"),(3, "h7 go ha s7"),(0, "sa s8 sk gk"),(0, "ez e7 e8 ea"),(3, "ga gz g9 ek"),(3, "g8 s9 e9 sz"),],
+        &[(0, [H9,SU,HK,GU]),(3, [EO,SO,HU,H8]),(3, [HO,EU,HZ,G7]),(3, [H7,GO,HA,S7]),(0, [SA,S8,SK,GK]),(0, [EZ,E7,E8,EA]),(3, [GA,GZ,G9,EK]),(3, [G8,S9,E9,SZ]),],
         [100, -100, -100, 100],
     );
     test_rules(
         "../../testdata/games/50.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3)),
-        ["ho so gu gk g9 sa s9 s7","ha ea ez ek e9 gz g8 g7","hu hk h9 h7 e8 e7 ga sz","eo go eu su hz h8 sk s8",],
+        [[HO,SO,GU,GK,G9,SA,S9,S7],[HA,EA,EZ,EK,E9,GZ,G8,G7],[HU,HK,H9,H7,E8,E7,GA,SZ],[EO,GO,EU,SU,HZ,H8,SK,S8],],
         vec![],
         vec![],
-        &[(0, "ho ha h7 hz"),(0, "so e9 h9 h8"),(0, "gu g7 hk su"),(0, "sa ek sz s8"),(0, "s9 ez hu sk"),(2, "ga eu gk g8"),(3, "go g9 gz e7"),(3, "eo s7 ea e8"),],
+        &[(0, [HO,HA,H7,HZ]),(0, [SO,E9,H9,H8]),(0, [GU,G7,HK,SU]),(0, [SA,EK,SZ,S8]),(0, [S9,EZ,HU,SK]),(2, [GA,EU,GK,G8]),(3, [GO,G9,GZ,E7]),(3, [EO,S7,EA,E8]),],
         [90, -90, -90, 90],
     );
     test_rules(
         "../../testdata/games/51.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI3, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
-        ["eu su h9 ea gz g9 sz sk","eo ho gu h7 ez g8 g7 s8","go ek e9 e7 ga sa s9 s7","so hu ha hz hk h8 e8 gk",],
+        [[EU,SU,H9,EA,GZ,G9,SZ,SK],[EO,HO,GU,H7,EZ,G8,G7,S8],[GO,EK,E9,E7,GA,SA,S9,S7],[SO,HU,HA,HZ,HK,H8,E8,GK],],
         vec![],
         vec![],
-        &[(0, "g9 g7 ga gk"),(2, "go h8 h9 eo"),(1, "g8 e7 hk gz"),(3, "e8 ea ez e9"),(0, "sk s8 sa ha"),(3, "hu eu h7 s7"),(0, "sz ho s9 so"),(1, "gu ek hz su"),],
+        &[(0, [G9,G7,GA,GK]),(2, [GO,H8,H9,EO]),(1, [G8,E7,HK,GZ]),(3, [E8,EA,EZ,E9]),(0, [SK,S8,SA,HA]),(3, [HU,EU,H7,S7]),(0, [SZ,HO,S9,SO]),(1, [GU,EK,HZ,SU]),],
         [20, 20, -20, -20],
     );
     test_rules(
         "../../testdata/games/53.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI1, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
-        ["so ez ek e7 ga sz sk s8","go hu ha hz hk h8 e9 gk","eo gu h9 h7 g8 sa s9 s7","ho eu su ea e8 gz g9 g7",],
+        [[SO,EZ,EK,E7,GA,SZ,SK,S8],[GO,HU,HA,HZ,HK,H8,E9,GK],[EO,GU,H9,H7,G8,SA,S9,S7],[HO,EU,SU,EA,E8,GZ,G9,G7],],
         vec![],
         vec![],
-        &[(0, "so h8 h7 ho"),(3, "gz ga gk g8"),(0, "sk ha s7 su"),(3, "g7 s8 hk s9"),(1, "hu gu eu e7"),(3, "ea ez e9 sa"),(3, "e8 ek hz eo"),(2, "h9 g9 sz go"),],
+        &[(0, [SO,H8,H7,HO]),(3, [GZ,GA,GK,G8]),(0, [SK,HA,S7,SU]),(3, [G7,S8,HK,S9]),(1, [HU,GU,EU,E7]),(3, [EA,EZ,E9,SA]),(3, [E8,EK,HZ,EO]),(2, [H9,G9,SZ,GO]),],
         [-20, -20, 20, 20],
     );
     test_rules(
         "../../testdata/games/55.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI2, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
-        ["su hk h7 ek ga gz g9 g7","go so eu ez e8 gk g8 sz","ho gu hu ha hz h8 e7 s7","eo h9 ea e9 sa sk s9 s8",],
+        [[SU,HK,H7,EK,GA,GZ,G9,G7],[GO,SO,EU,EZ,E8,GK,G8,SZ],[HO,GU,HU,HA,HZ,H8,E7,S7],[EO,H9,EA,E9,SA,SK,S9,S8],],
         vec![],
         vec![],
-        &[(0, "ek e8 e7 ea"),(3, "eo h7 eu ha"),(3, "h9 su go h8"),(1, "ez hu e9 g7"),(2, "ho sa hk so"),(2, "gu sk gz g8"),(2, "s7 s8 g9 sz"),(1, "gk hz s9 ga"),],
+        &[(0, [EK,E8,E7,EA]),(3, [EO,H7,EU,HA]),(3, [H9,SU,GO,H8]),(1, [EZ,HU,E9,G7]),(2, [HO,SA,HK,SO]),(2, [GU,SK,GZ,G8]),(2, [S7,S8,G9,SZ]),(1, [GK,HZ,S9,GA]),],
         [-30, -30, 30, 30],
     );
     test_rules(
         "../../testdata/games/6.html",
         &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3)),
-        ["eo go so ha hk ek gz g9","su h9 e9 e8 gk g7 s9 s8","ho eu hu h8 ez e7 ga sz","gu hz h7 ea g8 sa sk s7",],
+        [[EO,GO,SO,HA,HK,EK,GZ,G9],[SU,H9,E9,E8,GK,G7,S9,S8],[HO,EU,HU,H8,EZ,E7,GA,SZ],[GU,HZ,H7,EA,G8,SA,SK,S7],],
         vec![],
         vec![],
-        &[(0, "eo h9 h8 hz"),(0, "hk su eu h7"),(2, "e7 ea ek e9"),(3, "gu go gk hu"),(0, "g9 g7 ga g8"),(2, "ho s7 ha e8"),(2, "ez sk so s9"),(0, "gz s8 sz sa"),],
+        &[(0, [EO,H9,H8,HZ]),(0, [HK,SU,EU,H7]),(2, [E7,EA,EK,E9]),(3, [GU,GO,GK,HU]),(0, [G9,G7,GA,G8]),(2, [HO,S7,HA,E8]),(2, [EZ,SK,SO,S9]),(0, [GZ,S8,SZ,SA]),],
         [20, -20, -20, 20],
     );
 }
@@ -445,154 +459,154 @@ fn test_rulesfarbwenz() {
     test_rules(
         "../../testdata/games/11.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["ga g9 ez e8 hz h9 h8 sk","ek eo e9 e7 ha hk sz s8","su gk go g7 ea h7 so s9","eu gu hu gz g8 ho sa s7",],
+        [[GA,G9,EZ,E8,HZ,H9,H8,SK],[EK,EO,E9,E7,HA,HK,SZ,S8],[SU,GK,GO,G7,EA,H7,SO,S9],[EU,GU,HU,GZ,G8,HO,SA,S7],],
         vec![],
         vec![],
-        &[(0, "sk s8 s9 sa"),(3, "gu ga eo g7"),(3, "hu g9 e7 go"),(3, "eu h8 hk gk"),(3, "g8 hz sz su"),(2, "ea gz e8 e9"),(3, "s7 ez ha so"),(2, "h7 ho h9 ek"),],
+        &[(0, [SK,S8,S9,SA]),(3, [GU,GA,EO,G7]),(3, [HU,G9,E7,GO]),(3, [EU,H8,HK,GK]),(3, [G8,HZ,SZ,SU]),(2, [EA,GZ,E8,E9]),(3, [S7,EZ,HA,SO]),(2, [H7,HO,H9,EK]),],
         [-80, -80, -80, 240],
     );
     test_rules(
         "../../testdata/games/12.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eu ha hz h9 h7 ga gz g8","hu ek eo e9 go g9 g7 sk","su ho ea ez e8 e7 s9 s7","gu hk h8 gk sa sz so s8",],
+        [[EU,HA,HZ,H9,H7,GA,GZ,G8],[HU,EK,EO,E9,GO,G9,G7,SK],[SU,HO,EA,EZ,E8,E7,S9,S7],[GU,HK,H8,GK,SA,SZ,SO,S8],],
         vec![],
         vec![],
-        &[(0, "h7 hu ho hk"),(1, "sk s7 sz ha"),(0, "eu g7 su h8"),(0, "h9 go ea gu"),(3, "gk ga g9 s9"),(0, "hz e9 e7 s8"),(0, "gz eo e8 so"),(0, "g8 ek ez sa"),],
+        &[(0, [H7,HU,HO,HK]),(1, [SK,S7,SZ,HA]),(0, [EU,G7,SU,H8]),(0, [H9,GO,EA,GU]),(3, [GK,GA,G9,S9]),(0, [HZ,E9,E7,S8]),(0, [GZ,EO,E8,SO]),(0, [G8,EK,EZ,SA]),],
         [180, -60, -60, -60],
     );
     test_rules(
         "../../testdata/games/15.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["hk ez e8 gk g7 sk so s9","gu ha hz ho h7 ek sa s8","eu h8 eo e9 e7 ga g9 s7","hu su h9 ea gz go g8 sz",],
+        [[HK,EZ,E8,GK,G7,SK,SO,S9],[GU,HA,HZ,HO,H7,EK,SA,S8],[EU,H8,EO,E9,E7,GA,G9,S7],[HU,SU,H9,EA,GZ,GO,G8,SZ],],
         vec![],
         vec![],
-        &[(0, "sk sa s7 sz"),(1, "h7 h8 su hk"),(3, "ea ez ek eo"),(3, "go g7 ha g9"),(1, "ho eu h9 gk"),(2, "e9 hu e8 s8"),(3, "g8 s9 hz ga"),(1, "gu e7 gz so"),],
+        &[(0, [SK,SA,S7,SZ]),(1, [H7,H8,SU,HK]),(3, [EA,EZ,EK,EO]),(3, [GO,G7,HA,G9]),(1, [HO,EU,H9,GK]),(2, [E9,HU,E8,S8]),(3, [G8,S9,HZ,GA]),(1, [GU,E7,GZ,SO]),],
         [-50, 150, -50, -50],
     );
     test_rules(
         "../../testdata/games/17.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["su ga gz go g8 ea ek ha","eu gu gk g7 e8 hk so s7","hu g9 ho h8 h7 sa s9 s8","ez eo e9 e7 hz h9 sz sk",],
+        [[SU,GA,GZ,GO,G8,EA,EK,HA],[EU,GU,GK,G7,E8,HK,SO,S7],[HU,G9,HO,H8,H7,SA,S9,S8],[EZ,EO,E9,E7,HZ,H9,SZ,SK],],
         vec![],
         vec![],
-        &[(0, "g8 gk g9 ez"),(1, "hk h7 h9 ha"),(0, "su gu hu hz"),(1, "e8 ho e9 ea"),(0, "go g7 h8 e7"),(0, "ek s7 s8 eo"),(0, "gz eu sa sz"),(1, "so s9 sk ga"),],
+        &[(0, [G8,GK,G9,EZ]),(1, [HK,H7,H9,HA]),(0, [SU,GU,HU,HZ]),(1, [E8,HO,E9,EA]),(0, [GO,G7,H8,E7]),(0, [EK,S7,S8,EO]),(0, [GZ,EU,SA,SZ]),(1, [SO,S9,SK,GA]),],
         [-240, 80, 80, 80],
     );
     test_rules(
         "../../testdata/games/23.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["gu hu g9 ek e9 e8 e7 hk","go ez ha hz h9 h7 sz s8","eu ga gz gk g7 ea sa s9","su g8 eo ho h8 sk so s7",],
+        [[GU,HU,G9,EK,E9,E8,E7,HK],[GO,EZ,HA,HZ,H9,H7,SZ,S8],[EU,GA,GZ,GK,G7,EA,SA,S9],[SU,G8,EO,HO,H8,SK,SO,S7],],
         vec![],
         vec![],
-        &[(0, "e9 ez ea eo"),(2, "g7 g8 g9 go"),(1, "hz ga h8 hk"),(2, "eu su hu h7"),(2, "gk sk gu ha"),(0, "ek sz gz s7"),(2, "sa so e7 s8"),(2, "s9 ho e8 h9"),],
+        &[(0, [E9,EZ,EA,EO]),(2, [G7,G8,G9,GO]),(1, [HZ,GA,H8,HK]),(2, [EU,SU,HU,H7]),(2, [GK,SK,GU,HA]),(0, [EK,SZ,GZ,S7]),(2, [SA,SO,E7,S8]),(2, [S9,HO,E8,H9]),],
         [-60, -60, 180, -60],
     );
     test_rules(
         "../../testdata/games/25.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["gu hu ga gk g7 ha h7 sa","eu ea ez e7 ho h8 sz s8","gz go g9 g8 eo h9 s9 s7","su ek e9 e8 hz hk sk so",],
+        [[GU,HU,GA,GK,G7,HA,H7,SA],[EU,EA,EZ,E7,HO,H8,SZ,S8],[GZ,GO,G9,G8,EO,H9,S9,S7],[SU,EK,E9,E8,HZ,HK,SK,SO],],
         vec![],
         vec![],
-        &[(0, "hu eu gz su"),(1, "ea eo ek g7"),(0, "gu e7 g8 e8"),(0, "gk ez g9 e9"),(0, "ga h8 go so"),(0, "ha ho h9 hk"),(0, "sa s8 s7 sk"),(0, "h7 sz s9 hz"),],
+        &[(0, [HU,EU,GZ,SU]),(1, [EA,EO,EK,G7]),(0, [GU,E7,G8,E8]),(0, [GK,EZ,G9,E9]),(0, [GA,H8,GO,SO]),(0, [HA,HO,H9,HK]),(0, [SA,S8,S7,SK]),(0, [H7,SZ,S9,HZ]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/37.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["gu hu ga g9 hz hk so s9","ea gz g7 ho h9 sk s8 s7","su eo e9 gk go g8 ha h8","eu ez ek e8 e7 h7 sa sz",],
+        [[GU,HU,GA,G9,HZ,HK,SO,S9],[EA,GZ,G7,HO,H9,SK,S8,S7],[SU,EO,E9,GK,GO,G8,HA,H8],[EU,EZ,EK,E8,E7,H7,SA,SZ],],
         vec![],
         vec![],
-        &[(0, "so sk eo sa"),(2, "ha h7 hz ho"),(2, "h8 ek hk h9"),(3, "eu hu ea e9"),(3, "e7 gu gz su"),(0, "ga g7 g8 ez"),(3, "sz s9 s7 go"),(3, "e8 g9 s8 gk"),],
+        &[(0, [SO,SK,EO,SA]),(2, [HA,H7,HZ,HO]),(2, [H8,EK,HK,H9]),(3, [EU,HU,EA,E9]),(3, [E7,GU,GZ,SU]),(0, [GA,G7,G8,EZ]),(3, [SZ,S9,S7,GO]),(3, [E8,G9,S8,GK]),],
         [-50, -50, -50, 150],
     );
     test_rules(
         "../../testdata/games/4.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["gu ha hz hk h9 h7 ek ga","eu ho h8 gz g8 sa s8 s7","hu ea e9 go g9 sz sk so","su ez eo e8 e7 gk g7 s9",],
+        [[GU,HA,HZ,HK,H9,H7,EK,GA],[EU,HO,H8,GZ,G8,SA,S8,S7],[HU,EA,E9,GO,G9,SZ,SK,SO],[SU,EZ,EO,E8,E7,GK,G7,S9],],
         vec![],
         vec![],
-        &[(0, "h7 ho hu su"),(2, "go gk ga g8"),(0, "h9 h8 sz g7"),(0, "gu eu ea ez"),(1, "sa sk s9 ha"),(0, "hk s7 g9 e7"),(0, "hz s8 e9 e8"),(0, "ek gz so eo"),],
+        &[(0, [H7,HO,HU,SU]),(2, [GO,GK,GA,G8]),(0, [H9,H8,SZ,G7]),(0, [GU,EU,EA,EZ]),(1, [SA,SK,S9,HA]),(0, [HK,S7,G9,E7]),(0, [HZ,S8,E9,E8]),(0, [EK,GZ,SO,EO]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/54.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eu ha hk ho h9 g9 sa s9","hu h7 e7 go g8 g7 so s8","gu h8 ez e9 e8 gz sk s7","su hz ea ek eo ga gk sz",],
+        [[EU,HA,HK,HO,H9,G9,SA,S9],[HU,H7,E7,GO,G8,G7,SO,S8],[GU,H8,EZ,E9,E8,GZ,SK,S7],[SU,HZ,EA,EK,EO,GA,GK,SZ],],
         vec![],
         vec![],
-        &[(0, "eu h7 h8 su"),(0, "h9 hu gu hz"),(2, "gz ga g9 g7"),(3, "ea ha e7 e8"),(0, "s9 so sk sz"),(3, "gk hk g8 s7"),(0, "ho s8 e9 eo"),(0, "sa go ez ek"),],
+        &[(0, [EU,H7,H8,SU]),(0, [H9,HU,GU,HZ]),(2, [GZ,GA,G9,G7]),(3, [EA,HA,E7,E8]),(0, [S9,SO,SK,SZ]),(3, [GK,HK,G8,S7]),(0, [HO,S8,E9,EO]),(0, [SA,GO,EZ,EK]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/9.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderTout>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["h8 ez e9 e8 ga gz gk g7","eu gu hu su ha hk h9 sa","ho ea ek eo sz sk s8 s7","hz h7 e7 go g9 g8 so s9",],
+        [[H8,EZ,E9,E8,GA,GZ,GK,G7],[EU,GU,HU,SU,HA,HK,H9,SA],[HO,EA,EK,EO,SZ,SK,S8,S7],[HZ,H7,E7,GO,G9,G8,SO,S9],],
         vec![],
         vec![],
-        &[(0, "ga ha ho g8"),(1, "gu s7 h7 h8"),(1, "eu s8 hz e8"),(1, "hu eo e7 g7"),(1, "su ek g9 e9"),(1, "hk sk go ez"),(1, "h9 sz s9 gk"),(1, "sa ea so gz"),],
+        &[(0, [GA,HA,HO,G8]),(1, [GU,S7,H7,H8]),(1, [EU,S8,HZ,E8]),(1, [HU,EO,E7,G7]),(1, [SU,EK,G9,E9]),(1, [HK,SK,GO,EZ]),(1, [H9,SZ,S9,GK]),(1, [SA,EA,SO,GZ]),],
         [-200, 600, -200, -200],
     );
     test_rules(
         "../../testdata/games/farbwenz/1.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderTout>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eu gu hu su gk g9","gz ek e9 hz so s9","go ea eo hk h9 sz","ga ez ha ho sa sk",],
+        [[EU,GU,HU,SU,GK,G9],[GZ,EK,E9,HZ,SO,S9],[GO,EA,EO,HK,H9,SZ],[GA,EZ,HA,HO,SA,SK],],
         vec![0,],
         vec![],
-        &[(0, "eu gz go ga"),(0, "gu s9 h9 ho"),(0, "hu so hk sk"),(0, "su hz eo ez"),(0, "gk e9 sz sa"),(0, "g9 ek ea ha"),],
+        &[(0, [EU,GZ,GO,GA]),(0, [GU,S9,H9,HO]),(0, [HU,SO,HK,SK]),(0, [SU,HZ,EO,EZ]),(0, [GK,E9,SZ,SA]),(0, [G9,EK,EA,HA]),],
         [1080, -360, -360, -360],
     );
     test_rules(
         "../../testdata/games/farbwenz/10.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["gu ea eo go g9 h9","hu gz ha hz ho s9","eu ga gk hk sz so","su ez ek e9 sa sk",],
+        [[GU,EA,EO,GO,G9,H9],[HU,GZ,HA,HZ,HO,S9],[EU,GA,GK,HK,SZ,SO],[SU,EZ,EK,E9,SA,SK],],
         vec![],
         vec![],
-        &[(0, "h9 ha hk ez"),(3, "e9 ea hu eu"),(2, "sz sa gu s9"),(0, "g9 gz gk ek"),(3, "sk go ho so"),(3, "su eo hz ga"),],
+        &[(0, [H9,HA,HK,EZ]),(3, [E9,EA,HU,EU]),(2, [SZ,SA,GU,S9]),(0, [G9,GZ,GK,EK]),(3, [SK,GO,HO,SO]),(3, [SU,EO,HZ,GA]),],
         [-80, -80, -80, 240],
     );
     test_rules(
         "../../testdata/games/farbwenz/2.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["gu ea eo go g9 h9","hu gz ha hz ho s9","eu ga gk hk sz so","su ez ek e9 sa sk",],
+        [[GU,EA,EO,GO,G9,H9],[HU,GZ,HA,HZ,HO,S9],[EU,GA,GK,HK,SZ,SO],[SU,EZ,EK,E9,SA,SK],],
         vec![],
         vec![],
-        &[(0, "h9 ha hk ez"),(3, "e9 ea hu eu"),(2, "sz sa gu s9"),(0, "g9 gz gk ek"),(3, "sk go ho so"),(3, "su eo hz ga"),],
+        &[(0, [H9,HA,HK,EZ]),(3, [E9,EA,HU,EU]),(2, [SZ,SA,GU,S9]),(0, [G9,GZ,GK,EK]),(3, [SK,GO,HO,SO]),(3, [SU,EO,HZ,GA]),],
         [-80, -80, -80, 240],
     );
     test_rules(
         "../../testdata/games/farbwenz/5.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eu hu ha ek gz s9","hz hk ho ga gk sa","ea eo e9 g9 sk so","gu su h9 ez go sz",],
+        [[EU,HU,HA,EK,GZ,S9],[HZ,HK,HO,GA,GK,SA],[EA,EO,E9,G9,SK,SO],[GU,SU,H9,EZ,GO,SZ],],
         vec![1,],
         vec![],
-        &[(0, "ek hz e9 ez"),(1, "ho ea su ha"),(3, "go gz ga g9"),(1, "hk sk h9 hu"),(0, "s9 sa so sz"),(1, "gk eo gu eu"),],
+        &[(0, [EK,HZ,E9,EZ]),(1, [HO,EA,SU,HA]),(3, [GO,GZ,GA,G9]),(1, [HK,SK,H9,HU]),(0, [S9,SA,SO,SZ]),(1, [GK,EO,GU,EU]),],
         [-200, 600, -200, -200],
     );
     test_rules(
         "../../testdata/games/farbwenz/7.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["su gz ea ha hz sz","hu g9 ek eo e9 so","ga ez hk ho sk s9","eu gu gk go h9 sa",],
+        [[SU,GZ,EA,HA,HZ,SZ],[HU,G9,EK,EO,E9,SO],[GA,EZ,HK,HO,SK,S9],[EU,GU,GK,GO,H9,SA],],
         vec![3,],
         vec![],
-        &[(0, "sz so s9 sa"),(3, "gu gz g9 ga"),(3, "eu su hu ho"),(3, "go hz ek sk"),(3, "gk ha e9 hk"),(3, "h9 ea eo ez"),],
+        &[(0, [SZ,SO,S9,SA]),(3, [GU,GZ,G9,GA]),(3, [EU,SU,HU,HO]),(3, [GO,HZ,EK,SK]),(3, [GK,HA,E9,HK]),(3, [H9,EA,EO,EZ]),],
         [-140, -140, -140, 420],
     );
     test_rules(
         "../../testdata/games/farbwenz/8.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["su gk go eo e8 h7 sz s8","eu gu hu e7 hz h8 s9 s7","gz g9 g8 g7 ea ek ha sa","ga ez e9 hk ho h9 sk so",],
+        [[SU,GK,GO,EO,E8,H7,SZ,S8],[EU,GU,HU,E7,HZ,H8,S9,S7],[GZ,G9,G8,G7,EA,EK,HA,SA],[GA,EZ,E9,HK,HO,H9,SK,SO],],
         vec![3,1,],
         vec![1,],
-        &[(0, "h7 h8 ha h9"),(2, "g9 ga gk hu"),(1, "e7 ea e9 e8"),(2, "g8 ez go gu"),(1, "eu g7 hk su"),(1, "s7 sa so s8"),(2, "gz sk eo s9"),(2, "ek ho sz hz"),],
+        &[(0, [H7,H8,HA,H9]),(2, [G9,GA,GK,HU]),(1, [E7,EA,E9,E8]),(2, [G8,EZ,GO,GU]),(1, [EU,G7,HK,SU]),(1, [S7,SA,SO,S8]),(2, [GZ,SK,EO,S9]),(2, [EK,HO,SZ,HZ]),],
         [-800, -800, 2400, -800],
     );
     test_rules(
         "../../testdata/games/farbwenz/9.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["gu su ea ek e9 e8 e7 s7","eu hu gk g9 g8 sa so s8","ga go hz hk ho h8 sz sk","ez eo gz g7 ha h9 h7 s9",],
+        [[GU,SU,EA,EK,E9,E8,E7,S7],[EU,HU,GK,G9,G8,SA,SO,S8],[GA,GO,HZ,HK,HO,H8,SZ,SK],[EZ,EO,GZ,G7,HA,H9,H7,S9],],
         vec![],
         vec![],
-        &[(0, "su hu hz ez"),(1, "sa sk s9 s7"),(1, "g8 ga g7 ea"),(0, "gu eu sz eo"),(1, "s8 ho h7 ek"),(0, "e9 gk hk h9"),(0, "e8 so h8 gz"),(0, "e7 g9 go ha"),],
+        &[(0, [SU,HU,HZ,EZ]),(1, [SA,SK,S9,S7]),(1, [G8,GA,G7,EA]),(0, [GU,EU,SZ,EO]),(1, [S8,HO,H7,EK]),(0, [E9,GK,HK,H9]),(0, [E8,SO,H8,GZ]),(0, [E7,G9,GO,HA]),],
         [150, -50, -50, -50],
     );
 }
@@ -602,154 +616,154 @@ fn test_ruleswenz() {
     test_rules(
         "../../testdata/games/13.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["eu hu ga gz ha hz sa s9","gu go g7 hk h7 sk so s8","su ek eo gk g9 g8 ho sz","ea ez e9 e8 e7 h9 h8 s7",],
+        [[EU,HU,GA,GZ,HA,HZ,SA,S9],[GU,GO,G7,HK,H7,SK,SO,S8],[SU,EK,EO,GK,G9,G8,HO,SZ],[EA,EZ,E9,E8,E7,H9,H8,S7],],
         vec![],
         vec![],
-        &[(0, "eu gu su s7"),(0, "hu g7 g8 h8"),(0, "ga go g9 h9"),(0, "gz h7 gk e7"),(0, "ha hk ho e8"),(0, "hz s8 eo e9"),(0, "sa so sz ez"),(0, "s9 sk ek ea"),],
+        &[(0, [EU,GU,SU,S7]),(0, [HU,G7,G8,H8]),(0, [GA,GO,G9,H9]),(0, [GZ,H7,GK,E7]),(0, [HA,HK,HO,E8]),(0, [HZ,S8,EO,E9]),(0, [SA,SO,SZ,EZ]),(0, [S9,SK,EK,EA]),],
         [180, -60, -60, -60],
     );
     test_rules(
         "../../testdata/games/52.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["ek e9 e7 gk go g8 ha hk","hu ez eo e8 hz h9 sz so","gz g9 g7 ho h7 sk s9 s8","eu gu su ea ga h8 sa s7",],
+        [[EK,E9,E7,GK,GO,G8,HA,HK],[HU,EZ,EO,E8,HZ,H9,SZ,SO],[GZ,G9,G7,HO,H7,SK,S9,S8],[EU,GU,SU,EA,GA,H8,SA,S7],],
         vec![],
         vec![],
-        &[(0, "ha hz ho h8"),(0, "gk hu gz ga"),(1, "h9 h7 s7 hk"),(0, "go e8 g7 su"),(3, "gu g8 eo g9"),(3, "eu e7 so s8"),(3, "ea e9 ez s9"),(3, "sa ek sz sk"),],
+        &[(0, [HA,HZ,HO,H8]),(0, [GK,HU,GZ,GA]),(1, [H9,H7,S7,HK]),(0, [GO,E8,G7,SU]),(3, [GU,G8,EO,G9]),(3, [EU,E7,SO,S8]),(3, [EA,E9,EZ,S9]),(3, [SA,EK,SZ,SK]),],
         [-70, -70, -70, 210],
     );
     test_rules(
         "../../testdata/games/8.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["hu su ea ez e9 hz sa s8","gu ek g9 g8 sk so s9 s7","eu ga gk g7 ho h9 h7 sz","eo e8 e7 gz go ha hk h8",],
+        [[HU,SU,EA,EZ,E9,HZ,SA,S8],[GU,EK,G9,G8,SK,SO,S9,S7],[EU,GA,GK,G7,HO,H9,H7,SZ],[EO,E8,E7,GZ,GO,HA,HK,H8],],
         vec![],
         vec![],
-        &[(0, "hu gu eu gz"),(2, "ga go s8 g8"),(2, "gk eo hz g9"),(2, "g7 ha su ek"),(0, "sa s7 sz e7"),(0, "ea s9 h7 e8"),(0, "ez so h9 h8"),(0, "e9 sk ho hk"),],
+        &[(0, [HU,GU,EU,GZ]),(2, [GA,GO,S8,G8]),(2, [GK,EO,HZ,G9]),(2, [G7,HA,SU,EK]),(0, [SA,S7,SZ,E7]),(0, [EA,S9,H7,E8]),(0, [EZ,SO,H9,H8]),(0, [E9,SK,HO,HK]),],
         [210, -70, -70, -70],
     );
     test_rules(
         "../../testdata/games/wenz/1.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["gu su ea hz sa sz","eu hu ga gz gk s9","ha hk ho h9 sk so","ez ek eo e9 go g9",],
+        [[GU,SU,EA,HZ,SA,SZ],[EU,HU,GA,GZ,GK,S9],[HA,HK,HO,H9,SK,SO],[EZ,EK,EO,E9,GO,G9],],
         vec![1,3,],
         vec![1,],
-        &[(0, "gu eu ha ez"),(1, "hu hk ek su"),(1, "ga sk go sz"),(1, "gz so g9 sa"),(1, "gk ho eo hz"),(1, "s9 h9 e9 ea"),],
+        &[(0, [GU,EU,HA,EZ]),(1, [HU,HK,EK,SU]),(1, [GA,SK,GO,SZ]),(1, [GZ,SO,G9,SA]),(1, [GK,HO,EO,HZ]),(1, [S9,H9,E9,EA]),],
         [-1680, 560, 560, 560],
     );
     test_rules(
         "../../testdata/games/wenz/10.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["ez ek gk go ho h9 sz s7","gu eo g8 g7 hz h8 so s8","ea e9 e8 ga g9 ha h7 sa","eu hu su e7 gz hk sk s9",],
+        [[EZ,EK,GK,GO,HO,H9,SZ,S7],[GU,EO,G8,G7,HZ,H8,SO,S8],[EA,E9,E8,GA,G9,HA,H7,SA],[EU,HU,SU,E7,GZ,HK,SK,S9],],
         vec![],
         vec![],
-        &[(0, "ek eo ea e7"),(2, "sa s9 s7 s8"),(2, "ha hk h9 h8"),(2, "ga gz go g7"),(2, "h7 su ho hz"),(3, "eu sz gu g9"),(3, "hu ez so e8"),(3, "sk gk g8 e9"),],
+        &[(0, [EK,EO,EA,E7]),(2, [SA,S9,S7,S8]),(2, [HA,HK,H9,H8]),(2, [GA,GZ,GO,G7]),(2, [H7,SU,HO,HZ]),(3, [EU,SZ,GU,G9]),(3, [HU,EZ,SO,E8]),(3, [SK,GK,G8,E9]),],
         [-90, -90, 270, -90],
     );
     test_rules(
         "../../testdata/games/wenz/11.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["eu su eo e9 hz s9","gu hu ea ga sa sz","ek gz g9 h9 sk so","ez gk go ha hk ho",],
+        [[EU,SU,EO,E9,HZ,S9],[GU,HU,EA,GA,SA,SZ],[EK,GZ,G9,H9,SK,SO],[EZ,GK,GO,HA,HK,HO],],
         vec![0,],
         vec![0,1,],
-        &[(0, "eu gu gz ez"),(0, "eo ea ek go"),(1, "hu g9 gk su"),(1, "ga h9 ho s9"),(1, "sa so hk e9"),(1, "sz sk ha hz"),],
+        &[(0, [EU,GU,GZ,EZ]),(0, [EO,EA,EK,GO]),(1, [HU,G9,GK,SU]),(1, [GA,H9,HO,S9]),(1, [SA,SO,HK,E9]),(1, [SZ,SK,HA,HZ]),],
         [-480, 1440, -480, -480],
     );
     test_rules(
         "../../testdata/games/wenz/12.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["ea eo hz ho h9 s9","ek e9 ga gk g9 hk","gz go ha sa sk so","eu gu hu su ez sz",],
+        [[EA,EO,HZ,HO,H9,S9],[EK,E9,GA,GK,G9,HK],[GZ,GO,HA,SA,SK,SO],[EU,GU,HU,SU,EZ,SZ],],
         vec![3,],
         vec![],
-        &[(0, "hz hk ha su"),(3, "hu eo ek so"),(3, "gu s9 e9 sk"),(3, "sz ea gk sa"),(2, "go eu h9 g9"),(3, "ez ho ga gz"),],
+        &[(0, [HZ,HK,HA,SU]),(3, [HU,EO,EK,SO]),(3, [GU,S9,E9,SK]),(3, [SZ,EA,GK,SA]),(2, [GO,EU,H9,G9]),(3, [EZ,HO,GA,GZ]),],
         [-180, -180, -180, 540],
     );
     test_rules(
         "../../testdata/games/wenz/13.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["eo ga gz gk ha ho h9 sz","su e8 g7 hz sk so s9 s7","gu hu ea ez ek e9 go g9","eu e7 g8 hk h8 h7 sa s8",],
+        [[EO,GA,GZ,GK,HA,HO,H9,SZ],[SU,E8,G7,HZ,SK,SO,S9,S7],[GU,HU,EA,EZ,EK,E9,GO,G9],[EU,E7,G8,HK,H8,H7,SA,S8],],
         vec![1,],
         vec![],
-        &[(0, "eo e8 ek e7"),(2, "hu eu sz su"),(3, "g8 gk g7 g9"),(0, "gz s7 go sa"),(0, "ga so gu s8"),(2, "ea h7 h9 s9"),(2, "ez h8 ho sk"),(2, "e9 hk ha hz"),],
+        &[(0, [EO,E8,EK,E7]),(2, [HU,EU,SZ,SU]),(3, [G8,GK,G7,G9]),(0, [GZ,S7,GO,SA]),(0, [GA,SO,GU,S8]),(2, [EA,H7,H9,S9]),(2, [EZ,H8,HO,SK]),(2, [E9,HK,HA,HZ]),],
         [-100, -100, 300, -100],
     );
     test_rules(
         "../../testdata/games/wenz/14.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["gu hu su ek gz sz","e9 hz hk ho sk s9","ea ga go ha h9 sa","eu ez eo gk g9 so",],
+        [[GU,HU,SU,EK,GZ,SZ],[E9,HZ,HK,HO,SK,S9],[EA,GA,GO,HA,H9,SA],[EU,EZ,EO,GK,G9,SO],],
         vec![0,3,],
         vec![0,],
-        &[(0, "ek e9 ea eo"),(2, "sa so sz s9"),(2, "ha eu gz hz"),(3, "ez su sk h9"),(0, "gu hk go gk"),(0, "hu ho ga g9"),],
+        &[(0, [EK,E9,EA,EO]),(2, [SA,SO,SZ,S9]),(2, [HA,EU,GZ,HZ]),(3, [EZ,SU,SK,H9]),(0, [GU,HK,GO,GK]),(0, [HU,HO,GA,G9]),],
         [720, 720, -2160, 720],
     );
     test_rules(
         "../../testdata/games/wenz/2.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["eo e7 ga ho h7 sk s9 s8","eu su gk g8 g7 ha hz sa","gu hu ez ek e8 hk h9 so","ea e9 gz go g9 h8 sz s7",],
+        [[EO,E7,GA,HO,H7,SK,S9,S8],[EU,SU,GK,G8,G7,HA,HZ,SA],[GU,HU,EZ,EK,E8,HK,H9,SO],[EA,E9,GZ,GO,G9,H8,SZ,S7],],
         vec![1,],
         vec![],
-        &[(0, "ga g7 ez gz"),(0, "eo g8 ek ea"),(3, "s7 sk sa so"),(1, "eu hu h8 e7"),(1, "hz h9 e9 h7"),(1, "su gu g9 ho"),(2, "hk go s8 ha"),(1, "gk e8 sz s9"),],
+        &[(0, [GA,G7,EZ,GZ]),(0, [EO,G8,EK,EA]),(3, [S7,SK,SA,SO]),(1, [EU,HU,H8,E7]),(1, [HZ,H9,E9,H7]),(1, [SU,GU,G9,HO]),(2, [HK,GO,S8,HA]),(1, [GK,E8,SZ,S9]),],
         [-100, 300, -100, -100],
     );
     test_rules(
         "../../testdata/games/wenz/3.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["eo e9 gz g7 ho h7 sz s9","eu gu hu ek ga go hk sa","su ez gk ha h9 h8 sk s7","ea e8 e7 g9 g8 hz so s8",],
+        [[EO,E9,GZ,G7,HO,H7,SZ,S9],[EU,GU,HU,EK,GA,GO,HK,SA],[SU,EZ,GK,HA,H9,H8,SK,S7],[EA,E8,E7,G9,G8,HZ,SO,S8],],
         vec![],
         vec![],
-        &[(0, "eo ek ez ea"),(3, "g9 g7 go gk"),(2, "ha hz ho hk"),(2, "h9 so h7 hu"),(1, "gu su s8 e9"),(1, "eu h8 g8 gz"),(1, "ga s7 e7 s9"),(1, "sa sk e8 sz"),],
+        &[(0, [EO,EK,EZ,EA]),(3, [G9,G7,GO,GK]),(2, [HA,HZ,HO,HK]),(2, [H9,SO,H7,HU]),(1, [GU,SU,S8,E9]),(1, [EU,H8,G8,GZ]),(1, [GA,S7,E7,S9]),(1, [SA,SK,E8,SZ]),],
         [80, -240, 80, 80],
     );
     test_rules(
         "../../testdata/games/wenz/4.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["eu su gz hz sa sz","gu ea ek e9 g9 ha","hu ez ga gk go s9","eo hk ho h9 sk so",],
+        [[EU,SU,GZ,HZ,SA,SZ],[GU,EA,EK,E9,G9,HA],[HU,EZ,GA,GK,GO,S9],[EO,HK,HO,H9,SK,SO],],
         vec![3,],
         vec![],
-        &[(0, "eu gu hu h9"),(0, "gz g9 ga ho"),(2, "gk sk hz ha"),(2, "go hk su e9"),(0, "sa ek s9 so"),(0, "sz ea ez eo"),],
+        &[(0, [EU,GU,HU,H9]),(0, [GZ,G9,GA,HO]),(2, [GK,SK,HZ,HA]),(2, [GO,HK,SU,E9]),(0, [SA,EK,S9,SO]),(0, [SZ,EA,EZ,EO]),],
         [300, -100, -100, -100],
     );
     test_rules(
         "../../testdata/games/wenz/5.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderTout>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["ek eo go sa sk s9","hu e9 ga hz h9 so","ea ez gz gk g9 sz","eu gu su ha hk ho",],
+        [[EK,EO,GO,SA,SK,S9],[HU,E9,GA,HZ,H9,SO],[EA,EZ,GZ,GK,G9,SZ],[EU,GU,SU,HA,HK,HO],],
         vec![3,0,1,],
         vec![],
-        &[(0, "ek e9 ea gu"),(3, "eu sa hu ez"),(3, "su go h9 sz"),(3, "ha eo hz g9"),(3, "hk sk so gk"),(3, "ho s9 ga gz"),],
+        &[(0, [EK,E9,EA,GU]),(3, [EU,SA,HU,EZ]),(3, [SU,GO,H9,SZ]),(3, [HA,EO,HZ,G9]),(3, [HK,SK,SO,GK]),(3, [HO,S9,GA,GZ]),],
         [-1120, -1120, -1120, 3360],
     );
     test_rules(
         "../../testdata/games/wenz/6.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["ek e8 e7 gz g9 hk sz so","eu hu gk go g8 ho h7 s8","gu su ez eo h9 h8 sk s7","ea e9 ga g7 ha hz sa s9",],
+        [[EK,E8,E7,GZ,G9,HK,SZ,SO],[EU,HU,GK,GO,G8,HO,H7,S8],[GU,SU,EZ,EO,H9,H8,SK,S7],[EA,E9,GA,G7,HA,HZ,SA,S9],],
         vec![2,],
         vec![],
-        &[(0, "hk h7 h8 ha"),(3, "sa so s8 s7"),(3, "ga g9 g8 su"),(2, "sk s9 sz ho"),(0, "gz go h9 g7"),(0, "ek gk eo ea"),(3, "hz e7 hu ez"),(1, "eu gu e9 e8"),],
+        &[(0, [HK,H7,H8,HA]),(3, [SA,SO,S8,S7]),(3, [GA,G9,G8,SU]),(2, [SK,S9,SZ,HO]),(0, [GZ,GO,H9,G7]),(0, [EK,GK,EO,EA]),(3, [HZ,E7,HU,EZ]),(1, [EU,GU,E9,E8]),],
         [180, 180, 180, -540],
     );
     test_rules(
         "../../testdata/games/wenz/7.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["ez ek gk go ho h9 sz s7","gu eo g8 g7 hz h8 so s8","ea e9 e8 ga g9 ha h7 sa","eu hu su e7 gz hk sk s9",],
+        [[EZ,EK,GK,GO,HO,H9,SZ,S7],[GU,EO,G8,G7,HZ,H8,SO,S8],[EA,E9,E8,GA,G9,HA,H7,SA],[EU,HU,SU,E7,GZ,HK,SK,S9],],
         vec![],
         vec![],
-        &[(0, "ek eo ea e7"),(2, "sa s9 s7 s8"),(2, "ha hk h9 h8"),(2, "ga gz go g7"),(2, "h7 su ho hz"),(3, "eu sz gu g9"),(3, "hu ez so e8"),(3, "sk gk g8 e9"),],
+        &[(0, [EK,EO,EA,E7]),(2, [SA,S9,S7,S8]),(2, [HA,HK,H9,H8]),(2, [GA,GZ,GO,G7]),(2, [H7,SU,HO,HZ]),(3, [EU,SZ,GU,G9]),(3, [HU,EZ,SO,E8]),(3, [SK,GK,G8,E9]),],
         [-90, -90, 270, -90],
     );
     test_rules(
         "../../testdata/games/wenz/8.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["eu su gz g9 hz ho h7 sa","hu e7 ga gk ha hk so s7","ea ez ek g8 h9 h8 s9 s8","gu eo e9 e8 go g7 sz sk",],
+        [[EU,SU,GZ,G9,HZ,HO,H7,SA],[HU,E7,GA,GK,HA,HK,SO,S7],[EA,EZ,EK,G8,H9,H8,S9,S8],[GU,EO,E9,E8,GO,G7,SZ,SK],],
         vec![],
         vec![],
-        &[(0, "eu hu g8 gu"),(0, "h7 hk h8 go"),(1, "ha h9 eo ho"),(1, "ga s9 g7 g9"),(1, "so s8 sk sa"),(0, "hz e7 ek e9"),(0, "gz gk ez e8"),(0, "su s7 ea sz"),],
+        &[(0, [EU,HU,G8,GU]),(0, [H7,HK,H8,GO]),(1, [HA,H9,EO,HO]),(1, [GA,S9,G7,G9]),(1, [SO,S8,SK,SA]),(0, [HZ,E7,EK,E9]),(0, [GZ,GK,EZ,E8]),(0, [SU,S7,EA,SZ]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/wenz/9.html",
         &rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["su ek gz hk so s9","eo gk go g9 ha sa","gu hu ea ez e9 ga","eu hz ho h9 sz sk",],
+        [[SU,EK,GZ,HK,SO,S9],[EO,GK,GO,G9,HA,SA],[GU,HU,EA,EZ,E9,GA],[EU,HZ,HO,H9,SZ,SK],],
         vec![],
         vec![],
-        &[(0, "so sa hu sk"),(2, "gu eu su ha"),(3, "sz s9 eo e9"),(3, "h9 hk g9 ez"),(0, "ek gk ea ho"),(2, "ga hz gz go"),],
+        &[(0, [SO,SA,HU,SK]),(2, [GU,EU,SU,HA]),(3, [SZ,S9,EO,E9]),(3, [H9,HK,G9,EZ]),(0, [EK,GK,EA,HO]),(2, [GA,HZ,GZ,GO]),],
         [-50, -50, 150, -50],
     );
 }
@@ -759,114 +773,114 @@ fn test_rulessolo() {
     test_rules(
         "../../testdata/games/28.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go ho gz g7 ea ez hk","so eu hu ga gk ha sa s9","gu su g9 g8 e9 h8 sk s7","ek e8 e7 hz h9 h7 sz s8",],
+        [[EO,GO,HO,GZ,G7,EA,EZ,HK],[SO,EU,HU,GA,GK,HA,SA,S9],[GU,SU,G9,G8,E9,H8,SK,S7],[EK,E8,E7,HZ,H9,H7,SZ,S8],],
         vec![],
         vec![],
-        &[(0, "eo gk g8 e7"),(0, "ho hu g9 e8"),(0, "go eu su h7"),(0, "ea ga e9 ek"),(1, "ha h8 h9 hk"),(1, "sa s7 s8 gz"),(0, "g7 so gu sz"),(1, "s9 sk hz ez"),],
+        &[(0, [EO,GK,G8,E7]),(0, [HO,HU,G9,E8]),(0, [GO,EU,SU,H7]),(0, [EA,GA,E9,EK]),(1, [HA,H8,H9,HK]),(1, [SA,S7,S8,GZ]),(0, [G7,SO,GU,SZ]),(1, [S9,SK,HZ,EZ]),],
         [-240, 80, 80, 80],
     );
     test_rules(
         "../../testdata/games/34.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo ho gu hu ek e9 ha h7","go so eu su e7 g7 hk sz","ez e8 ga g9 g8 h9 sk s8","ea gz gk hz h8 sa s9 s7",],
+        [[EO,HO,GU,HU,EK,E9,HA,H7],[GO,SO,EU,SU,E7,G7,HK,SZ],[EZ,E8,GA,G9,G8,H9,SK,S8],[EA,GZ,GK,HZ,H8,SA,S9,S7],],
         vec![],
         vec![],
-        &[(0, "eo e7 e8 ea"),(0, "hu eu ez gz"),(1, "hk h9 h8 ha"),(0, "gu so ga hz"),(1, "g7 g8 gk ek"),(0, "h7 su sk sa"),(1, "sz s8 s7 ho"),(0, "e9 go g9 s9"),],
+        &[(0, [EO,E7,E8,EA]),(0, [HU,EU,EZ,GZ]),(1, [HK,H9,H8,HA]),(0, [GU,SO,GA,HZ]),(1, [G7,G8,GK,EK]),(0, [H7,SU,SK,SA]),(1, [SZ,S8,S7,HO]),(0, [E9,GO,G9,S9]),],
         [-150, 50, 50, 50],
     );
     test_rules(
         "../../testdata/games/7.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["su ga hz h8 h7 sa s9 s7","go hu g8 ez ek e8 e7 s8","eo so gu gz gk g9 ha hk","ho eu g7 ea e9 h9 sz sk",],
+        [[SU,GA,HZ,H8,H7,SA,S9,S7],[GO,HU,G8,EZ,EK,E8,E7,S8],[EO,SO,GU,GZ,GK,G9,HA,HK],[HO,EU,G7,EA,E9,H9,SZ,SK],],
         vec![],
         vec![],
-        &[(0, "h8 hu hk h9"),(1, "ez gu e9 s7"),(2, "eo g7 su g8"),(2, "g9 eu ga go"),(1, "s8 gz sk s9"),(2, "so ho h7 ek"),(3, "ea hz e7 gk"),(2, "ha sz sa e8"),],
+        &[(0, [H8,HU,HK,H9]),(1, [EZ,GU,E9,S7]),(2, [EO,G7,SU,G8]),(2, [G9,EU,GA,GO]),(1, [S8,GZ,SK,S9]),(2, [SO,HO,H7,EK]),(3, [EA,HZ,E7,GK]),(2, [HA,SZ,SA,E8]),],
         [-50, -50, 150, -50],
     );
     test_rules(
         "../../testdata/games/solo/1-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo so hu su hk h8 h7 g7","ho hz e7 gk g8 sa s9 s7","gu ha ea ek ga gz g9 sz","go eu h9 ez e9 e8 sk s8",],
+        [[EO,SO,HU,SU,HK,H8,H7,G7],[HO,HZ,E7,GK,G8,SA,S9,S7],[GU,HA,EA,EK,GA,GZ,G9,SZ],[GO,EU,H9,EZ,E9,E8,SK,S8],],
         vec![],
         vec![],
-        &[(0, "eo ho gu h9"),(0, "hu hz ha eu"),(3, "s8 hk s7 sz"),(0, "su sa ga go"),(3, "sk g7 s9 gz"),(3, "e8 h7 e7 ek"),(0, "so g8 g9 e9"),(0, "h8 gk ea ez"),],
+        &[(0, [EO,HO,GU,H9]),(0, [HU,HZ,HA,EU]),(3, [S8,HK,S7,SZ]),(0, [SU,SA,GA,GO]),(3, [SK,G7,S9,GZ]),(3, [E8,H7,E7,EK]),(0, [SO,G8,G9,E9]),(0, [H8,GK,EA,EZ]),],
         [-150, 50, 50, 50],
     );
     // ../../testdata/games/solo/10-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/100-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo eu ez ga g7 hz hk sa","so gu ea gk g9 h8 sz sk","ek gz ha h9 h7 s9 s8 s7","go ho hu su e9 e8 e7 g8",],
+        [[EO,EU,EZ,GA,G7,HZ,HK,SA],[SO,GU,EA,GK,G9,H8,SZ,SK],[EK,GZ,HA,H9,H7,S9,S8,S7],[GO,HO,HU,SU,E9,E8,E7,G8],],
         vec![],
         vec![],
-        &[(0, "sa sk s7 e8"),(3, "ho eo ea ek"),(0, "ga gk gz g8"),(0, "hk h8 h7 e7"),(3, "go ez gu s8"),(3, "su eu so ha"),(1, "sz s9 e9 g7"),(3, "hu hz g9 h9"),],
+        &[(0, [SA,SK,S7,E8]),(3, [HO,EO,EA,EK]),(0, [GA,GK,GZ,G8]),(0, [HK,H8,H7,E7]),(3, [GO,EZ,GU,S8]),(3, [SU,EU,SO,HA]),(1, [SZ,S9,E9,G7]),(3, [HU,HZ,G9,H9]),],
         [50, 50, 50, -150],
     );
     test_rules(
         "../../testdata/games/solo/104-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["hu ea ek e9 e8 e7 sa s9","so ha ez gz gk g8 g7 sz","gu su hz h9 ga sk s8 s7","eo go ho eu hk h8 h7 g9",],
+        [[HU,EA,EK,E9,E8,E7,SA,S9],[SO,HA,EZ,GZ,GK,G8,G7,SZ],[GU,SU,HZ,H9,GA,SK,S8,S7],[EO,GO,HO,EU,HK,H8,H7,G9],],
         vec![],
         vec![],
-        &[(0, "sa sz s8 hk"),(3, "go hu ha h9"),(3, "ho s9 so su"),(3, "eu e7 g7 hz"),(3, "eo e8 g8 gu"),(3, "g9 e9 gz ga"),(2, "sk h8 ek gk"),(3, "h7 ea ez s7"),],
+        &[(0, [SA,SZ,S8,HK]),(3, [GO,HU,HA,H9]),(3, [HO,S9,SO,SU]),(3, [EU,E7,G7,HZ]),(3, [EO,E8,G8,GU]),(3, [G9,E9,GZ,GA]),(2, [SK,H8,EK,GK]),(3, [H7,EA,EZ,S7]),],
         [-90, -90, -90, 270],
     );
     test_rules(
         "../../testdata/games/solo/105-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["so ek g7 hz hk h7 sk s8","eu hu e7 ga g8 h8 sz s9","ho ea ez gz g9 h9 sa s7","eo go gu su e9 e8 gk ha",],
+        [[SO,EK,G7,HZ,HK,H7,SK,S8],[EU,HU,E7,GA,G8,H8,SZ,S9],[HO,EA,EZ,GZ,G9,H9,SA,S7],[EO,GO,GU,SU,E9,E8,GK,HA],],
         vec![],
         vec![],
-        &[(0, "hk h8 h9 ha"),(3, "go ek e7 ea"),(3, "eo so hu ez"),(3, "e8 hz eu ho"),(2, "sa su s8 s9"),(3, "gk g7 ga gz"),(1, "sz s7 e9 sk"),(3, "gu h7 g8 g9"),],
+        &[(0, [HK,H8,H9,HA]),(3, [GO,EK,E7,EA]),(3, [EO,SO,HU,EZ]),(3, [E8,HZ,EU,HO]),(2, [SA,SU,S8,S9]),(3, [GK,G7,GA,GZ]),(1, [SZ,S7,E9,SK]),(3, [GU,H7,G8,G9]),],
         [-50, -50, -50, 150],
     );
     // ../../testdata/games/solo/106-gras-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/109-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo ho so eu gu hk e7 g8","go h8 e8 gz gk g9 g7 sz","hu ha h9 ea ek ga s9 s8","su hz h7 ez e9 sa sk s7",],
+        [[EO,HO,SO,EU,GU,HK,E7,G8],[GO,H8,E8,GZ,GK,G9,G7,SZ],[HU,HA,H9,EA,EK,GA,S9,S8],[SU,HZ,H7,EZ,E9,SA,SK,S7],],
         vec![],
         vec![],
-        &[(0, "gu go ha hz"),(1, "e8 ea ez e7"),(2, "ek e9 g8 sz"),(2, "ga su eu g7"),(0, "so h8 h9 h7"),(0, "ho g9 hu s7"),(0, "eo gk s9 sk"),(0, "hk gz s8 sa"),],
+        &[(0, [GU,GO,HA,HZ]),(1, [E8,EA,EZ,E7]),(2, [EK,E9,G8,SZ]),(2, [GA,SU,EU,G7]),(0, [SO,H8,H9,H7]),(0, [HO,G9,HU,S7]),(0, [EO,GK,S9,SK]),(0, [HK,GZ,S8,SA]),],
         [-150, 50, 50, 50],
     );
     // ../../testdata/games/solo/11-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/111-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo hu ez e9 e8 ga gz sa","ho gu su hk h9 ea sz s9","go so eu ha hz h8 h7 gk","ek e7 g9 g8 g7 sk s8 s7",],
+        [[EO,HU,EZ,E9,E8,GA,GZ,SA],[HO,GU,SU,HK,H9,EA,SZ,S9],[GO,SO,EU,HA,HZ,H8,H7,GK],[EK,E7,G9,G8,G7,SK,S8,S7],],
         vec![],
         vec![],
-        &[(0, "sa sz so s7"),(2, "eu sk eo hk"),(0, "ga s9 gk g7"),(0, "gz ho go g8"),(2, "h8 ek hu h9"),(0, "e9 ea ha e7"),(2, "h7 g9 e8 su"),(1, "gu hz s8 ez"),],
+        &[(0, [SA,SZ,SO,S7]),(2, [EU,SK,EO,HK]),(0, [GA,S9,GK,G7]),(0, [GZ,HO,GO,G8]),(2, [H8,EK,HU,H9]),(0, [E9,EA,HA,E7]),(2, [H7,G9,E8,SU]),(1, [GU,HZ,S8,EZ]),],
         [-50, -50, 150, -50],
     );
     // ../../testdata/games/solo/112-gras-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/113-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["hz hk ek e7 ga g9 sa sk","go h8 ez e8 gk g8 s9 s8","eo so eu hu ha h9 h7 s7","ho gu su ea e9 gz g7 sz",],
+        [[HZ,HK,EK,E7,GA,G9,SA,SK],[GO,H8,EZ,E8,GK,G8,S9,S8],[EO,SO,EU,HU,HA,H9,H7,S7],[HO,GU,SU,EA,E9,GZ,G7,SZ],],
         vec![],
         vec![],
-        &[(0, "ga gk ha g7"),(2, "eo su hk h8"),(2, "eu ho hz go"),(1, "g8 s7 gz g9"),(3, "sz sa s9 h7"),(2, "so gu e7 s8"),(2, "hu e9 sk e8"),(2, "h9 ea ek ez"),],
+        &[(0, [GA,GK,HA,G7]),(2, [EO,SU,HK,H8]),(2, [EU,HO,HZ,GO]),(1, [G8,S7,GZ,G9]),(3, [SZ,SA,S9,H7]),(2, [SO,GU,E7,S8]),(2, [HU,E9,SK,E8]),(2, [H9,EA,EK,EZ]),],
         [-60, -60, 180, -60],
     );
     test_rules(
         "../../testdata/games/solo/114-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go eu gu ez e9 e8 s7","hu su e7 g8 ha h8 h7 sz","ho so gk hz hk h9 s9 s8","ea ek ga gz g9 g7 sa sk",],
+        [[EO,GO,EU,GU,EZ,E9,E8,S7],[HU,SU,E7,G8,HA,H8,H7,SZ],[HO,SO,GK,HZ,HK,H9,S9,S8],[EA,EK,GA,GZ,G9,G7,SA,SK],],
         vec![],
         vec![],
-        &[(0, "go e7 so ek"),(0, "eo su ho ea"),(0, "gu hu gk g9"),(0, "s7 sz s8 sa"),(3, "ga e9 g8 s9"),(0, "eu h7 h9 g7"),(0, "ez h8 hk gz"),(0, "e8 ha hz sk"),],
+        &[(0, [GO,E7,SO,EK]),(0, [EO,SU,HO,EA]),(0, [GU,HU,GK,G9]),(0, [S7,SZ,S8,SA]),(3, [GA,E9,G8,S9]),(0, [EU,H7,H9,G7]),(0, [EZ,H8,HK,GZ]),(0, [E8,HA,HZ,SK]),],
         [180, -60, -60, -60],
     );
     // ../../testdata/games/solo/116-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/119-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["so eu ek e8 e7 gz gk sz","ho gu su hk h9 h8 sa s9","eo go hu ea ez e9 ga h7","g9 g8 g7 ha hz sk s8 s7",],
+        [[SO,EU,EK,E8,E7,GZ,GK,SZ],[HO,GU,SU,HK,H9,H8,SA,S9],[EO,GO,HU,EA,EZ,E9,GA,H7],[G9,G8,G7,HA,HZ,SK,S8,S7],],
         vec![],
         vec![],
-        &[(0, "gk gu ga g9"),(1, "hk h7 ha sz"),(3, "g8 gz ho go"),(2, "e9 hz ek su"),(1, "h9 hu sk eu"),(0, "e7 h8 ea s7"),(2, "eo s8 e8 s9"),(2, "ez g7 so sa"),],
+        &[(0, [GK,GU,GA,G9]),(1, [HK,H7,HA,SZ]),(3, [G8,GZ,HO,GO]),(2, [E9,HZ,EK,SU]),(1, [H9,HU,SK,EU]),(0, [E7,H8,EA,S7]),(2, [EO,S8,E8,S9]),(2, [EZ,G7,SO,SA]),],
         [60, 60, -180, 60],
     );
     // ../../testdata/games/solo/120-herz-solo.html has wrong format
@@ -874,159 +888,159 @@ fn test_rulessolo() {
     test_rules(
         "../../testdata/games/solo/123-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["e9 gk g8 ha h7 sa sz s8","go ho eu ea ek e8 e7 hk","eo so hu su gz g9 h9 h8","gu ez ga g7 hz sk s9 s7",],
+        [[E9,GK,G8,HA,H7,SA,SZ,S8],[GO,HO,EU,EA,EK,E8,E7,HK],[EO,SO,HU,SU,GZ,G9,H9,H8],[GU,EZ,GA,G7,HZ,SK,S9,S7],],
         vec![],
         vec![2,],
-        &[(0, "sa ea su sk"),(2, "h8 hz h7 hk"),(3, "s9 sz ho eo"),(2, "h9 gu ha eu"),(1, "go hu ez e9"),(1, "e8 so ga gk"),(2, "gz g7 g8 ek"),(1, "e7 g9 s7 s8"),],
+        &[(0, [SA,EA,SU,SK]),(2, [H8,HZ,H7,HK]),(3, [S9,SZ,HO,EO]),(2, [H9,GU,HA,EU]),(1, [GO,HU,EZ,E9]),(1, [E8,SO,GA,GK]),(2, [GZ,G7,G8,EK]),(1, [E7,G9,S7,S8]),],
         [100, -300, 100, 100],
     );
     test_rules(
         "../../testdata/games/solo/124-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go so eu gu hk h7 sa","h8 ea ez e9 e8 ga g9 s9","ha e7 gz g8 g7 sz s8 s7","ho hu su hz h9 ek gk sk",],
+        [[EO,GO,SO,EU,GU,HK,H7,SA],[H8,EA,EZ,E9,E8,GA,G9,S9],[HA,E7,GZ,G8,G7,SZ,S8,S7],[HO,HU,SU,HZ,H9,EK,GK,SK],],
         vec![],
         vec![],
-        &[(0, "eo h8 ha h9"),(0, "go s9 e7 su"),(0, "gu ea gz ho"),(3, "ek hk e8 g7"),(0, "so ez g8 hz"),(0, "eu e9 s7 hu"),(0, "sa g9 s8 sk"),(0, "h7 ga sz gk"),],
+        &[(0, [EO,H8,HA,H9]),(0, [GO,S9,E7,SU]),(0, [GU,EA,GZ,HO]),(3, [EK,HK,E8,G7]),(0, [SO,EZ,G8,HZ]),(0, [EU,E9,S7,HU]),(0, [SA,G9,S8,SK]),(0, [H7,GA,SZ,GK]),],
         [180, -60, -60, -60],
     );
     // ../../testdata/games/solo/126-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/127-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go g9 g7 ea e9 ha h9","eu ga gz e8 e7 hz hk s7","ho so gu hu su h8 sz sk","gk g8 ez ek h7 sa s9 s8",],
+        [[EO,GO,G9,G7,EA,E9,HA,H9],[EU,GA,GZ,E8,E7,HZ,HK,S7],[HO,SO,GU,HU,SU,H8,SZ,SK],[GK,G8,EZ,EK,H7,SA,S9,S8],],
         vec![],
         vec![],
-        &[(0, "go ga su g8"),(0, "eo eu hu gk"),(0, "g7 gz gu ez"),(2, "h8 h7 ha hk"),(0, "ea e7 so ek"),(2, "ho sa g9 hz"),(2, "sz s9 h9 s7"),(2, "sk s8 e9 e8"),],
+        &[(0, [GO,GA,SU,G8]),(0, [EO,EU,HU,GK]),(0, [G7,GZ,GU,EZ]),(2, [H8,H7,HA,HK]),(0, [EA,E7,SO,EK]),(2, [HO,SA,G9,HZ]),(2, [SZ,S9,H9,S7]),(2, [SK,S8,E9,E8]),],
         [-150, 50, 50, 50],
     );
     // ../../testdata/games/solo/128-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/129-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go so hu gk g8 e7 s9","g7 ez e8 ha hz h9 sk s8","eu gu su ga gz ea ek h8","ho g9 e9 hk h7 sa sz s7",],
+        [[EO,GO,SO,HU,GK,G8,E7,S9],[G7,EZ,E8,HA,HZ,H9,SK,S8],[EU,GU,SU,GA,GZ,EA,EK,H8],[HO,G9,E9,HK,H7,SA,SZ,S7],],
         vec![],
         vec![],
-        &[(0, "go g7 su g9"),(0, "eo s8 gu ho"),(0, "so sk gz e9"),(0, "g8 ha ga sa"),(2, "ea hk e7 ez"),(2, "eu sz hu hz"),(2, "ek s7 s9 e8"),(2, "h8 h7 gk h9"),],
+        &[(0, [GO,G7,SU,G9]),(0, [EO,S8,GU,HO]),(0, [SO,SK,GZ,E9]),(0, [G8,HA,GA,SA]),(2, [EA,HK,E7,EZ]),(2, [EU,SZ,HU,HZ]),(2, [EK,S7,S9,E8]),(2, [H8,H7,GK,H9]),],
         [-150, 50, 50, 50],
     );
     // ../../testdata/games/solo/13-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/130-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go hu gk g9 g7 h8 sa","gu gz g8 e8 e7 hk sz s9","eu su ga ez e9 h9 h7 s8","ho so ea ek ha hz sk s7",],
+        [[EO,GO,HU,GK,G9,G7,H8,SA],[GU,GZ,G8,E8,E7,HK,SZ,S9],[EU,SU,GA,EZ,E9,H9,H7,S8],[HO,SO,EA,EK,HA,HZ,SK,S7],],
         vec![],
         vec![],
-        &[(0, "eo g8 su so"),(0, "go gu eu ho"),(0, "hu gz ga s7"),(0, "h8 hk h9 ha"),(3, "hz g9 e7 h7"),(0, "g7 e8 s8 sk"),(0, "gk s9 e9 ek"),(0, "sa sz ez ea"),],
+        &[(0, [EO,G8,SU,SO]),(0, [GO,GU,EU,HO]),(0, [HU,GZ,GA,S7]),(0, [H8,HK,H9,HA]),(3, [HZ,G9,E7,H7]),(0, [G7,E8,S8,SK]),(0, [GK,S9,E9,EK]),(0, [SA,SZ,EZ,EA]),],
         [180, -60, -60, -60],
     );
     test_rules(
         "../../testdata/games/solo/131-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["hz ek e9 e8 ga gz g8 s8","eu h7 ea ez gk g7 sk s7","eo ho so gu hu ha hk sz","go su h9 h8 e7 g9 sa s9",],
+        [[HZ,EK,E9,E8,GA,GZ,G8,S8],[EU,H7,EA,EZ,GK,G7,SK,S7],[EO,HO,SO,GU,HU,HA,HK,SZ],[GO,SU,H9,H8,E7,G9,SA,S9],],
         vec![],
         vec![],
-        &[(0, "ek ez gu e7"),(2, "eo h8 hz h7"),(2, "so h9 s8 eu"),(2, "hu go ga ea"),(3, "sa e8 sk sz"),(3, "s9 e9 s7 ha"),(2, "ho su g8 g7"),(2, "hk g9 gz gk"),],
+        &[(0, [EK,EZ,GU,E7]),(2, [EO,H8,HZ,H7]),(2, [SO,H9,S8,EU]),(2, [HU,GO,GA,EA]),(3, [SA,E8,SK,SZ]),(3, [S9,E9,S7,HA]),(2, [HO,SU,G8,G7]),(2, [HK,G9,GZ,GK]),],
         [-50, -50, 150, -50],
     );
     test_rules(
         "../../testdata/games/solo/132-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["su ea ez ek e9 gz sz s8","so eu hk g9 g7 sk s9 s7","go gu h8 e7 ga gk g8 sa","eo ho hu ha hz h9 h7 e8",],
+        [[SU,EA,EZ,EK,E9,GZ,SZ,S8],[SO,EU,HK,G9,G7,SK,S9,S7],[GO,GU,H8,E7,GA,GK,G8,SA],[EO,HO,HU,HA,HZ,H9,H7,E8],],
         vec![],
         vec![],
-        &[(0, "gz g7 ga ha"),(3, "hu su so h8"),(1, "sk sa hz s8"),(3, "eo e9 hk gu"),(3, "h7 sz eu go"),(2, "gk e8 ea g9"),(2, "g8 h9 ez s9"),(3, "ho ek s7 e7"),],
+        &[(0, [GZ,G7,GA,HA]),(3, [HU,SU,SO,H8]),(1, [SK,SA,HZ,S8]),(3, [EO,E9,HK,GU]),(3, [H7,SZ,EU,GO]),(2, [GK,E8,EA,G9]),(2, [G8,H9,EZ,S9]),(3, [HO,EK,S7,E7]),],
         [-50, -50, -50, 150],
     );
     // ../../testdata/games/solo/134-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/135-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["so su ea e7 ha hz h9 sk","ho eu gu gz gk h7 sa s9","ek g9 g8 g7 hk h8 s8 s7","eo go hu ez e9 e8 ga sz",],
+        [[SO,SU,EA,E7,HA,HZ,H9,SK],[HO,EU,GU,GZ,GK,H7,SA,S9],[EK,G9,G8,G7,HK,H8,S8,S7],[EO,GO,HU,EZ,E9,E8,GA,SZ],],
         vec![],
         vec![],
-        &[(0, "sk sa s7 sz"),(1, "s9 s8 e9 h9"),(3, "go e7 gu ek"),(3, "eo su eu g9"),(3, "e8 ea ho hk"),(1, "gk g7 ga so"),(0, "ha h7 h8 ez"),(3, "hu hz gz g8"),],
+        &[(0, [SK,SA,S7,SZ]),(1, [S9,S8,E9,H9]),(3, [GO,E7,GU,EK]),(3, [EO,SU,EU,G9]),(3, [E8,EA,HO,HK]),(1, [GK,G7,GA,SO]),(0, [HA,H7,H8,EZ]),(3, [HU,HZ,GZ,G8]),],
         [50, 50, 50, -150],
     );
     test_rules(
         "../../testdata/games/solo/137-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["gu gk g9 ea e8 e7 sz sk","eu hu ek e9 ha h8 s9 s8","eo go so gz g8 g7 h9 h7","ho su ga ez hz hk sa s7",],
+        [[GU,GK,G9,EA,E8,E7,SZ,SK],[EU,HU,EK,E9,HA,H8,S9,S8],[EO,GO,SO,GZ,G8,G7,H9,H7],[HO,SU,GA,EZ,HZ,HK,SA,S7],],
         vec![],
         vec![],
-        &[(0, "ea e9 gz ez"),(2, "go su gk hu"),(2, "eo ga g9 eu"),(2, "g7 ho gu ek"),(3, "sa sk s8 g8"),(2, "so s7 e8 s9"),(2, "h7 hz sz ha"),(1, "h8 h9 hk e7"),],
+        &[(0, [EA,E9,GZ,EZ]),(2, [GO,SU,GK,HU]),(2, [EO,GA,G9,EU]),(2, [G7,HO,GU,EK]),(3, [SA,SK,S8,G8]),(2, [SO,S7,E8,S9]),(2, [H7,HZ,SZ,HA]),(1, [H8,H9,HK,E7]),],
         [-50, -50, 150, -50],
     );
     test_rules(
         "../../testdata/games/solo/139-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go gu g7 ea e7 hk h9 s9","eu hu gz e9 ha h8 h7 s7","eo ho so su ga gk g8 ek","g9 ez e8 hz sa sz sk s8",],
+        [[GO,GU,G7,EA,E7,HK,H9,S9],[EU,HU,GZ,E9,HA,H8,H7,S7],[EO,HO,SO,SU,GA,GK,G8,EK],[G9,EZ,E8,HZ,SA,SZ,SK,S8],],
         vec![],
         vec![],
-        &[(0, "s9 s7 ek sa"),(3, "sz hk eu so"),(2, "eo g9 g7 hu"),(2, "su hz gu gz"),(0, "ea e9 ga e8"),(2, "ho ez go ha"),(0, "h9 h7 gk s8"),(2, "g8 sk e7 h8"),],
+        &[(0, [S9,S7,EK,SA]),(3, [SZ,HK,EU,SO]),(2, [EO,G9,G7,HU]),(2, [SU,HZ,GU,GZ]),(0, [EA,E9,GA,E8]),(2, [HO,EZ,GO,HA]),(0, [H9,H7,GK,S8]),(2, [G8,SK,E7,H8]),],
         [50, 50, -150, 50],
     );
     test_rules(
         "../../testdata/games/solo/142-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["gu su g7 ea e9 sa sz s8","eo go ho so hu ga g9 e8","g8 ez e7 ha hz hk s9 s7","eu gz gk ek h9 h8 h7 sk",],
+        [[GU,SU,G7,EA,E9,SA,SZ,S8],[EO,GO,HO,SO,HU,GA,G9,E8],[G8,EZ,E7,HA,HZ,HK,S9,S7],[EU,GZ,GK,EK,H9,H8,H7,SK],],
         vec![],
         vec![],
-        &[(0, "ea e8 ez ek"),(0, "e9 hu e7 sk"),(1, "so g8 gz g7"),(1, "ho ha gk su"),(1, "go s7 eu gu"),(1, "eo s9 h9 s8"),(1, "ga hk h7 sz"),(1, "g9 hz h8 sa"),],
+        &[(0, [EA,E8,EZ,EK]),(0, [E9,HU,E7,SK]),(1, [SO,G8,GZ,G7]),(1, [HO,HA,GK,SU]),(1, [GO,S7,EU,GU]),(1, [EO,S9,H9,S8]),(1, [GA,HK,H7,SZ]),(1, [G9,HZ,H8,SA]),],
         [-100, 300, -100, -100],
     );
     test_rules(
         "../../testdata/games/solo/143-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo ho so gu hu gk g7 h9","eu gz ea hz hk sa sz sk","ga g8 e9 e7 ha h8 h7 s9","go su g9 ez ek e8 s8 s7",],
+        [[EO,HO,SO,GU,HU,GK,G7,H9],[EU,GZ,EA,HZ,HK,SA,SZ,SK],[GA,G8,E9,E7,HA,H8,H7,S9],[GO,SU,G9,EZ,EK,E8,S8,S7],],
         vec![],
         vec![],
-        &[(0, "eo eu g8 g9"),(0, "hu gz ga go"),(3, "ez gu ea e9"),(0, "so sa s9 su"),(0, "ho sk e7 s8"),(0, "h9 hz ha ek"),(2, "h8 e8 gk hk"),(0, "g7 sz h7 s7"),],
+        &[(0, [EO,EU,G8,G9]),(0, [HU,GZ,GA,GO]),(3, [EZ,GU,EA,E9]),(0, [SO,SA,S9,SU]),(0, [HO,SK,E7,S8]),(0, [H9,HZ,HA,EK]),(2, [H8,E8,GK,HK]),(0, [G7,SZ,H7,S7]),],
         [150, -50, -50, -50],
     );
     // ../../testdata/games/solo/144-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/146-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["ho so su ea ek e8 ha hz","eo go eu e9 gk g7 hk sz","g9 g8 h9 h8 h7 sa sk s8","gu hu ez e7 ga gz s9 s7",],
+        [[HO,SO,SU,EA,EK,E8,HA,HZ],[EO,GO,EU,E9,GK,G7,HK,SZ],[G9,G8,H9,H8,H7,SA,SK,S8],[GU,HU,EZ,E7,GA,GZ,S9,S7],],
         vec![],
         vec![],
-        &[(0, "so go sa ez"),(1, "hk h7 hu ha"),(3, "ga ea g7 g8"),(0, "su eu sk e7"),(1, "gk g9 gz ek"),(0, "e8 e9 s8 gu"),(3, "s9 ho sz h8"),(0, "hz eo h9 s7"),],
+        &[(0, [SO,GO,SA,EZ]),(1, [HK,H7,HU,HA]),(3, [GA,EA,G7,G8]),(0, [SU,EU,SK,E7]),(1, [GK,G9,GZ,EK]),(0, [E8,E9,S8,GU]),(3, [S9,HO,SZ,H8]),(0, [HZ,EO,H9,S7]),],
         [-150, 50, 50, 50],
     );
     test_rules(
         "../../testdata/games/solo/149-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go ho so eu gu hk h8 g8","su h9 ez e8 e7 ga sz s8","eo hu ha h7 ek gk sk s9","hz ea e9 gz g9 g7 sa s7",],
+        [[GO,HO,SO,EU,GU,HK,H8,G8],[SU,H9,EZ,E8,E7,GA,SZ,S8],[EO,HU,HA,H7,EK,GK,SK,S9],[HZ,EA,E9,GZ,G9,G7,SA,S7],],
         vec![],
         vec![],
-        &[(0, "gu h9 ha hz"),(0, "eu su h7 g7"),(0, "so ez eo gz"),(2, "gk g9 g8 ga"),(1, "e8 ek ea hk"),(0, "ho e7 hu e9"),(0, "go s8 s9 s7"),(0, "h8 sz sk sa"),],
+        &[(0, [GU,H9,HA,HZ]),(0, [EU,SU,H7,G7]),(0, [SO,EZ,EO,GZ]),(2, [GK,G9,G8,GA]),(1, [E8,EK,EA,HK]),(0, [HO,E7,HU,E9]),(0, [GO,S8,S9,S7]),(0, [H8,SZ,SK,SA]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/solo/15-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["hu su h9 ga gk g9","eo gu hk ez ek sk","go ho so eu hz sa","ha ea e9 gz sz s9",],
+        [[HU,SU,H9,GA,GK,G9],[EO,GU,HK,EZ,EK,SK],[GO,HO,SO,EU,HZ,SA],[HA,EA,E9,GZ,SZ,S9],],
         vec![],
         vec![],
-        &[(0, "ga sk hz gz"),(2, "eu ha h9 eo"),(1, "ez so ea g9"),(2, "ho e9 su hk"),(2, "go s9 hu gu"),(2, "sa sz gk ek"),],
+        &[(0, [GA,SK,HZ,GZ]),(2, [EU,HA,H9,EO]),(1, [EZ,SO,EA,G9]),(2, [HO,E9,SU,HK]),(2, [GO,S9,HU,GU]),(2, [SA,SZ,GK,EK]),],
         [-60, -60, 180, -60],
     );
     test_rules(
         "../../testdata/games/solo/150-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["so eu g9 ez e7 hz hk sa","eo go gu hu gz g7 ea e8","su ga gk ek h9 h8 sk s9","ho g8 e9 ha h7 sz s8 s7",],
+        [[SO,EU,G9,EZ,E7,HZ,HK,SA],[EO,GO,GU,HU,GZ,G7,EA,E8],[SU,GA,GK,EK,H9,H8,SK,S9],[HO,G8,E9,HA,H7,SZ,S8,S7],],
         vec![],
         vec![],
-        &[(0, "sa hu s9 s7"),(1, "go ga g8 g9"),(1, "eo su ho eu"),(1, "g7 gk sz so"),(0, "hz gz h8 h7"),(1, "gu h9 s8 hk"),(1, "ea ek e9 e7"),(1, "e8 sk ha ez"),],
+        &[(0, [SA,HU,S9,S7]),(1, [GO,GA,G8,G9]),(1, [EO,SU,HO,EU]),(1, [G7,GK,SZ,SO]),(0, [HZ,GZ,H8,H7]),(1, [GU,H9,S8,HK]),(1, [EA,EK,E9,E7]),(1, [E8,SK,HA,EZ]),],
         [-50, 150, -50, -50],
     );
     test_rules(
         "../../testdata/games/solo/151-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["hu gk g9 g8 e9 ha h9 h8","eo so gu ga gz g7 sz s8","go eu su ez ek h7 s9 s7","ho ea e8 e7 hz hk sa sk",],
+        [[HU,GK,G9,G8,E9,HA,H9,H8],[EO,SO,GU,GA,GZ,G7,SZ,S8],[GO,EU,SU,EZ,EK,H7,S9,S7],[HO,EA,E8,E7,HZ,HK,SA,SK],],
         vec![],
         vec![],
-        &[(0, "ha ga h7 hk"),(1, "gu eu ho gk"),(3, "sa e9 s8 s7"),(3, "sk g9 sz s9"),(0, "h9 so ek hz"),(1, "eo su e7 g8"),(1, "g7 go ea hu"),(2, "ez e8 h8 gz"),],
+        &[(0, [HA,GA,H7,HK]),(1, [GU,EU,HO,GK]),(3, [SA,E9,S8,S7]),(3, [SK,G9,SZ,S9]),(0, [H9,SO,EK,HZ]),(1, [EO,SU,E7,G8]),(1, [G7,GO,EA,HU]),(2, [EZ,E8,H8,GZ]),],
         [-50, 150, -50, -50],
     );
     // ../../testdata/games/solo/153-eichel-solo.html has wrong format
@@ -1034,93 +1048,93 @@ fn test_rulessolo() {
     test_rules(
         "../../testdata/games/solo/155-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go so eu gu h8 ea s9","hk h9 ez e9 gk g7 sa s7","su ha h7 ek g9 g8 sk s8","ho hu hz e8 e7 ga gz sz",],
+        [[EO,GO,SO,EU,GU,H8,EA,S9],[HK,H9,EZ,E9,GK,G7,SA,S7],[SU,HA,H7,EK,G9,G8,SK,S8],[HO,HU,HZ,E8,E7,GA,GZ,SZ],],
         vec![],
         vec![],
-        &[(0, "go hk ha hu"),(0, "eo h9 h7 hz"),(0, "gu ez su ho"),(3, "ga h8 g7 g9"),(0, "eu e9 ek e7"),(0, "s9 s7 sk sz"),(3, "e8 ea gk g8"),(0, "so sa s8 gz"),],
+        &[(0, [GO,HK,HA,HU]),(0, [EO,H9,H7,HZ]),(0, [GU,EZ,SU,HO]),(3, [GA,H8,G7,G9]),(0, [EU,E9,EK,E7]),(0, [S9,S7,SK,SZ]),(3, [E8,EA,GK,G8]),(0, [SO,SA,S8,GZ]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/solo/156-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["e9 e8 ga hz hk h8 h7 s8","hu su gz gk g9 sz sk s7","eo ho eu ea ez ek e7 sa","go so gu g8 g7 ha h9 s9",],
+        [[E9,E8,GA,HZ,HK,H8,H7,S8],[HU,SU,GZ,GK,G9,SZ,SK,S7],[EO,HO,EU,EA,EZ,EK,E7,SA],[GO,SO,GU,G8,G7,HA,H9,S9],],
         vec![],
         vec![],
-        &[(0, "hk hu eu h9"),(2, "e7 gu e9 su"),(3, "ha h7 s7 ea"),(2, "eo so e8 g9"),(2, "ho go ga sz"),(3, "g8 s8 gz ez"),(2, "sa s9 h8 sk"),(2, "ek g7 hz gk"),],
+        &[(0, [HK,HU,EU,H9]),(2, [E7,GU,E9,SU]),(3, [HA,H7,S7,EA]),(2, [EO,SO,E8,G9]),(2, [HO,GO,GA,SZ]),(3, [G8,S8,GZ,EZ]),(2, [SA,S9,H8,SK]),(2, [EK,G7,HZ,GK]),],
         [-50, -50, 150, -50],
     );
     test_rules(
         "../../testdata/games/solo/157-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go su e9 e8 g7 ha hz","ea e7 ga gk g9 h8 sk s8","ho so gu ek gz g8 hk sz","eu hu ez h9 h7 sa s9 s7",],
+        [[EO,GO,SU,E9,E8,G7,HA,HZ],[EA,E7,GA,GK,G9,H8,SK,S8],[HO,SO,GU,EK,GZ,G8,HK,SZ],[EU,HU,EZ,H9,H7,SA,S9,S7],],
         vec![],
         vec![],
-        &[(0, "go ea ek hu"),(0, "eo e7 gu eu"),(0, "e9 sk so ez"),(2, "hk h9 ha h8"),(0, "hz gk ho h7"),(2, "sz sa e8 s8"),(0, "g7 ga gz s9"),(1, "g9 g8 s7 su"),],
+        &[(0, [GO,EA,EK,HU]),(0, [EO,E7,GU,EU]),(0, [E9,SK,SO,EZ]),(2, [HK,H9,HA,H8]),(0, [HZ,GK,HO,H7]),(2, [SZ,SA,E8,S8]),(0, [G7,GA,GZ,S9]),(1, [G9,G8,S7,SU]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/solo/159-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["so eu e7 gz gk g9 g7 sa","eo go ho hu su ha h7 ek","hk h9 ez e9 g8 sz s9 s7","gu hz h8 ea e8 ga sk s8",],
+        [[SO,EU,E7,GZ,GK,G9,G7,SA],[EO,GO,HO,HU,SU,HA,H7,EK],[HK,H9,EZ,E9,G8,SZ,S9,S7],[GU,HZ,H8,EA,E8,GA,SK,S8],],
         vec![],
         vec![],
-        &[(0, "gz su g8 ga"),(1, "go hk h8 eu"),(1, "ho h9 gu so"),(1, "hu sz hz e7"),(1, "eo s9 s8 g7"),(1, "ek ez ea sa"),(3, "e8 gk h7 e9"),(1, "ha s7 sk g9"),],
+        &[(0, [GZ,SU,G8,GA]),(1, [GO,HK,H8,EU]),(1, [HO,H9,GU,SO]),(1, [HU,SZ,HZ,E7]),(1, [EO,S9,S8,G7]),(1, [EK,EZ,EA,SA]),(3, [E8,GK,H7,E9]),(1, [HA,S7,SK,G9]),],
         [-80, 240, -80, -80],
     );
     test_rules(
         "../../testdata/games/solo/160-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eu gu g8 ea hk h8 sa s9","ga e9 e8 e7 h9 sz sk s8","eo go ho hu su gk g9 ez","so gz g7 ek ha hz h7 s7",],
+        [[EU,GU,G8,EA,HK,H8,SA,S9],[GA,E9,E8,E7,H9,SZ,SK,S8],[EO,GO,HO,HU,SU,GK,G9,EZ],[SO,GZ,G7,EK,HA,HZ,H7,S7],],
         vec![],
         vec![],
-        &[(0, "sa sz su s7"),(2, "eo g7 g8 ga"),(2, "ho gz gu h9"),(2, "go so eu e7"),(2, "g9 ek s9 e8"),(2, "ez ha ea e9"),(0, "hk sk gk h7"),(2, "hu hz h8 s8"),],
+        &[(0, [SA,SZ,SU,S7]),(2, [EO,G7,G8,GA]),(2, [HO,GZ,GU,H9]),(2, [GO,SO,EU,E7]),(2, [G9,EK,S9,E8]),(2, [EZ,HA,EA,E9]),(0, [HK,SK,GK,H7]),(2, [HU,HZ,H8,S8]),],
         [-80, -80, 240, -80],
     );
     test_rules(
         "../../testdata/games/solo/161-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go eu h9 ea e8 e7 g9 s9","so gu ez e9 g8 sz sk s7","su ha hz hk h7 ga gz g7","eo ho hu h8 ek gk sa s8",],
+        [[GO,EU,H9,EA,E8,E7,G9,S9],[SO,GU,EZ,E9,G8,SZ,SK,S7],[SU,HA,HZ,HK,H7,GA,GZ,G7],[EO,HO,HU,H8,EK,GK,SA,S8],],
         vec![],
         vec![],
-        &[(0, "ea ez ha ek"),(2, "h7 h8 h9 gu"),(1, "e9 hk gk e8"),(2, "su hu eu so"),(1, "g8 gz ho g9"),(3, "s8 s9 s7 g7"),(0, "e7 sk hz eo"),(3, "sa go sz ga"),],
+        &[(0, [EA,EZ,HA,EK]),(2, [H7,H8,H9,GU]),(1, [E9,HK,GK,E8]),(2, [SU,HU,EU,SO]),(1, [G8,GZ,HO,G9]),(3, [S8,S9,S7,G7]),(0, [E7,SK,HZ,EO]),(3, [SA,GO,SZ,GA]),],
         [120, 120, -360, 120],
     );
     test_rules(
         "../../testdata/games/solo/162-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["e7 g9 g7 hz h8 sa sz s7","go ho hu su ea ez e8 ha","ek ga gz gk h9 sk s9 s8","eo so eu gu e9 g8 hk h7",],
+        [[E7,G9,G7,HZ,H8,SA,SZ,S7],[GO,HO,HU,SU,EA,EZ,E8,HA],[EK,GA,GZ,GK,H9,SK,S9,S8],[EO,SO,EU,GU,E9,G8,HK,H7],],
         vec![],
         vec![3,],
-        &[(0, "sa su s8 gu"),(3, "g8 g9 ea gk"),(1, "hu ek eu e7"),(3, "h7 h8 ha h9"),(1, "ho ga eo hz"),(3, "hk g7 ez s9"),(1, "go sk e9 s7"),(1, "e8 gz so sz"),],
+        &[(0, [SA,SU,S8,GU]),(3, [G8,G9,EA,GK]),(1, [HU,EK,EU,E7]),(3, [H7,H8,HA,H9]),(1, [HO,GA,EO,HZ]),(3, [HK,G7,EZ,S9]),(1, [GO,SK,E9,S7]),(1, [E8,GZ,SO,SZ]),],
         [100, -300, 100, 100],
     );
     // ../../testdata/games/solo/163-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/164-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go so hu ek e9 hz hk","ho ea ez e7 h8 sz sk s7","gu ga gz g9 g7 ha h9 sa","eu su e8 gk g8 h7 s9 s8",],
+        [[EO,GO,SO,HU,EK,E9,HZ,HK],[HO,EA,EZ,E7,H8,SZ,SK,S7],[GU,GA,GZ,G9,G7,HA,H9,SA],[EU,SU,E8,GK,G8,H7,S9,S8],],
         vec![0,],
         vec![],
-        &[(0, "go ez gu e8"),(0, "eo e7 g7 su"),(0, "hu ea ga eu"),(3, "h7 hk h8 ha"),(2, "gz g8 e9 s7"),(0, "so ho sa gk"),(1, "sz h9 s8 ek"),(0, "hz sk g9 s9"),],
+        &[(0, [GO,EZ,GU,E8]),(0, [EO,E7,G7,SU]),(0, [HU,EA,GA,EU]),(3, [H7,HK,H8,HA]),(2, [GZ,G8,E9,S7]),(0, [SO,HO,SA,GK]),(1, [SZ,H9,S8,EK]),(0, [HZ,SK,G9,S9]),],
         [-300, 100, 100, 100],
     );
     // ../../testdata/games/solo/165-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/166-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["ho so hu su ga g9 ea ha","go gz gk ez e7 sa s9 s8","eu gu g8 g7 e9 e8 hz h7","eo ek hk h9 h8 sz sk s7",],
+        [[HO,SO,HU,SU,GA,G9,EA,HA],[GO,GZ,GK,EZ,E7,SA,S9,S8],[EU,GU,G8,G7,E9,E8,HZ,H7],[EO,EK,HK,H9,H8,SZ,SK,S7],],
         vec![],
         vec![],
-        &[(0, "so gz g7 eo"),(3, "hk ha gk hz"),(1, "sa h7 sk ga"),(0, "su go g8 sz"),(1, "s9 e8 s7 g9"),(0, "ho s8 gu h8"),(0, "ea e7 e9 ek"),(0, "hu ez eu h9"),],
+        &[(0, [SO,GZ,G7,EO]),(3, [HK,HA,GK,HZ]),(1, [SA,H7,SK,GA]),(0, [SU,GO,G8,SZ]),(1, [S9,E8,S7,G9]),(0, [HO,S8,GU,H8]),(0, [EA,E7,E9,EK]),(0, [HU,EZ,EU,H9]),],
         [-150, 50, 50, 50],
     );
     test_rules(
         "../../testdata/games/solo/168-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["su gz gk ez e9 e7 hz sk","so g8 ea e8 ha h7 sa s7","eo hu ek h9 h8 sz s9 s8","go ho eu gu ga g9 g7 hk",],
+        [[SU,GZ,GK,EZ,E9,E7,HZ,SK],[SO,G8,EA,E8,HA,H7,SA,S7],[EO,HU,EK,H9,H8,SZ,S9,S8],[GO,HO,EU,GU,GA,G9,G7,HK],],
         vec![],
         vec![],
-        &[(0, "sk sa s8 ga"),(3, "eu gz so hu"),(1, "ha h9 hk hz"),(1, "h7 h8 g9 gk"),(0, "e7 ea ek g7"),(3, "ho su g8 eo"),(2, "sz gu e9 s7"),(3, "go ez e8 s9"),],
+        &[(0, [SK,SA,S8,GA]),(3, [EU,GZ,SO,HU]),(1, [HA,H9,HK,HZ]),(1, [H7,H8,G9,GK]),(0, [E7,EA,EK,G7]),(3, [HO,SU,G8,EO]),(2, [SZ,GU,E9,S7]),(3, [GO,EZ,E8,S9]),],
         [-50, -50, -50, 150],
     );
     // ../../testdata/games/solo/169-gras-solo.html has wrong format
@@ -1129,28 +1143,28 @@ fn test_rulessolo() {
     test_rules(
         "../../testdata/games/solo/172-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["so hu ea ez e7 h7 sz s9","eu gu ga gz g8 hk h8 s7","g7 ek e9 e8 h9 sa sk s8","eo go ho su gk g9 ha hz",],
+        [[SO,HU,EA,EZ,E7,H7,SZ,S9],[EU,GU,GA,GZ,G8,HK,H8,S7],[G7,EK,E9,E8,H9,SA,SK,S8],[EO,GO,HO,SU,GK,G9,HA,HZ],],
         vec![],
         vec![],
-        &[(0, "h7 h8 h9 ha"),(3, "eo hu g8 g7"),(3, "ho so gz e8"),(3, "go e7 gu e9"),(3, "su ea eu ek"),(1, "hk sk hz s9"),(3, "g9 sz ga sa"),(1, "s7 s8 gk ez"),],
+        &[(0, [H7,H8,H9,HA]),(3, [EO,HU,G8,G7]),(3, [HO,SO,GZ,E8]),(3, [GO,E7,GU,E9]),(3, [SU,EA,EU,EK]),(1, [HK,SK,HZ,S9]),(3, [G9,SZ,GA,SA]),(1, [S7,S8,GK,EZ]),],
         [-80, -80, -80, 240],
     );
     test_rules(
         "../../testdata/games/solo/173-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go ho eu ea ez e9 g9 ha","so hu su e8 hz h8 s8 s7","ga gz gk g8 g7 hk sz s9","eo gu ek e7 h9 h7 sa sk",],
+        [[GO,HO,EU,EA,EZ,E9,G9,HA],[SO,HU,SU,E8,HZ,H8,S8,S7],[GA,GZ,GK,G8,G7,HK,SZ,S9],[EO,GU,EK,E7,H9,H7,SA,SK],],
         vec![],
         vec![],
-        &[(0, "eu so ga ek"),(1, "s7 s9 sa ea"),(0, "ho e8 hk e7"),(0, "go su g7 eo"),(3, "h9 ha h8 g8"),(0, "e9 hu sz gu"),(3, "sk ez s8 gk"),(0, "g9 hz gz h7"),],
+        &[(0, [EU,SO,GA,EK]),(1, [S7,S9,SA,EA]),(0, [HO,E8,HK,E7]),(0, [GO,SU,G7,EO]),(3, [H9,HA,H8,G8]),(0, [E9,HU,SZ,GU]),(3, [SK,EZ,S8,GK]),(0, [G9,HZ,GZ,H7]),],
         [-150, 50, 50, 50],
     );
     test_rules(
         "../../testdata/games/solo/174-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["hu su ek ga h9 h8 h7 sz","eo go gu ea e8 e7 g8 sa","ho eu e9 gk g7 ha sk s9","so ez gz g9 hz hk s8 s7",],
+        [[HU,SU,EK,GA,H9,H8,H7,SZ],[EO,GO,GU,EA,E8,E7,G8,SA],[HO,EU,E9,GK,G7,HA,SK,S9],[SO,EZ,GZ,G9,HZ,HK,S8,S7],],
         vec![],
         vec![],
-        &[(0, "ga g8 gk gz"),(0, "h7 ea ha hk"),(1, "go e9 ez su"),(1, "eo eu so hu"),(1, "e8 ho hz ek"),(2, "s9 s8 sz sa"),(1, "gu sk g9 h8"),(1, "e7 g7 s7 h9"),],
+        &[(0, [GA,G8,GK,GZ]),(0, [H7,EA,HA,HK]),(1, [GO,E9,EZ,SU]),(1, [EO,EU,SO,HU]),(1, [E8,HO,HZ,EK]),(2, [S9,S8,SZ,SA]),(1, [GU,SK,G9,H8]),(1, [E7,G7,S7,H9]),],
         [-50, 150, -50, -50],
     );
     // ../../testdata/games/solo/175-herz-solo.html has wrong format
@@ -1159,64 +1173,64 @@ fn test_rulessolo() {
     test_rules(
         "../../testdata/games/solo/179-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["hu su hz ea e8 ga gz s7","gu ha h8 ez ek g9 sz s8","h9 h7 e9 e7 gk g8 sk s9","eo go ho so eu hk g7 sa",],
+        [[HU,SU,HZ,EA,E8,GA,GZ,S7],[GU,HA,H8,EZ,EK,G9,SZ,S8],[H9,H7,E9,E7,GK,G8,SK,S9],[EO,GO,HO,SO,EU,HK,G7,SA],],
         vec![],
         vec![],
-        &[(0, "ea ek e7 hk"),(3, "eo su h8 h7"),(3, "go hu gu h9"),(3, "ho hz ha e9"),(3, "sa s7 s8 s9"),(3, "g7 ga g9 gk"),(0, "gz sz g8 so"),(3, "eu e8 ez sk"),],
+        &[(0, [EA,EK,E7,HK]),(3, [EO,SU,H8,H7]),(3, [GO,HU,GU,H9]),(3, [HO,HZ,HA,E9]),(3, [SA,S7,S8,S9]),(3, [G7,GA,G9,GK]),(0, [GZ,SZ,G8,SO]),(3, [EU,E8,EZ,SK]),],
         [-110, -110, -110, 330],
     );
     test_rules(
         "../../testdata/games/solo/18-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go ho so gu ek g7 h8","hu su ea ez e9 g8 h7 sk","eu e7 ga gk hz hk sa s7","e8 gz g9 ha h9 sz s9 s8",],
+        [[EO,GO,HO,SO,GU,EK,G7,H8],[HU,SU,EA,EZ,E9,G8,H7,SK],[EU,E7,GA,GK,HZ,HK,SA,S7],[E8,GZ,G9,HA,H9,SZ,S9,S8],],
         vec![],
         vec![],
-        &[(0, "eo hu e7 e8"),(0, "go e9 eu s8"),(0, "so ez sa s9"),(0, "gu su s7 h9"),(0, "ho ea hk sz"),(0, "g7 g8 gk gz"),(3, "ha h8 h7 hz"),(3, "g9 ek sk ga"),],
+        &[(0, [EO,HU,E7,E8]),(0, [GO,E9,EU,S8]),(0, [SO,EZ,SA,S9]),(0, [GU,SU,S7,H9]),(0, [HO,EA,HK,SZ]),(0, [G7,G8,GK,GZ]),(3, [HA,H8,H7,HZ]),(3, [G9,EK,SK,GA]),],
         [270, -90, -90, -90],
     );
     test_rules(
         "../../testdata/games/solo/180-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eu ea e8 h8 sz s9 s8 s7","ho so gu su gk g9 g8 ha","eo hu ez e9 e7 hk sa sk","go ga gz g7 ek hz h9 h7",],
+        [[EU,EA,E8,H8,SZ,S9,S8,S7],[HO,SO,GU,SU,GK,G9,G8,HA],[EO,HU,EZ,E9,E7,HK,SA,SK],[GO,GA,GZ,G7,EK,HZ,H9,H7],],
         vec![],
         vec![],
-        &[(0, "sz gk sk ga"),(3, "h9 h8 ha hk"),(1, "gu hu gz eu"),(0, "s7 su sa go"),(3, "ek e8 so e7"),(1, "g9 eo g7 ea"),(2, "e9 h7 s8 g8"),(1, "ho ez hz s9"),],
+        &[(0, [SZ,GK,SK,GA]),(3, [H9,H8,HA,HK]),(1, [GU,HU,GZ,EU]),(0, [S7,SU,SA,GO]),(3, [EK,E8,SO,E7]),(1, [G9,EO,G7,EA]),(2, [E9,H7,S8,G8]),(1, [HO,EZ,HZ,S9]),],
         [50, -150, 50, 50],
     );
     test_rules(
         "../../testdata/games/solo/181-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go hu e8 gz hz h9 sz s7","ho gk g8 g7 ha h8 sa s9","so eu gu ea ez ek ga s8","eo su e9 e7 g9 hk h7 sk",],
+        [[GO,HU,E8,GZ,HZ,H9,SZ,S7],[HO,GK,G8,G7,HA,H8,SA,S9],[SO,EU,GU,EA,EZ,EK,GA,S8],[EO,SU,E9,E7,G9,HK,H7,SK],],
         vec![],
         vec![],
-        &[(0, "gz gk ga g9"),(2, "gu e7 e8 ho"),(1, "g8 s8 sk sz"),(1, "g7 ek su hz"),(3, "h7 h9 h8 ea"),(2, "eu e9 hu s9"),(2, "so eo go sa"),(3, "hk s7 ha ez"),],
+        &[(0, [GZ,GK,GA,G9]),(2, [GU,E7,E8,HO]),(1, [G8,S8,SK,SZ]),(1, [G7,EK,SU,HZ]),(3, [H7,H9,H8,EA]),(2, [EU,E9,HU,S9]),(2, [SO,EO,GO,SA]),(3, [HK,S7,HA,EZ]),],
         [-80, -80, 240, -80],
     );
     test_rules(
         "../../testdata/games/solo/182-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["ho so eu hu su e7 ga ha","gu e9 g8 g7 hz sz sk s8","ez e8 gz gk hk h8 h7 s7","eo go ea ek g9 h9 sa s9",],
+        [[HO,SO,EU,HU,SU,E7,GA,HA],[GU,E9,G8,G7,HZ,SZ,SK,S8],[EZ,E8,GZ,GK,HK,H8,H7,S7],[EO,GO,EA,EK,G9,H9,SA,S9],],
         vec![],
         vec![],
-        &[(0, "eu e9 ez go"),(3, "sa su s8 s7"),(0, "so gu e8 ek"),(0, "hu hz gz eo"),(3, "g9 ga g7 gk"),(0, "ho g8 h7 ea"),(0, "ha sk h8 h9"),(0, "e7 sz hk s9"),],
+        &[(0, [EU,E9,EZ,GO]),(3, [SA,SU,S8,S7]),(0, [SO,GU,E8,EK]),(0, [HU,HZ,GZ,EO]),(3, [G9,GA,G7,GK]),(0, [HO,G8,H7,EA]),(0, [HA,SK,H8,H9]),(0, [E7,SZ,HK,S9]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/solo/183-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["ho so su ea ez e8 e7 s8","ek g9 ha h8 h7 sa sz sk","eo go eu gu hu g7 h9 s7","e9 ga gz gk g8 hz hk s9",],
+        [[HO,SO,SU,EA,EZ,E8,E7,S8],[EK,G9,HA,H8,H7,SA,SZ,SK],[EO,GO,EU,GU,HU,G7,H9,S7],[E9,GA,GZ,GK,G8,HZ,HK,S9],],
         vec![],
         vec![2,],
-        &[(0, "e7 ek hu e9"),(2, "g7 ga ea g9"),(0, "e8 sa gu gz"),(2, "eo hz su sz"),(2, "go hk so ha"),(2, "s7 s9 s8 sk"),(1, "h7 h9 g8 ez"),(0, "ho h8 eu gk"),],
+        &[(0, [E7,EK,HU,E9]),(2, [G7,GA,EA,G9]),(0, [E8,SA,GU,GZ]),(2, [EO,HZ,SU,SZ]),(2, [GO,HK,SO,HA]),(2, [S7,S9,S8,SK]),(1, [H7,H9,G8,EZ]),(0, [HO,H8,EU,GK]),],
         [-300, 100, 100, 100],
     );
     test_rules(
         "../../testdata/games/solo/184-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go ho so eu ga g8 g7 sk","g9 ha hz h9 sz s9 s8 s7","eo hu su gz gk h8 h7 sa","gu ea ez ek e9 e8 e7 hk",],
+        [[GO,HO,SO,EU,GA,G8,G7,SK],[G9,HA,HZ,H9,SZ,S9,S8,S7],[EO,HU,SU,GZ,GK,H8,H7,SA],[GU,EA,EZ,EK,E9,E8,E7,HK],],
         vec![],
         vec![2,],
-        &[(0, "eu g9 gk gu"),(0, "so s7 su e7"),(0, "ho ha eo ea"),(2, "sa hk sk sz"),(2, "h7 ek g8 h9"),(0, "go s8 gz e8"),(0, "g7 hz hu ez"),(2, "h8 e9 ga s9"),],
+        &[(0, [EU,G9,GK,GU]),(0, [SO,S7,SU,E7]),(0, [HO,HA,EO,EA]),(2, [SA,HK,SK,SZ]),(2, [H7,EK,G8,H9]),(0, [GO,S8,GZ,E8]),(0, [G7,HZ,HU,EZ]),(2, [H8,E9,GA,S9]),],
         [-300, 100, 100, 100],
     );
     // ../../testdata/games/solo/185-gras-solo.html has wrong format
@@ -1241,29 +1255,29 @@ fn test_rulessolo() {
     test_rules(
         "../../testdata/games/solo/202-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["ho hu ga ez e7 hk h9 s8","eo go so eu gz gk g8 h7","gu su ek e8 ha hz sa sk","g9 g7 ea e9 h8 sz s9 s7",],
+        [[HO,HU,GA,EZ,E7,HK,H9,S8],[EO,GO,SO,EU,GZ,GK,G8,H7],[GU,SU,EK,E8,HA,HZ,SA,SK],[G9,G7,EA,E9,H8,SZ,S9,S7],],
         vec![],
         vec![],
-        &[(0, "hk h7 ha h8"),(2, "sa s7 s8 gz"),(1, "go su g7 hu"),(1, "eo gu g9 ga"),(1, "eu hz sz ho"),(0, "h9 gk e8 s9"),(1, "so sk e9 e7"),(1, "g8 ek ea ez"),],
+        &[(0, [HK,H7,HA,H8]),(2, [SA,S7,S8,GZ]),(1, [GO,SU,G7,HU]),(1, [EO,GU,G9,GA]),(1, [EU,HZ,SZ,HO]),(0, [H9,GK,E8,S9]),(1, [SO,SK,E9,E7]),(1, [G8,EK,EA,EZ]),],
         [-50, 150, -50, -50],
     );
     test_rules(
         "../../testdata/games/solo/203-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go so gu ez e9 g7 ha sz","ek ga g9 g8 h9 h8 sa s8","e7 gz gk hz hk h7 sk s9","eo ho eu hu su ea e8 s7",],
+        [[GO,SO,GU,EZ,E9,G7,HA,SZ],[EK,GA,G9,G8,H9,H8,SA,S8],[E7,GZ,GK,HZ,HK,H7,SK,S9],[EO,HO,EU,HU,SU,EA,E8,S7],],
         vec![],
         vec![],
-        &[(0, "ha h9 hk s7"),(0, "g7 ga gk ea"),(3, "ho go ek e7"),(0, "sz sa s9 e8"),(3, "eo e9 s8 sk"),(3, "su gu h8 gz"),(0, "so g8 hz hu"),(0, "ez g9 h7 eu"),],
+        &[(0, [HA,H9,HK,S7]),(0, [G7,GA,GK,EA]),(3, [HO,GO,EK,E7]),(0, [SZ,SA,S9,E8]),(3, [EO,E9,S8,SK]),(3, [SU,GU,H8,GZ]),(0, [SO,G8,HZ,HU]),(0, [EZ,G9,H7,EU]),],
         [-50, -50, -50, 150],
     );
     // ../../testdata/games/solo/204-gras-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/205-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go ek e8 gk g8 g7 hz h8","eu hu ea g9 h9 h7 sa s9","su gz ha hk sz sk s8 s7","eo ho so gu ez e9 e7 ga",],
+        [[GO,EK,E8,GK,G8,G7,HZ,H8],[EU,HU,EA,G9,H9,H7,SA,S9],[SU,GZ,HA,HK,SZ,SK,S8,S7],[EO,HO,SO,GU,EZ,E9,E7,GA],],
         vec![],
         vec![],
-        &[(0, "g7 g9 gz ga"),(3, "so ek ea su"),(3, "eo e8 hu s7"),(3, "gu go eu sz"),(0, "h8 h7 ha ez"),(3, "ho g8 h9 s8"),(3, "e9 gk s9 sk"),(3, "e7 hz sa hk"),],
+        &[(0, [G7,G9,GZ,GA]),(3, [SO,EK,EA,SU]),(3, [EO,E8,HU,S7]),(3, [GU,GO,EU,SZ]),(0, [H8,H7,HA,EZ]),(3, [HO,G8,H9,S8]),(3, [E9,GK,S9,SK]),(3, [E7,HZ,SA,HK]),],
         [-60, -60, -60, 180],
     );
     // ../../testdata/games/solo/206-eichel-solo.html has wrong format
@@ -1271,10 +1285,10 @@ fn test_rulessolo() {
     test_rules(
         "../../testdata/games/solo/209-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["ez g9 g7 ha h9 h8 sa s8","so eu gu su ek e9 e8 e7","eo ga gz gk g8 hk sz s7","go ho hu ea hz h7 sk s9",],
+        [[EZ,G9,G7,HA,H9,H8,SA,S8],[SO,EU,GU,SU,EK,E9,E8,E7],[EO,GA,GZ,GK,G8,HK,SZ,S7],[GO,HO,HU,EA,HZ,H7,SK,S9],],
         vec![],
         vec![],
-        &[(0, "ha su hk h7"),(1, "gu eo ea ez"),(2, "ga hz g7 ek"),(1, "eu gz ho g9"),(3, "s9 sa e9 s7"),(1, "e8 sz hu s8"),(3, "go h8 e7 gk"),(3, "sk h9 so g8"),],
+        &[(0, [HA,SU,HK,H7]),(1, [GU,EO,EA,EZ]),(2, [GA,HZ,G7,EK]),(1, [EU,GZ,HO,G9]),(3, [S9,SA,E9,S7]),(1, [E8,SZ,HU,S8]),(3, [GO,H8,E7,GK]),(3, [SK,H9,SO,G8]),],
         [80, -240, 80, 80],
     );
     // ../../testdata/games/solo/21-gras-solo.html has wrong format
@@ -1282,213 +1296,213 @@ fn test_rulessolo() {
     test_rules(
         "../../testdata/games/solo/211-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo so eu hu ek e9 e7 sa","go ho su ez h9 h8 h7 sz","gu ea gz gk g9 hk s9 s8","e8 ga g8 g7 ha hz sk s7",],
+        [[EO,SO,EU,HU,EK,E9,E7,SA],[GO,HO,SU,EZ,H9,H8,H7,SZ],[GU,EA,GZ,GK,G9,HK,S9,S8],[E8,GA,G8,G7,HA,HZ,SK,S7],],
         vec![],
         vec![],
-        &[(0, "eo su gu e8"),(0, "hu go ea ha"),(1, "h9 hk hz ek"),(0, "eu ho gz ga"),(1, "sz s8 s7 sa"),(0, "so ez s9 g7"),(0, "e9 h8 g9 g8"),(0, "e7 h7 gk sk"),],
+        &[(0, [EO,SU,GU,E8]),(0, [HU,GO,EA,HA]),(1, [H9,HK,HZ,EK]),(0, [EU,HO,GZ,GA]),(1, [SZ,S8,S7,SA]),(0, [SO,EZ,S9,G7]),(0, [E9,H8,G9,G8]),(0, [E7,H7,GK,SK]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/solo/213-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go ho su ha hk sz s9 s7","so eu g7 ez e7 sa sk s8","eo gu ga gz gk g9 g8 h9","hu ea ek e9 e8 hz h8 h7",],
+        [[GO,HO,SU,HA,HK,SZ,S9,S7],[SO,EU,G7,EZ,E7,SA,SK,S8],[EO,GU,GA,GZ,GK,G9,G8,H9],[HU,EA,EK,E9,E8,HZ,H8,H7],],
         vec![],
         vec![],
-        &[(0, "ha so h9 hz"),(1, "sa gk hu sz"),(3, "h7 hk eu g8"),(1, "sk gu h8 s7"),(2, "eo e8 su g7"),(2, "g9 ea ho ez"),(0, "go e7 gz ek"),(0, "s9 s8 ga e9"),],
+        &[(0, [HA,SO,H9,HZ]),(1, [SA,GK,HU,SZ]),(3, [H7,HK,EU,G8]),(1, [SK,GU,H8,S7]),(2, [EO,E8,SU,G7]),(2, [G9,EA,HO,EZ]),(0, [GO,E7,GZ,EK]),(0, [S9,S8,GA,E9]),],
         [60, 60, -180, 60],
     );
     test_rules(
         "../../testdata/games/solo/215-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go ho so eu hk h9 h7 gk","eo hu su hz e7 g8 g7 s9","h8 ek e8 ga gz sz s8 s7","gu ha ea ez e9 g9 sa sk",],
+        [[GO,HO,SO,EU,HK,H9,H7,GK],[EO,HU,SU,HZ,E7,G8,G7,S9],[H8,EK,E8,GA,GZ,SZ,S8,S7],[GU,HA,EA,EZ,E9,G9,SA,SK],],
         vec![],
         vec![],
-        &[(0, "eu hz h8 gu"),(0, "so eo ga ha"),(1, "e7 ek ea hk"),(0, "ho su e8 g9"),(0, "go hu s7 e9"),(0, "gk g7 gz ez"),(2, "s8 sa h7 s9"),(0, "h9 g8 sz sk"),],
+        &[(0, [EU,HZ,H8,GU]),(0, [SO,EO,GA,HA]),(1, [E7,EK,EA,HK]),(0, [HO,SU,E8,G9]),(0, [GO,HU,S7,E9]),(0, [GK,G7,GZ,EZ]),(2, [S8,SA,H7,S9]),(0, [H9,G8,SZ,SK]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/solo/216-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eu hu ha ez e8 e7 sz s8","go ek gz gk sa sk s9 s7","ho hz h9 h7 ga g9 g8 g7","eo so gu su hk h8 ea e9",],
+        [[EU,HU,HA,EZ,E8,E7,SZ,S8],[GO,EK,GZ,GK,SA,SK,S9,S7],[HO,HZ,H9,H7,GA,G9,G8,G7],[EO,SO,GU,SU,HK,H8,EA,E9],],
         vec![],
         vec![],
-        &[(0, "e7 ek hz e9"),(2, "ga gu eu gz"),(0, "ez go g7 ea"),(1, "gk g8 su hu"),(0, "s8 s7 g9 hk"),(3, "eo ha s9 h7"),(3, "h8 sz sa h9"),(2, "ho so e8 sk"),],
+        &[(0, [E7,EK,HZ,E9]),(2, [GA,GU,EU,GZ]),(0, [EZ,GO,G7,EA]),(1, [GK,G8,SU,HU]),(0, [S8,S7,G9,HK]),(3, [EO,HA,S9,H7]),(3, [H8,SZ,SA,H9]),(2, [HO,SO,E8,SK]),],
         [60, 60, 60, -180],
     );
     test_rules(
         "../../testdata/games/solo/217-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["so hu e7 ga g7 h9 sz s8","e8 gk g9 g8 hk h8 h7 s7","eo go ho eu su ea ez ha","gu ek e9 gz hz sa sk s9",],
+        [[SO,HU,E7,GA,G7,H9,SZ,S8],[E8,GK,G9,G8,HK,H8,H7,S7],[EO,GO,HO,EU,SU,EA,EZ,HA],[GU,EK,E9,GZ,HZ,SA,SK,S9],],
         vec![],
         vec![],
-        &[(0, "h9 h8 ha hz"),(2, "eo e9 e7 e8"),(2, "ho ek hu h7"),(2, "go gu so s7"),(2, "eu s9 g7 g8"),(2, "su sk s8 g9"),(2, "ea gz sz hk"),(2, "ez sa ga gk"),],
+        &[(0, [H9,H8,HA,HZ]),(2, [EO,E9,E7,E8]),(2, [HO,EK,HU,H7]),(2, [GO,GU,SO,S7]),(2, [EU,S9,G7,G8]),(2, [SU,SK,S8,G9]),(2, [EA,GZ,SZ,HK]),(2, [EZ,SA,GA,GK]),],
         [-100, -100, 300, -100],
     );
     test_rules(
         "../../testdata/games/solo/219-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["su ga hz h8 h7 sa s9 s7","go hu g8 ez ek e8 e7 s8","eo so gu gz gk g9 ha hk","ho eu g7 ea e9 h9 sz sk",],
+        [[SU,GA,HZ,H8,H7,SA,S9,S7],[GO,HU,G8,EZ,EK,E8,E7,S8],[EO,SO,GU,GZ,GK,G9,HA,HK],[HO,EU,G7,EA,E9,H9,SZ,SK],],
         vec![],
         vec![],
-        &[(0, "h8 hu hk h9"),(1, "ez gu e9 s7"),(2, "eo g7 su g8"),(2, "g9 eu ga go"),(1, "s8 gz sk s9"),(2, "so ho h7 ek"),(3, "ea hz e7 gk"),(2, "ha sz sa e8"),],
+        &[(0, [H8,HU,HK,H9]),(1, [EZ,GU,E9,S7]),(2, [EO,G7,SU,G8]),(2, [G9,EU,GA,GO]),(1, [S8,GZ,SK,S9]),(2, [SO,HO,H7,EK]),(3, [EA,HZ,E7,GK]),(2, [HA,SZ,SA,E8]),],
         [-50, -50, 150, -50],
     );
     test_rules(
         "../../testdata/games/solo/22-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["gu e8 gz g8 g7 ha sz s8","hu g9 hz h9 h8 sa s9 s7","eo su ea ek e7 gk hk h7","go ho so eu ez e9 ga sk",],
+        [[GU,E8,GZ,G8,G7,HA,SZ,S8],[HU,G9,HZ,H9,H8,SA,S9,S7],[EO,SU,EA,EK,E7,GK,HK,H7],[GO,HO,SO,EU,EZ,E9,GA,SK],],
         vec![],
         vec![2,],
-        &[(0, "ha h9 hk ez"),(3, "eu e8 hu e7"),(3, "so gu hz eo"),(2, "gk ga g8 g9"),(3, "ho g7 h8 ek"),(3, "go s8 s7 su"),(3, "sk sz sa h7"),(1, "s9 ea e9 gz"),],
+        &[(0, [HA,H9,HK,EZ]),(3, [EU,E8,HU,E7]),(3, [SO,GU,HZ,EO]),(2, [GK,GA,G8,G9]),(3, [HO,G7,H8,EK]),(3, [GO,S8,S7,SU]),(3, [SK,SZ,SA,H7]),(1, [S9,EA,E9,GZ]),],
         [100, 100, 100, -300],
     );
     test_rules(
         "../../testdata/games/solo/220-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go ho gz g7 ea ez hk","so eu hu ga gk ha sa s9","gu su g9 g8 e9 h8 sk s7","ek e8 e7 hz h9 h7 sz s8",],
+        [[EO,GO,HO,GZ,G7,EA,EZ,HK],[SO,EU,HU,GA,GK,HA,SA,S9],[GU,SU,G9,G8,E9,H8,SK,S7],[EK,E8,E7,HZ,H9,H7,SZ,S8],],
         vec![],
         vec![],
-        &[(0, "eo gk g8 e7"),(0, "ho hu g9 e8"),(0, "go eu su h7"),(0, "ea ga e9 ek"),(1, "ha h8 h9 hk"),(1, "sa s7 s8 gz"),(0, "g7 so gu sz"),(1, "s9 sk hz ez"),],
+        &[(0, [EO,GK,G8,E7]),(0, [HO,HU,G9,E8]),(0, [GO,EU,SU,H7]),(0, [EA,GA,E9,EK]),(1, [HA,H8,H9,HK]),(1, [SA,S7,S8,GZ]),(0, [G7,SO,GU,SZ]),(1, [S9,SK,HZ,EZ]),],
         [-240, 80, 80, 80],
     );
     test_rules(
         "../../testdata/games/solo/221-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo ho gu hu ek e9 ha h7","go so eu su e7 g7 hk sz","ez e8 ga g9 g8 h9 sk s8","ea gz gk hz h8 sa s9 s7",],
+        [[EO,HO,GU,HU,EK,E9,HA,H7],[GO,SO,EU,SU,E7,G7,HK,SZ],[EZ,E8,GA,G9,G8,H9,SK,S8],[EA,GZ,GK,HZ,H8,SA,S9,S7],],
         vec![],
         vec![],
-        &[(0, "eo e7 e8 ea"),(0, "hu eu ez gz"),(1, "hk h9 h8 ha"),(0, "gu so ga hz"),(1, "g7 g8 gk ek"),(0, "h7 su sk sa"),(1, "sz s8 s7 ho"),(0, "e9 go g9 s9"),],
+        &[(0, [EO,E7,E8,EA]),(0, [HU,EU,EZ,GZ]),(1, [HK,H9,H8,HA]),(0, [GU,SO,GA,HZ]),(1, [G7,G8,GK,EK]),(0, [H7,SU,SK,SA]),(1, [SZ,S8,S7,HO]),(0, [E9,GO,G9,S9]),],
         [-150, 50, 50, 50],
     );
     // ../../testdata/games/solo/23-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/25-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go ho so hu ga g8 ha s9","gz g9 g7 ea ez h9 h8 s7","eo eu gu e8 e7 hz hk s8","su gk ek e9 h7 sa sz sk",],
+        [[GO,HO,SO,HU,GA,G8,HA,S9],[GZ,G9,G7,EA,EZ,H9,H8,S7],[EO,EU,GU,E8,E7,HZ,HK,S8],[SU,GK,EK,E9,H7,SA,SZ,SK],],
         vec![],
         vec![],
-        &[(0, "so gz eo gk"),(2, "s8 sz s9 s7"),(3, "sa hu g7 gu"),(2, "e7 e9 g8 ez"),(0, "ho g9 eu su"),(0, "go h8 e8 h7"),(0, "ga ea hk sk"),(0, "ha h9 hz ek"),],
+        &[(0, [SO,GZ,EO,GK]),(2, [S8,SZ,S9,S7]),(3, [SA,HU,G7,GU]),(2, [E7,E9,G8,EZ]),(0, [HO,G9,EU,SU]),(0, [GO,H8,E8,H7]),(0, [GA,EA,HK,SK]),(0, [HA,H9,HZ,EK]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/solo/26-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo ho gu ga g9 ea e8 ha","go su g8 ez e7 hk sa s9","so hu gz g7 e9 hz h7 sz","eu gk ek h9 h8 sk s8 s7",],
+        [[EO,HO,GU,GA,G9,EA,E8,HA],[GO,SU,G8,EZ,E7,HK,SA,S9],[SO,HU,GZ,G7,E9,HZ,H7,SZ],[EU,GK,EK,H9,H8,SK,S8,S7],],
         vec![],
         vec![],
-        &[(0, "gu su gz eu"),(3, "s7 ga s9 sz"),(0, "eo g8 g7 gk"),(0, "g9 go hu ek"),(1, "hk h7 h9 ha"),(0, "ho e7 so h8"),(0, "ea ez e9 s8"),(0, "e8 sa hz sk"),],
+        &[(0, [GU,SU,GZ,EU]),(3, [S7,GA,S9,SZ]),(0, [EO,G8,G7,GK]),(0, [G9,GO,HU,EK]),(1, [HK,H7,H9,HA]),(0, [HO,E7,SO,H8]),(0, [EA,EZ,E9,S8]),(0, [E8,SA,HZ,SK]),],
         [180, -60, -60, -60],
     );
     // ../../testdata/games/solo/27-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/29-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["hu hk h9 e9 gk g7 sk s9","ez ek e7 gz g9 g8 sa sz","ho su ha h7 ea e8 s8 s7","eo go so eu gu hz h8 ga",],
+        [[HU,HK,H9,E9,GK,G7,SK,S9],[EZ,EK,E7,GZ,G9,G8,SA,SZ],[HO,SU,HA,H7,EA,E8,S8,S7],[EO,GO,SO,EU,GU,HZ,H8,GA],],
         vec![],
         vec![],
-        &[(0, "e9 ek ea hz"),(3, "eo h9 e7 h7"),(3, "go hk g8 su"),(3, "gu hu ez ho"),(2, "s7 h8 s9 sz"),(3, "eu sk sa ha"),(3, "so g7 g9 s8"),(3, "ga gk gz e8"),],
+        &[(0, [E9,EK,EA,HZ]),(3, [EO,H9,E7,H7]),(3, [GO,HK,G8,SU]),(3, [GU,HU,EZ,HO]),(2, [S7,H8,S9,SZ]),(3, [EU,SK,SA,HA]),(3, [SO,G7,G9,S8]),(3, [GA,GK,GZ,E8]),],
         [-60, -60, -60, 180],
     );
     test_rules(
         "../../testdata/games/solo/30-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["so ga g9 e7 hk h9 h8 s9","eu gu ek hz h7 sz s8 s7","ho su gk g7 ez e9 e8 sk","eo go hu gz g8 ea ha sa",],
+        [[SO,GA,G9,E7,HK,H9,H8,S9],[EU,GU,EK,HZ,H7,SZ,S8,S7],[HO,SU,GK,G7,EZ,E9,E8,SK],[EO,GO,HU,GZ,G8,EA,HA,SA],],
         vec![],
         vec![],
-        &[(0, "h9 h7 gk ha"),(2, "ez ea e7 ek"),(3, "go g9 gu g7"),(3, "eo so eu su"),(3, "g8 ga hz ho"),(2, "e9 gz s9 s7"),(3, "hu h8 s8 e8"),(3, "sa hk sz sk"),],
+        &[(0, [H9,H7,GK,HA]),(2, [EZ,EA,E7,EK]),(3, [GO,G9,GU,G7]),(3, [EO,SO,EU,SU]),(3, [G8,GA,HZ,HO]),(2, [E9,GZ,S9,S7]),(3, [HU,H8,S8,E8]),(3, [SA,HK,SZ,SK]),],
         [-50, -50, -50, 150],
     );
     test_rules(
         "../../testdata/games/solo/31-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go gu ek e9 g7 sz sk s9","ho eu h7 ez ga gk g8 sa","su hz h9 e8 gz g9 s8 s7","eo so hu ha hk h8 ea e7",],
+        [[GO,GU,EK,E9,G7,SZ,SK,S9],[HO,EU,H7,EZ,GA,GK,G8,SA],[SU,HZ,H9,E8,GZ,G9,S8,S7],[EO,SO,HU,HA,HK,H8,EA,E7],],
         vec![],
         vec![],
-        &[(0, "sk sa s7 ha"),(3, "eo gu h7 h9"),(3, "h8 go eu hz"),(0, "g7 ga g9 hk"),(3, "hu sz ho su"),(1, "ez e8 ea e9"),(3, "so s9 g8 s8"),(3, "e7 ek gk gz"),],
+        &[(0, [SK,SA,S7,HA]),(3, [EO,GU,H7,H9]),(3, [H8,GO,EU,HZ]),(0, [G7,GA,G9,HK]),(3, [HU,SZ,HO,SU]),(1, [EZ,E8,EA,E9]),(3, [SO,S9,G8,S8]),(3, [E7,EK,GK,GZ]),],
         [-50, -50, -50, 150],
     );
     test_rules(
         "../../testdata/games/solo/32-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go gu ea e9 e7 g9 sa","su ez ek e8 ga g7 h9 s8","ho eu hu gk g8 ha h8 sz","so gz hz hk h7 sk s9 s7",],
+        [[EO,GO,GU,EA,E9,E7,G9,SA],[SU,EZ,EK,E8,GA,G7,H9,S8],[HO,EU,HU,GK,G8,HA,H8,SZ],[SO,GZ,HZ,HK,H7,SK,S9,S7],],
         vec![],
         vec![],
-        &[(0, "go e8 hu so"),(0, "eo ek eu s7"),(0, "gu ez ho gz"),(2, "ha hk e9 h9"),(0, "e7 su sz hz"),(1, "ga gk sk g9"),(1, "s8 g8 s9 sa"),(0, "ea g7 h8 h7"),],
+        &[(0, [GO,E8,HU,SO]),(0, [EO,EK,EU,S7]),(0, [GU,EZ,HO,GZ]),(2, [HA,HK,E9,H9]),(0, [E7,SU,SZ,HZ]),(1, [GA,GK,SK,G9]),(1, [S8,G8,S9,SA]),(0, [EA,G7,H8,H7]),],
         [-150, 50, 50, 50],
     );
     // ../../testdata/games/solo/34-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/36-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go h8 ea ek e8 gk sk s8","eo eu su ha hz hk h9 sa","so h7 ez e7 ga gz g9 sz","ho gu hu e9 g8 g7 s9 s7",],
+        [[GO,H8,EA,EK,E8,GK,SK,S8],[EO,EU,SU,HA,HZ,HK,H9,SA],[SO,H7,EZ,E7,GA,GZ,G9,SZ],[HO,GU,HU,E9,G8,G7,S9,S7],],
         vec![],
         vec![],
-        &[(0, "gk hz g9 g8"),(1, "h9 h7 hu h8"),(3, "g7 go eo gz"),(1, "su so ho ea"),(3, "e9 ek hk e7"),(1, "eu ez gu e8"),(1, "ha ga s7 s8"),(1, "sa sz s9 sk"),],
+        &[(0, [GK,HZ,G9,G8]),(1, [H9,H7,HU,H8]),(3, [G7,GO,EO,GZ]),(1, [SU,SO,HO,EA]),(3, [E9,EK,HK,E7]),(1, [EU,EZ,GU,E8]),(1, [HA,GA,S7,S8]),(1, [SA,SZ,S9,SK]),],
         [-60, 180, -60, -60],
     );
     test_rules(
         "../../testdata/games/solo/37-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["hu su ga e9 e7 h8 h7 s9","ho so g9 g7 ez ha hk s8","gu ek e8 hz h9 sa sz sk","eo go eu gz gk g8 ea s7",],
+        [[HU,SU,GA,E9,E7,H8,H7,S9],[HO,SO,G9,G7,EZ,HA,HK,S8],[GU,EK,E8,HZ,H9,SA,SZ,SK],[EO,GO,EU,GZ,GK,G8,EA,S7],],
         vec![],
         vec![],
-        &[(0, "s9 s8 sa s7"),(2, "sz eu h7 so"),(1, "ha h9 gz h8"),(3, "go su g7 gu"),(3, "eo hu g9 e8"),(3, "g8 ga ho hz"),(1, "hk ek gk e7"),(3, "ea e9 ez sk"),],
+        &[(0, [S9,S8,SA,S7]),(2, [SZ,EU,H7,SO]),(1, [HA,H9,GZ,H8]),(3, [GO,SU,G7,GU]),(3, [EO,HU,G9,E8]),(3, [G8,GA,HO,HZ]),(1, [HK,EK,GK,E7]),(3, [EA,E9,EZ,SK]),],
         [-50, -50, -50, 150],
     );
     test_rules(
         "../../testdata/games/solo/38-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go so gu ga gz g9 g8 ha","ho hu ez e7 hk sa sk s9","eo eu ea e9 e8 h9 h8 s7","su gk g7 ek hz h7 sz s8",],
+        [[GO,SO,GU,GA,GZ,G9,G8,HA],[HO,HU,EZ,E7,HK,SA,SK,S9],[EO,EU,EA,E9,E8,H9,H8,S7],[SU,GK,G7,EK,HZ,H7,SZ,S8],],
         vec![],
         vec![],
-        &[(0, "gu ho eu gk"),(1, "sa s7 s8 ga"),(0, "g8 hu eo g7"),(2, "h9 h7 ha hk"),(0, "go ez h8 su"),(0, "so s9 e8 ek"),(0, "gz e7 e9 hz"),(0, "g9 sk ea sz"),],
+        &[(0, [GU,HO,EU,GK]),(1, [SA,S7,S8,GA]),(0, [G8,HU,EO,G7]),(2, [H9,H7,HA,HK]),(0, [GO,EZ,H8,SU]),(0, [SO,S9,E8,EK]),(0, [GZ,E7,E9,HZ]),(0, [G9,SK,EA,SZ]),],
         [180, -60, -60, -60],
     );
     // ../../testdata/games/solo/39-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/4-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go ho so g9 g7 ea s7","hu su ga ez e9 e7 hz h7","eu gk g8 ek ha h8 sa s9","gu gz e8 hk h9 sz sk s8",],
+        [[EO,GO,HO,SO,G9,G7,EA,S7],[HU,SU,GA,EZ,E9,E7,HZ,H7],[EU,GK,G8,EK,HA,H8,SA,S9],[GU,GZ,E8,HK,H9,SZ,SK,S8],],
         vec![],
         vec![],
-        &[(0, "eo su g8 gu"),(0, "go hu gk gz"),(0, "so ga eu e8"),(0, "s7 ez sa sz"),(2, "ek hk ea e7"),(0, "ho e9 s9 h9"),(0, "g7 hz h8 s8"),(0, "g9 h7 ha sk"),],
+        &[(0, [EO,SU,G8,GU]),(0, [GO,HU,GK,GZ]),(0, [SO,GA,EU,E8]),(0, [S7,EZ,SA,SZ]),(2, [EK,HK,EA,E7]),(0, [HO,E9,S9,H9]),(0, [G7,HZ,H8,S8]),(0, [G9,H7,HA,SK]),],
         [270, -90, -90, -90],
     );
     test_rules(
         "../../testdata/games/solo/40-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["gu hu su h8 ea e7 ga g8","so h9 ez e8 g9 g7 sz s7","ha hz ek gz gk sa sk s9","eo go ho eu hk h7 e9 s8",],
+        [[GU,HU,SU,H8,EA,E7,GA,G8],[SO,H9,EZ,E8,G9,G7,SZ,S7],[HA,HZ,EK,GZ,GK,SA,SK,S9],[EO,GO,HO,EU,HK,H7,E9,S8],],
         vec![],
         vec![],
-        &[(0, "ea e8 ek e9"),(0, "e7 ez sk hk"),(3, "eo h8 h9 hz"),(3, "ho su so ha"),(3, "eu hu g9 s9"),(3, "go gu g7 sa"),(3, "s8 ga sz gz"),(1, "s7 gk h7 g8"),],
+        &[(0, [EA,E8,EK,E9]),(0, [E7,EZ,SK,HK]),(3, [EO,H8,H9,HZ]),(3, [HO,SU,SO,HA]),(3, [EU,HU,G9,S9]),(3, [GO,GU,G7,SA]),(3, [S8,GA,SZ,GZ]),(1, [S7,GK,H7,G8]),],
         [-80, -80, -80, 240],
     );
     test_rules(
         "../../testdata/games/solo/41-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["so hu su ez e8 ga ha sa","go ek g9 hk h8 sz s9 s7","eo ho e9 gk hz h9 h7 sk","eu gu ea e7 gz g8 g7 s8",],
+        [[SO,HU,SU,EZ,E8,GA,HA,SA],[GO,EK,G9,HK,H8,SZ,S9,S7],[EO,HO,E9,GK,HZ,H9,H7,SK],[EU,GU,EA,E7,GZ,G8,G7,S8],],
         vec![],
         vec![],
-        &[(0, "su ek e9 gu"),(3, "g8 ga g9 gk"),(0, "hu go ho ea"),(1, "s7 sk s8 sa"),(0, "e8 sz eo e7"),(2, "h7 eu ha hk"),(3, "g7 ez s9 h9"),(0, "so h8 hz gz"),],
+        &[(0, [SU,EK,E9,GU]),(3, [G8,GA,G9,GK]),(0, [HU,GO,HO,EA]),(1, [S7,SK,S8,SA]),(0, [E8,SZ,EO,E7]),(2, [H7,EU,HA,HK]),(3, [G7,EZ,S9,H9]),(0, [SO,H8,HZ,GZ]),],
         [240, -80, -80, -80],
     );
     test_rules(
         "../../testdata/games/solo/44-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eu gz ea ek e7 sa s9 s8","eo go ho so gu gk e8 hk","hu su g9 g7 ha hz h9 sk","ga g8 ez e9 h8 h7 sz s7",],
+        [[EU,GZ,EA,EK,E7,SA,S9,S8],[EO,GO,HO,SO,GU,GK,E8,HK],[HU,SU,G9,G7,HA,HZ,H9,SK],[GA,G8,EZ,E9,H8,H7,SZ,S7],],
         vec![],
         vec![],
-        &[(0, "sa gk sk s7"),(1, "go g7 ga eu"),(1, "eo g9 g8 gz"),(1, "gu su sz s8"),(1, "e8 ha ez ea"),(0, "ek hk hz e9"),(0, "e7 ho h9 h8"),(1, "so hu h7 s9"),],
+        &[(0, [SA,GK,SK,S7]),(1, [GO,G7,GA,EU]),(1, [EO,G9,G8,GZ]),(1, [GU,SU,SZ,S8]),(1, [E8,HA,EZ,EA]),(0, [EK,HK,HZ,E9]),(0, [E7,HO,H9,H8]),(1, [SO,HU,H7,S9]),],
         [-90, 270, -90, -90],
     );
     // ../../testdata/games/solo/46-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/49-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eu hu ha h7 e8 e7 ga g9","ez gz g7 sa sz sk s9 s8","su hz hk h9 h8 ea ek e9","eo go ho so gu gk g8 s7",],
+        [[EU,HU,HA,H7,E8,E7,GA,G9],[EZ,GZ,G7,SA,SZ,SK,S9,S8],[SU,HZ,HK,H9,H8,EA,EK,E9],[EO,GO,HO,SO,GU,GK,G8,S7],],
         vec![],
         vec![3,],
-        &[(0, "e7 ez ea gu"),(3, "eo ha sa h8"),(3, "go h7 sz h9"),(3, "ho hu gz su"),(3, "so eu sk hk"),(3, "gk ga g7 hz"),(2, "ek s7 e8 s9"),(2, "e9 g8 g9 s8"),],
+        &[(0, [E7,EZ,EA,GU]),(3, [EO,HA,SA,H8]),(3, [GO,H7,SZ,H9]),(3, [HO,HU,GZ,SU]),(3, [SO,EU,SK,HK]),(3, [GK,GA,G7,HZ]),(2, [EK,S7,E8,S9]),(2, [E9,G8,G9,S8]),],
         [260, 260, -780, 260],
     );
     // ../../testdata/games/solo/5-gras-solo.html has wrong format
@@ -1496,74 +1510,74 @@ fn test_rulessolo() {
     test_rules(
         "../../testdata/games/solo/51-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo ho su ez e9 ga ha hk","so hu ek e8 g9 g8 hz s9","gu e7 h9 h7 sa sk s8 s7","go eu ea gz gk g7 h8 sz",],
+        [[EO,HO,SU,EZ,E9,GA,HA,HK],[SO,HU,EK,E8,G9,G8,HZ,S9],[GU,E7,H9,H7,SA,SK,S8,S7],[GO,EU,EA,GZ,GK,G7,H8,SZ],],
         vec![],
         vec![],
-        &[(0, "ho e8 e7 go"),(3, "gk ga g8 gu"),(2, "sa sz ez s9"),(0, "eo hu h7 eu"),(0, "e9 ek sk ea"),(3, "h8 ha hz h9"),(0, "su so s8 gz"),(1, "g9 s7 g7 hk"),],
+        &[(0, [HO,E8,E7,GO]),(3, [GK,GA,G8,GU]),(2, [SA,SZ,EZ,S9]),(0, [EO,HU,H7,EU]),(0, [E9,EK,SK,EA]),(3, [H8,HA,HZ,H9]),(0, [SU,SO,S8,GZ]),(1, [G9,S7,G7,HK]),],
         [-150, 50, 50, 50],
     );
     // ../../testdata/games/solo/52-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/53-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo ho eu ea e9 e8 g9 sa","gu hu su e7 ga gz sk s8","ez ek gk ha h8 h7 sz s9","go so g8 g7 hz hk h9 s7",],
+        [[EO,HO,EU,EA,E9,E8,G9,SA],[GU,HU,SU,E7,GA,GZ,SK,S8],[EZ,EK,GK,HA,H8,H7,SZ,S9],[GO,SO,G8,G7,HZ,HK,H9,S7],],
         vec![],
         vec![],
-        &[(0, "ho e7 ez go"),(3, "g8 g9 ga gk"),(1, "s8 s9 s7 sa"),(0, "eo su ek so"),(0, "eu hu h7 g7"),(0, "e9 gu sz hz"),(1, "sk h8 h9 e8"),(0, "ea gz ha hk"),],
+        &[(0, [HO,E7,EZ,GO]),(3, [G8,G9,GA,GK]),(1, [S8,S9,S7,SA]),(0, [EO,SU,EK,SO]),(0, [EU,HU,H7,G7]),(0, [E9,GU,SZ,HZ]),(1, [SK,H8,H9,E8]),(0, [EA,GZ,HA,HK]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/solo/54-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eu g9 ez hz h9 s9 s8 s7","go so gu su ea e7 hk h8","ho g7 ek e8 h7 sa sz sk","eo hu ga gz gk g8 e9 ha",],
+        [[EU,G9,EZ,HZ,H9,S9,S8,S7],[GO,SO,GU,SU,EA,E7,HK,H8],[HO,G7,EK,E8,H7,SA,SZ,SK],[EO,HU,GA,GZ,GK,G8,E9,HA],],
         vec![],
         vec![],
-        &[(0, "ez e7 e8 e9"),(0, "s7 su sk hu"),(3, "g8 g9 gu g7"),(1, "ea ek gk eu"),(0, "s8 h8 sz ga"),(3, "eo s9 so ho"),(3, "ha hz hk h7"),(3, "gz h9 go sa"),],
+        &[(0, [EZ,E7,E8,E9]),(0, [S7,SU,SK,HU]),(3, [G8,G9,GU,G7]),(1, [EA,EK,GK,EU]),(0, [S8,H8,SZ,GA]),(3, [EO,S9,SO,HO]),(3, [HA,HZ,HK,H7]),(3, [GZ,H9,GO,SA]),],
         [-50, -50, -50, 150],
     );
     test_rules(
         "../../testdata/games/solo/55-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go so gu gk g9 g8 e9","ga g7 ez ek e7 ha h7 sk","eu hu su gz h9 h8 sa s7","ho ea e8 hz hk sz s9 s8",],
+        [[EO,GO,SO,GU,GK,G9,G8,E9],[GA,G7,EZ,EK,E7,HA,H7,SK],[EU,HU,SU,GZ,H9,H8,SA,S7],[HO,EA,E8,HZ,HK,SZ,S9,S8],],
         vec![],
         vec![],
-        &[(0, "go ga su ho"),(0, "so g7 hu s8"),(0, "eo e7 gz e8"),(0, "gu sk eu sz"),(2, "sa s9 gk h7"),(0, "e9 ez s7 ea"),(3, "hk g9 ha h8"),(0, "g8 ek h9 hz"),],
+        &[(0, [GO,GA,SU,HO]),(0, [SO,G7,HU,S8]),(0, [EO,E7,GZ,E8]),(0, [GU,SK,EU,SZ]),(2, [SA,S9,GK,H7]),(0, [E9,EZ,S7,EA]),(3, [HK,G9,HA,H8]),(0, [G8,EK,H9,HZ]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/solo/57-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eu ez gz g9 g7 hz h9 h7","eo ho hu su ea e9 e7 s7","go ek ga h8 sz sk s9 s8","so gu e8 gk g8 ha hk sa",],
+        [[EU,EZ,GZ,G9,G7,HZ,H9,H7],[EO,HO,HU,SU,EA,E9,E7,S7],[GO,EK,GA,H8,SZ,SK,S9,S8],[SO,GU,E8,GK,G8,HA,HK,SA],],
         vec![],
         vec![],
-        &[(0, "g9 ea ga g8"),(1, "eo ek e8 eu"),(1, "su go gu ez"),(2, "sz sa hz s7"),(3, "ha h7 hu h8"),(1, "ho s8 so h9"),(1, "e7 sk hk gz"),(1, "e9 s9 gk g7"),],
+        &[(0, [G9,EA,GA,G8]),(1, [EO,EK,E8,EU]),(1, [SU,GO,GU,EZ]),(2, [SZ,SA,HZ,S7]),(3, [HA,H7,HU,H8]),(1, [HO,S8,SO,H9]),(1, [E7,SK,HK,GZ]),(1, [E9,S9,GK,G7]),],
         [-50, 150, -50, -50],
     );
     test_rules(
         "../../testdata/games/solo/58-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["ho eu ez e7 gz g8 sa sz","hu e9 g9 ha hk h8 h7 s9","so gu gk g7 hz h9 sk s7","eo go su ea ek e8 ga s8",],
+        [[HO,EU,EZ,E7,GZ,G8,SA,SZ],[HU,E9,G9,HA,HK,H8,H7,S9],[SO,GU,GK,G7,HZ,H9,SK,S7],[EO,GO,SU,EA,EK,E8,GA,S8],],
         vec![],
         vec![],
-        &[(0, "sa s9 sk s8"),(0, "sz hu s7 go"),(3, "eo e7 e9 gu"),(3, "su eu ha so"),(2, "h9 ea g8 h7"),(3, "ga gz g9 g7"),(3, "e8 ez hk hz"),(0, "ho h8 gk ek"),],
+        &[(0, [SA,S9,SK,S8]),(0, [SZ,HU,S7,GO]),(3, [EO,E7,E9,GU]),(3, [SU,EU,HA,SO]),(2, [H9,EA,G8,H7]),(3, [GA,GZ,G9,G7]),(3, [E8,EZ,HK,HZ]),(0, [HO,H8,GK,EK]),],
         [50, 50, 50, -150],
     );
     test_rules(
         "../../testdata/games/solo/59-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go eu h8 ek e7 gk s8","ho hu h9 g9 g8 sz sk s9","so gu su ha hz h7 ea ga","hk ez e9 e8 gz g7 sa s7",],
+        [[EO,GO,EU,H8,EK,E7,GK,S8],[HO,HU,H9,G9,G8,SZ,SK,S9],[SO,GU,SU,HA,HZ,H7,EA,GA],[HK,EZ,E9,E8,GZ,G7,SA,S7],],
         vec![],
         vec![],
-        &[(0, "s8 sk ha s7"),(2, "gu hk eu h9"),(0, "gk g8 ga g7"),(2, "su sa h8 hu"),(1, "s9 h7 e8 e7"),(2, "ea ez ek ho"),(1, "g9 hz gz go"),(0, "eo sz so e9"),],
+        &[(0, [S8,SK,HA,S7]),(2, [GU,HK,EU,H9]),(0, [GK,G8,GA,G7]),(2, [SU,SA,H8,HU]),(1, [S9,H7,E8,E7]),(2, [EA,EZ,EK,HO]),(1, [G9,HZ,GZ,GO]),(0, [EO,SZ,SO,E9]),],
         [90, 90, -270, 90],
     );
     test_rules(
         "../../testdata/games/solo/6-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go hk ea e7 g9 g8 g7 s9","ha hz h7 e8 gz sz sk s8","ho eu hu ez ek e9 sa s7","eo so gu su h9 h8 ga gk",],
+        [[GO,HK,EA,E7,G9,G8,G7,S9],[HA,HZ,H7,E8,GZ,SZ,SK,S8],[HO,EU,HU,EZ,EK,E9,SA,S7],[EO,SO,GU,SU,H9,H8,GA,GK],],
         vec![],
         vec![],
-        &[(0, "g9 gz eu gk"),(2, "ez gu e7 e8"),(3, "eo hk h7 hu"),(3, "su go ha ho"),(0, "g8 hz sa ga"),(1, "sk s7 h8 s9"),(3, "so g7 s8 e9"),(3, "h9 ea sz ek"),],
+        &[(0, [G9,GZ,EU,GK]),(2, [EZ,GU,E7,E8]),(3, [EO,HK,H7,HU]),(3, [SU,GO,HA,HO]),(0, [G8,HZ,SA,GA]),(1, [SK,S7,H8,S9]),(3, [SO,G7,S8,E9]),(3, [H9,EA,SZ,EK]),],
         [50, 50, 50, -150],
     );
     // ../../testdata/games/solo/62-herz-solo.html has wrong format
@@ -1573,56 +1587,56 @@ fn test_rulessolo() {
     test_rules(
         "../../testdata/games/solo/67-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go ho eu gu su g9 g7","so g8 e9 e8 ha h8 sk s9","hu gz gk ea ez ek hz hk","ga e7 h9 h7 sa sz s8 s7",],
+        [[EO,GO,HO,EU,GU,SU,G9,G7],[SO,G8,E9,E8,HA,H8,SK,S9],[HU,GZ,GK,EA,EZ,EK,HZ,HK],[GA,E7,H9,H7,SA,SZ,S8,S7],],
         vec![],
         vec![],
-        &[(0, "eo g8 gk ga"),(0, "go so hu e7"),(0, "ho e9 gz h7"),(0, "eu e8 ek h9"),(0, "gu s9 hk s7"),(0, "su sk ez s8"),(0, "g9 h8 hz sz"),(0, "g7 ha ea sa"),],
+        &[(0, [EO,G8,GK,GA]),(0, [GO,SO,HU,E7]),(0, [HO,E9,GZ,H7]),(0, [EU,E8,EK,H9]),(0, [GU,S9,HK,S7]),(0, [SU,SK,EZ,S8]),(0, [G9,H8,HZ,SZ]),(0, [G7,HA,EA,SA]),],
         [300, -100, -100, -100],
     );
     test_rules(
         "../../testdata/games/solo/68-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go g8 ea e9 e8 e7 ha s8","so g9 hk h9 h7 sk s9 s7","eo ho gu su gz gk g7 hz","eu hu ga ez ek h8 sa sz",],
+        [[GO,G8,EA,E9,E8,E7,HA,S8],[SO,G9,HK,H9,H7,SK,S9,S7],[EO,HO,GU,SU,GZ,GK,G7,HZ],[EU,HU,GA,EZ,EK,H8,SA,SZ],],
         vec![],
         vec![],
-        &[(0, "ea so ho ek"),(2, "eo hu g8 g9"),(2, "su ga go hk"),(0, "e9 h7 hz ez"),(3, "sa s8 s7 gz"),(2, "gu eu ha sk"),(3, "h8 e7 h9 g7"),(2, "gk sz e8 s9"),],
+        &[(0, [EA,SO,HO,EK]),(2, [EO,HU,G8,G9]),(2, [SU,GA,GO,HK]),(0, [E9,H7,HZ,EZ]),(3, [SA,S8,S7,GZ]),(2, [GU,EU,HA,SK]),(3, [H8,E7,H9,G7]),(2, [GK,SZ,E8,S9]),],
         [-50, -50, 150, -50],
     );
     // ../../testdata/games/solo/7-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/70-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go hu ez e7 h8 sz sk s7","eu gz g7 e9 ha h9 sa s8","eo so gu su ga gk g9 e8","ho g8 ea ek hz hk h7 s9",],
+        [[GO,HU,EZ,E7,H8,SZ,SK,S7],[EU,GZ,G7,E9,HA,H9,SA,S8],[EO,SO,GU,SU,GA,GK,G9,E8],[HO,G8,EA,EK,HZ,HK,H7,S9],],
         vec![],
         vec![],
-        &[(0, "sk sa ga s9"),(2, "so ho go gz"),(0, "sz s8 eo g8"),(2, "g9 hz hu g7"),(0, "s7 e9 e8 ea"),(0, "ez eu su ek"),(1, "ha gk hk h8"),(2, "gu h7 e7 h9"),],
+        &[(0, [SK,SA,GA,S9]),(2, [SO,HO,GO,GZ]),(0, [SZ,S8,EO,G8]),(2, [G9,HZ,HU,G7]),(0, [S7,E9,E8,EA]),(0, [EZ,EU,SU,EK]),(1, [HA,GK,HK,H8]),(2, [GU,H7,E7,H9]),],
         [50, 50, -150, 50],
     );
     test_rules(
         "../../testdata/games/solo/72-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go eu gu g9 g8 ea s7","so gz ek e7 ha hk h7 sa","ho ga ez e9 hz h9 h8 s8","hu su gk g7 e8 sz sk s9",],
+        [[EO,GO,EU,GU,G9,G8,EA,S7],[SO,GZ,EK,E7,HA,HK,H7,SA],[HO,GA,EZ,E9,HZ,H9,H8,S8],[HU,SU,GK,G7,E8,SZ,SK,S9],],
         vec![],
         vec![],
-        &[(0, "go gz ga g7"),(0, "eo so ho su"),(0, "gu ek s8 gk"),(0, "eu e7 h8 hu"),(0, "ea h7 e9 e8"),(0, "s7 sa hz sz"),(1, "ha h9 s9 g8"),(0, "g9 hk ez sk"),],
+        &[(0, [GO,GZ,GA,G7]),(0, [EO,SO,HO,SU]),(0, [GU,EK,S8,GK]),(0, [EU,E7,H8,HU]),(0, [EA,H7,E9,E8]),(0, [S7,SA,HZ,SZ]),(1, [HA,H9,S9,G8]),(0, [G9,HK,EZ,SK]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/solo/73-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eu h8 ez ek e9 ga gk s9","hu hk h7 gz g8 g7 sk s8","eo go su hz ea e7 sa s7","ho so gu ha h9 e8 g9 sz",],
+        [[EU,H8,EZ,EK,E9,GA,GK,S9],[HU,HK,H7,GZ,G8,G7,SK,S8],[EO,GO,SU,HZ,EA,E7,SA,S7],[HO,SO,GU,HA,H9,E8,G9,SZ],],
         vec![],
         vec![],
-        &[(0, "ga g7 hz g9"),(2, "go h9 h8 h7"),(2, "eo gu eu hk"),(2, "ea e8 ek hu"),(1, "sk sa sz s9"),(2, "e7 ha ez gz"),(3, "ho gk g8 su"),(3, "so e9 s8 s7"),],
+        &[(0, [GA,G7,HZ,G9]),(2, [GO,H9,H8,H7]),(2, [EO,GU,EU,HK]),(2, [EA,E8,EK,HU]),(1, [SK,SA,SZ,S9]),(2, [E7,HA,EZ,GZ]),(3, [HO,GK,G8,SU]),(3, [SO,E9,S8,S7]),],
         [50, 50, -150, 50],
     );
     test_rules(
         "../../testdata/games/solo/74-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eu ea e8 ga g7 sa sz s9","go gu e7 gz g9 h7 sk s7","ek e9 gk g8 hz h9 h8 s8","eo ho so hu su ez ha hk",],
+        [[EU,EA,E8,GA,G7,SA,SZ,S9],[GO,GU,E7,GZ,G9,H7,SK,S7],[EK,E9,GK,G8,HZ,H9,H8,S8],[EO,HO,SO,HU,SU,EZ,HA,HK],],
         vec![],
         vec![],
-        &[(0, "ga gz g8 ez"),(3, "so ea go ek"),(1, "h7 h9 ha eu"),(0, "sa sk s8 su"),(3, "ho e8 e7 e9"),(3, "eo g7 gu gk"),(3, "hk sz s7 hz"),(2, "h8 hu s9 g9"),],
+        &[(0, [GA,GZ,G8,EZ]),(3, [SO,EA,GO,EK]),(1, [H7,H9,HA,EU]),(0, [SA,SK,S8,SU]),(3, [HO,E8,E7,E9]),(3, [EO,G7,GU,GK]),(3, [HK,SZ,S7,HZ]),(2, [H8,HU,S9,G9]),],
         [-50, -50, -50, 150],
     );
     // ../../testdata/games/solo/75-herz-solo.html has wrong format
@@ -1632,47 +1646,47 @@ fn test_rulessolo() {
     test_rules(
         "../../testdata/games/solo/82-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["gu ga gk ea ez e7 sk s7","so g9 g8 e9 ha hz h8 s8","hu su e8 hk h9 h7 sz s9","eo go ho eu gz g7 ek sa",],
+        [[GU,GA,GK,EA,EZ,E7,SK,S7],[SO,G9,G8,E9,HA,HZ,H8,S8],[HU,SU,E8,HK,H9,H7,SZ,S9],[EO,GO,HO,EU,GZ,G7,EK,SA],],
         vec![],
         vec![],
-        &[(0, "sk s8 s9 sa"),(3, "go ga g8 su"),(3, "ho gu g9 hu"),(3, "eo gk so e8"),(3, "g7 ez ha h7"),(3, "ek ea e9 sz"),(0, "s7 h8 h9 gz"),(3, "eu e7 hz hk"),],
+        &[(0, [SK,S8,S9,SA]),(3, [GO,GA,G8,SU]),(3, [HO,GU,G9,HU]),(3, [EO,GK,SO,E8]),(3, [G7,EZ,HA,H7]),(3, [EK,EA,E9,SZ]),(0, [S7,H8,H9,GZ]),(3, [EU,E7,HZ,HK]),],
         [-90, -90, -90, 270],
     );
     // ../../testdata/games/solo/83-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/84-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["so eu gu su g9 g8 h9 sa","ho e9 hk h8 sz sk s8 s7","eo go hu ea ez ek e7 ga","e8 gz gk g7 ha hz h7 s9",],
+        [[SO,EU,GU,SU,G9,G8,H9,SA],[HO,E9,HK,H8,SZ,SK,S8,S7],[EO,GO,HU,EA,EZ,EK,E7,GA],[E8,GZ,GK,G7,HA,HZ,H7,S9],],
         vec![],
         vec![],
-        &[(0, "sa sz hu s9"),(2, "go e8 su e9"),(2, "eo g7 gu ho"),(2, "e7 ha eu hk"),(0, "h9 h8 ea h7"),(2, "ek hz so s7"),(0, "g9 s8 ga gk"),(2, "ez gz g8 sk"),],
+        &[(0, [SA,SZ,HU,S9]),(2, [GO,E8,SU,E9]),(2, [EO,G7,GU,HO]),(2, [E7,HA,EU,HK]),(0, [H9,H8,EA,H7]),(2, [EK,HZ,SO,S7]),(0, [G9,S8,GA,GK]),(2, [EZ,GZ,G8,SK]),],
         [-50, -50, 150, -50],
     );
     test_rules(
         "../../testdata/games/solo/86-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo ez ga hz hk sa s9 s8","go eu e8 e7 g7 ha h9 sz","ho hu su gz gk g9 h8 s7","so gu ea ek e9 g8 h7 sk",],
+        [[EO,EZ,GA,HZ,HK,SA,S9,S8],[GO,EU,E8,E7,G7,HA,H9,SZ],[HO,HU,SU,GZ,GK,G9,H8,S7],[SO,GU,EA,EK,E9,G8,H7,SK],],
         vec![],
         vec![],
-        &[(0, "ga g7 g9 g8"),(0, "hk ha h8 h7"),(1, "h9 su sk hz"),(2, "gz gu eo sz"),(0, "s8 eu s7 so"),(3, "e9 ez e7 hu"),(2, "gk ea sa go"),(1, "e8 ho ek s9"),],
+        &[(0, [GA,G7,G9,G8]),(0, [HK,HA,H8,H7]),(1, [H9,SU,SK,HZ]),(2, [GZ,GU,EO,SZ]),(0, [S8,EU,S7,SO]),(3, [E9,EZ,E7,HU]),(2, [GK,EA,SA,GO]),(1, [E8,HO,EK,S9]),],
         [90, 90, 90, -270],
     );
     test_rules(
         "../../testdata/games/solo/87-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["go so eu hu gz gk ek sa","gu g8 e9 e7 ha hz h9 h7","eo ho g9 g7 ez e8 h8 sz","su ga ea hk sk s9 s8 s7",],
+        [[GO,SO,EU,HU,GZ,GK,EK,SA],[GU,G8,E9,E7,HA,HZ,H9,H7],[EO,HO,G9,G7,EZ,E8,H8,SZ],[SU,GA,EA,HK,SK,S9,S8,S7],],
         vec![],
         vec![],
-        &[(0, "eu g8 ho ga"),(2, "sz sk sa gu"),(1, "e7 e8 ea ek"),(3, "s9 hu e9 h8"),(0, "so hz eo su"),(2, "ez hk gk h7"),(0, "go h9 g7 s7"),(0, "gz ha g9 s8"),],
+        &[(0, [EU,G8,HO,GA]),(2, [SZ,SK,SA,GU]),(1, [E7,E8,EA,EK]),(3, [S9,HU,E9,H8]),(0, [SO,HZ,EO,SU]),(2, [EZ,HK,GK,H7]),(0, [GO,H9,G7,S7]),(0, [GZ,HA,G9,S8]),],
         [-150, 50, 50, 50],
     );
     test_rules(
         "../../testdata/games/solo/9-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo eu hz hk h9 ga sa s7","gu e9 e8 e7 gk g7 sz sk","go ho h8 ea ez ek gz s9","so hu su ha h7 g9 g8 s8",],
+        [[EO,EU,HZ,HK,H9,GA,SA,S7],[GU,E9,E8,E7,GK,G7,SZ,SK],[GO,HO,H8,EA,EZ,EK,GZ,S9],[SO,HU,SU,HA,H7,G9,G8,S8],],
         vec![],
         vec![],
-        &[(0, "eo gu h8 h7"),(0, "h9 sz ho ha"),(2, "ea s8 hz e7"),(0, "ga g7 gz g8"),(0, "sa sk s9 su"),(3, "g9 hk gk go"),(2, "ek hu eu e8"),(0, "s7 e9 ez so"),],
+        &[(0, [EO,GU,H8,H7]),(0, [H9,SZ,HO,HA]),(2, [EA,S8,HZ,E7]),(0, [GA,G7,GZ,G8]),(0, [SA,SK,S9,SU]),(3, [G9,HK,GK,GO]),(2, [EK,HU,EU,E8]),(0, [S7,E9,EZ,SO]),],
         [-150, 50, 50, 50],
     );
     // ../../testdata/games/solo/90-herz-solo.html has wrong format
@@ -1682,37 +1696,37 @@ fn test_rulessolo() {
     test_rules(
         "../../testdata/games/solo/94-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["hu su e8 g9 sz sk s9 s8","eo go ho so eu ek e7 h7","gu ea ga gz ha hz hk h9","ez e9 gk g8 g7 h8 sa s7",],
+        [[HU,SU,E8,G9,SZ,SK,S9,S8],[EO,GO,HO,SO,EU,EK,E7,H7],[GU,EA,GA,GZ,HA,HZ,HK,H9],[EZ,E9,GK,G8,G7,H8,SA,S7],],
         vec![],
         vec![],
-        &[(0, "sz eu h9 s7"),(1, "go gu ez e8"),(1, "eo ea e9 su"),(1, "so ha sa hu"),(1, "ho hk h8 g9"),(1, "h7 hz gk sk"),(2, "ga g7 s8 e7"),(1, "ek gz g8 s9"),],
+        &[(0, [SZ,EU,H9,S7]),(1, [GO,GU,EZ,E8]),(1, [EO,EA,E9,SU]),(1, [SO,HA,SA,HU]),(1, [HO,HK,H8,G9]),(1, [H7,HZ,GK,SK]),(2, [GA,G7,S8,E7]),(1, [EK,GZ,G8,S9]),],
         [-110, 330, -110, -110],
     );
     test_rules(
         "../../testdata/games/solo/96-herz-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["h7 ea ez ek e9 e7 gk sz","gu hk e8 ga gz g8 s9 s8","ho ha hz h8 g7 sa sk s7","eo go so eu hu su h9 g9",],
+        [[H7,EA,EZ,EK,E9,E7,GK,SZ],[GU,HK,E8,GA,GZ,G8,S9,S8],[HO,HA,HZ,H8,G7,SA,SK,S7],[EO,GO,SO,EU,HU,SU,H9,G9],],
         vec![],
         vec![],
-        &[(0, "gk ga g7 g9"),(1, "gz sk eu h7"),(3, "go ez hk h8"),(3, "eo e7 gu hz"),(3, "su sz e8 ho"),(2, "sa h9 e9 s8"),(3, "so ek s9 ha"),(3, "hu ea g8 s7"),],
+        &[(0, [GK,GA,G7,G9]),(1, [GZ,SK,EU,H7]),(3, [GO,EZ,HK,H8]),(3, [EO,E7,GU,HZ]),(3, [SU,SZ,E8,HO]),(2, [SA,H9,E9,S8]),(3, [SO,EK,S9,HA]),(3, [HU,EA,G8,S7]),],
         [-50, -50, -50, 150],
     );
     test_rules(
         "../../testdata/games/solo/97-gras-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["eo go ho eu ga g9 e8 sa","hu gz gk g7 ek e9 s9 s8","so gu su e7 hz h9 h8 s7","g8 ea ez ha hk h7 sz sk",],
+        [[EO,GO,HO,EU,GA,G9,E8,SA],[HU,GZ,GK,G7,EK,E9,S9,S8],[SO,GU,SU,E7,HZ,H9,H8,S7],[G8,EA,EZ,HA,HK,H7,SZ,SK],],
         vec![],
         vec![],
-        &[(0, "go g7 su g8"),(0, "ho gk gu h7"),(0, "eo hu so hk"),(0, "eu gz e7 sk"),(0, "e8 ek hz ea"),(3, "ez g9 e9 s7"),(0, "sa s8 h8 sz"),(0, "ga s9 h9 ha"),],
+        &[(0, [GO,G7,SU,G8]),(0, [HO,GK,GU,H7]),(0, [EO,HU,SO,HK]),(0, [EU,GZ,E7,SK]),(0, [E8,EK,HZ,EA]),(3, [EZ,G9,E9,S7]),(0, [SA,S8,H8,SZ]),(0, [GA,S9,H9,HA]),],
         [270, -90, -90, -90],
     );
     test_rules(
         "../../testdata/games/solo/98-eichel-solo.html",
         &rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)),
-        ["ho eu hu ez e9 e7 sa sk","so gu su e8 gz g9 h9 s7","eo ek g7 hz hk h8 h7 s9","go ea ga gk g8 ha sz s8",],
+        [[HO,EU,HU,EZ,E9,E7,SA,SK],[SO,GU,SU,E8,GZ,G9,H9,S7],[EO,EK,G7,HZ,HK,H8,H7,S9],[GO,EA,GA,GK,G8,HA,SZ,S8],],
         vec![],
         vec![],
-        &[(0, "eu so ek ea"),(1, "s7 s9 s8 sa"),(0, "hu e8 eo go"),(2, "hk ha e9 h9"),(0, "ho su g7 g8"),(0, "e7 gu hz ga"),(1, "gz h8 gk ez"),(0, "sk g9 h7 sz"),],
+        &[(0, [EU,SO,EK,EA]),(1, [S7,S9,S8,SA]),(0, [HU,E8,EO,GO]),(2, [HK,HA,E9,H9]),(0, [HO,SU,G7,G8]),(0, [E7,GU,HZ,GA]),(1, [GZ,H8,GK,EZ]),(0, [SK,G9,H7,SZ]),],
         [-150, 50, 50, 50],
     );
 }
@@ -1722,109 +1736,109 @@ fn test_rulesgeier() {
     test_rules(
         "../../testdata/games/39.html",
         &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["eo ez eu gk g9 h8 su s9","go ho e7 gz g8 hk hu s7","so ea ek ga g7 ha sa sz","e9 e8 gu hz h9 h7 sk s8",],
+        [[EO,EZ,EU,GK,G9,H8,SU,S9],[GO,HO,E7,GZ,G8,HK,HU,S7],[SO,EA,EK,GA,G7,HA,SA,SZ],[E9,E8,GU,HZ,H9,H7,SK,S8],],
         vec![],
         vec![],
-        &[(0, "h8 hu ha h7"),(2, "so sk eo ho"),(0, "s9 s7 sa s8"),(2, "sz e8 su go"),(1, "gz ga gu g9"),(2, "ea e9 eu e7"),(2, "g7 h9 gk g8"),(0, "ez hk ek hz"),],
+        &[(0, [H8,HU,HA,H7]),(2, [SO,SK,EO,HO]),(0, [S9,S7,SA,S8]),(2, [SZ,E8,SU,GO]),(1, [GZ,GA,GU,G9]),(2, [EA,E9,EU,E7]),(2, [G7,H9,GK,G8]),(0, [EZ,HK,EK,HZ]),],
         [80, 80, -240, 80],
     );
     test_rules(
         "../../testdata/games/42.html",
         &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI2,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["e9 e7 ga gz hu h8 s9 s8","go ek gu g9 h7 sa sz s7","eo ho ea ez g8 ha hz hk","so eu e8 gk g7 h9 sk su",],
+        [[E9,E7,GA,GZ,HU,H8,S9,S8],[GO,EK,GU,G9,H7,SA,SZ,S7],[EO,HO,EA,EZ,G8,HA,HZ,HK],[SO,EU,E8,GK,G7,H9,SK,SU],],
         vec![],
         vec![],
-        &[(0, "ga gu g8 gk"),(0, "gz g9 ho g7"),(2, "eo so e7 go"),(2, "ha h9 h8 h7"),(2, "ez e8 e9 ek"),(2, "hz eu hu s7"),(2, "ea su s8 sz"),(2, "hk sk s9 sa"),],
+        &[(0, [GA,GU,G8,GK]),(0, [GZ,G9,HO,G7]),(2, [EO,SO,E7,GO]),(2, [HA,H9,H8,H7]),(2, [EZ,E8,E9,EK]),(2, [HZ,EU,HU,S7]),(2, [EA,SU,S8,SZ]),(2, [HK,SK,S9,SA]),],
         [-60, -60, 180, -60],
     );
     test_rules(
         "../../testdata/games/geier/1.html",
         &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/200, /*n_payout_schneider_schwarz*/50, SLaufendeParams::new(10, 2)),
-        ["eo so ea eu e7 g8 sa s7","go ho ha hk h9 sz sk s9","ez e9 e8 gk gu g9 h7 su","ek ga gz g7 hz hu h8 s8",],
+        [[EO,SO,EA,EU,E7,G8,SA,S7],[GO,HO,HA,HK,H9,SZ,SK,S9],[EZ,E9,E8,GK,GU,G9,H7,SU],[EK,GA,GZ,G7,HZ,HU,H8,S8],],
         vec![],
         vec![],
-        &[(0, "eo ho h7 s8"),(0, "e7 sz ez ek"),(2, "su gz sa s9"),(0, "ea go e8 ga"),(1, "ha gk hz so"),(0, "eu sk e9 g7"),(0, "s7 hk g9 h8"),(0, "g8 h9 gu hu"),],
+        &[(0, [EO,HO,H7,S8]),(0, [E7,SZ,EZ,EK]),(2, [SU,GZ,SA,S9]),(0, [EA,GO,E8,GA]),(1, [HA,GK,HZ,SO]),(0, [EU,SK,E9,G7]),(0, [S7,HK,G9,H8]),(0, [G8,H9,GU,HU]),],
         [600, -200, -200, -200],
     );
     test_rules(
         "../../testdata/games/geier/10.html",
         &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["go e9 e7 gz hk h7 su s7","so ek g9 g7 h9 sk s9 s8","ho e8 gk gu g8 hz hu sz","eo ea ez eu ga ha h8 sa",],
+        [[GO,E9,E7,GZ,HK,H7,SU,S7],[SO,EK,G9,G7,H9,SK,S9,S8],[HO,E8,GK,GU,G8,HZ,HU,SZ],[EO,EA,EZ,EU,GA,HA,H8,SA],],
         vec![],
         vec![],
-        &[(0, "e7 ek e8 ea"),(3, "eo go so ho"),(3, "ez e9 h9 sz"),(3, "sa s7 s8 g8"),(3, "ga gz g7 gu"),(3, "ha h7 g9 hu"),(3, "eu hk s9 hz"),(3, "h8 su sk gk"),],
+        &[(0, [E7,EK,E8,EA]),(3, [EO,GO,SO,HO]),(3, [EZ,E9,H9,SZ]),(3, [SA,S7,S8,G8]),(3, [GA,GZ,G7,GU]),(3, [HA,H7,G9,HU]),(3, [EU,HK,S9,HZ]),(3, [H8,SU,SK,GK]),],
         [-70, -70, -70, 210],
     );
     test_rules(
         "../../testdata/games/geier/2.html",
         &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["eo ho so ez e9 gz gk sa","go eu ga g8 hu h9 h8 s9","ea g9 g7 ha hz h7 sz sk","ek e8 e7 gu hk su s8 s7",],
+        [[EO,HO,SO,EZ,E9,GZ,GK,SA],[GO,EU,GA,G8,HU,H9,H8,S9],[EA,G9,G7,HA,HZ,H7,SZ,SK],[EK,E8,E7,GU,HK,SU,S8,S7],],
         vec![],
         vec![],
-        &[(0, "eo go g7 s7"),(0, "gz ga g9 gu"),(1, "s9 sk s8 sa"),(0, "ez eu ea ek"),(2, "ha hk ho h8"),(0, "so g8 h7 e7"),(0, "gk h9 hz e8"),(0, "e9 hu sz su"),],
+        &[(0, [EO,GO,G7,S7]),(0, [GZ,GA,G9,GU]),(1, [S9,SK,S8,SA]),(0, [EZ,EU,EA,EK]),(2, [HA,HK,HO,H8]),(0, [SO,G8,H7,E7]),(0, [GK,H9,HZ,E8]),(0, [E9,HU,SZ,SU]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/geier/3.html",
         &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderTout>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["eo so ea ez sa sz su s9","e8 e7 g7 ha hz h7 s8 s7","ho ga gz gk g9 g8 hu h9","go ek eu e9 gu hk h8 sk",],
+        [[EO,SO,EA,EZ,SA,SZ,SU,S9],[E8,E7,G7,HA,HZ,H7,S8,S7],[HO,GA,GZ,GK,G9,G8,HU,H9],[GO,EK,EU,E9,GU,HK,H8,SK],],
         vec![],
         vec![],
-        &[(0, "eo g7 ho go"),(0, "ea e8 h9 e9"),(0, "ez e7 hu eu"),(0, "sa s8 g8 sk"),(0, "sz s7 g9 h8"),(0, "su h7 gk hk"),(0, "s9 hz gz gu"),(0, "so ha ga ek"),],
+        &[(0, [EO,G7,HO,GO]),(0, [EA,E8,H9,E9]),(0, [EZ,E7,HU,EU]),(0, [SA,S8,G8,SK]),(0, [SZ,S7,G9,H8]),(0, [SU,H7,GK,HK]),(0, [S9,HZ,GZ,GU]),(0, [SO,HA,GA,EK]),],
         [300, -100, -100, -100],
     );
     test_rules(
         "../../testdata/games/geier/4.html",
         &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["eo ea gz gk g9 hu sa s7","ek eu ga g7 hz hk h8 s9","gu g8 ha h7 sz sk su s8","go ho so ez e9 e8 e7 h9",],
+        [[EO,EA,GZ,GK,G9,HU,SA,S7],[EK,EU,GA,G7,HZ,HK,H8,S9],[GU,G8,HA,H7,SZ,SK,SU,S8],[GO,HO,SO,EZ,E9,E8,E7,H9],],
         vec![],
         vec![],
-        &[(0, "ea ek sz e7"),(0, "sa s9 sk h9"),(0, "hu hz ha so"),(3, "go eo ga su"),(0, "gz g7 g8 ho"),(3, "ez s7 eu s8"),(3, "e9 g9 h8 h7"),(3, "e8 gk hk gu"),],
+        &[(0, [EA,EK,SZ,E7]),(0, [SA,S9,SK,H9]),(0, [HU,HZ,HA,SO]),(3, [GO,EO,GA,SU]),(0, [GZ,G7,G8,HO]),(3, [EZ,S7,EU,S8]),(3, [E9,G9,H8,H7]),(3, [E8,GK,HK,GU]),],
         [-50, -50, -50, 150],
     );
     test_rules(
         "../../testdata/games/geier/5.html",
         &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["ho so ea ez ga h9 sa s7","eo gz g7 ha hz hu h8 su","ek e8 e7 g9 g8 hk h7 sk","go eu e9 gk gu sz s9 s8",],
+        [[HO,SO,EA,EZ,GA,H9,SA,S7],[EO,GZ,G7,HA,HZ,HU,H8,SU],[EK,E8,E7,G9,G8,HK,H7,SK],[GO,EU,E9,GK,GU,SZ,S9,S8],],
         vec![3,0,1,],
         vec![],
-        &[(0, "ho eo sk go"),(1, "ha hk sz h9"),(1, "hz h7 gk s7"),(1, "hu g9 gu so"),(0, "ea h8 e7 e9"),(0, "ez su e8 eu"),(0, "ga g7 g8 s8"),(0, "sa gz ek s9"),],
+        &[(0, [HO,EO,SK,GO]),(1, [HA,HK,SZ,H9]),(1, [HZ,H7,GK,S7]),(1, [HU,G9,GU,SO]),(0, [EA,H8,E7,E9]),(0, [EZ,SU,E8,EU]),(0, [GA,G7,G8,S8]),(0, [SA,GZ,EK,S9]),],
         [1680, -560, -560, -560],
     );
     test_rules(
         "../../testdata/games/geier/6.html",
         &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["go ho so ez gz gk","e9 gu hz hk sa su","eo ea ek g9 ha h9","eu ga hu sz sk s9",],
+        [[GO,HO,SO,EZ,GZ,GK],[E9,GU,HZ,HK,SA,SU],[EO,EA,EK,G9,HA,H9],[EU,GA,HU,SZ,SK,S9],],
         vec![2,],
         vec![],
-        &[(0, "go e9 eo eu"),(2, "g9 ga gk gu"),(3, "sz so su h9"),(0, "gz sa ek s9"),(0, "ho hk ha sk"),(0, "ez hz ea hu"),],
+        &[(0, [GO,E9,EO,EU]),(2, [G9,GA,GK,GU]),(3, [SZ,SO,SU,H9]),(0, [GZ,SA,EK,S9]),(0, [HO,HK,HA,SK]),(0, [EZ,HZ,EA,HU]),],
         [300, -100, -100, -100],
     );
     test_rules(
         "../../testdata/games/geier/7.html",
         &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI3,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["gz gk ha hk hu h8 h7 s8","eu e9 e7 gu g8 g7 sz su","go so ek ga g9 h9 sk s7","eo ho ea ez e8 hz sa s9",],
+        [[GZ,GK,HA,HK,HU,H8,H7,S8],[EU,E9,E7,GU,G8,G7,SZ,SU],[GO,SO,EK,GA,G9,H9,SK,S7],[EO,HO,EA,EZ,E8,HZ,SA,S9],],
         vec![3,1,],
         vec![],
-        &[(0, "s8 su s7 sa"),(3, "eo h7 g7 so"),(3, "ea h8 e7 ek"),(3, "ez hu e9 h9"),(3, "e8 hk eu sk"),(1, "g8 ga ho gk"),(3, "s9 gz sz g9"),(1, "gu go hz ha"),],
+        &[(0, [S8,SU,S7,SA]),(3, [EO,H7,G7,SO]),(3, [EA,H8,E7,EK]),(3, [EZ,HU,E9,H9]),(3, [E8,HK,EU,SK]),(1, [G8,GA,HO,GK]),(3, [S9,GZ,SZ,G9]),(1, [GU,GO,HZ,HA]),],
         [-200, -200, -200, 600],
     );
     test_rules(
         "../../testdata/games/geier/8.html",
         &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI0,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["eo so ea eu e9 e8 e7 g9","go ho ek ga g7 ha hk h7","gk g8 hu h9 h8 sz s9 s7","ez gz gu hz sa sk su s8",],
+        [[EO,SO,EA,EU,E9,E8,E7,G9],[GO,HO,EK,GA,G7,HA,HK,H7],[GK,G8,HU,H9,H8,SZ,S9,S7],[EZ,GZ,GU,HZ,SA,SK,SU,S8],],
         vec![],
         vec![],
-        &[(0, "eo ho h8 s8"),(0, "ea ek h9 ez"),(0, "e9 g7 s7 su"),(0, "e8 h7 hu sk"),(0, "eu go sz hz"),(1, "ga gk gu g9"),(1, "ha s9 gz so"),(0, "e7 hk g8 sa"),],
+        &[(0, [EO,HO,H8,S8]),(0, [EA,EK,H9,EZ]),(0, [E9,G7,S7,SU]),(0, [E8,H7,HU,SK]),(0, [EU,GO,SZ,HZ]),(1, [GA,GK,GU,G9]),(1, [HA,S9,GZ,SO]),(0, [E7,HK,G8,SA]),],
         [150, -50, -50, -50],
     );
     test_rules(
         "../../testdata/games/geier/9.html",
         &rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI1,/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)),
-        ["ho e8 gu g8 hz hu s9 s7","eo go so ez ek e9 hk h8","gz g9 g7 ha h9 sa sk su","ea eu e7 ga gk h7 sz s8",],
+        [[HO,E8,GU,G8,HZ,HU,S9,S7],[EO,GO,SO,EZ,EK,E9,HK,H8],[GZ,G9,G7,HA,H9,SA,SK,SU],[EA,EU,E7,GA,GK,H7,SZ,S8],],
         vec![],
         vec![],
-        &[(0, "e8 ek gz ea"),(3, "ga gu go g7"),(1, "eo g9 h7 ho"),(1, "h8 ha sz hz"),(2, "sk s8 s7 so"),(1, "ez h9 e7 g8"),(1, "hk su eu hu"),(1, "e9 sa gk s9"),],
+        &[(0, [E8,EK,GZ,EA]),(3, [GA,GU,GO,G7]),(1, [EO,G9,H7,HO]),(1, [H8,HA,SZ,HZ]),(2, [SK,S8,S7,SO]),(1, [EZ,H9,E7,G8]),(1, [HK,SU,EU,HU]),(1, [E9,SA,GK,S9]),],
         [-70, 210, -70, -70],
     );
 }
@@ -1837,14 +1851,14 @@ fn test_rulesramsch() {
         vec![],
         vec![],
         &[
-            (0, "eo go ho so"),
-            (0, "eu gu hu su"),
-            (0, "ha hz hk h9"),
-            (0, "ea ez ek e9"),
-            (0, "ga gz gk g9"),
-            (0, "sa sz sk s9"),
-            (0, "e8 e7 g8 g7"),
-            (0, "h8 h7 s8 s7"),
+            (0, [EO,GO,HO,SO]),
+            (0, [EU,GU,HU,SU]),
+            (0, [HA,HZ,HK,H9]),
+            (0, [EA,EZ,EK,E9]),
+            (0, [GA,GZ,GK,G9]),
+            (0, [SA,SZ,SK,S9]),
+            (0, [E8,E7,G8,G7]),
+            (0, [H8,H7,S8,S7]),
         ],
         [30, -10, -10, -10],
     );
@@ -1854,14 +1868,14 @@ fn test_rulesramsch() {
         vec![],
         vec![],
         &[
-            (0, "eo go ho so"),
-            (0, "eu gu hu su"),
-            (0, "ha hz hk h9"),
-            (0, "ea ez ek e9"),
-            (0, "ga gz gk g9"),
-            (0, "sa sz sk s9"),
-            (0, "e8 e7 g8 g7"),
-            (0, "h8 h7 s8 s7"),
+            (0, [EO,GO,HO,SO]),
+            (0, [EU,GU,HU,SU]),
+            (0, [HA,HZ,HK,H9]),
+            (0, [EA,EZ,EK,E9]),
+            (0, [GA,GZ,GK,G9]),
+            (0, [SA,SZ,SK,S9]),
+            (0, [E8,E7,G8,G7]),
+            (0, [H8,H7,S8,S7]),
         ],
         [30, -10, -10, -10],
     );
@@ -1871,14 +1885,14 @@ fn test_rulesramsch() {
         vec![],
         vec![],
         &[
-            (0, "eo go ho so"),
-            (0, "eu gu hu su"),
-            (0, "ha hz hk h9"),
-            (0, "ea ez ek e9"),
-            (0, "ga gz gk g9"),
-            (0, "sa sz sk s9"),
-            (0, "e8 e7 g8 g7"),
-            (0, "h7 h8 s8 s7"),
+            (0, [EO,GO,HO,SO]),
+            (0, [EU,GU,HU,SU]),
+            (0, [HA,HZ,HK,H9]),
+            (0, [EA,EZ,EK,E9]),
+            (0, [GA,GZ,GK,G9]),
+            (0, [SA,SZ,SK,S9]),
+            (0, [E8,E7,G8,G7]),
+            (0, [H7,H8,S8,S7]),
         ],
         [-30, 10, 10, 10],
     );
@@ -1892,14 +1906,14 @@ fn test_rulesbettel() {
         vec![],
         vec![],
         &[
-            (0, "eo ez ek e9"),
-            (2, "ho h9 ha hz"),
-            (0, "h8 h7 hu so"),
-            (2, "g8 g9 ga go"),
-            (0, "e8 e7 gk su"),
-            (0, "sa sz sk s9"),
-            (0, "eu gz hk s7"),
-            (0, "ea gu s8 g7"),
+            (0, [EO,EZ,EK,E9]),
+            (2, [HO,H9,HA,HZ]),
+            (0, [H8,H7,HU,SO]),
+            (2, [G8,G9,GA,GO]),
+            (0, [E8,E7,GK,SU]),
+            (0, [SA,SZ,SK,S9]),
+            (0, [EU,GZ,HK,S7]),
+            (0, [EA,GU,S8,G7]),
         ],
         [-10, -10, -10, 30],
     );
@@ -1909,14 +1923,14 @@ fn test_rulesbettel() {
         vec![],
         vec![],
         &[
-            (0, "eo ez ek e9"),
-            (2, "ho h9 ha hz"),
-            (0, "h8 h7 hu so"),
-            (2, "g8 g9 ga go"),
-            (0, "e8 e7 gk su"),
-            (0, "sa sz sk s9"),
-            (0, "eu gz hk s7"),
-            (0, "ea gu s8 g7"),
+            (0, [EO,EZ,EK,E9]),
+            (2, [HO,H9,HA,HZ]),
+            (0, [H8,H7,HU,SO]),
+            (2, [G8,G9,GA,GO]),
+            (0, [E8,E7,GK,SU]),
+            (0, [SA,SZ,SK,S9]),
+            (0, [EU,GZ,HK,S7]),
+            (0, [EA,GU,S8,G7]),
         ],
         [10, 10, -30, 10],
     );
