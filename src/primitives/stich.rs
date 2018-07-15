@@ -25,12 +25,13 @@ impl fmt::Display for SStich {
 fn test_stich() {
     // TODO? use quicktest or similar
     {
-        let veccard = verify!(cardvector::parse_cards::<Vec<_>>("e7 e8 e9 ek")).unwrap();
+        use card::card_values::*;
+        let acard = [E7, E8, E9, EK];
         for epi_first in EPlayerIndex::values() {
             for n_size in 0..5 {
                 let mut stich = SStich::new(epi_first);
                 for i_card in 0..n_size {
-                    stich.push(veccard[i_card]);
+                    stich.push(acard[i_card]);
                 }
                 assert_eq!(stich.size(), n_size);
                 assert_eq!(stich.first_playerindex(), epi_first);
