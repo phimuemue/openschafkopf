@@ -69,19 +69,19 @@ pub fn unplayed_cards<'lifetime>(vecstich: &'lifetime [SStich], hand_fixed: &'li
 
 #[test]
 fn test_unplayed_cards() {
-    use primitives::cardvector::parse_cards;
-    let vecstich = ["g7 g8 ga g9", "s8 ho s7 s9", "h7 hk hu su", "eo go hz h8", "e9 ek e8 ea", "sa eu so ha"].into_iter()
-        .map(|str_stich| {
+    use card::card_values::*;
+    let vecstich = [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]].into_iter()
+        .map(|acard| {
             let mut stich = SStich::new(/*epi should not be relevant*/EPlayerIndex::EPI0);
-            for card in verify!(parse_cards::<Vec<_>>(str_stich)).unwrap() {
-                stich.push(card.clone());
+            for card in acard.into_iter() {
+                stich.push(*card);
             }
             stich
         })
         .collect::<Vec<_>>();
-    let hand = &SHand::new_from_vec(verify!(parse_cards("gk sk")).unwrap());
+    let hand = &SHand::new_from_vec([GK, SK].into_iter().cloned().collect());
     let veccard_unplayed = unplayed_cards(&vecstich, &hand).collect::<Vec<_>>();
-    let veccard_unplayed_check = verify!(parse_cards::<Vec<_>>("gz e7 sz h9 ez gu")).unwrap();
+    let veccard_unplayed_check = [GZ, E7, SZ, H9, EZ, GU];
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
     assert!(veccard_unplayed.iter().all(|card| veccard_unplayed_check.contains(card)));
     assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
