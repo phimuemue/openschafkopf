@@ -13,12 +13,15 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering;
     fn count_laufende(gamefinishedstiche: &SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize {
         let veccard_trumpf = Self::trumpfs_in_descending_order(Vec::new());
-        let mapcardepi = gamefinishedstiche.get().iter()
-            .flat_map(|stich| stich.iter())
-            .map(|(epi, card)| (*card, epi))
-            .collect::<SCardMap<_>>();
+        let mapcardoepi = {
+            let mut mapcardoepi = SCard::map_from_fn(|_card| None);
+            for (epi, card) in gamefinishedstiche.get().iter().flat_map(|stich| stich.iter()) {
+                mapcardoepi[*card] = Some(epi);
+            }
+            mapcardoepi
+        };
         let laufende_relevant = |card: &SCard| {
-            ab_winner[mapcardepi[*card]]
+            ab_winner[verify!(mapcardoepi[*card]).unwrap()]
         };
         let b_might_have_lauf = laufende_relevant(&veccard_trumpf[0]);
         let ekurzlang = EKurzLang::from_cards_per_player(gamefinishedstiche.get().len());

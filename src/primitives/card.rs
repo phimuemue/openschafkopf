@@ -1,8 +1,4 @@
-use std::{
-    fmt,
-    ops::Index,
-    iter::FromIterator,
-};
+use std::fmt;
 use util::*;
 
 plain_enum_mod!{modefarbe, EFarbe {
@@ -154,30 +150,18 @@ fn test_card_ctor() {
     }
 }
 
-pub struct SCardMap<T> {
-    aot : [Option<T>; 32],
-}
-
-impl<T> FromIterator<(SCard, T)> for SCardMap<T> {
-    fn from_iter<ItPairCardT: IntoIterator<Item=(SCard, T)>>(itpaircardt : ItPairCardT) -> SCardMap<T> {
-        SCardMap {
-            aot : {
-                let mut aot : [_; 32] = Default::default();
-                for (card, t) in itpaircardt {
-                    aot[card.n_internalrepresentation.as_num::<usize>()] = Some(t);
-                }
-                aot
-            }
-        }
+impl TPlainEnum for SCard {
+    const SIZE : usize = EFarbe::SIZE*ESchlag::SIZE;
+    fn from_usize(n: usize) -> Self {
+        debug_assert!(n < Self::SIZE);
+        SCard{n_internalrepresentation: n.as_num::<u8>()}
+    }
+    fn to_usize(self) -> usize {
+        self.n_internalrepresentation.as_num::<usize>()
     }
 }
-
-impl <T> Index<SCard> for SCardMap<T> {
-    type Output = T;
-
-    fn index(&self, card: SCard) -> &T {
-        verify!(self.aot[card.n_internalrepresentation.as_num::<usize>()].as_ref()).unwrap()
-    }
+impl<V> TInternalEnumMapType<V> for SCard {
+    type InternalEnumMapType = [V; SCard::SIZE];
 }
 
 #[cfg(test)]
