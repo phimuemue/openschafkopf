@@ -11,9 +11,7 @@ use ai::{
 };
 use rand;
 use std::{
-    collections::{
-        HashMap, hash_map::Entry,
-    },
+    self,
     fs,
     mem,
     sync::{
@@ -248,11 +246,11 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
         }
     }
     let veccard_allowed_fixed = game.rules.all_allowed_cards(&game.vecstich, &game.ahand[epi_fixed]);
-    let mapcardpayout = verify!(vecsusp.lock()).unwrap().iter()
+    let mapcardn_payout = verify!(vecsusp.lock()).unwrap().iter()
         .fold(
             // aggregate n_payout per card in some way
-            HashMap::new(),
-            |mut mapcardpayout: HashMap<SCard, isize>, susp| {
+            SCard::map_from_fn(|_card| std::isize::MAX),
+            |mut mapcardn_payout, susp| {
                 let mut vecstich_complete_payout = game.completed_stichs().to_vec();
                 for (card, n_payout) in susp.suspicion_transitions().iter()
                     .map(|susptrans| {
@@ -268,22 +266,13 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                         (susptrans.stich()[epi_fixed], n_payout)
                     })
                 {
-                    match mapcardpayout.entry(card) {
-                        Entry::Occupied(mut occentry) => {
-                            let n_payout_acc = *occentry.get();
-                            occentry.insert(cmp::min(n_payout_acc, n_payout));
-                        }
-                        Entry::Vacant(vacentry) => {
-                            vacentry.insert(n_payout);
-                        }
-                    }
-                    assert!(!mapcardpayout.is_empty());
+                    mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
                 }
-                mapcardpayout
+                mapcardn_payout
             }
         );
     verify!(veccard_allowed_fixed.into_iter()
-        .max_by_key(|card| mapcardpayout[card]))
+        .max_by_key(|card| mapcardn_payout[*card]))
         .unwrap()
 }
 
