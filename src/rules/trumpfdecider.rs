@@ -13,18 +13,25 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering;
     fn count_laufende(gamefinishedstiche: &SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize {
         let veccard_trumpf = Self::trumpfs_in_descending_order(Vec::new());
-        let mapcardoepi = {
-            let mut mapcardoepi = SCard::map_from_fn(|_card| None);
+        #[cfg(debug_assertions)]
+        let mut mapcardb_used = SCard::map_from_fn(|_card| false);
+        let mapcardepi = {
+            let mut mapcardepi = SCard::map_from_fn(|_card| EPlayerIndex::EPI0);
             for (epi, card) in gamefinishedstiche.get().iter().flat_map(|stich| stich.iter()) {
-                mapcardoepi[*card] = Some(epi);
+                #[cfg(debug_assertions)] {
+                    mapcardb_used[*card] = true;
+                }
+                mapcardepi[*card] = epi;
             }
-            mapcardoepi
+            mapcardepi
         };
+        let ekurzlang = EKurzLang::from_cards_per_player(gamefinishedstiche.get().len());
+        #[cfg(debug_assertions)]
+        assert!(SCard::values(ekurzlang).all(|card| mapcardb_used[card]));
         let laufende_relevant = |card: &SCard| {
-            ab_winner[verify!(mapcardoepi[*card]).unwrap()]
+            ab_winner[mapcardepi[*card]]
         };
         let b_might_have_lauf = laufende_relevant(&veccard_trumpf[0]);
-        let ekurzlang = EKurzLang::from_cards_per_player(gamefinishedstiche.get().len());
         veccard_trumpf.iter()
             .filter(|&card| ekurzlang.supports_card(*card))
             .take_while(|card| b_might_have_lauf==laufende_relevant(card))
