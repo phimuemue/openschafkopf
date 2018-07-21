@@ -72,9 +72,9 @@ fn all_allowed_cards_within_stich_distinguish_farbe_frei<Rules, Result, FnFarbeF
         FnFarbeNotFrei: Fn(SHandVector) -> Result,
 {
     assert!(!vecstich.is_empty());
-    let card_first = *current_stich(vecstich).first();
+    let trumpforfarbe_first = rules.trumpforfarbe(*current_stich(vecstich).first());
     let veccard_same_farbe : SHandVector = hand.cards().iter().cloned()
-        .filter(|&card| rules.trumpforfarbe(card)==rules.trumpforfarbe(card_first))
+        .filter(|&card| rules.trumpforfarbe(card)==trumpforfarbe_first)
         .collect();
     if veccard_same_farbe.is_empty() {
         fn_farbe_frei()
