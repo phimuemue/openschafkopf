@@ -9,10 +9,9 @@ use util::*;
 pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe;
 
-    fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> return_impl!(Vec<SCard>);
+    fn trumpfs_in_descending_order() -> return_impl!(Box<Iterator<Item=SCard>>);
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering;
     fn count_laufende(gamefinishedstiche: &SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize {
-        let veccard_trumpf = Self::trumpfs_in_descending_order(Vec::new());
         #[cfg(debug_assertions)]
         let mut mapcardb_used = SCard::map_from_fn(|_card| false);
         let mapcardepi = {
@@ -28,14 +27,16 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {
         let ekurzlang = EKurzLang::from_cards_per_player(gamefinishedstiche.get().len());
         #[cfg(debug_assertions)]
         assert!(SCard::values(ekurzlang).all(|card| mapcardb_used[card]));
-        let laufende_relevant = |card: &SCard| {
-            ab_winner[mapcardepi[*card]]
+        let laufende_relevant = |card: SCard| {
+            ab_winner[mapcardepi[card]]
         };
-        let b_might_have_lauf = laufende_relevant(&veccard_trumpf[0]);
-        veccard_trumpf.iter()
-            .filter(|&card| ekurzlang.supports_card(*card))
-            .take_while(|card| b_might_have_lauf==laufende_relevant(card))
+        let mut itcard_trumpf_descending = Self::trumpfs_in_descending_order();
+        let b_might_have_lauf = laufende_relevant(verify!(itcard_trumpf_descending.nth(0)).unwrap());
+        itcard_trumpf_descending
+            .filter(|card| ekurzlang.supports_card(*card))
+            .take_while(|card| b_might_have_lauf==laufende_relevant(*card))
             .count()
+            + 1 // consumed by nth(0)
     }
 }
 
@@ -45,8 +46,8 @@ impl TTrumpfDecider for STrumpfDeciderNoTrumpf {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
         VTrumpfOrFarbe::Farbe(card.farbe())
     }
-    fn trumpfs_in_descending_order(mut _veceschlag: Vec<ESchlag>) -> return_impl!(Vec<SCard>) {
-        Vec::new()
+    fn trumpfs_in_descending_order() -> return_impl!(Box<Iterator<Item=SCard>>) {
+        Box::new(None.into_iter())
     }
     fn compare_trumpf(_card_fst: SCard, _card_snd: SCard) -> Ordering {
         panic!("STrumpfDeciderNoTrumpf::compare_trumpf called")
@@ -69,14 +70,15 @@ impl<StaticSchlag, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<StaticSch
             DeciderSec::trumpforfarbe(card)
         }
     }
-    fn trumpfs_in_descending_order(mut veceschlag: Vec<ESchlag>) -> return_impl!(Vec<SCard>) {
-        let mut veccard_trumpf : Vec<_> = EFarbe::values()
-            .map(|efarbe| SCard::new(efarbe, StaticSchlag::VALUE))
-            .collect();
-        veceschlag.push(StaticSchlag::VALUE);
-        let mut veccard_trumpf_sec = DeciderSec::trumpfs_in_descending_order(veceschlag);
-        veccard_trumpf.append(&mut veccard_trumpf_sec);
-        veccard_trumpf
+    fn trumpfs_in_descending_order() -> return_impl!(Box<Iterator<Item=SCard>>) {
+        Box::new(
+            EFarbe::values()
+                .map(|efarbe| SCard::new(efarbe, StaticSchlag::VALUE))
+                .chain(
+                    DeciderSec::trumpfs_in_descending_order()
+                        .filter(|card| StaticSchlag::VALUE!=card.schlag())
+                )
+        )
     }
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering {
         match (StaticSchlag::VALUE==card_fst.schlag(), StaticSchlag::VALUE==card_snd.schlag()) {
@@ -111,11 +113,11 @@ impl<StaticFarbe> TTrumpfDecider for STrumpfDeciderFarbe<StaticFarbe>
             VTrumpfOrFarbe::Farbe(card.farbe())
         }
     }
-    fn trumpfs_in_descending_order(veceschlag: Vec<ESchlag>) -> return_impl!(Vec<SCard>) {
-        ESchlag::values()
-            .filter(|eschlag| !veceschlag.iter().any(|&eschlag_done| eschlag_done==*eschlag))
-            .map(|eschlag| SCard::new(StaticFarbe::VALUE, eschlag))
-            .collect()
+    fn trumpfs_in_descending_order() -> return_impl!(Box<Iterator<Item=SCard>>) {
+        Box::new(
+            ESchlag::values()
+                .map(|eschlag| SCard::new(StaticFarbe::VALUE, eschlag))
+        )
     }
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering {
         assert!(Self::trumpforfarbe(card_fst).is_trumpf());
