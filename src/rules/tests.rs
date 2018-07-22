@@ -28,13 +28,12 @@ fn internal_test_rules(
     let epi_first = EPlayerIndex::EPI0; // TODO parametrize w.r.t. epi_first
     let mut game = SGame::new(
         ahand,
-        {
-            let mut doublings = SDoublings::new(epi_first);
-            for epi_doubling in EPlayerIndex::values().map(|epi| epi.wrapping_add(epi_first.to_usize())) {
-                doublings.push(/*b_doubling*/vecn_doubling.contains(&epi_doubling.to_usize()));
-            }
-            doublings
-        },
+        SDoublings::new_full(
+            epi_first,
+            EPlayerIndex::map_from_fn(|epi| 
+                vecn_doubling.contains(&epi.wrapping_add(epi_first.to_usize()).to_usize())
+            ).into_raw()
+        ),
         Some(SStossParams::new(
             /*n_stoss_max*/4,
         )),
