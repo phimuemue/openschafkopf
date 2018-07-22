@@ -86,11 +86,7 @@ impl<StaticSchlag, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<StaticSch
                 static_assert!(assert(EFarbe::Eichel < EFarbe::Gras, "Farb-Sorting can't be used here"));
                 static_assert!(assert(EFarbe::Gras < EFarbe::Herz, "Farb-Sorting can't be used here"));
                 static_assert!(assert(EFarbe::Herz < EFarbe::Schelln, "Farb-Sorting can't be used here"));
-                if card_snd.farbe() < card_fst.farbe() {
-                    Ordering::Less
-                } else {
-                    Ordering::Greater
-                }
+                card_snd.farbe().cmp(&card_fst.farbe())
             },
             (true, false) => Ordering::Greater,
             (false, true) => Ordering::Less,
