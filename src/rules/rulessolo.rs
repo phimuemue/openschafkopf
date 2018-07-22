@@ -85,3 +85,23 @@ pub type SCoreGenericWenz<TrumpfFarbDecider> = STrumpfDeciderSchlag<
     SStaticSchlagUnter, TrumpfFarbDecider>;
 pub type SCoreGenericGeier<TrumpfFarbDecider> = STrumpfDeciderSchlag<
     SStaticSchlagOber, TrumpfFarbDecider>;
+
+#[test]
+fn test_trumpfdecider() {
+    use card::card_values::*;
+    assert_eq!(
+        <SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>> as TTrumpfDecider>
+            ::trumpfs_in_descending_order().collect::<Vec<_>>(),
+        vec![EO, GO, HO, SO, EU, GU, HU, SU, GA, GZ, GK, G9, G8, G7],
+    );
+    assert_eq!(
+        <SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeGras>> as TTrumpfDecider>
+            ::trumpfs_in_descending_order().collect::<Vec<_>>(),
+        vec![EU, GU, HU, SU, GA, GZ, GK, GO, G9, G8, G7],
+    );
+    assert_eq!(
+        <SCoreGenericWenz<STrumpfDeciderNoTrumpf> as TTrumpfDecider>
+            ::trumpfs_in_descending_order().collect::<Vec<_>>(),
+        vec![EU, GU, HU, SU],
+    );
+}
