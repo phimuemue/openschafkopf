@@ -151,12 +151,12 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
 
     fn compare_in_stich(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
         assert_ne!(card_fst, card_snd);
-        match (self.trumpforfarbe(card_fst).is_trumpf(), self.trumpforfarbe(card_snd).is_trumpf()) {
-            (true, false) => Ordering::Greater,
-            (false, true) => Ordering::Less,
-            (true, true) => self.compare_trumpf(card_fst, card_snd),
-            (false, false) => {
-                if card_fst.farbe() != card_snd.farbe() {
+        match (self.trumpforfarbe(card_fst), self.trumpforfarbe(card_snd)) {
+            (VTrumpfOrFarbe::Trumpf, VTrumpfOrFarbe::Farbe(_)) => Ordering::Greater,
+            (VTrumpfOrFarbe::Farbe(_), VTrumpfOrFarbe::Trumpf) => Ordering::Less,
+            (VTrumpfOrFarbe::Trumpf, VTrumpfOrFarbe::Trumpf) => self.compare_trumpf(card_fst, card_snd),
+            (VTrumpfOrFarbe::Farbe(efarbe_fst), VTrumpfOrFarbe::Farbe(efarbe_snd)) => {
+                if efarbe_fst != efarbe_snd {
                     Ordering::Greater
                 } else {
                     self.compare_in_stich_same_farbe(card_fst, card_snd)
