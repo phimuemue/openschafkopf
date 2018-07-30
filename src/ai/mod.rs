@@ -183,7 +183,7 @@ pub fn is_compatible_with_game_so_far(
     }
 }
 
-fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize, ofile_output: Option<fs::File>) -> SCard
+fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize, ofile_output: Option<fs::File>) -> (SHandVector, EnumMap<SCard, isize>)
     where HandsIterator: Iterator<Item=EnumMap<EPlayerIndex, SHand>>
 {
     let stich_current = game.current_stich();
@@ -271,7 +271,15 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
                 mapcardn_payout
             }
         );
-    verify!(veccard_allowed_fixed.into_iter()
+    assert!(veccard_allowed_fixed.iter().all(|card| mapcardn_payout[*card] < std::isize::MAX));
+    (veccard_allowed_fixed, mapcardn_payout)
+}
+
+fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize, ofile_output: Option<fs::File>) -> SCard
+    where HandsIterator: Iterator<Item=EnumMap<EPlayerIndex, SHand>>
+{
+    let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(game, itahand, n_branches, ofile_output);
+    verify!(veccard_allowed.into_iter()
         .max_by_key(|card| mapcardn_payout[*card]))
         .unwrap()
 }
@@ -436,4 +444,56 @@ fn test_is_compatible_with_game_so_far() {
             VTestAction::AssertFrei(EPlayerIndex::EPI3, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
         ]
     );
+}
+
+#[test]
+fn test_very_expensive_exploration() { // this kind of abuses the test mechanism to benchmark the performance
+    use card::card_values::*;
+    use game::*;
+    use rules::{ruleset::*, rulessolo::*, payoutdecider::*, trumpfdecider::*, tests::TPayoutDeciderDefaultParams};
+    let epi_first_and_active_player = EPlayerIndex::EPI0;
+    let n_payout_base = 50;
+    let n_payout_schneider_schwarz = 10;
+    let mut game = SGame::new(
+        EPlayerIndex::map_from_raw([
+            [EO,EU,HA,HZ,HK,H9,H8,H7],
+            [GO,GU,E7,G7,S7,EA,EZ,EK],
+            [HO,HU,E8,G8,S8,GA,GZ,GK],
+            [SO,SU,E9,G9,S9,SA,SZ,SK],
+        ]).map(|acard_hand|
+            SHand::new_from_vec(acard_hand.into_iter().cloned().collect())
+        ),
+        SDoublings::new(epi_first_and_active_player),
+        Some(SStossParams::new(
+            /*n_stoss_max*/ 4,
+        )),
+        TRules::box_clone(&SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>::new(
+            epi_first_and_active_player,
+            SPayoutDeciderPointBased::default_prioparams(),
+            /*str_rulename*/"-", // should not matter within those tests
+            SPayoutDeciderPointBased::default_payoutparams(n_payout_base, n_payout_schneider_schwarz, SLaufendeParams::new(10, 3)),
+        )),
+        /*n_stock*/ 0,
+    );
+    for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]].into_iter() {
+        assert_eq!(EPlayerIndex::values().nth(0), Some(epi_first_and_active_player));
+        for (epi, card) in EPlayerIndex::values().zip(acard_stich.into_iter()) {
+            verify!(game.zugeben(*card, epi)).unwrap();
+        }
+    }
+    let (veccard_allowed, mapcardpayout) = determine_best_card_internal(
+        &game,
+        all_possible_hands(
+            game.completed_stichs(),
+            game.ahand[epi_first_and_active_player].clone(),
+            epi_first_and_active_player,
+        )
+            .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich)),
+        /*n_branches*/1,
+        /*ofile_output*/None, //verify!(fs::File::create(&"suspicion.html")).ok(), // to inspect search tree
+    );
+    for card in [H7, H8, H9].into_iter() {
+        assert!(veccard_allowed.contains(card));
+        assert_eq!(mapcardpayout[*card], 3*(n_payout_base+2*n_payout_schneider_schwarz));
+    }
 }

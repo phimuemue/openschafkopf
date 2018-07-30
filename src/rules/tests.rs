@@ -140,7 +140,7 @@ fn rulesrufspiel_new_test(epi: EPlayerIndex, efarbe: EFarbe, n_payout_base: isiz
     )
 }
 
-trait TPayoutDeciderDefaultParams : TPayoutDecider {
+pub trait TPayoutDeciderDefaultParams : TPayoutDecider {
     fn default_prioparams() -> Self::PrioParams;
     fn default_payoutparams(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self::PayoutParams;
 }

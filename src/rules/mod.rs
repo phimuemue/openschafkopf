@@ -13,7 +13,7 @@ pub mod wrappers;
 pub mod card_points;
 
 #[cfg(test)]
-mod tests;
+pub mod tests;
 
 use primitives::*;
 use std::{
