@@ -1,5 +1,6 @@
 pub mod playercomputer;
 pub mod playerhuman;
+pub mod playerrandom;
 
 use primitives::*;
 use rules::{

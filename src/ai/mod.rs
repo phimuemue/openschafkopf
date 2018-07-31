@@ -1,6 +1,7 @@
 pub mod suspicion;
 pub mod handiterators;
 pub mod rulespecific;
+pub mod test;
 
 use primitives::*;
 use rules::*;

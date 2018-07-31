@@ -73,9 +73,15 @@ impl EKurzLang {
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Hash, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Hash)]
 pub struct SCard {
     n_internalrepresentation : u8,
+}
+
+impl fmt::Debug for SCard {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(self, f)
+    }
 }
 
 impl fmt::Display for SCard {
