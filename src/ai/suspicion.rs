@@ -12,6 +12,7 @@ use rand::{
     self,
     Rng,
 };
+use arrayvec::ArrayVec;
 
 pub struct SSuspicionTransition {
     stich : SStich,
@@ -275,10 +276,12 @@ impl SSuspicion {
                 })
             })
             .group_by(|&(susptrans, _n_payout)| { // other players may play inconveniently for epi...
+                type SStichKeyBeforeEpi = ArrayVec<[SCard; 4]>;
+                static_assert!(debug_assert(susptrans.stich.size() <= SStichKeyBeforeEpi::new().capacity()));
                 susptrans.stich.iter()
                     .take_while(|&(epi_stich, _card)| epi_stich != epi)
-                    .map(|(_epi, card)| card)
-                    .collect::<Vec<_>>()
+                    .map(|(_epi, card)| *card)
+                    .collect::<SStichKeyBeforeEpi>()
             })
             .into_iter()
             .map(|(_stich_key_before_epi, grpsusptransn_before_epi)| {
