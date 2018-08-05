@@ -69,6 +69,7 @@ impl SSuspicion {
     ) -> Self 
         where FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
     {
+        SCompletedStichs::new(vecstich);
         let mut vecstich_successor : Vec<SStich> = Vec::new();
         push_pop_vecstich(vecstich, SStich::new(epi_first), |vecstich| {
             let offset_to_playerindex = move |i_offset: usize| {epi_first.wrapping_add(i_offset)};

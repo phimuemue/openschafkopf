@@ -87,7 +87,7 @@ impl TPlayer for SPlayerComputer {
         txb: mpsc::Sender<bool>,
     ) {
         let n_samples_per_stoss = 5; // TODO move to ai, make adjustable
-        let mut vecpairahandf_suspicion = forever_rand_hands(/*vecstich*/&Vec::new(), hand, epi)
+        let mut vecpairahandf_suspicion = forever_rand_hands(/*vecstich*/SCompletedStichs::new(&Vec::new()), hand, epi)
             .filter(|ahand| is_compatible_with_game_so_far(ahand, rules, /*vecstich*/&[SStich::new(doublings.epi_first)])) // stoss currently only in SPreGame
             .take(2*n_samples_per_stoss)
             .map(|ahand| {

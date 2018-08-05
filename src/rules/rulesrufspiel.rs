@@ -125,7 +125,7 @@ impl TRules for SRulesRufspiel {
     fn all_allowed_cards_first_in_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!vecstich.is_empty());
         if // do we already know who had the rufsau?
-            completed_stichs(vecstich).iter()
+            completed_stichs(vecstich).get().iter()
                 .any(|stich| {
                     assert_eq!(stich.size(), 4); // completed_stichs should only process full stichs
                     self.is_ruffarbe(*stich.first()) // gesucht or weggelaufen
@@ -154,7 +154,7 @@ impl TRules for SRulesRufspiel {
             hand.cards().clone()
         } else {
             let epi = verify!(current_stich(vecstich).current_playerindex()).unwrap();
-            let b_weggelaufen = completed_stichs(vecstich).iter()
+            let b_weggelaufen = completed_stichs(vecstich).get().iter()
                 .any(|stich| epi==stich.first_playerindex() && self.is_ruffarbe(*stich.first()));
             let card_first = *current_stich(vecstich).first();
             if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) && !b_weggelaufen {

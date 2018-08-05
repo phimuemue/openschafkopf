@@ -29,3 +29,15 @@ impl<'vecstich> SGameFinishedStiche<'vecstich> {
     }
 }
 
+#[derive(Copy, Clone)]
+pub struct SCompletedStichs<'vecstich>(&'vecstich [SStich]);
+
+impl<'vecstich> SCompletedStichs<'vecstich> {
+    pub fn new(vecstich: &[SStich]) -> SCompletedStichs {
+        assert!(vecstich.iter().all(|stich| stich.size()==4));
+        SCompletedStichs(vecstich)
+    }
+    pub fn get(&self) -> &[SStich] {
+        self.0
+    }
+}

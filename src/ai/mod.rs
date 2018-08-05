@@ -5,7 +5,10 @@ pub mod rulespecific;
 pub mod test;
 
 use primitives::*;
-use rules::*;
+use rules::{
+    *,
+    wrappers::SCompletedStichs,
+};
 use game::*;
 use ai::{
     suspicion::*,
@@ -126,7 +129,7 @@ pub fn is_compatible_with_game_so_far(
         .all(|(epi, card)| ahand[epi].contains(*card))
     // ... and must not contain other cards preventing farbe/trumpf frei
     && {
-        let mut vecstich_complete_and_current_stich = completed_stichs(vecstich).to_vec();
+        let mut vecstich_complete_and_current_stich = completed_stichs(vecstich).get().to_vec();
         vecstich_complete_and_current_stich.push(SStich::new(stich_current.first_playerindex()));
         stich_current.iter()
             .all(|(epi, card_played)| {
@@ -142,7 +145,7 @@ pub fn is_compatible_with_game_so_far(
     && {
         assert_ahand_same_size(ahand);
         let mut ahand_simulate = ahand.clone();
-        for stich in completed_stichs(vecstich).iter().rev() {
+        for stich in completed_stichs(vecstich).get().iter().rev() {
             for epi in EPlayerIndex::values() {
                 ahand_simulate[epi].cards_mut().push(stich[epi]);
             }
@@ -153,7 +156,7 @@ pub fn is_compatible_with_game_so_far(
                 &ahand_simulate[epi_active],
                 {
                     let cards_per_player = |epi| {
-                        completed_stichs(vecstich).len() + ahand[epi].cards().len()
+                        completed_stichs(vecstich).get().len() + ahand[epi].cards().len()
                     };
                     assert!(EPlayerIndex::values().all(|epi| cards_per_player(epi)==cards_per_player(EPlayerIndex::EPI0)));
                     EKurzLang::from_cards_per_player(cards_per_player(EPlayerIndex::EPI0))
@@ -163,7 +166,7 @@ pub fn is_compatible_with_game_so_far(
         && {
             let mut b_valid_up_to_now = true;
             let mut vecstich_simulate = Vec::new();
-            'loopstich: for stich in completed_stichs(vecstich).iter() {
+            'loopstich: for stich in completed_stichs(vecstich).get().iter() {
                 vecstich_simulate.push(SStich::new(stich.epi_first));
                 for (epi, card) in stich.iter() {
                     if rules.card_is_allowed(
@@ -196,7 +199,7 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
             let vecsusp = Arc::clone(&vecsusp);
             scope.spawn(move || {
                 assert_ahand_same_size(&ahand);
-                let mut vecstich_complete_mut = game.completed_stichs().to_vec();
+                let mut vecstich_complete_mut = game.completed_stichs().get().to_vec();
                 let n_stich_complete = vecstich_complete_mut.len();
                 let susp = SSuspicion::new(
                     stich_current.first_playerindex(),
@@ -242,7 +245,7 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                 8,
                 0,
                 game.rules.as_ref(),
-                &mut game.completed_stichs().to_vec(),
+                &mut game.completed_stichs().get().to_vec(),
                 &mut file_output,
             )).unwrap();
         }
@@ -253,7 +256,7 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
             // aggregate n_payout per card in some way
             SCard::map_from_fn(|_card| std::isize::MAX),
             |mut mapcardn_payout, susp| {
-                let mut vecstich_complete_payout = game.completed_stichs().to_vec();
+                let mut vecstich_complete_payout = game.completed_stichs().get().to_vec();
                 for (card, n_payout) in susp.suspicion_transitions().iter()
                     .map(|susptrans| {
                         let n_payout = push_pop_vecstich(&mut vecstich_complete_payout, susptrans.stich().clone(), |mut vecstich_complete_payout| {
@@ -297,7 +300,7 @@ impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
         let n_payout_sum = Arc::new(AtomicIsize::new(0));
         crossbeam::scope(|scope| {
-            for ahand in forever_rand_hands(/*vecstich*/&Vec::new(), hand_fixed.get(), epi_rank).take(self.n_rank_rules_samples) {
+            for ahand in forever_rand_hands(SCompletedStichs::new(&Vec::new()), hand_fixed.get(), epi_rank).take(self.n_rank_rules_samples) {
                 let n_payout_sum = Arc::clone(&n_payout_sum);
                 scope.spawn(move || {
                     let n_payout = 

@@ -422,7 +422,7 @@ impl SGame {
         }
     }
 
-    pub fn completed_stichs(&self) -> &[SStich] {
+    pub fn completed_stichs(&self) -> SCompletedStichs {
         completed_stichs(&self.vecstich)
     }
 }

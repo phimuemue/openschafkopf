@@ -18,7 +18,7 @@ fn detect_expensive_all_possible_hands() {
         &EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
             /*fn_check_ask_for_card*/|game| {
                 let vecstich = game.completed_stichs();
-                if game.kurzlang().cards_per_player() - 4 < vecstich.len() {
+                if game.kurzlang().cards_per_player() - 4 < vecstich.get().len() {
                     let epi_fixed = verify!(game.current_stich().current_playerindex()).unwrap();
                     let vecahand = all_possible_hands(
                         vecstich,
@@ -47,7 +47,7 @@ fn detect_expensive_all_possible_hands() {
                                 game.current_stich().first_playerindex(),
                                 ahand,
                                 game.rules.as_ref(),
-                                &mut game.completed_stichs().to_vec(),
+                                &mut game.completed_stichs().get().to_vec(),
                                 &|_vecstich_complete, _vecstich_successor| {/*no filtering*/},
                             ).count_leaves(),
                             2000,

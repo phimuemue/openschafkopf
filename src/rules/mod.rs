@@ -32,11 +32,11 @@ pub fn current_stich(vecstich: &[SStich]) -> &SStich {
     verify!(vecstich.last()).unwrap()
 }
 
-pub fn completed_stichs(vecstich: &[SStich]) -> &[SStich] {
+pub fn completed_stichs(vecstich: &[SStich]) -> SCompletedStichs {
     assert!(current_stich(vecstich).size()<4);
     assert_eq!(vecstich[0..vecstich.len()-1].len(), vecstich.len()-1);
     assert!(vecstich[0..vecstich.len()-1].iter().all(|stich| stich.size()==4));
-    &vecstich[0..vecstich.len()-1]
+    SCompletedStichs::new(&vecstich[0..vecstich.len()-1])
 }
 
 #[derive(PartialEq, Eq, Debug)]

@@ -56,11 +56,11 @@ impl Iterator for SForeverRandHands {
     }
 }
 
-pub fn forever_rand_hands(vecstich: &[SStich], hand_fixed: &SHand, epi_fixed: EPlayerIndex) -> SForeverRandHands {
+pub fn forever_rand_hands(vecstich: SCompletedStichs, hand_fixed: &SHand, epi_fixed: EPlayerIndex) -> SForeverRandHands {
     SForeverRandHands {
         epi_fixed,
         ahand : {
-            let mut veccard_unplayed = unplayed_cards(vecstich, hand_fixed).collect::<Vec<_>>();
+            let mut veccard_unplayed = unplayed_cards(vecstich.get(), hand_fixed).collect::<Vec<_>>();
             assert!(veccard_unplayed.len()>=3*hand_fixed.cards().len());
             let n_size = hand_fixed.cards().len();
             EPlayerIndex::map_from_fn(|epi| {
@@ -104,8 +104,8 @@ impl Iterator for SAllHands {
     }
 }
 
-pub fn all_possible_hands(vecstich: &[SStich], hand_fixed: SHand, epi_fixed: EPlayerIndex) -> SAllHands {
-    let veccard_unknown = unplayed_cards(vecstich, &hand_fixed).collect::<Vec<_>>();
+pub fn all_possible_hands(vecstich: SCompletedStichs, hand_fixed: SHand, epi_fixed: EPlayerIndex) -> SAllHands {
+    let veccard_unknown = unplayed_cards(vecstich.get(), &hand_fixed).collect::<Vec<_>>();
     let n_cards_total = veccard_unknown.len();
     assert_eq!(n_cards_total%3, 0);
     let n_cards_per_player = n_cards_total / 3;
@@ -142,7 +142,7 @@ fn test_all_possible_hands() {
         vecstich.push(acard_to_stich(acard_stich));
         assert_eq!(
             all_possible_hands(
-                &vecstich,
+                SCompletedStichs::new(&vecstich),
                 SHand::new_from_vec(slccard_hand.iter().cloned().collect()),
                 EPlayerIndex::EPI0, // epi_fixed
             ).count(),
