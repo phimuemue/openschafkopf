@@ -206,13 +206,14 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                     ahand,
                     game.rules.as_ref(),
                     &mut vecstich_complete_mut,
+                    stich_current,
                     &|vecstich_complete_successor: &[SStich], vecstich_successor: &mut Vec<SStich>| {
                         assert!(!vecstich_successor.is_empty());
                         if vecstich_complete_successor.len()==n_stich_complete {
-                            vecstich_successor.retain(|stich_successor| {
-                                assert_eq!(stich_successor.size(), 4);
-                                stich_current.equal_up_to_size(stich_successor, stich_current.size())
-                            });
+                            assert!(
+                                vecstich_successor.iter()
+                                    .all(|stich_successor| stich_successor.equal_up_to_size(stich_current, stich_current.size()))
+                            );
                             assert!(!vecstich_successor.is_empty());
                         } else if n_stich_complete < 6 {
                             // TODO: maybe keep more than one successor stich
@@ -309,6 +310,7 @@ impl TAi for SAiSimulating {
                             ahand,
                             rules,
                             &mut Vec::new(),
+                            &SStich::new(epi_first),
                             &|_vecstich_complete, vecstich_successor| {
                                 assert!(!vecstich_successor.is_empty());
                                 random_sample_from_vec(vecstich_successor, 1);

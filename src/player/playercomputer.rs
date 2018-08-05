@@ -120,6 +120,7 @@ impl TPlayer for SPlayerComputer {
                         ahand,
                         rules,
                         &mut Vec::new(),
+                        &SStich::new(doublings.first_playerindex()),
                         &|_vecstich_complete, vecstich_successor| {
                             assert!(!vecstich_successor.is_empty());
                             random_sample_from_vec(vecstich_successor, 1);

@@ -65,6 +65,7 @@ impl SSuspicion {
         ahand: EnumMap<EPlayerIndex, SHand>,
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
+        stich_current_model: &SStich,
         func_filter_successors: &FuncFilterSuccessors,
     ) -> Self 
         where FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
@@ -90,7 +91,10 @@ impl SSuspicion {
                 traverse_valid_cards!(1, {
                     traverse_valid_cards!(2, {
                         traverse_valid_cards!(3, {
-                            vecstich_successor.push(current_stich(vecstich).clone());
+                            let stich_current = current_stich(vecstich);
+                            if stich_current.equal_up_to_size(stich_current_model, stich_current_model.size()) {
+                                vecstich_successor.push(stich_current.clone());
+                            }
                         } );
                     } );
                 } );
@@ -112,6 +116,7 @@ impl SSuspicion {
                         }),
                         rules,
                         vecstich,
+                        &SStich::new(epi_first_susp),
                         func_filter_successors
                     ),
                 })
