@@ -41,16 +41,6 @@ pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<SStich>, stich: SStich, fun
     r
 }
 
-impl SSuspicionTransition {
-    pub fn stich(&self) -> &SStich {
-        &self.stich
-    }
-
-    pub fn suspicion(&self) -> &SSuspicion {
-        &self.susp
-    }
-}
-
 pub struct SSuspicion {
     vecsusptrans : Vec<SSuspicionTransition>,
     ahand : EnumMap<EPlayerIndex, SHand>,

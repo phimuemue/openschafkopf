@@ -252,26 +252,20 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
             SCard::map_from_fn(|_card| std::isize::MAX),
             |mut mapcardn_payout, susp| {
                 let mut vecstich_complete_payout = game.completed_stichs().get().to_vec();
-                for (card, n_payout) in susp.suspicion_transitions().iter()
-                    .map(|susptrans| {
-                        let n_payout = push_pop_vecstich(&mut vecstich_complete_payout, susptrans.stich().clone(), |mut vecstich_complete_payout| {
-                            susptrans.suspicion().min_reachable_payout(
-                                game.rules.as_ref(),
-                                &mut vecstich_complete_payout,
-                                epi_fixed,
-                                stoss_and_doublings(&game.vecstoss, &game.doublings),
-                                game.n_stock,
-                            ).1
-                        });
-                        (susptrans.stich()[epi_fixed], n_payout)
-                    })
-                {
-                    mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
-                }
+                let (card, n_payout) = susp.min_reachable_payout(
+                    game.rules.as_ref(),
+                    &mut vecstich_complete_payout,
+                    epi_fixed,
+                    stoss_and_doublings(&game.vecstoss, &game.doublings),
+                    game.n_stock,
+                );
+                mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
                 mapcardn_payout
             }
         );
-    assert!(veccard_allowed_fixed.iter().all(|card| mapcardn_payout[*card] < std::isize::MAX));
+    assert!(<SCard as TPlainEnum>::values().any(|card| {
+        veccard_allowed_fixed.contains(&card) && mapcardn_payout[card] < std::isize::MAX
+    }));
     (veccard_allowed_fixed, mapcardn_payout)
 }
 
@@ -481,19 +475,25 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             verify!(game.zugeben(*card, epi)).unwrap();
         }
     }
-    let (veccard_allowed, mapcardpayout) = determine_best_card_internal(
-        &game,
-        all_possible_hands(
-            game.completed_stichs(),
-            game.ahand[epi_first_and_active_player].clone(),
-            epi_first_and_active_player,
-        )
-            .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich)),
-        /*n_branches*/1,
-        /*ofile_output*/None, //verify!(fs::File::create(&"suspicion.html")).ok(), // to inspect search tree
-    );
-    for card in [H7, H8, H9].into_iter() {
-        assert!(veccard_allowed.contains(card));
-        assert_eq!(mapcardpayout[*card], 3*(n_payout_base+2*n_payout_schneider_schwarz));
+    for ahand in all_possible_hands(
+        game.completed_stichs(),
+        game.ahand[epi_first_and_active_player].clone(),
+        epi_first_and_active_player,
+    )
+        .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
+    {
+        let (veccard_allowed, mapcardpayout) = determine_best_card_internal(
+            &game,
+            Some(ahand).into_iter(),
+            /*n_branches*/1,
+            /*ofile_output*/None, //verify!(fs::File::create(&"suspicion.html")).ok(), // to inspect search tree
+        );
+        for card in [H7, H8, H9].into_iter() {
+            assert!(veccard_allowed.contains(card));
+            assert!(
+                mapcardpayout[*card] == std::isize::MAX
+                || mapcardpayout[*card] == 3*(n_payout_base+2*n_payout_schneider_schwarz)
+            );
+        }
     }
 }
