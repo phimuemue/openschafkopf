@@ -208,13 +208,8 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                     stich_current,
                     &|vecstich_complete_successor: &[SStich], vecstich_successor: &mut Vec<SStich>| {
                         assert!(!vecstich_successor.is_empty());
-                        if vecstich_complete_successor.len()==n_stich_complete {
-                            assert!(
-                                vecstich_successor.iter()
-                                    .all(|stich_successor| stich_successor.equal_up_to_size(stich_current, stich_current.size()))
-                            );
-                            assert!(!vecstich_successor.is_empty());
-                        } else if n_stich_complete < 6 {
+                        assert!(n_stich_complete<=vecstich_complete_successor.len());
+                        if vecstich_complete_successor.len()!=n_stich_complete && n_stich_complete < 6 {
                             // TODO: maybe keep more than one successor stich
                             random_sample_from_vec(vecstich_successor, n_branches);
                         } else {
