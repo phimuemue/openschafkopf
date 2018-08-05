@@ -44,7 +44,6 @@ fn detect_expensive_all_possible_hands() {
                     for ahand in vecahand {
                         assert_bound(
                             SSuspicion::new(
-                                game.current_stich().first_playerindex(),
                                 ahand,
                                 game.rules.as_ref(),
                                 &mut game.completed_stichs().get().to_vec(),

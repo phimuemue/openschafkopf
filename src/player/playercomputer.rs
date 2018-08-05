@@ -116,7 +116,6 @@ impl TPlayer for SPlayerComputer {
             vecpairahandf_suspicion.into_iter()
                 .map(|(ahand, _f_rank_rules)| {
                     SSuspicion::new(
-                        doublings.first_playerindex(),
                         ahand,
                         rules,
                         &mut Vec::new(),

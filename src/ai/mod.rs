@@ -202,7 +202,6 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                 let mut vecstich_complete_mut = game.completed_stichs().get().to_vec();
                 let n_stich_complete = vecstich_complete_mut.len();
                 let susp = SSuspicion::new(
-                    stich_current.first_playerindex(),
                     ahand,
                     game.rules.as_ref(),
                     &mut vecstich_complete_mut,
@@ -306,7 +305,6 @@ impl TAi for SAiSimulating {
                 scope.spawn(move || {
                     let n_payout = 
                         SSuspicion::new(
-                            epi_first,
                             ahand,
                             rules,
                             &mut Vec::new(),

@@ -61,7 +61,6 @@ impl SSuspicion {
 
     // TODO Maybe something like payout_hint is useful to prune suspicion tree
     pub fn new<FuncFilterSuccessors>(
-        epi_first: EPlayerIndex,
         ahand: EnumMap<EPlayerIndex, SHand>,
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
@@ -72,6 +71,7 @@ impl SSuspicion {
     {
         SCompletedStichs::new(vecstich);
         let mut vecstich_successor : Vec<SStich> = Vec::new();
+        let epi_first = stich_current_model.first_playerindex();
         push_pop_vecstich(vecstich, SStich::new(epi_first), |vecstich| {
             let offset_to_playerindex = move |i_offset: usize| {epi_first.wrapping_add(i_offset)};
             macro_rules! traverse_valid_cards {($i_offset : expr, $func: expr) => {
@@ -110,7 +110,6 @@ impl SSuspicion {
                 push_pop_vecstich(vecstich, stich.clone(), |vecstich| SSuspicionTransition {
                     stich : stich.clone(),
                     susp : SSuspicion::new(
-                        epi_first_susp,
                         EPlayerIndex::map_from_fn(|epi| {
                             ahand[epi].new_from_hand(stich[epi])
                         }),
