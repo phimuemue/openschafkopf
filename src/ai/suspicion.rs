@@ -23,6 +23,10 @@ pub fn assert_ahand_same_size(ahand: &EnumMap<EPlayerIndex, SHand>) {
     assert!(ahand.iter().map(|hand| hand.cards().len()).all_equal());
 }
 
+pub fn hand_size_internal(ahand: &EnumMap<EPlayerIndex, SHand>) -> usize {
+    assert_ahand_same_size(ahand);
+    ahand[EPlayerIndex::EPI0].cards().len()
+}
 
 pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<SStich>, stich: SStich, func: Func) -> R
     where Func: FnOnce(&mut Vec<SStich>) -> R
@@ -71,38 +75,40 @@ impl SSuspicion {
     {
         SCompletedStichs::new(vecstich);
         let mut vecstich_successor : Vec<SStich> = Vec::new();
-        let epi_first = stich_current_model.first_playerindex();
-        push_pop_vecstich(vecstich, SStich::new(epi_first), |vecstich| {
-            let offset_to_playerindex = move |i_offset: usize| {epi_first.wrapping_add(i_offset)};
-            macro_rules! traverse_valid_cards {($i_offset : expr, $func: expr) => {
-                // TODO use equivalent card optimization
-                for card in rules.all_allowed_cards(vecstich, &ahand[offset_to_playerindex($i_offset)]) {
-                    current_stich_mut(vecstich).push(card);
-                    assert_eq!(card, current_stich(vecstich)[offset_to_playerindex($i_offset)]);
-                    $func;
-                    current_stich_mut(vecstich).undo_most_recent();
-                }
-            };};
-            // It seems that this nested loop is the ai's bottleneck
-            // because it is currently designed to be generic for all rules.
-            // It may be more performant to have TRules::all_possible_stichs
-            // so that we can implement rule-specific optimizations.
-            traverse_valid_cards!(0, {
-                traverse_valid_cards!(1, {
-                    traverse_valid_cards!(2, {
-                        traverse_valid_cards!(3, {
-                            let stich_current = current_stich(vecstich);
-                            if stich_current.equal_up_to_size(stich_current_model, stich_current_model.size()) {
-                                vecstich_successor.push(stich_current.clone());
-                            }
+        if 1<hand_size_internal(&ahand) {
+            let epi_first = stich_current_model.first_playerindex();
+            push_pop_vecstich(vecstich, SStich::new(epi_first), |vecstich| {
+                let offset_to_playerindex = move |i_offset: usize| {epi_first.wrapping_add(i_offset)};
+                macro_rules! traverse_valid_cards {($i_offset : expr, $func: expr) => {
+                    // TODO use equivalent card optimization
+                    for card in rules.all_allowed_cards(vecstich, &ahand[offset_to_playerindex($i_offset)]) {
+                        current_stich_mut(vecstich).push(card);
+                        assert_eq!(card, current_stich(vecstich)[offset_to_playerindex($i_offset)]);
+                        $func;
+                        current_stich_mut(vecstich).undo_most_recent();
+                    }
+                };};
+                // It seems that this nested loop is the ai's bottleneck
+                // because it is currently designed to be generic for all rules.
+                // It may be more performant to have TRules::all_possible_stichs
+                // so that we can implement rule-specific optimizations.
+                traverse_valid_cards!(0, {
+                    traverse_valid_cards!(1, {
+                        traverse_valid_cards!(2, {
+                            traverse_valid_cards!(3, {
+                                let stich_current = current_stich(vecstich);
+                                if stich_current.equal_up_to_size(stich_current_model, stich_current_model.size()) {
+                                    vecstich_successor.push(stich_current.clone());
+                                }
+                            } );
                         } );
                     } );
                 } );
-            } );
-        });
-        if !vecstich_successor.is_empty() {
-            func_filter_successors(vecstich, &mut vecstich_successor);
-            assert!(!vecstich_successor.is_empty());
+            });
+            if !vecstich_successor.is_empty() {
+                func_filter_successors(vecstich, &mut vecstich_successor);
+                assert!(!vecstich_successor.is_empty());
+            }
         }
         let vecsusptrans = vecstich_successor.into_iter()
             .map(|stich| {
@@ -138,8 +144,7 @@ impl SSuspicion {
     }
 
     fn hand_size(&self) -> usize {
-        assert_ahand_same_size(&self.ahand);
-        self.ahand[EPlayerIndex::EPI0].cards().len()
+        hand_size_internal(&self.ahand)
     }
 
     pub fn print_suspicion(
@@ -233,7 +238,7 @@ impl SSuspicion {
                     epi,
                     /*tpln_stoss_doubling*/(0, 0), // dummy values
                     /*n_stock*/0, // dummy value
-                )),
+                ).1),
             ).as_bytes())?;
             file_output.write_all(b"</tr></table></label>\n")?;
             if 1<self.hand_size() {
@@ -260,20 +265,36 @@ impl SSuspicion {
         epi: EPlayerIndex,
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
-    ) -> isize {
+    ) -> (SCard, isize) {
         let vecstich_backup = vecstich.clone();
         assert!(vecstich.iter().all(|stich| stich.size()==4));
-        if 0==self.hand_size() {
-            return rules.payout(
-                &SGameFinishedStiche::new(
-                    vecstich,
-                    EKurzLang::from_cards_per_player(vecstich.len()+self.hand_size())
+        if 1==self.hand_size() {
+            assert!(!vecstich.is_empty());
+            let epi_first = rules.winner_index(current_stich(vecstich));
+            return push_pop_vecstich(
+                vecstich,
+                SStich::new_full(
+                    epi_first,
+                    EPlayerIndex::map_from_fn(|epi_stich|
+                        self.ahand[epi_first.wrapping_add(epi_stich.to_usize())].cards()[0]
+                    ).into_raw(),
                 ),
-                tpln_stoss_doubling,
-                n_stock,
-            ).get_player(epi);
+                |vecstich| {
+                    (
+                        self.ahand[epi].cards()[0],
+                        rules.payout(
+                            &SGameFinishedStiche::new(
+                                vecstich,
+                                EKurzLang::from_cards_per_player(vecstich.len())
+                            ),
+                            tpln_stoss_doubling,
+                            n_stock,
+                        ).get_player(epi),
+                    )
+                },
+            );
         }
-        let n_payout = verify!(self.vecsusptrans.iter()
+        let tplcardpayout = verify!(self.vecsusptrans.iter()
             .map(|susptrans| {
                 assert_eq!(susptrans.stich.size(), 4);
                 push_pop_vecstich(vecstich, susptrans.stich.clone(), |vecstich| {
@@ -295,16 +316,17 @@ impl SSuspicion {
                     .into_iter()
                     .map(|(_stich_key_epi, grpsusptransn_epi)| {
                         // in this group, we need the worst case if other players play badly
-                        verify!(grpsusptransn_epi.into_iter().min_by_key(|&(_susptrans, n_payout)| n_payout)).unwrap()
+                        verify!(grpsusptransn_epi.into_iter().min_by_key(|&(_susptrans, (_card, n_payout))| n_payout)).unwrap()
                     })
-                    .max_by_key(|&(_susptrans, n_payout)| n_payout))
+                    .max_by_key(|&(_susptrans, (_card, n_payout))| n_payout))
                     .unwrap()
             })
-            .min_by_key(|&(_susptrans, n_payout)| n_payout))
-            .unwrap()
-            .1;
+            .min_by_key(|&(_susptrans, (_card, n_payout))| n_payout)
+            .map(|(susptrans, (_card, n_payout))| (susptrans.stich[epi], n_payout)))
+            .unwrap();
         assert!(vecstich_backup.iter().zip(vecstich.iter()).all(|(s1,s2)|s1.size()==s2.size()));
-        n_payout
+        assert!(self.ahand[epi].cards().contains(&tplcardpayout.0));
+        tplcardpayout
     }
 
 }

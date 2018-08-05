@@ -261,7 +261,7 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                                 epi_fixed,
                                 stoss_and_doublings(&game.vecstoss, &game.doublings),
                                 game.n_stock,
-                            )
+                            ).1
                         });
                         (susptrans.stich()[epi_fixed], n_payout)
                     })
@@ -314,7 +314,7 @@ impl TAi for SAiSimulating {
                             epi_rank,
                             /*tpln_stoss_doubling*/(0, 0), // // TODO do we need tpln_stoss_doubling from somewhere? 
                             n_stock,
-                        )
+                        ).1
                     ;
                     n_payout_sum.fetch_add(n_payout, Ordering::SeqCst);
                 });

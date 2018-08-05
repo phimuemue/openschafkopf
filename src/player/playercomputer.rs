@@ -130,7 +130,7 @@ impl TPlayer for SPlayerComputer {
                         epi,
                         stoss_and_doublings(vecstoss, doublings),
                         n_stock,
-                    )
+                    ).1
                 })
                 .sum::<isize>().as_num::<f64>()
                 / n_samples_per_stoss.as_num::<f64>()

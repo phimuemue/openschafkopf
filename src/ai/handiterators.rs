@@ -17,8 +17,7 @@ pub struct SForeverRandHands {
 impl Iterator for SForeverRandHands {
     type Item = EnumMap<EPlayerIndex, SHand>;
     fn next(&mut self) -> Option<EnumMap<EPlayerIndex, SHand>> {
-        assert_ahand_same_size(&self.ahand);
-        let n_len_hand = self.ahand[EPlayerIndex::EPI0].cards().len();
+        let n_len_hand = hand_size_internal(&self.ahand);
         let mut rng = rand::thread_rng();
         for i_card in 0..3*n_len_hand {
             let i_rand = rng.gen_range(0, 3*n_len_hand - i_card);
