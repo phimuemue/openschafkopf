@@ -35,7 +35,7 @@ pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<SStich>, stich: SStich, fun
     assert!(vecstich.iter().all(|stich| stich.size()==4));
     vecstich.push(stich);
     let r = func(vecstich);
-    vecstich.pop().expect("vecstich unexpectedly empty");
+    verify!(vecstich.pop()).unwrap();
     assert!(vecstich.iter().all(|stich| stich.size()==4));
     assert_eq!(n_stich, vecstich.len());
     r
