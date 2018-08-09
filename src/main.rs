@@ -35,7 +35,6 @@ use primitives::*;
 use rules::{
     TActivelyPlayableRules, // TODO improve trait-object behaviour
     ruleset::*,
-    wrappers::*,
 };
 use ai::*;
 use std::{

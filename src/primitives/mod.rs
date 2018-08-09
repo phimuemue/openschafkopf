@@ -4,6 +4,7 @@ pub mod stich;
 pub mod hand;
 pub mod accountbalance;
 pub mod cardvector;
+pub mod wrappers;
 
 pub use self::{
     card::*,
@@ -11,4 +12,5 @@ pub use self::{
     stich::*,
     hand::*,
     accountbalance::*,
+    wrappers::*,
 };

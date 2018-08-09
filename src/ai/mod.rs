@@ -7,7 +7,6 @@ pub mod test;
 use primitives::*;
 use rules::{
     *,
-    wrappers::SCompletedStichs,
 };
 use game::*;
 use ai::{

@@ -9,7 +9,6 @@ pub mod rulesramsch;
 pub mod rulesbettel;
 pub mod ruleset;
 pub mod payoutdecider;
-pub mod wrappers;
 pub mod card_points;
 
 #[cfg(test)]
@@ -20,7 +19,6 @@ use std::{
     cmp::Ordering,
     fmt,
 };
-pub use rules::wrappers::*;
 use util::*;
 use ai::rulespecific::*;
 
