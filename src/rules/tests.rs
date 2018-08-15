@@ -20,7 +20,7 @@ fn internal_test_rules(
     ahand: EnumMap<EPlayerIndex, SHand>,
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
-    vecstich_test: &[SStich],
+    slcstich_test: &[SStich],
     an_payout: [isize; 4],
 ) {
     use game::*;
@@ -43,7 +43,7 @@ fn internal_test_rules(
     for n_epi_stoss in vecn_stoss {
         verify!(game.stoss(EPlayerIndex::from_usize(n_epi_stoss))).unwrap();
     }
-    for (i_stich, stich) in vecstich_test.iter().enumerate() {
+    for (i_stich, stich) in slcstich_test.iter().enumerate() {
         println!("Stich {}: {}", i_stich, stich);
         assert_eq!(Some(stich.first_playerindex()), game.which_player_can_do_something().map(|gameaction| gameaction.0));
         for (epi, card) in stich.iter() {
@@ -53,7 +53,7 @@ fn internal_test_rules(
         }
     }
     for (i_stich, stich) in game.vecstich.iter().enumerate() {
-        assert_eq!(stich, &vecstich_test[i_stich]);
+        assert_eq!(stich, &slcstich_test[i_stich]);
         println!("Stich {}: {}", i_stich, stich);
     }
     let accountbalance_payout = verify!(game.finish()).unwrap().accountbalance;

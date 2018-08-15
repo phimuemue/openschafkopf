@@ -22,19 +22,19 @@ use std::{
 use util::*;
 use ai::rulespecific::*;
 
-pub fn current_stich_mut(vecstich: &mut [SStich]) -> &mut SStich {
-    verify!(vecstich.last_mut()).unwrap()
+pub fn current_stich_mut(slcstich: &mut [SStich]) -> &mut SStich {
+    verify!(slcstich.last_mut()).unwrap()
 }
 
-pub fn current_stich(vecstich: &[SStich]) -> &SStich {
-    verify!(vecstich.last()).unwrap()
+pub fn current_stich(slcstich: &[SStich]) -> &SStich {
+    verify!(slcstich.last()).unwrap()
 }
 
-pub fn completed_stichs(vecstich: &[SStich]) -> SCompletedStichs {
-    assert!(current_stich(vecstich).size()<4);
-    assert_eq!(vecstich[0..vecstich.len()-1].len(), vecstich.len()-1);
-    assert!(vecstich[0..vecstich.len()-1].iter().all(|stich| stich.size()==4));
-    SCompletedStichs::new(&vecstich[0..vecstich.len()-1])
+pub fn completed_stichs(slcstich: &[SStich]) -> SCompletedStichs {
+    assert!(current_stich(slcstich).size()<4);
+    assert_eq!(slcstich[0..slcstich.len()-1].len(), slcstich.len()-1);
+    assert!(slcstich[0..slcstich.len()-1].iter().all(|stich| stich.size()==4));
+    SCompletedStichs::new(&slcstich[0..slcstich.len()-1])
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -59,7 +59,7 @@ pub struct SStoss {
 
 fn all_allowed_cards_within_stich_distinguish_farbe_frei<Rules, Result, FnFarbeFrei, FnFarbeNotFrei>(
     rules: &Rules,
-    vecstich: &[SStich],
+    slcstich: &[SStich],
     hand: &SHand,
     fn_farbe_frei: FnFarbeFrei,
     fn_farbe_not_frei: FnFarbeNotFrei,
@@ -69,8 +69,8 @@ fn all_allowed_cards_within_stich_distinguish_farbe_frei<Rules, Result, FnFarbeF
         FnFarbeFrei: Fn() -> Result,
         FnFarbeNotFrei: Fn(SHandVector) -> Result,
 {
-    assert!(!vecstich.is_empty());
-    let trumpforfarbe_first = rules.trumpforfarbe(*current_stich(vecstich).first());
+    assert!(!slcstich.is_empty());
+    let trumpforfarbe_first = rules.trumpforfarbe(*current_stich(slcstich).first());
     let veccard_same_farbe : SHandVector = hand.cards().iter().cloned()
         .filter(|&card| rules.trumpforfarbe(card)==trumpforfarbe_first)
         .collect();
@@ -100,13 +100,13 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
 
     fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> SAccountBalance;
 
-    fn all_allowed_cards(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
-        assert!(!vecstich.is_empty());
-        assert!(current_stich(vecstich).size()<4);
-        if 0==current_stich(vecstich).size() {
-            self.all_allowed_cards_first_in_stich(vecstich, hand)
+    fn all_allowed_cards(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
+        assert!(!slcstich.is_empty());
+        assert!(current_stich(slcstich).size()<4);
+        if 0==current_stich(slcstich).size() {
+            self.all_allowed_cards_first_in_stich(slcstich, hand)
         } else {
-            self.all_allowed_cards_within_stich(vecstich, hand)
+            self.all_allowed_cards_within_stich(slcstich, hand)
         }
     }
 
@@ -115,19 +115,19 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
         hand.cards().clone()
     }
 
-    fn all_allowed_cards_within_stich(&self, vecstich: &[SStich], hand: &SHand) -> SHandVector {
+    fn all_allowed_cards_within_stich(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
         // probably in most cases, only the first card of the current stich is decisive
         all_allowed_cards_within_stich_distinguish_farbe_frei(
             self,
-            vecstich,
+            slcstich,
             hand,
             /*fn_farbe_frei*/|| hand.cards().clone(),
             /*fn_farbe_not_frei*/|veccard_same_farbe| veccard_same_farbe
         )
     }
 
-    fn card_is_allowed(&self, vecstich: &[SStich], hand: &SHand, card: SCard) -> bool {
-        self.all_allowed_cards(vecstich, hand).into_iter()
+    fn card_is_allowed(&self, slcstich: &[SStich], hand: &SHand, card: SCard) -> bool {
+        self.all_allowed_cards(slcstich, hand).into_iter()
             .any(|card_iterated| card_iterated==card)
     }
 

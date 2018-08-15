@@ -56,12 +56,12 @@ pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
     mem::swap(vecstich, &mut vecstich_sample);
 }
 
-pub fn unplayed_cards<'lifetime>(vecstich: &'lifetime [SStich], hand_fixed: &'lifetime SHand) -> impl Iterator<Item=SCard> + 'lifetime {
-    assert!(vecstich.iter().all(|stich| 4==stich.size()));
-    SCard::values(EKurzLang::from_cards_per_player(vecstich.len() + hand_fixed.cards().len())).into_iter()
+pub fn unplayed_cards<'lifetime>(slcstich: &'lifetime [SStich], hand_fixed: &'lifetime SHand) -> impl Iterator<Item=SCard> + 'lifetime {
+    assert!(slcstich.iter().all(|stich| 4==stich.size()));
+    SCard::values(EKurzLang::from_cards_per_player(slcstich.len() + hand_fixed.cards().len())).into_iter()
         .filter(move |card| 
              !hand_fixed.contains(*card)
-             && !vecstich.iter().any(|stich|
+             && !slcstich.iter().any(|stich|
                 stich.iter().any(|(_epi, card_played)|
                     card_played==card
                 )
@@ -119,16 +119,16 @@ impl TAi for SAiCheating {
 pub fn is_compatible_with_game_so_far(
     ahand: &EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
-    vecstich: &[SStich],
+    slcstich: &[SStich],
 ) -> bool {
-    let stich_current = current_stich(vecstich);
+    let stich_current = current_stich(slcstich);
     assert!(stich_current.size()<4);
     // hands must contain respective cards from stich_current...
     stich_current.iter()
         .all(|(epi, card)| ahand[epi].contains(*card))
     // ... and must not contain other cards preventing farbe/trumpf frei
     && {
-        let mut vecstich_complete_and_current_stich = completed_stichs(vecstich).get().to_vec();
+        let mut vecstich_complete_and_current_stich = completed_stichs(slcstich).get().to_vec();
         vecstich_complete_and_current_stich.push(SStich::new(stich_current.first_playerindex()));
         stich_current.iter()
             .all(|(epi, card_played)| {
@@ -144,7 +144,7 @@ pub fn is_compatible_with_game_so_far(
     && {
         assert_ahand_same_size(ahand);
         let mut ahand_simulate = ahand.clone();
-        for stich in completed_stichs(vecstich).get().iter().rev() {
+        for stich in completed_stichs(slcstich).get().iter().rev() {
             for epi in EPlayerIndex::values() {
                 ahand_simulate[epi].cards_mut().push(stich[epi]);
             }
@@ -155,7 +155,7 @@ pub fn is_compatible_with_game_so_far(
                 &ahand_simulate[epi_active],
                 {
                     let cards_per_player = |epi| {
-                        completed_stichs(vecstich).get().len() + ahand[epi].cards().len()
+                        completed_stichs(slcstich).get().len() + ahand[epi].cards().len()
                     };
                     assert!(EPlayerIndex::values().all(|epi| cards_per_player(epi)==cards_per_player(EPlayerIndex::EPI0)));
                     EKurzLang::from_cards_per_player(cards_per_player(EPlayerIndex::EPI0))
@@ -165,7 +165,7 @@ pub fn is_compatible_with_game_so_far(
         && {
             let mut b_valid_up_to_now = true;
             let mut vecstich_simulate = Vec::new();
-            'loopstich: for stich in completed_stichs(vecstich).get().iter() {
+            'loopstich: for stich in completed_stichs(slcstich).get().iter() {
                 vecstich_simulate.push(SStich::new(stich.epi_first));
                 for (epi, card) in stich.iter() {
                     if rules.card_is_allowed(
@@ -205,14 +205,14 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                     game.rules.as_ref(),
                     &mut vecstich_complete_mut,
                     stich_current,
-                    &|vecstich_complete_successor: &[SStich], vecstich_successor: &mut Vec<SStich>| {
+                    &|slcstich_complete_successor: &[SStich], vecstich_successor: &mut Vec<SStich>| {
                         assert!(!vecstich_successor.is_empty());
-                        assert!(n_stich_complete<=vecstich_complete_successor.len());
-                        if vecstich_complete_successor.len()!=n_stich_complete && n_stich_complete < 6 {
+                        assert!(n_stich_complete<=slcstich_complete_successor.len());
+                        if slcstich_complete_successor.len()!=n_stich_complete && n_stich_complete < 6 {
                             // TODO: maybe keep more than one successor stich
                             random_sample_from_vec(vecstich_successor, n_branches);
                         } else {
-                            // if vecstich_complete_successor>=6, we hope that we can compute everything
+                            // if slcstich_complete_successor>=6, we hope that we can compute everything
                         }
                     }
                 );

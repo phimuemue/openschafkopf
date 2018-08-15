@@ -17,11 +17,11 @@ fn detect_expensive_all_possible_hands() {
     game_loop_cli(
         &EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
             /*fn_check_ask_for_card*/|game| {
-                let vecstich = game.completed_stichs();
-                if game.kurzlang().cards_per_player() - 4 < vecstich.get().len() {
+                let slcstich = game.completed_stichs();
+                if game.kurzlang().cards_per_player() - 4 < slcstich.get().len() {
                     let epi_fixed = verify!(game.current_stich().current_playerindex()).unwrap();
                     let vecahand = all_possible_hands(
-                        vecstich,
+                        slcstich,
                         game.ahand[epi_fixed].clone(),
                         epi_fixed,
                     )

@@ -113,9 +113,9 @@ fn do_in_window<FnDo, RetVal>(skuiwin: &VSkUiWindow, fn_do: FnDo) -> RetVal
     retval
 }
 
-pub fn print_vecstich(epi_myself: EPlayerIndex, vecstich: &[SStich]) {
+pub fn print_vecstich(epi_myself: EPlayerIndex, slcstich: &[SStich]) {
     do_in_window(&VSkUiWindow::Stich, |ncwin| {
-        for (i_stich, stich) in vecstich.iter().enumerate() {
+        for (i_stich, stich) in slcstich.iter().enumerate() {
             let n_x = (i_stich*10+3).as_num();
             let n_y = 1;
             let n_card_width = 2;
