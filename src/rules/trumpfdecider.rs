@@ -11,7 +11,7 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {
 
     fn trumpfs_in_descending_order() -> return_impl!(Box<Iterator<Item=SCard>>);
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering;
-    fn count_laufende(gamefinishedstiche: &SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize {
+    fn count_laufende(gamefinishedstiche: SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize {
         #[cfg(debug_assertions)]
         let mut mapcardb_used = SCard::map_from_fn(|_card| false);
         let mapcardepi = {
@@ -129,7 +129,7 @@ macro_rules! impl_rules_trumpf {($trumpfdecider: ident) => {
     fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
         $trumpfdecider::compare_trumpf(card_fst, card_snd)
     }
-    fn count_laufende(&self, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize {
+    fn count_laufende(&self, gamefinishedstiche: SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize {
         $trumpfdecider::count_laufende(gamefinishedstiche, ab_winner)
     }
 }}

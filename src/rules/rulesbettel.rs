@@ -60,7 +60,7 @@ impl SPayoutDeciderBettel {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         &self,
         rules: &Rules,
-        gamefinishedstiche: &SGameFinishedStiche,
+        gamefinishedstiche: SGameFinishedStiche,
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
     ) -> EnumMap<EPlayerIndex, isize>

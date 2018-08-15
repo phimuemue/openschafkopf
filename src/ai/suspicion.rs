@@ -273,7 +273,7 @@ impl SSuspicion {
                     (
                         self.ahand[epi].cards()[0],
                         rules.payout(
-                            &SGameFinishedStiche::new(
+                            SGameFinishedStiche::new(
                                 vecstich,
                                 EKurzLang::from_cards_per_player(vecstich.len())
                             ),

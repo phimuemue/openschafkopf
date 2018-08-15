@@ -36,7 +36,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone + Display + fmt::Debug {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         &self,
         rules: &Rules,
-        gamefinishedstiche: &SGameFinishedStiche,
+        gamefinishedstiche: SGameFinishedStiche,
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
     ) -> EnumMap<EPlayerIndex, isize>
@@ -73,7 +73,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         &self,
         rules: &Rules,
-        gamefinishedstiche: &SGameFinishedStiche,
+        gamefinishedstiche: SGameFinishedStiche,
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
     ) -> EnumMap<EPlayerIndex, isize>
@@ -146,7 +146,7 @@ impl Display for SPayoutDeciderPointBased {
 }
 
 impl SLaufendeParams {
-    pub fn payout_laufende<Rules>(&self, rules: &Rules, gamefinishedstiche: &SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> isize 
+    pub fn payout_laufende<Rules>(&self, rules: &Rules, gamefinishedstiche: SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> isize 
         where Rules: TRules,
     {
         let n_laufende = rules.count_laufende(gamefinishedstiche, ab_winner);
@@ -194,7 +194,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         &self,
         rules: &Rules,
-        gamefinishedstiche: &SGameFinishedStiche,
+        gamefinishedstiche: SGameFinishedStiche,
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
     ) -> EnumMap<EPlayerIndex, isize>
@@ -243,7 +243,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         &self,
         rules: &Rules,
-        gamefinishedstiche: &SGameFinishedStiche,
+        gamefinishedstiche: SGameFinishedStiche,
         fn_is_player_party: FnIsPlayerParty,
         fn_player_multiplier: FnPlayerMultiplier,
     ) -> EnumMap<EPlayerIndex, isize>

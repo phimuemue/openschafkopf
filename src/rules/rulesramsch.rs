@@ -50,7 +50,7 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payout(&self, gamefinishedstiche: &SGameFinishedStiche, tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> SAccountBalance {
+    fn payout(&self, gamefinishedstiche: SGameFinishedStiche, tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> SAccountBalance {
         let apply_doubling_stoss_stock = |epi_single, n_factor_single| {
             SAccountBalance::new(
                 SStossDoublingPayoutDecider::payout(

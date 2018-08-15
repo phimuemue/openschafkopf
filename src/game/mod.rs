@@ -328,7 +328,7 @@ impl TGamePhase for SGame {
     fn finish_success(self) -> Self::Finish {
         SGameResult {
             accountbalance : self.rules.payout(
-                &SGameFinishedStiche::new(&self.vecstich, self.kurzlang()),
+                SGameFinishedStiche::new(&self.vecstich, self.kurzlang()),
                 stoss_and_doublings(&self.vecstoss, &self.doublings),
                 self.n_stock,
             ),
