@@ -20,8 +20,9 @@ fn internal_test_rules(
     ahand: EnumMap<EPlayerIndex, SHand>,
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
+    n_stock: isize,
     slcstich_test: &[SStich],
-    an_payout: [isize; 4],
+    (an_payout, n_stock_payout): ([isize; 4], isize),
 ) {
     use game::*;
     println!("Testing rules: {}", str_info);
@@ -38,7 +39,7 @@ fn internal_test_rules(
             /*n_stoss_max*/4,
         )),
         rules.box_clone(),
-        /*n_stock*/ 0, // TODO test stock
+        n_stock, // TODO test stock
     );
     for n_epi_stoss in vecn_stoss {
         verify!(game.stoss(EPlayerIndex::from_usize(n_epi_stoss))).unwrap();
@@ -58,6 +59,7 @@ fn internal_test_rules(
     }
     let accountbalance_payout = verify!(game.finish()).unwrap().accountbalance;
     assert_eq!(EPlayerIndex::map_from_fn(|epi| accountbalance_payout.get_player(epi)), EPlayerIndex::map_from_raw(an_payout));
+    assert_eq!(accountbalance_payout.get_stock(), n_stock_payout);
 }
 
 fn make_stich_vector(vecpairnacard_stich: &[(usize, [SCard; 4])]) -> Vec<SStich> {
@@ -100,8 +102,9 @@ pub fn test_rules<CardArrayKurzLang>(
             .map(TCardArrayKurzLand::to_hand),
         vecn_doubling,
         vecn_stoss,
+        /*n_stock*/0,
         &make_stich_vector(vecpairnacard_stich),
-        an_payout,
+        (an_payout, 0),
     );
 }
 
@@ -110,8 +113,9 @@ pub fn test_rules_manual(
     rules: &TRules,
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
+    n_stock: isize,
     vecpairnacard_stich: &[(usize, [SCard; 4])],
-    an_payout: [isize; 4],
+    (an_payout, n_stock_payout): ([isize; 4], isize),
 ) {
     let vecstich = make_stich_vector(vecpairnacard_stich);
     internal_test_rules(
@@ -122,8 +126,9 @@ pub fn test_rules_manual(
         ),
         vecn_doubling,
         vecn_stoss,
+        n_stock,
         &vecstich,
-        an_payout,
+        (an_payout, n_stock_payout),
     );
 }
 
@@ -1844,6 +1849,7 @@ fn test_rulesramsch() {
         &SRulesRamsch::new(10, VDurchmarsch::All),
         vec![],
         vec![],
+        0,
         &[
             (0, [EO,GO,HO,SO]),
             (0, [EU,GU,HU,SU]),
@@ -1854,13 +1860,14 @@ fn test_rulesramsch() {
             (0, [E8,E7,G8,G7]),
             (0, [H8,H7,S8,S7]),
         ],
-        [30, -10, -10, -10],
+        ([30, -10, -10, -10], 0),
     );
     test_rules_manual(
         "0 has durchmarsch 120",
         &SRulesRamsch::new(10, VDurchmarsch::AtLeast(120)),
         vec![],
         vec![],
+        0,
         &[
             (0, [EO,GO,HO,SO]),
             (0, [EU,GU,HU,SU]),
@@ -1871,13 +1878,14 @@ fn test_rulesramsch() {
             (0, [E8,E7,G8,G7]),
             (0, [H8,H7,S8,S7]),
         ],
-        [30, -10, -10, -10],
+        ([30, -10, -10, -10], 0),
     );
     test_rules_manual(
         "0 has 120, but no durchmarsch",
         &SRulesRamsch::new(10, VDurchmarsch::All),
         vec![],
         vec![],
+        0,
         &[
             (0, [EO,GO,HO,SO]),
             (0, [EU,GU,HU,SU]),
@@ -1888,7 +1896,7 @@ fn test_rulesramsch() {
             (0, [E8,E7,G8,G7]),
             (0, [H7,H8,S8,S7]),
         ],
-        [-30, 10, 10, 10],
+        ([-30, 10, 10, 10], 0),
     );
 }
 
@@ -1899,6 +1907,7 @@ fn test_rulesbettel() {
         &SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>::new(EPlayerIndex::EPI3, /*i_prio*/0, /*n_payout_base*/10),
         vec![],
         vec![],
+        0,
         &[
             (0, [EO,EZ,EK,E9]),
             (2, [HO,H9,HA,HZ]),
@@ -1909,13 +1918,14 @@ fn test_rulesbettel() {
             (0, [EU,GZ,HK,S7]),
             (0, [EA,GU,S8,G7]),
         ],
-        [-10, -10, -10, 30],
+        ([-10, -10, -10, 30], 0),
     );
     test_rules_manual(
         "2 looses Bettel",
         &SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>::new(EPlayerIndex::EPI2, /*i_prio*/0, /*n_payout_base*/10),
         vec![],
         vec![],
+        0,
         &[
             (0, [EO,EZ,EK,E9]),
             (2, [HO,H9,HA,HZ]),
@@ -1926,6 +1936,6 @@ fn test_rulesbettel() {
             (0, [EU,GZ,HK,S7]),
             (0, [EA,GU,S8,G7]),
         ],
-        [10, 10, -30, 10],
+        ([10, 10, -30, 10], 0),
     );
 }
