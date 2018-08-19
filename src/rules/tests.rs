@@ -39,7 +39,7 @@ fn internal_test_rules(
             /*n_stoss_max*/4,
         )),
         rules.box_clone(),
-        n_stock, // TODO test stock
+        n_stock,
     );
     for n_epi_stoss in vecn_stoss {
         verify!(game.stoss(EPlayerIndex::from_usize(n_epi_stoss))).unwrap();
@@ -1849,7 +1849,7 @@ fn test_rulesramsch() {
         &SRulesRamsch::new(10, VDurchmarsch::All),
         vec![],
         vec![],
-        0,
+        /*n_stock*/20,
         &[
             (0, [EO,GO,HO,SO]),
             (0, [EU,GU,HU,SU]),
@@ -1867,7 +1867,7 @@ fn test_rulesramsch() {
         &SRulesRamsch::new(10, VDurchmarsch::AtLeast(120)),
         vec![],
         vec![],
-        0,
+        /*n_stock*/160,
         &[
             (0, [EO,GO,HO,SO]),
             (0, [EU,GU,HU,SU]),
@@ -1885,7 +1885,7 @@ fn test_rulesramsch() {
         &SRulesRamsch::new(10, VDurchmarsch::All),
         vec![],
         vec![],
-        0,
+        /*n_stock*/40,
         &[
             (0, [EO,GO,HO,SO]),
             (0, [EU,GU,HU,SU]),
@@ -1907,7 +1907,7 @@ fn test_rulesbettel() {
         &SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>::new(EPlayerIndex::EPI3, /*i_prio*/0, /*n_payout_base*/10),
         vec![],
         vec![],
-        0,
+        /*n_stock*/20,
         &[
             (0, [EO,EZ,EK,E9]),
             (2, [HO,H9,HA,HZ]),
@@ -1925,7 +1925,7 @@ fn test_rulesbettel() {
         &SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>::new(EPlayerIndex::EPI2, /*i_prio*/0, /*n_payout_base*/10),
         vec![],
         vec![],
-        0,
+        /*n_stock*/40,
         &[
             (0, [EO,EZ,EK,E9]),
             (2, [HO,H9,HA,HZ]),
@@ -1937,5 +1937,54 @@ fn test_rulesbettel() {
             (0, [EA,GU,S8,G7]),
         ],
         ([10, 10, -30, 10], 0),
+    );
+}
+
+#[test]
+fn test_stock() {
+    let rulesrufspiel = rulesrufspiel_new_test(
+        EPlayerIndex::EPI0,
+        EFarbe::Eichel,
+        /*n_payout_base*/10,
+        /*n_payout_schneider_schwarz*/10,
+        SLaufendeParams::new(10, 3),
+    );
+    let n_stock_initial = 80; // TODO randomize
+    assert_eq!(n_stock_initial%2, 0);
+    test_rules_manual(
+        "Rufspiel: Players win stock",
+        &rulesrufspiel,
+        vec![],
+        vec![],
+        n_stock_initial,
+        &[
+            (0, [EO, GO, HO, SO]),
+            (0, [EU, GU, HU, SU]),
+            (0, [HA, HZ, HK, H9]),
+            (0, [EZ, EA, EK, E9]),
+            (1, [E8, E7, S7, S8]),
+            (1, [SA, SZ, SK, S9]),
+            (1, [GA, GZ, GK, H8]),
+            (0, [H7, G9, G8, G7]),
+        ],
+        ([30+n_stock_initial/2, 30+n_stock_initial/2, -30, -30], -n_stock_initial),
+    );
+    test_rules_manual(
+        "Rufspiel: Players win stock",
+        &rulesrufspiel,
+        vec![],
+        vec![],
+        n_stock_initial,
+        &[
+            (0, [EZ, EA, EK, H7]),
+            (3, [EO, GO, HO, SO]),
+            (3, [EU, GU, HU, SU]),
+            (3, [HA, HZ, HK, H9]),
+            (3, [SA, SZ, SK, S9]),
+            (3, [GA, GZ, GK, G9]),
+            (3, [G8, G7, E9, E8]),
+            (3, [H8, E7, S8, S7]),
+        ],
+        ([-30-n_stock_initial/2, -30-n_stock_initial/2, 30, 30], n_stock_initial),
     );
 }
