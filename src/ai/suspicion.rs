@@ -95,10 +95,9 @@ impl SSuspicion {
                     } );
                 } );
             });
-            if !vecstich_successor.is_empty() {
-                func_filter_successors(vecstich, &mut vecstich_successor);
-                assert!(!vecstich_successor.is_empty());
-            }
+            assert!(!vecstich_successor.is_empty());
+            func_filter_successors(vecstich, &mut vecstich_successor);
+            assert!(!vecstich_successor.is_empty());
         }
         let vecsusptrans = vecstich_successor.into_iter()
             .map(|stich| {
