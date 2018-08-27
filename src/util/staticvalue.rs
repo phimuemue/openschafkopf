@@ -1,7 +1,9 @@
 use std::fmt;
 
 // TODORUST this should become superfluous once we have const generics
-pub trait TStaticValue<V> : Sync + 'static + Clone + fmt::Debug {
+pub trait TStaticValue<V> : Sync + 'static + Clone + fmt::Debug
+    where V: Copy, // prevent interior mutation (suggested by clippy)
+{
     const VALUE : V;
 }
 

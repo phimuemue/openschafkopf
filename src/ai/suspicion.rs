@@ -301,12 +301,12 @@ impl SSuspicion {
             })
             .into_iter()
             .map(|(_stich_key_before_epi, grpsusptransn_before_epi)| {
-                verify!(grpsusptransn_before_epi.into_iter()
+                verify!(grpsusptransn_before_epi
                     .group_by(|&(susptrans, _n_payout)| susptrans.stich[epi])
                     .into_iter()
                     .map(|(_stich_key_epi, grpsusptransn_epi)| {
                         // in this group, we need the worst case if other players play badly
-                        verify!(grpsusptransn_epi.into_iter().min_by_key(|&(_susptrans, (_card, n_payout))| n_payout)).unwrap()
+                        verify!(grpsusptransn_epi.min_by_key(|&(_susptrans, (_card, n_payout))| n_payout)).unwrap()
                     })
                     .max_by_key(|&(_susptrans, (_card, n_payout))| n_payout))
                     .unwrap()

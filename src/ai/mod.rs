@@ -58,7 +58,7 @@ pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
 
 pub fn unplayed_cards<'lifetime>(slcstich: &'lifetime [SStich], hand_fixed: &'lifetime SHand) -> impl Iterator<Item=SCard> + 'lifetime {
     assert!(slcstich.iter().all(|stich| 4==stich.size())); // TODO is this really required?
-    SCard::values(EKurzLang::from_cards_per_player(slcstich.len() + hand_fixed.cards().len())).into_iter()
+    SCard::values(EKurzLang::from_cards_per_player(slcstich.len() + hand_fixed.cards().len()))
         .filter(move |card| 
              !hand_fixed.contains(*card)
              && !slcstich.iter().any(|stich|
