@@ -230,7 +230,7 @@ impl SSuspicion {
                 ).1),
             ).as_bytes())?;
             file_output.write_all(b"</tr></table></label>\n")?;
-            if 1<self.hand_size() {
+            if !self.vecsusptrans.is_empty() {
                 file_output.write_all(b"<ul>\n")?;
                 for susptrans in &self.vecsusptrans {
                     push_pop_vecstich(vecstich, susptrans.stich.clone(), |vecstich| {
@@ -238,8 +238,6 @@ impl SSuspicion {
                     })?;
                 }
                 file_output.write_all(b"</ul>\n")?;
-            } else {
-                assert_eq!(1, self.vecsusptrans.len());
             }
             file_output.write_all(b"</li>\n")
         } else {
