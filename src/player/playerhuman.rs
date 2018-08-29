@@ -8,10 +8,8 @@ use game::*;
 use skui;
 use ai::*;
 use util::*;
-use std::{
-    sync::mpsc,
-    fs,
-};
+use std::sync::mpsc;
+use chrono::Local;
 
 pub struct SPlayerHuman {
     pub ai : Box<TAi>,
@@ -100,7 +98,10 @@ impl TPlayer for SPlayerHuman {
                     skui::print_hand(hand.cards(), Some(i_card_chosen));
                     skui::print_game_info(game.rules.as_ref(), &game.doublings, &game.vecstoss);
                 },
-                || Some(self.ai.suggest_card(game, /*ofile_output*/verify!(fs::File::create(&"suspicion.html")).ok()))
+                || Some(self.ai.suggest_card(
+                    game,
+                    /*ostr_file_out*/Some(&format!("suspicion_{}", Local::now().format("%Y%m%d%H%M%S")))
+                ))
             )
         ).is_err() {
             unimplemented!() // we possibly want to be able to deal with "blocked" plays (timeout etc.)

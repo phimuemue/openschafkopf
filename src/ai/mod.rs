@@ -30,7 +30,7 @@ use util::*;
 
 pub trait TAi {
     fn rank_rules(&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64;
-    fn suggest_card(&self, game: &SGame, ofile_output: Option<fs::File>) -> SCard {
+    fn suggest_card(&self, game: &SGame, ostr_file_out: Option<&str>) -> SCard {
         let veccard_allowed = game.rules.all_allowed_cards(
             &game.vecstich,
             &game.ahand[verify!(game.which_player_can_do_something()).unwrap().0]
@@ -43,10 +43,10 @@ pub trait TAi {
         {
             card
         } else {
-            self.internal_suggest_card(game, ofile_output)
+            self.internal_suggest_card(game, ostr_file_out)
         }
     }
-    fn internal_suggest_card(&self, game: &SGame, ofile_output: Option<fs::File>) -> SCard;
+    fn internal_suggest_card(&self, game: &SGame, ostr_file_out: Option<&str>) -> SCard;
 }
 
 pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
@@ -100,7 +100,7 @@ impl TAi for SAiCheating {
         ).rank_rules(hand_fixed, epi_first, epi_rank, rules, n_stock)
     }
 
-    fn internal_suggest_card(&self, game: &SGame, ofile_output: Option<fs::File>) -> SCard {
+    fn internal_suggest_card(&self, game: &SGame, ostr_file_out: Option<&str>) -> SCard {
         determine_best_card(
             game,
             Some(EPlayerIndex::map_from_fn(|epi|
@@ -111,7 +111,7 @@ impl TAi for SAiCheating {
                 )
             )).into_iter(),
             /*n_branches*/1,
-            ofile_output,
+            ostr_file_out,
         )
     }
 }
@@ -187,7 +187,7 @@ pub fn is_compatible_with_game_so_far(
     }
 }
 
-fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize, ofile_output: Option<fs::File>) -> (SHandVector, EnumMap<SCard, isize>)
+fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize, ostr_file_out: Option<&str>) -> (SHandVector, EnumMap<SCard, isize>)
     where HandsIterator: Iterator<Item=EnumMap<EPlayerIndex, SHand>>
 {
     let stich_current = game.current_stich();
@@ -221,7 +221,8 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
             });
         }
     });
-    if let Some(mut file_output) = ofile_output {
+    if let Some(str_file_out) = ostr_file_out {
+        let mut file_output = verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap();
         // TODO improve error handling; encapsulate usage of file_output in one single place
         verify!(file_output.write_all(
             b"<style>
@@ -268,10 +269,10 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
     (veccard_allowed_fixed, mapcardn_payout)
 }
 
-fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize, ofile_output: Option<fs::File>) -> SCard
+fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize, ostr_file_out: Option<&str>) -> SCard
     where HandsIterator: Iterator<Item=EnumMap<EPlayerIndex, SHand>>
 {
-    let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(game, itahand, n_branches, ofile_output);
+    let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(game, itahand, n_branches, ostr_file_out);
     verify!(veccard_allowed.into_iter()
         .max_by_key(|card| mapcardn_payout[*card]))
         .unwrap()
@@ -317,7 +318,7 @@ impl TAi for SAiSimulating {
         (n_payout_sum.as_num::<f64>()) / (self.n_rank_rules_samples.as_num::<f64>())
     }
 
-    fn internal_suggest_card(&self, game: &SGame, ofile_output: Option<fs::File>) -> SCard {
+    fn internal_suggest_card(&self, game: &SGame, ostr_file_out: Option<&str>) -> SCard {
         let stich_current = game.current_stich();
         assert!(stich_current.size()<4);
         let epi_fixed = verify!(stich_current.current_playerindex()).unwrap();
@@ -329,7 +330,7 @@ impl TAi for SAiSimulating {
                 all_possible_hands(game.completed_stichs(), hand_fixed.clone(), epi_fixed)
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich)),
                 self.n_suggest_card_branches,
-                ofile_output,
+                ostr_file_out,
             )
         } else {
             determine_best_card(
@@ -338,7 +339,7 @@ impl TAi for SAiSimulating {
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
-                ofile_output,
+                ostr_file_out,
             )
         }
     }
@@ -485,7 +486,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             &game,
             Some(ahand).into_iter(),
             /*n_branches*/1,
-            /*ofile_output*/None, //verify!(fs::File::create(&"suspicion.html")).ok(), // to inspect search tree
+            /*ostr_file_out*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
         );
         for card in [H7, H8, H9].into_iter() {
             assert!(veccard_allowed.contains(card));
