@@ -46,6 +46,17 @@ pub struct SSuspicion {
     ahand : EnumMap<EPlayerIndex, SHand>,
 }
 
+pub trait TForEachSnapshot {
+    fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>);
+    fn end_snapshot(&mut self, slcstich: SCompletedStichs, susp: &SSuspicion);
+}
+
+pub struct SForEachSnapshotNoop;
+impl TForEachSnapshot for SForEachSnapshotNoop {
+    fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>) {}
+    fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion) {}
+}
+
 impl SSuspicion {
 
     pub fn suspicion_transitions(&self) -> &[SSuspicionTransition] {
@@ -54,14 +65,17 @@ impl SSuspicion {
 
 
     // TODO Maybe something like payout_hint is useful to prune suspicion tree
-    pub fn new<FuncFilterSuccessors>(
+    pub fn new<FuncFilterSuccessors, ForEachSnapshot>(
         ahand: EnumMap<EPlayerIndex, SHand>,
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
         stich_current_model: &SStich,
         func_filter_successors: &FuncFilterSuccessors,
+        foreachsnapshot: &mut ForEachSnapshot
     ) -> Self 
-        where FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/)
+        where
+            FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
+            ForEachSnapshot: TForEachSnapshot,
     {
         SCompletedStichs::new(vecstich);
         let mut vecstich_successor : Vec<SStich> = Vec::new();
@@ -99,6 +113,7 @@ impl SSuspicion {
             func_filter_successors(vecstich, &mut vecstich_successor);
             assert!(!vecstich_successor.is_empty());
         }
+        foreachsnapshot.begin_snapshot(SCompletedStichs::new(vecstich), &ahand);
         let vecsusptrans = vecstich_successor.into_iter()
             .map(|stich| {
                 let epi_first_susp = rules.winner_index(&stich);
@@ -111,15 +126,18 @@ impl SSuspicion {
                         rules,
                         vecstich,
                         &SStich::new(epi_first_susp),
-                        func_filter_successors
+                        func_filter_successors,
+                        &mut SForEachSnapshotNoop{},
                     ),
                 })
             })
             .collect();
-        SSuspicion {
+        let susp = SSuspicion {
             vecsusptrans,
             ahand,
-        }
+        };
+        foreachsnapshot.end_snapshot(SCompletedStichs::new(vecstich), &susp);
+        susp
     }
 
     pub fn count_leaves(&self) -> usize {

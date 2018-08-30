@@ -214,7 +214,8 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                         } else {
                             // if slcstich_complete_successor>=6, we hope that we can compute everything
                         }
-                    }
+                    },
+                    &mut SForEachSnapshotNoop{},
                 );
                 assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
                 verify!(vecsusp.lock()).unwrap().push(susp);
@@ -302,7 +303,8 @@ impl TAi for SAiSimulating {
                             &|_vecstich_complete, vecstich_successor| {
                                 assert!(!vecstich_successor.is_empty());
                                 random_sample_from_vec(vecstich_successor, 1);
-                            }
+                            },
+                            &mut SForEachSnapshotNoop{},
                         ).min_reachable_payout(
                             rules,
                             &mut Vec::new(),
