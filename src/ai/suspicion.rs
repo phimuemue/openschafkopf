@@ -127,7 +127,7 @@ impl SSuspicion {
                         vecstich,
                         &SStich::new(epi_first_susp),
                         func_filter_successors,
-                        &mut SForEachSnapshotNoop{},
+                        foreachsnapshot,
                     ),
                 })
             })
