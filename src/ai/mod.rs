@@ -222,20 +222,21 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
         }
     });
     if let Some(str_file_out) = ostr_file_out {
-        let mut file_output = verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap();
-        // TODO improve error handling; encapsulate usage of file_output in one single place
-        verify!(file_output.write_all(
-            b"<style>
-            input + label + ul {
-                display: none;
-            }
-            input:checked + label + ul {
-                display: block;
-            }
-            </style>"
-        )).unwrap();
-        for susp in verify!(vecsusp.lock()).unwrap().iter() {
+        verify!(std::fs::create_dir_all(str_file_out)).unwrap();
+        for (i_susp, susp) in verify!(vecsusp.lock()).unwrap().iter().enumerate() {
+            let mut file_output = verify!(fs::File::create(format!("{}/{}.html", str_file_out, i_susp))).unwrap();
             // TODO error handling
+            // TODO encapsulate usage of file_output in one single place
+            verify!(file_output.write_all(
+                b"<style>
+                input + label + ul {
+                    display: none;
+                }
+                input:checked + label + ul {
+                    display: block;
+                }
+                </style>"
+            )).unwrap();
             verify!(susp.print_suspicion(
                 8,
                 0,
