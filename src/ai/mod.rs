@@ -190,40 +190,51 @@ pub fn is_compatible_with_game_so_far(
 fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize, ostr_file_out: Option<&str>) -> (SHandVector, EnumMap<SCard, isize>)
     where HandsIterator: Iterator<Item=EnumMap<EPlayerIndex, SHand>>
 {
-    let stich_current = game.current_stich();
-    let epi_fixed = verify!(stich_current.current_playerindex()).unwrap();
+    let epi_fixed = verify!(game.current_stich().current_playerindex()).unwrap();
     let vecsusp = Arc::new(Mutex::new(Vec::new()));
     crossbeam::scope(|scope| {
         for ahand in itahand {
             let vecsusp = Arc::clone(&vecsusp);
             scope.spawn(move || {
                 assert_ahand_same_size(&ahand);
-                let mut vecstich_complete_mut = game.completed_stichs().get().to_vec();
-                let n_stich_complete = vecstich_complete_mut.len();
-                let susp = SSuspicion::new(
-                    ahand,
-                    game.rules.as_ref(),
-                    &mut vecstich_complete_mut,
-                    stich_current,
-                    &|slcstich_complete_successor: &[SStich], vecstich_successor: &mut Vec<SStich>| {
-                        assert!(!vecstich_successor.is_empty());
-                        assert!(n_stich_complete<=slcstich_complete_successor.len());
-                        if slcstich_complete_successor.len()!=n_stich_complete && n_stich_complete < 6 {
-                            // TODO: maybe keep more than one successor stich
-                            random_sample_from_vec(vecstich_successor, n_branches);
-                        } else {
-                            // if slcstich_complete_successor>=6, we hope that we can compute everything
-                        }
-                    },
-                    &mut SForEachSnapshotNoop{},
-                );
+                fn new_suspicion<ForEachSnapshot: TForEachSnapshot>(
+                    ahand: EnumMap<EPlayerIndex, SHand>,
+                    game: &SGame,
+                    n_branches: usize,
+                    foreachsnapshot: &mut ForEachSnapshot,
+                ) -> SSuspicion {
+                    let mut vecstich_complete_mut = game.completed_stichs().get().to_vec();
+                    let n_stich_complete = vecstich_complete_mut.len();
+                    SSuspicion::new(
+                        ahand,
+                        game.rules.as_ref(),
+                        &mut vecstich_complete_mut,
+                        game.current_stich(),
+                        &|slcstich_complete_successor: &[SStich], vecstich_successor: &mut Vec<SStich>| {
+                            assert!(!vecstich_successor.is_empty());
+                            assert!(n_stich_complete<=slcstich_complete_successor.len());
+                            if slcstich_complete_successor.len()!=n_stich_complete && n_stich_complete < 6 {
+                                // TODO: maybe keep more than one successor stich
+                                random_sample_from_vec(vecstich_successor, n_branches);
+                            } else {
+                                // if slcstich_complete_successor>=6, we hope that we can compute everything
+                            }
+                        },
+                        foreachsnapshot,
+                    )
+                }
+                let susp = if let Some(str_file_out) = ostr_file_out {
+                    verify!(std::fs::create_dir_all(str_file_out)).unwrap();
+                    new_suspicion(ahand, game, n_branches, &mut SForEachSnapshotHTMLVisualizer{})
+                } else {
+                    new_suspicion(ahand, game, n_branches, &mut SForEachSnapshotNoop{})
+                };
                 assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
                 verify!(vecsusp.lock()).unwrap().push(susp);
             });
         }
     });
     if let Some(str_file_out) = ostr_file_out {
-        verify!(std::fs::create_dir_all(str_file_out)).unwrap();
         for (i_susp, susp) in verify!(vecsusp.lock()).unwrap().iter().enumerate() {
             let mut file_output = verify!(fs::File::create(format!("{}/{}.html", str_file_out, i_susp))).unwrap();
             // TODO error handling

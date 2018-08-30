@@ -57,6 +57,15 @@ impl TForEachSnapshot for SForEachSnapshotNoop {
     fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion) {}
 }
 
+pub struct SForEachSnapshotHTMLVisualizer {
+}
+impl TForEachSnapshot for SForEachSnapshotHTMLVisualizer {
+    fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>) {
+    }
+    fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion) {
+    }
+}
+
 impl SSuspicion {
 
     pub fn suspicion_transitions(&self) -> &[SSuspicionTransition] {
