@@ -23,7 +23,6 @@ use std::{
         atomic::{AtomicIsize, Ordering},
     },
     cmp,
-    io::Write,
 };
 use crossbeam;
 use util::*;
@@ -193,7 +192,7 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
     let epi_fixed = verify!(game.current_stich().current_playerindex()).unwrap();
     let vecsusp = Arc::new(Mutex::new(Vec::new()));
     crossbeam::scope(|scope| {
-        for ahand in itahand {
+        for (i_susp, ahand) in itahand.enumerate() {
             let vecsusp = Arc::clone(&vecsusp);
             scope.spawn(move || {
                 assert_ahand_same_size(&ahand);
@@ -225,7 +224,15 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                 }
                 let susp = if let Some(str_file_out) = ostr_file_out {
                     verify!(std::fs::create_dir_all(str_file_out)).unwrap();
-                    new_suspicion(ahand, game, n_branches, &mut SForEachSnapshotHTMLVisualizer{})
+                    new_suspicion(
+                        ahand,
+                        game,
+                        n_branches,
+                        &mut SForEachSnapshotHTMLVisualizer::new(
+                            verify!(fs::File::create(format!("{}/{}.html", str_file_out, i_susp))).unwrap(),
+                            game.rules.as_ref(),
+                        ),
+                    )
                 } else {
                     new_suspicion(ahand, game, n_branches, &mut SForEachSnapshotNoop{})
                 };
@@ -234,30 +241,6 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
             });
         }
     });
-    if let Some(str_file_out) = ostr_file_out {
-        for (i_susp, susp) in verify!(vecsusp.lock()).unwrap().iter().enumerate() {
-            let mut file_output = verify!(fs::File::create(format!("{}/{}.html", str_file_out, i_susp))).unwrap();
-            // TODO error handling
-            // TODO encapsulate usage of file_output in one single place
-            verify!(file_output.write_all(
-                b"<style>
-                input + label + ul {
-                    display: none;
-                }
-                input:checked + label + ul {
-                    display: block;
-                }
-                </style>"
-            )).unwrap();
-            verify!(susp.print_suspicion(
-                8,
-                0,
-                game.rules.as_ref(),
-                &mut game.completed_stichs().get().to_vec(),
-                &mut file_output,
-            )).unwrap();
-        }
-    }
     let veccard_allowed_fixed = game.rules.all_allowed_cards(&game.vecstich, &game.ahand[epi_fixed]);
     let mapcardn_payout = verify!(vecsusp.lock()).unwrap().iter()
         .fold(

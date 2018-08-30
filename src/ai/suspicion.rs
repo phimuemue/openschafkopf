@@ -5,7 +5,6 @@ use util::*;
 use std::{
     fs,
     io::Write,
-    io,
     fmt,
 };
 use rand::{
@@ -57,12 +56,127 @@ impl TForEachSnapshot for SForEachSnapshotNoop {
     fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion) {}
 }
 
-pub struct SForEachSnapshotHTMLVisualizer {
+pub struct SForEachSnapshotHTMLVisualizer<'rules> {
+    file_output: fs::File,
+    rules: &'rules TRules,
 }
-impl TForEachSnapshot for SForEachSnapshotHTMLVisualizer {
-    fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>) {
+impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
+    pub fn new(file_output: fs::File, rules: &'rules TRules) -> Self {
+        let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output, rules};
+        foreachsnapshothtmlvisualizer.write_all(
+            b"<style>
+            input + label + ul {
+                display: none;
+            }
+            input:checked + label + ul {
+                display: block;
+            }
+            </style>"
+        );
+        foreachsnapshothtmlvisualizer
     }
+
+    fn write_all(&mut self, buf: &[u8]) {
+        verify!(self.file_output.write_all(buf)).unwrap() // TODO error handling
+    }
+
+    fn output_card(card: SCard, b_border: bool) -> String {
+        let (n_width, n_height) = (336 / ESchlag::SIZE.as_num::<isize>(), 232 / EFarbe::SIZE.as_num::<isize>());
+        format!(
+            "<div style=\"
+                margin: 0;
+                padding: 0;
+                width:{};
+                height:{};
+                display:inline-block;
+                background-image:url(https://www.sauspiel.de/images/redesign/cards/by/card-icons@2x.png);
+                background-position-x:{}px;
+                background-position-y:{}px;
+                border:{};
+            \"></div>",
+            n_width,
+            n_height,
+            // Do not use Enum::to_usize. Sauspiel's representation does not necessarily match ours.
+            -n_width * match card.schlag() {
+                ESchlag::Ass => 0,
+                ESchlag::Zehn => 1,
+                ESchlag::Koenig => 2,
+                ESchlag::Ober => 3,
+                ESchlag::Unter => 4,
+                ESchlag::S9 => 5,
+                ESchlag::S8 => 6,
+                ESchlag::S7 => 7,
+            },
+            -n_height * match card.farbe() {
+                EFarbe::Eichel => 0,
+                EFarbe::Gras => 1,
+                EFarbe::Herz => 2,
+                EFarbe::Schelln => 3,
+            },
+            if b_border {"solid"} else {"none"},
+        )
+    }
+
+    fn player_table<T, FnPerPlayer>(fn_per_player: FnPerPlayer) -> String
+        where
+            FnPerPlayer: Fn(EPlayerIndex) -> T,
+            T: fmt::Display,
+    {
+        format!(
+            "<table>
+              <tr><td align=\"center\" colspan=\"2\"><br>{}<br></td></tr>
+              <tr><td>{}</td><td>{}</td></tr>
+              <tr><td align=\"center\" colspan=\"2\">{}</td></tr>
+            </table>\n",
+            fn_per_player(EPlayerIndex::EPI2),
+            fn_per_player(EPlayerIndex::EPI1),
+            fn_per_player(EPlayerIndex::EPI3),
+            fn_per_player(EPlayerIndex::EPI0),
+        )
+    }
+}
+impl<'rules> TForEachSnapshot for SForEachSnapshotHTMLVisualizer<'rules> {
+    fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>) {
+        let str_item_id = format!("{}{}",
+            slcstich.get().len(),
+            rand::thread_rng().sample_iter(&rand::distributions::Alphanumeric).take(16).collect::<String>(), // we simply assume no collisions here
+        );
+        self.write_all(format!("<li><<input type=\"checkbox\" id=\"{}\" />>\n", str_item_id).as_bytes());
+        self.write_all(format!("<label for=\"{}\">TODO direct successors<table><tr>\n", // TODO
+            str_item_id,
+            // TODO self.vecsusptrans.len(),
+        ).as_bytes());
+        EKurzLang::from_cards_per_player(slcstich.get().len()+hand_size_internal(ahand));
+        for stich in slcstich.get().iter() {
+            self.write_all(b"<td>\n");
+            self.write_all(Self::player_table(|epi| Self::output_card(stich[epi], epi==stich.first_playerindex())).as_bytes());
+            self.write_all(b"</td>\n");
+        }
+        let str_table_hands = format!(
+            "<td>{}</td> <td>TODO min_reachable_payout</td>\n", // TODO how to output min_reachable_payout?
+            Self::player_table(|epi| {
+                let mut veccard = ahand[epi].cards().clone();
+                self.rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
+                veccard.into_iter()
+                    .map(|card| Self::output_card(card, /*b_border*/false))
+                    .join("")
+            }),
+            // Self::player_table(|epi| self.min_reachable_payout(
+            //     self.rules,
+            //     &mut slcstich.clone(),
+            //     epi,
+            //     /*tpln_stoss_doubling*/(0, 0), // dummy values
+            //     /*n_stock*/0, // dummy value
+            // ).1),
+        );
+        self.write_all(str_table_hands.as_bytes());
+        self.write_all(b"</tr></table></label>\n");
+        self.write_all(b"<ul>\n");
+    }
+
     fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion) {
+        self.write_all(b"</ul>\n");
+        self.write_all(b"</li>\n");
     }
 }
 
@@ -161,115 +275,6 @@ impl SSuspicion {
 
     fn hand_size(&self) -> usize {
         hand_size_internal(&self.ahand)
-    }
-
-    pub fn print_suspicion(
-        &self,
-        n_level_end: usize,
-        n_level: usize,
-        rules: &TRules,
-        vecstich: &mut Vec<SStich>,
-        mut file_output: &mut fs::File,
-    ) -> io::Result<()> {
-        if n_level < n_level_end {
-            let str_item_id = format!("{}{}",
-                n_level,
-                rand::thread_rng().sample_iter(&rand::distributions::Alphanumeric).take(16).collect::<String>(), // we simply assume no collisions here
-            );
-            file_output.write_all(format!("<li><<input type=\"checkbox\" id=\"{}\" />>\n", str_item_id).as_bytes())?;
-            file_output.write_all(format!("<label for=\"{}\">{} direct successors<table><tr>\n",
-                str_item_id,
-                self.vecsusptrans.len(),
-            ).as_bytes())?;
-            EKurzLang::from_cards_per_player(vecstich.len()+self.hand_size());
-            let output_card = |card: SCard, b_border| {
-                let (n_width, n_height) = (336 / ESchlag::SIZE.as_num::<isize>(), 232 / EFarbe::SIZE.as_num::<isize>());
-                format!(
-                    "<div style=\"
-                        margin: 0;
-                        padding: 0;
-                        width:{};
-                        height:{};
-                        display:inline-block;
-                        background-image:url(https://www.sauspiel.de/images/redesign/cards/by/card-icons@2x.png);
-                        background-position-x:{}px;
-                        background-position-y:{}px;
-                        border:{};
-                    \"></div>",
-                    n_width,
-                    n_height,
-                    // Do not use Enum::to_usize. Sauspiel's representation does not necessarily match ours.
-                    -n_width * match card.schlag() {
-                        ESchlag::Ass => 0,
-                        ESchlag::Zehn => 1,
-                        ESchlag::Koenig => 2,
-                        ESchlag::Ober => 3,
-                        ESchlag::Unter => 4,
-                        ESchlag::S9 => 5,
-                        ESchlag::S8 => 6,
-                        ESchlag::S7 => 7,
-                    },
-                    -n_height * match card.farbe() {
-                        EFarbe::Eichel => 0,
-                        EFarbe::Gras => 1,
-                        EFarbe::Herz => 2,
-                        EFarbe::Schelln => 3,
-                    },
-                    if b_border {"solid"} else {"none"},
-                )
-            };
-            fn player_table<T, FnPerPlayer>(fn_per_player: FnPerPlayer) -> String
-                where FnPerPlayer: Fn(EPlayerIndex) -> T,
-                      T: fmt::Display,
-            {
-                format!(
-                    "<table>
-                      <tr><td align=\"center\" colspan=\"2\"><br>{}<br></td></tr>
-                      <tr><td>{}</td><td>{}</td></tr>
-                      <tr><td align=\"center\" colspan=\"2\">{}</td></tr>
-                    </table>\n",
-                    fn_per_player(EPlayerIndex::EPI2),
-                    fn_per_player(EPlayerIndex::EPI1),
-                    fn_per_player(EPlayerIndex::EPI3),
-                    fn_per_player(EPlayerIndex::EPI0),
-                )
-            }
-            for stich in vecstich.iter() {
-                file_output.write_all(b"<td>\n")?;
-                file_output.write_all(player_table(|epi| output_card(stich[epi], epi==stich.first_playerindex())).as_bytes())?;
-                file_output.write_all(b"</td>\n")?;
-            }
-            file_output.write_all(format!(
-                "<td>{}</td> <td>{}</td>\n",
-                player_table(|epi| {
-                    let mut veccard = self.ahand[epi].cards().clone();
-                    rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
-                    veccard.into_iter()
-                        .map(|card| output_card(card, /*b_border*/false))
-                        .join("")
-                }),
-                player_table(|epi| self.min_reachable_payout(
-                    rules,
-                    &mut vecstich.clone(),
-                    epi,
-                    /*tpln_stoss_doubling*/(0, 0), // dummy values
-                    /*n_stock*/0, // dummy value
-                ).1),
-            ).as_bytes())?;
-            file_output.write_all(b"</tr></table></label>\n")?;
-            if !self.vecsusptrans.is_empty() {
-                file_output.write_all(b"<ul>\n")?;
-                for susptrans in &self.vecsusptrans {
-                    push_pop_vecstich(vecstich, susptrans.stich.clone(), |vecstich| {
-                        susptrans.susp.print_suspicion(n_level_end, n_level+1, rules, vecstich, &mut file_output)
-                    })?;
-                }
-                file_output.write_all(b"</ul>\n")?;
-            }
-            file_output.write_all(b"</li>\n")
-        } else {
-            Ok(())
-        }
     }
 
     pub fn min_reachable_payout(
