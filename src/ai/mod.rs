@@ -199,12 +199,13 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
             let mapcardn_payout = Arc::clone(&mapcardn_payout);
             scope.spawn(move || {
                 assert_ahand_same_size(&ahand);
-                fn new_suspicion<ForEachSnapshot: TForEachSnapshot>(
+                fn internal_min_reachable_payout<ForEachSnapshot: TForEachSnapshot>(
                     ahand: EnumMap<EPlayerIndex, SHand>,
                     game: &SGame,
                     n_branches: usize,
+                    epi_fixed: EPlayerIndex,
                     foreachsnapshot: &mut ForEachSnapshot,
-                ) -> SSuspicion {
+                ) -> (SCard, isize) {
                     let mut vecstich_complete_mut = game.completed_stichs().get().to_vec();
                     let n_stich_complete = vecstich_complete_mut.len();
                     SSuspicion::new(
@@ -223,30 +224,29 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                             }
                         },
                         foreachsnapshot,
+                    ).min_reachable_payout(
+                        game.rules.as_ref(),
+                        &mut vecstich_complete_mut,
+                        epi_fixed,
+                        stoss_and_doublings(&game.vecstoss, &game.doublings),
+                        game.n_stock,
                     )
                 }
-                let susp = if let Some(str_file_out) = ostr_file_out {
+                let (card, n_payout) = if let Some(str_file_out) = ostr_file_out {
                     verify!(std::fs::create_dir_all(str_file_out)).unwrap();
-                    new_suspicion(
+                    internal_min_reachable_payout(
                         ahand,
                         game,
                         n_branches,
+                        epi_fixed,
                         &mut SForEachSnapshotHTMLVisualizer::new(
                             verify!(fs::File::create(format!("{}/{}.html", str_file_out, i_susp))).unwrap(),
                             game.rules.as_ref(),
                         ),
                     )
                 } else {
-                    new_suspicion(ahand, game, n_branches, &mut SForEachSnapshotNoop{})
+                    internal_min_reachable_payout(ahand, game, n_branches, epi_fixed, &mut SForEachSnapshotNoop{})
                 };
-                let mut vecstich_complete_payout = game.completed_stichs().get().to_vec();
-                let (card, n_payout) = susp.min_reachable_payout(
-                    game.rules.as_ref(),
-                    &mut vecstich_complete_payout,
-                    epi_fixed,
-                    stoss_and_doublings(&game.vecstoss, &game.doublings),
-                    game.n_stock,
-                );
                 let mut mapcardn_payout = verify!(mapcardn_payout.lock()).unwrap();
                 mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
             });
