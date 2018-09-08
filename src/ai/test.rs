@@ -42,26 +42,36 @@ fn detect_expensive_all_possible_hands() {
                     };
                     assert_bound(vecahand.len(), 2000);
                     for ahand in vecahand {
-                        struct SLeafCounter(usize);
+                        struct SLeafCounter;
                         impl TForEachSnapshot for SLeafCounter {
-                            fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {}
-                            fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion, slcstich_successor: &[SStich]) {
-                                if slcstich_successor.is_empty() {
-                                    self.0+=1;
+                            type Output = usize;
+                            fn pruned_output(&mut self, _slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+                                if 1==hand_size_internal(ahand) {
+                                    Some(1) // we can be sure that there is only 1 leaf
+                                } else {
+                                    None // no pruning
                                 }
                             }
+                            fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {}
+                            fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
+                                &mut self,
+                                ittplstichoutput: ItTplStichOutput,
+                            ) -> Self::Output {
+                                ittplstichoutput.map(|tplstichoutput| tplstichoutput.1).sum()
+                            }
                         }
-                        let mut leafcounter = SLeafCounter(0);
-                        SSuspicion::new(
-                            ahand,
-                            game.rules.as_ref(),
-                            &mut game.completed_stichs().get().to_vec(),
-                            game.current_stich(),
-                            &|_vecstich_complete, _vecstich_successor| {/*no filtering*/},
-                            &mut leafcounter,
-                            /*ostr_file_out*/None,
+                        assert_bound(
+                            SSuspicion::new(
+                                ahand,
+                                game.rules.as_ref(),
+                                &mut game.completed_stichs().get().to_vec(),
+                                game.current_stich(),
+                                &|_vecstich_complete, _vecstich_successor| {/*no filtering*/},
+                                &mut SLeafCounter{},
+                                /*ostr_file_out*/None,
+                            ),
+                            2000
                         );
-                        assert_bound(leafcounter.0, 2000);
                     }
                 }
             },
