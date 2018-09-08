@@ -46,13 +46,13 @@ pub struct SSuspicion {
 }
 
 pub trait TForEachSnapshot {
-    fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>);
+    fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]);
     fn end_snapshot(&mut self, slcstich: SCompletedStichs, susp: &SSuspicion);
 }
 
 pub struct SForEachSnapshotNoop;
 impl TForEachSnapshot for SForEachSnapshotNoop {
-    fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>) {}
+    fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {}
     fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion) {}
 }
 
@@ -136,15 +136,15 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
     }
 }
 impl<'rules> TForEachSnapshot for SForEachSnapshotHTMLVisualizer<'rules> {
-    fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>) {
+    fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]) {
         let str_item_id = format!("{}{}",
             slcstich.get().len(),
             rand::thread_rng().sample_iter(&rand::distributions::Alphanumeric).take(16).collect::<String>(), // we simply assume no collisions here
         );
         self.write_all(format!("<li><<input type=\"checkbox\" id=\"{}\" />>\n", str_item_id).as_bytes());
-        self.write_all(format!("<label for=\"{}\">TODO direct successors<table><tr>\n", // TODO
+        self.write_all(format!("<label for=\"{}\">{} direct successors<table><tr>\n",
             str_item_id,
-            // TODO self.vecsusptrans.len(),
+            slcstich_successor.len(),
         ).as_bytes());
         EKurzLang::from_cards_per_player(slcstich.get().len()+hand_size_internal(ahand));
         for stich in slcstich.get().iter() {
@@ -237,7 +237,7 @@ impl SSuspicion {
             func_filter_successors(vecstich, &mut vecstich_successor);
             assert!(!vecstich_successor.is_empty());
         }
-        foreachsnapshot.begin_snapshot(SCompletedStichs::new(vecstich), &ahand);
+        foreachsnapshot.begin_snapshot(SCompletedStichs::new(vecstich), &ahand, &vecstich_successor);
         let vecsusptrans = vecstich_successor.into_iter()
             .map(|stich| {
                 let epi_first_susp = rules.winner_index(&stich);
