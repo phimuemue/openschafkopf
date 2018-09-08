@@ -118,7 +118,7 @@ impl TPlayer for SPlayerComputer {
         verify!(txb.send(
             vecpairahandf_suspicion.into_iter()
                 .map(|(ahand, _f_rank_rules)| {
-                    SSuspicion::new(
+                    SSuspicion::min_reachable_payout(
                         ahand,
                         rules,
                         &mut Vec::new(),
@@ -128,9 +128,6 @@ impl TPlayer for SPlayerComputer {
                             random_sample_from_vec(vecstich_successor, 1);
                         },
                         &mut SForEachSnapshotNoop{},
-                    ).min_reachable_payout(
-                        rules,
-                        &mut Vec::new(),
                         epi,
                         stoss_and_doublings(vecstoss, doublings),
                         n_stock,

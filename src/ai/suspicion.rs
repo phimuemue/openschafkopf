@@ -278,7 +278,39 @@ impl SSuspicion {
         hand_size_internal(&self.ahand)
     }
 
-    pub fn min_reachable_payout(
+    pub fn min_reachable_payout<FuncFilterSuccessors, ForEachSnapshot>(
+        ahand: EnumMap<EPlayerIndex, SHand>,
+        rules: &TRules,
+        vecstich: &mut Vec<SStich>,
+        stich_current_model: &SStich,
+        func_filter_successors: &FuncFilterSuccessors,
+        foreachsnapshot: &mut ForEachSnapshot,
+        epi: EPlayerIndex,
+        tpln_stoss_doubling: (usize, usize),
+        n_stock: isize,
+    ) -> (SCard, isize)
+        where
+            FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
+            ForEachSnapshot: TForEachSnapshot,
+    {
+        let vecstich_backup = vecstich.clone();
+        assert!(vecstich.iter().all(|stich| stich.size()==4));
+        let susp = SSuspicion::new(
+            ahand,
+            rules,
+            vecstich,
+            stich_current_model,
+            func_filter_successors,
+            foreachsnapshot,
+        );
+        assert_eq!(vecstich, &vecstich_backup);
+        let (card, n_payout) = susp.min_reachable_payout_internal(rules, vecstich, epi, tpln_stoss_doubling, n_stock);
+        assert!(vecstich_backup.iter().zip(vecstich.iter()).all(|(s1,s2)|s1.size()==s2.size()));
+        assert!(susp.ahand[epi].cards().contains(&card));
+        (card, n_payout)
+    }
+
+    fn min_reachable_payout_internal(
         &self,
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
@@ -286,8 +318,6 @@ impl SSuspicion {
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
     ) -> (SCard, isize) {
-        let vecstich_backup = vecstich.clone();
-        assert!(vecstich.iter().all(|stich| stich.size()==4));
         if 1==self.hand_size() {
             assert!(!vecstich.is_empty());
             let epi_first = rules.winner_index(current_stich(vecstich));
@@ -314,11 +344,11 @@ impl SSuspicion {
                 },
             );
         }
-        let tplcardpayout = verify!(self.vecsusptrans.iter()
+        verify!(self.vecsusptrans.iter()
             .map(|susptrans| {
                 assert_eq!(susptrans.stich.size(), 4);
                 push_pop_vecstich(vecstich, susptrans.stich.clone(), |vecstich| {
-                    (susptrans, susptrans.susp.min_reachable_payout(rules, vecstich, epi, tpln_stoss_doubling, n_stock))
+                    (susptrans, susptrans.susp.min_reachable_payout_internal(rules, vecstich, epi, tpln_stoss_doubling, n_stock))
                 })
             })
             .group_by(|&(susptrans, _n_payout)| { // other players may play inconveniently for epi...
@@ -343,10 +373,7 @@ impl SSuspicion {
             })
             .min_by_key(|&(_susptrans, (_card, n_payout))| n_payout)
             .map(|(susptrans, (_card, n_payout))| (susptrans.stich[epi], n_payout)))
-            .unwrap();
-        assert!(vecstich_backup.iter().zip(vecstich.iter()).all(|(s1,s2)|s1.size()==s2.size()));
-        assert!(self.ahand[epi].cards().contains(&tplcardpayout.0));
-        tplcardpayout
+            .unwrap()
     }
 
 }

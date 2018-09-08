@@ -208,7 +208,7 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                 ) -> (SCard, isize) {
                     let mut vecstich_complete_mut = game.completed_stichs().get().to_vec();
                     let n_stich_complete = vecstich_complete_mut.len();
-                    SSuspicion::new(
+                    SSuspicion::min_reachable_payout(
                         ahand,
                         game.rules.as_ref(),
                         &mut vecstich_complete_mut,
@@ -224,9 +224,6 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                             }
                         },
                         foreachsnapshot,
-                    ).min_reachable_payout(
-                        game.rules.as_ref(),
-                        &mut vecstich_complete_mut,
                         epi_fixed,
                         stoss_and_doublings(&game.vecstoss, &game.doublings),
                         game.n_stock,
@@ -287,7 +284,7 @@ impl TAi for SAiSimulating {
                 let n_payout_sum = Arc::clone(&n_payout_sum);
                 scope.spawn(move || {
                     let n_payout = 
-                        SSuspicion::new(
+                        SSuspicion::min_reachable_payout(
                             ahand,
                             rules,
                             &mut Vec::new(),
@@ -297,9 +294,6 @@ impl TAi for SAiSimulating {
                                 random_sample_from_vec(vecstich_successor, 1);
                             },
                             &mut SForEachSnapshotNoop{},
-                        ).min_reachable_payout(
-                            rules,
-                            &mut Vec::new(),
                             epi_rank,
                             /*tpln_stoss_doubling*/(0, 0), // // TODO do we need tpln_stoss_doubling from somewhere? 
                             n_stock,
