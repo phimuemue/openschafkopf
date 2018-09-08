@@ -42,17 +42,25 @@ fn detect_expensive_all_possible_hands() {
                     };
                     assert_bound(vecahand.len(), 2000);
                     for ahand in vecahand {
-                        assert_bound(
-                            SSuspicion::new(
-                                ahand,
-                                game.rules.as_ref(),
-                                &mut game.completed_stichs().get().to_vec(),
-                                game.current_stich(),
-                                &|_vecstich_complete, _vecstich_successor| {/*no filtering*/},
-                                &mut SForEachSnapshotNoop{},
-                            ).count_leaves(),
-                            2000,
+                        struct SLeafCounter(usize);
+                        impl TForEachSnapshot for SLeafCounter {
+                            fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>) {}
+                            fn end_snapshot(&mut self, _slcstich: SCompletedStichs, susp: &SSuspicion) {
+                                if susp.suspicion_transitions().is_empty() {
+                                    self.0+=1;
+                                }
+                            }
+                        }
+                        let mut leafcounter = SLeafCounter(0);
+                        SSuspicion::new(
+                            ahand,
+                            game.rules.as_ref(),
+                            &mut game.completed_stichs().get().to_vec(),
+                            game.current_stich(),
+                            &|_vecstich_complete, _vecstich_successor| {/*no filtering*/},
+                            &mut leafcounter,
                         );
+                        assert_bound(leafcounter.0, 2000);
                     }
                 }
             },

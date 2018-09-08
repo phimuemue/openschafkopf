@@ -182,6 +182,7 @@ impl<'rules> TForEachSnapshot for SForEachSnapshotHTMLVisualizer<'rules> {
 
 impl SSuspicion {
 
+    #[cfg(test)]
     pub fn suspicion_transitions(&self) -> &[SSuspicionTransition] {
         &self.vecsusptrans
     }
@@ -260,18 +261,7 @@ impl SSuspicion {
             ahand,
         };
         foreachsnapshot.end_snapshot(SCompletedStichs::new(vecstich), &susp);
-        assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
         susp
-    }
-
-    pub fn count_leaves(&self) -> usize {
-        if self.vecsusptrans.is_empty() {
-            1
-        } else {
-            self.vecsusptrans.iter()
-                .map(|susptrans| susptrans.susp.count_leaves())
-                .sum()
-        }
     }
 
     fn hand_size(&self) -> usize {
