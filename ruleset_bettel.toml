@@ -1,0 +1,16 @@
+base-price = 20
+solo-price = 50
+lauf-min = 3
+deck = "lang"
+
+[rufspiel]
+[bettel]
+stichzwang=true
+price=20
+
+[ramsch]
+price=10
+durchmarsch=91
+
+[doubling]
+[steigern]

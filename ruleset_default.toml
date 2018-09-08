@@ -1,0 +1,23 @@
+base-price = 20
+solo-price = 50
+lauf-min = 3
+deck = "lang"
+
+[rufspiel]
+[solo]
+[farbwenz]
+lauf=3
+[wenz]
+lauf=2
+[bettel]
+price=20
+
+[ramsch]
+price=10
+durchmarsch=91
+
+[doubling]
+[stoss]
+max=2
+[steigern]
+step=15
