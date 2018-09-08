@@ -59,6 +59,7 @@ fn detect_expensive_all_possible_hands() {
                             game.current_stich(),
                             &|_vecstich_complete, _vecstich_successor| {/*no filtering*/},
                             &mut leafcounter,
+                            /*ostr_file_out*/None,
                         );
                         assert_bound(leafcounter.0, 2000);
                     }

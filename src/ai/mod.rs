@@ -16,7 +16,6 @@ use ai::{
 use rand;
 use std::{
     self,
-    fs,
     mem,
     sync::{
         Arc, Mutex,
@@ -199,51 +198,31 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
             let mapcardn_payout = Arc::clone(&mapcardn_payout);
             scope.spawn(move || {
                 assert_ahand_same_size(&ahand);
-                fn internal_min_reachable_payout<ForEachSnapshot: TForEachSnapshot>(
-                    ahand: EnumMap<EPlayerIndex, SHand>,
-                    game: &SGame,
-                    n_branches: usize,
-                    epi_fixed: EPlayerIndex,
-                    foreachsnapshot: &mut ForEachSnapshot,
-                ) -> (SCard, isize) {
-                    let mut vecstich_complete_mut = game.completed_stichs().get().to_vec();
-                    let n_stich_complete = vecstich_complete_mut.len();
-                    SSuspicion::min_reachable_payout(
-                        ahand,
-                        game.rules.as_ref(),
-                        &mut vecstich_complete_mut,
-                        game.current_stich(),
-                        &|slcstich_complete_successor: &[SStich], vecstich_successor: &mut Vec<SStich>| {
-                            assert!(!vecstich_successor.is_empty());
-                            assert!(n_stich_complete<=slcstich_complete_successor.len());
-                            if slcstich_complete_successor.len()!=n_stich_complete && n_stich_complete < 6 {
-                                // TODO: maybe keep more than one successor stich
-                                random_sample_from_vec(vecstich_successor, n_branches);
-                            } else {
-                                // if slcstich_complete_successor>=6, we hope that we can compute everything
-                            }
-                        },
-                        foreachsnapshot,
-                        epi_fixed,
-                        stoss_and_doublings(&game.vecstoss, &game.doublings),
-                        game.n_stock,
-                    )
-                }
-                let (card, n_payout) = if let Some(str_file_out) = ostr_file_out {
-                    verify!(std::fs::create_dir_all(str_file_out)).unwrap();
-                    internal_min_reachable_payout(
-                        ahand,
-                        game,
-                        n_branches,
-                        epi_fixed,
-                        &mut SForEachSnapshotHTMLVisualizer::new(
-                            verify!(fs::File::create(format!("{}/{}.html", str_file_out, i_susp))).unwrap(),
-                            game.rules.as_ref(),
-                        ),
-                    )
-                } else {
-                    internal_min_reachable_payout(ahand, game, n_branches, epi_fixed, &mut SForEachSnapshotNoop{})
-                };
+                let mut vecstich_complete_mut = game.completed_stichs().get().to_vec();
+                let n_stich_complete = vecstich_complete_mut.len();
+                let (card, n_payout) = SSuspicion::min_reachable_payout(
+                    ahand,
+                    game.rules.as_ref(),
+                    &mut vecstich_complete_mut,
+                    game.current_stich(),
+                    &|slcstich_complete_successor: &[SStich], vecstich_successor: &mut Vec<SStich>| {
+                        assert!(!vecstich_successor.is_empty());
+                        assert!(n_stich_complete<=slcstich_complete_successor.len());
+                        if slcstich_complete_successor.len()!=n_stich_complete && n_stich_complete < 6 {
+                            // TODO: maybe keep more than one successor stich
+                            random_sample_from_vec(vecstich_successor, n_branches);
+                        } else {
+                            // if slcstich_complete_successor>=6, we hope that we can compute everything
+                        }
+                    },
+                    epi_fixed,
+                    stoss_and_doublings(&game.vecstoss, &game.doublings),
+                    game.n_stock,
+                    ostr_file_out.map(|str_file_out| {
+                        verify!(std::fs::create_dir_all(str_file_out)).unwrap();
+                        format!("{}/{}", str_file_out, i_susp)
+                    }).as_ref().map(|str_file_out| &str_file_out[..]),
+                );
                 let mut mapcardn_payout = verify!(mapcardn_payout.lock()).unwrap();
                 mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
             });
@@ -293,10 +272,10 @@ impl TAi for SAiSimulating {
                                 assert!(!vecstich_successor.is_empty());
                                 random_sample_from_vec(vecstich_successor, 1);
                             },
-                            &mut SForEachSnapshotNoop{},
                             epi_rank,
                             /*tpln_stoss_doubling*/(0, 0), // // TODO do we need tpln_stoss_doubling from somewhere? 
                             n_stock,
+                            /*ostr_file_out*/None,
                         ).1
                     ;
                     n_payout_sum.fetch_add(n_payout, Ordering::SeqCst);

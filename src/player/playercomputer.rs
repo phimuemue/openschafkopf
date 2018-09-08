@@ -8,10 +8,7 @@ use game::*;
 use ai::{
     *,
     handiterators::forever_rand_hands,
-    suspicion::{
-        SSuspicion,
-        SForEachSnapshotNoop,
-    },
+    suspicion::SSuspicion,
 };
 use util::*;
 use std::sync::mpsc;
@@ -127,10 +124,10 @@ impl TPlayer for SPlayerComputer {
                             assert!(!vecstich_successor.is_empty());
                             random_sample_from_vec(vecstich_successor, 1);
                         },
-                        &mut SForEachSnapshotNoop{},
                         epi,
                         stoss_and_doublings(vecstoss, doublings),
                         n_stock,
+                        /*ostr_file_out*/None,
                     ).1
                 })
                 .sum::<isize>().as_num::<f64>()

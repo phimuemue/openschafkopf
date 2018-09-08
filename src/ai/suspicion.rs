@@ -56,13 +56,14 @@ impl TForEachSnapshot for SForEachSnapshotNoop {
     fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion, _slcstich_successor: &[SStich]) {}
 }
 
-pub struct SForEachSnapshotHTMLVisualizer<'rules> {
+pub struct SForEachSnapshotHTMLVisualizer<'rules, 'foreachsnapshot, ForEachSnapshot: TForEachSnapshot + 'foreachsnapshot> {
     file_output: fs::File,
     rules: &'rules TRules,
+    foreachsnapshot: &'foreachsnapshot mut ForEachSnapshot
 }
-impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
-    pub fn new(file_output: fs::File, rules: &'rules TRules) -> Self {
-        let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output, rules};
+impl<'rules, 'foreachsnapshot, ForEachSnapshot: TForEachSnapshot> SForEachSnapshotHTMLVisualizer<'rules, 'foreachsnapshot, ForEachSnapshot> {
+    pub fn new(file_output: fs::File, rules: &'rules TRules, foreachsnapshot: &'foreachsnapshot mut ForEachSnapshot) -> Self {
+        let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output, rules, foreachsnapshot};
         foreachsnapshothtmlvisualizer.write_all(
             b"<style>
             input + label + ul {
@@ -135,8 +136,9 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
         )
     }
 }
-impl<'rules> TForEachSnapshot for SForEachSnapshotHTMLVisualizer<'rules> {
+impl<'rules, 'foreachsnapshot, ForEachSnapshot: TForEachSnapshot> TForEachSnapshot for SForEachSnapshotHTMLVisualizer<'rules, 'foreachsnapshot, ForEachSnapshot> {
     fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]) {
+        self.foreachsnapshot.begin_snapshot(slcstich, ahand, slcstich_successor);
         let str_item_id = format!("{}{}",
             slcstich.get().len(),
             rand::thread_rng().sample_iter(&rand::distributions::Alphanumeric).take(16).collect::<String>(), // we simply assume no collisions here
@@ -174,21 +176,60 @@ impl<'rules> TForEachSnapshot for SForEachSnapshotHTMLVisualizer<'rules> {
         self.write_all(b"<ul>\n");
     }
 
-    fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion, _slcstich_successor: &[SStich]) {
+    fn end_snapshot(&mut self, slcstich: SCompletedStichs, susp: &SSuspicion, slcstich_successor: &[SStich]) {
+        self.foreachsnapshot.end_snapshot(slcstich, susp, slcstich_successor);
         self.write_all(b"</ul>\n");
         self.write_all(b"</li>\n");
     }
 }
 
 impl SSuspicion {
-    // TODO Maybe something like payout_hint is useful to prune suspicion tree
     pub fn new<FuncFilterSuccessors, ForEachSnapshot>(
         ahand: EnumMap<EPlayerIndex, SHand>,
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
         stich_current_model: &SStich,
         func_filter_successors: &FuncFilterSuccessors,
-        foreachsnapshot: &mut ForEachSnapshot
+        foreachsnapshot: &mut ForEachSnapshot,
+        ostr_file_out: Option<&str>,
+    ) -> Self 
+        where
+            FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
+            ForEachSnapshot: TForEachSnapshot,
+    {
+        if let Some(str_file_out) = ostr_file_out {
+            Self::new_internal(
+                ahand,
+                rules,
+                vecstich,
+                stich_current_model,
+                func_filter_successors,
+                &mut SForEachSnapshotHTMLVisualizer::new(
+                    verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap(),
+                    rules,
+                    foreachsnapshot,
+                ),
+            )
+        } else {
+            Self::new_internal(
+                ahand,
+                rules,
+                vecstich,
+                stich_current_model,
+                func_filter_successors,
+                foreachsnapshot,
+            )
+        }
+    }
+
+    // TODO Maybe something like payout_hint is useful to prune suspicion tree
+    pub fn new_internal<FuncFilterSuccessors, ForEachSnapshot>(
+        ahand: EnumMap<EPlayerIndex, SHand>,
+        rules: &TRules,
+        vecstich: &mut Vec<SStich>,
+        stich_current_model: &SStich,
+        func_filter_successors: &FuncFilterSuccessors,
+        foreachsnapshot: &mut ForEachSnapshot,
     ) -> Self 
         where
             FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
@@ -236,7 +277,7 @@ impl SSuspicion {
                 let epi_first_susp = rules.winner_index(stich);
                 push_pop_vecstich(vecstich, stich.clone(), |vecstich| SSuspicionTransition {
                     stich : stich.clone(),
-                    susp : SSuspicion::new(
+                    susp : SSuspicion::new_internal(
                         EPlayerIndex::map_from_fn(|epi| {
                             ahand[epi].new_from_hand(stich[epi])
                         }),
@@ -261,20 +302,19 @@ impl SSuspicion {
         hand_size_internal(&self.ahand)
     }
 
-    pub fn min_reachable_payout<FuncFilterSuccessors, ForEachSnapshot>(
+    pub fn min_reachable_payout<FuncFilterSuccessors>(
         ahand: EnumMap<EPlayerIndex, SHand>,
         rules: &TRules,
         vecstich: &mut Vec<SStich>,
         stich_current_model: &SStich,
         func_filter_successors: &FuncFilterSuccessors,
-        foreachsnapshot: &mut ForEachSnapshot,
         epi: EPlayerIndex,
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
+        ostr_file_out: Option<&str>,
     ) -> (SCard, isize)
         where
             FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
-            ForEachSnapshot: TForEachSnapshot,
     {
         let vecstich_backup = vecstich.clone();
         assert!(vecstich.iter().all(|stich| stich.size()==4));
@@ -284,7 +324,8 @@ impl SSuspicion {
             vecstich,
             stich_current_model,
             func_filter_successors,
-            foreachsnapshot,
+            &mut SForEachSnapshotNoop{},
+            ostr_file_out,
         );
         assert_eq!(vecstich, &vecstich_backup);
         let (card, n_payout) = susp.min_reachable_payout_internal(rules, vecstich, epi, tpln_stoss_doubling, n_stock);
