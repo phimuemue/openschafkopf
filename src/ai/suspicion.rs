@@ -238,9 +238,9 @@ impl SSuspicion {
             assert!(!vecstich_successor.is_empty());
         }
         foreachsnapshot.begin_snapshot(SCompletedStichs::new(vecstich), &ahand, &vecstich_successor);
-        let vecsusptrans = vecstich_successor.into_iter()
+        let vecsusptrans = vecstich_successor.iter()
             .map(|stich| {
-                let epi_first_susp = rules.winner_index(&stich);
+                let epi_first_susp = rules.winner_index(stich);
                 push_pop_vecstich(vecstich, stich.clone(), |vecstich| SSuspicionTransition {
                     stich : stich.clone(),
                     susp : SSuspicion::new(
