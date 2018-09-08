@@ -190,10 +190,13 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
     where HandsIterator: Iterator<Item=EnumMap<EPlayerIndex, SHand>>
 {
     let epi_fixed = verify!(game.current_stich().current_playerindex()).unwrap();
-    let vecsusp = Arc::new(Mutex::new(Vec::new()));
+    let mapcardn_payout = Arc::new(Mutex::new(
+        // aggregate n_payout per card in some way
+        SCard::map_from_fn(|_card| std::isize::MAX),
+    ));
     crossbeam::scope(|scope| {
         for (i_susp, ahand) in itahand.enumerate() {
-            let vecsusp = Arc::clone(&vecsusp);
+            let mapcardn_payout = Arc::clone(&mapcardn_payout);
             scope.spawn(move || {
                 assert_ahand_same_size(&ahand);
                 fn new_suspicion<ForEachSnapshot: TForEachSnapshot>(
@@ -237,16 +240,6 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                     new_suspicion(ahand, game, n_branches, &mut SForEachSnapshotNoop{})
                 };
                 assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
-                verify!(vecsusp.lock()).unwrap().push(susp);
-            });
-        }
-    });
-    let veccard_allowed_fixed = game.rules.all_allowed_cards(&game.vecstich, &game.ahand[epi_fixed]);
-    let mapcardn_payout = verify!(vecsusp.lock()).unwrap().iter()
-        .fold(
-            // aggregate n_payout per card in some way
-            SCard::map_from_fn(|_card| std::isize::MAX),
-            |mut mapcardn_payout, susp| {
                 let mut vecstich_complete_payout = game.completed_stichs().get().to_vec();
                 let (card, n_payout) = susp.min_reachable_payout(
                     game.rules.as_ref(),
@@ -255,10 +248,16 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                     stoss_and_doublings(&game.vecstoss, &game.doublings),
                     game.n_stock,
                 );
+                let mut mapcardn_payout = verify!(mapcardn_payout.lock()).unwrap();
                 mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
-                mapcardn_payout
-            }
-        );
+            });
+        }
+    });
+    let mapcardn_payout = verify!(
+        verify!(Arc::try_unwrap(mapcardn_payout)).unwrap() // "Returns the contained value, if the Arc has exactly one strong reference"   
+            .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
+    ).unwrap();
+    let veccard_allowed_fixed = game.rules.all_allowed_cards(&game.vecstich, &game.ahand[epi_fixed]);
     assert!(<SCard as TPlainEnum>::values().any(|card| {
         veccard_allowed_fixed.contains(&card) && mapcardn_payout[card] < std::isize::MAX
     }));
