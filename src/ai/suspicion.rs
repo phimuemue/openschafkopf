@@ -47,13 +47,13 @@ pub struct SSuspicion {
 
 pub trait TForEachSnapshot {
     fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]);
-    fn end_snapshot(&mut self, slcstich: SCompletedStichs, susp: &SSuspicion);
+    fn end_snapshot(&mut self, slcstich: SCompletedStichs, susp: &SSuspicion, slcstich_successor: &[SStich]);
 }
 
 pub struct SForEachSnapshotNoop;
 impl TForEachSnapshot for SForEachSnapshotNoop {
     fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {}
-    fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion) {}
+    fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion, _slcstich_successor: &[SStich]) {}
 }
 
 pub struct SForEachSnapshotHTMLVisualizer<'rules> {
@@ -174,20 +174,13 @@ impl<'rules> TForEachSnapshot for SForEachSnapshotHTMLVisualizer<'rules> {
         self.write_all(b"<ul>\n");
     }
 
-    fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion) {
+    fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion, _slcstich_successor: &[SStich]) {
         self.write_all(b"</ul>\n");
         self.write_all(b"</li>\n");
     }
 }
 
 impl SSuspicion {
-
-    #[cfg(test)]
-    pub fn suspicion_transitions(&self) -> &[SSuspicionTransition] {
-        &self.vecsusptrans
-    }
-
-
     // TODO Maybe something like payout_hint is useful to prune suspicion tree
     pub fn new<FuncFilterSuccessors, ForEachSnapshot>(
         ahand: EnumMap<EPlayerIndex, SHand>,
@@ -260,7 +253,7 @@ impl SSuspicion {
             vecsusptrans,
             ahand,
         };
-        foreachsnapshot.end_snapshot(SCompletedStichs::new(vecstich), &susp);
+        foreachsnapshot.end_snapshot(SCompletedStichs::new(vecstich), &susp, &vecstich_successor);
         susp
     }
 

@@ -45,8 +45,8 @@ fn detect_expensive_all_possible_hands() {
                         struct SLeafCounter(usize);
                         impl TForEachSnapshot for SLeafCounter {
                             fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {}
-                            fn end_snapshot(&mut self, _slcstich: SCompletedStichs, susp: &SSuspicion) {
-                                if susp.suspicion_transitions().is_empty() {
+                            fn end_snapshot(&mut self, _slcstich: SCompletedStichs, _susp: &SSuspicion, slcstich_successor: &[SStich]) {
+                                if slcstich_successor.is_empty() {
                                     self.0+=1;
                                 }
                             }
