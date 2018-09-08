@@ -260,6 +260,7 @@ impl SSuspicion {
             ahand,
         };
         foreachsnapshot.end_snapshot(SCompletedStichs::new(vecstich), &susp);
+        assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
         susp
     }
 

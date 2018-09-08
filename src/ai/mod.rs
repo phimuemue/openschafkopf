@@ -239,7 +239,6 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                 } else {
                     new_suspicion(ahand, game, n_branches, &mut SForEachSnapshotNoop{})
                 };
-                assert!(susp.suspicion_transitions().len() <= susp.count_leaves());
                 let mut vecstich_complete_payout = game.completed_stichs().get().to_vec();
                 let (card, n_payout) = susp.min_reachable_payout(
                     game.rules.as_ref(),
