@@ -32,14 +32,18 @@ pub trait TForEachSnapshot {
     ) -> Self::Output;
 }
 
-pub struct SForEachSnapshotHTMLVisualizer<'rules, 'foreachsnapshot, ForEachSnapshot: TForEachSnapshot + 'foreachsnapshot> {
+trait TSnapshotVisualizer {
+    fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]);
+    fn end_snapshot(&mut self);
+}
+
+pub struct SForEachSnapshotHTMLVisualizer<'rules> {
     file_output: fs::File,
     rules: &'rules TRules,
-    foreachsnapshot: &'foreachsnapshot mut ForEachSnapshot
 }
-impl<'rules, 'foreachsnapshot, ForEachSnapshot: TForEachSnapshot> SForEachSnapshotHTMLVisualizer<'rules, 'foreachsnapshot, ForEachSnapshot> {
-    pub fn new(file_output: fs::File, rules: &'rules TRules, foreachsnapshot: &'foreachsnapshot mut ForEachSnapshot) -> Self {
-        let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output, rules, foreachsnapshot};
+impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
+    pub fn new(file_output: fs::File, rules: &'rules TRules) -> Self {
+        let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output, rules};
         foreachsnapshothtmlvisualizer.write_all(
             b"<style>
             input + label + ul {
@@ -111,13 +115,10 @@ impl<'rules, 'foreachsnapshot, ForEachSnapshot: TForEachSnapshot> SForEachSnapsh
             fn_per_player(EPlayerIndex::EPI0),
         )
     }
+}
 
-    fn end_snapshot_internal(&mut self) {
-        self.write_all(b"</ul>\n");
-        self.write_all(b"</li>\n");
-    }
-
-    fn begin_snapshot_internal(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]) {
+impl<'rules> TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'rules> {
+    fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]) {
         let str_item_id = format!("{}{}",
             slcstich.get().len(),
             rand::thread_rng().sample_iter(&rand::distributions::Alphanumeric).take(16).collect::<String>(), // we simply assume no collisions here
@@ -154,31 +155,10 @@ impl<'rules, 'foreachsnapshot, ForEachSnapshot: TForEachSnapshot> SForEachSnapsh
         self.write_all(b"</tr></table></label>\n");
         self.write_all(b"<ul>\n");
     }
-}
-impl<'rules, 'foreachsnapshot, ForEachSnapshot: TForEachSnapshot> TForEachSnapshot for SForEachSnapshotHTMLVisualizer<'rules, 'foreachsnapshot, ForEachSnapshot> {
-    type Output = ForEachSnapshot::Output;
 
-    fn pruned_output(&mut self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
-        if let Some(output) = self.foreachsnapshot.pruned_output(vecstich, ahand) {
-            self.begin_snapshot_internal(vecstich.get(), ahand, &Vec::new());
-            self.end_snapshot_internal();
-            Some(output)
-        } else {
-            None
-        }
-    }
-
-    fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]) {
-        self.begin_snapshot_internal(slcstich, ahand, slcstich_successor);
-        self.foreachsnapshot.begin_snapshot(slcstich, ahand, slcstich_successor)
-    }
-
-    fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
-        &mut self,
-        ittplstichoutput: ItTplStichOutput,
-    ) -> Self::Output {
-        self.end_snapshot_internal();
-        self.foreachsnapshot.end_snapshot(ittplstichoutput)
+    fn end_snapshot(&mut self) {
+        self.write_all(b"</ul>\n");
+        self.write_all(b"</li>\n");
     }
 }
 
@@ -195,24 +175,29 @@ pub fn explore_snapshots<FuncFilterSuccessors, ForEachSnapshot>(
         FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
         ForEachSnapshot: TForEachSnapshot,
 {
-    macro_rules! forward_to_internal{($foreachsnapshot_internal: expr) => {
+    macro_rules! forward_to_internal{($snapshotvisualizer: expr) => {
         explore_snapshots_internal(
             ahand,
             rules,
             vecstich,
             stich_current_model,
             func_filter_successors,
-            $foreachsnapshot_internal
+            foreachsnapshot,
+            $snapshotvisualizer,
         )
     }}
     if let Some(str_file_out) = ostr_file_out {
         forward_to_internal!(&mut SForEachSnapshotHTMLVisualizer::new(
             verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap(),
             rules,
-            foreachsnapshot,
         ))
     } else {
-        forward_to_internal!(foreachsnapshot)
+        struct SNoVisualization;
+        impl TSnapshotVisualizer for SNoVisualization {
+            fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {}
+            fn end_snapshot(&mut self) {}
+        }
+        forward_to_internal!(&mut SNoVisualization{})
     }
 }
 
@@ -224,12 +209,15 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
     stich_current_model: &SStich,
     func_filter_successors: &FuncFilterSuccessors,
     foreachsnapshot: &mut ForEachSnapshot,
+    snapshotvisualizer: &mut TSnapshotVisualizer,
 ) -> ForEachSnapshot::Output 
     where
         FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
         ForEachSnapshot: TForEachSnapshot,
 {
     if let Some(output) = foreachsnapshot.pruned_output(vecstich, &ahand) {
+        snapshotvisualizer.begin_snapshot(vecstich.get(), &ahand, /*vecstich_successor*/&Vec::new());
+        snapshotvisualizer.end_snapshot();
         output
     } else {
         let mut vecstich_successor : Vec<SStich> = Vec::new();
@@ -268,6 +256,7 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
             func_filter_successors(vecstich.get().get(), &mut vecstich_successor);
             assert!(!vecstich_successor.is_empty());
         }
+        snapshotvisualizer.begin_snapshot(vecstich.get(), &ahand, &vecstich_successor);
         foreachsnapshot.begin_snapshot(vecstich.get(), &ahand, &vecstich_successor);
         let vectplstichoutput = vecstich_successor.into_iter()
             .map(|stich| {
@@ -281,11 +270,13 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
                         &SStich::new(rules.winner_index(&stich)),
                         func_filter_successors,
                         foreachsnapshot,
+                        snapshotvisualizer,
                     )
                 });
                 (stich, output_successor)
             })
             .collect::<Vec<_>>();
+        snapshotvisualizer.end_snapshot();
         foreachsnapshot.end_snapshot(vectplstichoutput.into_iter())
     }
 }
