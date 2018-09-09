@@ -61,7 +61,7 @@ fn detect_expensive_all_possible_hands() {
                             }
                         }
                         assert_bound(
-                            SSuspicion::new(
+                            explore_snapshots(
                                 ahand,
                                 game.rules.as_ref(),
                                 &mut game.completed_stichs().get().to_vec(),

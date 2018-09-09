@@ -8,7 +8,7 @@ use game::*;
 use ai::{
     *,
     handiterators::forever_rand_hands,
-    suspicion::SSuspicion,
+    suspicion::min_reachable_payout,
 };
 use util::*;
 use std::sync::mpsc;
@@ -115,7 +115,7 @@ impl TPlayer for SPlayerComputer {
         verify!(txb.send(
             vecpairahandf_suspicion.into_iter()
                 .map(|(ahand, _f_rank_rules)| {
-                    SSuspicion::min_reachable_payout(
+                    min_reachable_payout(
                         ahand,
                         rules,
                         &mut Vec::new(),

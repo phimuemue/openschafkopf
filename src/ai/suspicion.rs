@@ -35,8 +35,6 @@ pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<SStich>, stich: SStich, fun
     r
 }
 
-pub struct SSuspicion;
-
 pub trait TForEachSnapshot {
     type Output;
     fn pruned_output(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output>;
@@ -197,156 +195,154 @@ impl<'rules, 'foreachsnapshot, ForEachSnapshot: TForEachSnapshot> TForEachSnapsh
     }
 }
 
-impl SSuspicion {
-    pub fn new<FuncFilterSuccessors, ForEachSnapshot>(
-        ahand: EnumMap<EPlayerIndex, SHand>,
-        rules: &TRules,
-        vecstich: &mut Vec<SStich>,
-        stich_current_model: &SStich,
-        func_filter_successors: &FuncFilterSuccessors,
-        foreachsnapshot: &mut ForEachSnapshot,
-        ostr_file_out: Option<&str>,
-    ) -> ForEachSnapshot::Output 
-        where
-            FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
-            ForEachSnapshot: TForEachSnapshot,
-    {
-        if let Some(str_file_out) = ostr_file_out {
-            Self::new_internal(
-                ahand,
-                rules,
-                vecstich,
-                stich_current_model,
-                func_filter_successors,
-                &mut SForEachSnapshotHTMLVisualizer::new(
-                    verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap(),
-                    rules,
-                    foreachsnapshot,
-                ),
-            )
-        } else {
-            Self::new_internal(
-                ahand,
-                rules,
-                vecstich,
-                stich_current_model,
-                func_filter_successors,
-                foreachsnapshot,
-            )
-        }
-    }
-
-    // TODO Maybe something like payout_hint is useful to prune suspicion tree
-    pub fn new_internal<FuncFilterSuccessors, ForEachSnapshot>(
-        ahand: EnumMap<EPlayerIndex, SHand>,
-        rules: &TRules,
-        vecstich: &mut Vec<SStich>,
-        stich_current_model: &SStich,
-        func_filter_successors: &FuncFilterSuccessors,
-        foreachsnapshot: &mut ForEachSnapshot,
-    ) -> ForEachSnapshot::Output 
-        where
-            FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
-            ForEachSnapshot: TForEachSnapshot,
-    {
-        if let Some(output) = foreachsnapshot.pruned_output(SCompletedStichs::new(vecstich), &ahand) {
-            output
-        } else {
-            SCompletedStichs::new(vecstich);
-            let mut vecstich_successor : Vec<SStich> = Vec::new();
-            assert!(1<hand_size_internal(&ahand)); // otherwise, pruned_output must return Some(output)
-            {
-                let epi_first = stich_current_model.first_playerindex();
-                push_pop_vecstich(vecstich, SStich::new(epi_first), |vecstich| {
-                    let offset_to_playerindex = move |i_offset: usize| {epi_first.wrapping_add(i_offset)};
-                    macro_rules! traverse_valid_cards {($i_offset : expr, $func: expr) => {
-                        // TODO use equivalent card optimization
-                        for card in rules.all_allowed_cards(vecstich, &ahand[offset_to_playerindex($i_offset)]) {
-                            current_stich_mut(vecstich).push(card);
-                            assert_eq!(card, current_stich(vecstich)[offset_to_playerindex($i_offset)]);
-                            $func;
-                            current_stich_mut(vecstich).undo_most_recent();
-                        }
-                    };};
-                    // It seems that this nested loop is the ai's bottleneck
-                    // because it is currently designed to be generic for all rules.
-                    // It may be more performant to have TRules::all_possible_stichs
-                    // so that we can implement rule-specific optimizations.
-                    traverse_valid_cards!(0, {
-                        traverse_valid_cards!(1, {
-                            traverse_valid_cards!(2, {
-                                traverse_valid_cards!(3, {
-                                    let stich_current = current_stich(vecstich);
-                                    if stich_current.equal_up_to_size(stich_current_model, stich_current_model.size()) {
-                                        vecstich_successor.push(stich_current.clone());
-                                    }
-                                } );
-                            } );
-                        } );
-                    } );
-                });
-                assert!(!vecstich_successor.is_empty());
-                func_filter_successors(vecstich, &mut vecstich_successor);
-                assert!(!vecstich_successor.is_empty());
-            }
-            foreachsnapshot.begin_snapshot(SCompletedStichs::new(vecstich), &ahand, &vecstich_successor);
-            let vectplstichoutput = vecstich_successor.into_iter()
-                .map(|stich| {
-                    let output_successor = push_pop_vecstich(vecstich, stich.clone(), |vecstich| {
-                        SSuspicion::new_internal(
-                            EPlayerIndex::map_from_fn(|epi| {
-                                ahand[epi].new_from_hand(stich[epi])
-                            }),
-                            rules,
-                            vecstich,
-                            &SStich::new(rules.winner_index(&stich)),
-                            func_filter_successors,
-                            foreachsnapshot,
-                        )
-                    });
-                    (stich, output_successor)
-                })
-                .collect::<Vec<_>>();
-            foreachsnapshot.end_snapshot(vectplstichoutput.into_iter())
-        }
-    }
-
-    pub fn min_reachable_payout<FuncFilterSuccessors>(
-        ahand: EnumMap<EPlayerIndex, SHand>,
-        rules: &TRules,
-        vecstich: &mut Vec<SStich>,
-        stich_current_model: &SStich,
-        func_filter_successors: &FuncFilterSuccessors,
-        epi: EPlayerIndex,
-        tpln_stoss_doubling: (usize, usize),
-        n_stock: isize,
-        ostr_file_out: Option<&str>,
-    ) -> (SCard, isize)
-        where
-            FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
-    {
-        let vecstich_backup = vecstich.clone();
-        let ahand_backup = ahand.clone();
-        assert!(vecstich.iter().all(|stich| stich.size()==4));
-        let (card, n_payout) = SSuspicion::new(
+pub fn explore_snapshots<FuncFilterSuccessors, ForEachSnapshot>(
+    ahand: EnumMap<EPlayerIndex, SHand>,
+    rules: &TRules,
+    vecstich: &mut Vec<SStich>,
+    stich_current_model: &SStich,
+    func_filter_successors: &FuncFilterSuccessors,
+    foreachsnapshot: &mut ForEachSnapshot,
+    ostr_file_out: Option<&str>,
+) -> ForEachSnapshot::Output 
+    where
+        FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
+        ForEachSnapshot: TForEachSnapshot,
+{
+    if let Some(str_file_out) = ostr_file_out {
+        explore_snapshots_internal(
             ahand,
             rules,
             vecstich,
             stich_current_model,
             func_filter_successors,
-            &mut SMinReachablePayout{
+            &mut SForEachSnapshotHTMLVisualizer::new(
+                verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap(),
                 rules,
-                epi,
-                tpln_stoss_doubling,
-                n_stock,
-            },
-            ostr_file_out,
-        );
-        assert_eq!(vecstich, &vecstich_backup);
-        assert!(vecstich_backup.iter().zip(vecstich.iter()).all(|(s1,s2)|s1.size()==s2.size()));
-        assert!(ahand_backup[epi].cards().contains(&card));
-        (card, n_payout)
+                foreachsnapshot,
+            ),
+        )
+    } else {
+        explore_snapshots_internal(
+            ahand,
+            rules,
+            vecstich,
+            stich_current_model,
+            func_filter_successors,
+            foreachsnapshot,
+        )
     }
+}
+
+// TODO Maybe something like payout_hint is useful to prune suspicion tree
+fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
+    ahand: EnumMap<EPlayerIndex, SHand>,
+    rules: &TRules,
+    vecstich: &mut Vec<SStich>,
+    stich_current_model: &SStich,
+    func_filter_successors: &FuncFilterSuccessors,
+    foreachsnapshot: &mut ForEachSnapshot,
+) -> ForEachSnapshot::Output 
+    where
+        FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
+        ForEachSnapshot: TForEachSnapshot,
+{
+    if let Some(output) = foreachsnapshot.pruned_output(SCompletedStichs::new(vecstich), &ahand) {
+        output
+    } else {
+        SCompletedStichs::new(vecstich);
+        let mut vecstich_successor : Vec<SStich> = Vec::new();
+        assert!(1<hand_size_internal(&ahand)); // otherwise, pruned_output must return Some(output)
+        {
+            let epi_first = stich_current_model.first_playerindex();
+            push_pop_vecstich(vecstich, SStich::new(epi_first), |vecstich| {
+                let offset_to_playerindex = move |i_offset: usize| {epi_first.wrapping_add(i_offset)};
+                macro_rules! traverse_valid_cards {($i_offset : expr, $func: expr) => {
+                    // TODO use equivalent card optimization
+                    for card in rules.all_allowed_cards(vecstich, &ahand[offset_to_playerindex($i_offset)]) {
+                        current_stich_mut(vecstich).push(card);
+                        assert_eq!(card, current_stich(vecstich)[offset_to_playerindex($i_offset)]);
+                        $func;
+                        current_stich_mut(vecstich).undo_most_recent();
+                    }
+                };};
+                // It seems that this nested loop is the ai's bottleneck
+                // because it is currently designed to be generic for all rules.
+                // It may be more performant to have TRules::all_possible_stichs
+                // so that we can implement rule-specific optimizations.
+                traverse_valid_cards!(0, {
+                    traverse_valid_cards!(1, {
+                        traverse_valid_cards!(2, {
+                            traverse_valid_cards!(3, {
+                                let stich_current = current_stich(vecstich);
+                                if stich_current.equal_up_to_size(stich_current_model, stich_current_model.size()) {
+                                    vecstich_successor.push(stich_current.clone());
+                                }
+                            } );
+                        } );
+                    } );
+                } );
+            });
+            assert!(!vecstich_successor.is_empty());
+            func_filter_successors(vecstich, &mut vecstich_successor);
+            assert!(!vecstich_successor.is_empty());
+        }
+        foreachsnapshot.begin_snapshot(SCompletedStichs::new(vecstich), &ahand, &vecstich_successor);
+        let vectplstichoutput = vecstich_successor.into_iter()
+            .map(|stich| {
+                let output_successor = push_pop_vecstich(vecstich, stich.clone(), |vecstich| {
+                    explore_snapshots_internal(
+                        EPlayerIndex::map_from_fn(|epi| {
+                            ahand[epi].new_from_hand(stich[epi])
+                        }),
+                        rules,
+                        vecstich,
+                        &SStich::new(rules.winner_index(&stich)),
+                        func_filter_successors,
+                        foreachsnapshot,
+                    )
+                });
+                (stich, output_successor)
+            })
+            .collect::<Vec<_>>();
+        foreachsnapshot.end_snapshot(vectplstichoutput.into_iter())
+    }
+}
+
+pub fn min_reachable_payout<FuncFilterSuccessors>(
+    ahand: EnumMap<EPlayerIndex, SHand>,
+    rules: &TRules,
+    vecstich: &mut Vec<SStich>,
+    stich_current_model: &SStich,
+    func_filter_successors: &FuncFilterSuccessors,
+    epi: EPlayerIndex,
+    tpln_stoss_doubling: (usize, usize),
+    n_stock: isize,
+    ostr_file_out: Option<&str>,
+) -> (SCard, isize)
+    where
+        FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
+{
+    let vecstich_backup = vecstich.clone();
+    let ahand_backup = ahand.clone();
+    assert!(vecstich.iter().all(|stich| stich.size()==4));
+    let (card, n_payout) = explore_snapshots(
+        ahand,
+        rules,
+        vecstich,
+        stich_current_model,
+        func_filter_successors,
+        &mut SMinReachablePayout{
+            rules,
+            epi,
+            tpln_stoss_doubling,
+            n_stock,
+        },
+        ostr_file_out,
+    );
+    assert_eq!(vecstich, &vecstich_backup);
+    assert!(vecstich_backup.iter().zip(vecstich.iter()).all(|(s1,s2)|s1.size()==s2.size()));
+    assert!(ahand_backup[epi].cards().contains(&card));
+    (card, n_payout)
 }
 
 struct SMinReachablePayout<'rules> {

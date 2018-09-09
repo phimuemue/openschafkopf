@@ -200,7 +200,7 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                 assert_ahand_same_size(&ahand);
                 let mut vecstich_complete_mut = game.completed_stichs().get().to_vec();
                 let n_stich_complete = vecstich_complete_mut.len();
-                let (card, n_payout) = SSuspicion::min_reachable_payout(
+                let (card, n_payout) = min_reachable_payout(
                     ahand,
                     game.rules.as_ref(),
                     &mut vecstich_complete_mut,
@@ -263,7 +263,7 @@ impl TAi for SAiSimulating {
                 let n_payout_sum = Arc::clone(&n_payout_sum);
                 scope.spawn(move || {
                     let n_payout = 
-                        SSuspicion::min_reachable_payout(
+                        min_reachable_payout(
                             ahand,
                             rules,
                             &mut Vec::new(),
