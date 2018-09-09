@@ -22,22 +22,9 @@ pub fn hand_size_internal(ahand: &EnumMap<EPlayerIndex, SHand>) -> usize {
     ahand[EPlayerIndex::EPI0].cards().len()
 }
 
-pub fn push_pop_vecstich<Func, R>(vecstich: &mut Vec<SStich>, stich: SStich, func: Func) -> R
-    where Func: FnOnce(&mut Vec<SStich>) -> R
-{
-    let n_stich = vecstich.len();
-    assert!(vecstich.iter().all(|stich| stich.size()==4));
-    vecstich.push(stich);
-    let r = func(vecstich);
-    verify!(vecstich.pop()).unwrap();
-    assert!(vecstich.iter().all(|stich| stich.size()==4));
-    assert_eq!(n_stich, vecstich.len());
-    r
-}
-
 pub trait TForEachSnapshot {
     type Output;
-    fn pruned_output(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output>;
+    fn pruned_output(&mut self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output>;
     fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]);
     fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
         &mut self,
@@ -171,9 +158,9 @@ impl<'rules, 'foreachsnapshot, ForEachSnapshot: TForEachSnapshot> SForEachSnapsh
 impl<'rules, 'foreachsnapshot, ForEachSnapshot: TForEachSnapshot> TForEachSnapshot for SForEachSnapshotHTMLVisualizer<'rules, 'foreachsnapshot, ForEachSnapshot> {
     type Output = ForEachSnapshot::Output;
 
-    fn pruned_output(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
-        if let Some(output) = self.foreachsnapshot.pruned_output(slcstich, ahand) {
-            self.begin_snapshot_internal(slcstich, ahand, &Vec::new());
+    fn pruned_output(&mut self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+        if let Some(output) = self.foreachsnapshot.pruned_output(vecstich, ahand) {
+            self.begin_snapshot_internal(vecstich.get(), ahand, &Vec::new());
             self.end_snapshot_internal();
             Some(output)
         } else {
@@ -198,7 +185,7 @@ impl<'rules, 'foreachsnapshot, ForEachSnapshot: TForEachSnapshot> TForEachSnapsh
 pub fn explore_snapshots<FuncFilterSuccessors, ForEachSnapshot>(
     ahand: EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
-    vecstich: &mut Vec<SStich>,
+    vecstich: &mut SVecStichPushPop,
     stich_current_model: &SStich,
     func_filter_successors: &FuncFilterSuccessors,
     foreachsnapshot: &mut ForEachSnapshot,
@@ -237,7 +224,7 @@ pub fn explore_snapshots<FuncFilterSuccessors, ForEachSnapshot>(
 fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
     ahand: EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
-    vecstich: &mut Vec<SStich>,
+    vecstich: &mut SVecStichPushPop,
     stich_current_model: &SStich,
     func_filter_successors: &FuncFilterSuccessors,
     foreachsnapshot: &mut ForEachSnapshot,
@@ -246,23 +233,22 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
         FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
         ForEachSnapshot: TForEachSnapshot,
 {
-    if let Some(output) = foreachsnapshot.pruned_output(SCompletedStichs::new(vecstich), &ahand) {
+    if let Some(output) = foreachsnapshot.pruned_output(vecstich, &ahand) {
         output
     } else {
-        SCompletedStichs::new(vecstich);
         let mut vecstich_successor : Vec<SStich> = Vec::new();
         assert!(1<hand_size_internal(&ahand)); // otherwise, pruned_output must return Some(output)
         {
             let epi_first = stich_current_model.first_playerindex();
-            push_pop_vecstich(vecstich, SStich::new(epi_first), |vecstich| {
+            vecstich.push_pop(SStich::new(epi_first), |mut vecstich| {
                 let offset_to_playerindex = move |i_offset: usize| {epi_first.wrapping_add(i_offset)};
                 macro_rules! traverse_valid_cards {($i_offset : expr, $func: expr) => {
                     // TODO use equivalent card optimization
-                    for card in rules.all_allowed_cards(vecstich, &ahand[offset_to_playerindex($i_offset)]) {
-                        current_stich_mut(vecstich).push(card);
-                        assert_eq!(card, current_stich(vecstich)[offset_to_playerindex($i_offset)]);
+                    for card in rules.all_allowed_cards(vecstich.get(), &ahand[offset_to_playerindex($i_offset)]) {
+                        current_stich_mut(vecstich.get_mut()).push(card);
+                        assert_eq!(card, current_stich(vecstich.get())[offset_to_playerindex($i_offset)]);
                         $func;
-                        current_stich_mut(vecstich).undo_most_recent();
+                        current_stich_mut(vecstich.get_mut()).undo_most_recent();
                     }
                 };};
                 // It seems that this nested loop is the ai's bottleneck
@@ -273,7 +259,7 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
                     traverse_valid_cards!(1, {
                         traverse_valid_cards!(2, {
                             traverse_valid_cards!(3, {
-                                let stich_current = current_stich(vecstich);
+                                let stich_current = current_stich(vecstich.get());
                                 if stich_current.equal_up_to_size(stich_current_model, stich_current_model.size()) {
                                     vecstich_successor.push(stich_current.clone());
                                 }
@@ -283,19 +269,19 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
                 } );
             });
             assert!(!vecstich_successor.is_empty());
-            func_filter_successors(vecstich, &mut vecstich_successor);
+            func_filter_successors(vecstich.get().get(), &mut vecstich_successor);
             assert!(!vecstich_successor.is_empty());
         }
-        foreachsnapshot.begin_snapshot(SCompletedStichs::new(vecstich), &ahand, &vecstich_successor);
+        foreachsnapshot.begin_snapshot(vecstich.get(), &ahand, &vecstich_successor);
         let vectplstichoutput = vecstich_successor.into_iter()
             .map(|stich| {
-                let output_successor = push_pop_vecstich(vecstich, stich.clone(), |vecstich| {
+                let output_successor = vecstich.push_pop(stich.clone(), |vecstich| {
                     explore_snapshots_internal(
                         EPlayerIndex::map_from_fn(|epi| {
                             ahand[epi].new_from_hand(stich[epi])
                         }),
                         rules,
-                        vecstich,
+                        &mut vecstich.to_pushpop(),
                         &SStich::new(rules.winner_index(&stich)),
                         func_filter_successors,
                         foreachsnapshot,
@@ -311,7 +297,7 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
 pub fn min_reachable_payout<FuncFilterSuccessors>(
     ahand: EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
-    vecstich: &mut Vec<SStich>,
+    vecstich: &mut SVecStichPushPop,
     stich_current_model: &SStich,
     func_filter_successors: &FuncFilterSuccessors,
     epi: EPlayerIndex,
@@ -322,9 +308,8 @@ pub fn min_reachable_payout<FuncFilterSuccessors>(
     where
         FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
 {
-    let vecstich_backup = vecstich.clone();
     let ahand_backup = ahand.clone();
-    assert!(vecstich.iter().all(|stich| stich.size()==4));
+    assert!(vecstich.get().get().iter().all(|stich| stich.size()==4));
     let (card, n_payout) = explore_snapshots(
         ahand,
         rules,
@@ -339,8 +324,6 @@ pub fn min_reachable_payout<FuncFilterSuccessors>(
         },
         ostr_file_out,
     );
-    assert_eq!(vecstich, &vecstich_backup);
-    assert!(vecstich_backup.iter().zip(vecstich.iter()).all(|(s1,s2)|s1.size()==s2.size()));
     assert!(ahand_backup[epi].cards().contains(&card));
     (card, n_payout)
 }
@@ -355,12 +338,11 @@ struct SMinReachablePayout<'rules> {
 impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
     type Output = (SCard, isize);
 
-    fn pruned_output(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+    fn pruned_output(&mut self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
         if 1==hand_size_internal(ahand) {
-            assert!(!slcstich.get().is_empty());
-            let epi_first = self.rules.winner_index(current_stich(slcstich.get()));
-            return push_pop_vecstich(
-                &mut slcstich.get().to_vec(), // TODO avoid this copy
+            assert!(!vecstich.get().get().is_empty());
+            let epi_first = self.rules.winner_index(current_stich(vecstich.get().get()));
+            return vecstich.push_pop(
                 SStich::new_full(
                     epi_first,
                     EPlayerIndex::map_from_fn(|epi_stich|
@@ -372,8 +354,8 @@ impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
                         ahand[self.epi].cards()[0],
                         self.rules.payout(
                             SGameFinishedStiche::new(
-                                vecstich,
-                                EKurzLang::from_cards_per_player(vecstich.len())
+                                vecstich.get(),
+                                EKurzLang::from_cards_per_player(vecstich.get().len())
                             ),
                             self.tpln_stoss_doubling,
                             self.n_stock,

@@ -45,7 +45,7 @@ fn detect_expensive_all_possible_hands() {
                         struct SLeafCounter;
                         impl TForEachSnapshot for SLeafCounter {
                             type Output = usize;
-                            fn pruned_output(&mut self, _slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+                            fn pruned_output(&mut self, _vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
                                 if 1==hand_size_internal(ahand) {
                                     Some(1) // we can be sure that there is only 1 leaf
                                 } else {
@@ -64,7 +64,7 @@ fn detect_expensive_all_possible_hands() {
                             explore_snapshots(
                                 ahand,
                                 game.rules.as_ref(),
-                                &mut game.completed_stichs().get().to_vec(),
+                                &mut SVecStichPushPop::new(&mut game.completed_stichs().get().to_vec()),
                                 game.current_stich(),
                                 &|_vecstich_complete, _vecstich_successor| {/*no filtering*/},
                                 &mut SLeafCounter{},

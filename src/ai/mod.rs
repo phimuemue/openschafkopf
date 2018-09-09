@@ -203,7 +203,7 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                 let (card, n_payout) = min_reachable_payout(
                     ahand,
                     game.rules.as_ref(),
-                    &mut vecstich_complete_mut,
+                    &mut SVecStichPushPop::new(&mut vecstich_complete_mut),
                     game.current_stich(),
                     &|slcstich_complete_successor: &[SStich], vecstich_successor: &mut Vec<SStich>| {
                         assert!(!vecstich_successor.is_empty());
@@ -266,7 +266,7 @@ impl TAi for SAiSimulating {
                         min_reachable_payout(
                             ahand,
                             rules,
-                            &mut Vec::new(),
+                            &mut SVecStichPushPop::new(&mut Vec::new()),
                             &SStich::new(epi_first),
                             &|_vecstich_complete, vecstich_successor| {
                                 assert!(!vecstich_successor.is_empty());

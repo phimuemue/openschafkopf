@@ -118,7 +118,7 @@ impl TPlayer for SPlayerComputer {
                     min_reachable_payout(
                         ahand,
                         rules,
-                        &mut Vec::new(),
+                        &mut SVecStichPushPop::new(&mut Vec::new()),
                         &SStich::new(doublings.first_playerindex()),
                         &|_vecstich_complete, vecstich_successor| {
                             assert!(!vecstich_successor.is_empty());
