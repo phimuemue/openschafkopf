@@ -111,6 +111,7 @@ pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
     })
 }
 
+#[derive(Debug)]
 pub enum VGamePreparationsFinish<'rules> {
     DetermineRules(SDetermineRules<'rules>),
     DirectGame(SGame),
@@ -427,6 +428,7 @@ impl SGame {
     }
 }
 
+#[derive(Debug)]
 pub struct SGameResult {
     // TODO store all information about finished game
     pub accountbalance : SAccountBalance,

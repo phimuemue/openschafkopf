@@ -134,6 +134,7 @@ fn main() {
 
 fn communicate_via_channel<T, Func>(f: Func) -> T
     where Func: FnOnce(mpsc::Sender<T>) -> (),
+          T: std::fmt::Debug,
 {
     let (txt, rxt) = mpsc::channel::<T>();
     f(txt.clone());

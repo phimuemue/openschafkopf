@@ -17,7 +17,7 @@ impl<TOk, TErr> TVerifiableByVerifyMacro for Result<TOk, TErr> {
 macro_rules! verify {($e: expr) => {
     {
         let e = $e;
-        assert!(e.is_verify_true(), stringify!($e));;
+        assert!(e.is_verify_true(), "verify!({}): {:?}", stringify!($e), e);;
         e
     }
 }}

@@ -3,6 +3,7 @@
 use primitives::eplayerindex::*;
 use util::*;
 
+#[derive(Debug)]
 pub struct SAccountBalance {
     an : EnumMap<EPlayerIndex, isize>,
     n_stock : isize,
