@@ -195,28 +195,24 @@ pub fn explore_snapshots<FuncFilterSuccessors, ForEachSnapshot>(
         FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
         ForEachSnapshot: TForEachSnapshot,
 {
+    macro_rules! forward_to_internal{($foreachsnapshot_internal: expr) => {
+        explore_snapshots_internal(
+            ahand,
+            rules,
+            vecstich,
+            stich_current_model,
+            func_filter_successors,
+            $foreachsnapshot_internal
+        )
+    }}
     if let Some(str_file_out) = ostr_file_out {
-        explore_snapshots_internal(
-            ahand,
+        forward_to_internal!(&mut SForEachSnapshotHTMLVisualizer::new(
+            verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap(),
             rules,
-            vecstich,
-            stich_current_model,
-            func_filter_successors,
-            &mut SForEachSnapshotHTMLVisualizer::new(
-                verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap(),
-                rules,
-                foreachsnapshot,
-            ),
-        )
-    } else {
-        explore_snapshots_internal(
-            ahand,
-            rules,
-            vecstich,
-            stich_current_model,
-            func_filter_successors,
             foreachsnapshot,
-        )
+        ))
+    } else {
+        forward_to_internal!(foreachsnapshot)
     }
 }
 
