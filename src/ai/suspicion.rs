@@ -34,7 +34,7 @@ pub trait TForEachSnapshot {
 
 trait TSnapshotVisualizer {
     fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]);
-    fn end_snapshot(&mut self);
+    fn end_snapshot<Output: fmt::Debug>(&mut self, output: &Output);
 }
 
 pub struct SForEachSnapshotHTMLVisualizer<'rules> {
@@ -135,7 +135,7 @@ impl<'rules> TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'rules> {
             self.write_all(b"</td>\n");
         }
         let str_table_hands = format!(
-            "<td>{}</td> <td>TODO min_reachable_payout</td>\n", // TODO how to output min_reachable_payout?
+            "<td>{}</td>\n",
             Self::player_table(|epi| {
                 let mut veccard = ahand[epi].cards().clone();
                 self.rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
@@ -143,22 +143,16 @@ impl<'rules> TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'rules> {
                     .map(|card| Self::output_card(card, /*b_border*/false))
                     .join("")
             }),
-            // Self::player_table(|epi| self.min_reachable_payout(
-            //     self.rules,
-            //     &mut slcstich.clone(),
-            //     epi,
-            //     /*tpln_stoss_doubling*/(0, 0), // dummy values
-            //     /*n_stock*/0, // dummy value
-            // ).1),
         );
         self.write_all(str_table_hands.as_bytes());
         self.write_all(b"</tr></table></label>\n");
         self.write_all(b"<ul>\n");
     }
 
-    fn end_snapshot(&mut self) {
+    fn end_snapshot<Output: fmt::Debug>(&mut self, output: &Output) {
         self.write_all(b"</ul>\n");
         self.write_all(b"</li>\n");
+        self.write_all(format!("<p>{:?}</p>\n", output).as_bytes());
     }
 }
 
@@ -174,6 +168,7 @@ pub fn explore_snapshots<FuncFilterSuccessors, ForEachSnapshot>(
     where
         FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
         ForEachSnapshot: TForEachSnapshot,
+        ForEachSnapshot::Output: fmt::Debug,
 {
     macro_rules! forward_to_internal{($snapshotvisualizer: expr) => {
         explore_snapshots_internal(
@@ -195,29 +190,31 @@ pub fn explore_snapshots<FuncFilterSuccessors, ForEachSnapshot>(
         struct SNoVisualization;
         impl TSnapshotVisualizer for SNoVisualization {
             fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {}
-            fn end_snapshot(&mut self) {}
+            fn end_snapshot<Output: fmt::Debug>(&mut self, _output: &Output) {}
         }
         forward_to_internal!(&mut SNoVisualization{})
     }
 }
 
 // TODO Maybe something like payout_hint is useful to prune suspicion tree
-fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
+fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot, SnapshotVisualizer>(
     ahand: &EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
     vecstich: &mut SVecStichPushPop,
     stich_current_model: &SStich,
     func_filter_successors: &FuncFilterSuccessors,
     foreachsnapshot: &ForEachSnapshot,
-    snapshotvisualizer: &mut TSnapshotVisualizer,
+    snapshotvisualizer: &mut SnapshotVisualizer,
 ) -> ForEachSnapshot::Output 
     where
         FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
         ForEachSnapshot: TForEachSnapshot,
+        SnapshotVisualizer: TSnapshotVisualizer,
+        ForEachSnapshot::Output : fmt::Debug,
 {
     if let Some(output) = foreachsnapshot.pruned_output(vecstich, &ahand) {
         snapshotvisualizer.begin_snapshot(vecstich.get(), &ahand, /*vecstich_successor*/&Vec::new());
-        snapshotvisualizer.end_snapshot();
+        snapshotvisualizer.end_snapshot(&output);
         output
     } else {
         let mut vecstich_successor : Vec<SStich> = Vec::new();
@@ -277,7 +274,7 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
                     (stich, output_successor)
                 })
         );
-        snapshotvisualizer.end_snapshot();
+        snapshotvisualizer.end_snapshot(&output);
         output
     }
 }
