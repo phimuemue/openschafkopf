@@ -52,7 +52,6 @@ fn detect_expensive_all_possible_hands() {
                                     None // no pruning
                                 }
                             }
-                            fn begin_snapshot(&self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {}
                             fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
                                 &self,
                                 ittplstichoutput: ItTplStichOutput,

@@ -25,7 +25,6 @@ pub fn hand_size_internal(ahand: &EnumMap<EPlayerIndex, SHand>) -> usize {
 pub trait TForEachSnapshot {
     type Output;
     fn pruned_output(&self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output>;
-    fn begin_snapshot(&self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]);
     fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
         &self,
         ittplstichoutput: ItTplStichOutput,
@@ -257,7 +256,6 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot, SnapshotVis
             assert!(!vecstich_successor.is_empty());
         }
         snapshotvisualizer.begin_snapshot(vecstich.get(), &ahand, &vecstich_successor);
-        foreachsnapshot.begin_snapshot(vecstich.get(), &ahand, &vecstich_successor);
         let output = foreachsnapshot.end_snapshot(
             vecstich_successor.into_iter()
                 .map(|stich| {
@@ -354,9 +352,6 @@ impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
             assert!(0 < hand_size_internal(ahand));
             None
         }
-    }
-
-    fn begin_snapshot(&self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {
     }
 
     fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
