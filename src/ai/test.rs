@@ -62,7 +62,7 @@ fn detect_expensive_all_possible_hands() {
                         }
                         assert_bound(
                             explore_snapshots(
-                                ahand,
+                                &ahand,
                                 game.rules.as_ref(),
                                 &mut SVecStichPushPop::new(&mut game.completed_stichs().get().to_vec()),
                                 game.current_stich(),

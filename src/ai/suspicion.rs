@@ -163,7 +163,7 @@ impl<'rules> TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'rules> {
 }
 
 pub fn explore_snapshots<FuncFilterSuccessors, ForEachSnapshot>(
-    ahand: EnumMap<EPlayerIndex, SHand>,
+    ahand: &EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
     vecstich: &mut SVecStichPushPop,
     stich_current_model: &SStich,
@@ -203,7 +203,7 @@ pub fn explore_snapshots<FuncFilterSuccessors, ForEachSnapshot>(
 
 // TODO Maybe something like payout_hint is useful to prune suspicion tree
 fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
-    ahand: EnumMap<EPlayerIndex, SHand>,
+    ahand: &EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
     vecstich: &mut SVecStichPushPop,
     stich_current_model: &SStich,
@@ -263,11 +263,11 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
                 .map(|stich| {
                     let output_successor = vecstich.push_pop(stich.clone(), |vecstich| {
                         explore_snapshots_internal(
-                            EPlayerIndex::map_from_fn(|epi| {
+                            &EPlayerIndex::map_from_fn(|epi| {
                                 ahand[epi].new_from_hand(stich[epi])
                             }),
                             rules,
-                            &mut vecstich.to_pushpop(),
+                            &mut vecstich.into_pushpop(),
                             &SStich::new(rules.winner_index(&stich)),
                             func_filter_successors,
                             foreachsnapshot,
@@ -283,7 +283,7 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
 }
 
 pub fn min_reachable_payout<FuncFilterSuccessors>(
-    ahand: EnumMap<EPlayerIndex, SHand>,
+    ahand: &EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
     vecstich: &mut SVecStichPushPop,
     stich_current_model: &SStich,
@@ -296,10 +296,9 @@ pub fn min_reachable_payout<FuncFilterSuccessors>(
     where
         FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
 {
-    let ahand_backup = ahand.clone();
     assert!(vecstich.get().get().iter().all(|stich| stich.size()==4));
     let (card, n_payout) = explore_snapshots(
-        ahand,
+        &ahand,
         rules,
         vecstich,
         stich_current_model,
@@ -312,7 +311,7 @@ pub fn min_reachable_payout<FuncFilterSuccessors>(
         },
         ostr_file_out,
     );
-    assert!(ahand_backup[epi].cards().contains(&card));
+    assert!(ahand[epi].cards().contains(&card));
     (card, n_payout)
 }
 
@@ -330,7 +329,7 @@ impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
         if 1==hand_size_internal(ahand) {
             assert!(!vecstich.get().get().is_empty());
             let epi_first = self.rules.winner_index(current_stich(vecstich.get().get()));
-            return vecstich.push_pop(
+            vecstich.push_pop(
                 SStich::new_full(
                     epi_first,
                     EPlayerIndex::map_from_fn(|epi_stich|
@@ -350,7 +349,7 @@ impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
                         ).get_player(self.epi),
                     ))
                 },
-            );
+            )
         } else {
             assert!(0 < hand_size_internal(ahand));
             None

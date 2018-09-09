@@ -201,7 +201,7 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                 let mut vecstich_complete_mut = game.completed_stichs().get().to_vec();
                 let n_stich_complete = vecstich_complete_mut.len();
                 let (card, n_payout) = min_reachable_payout(
-                    ahand,
+                    &ahand,
                     game.rules.as_ref(),
                     &mut SVecStichPushPop::new(&mut vecstich_complete_mut),
                     game.current_stich(),
@@ -264,7 +264,7 @@ impl TAi for SAiSimulating {
                 scope.spawn(move || {
                     let n_payout = 
                         min_reachable_payout(
-                            ahand,
+                            &ahand,
                             rules,
                             &mut SVecStichPushPop::new(&mut Vec::new()),
                             &SStich::new(epi_first),

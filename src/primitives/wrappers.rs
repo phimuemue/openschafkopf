@@ -72,7 +72,7 @@ impl<'vecstich> SVecStichPushPop<'vecstich> {
 }
 
 impl<'vecstich> SVecStichPushPopTmp<'vecstich> {
-    pub fn to_pushpop(self) -> SVecStichPushPop<'vecstich> {
+    pub fn into_pushpop(self) -> SVecStichPushPop<'vecstich> {
         SVecStichPushPop::new(self.0)
     }
 
