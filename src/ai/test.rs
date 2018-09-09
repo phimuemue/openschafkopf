@@ -45,16 +45,16 @@ fn detect_expensive_all_possible_hands() {
                         struct SLeafCounter;
                         impl TForEachSnapshot for SLeafCounter {
                             type Output = usize;
-                            fn pruned_output(&mut self, _vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+                            fn pruned_output(&self, _vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
                                 if 1==hand_size_internal(ahand) {
                                     Some(1) // we can be sure that there is only 1 leaf
                                 } else {
                                     None // no pruning
                                 }
                             }
-                            fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {}
+                            fn begin_snapshot(&self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {}
                             fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
-                                &mut self,
+                                &self,
                                 ittplstichoutput: ItTplStichOutput,
                             ) -> Self::Output {
                                 ittplstichoutput.map(|tplstichoutput| tplstichoutput.1).sum()

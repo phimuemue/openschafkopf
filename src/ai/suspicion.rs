@@ -24,10 +24,10 @@ pub fn hand_size_internal(ahand: &EnumMap<EPlayerIndex, SHand>) -> usize {
 
 pub trait TForEachSnapshot {
     type Output;
-    fn pruned_output(&mut self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output>;
-    fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]);
+    fn pruned_output(&self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output>;
+    fn begin_snapshot(&self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]);
     fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
-        &mut self,
+        &self,
         ittplstichoutput: ItTplStichOutput,
     ) -> Self::Output;
 }
@@ -208,7 +208,7 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
     vecstich: &mut SVecStichPushPop,
     stich_current_model: &SStich,
     func_filter_successors: &FuncFilterSuccessors,
-    foreachsnapshot: &mut ForEachSnapshot,
+    foreachsnapshot: &ForEachSnapshot,
     snapshotvisualizer: &mut TSnapshotVisualizer,
 ) -> ForEachSnapshot::Output 
     where
@@ -258,26 +258,27 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot>(
         }
         snapshotvisualizer.begin_snapshot(vecstich.get(), &ahand, &vecstich_successor);
         foreachsnapshot.begin_snapshot(vecstich.get(), &ahand, &vecstich_successor);
-        let vectplstichoutput = vecstich_successor.into_iter()
-            .map(|stich| {
-                let output_successor = vecstich.push_pop(stich.clone(), |vecstich| {
-                    explore_snapshots_internal(
-                        EPlayerIndex::map_from_fn(|epi| {
-                            ahand[epi].new_from_hand(stich[epi])
-                        }),
-                        rules,
-                        &mut vecstich.to_pushpop(),
-                        &SStich::new(rules.winner_index(&stich)),
-                        func_filter_successors,
-                        foreachsnapshot,
-                        snapshotvisualizer,
-                    )
-                });
-                (stich, output_successor)
-            })
-            .collect::<Vec<_>>();
+        let output = foreachsnapshot.end_snapshot(
+            vecstich_successor.into_iter()
+                .map(|stich| {
+                    let output_successor = vecstich.push_pop(stich.clone(), |vecstich| {
+                        explore_snapshots_internal(
+                            EPlayerIndex::map_from_fn(|epi| {
+                                ahand[epi].new_from_hand(stich[epi])
+                            }),
+                            rules,
+                            &mut vecstich.to_pushpop(),
+                            &SStich::new(rules.winner_index(&stich)),
+                            func_filter_successors,
+                            foreachsnapshot,
+                            snapshotvisualizer,
+                        )
+                    });
+                    (stich, output_successor)
+                })
+        );
         snapshotvisualizer.end_snapshot();
-        foreachsnapshot.end_snapshot(vectplstichoutput.into_iter())
+        output
     }
 }
 
@@ -325,7 +326,7 @@ struct SMinReachablePayout<'rules> {
 impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
     type Output = (SCard, isize);
 
-    fn pruned_output(&mut self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+    fn pruned_output(&self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
         if 1==hand_size_internal(ahand) {
             assert!(!vecstich.get().get().is_empty());
             let epi_first = self.rules.winner_index(current_stich(vecstich.get().get()));
@@ -356,11 +357,11 @@ impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
         }
     }
 
-    fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {
+    fn begin_snapshot(&self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {
     }
 
     fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
-        &mut self,
+        &self,
         ittplstichoutput: ItTplStichOutput,
     ) -> Self::Output {
         verify!(ittplstichoutput
