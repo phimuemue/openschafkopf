@@ -40,10 +40,11 @@ trait TSnapshotVisualizer {
 pub struct SForEachSnapshotHTMLVisualizer<'rules> {
     file_output: fs::File,
     rules: &'rules TRules,
+    epi: EPlayerIndex,
 }
 impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
-    pub fn new(file_output: fs::File, rules: &'rules TRules) -> Self {
-        let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output, rules};
+    pub fn new(file_output: fs::File, rules: &'rules TRules, epi: EPlayerIndex) -> Self {
+        let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output, rules, epi};
         foreachsnapshothtmlvisualizer.write_all(
             b"<style>
             input + label + ul {
@@ -98,7 +99,7 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
         )
     }
 
-    fn player_table<T, FnPerPlayer>(fn_per_player: FnPerPlayer) -> String
+    fn player_table<T, FnPerPlayer>(epi: EPlayerIndex, fn_per_player: FnPerPlayer) -> String
         where
             FnPerPlayer: Fn(EPlayerIndex) -> T,
             T: fmt::Display,
@@ -109,10 +110,10 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
               <tr><td>{}</td><td>{}</td></tr>
               <tr><td align=\"center\" colspan=\"2\">{}</td></tr>
             </table>\n",
-            fn_per_player(EPlayerIndex::EPI2),
-            fn_per_player(EPlayerIndex::EPI1),
-            fn_per_player(EPlayerIndex::EPI3),
-            fn_per_player(EPlayerIndex::EPI0),
+            fn_per_player(EPlayerIndex::EPI2.wrapping_add(epi.to_usize())),
+            fn_per_player(EPlayerIndex::EPI1.wrapping_add(epi.to_usize())),
+            fn_per_player(EPlayerIndex::EPI3.wrapping_add(epi.to_usize())),
+            fn_per_player(EPlayerIndex::EPI0.wrapping_add(epi.to_usize())),
         )
     }
 }
@@ -131,12 +132,13 @@ impl<'rules> TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'rules> {
         EKurzLang::from_cards_per_player(slcstich.get().len()+hand_size_internal(ahand));
         for stich in slcstich.get().iter() {
             self.write_all(b"<td>\n");
-            self.write_all(Self::player_table(|epi| Self::output_card(stich[epi], epi==stich.first_playerindex())).as_bytes());
+            let epi_0 = self.epi;
+            self.write_all(Self::player_table(epi_0, |epi| Self::output_card(stich[epi], epi==stich.first_playerindex())).as_bytes());
             self.write_all(b"</td>\n");
         }
         let str_table_hands = format!(
             "<td>{}</td>\n",
-            Self::player_table(|epi| {
+            Self::player_table(self.epi, |epi| {
                 let mut veccard = ahand[epi].cards().clone();
                 self.rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
                 veccard.into_iter()
@@ -185,6 +187,7 @@ pub fn explore_snapshots<FuncFilterSuccessors, ForEachSnapshot>(
         forward_to_internal!(&mut SForEachSnapshotHTMLVisualizer::new(
             verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap(),
             rules,
+            verify!(stich_current_model.current_playerindex()).unwrap(),
         ))
     } else {
         struct SNoVisualization;
