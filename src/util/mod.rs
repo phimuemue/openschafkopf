@@ -32,3 +32,7 @@ macro_rules! make_upcastable{($upcasttrait:ident, $trait:ident) => {
         }
     }
 }}
+
+macro_rules! if_then_option{($cond: expr, $val: expr) => {
+    if $cond {Some($val)} else {None}
+}}

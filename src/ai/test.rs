@@ -46,11 +46,7 @@ fn detect_expensive_all_possible_hands() {
                         impl TForEachSnapshot for SLeafCounter {
                             type Output = usize;
                             fn pruned_output(&self, _vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
-                                if 1==hand_size_internal(ahand) {
-                                    Some(1) // we can be sure that there is only 1 leaf
-                                } else {
-                                    None // no pruning
-                                }
+                                if_then_option!(1==hand_size_internal(ahand), 1) // exactly 1 leaf if hands offer only 1 card
                             }
                             fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
                                 &self,

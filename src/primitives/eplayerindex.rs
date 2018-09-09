@@ -102,11 +102,10 @@ impl<T> SPlayersInRound<T> {
         self.epi_first
     }
     pub fn current_playerindex(&self) -> Option<EPlayerIndex> {
-        if self.size()==EPlayerIndex::SIZE {
-            None
-        } else {
-            Some(self.first_playerindex().wrapping_add(self.size()))
-        }
+        if_then_option!(
+            self.size()!=EPlayerIndex::SIZE,
+            self.first_playerindex().wrapping_add(self.size())
+        )
     }
     pub fn size(&self) -> usize {
         self.vect.len()
@@ -137,11 +136,7 @@ impl<T> SPlayersInRound<T> {
         self.position(epi)<self.size()
     }
     pub fn get(&self, epi: EPlayerIndex) -> Option<&T> {
-        if self.valid_index(epi) {
-            Some(&self[epi])
-        } else {
-            None
-        }
+        if_then_option!(self.valid_index(epi), &self[epi])
     }
 }
 
