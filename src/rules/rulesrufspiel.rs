@@ -99,21 +99,17 @@ impl TRules for SRulesRufspiel {
                 .count(),
             2
         );
-        if /*b_player_party_wins*/ 0<an_payout_no_stock[self.epi] {
-            EPlayerIndex::map_from_fn(|epi|
-                SPayoutInfo::new(
-                    an_payout_no_stock[epi],
-                    if mapepib_player_party[epi] {EStockAction::TakeHalf} else {EStockAction::Ignore},
-                )
-            )
+        let estockaction_playerparty = /*b_player_party_wins*/if 0<an_payout_no_stock[self.epi] {
+            EStockAction::TakeHalf
         } else {
-            EPlayerIndex::map_from_fn(|epi|
-                SPayoutInfo::new(
-                    an_payout_no_stock[epi],
-                    if mapepib_player_party[epi] {EStockAction::GiveHalf} else {EStockAction::Ignore},
-                )
+            EStockAction::GiveHalf
+        };
+        EPlayerIndex::map_from_fn(|epi|
+            SPayoutInfo::new(
+                an_payout_no_stock[epi],
+                if mapepib_player_party[epi] {estockaction_playerparty} else {EStockAction::Ignore},
             )
-        }
+        )
     }
 
     fn all_allowed_cards_first_in_stich(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {

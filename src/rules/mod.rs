@@ -81,7 +81,7 @@ fn all_allowed_cards_within_stich_distinguish_farbe_frei<Rules, Result, FnFarbeF
     }
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Copy, Clone)]
 pub enum EStockAction {
     Ignore,
     TakeHalf,
