@@ -51,24 +51,6 @@ impl TRules for SRulesRamsch {
     }
 
     fn payout(&self, gamefinishedstiche: SGameFinishedStiche, tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> SAccountBalance {
-        let apply_doubling_stoss_stock = |epi_single, n_factor_single| {
-            SAccountBalance::new(
-                SStossDoublingPayoutDecider::payout(
-                    &EPlayerIndex::map_from_fn(|epi| {
-                        if epi_single==epi {
-                            3 * self.n_price * n_factor_single
-                        } else {
-                            -self.n_price * n_factor_single
-                        }
-                    }),
-                    {
-                        assert_eq!(tpln_stoss_doubling.0, 0); // SRulesRamsch does not allow stoss
-                        tpln_stoss_doubling
-                    },
-                ),
-                0,
-            )
-        };
         let an_points = gamefinishedstiche.get().iter()
             .fold(
                 EPlayerIndex::map_from_fn(|_epi| 0),
@@ -86,7 +68,7 @@ impl TRules for SRulesRamsch {
             assert_eq!(1, vecepi_most_points.len());
             vecepi_most_points[0]
         };
-        if { match self.durchmarsch {
+        let (epi_single, n_factor_single) = if { match self.durchmarsch {
             VDurchmarsch::All if 120==*n_points_max =>
                 gamefinishedstiche.get().iter().all(|stich| self.winner_index(stich)==the_one_epi()),
             VDurchmarsch::All | VDurchmarsch::None =>
@@ -96,7 +78,7 @@ impl TRules for SRulesRamsch {
                 *n_points_max>=n_points_durchmarsch
             },
         } } {
-            apply_doubling_stoss_stock(the_one_epi(), 1)
+            (the_one_epi(), 1)
         } else {
             let epi_loser : EPlayerIndex = {
                 if 1==vecepi_most_points.len() {
@@ -134,7 +116,23 @@ impl TRules for SRulesRamsch {
                         .0
                 }
             };
-            apply_doubling_stoss_stock(epi_loser, -1)
-        }
+            (epi_loser, -1)
+        };
+        SAccountBalance::new(
+            SStossDoublingPayoutDecider::payout(
+                &EPlayerIndex::map_from_fn(|epi| {
+                    if epi_single==epi {
+                        3 * self.n_price * n_factor_single
+                    } else {
+                        -self.n_price * n_factor_single
+                    }
+                }),
+                {
+                    assert_eq!(tpln_stoss_doubling.0, 0); // SRulesRamsch does not allow stoss
+                    tpln_stoss_doubling
+                },
+            ),
+            0,
+        )
     }
 }
