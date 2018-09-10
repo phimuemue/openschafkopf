@@ -136,7 +136,7 @@ impl TRules for SRulesRamsch {
             VDurchmarsch::All if 120==*n_points_max =>
                 possibly_durchmarsch(gamefinishedstiche.get().iter().all(|stich| self.winner_index(stich)==the_one_epi())),
             VDurchmarsch::All | VDurchmarsch::None =>
-                no_durchmarsch_payout(),
+                possibly_durchmarsch(/*b_durchmarsch*/false),
             VDurchmarsch::AtLeast(n_points_durchmarsch) => {
                 assert!(n_points_durchmarsch>=61); // otherwise, it may not be clear who is the durchmarsch winner
                 possibly_durchmarsch(*n_points_max>=n_points_durchmarsch)
