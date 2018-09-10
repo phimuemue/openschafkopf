@@ -13,23 +13,20 @@ macro_rules! impl_single_play {() => {
         (epi==self.epi)==(vecstoss.len()%2==1)
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche, tpln_stoss_doubling: (usize, usize)) -> EnumMap<EPlayerIndex, SPayoutInfo> {
-        SStossDoublingPayoutDecider::payout(
-            &self.payoutdecider.payout(
-                self,
-                gamefinishedstiche,
-                /*fn_is_player_party*/ |epi| {
-                    epi==self.epi
-                },
-                /*fn_player_multiplier*/ |epi| {
-                    if self.epi==epi {
-                        3
-                    } else {
-                        1
-                    }
-                },
-            ),
-            tpln_stoss_doubling,
+    fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche) -> EnumMap<EPlayerIndex, SPayoutInfo> {
+        self.payoutdecider.payout(
+            self,
+            gamefinishedstiche,
+            /*fn_is_player_party*/ |epi| {
+                epi==self.epi
+            },
+            /*fn_player_multiplier*/ |epi| {
+                if self.epi==epi {
+                    3
+                } else {
+                    1
+                }
+            },
         )
             .map(|n_payout| SPayoutInfo::new(*n_payout, EStockAction::Ignore))
     }

@@ -75,7 +75,7 @@ impl TRules for SRulesRufspiel {
         (epi==self.epi || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche, tpln_stoss_doubling: (usize, usize)) -> EnumMap<EPlayerIndex, SPayoutInfo> {
+    fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche) -> EnumMap<EPlayerIndex, SPayoutInfo> {
         let epi_coplayer = verify!(gamefinishedstiche.get().iter()
             .flat_map(|stich| stich.iter())
             .find(|&(_, card)| *card==self.rufsau())
@@ -85,14 +85,11 @@ impl TRules for SRulesRufspiel {
         let mapepib_player_party = EPlayerIndex::map_from_fn(|epi|
             epi==self.epi || epi==epi_coplayer
         );
-        let an_payout_no_stock = SStossDoublingPayoutDecider::payout(
-            &self.payoutdecider.payout(
-                self,
-                gamefinishedstiche,
-                |epi| mapepib_player_party[epi],
-                /*fn_player_multiplier*/ |_epi| 1, // everyone pays/gets the same
-            ),
-            tpln_stoss_doubling,
+        let an_payout_no_stock = &self.payoutdecider.payout(
+            self,
+            gamefinishedstiche,
+            |epi| mapepib_player_party[epi],
+            /*fn_player_multiplier*/ |_epi| 1, // everyone pays/gets the same
         );
         assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
         assert_eq!(an_payout_no_stock[self.epi], an_payout_no_stock[epi_coplayer]);

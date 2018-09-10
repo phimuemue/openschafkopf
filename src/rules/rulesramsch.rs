@@ -2,7 +2,6 @@ use primitives::*;
 use rules::{
     *,
     trumpfdecider::*,
-    payoutdecider::SStossDoublingPayoutDecider,
     card_points::*,
 };
 use std::{
@@ -50,7 +49,7 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche, tpln_stoss_doubling: (usize, usize)) -> EnumMap<EPlayerIndex, SPayoutInfo> {
+    fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche) -> EnumMap<EPlayerIndex, SPayoutInfo> {
         let an_points = gamefinishedstiche.get().iter()
             .fold(
                 EPlayerIndex::map_from_fn(|_epi| 0),
@@ -118,19 +117,15 @@ impl TRules for SRulesRamsch {
             };
             (epi_loser, -1)
         };
-        SStossDoublingPayoutDecider::payout(
-            &EPlayerIndex::map_from_fn(|epi| {
+        EPlayerIndex::map_from_fn(|epi| {
+            SPayoutInfo::new(
                 if epi_single==epi {
                     3 * self.n_price * n_factor_single
                 } else {
                     -self.n_price * n_factor_single
-                }
-            }),
-            {
-                assert_eq!(tpln_stoss_doubling.0, 0); // SRulesRamsch does not allow stoss
-                tpln_stoss_doubling
-            },
-        )
-            .map(|n_payout| SPayoutInfo::new(*n_payout, EStockAction::Ignore))
+                },
+                EStockAction::Ignore,
+            )
+        })
     }
 }

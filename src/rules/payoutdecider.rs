@@ -5,16 +5,6 @@ use rules::{
 };
 use util::*;
 
-#[derive(Clone)]
-pub struct SStossDoublingPayoutDecider {}
-impl SStossDoublingPayoutDecider {
-    pub fn payout(an_payout_raw: &EnumMap<EPlayerIndex, isize>, (n_stoss, n_doubling): (usize, usize)) -> EnumMap<EPlayerIndex, isize> {
-        an_payout_raw.map(|n_payout_raw|
-            n_payout_raw * 2isize.pow((n_stoss + n_doubling).as_num())
-        )
-    }
-}
-
 #[derive(Clone, new, Debug)]
 pub struct SLaufendeParams {
     pub n_payout_per_lauf : isize,

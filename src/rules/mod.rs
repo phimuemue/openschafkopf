@@ -95,11 +95,11 @@ pub struct SPayoutInfo {
 }
 
 impl SPayoutInfo {
-    fn payout_including_stock(&self, n_stock: isize) -> isize {
+    fn payout_including_stock(&self, n_stock: isize, tpln_stoss_doubling: (usize, usize)) -> isize {
         assert_eq!(n_stock%2, 0);
         assert!(self.estockaction!=EStockAction::TakeHalf || 0<self.n_payout);
         assert!(self.estockaction!=EStockAction::GiveHalf || self.n_payout<0);
-        self.n_payout + match self.estockaction {
+        self.n_payout * 2isize.pow((tpln_stoss_doubling.0 + tpln_stoss_doubling.1).as_num::<u32>()) + match self.estockaction {
             EStockAction::Ignore => 0,
             EStockAction::TakeHalf => n_stock/2,
             EStockAction::GiveHalf => -n_stock/2,
@@ -124,7 +124,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
 
     fn payout(&self, gamefinishedstiche: SGameFinishedStiche, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> SAccountBalance {
-        let apayoutinfo = self.payoutinfos(gamefinishedstiche, tpln_stoss_doubling);
+        let apayoutinfo = self.payoutinfos(gamefinishedstiche);
         assert!({
             let count_stockaction = |estockaction| {
                 apayoutinfo.iter().filter(|payoutinfo| estockaction==payoutinfo.estockaction).count()
@@ -132,12 +132,13 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
             count_stockaction(EStockAction::TakeHalf)==0 || count_stockaction(EStockAction::GiveHalf)==0
         });
         assert_eq!(n_stock%2, 0);
-        let an_payout = apayoutinfo.map(|payoutinfo| payoutinfo.payout_including_stock(n_stock));
+        // TODO assert tpln_stoss_doubling consistent with stoss_allowed etc
+        let an_payout = apayoutinfo.map(|payoutinfo| payoutinfo.payout_including_stock(n_stock, tpln_stoss_doubling));
         let n_stock = -an_payout.iter().sum::<isize>();
         SAccountBalance::new(an_payout, n_stock)
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche, tpln_stoss_doubling: (usize, usize)) -> EnumMap<EPlayerIndex, SPayoutInfo>;
+    fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche) -> EnumMap<EPlayerIndex, SPayoutInfo>;
 
     fn all_allowed_cards(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!slcstich.is_empty());
