@@ -125,22 +125,19 @@ impl TRules for SRulesRamsch {
             assert_eq!(1, vecepi_most_points.len());
             vecepi_most_points[0]
         };
-        let possibly_durchmarsch = |b_durchmarsch| {
-            if b_durchmarsch {
-                apply_doubling_stoss_stock(the_one_epi(), 1)
-            } else {
-                no_durchmarsch_payout()
-            }
-        };
-        match self.durchmarsch {
+        if { match self.durchmarsch {
             VDurchmarsch::All if 120==*n_points_max =>
-                possibly_durchmarsch(gamefinishedstiche.get().iter().all(|stich| self.winner_index(stich)==the_one_epi())),
+                gamefinishedstiche.get().iter().all(|stich| self.winner_index(stich)==the_one_epi()),
             VDurchmarsch::All | VDurchmarsch::None =>
-                possibly_durchmarsch(/*b_durchmarsch*/false),
+                false,
             VDurchmarsch::AtLeast(n_points_durchmarsch) => {
                 assert!(n_points_durchmarsch>=61); // otherwise, it may not be clear who is the durchmarsch winner
-                possibly_durchmarsch(*n_points_max>=n_points_durchmarsch)
+                *n_points_max>=n_points_durchmarsch
             },
+        } } {
+            apply_doubling_stoss_stock(the_one_epi(), 1)
+        } else {
+            no_durchmarsch_payout()
         }
     }
 }
