@@ -50,7 +50,7 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payout(&self, gamefinishedstiche: SGameFinishedStiche, tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> SAccountBalance {
+    fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche, tpln_stoss_doubling: (usize, usize)) -> EnumMap<EPlayerIndex, SPayoutInfo> {
         let an_points = gamefinishedstiche.get().iter()
             .fold(
                 EPlayerIndex::map_from_fn(|_epi| 0),
@@ -118,21 +118,19 @@ impl TRules for SRulesRamsch {
             };
             (epi_loser, -1)
         };
-        SAccountBalance::new(
-            SStossDoublingPayoutDecider::payout(
-                &EPlayerIndex::map_from_fn(|epi| {
-                    if epi_single==epi {
-                        3 * self.n_price * n_factor_single
-                    } else {
-                        -self.n_price * n_factor_single
-                    }
-                }),
-                {
-                    assert_eq!(tpln_stoss_doubling.0, 0); // SRulesRamsch does not allow stoss
-                    tpln_stoss_doubling
-                },
-            ),
-            0,
+        SStossDoublingPayoutDecider::payout(
+            &EPlayerIndex::map_from_fn(|epi| {
+                if epi_single==epi {
+                    3 * self.n_price * n_factor_single
+                } else {
+                    -self.n_price * n_factor_single
+                }
+            }),
+            {
+                assert_eq!(tpln_stoss_doubling.0, 0); // SRulesRamsch does not allow stoss
+                tpln_stoss_doubling
+            },
         )
+            .map(|n_payout| SPayoutInfo::new(*n_payout, EStockAction::Ignore))
     }
 }

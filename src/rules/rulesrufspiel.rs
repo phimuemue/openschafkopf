@@ -75,7 +75,7 @@ impl TRules for SRulesRufspiel {
         (epi==self.epi || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }
 
-    fn payout(&self, gamefinishedstiche: SGameFinishedStiche, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> SAccountBalance {
+    fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche, tpln_stoss_doubling: (usize, usize)) -> EnumMap<EPlayerIndex, SPayoutInfo> {
         let epi_coplayer = verify!(gamefinishedstiche.get().iter()
             .flat_map(|stich| stich.iter())
             .find(|&(_, card)| *card==self.rufsau())
@@ -102,21 +102,19 @@ impl TRules for SRulesRufspiel {
                 .count(),
             2
         );
-        assert_eq!(n_stock%2, 0);
-        let n_stock_per_player = n_stock/2;
         if /*b_player_party_wins*/ 0<an_payout_no_stock[self.epi] {
-            SAccountBalance::new(
-                EPlayerIndex::map_from_fn(|epi|
-                    an_payout_no_stock[epi] + if mapepib_player_party[epi] { n_stock_per_player } else {0}
-                ),
-                -n_stock
+            EPlayerIndex::map_from_fn(|epi|
+                SPayoutInfo::new(
+                    an_payout_no_stock[epi],
+                    if mapepib_player_party[epi] {EStockAction::TakeHalf} else {EStockAction::Ignore},
+                )
             )
         } else {
-            SAccountBalance::new(
-                EPlayerIndex::map_from_fn(|epi|
-                    an_payout_no_stock[epi] - if mapepib_player_party[epi] { n_stock_per_player } else {0}
-                ),
-                n_stock
+            EPlayerIndex::map_from_fn(|epi|
+                SPayoutInfo::new(
+                    an_payout_no_stock[epi],
+                    if mapepib_player_party[epi] {EStockAction::GiveHalf} else {EStockAction::Ignore},
+                )
             )
         }
     }
