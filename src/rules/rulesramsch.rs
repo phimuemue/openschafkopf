@@ -81,7 +81,23 @@ impl TRules for SRulesRamsch {
         let vecepi_most_points = EPlayerIndex::values()
             .filter(|epi| n_points_max==&an_points[*epi])
             .collect::<Vec<_>>();
-        let no_durchmarsch_payout = || {
+        let the_one_epi = || -> EPlayerIndex {
+            assert!(*n_points_max>=61);
+            assert_eq!(1, vecepi_most_points.len());
+            vecepi_most_points[0]
+        };
+        if { match self.durchmarsch {
+            VDurchmarsch::All if 120==*n_points_max =>
+                gamefinishedstiche.get().iter().all(|stich| self.winner_index(stich)==the_one_epi()),
+            VDurchmarsch::All | VDurchmarsch::None =>
+                false,
+            VDurchmarsch::AtLeast(n_points_durchmarsch) => {
+                assert!(n_points_durchmarsch>=61); // otherwise, it may not be clear who is the durchmarsch winner
+                *n_points_max>=n_points_durchmarsch
+            },
+        } } {
+            apply_doubling_stoss_stock(the_one_epi(), 1)
+        } else {
             let epi_loser : EPlayerIndex = {
                 if 1==vecepi_most_points.len() {
                     vecepi_most_points[0]
@@ -119,25 +135,6 @@ impl TRules for SRulesRamsch {
                 }
             };
             apply_doubling_stoss_stock(epi_loser, -1)
-        };
-        let the_one_epi = || -> EPlayerIndex {
-            assert!(*n_points_max>=61);
-            assert_eq!(1, vecepi_most_points.len());
-            vecepi_most_points[0]
-        };
-        if { match self.durchmarsch {
-            VDurchmarsch::All if 120==*n_points_max =>
-                gamefinishedstiche.get().iter().all(|stich| self.winner_index(stich)==the_one_epi()),
-            VDurchmarsch::All | VDurchmarsch::None =>
-                false,
-            VDurchmarsch::AtLeast(n_points_durchmarsch) => {
-                assert!(n_points_durchmarsch>=61); // otherwise, it may not be clear who is the durchmarsch winner
-                *n_points_max>=n_points_durchmarsch
-            },
-        } } {
-            apply_doubling_stoss_stock(the_one_epi(), 1)
-        } else {
-            no_durchmarsch_payout()
         }
     }
 }
