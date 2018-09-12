@@ -2,6 +2,7 @@ use primitives::*;
 use rules::{
     *,
     trumpfdecider::*,
+    payoutdecider::internal_payout,
     card_points::*,
 };
 use std::{
@@ -67,7 +68,7 @@ impl TRules for SRulesRamsch {
             assert_eq!(1, vecepi_most_points.len());
             vecepi_most_points[0]
         };
-        let (epi_single, n_factor_single) = if match self.durchmarsch {
+        let (epi_single, b_epi_single_wins) = if match self.durchmarsch {
             VDurchmarsch::All if 120==*n_points_max =>
                 gamefinishedstiche.get().iter().all(|stich| self.winner_index(stich)==the_one_epi()),
             VDurchmarsch::All | VDurchmarsch::None =>
@@ -77,7 +78,7 @@ impl TRules for SRulesRamsch {
                 *n_points_max>=n_points_durchmarsch
             },
         } {
-            (the_one_epi(), 1)
+            (the_one_epi(), true)
         } else {
             let epi_loser : EPlayerIndex = {
                 if 1==vecepi_most_points.len() {
@@ -115,17 +116,17 @@ impl TRules for SRulesRamsch {
                         .0
                 }
             };
-            (epi_loser, -1)
+            (epi_loser, false)
         };
-        EPlayerIndex::map_from_fn(|epi| {
-            SPayoutInfo::new(
-                if epi_single==epi {
-                    3 * self.n_price * n_factor_single
-                } else {
-                    -self.n_price * n_factor_single
-                },
-                EStockAction::Ignore,
-            )
-        })
+        internal_payout(
+            self.n_price,
+            /*fn_player_multiplier*/|epi| {
+                if epi_single==epi {3} else {1}
+            },
+            /*ab_winner*/&EPlayerIndex::map_from_fn(|epi|
+                (epi_single==epi)==b_epi_single_wins
+            ),
+        )
+            .map(|n_payout| SPayoutInfo::new(*n_payout, EStockAction::Ignore))
     }
 }
