@@ -25,7 +25,7 @@ impl TPointsToWin for VGameAnnouncementPrioritySoloLike {
     fn points_to_win(&self) -> isize {
         match self {
             VGameAnnouncementPrioritySoloLike::SoloSimple(_) => 61,
-            VGameAnnouncementPrioritySoloLike::SoloSteigern{n_points_to_win, n_step: _} => *n_points_to_win,
+            VGameAnnouncementPrioritySoloLike::SoloSteigern{n_points_to_win, n_step: _n_step} => *n_points_to_win,
         }
     }
 }

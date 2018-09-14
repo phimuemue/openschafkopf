@@ -68,7 +68,7 @@ impl TRules for SRulesRamsch {
             assert_eq!(1, vecepi_most_points.len());
             vecepi_most_points[0]
         };
-        let (epi_single, n_factor_single) = if { match self.durchmarsch {
+        let (epi_single, n_factor_single) = if match self.durchmarsch {
             VDurchmarsch::All if 120==*n_points_max =>
                 gamefinishedstiche.get().iter().all(|stich| self.winner_index(stich)==the_one_epi()),
             VDurchmarsch::All | VDurchmarsch::None =>
@@ -77,7 +77,7 @@ impl TRules for SRulesRamsch {
                 assert!(n_points_durchmarsch>=61); // otherwise, it may not be clear who is the durchmarsch winner
                 *n_points_max>=n_points_durchmarsch
             },
-        } } {
+        } {
             (the_one_epi(), 1)
         } else {
             let epi_loser : EPlayerIndex = {
