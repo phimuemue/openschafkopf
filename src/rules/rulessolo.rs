@@ -14,7 +14,7 @@ use util::*;
 #[derive(Clone, Debug)]
 pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
-          PayoutDecider: TPayoutDecider,
+          PayoutDecider: TPayoutDeciderSoloLike,
 {
     pub str_name: String,
     pub epi : EPlayerIndex,
@@ -24,7 +24,7 @@ pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider>
 
 impl<TrumpfDecider, PayoutDecider> fmt::Display for SRulesSoloLike<TrumpfDecider, PayoutDecider> 
     where TrumpfDecider: TTrumpfDecider,
-          PayoutDecider: TPayoutDecider,
+          PayoutDecider: TPayoutDeciderSoloLike,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}{}", self.str_name, self.payoutdecider)
@@ -33,7 +33,7 @@ impl<TrumpfDecider, PayoutDecider> fmt::Display for SRulesSoloLike<TrumpfDecider
 
 impl<TrumpfDecider, PayoutDecider> TActivelyPlayableRules for SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
-          PayoutDecider: TPayoutDecider,
+          PayoutDecider: TPayoutDeciderSoloLike,
 {
     box_clone_impl_by_clone!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority {
@@ -47,7 +47,7 @@ impl<TrumpfDecider, PayoutDecider> TActivelyPlayableRules for SRulesSoloLike<Tru
 
 impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, PayoutDecider> 
     where TrumpfDecider: TTrumpfDecider,
-          PayoutDecider: TPayoutDecider,
+          PayoutDecider: TPayoutDeciderSoloLike,
 {
     box_clone_impl_by_clone!(TRules);
     impl_rules_trumpf!(TrumpfDecider);
@@ -56,7 +56,7 @@ impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, Payo
 
 impl<TrumpfDecider, PayoutDecider> SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
-          PayoutDecider: TPayoutDecider,
+          PayoutDecider: TPayoutDeciderSoloLike,
 {
     fn internal_new(epi: EPlayerIndex, str_rulename: &str, payoutdecider: PayoutDecider) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
         SRulesSoloLike::<TrumpfDecider, PayoutDecider> {
@@ -73,7 +73,7 @@ impl<TrumpfDecider, PayoutDecider> SRulesSoloLike<TrumpfDecider, PayoutDecider>
 
 pub fn sololike<TrumpfDecider, PayoutDecider>(epi: EPlayerIndex, prioparams: PayoutDecider::PrioParams, str_rulename: &str, payoutparams: PayoutDecider::PayoutParams) -> Box<TActivelyPlayableRules> 
     where TrumpfDecider: TTrumpfDecider,
-          PayoutDecider: TPayoutDecider,
+          PayoutDecider: TPayoutDeciderSoloLike,
 {
     Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(epi, prioparams, str_rulename, payoutparams)) as Box<TActivelyPlayableRules>
 }

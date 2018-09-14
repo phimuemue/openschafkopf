@@ -429,7 +429,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         Some(SStossParams::new(
             /*n_stoss_max*/ 4,
         )),
-        TRules::box_clone(&SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>::new(
+        TRules::box_clone(&SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike>>::new(
             epi_first_and_active_player,
             SPayoutDeciderPointBased::default_prioparams(),
             /*str_rulename*/"-", // should not matter within those tests

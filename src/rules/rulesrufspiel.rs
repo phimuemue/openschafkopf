@@ -15,7 +15,7 @@ use ai::rulespecific::airufspiel::*;
 pub struct SRulesRufspiel {
     epi : EPlayerIndex,
     efarbe : EFarbe,
-    payoutdecider: SPayoutDeciderPointBased,
+    payoutdecider: SPayoutDeciderPointBased<SPointsToWin61>,
 }
 
 impl fmt::Display for SRulesRufspiel {
@@ -35,7 +35,7 @@ impl SRulesRufspiel {
         SRulesRufspiel {
             epi,
             efarbe,
-            payoutdecider: SPayoutDeciderPointBased::new(payoutparams, VGameAnnouncementPriorityPointBased::RufspielLike),
+            payoutdecider: SPayoutDeciderPointBased::new(payoutparams, SPointsToWin61{}),
         }
     }
 
@@ -51,8 +51,7 @@ impl SRulesRufspiel {
 impl TActivelyPlayableRules for SRulesRufspiel {
     box_clone_impl_by_clone!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority {
-        assert_eq!(VGameAnnouncementPriority::PointBased(VGameAnnouncementPriorityPointBased::RufspielLike), self.payoutdecider.priority());
-        self.payoutdecider.priority()
+        VGameAnnouncementPriority::RufspielLike
     }
 }
 

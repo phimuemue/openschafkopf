@@ -172,7 +172,7 @@ impl SRuleSet {
                         .collect()
                 }
             )?;
-            macro_rules! read_sololike {($payoutdecider: ident, $fn_prio: expr, $str_rulename_suffix: expr) => {
+            macro_rules! read_sololike {($payoutdecider: ty, $fn_prio: expr, $str_rulename_suffix: expr) => {
                 let internal_rulename = |str_rulename| {
                     format!("{}{}", str_rulename, $str_rulename_suffix)
                 };
@@ -233,9 +233,9 @@ impl SRuleSet {
                     println!("steigern.steps not specified");
                     10
                 };
-                read_sololike!(SPayoutDeciderPointBased, |_i_prio| VGameAnnouncementPriorityPointBased::SoloSteigern{n_points_to_win: 61, n_step}, "");
+                read_sololike!(SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike>, |_i_prio| VGameAnnouncementPrioritySoloLike::SoloSteigern{n_points_to_win: 61, n_step}, "");
             } else {
-                read_sololike!(SPayoutDeciderPointBased, VGameAnnouncementPriorityPointBased::SoloSimple, "");
+                read_sololike!(SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike>, VGameAnnouncementPrioritySoloLike::SoloSimple, "");
             }
             read_sololike!(SPayoutDeciderTout, |x|x, " Tout");
             create_rulegroup_sololike!(

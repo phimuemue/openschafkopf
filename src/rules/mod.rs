@@ -188,9 +188,8 @@ box_clone_impl_box!(TRules);
 make_upcastable!(TAsRules, TRules);
 
 #[derive(PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]
-pub enum VGameAnnouncementPriorityPointBased {
+pub enum VGameAnnouncementPrioritySoloLike {
     // state priorities in ascending order
-    RufspielLike,
     SoloSimple(isize),
     SoloSteigern{n_points_to_win: isize, n_step: isize},
 }
@@ -198,7 +197,8 @@ pub enum VGameAnnouncementPriorityPointBased {
 #[derive(PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]
 pub enum VGameAnnouncementPriority {
     // state priorities in ascending order
-    PointBased(VGameAnnouncementPriorityPointBased),
+    RufspielLike,
+    SoloLike(VGameAnnouncementPrioritySoloLike),
     SoloTout(isize),
     SoloSie,
 }
@@ -206,24 +206,24 @@ pub enum VGameAnnouncementPriority {
 #[test]
 fn test_gameannouncementprio() {
     use self::VGameAnnouncementPriority::*;
-    use self::VGameAnnouncementPriorityPointBased::*;
-    assert!(PointBased(RufspielLike)==PointBased(RufspielLike));
-    assert!(PointBased(RufspielLike)<PointBased(SoloSimple(0)));
-    assert!(PointBased(RufspielLike)<SoloTout(0));
-    assert!(PointBased(RufspielLike)<SoloSie);
-    assert!(PointBased(SoloSimple(0))>PointBased(RufspielLike));
-    assert!(PointBased(SoloSimple(0))==PointBased(SoloSimple(0)));
-    assert!(PointBased(SoloSimple(0))<SoloTout(0));
-    assert!(PointBased(SoloSimple(0))<SoloSie);
-    assert!(SoloTout(0)>PointBased(RufspielLike));
-    assert!(SoloTout(0)>PointBased(SoloSimple(0)));
+    use self::VGameAnnouncementPrioritySoloLike::*;
+    assert!(RufspielLike==RufspielLike);
+    assert!(RufspielLike<SoloLike(SoloSimple(0)));
+    assert!(RufspielLike<SoloTout(0));
+    assert!(RufspielLike<SoloSie);
+    assert!(SoloLike(SoloSimple(0))>RufspielLike);
+    assert!(SoloLike(SoloSimple(0))==SoloLike(SoloSimple(0)));
+    assert!(SoloLike(SoloSimple(0))<SoloTout(0));
+    assert!(SoloLike(SoloSimple(0))<SoloSie);
+    assert!(SoloTout(0)>RufspielLike);
+    assert!(SoloTout(0)>SoloLike(SoloSimple(0)));
     assert!(SoloTout(0)==SoloTout(0));
     assert!(SoloTout(0)<SoloSie);
-    assert!(SoloSie>PointBased(RufspielLike));
-    assert!(SoloSie>PointBased(SoloSimple(0)));
+    assert!(SoloSie>RufspielLike);
+    assert!(SoloSie>SoloLike(SoloSimple(0)));
     assert!(SoloSie>SoloTout(0));
     assert!(SoloSie==SoloSie);
-    assert!(PointBased(SoloSimple(0))<PointBased(SoloSimple(1)));
+    assert!(SoloLike(SoloSimple(0))<SoloLike(SoloSimple(1)));
     assert!(SoloTout(0)<SoloTout(1));
 }
 

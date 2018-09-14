@@ -29,10 +29,7 @@ pub struct SPayoutDeciderParams {
     pub laufendeparams : SLaufendeParams,
 }
 
-pub trait TPayoutDecider : Sync + 'static + Clone + Display + fmt::Debug {
-    type PrioParams;
-    type PayoutParams;
-    fn new(payoutparams: Self::PayoutParams, prioparams: Self::PrioParams) -> Self;
+pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         &self,
         rules: &Rules,
@@ -43,33 +40,80 @@ pub trait TPayoutDecider : Sync + 'static + Clone + Display + fmt::Debug {
         where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
               FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
               Rules: TRules;
+}
+
+pub trait TPayoutDeciderSoloLike : TPayoutDecider + Display {
+    type PrioParams;
+    type PayoutParams;
+    fn new(payoutparams: Self::PayoutParams, prioparams: Self::PrioParams) -> Self;
     fn priority(&self) -> VGameAnnouncementPriority;
     fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Self> {
         None
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct SPayoutDeciderPointBased {
-    payoutparams : SPayoutDeciderParams,
-    priopointbased: VGameAnnouncementPriorityPointBased,
+pub trait TPointsToWin : Sync + 'static + Clone + fmt::Debug {
+    fn points_to_win(&self) -> isize;
 }
 
-impl TPayoutDecider for SPayoutDeciderPointBased {
-    type PrioParams = VGameAnnouncementPriorityPointBased;
+#[derive(Clone, Debug)]
+pub struct SPointsToWin61;
+
+impl TPointsToWin for SPointsToWin61 {
+    fn points_to_win(&self) -> isize {
+        61
+    }
+}
+
+#[derive(Clone, Debug, new)]
+pub struct SPayoutDeciderPointBased<PointsToWin: TPointsToWin> {
+    payoutparams : SPayoutDeciderParams,
+    pointstowin: PointsToWin,
+}
+
+impl TPointsToWin for VGameAnnouncementPrioritySoloLike {
+    fn points_to_win(&self) -> isize {
+        match self {
+            VGameAnnouncementPrioritySoloLike::SoloSimple(_) => 61,
+            VGameAnnouncementPrioritySoloLike::SoloSteigern{n_points_to_win, n_step: _} => *n_points_to_win,
+        }
+    }
+}
+
+impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
+    type PrioParams = VGameAnnouncementPrioritySoloLike;
     type PayoutParams = SPayoutDeciderParams;
 
-    fn new(payoutparams: Self::PayoutParams, priopointbased: Self::PrioParams) -> Self {
+    fn new(payoutparams: Self::PayoutParams, pointstowin: Self::PrioParams) -> Self {
         SPayoutDeciderPointBased {
             payoutparams,
-            priopointbased,
+            pointstowin,
         }
     }
 
     fn priority(&self) -> VGameAnnouncementPriority {
-        VGameAnnouncementPriority::PointBased(self.priopointbased.clone())
+        VGameAnnouncementPriority::SoloLike(self.pointstowin.clone())
     }
 
+    fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Self> {
+        use self::VGameAnnouncementPriority::*;
+        use self::VGameAnnouncementPrioritySoloLike::*;
+        if let (SoloLike(SoloSteigern{..}), &SoloLike(SoloSteigern{n_points_to_win, n_step})) = (self.priority(), prio) {
+            let n_points_to_win_steigered = n_points_to_win + match ebid {
+                EBid::AtLeast => 0,
+                EBid::Higher => n_step,
+            };
+            if n_points_to_win_steigered<=120 {
+                let mut payoutdecider = self.clone();
+                payoutdecider.pointstowin = SoloSteigern{n_points_to_win: n_points_to_win_steigered, n_step};
+                return Some(payoutdecider)
+            }
+        }
+        None
+    }
+}
+
+impl<PointsToWin: TPointsToWin> TPayoutDecider for SPayoutDeciderPointBased<PointsToWin> {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         &self,
         rules: &Rules,
@@ -85,11 +129,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
             .filter(|stich| fn_is_player_party(rules.winner_index(stich)))
             .map(|stich| points_stich(stich))
             .sum();
-        use self::VGameAnnouncementPriorityPointBased::*;
-        let b_player_party_wins = n_points_player_party >= match self.priopointbased {
-            RufspielLike | SoloSimple(_) => 61,
-            SoloSteigern{n_points_to_win, ..} => n_points_to_win,
-        };
+        let b_player_party_wins = n_points_player_party >= self.pointstowin.points_to_win();
         let ab_winner = EPlayerIndex::map_from_fn(|epi| {
             fn_is_player_party(epi)==b_player_party_wins
         });
@@ -109,30 +149,13 @@ impl TPayoutDecider for SPayoutDeciderPointBased {
             &ab_winner,
         )
     }
-
-    fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Self> {
-        use self::VGameAnnouncementPriority::*;
-        use self::VGameAnnouncementPriorityPointBased::*;
-        if let (PointBased(SoloSteigern{..}), &PointBased(SoloSteigern{n_points_to_win, n_step})) = (self.priority(), prio) {
-            let n_points_to_win_steigered = n_points_to_win + match ebid {
-                EBid::AtLeast => 0,
-                EBid::Higher => n_step,
-            };
-            if n_points_to_win_steigered<=120 {
-                let mut payoutdecider = self.clone();
-                payoutdecider.priopointbased = SoloSteigern{n_points_to_win: n_points_to_win_steigered, n_step};
-                return Some(payoutdecider)
-            }
-        }
-        None
-    }
 }
 
-impl Display for SPayoutDeciderPointBased {
+impl Display for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use self::VGameAnnouncementPriorityPointBased::*;
-        match self.priopointbased {
-            RufspielLike | SoloSimple(_) => Ok(()), // no special indication required
+        use self::VGameAnnouncementPrioritySoloLike::*;
+        match self.pointstowin {
+            SoloSimple(_) => Ok(()), // no special indication required
             SoloSteigern{n_points_to_win, ..} => {
                 assert!(61<=n_points_to_win);
                 if n_points_to_win<61 {
@@ -176,7 +199,7 @@ pub struct SPayoutDeciderTout {
     i_prio: isize,
 }
 
-impl TPayoutDecider for SPayoutDeciderTout {
+impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
     type PrioParams = isize;
     type PayoutParams = SPayoutDeciderParams;
 
@@ -190,7 +213,9 @@ impl TPayoutDecider for SPayoutDeciderTout {
             i_prio,
         }
     }
+}
 
+impl TPayoutDecider for SPayoutDeciderTout {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         &self,
         rules: &Rules,
@@ -215,6 +240,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
         )
     }
 }
+
 impl Display for SPayoutDeciderTout {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "")
@@ -226,7 +252,7 @@ pub struct SPayoutDeciderSie {
     payoutparams : SPayoutDeciderParams,
 }
 
-impl TPayoutDecider for SPayoutDeciderSie {
+impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
     type PrioParams = ();
     type PayoutParams = SPayoutDeciderParams;
 
@@ -239,7 +265,9 @@ impl TPayoutDecider for SPayoutDeciderSie {
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::SoloSie
     }
+}
 
+impl TPayoutDecider for SPayoutDeciderSie {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         &self,
         rules: &Rules,
