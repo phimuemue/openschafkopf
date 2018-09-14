@@ -2,7 +2,7 @@ use primitives::*;
 use rules::{
     *,
     trumpfdecider::*,
-    payoutdecider::{SStossDoublingPayoutDecider, internal_payout},
+    payoutdecider::{TPayoutDecider, SStossDoublingPayoutDecider, internal_payout},
 };
 use std::marker::PhantomData;
 use util::*;
@@ -52,11 +52,11 @@ impl<BettelAllAllowedCardsWithinStich> TActivelyPlayableRules for SRulesBettel<B
 }
 
 #[derive(Clone, Debug)]
-struct SPayoutDeciderBettel { // TODO clean up and use TPayoutDecider
+struct SPayoutDeciderBettel {
     n_payout_base : isize,
 }
 
-impl SPayoutDeciderBettel {
+impl TPayoutDecider for SPayoutDeciderBettel {
     fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
         &self,
         rules: &Rules,
