@@ -246,7 +246,7 @@ impl SRuleSet {
             create_rulegroup_sololike!(
                 "solo",
                 "Sie",
-                &|payoutparams| vec![Some(sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, _>(epi, SPayoutDeciderSie::new(payoutparams, /*prioparams*/()) ,"Sie"))]
+                &|payoutparams| vec![Some(sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, _>(epi, SPayoutDeciderSie::new(payoutparams) ,"Sie"))]
             )?;
             { // Bettel
                 let str_rule_name_file = "bettel";

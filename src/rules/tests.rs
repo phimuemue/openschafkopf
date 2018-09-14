@@ -145,38 +145,34 @@ fn rulesrufspiel_new_test(epi: EPlayerIndex, efarbe: EFarbe, n_payout_base: isiz
     )
 }
 
-pub trait TPayoutDeciderDefaultParams : TPayoutDeciderSoloLike {
-    fn default_prioparams() -> Self::PrioParams;
-    fn default_payoutparams(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self::PayoutParams;
+pub trait TPayoutDeciderSoloLikeDefault : TPayoutDeciderSoloLike {
+    fn default_payoutdecider(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self;
 }
-impl TPayoutDeciderDefaultParams for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
-    fn default_prioparams() -> Self::PrioParams {
-        VGameAnnouncementPrioritySoloLike::SoloSimple(0)
-    }
-    fn default_payoutparams(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self::PayoutParams {
-        SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams)
+impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
+    fn default_payoutdecider(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self {
+        Self::new(
+            SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
+            VGameAnnouncementPrioritySoloLike::SoloSimple(0),
+        )
     }
 }
-impl TPayoutDeciderDefaultParams for SPayoutDeciderTout {
-    fn default_prioparams() -> Self::PrioParams {
-        0
-    }
-    fn default_payoutparams(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self::PayoutParams {
-        SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams)
+impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderTout {
+    fn default_payoutdecider(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self {
+        Self::new(
+            SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
+            0,
+        )
     }
 }
 
 fn rulessololike_new_test<TrumpfDecider, PayoutDecider>(epi: EPlayerIndex, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider>
     where TrumpfDecider: TTrumpfDecider,
-          PayoutDecider: TPayoutDeciderDefaultParams,
+          PayoutDecider: TPayoutDeciderSoloLikeDefault,
 {
     // Do not inline this function. It serves as a bridge between actual implementation and the data we extract for the test suite.
     SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(
         epi,
-        PayoutDecider::new(
-            PayoutDecider::default_payoutparams(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
-            PayoutDecider::default_prioparams(),
-        ),
+        PayoutDecider::default_payoutdecider(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
         "-", // should not matter within those tests
     )
 }

@@ -12,9 +12,6 @@ use std::{
 use util::*;
 
 pub trait TPayoutDeciderSoloLike : TPayoutDecider {
-    type PrioParams;
-    type PayoutParams;
-    fn new(payoutparams: Self::PayoutParams, prioparams: Self::PrioParams) -> Self;
     fn priority(&self) -> VGameAnnouncementPriority;
     fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Self> {
         None
@@ -34,16 +31,6 @@ impl TPointsToWin for VGameAnnouncementPrioritySoloLike {
 }
 
 impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
-    type PrioParams = VGameAnnouncementPrioritySoloLike;
-    type PayoutParams = SPayoutDeciderParams;
-
-    fn new(payoutparams: Self::PayoutParams, pointstowin: Self::PrioParams) -> Self {
-        SPayoutDeciderPointBased {
-            payoutparams,
-            pointstowin,
-        }
-    }
-
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::SoloLike(self.pointstowin.clone())
     }
@@ -81,7 +68,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, new)]
 pub struct SPayoutDeciderTout {
     payoutparams : SPayoutDeciderParams,
     i_prio: isize,
@@ -114,22 +101,12 @@ impl TPayoutDecider for SPayoutDeciderTout {
 }
 
 impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
-    type PrioParams = isize;
-    type PayoutParams = SPayoutDeciderParams;
-
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::SoloTout(self.i_prio)
     }
-
-    fn new(payoutparams: Self::PayoutParams, i_prio: isize) -> Self {
-        SPayoutDeciderTout {
-            payoutparams,
-            i_prio,
-        }
-    }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, new)]
 pub struct SPayoutDeciderSie {
     payoutparams : SPayoutDeciderParams,
 }
@@ -182,15 +159,6 @@ impl TPayoutDecider for SPayoutDeciderSie {
 }
 
 impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
-    type PrioParams = ();
-    type PayoutParams = SPayoutDeciderParams;
-
-    fn new(payoutparams: Self::PayoutParams, _prioparams: ()) -> Self {
-        SPayoutDeciderSie {
-            payoutparams,
-        }
-    }
-
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::SoloSie
     }
