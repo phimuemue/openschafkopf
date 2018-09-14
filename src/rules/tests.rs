@@ -173,9 +173,11 @@ fn rulessololike_new_test<TrumpfDecider, PayoutDecider>(epi: EPlayerIndex, n_pay
     // Do not inline this function. It serves as a bridge between actual implementation and the data we extract for the test suite.
     SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(
         epi,
-        PayoutDecider::default_prioparams(),
+        PayoutDecider::new(
+            PayoutDecider::default_payoutparams(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
+            PayoutDecider::default_prioparams(),
+        ),
         "-", // should not matter within those tests
-        PayoutDecider::default_payoutparams(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
     )
 }
 
