@@ -5,19 +5,22 @@ use rules::{
     payoutdecider::*,
 };
 use std::{
-    fmt::{self, Display},
+    fmt::self,
     cmp::Ordering,
     marker::PhantomData,
 };
 use util::*;
 
-pub trait TPayoutDeciderSoloLike : TPayoutDecider + Display {
+pub trait TPayoutDeciderSoloLike : TPayoutDecider {
     type PrioParams;
     type PayoutParams;
     fn new(payoutparams: Self::PayoutParams, prioparams: Self::PrioParams) -> Self;
     fn priority(&self) -> VGameAnnouncementPriority;
     fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Self> {
         None
+    }
+    fn priorityinfo(&self) -> String {
+        "".to_string()
     }
 }
 
@@ -61,19 +64,17 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
         }
         None
     }
-}
 
-impl Display for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn priorityinfo(&self) -> String {
         use self::VGameAnnouncementPrioritySoloLike::*;
         match self.pointstowin {
-            SoloSimple(_) => Ok(()), // no special indication required
+            SoloSimple(_) => "".to_string(), // no special indication required
             SoloSteigern{n_points_to_win, ..} => {
                 assert!(61<=n_points_to_win);
                 if n_points_to_win<61 {
-                    write!(f, "for {}", n_points_to_win)
+                    format!("for {}", n_points_to_win).to_string()
                 } else {
-                    Ok(())
+                    "".to_string()
                 }
             },
         }
@@ -109,12 +110,6 @@ impl TPayoutDecider for SPayoutDeciderTout {
             fn_player_multiplier,
             &ab_winner,
         )
-    }
-}
-
-impl Display for SPayoutDeciderTout {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "")
     }
 }
 
@@ -186,12 +181,6 @@ impl TPayoutDecider for SPayoutDeciderSie {
     }
 }
 
-impl Display for SPayoutDeciderSie {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "")
-    }
-}
-
 impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
     type PrioParams = ();
     type PayoutParams = SPayoutDeciderParams;
@@ -223,7 +212,7 @@ impl<TrumpfDecider, PayoutDecider> fmt::Display for SRulesSoloLike<TrumpfDecider
           PayoutDecider: TPayoutDeciderSoloLike,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", self.str_name, self.payoutdecider)
+        write!(f, "{}{}", self.str_name, self.payoutdecider.priorityinfo())
     }
 }
 
