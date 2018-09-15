@@ -82,14 +82,22 @@ impl TRules for SRulesRufspiel {
             .map(|(epi, _)| epi))
             .unwrap();
         assert_ne!(self.epi, epi_coplayer);
-        let mapepib_player_party = EPlayerIndex::map_from_fn(|epi|
-            epi==self.epi || epi==epi_coplayer
-        );
+        struct SPlayerParties22 {
+            aepi_pri: [EPlayerIndex; 2],
+        }
+        impl TPlayerParties for SPlayerParties22 {
+            fn is_primary_party(&self, epi: EPlayerIndex) -> bool {
+                self.aepi_pri[0]==epi || self.aepi_pri[1]==epi
+            }
+            fn multiplier(&self, _epi: EPlayerIndex) -> isize {
+                1
+            }
+        }
+        let playerparties = SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]};
         let an_payout_no_stock = &self.payoutdecider.payout(
             self,
             gamefinishedstiche,
-            |epi| mapepib_player_party[epi],
-            /*fn_player_multiplier*/ |_epi| 1, // everyone pays/gets the same
+            &playerparties,
         );
         assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
         assert_eq!(an_payout_no_stock[self.epi], an_payout_no_stock[epi_coplayer]);
@@ -107,7 +115,7 @@ impl TRules for SRulesRufspiel {
         EPlayerIndex::map_from_fn(|epi|
             SPayoutInfo::new(
                 an_payout_no_stock[epi],
-                if mapepib_player_party[epi] {estockaction_playerparty} else {EStockAction::Ignore},
+                if playerparties.is_primary_party(epi) {estockaction_playerparty} else {EStockAction::Ignore},
             )
         )
     }

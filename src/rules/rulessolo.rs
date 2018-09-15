@@ -75,27 +75,25 @@ pub struct SPayoutDeciderTout {
 }
 
 impl TPayoutDecider for SPayoutDeciderTout {
-    fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
+    fn payout<Rules, PlayerParties>(
         &self,
         rules: &Rules,
         gamefinishedstiche: SGameFinishedStiche,
-        fn_is_player_party: FnIsPlayerParty,
-        fn_player_multiplier: FnPlayerMultiplier,
+        playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
-        where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
-              FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
+        where PlayerParties: TPlayerParties,
               Rules: TRules,
     {
         // TODORULES optionally count schneider/schwarz
-        let b_player_party_wins = gamefinishedstiche.get().iter()
-            .all(|stich| fn_is_player_party(rules.winner_index(stich)));
+        let b_primary_party_wins = gamefinishedstiche.get().iter()
+            .all(|stich| playerparties.is_primary_party(rules.winner_index(stich)));
         let ab_winner = EPlayerIndex::map_from_fn(|epi| {
-            fn_is_player_party(epi)==b_player_party_wins
+            playerparties.is_primary_party(epi)==b_primary_party_wins
         });
         internal_payout(
             /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner)) * 2,
-            fn_player_multiplier,
-            &ab_winner,
+            playerparties,
+            b_primary_party_wins,
         )
     }
 }
@@ -112,22 +110,20 @@ pub struct SPayoutDeciderSie {
 }
 
 impl TPayoutDecider for SPayoutDeciderSie {
-    fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
+    fn payout<Rules, PlayerParties>(
         &self,
         rules: &Rules,
         gamefinishedstiche: SGameFinishedStiche,
-        fn_is_player_party: FnIsPlayerParty,
-        fn_player_multiplier: FnPlayerMultiplier,
+        playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
-        where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
-              FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
+        where PlayerParties: TPlayerParties,
               Rules: TRules,
     {
         // TODORULES optionally count schneider/schwarz
-        let b_player_party_wins = gamefinishedstiche.get().iter()
+        let b_primary_party_wins = gamefinishedstiche.get().iter()
             .all(|stich| {
                 let epi_stich_winner = rules.winner_index(stich);
-                rules.trumpforfarbe(stich[epi_stich_winner]).is_trumpf() && fn_is_player_party(epi_stich_winner)
+                rules.trumpforfarbe(stich[epi_stich_winner]).is_trumpf() && playerparties.is_primary_party(epi_stich_winner)
             })
             && match EKurzLang::from_cards_per_player(gamefinishedstiche.get().len()) {
                 EKurzLang::Lang => true,
@@ -150,10 +146,8 @@ impl TPayoutDecider for SPayoutDeciderSie {
             + {
                 gamefinishedstiche.get().len().as_num::<isize>()
             } * self.payoutparams.laufendeparams.n_payout_per_lauf) * 4,
-            fn_player_multiplier,
-            /*ab_winner*/ &EPlayerIndex::map_from_fn(|epi| {
-                fn_is_player_party(epi)==b_player_party_wins
-            })
+            playerparties,
+            b_primary_party_wins,
         )
     }
 }

@@ -107,6 +107,25 @@ impl SPayoutInfo {
     }
 }
 
+pub trait TPlayerParties {
+    fn is_primary_party(&self, epi: EPlayerIndex) -> bool;
+    fn multiplier(&self, epi: EPlayerIndex) -> isize;
+}
+
+#[derive(new)]
+pub struct SPlayerParties13 {
+    epi: EPlayerIndex,
+}
+
+impl TPlayerParties for SPlayerParties13 {
+    fn is_primary_party(&self, epi: EPlayerIndex) -> bool {
+        self.epi==epi
+    }
+    fn multiplier(&self, epi: EPlayerIndex) -> isize {
+        if self.is_primary_party(epi) {3} else {1}
+    }
+}
+
 pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
     box_clone_require!(TRules);
 

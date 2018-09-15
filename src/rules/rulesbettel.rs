@@ -57,25 +57,21 @@ struct SPayoutDeciderBettel {
 }
 
 impl TPayoutDecider for SPayoutDeciderBettel {
-    fn payout<FnIsPlayerParty, FnPlayerMultiplier, Rules>(
+    fn payout<Rules, PlayerParties>(
         &self,
         rules: &Rules,
         gamefinishedstiche: SGameFinishedStiche,
-        fn_is_player_party: FnIsPlayerParty,
-        fn_player_multiplier: FnPlayerMultiplier,
+        playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
-        where FnIsPlayerParty: Fn(EPlayerIndex)->bool,
-              FnPlayerMultiplier: Fn(EPlayerIndex)->isize,
+        where PlayerParties: TPlayerParties,
               Rules: TRules
     {
-        let b_player_party_wins = gamefinishedstiche.get().iter()
-            .all(|stich| !fn_is_player_party(rules.winner_index(stich)));
+        let b_primary_party_wins = gamefinishedstiche.get().iter()
+            .all(|stich| !playerparties.is_primary_party(rules.winner_index(stich)));
         internal_payout(
             /*n_payout_single_player*/ self.n_payout_base,
-            fn_player_multiplier,
-            /*ab_winner*/ &EPlayerIndex::map_from_fn(|epi| {
-                fn_is_player_party(epi)==b_player_party_wins
-            })
+            playerparties,
+            b_primary_party_wins,
         )
     }
 }

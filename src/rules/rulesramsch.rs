@@ -120,12 +120,8 @@ impl TRules for SRulesRamsch {
         };
         internal_payout(
             self.n_price,
-            /*fn_player_multiplier*/|epi| {
-                if epi_single==epi {3} else {1}
-            },
-            /*ab_winner*/&EPlayerIndex::map_from_fn(|epi|
-                (epi_single==epi)==b_epi_single_wins
-            ),
+            &SPlayerParties13::new(epi_single),
+            b_epi_single_wins,
         )
             .map(|n_payout| SPayoutInfo::new(*n_payout, EStockAction::Ignore))
     }

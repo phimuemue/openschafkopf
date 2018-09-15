@@ -17,16 +17,7 @@ macro_rules! impl_single_play {() => {
         self.payoutdecider.payout(
             self,
             gamefinishedstiche,
-            /*fn_is_player_party*/ |epi| {
-                epi==self.epi
-            },
-            /*fn_player_multiplier*/ |epi| {
-                if self.epi==epi {
-                    3
-                } else {
-                    1
-                }
-            },
+            &SPlayerParties13::new(self.epi),
         )
             .map(|n_payout| SPayoutInfo::new(*n_payout, EStockAction::Ignore))
     }
