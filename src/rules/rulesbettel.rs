@@ -66,12 +66,11 @@ impl TPayoutDecider for SPayoutDeciderBettel {
         where PlayerParties: TPlayerParties,
               Rules: TRules
     {
-        let b_primary_party_wins = gamefinishedstiche.get().iter()
-            .all(|stich| !playerparties.is_primary_party(rules.winner_index(stich)));
         internal_payout(
             /*n_payout_single_player*/ self.n_payout_base,
             playerparties,
-            b_primary_party_wins,
+            /*b_primary_party_wins*/ gamefinishedstiche.get().iter()
+                .all(|stich| !playerparties.is_primary_party(rules.winner_index(stich))),
         )
     }
 }
