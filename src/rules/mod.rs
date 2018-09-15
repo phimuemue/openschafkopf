@@ -126,13 +126,16 @@ impl TPlayerParties for SPlayerParties13 {
     }
 }
 
+pub trait TRulesNoObj : TRules {
+    type TrumpfDecider: trumpfdecider::TTrumpfDecider;
+}
+
 pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
     box_clone_require!(TRules);
 
     // TTrumpfDecider
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
     fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering;
-    fn count_laufende(&self, gamefinishedstiche: SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize;
 
     fn playerindex(&self) -> Option<EPlayerIndex>;
 

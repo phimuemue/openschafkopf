@@ -2,6 +2,7 @@ use primitives::*;
 use rules::{
     *,
     card_points::*,
+    trumpfdecider::TTrumpfDecider,
 };
 use util::*;
 
@@ -26,7 +27,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
         where PlayerParties: TPlayerParties,
-              Rules: TRules;
+              Rules: TRulesNoObj;
 }
 
 pub trait TPointsToWin : Sync + 'static + Clone + fmt::Debug {
@@ -56,16 +57,13 @@ impl<PointsToWin: TPointsToWin> TPayoutDecider for SPayoutDeciderPointBased<Poin
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
         where PlayerParties: TPlayerParties,
-              Rules: TRules,
+              Rules: TRulesNoObj,
     {
         let n_points_primary_party : isize = gamefinishedstiche.get().iter()
             .filter(|stich| playerparties.is_primary_party(rules.winner_index(stich)))
             .map(|stich| points_stich(stich))
             .sum();
         let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
-        let ab_winner = EPlayerIndex::map_from_fn(|epi| {
-            playerparties.is_primary_party(epi)==b_primary_party_wins
-        });
         internal_payout(
             /*n_payout_single_player*/ self.payoutparams.n_payout_base
                 + { 
@@ -77,7 +75,7 @@ impl<PointsToWin: TPointsToWin> TPayoutDecider for SPayoutDeciderPointBased<Poin
                         0 // "nothing", i.e. neither schneider nor schwarz
                     }
                 }
-                + self.payoutparams.laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner),
+                + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(gamefinishedstiche, playerparties),
             playerparties,
             b_primary_party_wins,
         )
@@ -85,10 +83,8 @@ impl<PointsToWin: TPointsToWin> TPayoutDecider for SPayoutDeciderPointBased<Poin
 }
 
 impl SLaufendeParams {
-    pub fn payout_laufende<Rules>(&self, rules: &Rules, gamefinishedstiche: SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> isize 
-        where Rules: TRules,
-    {
-        let n_laufende = rules.count_laufende(gamefinishedstiche, ab_winner);
+    pub fn payout_laufende<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(&self, gamefinishedstiche: SGameFinishedStiche, playerparties: &PlayerParties) -> isize {
+        let n_laufende = Rules::TrumpfDecider::count_laufende(gamefinishedstiche, playerparties);
         (if n_laufende<self.n_lauf_lbound {0} else {n_laufende}).as_num::<isize>() * self.n_payout_per_lauf
     }
 }

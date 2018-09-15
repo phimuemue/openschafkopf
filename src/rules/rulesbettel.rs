@@ -127,11 +127,17 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStic
     }
 }
 
+impl<BettelAllAllowedCardsWithinStich> TRulesNoObj for SRulesBettel<BettelAllAllowedCardsWithinStich>
+    where BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich,
+{
+    impl_rules_trumpf_noobj!(STrumpfDeciderNoTrumpf);
+}
+
 impl<BettelAllAllowedCardsWithinStich> TRules for SRulesBettel<BettelAllAllowedCardsWithinStich>
     where BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich,
 {
     box_clone_impl_by_clone!(TRules);
-    impl_rules_trumpf!(STrumpfDeciderNoTrumpf);
+    impl_rules_trumpf!();
     impl_single_play!();
 
     fn all_allowed_cards_within_stich(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {

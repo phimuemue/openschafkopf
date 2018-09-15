@@ -82,16 +82,13 @@ impl TPayoutDecider for SPayoutDeciderTout {
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
         where PlayerParties: TPlayerParties,
-              Rules: TRules,
+              Rules: TRulesNoObj,
     {
         // TODORULES optionally count schneider/schwarz
         let b_primary_party_wins = gamefinishedstiche.get().iter()
             .all(|stich| playerparties.is_primary_party(rules.winner_index(stich)));
-        let ab_winner = EPlayerIndex::map_from_fn(|epi| {
-            playerparties.is_primary_party(epi)==b_primary_party_wins
-        });
         internal_payout(
-            /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(rules, gamefinishedstiche, &ab_winner)) * 2,
+            /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(gamefinishedstiche, playerparties)) * 2,
             playerparties,
             b_primary_party_wins,
         )
@@ -117,7 +114,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
         where PlayerParties: TPlayerParties,
-              Rules: TRules,
+              Rules: TRulesNoObj,
     {
         // TODORULES optionally count schneider/schwarz
         let b_primary_party_wins = gamefinishedstiche.get().iter()
@@ -192,12 +189,19 @@ impl<TrumpfDecider, PayoutDecider> TActivelyPlayableRules for SRulesSoloLike<Tru
     }
 }
 
+impl<TrumpfDecider, PayoutDecider> TRulesNoObj for SRulesSoloLike<TrumpfDecider, PayoutDecider> 
+    where TrumpfDecider: TTrumpfDecider,
+          PayoutDecider: TPayoutDeciderSoloLike,
+{
+    impl_rules_trumpf_noobj!(TrumpfDecider);
+}
+
 impl<TrumpfDecider, PayoutDecider> TRules for SRulesSoloLike<TrumpfDecider, PayoutDecider> 
     where TrumpfDecider: TTrumpfDecider,
           PayoutDecider: TPayoutDeciderSoloLike,
 {
     box_clone_impl_by_clone!(TRules);
-    impl_rules_trumpf!(TrumpfDecider);
+    impl_rules_trumpf!();
     impl_single_play!();
 }
 

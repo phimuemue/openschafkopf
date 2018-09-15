@@ -11,7 +11,7 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {
 
     fn trumpfs_in_descending_order() -> return_impl!(Box<Iterator<Item=SCard>>);
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering;
-    fn count_laufende(gamefinishedstiche: SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize {
+    fn count_laufende<PlayerParties: TPlayerParties>(gamefinishedstiche: SGameFinishedStiche, playerparties: &PlayerParties) -> usize {
         #[cfg(debug_assertions)]
         let mut mapcardb_used = SCard::map_from_fn(|_card| false);
         let mapcardepi = {
@@ -28,7 +28,7 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {
         #[cfg(debug_assertions)]
         assert!(SCard::values(ekurzlang).all(|card| mapcardb_used[card]));
         let laufende_relevant = |card: SCard| {
-            ab_winner[mapcardepi[card]]
+            playerparties.is_primary_party(mapcardepi[card])
         };
         let mut itcard_trumpf_descending = Self::trumpfs_in_descending_order();
         let b_might_have_lauf = laufende_relevant(verify!(itcard_trumpf_descending.nth(0)).unwrap());
@@ -122,14 +122,15 @@ impl<StaticFarbe> TTrumpfDecider for STrumpfDeciderFarbe<StaticFarbe>
     }
 }
 
-macro_rules! impl_rules_trumpf {($trumpfdecider: ident) => {
+macro_rules! impl_rules_trumpf {() => {
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        $trumpfdecider::trumpforfarbe(card)
+        <Self as TRulesNoObj>::TrumpfDecider::trumpforfarbe(card)
     }
     fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
-        $trumpfdecider::compare_trumpf(card_fst, card_snd)
+        <Self as TRulesNoObj>::TrumpfDecider::compare_trumpf(card_fst, card_snd)
     }
-    fn count_laufende(&self, gamefinishedstiche: SGameFinishedStiche, ab_winner: &EnumMap<EPlayerIndex, bool>) -> usize {
-        $trumpfdecider::count_laufende(gamefinishedstiche, ab_winner)
-    }
+}}
+
+macro_rules! impl_rules_trumpf_noobj{($trumpfdecider: ident) => {
+    type TrumpfDecider = $trumpfdecider;
 }}

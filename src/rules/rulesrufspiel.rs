@@ -55,9 +55,13 @@ impl TActivelyPlayableRules for SRulesRufspiel {
     }
 }
 
+impl TRulesNoObj for SRulesRufspiel {
+    impl_rules_trumpf_noobj!(STrumpfDeciderRufspiel);
+}
+
 impl TRules for SRulesRufspiel {
     box_clone_impl_by_clone!(TRules);
-    impl_rules_trumpf!(STrumpfDeciderRufspiel);
+    impl_rules_trumpf!();
 
     fn can_be_played(&self, hand: SFullHand) -> bool {
         let it = || {hand.get().cards().iter().filter(|&card| self.is_ruffarbe(*card))};
