@@ -11,33 +11,6 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {
 
     fn trumpfs_in_descending_order() -> return_impl!(Box<Iterator<Item=SCard>>);
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering;
-    fn count_laufende<PlayerParties: TPlayerParties>(gamefinishedstiche: SGameFinishedStiche, playerparties: &PlayerParties) -> usize {
-        #[cfg(debug_assertions)]
-        let mut mapcardb_used = SCard::map_from_fn(|_card| false);
-        let mapcardepi = {
-            let mut mapcardepi = SCard::map_from_fn(|_card| EPlayerIndex::EPI0);
-            for (epi, card) in gamefinishedstiche.get().iter().flat_map(|stich| stich.iter()) {
-                #[cfg(debug_assertions)] {
-                    mapcardb_used[*card] = true;
-                }
-                mapcardepi[*card] = epi;
-            }
-            mapcardepi
-        };
-        let ekurzlang = EKurzLang::from_cards_per_player(gamefinishedstiche.get().len());
-        #[cfg(debug_assertions)]
-        assert!(SCard::values(ekurzlang).all(|card| mapcardb_used[card]));
-        let laufende_relevant = |card: SCard| {
-            playerparties.is_primary_party(mapcardepi[card])
-        };
-        let mut itcard_trumpf_descending = Self::trumpfs_in_descending_order();
-        let b_might_have_lauf = laufende_relevant(verify!(itcard_trumpf_descending.nth(0)).unwrap());
-        itcard_trumpf_descending
-            .filter(|card| ekurzlang.supports_card(*card))
-            .take_while(|card| b_might_have_lauf==laufende_relevant(*card))
-            .count()
-            + 1 // consumed by nth(0)
-    }
 }
 
 #[derive(Clone, Debug)]

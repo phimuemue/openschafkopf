@@ -84,7 +84,32 @@ impl<PointsToWin: TPointsToWin> TPayoutDecider for SPayoutDeciderPointBased<Poin
 
 impl SLaufendeParams {
     pub fn payout_laufende<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(&self, gamefinishedstiche: SGameFinishedStiche, playerparties: &PlayerParties) -> isize {
-        let n_laufende = Rules::TrumpfDecider::count_laufende(gamefinishedstiche, playerparties);
+        #[cfg(debug_assertions)]
+        let mut mapcardb_used = SCard::map_from_fn(|_card| false);
+        let mapcardepi = {
+            let mut mapcardepi = SCard::map_from_fn(|_card| EPlayerIndex::EPI0);
+            for (epi, card) in gamefinishedstiche.get().iter().flat_map(|stich| stich.iter()) {
+                #[cfg(debug_assertions)] {
+                    mapcardb_used[*card] = true;
+                }
+                mapcardepi[*card] = epi;
+            }
+            mapcardepi
+        };
+        let ekurzlang = EKurzLang::from_cards_per_player(gamefinishedstiche.get().len());
+        #[cfg(debug_assertions)]
+        assert!(SCard::values(ekurzlang).all(|card| mapcardb_used[card]));
+        let laufende_relevant = |card: SCard| {
+            playerparties.is_primary_party(mapcardepi[card])
+        };
+        let mut itcard_trumpf_descending = Rules::TrumpfDecider::trumpfs_in_descending_order();
+        let b_might_have_lauf = laufende_relevant(verify!(itcard_trumpf_descending.nth(0)).unwrap());
+        let n_laufende = itcard_trumpf_descending
+            .filter(|card| ekurzlang.supports_card(*card))
+            .take_while(|card| b_might_have_lauf==laufende_relevant(*card))
+            .count()
+            + 1 // consumed by nth(0)
+        ;
         (if n_laufende<self.n_lauf_lbound {0} else {n_laufende}).as_num::<isize>() * self.n_payout_per_lauf
     }
 }
