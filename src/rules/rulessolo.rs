@@ -27,11 +27,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         _playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
-        where Rules: TRulesNoObj
-    {
-        // TODO remove default implementation and customize all instances
-        EPlayerIndex::map_from_fn(|_epi| (None, None))
-    }
+        where Rules: TRulesNoObj;
 }
 
 pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + TPayoutDecider {
@@ -63,6 +59,18 @@ impl TPayoutDecider for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLi
         where Rules: TRulesNoObj
     {
         self.payout(rules, gamefinishedstiche, playerparties13)
+    }
+
+    fn payouthints<Rules>(
+        &self,
+        rules: &Rules,
+        slcstich: &[SStich],
+        ahand: &EnumMap<EPlayerIndex, SHand>,
+        playerparties13: &SPlayerParties13,
+    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
+        where Rules: TRulesNoObj
+    {
+        self.payouthints(rules, slcstich, ahand, playerparties13)
     }
 }
 

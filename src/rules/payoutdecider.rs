@@ -70,6 +70,17 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
             b_primary_party_wins,
         )
     }
+
+    pub fn payouthints<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(
+        &self,
+        _rules: &Rules,
+        _slcstich: &[SStich],
+        _ahand: &EnumMap<EPlayerIndex, SHand>,
+        _playerparties: &PlayerParties,
+    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)> {
+        // TODO remove default implementation and customize all instances
+        EPlayerIndex::map_from_fn(|_epi| (None, None))
+    }
 }
 
 impl SLaufendeParams {

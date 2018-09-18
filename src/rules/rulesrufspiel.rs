@@ -59,6 +59,19 @@ impl TRulesNoObj for SRulesRufspiel {
     impl_rules_trumpf_noobj!(STrumpfDeciderRufspiel);
 }
 
+struct SPlayerParties22 {
+    aepi_pri: [EPlayerIndex; 2],
+}
+
+impl TPlayerParties for SPlayerParties22 {
+    fn is_primary_party(&self, epi: EPlayerIndex) -> bool {
+        self.aepi_pri[0]==epi || self.aepi_pri[1]==epi
+    }
+    fn multiplier(&self, _epi: EPlayerIndex) -> isize {
+        1
+    }
+}
+
 impl TRules for SRulesRufspiel {
     box_clone_impl_by_clone!(TRules);
     impl_rules_trumpf!();
@@ -86,17 +99,6 @@ impl TRules for SRulesRufspiel {
             .map(|(epi, _)| epi))
             .unwrap();
         assert_ne!(self.epi, epi_coplayer);
-        struct SPlayerParties22 {
-            aepi_pri: [EPlayerIndex; 2],
-        }
-        impl TPlayerParties for SPlayerParties22 {
-            fn is_primary_party(&self, epi: EPlayerIndex) -> bool {
-                self.aepi_pri[0]==epi || self.aepi_pri[1]==epi
-            }
-            fn multiplier(&self, _epi: EPlayerIndex) -> isize {
-                1
-            }
-        }
         let playerparties = SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]};
         let an_payout_no_stock = &self.payoutdecider.payout(
             self,
@@ -124,9 +126,23 @@ impl TRules for SRulesRufspiel {
         )
     }
 
-    fn payouthints(&self, _slcstich: &[SStich], _ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SPayoutHint> {
-        // TODO sensible payouthints
-        EPlayerIndex::map_from_fn(|_epi| SPayoutHint::new((None, None)))
+    fn payouthints(&self, slcstich: &[SStich], ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SPayoutHint> {
+        let epi_coplayer = slcstich.iter()
+            .flat_map(|stich| stich.iter())
+            .find(|&(_, card)| *card==self.rufsau())
+            .map(|(epi, _)| epi)
+            .unwrap_or_else(|| {
+                verify!(EPlayerIndex::values().find(|epi|
+                    ahand[*epi].cards().iter().any(|card| *card==self.rufsau())
+                )).unwrap()
+            });
+        assert_ne!(self.epi, epi_coplayer);
+        self.payoutdecider.payouthints(self, slcstich, ahand, &SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]})
+            .map(|pairon_payout| SPayoutHint::new((
+                // TODO EStockAction
+                pairon_payout.0.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore)),
+                pairon_payout.1.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore)),
+            )))
     }
 
     fn all_allowed_cards_first_in_stich(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
