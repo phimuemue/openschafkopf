@@ -28,6 +28,20 @@ pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
     ) -> EnumMap<EPlayerIndex, isize>
         where PlayerParties: TPlayerParties,
               Rules: TRulesNoObj;
+
+    fn payouthints<Rules, PlayerParties>(
+        &self,
+        _rules: &Rules,
+        _slcstich: &[SStich],
+        _ahand: &EnumMap<EPlayerIndex, SHand>,
+        _playerparties: &PlayerParties,
+    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
+        where PlayerParties: TPlayerParties,
+              Rules: TRulesNoObj
+    {
+        // TODO remove default implementation and customize all instances
+        EPlayerIndex::map_from_fn(|_epi| (None, None))
+    }
 }
 
 pub trait TPointsToWin : Sync + 'static + Clone + fmt::Debug {

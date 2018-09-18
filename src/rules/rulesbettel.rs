@@ -73,6 +73,32 @@ impl TPayoutDecider for SPayoutDeciderBettel {
                 .all(|stich| !playerparties.is_primary_party(rules.winner_index(stich))),
         )
     }
+
+    fn payouthints<Rules, PlayerParties>(
+        &self,
+        rules: &Rules,
+        slcstich: &[SStich],
+        _ahand: &EnumMap<EPlayerIndex, SHand>,
+        playerparties: &PlayerParties,
+    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
+        where PlayerParties: TPlayerParties,
+              Rules: TRulesNoObj
+    {
+        if 
+            !slcstich.iter()
+                .take_while(|stich| stich.size()==4)
+                .all(|stich| !playerparties.is_primary_party(rules.winner_index(stich)))
+        {
+            internal_payout(
+                /*n_payout_single_player*/ self.n_payout_base,
+                playerparties,
+                /*b_primary_party_wins*/ false,
+            )
+                .map(|n_payout| (Some(*n_payout), Some(*n_payout)))
+        } else {
+            EPlayerIndex::map_from_fn(|_epi| (None, None))
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
