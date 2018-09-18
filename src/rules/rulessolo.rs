@@ -172,6 +172,38 @@ pub struct SPayoutDeciderSie {
     payoutparams : SPayoutDeciderParams,
 }
 
+fn cards_valid_for_sie_internal<Rules: TRulesNoObj, ItCard: Iterator<Item=SCard>, FnAllowUnter: Fn(EFarbe)->bool>(
+    rules: &Rules,
+    mut itcard: ItCard,
+    fn_allow_unter: FnAllowUnter,
+) -> bool {
+    itcard.all(|card| {
+        let b_card_valid = match card.schlag() {
+            ESchlag::Ober => true,
+            ESchlag::Unter => fn_allow_unter(card.farbe()),
+            ESchlag::S7 | ESchlag::S8 | ESchlag::S9 | ESchlag::Zehn | ESchlag::Koenig | ESchlag::Ass => false,
+        };
+        assert!(!b_card_valid || rules.trumpforfarbe(card).is_trumpf());
+        b_card_valid
+    })
+}
+
+fn cards_valid_for_sie<Rules: TRulesNoObj, ItCard: Iterator<Item=SCard>>(
+    rules: &Rules,
+    itcard: ItCard,
+    ekurzlang: EKurzLang,
+) -> bool {
+    match ekurzlang {
+        EKurzLang::Lang => cards_valid_for_sie_internal(rules, itcard, /*fn_allow_unter*/|_| true),
+        EKurzLang::Kurz => cards_valid_for_sie_internal(rules, itcard, /*fn_allow_unter*/|efarbe|
+            match efarbe {
+                EFarbe::Eichel | EFarbe::Gras => true,
+                EFarbe::Herz | EFarbe::Schelln => false,
+            }
+        ),
+    }
+}
+
 impl TPayoutDecider for SPayoutDeciderSie {
     fn payout<Rules>(
         &self,
@@ -182,39 +214,54 @@ impl TPayoutDecider for SPayoutDeciderSie {
         where Rules: TRulesNoObj,
     {
         // TODORULES optionally count schneider/schwarz
-        fn cards_valid_for_sie<Rules: TRulesNoObj, FnAllowUnter: Fn(EFarbe)->bool>(
-            rules: &Rules,
-            gamefinishedstiche: SGameFinishedStiche,
-            playerparties13: &SPlayerParties13,
-            fn_allow_unter: FnAllowUnter,
-        ) -> bool {
-            gamefinishedstiche.get().iter().all(|stich| {
-                let card = stich[playerparties13.primary_player()];
-                let b_card_valid = match card.schlag() {
-                    ESchlag::Ober => true,
-                    ESchlag::Unter => fn_allow_unter(card.farbe()),
-                    ESchlag::S7 | ESchlag::S8 | ESchlag::S9 | ESchlag::Zehn | ESchlag::Koenig | ESchlag::Ass => false,
-                };
-                assert!(!b_card_valid || rules.trumpforfarbe(card).is_trumpf());
-                b_card_valid
-            })
-        }
         internal_payout(
             /*n_payout_single_player*/ (self.payoutparams.n_payout_base
             + {
                 gamefinishedstiche.get().len().as_num::<isize>()
             } * self.payoutparams.laufendeparams.n_payout_per_lauf) * 4,
             playerparties13,
-            /*b_primary_party_wins*/ match EKurzLang::from_cards_per_player(gamefinishedstiche.get().len()) {
-                EKurzLang::Lang => cards_valid_for_sie(rules, gamefinishedstiche, playerparties13, /*fn_allow_unter*/|_| true),
-                EKurzLang::Kurz => cards_valid_for_sie(rules, gamefinishedstiche, playerparties13, /*fn_allow_unter*/|efarbe|
-                    match efarbe {
-                        EFarbe::Eichel | EFarbe::Gras => true,
-                        EFarbe::Herz | EFarbe::Schelln => false,
-                    }
-                ),
-            }
+            /*b_primary_party_wins*/cards_valid_for_sie(
+                rules,
+                gamefinishedstiche.get().iter().map(|stich| stich[playerparties13.primary_player()]),
+                EKurzLang::from_cards_per_player(gamefinishedstiche.get().len())
+            )
         )
+    }
+
+    fn payouthints<Rules>(
+        &self,
+        rules: &Rules,
+        slcstich: &[SStich],
+        ahand: &EnumMap<EPlayerIndex, SHand>,
+        playerparties13: &SPlayerParties13,
+    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
+        where Rules: TRulesNoObj
+    {
+        let itcard = slcstich.iter().filter_map(|stich| stich.get(playerparties13.primary_player())).cloned()
+            .chain(ahand[playerparties13.primary_player()].cards().iter().cloned());
+        if
+            !cards_valid_for_sie(
+                rules,
+                itcard.clone(),
+                EKurzLang::from_cards_per_player(itcard.count()),
+            )
+        {
+            internal_payout(
+                /*n_payout_single_player*/ self.payoutparams.n_payout_base * 4,
+                playerparties13,
+                /*b_primary_party_wins*/ false,
+            )
+                .map(|n_payout| {
+                     assert_ne!(0, *n_payout);
+                     if 0<*n_payout {
+                         (Some(*n_payout), None)
+                     } else {
+                         (None, Some(*n_payout))
+                     }
+                })
+        } else {
+            EPlayerIndex::map_from_fn(|_epi| (None, None))
+        }
     }
 }
 
