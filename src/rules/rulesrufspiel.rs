@@ -124,6 +124,11 @@ impl TRules for SRulesRufspiel {
         )
     }
 
+    fn payouthints(&self, _slcstich: &[SStich], _ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SPayoutHint> {
+        // TODO sensible payouthints
+        EPlayerIndex::map_from_fn(|_epi| SPayoutHint::new((None, None)))
+    }
+
     fn all_allowed_cards_first_in_stich(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!slcstich.is_empty());
         if // do we already know who had the rufsau?

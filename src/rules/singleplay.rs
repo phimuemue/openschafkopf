@@ -21,4 +21,10 @@ macro_rules! impl_single_play {() => {
         )
             .map(|n_payout| SPayoutInfo::new(*n_payout, EStockAction::Ignore))
     }
+
+    fn payouthints(&self, _slcstich: &[SStich], _ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SPayoutHint> {
+        // TODO sensible payouthints
+        EPlayerIndex::map_from_fn(|_epi| SPayoutHint::new((None, None)))
+    }
+
 }}

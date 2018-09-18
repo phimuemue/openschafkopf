@@ -81,14 +81,14 @@ fn all_allowed_cards_within_stich_distinguish_farbe_frei<Rules, Result, FnFarbeF
     }
 }
 
-#[derive(Eq, PartialEq, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum EStockAction {
     Ignore,
     TakeHalf,
     GiveHalf,
 }
 
-#[derive(Eq, PartialEq, new)]
+#[derive(Eq, PartialEq, Clone, Debug, new)]
 pub struct SPayoutInfo {
     n_payout: isize,
     estockaction: EStockAction,
@@ -104,6 +104,27 @@ impl SPayoutInfo {
             EStockAction::TakeHalf => n_stock/2,
             EStockAction::GiveHalf => -n_stock/2,
         }
+    }
+}
+
+#[derive(Debug, new)]
+pub struct SPayoutHint {
+    tpln_payout: (Option<SPayoutInfo>, Option<SPayoutInfo>),
+}
+
+impl SPayoutHint {
+    fn contains_payouthint(&self, payouthint_other: &SPayoutHint) -> bool {
+        (match (&self.tpln_payout.0, &payouthint_other.tpln_payout.0) {
+            (None, _) => true,
+            (Some(_), None) => false,
+            (Some(payoutinfo_self), Some(payoutinfo_other)) => payoutinfo_self.n_payout<=payoutinfo_other.n_payout,
+        })
+        && match (&self.tpln_payout.1, &payouthint_other.tpln_payout.1) {
+            (None, _) => true,
+            (Some(_), None) => false,
+            (Some(payoutinfo_self), Some(payoutinfo_other)) => payoutinfo_self.n_payout>=payoutinfo_other.n_payout,
+        }
+        // TODO check estockaction
     }
 }
 
@@ -155,12 +176,42 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
         });
         assert_eq!(n_stock%2, 0);
         // TODO assert tpln_stoss_doubling consistent with stoss_allowed etc
+        #[cfg(debug_assertions)] {
+            let mut mapepipayouthint = EPlayerIndex::map_from_fn(|_epi| SPayoutHint::new((None, None)));
+            let mut vecstich_check = Vec::new();
+            let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
+                SHand::new_from_vec(gamefinishedstiche.get().iter().map(|stich| stich[epi]).collect())
+            );
+            for stich in gamefinishedstiche.get().iter() {
+                vecstich_check.push(SStich::new(stich.first_playerindex()));
+                for (epi, card) in stich.iter() {
+                    verify!(vecstich_check.last_mut()).unwrap().push(*card);
+                    ahand_check[epi].play_card(*card);
+                    let mapepipayouthint_after = self.payouthints(&vecstich_check, &ahand_check);
+                    assert!(
+                        mapepipayouthint.iter().zip(mapepipayouthint_after.iter())
+                            .all(|(payouthint, payouthint_other)| payouthint.contains_payouthint(payouthint_other)),
+                        "{:?}\n{:?}\n{:?}\n{:?}", vecstich_check, ahand_check, mapepipayouthint, mapepipayouthint_after,
+                    );
+                    mapepipayouthint = mapepipayouthint_after;
+                }
+                assert!(
+                    mapepipayouthint.iter().zip(apayoutinfo.iter().cloned())
+                        .all(|(payouthint, payoutinfo)|
+                            payouthint.contains_payouthint(&SPayoutHint::new((Some(payoutinfo.clone()), Some(payoutinfo.clone()))))
+                        )
+                    "{:?}\n{:?}\n{:?}\n{:?}", vecstich_check, ahand_check, mapepipayouthint, apayoutinfo,
+                );
+            }
+        }
         let an_payout = apayoutinfo.map(|payoutinfo| payoutinfo.payout_including_stock(n_stock, tpln_stoss_doubling));
         let n_stock = -an_payout.iter().sum::<isize>();
         SAccountBalance::new(an_payout, n_stock)
     }
 
     fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche) -> EnumMap<EPlayerIndex, SPayoutInfo>;
+
+    fn payouthints(&self, slcstich: &[SStich], ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SPayoutHint>;
 
     fn all_allowed_cards(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!slcstich.is_empty());
