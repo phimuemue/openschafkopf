@@ -92,6 +92,39 @@ impl TPayoutDecider for SPayoutDeciderTout {
                 .all(|stich| playerparties.is_primary_party(rules.winner_index(stich))),
         )
     }
+
+    fn payouthints<Rules, PlayerParties>(
+        &self,
+        rules: &Rules,
+        slcstich: &[SStich],
+        _ahand: &EnumMap<EPlayerIndex, SHand>,
+        playerparties: &PlayerParties,
+    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
+        where PlayerParties: TPlayerParties,
+              Rules: TRulesNoObj
+    {
+        if 
+            !slcstich.iter()
+                .take_while(|stich| stich.size()==4)
+                .all(|stich| playerparties.is_primary_party(rules.winner_index(stich)))
+        {
+            internal_payout(
+                /*n_payout_single_player*/ (self.payoutparams.n_payout_base) * 2, // TODO laufende
+                playerparties,
+                /*b_primary_party_wins*/ false,
+            )
+                .map(|n_payout| {
+                     assert_ne!(0, *n_payout);
+                     if 0<*n_payout {
+                         (Some(*n_payout), None)
+                     } else {
+                         (None, Some(*n_payout))
+                     }
+                })
+        } else {
+            EPlayerIndex::map_from_fn(|_epi| (None, None))
+        }
+    }
 }
 
 impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
