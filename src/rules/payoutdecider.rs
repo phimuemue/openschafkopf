@@ -73,13 +73,34 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
 
     pub fn payouthints<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(
         &self,
-        _rules: &Rules,
-        _slcstich: &[SStich],
+        rules: &Rules,
+        slcstich: &[SStich],
         _ahand: &EnumMap<EPlayerIndex, SHand>,
-        _playerparties: &PlayerParties,
+        playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)> {
-        // TODO remove default implementation and customize all instances
-        EPlayerIndex::map_from_fn(|_epi| (None, None))
+        // TODO consider secondary party, as well
+        let n_points_primary_party : isize = slcstich.iter()
+            .take_while(|stich| stich.size()==4)
+            .filter(|stich| playerparties.is_primary_party(rules.winner_index(stich)))
+            .map(|stich| points_stich(stich))
+            .sum();
+        if /*b_primary_party_wins*/ n_points_primary_party >= self.pointstowin.points_to_win() {
+            internal_payout(
+                /*n_payout_single_player*/ self.payoutparams.n_payout_base,
+                playerparties,
+                /*b_primary_party_wins*/ true,
+            )
+                .map(|n_payout| {
+                     assert_ne!(0, *n_payout);
+                     if 0<*n_payout {
+                         (Some(*n_payout), None)
+                     } else {
+                         (None, Some(*n_payout))
+                     }
+                })
+        } else {
+            EPlayerIndex::map_from_fn(|_epi| (None, None))
+        }
     }
 }
 
