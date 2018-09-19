@@ -245,6 +245,11 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
     }
 
     fn winner_index(&self, stich: &SStich) -> EPlayerIndex {
+        assert_eq!(stich.size(), 4);
+        self.preliminary_winner_index(stich)
+    }
+
+    fn preliminary_winner_index(&self, stich: &SStich) -> EPlayerIndex {
         let mut epi_best = stich.epi_first;
         for (epi, card) in stich.iter().skip(1) {
             if Ordering::Less==self.compare_in_stich(stich[epi_best], *card) {
