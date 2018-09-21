@@ -11,7 +11,30 @@ use std::{
 };
 use util::*;
 
-pub trait TPayoutDeciderSoloLike : TPayoutDecider {
+pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
+    fn payout<Rules>(
+        &self,
+        rules: &Rules,
+        gamefinishedstiche: SGameFinishedStiche,
+        playerparties13: &SPlayerParties13,
+    ) -> EnumMap<EPlayerIndex, isize>
+        where Rules: TRulesNoObj;
+
+    fn payouthints<Rules>(
+        &self,
+        _rules: &Rules,
+        _slcstich: &[SStich],
+        _ahand: &EnumMap<EPlayerIndex, SHand>,
+        _playerparties13: &SPlayerParties13,
+    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
+        where Rules: TRulesNoObj
+    {
+        // TODO remove default implementation and customize all instances
+        EPlayerIndex::map_from_fn(|_epi| (None, None))
+    }
+}
+
+pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + TPayoutDecider {
     fn priority(&self) -> VGameAnnouncementPriority;
     fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Self> {
         None
@@ -27,6 +50,19 @@ impl TPointsToWin for VGameAnnouncementPrioritySoloLike {
             VGameAnnouncementPrioritySoloLike::SoloSimple(_) => 61,
             VGameAnnouncementPrioritySoloLike::SoloSteigern{n_points_to_win, n_step: _n_step} => *n_points_to_win,
         }
+    }
+}
+
+impl TPayoutDecider for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
+    fn payout<Rules>(
+        &self,
+        rules: &Rules,
+        gamefinishedstiche: SGameFinishedStiche,
+        playerparties13: &SPlayerParties13,
+    ) -> EnumMap<EPlayerIndex, isize>
+        where Rules: TRulesNoObj
+    {
+        self.payout(rules, gamefinishedstiche, playerparties13)
     }
 }
 
@@ -75,42 +111,40 @@ pub struct SPayoutDeciderTout {
 }
 
 impl TPayoutDecider for SPayoutDeciderTout {
-    fn payout<Rules, PlayerParties>(
+    fn payout<Rules>(
         &self,
         rules: &Rules,
         gamefinishedstiche: SGameFinishedStiche,
-        playerparties: &PlayerParties,
+        playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
-        where PlayerParties: TPlayerParties,
-              Rules: TRulesNoObj,
+        where Rules: TRulesNoObj,
     {
         // TODORULES optionally count schneider/schwarz
         internal_payout(
-            /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(gamefinishedstiche, playerparties)) * 2,
-            playerparties,
+            /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(gamefinishedstiche, playerparties13)) * 2,
+            playerparties13,
             /*b_primary_party_wins*/ gamefinishedstiche.get().iter()
-                .all(|stich| playerparties.is_primary_party(rules.winner_index(stich))),
+                .all(|stich| playerparties13.is_primary_party(rules.winner_index(stich))),
         )
     }
 
-    fn payouthints<Rules, PlayerParties>(
+    fn payouthints<Rules>(
         &self,
         rules: &Rules,
         slcstich: &[SStich],
         _ahand: &EnumMap<EPlayerIndex, SHand>,
-        playerparties: &PlayerParties,
+        playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
-        where PlayerParties: TPlayerParties,
-              Rules: TRulesNoObj
+        where Rules: TRulesNoObj
     {
         if 
             !slcstich.iter()
                 .take_while(|stich| stich.size()==4)
-                .all(|stich| playerparties.is_primary_party(rules.winner_index(stich)))
+                .all(|stich| playerparties13.is_primary_party(rules.winner_index(stich)))
         {
             internal_payout(
                 /*n_payout_single_player*/ (self.payoutparams.n_payout_base) * 2, // TODO laufende
-                playerparties,
+                playerparties13,
                 /*b_primary_party_wins*/ false,
             )
                 .map(|n_payout| {
@@ -139,14 +173,13 @@ pub struct SPayoutDeciderSie {
 }
 
 impl TPayoutDecider for SPayoutDeciderSie {
-    fn payout<Rules, PlayerParties>(
+    fn payout<Rules>(
         &self,
         rules: &Rules,
         gamefinishedstiche: SGameFinishedStiche,
-        playerparties: &PlayerParties,
+        playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
-        where PlayerParties: TPlayerParties,
-              Rules: TRulesNoObj,
+        where Rules: TRulesNoObj,
     {
         // TODORULES optionally count schneider/schwarz
         internal_payout(
@@ -154,11 +187,11 @@ impl TPayoutDecider for SPayoutDeciderSie {
             + {
                 gamefinishedstiche.get().len().as_num::<isize>()
             } * self.payoutparams.laufendeparams.n_payout_per_lauf) * 4,
-            playerparties,
+            playerparties13,
             /*b_primary_party_wins*/ gamefinishedstiche.get().iter()
                 .all(|stich| {
                     let epi_stich_winner = rules.winner_index(stich);
-                    rules.trumpforfarbe(stich[epi_stich_winner]).is_trumpf() && playerparties.is_primary_party(epi_stich_winner)
+                    rules.trumpforfarbe(stich[epi_stich_winner]).is_trumpf() && playerparties13.is_primary_party(epi_stich_winner)
                 })
                 && match EKurzLang::from_cards_per_player(gamefinishedstiche.get().len()) {
                     EKurzLang::Lang => true,

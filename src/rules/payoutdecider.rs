@@ -19,30 +19,6 @@ pub struct SPayoutDeciderParams {
     pub laufendeparams : SLaufendeParams,
 }
 
-pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
-    fn payout<Rules, PlayerParties>(
-        &self,
-        rules: &Rules,
-        gamefinishedstiche: SGameFinishedStiche,
-        playerparties: &PlayerParties,
-    ) -> EnumMap<EPlayerIndex, isize>
-        where PlayerParties: TPlayerParties,
-              Rules: TRulesNoObj;
-
-    fn payouthints<Rules, PlayerParties>(
-        &self,
-        _rules: &Rules,
-        _slcstich: &[SStich],
-        _ahand: &EnumMap<EPlayerIndex, SHand>,
-        _playerparties: &PlayerParties,
-    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
-        where PlayerParties: TPlayerParties,
-              Rules: TRulesNoObj
-    {
-        // TODO remove default implementation and customize all instances
-        EPlayerIndex::map_from_fn(|_epi| (None, None))
-    }
-}
 
 pub trait TPointsToWin : Sync + 'static + Clone + fmt::Debug {
     fn points_to_win(&self) -> isize;
@@ -63,8 +39,8 @@ pub struct SPayoutDeciderPointBased<PointsToWin: TPointsToWin> {
     pub pointstowin: PointsToWin,
 }
 
-impl<PointsToWin: TPointsToWin> TPayoutDecider for SPayoutDeciderPointBased<PointsToWin> {
-    fn payout<Rules, PlayerParties>(
+impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
+    pub fn payout<Rules, PlayerParties>(
         &self,
         rules: &Rules,
         gamefinishedstiche: SGameFinishedStiche,
