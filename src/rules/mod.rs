@@ -138,6 +138,12 @@ pub struct SPlayerParties13 {
     epi: EPlayerIndex,
 }
 
+impl SPlayerParties13 {
+    pub fn primary_player(&self) -> EPlayerIndex {
+        self.epi
+    }
+}
+
 impl TPlayerParties for SPlayerParties13 {
     fn is_primary_party(&self, epi: EPlayerIndex) -> bool {
         self.epi==epi

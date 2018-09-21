@@ -182,32 +182,38 @@ impl TPayoutDecider for SPayoutDeciderSie {
         where Rules: TRulesNoObj,
     {
         // TODORULES optionally count schneider/schwarz
+        fn cards_valid_for_sie<Rules: TRulesNoObj, FnAllowUnter: Fn(EFarbe)->bool>(
+            rules: &Rules,
+            gamefinishedstiche: SGameFinishedStiche,
+            playerparties13: &SPlayerParties13,
+            fn_allow_unter: FnAllowUnter,
+        ) -> bool {
+            gamefinishedstiche.get().iter().all(|stich| {
+                let card = stich[playerparties13.primary_player()];
+                let b_card_valid = match card.schlag() {
+                    ESchlag::Ober => true,
+                    ESchlag::Unter => fn_allow_unter(card.farbe()),
+                    ESchlag::S7 | ESchlag::S8 | ESchlag::S9 | ESchlag::Zehn | ESchlag::Koenig | ESchlag::Ass => false,
+                };
+                assert!(!b_card_valid || rules.trumpforfarbe(card).is_trumpf());
+                b_card_valid
+            })
+        }
         internal_payout(
             /*n_payout_single_player*/ (self.payoutparams.n_payout_base
             + {
                 gamefinishedstiche.get().len().as_num::<isize>()
             } * self.payoutparams.laufendeparams.n_payout_per_lauf) * 4,
             playerparties13,
-            /*b_primary_party_wins*/ gamefinishedstiche.get().iter()
-                .all(|stich| {
-                    let epi_stich_winner = rules.winner_index(stich);
-                    rules.trumpforfarbe(stich[epi_stich_winner]).is_trumpf() && playerparties13.is_primary_party(epi_stich_winner)
-                })
-                && match EKurzLang::from_cards_per_player(gamefinishedstiche.get().len()) {
-                    EKurzLang::Lang => true,
-                    EKurzLang::Kurz => {
-                        gamefinishedstiche.get().iter()
-                            .all(|stich| {
-                                let epi_stich_winner = rules.winner_index(stich);
-                                let card = stich[epi_stich_winner];
-                                assert!(rules.trumpforfarbe(card).is_trumpf());
-                                card.schlag()==ESchlag::Ober || {
-                                    assert_eq!(card.schlag(), ESchlag::Unter);
-                                    card.farbe()==EFarbe::Eichel || card.farbe()==EFarbe::Gras
-                                }
-                            })
-                    },
-                }
+            /*b_primary_party_wins*/ match EKurzLang::from_cards_per_player(gamefinishedstiche.get().len()) {
+                EKurzLang::Lang => cards_valid_for_sie(rules, gamefinishedstiche, playerparties13, /*fn_allow_unter*/|_| true),
+                EKurzLang::Kurz => cards_valid_for_sie(rules, gamefinishedstiche, playerparties13, /*fn_allow_unter*/|efarbe|
+                    match efarbe {
+                        EFarbe::Eichel | EFarbe::Gras => true,
+                        EFarbe::Herz | EFarbe::Schelln => false,
+                    }
+                ),
+            }
         )
     }
 }
