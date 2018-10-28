@@ -12,7 +12,6 @@ extern crate crossbeam;
 #[macro_use]
 extern crate failure;
 extern crate as_num;
-#[macro_use]
 extern crate plain_enum;
 #[macro_use]
 extern crate derive_new;
