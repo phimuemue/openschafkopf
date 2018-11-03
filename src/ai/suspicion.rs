@@ -359,11 +359,8 @@ impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
         ittplstichoutput: ItTplStichOutput,
     ) -> Self::Output {
         verify!(ittplstichoutput
-            .map(|(stich, output)| {
-                assert_eq!(stich.size(), 4);
-                (stich, output)
-            })
             .group_by(|&(ref stich, _n_payout)| { // other players may play inconveniently for epi...
+                assert_eq!(stich.size(), 4);
                 type SStichKeyBeforeEpi = ArrayVec<[SCard; 4]>;
                 static_assert!(debug_assert(stich.size() <= SStichKeyBeforeEpi::new().capacity()));
                 stich.iter()
