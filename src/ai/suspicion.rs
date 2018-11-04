@@ -1,5 +1,6 @@
 use primitives::*;
 use rules::*;
+use game::{SGame, stoss_and_doublings};
 use itertools::Itertools;
 use util::*;
 use std::{
@@ -347,56 +348,65 @@ fn end_snapshot_minmax<ItTplStichNPayout: Iterator<Item=(SStich, (SCard, isize))
 }
 
 #[derive(new, Clone)]
-pub struct SMinReachablePayout<'rules> {
+pub struct SMinReachablePayoutParams<'rules> {
     rules: &'rules TRules,
     epi: EPlayerIndex,
     tpln_stoss_doubling: (usize, usize),
     n_stock: isize,
 }
 
+impl<'rules> SMinReachablePayoutParams<'rules> {
+    pub fn new_from_game(game: &'rules SGame) -> Self {
+        SMinReachablePayoutParams::new(
+            game.rules.as_ref(),
+            verify!(game.current_stich().current_playerindex()).unwrap(),
+            /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
+            game.n_stock,
+        )
+    }
+}
+
+#[derive(Clone)]
+pub struct SMinReachablePayout<'rules>(pub SMinReachablePayoutParams<'rules>);
+
 impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
     type Output = (SCard, isize);
 
     fn pruned_output(&self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
-        pruned_output_internal(self.rules, self.epi, self.tpln_stoss_doubling, self.n_stock, vecstich, ahand)
+        pruned_output_internal(self.0.rules, self.0.epi, self.0.tpln_stoss_doubling, self.0.n_stock, vecstich, ahand)
     }
 
     fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
         &self,
         ittplstichoutput: ItTplStichOutput,
     ) -> Self::Output {
-        end_snapshot_minmax(self.epi, ittplstichoutput)
+        end_snapshot_minmax(self.0.epi, ittplstichoutput)
     }
 }
 
-#[derive(new, Clone)]
-pub struct SMinReachablePayoutLowerBoundViaHint<'rules> {
-    rules: &'rules TRules,
-    epi: EPlayerIndex,
-    tpln_stoss_doubling: (usize, usize),
-    n_stock: isize,
-}
+#[derive(Clone)]
+pub struct SMinReachablePayoutLowerBoundViaHint<'rules>(pub SMinReachablePayoutParams<'rules>);
 
 impl<'rules> TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'rules> {
     type Output = (SCard, isize);
 
     fn pruned_output(&self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
-        pruned_output_internal(self.rules, self.epi, self.tpln_stoss_doubling, self.n_stock, vecstich, ahand)
+        pruned_output_internal(self.0.rules, self.0.epi, self.0.tpln_stoss_doubling, self.0.n_stock, vecstich, ahand)
             .map_or_else(
                 /*default*/|| {
                     assert!(0 < hand_size_internal(ahand));
-                    let payouthint = self.rules.payouthints(
+                    let payouthint = self.0.rules.payouthints(
                         vecstich.get().get(),
                         ahand,
-                    )[self.epi].clone(); // TODO can't we move out of array?
+                    )[self.0.epi].clone(); // TODO can't we move out of array?
                     match payouthint.lower_bound() {
                         None => None,
                         Some(payoutinfo) => {
-                            let n_payout = payoutinfo.payout_including_stock(self.n_stock, self.tpln_stoss_doubling);
+                            let n_payout = payoutinfo.payout_including_stock(self.0.n_stock, self.0.tpln_stoss_doubling);
                             if_then_option!(
                                 0<n_payout,
                                 (
-                                    *verify!(ahand[self.epi].cards().first()).unwrap(), // TODO can we improve choice?
+                                    *verify!(ahand[self.0.epi].cards().first()).unwrap(), // TODO can we improve choice?
                                     n_payout,
                                 )
                             )
@@ -411,6 +421,6 @@ impl<'rules> TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'rules> {
         &self,
         ittplstichoutput: ItTplStichOutput,
     ) -> Self::Output {
-        end_snapshot_minmax(self.epi, ittplstichoutput)
+        end_snapshot_minmax(self.0.epi, ittplstichoutput)
     }
 }

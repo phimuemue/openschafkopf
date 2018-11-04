@@ -254,13 +254,8 @@ fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_br
         game,
         itahand,
         n_branches,
-        &SMinReachablePayout::new(
-            game.rules.as_ref(),
-            verify!(game.current_stich().current_playerindex()).unwrap(),
-            /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
-            game.n_stock,
-        ),
-        ostr_file_out
+        &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
+        ostr_file_out,
     );
     verify!(veccard_allowed.into_iter()
         .max_by_key(|card| mapcardn_payout[*card]))
@@ -291,12 +286,12 @@ impl TAi for SAiSimulating {
                                 assert!(!vecstich_successor.is_empty());
                                 random_sample_from_vec(vecstich_successor, 1);
                             },
-                            &mut SMinReachablePayoutLowerBoundViaHint::new(
+                            &mut SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new(
                                 rules,
                                 epi_rank,
                                 /*tpln_stoss_doubling*/(0, 0), // TODO do we need tpln_stoss_doubling from somewhere? 
                                 n_stock,
-                            ),
+                            )),
                             /*ostr_file_out*/None,
                         ).1
                     ;
@@ -329,12 +324,7 @@ impl TAi for SAiSimulating {
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
-                &SMinReachablePayoutLowerBoundViaHint::new(
-                    game.rules.as_ref(),
-                    verify!(game.current_stich().current_playerindex()).unwrap(),
-                    /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
-                    game.n_stock,
-                ),
+                &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
                 ostr_file_out
             );
             verify!(veccard_allowed.into_iter()
@@ -493,12 +483,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             &game,
             Some(ahand).into_iter(),
             /*n_branches*/1,
-            &SMinReachablePayout::new(
-                game.rules.as_ref(),
-                verify!(game.current_stich().current_playerindex()).unwrap(),
-                /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
-                game.n_stock,
-            ),
+            &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(&game)),
             /*ostr_file_out*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
         );
         for card in [H7, H8, H9].into_iter() {

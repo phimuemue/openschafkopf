@@ -8,7 +8,7 @@ use game::*;
 use ai::{
     *,
     handiterators::forever_rand_hands,
-    suspicion::{explore_snapshots, SMinReachablePayout},
+    suspicion::{explore_snapshots, SMinReachablePayout, SMinReachablePayoutParams},
 };
 use util::*;
 use std::sync::mpsc;
@@ -124,12 +124,12 @@ impl TPlayer for SPlayerComputer {
                             assert!(!vecstich_successor.is_empty());
                             random_sample_from_vec(vecstich_successor, 1);
                         },
-                        &mut SMinReachablePayout::new(
+                        &mut SMinReachablePayout(SMinReachablePayoutParams::new(
                             rules,
                             epi,
                             /*tpln_stoss_doubling*/stoss_and_doublings(vecstoss, doublings),
                             n_stock,
-                        ),
+                        )),
                         /*ostr_file_out*/None,
                     ).1
                 })
