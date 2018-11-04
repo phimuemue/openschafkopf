@@ -386,3 +386,126 @@ impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
     }
 }
 
+pub fn min_reachable_payout_lower_bound<FuncFilterSuccessors>(
+    ahand: &EnumMap<EPlayerIndex, SHand>,
+    rules: &TRules,
+    vecstich: &mut SVecStichPushPop,
+    stich_current_model: &SStich,
+    func_filter_successors: &FuncFilterSuccessors,
+    epi: EPlayerIndex,
+    tpln_stoss_doubling: (usize, usize),
+    n_stock: isize,
+    ostr_file_out: Option<&str>,
+) -> (SCard, isize)
+    where
+        FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
+{
+    assert!(vecstich.get().get().iter().all(|stich| stich.size()==4));
+    let (card, n_payout) = explore_snapshots(
+        &ahand,
+        rules,
+        vecstich,
+        stich_current_model,
+        func_filter_successors,
+        &mut SMinReachablePayoutLowerBoundViaHint{
+            rules,
+            epi,
+            tpln_stoss_doubling,
+            n_stock,
+        },
+        ostr_file_out,
+    );
+    assert!(ahand[epi].cards().contains(&card));
+    (card, n_payout)
+}
+
+struct SMinReachablePayoutLowerBoundViaHint<'rules> {
+    rules: &'rules TRules,
+    epi: EPlayerIndex,
+    tpln_stoss_doubling: (usize, usize),
+    n_stock: isize,
+}
+
+impl<'rules> TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'rules> {
+    type Output = (SCard, isize);
+
+    fn pruned_output(&self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+        if 1==hand_size_internal(ahand) {
+            assert!(!vecstich.get().get().is_empty());
+            let epi_first = self.rules.winner_index(current_stich(vecstich.get().get()));
+            vecstich.push_pop(
+                SStich::new_full(
+                    epi_first,
+                    EPlayerIndex::map_from_fn(|epi_stich|
+                        ahand[epi_first.wrapping_add(epi_stich.to_usize())].cards()[0]
+                    ).into_raw(),
+                ),
+                |vecstich| {
+                    Some((
+                        ahand[self.epi].cards()[0],
+                        self.rules.payout(
+                            SGameFinishedStiche::new(
+                                vecstich.get(),
+                                EKurzLang::from_cards_per_player(vecstich.get().len())
+                            ),
+                            self.tpln_stoss_doubling,
+                            self.n_stock,
+                        ).get_player(self.epi),
+                    ))
+                },
+            )
+        } else {
+            assert!(0 < hand_size_internal(ahand));
+            let payouthint = self.rules.payouthints(
+                vecstich.get().get(),
+                ahand,
+            )[self.epi].clone(); // TODO can't we move out of array?
+            match payouthint.lower_bound() {
+                None => None,
+                Some(payoutinfo) => {
+                    let n_payout = payoutinfo.payout_including_stock(self.n_stock, self.tpln_stoss_doubling);
+                    if_then_option!(
+                        0<n_payout,
+                        (
+                            *verify!(ahand[self.epi].cards().first()).unwrap(), // TODO can we improve choice?
+                            n_payout,
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
+        &self,
+        ittplstichoutput: ItTplStichOutput,
+    ) -> Self::Output {
+        verify!(ittplstichoutput
+            .group_by(|&(ref stich, ref _payouthint)| { // other players may play inconveniently for epi...
+                assert_eq!(stich.size(), 4);
+                type SStichKeyBeforeEpi = ArrayVec<[SCard; 4]>;
+                static_assert!(debug_assert(stich.size() <= SStichKeyBeforeEpi::new().capacity()));
+                stich.iter()
+                    .take_while(|&(epi_stich, _card)| epi_stich != self.epi)
+                    .map(|(_epi, card)| *card)
+                    .collect::<SStichKeyBeforeEpi>()
+            })
+            .into_iter()
+            .map(|(_stich_key_before_epi, grpstichpayouthint_before_epi)| {
+                verify!(grpstichpayouthint_before_epi
+                    .group_by(|&(ref stich, ref _payouthint)| stich[self.epi])
+                    .into_iter()
+                    .map(|(_stich_key_epi, grpstichpayouthint_epi)| {
+                        // in this group, we need the worst case if other players play badly
+                        verify!(grpstichpayouthint_epi.min_by_key(|&(ref _stich, (_card, n_payout))|
+                            n_payout
+                        )).unwrap()
+                    })
+                    .max_by_key(|&(ref _stich, (_card, n_payout))| n_payout))
+                    .unwrap()
+            })
+            .min_by_key(|&(ref _stich, (_card, n_payout))| n_payout)
+            .map(|(stich, (_card, n_payout))| (stich[self.epi], n_payout)))
+            .unwrap()
+    }
+}

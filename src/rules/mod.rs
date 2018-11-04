@@ -95,7 +95,7 @@ pub struct SPayoutInfo {
 }
 
 impl SPayoutInfo {
-    fn payout_including_stock(&self, n_stock: isize, tpln_stoss_doubling: (usize, usize)) -> isize {
+    pub fn payout_including_stock(&self, n_stock: isize, tpln_stoss_doubling: (usize, usize)) -> isize {
         assert_eq!(n_stock%2, 0);
         assert!(self.estockaction!=EStockAction::TakeHalf || 0<self.n_payout);
         assert!(self.estockaction!=EStockAction::GiveHalf || self.n_payout<0);
@@ -107,7 +107,7 @@ impl SPayoutInfo {
     }
 }
 
-#[derive(Debug, new)]
+#[derive(Debug, new, Clone)]
 pub struct SPayoutHint {
     tpln_payout: (Option<SPayoutInfo>, Option<SPayoutInfo>),
 }
@@ -125,6 +125,10 @@ impl SPayoutHint {
             (Some(payoutinfo_self), Some(payoutinfo_other)) => payoutinfo_self.n_payout>=payoutinfo_other.n_payout,
         }
         // TODO check estockaction
+    }
+
+    pub fn lower_bound(&self) -> &Option<SPayoutInfo> {
+        &self.tpln_payout.0
     }
 }
 

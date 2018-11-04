@@ -263,7 +263,7 @@ impl TAi for SAiSimulating {
                 let n_payout_sum = Arc::clone(&n_payout_sum);
                 scope.spawn(move || {
                     let n_payout = 
-                        min_reachable_payout(
+                        min_reachable_payout_lower_bound(
                             &ahand,
                             rules,
                             &mut SVecStichPushPop::new(&mut Vec::new()),
