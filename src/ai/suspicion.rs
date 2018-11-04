@@ -280,6 +280,44 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot, SnapshotVis
     }
 }
 
+fn pruned_output_internal(
+    rules: &TRules,
+    epi: EPlayerIndex,
+    tpln_stoss_doubling: (usize, usize),
+    n_stock: isize,
+    vecstich: &mut SVecStichPushPop,
+    ahand: &EnumMap<EPlayerIndex, SHand>,
+) -> Option<(SCard, isize)> {
+    if 1==hand_size_internal(ahand) {
+        assert!(!vecstich.get().get().is_empty());
+        let epi_first = rules.winner_index(current_stich(vecstich.get().get()));
+        vecstich.push_pop(
+            SStich::new_full(
+                epi_first,
+                EPlayerIndex::map_from_fn(|epi_stich|
+                    ahand[epi_first.wrapping_add(epi_stich.to_usize())].cards()[0]
+                ).into_raw(),
+            ),
+            |vecstich| {
+                Some((
+                    ahand[epi].cards()[0],
+                    rules.payout(
+                        SGameFinishedStiche::new(
+                            vecstich.get(),
+                            EKurzLang::from_cards_per_player(vecstich.get().len())
+                        ),
+                        tpln_stoss_doubling,
+                        n_stock,
+                    ).get_player(epi),
+                ))
+            },
+        )
+    } else {
+        assert!(0 < hand_size_internal(ahand));
+        None
+    }
+}
+
 fn end_snapshot_minmax<ItTplStichNPayout: Iterator<Item=(SStich, (SCard, isize))>>(epi: EPlayerIndex, ittplstichn_payout: ItTplStichNPayout) -> (SCard, isize) {
     verify!(ittplstichn_payout
         .group_by(|&(ref stich, _n_payout)| { // other players may play inconveniently for epi...
@@ -320,34 +358,7 @@ impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
     type Output = (SCard, isize);
 
     fn pruned_output(&self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
-        if 1==hand_size_internal(ahand) {
-            assert!(!vecstich.get().get().is_empty());
-            let epi_first = self.rules.winner_index(current_stich(vecstich.get().get()));
-            vecstich.push_pop(
-                SStich::new_full(
-                    epi_first,
-                    EPlayerIndex::map_from_fn(|epi_stich|
-                        ahand[epi_first.wrapping_add(epi_stich.to_usize())].cards()[0]
-                    ).into_raw(),
-                ),
-                |vecstich| {
-                    Some((
-                        ahand[self.epi].cards()[0],
-                        self.rules.payout(
-                            SGameFinishedStiche::new(
-                                vecstich.get(),
-                                EKurzLang::from_cards_per_player(vecstich.get().len())
-                            ),
-                            self.tpln_stoss_doubling,
-                            self.n_stock,
-                        ).get_player(self.epi),
-                    ))
-                },
-            )
-        } else {
-            assert!(0 < hand_size_internal(ahand));
-            None
-        }
+        pruned_output_internal(self.rules, self.epi, self.tpln_stoss_doubling, self.n_stock, vecstich, ahand)
     }
 
     fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
@@ -370,50 +381,30 @@ impl<'rules> TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'rules> {
     type Output = (SCard, isize);
 
     fn pruned_output(&self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
-        if 1==hand_size_internal(ahand) {
-            assert!(!vecstich.get().get().is_empty());
-            let epi_first = self.rules.winner_index(current_stich(vecstich.get().get()));
-            vecstich.push_pop(
-                SStich::new_full(
-                    epi_first,
-                    EPlayerIndex::map_from_fn(|epi_stich|
-                        ahand[epi_first.wrapping_add(epi_stich.to_usize())].cards()[0]
-                    ).into_raw(),
-                ),
-                |vecstich| {
-                    Some((
-                        ahand[self.epi].cards()[0],
-                        self.rules.payout(
-                            SGameFinishedStiche::new(
-                                vecstich.get(),
-                                EKurzLang::from_cards_per_player(vecstich.get().len())
-                            ),
-                            self.tpln_stoss_doubling,
-                            self.n_stock,
-                        ).get_player(self.epi),
-                    ))
+        pruned_output_internal(self.rules, self.epi, self.tpln_stoss_doubling, self.n_stock, vecstich, ahand)
+            .map_or_else(
+                /*default*/|| {
+                    assert!(0 < hand_size_internal(ahand));
+                    let payouthint = self.rules.payouthints(
+                        vecstich.get().get(),
+                        ahand,
+                    )[self.epi].clone(); // TODO can't we move out of array?
+                    match payouthint.lower_bound() {
+                        None => None,
+                        Some(payoutinfo) => {
+                            let n_payout = payoutinfo.payout_including_stock(self.n_stock, self.tpln_stoss_doubling);
+                            if_then_option!(
+                                0<n_payout,
+                                (
+                                    *verify!(ahand[self.epi].cards().first()).unwrap(), // TODO can we improve choice?
+                                    n_payout,
+                                )
+                            )
+                        }
+                    }
                 },
+                Some, // re-wrap contained payout into Some
             )
-        } else {
-            assert!(0 < hand_size_internal(ahand));
-            let payouthint = self.rules.payouthints(
-                vecstich.get().get(),
-                ahand,
-            )[self.epi].clone(); // TODO can't we move out of array?
-            match payouthint.lower_bound() {
-                None => None,
-                Some(payoutinfo) => {
-                    let n_payout = payoutinfo.payout_including_stock(self.n_stock, self.tpln_stoss_doubling);
-                    if_then_option!(
-                        0<n_payout,
-                        (
-                            *verify!(ahand[self.epi].cards().first()).unwrap(), // TODO can we improve choice?
-                            n_payout,
-                        )
-                    )
-                }
-            }
-        }
     }
 
     fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
