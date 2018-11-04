@@ -36,3 +36,11 @@ macro_rules! make_upcastable{($upcasttrait:ident, $trait:ident) => {
 macro_rules! if_then_option{($cond: expr, $val: expr) => {
     if $cond {Some($val)} else {None}
 }}
+
+pub fn tpl_flip_if<T>(b: bool, (t0, t1): (T, T)) -> (T, T) {
+    if b {
+        (t1, t0)
+    } else {
+        (t0, t1)
+    }
+}

@@ -92,11 +92,7 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
             )
                 .map(|n_payout| {
                      assert_ne!(0, *n_payout);
-                     if 0<*n_payout {
-                         (Some(*n_payout), None)
-                     } else {
-                         (None, Some(*n_payout))
-                     }
+                     tpl_flip_if(0<*n_payout, (None, Some(*n_payout)))
                 })
         } else {
             EPlayerIndex::map_from_fn(|_epi| (None, None))
