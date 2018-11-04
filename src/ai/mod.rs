@@ -200,7 +200,7 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                 assert_ahand_same_size(&ahand);
                 let mut vecstich_complete_mut = game.completed_stichs().get().to_vec();
                 let n_stich_complete = vecstich_complete_mut.len();
-                let (card, n_payout) = min_reachable_payout(
+                let (card, n_payout) = explore_snapshots(
                     &ahand,
                     game.rules.as_ref(),
                     &mut SVecStichPushPop::new(&mut vecstich_complete_mut),
@@ -215,14 +215,18 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                             // if slcstich_complete_successor>=6, we hope that we can compute everything
                         }
                     },
-                    epi_fixed,
-                    stoss_and_doublings(&game.vecstoss, &game.doublings),
-                    game.n_stock,
+                    &mut SMinReachablePayout::new(
+                        game.rules.as_ref(),
+                        epi_fixed,
+                        /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
+                        game.n_stock,
+                    ),
                     ostr_file_out.map(|str_file_out| {
                         verify!(std::fs::create_dir_all(str_file_out)).unwrap();
                         format!("{}/{}", str_file_out, i_susp)
                     }).as_ref().map(|str_file_out| &str_file_out[..]),
                 );
+                assert!(ahand[epi_fixed].cards().contains(&card));
                 let mut mapcardn_payout = verify!(mapcardn_payout.lock()).unwrap();
                 mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
             });
@@ -263,7 +267,7 @@ impl TAi for SAiSimulating {
                 let n_payout_sum = Arc::clone(&n_payout_sum);
                 scope.spawn(move || {
                     let n_payout = 
-                        min_reachable_payout_lower_bound(
+                        explore_snapshots(
                             &ahand,
                             rules,
                             &mut SVecStichPushPop::new(&mut Vec::new()),
@@ -272,9 +276,12 @@ impl TAi for SAiSimulating {
                                 assert!(!vecstich_successor.is_empty());
                                 random_sample_from_vec(vecstich_successor, 1);
                             },
-                            epi_rank,
-                            /*tpln_stoss_doubling*/(0, 0), // // TODO do we need tpln_stoss_doubling from somewhere? 
-                            n_stock,
+                            &mut SMinReachablePayoutLowerBoundViaHint::new(
+                                rules,
+                                epi_rank,
+                                /*tpln_stoss_doubling*/(0, 0), // TODO do we need tpln_stoss_doubling from somewhere? 
+                                n_stock,
+                            ),
                             /*ostr_file_out*/None,
                         ).1
                     ;

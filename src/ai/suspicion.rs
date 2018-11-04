@@ -280,40 +280,8 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot, SnapshotVis
     }
 }
 
-pub fn min_reachable_payout<FuncFilterSuccessors>(
-    ahand: &EnumMap<EPlayerIndex, SHand>,
-    rules: &TRules,
-    vecstich: &mut SVecStichPushPop,
-    stich_current_model: &SStich,
-    func_filter_successors: &FuncFilterSuccessors,
-    epi: EPlayerIndex,
-    tpln_stoss_doubling: (usize, usize),
-    n_stock: isize,
-    ostr_file_out: Option<&str>,
-) -> (SCard, isize)
-    where
-        FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
-{
-    assert!(vecstich.get().get().iter().all(|stich| stich.size()==4));
-    let (card, n_payout) = explore_snapshots(
-        &ahand,
-        rules,
-        vecstich,
-        stich_current_model,
-        func_filter_successors,
-        &mut SMinReachablePayout{
-            rules,
-            epi,
-            tpln_stoss_doubling,
-            n_stock,
-        },
-        ostr_file_out,
-    );
-    assert!(ahand[epi].cards().contains(&card));
-    (card, n_payout)
-}
-
-struct SMinReachablePayout<'rules> {
+#[derive(new)]
+pub struct SMinReachablePayout<'rules> {
     rules: &'rules TRules,
     epi: EPlayerIndex,
     tpln_stoss_doubling: (usize, usize),
@@ -386,40 +354,8 @@ impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
     }
 }
 
-pub fn min_reachable_payout_lower_bound<FuncFilterSuccessors>(
-    ahand: &EnumMap<EPlayerIndex, SHand>,
-    rules: &TRules,
-    vecstich: &mut SVecStichPushPop,
-    stich_current_model: &SStich,
-    func_filter_successors: &FuncFilterSuccessors,
-    epi: EPlayerIndex,
-    tpln_stoss_doubling: (usize, usize),
-    n_stock: isize,
-    ostr_file_out: Option<&str>,
-) -> (SCard, isize)
-    where
-        FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
-{
-    assert!(vecstich.get().get().iter().all(|stich| stich.size()==4));
-    let (card, n_payout) = explore_snapshots(
-        &ahand,
-        rules,
-        vecstich,
-        stich_current_model,
-        func_filter_successors,
-        &mut SMinReachablePayoutLowerBoundViaHint{
-            rules,
-            epi,
-            tpln_stoss_doubling,
-            n_stock,
-        },
-        ostr_file_out,
-    );
-    assert!(ahand[epi].cards().contains(&card));
-    (card, n_payout)
-}
-
-struct SMinReachablePayoutLowerBoundViaHint<'rules> {
+#[derive(new)]
+pub struct SMinReachablePayoutLowerBoundViaHint<'rules> {
     rules: &'rules TRules,
     epi: EPlayerIndex,
     tpln_stoss_doubling: (usize, usize),

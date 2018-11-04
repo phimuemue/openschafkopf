@@ -8,7 +8,7 @@ use game::*;
 use ai::{
     *,
     handiterators::forever_rand_hands,
-    suspicion::min_reachable_payout,
+    suspicion::{explore_snapshots, SMinReachablePayout},
 };
 use util::*;
 use std::sync::mpsc;
@@ -115,7 +115,7 @@ impl TPlayer for SPlayerComputer {
         verify!(txb.send(
             vecpairahandf_suspicion.into_iter()
                 .map(|(ahand, _f_rank_rules)| {
-                    min_reachable_payout(
+                    explore_snapshots(
                         &ahand,
                         rules,
                         &mut SVecStichPushPop::new(&mut Vec::new()),
@@ -124,9 +124,12 @@ impl TPlayer for SPlayerComputer {
                             assert!(!vecstich_successor.is_empty());
                             random_sample_from_vec(vecstich_successor, 1);
                         },
-                        epi,
-                        stoss_and_doublings(vecstoss, doublings),
-                        n_stock,
+                        &mut SMinReachablePayout::new(
+                            rules,
+                            epi,
+                            /*tpln_stoss_doubling*/stoss_and_doublings(vecstoss, doublings),
+                            n_stock,
+                        ),
                         /*ostr_file_out*/None,
                     ).1
                 })
