@@ -280,6 +280,34 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot, SnapshotVis
     }
 }
 
+fn end_snapshot_minmax<ItTplStichNPayout: Iterator<Item=(SStich, (SCard, isize))>>(epi: EPlayerIndex, ittplstichn_payout: ItTplStichNPayout) -> (SCard, isize) {
+    verify!(ittplstichn_payout
+        .group_by(|&(ref stich, _n_payout)| { // other players may play inconveniently for epi...
+            assert_eq!(stich.size(), 4);
+            type SStichKeyBeforeEpi = ArrayVec<[SCard; 4]>;
+            static_assert!(debug_assert(stich.size() <= SStichKeyBeforeEpi::new().capacity()));
+            stich.iter()
+                .take_while(|&(epi_stich, _card)| epi_stich != epi)
+                .map(|(_epi, card)| *card)
+                .collect::<SStichKeyBeforeEpi>()
+        })
+        .into_iter()
+        .map(|(_stich_key_before_epi, grpstichn_before_epi)| {
+            verify!(grpstichn_before_epi
+                .group_by(|&(ref stich, _n_payout)| stich[epi])
+                .into_iter()
+                .map(|(_stich_key_epi, grpstichn_epi)| {
+                    // in this group, we need the worst case if other players play badly
+                    verify!(grpstichn_epi.min_by_key(|&(ref _stich, (_card, n_payout))| n_payout)).unwrap()
+                })
+                .max_by_key(|&(ref _stich, (_card, n_payout))| n_payout))
+                .unwrap()
+        })
+        .min_by_key(|&(ref _stich, (_card, n_payout))| n_payout)
+        .map(|(stich, (_card, n_payout))| (stich[epi], n_payout)))
+        .unwrap()
+}
+
 #[derive(new, Clone)]
 pub struct SMinReachablePayout<'rules> {
     rules: &'rules TRules,
@@ -326,31 +354,7 @@ impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
         &self,
         ittplstichoutput: ItTplStichOutput,
     ) -> Self::Output {
-        verify!(ittplstichoutput
-            .group_by(|&(ref stich, _n_payout)| { // other players may play inconveniently for epi...
-                assert_eq!(stich.size(), 4);
-                type SStichKeyBeforeEpi = ArrayVec<[SCard; 4]>;
-                static_assert!(debug_assert(stich.size() <= SStichKeyBeforeEpi::new().capacity()));
-                stich.iter()
-                    .take_while(|&(epi_stich, _card)| epi_stich != self.epi)
-                    .map(|(_epi, card)| *card)
-                    .collect::<SStichKeyBeforeEpi>()
-            })
-            .into_iter()
-            .map(|(_stich_key_before_epi, grpstichn_before_epi)| {
-                verify!(grpstichn_before_epi
-                    .group_by(|&(ref stich, _n_payout)| stich[self.epi])
-                    .into_iter()
-                    .map(|(_stich_key_epi, grpstichn_epi)| {
-                        // in this group, we need the worst case if other players play badly
-                        verify!(grpstichn_epi.min_by_key(|&(ref _stich, (_card, n_payout))| n_payout)).unwrap()
-                    })
-                    .max_by_key(|&(ref _stich, (_card, n_payout))| n_payout))
-                    .unwrap()
-            })
-            .min_by_key(|&(ref _stich, (_card, n_payout))| n_payout)
-            .map(|(stich, (_card, n_payout))| (stich[self.epi], n_payout)))
-            .unwrap()
+        end_snapshot_minmax(self.epi, ittplstichoutput)
     }
 }
 
@@ -416,32 +420,6 @@ impl<'rules> TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'rules> {
         &self,
         ittplstichoutput: ItTplStichOutput,
     ) -> Self::Output {
-        verify!(ittplstichoutput
-            .group_by(|&(ref stich, ref _payouthint)| { // other players may play inconveniently for epi...
-                assert_eq!(stich.size(), 4);
-                type SStichKeyBeforeEpi = ArrayVec<[SCard; 4]>;
-                static_assert!(debug_assert(stich.size() <= SStichKeyBeforeEpi::new().capacity()));
-                stich.iter()
-                    .take_while(|&(epi_stich, _card)| epi_stich != self.epi)
-                    .map(|(_epi, card)| *card)
-                    .collect::<SStichKeyBeforeEpi>()
-            })
-            .into_iter()
-            .map(|(_stich_key_before_epi, grpstichpayouthint_before_epi)| {
-                verify!(grpstichpayouthint_before_epi
-                    .group_by(|&(ref stich, ref _payouthint)| stich[self.epi])
-                    .into_iter()
-                    .map(|(_stich_key_epi, grpstichpayouthint_epi)| {
-                        // in this group, we need the worst case if other players play badly
-                        verify!(grpstichpayouthint_epi.min_by_key(|&(ref _stich, (_card, n_payout))|
-                            n_payout
-                        )).unwrap()
-                    })
-                    .max_by_key(|&(ref _stich, (_card, n_payout))| n_payout))
-                    .unwrap()
-            })
-            .min_by_key(|&(ref _stich, (_card, n_payout))| n_payout)
-            .map(|(stich, (_card, n_payout))| (stich[self.epi], n_payout)))
-            .unwrap()
+        end_snapshot_minmax(self.epi, ittplstichoutput)
     }
 }
