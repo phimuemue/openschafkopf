@@ -280,7 +280,7 @@ fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot, SnapshotVis
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct SMinReachablePayout<'rules> {
     rules: &'rules TRules,
     epi: EPlayerIndex,
@@ -354,7 +354,7 @@ impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct SMinReachablePayoutLowerBoundViaHint<'rules> {
     rules: &'rules TRules,
     epi: EPlayerIndex,

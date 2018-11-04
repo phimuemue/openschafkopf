@@ -185,8 +185,16 @@ pub fn is_compatible_with_game_so_far(
     }
 }
 
-fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize, ostr_file_out: Option<&str>) -> (SHandVector, EnumMap<SCard, isize>)
-    where HandsIterator: Iterator<Item=EnumMap<EPlayerIndex, SHand>>
+fn determine_best_card_internal<HandsIterator, ForEachSnapshot>(
+    game: &SGame,
+    itahand: HandsIterator,
+    n_branches: usize,
+    foreachsnapshot: &ForEachSnapshot,
+    ostr_file_out: Option<&str>
+) -> (SHandVector, EnumMap<SCard, isize>)
+    where
+        HandsIterator: Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
+        ForEachSnapshot: TForEachSnapshot<Output=(SCard, isize)> + Send + Clone,
 {
     let epi_fixed = verify!(game.current_stich().current_playerindex()).unwrap();
     let mapcardn_payout = Arc::new(Mutex::new(
@@ -196,6 +204,7 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
     crossbeam::scope(|scope| {
         for (i_susp, ahand) in itahand.enumerate() {
             let mapcardn_payout = Arc::clone(&mapcardn_payout);
+            let mut foreachsnapshot = foreachsnapshot.clone();
             scope.spawn(move || {
                 assert_ahand_same_size(&ahand);
                 let mut vecstich_complete_mut = game.completed_stichs().get().to_vec();
@@ -215,12 +224,7 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
                             // if slcstich_complete_successor>=6, we hope that we can compute everything
                         }
                     },
-                    &mut SMinReachablePayout::new(
-                        game.rules.as_ref(),
-                        epi_fixed,
-                        /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
-                        game.n_stock,
-                    ),
+                    &mut foreachsnapshot,
                     ostr_file_out.map(|str_file_out| {
                         verify!(std::fs::create_dir_all(str_file_out)).unwrap();
                         format!("{}/{}", str_file_out, i_susp)
@@ -246,7 +250,18 @@ fn determine_best_card_internal<HandsIterator>(game: &SGame, itahand: HandsItera
 fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize, ostr_file_out: Option<&str>) -> SCard
     where HandsIterator: Iterator<Item=EnumMap<EPlayerIndex, SHand>>
 {
-    let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(game, itahand, n_branches, ostr_file_out);
+    let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
+        game,
+        itahand,
+        n_branches,
+        &SMinReachablePayout::new(
+            game.rules.as_ref(),
+            verify!(game.current_stich().current_playerindex()).unwrap(),
+            /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
+            game.n_stock,
+        ),
+        ostr_file_out
+    );
     verify!(veccard_allowed.into_iter()
         .max_by_key(|card| mapcardn_payout[*card]))
         .unwrap()
@@ -307,6 +322,24 @@ impl TAi for SAiSimulating {
                 self.n_suggest_card_branches,
                 ostr_file_out,
             )
+        } else if hand_fixed.cards().len()<=5 {
+            let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
+                game,
+                forever_rand_hands(game.completed_stichs(), hand_fixed, epi_fixed)
+                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
+                    .take(self.n_suggest_card_samples),
+                self.n_suggest_card_branches,
+                &SMinReachablePayoutLowerBoundViaHint::new(
+                    game.rules.as_ref(),
+                    verify!(game.current_stich().current_playerindex()).unwrap(),
+                    /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
+                    game.n_stock,
+                ),
+                ostr_file_out
+            );
+            verify!(veccard_allowed.into_iter()
+                .max_by_key(|card| mapcardn_payout[*card]))
+                .unwrap()
         } else {
             determine_best_card(
                 game,
@@ -460,6 +493,12 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             &game,
             Some(ahand).into_iter(),
             /*n_branches*/1,
+            &SMinReachablePayout::new(
+                game.rules.as_ref(),
+                verify!(game.current_stich().current_playerindex()).unwrap(),
+                /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
+                game.n_stock,
+            ),
             /*ostr_file_out*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
         );
         for card in [H7, H8, H9].into_iter() {
