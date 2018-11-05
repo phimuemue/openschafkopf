@@ -247,9 +247,7 @@ fn determine_best_card_internal<HandsIterator, ForEachSnapshot>(
     (veccard_allowed_fixed, mapcardn_payout)
 }
 
-fn determine_best_card<HandsIterator>(game: &SGame, itahand: HandsIterator, n_branches: usize, ostr_file_out: Option<&str>) -> SCard
-    where HandsIterator: Iterator<Item=EnumMap<EPlayerIndex, SHand>>
-{
+fn determine_best_card(game: &SGame, itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>, n_branches: usize, ostr_file_out: Option<&str>) -> SCard {
     let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
         game,
         itahand,

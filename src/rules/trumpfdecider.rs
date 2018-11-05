@@ -32,10 +32,7 @@ pub struct STrumpfDeciderSchlag<StaticSchlag, DeciderSec> {
     staticschlag: PhantomData<StaticSchlag>,
     decidersec: PhantomData<DeciderSec>,
 }
-impl<StaticSchlag, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<StaticSchlag, DeciderSec> 
-    where DeciderSec: TTrumpfDecider,
-          StaticSchlag: TStaticValue<ESchlag>,
-{
+impl<StaticSchlag: TStaticValue<ESchlag>, DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<StaticSchlag, DeciderSec> {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
         if StaticSchlag::VALUE == card.schlag() {
             VTrumpfOrFarbe::Trumpf
@@ -72,9 +69,7 @@ impl<StaticSchlag, DeciderSec> TTrumpfDecider for STrumpfDeciderSchlag<StaticSch
 pub struct STrumpfDeciderFarbe<StaticFarbe> {
     staticfarbe: PhantomData<StaticFarbe>,
 }
-impl<StaticFarbe> TTrumpfDecider for STrumpfDeciderFarbe<StaticFarbe> 
-    where StaticFarbe: TStaticValue<EFarbe>,
-{
+impl<StaticFarbe: TStaticValue<EFarbe>> TTrumpfDecider for STrumpfDeciderFarbe<StaticFarbe> {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
         if StaticFarbe::VALUE == card.farbe() {
             VTrumpfOrFarbe::Trumpf

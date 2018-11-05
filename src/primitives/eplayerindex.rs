@@ -35,28 +35,20 @@ pub struct SPlayersInRound<T> {
     vect: ArrayVec<[T; EPlayerIndex::SIZE]>,
 }
 
-impl<T> PartialEq for SPlayersInRound<T>
-    where T: PartialEq,
-{
+impl<T: PartialEq> PartialEq for SPlayersInRound<T> {
     fn eq(&self, playersinround_other: &SPlayersInRound<T>) -> bool {
         self.size()==playersinround_other.size()
         && self.equal_up_to_size(playersinround_other, self.size())
     }
 }
-impl<T> Eq for SPlayersInRound<T> 
-    where T: Eq,
-{}
+impl<T: Eq> Eq for SPlayersInRound<T>{}
 
-pub struct SPlayersInRoundIterator<InternalIter>
-    where InternalIter: Iterator,
-{
+pub struct SPlayersInRoundIterator<InternalIter: Iterator> {
     iter: InternalIter,
     n_epi: usize,
 }
 
-impl<InternalIter> Iterator for SPlayersInRoundIterator<InternalIter>
-    where InternalIter: Iterator,
-{
+impl<InternalIter: Iterator> Iterator for SPlayersInRoundIterator<InternalIter> {
     type Item = (EPlayerIndex, InternalIter::Item);
     fn next(&mut self) -> Option<(EPlayerIndex, InternalIter::Item)> {
         let item_next = self.iter.next()
@@ -74,9 +66,7 @@ impl<T> Index<EPlayerIndex> for SPlayersInRound<T> {
     }
 }
 
-impl<T> SPlayersInRound<T>
-    where T: PartialEq,
-{
+impl<T: PartialEq> SPlayersInRound<T> {
     pub fn equal_up_to_size(&self, playersinround_other: &SPlayersInRound<T>, n_size: usize) -> bool {
         self.iter()
             .zip(playersinround_other.iter())

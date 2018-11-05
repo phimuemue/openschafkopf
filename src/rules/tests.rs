@@ -84,7 +84,7 @@ impl TCardArrayKurzLand for [SCard; 8] {
     }
 }
 
-pub fn test_rules<CardArrayKurzLang>(
+pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLand>(
     str_info: &str,
     rules: &TRules,
     aacard_hand: [CardArrayKurzLang; 4],
@@ -92,9 +92,7 @@ pub fn test_rules<CardArrayKurzLang>(
     vecn_stoss: Vec<usize>,
     vecpairnacard_stich: &[(usize, [SCard; 4])],
     an_payout: [isize; 4],
-)
-    where CardArrayKurzLang: TCardArrayKurzLand,
-{
+) {
     internal_test_rules(
         str_info,
         rules,
@@ -165,10 +163,10 @@ impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderTout {
     }
 }
 
-fn rulessololike_new_test<TrumpfDecider, PayoutDecider>(epi: EPlayerIndex, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider>
-    where TrumpfDecider: TTrumpfDecider,
-          PayoutDecider: TPayoutDeciderSoloLikeDefault,
-{
+fn rulessololike_new_test<
+    TrumpfDecider: TTrumpfDecider,
+    PayoutDecider: TPayoutDeciderSoloLikeDefault
+>(epi: EPlayerIndex, n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
     // Do not inline this function. It serves as a bridge between actual implementation and the data we extract for the test suite.
     SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(
         epi,

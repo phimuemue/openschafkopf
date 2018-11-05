@@ -255,9 +255,7 @@ impl SRuleSet {
                         .or_else(|_err| 
                             fallback(&format!("{}.price", str_rule_name_file), /*str_base_price_fallback*/"base-price")
                         )?;
-                    fn push_bettel<BettelAllAllowedCardsWithinStich>(vecrulegroup: &mut Vec<SRuleGroup>, epi: EPlayerIndex, n_payout_base: isize)
-                        where BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich,
-                    {
+                    fn push_bettel<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich>(vecrulegroup: &mut Vec<SRuleGroup>, epi: EPlayerIndex, n_payout_base: isize) {
                         vecrulegroup.push(SRuleGroup{
                             str_name: "Bettel".to_string(),
                             vecorules: vec![Some(Box::new(SRulesBettel::<BettelAllAllowedCardsWithinStich>::new(

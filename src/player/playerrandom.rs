@@ -10,15 +10,11 @@ use std::sync::mpsc;
 use rand;
 
 #[derive(new)]
-pub struct SPlayerRandom<FnCheckAskForCard>
-    where FnCheckAskForCard: Fn(&SGame),
-{
+pub struct SPlayerRandom<FnCheckAskForCard: Fn(&SGame)> {
     fn_check_ask_for_card: FnCheckAskForCard,
 }
 
-impl<FnCheckAskForCard> TPlayer for SPlayerRandom<FnCheckAskForCard>
-    where FnCheckAskForCard: Fn(&SGame),
-{
+impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard> {
     fn ask_for_doubling(
         &self,
         _veccard: &[SCard],

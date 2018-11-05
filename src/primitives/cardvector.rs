@@ -4,9 +4,7 @@ use primitives::card::*;
 use self::combine::*;
 use std::iter::FromIterator;
 
-pub fn parse_cards<C>(str_cards: &str) -> Option<C>
-    where C: FromIterator<SCard>
-{
+pub fn parse_cards<C: FromIterator<SCard>>(str_cards: &str) -> Option<C> {
     use std::fmt;
     use std::error::Error as StdError;
     #[derive(Debug)]

@@ -132,9 +132,7 @@ impl SLaufendeParams {
     }
 }
 
-pub fn internal_payout<PlayerParties>(n_payout_single_player: isize, playerparties: &PlayerParties, b_primary_party_wins: bool) -> EnumMap<EPlayerIndex, isize> 
-    where PlayerParties: TPlayerParties,
-{
+pub fn internal_payout(n_payout_single_player: isize, playerparties: &impl TPlayerParties, b_primary_party_wins: bool) -> EnumMap<EPlayerIndex, isize> {
     EPlayerIndex::map_from_fn(|epi| {
         n_payout_single_player 
         * {

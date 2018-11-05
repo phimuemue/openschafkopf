@@ -13,18 +13,14 @@ pub trait TBettelAllAllowedCardsWithinStich : Sync + 'static + Clone + fmt::Debu
 }
 
 #[derive(Clone, Debug)]
-pub struct SRulesBettel<BettelAllAllowedCardsWithinStich>
-    where BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich,
-{
+pub struct SRulesBettel<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> {
     epi : EPlayerIndex,
     i_prio : isize,
     payoutdecider : SPayoutDeciderBettel,
     bettelallallowedcardswithinstich : PhantomData<BettelAllAllowedCardsWithinStich>,
 }
 
-impl<BettelAllAllowedCardsWithinStich> SRulesBettel<BettelAllAllowedCardsWithinStich>
-    where BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich,
-{
+impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> SRulesBettel<BettelAllAllowedCardsWithinStich> {
     pub fn new(epi: EPlayerIndex, i_prio: isize, n_payout_base: isize) -> SRulesBettel<BettelAllAllowedCardsWithinStich> {
         SRulesBettel{
             epi,
@@ -35,17 +31,13 @@ impl<BettelAllAllowedCardsWithinStich> SRulesBettel<BettelAllAllowedCardsWithinS
     }
 }
 
-impl<BettelAllAllowedCardsWithinStich> fmt::Display for SRulesBettel<BettelAllAllowedCardsWithinStich>
-    where BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich,
-{
+impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> fmt::Display for SRulesBettel<BettelAllAllowedCardsWithinStich> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Bettel von {}", self.epi)
     }
 }
 
-impl<BettelAllAllowedCardsWithinStich> TActivelyPlayableRules for SRulesBettel<BettelAllAllowedCardsWithinStich>
-    where BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich,
-{
+impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TActivelyPlayableRules for SRulesBettel<BettelAllAllowedCardsWithinStich> {
     box_clone_impl_by_clone!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::SoloLike(VGameAnnouncementPrioritySoloLike::SoloSimple(self.i_prio))
@@ -151,15 +143,11 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStic
     }
 }
 
-impl<BettelAllAllowedCardsWithinStich> TRulesNoObj for SRulesBettel<BettelAllAllowedCardsWithinStich>
-    where BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich,
-{
+impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRulesNoObj for SRulesBettel<BettelAllAllowedCardsWithinStich> {
     impl_rules_trumpf_noobj!(STrumpfDeciderNoTrumpf);
 }
 
-impl<BettelAllAllowedCardsWithinStich> TRules for SRulesBettel<BettelAllAllowedCardsWithinStich>
-    where BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich,
-{
+impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules for SRulesBettel<BettelAllAllowedCardsWithinStich> {
     box_clone_impl_by_clone!(TRules);
     impl_rules_trumpf!();
     impl_single_play!();

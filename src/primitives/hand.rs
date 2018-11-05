@@ -26,9 +26,7 @@ impl SHand {
     pub fn contains(&self, card_check: SCard) -> bool {
         self.contains_pred(|&card| card==card_check)
     }
-    pub fn contains_pred<Pred>(&self, pred: Pred) -> bool
-        where Pred: Fn(&SCard) -> bool
-    {
+    pub fn contains_pred(&self, pred: impl Fn(&SCard)->bool) -> bool {
         self.veccard
             .iter()
             .any(pred)
