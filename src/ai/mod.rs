@@ -185,15 +185,14 @@ pub fn is_compatible_with_game_so_far(
     }
 }
 
-fn determine_best_card_internal<HandsIterator, ForEachSnapshot>(
+fn determine_best_card_internal<ForEachSnapshot>(
     game: &SGame,
-    itahand: HandsIterator,
+    itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
     n_branches: usize,
     foreachsnapshot: &ForEachSnapshot,
     ostr_file_out: Option<&str>
 ) -> (SHandVector, EnumMap<SCard, isize>)
     where
-        HandsIterator: Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
         ForEachSnapshot: TForEachSnapshot<Output=(SCard, isize)> + Send + Clone,
 {
     let epi_fixed = verify!(game.current_stich().current_playerindex()).unwrap();

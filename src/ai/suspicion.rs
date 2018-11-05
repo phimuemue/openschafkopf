@@ -99,11 +99,7 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
         )
     }
 
-    fn player_table<T, FnPerPlayer>(epi: EPlayerIndex, fn_per_player: FnPerPlayer) -> String
-        where
-            FnPerPlayer: Fn(EPlayerIndex) -> T,
-            T: fmt::Display,
-    {
+    fn player_table<T: fmt::Display>(epi: EPlayerIndex, fn_per_player: impl Fn(EPlayerIndex)->T) -> String {
         format!(
             "<table>
               <tr><td align=\"center\" colspan=\"2\"><br>{}<br></td></tr>
@@ -158,17 +154,16 @@ impl<'rules> TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'rules> {
     }
 }
 
-pub fn explore_snapshots<FuncFilterSuccessors, ForEachSnapshot>(
+pub fn explore_snapshots<ForEachSnapshot>(
     ahand: &EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
     vecstich: &mut SVecStichPushPop,
     stich_current_model: &SStich,
-    func_filter_successors: &FuncFilterSuccessors,
+    func_filter_successors: &impl Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
     foreachsnapshot: &mut ForEachSnapshot,
     ostr_file_out: Option<&str>,
 ) -> ForEachSnapshot::Output 
     where
-        FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
         ForEachSnapshot: TForEachSnapshot,
         ForEachSnapshot::Output: fmt::Debug,
 {
@@ -200,19 +195,17 @@ pub fn explore_snapshots<FuncFilterSuccessors, ForEachSnapshot>(
 }
 
 // TODO Maybe something like payout_hint is useful to prune suspicion tree
-fn explore_snapshots_internal<FuncFilterSuccessors, ForEachSnapshot, SnapshotVisualizer>(
+fn explore_snapshots_internal<ForEachSnapshot>(
     ahand: &EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
     vecstich: &mut SVecStichPushPop,
     stich_current_model: &SStich,
-    func_filter_successors: &FuncFilterSuccessors,
+    func_filter_successors: &impl Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
     foreachsnapshot: &ForEachSnapshot,
-    snapshotvisualizer: &mut SnapshotVisualizer,
+    snapshotvisualizer: &mut impl TSnapshotVisualizer,
 ) -> ForEachSnapshot::Output 
     where
-        FuncFilterSuccessors : Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
         ForEachSnapshot: TForEachSnapshot,
-        SnapshotVisualizer: TSnapshotVisualizer,
         ForEachSnapshot::Output : fmt::Debug,
 {
     if let Some(output) = foreachsnapshot.pruned_output(vecstich, &ahand) {

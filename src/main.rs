@@ -131,10 +131,7 @@ fn main() {
     }
 }
 
-fn communicate_via_channel<T, Func>(f: Func) -> T
-    where Func: FnOnce(mpsc::Sender<T>) -> (),
-          T: std::fmt::Debug,
-{
+fn communicate_via_channel<T: std::fmt::Debug>(f: impl FnOnce(mpsc::Sender<T>)) -> T {
     let (txt, rxt) = mpsc::channel::<T>();
     f(txt.clone());
     verify!(rxt.recv()).unwrap()

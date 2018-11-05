@@ -67,9 +67,7 @@ enum VSkUiWindow {
     AccountBalance,
 }
 
-fn do_in_window<FnDo, RetVal>(skuiwin: &VSkUiWindow, fn_do: FnDo) -> RetVal
-    where FnDo: FnOnce(ncurses::WINDOW) -> RetVal
-{
+fn do_in_window<RetVal>(skuiwin: &VSkUiWindow, fn_do: impl FnOnce(ncurses::WINDOW)->RetVal) -> RetVal {
     let (n_height, n_width) = {
         let mut n_height = 0;
         let mut n_width = 0;
@@ -219,17 +217,13 @@ pub fn choose_alternative_from_list_key_bindings() -> SAskForAlternativeKeyBindi
     }
 }
 
-pub fn ask_for_alternative<'vect, T, FnFilter, FnCallback, FnSuggest>(
+pub fn ask_for_alternative<'vect, T>(
     vect: &'vect [T],
     askforalternativekeybindings: &SAskForAlternativeKeyBindings,
-    fn_filter: FnFilter,
-    fn_callback: FnCallback,
-    fn_suggest: FnSuggest
-) -> &'vect T
-    where FnFilter : Fn(&T) -> bool,
-          FnCallback : Fn(ncurses::WINDOW, usize, &Option<T>),
-          FnSuggest : Fn() -> Option<T>
-{
+    fn_filter: impl Fn(&T)->bool,
+    fn_callback: impl Fn(ncurses::WINDOW, usize, &Option<T>),
+    fn_suggest: impl Fn()->Option<T>
+) -> &'vect T {
     do_in_window(&VSkUiWindow::Interaction, |ncwin| {
         let mut ot_suggest = None;
         let vect = vect.into_iter().enumerate().filter(|&(_i_t, t)| fn_filter(t)).collect::<Vec<_>>();

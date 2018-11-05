@@ -15,16 +15,13 @@ pub struct SPlayerHuman {
     pub ai : Box<TAi>,
 }
 
-fn choose_ruleset_or_rules<'t, T, FnFormat, FnChoose>(
+fn choose_ruleset_or_rules<'t, T>(
     hand: &SHand,
     vect : &'t [T],
-    fn_format: FnFormat,
-    fn_choose: FnChoose,
+    fn_format: impl Fn(&T)->String,
+    fn_choose: impl Fn(usize)->Option<&'t TActivelyPlayableRules>,
     opairepiprio: &Option<(EPlayerIndex, VGameAnnouncementPriority)>,
-) -> &'t T
-    where FnFormat: Fn(&T) -> String,
-          FnChoose: Fn(usize) -> Option<&'t TActivelyPlayableRules>
-{
+) -> &'t T {
     skui::ask_for_alternative(
         vect,
         &skui::choose_alternative_from_list_key_bindings(),
