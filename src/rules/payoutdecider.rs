@@ -40,14 +40,14 @@ pub struct SPayoutDeciderPointBased<PointsToWin: TPointsToWin> {
 }
 
 impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
-    pub fn payout<Rules, PlayerParties>(
+    pub fn payout<Rules>(
         &self,
         rules: &Rules,
         gamefinishedstiche: SGameFinishedStiche,
-        playerparties: &PlayerParties,
+        playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
-        where PlayerParties: TPlayerParties,
-              Rules: TRulesNoObj,
+        where 
+            Rules: TRulesNoObj,
     {
         let n_points_primary_party : isize = gamefinishedstiche.get().iter()
             .filter(|stich| playerparties.is_primary_party(rules.winner_index(stich)))

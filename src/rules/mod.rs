@@ -57,16 +57,13 @@ pub struct SStoss {
     pub epi : EPlayerIndex,
 }
 
-fn all_allowed_cards_within_stich_distinguish_farbe_frei<Rules, Result>(
-    rules: &Rules,
+fn all_allowed_cards_within_stich_distinguish_farbe_frei<Result>(
+    rules: &(impl TRules + ?Sized),
     slcstich: &[SStich],
     hand: &SHand,
     fn_farbe_frei: impl Fn()->Result,
     fn_farbe_not_frei: impl Fn(SHandVector)->Result,
-) -> Result
-    where 
-        Rules: TRules + ?Sized,
-{
+) -> Result {
     assert!(!slcstich.is_empty());
     let trumpforfarbe_first = rules.trumpforfarbe(*current_stich(slcstich).first());
     let veccard_same_farbe : SHandVector = hand.cards().iter().cloned()
