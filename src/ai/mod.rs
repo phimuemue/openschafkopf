@@ -185,16 +185,13 @@ pub fn is_compatible_with_game_so_far(
     }
 }
 
-fn determine_best_card_internal<ForEachSnapshot>(
+fn determine_best_card_internal(
     game: &SGame,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
     n_branches: usize,
-    foreachsnapshot: &ForEachSnapshot,
+    foreachsnapshot: &(impl TForEachSnapshot<Output=(SCard, isize)> + Send + Clone),
     ostr_file_out: Option<&str>
-) -> (SHandVector, EnumMap<SCard, isize>)
-    where
-        ForEachSnapshot: TForEachSnapshot<Output=(SCard, isize)> + Send + Clone,
-{
+) -> (SHandVector, EnumMap<SCard, isize>) {
     let epi_fixed = verify!(game.current_stich().current_playerindex()).unwrap();
     let mapcardn_payout = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
