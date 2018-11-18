@@ -1,16 +1,88 @@
 use game_loop_cli;
 use primitives::*;
-use rules::ruleset::*;
+use rules::{
+    *,
+    ruleset::*,
+};
 use player::{
     TPlayer,
     playerrandom::SPlayerRandom,
 };
 use util::*;
-use handiterators::*;
 use ai::{
-    is_compatible_with_game_so_far,
+    *,
     suspicion::*,
 };
+use game;
+
+#[test]
+fn test_determine_best_card() {
+    // https://www.sauspiel.de/spiele/785105783
+    use card::card_values::*;
+    let epi_first_and_active_player = EPlayerIndex::EPI0;
+    let mut game = game::SGame::new(
+        EPlayerIndex::map_from_raw([
+            [EO, HO, EU, SU, HZ, E8, SZ, S7],
+            [HK, EK, E7, GA, GZ, G9, G8, S8],
+            [GO, SO, GU, HU, HA, EA, EZ, G7],
+            [H9, H8, H7, E9, GK, SA, SK, S9],
+        ]).map(|acard_hand|
+            SHand::new_from_vec(acard_hand.into_iter().cloned().collect())
+        ),
+        game::SDoublings::new(epi_first_and_active_player),
+        Some(SStossParams::new(
+            /*n_stoss_max*/4,
+        )),
+        TRules::box_clone(&rulesrufspiel::SRulesRufspiel::new(epi_first_and_active_player, EFarbe::Eichel, payoutdecider::SPayoutDeciderParams::new(
+            /*n_payout_base*/100,
+            /*n_payout_schneider_schwarz*/50,
+            payoutdecider::SLaufendeParams::new(
+                /*n_payout_per_lauf*/50,
+                /*n_lauf_lbound*/3,
+            ),
+        ))),
+        /*n_stock*/0,
+    );
+    fn play_stichs(game: &mut SGame, slctplepistich: &[(EPlayerIndex, [SCard; 4])]) {
+        for (epi_stich_first, acard_stich) in slctplepistich.iter() {
+            for (epi, card) in EPlayerIndex::values()
+                .map(|epi| epi.wrapping_add(epi_stich_first.to_usize()))
+                .zip(acard_stich.iter())
+            {
+                verify!(game.zugeben(*card, epi)).unwrap();
+            }
+        }
+    };
+    play_stichs(&mut game, &[
+        (EPlayerIndex::EPI0, [EO, HK, HA, H8]),
+        (EPlayerIndex::EPI0, [SU, GA, GO, H9]),
+        (EPlayerIndex::EPI2, [SO, H7, HZ, S8]),
+        (EPlayerIndex::EPI2, [GU, E9, EU, G8]),
+    ]);
+    let aicheating = SAiCheating::new(
+        /*n_rank_rules_samples*/1
+    );
+    let aisimulating = SAiSimulating::new(
+        /*n_suggest_card_branches*/1,
+        /*n_suggest_card_samples*/1,
+        /*n_samples_per_rules*/1,
+    );
+    assert_ne!(aicheating.suggest_card(&game, /*ostr_file_out*/None), HO);
+    assert_ne!(aisimulating.suggest_card(&game, /*ostr_file_out*/None), HO);
+    play_stichs(&mut game, &[
+        (EPlayerIndex::EPI0, [HO, E7, HU, GK]),
+    ]);
+    // TODO these asserts should hold
+    //assert_ne!(aicheating.suggest_card(&game, /*ostr_file_out*/None), SZ);
+    //assert_ne!(aisimulating.suggest_card(&game, /*ostr_file_out*/None), SZ);
+    //assert_eq!(aicheating.suggest_card(&game, /*ostr_file_out*/None), E8);
+    //assert_eq!(aisimulating.suggest_card(&game, /*ostr_file_out*/None), E8);
+    play_stichs(&mut game, &[
+        (EPlayerIndex::EPI0, [SZ, EK, G7, SA]),
+        (EPlayerIndex::EPI3, [SK, S7, GZ, EZ]),
+        (EPlayerIndex::EPI3, [S9, E8, G9, EA]),
+    ]);
+}
 
 #[test]
 fn detect_expensive_all_possible_hands() {
