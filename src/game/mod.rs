@@ -55,7 +55,7 @@ impl<'rules> TGamePhase for SDealCards<'rules> {
     }
 }
 
-impl<'rules> SDealCards<'rules> {
+impl SDealCards<'_> {
     pub fn new(epi_first: EPlayerIndex, ruleset: &SRuleSet, n_stock: isize) -> SDealCards {
         SDealCards {
             ahand : {
@@ -172,7 +172,7 @@ macro_rules! impl_fullhand { () => {
     }
 }}
 
-impl<'rules> SGamePreparations<'rules> {
+impl SGamePreparations<'_> {
     impl_fullhand!();
 
     pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<TActivelyPlayableRules>>) -> Result<(), Error> {
@@ -201,7 +201,7 @@ pub struct SDetermineRules<'rules> {
     pairepirules_current_bid : (EPlayerIndex, Box<TActivelyPlayableRules>),
 }
 
-impl<'rules> TGamePhase for SDetermineRules<'rules> {
+impl TGamePhase for SDetermineRules<'_> {
     type ActivePlayerInfo = (EPlayerIndex, Vec<SRuleGroup>);
     type Finish = SGame;
 
@@ -248,7 +248,7 @@ impl<'rules> TGamePhase for SDetermineRules<'rules> {
     }
 }
 
-impl<'rules> SDetermineRules<'rules> {
+impl SDetermineRules<'_> {
     impl_fullhand!();
 
     pub fn currently_offered_prio(&self) -> (EPlayerIndex, VGameAnnouncementPriority) {

@@ -13,7 +13,7 @@ pub struct SAIRufspiel<'rules> {
     rules : &'rules SRulesRufspiel,
 }
 
-impl<'rules> TRuleSpecificAI for SAIRufspiel<'rules> {
+impl TRuleSpecificAI for SAIRufspiel<'_> {
     fn suggest_card(&self, game: &SGame) -> Option<SCard> {
         let epi = verify!(game.which_player_can_do_something()).unwrap().0;
         let rules = self.rules;

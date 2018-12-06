@@ -19,7 +19,7 @@ impl<'hand> SFullHand<'hand> {
 #[derive(Copy, Clone)]
 pub struct SGameFinishedStiche<'slcstich>(&'slcstich [SStich]);
 
-impl<'slcstich> SGameFinishedStiche<'slcstich> {
+impl SGameFinishedStiche<'_> {
     pub fn new(slcstich: &[SStich], ekurzlang: EKurzLang) -> SGameFinishedStiche {
         assert_eq!(slcstich.len(), ekurzlang.cards_per_player());
         assert!(slcstich.iter().all(|stich| 4==stich.size()));
@@ -33,7 +33,7 @@ impl<'slcstich> SGameFinishedStiche<'slcstich> {
 #[derive(Copy, Clone)]
 pub struct SCompletedStichs<'slcstich>(&'slcstich [SStich]);
 
-impl<'slcstich> SCompletedStichs<'slcstich> {
+impl SCompletedStichs<'_> {
     pub fn new(slcstich: &[SStich]) -> SCompletedStichs {
         assert!(slcstich.iter().all(|stich| stich.size()==4));
         SCompletedStichs(slcstich)

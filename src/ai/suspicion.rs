@@ -114,7 +114,7 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
     }
 }
 
-impl<'rules> TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'rules> {
+impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
     fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]) {
         let str_item_id = format!("{}{}",
             slcstich.get().len(),
@@ -362,7 +362,7 @@ impl<'rules> SMinReachablePayoutParams<'rules> {
 #[derive(Clone)]
 pub struct SMinReachablePayout<'rules>(pub SMinReachablePayoutParams<'rules>);
 
-impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
+impl TForEachSnapshot for SMinReachablePayout<'_> {
     type Output = (SCard, isize);
 
     fn pruned_output(&self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
@@ -380,7 +380,7 @@ impl<'rules> TForEachSnapshot for SMinReachablePayout<'rules> {
 #[derive(Clone)]
 pub struct SMinReachablePayoutLowerBoundViaHint<'rules>(pub SMinReachablePayoutParams<'rules>);
 
-impl<'rules> TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'rules> {
+impl TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'_> {
     type Output = (SCard, isize);
 
     fn pruned_output(&self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
