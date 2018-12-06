@@ -1,5 +1,5 @@
-use primitives::*;
-use rules::{
+use crate::primitives::*;
+use crate::rules::{
     *,
     trumpfdecider::*,
     payoutdecider::*,
@@ -8,8 +8,8 @@ use std::{
     fmt,
     cmp::Ordering,
 };
-use util::*;
-use ai::rulespecific::airufspiel::*;
+use crate::util::*;
+use crate::ai::rulespecific::airufspiel::*;
 
 #[derive(Clone, Debug)]
 pub struct SRulesRufspiel {

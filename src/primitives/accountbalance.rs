@@ -1,7 +1,7 @@
 // this stores the how much money each player currently has
 
-use primitives::eplayerindex::*;
-use util::*;
+use crate::primitives::eplayerindex::*;
+use crate::util::*;
 
 #[derive(Debug)]
 pub struct SAccountBalance {

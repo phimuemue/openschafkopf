@@ -1,8 +1,8 @@
-use primitives::*;
-use game::*;
+use crate::primitives::*;
+use crate::game::*;
 use ncurses;
-use rules::*;
-use util::*;
+use crate::rules::*;
+use crate::util::*;
 use itertools::Itertools;
 
 // TODO do we update output too often?

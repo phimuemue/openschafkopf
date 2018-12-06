@@ -30,23 +30,23 @@ mod player;
 mod ai;
 mod skui;
 
-use game::*;
-use primitives::*;
-use rules::{
+use crate::game::*;
+use crate::primitives::*;
+use crate::rules::{
     TActivelyPlayableRules, // TODO improve trait-object behaviour
     ruleset::*,
 };
-use ai::*;
+use crate::ai::*;
 use std::{
     path::Path,
     sync::mpsc,
 };
-use player::{
+use crate::player::{
     *,
     playerhuman::*,
     playercomputer::*,
 };
-use util::*;
+use crate::util::*;
 
 fn main() {
     env_logger::init();

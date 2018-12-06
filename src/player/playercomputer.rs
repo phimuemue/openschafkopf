@@ -1,16 +1,16 @@
-use primitives::*;
-use player::*;
-use rules::{
+use crate::primitives::*;
+use crate::player::*;
+use crate::rules::{
     *,
     ruleset::*,
 };
-use game::*;
-use ai::{
+use crate::game::*;
+use crate::ai::{
     *,
     handiterators::forever_rand_hands,
     suspicion::{explore_snapshots, SMinReachablePayout, SMinReachablePayoutParams},
 };
-use util::*;
+use crate::util::*;
 use std::sync::mpsc;
 
 pub struct SPlayerComputer {

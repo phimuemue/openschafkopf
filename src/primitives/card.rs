@@ -1,5 +1,5 @@
 use std::fmt;
-use util::*;
+use crate::util::*;
 
 plain_enum_mod!{modefarbe, EFarbe {
     Eichel,
@@ -172,7 +172,7 @@ impl<V> TInternalEnumMapType<V> for SCard {
 
 #[cfg(test)]
 pub mod card_values {
-    use card::*;
+    use crate::card::*;
     macro_rules! impl_card_val_internal {(($($card:ident,)*), ($($eschlag:ident,)*), $efarbe:ident) => {
         $(pub const $card : SCard = card_new_const!(EFarbe::$efarbe, ESchlag::$eschlag);)*
     }}

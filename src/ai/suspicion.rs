@@ -1,8 +1,8 @@
-use primitives::*;
-use rules::*;
-use game::{SGame, stoss_and_doublings};
+use crate::primitives::*;
+use crate::rules::*;
+use crate::game::{SGame, stoss_and_doublings};
 use itertools::Itertools;
-use util::*;
+use crate::util::*;
 use std::{
     fs,
     io::Write,

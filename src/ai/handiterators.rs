@@ -1,8 +1,8 @@
-use primitives::*;
-use game::*;
-use util::*;
+use crate::primitives::*;
+use crate::game::*;
+use crate::util::*;
 use permutohedron::LexicalPermutation;
-use ai::{
+use crate::ai::{
     *,
     suspicion::*,
 };
@@ -130,7 +130,7 @@ pub fn all_possible_hands(slcstich: SCompletedStichs, hand_fixed: SHand, epi_fix
 
 #[test]
 fn test_all_possible_hands() {
-    use card::card_values::*;
+    use crate::card::card_values::*;
     let acard_to_stich = |acard: [SCard; 4]| {
         SStich::new_full(/*epi_first irrelevant*/EPlayerIndex::EPI0, acard)
     };

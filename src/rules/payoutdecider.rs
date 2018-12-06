@@ -1,10 +1,10 @@
-use primitives::*;
-use rules::{
+use crate::primitives::*;
+use crate::rules::{
     *,
     card_points::*,
     trumpfdecider::TTrumpfDecider,
 };
-use util::*;
+use crate::util::*;
 
 #[derive(Clone, new, Debug)]
 pub struct SLaufendeParams {

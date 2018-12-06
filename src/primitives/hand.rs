@@ -1,4 +1,4 @@
-use primitives::card::*;
+use crate::primitives::card::*;
 use std::fmt;
 use arrayvec::ArrayVec;
 

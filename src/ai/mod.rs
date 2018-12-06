@@ -4,12 +4,12 @@ pub mod rulespecific;
 #[cfg(test)]
 pub mod test;
 
-use primitives::*;
-use rules::{
+use crate::primitives::*;
+use crate::rules::{
     *,
 };
-use game::*;
-use ai::{
+use crate::game::*;
+use crate::ai::{
     suspicion::*,
     handiterators::*,
 };
@@ -24,7 +24,7 @@ use std::{
     cmp,
 };
 use crossbeam;
-use util::*;
+use crate::util::*;
 
 pub trait TAi {
     fn rank_rules(&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64;
@@ -69,7 +69,7 @@ pub fn unplayed_cards<'lifetime>(slcstich: &'lifetime [SStich], hand_fixed: &'li
 
 #[test]
 fn test_unplayed_cards() {
-    use card::card_values::*;
+    use crate::card::card_values::*;
     let vecstich = [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]].into_iter()
         .map(|acard| {
             SStich::new_full(/*epi_first irrelevant*/EPlayerIndex::EPI0, *acard)
@@ -339,10 +339,10 @@ impl TAi for SAiSimulating {
 
 #[test]
 fn test_is_compatible_with_game_so_far() {
-    use rules::rulesrufspiel::*;
-    use rules::payoutdecider::*;
-    use card::card_values::*;
-    use game;
+    use crate::rules::rulesrufspiel::*;
+    use crate::rules::payoutdecider::*;
+    use crate::card::card_values::*;
+    use crate::game;
     enum VTestAction {
         PlayStich([SCard; 4]),
         AssertFrei(EPlayerIndex, VTrumpfOrFarbe),
@@ -353,7 +353,7 @@ fn test_is_compatible_with_game_so_far() {
             .map(|acard_hand|
                 SHand::new_from_vec(acard_hand.into_iter().cloned().collect())
             );
-        use rules::ruleset::*;
+        use crate::rules::ruleset::*;
         let mut game = game::SGame::new(
             ahand,
             SDoublings::new(epi_first),
@@ -434,9 +434,9 @@ fn test_is_compatible_with_game_so_far() {
 
 #[test]
 fn test_very_expensive_exploration() { // this kind of abuses the test mechanism to benchmark the performance
-    use card::card_values::*;
-    use game::*;
-    use rules::{ruleset::*, rulessolo::*, payoutdecider::*, trumpfdecider::*, tests::TPayoutDeciderSoloLikeDefault};
+    use crate::card::card_values::*;
+    use crate::game::*;
+    use crate::rules::{ruleset::*, rulessolo::*, payoutdecider::*, trumpfdecider::*, tests::TPayoutDeciderSoloLikeDefault};
     let epi_first_and_active_player = EPlayerIndex::EPI0;
     let n_payout_base = 50;
     let n_payout_schneider_schwarz = 10;

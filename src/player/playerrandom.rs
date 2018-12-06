@@ -1,11 +1,11 @@
-use primitives::*;
-use player::*;
-use rules::{
+use crate::primitives::*;
+use crate::player::*;
+use crate::rules::{
     *,
     ruleset::*,
 };
-use game::*;
-use util::*;
+use crate::game::*;
+use crate::util::*;
 use std::sync::mpsc;
 use rand;
 

@@ -1,5 +1,5 @@
-use primitives::*;
-use util::*;
+use crate::primitives::*;
+use crate::util::*;
 
 // thin wrappers ensuring invariants
 

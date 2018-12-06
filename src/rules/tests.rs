@@ -1,8 +1,8 @@
-use primitives::{
+use crate::primitives::{
     *,
     card::card_values::*
 };
-use rules::{
+use crate::rules::{
     *,
     ruleset::*,
     rulesrufspiel::*,
@@ -12,7 +12,7 @@ use rules::{
     trumpfdecider::*,
     payoutdecider::*,
 };
-use util::*;
+use crate::util::*;
 
 fn internal_test_rules(
     str_info: &str,
@@ -24,7 +24,7 @@ fn internal_test_rules(
     slcstich_test: &[SStich],
     (an_payout, n_stock_payout): ([isize; 4], isize),
 ) {
-    use game::*;
+    use crate::game::*;
     println!("Testing rules: {}", str_info);
     let epi_first = EPlayerIndex::EPI0; // TODO parametrize w.r.t. epi_first
     let mut game = SGame::new(

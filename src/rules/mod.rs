@@ -14,13 +14,13 @@ pub mod card_points;
 #[cfg(test)]
 pub mod tests;
 
-use primitives::*;
+use crate::primitives::*;
 use std::{
     cmp::Ordering,
     fmt,
 };
-use util::*;
-use ai::rulespecific::*;
+use crate::util::*;
+use crate::ai::rulespecific::*;
 
 pub fn current_stich_mut(slcstich: &mut [SStich]) -> &mut SStich {
     verify!(slcstich.last_mut()).unwrap()

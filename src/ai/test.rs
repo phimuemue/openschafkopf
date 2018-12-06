@@ -1,24 +1,24 @@
-use game_loop_cli;
-use primitives::*;
-use rules::{
+use crate::game_loop_cli;
+use crate::primitives::*;
+use crate::rules::{
     *,
     ruleset::*,
 };
-use player::{
+use crate::player::{
     TPlayer,
     playerrandom::SPlayerRandom,
 };
-use util::*;
-use ai::{
+use crate::util::*;
+use crate::ai::{
     *,
     suspicion::*,
 };
-use game;
+use crate::game;
 
 #[test]
 fn test_determine_best_card() {
     // https://www.sauspiel.de/spiele/785105783
-    use card::card_values::*;
+    use crate::card::card_values::*;
     let epi_first_and_active_player = EPlayerIndex::EPI0;
     let mut game = game::SGame::new(
         EPlayerIndex::map_from_raw([

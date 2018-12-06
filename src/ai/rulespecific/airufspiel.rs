@@ -1,12 +1,12 @@
-use util::*;
-use primitives::*;
-use game::*;
-use rules::{
+use crate::util::*;
+use crate::primitives::*;
+use crate::game::*;
+use crate::rules::{
     *,
     rulesrufspiel::*,
     card_points::points_card,
 };
-use ai::rulespecific::*;
+use crate::ai::rulespecific::*;
 
 #[derive(new)]
 pub struct SAIRufspiel<'rules> {

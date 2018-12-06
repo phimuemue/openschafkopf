@@ -1,5 +1,5 @@
-use primitives::*;
-use rules::{
+use crate::primitives::*;
+use crate::rules::{
     *,
     rulesrufspiel::*,
     rulessolo::*,
@@ -8,7 +8,7 @@ use rules::{
     trumpfdecider::*,
     payoutdecider::*,
 };
-use util::*;
+use crate::util::*;
 use std::{
     fs::File,
     io::prelude::*,

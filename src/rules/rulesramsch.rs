@@ -1,5 +1,5 @@
-use primitives::*;
-use rules::{
+use crate::primitives::*;
+use crate::rules::{
     *,
     trumpfdecider::*,
     payoutdecider::internal_payout,
@@ -10,7 +10,7 @@ use std::{
     cmp::Ordering,
 };
 use itertools::Itertools;
-use util::*;
+use crate::util::*;
 
 #[derive(Clone, Debug)]
 pub enum VDurchmarsch {

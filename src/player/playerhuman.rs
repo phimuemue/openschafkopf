@@ -1,13 +1,13 @@
-use primitives::*;
-use player::*;
-use rules::{
+use crate::primitives::*;
+use crate::player::*;
+use crate::rules::{
     *,
     ruleset::*,
 };
-use game::*;
-use skui;
-use ai::*;
-use util::*;
+use crate::game::*;
+use crate::skui;
+use crate::ai::*;
+use crate::util::*;
 use std::sync::mpsc;
 use chrono::Local;
 

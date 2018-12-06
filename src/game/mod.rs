@@ -1,9 +1,9 @@
-use primitives::*;
-use rules::{
+use crate::primitives::*;
+use crate::rules::{
     *,
     ruleset::*,
 };
-use util::*;
+use crate::util::*;
 use rand::{self, Rng};
 use std::mem;
 

@@ -1,4 +1,4 @@
-use primitives::*;
+use crate::primitives::*;
 
 pub fn points_card(card: SCard) -> isize {
     // by default, we assume that we use the usual points

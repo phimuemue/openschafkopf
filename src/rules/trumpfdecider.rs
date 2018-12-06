@@ -1,10 +1,10 @@
-use primitives::*;
-use rules::*;
+use crate::primitives::*;
+use crate::rules::*;
 use std::{
     cmp::Ordering,
     marker::PhantomData,
 };
-use util::*;
+use crate::util::*;
 
 pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe;

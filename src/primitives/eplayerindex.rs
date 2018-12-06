@@ -8,7 +8,7 @@ use std::{
     str::FromStr,
     slice,
 };
-use util::*;
+use crate::util::*;
 
 plain_enum_mod!(modepi, EPlayerIndex {
     EPI0, EPI1, EPI2, EPI3,

@@ -1,5 +1,5 @@
-use primitives::*;
-use rules::{
+use crate::primitives::*;
+use crate::rules::{
     *,
     trumpfdecider::*,
     payoutdecider::*,
@@ -9,7 +9,7 @@ use std::{
     cmp::Ordering,
     marker::PhantomData,
 };
-use util::*;
+use crate::util::*;
 
 pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
     fn payout<Rules>(
@@ -334,7 +334,7 @@ pub type SCoreGenericGeier<TrumpfFarbDecider> = STrumpfDeciderSchlag<
 
 #[test]
 fn test_trumpfdecider() {
-    use card::card_values::*;
+    use crate::card::card_values::*;
     assert_eq!(
         <SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>> as TTrumpfDecider>
             ::trumpfs_in_descending_order().collect::<Vec<_>>(),

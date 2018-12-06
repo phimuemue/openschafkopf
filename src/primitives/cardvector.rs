@@ -1,6 +1,6 @@
 extern crate combine;
 
-use primitives::card::*;
+use crate::primitives::card::*;
 use self::combine::*;
 use std::iter::FromIterator;
 
@@ -53,7 +53,7 @@ pub fn parse_cards<C: FromIterator<SCard>>(str_cards: &str) -> Option<C> {
 
 #[test]
 fn test_cardvectorparser() {
-    use util::*;
+    use crate::util::*;
     assert_eq!(
         verify!(parse_cards::<Vec<_>>("ek gk hz hu s7")).unwrap(),
         vec![
