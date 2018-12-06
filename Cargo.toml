@@ -2,6 +2,7 @@
 name = "openschafkopf"
 version = "0.1.0"
 authors = ["openschakfopf"]
+edition = "2018"
 
 [dependencies]
 combine = "1"
