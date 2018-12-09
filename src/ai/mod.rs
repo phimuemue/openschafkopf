@@ -13,7 +13,7 @@ use crate::ai::{
     suspicion::*,
     handiterators::*,
 };
-use rand;
+use rand::prelude::IteratorRandom;
 use std::{
     self,
     mem,
@@ -48,9 +48,8 @@ pub trait TAi {
 }
 
 pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
-    let mut vecstich_sample = match rand::seq::sample_iter(&mut rand::thread_rng(), vecstich.iter().cloned(), n_size) {
-        Ok(vecstich) | Err(vecstich) => vecstich,
-    };
+    let mut vecstich_sample = vecstich.iter().cloned().choose_multiple(&mut rand::thread_rng(), n_size);
+    assert_eq!(vecstich_sample.len(), n_size);
     mem::swap(vecstich, &mut vecstich_sample);
 }
 
@@ -197,11 +196,11 @@ fn determine_best_card_internal(
         // aggregate n_payout per card in some way
         SCard::map_from_fn(|_card| std::isize::MAX),
     ));
-    crossbeam::scope(|scope| {
+    verify!(crossbeam::scope(|scope| {
         for (i_susp, ahand) in itahand.enumerate() {
             let mapcardn_payout = Arc::clone(&mapcardn_payout);
             let mut foreachsnapshot = foreachsnapshot.clone();
-            scope.spawn(move || {
+            scope.spawn(move |_scope| {
                 assert_ahand_same_size(&ahand);
                 let mut vecstich_complete_mut = game.completed_stichs().get().to_vec();
                 let n_stich_complete = vecstich_complete_mut.len();
@@ -231,7 +230,7 @@ fn determine_best_card_internal(
                 mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
             });
         }
-    });
+    })).unwrap();
     let mapcardn_payout = verify!(
         verify!(Arc::try_unwrap(mapcardn_payout)).unwrap() // "Returns the contained value, if the Arc has exactly one strong reference"   
             .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
@@ -266,10 +265,10 @@ pub struct SAiSimulating {
 impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
         let n_payout_sum = Arc::new(AtomicIsize::new(0));
-        crossbeam::scope(|scope| {
+        verify!(crossbeam::scope(|scope| {
             for ahand in forever_rand_hands(SCompletedStichs::new(&Vec::new()), hand_fixed.get(), epi_rank).take(self.n_rank_rules_samples) {
                 let n_payout_sum = Arc::clone(&n_payout_sum);
-                scope.spawn(move || {
+                scope.spawn(move |_scope| {
                     let n_payout = 
                         explore_snapshots(
                             &ahand,
@@ -292,7 +291,7 @@ impl TAi for SAiSimulating {
                     n_payout_sum.fetch_add(n_payout, Ordering::SeqCst);
                 });
             }
-        });
+        })).unwrap();
         let n_payout_sum = n_payout_sum.load(Ordering::SeqCst);
         (n_payout_sum.as_num::<f64>()) / (self.n_rank_rules_samples.as_num::<f64>())
     }

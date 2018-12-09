@@ -7,7 +7,7 @@ use crate::rules::{
 use crate::game::*;
 use crate::util::*;
 use std::sync::mpsc;
-use rand;
+use rand::prelude::*;
 
 #[derive(new)]
 pub struct SPlayerRandom<FnCheckAskForCard: Fn(&SGame)> {
@@ -26,14 +26,12 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         (self.fn_check_ask_for_card)(game);
         verify!(txcard.send(
-            verify!(rand::seq::sample_iter(
-                &mut rand::thread_rng(),
+            verify!(
                 game.rules.all_allowed_cards(
                     &game.vecstich,
                     &game.ahand[verify!(game.which_player_can_do_something()).unwrap().0],
-                ),
-                1,
-            )).unwrap()[0]
+                ).choose(&mut rand::thread_rng()).map(|&card| card)
+            ).unwrap()
         )).unwrap();
     }
 
@@ -48,11 +46,7 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
         txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>
     ) {
         verify!(txorules.send(
-            verify!(rand::seq::sample_iter(
-                &mut rand::thread_rng(),
-                allowed_rules(vecrulegroup, hand),
-                1,
-            )).unwrap()[0]
+            verify!(allowed_rules(vecrulegroup, hand).choose(&mut rand::thread_rng())).unwrap()
         )).unwrap();
     }
 

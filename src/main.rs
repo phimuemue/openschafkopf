@@ -245,9 +245,9 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
 
 #[test]
 fn test_game_loop() {
+    use rand::prelude::IteratorRandom;
     let mut rng = rand::thread_rng();
-    for ruleset in verify!(rand::seq::sample_iter(
-        &mut rng,
+    for ruleset in
         iproduct!(
             [10, 20].into_iter(), // n_base_price
             [50, 100].into_iter(), // n_solo_price
@@ -317,9 +317,8 @@ fn test_game_loop() {
                 );
                 println!("{}", str_ruleset);
                 verify!(SRuleSet::from_string(&str_ruleset)).unwrap()
-            }),
-            1,
-        )).unwrap()
+            })
+            .choose_multiple(&mut rng, 2)
     {
         game_loop_cli(
             &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
