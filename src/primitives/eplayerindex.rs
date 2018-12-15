@@ -93,24 +93,30 @@ impl<T> SPlayersInRound<T> {
     }
     pub fn current_playerindex(&self) -> Option<EPlayerIndex> {
         if_then_option!(
-            self.size()!=EPlayerIndex::SIZE,
+            !self.is_full(),
             self.first_playerindex().wrapping_add(self.size())
         )
     }
     pub fn size(&self) -> usize {
         self.vect.len()
     }
+    pub fn is_full(&self) -> bool {
+        self.size()==EPlayerIndex::SIZE
+    }
+    pub fn is_empty(&self) -> bool {
+        self.size()==0
+    }
     pub fn push(&mut self, t: T) {
-        assert!(self.size()<EPlayerIndex::SIZE);
+        assert!(!self.is_full());
         self.vect.push(t);
     }
     pub fn undo_most_recent(&mut self) {
-        assert!(0 < self.size());
+        assert!(!self.is_empty());
         self.vect.pop();
     }
 
     pub fn first(&self) -> &T {
-        assert!(0 < self.size());
+        assert!(!self.is_empty());
         &self[self.epi_first]
     }
     pub fn iter(&self) -> SPlayersInRoundIterator<slice::Iter<T>> {

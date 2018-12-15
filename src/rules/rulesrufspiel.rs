@@ -150,7 +150,7 @@ impl TRules for SRulesRufspiel {
         if // do we already know who had the rufsau?
             completed_stichs(slcstich).get().iter()
                 .any(|stich| {
-                    assert_eq!(stich.size(), 4); // completed_stichs should only process full stichs
+                    assert!(stich.is_full()); // completed_stichs should only process full stichs
                     self.is_ruffarbe(*stich.first()) // gesucht or weggelaufen
                     || stich.iter().any(|(_, card)| *card==self.rufsau()) // We explicitly traverse all cards because it may be allowed (by exotic rules) to schmier rufsau even if not gesucht.
                 } )
@@ -171,8 +171,7 @@ impl TRules for SRulesRufspiel {
 
     fn all_allowed_cards_within_stich(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!slcstich.is_empty());
-        assert!(current_stich(slcstich).size()<4);
-        assert!(current_stich(slcstich).current_playerindex().is_some());
+        assert!(!current_stich(slcstich).is_full());
         if hand.cards().len()<=1 {
             hand.cards().clone()
         } else {

@@ -54,7 +54,7 @@ pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
 }
 
 pub fn unplayed_cards<'lifetime>(slcstich: &'lifetime [SStich], hand_fixed: &'lifetime SHand) -> impl Iterator<Item=SCard> + 'lifetime {
-    assert!(slcstich.iter().all(|stich| 4==stich.size())); // TODO is this really required?
+    assert!(slcstich.iter().all(SStich::is_full)); // TODO is this really required?
     SCard::values(EKurzLang::from_cards_per_player(slcstich.len() + hand_fixed.cards().len()))
         .filter(move |card| 
              !hand_fixed.contains(*card)
@@ -119,7 +119,7 @@ pub fn is_compatible_with_game_so_far(
     slcstich: &[SStich],
 ) -> bool {
     let stich_current = current_stich(slcstich);
-    assert!(stich_current.size()<4);
+    assert!(!stich_current.is_full());
     // hands must contain respective cards from stich_current...
     stich_current.iter()
         .all(|(epi, card)| ahand[epi].contains(*card))
@@ -298,7 +298,7 @@ impl TAi for SAiSimulating {
 
     fn internal_suggest_card(&self, game: &SGame, ostr_file_out: Option<&str>) -> SCard {
         let stich_current = game.current_stich();
-        assert!(stich_current.size()<4);
+        assert!(!stich_current.is_full());
         let epi_fixed = verify!(stich_current.current_playerindex()).unwrap();
         let hand_fixed = &game.ahand[epi_fixed];
         assert!(!hand_fixed.cards().is_empty());

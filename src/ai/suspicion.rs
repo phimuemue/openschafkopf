@@ -315,7 +315,7 @@ fn pruned_output_internal(
 fn end_snapshot_minmax<ItTplStichNPayout: Iterator<Item=(SStich, (SCard, isize))>>(epi: EPlayerIndex, ittplstichn_payout: ItTplStichNPayout) -> (SCard, isize) {
     verify!(ittplstichn_payout
         .group_by(|&(ref stich, _n_payout)| { // other players may play inconveniently for epi...
-            assert_eq!(stich.size(), 4);
+            assert!(stich.is_full());
             type SStichKeyBeforeEpi = ArrayVec<[SCard; 4]>;
             static_assert!(debug_assert(stich.size() <= SStichKeyBeforeEpi::new().capacity()));
             stich.iter()

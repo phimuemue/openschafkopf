@@ -22,7 +22,7 @@ pub struct SGameFinishedStiche<'slcstich>(&'slcstich [SStich]);
 impl SGameFinishedStiche<'_> {
     pub fn new(slcstich: &[SStich], ekurzlang: EKurzLang) -> SGameFinishedStiche {
         assert_eq!(slcstich.len(), ekurzlang.cards_per_player());
-        assert!(slcstich.iter().all(|stich| 4==stich.size()));
+        assert!(slcstich.iter().all(SStich::is_full));
         SGameFinishedStiche(slcstich)
     }
     pub fn get(&self) -> &[SStich] {
@@ -35,7 +35,7 @@ pub struct SCompletedStichs<'slcstich>(&'slcstich [SStich]);
 
 impl SCompletedStichs<'_> {
     pub fn new(slcstich: &[SStich]) -> SCompletedStichs {
-        assert!(slcstich.iter().all(|stich| stich.size()==4));
+        assert!(slcstich.iter().all(SStich::is_full));
         SCompletedStichs(slcstich)
     }
     pub fn get(&self) -> &[SStich] {
@@ -48,7 +48,7 @@ pub struct SVecStichPushPopTmp<'vecstich>(&'vecstich mut Vec<SStich>);
 
 impl<'vecstich> SVecStichPushPop<'vecstich> {
     pub fn new(vecstich: &'vecstich mut Vec<SStich>) -> Self {
-        assert!(vecstich.iter().all(|stich| stich.size()==4));
+        assert!(vecstich.iter().all(SStich::is_full));
         SVecStichPushPop(vecstich)
     }
 
@@ -57,11 +57,11 @@ impl<'vecstich> SVecStichPushPop<'vecstich> {
             for<'vecstichtmp> Func: FnOnce(SVecStichPushPopTmp<'vecstichtmp>) -> R,
     {
         let n_stich = self.0.len();
-        assert!(self.0.iter().all(|stich| stich.size()==4));
+        assert!(self.0.iter().all(SStich::is_full));
         self.0.push(stich);
         let r = func(SVecStichPushPopTmp(self.0));
         verify!(self.0.pop()).unwrap();
-        assert!(self.0.iter().all(|stich| stich.size()==4));
+        assert!(self.0.iter().all(SStich::is_full));
         assert_eq!(n_stich, self.0.len());
         r
     }

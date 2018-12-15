@@ -77,7 +77,7 @@ impl TPayoutDecider for SPayoutDeciderBettel {
     {
         if 
             !slcstich.iter()
-                .take_while(|stich| stich.size()==4)
+                .take_while(|stich| stich.is_full())
                 .all(|stich| !playerparties13.is_primary_party(rules.winner_index(stich)))
         {
             internal_payout(

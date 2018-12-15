@@ -31,9 +31,9 @@ pub fn current_stich(slcstich: &[SStich]) -> &SStich {
 }
 
 pub fn completed_stichs(slcstich: &[SStich]) -> SCompletedStichs {
-    assert!(current_stich(slcstich).size()<4);
+    assert!(!current_stich(slcstich).is_full());
     assert_eq!(slcstich[0..slcstich.len()-1].len(), slcstich.len()-1);
-    assert!(slcstich[0..slcstich.len()-1].iter().all(|stich| stich.size()==4));
+    assert!(slcstich[0..slcstich.len()-1].iter().all(SStich::is_full));
     SCompletedStichs::new(&slcstich[0..slcstich.len()-1])
 }
 
@@ -220,8 +220,8 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
 
     fn all_allowed_cards(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!slcstich.is_empty());
-        assert!(current_stich(slcstich).size()<4);
-        if 0==current_stich(slcstich).size() {
+        assert!(!current_stich(slcstich).is_full());
+        if current_stich(slcstich).is_empty() {
             self.all_allowed_cards_first_in_stich(slcstich, hand)
         } else {
             self.all_allowed_cards_within_stich(slcstich, hand)
@@ -250,7 +250,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
     }
 
     fn winner_index(&self, stich: &SStich) -> EPlayerIndex {
-        assert_eq!(stich.size(), 4);
+        assert!(stich.is_full());
         self.preliminary_winner_index(stich)
     }
 

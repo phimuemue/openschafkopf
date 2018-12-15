@@ -82,7 +82,7 @@ impl SDealCards<'_> {
             bail!("Wrong player index");
         }
         self.doublings.push(b_doubling);
-        assert!(0<self.doublings.size());
+        assert!(!self.doublings.is_empty());
         Ok(())
     }
 }
@@ -186,7 +186,7 @@ impl SGamePreparations<'_> {
             bail!("Rules cannot be played. {}", self.ahand[epi]);
         }
         self.gameannouncements.push(orules);
-        assert!(0<self.gameannouncements.size());
+        assert!(!self.gameannouncements.is_empty());
         Ok(())
     }
 }
@@ -308,7 +308,7 @@ impl TGamePhase for SGame {
         self.current_stich().current_playerindex().map(|epi_current| (
             epi_current,
             if let Some(ref stossparams) = self.ostossparams {
-                if 1==self.vecstich.len() && 0==self.vecstich[0].size() // TODORULES Adjustable latest time of stoss
+                if 1==self.vecstich.len() && self.vecstich[0].is_empty() // TODORULES Adjustable latest time of stoss
                     && self.vecstoss.len() < stossparams.n_stoss_max
                 {
                     EPlayerIndex::values()
@@ -403,7 +403,7 @@ impl SGame {
         for epi in EPlayerIndex::values() {
             info!("Hand {}: {}", epi, self.ahand[epi]);
         }
-        if 4==self.current_stich().size() {
+        if self.current_stich().is_full() {
             if self.kurzlang().cards_per_player()==self.vecstich.len() {
                 info!("Game finished.");
                 Ok(())
@@ -414,7 +414,7 @@ impl SGame {
                     self.rules.winner_index(stich)
                 };
                 info!("Opening new stich starting at {}", epi_last_stich);
-                assert!(self.vecstich.is_empty() || 4==self.current_stich().size());
+                assert!(self.vecstich.is_empty() || self.current_stich().is_full());
                 self.vecstich.push(SStich::new(epi_last_stich));
                 Ok(())
             }

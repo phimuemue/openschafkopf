@@ -80,7 +80,7 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)> {
         // TODO consider secondary party, as well
         let n_points_primary_party : isize = slcstich.iter()
-            .take_while(|stich| stich.size()==4)
+            .take_while(|stich| stich.is_full())
             .filter(|stich| playerparties.is_primary_party(rules.winner_index(stich)))
             .map(|stich| points_stich(stich))
             .sum();
