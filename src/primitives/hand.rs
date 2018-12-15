@@ -4,7 +4,7 @@ use arrayvec::ArrayVec;
 
 pub type SHandVector = ArrayVec<[SCard; 8]>;
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, Debug)]
 pub struct SHand {
     veccard: SHandVector,
 }
