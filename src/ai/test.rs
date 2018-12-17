@@ -96,6 +96,7 @@ fn detect_expensive_all_possible_hands() {
                         slcstich,
                         game.ahand[epi_fixed].clone(),
                         epi_fixed,
+                        game.kurzlang(),
                     )
                         .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
                         .collect::<Vec<_>>();

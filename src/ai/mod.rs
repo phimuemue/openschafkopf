@@ -53,9 +53,8 @@ pub fn random_sample_from_vec(vecstich: &mut Vec<SStich>, n_size: usize) {
     mem::swap(vecstich, &mut vecstich_sample);
 }
 
-pub fn unplayed_cards<'lifetime>(slcstich: &'lifetime [SStich], hand_fixed: &'lifetime SHand) -> impl Iterator<Item=SCard> + 'lifetime {
-    assert!(slcstich.iter().all(SStich::is_full)); // TODO is this really required?
-    SCard::values(EKurzLang::from_cards_per_player(slcstich.len() + hand_fixed.cards().len()))
+pub fn unplayed_cards<'lifetime>(slcstich: &'lifetime [SStich], hand_fixed: &'lifetime SHand, ekurzlang: EKurzLang) -> impl Iterator<Item=SCard> + 'lifetime {
+    SCard::values(ekurzlang)
         .filter(move |card| 
              !hand_fixed.contains(*card)
              && !slcstich.iter().any(|stich|
@@ -75,7 +74,7 @@ fn test_unplayed_cards() {
         })
         .collect::<Vec<_>>();
     let hand = &SHand::new_from_vec([GK, SK].into_iter().cloned().collect());
-    let veccard_unplayed = unplayed_cards(&vecstich, &hand).collect::<Vec<_>>();
+    let veccard_unplayed = unplayed_cards(&vecstich, &hand, EKurzLang::Lang).collect::<Vec<_>>();
     let veccard_unplayed_check = [GZ, E7, SZ, H9, EZ, GU];
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
     assert!(veccard_unplayed.iter().all(|card| veccard_unplayed_check.contains(card)));
@@ -266,7 +265,7 @@ impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
         let n_payout_sum = Arc::new(AtomicIsize::new(0));
         verify!(crossbeam::scope(|scope| {
-            for ahand in forever_rand_hands(SCompletedStichs::new(&Vec::new()), hand_fixed.get(), epi_rank).take(self.n_rank_rules_samples) {
+            for ahand in forever_rand_hands(SCompletedStichs::new(&Vec::new()), hand_fixed.get(), epi_rank, EKurzLang::from_cards_per_player(hand_fixed.get().cards().len())).take(self.n_rank_rules_samples) {
                 let n_payout_sum = Arc::clone(&n_payout_sum);
                 scope.spawn(move |_scope| {
                     let n_payout = 
@@ -305,7 +304,7 @@ impl TAi for SAiSimulating {
         if hand_fixed.cards().len()<=2 {
             determine_best_card(
                 game,
-                all_possible_hands(game.completed_stichs(), hand_fixed.clone(), epi_fixed)
+                all_possible_hands(game.completed_stichs(), hand_fixed.clone(), epi_fixed, game.kurzlang())
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich)),
                 self.n_suggest_card_branches,
                 ostr_file_out,
@@ -313,7 +312,7 @@ impl TAi for SAiSimulating {
         } else if hand_fixed.cards().len()<=5 {
             let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
                 game,
-                forever_rand_hands(game.completed_stichs(), hand_fixed, epi_fixed)
+                forever_rand_hands(game.completed_stichs(), hand_fixed, epi_fixed, game.kurzlang())
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
@@ -326,7 +325,7 @@ impl TAi for SAiSimulating {
         } else {
             determine_best_card(
                 game,
-                forever_rand_hands(game.completed_stichs(), hand_fixed, epi_fixed)
+                forever_rand_hands(game.completed_stichs(), hand_fixed, epi_fixed, game.kurzlang())
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
@@ -382,7 +381,8 @@ fn test_is_compatible_with_game_so_far() {
             for ahand in forever_rand_hands(
                 game.completed_stichs(),
                 &game.ahand[verify!(game.which_player_can_do_something()).unwrap().0],
-                verify!(game.which_player_can_do_something()).unwrap().0
+                verify!(game.which_player_can_do_something()).unwrap().0,
+                game.kurzlang(),
             )
                 .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
                 .take(100)
@@ -469,6 +469,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         game.completed_stichs(),
         game.ahand[epi_first_and_active_player].clone(),
         epi_first_and_active_player,
+        game.kurzlang(),
     )
         .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
     {
