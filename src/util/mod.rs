@@ -68,7 +68,7 @@ pub trait IteratorExt : Iterator {
             Some(e) => e,
             None => return true,
         };
-        while let Some(curr) = self.next() {
+        for curr in self {
             if compare(&last, &curr).map(|o| o == std::cmp::Ordering::Greater).unwrap_or(true) {
                 return false;
             }
