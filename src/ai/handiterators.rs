@@ -82,13 +82,13 @@ fn make_handiterator<NextVecEPI: TNextVecEPI>(slcstich: SCompletedStichs, hand_f
 
 pub fn all_possible_hands(slcstich: SCompletedStichs, hand_fixed: SHand, epi_fixed: EPlayerIndex, ekurzlang: EKurzLang) -> SHandIterator<SNextVecEPIPermutation> {
     let ithand = make_handiterator(slcstich, hand_fixed, epi_fixed, ekurzlang);
-    //TODO assert!(ithand.vecepi.iter().is_sorted());
+    assert!(ithand.vecepi.iter().is_sorted());
     ithand
 }
 
 pub fn forever_rand_hands(slcstich: SCompletedStichs, hand_fixed: SHand, epi_fixed: EPlayerIndex, ekurzlang: EKurzLang) -> SHandIterator<SNextVecEPIShuffle> {
     let mut ithand = make_handiterator(slcstich, hand_fixed, epi_fixed, ekurzlang);
-    // TODO assert!(ithand.vecepi.iter().is_sorted());
+    assert!(ithand.vecepi.iter().is_sorted());
     SNextVecEPIShuffle::next(&mut ithand.vecepi); // initial shuffle
     ithand
 }
