@@ -265,7 +265,7 @@ impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
         let n_payout_sum = Arc::new(AtomicIsize::new(0));
         verify!(crossbeam::scope(|scope| {
-            for ahand in forever_rand_hands(SCompletedStichs::new(&Vec::new()), hand_fixed.get(), epi_rank, EKurzLang::from_cards_per_player(hand_fixed.get().cards().len())).take(self.n_rank_rules_samples) {
+            for ahand in forever_rand_hands(SCompletedStichs::new(&Vec::new()), hand_fixed.get().clone(), epi_rank, EKurzLang::from_cards_per_player(hand_fixed.get().cards().len())).take(self.n_rank_rules_samples) {
                 let n_payout_sum = Arc::clone(&n_payout_sum);
                 scope.spawn(move |_scope| {
                     let n_payout = 
@@ -312,7 +312,7 @@ impl TAi for SAiSimulating {
         } else if hand_fixed.cards().len()<=5 {
             let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
                 game,
-                forever_rand_hands(game.completed_stichs(), hand_fixed, epi_fixed, game.kurzlang())
+                forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), epi_fixed, game.kurzlang())
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
@@ -325,7 +325,7 @@ impl TAi for SAiSimulating {
         } else {
             determine_best_card(
                 game,
-                forever_rand_hands(game.completed_stichs(), hand_fixed, epi_fixed, game.kurzlang())
+                forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), epi_fixed, game.kurzlang())
                     .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
@@ -380,7 +380,7 @@ fn test_is_compatible_with_game_so_far() {
             }
             for ahand in forever_rand_hands(
                 game.completed_stichs(),
-                &game.ahand[verify!(game.which_player_can_do_something()).unwrap().0],
+                game.ahand[verify!(game.which_player_can_do_something()).unwrap().0].clone(),
                 verify!(game.which_player_can_do_something()).unwrap().0,
                 game.kurzlang(),
             )
