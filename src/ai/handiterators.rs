@@ -102,21 +102,23 @@ fn test_all_possible_hands() {
     let mut vecstich = [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8]].into_iter()
         .map(|acard| acard_to_stich(*acard))
         .collect::<Vec<_>>();
-    let mut add_stich_and_test = |acard_stich, slccard_hand: &[SCard], n_count| {
+    let mut add_stich_and_test = |acard_stich, slccard_hand: &[SCard], n_count, an_size_hand| {
         vecstich.push(acard_to_stich(acard_stich));
-        assert_eq!(
-            all_possible_hands(
-                SCompletedStichs::new(&vecstich),
-                SHand::new_from_vec(slccard_hand.iter().cloned().collect()),
-                EPlayerIndex::EPI0, // epi_fixed
-                EKurzLang::Lang,
-            ).count(),
-            n_count
-        );
+        let mut i_hand = 0;
+        for ahand in all_possible_hands(
+            SCompletedStichs::new(&vecstich),
+            SHand::new_from_vec(slccard_hand.iter().cloned().collect()),
+            EPlayerIndex::EPI0, // epi_fixed
+            EKurzLang::Lang,
+        ) {
+            i_hand+=1;
+            assert_eq!(EnumMap::from_raw(an_size_hand), ahand.map(|hand| hand.cards().len()));
+        }
+        assert_eq!(i_hand, n_count);
     };
     // 3*n unknown cards distributed among three players: binomial(3n,3)*binomial(2n,n) possibilities
-    add_stich_and_test([E9, EK, E8, EA], &[GK, SK, SA], 1680);
-    add_stich_and_test([SA, EU, SO, HA], &[GK, SK], 90);
-    add_stich_and_test([H9, GZ, GU, GK], &[SK], 6);
+    add_stich_and_test([E9, EK, E8, EA], &[GK, SK, SA], 1680, [3, 3, 3, 3]);
+    add_stich_and_test([SA, EU, SO, HA], &[GK, SK], 90, [2, 2, 2, 2]);
+    add_stich_and_test([H9, GZ, GU, GK], &[SK], 6, [1, 1, 1, 1]);
 }
 
