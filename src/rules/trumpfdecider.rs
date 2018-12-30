@@ -29,8 +29,7 @@ impl TTrumpfDecider for STrumpfDeciderNoTrumpf {
 
 #[derive(Clone, Debug)]
 pub struct STrumpfDeciderSchlag<StaticSchlag, DeciderSec> {
-    staticschlag: PhantomData<StaticSchlag>,
-    decidersec: PhantomData<DeciderSec>,
+    phantom: PhantomData<(StaticSchlag, DeciderSec)>,
 }
 impl<StaticSchlag: TStaticValue<ESchlag>, DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<StaticSchlag, DeciderSec> {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
@@ -67,7 +66,7 @@ impl<StaticSchlag: TStaticValue<ESchlag>, DeciderSec: TTrumpfDecider> TTrumpfDec
 
 #[derive(Clone, Debug)]
 pub struct STrumpfDeciderFarbe<StaticFarbe> {
-    staticfarbe: PhantomData<StaticFarbe>,
+    phantom: PhantomData<StaticFarbe>,
 }
 impl<StaticFarbe: TStaticValue<EFarbe>> TTrumpfDecider for STrumpfDeciderFarbe<StaticFarbe> {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {

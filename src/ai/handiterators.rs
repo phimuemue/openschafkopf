@@ -76,7 +76,7 @@ fn make_handiterator<NextVecEPI: TNextVecEPI>(slcstich: SCompletedStichs, hand_f
             .collect(),
         hand_known: hand_fixed,
         b_valid: true, // in the beginning, there should be a valid assignment of cards to players
-        phantom: Default::default(),
+        phantom: std::marker::PhantomData,
     }
 }
 

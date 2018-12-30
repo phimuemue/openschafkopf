@@ -17,7 +17,7 @@ pub struct SRulesBettel<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCards
     epi : EPlayerIndex,
     i_prio : isize,
     payoutdecider : SPayoutDeciderBettel,
-    bettelallallowedcardswithinstich : PhantomData<BettelAllAllowedCardsWithinStich>,
+    phantom : PhantomData<BettelAllAllowedCardsWithinStich>,
 }
 
 impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> SRulesBettel<BettelAllAllowedCardsWithinStich> {
@@ -26,7 +26,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> SRules
             epi,
             i_prio,
             payoutdecider: SPayoutDeciderBettel{n_payout_base},
-            bettelallallowedcardswithinstich: PhantomData::<BettelAllAllowedCardsWithinStich>,
+            phantom: PhantomData,
         }
     }
 }

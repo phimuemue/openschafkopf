@@ -275,7 +275,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
 pub struct SRulesSoloLike<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> {
     pub str_name: String,
     pub epi : EPlayerIndex,
-    pub trumpfdecider : PhantomData<TrumpfDecider>,
+    phantom : PhantomData<TrumpfDecider>,
     payoutdecider: PayoutDecider,
 }
 
@@ -310,7 +310,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> SRule
     fn internal_new(epi: EPlayerIndex, str_rulename: &str, payoutdecider: PayoutDecider) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
         SRulesSoloLike::<TrumpfDecider, PayoutDecider> {
             epi,
-            trumpfdecider: PhantomData::<TrumpfDecider>,
+            phantom: PhantomData,
             payoutdecider,
             str_name: str_rulename.to_string(),
         }
