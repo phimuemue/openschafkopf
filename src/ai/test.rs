@@ -98,7 +98,7 @@ fn detect_expensive_all_possible_hands() {
                         epi_fixed,
                         game.kurzlang(),
                     )
-                        .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
+                        .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich, game.kurzlang()))
                         .collect::<Vec<_>>();
                     let assert_bound = |n, n_detect| {
                         assert!(n < n_detect,

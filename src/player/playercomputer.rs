@@ -89,7 +89,7 @@ impl TPlayer for SPlayerComputer {
         let n_samples_per_stoss = 5; // TODO move to ai, make adjustable
         let ekurzlang = EKurzLang::from_cards_per_player(hand.cards().len());
         let mut vecpairahandf_suspicion = forever_rand_hands(/*slcstich*/SCompletedStichs::new(&Vec::new()), hand.clone(), epi, ekurzlang)
-            .filter(|ahand| is_compatible_with_game_so_far(ahand, rules, /*slcstich*/&[SStich::new(doublings.epi_first)])) // stoss currently only in SPreGame
+            .filter(|ahand| is_compatible_with_game_so_far(ahand, rules, /*slcstich*/&[SStich::new(doublings.epi_first)], ekurzlang)) // stoss currently only in SPreGame
             .take(2*n_samples_per_stoss)
             .map(|ahand| {
                 let f_rank_rules = rules.playerindex().map_or(0f64, |epi_active| {

@@ -116,6 +116,7 @@ pub fn is_compatible_with_game_so_far(
     ahand: &EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
     slcstich: &[SStich],
+    ekurzlang: EKurzLang,
 ) -> bool {
     let stich_current = current_stich(slcstich);
     assert!(!stich_current.is_full());
@@ -147,16 +148,7 @@ pub fn is_compatible_with_game_so_far(
         });
         assert_ahand_same_size(&ahand_simulate);
         rules.playerindex().map_or(true, |epi_active|
-            rules.can_be_played(SFullHand::new(
-                &ahand_simulate[epi_active],
-                {
-                    let cards_per_player = |epi| {
-                        completed_stichs(slcstich).get().len() + ahand[epi].cards().len()
-                    };
-                    assert!(EPlayerIndex::values().all(|epi| cards_per_player(epi)==cards_per_player(EPlayerIndex::EPI0)));
-                    EKurzLang::from_cards_per_player(cards_per_player(EPlayerIndex::EPI0))
-                },
-            ))
+            rules.can_be_played(SFullHand::new(&ahand_simulate[epi_active], ekurzlang))
         )
         && {
             let mut b_valid_up_to_now = true;
@@ -305,7 +297,7 @@ impl TAi for SAiSimulating {
             determine_best_card(
                 game,
                 all_possible_hands(game.completed_stichs(), hand_fixed.clone(), epi_fixed, game.kurzlang())
-                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich)),
+                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich, game.kurzlang())),
                 self.n_suggest_card_branches,
                 ostr_file_out,
             )
@@ -313,7 +305,7 @@ impl TAi for SAiSimulating {
             let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
                 game,
                 forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), epi_fixed, game.kurzlang())
-                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
+                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich, game.kurzlang()))
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
                 &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
@@ -326,7 +318,7 @@ impl TAi for SAiSimulating {
             determine_best_card(
                 game,
                 forever_rand_hands(game.completed_stichs(), hand_fixed.clone(), epi_fixed, game.kurzlang())
-                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
+                    .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich, game.kurzlang()))
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
                 ostr_file_out,
@@ -384,7 +376,7 @@ fn test_is_compatible_with_game_so_far() {
                 verify!(game.which_player_can_do_something()).unwrap().0,
                 game.kurzlang(),
             )
-                .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
+                .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich, game.kurzlang()))
                 .take(100)
             {
                 for epi in EPlayerIndex::values() {
@@ -471,7 +463,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         epi_first_and_active_player,
         game.kurzlang(),
     )
-        .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich))
+        .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich, game.kurzlang()))
     {
         let (veccard_allowed, mapcardpayout) = determine_best_card_internal(
             &game,
