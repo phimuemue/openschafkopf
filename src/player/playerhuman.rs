@@ -78,9 +78,9 @@ impl TPlayer for SPlayerHuman {
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         skui::print_vecstich(verify!(game.current_stich().current_playerindex()).unwrap(), &game.vecstich);
         let hand = {
-            let mut hand = game.ahand[verify!(game.which_player_can_do_something()).unwrap().0].clone();
-            game.rules.sort_cards_first_trumpf_then_farbe(hand.cards_mut());
-            hand
+            let mut veccard = game.ahand[verify!(game.which_player_can_do_something()).unwrap().0].cards().clone();
+            game.rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
+            SHand::new_from_vec(veccard)
         };
         let veccard_allowed = game.rules.all_allowed_cards(&game.vecstich, &hand);
         if txcard.send(

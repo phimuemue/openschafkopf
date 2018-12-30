@@ -38,10 +38,6 @@ impl SHand {
     pub fn cards(&self) -> &SHandVector {
         &self.veccard
     }
-
-    pub fn cards_mut(&mut self) -> &mut SHandVector {
-        &mut self.veccard
-    }
 }
 
 impl fmt::Display for SHand {

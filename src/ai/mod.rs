@@ -139,12 +139,12 @@ pub fn is_compatible_with_game_so_far(
     }
     && {
         assert_ahand_same_size(ahand);
-        let mut ahand_simulate = ahand.clone();
-        for stich in completed_stichs(slcstich).get().iter().rev() {
-            for epi in EPlayerIndex::values() {
-                ahand_simulate[epi].cards_mut().push(stich[epi]);
-            }
-        }
+        let slcstich_complete = completed_stichs(slcstich);
+        let mut ahand_simulate = EPlayerIndex::map_from_fn(|epi| {
+            let mut veccard = ahand[epi].cards().clone();
+            veccard.extend(slcstich_complete.get().iter().rev().map(|stich| stich[epi]));
+            SHand::new_from_vec(veccard)
+        });
         assert_ahand_same_size(&ahand_simulate);
         rules.playerindex().map_or(true, |epi_active|
             rules.can_be_played(SFullHand::new(
