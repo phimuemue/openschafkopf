@@ -34,7 +34,7 @@ pub struct SHandIterator<NextVecEPI: TNextVecEPI> {
 
 impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
     type Item = EnumMap<EPlayerIndex, SHand>;
-    fn next(&mut self) -> Option<EnumMap<EPlayerIndex, SHand>> {
+    fn next(&mut self) -> Option<Self::Item> {
         if self.b_valid {
             let ahand = EPlayerIndex::map_from_fn(|epi| {
                 if self.epi_fixed==epi {
