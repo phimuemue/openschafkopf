@@ -88,7 +88,7 @@ impl TPlayer for SPlayerComputer {
     ) {
         let n_samples_per_stoss = 5; // TODO move to ai, make adjustable
         let ekurzlang = EKurzLang::from_cards_per_player(hand.cards().len());
-        let mut vecpairahandf_suspicion = forever_rand_hands(/*slcstich*/SCompletedStichs::new(&Vec::new()), hand.clone(), epi, ekurzlang)
+        let mut vecpairahandf_suspicion = forever_rand_hands(/*slcstich*/&[SStich::new(doublings.first_playerindex())], hand.clone(), epi, ekurzlang)
             .filter(|ahand| is_compatible_with_game_so_far(ahand, rules, /*slcstich*/&[SStich::new(doublings.epi_first)], ekurzlang)) // stoss currently only in SPreGame
             .take(2*n_samples_per_stoss)
             .map(|ahand| {
@@ -115,15 +115,15 @@ impl TPlayer for SPlayerComputer {
         assert_eq!(n_samples_per_stoss, vecpairahandf_suspicion.len());
         verify!(txb.send(
             vecpairahandf_suspicion.into_iter()
-                .map(|(ahand, _f_rank_rules)| {
+                .map(|(mut ahand, _f_rank_rules)| {
                     explore_snapshots(
-                        &ahand,
+                        epi,
+                        &mut ahand,
                         rules,
-                        &mut SVecStichPushPop::new(&mut Vec::new()),
-                        &SStich::new(doublings.first_playerindex()),
-                        &|_vecstich_complete, vecstich_successor| {
-                            assert!(!vecstich_successor.is_empty());
-                            random_sample_from_vec(vecstich_successor, 1);
+                        &mut SVecStichPushPop::new(&mut vec![SStich::new(doublings.first_playerindex())]),
+                        &|_vecstich, veccard_allowed| {
+                            assert!(!veccard_allowed.is_empty());
+                            random_sample_from_vec(veccard_allowed, 1);
                         },
                         &mut SMinReachablePayout(SMinReachablePayoutParams::new(
                             rules,
@@ -132,7 +132,7 @@ impl TPlayer for SPlayerComputer {
                             n_stock,
                         )),
                         /*ostr_file_out*/None,
-                    ).1
+                    )
                 })
                 .sum::<isize>().as_num::<f64>()
                 / n_samples_per_stoss.as_num::<f64>()

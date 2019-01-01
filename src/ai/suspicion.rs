@@ -12,28 +12,21 @@ use rand::{
     self,
     Rng,
 };
-use arrayvec::ArrayVec;
-
-pub fn assert_ahand_same_size(ahand: &EnumMap<EPlayerIndex, SHand>) {
-    assert!(ahand.iter().map(|hand| hand.cards().len()).all_equal());
-}
-
-pub fn hand_size_internal(ahand: &EnumMap<EPlayerIndex, SHand>) -> usize {
-    assert_ahand_same_size(ahand);
-    ahand[EPlayerIndex::EPI0].cards().len()
-}
 
 pub trait TForEachSnapshot {
     type Output;
-    fn pruned_output(&self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output>;
-    fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
+    fn final_output(&self, slcstich: SGameFinishedStiche) -> Self::Output;
+    fn pruned_output(&self, slcstich: &[SStich], ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output>;
+    fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
         &self,
-        ittplstichoutput: ItTplStichOutput,
+        epi_self: EPlayerIndex,
+        epi_card: EPlayerIndex,
+        ittplcardoutput: ItTplCardOutput,
     ) -> Self::Output;
 }
 
 trait TSnapshotVisualizer {
-    fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]);
+    fn begin_snapshot(&mut self, slcstich: &[SStich], ahand: &EnumMap<EPlayerIndex, SHand>, slccard_allowed: &[SCard]);
     fn end_snapshot<Output: fmt::Debug>(&mut self, output: &Output);
 }
 
@@ -99,37 +92,41 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
         )
     }
 
-    fn player_table<T: fmt::Display>(epi: EPlayerIndex, fn_per_player: impl Fn(EPlayerIndex)->T) -> String {
+    fn player_table<T: fmt::Display>(epi_self: EPlayerIndex, fn_per_player: impl Fn(EPlayerIndex)->Option<T>) -> String {
+        let fn_per_player_internal = move |epi: EPlayerIndex| {
+            fn_per_player(epi.wrapping_add(epi_self.to_usize()))
+                .map_or("".to_string(), |t| t.to_string())
+        };
         format!(
             "<table>
               <tr><td align=\"center\" colspan=\"2\"><br>{}<br></td></tr>
               <tr><td>{}</td><td>{}</td></tr>
               <tr><td align=\"center\" colspan=\"2\">{}</td></tr>
             </table>\n",
-            fn_per_player(EPlayerIndex::EPI2.wrapping_add(epi.to_usize())),
-            fn_per_player(EPlayerIndex::EPI1.wrapping_add(epi.to_usize())),
-            fn_per_player(EPlayerIndex::EPI3.wrapping_add(epi.to_usize())),
-            fn_per_player(EPlayerIndex::EPI0.wrapping_add(epi.to_usize())),
+            fn_per_player_internal(EPlayerIndex::EPI2),
+            fn_per_player_internal(EPlayerIndex::EPI1),
+            fn_per_player_internal(EPlayerIndex::EPI3),
+            fn_per_player_internal(EPlayerIndex::EPI0),
         )
     }
 }
 
 impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
-    fn begin_snapshot(&mut self, slcstich: SCompletedStichs, ahand: &EnumMap<EPlayerIndex, SHand>, slcstich_successor: &[SStich]) {
+    fn begin_snapshot(&mut self, slcstich: &[SStich], ahand: &EnumMap<EPlayerIndex, SHand>, slccard_allowed: &[SCard]) {
         let str_item_id = format!("{}{}",
-            slcstich.get().len(),
+            slcstich.len(),
             rand::thread_rng().sample_iter(&rand::distributions::Alphanumeric).take(16).collect::<String>(), // we simply assume no collisions here
         );
         self.write_all(format!("<li><<input type=\"checkbox\" id=\"{}\" />>\n", str_item_id).as_bytes());
         self.write_all(format!("<label for=\"{}\">{} direct successors<table><tr>\n",
             str_item_id,
-            slcstich_successor.len(),
+            slccard_allowed.len(),
         ).as_bytes());
-        EKurzLang::from_cards_per_player(slcstich.get().len()+hand_size_internal(ahand));
-        for stich in slcstich.get().iter() {
+        //TODO assert!(ahand_vecstich_card_count_is_compatible(slcstich, ahand, ekurzlang));
+        for stich in slcstich.iter() {
             self.write_all(b"<td>\n");
             let epi_0 = self.epi;
-            self.write_all(Self::player_table(epi_0, |epi| Self::output_card(stich[epi], epi==stich.first_playerindex())).as_bytes());
+            self.write_all(Self::player_table(epi_0, |epi| stich.get(epi).map(|card| Self::output_card(*card, epi==stich.first_playerindex()))).as_bytes());
             self.write_all(b"</td>\n");
         }
         let str_table_hands = format!(
@@ -137,9 +134,9 @@ impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
             Self::player_table(self.epi, |epi| {
                 let mut veccard = ahand[epi].cards().clone();
                 self.rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
-                veccard.into_iter()
+                Some(veccard.into_iter()
                     .map(|card| Self::output_card(card, /*b_border*/false))
-                    .join("")
+                    .join(""))
             }),
         );
         self.write_all(str_table_hands.as_bytes());
@@ -155,11 +152,11 @@ impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
 }
 
 pub fn explore_snapshots<ForEachSnapshot>(
-    ahand: &EnumMap<EPlayerIndex, SHand>,
+    epi_self: EPlayerIndex,
+    ahand: &mut EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
-    vecstich: &mut SVecStichPushPop,
-    stich_current_model: &SStich,
-    func_filter_successors: &impl Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
+    slcstich: &mut SVecStichPushPop,
+    func_filter_allowed_cards: &impl Fn(&[SStich], &mut SHandVector),
     foreachsnapshot: &mut ForEachSnapshot,
     ostr_file_out: Option<&str>,
 ) -> ForEachSnapshot::Output 
@@ -169,11 +166,11 @@ pub fn explore_snapshots<ForEachSnapshot>(
 {
     macro_rules! forward_to_internal{($snapshotvisualizer: expr) => {
         explore_snapshots_internal(
+            epi_self,
             ahand,
             rules,
-            vecstich,
-            stich_current_model,
-            func_filter_successors,
+            slcstich,
+            func_filter_allowed_cards,
             foreachsnapshot,
             $snapshotvisualizer,
         )
@@ -182,12 +179,12 @@ pub fn explore_snapshots<ForEachSnapshot>(
         forward_to_internal!(&mut SForEachSnapshotHTMLVisualizer::new(
             verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap(),
             rules,
-            verify!(stich_current_model.current_playerindex()).unwrap(),
+            epi_self,
         ))
     } else {
         struct SNoVisualization;
         impl TSnapshotVisualizer for SNoVisualization {
-            fn begin_snapshot(&mut self, _slcstich: SCompletedStichs, _ahand: &EnumMap<EPlayerIndex, SHand>, _slcstich_successor: &[SStich]) {}
+            fn begin_snapshot(&mut self, _slcstich: &[SStich], _ahand: &EnumMap<EPlayerIndex, SHand>, _slccard_allowed: &[SCard]) {}
             fn end_snapshot<Output: fmt::Debug>(&mut self, _output: &Output) {}
         }
         forward_to_internal!(&mut SNoVisualization{})
@@ -196,11 +193,11 @@ pub fn explore_snapshots<ForEachSnapshot>(
 
 // TODO Maybe something like payout_hint is useful to prune suspicion tree
 fn explore_snapshots_internal<ForEachSnapshot>(
-    ahand: &EnumMap<EPlayerIndex, SHand>,
+    epi_self: EPlayerIndex,
+    ahand: &mut EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
     vecstich: &mut SVecStichPushPop,
-    stich_current_model: &SStich,
-    func_filter_successors: &impl Fn(&[SStich] /*vecstich_complete*/, &mut Vec<SStich>/*vecstich_successor*/),
+    func_filter_allowed_cards: &impl Fn(&[SStich], &mut SHandVector),
     foreachsnapshot: &ForEachSnapshot,
     snapshotvisualizer: &mut impl TSnapshotVisualizer,
 ) -> ForEachSnapshot::Output 
@@ -208,136 +205,57 @@ fn explore_snapshots_internal<ForEachSnapshot>(
         ForEachSnapshot: TForEachSnapshot,
         ForEachSnapshot::Output : fmt::Debug,
 {
-    if let Some(output) = foreachsnapshot.pruned_output(vecstich, &ahand) {
-        snapshotvisualizer.begin_snapshot(vecstich.get(), &ahand, /*vecstich_successor*/&Vec::new());
+    if ahand.iter().all(|hand| hand.cards().is_empty()) {
+        let slcstich_game_finished = completed_stichs(vecstich.get());
+        assert!(slcstich_game_finished.get().iter().all(SStich::is_full));
+        snapshotvisualizer.begin_snapshot(vecstich.get(), &ahand, /*slccard_allowed*/&Vec::new());
+        let output = foreachsnapshot.final_output(SGameFinishedStiche::new(
+            slcstich_game_finished.get(),
+            EKurzLang::from_cards_per_player(slcstich_game_finished.get().len())
+        ));
+        snapshotvisualizer.end_snapshot(&output);
+        output
+    } else if let Some(output) = foreachsnapshot.pruned_output(vecstich.get(), &ahand) {
+        snapshotvisualizer.begin_snapshot(vecstich.get(), &ahand, /*slccard_allowed*/&Vec::new());
         snapshotvisualizer.end_snapshot(&output);
         output
     } else {
-        let mut vecstich_successor : Vec<SStich> = Vec::new();
-        assert!(1<hand_size_internal(&ahand)); // otherwise, pruned_output must return Some(output)
-        {
-            let epi_first = stich_current_model.first_playerindex();
-            vecstich.push_pop(SStich::new(epi_first), |mut vecstich| {
-                let offset_to_playerindex = move |i_offset: usize| {epi_first.wrapping_add(i_offset)};
-                macro_rules! traverse_valid_cards {($i_offset : expr, $func: expr) => {
-                    // TODO use equivalent card optimization
-                    for card in rules.all_allowed_cards(vecstich.get(), &ahand[offset_to_playerindex($i_offset)]) {
-                        current_stich_mut(vecstich.get_mut()).push(card);
-                        assert_eq!(card, current_stich(vecstich.get())[offset_to_playerindex($i_offset)]);
-                        $func;
-                        current_stich_mut(vecstich.get_mut()).undo_most_recent();
-                    }
-                };};
-                // It seems that this nested loop is the ai's bottleneck
-                // because it is currently designed to be generic for all rules.
-                // It may be more performant to have TRules::all_possible_stichs
-                // so that we can implement rule-specific optimizations.
-                traverse_valid_cards!(0, {
-                    traverse_valid_cards!(1, {
-                        traverse_valid_cards!(2, {
-                            traverse_valid_cards!(3, {
-                                let stich_current = current_stich(vecstich.get());
-                                if stich_current.equal_up_to_size(stich_current_model, stich_current_model.size()) {
-                                    vecstich_successor.push(stich_current.clone());
-                                }
-                            } );
-                        } );
-                    } );
-                } );
-            });
-            assert!(!vecstich_successor.is_empty());
-            func_filter_successors(vecstich.get().get(), &mut vecstich_successor);
-            assert!(!vecstich_successor.is_empty());
-        }
-        snapshotvisualizer.begin_snapshot(vecstich.get(), &ahand, &vecstich_successor);
-        let output = foreachsnapshot.end_snapshot(
-            vecstich_successor.into_iter()
-                .map(|stich| {
-                    let output_successor = vecstich.push_pop(stich.clone(), |vecstich| {
-                        explore_snapshots_internal(
-                            &EPlayerIndex::map_from_fn(|epi| {
-                                ahand[epi].new_from_hand(stich[epi])
-                            }),
-                            rules,
-                            &mut vecstich.into_pushpop(),
-                            &SStich::new(rules.winner_index(&stich)),
-                            func_filter_successors,
-                            foreachsnapshot,
-                            snapshotvisualizer,
-                        )
-                    });
-                    (stich, output_successor)
-                })
+        let epi_current = verify!(current_stich(vecstich.get()).current_playerindex()).unwrap();
+        let mut veccard_allowed = rules.all_allowed_cards(vecstich.get(), &ahand[epi_current]);
+        func_filter_allowed_cards(vecstich.get(), &mut veccard_allowed);
+        // TODO? use equivalent card optimization
+        snapshotvisualizer.begin_snapshot(vecstich.get(), ahand, &veccard_allowed);
+        let output = foreachsnapshot.combine_outputs(
+            epi_self,
+            epi_current,
+            veccard_allowed.into_iter().map(|card| {
+                ahand[epi_current].play_card(card);
+                let output = vecstich.push_pop(card, rules, |mut vecstich| {
+                    explore_snapshots_internal(
+                        epi_self,
+                        ahand,
+                        rules,
+                        &mut vecstich,
+                        func_filter_allowed_cards,
+                        foreachsnapshot,
+                        snapshotvisualizer,
+                    )
+                });
+                ahand[epi_current].add_card(card);
+                (card, output)
+            })
         );
         snapshotvisualizer.end_snapshot(&output);
         output
     }
 }
 
-fn pruned_output_internal(
-    rules: &TRules,
-    epi: EPlayerIndex,
-    tpln_stoss_doubling: (usize, usize),
-    n_stock: isize,
-    vecstich: &mut SVecStichPushPop,
-    ahand: &EnumMap<EPlayerIndex, SHand>,
-) -> Option<(SCard, isize)> {
-    if 1==hand_size_internal(ahand) {
-        assert!(!vecstich.get().get().is_empty());
-        let epi_first = rules.winner_index(current_stich(vecstich.get().get()));
-        vecstich.push_pop(
-            SStich::new_full(
-                epi_first,
-                EPlayerIndex::map_from_fn(|epi_stich|
-                    ahand[epi_first.wrapping_add(epi_stich.to_usize())].cards()[0]
-                ).into_raw(),
-            ),
-            |vecstich| {
-                Some((
-                    ahand[epi].cards()[0],
-                    rules.payout(
-                        SGameFinishedStiche::new(
-                            vecstich.get(),
-                            EKurzLang::from_cards_per_player(vecstich.get().len())
-                        ),
-                        tpln_stoss_doubling,
-                        n_stock,
-                    ).get_player(epi),
-                ))
-            },
-        )
+fn end_snapshot_minmax<ItTplCardNPayout: Iterator<Item=(SCard, isize)>>(epi_self: EPlayerIndex, epi_card: EPlayerIndex, ittplcardn_payout: ItTplCardNPayout) -> isize {
+    verify!(if epi_self==epi_card {
+        ittplcardn_payout.max_by_key(|&(_card, n_payout)| n_payout)
     } else {
-        assert!(0 < hand_size_internal(ahand));
-        None
-    }
-}
-
-fn end_snapshot_minmax<ItTplStichNPayout: Iterator<Item=(SStich, (SCard, isize))>>(epi: EPlayerIndex, ittplstichn_payout: ItTplStichNPayout) -> (SCard, isize) {
-    verify!(ittplstichn_payout
-        .group_by(|&(ref stich, _n_payout)| { // other players may play inconveniently for epi...
-            assert!(stich.is_full());
-            type SStichKeyBeforeEpi = ArrayVec<[SCard; 4]>;
-            static_assert!(debug_assert(stich.size() <= SStichKeyBeforeEpi::new().capacity()));
-            stich.iter()
-                .take_while(|&(epi_stich, _card)| epi_stich != epi)
-                .map(|(_epi, card)| *card)
-                .collect::<SStichKeyBeforeEpi>()
-        })
-        .into_iter()
-        .map(|(_stich_key_before_epi, grpstichn_before_epi)| {
-            verify!(grpstichn_before_epi
-                .group_by(|&(ref stich, _n_payout)| stich[epi])
-                .into_iter()
-                .map(|(_stich_key_epi, grpstichn_epi)| {
-                    // in this group, we need the worst case if other players play badly
-                    verify!(grpstichn_epi.min_by_key(|&(ref _stich, (_card, n_payout))| n_payout)).unwrap()
-                })
-                .max_by_key(|&(ref _stich, (_card, n_payout))| n_payout))
-                .unwrap()
-        })
-        .min_by_key(|&(ref _stich, (_card, n_payout))| n_payout)
-        .map(|(stich, (_card, n_payout))| (stich[epi], n_payout)))
-        .unwrap()
+        ittplcardn_payout.min_by_key(|&(_card, n_payout)| n_payout) // other players may play inconveniently for epi_stich
+    }).unwrap().1
 }
 
 #[derive(new, Clone)]
@@ -363,17 +281,23 @@ impl<'rules> SMinReachablePayoutParams<'rules> {
 pub struct SMinReachablePayout<'rules>(pub SMinReachablePayoutParams<'rules>);
 
 impl TForEachSnapshot for SMinReachablePayout<'_> {
-    type Output = (SCard, isize);
+    type Output = isize;
 
-    fn pruned_output(&self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
-        pruned_output_internal(self.0.rules, self.0.epi, self.0.tpln_stoss_doubling, self.0.n_stock, vecstich, ahand)
+    fn final_output(&self, slcstich: SGameFinishedStiche) -> Self::Output {
+        self.0.rules.payout(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock).get_player(self.0.epi)
     }
 
-    fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
+    fn pruned_output(&self, _slcstich: &[SStich], _ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+        None
+    }
+
+    fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
         &self,
-        ittplstichoutput: ItTplStichOutput,
+        epi_self: EPlayerIndex,
+        epi_card: EPlayerIndex,
+        ittplcardoutput: ItTplCardOutput,
     ) -> Self::Output {
-        end_snapshot_minmax(self.0.epi, ittplstichoutput)
+        end_snapshot_minmax(epi_self, epi_card, ittplcardoutput)
     }
 }
 
@@ -381,39 +305,28 @@ impl TForEachSnapshot for SMinReachablePayout<'_> {
 pub struct SMinReachablePayoutLowerBoundViaHint<'rules>(pub SMinReachablePayoutParams<'rules>);
 
 impl TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'_> {
-    type Output = (SCard, isize);
+    type Output = isize;
 
-    fn pruned_output(&self, vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
-        pruned_output_internal(self.0.rules, self.0.epi, self.0.tpln_stoss_doubling, self.0.n_stock, vecstich, ahand)
-            .map_or_else(
-                /*default*/|| {
-                    assert!(0 < hand_size_internal(ahand));
-                    let payouthint = self.0.rules.payouthints(
-                        vecstich.get().get(),
-                        ahand,
-                    )[self.0.epi].clone(); // TODO can't we move out of array?
-                    match payouthint.lower_bound() {
-                        None => None,
-                        Some(payoutinfo) => {
-                            let n_payout = payoutinfo.payout_including_stock(self.0.n_stock, self.0.tpln_stoss_doubling);
-                            if_then_option!(
-                                0<n_payout,
-                                (
-                                    *verify!(ahand[self.0.epi].cards().first()).unwrap(), // TODO can we improve choice?
-                                    n_payout,
-                                )
-                            )
-                        }
-                    }
-                },
-                Some, // re-wrap contained payout into Some
-            )
+    fn final_output(&self, slcstich: SGameFinishedStiche) -> Self::Output {
+        self.0.rules.payout(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock).get_player(self.0.epi)
     }
 
-    fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
+    fn pruned_output(&self, slcstich: &[SStich], ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+        self.0.rules.payouthints(slcstich, ahand)[self.0.epi]
+            .lower_bound()
+            .clone() // TODO really needed?
+            .and_then(|payoutinfo| {
+                let n_payout = payoutinfo.payout_including_stock(self.0.n_stock, self.0.tpln_stoss_doubling);
+                if_then_option!(0<n_payout, n_payout)
+            })
+    }
+
+    fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
         &self,
-        ittplstichoutput: ItTplStichOutput,
+        epi_self: EPlayerIndex,
+        epi_card: EPlayerIndex,
+        ittplcardoutput: ItTplCardOutput,
     ) -> Self::Output {
-        end_snapshot_minmax(self.0.epi, ittplstichoutput)
+        end_snapshot_minmax(epi_self, epi_card, ittplcardoutput)
     }
 }

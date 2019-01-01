@@ -54,39 +54,36 @@ impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
     }
 }
 
-fn make_handiterator<NextVecEPI: TNextVecEPI>(slcstich: SCompletedStichs, hand_fixed: SHand, epi_fixed: EPlayerIndex, ekurzlang: EKurzLang) -> SHandIterator<NextVecEPI> {
-    let veccard_unknown = unplayed_cards(slcstich.get(), &hand_fixed, ekurzlang).collect::<Vec<_>>();
-    let n_cards_total = veccard_unknown.len();
-    assert_eq!(n_cards_total%3, 0);
-    let n_cards_per_player = n_cards_total / 3;
+fn make_handiterator<NextVecEPI: TNextVecEPI>(slcstich: &[SStich], hand_fixed: SHand, epi_fixed: EPlayerIndex, ekurzlang: EKurzLang) -> SHandIterator<NextVecEPI> {
+    completed_stichs(slcstich); // asserts invariants. TODO introduce SStichSequence
+    let veccard_unknown = unplayed_cards(slcstich, &hand_fixed, ekurzlang).collect::<Vec<_>>();
+    let mapepin_cards_per_hand = remaining_cards_per_hand(slcstich, ekurzlang);
+    let mut vecepi = Vec::new();
+    for epi in EPlayerIndex::values() {
+        if epi==epi_fixed {
+            assert_eq!(mapepin_cards_per_hand[epi], hand_fixed.cards().len());
+        } else {
+            vecepi.extend(std::iter::repeat(epi).take(mapepin_cards_per_hand[epi]));
+        }
+    }
+    assert_eq!(veccard_unknown.len(), vecepi.len());
     SHandIterator {
         epi_fixed,
         veccard_unknown,
-        vecepi: (0..n_cards_total)
-            .map(|i| {
-                let n_epi = i/n_cards_per_player;
-                assert!(n_epi<=2);
-                EPlayerIndex::from_usize(if n_epi<epi_fixed.to_usize() {
-                    n_epi
-                } else {
-                    n_epi + 1
-                })
-                
-            })
-            .collect(),
+        vecepi,
         hand_known: hand_fixed,
         b_valid: true, // in the beginning, there should be a valid assignment of cards to players
         phantom: std::marker::PhantomData,
     }
 }
 
-pub fn all_possible_hands(slcstich: SCompletedStichs, hand_fixed: SHand, epi_fixed: EPlayerIndex, ekurzlang: EKurzLang) -> SHandIterator<SNextVecEPIPermutation> {
+pub fn all_possible_hands(slcstich: &[SStich], hand_fixed: SHand, epi_fixed: EPlayerIndex, ekurzlang: EKurzLang) -> SHandIterator<SNextVecEPIPermutation> {
     let ithand = make_handiterator(slcstich, hand_fixed, epi_fixed, ekurzlang);
     assert!(ithand.vecepi.iter().is_sorted());
     ithand
 }
 
-pub fn forever_rand_hands(slcstich: SCompletedStichs, hand_fixed: SHand, epi_fixed: EPlayerIndex, ekurzlang: EKurzLang) -> SHandIterator<SNextVecEPIShuffle> {
+pub fn forever_rand_hands(slcstich: &[SStich], hand_fixed: SHand, epi_fixed: EPlayerIndex, ekurzlang: EKurzLang) -> SHandIterator<SNextVecEPIShuffle> {
     let mut ithand = make_handiterator(slcstich, hand_fixed, epi_fixed, ekurzlang);
     assert!(ithand.vecepi.iter().is_sorted());
     SNextVecEPIShuffle::next(&mut ithand.vecepi); // initial shuffle
@@ -96,29 +93,60 @@ pub fn forever_rand_hands(slcstich: SCompletedStichs, hand_fixed: SHand, epi_fix
 #[test]
 fn test_all_possible_hands() {
     use crate::card::card_values::*;
-    let acard_to_stich = |acard: [SCard; 4]| {
-        SStich::new_full(/*epi_first irrelevant*/EPlayerIndex::EPI0, acard)
-    };
-    let mut vecstich = [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8]].into_iter()
-        .map(|acard| acard_to_stich(*acard))
-        .collect::<Vec<_>>();
-    let mut add_stich_and_test = |acard_stich, slccard_hand: &[SCard], n_count, an_size_hand| {
-        vecstich.push(acard_to_stich(acard_stich));
-        let mut i_hand = 0;
-        for ahand in all_possible_hands(
-            SCompletedStichs::new(&vecstich),
-            SHand::new_from_vec(slccard_hand.iter().cloned().collect()),
-            EPlayerIndex::EPI0, // epi_fixed
-            EKurzLang::Lang,
-        ) {
-            i_hand+=1;
-            assert_eq!(EnumMap::from_raw(an_size_hand), ahand.map(|hand| hand.cards().len()));
+    let mut vecstich = Vec::new();
+    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8]].into_iter() {
+        vecstich.push(SStich::new(/*epi_first irrelevant*/EPlayerIndex::EPI0));
+        completed_stichs(&vecstich); // asserts invariants. TODO introduce SStichSequence
+        assert!(!current_stich(&vecstich).is_full());
+        for card in acard_stich {
+            current_stich_mut(&mut vecstich).push(*card);
         }
-        assert_eq!(i_hand, n_count);
-    };
-    // 3*n unknown cards distributed among three players: binomial(3n,3)*binomial(2n,n) possibilities
-    add_stich_and_test([E9, EK, E8, EA], &[GK, SK, SA], 1680, [3, 3, 3, 3]);
-    add_stich_and_test([SA, EU, SO, HA], &[GK, SK], 90, [2, 2, 2, 2]);
-    add_stich_and_test([H9, GZ, GU, GK], &[SK], 6, [1, 1, 1, 1]);
+    }
+    // see combinatorics.ods for computation of n_hand_count
+    let epi_fixed = EPlayerIndex::EPI3;
+    for atplcardslccardnan in [
+        [
+            (E9, vec![EA, GK, SK, SA], 34650, [4, 4, 4, 4]),
+            (EK, vec![EA, GK, SK, SA], 11550, [3, 4, 4, 4]),
+            (E8, vec![EA, GK, SK, SA], 4200,  [3, 3, 4, 4]),
+            (EA, vec![EA, GK, SK, SA], 1680,  [3, 3, 3, 4]),
+        ],
+        [
+            (SA, vec![HA, GK, SK], 1680, [3, 3, 3, 3]),
+            (EU, vec![HA, GK, SK], 560,  [2, 3, 3, 3]),
+            (SO, vec![HA, GK, SK], 210,  [2, 2, 3, 3]),
+            (HA, vec![HA, GK, SK], 90,   [2, 2, 2, 3]),
+        ],
+        [
+            (H9, vec![GK, SK], 90, [2, 2, 2, 2]),
+            (GZ, vec![GK, SK], 30, [1, 2, 2, 2]),
+            (GU, vec![GK, SK], 12, [1, 1, 2, 2]),
+            (GK, vec![GK, SK], 6,  [1, 1, 1, 2]),
+        ],
+        [
+            (EZ, vec![SK], 6, [1, 1, 1, 1]),
+            (SZ, vec![SK], 2, [0, 1, 1, 1]),
+            (E7, vec![SK], 1, [0, 0, 1, 1]),
+            (SK, vec![SK], 1, [0, 0, 0, 1]),
+        ],
+    ].into_iter() {
+        vecstich.push(SStich::new(/*epi_first irrelevant*/EPlayerIndex::EPI0));
+        for (card, veccard_hand, n_hand_count, an_size_hand) in atplcardslccardnan {
+            completed_stichs(&vecstich); // asserts invariants. TODO introduce SStichSequence
+            assert!(!current_stich(&vecstich).is_full());
+            let mut i_hand = 0;
+            for ahand in all_possible_hands(
+                &vecstich,
+                SHand::new_from_vec(veccard_hand.iter().cloned().collect()),
+                epi_fixed,
+                EKurzLang::Lang,
+            ) {
+                i_hand+=1;
+                assert_eq!(EnumMap::from_raw(an_size_hand.clone()), ahand.map(|hand| hand.cards().len()));
+            }
+            assert_eq!(i_hand, *n_hand_count);
+            current_stich_mut(&mut vecstich).push(*card);
+        }
+    }
 }
 

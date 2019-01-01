@@ -1,5 +1,6 @@
 use crate::primitives::*;
 use crate::util::*;
+use crate::rules::*;
 
 // thin wrappers ensuring invariants
 
@@ -43,44 +44,33 @@ impl SCompletedStichs<'_> {
     }
 }
 
+#[derive(new)]
 pub struct SVecStichPushPop<'vecstich>(&'vecstich mut Vec<SStich>); // TODO generalize
-pub struct SVecStichPushPopTmp<'vecstich>(&'vecstich mut Vec<SStich>);
 
 impl<'vecstich> SVecStichPushPop<'vecstich> {
-    pub fn new(vecstich: &'vecstich mut Vec<SStich>) -> Self {
-        assert!(vecstich.iter().all(SStich::is_full));
-        SVecStichPushPop(vecstich)
-    }
-
-    pub fn push_pop<Func, R>(&mut self, stich: SStich, func: Func) -> R
+    pub fn push_pop<F, R>(&mut self, card: SCard, rules: &TRules, func: F) -> R
         where
-            for<'vecstichtmp> Func: FnOnce(SVecStichPushPopTmp<'vecstichtmp>) -> R,
+            for<'inner> F: FnOnce(SVecStichPushPop<'inner>)->R
     {
-        let n_stich = self.0.len();
-        assert!(self.0.iter().all(SStich::is_full));
-        self.0.push(stich);
-        let r = func(SVecStichPushPopTmp(self.0));
-        verify!(self.0.pop()).unwrap();
-        assert!(self.0.iter().all(SStich::is_full));
-        assert_eq!(n_stich, self.0.len());
+        let n_len = self.0.len();
+        assert!(!current_stich(&self.0).is_full());
+        current_stich_mut(&mut self.0).push(card);
+        if current_stich(&self.0).is_full() {
+            self.0.push(SStich::new(rules.winner_index(current_stich(&self.0))));
+            assert!(current_stich(&self.0).is_empty());
+        }
+        let r = func(SVecStichPushPop::new(&mut self.0));
+        if current_stich(&self.0).is_empty() {
+            verify!(self.0.pop()).unwrap();
+            assert!(current_stich(&self.0).is_full());
+        }
+        current_stich_mut(&mut self.0).undo_most_recent();
+        assert!(!current_stich(&self.0).is_full());
+        assert_eq!(n_len, self.0.len());
         r
     }
 
-    pub fn get(&self) -> SCompletedStichs {
-        SCompletedStichs::new(self.0)
-    }
-}
-
-impl<'vecstich> SVecStichPushPopTmp<'vecstich> {
-    pub fn into_pushpop(self) -> SVecStichPushPop<'vecstich> {
-        SVecStichPushPop::new(self.0)
-    }
-
     pub fn get(&self) -> &[SStich] {
-        self.0
-    }
-
-    pub fn get_mut(&mut self) -> &mut [SStich] {
         self.0
     }
 }

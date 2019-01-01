@@ -89,11 +89,10 @@ fn detect_expensive_all_possible_hands() {
     game_loop_cli(
         &EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
             /*fn_check_ask_for_card*/|game| {
-                let slcstich = game.completed_stichs();
-                if game.kurzlang().cards_per_player() - 4 < slcstich.get().len() {
+                if game.kurzlang().cards_per_player() - 4 < game.completed_stichs().get().len() {
                     let epi_fixed = verify!(game.current_stich().current_playerindex()).unwrap();
                     let vecahand = all_possible_hands(
-                        slcstich,
+                        &game.vecstich,
                         game.ahand[epi_fixed].clone(),
                         epi_fixed,
                         game.kurzlang(),
@@ -114,26 +113,31 @@ fn detect_expensive_all_possible_hands() {
                         );
                     };
                     assert_bound(vecahand.len(), 2000);
-                    for ahand in vecahand {
+                    for mut ahand in vecahand {
                         struct SLeafCounter;
                         impl TForEachSnapshot for SLeafCounter {
                             type Output = usize;
-                            fn pruned_output(&self, _vecstich: &mut SVecStichPushPop, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
-                                if_then_option!(1==hand_size_internal(ahand), 1) // exactly 1 leaf if hands offer only 1 card
+                            fn final_output(&self, _slcstich: SGameFinishedStiche) -> Self::Output {
+                                1 // leaf
                             }
-                            fn end_snapshot<ItTplStichOutput: Iterator<Item=(SStich, Self::Output)>>(
+                            fn pruned_output(&self, _slcstich: &[SStich], _ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+                                None
+                            }
+                            fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
                                 &self,
-                                ittplstichoutput: ItTplStichOutput,
+                                _epi_self: EPlayerIndex,
+                                _epi_card: EPlayerIndex,
+                                ittplcardoutput: ItTplCardOutput,
                             ) -> Self::Output {
-                                ittplstichoutput.map(|tplstichoutput| tplstichoutput.1).sum()
+                                ittplcardoutput.map(|tplcardoutput| tplcardoutput.1).sum()
                             }
                         }
                         assert_bound(
                             explore_snapshots(
-                                &ahand,
+                                EPlayerIndex::EPI0, // TODO do this for all EPlayerIndex::values()?
+                                &mut ahand,
                                 game.rules.as_ref(),
-                                &mut SVecStichPushPop::new(&mut game.completed_stichs().get().to_vec()),
-                                game.current_stich(),
+                                &mut SVecStichPushPop::new(&mut game.vecstich.clone()),
                                 &|_vecstich_complete, _vecstich_successor| {/*no filtering*/},
                                 &mut SLeafCounter{},
                                 /*ostr_file_out*/None,

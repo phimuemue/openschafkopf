@@ -34,6 +34,10 @@ impl SHand {
     pub fn play_card(&mut self, card_played: SCard) {
         self.veccard.retain(|&mut card| card!=card_played)
     }
+    pub fn add_card(&mut self, card: SCard) {
+        assert!(!self.contains(card));
+        self.veccard.push(card)
+    }
 
     pub fn cards(&self) -> &SHandVector {
         &self.veccard
