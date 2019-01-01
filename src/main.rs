@@ -199,35 +199,33 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, 
         match stockorgame {
             VStockOrT::OrT(mut game) => {
                 while let Some(gameaction)=game.which_player_can_do_something() {
-                    || -> () { // TODO get rid of this closure
-                        if !gameaction.1.is_empty() {
-                            if let Some(epi_stoss) = gameaction.1.iter()
-                                .find(|epi| {
-                                    communicate_via_channel(|txb_stoss| {
-                                        aplayer[**epi].ask_for_stoss(
-                                            **epi,
-                                            &game.doublings,
-                                            game.rules.as_ref(),
-                                            &game.ahand[**epi],
-                                            &game.vecstoss,
-                                            game.n_stock,
-                                            txb_stoss,
-                                        );
-                                    })
+                    if !gameaction.1.is_empty() {
+                        if let Some(epi_stoss) = gameaction.1.iter()
+                            .find(|epi| {
+                                communicate_via_channel(|txb_stoss| {
+                                    aplayer[**epi].ask_for_stoss(
+                                        **epi,
+                                        &game.doublings,
+                                        game.rules.as_ref(),
+                                        &game.ahand[**epi],
+                                        &game.vecstoss,
+                                        game.n_stock,
+                                        txb_stoss,
+                                    );
                                 })
-                            {
-                                verify!(game.stoss(*epi_stoss)).unwrap();
-                                return;
-                            }
+                            })
+                        {
+                            verify!(game.stoss(*epi_stoss)).unwrap();
+                            continue;
                         }
-                        let card = communicate_via_channel(|txcard| {
-                            aplayer[gameaction.0].ask_for_card(
-                                &game,
-                                txcard.clone()
-                            );
-                        });
-                        verify!(game.zugeben(card, gameaction.0)).unwrap();
-                    }();
+                    }
+                    let card = communicate_via_channel(|txcard| {
+                        aplayer[gameaction.0].ask_for_card(
+                            &game,
+                            txcard.clone()
+                        );
+                    });
+                    verify!(game.zugeben(card, gameaction.0)).unwrap();
                 }
                 accountbalance.apply_payout(&verify!(game.finish()).unwrap().accountbalance);
             },
