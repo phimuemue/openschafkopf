@@ -125,50 +125,6 @@ impl TAi for SAiCheating {
     }
 }
 
-pub fn is_compatible_with_game_so_far(
-    ahand: &EnumMap<EPlayerIndex, SHand>,
-    rules: &TRules,
-    stichseq: &SStichSequence,
-    ekurzlang: EKurzLang,
-) -> bool {
-    let stich_current = stichseq.current_stich();
-    let slcstich_complete = stichseq.completed_stichs();
-    assert!(!stich_current.is_full());
-    assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand, ekurzlang));
-    // hands must not contain other cards preventing farbe/trumpf frei
-    let mut ahand_simulate = EPlayerIndex::map_from_fn(|epi| {
-        let mut veccard = ahand[epi].cards().clone();
-        veccard.extend(stich_current.get(epi).cloned().into_iter());
-        veccard.extend(slcstich_complete.get().iter().rev().map(|stich| stich[epi]));
-        assert_eq!(veccard.len(), ekurzlang.cards_per_player());
-        SHand::new_from_vec(veccard)
-    });
-    rules.playerindex().map_or(true, |epi_active|
-        rules.can_be_played(SFullHand::new(&ahand_simulate[epi_active], ekurzlang))
-    )
-    && {
-        let mut b_valid_up_to_now = true;
-        let mut stichseq_simulate = SStichSequence::new(stichseq.first_playerindex(), stichseq.kurzlang());
-        'loopstich: for stich in stichseq.visible_stichs() {
-            for (epi, card) in stich.iter() {
-                if rules.card_is_allowed(
-                    &stichseq_simulate,
-                    &ahand_simulate[epi],
-                    *card
-                ) {
-                    assert!(ahand_simulate[epi].contains(*card));
-                    ahand_simulate[epi].play_card(*card);
-                    stichseq_simulate.zugeben(*card, rules);
-                } else {
-                    b_valid_up_to_now = false;
-                    break 'loopstich;
-                }
-            }
-        }
-        b_valid_up_to_now
-    }
-}
-
 fn determine_best_card_internal(
     game: &SGame,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
@@ -263,7 +219,7 @@ impl TAi for SAiSimulating {
         let n_payout_sum = Arc::new(AtomicIsize::new(0));
         let ekurzlang = EKurzLang::from_cards_per_player(hand_fixed.get().cards().len());
         verify!(crossbeam::scope(|scope| {
-            for mut ahand in forever_rand_hands(&SStichSequence::new(epi_first, ekurzlang), hand_fixed.get().clone(), epi_rank, ekurzlang).take(self.n_rank_rules_samples) {
+            for mut ahand in forever_rand_hands2(&SStichSequence::new(epi_first, ekurzlang), hand_fixed.get().clone(), epi_rank, ekurzlang, rules).take(self.n_rank_rules_samples) {
                 let n_payout_sum = Arc::clone(&n_payout_sum);
                 scope.spawn(move |_scope| {
                     let n_payout = explore_snapshots(
@@ -300,16 +256,14 @@ impl TAi for SAiSimulating {
         if hand_fixed.cards().len()<=2 {
             determine_best_card(
                 game,
-                all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang())
-                    .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.stichseq, game.kurzlang())),
+                all_possible_hands2(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang(), game.rules.as_ref()),
                 self.n_suggest_card_branches,
                 ostr_file_out,
             )
         } else if hand_fixed.cards().len()<=5 {
             let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
                 game,
-                forever_rand_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang())
-                    .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.stichseq, game.kurzlang()))
+                forever_rand_hands2(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang(), game.rules.as_ref())
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
                 &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
@@ -321,8 +275,7 @@ impl TAi for SAiSimulating {
         } else {
             determine_best_card(
                 game,
-                forever_rand_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang())
-                    .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.stichseq, game.kurzlang()))
+                forever_rand_hands2(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang(), game.rules.as_ref())
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
                 ostr_file_out,
@@ -374,13 +327,13 @@ fn test_is_compatible_with_game_so_far() {
                     oassertnotfrei = Some((epi, trumpforfarbe));
                 }
             }
-            for ahand in forever_rand_hands(
+            for ahand in forever_rand_hands2(
                 &game.stichseq,
                 game.ahand[verify!(game.which_player_can_do_something()).unwrap().0].clone(),
                 verify!(game.which_player_can_do_something()).unwrap().0,
                 game.kurzlang(),
+                game.rules.as_ref(),
             )
-                .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.stichseq, game.kurzlang()))
                 .take(100)
             {
                 for epi in EPlayerIndex::values() {
@@ -461,14 +414,13 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             verify!(game.zugeben(*card, epi)).unwrap();
         }
     }
-    for ahand in all_possible_hands(
+    for ahand in all_possible_hands2(
         &game.stichseq,
         game.ahand[epi_first_and_active_player].clone(),
         epi_first_and_active_player,
         game.kurzlang(),
-    )
-        .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.stichseq, game.kurzlang()))
-    {
+        game.rules.as_ref(),
+    ) {
         let (veccard_allowed, mapcardpayout) = determine_best_card_internal(
             &game,
             Some(ahand).into_iter(),

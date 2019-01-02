@@ -7,7 +7,7 @@ use crate::rules::{
 use crate::game::*;
 use crate::ai::{
     *,
-    handiterators::forever_rand_hands,
+    handiterators::forever_rand_hands2,
     suspicion::{explore_snapshots, SMinReachablePayout, SMinReachablePayoutParams},
 };
 use crate::util::*;
@@ -88,8 +88,7 @@ impl TPlayer for SPlayerComputer {
     ) {
         let n_samples_per_stoss = 5; // TODO move to ai, make adjustable
         let ekurzlang = EKurzLang::from_cards_per_player(hand.cards().len());
-        let mut vecpairahandf_suspicion = forever_rand_hands(/*stichseq*/&SStichSequence::new(doublings.first_playerindex(), ekurzlang), hand.clone(), epi, ekurzlang)
-            .filter(|ahand| is_compatible_with_game_so_far(ahand, rules, /*stichseq*/&SStichSequence::new(doublings.epi_first, ekurzlang), ekurzlang)) // stoss currently only in SPreGame
+        let mut vecpairahandf_suspicion = forever_rand_hands2(/*stichseq*/&SStichSequence::new(doublings.first_playerindex(), ekurzlang), hand.clone(), epi, ekurzlang, rules)
             .take(2*n_samples_per_stoss)
             .map(|ahand| {
                 let f_rank_rules = rules.playerindex().map_or(0f64, |epi_active| {

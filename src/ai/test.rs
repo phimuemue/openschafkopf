@@ -91,13 +91,13 @@ fn detect_expensive_all_possible_hands() {
             /*fn_check_ask_for_card*/|game| {
                 if game.kurzlang().cards_per_player() - 4 < game.completed_stichs().get().len() {
                     let epi_fixed = verify!(game.current_playable_stich().current_playerindex()).unwrap();
-                    let vecahand = all_possible_hands(
+                    let vecahand = all_possible_hands2(
                         &game.stichseq,
                         game.ahand[epi_fixed].clone(),
                         epi_fixed,
                         game.kurzlang(),
+                        game.rules.as_ref()
                     )
-                        .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.stichseq, game.kurzlang()))
                         .collect::<Vec<_>>();
                     let assert_bound = |n, n_detect| {
                         assert!(n < n_detect,
