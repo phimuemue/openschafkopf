@@ -23,10 +23,6 @@ use crate::util::*;
 use crate::ai::rulespecific::*;
 use crate::game::SStichSequence;
 
-pub fn current_stich(slcstich: &[SStich]) -> &SStich {
-    verify!(slcstich.last()).unwrap()
-}
-
 #[derive(PartialEq, Eq, Debug)]
 pub enum VTrumpfOrFarbe {
     Trumpf,

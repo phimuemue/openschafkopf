@@ -296,12 +296,12 @@ pub struct SStichSequence {
 impl SStichSequence {
     fn assert_invariant(&self) {
         assert!(!self.vecstich.is_empty());
-        assert!(!current_stich(&self.vecstich).is_full());
+        assert!(!self.current_stich_no_invariant().is_full());
         assert_eq!(self.vecstich[0..self.vecstich.len()-1].len(), self.vecstich.len()-1);
         assert!(self.vecstich[0..self.vecstich.len()-1].iter().all(SStich::is_full));
         assert!(self.completed_stichs_no_invariant().get().len()<=self.ekurzlang.cards_per_player());
         if self.completed_stichs_no_invariant().get().len()==self.ekurzlang.cards_per_player() {
-            assert!(current_stich(&self.vecstich).is_empty());
+            assert!(self.current_stich_no_invariant().is_empty());
         }
     }
 
@@ -332,16 +332,20 @@ impl SStichSequence {
         self.completed_stichs_no_invariant()
     }
 
+    fn current_stich_no_invariant(&self) -> &SStich {
+        verify!(self.vecstich.last()).unwrap()
+    }
+
     pub fn current_stich(&self) -> &SStich {
         self.assert_invariant();
-        current_stich(&self.vecstich)
+        self.current_stich_no_invariant()
     }
 
     pub fn zugeben_custom_winner_index(&mut self, card: SCard, fn_winner_index: impl FnOnce(&SStich)->EPlayerIndex) {
         self.assert_invariant();
         verify!(self.vecstich.last_mut()).unwrap().push(card);
-        if current_stich(&self.vecstich).is_full() {
-            self.vecstich.push(SStich::new(fn_winner_index(current_stich(&self.vecstich))));
+        if self.current_stich_no_invariant().is_full() {
+            self.vecstich.push(SStich::new(fn_winner_index(self.current_stich_no_invariant())));
         }
         self.assert_invariant();
     }
@@ -361,7 +365,7 @@ impl SStichSequence {
         let r = func(self);
         if self.current_stich().is_empty() {
             verify!(self.vecstich.pop()).unwrap();
-            assert!(current_stich(&self.vecstich).is_full());
+            assert!(self.current_stich_no_invariant().is_full());
         }
         verify!(self.vecstich.last_mut()).unwrap().undo_most_recent();
         assert_eq!(n_len, self.vecstich.len());
