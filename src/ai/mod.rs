@@ -120,6 +120,7 @@ impl TAi for SAiCheating {
             game,
             Some(game.ahand.clone()).into_iter(),
             /*n_branches*/1,
+            &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
             ostr_file_out,
         )
     }
@@ -196,12 +197,18 @@ fn determine_best_card_internal(
     (veccard_allowed, mapcardn_payout)
 }
 
-fn determine_best_card(game: &SGame, itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>, n_branches: usize, ostr_file_out: Option<&str>) -> SCard {
+fn determine_best_card(
+    game: &SGame,
+    itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
+    n_branches: usize,
+    foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Send + Clone),
+    ostr_file_out: Option<&str>,
+) -> SCard {
     let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
         game,
         itahand,
         n_branches,
-        &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
+        foreachsnapshot,
         ostr_file_out,
     );
     verify!(veccard_allowed.into_iter()
@@ -255,32 +262,31 @@ impl TAi for SAiSimulating {
         let epi_fixed = verify!(stich_current.current_playerindex()).unwrap();
         let hand_fixed = &game.ahand[epi_fixed];
         assert!(!hand_fixed.cards().is_empty());
-        if hand_fixed.cards().len()<=2 {
+        macro_rules! forward_to_determine_best_card{($itahand: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
             determine_best_card(
                 game,
-                all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang(), game.rules.as_ref()),
+                $itahand,
                 self.n_suggest_card_branches,
+                $foreachsnapshot,
                 ostr_file_out,
             )
+        }}
+        if hand_fixed.cards().len()<=2 {
+            forward_to_determine_best_card!(
+                all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang(), game.rules.as_ref()),
+                &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
+            )
         } else if hand_fixed.cards().len()<=5 {
-            let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
-                game,
+            forward_to_determine_best_card!(
                 forever_rand_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang(), game.rules.as_ref())
                     .take(self.n_suggest_card_samples),
-                self.n_suggest_card_branches,
                 &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
-                ostr_file_out
-            );
-            verify!(veccard_allowed.into_iter()
-                .max_by_key(|card| mapcardn_payout[*card]))
-                .unwrap()
+            )
         } else {
-            determine_best_card(
-                game,
+            forward_to_determine_best_card!(
                 forever_rand_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang(), game.rules.as_ref())
                     .take(self.n_suggest_card_samples),
-                self.n_suggest_card_branches,
-                ostr_file_out,
+                &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
             )
         }
     }
