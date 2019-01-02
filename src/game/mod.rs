@@ -383,7 +383,6 @@ impl SGame {
     }
 
     pub fn zugeben(&mut self, card_played: SCard, epi: EPlayerIndex) -> Result<(), Error> {
-        // returns the EPlayerIndex of the player who is the next in row to do something
         info!("Player {} wants to play {}", epi, card_played);
         if Some(epi)!=self.which_player_can_do_something().map(|gameaction| gameaction.0) {
             bail!("Wrong player index");
