@@ -26,7 +26,7 @@ pub trait TForEachSnapshot {
 }
 
 trait TSnapshotVisualizer {
-    fn begin_snapshot(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, slccard_allowed: &[SCard]);
+    fn begin_snapshot(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>);
     fn end_snapshot<Output: fmt::Debug>(&mut self, output: &Output);
 }
 
@@ -112,7 +112,7 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
 }
 
 impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
-    fn begin_snapshot(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, slccard_allowed: &[SCard]) {
+    fn begin_snapshot(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) {
         let str_item_id = format!("{}{}",
             stichseq.count_played_cards(),
             rand::thread_rng().sample_iter(&rand::distributions::Alphanumeric).take(16).collect::<String>(), // we simply assume no collisions here
@@ -120,7 +120,7 @@ impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
         self.write_all(format!("<li><<input type=\"checkbox\" id=\"{}\" />>\n", str_item_id).as_bytes());
         self.write_all(format!("<label for=\"{}\">{} direct successors<table><tr>\n",
             str_item_id,
-            slccard_allowed.len(),
+            "TODO", // slccard_allowed.len(),
         ).as_bytes());
         //TODO assert!(ahand_vecstich_card_count_is_compatible(slcstich, ahand, ekurzlang));
         for stich in stichseq.visible_stichs() {
@@ -184,7 +184,7 @@ pub fn explore_snapshots<ForEachSnapshot>(
     } else {
         struct SNoVisualization;
         impl TSnapshotVisualizer for SNoVisualization {
-            fn begin_snapshot(&mut self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _slccard_allowed: &[SCard]) {}
+            fn begin_snapshot(&mut self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) {}
             fn end_snapshot<Output: fmt::Debug>(&mut self, _output: &Output) {}
         }
         forward_to_internal!(&mut SNoVisualization{})
@@ -205,49 +205,44 @@ fn explore_snapshots_internal<ForEachSnapshot>(
         ForEachSnapshot: TForEachSnapshot,
         ForEachSnapshot::Output : fmt::Debug,
 {
-    if ahand.iter().all(|hand| hand.cards().is_empty()) {
+    snapshotvisualizer.begin_snapshot(stichseq, &ahand);
+    let output = if ahand.iter().all(|hand| hand.cards().is_empty()) {
         let slcstich_game_finished = stichseq.completed_stichs();
         assert!(slcstich_game_finished.get().iter().all(SStich::is_full));
-        snapshotvisualizer.begin_snapshot(stichseq, &ahand, /*slccard_allowed*/&Vec::new());
-        let output = foreachsnapshot.final_output(SGameFinishedStiche::new(
+        foreachsnapshot.final_output(SGameFinishedStiche::new(
             slcstich_game_finished.get(),
             EKurzLang::from_cards_per_player(slcstich_game_finished.get().len())
-        ));
-        snapshotvisualizer.end_snapshot(&output);
-        output
-    } else if let Some(output) = foreachsnapshot.pruned_output(stichseq, &ahand) {
-        snapshotvisualizer.begin_snapshot(stichseq, &ahand, /*slccard_allowed*/&Vec::new());
-        snapshotvisualizer.end_snapshot(&output);
-        output
+        ))
     } else {
-        let epi_current = verify!(stichseq.current_stich().current_playerindex()).unwrap();
-        let mut veccard_allowed = rules.all_allowed_cards(stichseq, &ahand[epi_current]);
-        func_filter_allowed_cards(stichseq, &mut veccard_allowed);
-        // TODO? use equivalent card optimization
-        snapshotvisualizer.begin_snapshot(stichseq, ahand, &veccard_allowed);
-        let output = foreachsnapshot.combine_outputs(
-            epi_self,
-            epi_current,
-            veccard_allowed.into_iter().map(|card| {
-                ahand[epi_current].play_card(card);
-                let output = stichseq.zugeben_and_restore(card, rules, |stichseq| {
-                    explore_snapshots_internal(
-                        epi_self,
-                        ahand,
-                        rules,
-                        stichseq,
-                        func_filter_allowed_cards,
-                        foreachsnapshot,
-                        snapshotvisualizer,
-                    )
-                });
-                ahand[epi_current].add_card(card);
-                (card, output)
-            })
-        );
-        snapshotvisualizer.end_snapshot(&output);
-        output
-    }
+        foreachsnapshot.pruned_output(stichseq, &ahand).unwrap_or_else(|| {
+            let epi_current = verify!(stichseq.current_stich().current_playerindex()).unwrap();
+            let mut veccard_allowed = rules.all_allowed_cards(stichseq, &ahand[epi_current]);
+            func_filter_allowed_cards(stichseq, &mut veccard_allowed);
+            // TODO? use equivalent card optimization
+            foreachsnapshot.combine_outputs(
+                epi_self,
+                epi_current,
+                veccard_allowed.into_iter().map(|card| {
+                    ahand[epi_current].play_card(card);
+                    let output = stichseq.zugeben_and_restore(card, rules, |stichseq| {
+                        explore_snapshots_internal(
+                            epi_self,
+                            ahand,
+                            rules,
+                            stichseq,
+                            func_filter_allowed_cards,
+                            foreachsnapshot,
+                            snapshotvisualizer,
+                        )
+                    });
+                    ahand[epi_current].add_card(card);
+                    (card, output)
+                })
+            )
+        })
+    };
+    snapshotvisualizer.end_snapshot(&output);
+    output
 }
 
 fn end_snapshot_minmax<ItTplCardNPayout: Iterator<Item=(SCard, isize)>>(epi_self: EPlayerIndex, epi_card: EPlayerIndex, ittplcardn_payout: ItTplCardNPayout) -> isize {
