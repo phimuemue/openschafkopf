@@ -396,13 +396,9 @@ impl SGame {
         self.ahand[epi].play_card(card_played);
         assert!(!self.vecstich.is_empty());
         current_stich_mut(&mut self.vecstich).push(card_played);
-        for epi in EPlayerIndex::values() {
-            info!("Hand {}: {}", epi, self.ahand[epi]);
-        }
         if self.current_stich().is_full() {
             if self.kurzlang().cards_per_player()==self.vecstich.len() {
                 info!("Game finished.");
-                Ok(())
             } else {
                 let epi_last_stich = {
                     let stich = self.current_stich();
@@ -412,11 +408,12 @@ impl SGame {
                 info!("Opening new stich starting at {}", epi_last_stich);
                 assert!(self.vecstich.is_empty() || self.current_stich().is_full());
                 self.vecstich.push(SStich::new(epi_last_stich));
-                Ok(())
             }
-        } else {
-            Ok(())
         }
+        for epi in EPlayerIndex::values() {
+            info!("Hand {}: {}", epi, self.ahand[epi]);
+        }
+        Ok(())
     }
 
     pub fn completed_stichs(&self) -> SCompletedStichs {
