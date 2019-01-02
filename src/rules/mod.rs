@@ -23,19 +23,8 @@ use crate::util::*;
 use crate::ai::rulespecific::*;
 use crate::game::SStichSequence;
 
-pub fn current_stich_mut(slcstich: &mut [SStich]) -> &mut SStich {
-    verify!(slcstich.last_mut()).unwrap()
-}
-
 pub fn current_stich(slcstich: &[SStich]) -> &SStich {
     verify!(slcstich.last()).unwrap()
-}
-
-pub fn completed_stichs(slcstich: &[SStich]) -> SCompletedStichs {
-    assert!(!current_stich(slcstich).is_full());
-    assert_eq!(slcstich[0..slcstich.len()-1].len(), slcstich.len()-1);
-    assert!(slcstich[0..slcstich.len()-1].iter().all(SStich::is_full));
-    SCompletedStichs::new(&slcstich[0..slcstich.len()-1])
 }
 
 #[derive(PartialEq, Eq, Debug)]

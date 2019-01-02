@@ -299,8 +299,8 @@ impl SStichSequence {
         assert!(!current_stich(&self.vecstich).is_full());
         assert_eq!(self.vecstich[0..self.vecstich.len()-1].len(), self.vecstich.len()-1);
         assert!(self.vecstich[0..self.vecstich.len()-1].iter().all(SStich::is_full));
-        assert!(completed_stichs(&self.vecstich).get().len()<=self.ekurzlang.cards_per_player());
-        if completed_stichs(&self.vecstich).get().len()==self.ekurzlang.cards_per_player() {
+        assert!(self.completed_stichs_no_invariant().get().len()<=self.ekurzlang.cards_per_player());
+        if self.completed_stichs_no_invariant().get().len()==self.ekurzlang.cards_per_player() {
             assert!(current_stich(&self.vecstich).is_empty());
         }
     }
@@ -314,8 +314,8 @@ impl SStichSequence {
 
     pub fn game_finished(&self) -> bool {
         self.assert_invariant();
-        assert!(completed_stichs(&self.vecstich).get().len()<=self.ekurzlang.cards_per_player());
-        completed_stichs(&self.vecstich).get().len()==self.ekurzlang.cards_per_player()
+        assert!(self.completed_stichs().get().len()<=self.ekurzlang.cards_per_player());
+        self.completed_stichs().get().len()==self.ekurzlang.cards_per_player()
     }
 
     pub fn no_card_played(&self) -> bool {
@@ -323,9 +323,13 @@ impl SStichSequence {
         self.completed_stichs().get().len()==0 && self.current_stich().is_empty()
     }
 
+    fn completed_stichs_no_invariant(&self) -> SCompletedStichs {
+        SCompletedStichs::new(&self.vecstich[0..self.vecstich.len()-1])
+    }
+
     pub fn completed_stichs(&self) -> SCompletedStichs {
         self.assert_invariant();
-        completed_stichs(&self.vecstich)
+        self.completed_stichs_no_invariant()
     }
 
     pub fn current_stich(&self) -> &SStich {
@@ -335,7 +339,7 @@ impl SStichSequence {
 
     pub fn zugeben_custom_winner_index(&mut self, card: SCard, fn_winner_index: impl FnOnce(&SStich)->EPlayerIndex) {
         self.assert_invariant();
-        current_stich_mut(&mut self.vecstich).push(card);
+        verify!(self.vecstich.last_mut()).unwrap().push(card);
         if current_stich(&self.vecstich).is_full() {
             self.vecstich.push(SStich::new(fn_winner_index(current_stich(&self.vecstich))));
         }
@@ -359,7 +363,7 @@ impl SStichSequence {
             verify!(self.vecstich.pop()).unwrap();
             assert!(current_stich(&self.vecstich).is_full());
         }
-        current_stich_mut(&mut self.vecstich).undo_most_recent();
+        verify!(self.vecstich.last_mut()).unwrap().undo_most_recent();
         assert_eq!(n_len, self.vecstich.len());
         self.assert_invariant();
         r
