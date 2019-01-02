@@ -126,8 +126,8 @@ impl TRules for SRulesRufspiel {
         )
     }
 
-    fn payouthints(&self, slcstich: &[SStich], ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SPayoutHint> {
-        let epi_coplayer = slcstich.iter()
+    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SPayoutHint> {
+        let epi_coplayer = stichseq.visible_stichs()
             .flat_map(|stich| stich.iter())
             .find(|&(_, card)| *card==self.rufsau())
             .map(|(epi, _)| epi)
@@ -137,7 +137,7 @@ impl TRules for SRulesRufspiel {
                 )).unwrap()
             });
         assert_ne!(self.epi, epi_coplayer);
-        self.payoutdecider.payouthints(self, slcstich, ahand, &SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]})
+        self.payoutdecider.payouthints(self, stichseq, ahand, &SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]})
             .map(|pairon_payout| SPayoutHint::new((
                 // TODO EStockAction
                 pairon_payout.0.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore)),
@@ -145,10 +145,9 @@ impl TRules for SRulesRufspiel {
             )))
     }
 
-    fn all_allowed_cards_first_in_stich(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
-        assert!(!slcstich.is_empty());
+    fn all_allowed_cards_first_in_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         if // do we already know who had the rufsau?
-            completed_stichs(slcstich).get().iter()
+            stichseq.completed_stichs().get().iter()
                 .any(|stich| {
                     assert!(stich.is_full()); // completed_stichs should only process full stichs
                     self.is_ruffarbe(*stich.first()) // gesucht or weggelaufen
@@ -169,16 +168,15 @@ impl TRules for SRulesRufspiel {
         }
     }
 
-    fn all_allowed_cards_within_stich(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
-        assert!(!slcstich.is_empty());
-        assert!(!current_stich(slcstich).is_full());
+    fn all_allowed_cards_within_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         if hand.cards().len()<=1 {
             hand.cards().clone()
         } else {
-            let epi = verify!(current_stich(slcstich).current_playerindex()).unwrap();
-            let b_weggelaufen = completed_stichs(slcstich).get().iter()
+            let epi = verify!(stichseq.current_stich().current_playerindex()).unwrap();
+            let b_weggelaufen = stichseq.completed_stichs().get().iter()
                 .any(|stich| epi==stich.first_playerindex() && self.is_ruffarbe(*stich.first()));
-            let card_first = *current_stich(slcstich).first();
+            assert!(!stichseq.current_stich().is_empty());
+            let card_first = *stichseq.current_stich().first();
             if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) && !b_weggelaufen {
                 return Some(self.rufsau()).into_iter().collect()
             }

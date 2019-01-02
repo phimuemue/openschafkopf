@@ -74,12 +74,12 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
     pub fn payouthints<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(
         &self,
         rules: &Rules,
-        slcstich: &[SStich],
+        stichseq: &SStichSequence,
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)> {
         // TODO consider secondary party, as well
-        let n_points_primary_party : isize = slcstich.iter()
+        let n_points_primary_party : isize = stichseq.visible_stichs()
             .take_while(|stich| stich.is_full())
             .filter(|stich| playerparties.is_primary_party(rules.winner_index(stich)))
             .map(|stich| points_stich(stich))

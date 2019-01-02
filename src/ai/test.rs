@@ -90,14 +90,14 @@ fn detect_expensive_all_possible_hands() {
         &EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
             /*fn_check_ask_for_card*/|game| {
                 if game.kurzlang().cards_per_player() - 4 < game.completed_stichs().get().len() {
-                    let epi_fixed = verify!(game.current_stich().current_playerindex()).unwrap();
+                    let epi_fixed = verify!(game.current_playable_stich().current_playerindex()).unwrap();
                     let vecahand = all_possible_hands(
-                        &game.vecstich,
+                        &game.stichseq,
                         game.ahand[epi_fixed].clone(),
                         epi_fixed,
                         game.kurzlang(),
                     )
-                        .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.vecstich, game.kurzlang()))
+                        .filter(|ahand| is_compatible_with_game_so_far(ahand, game.rules.as_ref(), &game.stichseq, game.kurzlang()))
                         .collect::<Vec<_>>();
                     let assert_bound = |n, n_detect| {
                         assert!(n < n_detect,
@@ -107,7 +107,7 @@ fn detect_expensive_all_possible_hands() {
                             game.ahand.iter()
                                 .map(ToString::to_string)
                                 .collect::<Vec<_>>(),
-                            game.vecstich.iter()
+                            game.stichseq.visible_stichs()
                                 .map(ToString::to_string)
                                 .collect::<Vec<_>>(),
                         );
@@ -120,7 +120,7 @@ fn detect_expensive_all_possible_hands() {
                             fn final_output(&self, _slcstich: SGameFinishedStiche) -> Self::Output {
                                 1 // leaf
                             }
-                            fn pruned_output(&self, _slcstich: &[SStich], _ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+                            fn pruned_output(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
                                 None
                             }
                             fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
@@ -137,7 +137,7 @@ fn detect_expensive_all_possible_hands() {
                                 EPlayerIndex::EPI0, // TODO do this for all EPlayerIndex::values()?
                                 &mut ahand,
                                 game.rules.as_ref(),
-                                &mut SVecStichPushPop::new(&mut game.vecstich.clone()),
+                                &mut game.stichseq.clone(),
                                 &|_vecstich_complete, _vecstich_successor| {/*no filtering*/},
                                 &mut SLeafCounter{},
                                 /*ostr_file_out*/None,

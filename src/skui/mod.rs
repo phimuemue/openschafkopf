@@ -111,9 +111,9 @@ fn do_in_window<RetVal>(skuiwin: &VSkUiWindow, fn_do: impl FnOnce(ncurses::WINDO
     retval
 }
 
-pub fn print_vecstich(epi_myself: EPlayerIndex, slcstich: &[SStich]) {
+pub fn print_stichseq(epi_myself: EPlayerIndex, stichseq: &SStichSequence) {
     do_in_window(&VSkUiWindow::Stich, |ncwin| {
-        for (i_stich, stich) in slcstich.iter().enumerate() {
+        for (i_stich, stich) in stichseq.visible_stichs().enumerate() {
             let n_x = (i_stich*10+3).as_num();
             let n_y = 1;
             let n_card_width = 2;

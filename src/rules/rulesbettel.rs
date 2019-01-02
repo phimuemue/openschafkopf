@@ -9,7 +9,7 @@ use std::marker::PhantomData;
 use crate::util::*;
 
 pub trait TBettelAllAllowedCardsWithinStich : Sync + 'static + Clone + fmt::Debug {
-    fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, slcstich: &[SStich], hand: &SHand) -> SHandVector;
+    fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, stichseq: &SStichSequence, hand: &SHand) -> SHandVector;
 }
 
 #[derive(Clone, Debug)]
@@ -69,15 +69,14 @@ impl TPayoutDecider for SPayoutDeciderBettel {
     fn payouthints<Rules>(
         &self,
         rules: &Rules,
-        slcstich: &[SStich],
+        stichseq: &SStichSequence,
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj
     {
         if 
-            !slcstich.iter()
-                .take_while(|stich| stich.is_full())
+            !stichseq.completed_stichs().get().iter()
                 .all(|stich| !playerparties13.is_primary_party(rules.winner_index(stich)))
         {
             internal_payout(
@@ -98,10 +97,10 @@ pub struct SBettelAllAllowedCardsWithinStichNormal {}
 pub struct SBettelAllAllowedCardsWithinStichStichzwang {}
 
 impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichNormal {
-    fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, slcstich: &[SStich], hand: &SHand) -> SHandVector {
+    fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         all_allowed_cards_within_stich_distinguish_farbe_frei(
             rulesbettel,
-            slcstich,
+            stichseq,
             hand,
             /*fn_farbe_frei*/|| hand.cards().clone(),
             /*fn_farbe_not_frei*/|veccard_same_farbe| veccard_same_farbe,
@@ -109,13 +108,12 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichNorm
     }
 }
 impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStichzwang {
-    fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, slcstich: &[SStich], hand: &SHand) -> SHandVector {
-        assert!(!slcstich.is_empty());
-        let stich = current_stich(slcstich);
+    fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
+        let stich = stichseq.current_stich();
         let card_highest = stich[rulesbettel.preliminary_winner_index(stich)];
         all_allowed_cards_within_stich_distinguish_farbe_frei(
             rulesbettel,
-            slcstich,
+            stichseq,
             hand,
             /*fn_farbe_frei*/|| {
                 debug_assert!(hand.cards().iter().cloned().all(|card|
@@ -152,8 +150,8 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
     impl_rules_trumpf!();
     impl_single_play!();
 
-    fn all_allowed_cards_within_stich(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
-        BettelAllAllowedCardsWithinStich::all_allowed_cards_within_stich(self, slcstich, hand)
+    fn all_allowed_cards_within_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
+        BettelAllAllowedCardsWithinStich::all_allowed_cards_within_stich(self, stichseq, hand)
     }
 
     fn compare_in_stich_same_farbe(&self, card_fst: SCard, card_snd: SCard) -> Ordering {

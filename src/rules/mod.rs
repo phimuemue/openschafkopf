@@ -21,6 +21,7 @@ use std::{
 };
 use crate::util::*;
 use crate::ai::rulespecific::*;
+use crate::game::SStichSequence;
 
 pub fn current_stich_mut(slcstich: &mut [SStich]) -> &mut SStich {
     verify!(slcstich.last_mut()).unwrap()
@@ -59,13 +60,13 @@ pub struct SStoss {
 
 fn all_allowed_cards_within_stich_distinguish_farbe_frei<Result>(
     rules: &(impl TRules + ?Sized),
-    slcstich: &[SStich],
+    stichseq: &SStichSequence,
     hand: &SHand,
     fn_farbe_frei: impl Fn()->Result,
     fn_farbe_not_frei: impl Fn(SHandVector)->Result,
 ) -> Result {
-    assert!(!slcstich.is_empty());
-    let trumpforfarbe_first = rules.trumpforfarbe(*current_stich(slcstich).first());
+    assert!(!stichseq.current_stich().is_empty());
+    let trumpforfarbe_first = rules.trumpforfarbe(*stichseq.current_stich().first());
     let veccard_same_farbe : SHandVector = hand.cards().iter().cloned()
         .filter(|&card| rules.trumpforfarbe(card)==trumpforfarbe_first)
         .collect();
@@ -183,20 +184,22 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
         // TODO assert tpln_stoss_doubling consistent with stoss_allowed etc
         #[cfg(debug_assertions)] {
             let mut mapepipayouthint = EPlayerIndex::map_from_fn(|_epi| SPayoutHint::new((None, None)));
-            let mut vecstich_check = Vec::new();
+            let mut stichseq_check = SStichSequence::new(
+                gamefinishedstiche.get()[0].first_playerindex(),
+                EKurzLang::from_cards_per_player(gamefinishedstiche.get().len()),
+            );
             let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
                 SHand::new_from_vec(gamefinishedstiche.get().iter().map(|stich| stich[epi]).collect())
             );
             for stich in gamefinishedstiche.get().iter() {
-                vecstich_check.push(SStich::new(stich.first_playerindex()));
                 for (epi, card) in stich.iter() {
-                    verify!(vecstich_check.last_mut()).unwrap().push(*card);
+                    stichseq_check.zugeben_custom_winner_index(*card, |stich| self.winner_index(stich)); // TODO I could not simply pass rules. Why?
                     ahand_check[epi].play_card(*card);
-                    let mapepipayouthint_after = self.payouthints(&vecstich_check, &ahand_check);
+                    let mapepipayouthint_after = self.payouthints(&stichseq_check, &ahand_check);
                     assert!(
                         mapepipayouthint.iter().zip(mapepipayouthint_after.iter())
                             .all(|(payouthint, payouthint_other)| payouthint.contains_payouthint(payouthint_other)),
-                        "{:?}\n{:?}\n{:?}\n{:?}", vecstich_check, ahand_check, mapepipayouthint, mapepipayouthint_after,
+                        "{:?}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepipayouthint, mapepipayouthint_after,
                     );
                     mapepipayouthint = mapepipayouthint_after;
                 }
@@ -205,7 +208,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
                         .all(|(payouthint, payoutinfo)|
                             payouthint.contains_payouthint(&SPayoutHint::new((Some(payoutinfo.clone()), Some(payoutinfo.clone()))))
                         )
-                    "{:?}\n{:?}\n{:?}\n{:?}", vecstich_check, ahand_check, mapepipayouthint, apayoutinfo,
+                    "{:?}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepipayouthint, apayoutinfo,
                 );
             }
         }
@@ -216,39 +219,38 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
 
     fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche) -> EnumMap<EPlayerIndex, SPayoutInfo>;
 
-    fn payouthints(&self, slcstich: &[SStich], ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SPayoutHint>;
+    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SPayoutHint>;
 
-    fn all_allowed_cards(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
-        assert!(!slcstich.is_empty());
-        assert!(!current_stich(slcstich).is_full());
+    fn all_allowed_cards(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         assert!(!hand.cards().is_empty());
-        let veccard = if current_stich(slcstich).is_empty() {
-            self.all_allowed_cards_first_in_stich(slcstich, hand)
+        assert!(!stichseq.game_finished());
+        let veccard = if stichseq.current_stich().is_empty() {
+            self.all_allowed_cards_first_in_stich(stichseq, hand)
         } else {
-            self.all_allowed_cards_within_stich(slcstich, hand)
+            self.all_allowed_cards_within_stich(stichseq, hand)
         };
         assert!(!veccard.is_empty());
         veccard
     }
 
-    fn all_allowed_cards_first_in_stich(&self, _vecstich: &[SStich], hand: &SHand) -> SHandVector {
+    fn all_allowed_cards_first_in_stich(&self, _stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         // probably in most cases, every card can be played
         hand.cards().clone()
     }
 
-    fn all_allowed_cards_within_stich(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
+    fn all_allowed_cards_within_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         // probably in most cases, only the first card of the current stich is decisive
         all_allowed_cards_within_stich_distinguish_farbe_frei(
             self,
-            slcstich,
+            stichseq,
             hand,
             /*fn_farbe_frei*/|| hand.cards().clone(),
             /*fn_farbe_not_frei*/|veccard_same_farbe| veccard_same_farbe
         )
     }
 
-    fn card_is_allowed(&self, slcstich: &[SStich], hand: &SHand, card: SCard) -> bool {
-        self.all_allowed_cards(slcstich, hand).into_iter()
+    fn card_is_allowed(&self, stichseq: &SStichSequence, hand: &SHand, card: SCard) -> bool {
+        self.all_allowed_cards(stichseq, hand).into_iter()
             .any(|card_iterated| card_iterated==card)
     }
 

@@ -26,26 +26,26 @@ use std::{
 use crossbeam;
 use crate::util::*;
 
-pub fn remaining_cards_per_hand(slcstich: &[SStich], ekurzlang: EKurzLang) -> EnumMap<EPlayerIndex, usize> {
+pub fn remaining_cards_per_hand(stichseq: &SStichSequence, ekurzlang: EKurzLang) -> EnumMap<EPlayerIndex, usize> {
     EPlayerIndex::map_from_fn(|epi| {
         ekurzlang.cards_per_player()
-            - completed_stichs(slcstich).get().len()
-            - match current_stich(slcstich).get(epi) {
+            - stichseq.completed_stichs().get().len()
+            - match stichseq.current_stich().get(epi) {
                 None => 0,
                 Some(_card) => 1,
             }
     })
 }
 
-pub fn ahand_vecstich_card_count_is_compatible(slcstich: &[SStich], ahand: &EnumMap<EPlayerIndex, SHand>, ekurzlang: EKurzLang) -> bool {
-    ahand.map(|hand| hand.cards().len()) == remaining_cards_per_hand(slcstich, ekurzlang)
+pub fn ahand_vecstich_card_count_is_compatible(stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, ekurzlang: EKurzLang) -> bool {
+    ahand.map(|hand| hand.cards().len()) == remaining_cards_per_hand(stichseq, ekurzlang)
 }
 
 pub trait TAi {
     fn rank_rules(&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64;
     fn suggest_card(&self, game: &SGame, ostr_file_out: Option<&str>) -> SCard {
         let veccard_allowed = game.rules.all_allowed_cards(
-            &game.vecstich,
+            &game.stichseq,
             &game.ahand[verify!(game.which_player_can_do_something()).unwrap().0]
         );
         assert!(1<=veccard_allowed.len());
@@ -70,11 +70,11 @@ pub fn random_sample_from_vec(vect: &mut SHandVector, n_size: usize) {
     mem::swap(&mut vect_sampled, vect);
 }
 
-pub fn unplayed_cards<'lifetime>(slcstich: &'lifetime [SStich], hand_fixed: &'lifetime SHand, ekurzlang: EKurzLang) -> impl Iterator<Item=SCard> + 'lifetime {
+pub fn unplayed_cards<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: &'lifetime SHand, ekurzlang: EKurzLang) -> impl Iterator<Item=SCard> + 'lifetime {
     SCard::values(ekurzlang)
         .filter(move |card| 
              !hand_fixed.contains(*card)
-             && !slcstich.iter().any(|stich|
+             && !stichseq.visible_stichs().any(|stich|
                 stich.iter().any(|(_epi, card_played)|
                     card_played==card
                 )
@@ -85,13 +85,15 @@ pub fn unplayed_cards<'lifetime>(slcstich: &'lifetime [SStich], hand_fixed: &'li
 #[test]
 fn test_unplayed_cards() {
     use crate::card::card_values::*;
-    let vecstich = [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]].into_iter()
-        .map(|acard| {
-            SStich::new_full(/*epi_first irrelevant*/EPlayerIndex::EPI0, *acard)
-        })
-        .collect::<Vec<_>>();
+    let epi_irrelevant = EPlayerIndex::EPI0;
+    let mut stichseq = SStichSequence::new(epi_irrelevant, EKurzLang::Lang);
+    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]].into_iter() {
+        for card in acard_stich.into_iter() {
+            stichseq.zugeben_custom_winner_index(*card, |_stich| epi_irrelevant);
+        }
+    }
     let hand = &SHand::new_from_vec([GK, SK].into_iter().cloned().collect());
-    let veccard_unplayed = unplayed_cards(&vecstich, &hand, EKurzLang::Lang).collect::<Vec<_>>();
+    let veccard_unplayed = unplayed_cards(&stichseq, &hand, EKurzLang::Lang).collect::<Vec<_>>();
     let veccard_unplayed_check = [GZ, E7, SZ, H9, EZ, GU];
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
     assert!(veccard_unplayed.iter().all(|card| veccard_unplayed_check.contains(card)));
@@ -126,13 +128,13 @@ impl TAi for SAiCheating {
 pub fn is_compatible_with_game_so_far(
     ahand: &EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
-    slcstich: &[SStich],
+    stichseq: &SStichSequence,
     ekurzlang: EKurzLang,
 ) -> bool {
-    let stich_current = current_stich(slcstich);
-    let slcstich_complete = completed_stichs(slcstich);
+    let stich_current = stichseq.current_stich();
+    let slcstich_complete = stichseq.completed_stichs();
     assert!(!stich_current.is_full());
-    assert!(ahand_vecstich_card_count_is_compatible(slcstich, ahand, ekurzlang));
+    assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand, ekurzlang));
     // hands must not contain other cards preventing farbe/trumpf frei
     let mut ahand_simulate = EPlayerIndex::map_from_fn(|epi| {
         let mut veccard = ahand[epi].cards().clone();
@@ -146,18 +148,17 @@ pub fn is_compatible_with_game_so_far(
     )
     && {
         let mut b_valid_up_to_now = true;
-        let mut vecstich_simulate = Vec::new();
-        'loopstich: for stich in slcstich.iter() {
-            vecstich_simulate.push(SStich::new(stich.epi_first));
+        let mut stichseq_simulate = SStichSequence::new(stichseq.first_playerindex(), stichseq.kurzlang());
+        'loopstich: for stich in stichseq.visible_stichs() {
             for (epi, card) in stich.iter() {
                 if rules.card_is_allowed(
-                    &vecstich_simulate,
+                    &stichseq_simulate,
                     &ahand_simulate[epi],
                     *card
                 ) {
                     assert!(ahand_simulate[epi].contains(*card));
                     ahand_simulate[epi].play_card(*card);
-                    current_stich_mut(&mut vecstich_simulate).push(*card);
+                    stichseq_simulate.zugeben(*card, rules);
                 } else {
                     b_valid_up_to_now = false;
                     break 'loopstich;
@@ -175,8 +176,8 @@ fn determine_best_card_internal(
     foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Send + Clone),
     ostr_file_out: Option<&str>
 ) -> (SHandVector, EnumMap<SCard, isize>) {
-    let epi_fixed = verify!(game.current_stich().current_playerindex()).unwrap();
-    let veccard_allowed = game.rules.all_allowed_cards(&game.vecstich, &game.ahand[epi_fixed]);
+    let epi_fixed = verify!(game.current_playable_stich().current_playerindex()).unwrap();
+    let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &game.ahand[epi_fixed]);
     let mapcardn_payout = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
         SCard::map_from_fn(|_card| std::isize::MAX),
@@ -189,17 +190,17 @@ fn determine_best_card_internal(
                 let mut foreachsnapshot = foreachsnapshot.clone();
                 let mapcardn_payout = Arc::clone(&mapcardn_payout);
                 scope.spawn(move |_scope| {
-                    assert!(ahand_vecstich_card_count_is_compatible(&game.vecstich, &ahand, game.kurzlang()));
-                    let mut vecstich = game.vecstich.clone();
+                    assert!(ahand_vecstich_card_count_is_compatible(&game.stichseq, &ahand, game.kurzlang()));
+                    let mut stichseq = game.stichseq.clone();
                     let n_payout = explore_snapshots(
                         epi_fixed,
                         &mut ahand,
                         game.rules.as_ref(),
-                        &mut SVecStichPushPop::new(&mut vecstich),
-                        &|slcstich: &[SStich], veccard_allowed| {
+                        &mut stichseq,
+                        &|slcstich, veccard_allowed| {
                             assert!(!veccard_allowed.is_empty());
-                            assert!(slcstich.len()>=game.vecstich.len());
-                            if slcstich.len()!=game.vecstich.len() && game.completed_stichs().get().len() < 6 {
+                            assert!(slcstich.count_played_cards()>=game.stichseq.count_played_cards());
+                            if slcstich.count_played_cards()!=game.stichseq.count_played_cards() && game.completed_stichs().get().len() < 6 {
                                 // TODO: maybe keep more than one successor stich
                                 random_sample_from_vec(
                                     veccard_allowed,
@@ -260,15 +261,16 @@ pub struct SAiSimulating {
 impl TAi for SAiSimulating {
     fn rank_rules (&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
         let n_payout_sum = Arc::new(AtomicIsize::new(0));
+        let ekurzlang = EKurzLang::from_cards_per_player(hand_fixed.get().cards().len());
         verify!(crossbeam::scope(|scope| {
-            for mut ahand in forever_rand_hands(&[SStich::new(epi_first)], hand_fixed.get().clone(), epi_rank, EKurzLang::from_cards_per_player(hand_fixed.get().cards().len())).take(self.n_rank_rules_samples) {
+            for mut ahand in forever_rand_hands(&SStichSequence::new(epi_first, ekurzlang), hand_fixed.get().clone(), epi_rank, ekurzlang).take(self.n_rank_rules_samples) {
                 let n_payout_sum = Arc::clone(&n_payout_sum);
                 scope.spawn(move |_scope| {
                     let n_payout = explore_snapshots(
                         epi_rank,
                         &mut ahand,
                         rules,
-                        &mut SVecStichPushPop::new(&mut vec![SStich::new(epi_first)]),
+                        &mut SStichSequence::new(epi_first, ekurzlang),
                         &|_slcstich, veccard_allowed| {
                             assert!(!veccard_allowed.is_empty());
                             random_sample_from_vec(veccard_allowed, 1);
@@ -290,7 +292,7 @@ impl TAi for SAiSimulating {
     }
 
     fn internal_suggest_card(&self, game: &SGame, ostr_file_out: Option<&str>) -> SCard {
-        let stich_current = game.current_stich();
+        let stich_current = game.current_playable_stich();
         assert!(!stich_current.is_full());
         let epi_fixed = verify!(stich_current.current_playerindex()).unwrap();
         let hand_fixed = &game.ahand[epi_fixed];
@@ -298,16 +300,16 @@ impl TAi for SAiSimulating {
         if hand_fixed.cards().len()<=2 {
             determine_best_card(
                 game,
-                all_possible_hands(&game.vecstich, hand_fixed.clone(), epi_fixed, game.kurzlang())
-                    .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.vecstich, game.kurzlang())),
+                all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang())
+                    .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.stichseq, game.kurzlang())),
                 self.n_suggest_card_branches,
                 ostr_file_out,
             )
         } else if hand_fixed.cards().len()<=5 {
             let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
                 game,
-                forever_rand_hands(&game.vecstich, hand_fixed.clone(), epi_fixed, game.kurzlang())
-                    .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.vecstich, game.kurzlang()))
+                forever_rand_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang())
+                    .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.stichseq, game.kurzlang()))
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
                 &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
@@ -319,8 +321,8 @@ impl TAi for SAiSimulating {
         } else {
             determine_best_card(
                 game,
-                forever_rand_hands(&game.vecstich, hand_fixed.clone(), epi_fixed, game.kurzlang())
-                    .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.vecstich, game.kurzlang()))
+                forever_rand_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang())
+                    .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.stichseq, game.kurzlang()))
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
                 ostr_file_out,
@@ -373,12 +375,12 @@ fn test_is_compatible_with_game_so_far() {
                 }
             }
             for ahand in forever_rand_hands(
-                &game.vecstich,
+                &game.stichseq,
                 game.ahand[verify!(game.which_player_can_do_something()).unwrap().0].clone(),
                 verify!(game.which_player_can_do_something()).unwrap().0,
                 game.kurzlang(),
             )
-                .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.vecstich, game.kurzlang()))
+                .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.stichseq, game.kurzlang()))
                 .take(100)
             {
                 for epi in EPlayerIndex::values() {
@@ -460,12 +462,12 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         }
     }
     for ahand in all_possible_hands(
-        &game.vecstich,
+        &game.stichseq,
         game.ahand[epi_first_and_active_player].clone(),
         epi_first_and_active_player,
         game.kurzlang(),
     )
-        .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.vecstich, game.kurzlang()))
+        .filter(|ahand| is_compatible_with_game_so_far(&ahand, game.rules.as_ref(), &game.stichseq, game.kurzlang()))
     {
         let (veccard_allowed, mapcardpayout) = determine_best_card_internal(
             &game,

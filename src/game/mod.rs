@@ -287,6 +287,105 @@ impl SDetermineRules<'_> {
     }
 }
 
+#[derive(Debug, Clone)] // TODO? custom impl Debug
+pub struct SStichSequence {
+    vecstich: Vec<SStich>,
+    ekurzlang: EKurzLang,
+}
+
+impl SStichSequence {
+    fn assert_invariant(&self) {
+        assert!(!self.vecstich.is_empty());
+        assert!(!current_stich(&self.vecstich).is_full());
+        assert_eq!(self.vecstich[0..self.vecstich.len()-1].len(), self.vecstich.len()-1);
+        assert!(self.vecstich[0..self.vecstich.len()-1].iter().all(SStich::is_full));
+        assert!(completed_stichs(&self.vecstich).get().len()<=self.ekurzlang.cards_per_player());
+        if completed_stichs(&self.vecstich).get().len()==self.ekurzlang.cards_per_player() {
+            assert!(current_stich(&self.vecstich).is_empty());
+        }
+    }
+
+    pub fn new(epi_first: EPlayerIndex, ekurzlang: EKurzLang) -> Self {
+        SStichSequence {
+            vecstich: vec![SStich::new(epi_first)],
+            ekurzlang,
+        }
+    }
+
+    pub fn game_finished(&self) -> bool {
+        self.assert_invariant();
+        assert!(completed_stichs(&self.vecstich).get().len()<=self.ekurzlang.cards_per_player());
+        completed_stichs(&self.vecstich).get().len()==self.ekurzlang.cards_per_player()
+    }
+
+    pub fn no_card_played(&self) -> bool {
+        self.assert_invariant();
+        self.completed_stichs().get().len()==0 && self.current_stich().is_empty()
+    }
+
+    pub fn completed_stichs(&self) -> SCompletedStichs {
+        self.assert_invariant();
+        completed_stichs(&self.vecstich)
+    }
+
+    pub fn current_stich(&self) -> &SStich {
+        self.assert_invariant();
+        current_stich(&self.vecstich)
+    }
+
+    pub fn zugeben_custom_winner_index(&mut self, card: SCard, fn_winner_index: impl FnOnce(&SStich)->EPlayerIndex) {
+        self.assert_invariant();
+        current_stich_mut(&mut self.vecstich).push(card);
+        if current_stich(&self.vecstich).is_full() {
+            self.vecstich.push(SStich::new(fn_winner_index(current_stich(&self.vecstich))));
+        }
+        self.assert_invariant();
+    }
+
+    pub fn zugeben(&mut self, card: SCard, rules: &TRules) {
+        self.zugeben_custom_winner_index(card, |stich| rules.winner_index(stich));
+    }
+
+    pub fn zugeben_and_restore<F, R>(&mut self, card: SCard, rules: &TRules, func: F) -> R
+        where
+            for<'inner> F: FnOnce(&mut Self)->R
+    {
+        self.assert_invariant();
+        let n_len = self.vecstich.len();
+        assert!(!self.current_stich().is_full());
+        self.zugeben(card, rules);
+        let r = func(self);
+        if self.current_stich().is_empty() {
+            verify!(self.vecstich.pop()).unwrap();
+            assert!(current_stich(&self.vecstich).is_full());
+        }
+        current_stich_mut(&mut self.vecstich).undo_most_recent();
+        assert_eq!(n_len, self.vecstich.len());
+        self.assert_invariant();
+        r
+    }
+
+    pub fn visible_stichs(&self) -> impl Iterator<Item=&SStich>+Clone {
+        self.vecstich.iter().take(self.ekurzlang.cards_per_player())
+    }
+
+    pub fn first_playerindex(&self) -> EPlayerIndex {
+        self.assert_invariant();
+        self.vecstich[0].first_playerindex()
+    }
+
+    pub fn kurzlang(&self) -> EKurzLang {
+        self.assert_invariant();
+        self.ekurzlang
+    }
+
+    pub fn count_played_cards(&self) -> usize {
+        self.assert_invariant();
+        self.completed_stichs().get().len() * EPlayerIndex::SIZE
+            + self.current_stich().size()
+    }
+}
+
 #[derive(Debug)]
 pub struct SGame {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
@@ -295,7 +394,7 @@ pub struct SGame {
     pub vecstoss : Vec<SStoss>,
     ostossparams : Option<SStossParams>,
     pub n_stock : isize,
-    pub vecstich : Vec<SStich>,
+    pub stichseq: SStichSequence,
 }
 
 pub type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
@@ -305,31 +404,36 @@ impl TGamePhase for SGame {
     type Finish = SGameResult;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
-        self.current_stich().current_playerindex().map(|epi_current| (
-            epi_current,
-            if let Some(ref stossparams) = self.ostossparams {
-                if 1==self.vecstich.len() && self.vecstich[0].is_empty() // TODORULES Adjustable latest time of stoss
-                    && self.vecstoss.len() < stossparams.n_stoss_max
-                {
-                    EPlayerIndex::values()
-                        .map(|epi| epi.wrapping_add(self.doublings.first_playerindex().to_usize()))
-                        .filter(|epi| {
-                            self.rules.stoss_allowed(*epi, &self.vecstoss, &self.ahand[*epi])
-                        })
-                        .collect()
+        if self.stichseq.completed_stichs().get().len() < self.kurzlang().cards_per_player() {
+            self.current_playable_stich().current_playerindex().map(|epi_current| (
+                epi_current,
+                if let Some(ref stossparams) = self.ostossparams {
+                    if self.stichseq.no_card_played() // TODORULES Adjustable latest time of stoss
+                        && self.vecstoss.len() < stossparams.n_stoss_max
+                    {
+                        EPlayerIndex::values()
+                            .map(|epi| epi.wrapping_add(self.doublings.first_playerindex().to_usize()))
+                            .filter(|epi| {
+                                self.rules.stoss_allowed(*epi, &self.vecstoss, &self.ahand[*epi])
+                            })
+                            .collect()
+                    } else {
+                        Vec::new()
+                    }
                 } else {
                     Vec::new()
-                }
-            } else {
-                Vec::new()
-            },
-        ))
+                },
+            ))
+        } else {
+            None
+        }
     }
 
     fn finish_success(self) -> Self::Finish {
+        assert!(self.kurzlang().cards_per_player()==self.completed_stichs().get().len());
         SGameResult {
             accountbalance : self.rules.payout(
-                SGameFinishedStiche::new(&self.vecstich, self.kurzlang()),
+                SGameFinishedStiche::new(self.completed_stichs().get(), self.kurzlang()),
                 stoss_and_doublings(&self.vecstoss, &self.doublings),
                 self.n_stock,
             ),
@@ -346,6 +450,8 @@ impl SGame {
         n_stock : isize,
     ) -> SGame {
         let epi_first = doublings.first_playerindex();
+        let n_cards_per_player = ahand[EPlayerIndex::EPI0].cards().len();
+        assert!(ahand.iter().all(|hand| hand.cards().len()==n_cards_per_player));
         SGame {
             ahand,
             doublings,
@@ -353,20 +459,29 @@ impl SGame {
             vecstoss: Vec::new(),
             ostossparams,
             n_stock,
-            vecstich: vec![SStich::new(epi_first)],
+            stichseq: SStichSequence::new(epi_first, EKurzLang::from_cards_per_player(n_cards_per_player)),
         }
     }
 
-    pub fn current_stich(&self) -> &SStich {
-        current_stich(&self.vecstich)
+    pub fn current_playable_stich(&self) -> &SStich {
+        assert!(self.stichseq.completed_stichs().get().len()<self.kurzlang().cards_per_player());
+        self.stichseq.current_stich()
     }
 
     pub fn kurzlang(&self) -> EKurzLang {
-        let cards_per_player = |epi| {
-            self.vecstich.iter().filter(|stich| stich.get(epi).is_some()).count() + self.ahand[epi].cards().len()
-        };
-        assert!(EPlayerIndex::values().all(|epi| cards_per_player(epi)==cards_per_player(EPlayerIndex::EPI0)));
-        EKurzLang::from_cards_per_player(cards_per_player(EPlayerIndex::EPI0))
+        #[cfg(debug_assertions)] {
+            let cards_per_player = |epi| {
+                self.ahand[epi].cards().len()
+                    + self.stichseq.completed_stichs().get().len()
+                    + match self.stichseq.current_stich().get(epi) {
+                        None => 0,
+                        Some(_card) => 1,
+                    }
+            };
+            assert!(EPlayerIndex::values().all(|epi| cards_per_player(epi)==cards_per_player(EPlayerIndex::EPI0)));
+            assert_eq!(EKurzLang::from_cards_per_player(cards_per_player(EPlayerIndex::EPI0)), self.stichseq.ekurzlang);
+        }
+        self.stichseq.ekurzlang
     }
 
     pub fn stoss(&mut self, epi_stoss: EPlayerIndex) -> Result<(), Error> {
@@ -390,26 +505,11 @@ impl SGame {
         if !self.ahand[epi].contains(card_played) {
             bail!("card not contained in player's hand");
         }
-        if !self.rules.card_is_allowed(&self.vecstich, &self.ahand[epi], card_played) {
+        if !self.rules.card_is_allowed(&self.stichseq, &self.ahand[epi], card_played) {
             bail!("{} is not allowed");
         }
         self.ahand[epi].play_card(card_played);
-        assert!(!self.vecstich.is_empty());
-        current_stich_mut(&mut self.vecstich).push(card_played);
-        if self.current_stich().is_full() {
-            if self.kurzlang().cards_per_player()==self.vecstich.len() {
-                info!("Game finished.");
-            } else {
-                let epi_last_stich = {
-                    let stich = self.current_stich();
-                    info!("Stich: {}", stich);
-                    self.rules.winner_index(stich)
-                };
-                info!("Opening new stich starting at {}", epi_last_stich);
-                assert!(self.vecstich.is_empty() || self.current_stich().is_full());
-                self.vecstich.push(SStich::new(epi_last_stich));
-            }
-        }
+        self.stichseq.zugeben(card_played, self.rules.as_ref());
         for epi in EPlayerIndex::values() {
             info!("Hand {}: {}", epi, self.ahand[epi]);
         }
@@ -417,7 +517,7 @@ impl SGame {
     }
 
     pub fn completed_stichs(&self) -> SCompletedStichs {
-        completed_stichs(&self.vecstich)
+        self.stichseq.completed_stichs()
     }
 }
 

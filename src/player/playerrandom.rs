@@ -28,7 +28,7 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
         verify!(txcard.send(
             verify!(
                 game.rules.all_allowed_cards(
-                    &game.vecstich,
+                    &game.stichseq,
                     &game.ahand[verify!(game.which_player_can_do_something()).unwrap().0],
                 ).choose(&mut rand::thread_rng()).map(|&card| card)
             ).unwrap()

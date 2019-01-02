@@ -53,7 +53,7 @@ fn internal_test_rules(
             verify!(game.zugeben(*card, epi)).unwrap();
         }
     }
-    for (i_stich, stich) in game.vecstich.iter().enumerate() {
+    for (i_stich, stich) in game.stichseq.visible_stichs().enumerate() {
         assert_eq!(stich, &slcstich_test[i_stich]);
         println!("Stich {}: {}", i_stich, stich);
     }

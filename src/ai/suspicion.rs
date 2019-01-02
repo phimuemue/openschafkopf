@@ -1,6 +1,6 @@
 use crate::primitives::*;
 use crate::rules::*;
-use crate::game::{SGame, stoss_and_doublings};
+use crate::game::{SGame, SStichSequence, stoss_and_doublings};
 use itertools::Itertools;
 use crate::util::*;
 use std::{
@@ -16,7 +16,7 @@ use rand::{
 pub trait TForEachSnapshot {
     type Output;
     fn final_output(&self, slcstich: SGameFinishedStiche) -> Self::Output;
-    fn pruned_output(&self, slcstich: &[SStich], ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output>;
+    fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output>;
     fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
         &self,
         epi_self: EPlayerIndex,
@@ -26,7 +26,7 @@ pub trait TForEachSnapshot {
 }
 
 trait TSnapshotVisualizer {
-    fn begin_snapshot(&mut self, slcstich: &[SStich], ahand: &EnumMap<EPlayerIndex, SHand>, slccard_allowed: &[SCard]);
+    fn begin_snapshot(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, slccard_allowed: &[SCard]);
     fn end_snapshot<Output: fmt::Debug>(&mut self, output: &Output);
 }
 
@@ -112,9 +112,9 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
 }
 
 impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
-    fn begin_snapshot(&mut self, slcstich: &[SStich], ahand: &EnumMap<EPlayerIndex, SHand>, slccard_allowed: &[SCard]) {
+    fn begin_snapshot(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, slccard_allowed: &[SCard]) {
         let str_item_id = format!("{}{}",
-            slcstich.len(),
+            stichseq.count_played_cards(),
             rand::thread_rng().sample_iter(&rand::distributions::Alphanumeric).take(16).collect::<String>(), // we simply assume no collisions here
         );
         self.write_all(format!("<li><<input type=\"checkbox\" id=\"{}\" />>\n", str_item_id).as_bytes());
@@ -123,7 +123,7 @@ impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
             slccard_allowed.len(),
         ).as_bytes());
         //TODO assert!(ahand_vecstich_card_count_is_compatible(slcstich, ahand, ekurzlang));
-        for stich in slcstich.iter() {
+        for stich in stichseq.visible_stichs() {
             self.write_all(b"<td>\n");
             let epi_0 = self.epi;
             self.write_all(Self::player_table(epi_0, |epi| stich.get(epi).map(|card| Self::output_card(*card, epi==stich.first_playerindex()))).as_bytes());
@@ -155,8 +155,8 @@ pub fn explore_snapshots<ForEachSnapshot>(
     epi_self: EPlayerIndex,
     ahand: &mut EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
-    slcstich: &mut SVecStichPushPop,
-    func_filter_allowed_cards: &impl Fn(&[SStich], &mut SHandVector),
+    stichseq: &mut SStichSequence,
+    func_filter_allowed_cards: &impl Fn(&SStichSequence, &mut SHandVector),
     foreachsnapshot: &mut ForEachSnapshot,
     ostr_file_out: Option<&str>,
 ) -> ForEachSnapshot::Output 
@@ -169,7 +169,7 @@ pub fn explore_snapshots<ForEachSnapshot>(
             epi_self,
             ahand,
             rules,
-            slcstich,
+            stichseq,
             func_filter_allowed_cards,
             foreachsnapshot,
             $snapshotvisualizer,
@@ -184,7 +184,7 @@ pub fn explore_snapshots<ForEachSnapshot>(
     } else {
         struct SNoVisualization;
         impl TSnapshotVisualizer for SNoVisualization {
-            fn begin_snapshot(&mut self, _slcstich: &[SStich], _ahand: &EnumMap<EPlayerIndex, SHand>, _slccard_allowed: &[SCard]) {}
+            fn begin_snapshot(&mut self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _slccard_allowed: &[SCard]) {}
             fn end_snapshot<Output: fmt::Debug>(&mut self, _output: &Output) {}
         }
         forward_to_internal!(&mut SNoVisualization{})
@@ -196,8 +196,8 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     epi_self: EPlayerIndex,
     ahand: &mut EnumMap<EPlayerIndex, SHand>,
     rules: &TRules,
-    vecstich: &mut SVecStichPushPop,
-    func_filter_allowed_cards: &impl Fn(&[SStich], &mut SHandVector),
+    stichseq: &mut SStichSequence,
+    func_filter_allowed_cards: &impl Fn(&SStichSequence, &mut SHandVector),
     foreachsnapshot: &ForEachSnapshot,
     snapshotvisualizer: &mut impl TSnapshotVisualizer,
 ) -> ForEachSnapshot::Output 
@@ -206,36 +206,36 @@ fn explore_snapshots_internal<ForEachSnapshot>(
         ForEachSnapshot::Output : fmt::Debug,
 {
     if ahand.iter().all(|hand| hand.cards().is_empty()) {
-        let slcstich_game_finished = completed_stichs(vecstich.get());
+        let slcstich_game_finished = stichseq.completed_stichs();
         assert!(slcstich_game_finished.get().iter().all(SStich::is_full));
-        snapshotvisualizer.begin_snapshot(vecstich.get(), &ahand, /*slccard_allowed*/&Vec::new());
+        snapshotvisualizer.begin_snapshot(stichseq, &ahand, /*slccard_allowed*/&Vec::new());
         let output = foreachsnapshot.final_output(SGameFinishedStiche::new(
             slcstich_game_finished.get(),
             EKurzLang::from_cards_per_player(slcstich_game_finished.get().len())
         ));
         snapshotvisualizer.end_snapshot(&output);
         output
-    } else if let Some(output) = foreachsnapshot.pruned_output(vecstich.get(), &ahand) {
-        snapshotvisualizer.begin_snapshot(vecstich.get(), &ahand, /*slccard_allowed*/&Vec::new());
+    } else if let Some(output) = foreachsnapshot.pruned_output(stichseq, &ahand) {
+        snapshotvisualizer.begin_snapshot(stichseq, &ahand, /*slccard_allowed*/&Vec::new());
         snapshotvisualizer.end_snapshot(&output);
         output
     } else {
-        let epi_current = verify!(current_stich(vecstich.get()).current_playerindex()).unwrap();
-        let mut veccard_allowed = rules.all_allowed_cards(vecstich.get(), &ahand[epi_current]);
-        func_filter_allowed_cards(vecstich.get(), &mut veccard_allowed);
+        let epi_current = verify!(stichseq.current_stich().current_playerindex()).unwrap();
+        let mut veccard_allowed = rules.all_allowed_cards(stichseq, &ahand[epi_current]);
+        func_filter_allowed_cards(stichseq, &mut veccard_allowed);
         // TODO? use equivalent card optimization
-        snapshotvisualizer.begin_snapshot(vecstich.get(), ahand, &veccard_allowed);
+        snapshotvisualizer.begin_snapshot(stichseq, ahand, &veccard_allowed);
         let output = foreachsnapshot.combine_outputs(
             epi_self,
             epi_current,
             veccard_allowed.into_iter().map(|card| {
                 ahand[epi_current].play_card(card);
-                let output = vecstich.push_pop(card, rules, |mut vecstich| {
+                let output = stichseq.zugeben_and_restore(card, rules, |stichseq| {
                     explore_snapshots_internal(
                         epi_self,
                         ahand,
                         rules,
-                        &mut vecstich,
+                        stichseq,
                         func_filter_allowed_cards,
                         foreachsnapshot,
                         snapshotvisualizer,
@@ -270,7 +270,7 @@ impl<'rules> SMinReachablePayoutParams<'rules> {
     pub fn new_from_game(game: &'rules SGame) -> Self {
         SMinReachablePayoutParams::new(
             game.rules.as_ref(),
-            verify!(game.current_stich().current_playerindex()).unwrap(),
+            verify!(game.current_playable_stich().current_playerindex()).unwrap(),
             /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
             game.n_stock,
         )
@@ -287,7 +287,7 @@ impl TForEachSnapshot for SMinReachablePayout<'_> {
         self.0.rules.payout(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock).get_player(self.0.epi)
     }
 
-    fn pruned_output(&self, _slcstich: &[SStich], _ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+    fn pruned_output(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
         None
     }
 
@@ -311,8 +311,8 @@ impl TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'_> {
         self.0.rules.payout(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock).get_player(self.0.epi)
     }
 
-    fn pruned_output(&self, slcstich: &[SStich], ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
-        self.0.rules.payouthints(slcstich, ahand)[self.0.epi]
+    fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+        self.0.rules.payouthints(stichseq, ahand)[self.0.epi]
             .lower_bound()
             .clone() // TODO really needed?
             .and_then(|payoutinfo| {

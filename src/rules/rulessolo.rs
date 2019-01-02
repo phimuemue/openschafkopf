@@ -22,10 +22,10 @@ pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
 
     fn payouthints<Rules>(
         &self,
-        _rules: &Rules,
-        _slcstich: &[SStich],
-        _ahand: &EnumMap<EPlayerIndex, SHand>,
-        _playerparties13: &SPlayerParties13,
+        rules: &Rules,
+        stichseq: &SStichSequence,
+        ahand: &EnumMap<EPlayerIndex, SHand>,
+        playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj;
 }
@@ -64,13 +64,13 @@ impl TPayoutDecider for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLi
     fn payouthints<Rules>(
         &self,
         rules: &Rules,
-        slcstich: &[SStich],
+        stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj
     {
-        self.payouthints(rules, slcstich, ahand, playerparties13)
+        self.payouthints(rules, stichseq, ahand, playerparties13)
     }
 }
 
@@ -139,15 +139,14 @@ impl TPayoutDecider for SPayoutDeciderTout {
     fn payouthints<Rules>(
         &self,
         rules: &Rules,
-        slcstich: &[SStich],
+        stichseq: &SStichSequence,
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj
     {
         if 
-            !slcstich.iter()
-                .take_while(|stich| stich.is_full())
+            !stichseq.completed_stichs().get().iter()
                 .all(|stich| playerparties13.is_primary_party(rules.winner_index(stich)))
         {
             internal_payout(
@@ -235,13 +234,13 @@ impl TPayoutDecider for SPayoutDeciderSie {
     fn payouthints<Rules>(
         &self,
         rules: &Rules,
-        slcstich: &[SStich],
+        stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj
     {
-        let itcard = slcstich.iter().filter_map(|stich| stich.get(playerparties13.primary_player())).cloned()
+        let itcard = stichseq.visible_stichs().filter_map(|stich| stich.get(playerparties13.primary_player())).cloned()
             .chain(ahand[playerparties13.primary_player()].cards().iter().cloned());
         if
             !cards_valid_for_sie(
