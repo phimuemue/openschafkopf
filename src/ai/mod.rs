@@ -219,7 +219,7 @@ impl TAi for SAiSimulating {
         let n_payout_sum = Arc::new(AtomicIsize::new(0));
         let ekurzlang = EKurzLang::from_cards_per_player(hand_fixed.get().cards().len());
         verify!(crossbeam::scope(|scope| {
-            for mut ahand in forever_rand_hands2(&SStichSequence::new(epi_first, ekurzlang), hand_fixed.get().clone(), epi_rank, ekurzlang, rules).take(self.n_rank_rules_samples) {
+            for mut ahand in forever_rand_hands(&SStichSequence::new(epi_first, ekurzlang), hand_fixed.get().clone(), epi_rank, ekurzlang, rules).take(self.n_rank_rules_samples) {
                 let n_payout_sum = Arc::clone(&n_payout_sum);
                 scope.spawn(move |_scope| {
                     let n_payout = explore_snapshots(
@@ -256,14 +256,14 @@ impl TAi for SAiSimulating {
         if hand_fixed.cards().len()<=2 {
             determine_best_card(
                 game,
-                all_possible_hands2(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang(), game.rules.as_ref()),
+                all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang(), game.rules.as_ref()),
                 self.n_suggest_card_branches,
                 ostr_file_out,
             )
         } else if hand_fixed.cards().len()<=5 {
             let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
                 game,
-                forever_rand_hands2(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang(), game.rules.as_ref())
+                forever_rand_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang(), game.rules.as_ref())
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
                 &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
@@ -275,7 +275,7 @@ impl TAi for SAiSimulating {
         } else {
             determine_best_card(
                 game,
-                forever_rand_hands2(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang(), game.rules.as_ref())
+                forever_rand_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.kurzlang(), game.rules.as_ref())
                     .take(self.n_suggest_card_samples),
                 self.n_suggest_card_branches,
                 ostr_file_out,
@@ -327,7 +327,7 @@ fn test_is_compatible_with_game_so_far() {
                     oassertnotfrei = Some((epi, trumpforfarbe));
                 }
             }
-            for ahand in forever_rand_hands2(
+            for ahand in forever_rand_hands(
                 &game.stichseq,
                 game.ahand[verify!(game.which_player_can_do_something()).unwrap().0].clone(),
                 verify!(game.which_player_can_do_something()).unwrap().0,
@@ -414,7 +414,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             verify!(game.zugeben(*card, epi)).unwrap();
         }
     }
-    for ahand in all_possible_hands2(
+    for ahand in all_possible_hands(
         &game.stichseq,
         game.ahand[epi_first_and_active_player].clone(),
         epi_first_and_active_player,
