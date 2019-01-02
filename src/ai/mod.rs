@@ -75,8 +75,8 @@ pub fn unplayed_cards<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed
         .filter(move |card| 
              !hand_fixed.contains(*card)
              && !stichseq.visible_stichs().any(|stich|
-                stich.iter().any(|(_epi, card_played)|
-                    card_played==card
+                stich.iter().any(|(_epi, card_in_stich)|
+                    card_in_stich==card
                 )
              )
         )

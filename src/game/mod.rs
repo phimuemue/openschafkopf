@@ -507,19 +507,19 @@ impl SGame {
         }
     }
 
-    pub fn zugeben(&mut self, card_played: SCard, epi: EPlayerIndex) -> Result<(), Error> {
-        info!("Player {} wants to play {}", epi, card_played);
+    pub fn zugeben(&mut self, card: SCard, epi: EPlayerIndex) -> Result<(), Error> {
+        info!("Player {} wants to play {}", epi, card);
         if Some(epi)!=self.which_player_can_do_something().map(|gameaction| gameaction.0) {
             bail!("Wrong player index");
         }
-        if !self.ahand[epi].contains(card_played) {
+        if !self.ahand[epi].contains(card) {
             bail!("card not contained in player's hand");
         }
-        if !self.rules.card_is_allowed(&self.stichseq, &self.ahand[epi], card_played) {
+        if !self.rules.card_is_allowed(&self.stichseq, &self.ahand[epi], card) {
             bail!("{} is not allowed");
         }
-        self.ahand[epi].play_card(card_played);
-        self.stichseq.zugeben(card_played, self.rules.as_ref());
+        self.ahand[epi].play_card(card);
+        self.stichseq.zugeben(card, self.rules.as_ref());
         for epi in EPlayerIndex::values() {
             info!("Hand {}: {}", epi, self.ahand[epi]);
         }

@@ -10,13 +10,13 @@ pub struct SHand {
 }
 
 impl SHand {
-    pub fn new_from_hand(&self, card_played: SCard) -> SHand {
+    pub fn new_from_hand(&self, card: SCard) -> SHand {
         SHand {
             veccard : self
                 .veccard
                 .iter()
                 .cloned()
-                .filter(|&card| card!=card_played)
+                .filter(|&card_in_hand| card_in_hand!=card)
                 .collect()
         }
     }
@@ -31,8 +31,8 @@ impl SHand {
             .iter()
             .any(pred)
     }
-    pub fn play_card(&mut self, card_played: SCard) {
-        self.veccard.retain(|&mut card| card!=card_played)
+    pub fn play_card(&mut self, card: SCard) {
+        self.veccard.retain(|&mut card_in_hand| card_in_hand!=card)
     }
     pub fn add_card(&mut self, card: SCard) {
         assert!(!self.contains(card));
