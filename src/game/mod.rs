@@ -306,10 +306,12 @@ impl SStichSequence {
     }
 
     pub fn new(epi_first: EPlayerIndex, ekurzlang: EKurzLang) -> Self {
-        SStichSequence {
+        let stichseq = SStichSequence {
             vecstich: vec![SStich::new(epi_first)],
             ekurzlang,
-        }
+        };
+        stichseq.assert_invariant();
+        stichseq
     }
 
     pub fn game_finished(&self) -> bool {
