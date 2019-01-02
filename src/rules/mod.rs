@@ -235,8 +235,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
     }
 
     fn card_is_allowed(&self, stichseq: &SStichSequence, hand: &SHand, card: SCard) -> bool {
-        self.all_allowed_cards(stichseq, hand).into_iter()
-            .any(|card_iterated| card_iterated==card)
+        self.all_allowed_cards(stichseq, hand).contains(&card)
     }
 
     fn winner_index(&self, stich: &SStich) -> EPlayerIndex {
