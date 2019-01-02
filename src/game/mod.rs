@@ -391,15 +391,12 @@ impl SGame {
         if !self.ahand[epi].contains(card_played) {
             bail!("card not contained in player's hand");
         }
-        {
-            let hand = &mut self.ahand[epi];
-            if !self.rules.card_is_allowed(&self.vecstich, hand, card_played) {
-                bail!("{} is not allowed");
-            }
-            hand.play_card(card_played);
-            assert!(!self.vecstich.is_empty());
-            current_stich_mut(&mut self.vecstich).push(card_played);
+        if !self.rules.card_is_allowed(&self.vecstich, &self.ahand[epi], card_played) {
+            bail!("{} is not allowed");
         }
+        self.ahand[epi].play_card(card_played);
+        assert!(!self.vecstich.is_empty());
+        current_stich_mut(&mut self.vecstich).push(card_played);
         for epi in EPlayerIndex::values() {
             info!("Hand {}: {}", epi, self.ahand[epi]);
         }
