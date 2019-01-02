@@ -221,11 +221,14 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
     fn all_allowed_cards(&self, slcstich: &[SStich], hand: &SHand) -> SHandVector {
         assert!(!slcstich.is_empty());
         assert!(!current_stich(slcstich).is_full());
-        if current_stich(slcstich).is_empty() {
+        assert!(!hand.cards().is_empty());
+        let veccard = if current_stich(slcstich).is_empty() {
             self.all_allowed_cards_first_in_stich(slcstich, hand)
         } else {
             self.all_allowed_cards_within_stich(slcstich, hand)
-        }
+        };
+        assert!(!veccard.is_empty());
+        veccard
     }
 
     fn all_allowed_cards_first_in_stich(&self, _vecstich: &[SStich], hand: &SHand) -> SHandVector {
