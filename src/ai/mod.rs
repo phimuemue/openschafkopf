@@ -148,6 +148,8 @@ fn determine_best_card_internal(
                 scope.spawn(move |_scope| {
                     assert!(ahand_vecstich_card_count_is_compatible(&game.stichseq, &ahand, game.kurzlang()));
                     let mut stichseq = game.stichseq.clone();
+                    ahand[epi_fixed].play_card(card);
+                    stichseq.zugeben(card, game.rules.as_ref());
                     let n_payout = explore_snapshots(
                         epi_fixed,
                         &mut ahand,
@@ -175,7 +177,7 @@ fn determine_best_card_internal(
                         &mut foreachsnapshot,
                         ostr_file_out.map(|str_file_out| {
                             verify!(std::fs::create_dir_all(str_file_out)).unwrap();
-                            format!("{}/{}", str_file_out, i_susp)
+                            format!("{}/{}_{}", str_file_out, i_susp, card)
                         }).as_ref().map(|str_file_out| &str_file_out[..]),
                     );
                     let mut mapcardn_payout = verify!(mapcardn_payout.lock()).unwrap();
