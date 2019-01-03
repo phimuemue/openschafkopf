@@ -95,7 +95,6 @@ fn detect_expensive_all_possible_hands() {
                         &game.stichseq,
                         game.ahand[epi_fixed].clone(),
                         epi_fixed,
-                        game.kurzlang(),
                         game.rules.as_ref()
                     )
                         .collect::<Vec<_>>();

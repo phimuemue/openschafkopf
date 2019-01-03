@@ -59,9 +59,9 @@ impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
     }
 }
 
-fn make_handiterator<NextVecEPI: TNextVecEPI>(stichseq: &SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, ekurzlang: EKurzLang) -> SHandIterator<NextVecEPI> {
-    let veccard_unknown = unplayed_cards(stichseq, &hand_fixed, ekurzlang).collect::<Vec<_>>();
-    let mapepin_cards_per_hand = remaining_cards_per_hand(stichseq, ekurzlang);
+fn make_handiterator<NextVecEPI: TNextVecEPI>(stichseq: &SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex) -> SHandIterator<NextVecEPI> {
+    let veccard_unknown = unplayed_cards(stichseq, &hand_fixed).collect::<Vec<_>>();
+    let mapepin_cards_per_hand = remaining_cards_per_hand(stichseq);
     let mut vecepi = Vec::new();
     for epi in EPlayerIndex::values() {
         if epi==epi_fixed {
@@ -83,23 +83,23 @@ fn make_handiterator<NextVecEPI: TNextVecEPI>(stichseq: &SStichSequence, hand_fi
     }
 }
 
-fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVecEPI+'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, ekurzlang: EKurzLang, rules: &'lifetime TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator::<NextVecEPI>(stichseq, hand_fixed, epi_fixed, ekurzlang)
+fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVecEPI+'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, rules: &'lifetime TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+    make_handiterator::<NextVecEPI>(stichseq, hand_fixed, epi_fixed)
         .filter(move |ahand| {
             let stich_current = stichseq.current_stich();
             let slcstich_complete = stichseq.completed_stichs();
             assert!(!stich_current.is_full());
-            assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand, ekurzlang));
+            assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
             // hands must not contain other cards preventing farbe/trumpf frei
             let mut ahand_simulate = EPlayerIndex::map_from_fn(|epi| {
                 let mut veccard = ahand[epi].cards().clone();
                 veccard.extend(stich_current.get(epi).cloned().into_iter());
                 veccard.extend(slcstich_complete.get().iter().rev().map(|stich| stich[epi]));
-                assert_eq!(veccard.len(), ekurzlang.cards_per_player());
+                assert_eq!(veccard.len(), stichseq.kurzlang().cards_per_player());
                 SHand::new_from_vec(veccard)
             });
             rules.playerindex().map_or(true, |epi_active|
-                rules.can_be_played(SFullHand::new(&ahand_simulate[epi_active], ekurzlang))
+                rules.can_be_played(SFullHand::new(&ahand_simulate[epi_active], stichseq.kurzlang()))
             )
             && {
                 let mut b_valid_up_to_now = true;
@@ -125,12 +125,12 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
         })
 }
 
-pub fn all_possible_hands<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, ekurzlang: EKurzLang, rules: &'lifetime TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SNextVecEPIPermutation>(stichseq, hand_fixed, epi_fixed, ekurzlang, rules)
+pub fn all_possible_hands<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, rules: &'lifetime TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+    make_handiterator_compatible_with_game_so_far::<SNextVecEPIPermutation>(stichseq, hand_fixed, epi_fixed, rules)
 }
 
-pub fn forever_rand_hands<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, ekurzlang: EKurzLang, rules: &'lifetime TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SNextVecEPIShuffle>(stichseq, hand_fixed, epi_fixed, ekurzlang, rules)
+pub fn forever_rand_hands<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, rules: &'lifetime TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+    make_handiterator_compatible_with_game_so_far::<SNextVecEPIShuffle>(stichseq, hand_fixed, epi_fixed, rules)
 }
 
 #[test]
@@ -177,7 +177,6 @@ fn test_all_possible_hands() {
                 &stichseq,
                 SHand::new_from_vec(veccard_hand.iter().cloned().collect()),
                 epi_fixed,
-                EKurzLang::Lang,
             ) {
                 i_hand+=1;
                 assert_eq!(EnumMap::from_raw(an_size_hand.clone()), ahand.map(|hand| hand.cards().len()));
