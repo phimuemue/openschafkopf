@@ -310,18 +310,18 @@ impl SStichSequence {
             vecstich: vec![SStich::new(epi_first)],
             ekurzlang,
         };
-        stichseq.assert_invariant();
+        #[cfg(debug_assertions)]stichseq.assert_invariant();
         stichseq
     }
 
     pub fn game_finished(&self) -> bool {
-        self.assert_invariant();
+        #[cfg(debug_assertions)]self.assert_invariant();
         assert!(self.completed_stichs().get().len()<=self.ekurzlang.cards_per_player());
         self.completed_stichs().get().len()==self.ekurzlang.cards_per_player()
     }
 
     pub fn no_card_played(&self) -> bool {
-        self.assert_invariant();
+        #[cfg(debug_assertions)]self.assert_invariant();
         self.completed_stichs().get().is_empty() && self.current_stich().is_empty()
     }
 
@@ -330,7 +330,7 @@ impl SStichSequence {
     }
 
     pub fn completed_stichs(&self) -> SCompletedStichs {
-        self.assert_invariant();
+        #[cfg(debug_assertions)]self.assert_invariant();
         self.completed_stichs_no_invariant()
     }
 
@@ -339,17 +339,17 @@ impl SStichSequence {
     }
 
     pub fn current_stich(&self) -> &SStich {
-        self.assert_invariant();
+        #[cfg(debug_assertions)]self.assert_invariant();
         self.current_stich_no_invariant()
     }
 
     pub fn zugeben_custom_winner_index(&mut self, card: SCard, fn_winner_index: impl FnOnce(&SStich)->EPlayerIndex) {
-        self.assert_invariant();
+        #[cfg(debug_assertions)]self.assert_invariant();
         verify!(self.vecstich.last_mut()).unwrap().push(card);
         if self.current_stich_no_invariant().is_full() {
             self.vecstich.push(SStich::new(fn_winner_index(self.current_stich_no_invariant())));
         }
-        self.assert_invariant();
+        #[cfg(debug_assertions)]self.assert_invariant();
     }
 
     pub fn zugeben(&mut self, card: SCard, rules: &TRules) {
@@ -360,7 +360,7 @@ impl SStichSequence {
         where
             for<'inner> F: FnOnce(&mut Self)->R
     {
-        self.assert_invariant();
+        #[cfg(debug_assertions)]self.assert_invariant();
         let n_len = self.vecstich.len();
         assert!(!self.current_stich().is_full());
         self.zugeben(card, rules);
@@ -371,7 +371,7 @@ impl SStichSequence {
         }
         verify!(self.vecstich.last_mut()).unwrap().undo_most_recent();
         assert_eq!(n_len, self.vecstich.len());
-        self.assert_invariant();
+        #[cfg(debug_assertions)]self.assert_invariant();
         r
     }
 
@@ -380,17 +380,17 @@ impl SStichSequence {
     }
 
     pub fn first_playerindex(&self) -> EPlayerIndex {
-        self.assert_invariant();
+        #[cfg(debug_assertions)]self.assert_invariant();
         self.vecstich[0].first_playerindex()
     }
 
     pub fn kurzlang(&self) -> EKurzLang {
-        self.assert_invariant();
+        #[cfg(debug_assertions)]self.assert_invariant();
         self.ekurzlang
     }
 
     pub fn count_played_cards(&self) -> usize {
-        self.assert_invariant();
+        #[cfg(debug_assertions)]self.assert_invariant();
         self.completed_stichs().get().len() * EPlayerIndex::SIZE
             + self.current_stich().size()
     }
