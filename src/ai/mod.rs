@@ -62,14 +62,6 @@ pub trait TAi {
     fn internal_suggest_card(&self, game: &SGame, ostr_file_out: Option<&str>) -> SCard;
 }
 
-pub fn random_sample_from_vec(vect: &mut SHandVector, n_size: usize) {
-    assert!(n_size<=vect.len());
-    let vect_sampled_tmp = vect.iter().cloned().choose_multiple(&mut rand::thread_rng(), n_size); // TODO can we choose_multiple directly into SHandVector?
-    let mut vect_sampled = vect_sampled_tmp.into_iter().collect::<SHandVector>();
-    assert_eq!(vect_sampled.len(), n_size);
-    mem::swap(&mut vect_sampled, vect);
-}
-
 pub fn unplayed_cards<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: &'lifetime SHand, ekurzlang: EKurzLang) -> impl Iterator<Item=SCard> + 'lifetime {
     SCard::values(ekurzlang)
         .filter(move |card| 
@@ -119,7 +111,7 @@ impl TAi for SAiCheating {
         determine_best_card(
             game,
             Some(game.ahand.clone()).into_iter(),
-            /*n_branches*/1,
+            /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
             ostr_file_out,
         )
@@ -129,7 +121,7 @@ impl TAi for SAiCheating {
 fn determine_best_card_internal(
     game: &SGame,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
-    n_branches: usize,
+    func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Send + Clone),
     ostr_file_out: Option<&str>
 ) -> (SHandVector, EnumMap<SCard, isize>) {
@@ -156,25 +148,7 @@ fn determine_best_card_internal(
                         &mut ahand,
                         game.rules.as_ref(),
                         &mut stichseq,
-                        &|slcstich, veccard_allowed| {
-                            assert!(!veccard_allowed.is_empty());
-                            assert!(slcstich.count_played_cards()>=game.stichseq.count_played_cards());
-                            if slcstich.count_played_cards()!=game.stichseq.count_played_cards() && game.completed_stichs().get().len() < 6 {
-                                // TODO: maybe keep more than one successor stich
-                                random_sample_from_vec(
-                                    veccard_allowed,
-                                    std::cmp::min(
-                                        veccard_allowed.len(),
-                                        rand::thread_rng().gen_range(
-                                            1,
-                                            {assert!(0<n_branches); n_branches+1}
-                                        ),
-                                    ),
-                                );
-                            } else {
-                                // if slcstich>=6, we hope that we can compute everything
-                            }
-                        },
+                        func_filter_allowed_cards,
                         &mut foreachsnapshot,
                         ostr_file_out.map(|str_file_out| {
                             verify!(std::fs::create_dir_all(str_file_out)).unwrap();
@@ -197,17 +171,28 @@ fn determine_best_card_internal(
     (veccard_allowed, mapcardn_payout)
 }
 
+pub fn branching_factor(fn_stichseq_to_intvl: impl Fn(&SStichSequence)->(usize, usize)) -> impl Fn(&SStichSequence, &mut SHandVector) {
+    move |stichseq, veccard_allowed| {
+        assert!(!veccard_allowed.is_empty());
+        let (n_lo, n_hi) = fn_stichseq_to_intvl(stichseq);
+        assert!(n_lo < n_hi);
+        let vect_sampled_tmp = veccard_allowed.iter().cloned().choose_multiple(&mut rand::thread_rng(), rand::thread_rng().gen_range(n_lo, n_hi)); // TODO can we choose_multiple directly into SHandVector?
+        let mut vect_sampled = vect_sampled_tmp.into_iter().collect::<SHandVector>();
+        mem::swap(&mut vect_sampled, veccard_allowed);
+    }
+}
+
 fn determine_best_card(
     game: &SGame,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
-    n_branches: usize,
+    func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Send + Clone),
     ostr_file_out: Option<&str>,
 ) -> SCard {
     let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
         game,
         itahand,
-        n_branches,
+        func_filter_allowed_cards,
         foreachsnapshot,
         ostr_file_out,
     );
@@ -236,10 +221,7 @@ impl TAi for SAiSimulating {
                         &mut ahand,
                         rules,
                         &mut SStichSequence::new(epi_first, ekurzlang),
-                        &|_slcstich, veccard_allowed| {
-                            assert!(!veccard_allowed.is_empty());
-                            random_sample_from_vec(veccard_allowed, 1);
-                        },
+                        &branching_factor(|_stichseq| (1, 2)),
                         &mut SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new(
                             rules,
                             epi_rank,
@@ -266,7 +248,9 @@ impl TAi for SAiSimulating {
             determine_best_card(
                 game,
                 $itahand,
-                self.n_suggest_card_branches,
+                &branching_factor(|_stichseq| {
+                    (1, self.n_suggest_card_branches+1)
+                }),
                 $foreachsnapshot,
                 ostr_file_out,
             )
@@ -432,7 +416,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         let (veccard_allowed, mapcardpayout) = determine_best_card_internal(
             &game,
             Some(ahand).into_iter(),
-            /*n_branches*/1,
+            /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(&game)),
             /*ostr_file_out*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
         );

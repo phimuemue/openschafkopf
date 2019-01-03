@@ -120,10 +120,7 @@ impl TPlayer for SPlayerComputer {
                         &mut ahand,
                         rules,
                         &mut SStichSequence::new(doublings.first_playerindex(), ekurzlang),
-                        &|_vecstich, veccard_allowed| {
-                            assert!(!veccard_allowed.is_empty());
-                            random_sample_from_vec(veccard_allowed, 1);
-                        },
+                        &branching_factor(|_stichseq| (1, 2)),
                         &mut SMinReachablePayout(SMinReachablePayoutParams::new(
                             rules,
                             epi,
