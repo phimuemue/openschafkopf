@@ -208,7 +208,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
 
     fn all_allowed_cards(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         assert!(!hand.cards().is_empty());
-        assert!(!stichseq.game_finished());
+        #[cfg(debug_assertions)]assert!(!stichseq.game_finished());
         let veccard = if stichseq.current_stich().is_empty() {
             self.all_allowed_cards_first_in_stich(stichseq, hand)
         } else {
