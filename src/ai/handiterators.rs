@@ -171,7 +171,7 @@ fn test_all_possible_hands() {
             (SK, vec![SK], 1, [0, 0, 0, 1]),
         ],
     ].into_iter() {
-        for (card, veccard_hand, n_hand_count, an_size_hand) in atplcardslccardnan {
+        for (card, veccard_hand, n_hand_count, an_size_hand) in atplcardslccardnan.into_iter() {
             let mut i_hand = 0;
             for ahand in make_handiterator::<SNextVecEPIPermutation>(
                 &stichseq,
@@ -179,7 +179,7 @@ fn test_all_possible_hands() {
                 epi_fixed,
             ) {
                 i_hand+=1;
-                assert_eq!(EnumMap::from_raw(an_size_hand.clone()), ahand.map(|hand| hand.cards().len()));
+                assert_eq!(EnumMap::from_raw(*an_size_hand), ahand.map(|hand| hand.cards().len()));
             }
             assert_eq!(i_hand, *n_hand_count);
             stichseq.zugeben_custom_winner_index(*card, |_stich| epi_irrelevant);

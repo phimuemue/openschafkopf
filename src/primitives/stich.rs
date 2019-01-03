@@ -30,8 +30,8 @@ fn test_stich() {
         for epi_first in EPlayerIndex::values() {
             for n_size in 0..5 {
                 let mut stich = SStich::new(epi_first);
-                for i_card in 0..n_size {
-                    stich.push(acard[i_card]);
+                for &card in acard.iter().take(n_size) {
+                    stich.push(card);
                 }
                 assert_eq!(stich.size(), n_size);
                 assert_eq!(stich.first_playerindex(), epi_first);

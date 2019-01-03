@@ -322,7 +322,7 @@ impl SStichSequence {
 
     pub fn no_card_played(&self) -> bool {
         self.assert_invariant();
-        self.completed_stichs().get().len()==0 && self.current_stich().is_empty()
+        self.completed_stichs().get().is_empty() && self.current_stich().is_empty()
     }
 
     fn completed_stichs_no_invariant(&self) -> SCompletedStichs {

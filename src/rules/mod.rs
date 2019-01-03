@@ -320,7 +320,7 @@ pub enum VGameAnnouncementPriority {
 fn test_gameannouncementprio() {
     use self::VGameAnnouncementPriority::*;
     use self::VGameAnnouncementPrioritySoloLike::*;
-    assert!(RufspielLike==RufspielLike);
+    assert_eq!(RufspielLike, RufspielLike);
     assert!(RufspielLike<SoloLike(SoloSimple(0)));
     assert!(RufspielLike<SoloTout(0));
     assert!(RufspielLike<SoloSie);
@@ -335,7 +335,7 @@ fn test_gameannouncementprio() {
     assert!(SoloSie>RufspielLike);
     assert!(SoloSie>SoloLike(SoloSimple(0)));
     assert!(SoloSie>SoloTout(0));
-    assert!(SoloSie==SoloSie);
+    assert_eq!(SoloSie, SoloSie);
     assert!(SoloLike(SoloSimple(0))<SoloLike(SoloSimple(1)));
     assert!(SoloTout(0)<SoloTout(1));
 }
