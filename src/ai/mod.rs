@@ -244,34 +244,38 @@ impl TAi for SAiSimulating {
         let epi_fixed = verify!(stich_current.current_playerindex()).unwrap();
         let hand_fixed = &game.ahand[epi_fixed];
         assert!(!hand_fixed.cards().is_empty());
-        macro_rules! forward_to_determine_best_card{($itahand: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
+        macro_rules! forward_to_determine_best_card{($itahand: expr, $func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
             determine_best_card(
                 game,
                 $itahand,
-                &branching_factor(|_stichseq| {
-                    (1, self.n_suggest_card_branches+1)
-                }),
+                $func_filter_allowed_cards,
                 $foreachsnapshot,
                 ostr_file_out,
             )
         }}
-        if hand_fixed.cards().len()<=2 {
-            forward_to_determine_best_card!(
+        // TODORUST exhaustive_integer_patterns
+        // https://github.com/rust-lang/rfcs/issues/1550
+        // https://github.com/rust-lang/rust/issues/50907
+        match /*n_incomplete_stichs*/ game.stichseq.kurzlang().cards_per_player()-game.stichseq.completed_stichs().get().len() {
+            1|2 => forward_to_determine_best_card!(
                 all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.rules.as_ref()),
+                &|_,_| (/*no filtering*/),
                 &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
-            )
-        } else if hand_fixed.cards().len()<=5 {
-            forward_to_determine_best_card!(
-                forever_rand_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.rules.as_ref())
-                    .take(self.n_suggest_card_samples),
+            ),
+            3 => forward_to_determine_best_card!(
+                all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.rules.as_ref()),
+                &|_,_| (/*no filtering*/),
                 &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
-            )
-        } else {
-            forward_to_determine_best_card!(
+            ),
+            4|5|6|7|8 => forward_to_determine_best_card!(
                 forever_rand_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.rules.as_ref())
                     .take(self.n_suggest_card_samples),
-                &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
-            )
+                &branching_factor(|_stichseq| {
+                    (1, self.n_suggest_card_branches+1)
+                }),
+                &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
+            ),
+            n_incomplete_stichs => panic!("internal_suggest_card called with {} remaining stichs", n_incomplete_stichs),
         }
     }
 }
