@@ -71,7 +71,7 @@ fn main() {
         .get_matches();
     let ai = |subcommand_matches: &clap::ArgMatches| {
         match verify!(subcommand_matches.value_of("ai")).unwrap() {
-            "cheating" => SAi::new_cheating(/*n_rank_rules_samples*/50),
+            "cheating" => SAi::new_cheating(/*n_rank_rules_samples*/50, /*n_suggest_card_branches*/2),
             "simulating" => 
                 SAi::new_simulating(
                     /*n_rank_rules_samples*/50,
@@ -80,7 +80,7 @@ fn main() {
                 ),
             _ => {
                 println!("Warning: AI not recognized. Defaulting to 'cheating'");
-                SAi::new_cheating(/*n_rank_rules_samples*/50)
+                SAi::new_cheating(/*n_rank_rules_samples*/50, /*n_suggest_card_branches*/2)
             }
         }
     };
@@ -322,7 +322,7 @@ fn test_game_loop() {
             &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
                 Box::new(SPlayerComputer{ai: {
                     if epi<EPlayerIndex::EPI2 {
-                        ai::SAi::new_cheating(/*n_rank_rules_samples*/1)
+                        ai::SAi::new_cheating(/*n_rank_rules_samples*/1, /*n_suggest_card_branches*/2)
                     } else {
                         ai::SAi::new_simulating(/*n_rank_rules_samples*/1, /*n_suggest_card_branches*/1, /*n_suggest_card_samples*/1)
                     }
