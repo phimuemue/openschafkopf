@@ -14,7 +14,7 @@ use crate::util::*;
 use std::sync::mpsc;
 
 pub struct SPlayerComputer {
-    pub ai : Box<TAi>,
+    pub ai : SAi,
 }
 
 impl TPlayer for SPlayerComputer {

@@ -12,7 +12,7 @@ use std::sync::mpsc;
 use chrono::Local;
 
 pub struct SPlayerHuman {
-    pub ai : Box<TAi>,
+    pub ai : SAi,
 }
 
 fn choose_ruleset_or_rules<'t, T>(

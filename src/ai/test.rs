@@ -61,10 +61,10 @@ fn test_determine_best_card() {
         // TODO update AI to recognize this and assert
         (EPlayerIndex::EPI2, [GU, E9, EU, G8]),
     ]);
-    let aicheating = SAiCheating::new(
+    let aicheating = SAi::new_cheating(
         /*n_rank_rules_samples*/1
     );
-    let aisimulating = SAiSimulating::new(
+    let aisimulating = SAi::new_simulating(
         /*n_suggest_card_branches*/1,
         /*n_suggest_card_samples*/1,
         /*n_samples_per_rules*/1,
