@@ -78,12 +78,11 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)> {
-        let points_for_party = |b_primary| -> isize {
-            stichseq.completed_stichs().get().iter()
-                .filter(|stich| b_primary==playerparties.is_primary_party(rules.winner_index(stich)))
-                .map(|stich| points_stich(stich))
-                .sum()
-        };
+        let mapbn_points = stichseq.completed_stichs().get().iter()
+            .fold(bool::map_from_fn(|_b_primary| 0), |mut mapbn_points, stich| {
+                mapbn_points[/*b_primary*/playerparties.is_primary_party(rules.winner_index(stich))] += points_stich(stich);
+                mapbn_points
+            });
         let internal_payouthints = |b_primary_party_wins| {
             internal_payout(
                 /*n_payout_single_player*/ self.payoutparams.n_payout_base,
@@ -95,9 +94,9 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
                      tpl_flip_if(0<*n_payout, (None, Some(*n_payout)))
                 })
         };
-        if /*b_primary_party_wins*/ points_for_party(/*b_primary*/true) >= self.pointstowin.points_to_win() {
+        if /*b_primary_party_wins*/ mapbn_points[/*b_primary*/true] >= self.pointstowin.points_to_win() {
             internal_payouthints(/*b_primary_party_wins*/true)
-        } else if points_for_party(/*b_primary*/false) > 120-self.pointstowin.points_to_win() {
+        } else if mapbn_points[/*b_primary*/false] > 120-self.pointstowin.points_to_win() {
             internal_payouthints(/*b_primary_party_wins*/false)
         } else {
             EPlayerIndex::map_from_fn(|_epi| (None, None))
