@@ -147,7 +147,7 @@ fn detect_expensive_all_possible_hands() {
                                 game.rules.as_ref(),
                                 &mut game.stichseq.clone(),
                                 &|_vecstich_complete, _vecstich_successor| {/*no filtering*/},
-                                &mut SLeafCounter{},
+                                &SLeafCounter{},
                                 /*ostr_file_out*/None,
                             ),
                             2000

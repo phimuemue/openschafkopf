@@ -121,7 +121,7 @@ impl TPlayer for SPlayerComputer {
                         rules,
                         &mut SStichSequence::new(doublings.first_playerindex(), ekurzlang),
                         &branching_factor(|_stichseq| (1, 2)),
-                        &mut SMinReachablePayout(SMinReachablePayoutParams::new(
+                        &SMinReachablePayout(SMinReachablePayoutParams::new(
                             rules,
                             epi,
                             /*tpln_stoss_doubling*/stoss_and_doublings(vecstoss, doublings),
