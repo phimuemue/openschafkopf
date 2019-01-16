@@ -157,7 +157,7 @@ pub fn explore_snapshots<ForEachSnapshot>(
     rules: &TRules,
     stichseq: &mut SStichSequence,
     func_filter_allowed_cards: &impl Fn(&SStichSequence, &mut SHandVector),
-    foreachsnapshot: &mut ForEachSnapshot,
+    foreachsnapshot: &ForEachSnapshot,
     ostr_file_out: Option<&str>,
 ) -> ForEachSnapshot::Output 
     where
