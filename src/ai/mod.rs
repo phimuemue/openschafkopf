@@ -206,7 +206,7 @@ fn determine_best_card_internal(
     game: &SGame,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
-    foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Send + Clone),
+    foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Sync),
     ostr_file_out: Option<&str>
 ) -> (SHandVector, EnumMap<SCard, isize>) {
     let epi_fixed = verify!(game.current_playable_stich().current_playerindex()).unwrap();
@@ -220,7 +220,7 @@ fn determine_best_card_internal(
             for &card in veccard_allowed.iter() {
                 debug_assert!(ahand[epi_fixed].cards().contains(&card));
                 let mut ahand = ahand.clone();
-                let mut foreachsnapshot = foreachsnapshot.clone();
+                let foreachsnapshot = foreachsnapshot;
                 let mapcardn_payout = Arc::clone(&mapcardn_payout);
                 scope.spawn(move |_scope| {
                     assert!(ahand_vecstich_card_count_is_compatible(&game.stichseq, &ahand));
@@ -233,7 +233,7 @@ fn determine_best_card_internal(
                         game.rules.as_ref(),
                         &mut stichseq,
                         func_filter_allowed_cards,
-                        &mut foreachsnapshot,
+                        foreachsnapshot,
                         ostr_file_out.map(|str_file_out| {
                             verify!(std::fs::create_dir_all(str_file_out)).unwrap();
                             format!("{}/{}_{}", str_file_out, i_susp, card)
@@ -270,7 +270,7 @@ fn determine_best_card(
     game: &SGame,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
-    foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Send + Clone),
+    foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Sync),
     ostr_file_out: Option<&str>,
 ) -> SCard {
     let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
