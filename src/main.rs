@@ -8,7 +8,7 @@ extern crate permutohedron;
 #[macro_use]
 extern crate clap;
 extern crate arrayvec;
-extern crate crossbeam;
+extern crate rayon;
 #[macro_use]
 extern crate failure;
 extern crate as_num;

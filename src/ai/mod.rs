@@ -19,11 +19,10 @@ use std::{
     mem,
     sync::{
         Arc, Mutex,
-        atomic::{AtomicIsize, Ordering},
     },
     cmp,
 };
-use crossbeam;
+use rayon::prelude::*;
 use crate::util::*;
 
 pub fn remaining_cards_per_hand(stichseq: &SStichSequence) -> EnumMap<EPlayerIndex, usize> {
@@ -75,32 +74,28 @@ impl SAi {
 
     pub fn rank_rules(&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
-        let n_payout_sum = Arc::new(AtomicIsize::new(0));
         let ekurzlang = EKurzLang::from_cards_per_player(hand_fixed.get().cards().len());
-        verify!(crossbeam::scope(|scope| {
-            for mut ahand in forever_rand_hands(&SStichSequence::new(epi_first, ekurzlang), hand_fixed.get().clone(), epi_rank, rules).take(self.n_rank_rules_samples) {
-                let n_payout_sum = Arc::clone(&n_payout_sum);
-                scope.spawn(move |_scope| {
-                    let n_payout = explore_snapshots(
-                        epi_rank,
-                        &mut ahand,
+        forever_rand_hands(&SStichSequence::new(epi_first, ekurzlang), hand_fixed.get().clone(), epi_rank, rules)
+            .take(self.n_rank_rules_samples)
+            .collect::<Vec<_>>() // TODO necessary?
+            .into_par_iter()
+            .map(|mut ahand| {
+                explore_snapshots(
+                    epi_rank,
+                    &mut ahand,
+                    rules,
+                    &mut SStichSequence::new(epi_first, ekurzlang),
+                    &branching_factor(|_stichseq| (1, 2)),
+                    &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new(
                         rules,
-                        &mut SStichSequence::new(epi_first, ekurzlang),
-                        &branching_factor(|_stichseq| (1, 2)),
-                        &mut SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new(
-                            rules,
-                            epi_rank,
-                            /*tpln_stoss_doubling*/(0, 0), // TODO do we need tpln_stoss_doubling from somewhere? 
-                            n_stock,
-                        )),
-                        /*ostr_file_out*/None,
-                    );
-                    n_payout_sum.fetch_add(n_payout, Ordering::SeqCst);
-                });
-            }
-        })).unwrap();
-        let n_payout_sum = n_payout_sum.load(Ordering::SeqCst);
-        (n_payout_sum.as_num::<f64>()) / (self.n_rank_rules_samples.as_num::<f64>())
+                        epi_rank,
+                        /*tpln_stoss_doubling*/(0, 0), // TODO do we need tpln_stoss_doubling from somewhere? 
+                        n_stock,
+                    )),
+                    /*ostr_file_out*/None,
+                )
+            })
+            .sum::<isize>().as_num::<f64>() / (self.n_rank_rules_samples.as_num::<f64>())
     }
 
     pub fn suggest_card(&self, game: &SGame, ostr_file_out: Option<&str>) -> SCard {
@@ -215,36 +210,36 @@ fn determine_best_card_internal(
         // aggregate n_payout per card in some way
         SCard::map_from_fn(|_card| std::isize::MAX),
     ));
-    verify!(crossbeam::scope(|scope| {
-        for (i_susp, ahand) in itahand.enumerate() {
-            for &card in veccard_allowed.iter() {
-                debug_assert!(ahand[epi_fixed].cards().contains(&card));
-                let mut ahand = ahand.clone();
-                let foreachsnapshot = foreachsnapshot;
-                let mapcardn_payout = Arc::clone(&mapcardn_payout);
-                scope.spawn(move |_scope| {
-                    assert!(ahand_vecstich_card_count_is_compatible(&game.stichseq, &ahand));
-                    let mut stichseq = game.stichseq.clone();
-                    ahand[epi_fixed].play_card(card);
-                    stichseq.zugeben(card, game.rules.as_ref());
-                    let n_payout = explore_snapshots(
-                        epi_fixed,
-                        &mut ahand,
-                        game.rules.as_ref(),
-                        &mut stichseq,
-                        func_filter_allowed_cards,
-                        foreachsnapshot,
-                        ostr_file_out.map(|str_file_out| {
-                            verify!(std::fs::create_dir_all(str_file_out)).unwrap();
-                            format!("{}/{}_{}", str_file_out, i_susp, card)
-                        }).as_ref().map(|str_file_out| &str_file_out[..]),
-                    );
-                    let mut mapcardn_payout = verify!(mapcardn_payout.lock()).unwrap();
-                    mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
-                });
-            }
-        }
-    })).unwrap();
+    itahand.enumerate()
+        .collect::<Vec<_>>() // TODO necessary?
+        .into_par_iter()
+        .flat_map(|(i_susp, ahand)|
+            veccard_allowed.par_iter()
+                .map(move |card| (i_susp, ahand.clone(), *card))
+        )
+        .for_each(|(i_susp, ahand, card)| {
+            debug_assert!(ahand[epi_fixed].cards().contains(&card));
+            let mut ahand = ahand.clone();
+            let mapcardn_payout = Arc::clone(&mapcardn_payout);
+            assert!(ahand_vecstich_card_count_is_compatible(&game.stichseq, &ahand));
+            let mut stichseq = game.stichseq.clone();
+            ahand[epi_fixed].play_card(card);
+            stichseq.zugeben(card, game.rules.as_ref());
+            let n_payout = explore_snapshots(
+                epi_fixed,
+                &mut ahand,
+                game.rules.as_ref(),
+                &mut stichseq,
+                func_filter_allowed_cards,
+                foreachsnapshot,
+                ostr_file_out.map(|str_file_out| {
+                    verify!(std::fs::create_dir_all(str_file_out)).unwrap();
+                    format!("{}/{}_{}", str_file_out, i_susp, card)
+                }).as_ref().map(|str_file_out| &str_file_out[..]),
+            );
+            let mut mapcardn_payout = verify!(mapcardn_payout.lock()).unwrap();
+            mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
+        });
     let mapcardn_payout = verify!(
         verify!(Arc::try_unwrap(mapcardn_payout)).unwrap() // "Returns the contained value, if the Arc has exactly one strong reference"   
             .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
