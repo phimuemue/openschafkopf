@@ -1,6 +1,6 @@
 # OpenSchafkopf
 
-[![Build Status](https://travis-ci.org/phimuemue/openschafkopf.svg?branch=master)](https://travis-ci.org/phimuemue/openschafkopf)
+[![Build Status](https://travis-ci.com/phimuemue/openschafkopf.svg?token=p5VJrpqP4RgYm9XasCJN&branch=master)](https://travis-ci.com/phimuemue/openschafkopf)
 [![codecov](https://codecov.io/gh/phimuemue/openschafkopf/branch/master/graph/badge.svg)](https://codecov.io/gh/phimuemue/openschafkopf)
 
 This is a work in progress, aiming to model the game Schafkopf in a robust and extensible manner. Moreover, it aims to provide an AI playing the game. As of now, it does *not* provide any fancy user interface, but instead relies on the command line.
