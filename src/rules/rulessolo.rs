@@ -131,8 +131,8 @@ impl TPayoutDecider for SPayoutDeciderTout {
         internal_payout(
             /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(gamefinishedstiche, playerparties13)) * 2,
             playerparties13,
-            /*b_primary_party_wins*/ gamefinishedstiche.get().iter()
-                .all(|stich| playerparties13.is_primary_party(rules.winner_index(stich))),
+            /*b_primary_party_wins*/ gamefinishedstiche.get().completed_stichs_winner_index(rules)
+                .all(|(_stich, epi_winner)| playerparties13.is_primary_party(epi_winner)),
         )
     }
 
@@ -146,8 +146,8 @@ impl TPayoutDecider for SPayoutDeciderTout {
         where Rules: TRulesNoObj
     {
         if 
-            !stichseq.completed_stichs().get().iter()
-                .all(|stich| playerparties13.is_primary_party(rules.winner_index(stich)))
+            !stichseq.completed_stichs_winner_index(rules)
+                .all(|(_stich, epi_winner)| playerparties13.is_primary_party(epi_winner))
         {
             internal_payout(
                 /*n_payout_single_player*/ (self.payoutparams.n_payout_base) * 2, // TODO laufende
@@ -220,13 +220,13 @@ impl TPayoutDecider for SPayoutDeciderSie {
         internal_payout(
             /*n_payout_single_player*/ (self.payoutparams.n_payout_base
             + {
-                gamefinishedstiche.get().len().as_num::<isize>()
+                gamefinishedstiche.get().completed_stichs().get().len().as_num::<isize>()
             } * self.payoutparams.laufendeparams.n_payout_per_lauf) * 4,
             playerparties13,
             /*b_primary_party_wins*/cards_valid_for_sie(
                 rules,
-                gamefinishedstiche.get().iter().map(|stich| stich[playerparties13.primary_player()]),
-                EKurzLang::from_cards_per_player(gamefinishedstiche.get().len())
+                gamefinishedstiche.get().completed_stichs().get().iter().map(|stich| stich[playerparties13.primary_player()]),
+                EKurzLang::from_cards_per_player(gamefinishedstiche.get().completed_stichs().get().len())
             )
         )
     }

@@ -49,15 +49,16 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
         where 
             Rules: TRulesNoObj,
     {
-        let n_points_primary_party : isize = gamefinishedstiche.get().iter()
-            .filter(|stich| playerparties.is_primary_party(rules.winner_index(stich)))
-            .map(|stich| points_stich(stich))
+        let n_points_primary_party : isize = gamefinishedstiche.get().completed_stichs_winner_index(rules)
+            .filter(|&(_stich, epi_winner)| playerparties.is_primary_party(epi_winner))
+            .map(|(stich, _epi_winner)| points_stich(stich))
             .sum();
         let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
         internal_payout(
             /*n_payout_single_player*/ self.payoutparams.n_payout_base
                 + { 
-                    if gamefinishedstiche.get().iter().all(|stich| b_primary_party_wins==playerparties.is_primary_party(rules.winner_index(stich))) {
+                    if gamefinishedstiche.get().completed_stichs_winner_index(rules)
+                        .all(|(_stich, epi_winner)| b_primary_party_wins==playerparties.is_primary_party(epi_winner)) {
                         2*self.payoutparams.n_payout_schneider_schwarz // schwarz
                     } else if (b_primary_party_wins && n_points_primary_party>90) || (!b_primary_party_wins && n_points_primary_party<=30) {
                         self.payoutparams.n_payout_schneider_schwarz // schneider
@@ -78,9 +79,9 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)> {
-        let mapbn_points = stichseq.completed_stichs().get().iter()
-            .fold(bool::map_from_fn(|_b_primary| 0), |mut mapbn_points, stich| {
-                mapbn_points[/*b_primary*/playerparties.is_primary_party(rules.winner_index(stich))] += points_stich(stich);
+        let mapbn_points = stichseq.completed_stichs_winner_index(rules)
+            .fold(bool::map_from_fn(|_b_primary| 0), |mut mapbn_points, (stich, epi_winner)| {
+                mapbn_points[/*b_primary*/playerparties.is_primary_party(epi_winner)] += points_stich(stich);
                 mapbn_points
             });
         let internal_payouthints = |b_primary_party_wins| {
@@ -110,7 +111,7 @@ impl SLaufendeParams {
         let mut mapcardb_used = SCard::map_from_fn(|_card| false);
         let mapcardepi = {
             let mut mapcardepi = SCard::map_from_fn(|_card| EPlayerIndex::EPI0);
-            for (epi, card) in gamefinishedstiche.get().iter().flat_map(|stich| stich.iter()) {
+            for (epi, card) in gamefinishedstiche.get().completed_stichs().get().iter().flat_map(|stich| stich.iter()) {
                 #[cfg(debug_assertions)] {
                     mapcardb_used[*card] = true;
                 }
@@ -118,7 +119,7 @@ impl SLaufendeParams {
             }
             mapcardepi
         };
-        let ekurzlang = EKurzLang::from_cards_per_player(gamefinishedstiche.get().len());
+        let ekurzlang = gamefinishedstiche.get().kurzlang();
         #[cfg(debug_assertions)]
         assert!(SCard::values(ekurzlang).all(|card| mapcardb_used[card]));
         let laufende_relevant = |card: SCard| {

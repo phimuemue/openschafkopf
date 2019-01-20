@@ -352,6 +352,17 @@ impl SStichSequence {
         #[cfg(debug_assertions)]self.assert_invariant();
     }
 
+    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, rules: &'lifetime TRules) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
+        #[cfg(debug_assertions)]self.assert_invariant();
+        self.vecstich[0..self.vecstich.len()]
+            .windows(2) // TODO is this the most efficient way?
+            .map(move |astich| {
+                let epi = astich[1].first_playerindex();
+                debug_assert_eq!(epi, rules.winner_index(&astich[0]));
+                (&astich[0], epi)
+            })
+    }
+
     pub fn zugeben(&mut self, card: SCard, rules: &TRules) {
         self.zugeben_custom_winner_index(card, |stich| rules.winner_index(stich));
     }
@@ -443,7 +454,7 @@ impl TGamePhase for SGame {
         assert!(self.kurzlang().cards_per_player()==self.completed_stichs().get().len());
         SGameResult {
             accountbalance : self.rules.payout(
-                SGameFinishedStiche::new(self.completed_stichs().get(), self.kurzlang()),
+                SGameFinishedStiche::new(&self.stichseq),
                 stoss_and_doublings(&self.vecstoss, &self.doublings),
                 self.n_stock,
             ),

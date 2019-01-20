@@ -207,12 +207,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
 {
     snapshotvisualizer.begin_snapshot(stichseq, &ahand);
     let output = if ahand.iter().all(|hand| hand.cards().is_empty()) {
-        let slcstich_game_finished = stichseq.completed_stichs();
-        assert!(slcstich_game_finished.get().iter().all(SStich::is_full));
-        foreachsnapshot.final_output(SGameFinishedStiche::new(
-            slcstich_game_finished.get(),
-            EKurzLang::from_cards_per_player(slcstich_game_finished.get().len())
-        ))
+        foreachsnapshot.final_output(SGameFinishedStiche::new(stichseq))
     } else {
         foreachsnapshot.pruned_output(stichseq, &ahand).unwrap_or_else(|| {
             let epi_current = verify!(stichseq.current_stich().current_playerindex()).unwrap();

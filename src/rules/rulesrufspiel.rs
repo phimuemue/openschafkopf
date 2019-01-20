@@ -93,7 +93,7 @@ impl TRules for SRulesRufspiel {
     }
 
     fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche) -> EnumMap<EPlayerIndex, SPayoutInfo> {
-        let epi_coplayer = verify!(gamefinishedstiche.get().iter()
+        let epi_coplayer = verify!(gamefinishedstiche.get().completed_stichs().get().iter()
             .flat_map(|stich| stich.iter())
             .find(|&(_, card)| *card==self.rufsau())
             .map(|(epi, _)| epi))

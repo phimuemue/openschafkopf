@@ -61,8 +61,8 @@ impl TPayoutDecider for SPayoutDeciderBettel {
         internal_payout(
             /*n_payout_single_player*/ self.n_payout_base,
             playerparties13,
-            /*b_primary_party_wins*/ gamefinishedstiche.get().iter()
-                .all(|stich| !playerparties13.is_primary_party(rules.winner_index(stich))),
+            /*b_primary_party_wins*/ gamefinishedstiche.get().completed_stichs_winner_index(rules)
+                .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner)),
         )
     }
 
@@ -76,8 +76,8 @@ impl TPayoutDecider for SPayoutDeciderBettel {
         where Rules: TRulesNoObj
     {
         if 
-            !stichseq.completed_stichs().get().iter()
-                .all(|stich| !playerparties13.is_primary_party(rules.winner_index(stich)))
+            !stichseq.completed_stichs_winner_index(rules)
+                .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
         {
             internal_payout(
                 /*n_payout_single_player*/ self.n_payout_base,

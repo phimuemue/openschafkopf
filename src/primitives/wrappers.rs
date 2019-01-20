@@ -1,4 +1,5 @@
 use crate::primitives::*;
+use crate::game::*;
 
 // thin wrappers ensuring invariants
 
@@ -16,15 +17,14 @@ impl<'hand> SFullHand<'hand> {
 }
 
 #[derive(Copy, Clone)]
-pub struct SGameFinishedStiche<'slcstich>(&'slcstich [SStich]);
+pub struct SGameFinishedStiche<'stichseq>(&'stichseq SStichSequence);
 
-impl SGameFinishedStiche<'_> {
-    pub fn new(slcstich: &[SStich], ekurzlang: EKurzLang) -> SGameFinishedStiche {
-        assert_eq!(slcstich.len(), ekurzlang.cards_per_player());
-        assert!(slcstich.iter().all(SStich::is_full));
-        SGameFinishedStiche(slcstich)
+impl SGameFinishedStiche<'_> { // TODO rename: SStichSequenceGameFinished
+    pub fn new(stichseq: &SStichSequence) -> SGameFinishedStiche {
+        assert_eq!(stichseq.completed_stichs().get().len(), stichseq.kurzlang().cards_per_player());
+        SGameFinishedStiche(stichseq)
     }
-    pub fn get(&self) -> &[SStich] {
+    pub fn get(&self) -> &SStichSequence {
         self.0
     }
 }

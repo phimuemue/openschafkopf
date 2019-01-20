@@ -55,11 +55,11 @@ impl TRules for SRulesRamsch {
     }
 
     fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche) -> EnumMap<EPlayerIndex, SPayoutInfo> {
-        let an_points = gamefinishedstiche.get().iter()
+        let an_points = gamefinishedstiche.get().completed_stichs_winner_index(self)
             .fold(
                 EPlayerIndex::map_from_fn(|_epi| 0),
-                |mut an_points_accu, stich| {
-                    an_points_accu[self.winner_index(stich)] += points_stich(stich);
+                |mut an_points_accu, (stich, epi_winner)| {
+                    an_points_accu[epi_winner] += points_stich(stich);
                     an_points_accu
                 }
             );
@@ -74,7 +74,7 @@ impl TRules for SRulesRamsch {
         };
         let (epi_single, b_epi_single_wins) = if match self.durchmarsch {
             VDurchmarsch::All if 120==*n_points_max =>
-                gamefinishedstiche.get().iter().all(|stich| self.winner_index(stich)==the_one_epi()),
+                gamefinishedstiche.get().completed_stichs_winner_index(self).all(|(_stich, epi_winner)| epi_winner==the_one_epi()),
             VDurchmarsch::All | VDurchmarsch::None =>
                 false,
             VDurchmarsch::AtLeast(n_points_durchmarsch) => {
@@ -91,7 +91,7 @@ impl TRules for SRulesRamsch {
                     verify!(vecepi_most_points.iter().cloned()
                         .map(|epi| {(
                             epi,
-                            gamefinishedstiche.get().iter()
+                            gamefinishedstiche.get().completed_stichs().get().iter()
                                 .map(|stich| stich[epi])
                                 .filter(|card| self.trumpforfarbe(*card).is_trumpf())
                                 .max_by(|card_fst, card_snd| {

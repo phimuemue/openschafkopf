@@ -170,13 +170,13 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
         #[cfg(debug_assertions)] {
             let mut mapepipayouthint = EPlayerIndex::map_from_fn(|_epi| SPayoutHint::new((None, None)));
             let mut stichseq_check = SStichSequence::new(
-                gamefinishedstiche.get()[0].first_playerindex(),
-                EKurzLang::from_cards_per_player(gamefinishedstiche.get().len()),
+                gamefinishedstiche.get().first_playerindex(),
+                gamefinishedstiche.get().kurzlang(),
             );
             let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
-                SHand::new_from_vec(gamefinishedstiche.get().iter().map(|stich| stich[epi]).collect())
+                SHand::new_from_vec(gamefinishedstiche.get().completed_stichs().get().iter().map(|stich| stich[epi]).collect())
             );
-            for stich in gamefinishedstiche.get().iter() {
+            for stich in gamefinishedstiche.get().completed_stichs().get().iter() {
                 for (epi, card) in stich.iter() {
                     stichseq_check.zugeben_custom_winner_index(*card, |stich| self.winner_index(stich)); // TODO I could not simply pass rules. Why?
                     ahand_check[epi].play_card(*card);
