@@ -226,7 +226,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
             /*b_primary_party_wins*/cards_valid_for_sie(
                 rules,
                 gamefinishedstiche.get().completed_stichs().get().iter().map(|stich| stich[playerparties13.primary_player()]),
-                EKurzLang::from_cards_per_player(gamefinishedstiche.get().completed_stichs().get().len())
+                gamefinishedstiche.get().kurzlang(),
             )
         )
     }
@@ -246,7 +246,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
             !cards_valid_for_sie(
                 rules,
                 itcard.clone(),
-                EKurzLang::from_cards_per_player(itcard.count()),
+                stichseq.kurzlang(),
             )
         {
             internal_payout(
