@@ -21,7 +21,7 @@ pub struct SStichSequenceGameFinished<'stichseq>(&'stichseq SStichSequence);
 
 impl SStichSequenceGameFinished<'_> {
     pub fn new(stichseq: &SStichSequence) -> SStichSequenceGameFinished {
-        assert_eq!(stichseq.completed_stichs().get().len(), stichseq.kurzlang().cards_per_player());
+        assert!(stichseq.game_finished());
         SStichSequenceGameFinished(stichseq)
     }
     pub fn get(&self) -> &SStichSequence {
