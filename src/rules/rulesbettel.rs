@@ -53,7 +53,7 @@ impl TPayoutDecider for SPayoutDeciderBettel {
     fn payout<Rules>(
         &self,
         rules: &Rules,
-        gamefinishedstiche: SGameFinishedStiche,
+        gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRules

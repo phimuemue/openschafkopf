@@ -454,7 +454,7 @@ impl TGamePhase for SGame {
         assert!(self.kurzlang().cards_per_player()==self.completed_stichs().get().len());
         SGameResult {
             accountbalance : self.rules.payout(
-                SGameFinishedStiche::new(&self.stichseq),
+                SStichSequenceGameFinished::new(&self.stichseq),
                 stoss_and_doublings(&self.vecstoss, &self.doublings),
                 self.n_stock,
             ),

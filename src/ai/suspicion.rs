@@ -15,7 +15,7 @@ use rand::{
 
 pub trait TForEachSnapshot {
     type Output;
-    fn final_output(&self, slcstich: SGameFinishedStiche) -> Self::Output;
+    fn final_output(&self, slcstich: SStichSequenceGameFinished) -> Self::Output;
     fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output>;
     fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
         &self,
@@ -207,7 +207,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
 {
     snapshotvisualizer.begin_snapshot(stichseq, &ahand);
     let output = if ahand.iter().all(|hand| hand.cards().is_empty()) {
-        foreachsnapshot.final_output(SGameFinishedStiche::new(stichseq))
+        foreachsnapshot.final_output(SStichSequenceGameFinished::new(stichseq))
     } else {
         foreachsnapshot.pruned_output(stichseq, &ahand).unwrap_or_else(|| {
             let epi_current = verify!(stichseq.current_stich().current_playerindex()).unwrap();
@@ -273,7 +273,7 @@ pub struct SMinReachablePayout<'rules>(pub SMinReachablePayoutParams<'rules>);
 impl TForEachSnapshot for SMinReachablePayout<'_> {
     type Output = isize;
 
-    fn final_output(&self, slcstich: SGameFinishedStiche) -> Self::Output {
+    fn final_output(&self, slcstich: SStichSequenceGameFinished) -> Self::Output {
         self.0.rules.payout(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock).get_player(self.0.epi)
     }
 
@@ -297,7 +297,7 @@ pub struct SMinReachablePayoutLowerBoundViaHint<'rules>(pub SMinReachablePayoutP
 impl TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'_> {
     type Output = isize;
 
-    fn final_output(&self, slcstich: SGameFinishedStiche) -> Self::Output {
+    fn final_output(&self, slcstich: SStichSequenceGameFinished) -> Self::Output {
         self.0.rules.payout(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock).get_player(self.0.epi)
     }
 

@@ -15,7 +15,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
     fn payout<Rules>(
         &self,
         rules: &Rules,
-        gamefinishedstiche: SGameFinishedStiche,
+        gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRulesNoObj;
@@ -53,7 +53,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLi
     fn payout<Rules>(
         &self,
         rules: &Rules,
-        gamefinishedstiche: SGameFinishedStiche,
+        gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRulesNoObj
@@ -122,7 +122,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
     fn payout<Rules>(
         &self,
         rules: &Rules,
-        gamefinishedstiche: SGameFinishedStiche,
+        gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRulesNoObj,
@@ -211,7 +211,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
     fn payout<Rules>(
         &self,
         rules: &Rules,
-        gamefinishedstiche: SGameFinishedStiche,
+        gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRulesNoObj,

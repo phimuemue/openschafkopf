@@ -54,7 +54,7 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche) -> EnumMap<EPlayerIndex, SPayoutInfo> {
+    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished) -> EnumMap<EPlayerIndex, SPayoutInfo> {
         let an_points = gamefinishedstiche.get().completed_stichs_winner_index(self)
             .fold(
                 EPlayerIndex::map_from_fn(|_epi| 0),

@@ -17,12 +17,12 @@ impl<'hand> SFullHand<'hand> {
 }
 
 #[derive(Copy, Clone)]
-pub struct SGameFinishedStiche<'stichseq>(&'stichseq SStichSequence);
+pub struct SStichSequenceGameFinished<'stichseq>(&'stichseq SStichSequence);
 
-impl SGameFinishedStiche<'_> { // TODO rename: SStichSequenceGameFinished
-    pub fn new(stichseq: &SStichSequence) -> SGameFinishedStiche {
+impl SStichSequenceGameFinished<'_> {
+    pub fn new(stichseq: &SStichSequence) -> SStichSequenceGameFinished {
         assert_eq!(stichseq.completed_stichs().get().len(), stichseq.kurzlang().cards_per_player());
-        SGameFinishedStiche(stichseq)
+        SStichSequenceGameFinished(stichseq)
     }
     pub fn get(&self) -> &SStichSequence {
         self.0

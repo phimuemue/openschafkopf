@@ -13,7 +13,7 @@ macro_rules! impl_single_play {() => {
         (epi==self.epi)==(vecstoss.len()%2==1)
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche) -> EnumMap<EPlayerIndex, SPayoutInfo> {
+    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished) -> EnumMap<EPlayerIndex, SPayoutInfo> {
         self.payoutdecider.payout(
             self,
             gamefinishedstiche,

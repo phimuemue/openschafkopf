@@ -43,7 +43,7 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
     pub fn payout<Rules>(
         &self,
         rules: &Rules,
-        gamefinishedstiche: SGameFinishedStiche,
+        gamefinishedstiche: SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
         where 
@@ -106,7 +106,7 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
 }
 
 impl SLaufendeParams {
-    pub fn payout_laufende<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(&self, gamefinishedstiche: SGameFinishedStiche, playerparties: &PlayerParties) -> isize {
+    pub fn payout_laufende<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(&self, gamefinishedstiche: SStichSequenceGameFinished, playerparties: &PlayerParties) -> isize {
         #[cfg(debug_assertions)]
         let mut mapcardb_used = SCard::map_from_fn(|_card| false);
         let mapcardepi = {

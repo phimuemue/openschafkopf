@@ -157,7 +157,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
 
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
 
-    fn payout(&self, gamefinishedstiche: SGameFinishedStiche, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> SAccountBalance {
+    fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> SAccountBalance {
         let apayoutinfo = self.payoutinfos(gamefinishedstiche);
         assert!({
             let count_stockaction = |estockaction| {
@@ -202,7 +202,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
         SAccountBalance::new(an_payout, n_stock)
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SGameFinishedStiche) -> EnumMap<EPlayerIndex, SPayoutInfo>;
+    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished) -> EnumMap<EPlayerIndex, SPayoutInfo>;
 
     fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SPayoutHint>;
 
