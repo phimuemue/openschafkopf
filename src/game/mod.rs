@@ -299,8 +299,8 @@ impl SStichSequence {
         assert!(!self.current_stich_no_invariant().is_full());
         assert_eq!(self.vecstich[0..self.vecstich.len()-1].len(), self.vecstich.len()-1);
         assert!(self.vecstich[0..self.vecstich.len()-1].iter().all(SStich::is_full));
-        assert!(self.completed_stichs_no_invariant().get().len()<=self.ekurzlang.cards_per_player());
-        if self.completed_stichs_no_invariant().get().len()==self.ekurzlang.cards_per_player() {
+        assert!(self.completed_stichs_no_invariant().len()<=self.ekurzlang.cards_per_player());
+        if self.completed_stichs_no_invariant().len()==self.ekurzlang.cards_per_player() {
             assert!(self.current_stich_no_invariant().is_empty());
         }
     }
@@ -316,20 +316,20 @@ impl SStichSequence {
 
     pub fn game_finished(&self) -> bool {
         #[cfg(debug_assertions)]self.assert_invariant();
-        assert!(self.completed_stichs().get().len()<=self.ekurzlang.cards_per_player());
-        self.completed_stichs().get().len()==self.ekurzlang.cards_per_player()
+        assert!(self.completed_stichs().len()<=self.ekurzlang.cards_per_player());
+        self.completed_stichs().len()==self.ekurzlang.cards_per_player()
     }
 
     pub fn no_card_played(&self) -> bool {
         #[cfg(debug_assertions)]self.assert_invariant();
-        self.completed_stichs().get().is_empty() && self.current_stich().is_empty()
+        self.completed_stichs().is_empty() && self.current_stich().is_empty()
     }
 
-    fn completed_stichs_no_invariant(&self) -> SCompletedStichs {
-        SCompletedStichs::new(&self.vecstich[0..self.vecstich.len()-1])
+    fn completed_stichs_no_invariant(&self) -> &[SStich] {
+        &self.vecstich[0..self.vecstich.len()-1]
     }
 
-    pub fn completed_stichs(&self) -> SCompletedStichs {
+    pub fn completed_stichs(&self) -> &[SStich] {
         #[cfg(debug_assertions)]self.assert_invariant();
         self.completed_stichs_no_invariant()
     }
@@ -402,7 +402,7 @@ impl SStichSequence {
 
     pub fn count_played_cards(&self) -> usize {
         #[cfg(debug_assertions)]self.assert_invariant();
-        self.completed_stichs().get().len() * EPlayerIndex::SIZE
+        self.completed_stichs().len() * EPlayerIndex::SIZE
             + self.current_stich().size()
     }
 }
@@ -425,7 +425,7 @@ impl TGamePhase for SGame {
     type Finish = SGameResult;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
-        if self.stichseq.completed_stichs().get().len() < self.kurzlang().cards_per_player() {
+        if self.stichseq.completed_stichs().len() < self.kurzlang().cards_per_player() {
             self.current_playable_stich().current_playerindex().map(|epi_current| (
                 epi_current,
                 if let Some(ref stossparams) = self.ostossparams {
@@ -451,7 +451,7 @@ impl TGamePhase for SGame {
     }
 
     fn finish_success(self) -> Self::Finish {
-        assert!(self.kurzlang().cards_per_player()==self.completed_stichs().get().len());
+        assert!(self.kurzlang().cards_per_player()==self.completed_stichs().len());
         SGameResult {
             accountbalance : self.rules.payout(
                 SStichSequenceGameFinished::new(&self.stichseq),
@@ -485,7 +485,7 @@ impl SGame {
     }
 
     pub fn current_playable_stich(&self) -> &SStich {
-        assert!(self.stichseq.completed_stichs().get().len()<self.kurzlang().cards_per_player());
+        assert!(self.stichseq.completed_stichs().len()<self.kurzlang().cards_per_player());
         self.stichseq.current_stich()
     }
 
@@ -493,7 +493,7 @@ impl SGame {
         #[cfg(debug_assertions)] {
             let cards_per_player = |epi| {
                 self.ahand[epi].cards().len()
-                    + self.stichseq.completed_stichs().get().len()
+                    + self.stichseq.completed_stichs().len()
                     + match self.stichseq.current_stich().get(epi) {
                         None => 0,
                         Some(_card) => 1,
@@ -537,7 +537,7 @@ impl SGame {
         Ok(())
     }
 
-    pub fn completed_stichs(&self) -> SCompletedStichs {
+    pub fn completed_stichs(&self) -> &[SStich] {
         self.stichseq.completed_stichs()
     }
 }

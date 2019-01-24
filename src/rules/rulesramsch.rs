@@ -91,7 +91,7 @@ impl TRules for SRulesRamsch {
                     verify!(vecepi_most_points.iter().cloned()
                         .map(|epi| {(
                             epi,
-                            gamefinishedstiche.get().completed_stichs().get().iter()
+                            gamefinishedstiche.get().completed_stichs().iter()
                                 .map(|stich| stich[epi])
                                 .filter(|card| self.trumpforfarbe(*card).is_trumpf())
                                 .max_by(|card_fst, card_snd| {

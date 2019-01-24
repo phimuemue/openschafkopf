@@ -28,16 +28,3 @@ impl SStichSequenceGameFinished<'_> {
         self.0
     }
 }
-
-#[derive(Copy, Clone)]
-pub struct SCompletedStichs<'slcstich>(&'slcstich [SStich]);
-
-impl SCompletedStichs<'_> {
-    pub fn new(slcstich: &[SStich]) -> SCompletedStichs {
-        assert!(slcstich.iter().all(SStich::is_full));
-        SCompletedStichs(slcstich)
-    }
-    pub fn get(&self) -> &[SStich] {
-        self.0
-    }
-}

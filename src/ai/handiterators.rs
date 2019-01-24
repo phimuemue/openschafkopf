@@ -87,14 +87,13 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
     make_handiterator::<NextVecEPI>(stichseq, hand_fixed, epi_fixed)
         .filter(move |ahand| {
             let stich_current = stichseq.current_stich();
-            let slcstich_complete = stichseq.completed_stichs();
             assert!(!stich_current.is_full());
             assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
             // hands must not contain other cards preventing farbe/trumpf frei
             let mut ahand_simulate = EPlayerIndex::map_from_fn(|epi| {
                 let mut veccard = ahand[epi].cards().clone();
                 veccard.extend(stich_current.get(epi).cloned().into_iter());
-                veccard.extend(slcstich_complete.get().iter().rev().map(|stich| stich[epi]));
+                veccard.extend(stichseq.completed_stichs().iter().rev().map(|stich| stich[epi]));
                 assert_eq!(veccard.len(), stichseq.kurzlang().cards_per_player());
                 SHand::new_from_vec(veccard)
             });

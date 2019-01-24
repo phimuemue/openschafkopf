@@ -28,7 +28,7 @@ use crate::util::*;
 pub fn remaining_cards_per_hand(stichseq: &SStichSequence) -> EnumMap<EPlayerIndex, usize> {
     EPlayerIndex::map_from_fn(|epi| {
         stichseq.kurzlang().cards_per_player()
-            - stichseq.completed_stichs().get().len()
+            - stichseq.completed_stichs().len()
             - match stichseq.current_stich().get(epi) {
                 None => 0,
                 Some(_card) => 1,
@@ -142,7 +142,7 @@ impl SAi {
             // TODORUST exhaustive_integer_patterns
             // https://github.com/rust-lang/rfcs/issues/1550
             // https://github.com/rust-lang/rust/issues/50907
-            match /*n_incomplete_stichs*/ game.stichseq.kurzlang().cards_per_player()-game.stichseq.completed_stichs().get().len() {
+            match /*n_incomplete_stichs*/ game.stichseq.kurzlang().cards_per_player()-game.stichseq.completed_stichs().len() {
                 1|2 => forward_to_determine_best_card!(
                     |_n_suggest_card_samples| all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.rules.as_ref()),
                     &|_,_| (/*no filtering*/),

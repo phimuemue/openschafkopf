@@ -111,7 +111,7 @@ impl SLaufendeParams {
         let mut mapcardb_used = SCard::map_from_fn(|_card| false);
         let mapcardepi = {
             let mut mapcardepi = SCard::map_from_fn(|_card| EPlayerIndex::EPI0);
-            for (epi, card) in gamefinishedstiche.get().completed_stichs().get().iter().flat_map(|stich| stich.iter()) {
+            for (epi, card) in gamefinishedstiche.get().completed_stichs().iter().flat_map(|stich| stich.iter()) {
                 #[cfg(debug_assertions)] {
                     mapcardb_used[*card] = true;
                 }

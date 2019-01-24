@@ -220,12 +220,12 @@ impl TPayoutDecider for SPayoutDeciderSie {
         internal_payout(
             /*n_payout_single_player*/ (self.payoutparams.n_payout_base
             + {
-                gamefinishedstiche.get().completed_stichs().get().len().as_num::<isize>()
+                gamefinishedstiche.get().completed_stichs().len().as_num::<isize>()
             } * self.payoutparams.laufendeparams.n_payout_per_lauf) * 4,
             playerparties13,
             /*b_primary_party_wins*/cards_valid_for_sie(
                 rules,
-                gamefinishedstiche.get().completed_stichs().get().iter().map(|stich| stich[playerparties13.primary_player()]),
+                gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[playerparties13.primary_player()]),
                 gamefinishedstiche.get().kurzlang(),
             )
         )

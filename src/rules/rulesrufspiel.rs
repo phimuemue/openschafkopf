@@ -93,7 +93,7 @@ impl TRules for SRulesRufspiel {
     }
 
     fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished) -> EnumMap<EPlayerIndex, SPayoutInfo> {
-        let epi_coplayer = verify!(gamefinishedstiche.get().completed_stichs().get().iter()
+        let epi_coplayer = verify!(gamefinishedstiche.get().completed_stichs().iter()
             .flat_map(|stich| stich.iter())
             .find(|&(_, card)| *card==self.rufsau())
             .map(|(epi, _)| epi))
@@ -147,7 +147,7 @@ impl TRules for SRulesRufspiel {
 
     fn all_allowed_cards_first_in_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         if // do we already know who had the rufsau?
-            stichseq.completed_stichs().get().iter()
+            stichseq.completed_stichs().iter()
                 .any(|stich| {
                     assert!(stich.is_full()); // completed_stichs should only process full stichs
                     self.is_ruffarbe(*stich.first()) // gesucht or weggelaufen
@@ -173,7 +173,7 @@ impl TRules for SRulesRufspiel {
             hand.cards().clone()
         } else {
             let epi = verify!(stichseq.current_stich().current_playerindex()).unwrap();
-            let b_weggelaufen = stichseq.completed_stichs().get().iter()
+            let b_weggelaufen = stichseq.completed_stichs().iter()
                 .any(|stich| epi==stich.first_playerindex() && self.is_ruffarbe(*stich.first()));
             assert!(!stichseq.current_stich().is_empty());
             let card_first = *stichseq.current_stich().first();
