@@ -352,7 +352,7 @@ impl SStichSequence {
         #[cfg(debug_assertions)]self.assert_invariant();
     }
 
-    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, rules: &'lifetime TRules) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
+    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, rules: &'lifetime impl TRules) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
         #[cfg(debug_assertions)]self.assert_invariant();
         self.vecstich[0..self.vecstich.len()]
             .windows(2) // TODO is this the most efficient way?
