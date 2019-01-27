@@ -26,6 +26,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
         rules: &Rules,
         stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
+        rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj;
@@ -68,11 +69,12 @@ impl TPayoutDecider for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLi
         rules: &Rules,
         stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
+        rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj
     {
-        self.payouthints(rules, stichseq, ahand, playerparties13)
+        self.payouthints(rules, stichseq, ahand, rulestatecache, playerparties13)
     }
 }
 
@@ -147,14 +149,16 @@ impl TPayoutDecider for SPayoutDeciderTout {
         rules: &Rules,
         stichseq: &SStichSequence,
         _ahand: &EnumMap<EPlayerIndex, SHand>,
+        rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj
     {
-        if 
+        if debug_verify_eq!(
+            rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich < stichseq.completed_stichs().len(),
             !stichseq.completed_stichs_winner_index(rules)
                 .all(|(_stich, epi_winner)| playerparties13.is_primary_party(epi_winner))
-        {
+        ) {
             internal_payout(
                 /*n_payout_single_player*/ (self.payoutparams.n_payout_base) * 2, // TODO laufende
                 playerparties13,
@@ -243,6 +247,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
         rules: &Rules,
         stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
+        _rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj

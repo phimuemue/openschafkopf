@@ -130,18 +130,21 @@ impl TRules for SRulesRufspiel {
         )
     }
 
-    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SPayoutHint> {
-        let epi_coplayer = stichseq.visible_stichs()
-            .flat_map(|stich| stich.iter())
-            .find(|&(_, card)| *card==self.rufsau())
-            .map(|(epi, _)| epi)
-            .unwrap_or_else(|| {
-                verify!(EPlayerIndex::values().find(|epi|
-                    ahand[*epi].cards().iter().any(|card| *card==self.rufsau())
-                )).unwrap()
-            });
+    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
+        let epi_coplayer = debug_verify_eq!(
+            verify!(rulestatecache.fixed.mapcardoepi[self.rufsau()]).unwrap(),
+            stichseq.visible_stichs()
+                .flat_map(|stich| stich.iter())
+                .find(|&(_, card)| *card==self.rufsau())
+                .map(|(epi, _)| epi)
+                .unwrap_or_else(|| {
+                    verify!(EPlayerIndex::values().find(|epi|
+                        ahand[*epi].cards().iter().any(|card| *card==self.rufsau())
+                    )).unwrap()
+                })
+        );
         assert_ne!(self.epi, epi_coplayer);
-        self.payoutdecider.payouthints(self, stichseq, ahand, &SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]})
+        self.payoutdecider.payouthints(self, stichseq, ahand, rulestatecache, &SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]})
             .map(|pairon_payout| SPayoutHint::new((
                 // TODO EStockAction
                 pairon_payout.0.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore)),

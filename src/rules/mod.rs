@@ -292,7 +292,15 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
                 for (epi, card) in stich.iter() {
                     stichseq_check.zugeben_custom_winner_index(*card, |stich| self.winner_index(stich)); // TODO I could not simply pass rules. Why?
                     ahand_check[epi].play_card(*card);
-                    let mapepipayouthint_after = self.payouthints(&stichseq_check, &ahand_check);
+                    let mapepipayouthint_after = self.payouthints(
+                        &stichseq_check,
+                        &ahand_check,
+                        &SRuleStateCache::new(
+                            &stichseq_check,
+                            &ahand_check,
+                            |stich| self.winner_index(stich),
+                        ),
+                    );
                     assert!(
                         mapepipayouthint.iter().zip(mapepipayouthint_after.iter())
                             .all(|(payouthint, payouthint_other)| payouthint.contains_payouthint(payouthint_other)),
@@ -316,7 +324,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
 
     fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo>;
 
-    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SPayoutHint>;
+    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint>;
 
     fn all_allowed_cards(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         assert!(!hand.cards().is_empty());

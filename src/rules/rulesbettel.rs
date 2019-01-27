@@ -75,14 +75,16 @@ impl TPayoutDecider for SPayoutDeciderBettel {
         rules: &Rules,
         stichseq: &SStichSequence,
         _ahand: &EnumMap<EPlayerIndex, SHand>,
+        rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj
     {
-        if 
+        if debug_verify_eq!(
+            0 < rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich,
             !stichseq.completed_stichs_winner_index(rules)
                 .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
-        {
+        ) {
             internal_payout(
                 /*n_payout_single_player*/ self.n_payout_base,
                 playerparties13,

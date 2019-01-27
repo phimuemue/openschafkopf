@@ -16,7 +16,7 @@ use rand::{
 pub trait TForEachSnapshot {
     type Output;
     fn final_output(&self, slcstich: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output;
-    fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output>;
+    fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<Self::Output>;
     fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
         &self,
         epi_self: EPlayerIndex,
@@ -218,7 +218,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             rulestatecache,
         )
     } else {
-        foreachsnapshot.pruned_output(stichseq, &ahand).unwrap_or_else(|| {
+        foreachsnapshot.pruned_output(stichseq, &ahand, rulestatecache).unwrap_or_else(|| {
             let epi_current = verify!(stichseq.current_stich().current_playerindex()).unwrap();
             let mut veccard_allowed = rules.all_allowed_cards(stichseq, &ahand[epi_current]);
             func_filter_allowed_cards(stichseq, &mut veccard_allowed);
@@ -298,7 +298,7 @@ impl TForEachSnapshot for SMinReachablePayout<'_> {
         self.0.rules.payout_with_cache(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock, rulestatecache).get_player(self.0.epi)
     }
 
-    fn pruned_output(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
+    fn pruned_output(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
         None
     }
 
@@ -318,12 +318,12 @@ pub struct SMinReachablePayoutLowerBoundViaHint<'rules>(pub SMinReachablePayoutP
 impl TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'_> {
     type Output = isize;
 
-    fn final_output(&self, slcstich: SStichSequenceGameFinished, _rulestatecache: &SRuleStateCache) -> Self::Output {
-        self.0.rules.payout(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock).get_player(self.0.epi)
+    fn final_output(&self, slcstich: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
+        self.0.rules.payout_with_cache(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock, rulestatecache).get_player(self.0.epi)
     }
 
-    fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Option<Self::Output> {
-        self.0.rules.payouthints(stichseq, ahand)[self.0.epi]
+    fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
+        self.0.rules.payouthints(stichseq, ahand, rulestatecache)[self.0.epi]
             .lower_bound()
             .clone() // TODO really needed?
             .and_then(|payoutinfo| {
