@@ -357,13 +357,17 @@ impl SStichSequence {
         #[cfg(debug_assertions)]self.assert_invariant();
     }
 
-    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, rules: &'lifetime impl TRules) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
+    pub fn completed_stichs_custom_winner_index(&self, fn_winner_index: impl Fn(&SStich)->EPlayerIndex) -> impl Iterator<Item=(&SStich, EPlayerIndex)> {
         #[cfg(debug_assertions)]self.assert_invariant();
         self.vecstich[0..self.vecstich.len()]
             .windows(2) // TODO is this the most efficient way?
             .map(move |astich| {
-                (&astich[0], debug_verify_eq!(astich[1].first_playerindex(), rules.winner_index(&astich[0])))
+                (&astich[0], debug_verify_eq!(astich[1].first_playerindex(), fn_winner_index(&astich[0])))
             })
+    }
+
+    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, rules: &'lifetime impl TRules) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
+        self.completed_stichs_custom_winner_index(move |stich| rules.winner_index(stich))
     }
 
     pub fn zugeben(&mut self, card: SCard, rules: &TRules) {

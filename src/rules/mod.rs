@@ -22,6 +22,8 @@ use std::{
 use crate::util::*;
 use crate::ai::rulespecific::*;
 use crate::game::SStichSequence;
+use crate::ai::ahand_vecstich_card_count_is_compatible;
+use crate::rules::card_points::points_stich;
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum VTrumpfOrFarbe {
@@ -118,6 +120,101 @@ pub trait TPlayerParties {
     fn multiplier(&self, epi: EPlayerIndex) -> isize;
 }
 
+#[derive(Eq, PartialEq, Debug)]
+pub struct SRuleStateCacheFixed {
+    pub mapcardoepi: EnumMap<SCard, Option<EPlayerIndex>>, // TODO? Option<EPlayerIndex> is clean for EKurzLang. Does it incur runtime overhead?
+}
+#[derive(Eq, PartialEq, Debug)]
+pub struct SPointStichCount {
+    pub n_stich: usize,
+    pub n_point: isize,
+}
+#[derive(Eq, PartialEq, Debug)]
+pub struct SRuleStateCacheChanging {
+    pub mapepipointstichcount: EnumMap<EPlayerIndex, SPointStichCount>,
+}
+#[derive(Eq, PartialEq, Debug)]
+pub struct SRuleStateCache { // TODO should we have a cache typer per rules? (Would possibly forbid having TRules trait objects.)
+    pub fixed: SRuleStateCacheFixed,
+    pub changing: SRuleStateCacheChanging,
+}
+pub struct SUnregisterStich {
+    epi_winner: EPlayerIndex,
+    n_points_epi_winner_before: isize,
+}
+
+impl SRuleStateCache {
+    pub fn new(
+        stichseq: &SStichSequence,
+        ahand: &EnumMap<EPlayerIndex, SHand>,
+        fn_winner_index: impl Fn(&SStich)->EPlayerIndex,
+    ) -> Self {
+        assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
+        let mut mapcardoepi = SCard::map_from_fn(|_| None);
+        {
+            let mut register_card = |card, epi| {
+                assert!(mapcardoepi[card].is_none());
+                mapcardoepi[card] = Some(epi);
+            };
+            for stich in stichseq.visible_stichs() {
+                for (epi, card) in stich.iter() {
+                    register_card(*card, epi);
+                }
+            }
+            for epi in EPlayerIndex::values() {
+                for card in ahand[epi].cards().iter() {
+                    register_card(*card, epi);
+                }
+            }
+            assert!(EPlayerIndex::values().all(|epi| {
+                mapcardoepi.iter().filter_map(|&oepi_card| oepi_card).filter(|epi_card| *epi_card==epi).count()==stichseq.kurzlang().cards_per_player()
+            }));
+        }
+        stichseq.completed_stichs_custom_winner_index(fn_winner_index).fold(
+            Self {
+                changing: SRuleStateCacheChanging {
+                    mapepipointstichcount: EPlayerIndex::map_from_fn(|_epi| SPointStichCount {
+                        n_stich: 0,
+                        n_point: 0,
+                    }),
+                },
+                fixed: SRuleStateCacheFixed {
+                    mapcardoepi,
+                }
+            },
+            |mut rulestatecache, (stich, epi_winner)| {
+                rulestatecache.register_stich(stich, epi_winner);
+                rulestatecache
+            },
+        )
+    }
+
+    fn new_from_gamefinishedstiche(gamefinishedstiche: SStichSequenceGameFinished, fn_winner_index: impl Fn(&SStich)->EPlayerIndex) -> SRuleStateCache {
+        Self::new(
+            gamefinishedstiche.get(),
+            &EPlayerIndex::map_from_fn(|_epi|
+                SHand::new_from_vec(SHandVector::new())
+            ),
+            fn_winner_index,
+        )
+    }
+
+    pub fn register_stich(&mut self, stich: &SStich, epi_winner: EPlayerIndex) -> SUnregisterStich {
+        let unregisterstich = SUnregisterStich {
+            epi_winner,
+            n_points_epi_winner_before: self.changing.mapepipointstichcount[epi_winner].n_point,
+        };
+        self.changing.mapepipointstichcount[epi_winner].n_stich += 1;
+        self.changing.mapepipointstichcount[epi_winner].n_point += points_stich(stich);
+        unregisterstich
+    }
+
+    pub fn unregister_stich(&mut self, unregisterstich: SUnregisterStich) {
+        self.changing.mapepipointstichcount[unregisterstich.epi_winner].n_point = unregisterstich.n_points_epi_winner_before;
+        self.changing.mapepipointstichcount[unregisterstich.epi_winner].n_stich -= 1;
+    }
+}
+
 #[derive(new)]
 pub struct SPlayerParties13 {
     epi: EPlayerIndex,
@@ -158,6 +255,19 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
 
     fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> SAccountBalance {
+        self.payout_with_cache(
+            gamefinishedstiche,
+            tpln_stoss_doubling,
+            n_stock,
+            &SRuleStateCache::new_from_gamefinishedstiche(gamefinishedstiche, |stich| self.winner_index(stich)),
+        )
+    }
+
+    fn payout_with_cache(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> SAccountBalance {
+        debug_assert_eq!(
+            rulestatecache,
+            &SRuleStateCache::new_from_gamefinishedstiche(gamefinishedstiche, |stich| self.winner_index(stich)),
+        );
         let apayoutinfo = self.payoutinfos(gamefinishedstiche);
         assert!({
             let count_stockaction = |estockaction| {
