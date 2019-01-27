@@ -15,6 +15,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
     fn payout<Rules>(
         &self,
         rules: &Rules,
+        rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
@@ -53,12 +54,13 @@ impl TPayoutDecider for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLi
     fn payout<Rules>(
         &self,
         rules: &Rules,
+        rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRulesNoObj
     {
-        self.payout(rules, gamefinishedstiche, playerparties13)
+        self.payout(rules, rulestatecache, gamefinishedstiche, playerparties13)
     }
 
     fn payouthints<Rules>(
@@ -122,6 +124,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
     fn payout<Rules>(
         &self,
         rules: &Rules,
+        rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
@@ -129,10 +132,13 @@ impl TPayoutDecider for SPayoutDeciderTout {
     {
         // TODORULES optionally count schneider/schwarz
         internal_payout(
-            /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(gamefinishedstiche, playerparties13)) * 2,
+            /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(rulestatecache, gamefinishedstiche, playerparties13)) * 2,
             playerparties13,
-            /*b_primary_party_wins*/ gamefinishedstiche.get().completed_stichs_winner_index(rules)
-                .all(|(_stich, epi_winner)| playerparties13.is_primary_party(epi_winner)),
+            /*b_primary_party_wins*/ debug_verify_eq!(
+                rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==gamefinishedstiche.get().kurzlang().cards_per_player(),
+                gamefinishedstiche.get().completed_stichs_winner_index(rules)
+                    .all(|(_stich, epi_winner)| playerparties13.is_primary_party(epi_winner))
+            ),
         )
     }
 
@@ -211,6 +217,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
     fn payout<Rules>(
         &self,
         rules: &Rules,
+        _rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>

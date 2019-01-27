@@ -92,16 +92,20 @@ impl TRules for SRulesRufspiel {
         (epi==self.epi || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished) -> EnumMap<EPlayerIndex, SPayoutInfo> {
-        let epi_coplayer = verify!(gamefinishedstiche.get().completed_stichs().iter()
-            .flat_map(|stich| stich.iter())
-            .find(|&(_, card)| *card==self.rufsau())
-            .map(|(epi, _)| epi))
-            .unwrap();
+    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo> {
+        let epi_coplayer = debug_verify_eq!(
+            verify!(rulestatecache.fixed.mapcardoepi[self.rufsau()]).unwrap(),
+            verify!(gamefinishedstiche.get().completed_stichs().iter()
+                .flat_map(|stich| stich.iter())
+                .find(|&(_, card)| *card==self.rufsau())
+                .map(|(epi, _)| epi))
+                .unwrap()
+        );
         assert_ne!(self.epi, epi_coplayer);
         let playerparties = SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]};
         let an_payout_no_stock = &self.payoutdecider.payout(
             self,
+            rulestatecache,
             gamefinishedstiche,
             &playerparties,
         );

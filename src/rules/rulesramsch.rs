@@ -54,32 +54,39 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished) -> EnumMap<EPlayerIndex, SPayoutInfo> {
-        let an_points = gamefinishedstiche.get().completed_stichs_winner_index(self)
-            .fold(
-                EPlayerIndex::map_from_fn(|_epi| 0),
-                |mut an_points_accu, (stich, epi_winner)| {
-                    an_points_accu[epi_winner] += points_stich(stich);
-                    an_points_accu
-                }
-            );
-        let n_points_max = verify!(an_points.iter().max()).unwrap();
+    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo> {
+        let points_for_player = |epi| rulestatecache.changing.mapepipointstichcount[epi].n_point;
+        debug_assert_eq!(
+            EPlayerIndex::map_from_fn(points_for_player),
+            gamefinishedstiche.get().completed_stichs_winner_index(self)
+                .fold(
+                    EPlayerIndex::map_from_fn(|_epi| 0),
+                    |mut an_points_accu, (stich, epi_winner)| {
+                        an_points_accu[epi_winner] += points_stich(stich);
+                        an_points_accu
+                    }
+                )
+        );
+        let n_points_max = verify!(EPlayerIndex::values().map(points_for_player).max()).unwrap();
         let vecepi_most_points = EPlayerIndex::values()
-            .filter(|epi| n_points_max==&an_points[*epi])
+            .filter(|epi| n_points_max==points_for_player(*epi))
             .collect::<Vec<_>>();
         let the_one_epi = || -> EPlayerIndex {
-            assert!(*n_points_max>=61);
+            assert!(n_points_max>=61);
             assert_eq!(1, vecepi_most_points.len());
             vecepi_most_points[0]
         };
         let (epi_single, b_epi_single_wins) = if match self.durchmarsch {
-            VDurchmarsch::All if 120==*n_points_max =>
-                gamefinishedstiche.get().completed_stichs_winner_index(self).all(|(_stich, epi_winner)| epi_winner==the_one_epi()),
+            VDurchmarsch::All if 120==n_points_max =>
+                debug_verify_eq!(
+                    rulestatecache.changing.mapepipointstichcount[the_one_epi()].n_stich==gamefinishedstiche.get().kurzlang().cards_per_player(),
+                    gamefinishedstiche.get().completed_stichs_winner_index(self).all(|(_stich, epi_winner)| epi_winner==the_one_epi())
+                ),
             VDurchmarsch::All | VDurchmarsch::None =>
                 false,
             VDurchmarsch::AtLeast(n_points_durchmarsch) => {
                 assert!(n_points_durchmarsch>=61); // otherwise, it may not be clear who is the durchmarsch winner
-                *n_points_max>=n_points_durchmarsch
+                n_points_max>=n_points_durchmarsch
             },
         } {
             (the_one_epi(), true)

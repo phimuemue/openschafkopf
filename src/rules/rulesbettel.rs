@@ -53,6 +53,7 @@ impl TPayoutDecider for SPayoutDeciderBettel {
     fn payout<Rules>(
         &self,
         rules: &Rules,
+        rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
@@ -61,8 +62,11 @@ impl TPayoutDecider for SPayoutDeciderBettel {
         internal_payout(
             /*n_payout_single_player*/ self.n_payout_base,
             playerparties13,
-            /*b_primary_party_wins*/ gamefinishedstiche.get().completed_stichs_winner_index(rules)
-                .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner)),
+            /*b_primary_party_wins*/debug_verify_eq!(
+                rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==0,
+                gamefinishedstiche.get().completed_stichs_winner_index(rules)
+                    .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
+            )
         )
     }
 

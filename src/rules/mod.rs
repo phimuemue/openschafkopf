@@ -264,11 +264,13 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
     }
 
     fn payout_with_cache(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> SAccountBalance {
-        debug_assert_eq!(
-            rulestatecache,
-            &SRuleStateCache::new_from_gamefinishedstiche(gamefinishedstiche, |stich| self.winner_index(stich)),
+        let apayoutinfo = self.payoutinfos(
+            gamefinishedstiche,
+            debug_verify_eq!(
+                rulestatecache,
+                &SRuleStateCache::new_from_gamefinishedstiche(gamefinishedstiche, |stich| self.winner_index(stich))
+            ),
         );
-        let apayoutinfo = self.payoutinfos(gamefinishedstiche);
         assert!({
             let count_stockaction = |estockaction| {
                 apayoutinfo.iter().filter(|payoutinfo| estockaction==payoutinfo.estockaction).count()
@@ -312,7 +314,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
         SAccountBalance::new(an_payout, n_stock)
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished) -> EnumMap<EPlayerIndex, SPayoutInfo>;
+    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo>;
 
     fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SPayoutHint>;
 

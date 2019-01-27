@@ -43,22 +43,35 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
     pub fn payout<Rules>(
         &self,
         rules: &Rules,
+        rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
         where 
             Rules: TRulesNoObj,
     {
-        let n_points_primary_party : isize = gamefinishedstiche.get().completed_stichs_winner_index(rules)
-            .filter(|&(_stich, epi_winner)| playerparties.is_primary_party(epi_winner))
-            .map(|(stich, _epi_winner)| points_stich(stich))
-            .sum();
+        let n_points_primary_party = debug_verify_eq!(
+            EPlayerIndex::values()
+                .filter(|epi| playerparties.is_primary_party(*epi))
+                .map(|epi| rulestatecache.changing.mapepipointstichcount[epi].n_point)
+                .sum::<isize>(),
+            gamefinishedstiche.get().completed_stichs_winner_index(rules)
+                .filter(|&(_stich, epi_winner)| playerparties.is_primary_party(epi_winner))
+                .map(|(stich, _epi_winner)| points_stich(stich))
+                .sum()
+        );
         let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
         internal_payout(
             /*n_payout_single_player*/ self.payoutparams.n_payout_base
                 + { 
-                    if gamefinishedstiche.get().completed_stichs_winner_index(rules)
-                        .all(|(_stich, epi_winner)| b_primary_party_wins==playerparties.is_primary_party(epi_winner)) {
+                    if debug_verify_eq!(
+                        EPlayerIndex::values()
+                            .filter(|epi| b_primary_party_wins==playerparties.is_primary_party(*epi))
+                            .map(|epi|  rulestatecache.changing.mapepipointstichcount[epi].n_stich)
+                            .sum::<usize>()==gamefinishedstiche.get().kurzlang().cards_per_player(),
+                        gamefinishedstiche.get().completed_stichs_winner_index(rules)
+                            .all(|(_stich, epi_winner)| b_primary_party_wins==playerparties.is_primary_party(epi_winner))
+                    ) {
                         2*self.payoutparams.n_payout_schneider_schwarz // schwarz
                     } else if (b_primary_party_wins && n_points_primary_party>90) || (!b_primary_party_wins && n_points_primary_party<=30) {
                         self.payoutparams.n_payout_schneider_schwarz // schneider
@@ -66,7 +79,7 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
                         0 // "nothing", i.e. neither schneider nor schwarz
                     }
                 }
-                + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(gamefinishedstiche, playerparties),
+                + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(rulestatecache, gamefinishedstiche, playerparties),
             playerparties,
             b_primary_party_wins,
         )
@@ -106,24 +119,20 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
 }
 
 impl SLaufendeParams {
-    pub fn payout_laufende<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(&self, gamefinishedstiche: SStichSequenceGameFinished, playerparties: &PlayerParties) -> isize {
-        #[cfg(debug_assertions)]
-        let mut mapcardb_used = SCard::map_from_fn(|_card| false);
-        let mapcardepi = {
-            let mut mapcardepi = SCard::map_from_fn(|_card| EPlayerIndex::EPI0);
-            for (epi, card) in gamefinishedstiche.get().completed_stichs().iter().flat_map(|stich| stich.iter()) {
-                #[cfg(debug_assertions)] {
-                    mapcardb_used[*card] = true;
-                }
-                mapcardepi[*card] = epi;
-            }
-            mapcardepi
-        };
+    pub fn payout_laufende<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(&self, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, playerparties: &PlayerParties) -> isize {
         let ekurzlang = gamefinishedstiche.get().kurzlang();
-        #[cfg(debug_assertions)]
-        assert!(SCard::values(ekurzlang).all(|card| mapcardb_used[card]));
-        let laufende_relevant = |card: SCard| {
-            playerparties.is_primary_party(mapcardepi[card])
+        #[cfg(debug_assertions)] {
+            let mut mapcardoepi = SCard::map_from_fn(|_card| None);
+            for (epi, card) in gamefinishedstiche.get().completed_stichs().iter().flat_map(|stich| stich.iter()) {
+                assert!(mapcardoepi[*card].is_none());
+                mapcardoepi[*card] = Some(epi);
+            }
+            assert_eq!(mapcardoepi, rulestatecache.fixed.mapcardoepi);
+            #[cfg(debug_assertions)]
+            assert!(SCard::values(ekurzlang).all(|card| mapcardoepi[card].is_some()));
+        }
+        let laufende_relevant = |card: SCard| { // TODO should we make this part of SRuleStateCacheFixed?
+            playerparties.is_primary_party(verify!(rulestatecache.fixed.mapcardoepi[card]).unwrap())
         };
         let mut itcard_trumpf_descending = Rules::TrumpfDecider::trumpfs_in_descending_order();
         let b_might_have_lauf = laufende_relevant(verify!(itcard_trumpf_descending.nth(0)).unwrap());
