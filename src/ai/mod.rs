@@ -143,17 +143,17 @@ impl SAi {
             // https://github.com/rust-lang/rfcs/issues/1550
             // https://github.com/rust-lang/rust/issues/50907
             match /*n_incomplete_stichs*/ game.stichseq.kurzlang().cards_per_player()-game.stichseq.completed_stichs().len() {
-                1|2 => forward_to_determine_best_card!(
+                1|2|3 => forward_to_determine_best_card!(
                     |_n_suggest_card_samples| all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.rules.as_ref()),
                     &|_,_| (/*no filtering*/),
                     &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
                 ),
-                3 => forward_to_determine_best_card!(
+                4 => forward_to_determine_best_card!(
                     |_n_suggest_card_samples| all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.rules.as_ref()),
                     &|_,_| (/*no filtering*/),
                     &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
                 ),
-                4|5|6|7|8 => forward_to_determine_best_card!(
+                5|6|7|8 => forward_to_determine_best_card!(
                     |n_suggest_card_samples| forever_rand_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.rules.as_ref())
                         .take(n_suggest_card_samples),
                     &branching_factor(|_stichseq| {
