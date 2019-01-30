@@ -362,9 +362,7 @@ impl SStichSequence {
         self.vecstich[0..self.vecstich.len()]
             .windows(2) // TODO is this the most efficient way?
             .map(move |astich| {
-                let epi = astich[1].first_playerindex();
-                debug_assert_eq!(epi, rules.winner_index(&astich[0]));
-                (&astich[0], epi)
+                (&astich[0], debug_verify_eq!(astich[1].first_playerindex(), rules.winner_index(&astich[0])))
             })
     }
 

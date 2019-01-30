@@ -22,6 +22,14 @@ macro_rules! verify {($e: expr) => {
     }
 }}
 
+macro_rules! debug_verify_eq {($e: expr, $e_chk: expr) => {
+    {
+        let e = $e;
+        debug_assert_eq!(e, $e_chk);;
+        e
+    }
+}}
+
 #[test]
 fn test_verify() {
     verify!(Some(4));
