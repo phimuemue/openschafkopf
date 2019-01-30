@@ -6,6 +6,7 @@ use crate::rules::{
 use crate::util::*;
 use rand::{self, Rng};
 use std::mem;
+use arrayvec::ArrayVec;
 
 pub trait TGamePhase : Sized {
     type ActivePlayerInfo;
@@ -289,7 +290,7 @@ impl SDetermineRules<'_> {
 
 #[derive(Debug, Clone)] // TODO? custom impl Debug
 pub struct SStichSequence {
-    vecstich: Vec<SStich>,
+    vecstich: ArrayVec<[SStich; 9]>,
     ekurzlang: EKurzLang,
 }
 
@@ -307,7 +308,11 @@ impl SStichSequence {
 
     pub fn new(epi_first: EPlayerIndex, ekurzlang: EKurzLang) -> Self {
         let stichseq = SStichSequence {
-            vecstich: vec![SStich::new(epi_first)],
+            vecstich: {
+                let mut vecstich = ArrayVec::new();
+                vecstich.push(SStich::new(epi_first));
+                vecstich
+            },
             ekurzlang,
         };
         #[cfg(debug_assertions)]stichseq.assert_invariant();
@@ -381,7 +386,7 @@ impl SStichSequence {
             assert!(self.current_stich_no_invariant().is_full());
         }
         verify!(self.vecstich.last_mut()).unwrap().undo_most_recent();
-        assert_eq!(n_len, self.vecstich.len());
+        debug_assert_eq!(n_len, self.vecstich.len());
         #[cfg(debug_assertions)]self.assert_invariant();
         r
     }
