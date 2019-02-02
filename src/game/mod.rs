@@ -112,6 +112,7 @@ pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
     })
 }
 
+#[allow(clippy::large_enum_variant)] // It is ok for DirectGame to be so large
 #[derive(Debug)]
 pub enum VGamePreparationsFinish<'rules> {
     DetermineRules(SDetermineRules<'rules>),
