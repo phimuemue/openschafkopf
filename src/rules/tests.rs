@@ -75,12 +75,12 @@ pub trait TCardArrayKurzLand {
 }
 impl TCardArrayKurzLand for [SCard; 6] {
     fn to_hand(&self) -> SHand {
-        SHand::new_from_vec(self.into_iter().cloned().collect())
+        SHand::new_from_vec(self.iter().cloned().collect())
     }
 }
 impl TCardArrayKurzLand for [SCard; 8] {
     fn to_hand(&self) -> SHand {
-        SHand::new_from_vec(self.into_iter().cloned().collect())
+        SHand::new_from_vec(self.iter().cloned().collect())
     }
 }
 

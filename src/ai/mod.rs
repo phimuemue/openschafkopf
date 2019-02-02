@@ -184,12 +184,12 @@ fn test_unplayed_cards() {
     use crate::card::card_values::*;
     let epi_irrelevant = EPlayerIndex::EPI0;
     let mut stichseq = SStichSequence::new(epi_irrelevant, EKurzLang::Lang);
-    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]].into_iter() {
-        for card in acard_stich.into_iter() {
+    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]].iter() {
+        for card in acard_stich.iter() {
             stichseq.zugeben_custom_winner_index(*card, |_stich| epi_irrelevant);
         }
     }
-    let hand = &SHand::new_from_vec([GK, SK].into_iter().cloned().collect());
+    let hand = &SHand::new_from_vec([GK, SK].iter().cloned().collect());
     let veccard_unplayed = unplayed_cards(&stichseq, &hand).collect::<Vec<_>>();
     let veccard_unplayed_check = [GZ, E7, SZ, H9, EZ, GU];
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
@@ -294,7 +294,7 @@ fn test_is_compatible_with_game_so_far() {
     let test_game = |aacard_hand: [[SCard; 8]; 4], rules: &TRules, epi_first, vectestaction: Vec<VTestAction>| {
         let ahand = EPlayerIndex::map_from_raw(aacard_hand)
             .map(|acard_hand|
-                SHand::new_from_vec(acard_hand.into_iter().cloned().collect())
+                SHand::new_from_vec(acard_hand.iter().cloned().collect())
             );
         use crate::rules::ruleset::*;
         let mut game = game::SGame::new(
@@ -311,7 +311,7 @@ fn test_is_compatible_with_game_so_far() {
             let mut oassertnotfrei = None;
             match testaction {
                 VTestAction::PlayStich(acard) => {
-                    for card in acard.into_iter() {
+                    for card in acard.iter() {
                         let epi = verify!(game.which_player_can_do_something()).unwrap().0;
                         verify!(game.zugeben(*card, epi)).unwrap();
                     }
@@ -390,7 +390,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             [HO,HU,E8,G8,S8,GA,GZ,GK],
             [SO,SU,E9,G9,S9,SA,SZ,SK],
         ]).map(|acard_hand|
-            SHand::new_from_vec(acard_hand.into_iter().cloned().collect())
+            SHand::new_from_vec(acard_hand.iter().cloned().collect())
         ),
         SDoublings::new(epi_first_and_active_player),
         Some(SStossParams::new(
@@ -403,9 +403,9 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         )),
         /*n_stock*/ 0,
     );
-    for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]].into_iter() {
+    for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]].iter() {
         assert_eq!(EPlayerIndex::values().nth(0), Some(epi_first_and_active_player));
-        for (epi, card) in EPlayerIndex::values().zip(acard_stich.into_iter()) {
+        for (epi, card) in EPlayerIndex::values().zip(acard_stich.iter()) {
             verify!(game.zugeben(*card, epi)).unwrap();
         }
     }
@@ -422,7 +422,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(&game)),
             /*ostr_file_out*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
         );
-        for card in [H7, H8, H9].into_iter() {
+        for card in [H7, H8, H9].iter() {
             assert!(veccard_allowed.contains(card));
             assert!(
                 mapcardpayout[*card] == std::isize::MAX

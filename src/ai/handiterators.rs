@@ -137,7 +137,7 @@ fn test_all_possible_hands() {
     use crate::card::card_values::*;
     let epi_irrelevant = EPlayerIndex::EPI0;
     let mut stichseq = SStichSequence::new(epi_irrelevant, EKurzLang::Lang);
-    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8]].into_iter() {
+    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8]].iter() {
         for card in acard_stich {
             stichseq.zugeben_custom_winner_index(*card, |_stich| epi_irrelevant);
         }
@@ -169,8 +169,8 @@ fn test_all_possible_hands() {
             (E7, vec![SK], 1, [0, 0, 1, 1]),
             (SK, vec![SK], 1, [0, 0, 0, 1]),
         ],
-    ].into_iter() {
-        for (card, veccard_hand, n_hand_count, an_size_hand) in atplcardslccardnan.into_iter() {
+    ].iter() {
+        for (card, veccard_hand, n_hand_count, an_size_hand) in atplcardslccardnan.iter() {
             let mut i_hand = 0;
             for ahand in make_handiterator::<SNextVecEPIPermutation>(
                 &stichseq,
