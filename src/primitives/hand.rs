@@ -35,7 +35,7 @@ impl SHand {
         self.veccard.retain(|&mut card_in_hand| card_in_hand!=card)
     }
     pub fn add_card(&mut self, card: SCard) {
-        assert!(!self.contains(card));
+        debug_assert!(!self.contains(card));
         self.veccard.push(card)
     }
 
