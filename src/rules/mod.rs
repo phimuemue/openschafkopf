@@ -318,9 +318,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
                 );
             }
         }
-        let an_payout = apayoutinfo.map(|payoutinfo| payoutinfo.payout_including_stock(n_stock, tpln_stoss_doubling));
-        let n_stock = -an_payout.iter().sum::<isize>();
-        SAccountBalance::new(an_payout, n_stock)
+        SAccountBalance::new(apayoutinfo.map(|payoutinfo| payoutinfo.payout_including_stock(n_stock, tpln_stoss_doubling)))
     }
 
     fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo>;

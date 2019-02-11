@@ -10,7 +10,8 @@ pub struct SAccountBalance {
 }
 
 impl SAccountBalance {
-    pub fn new(an: EnumMap<EPlayerIndex, isize>, n_stock: isize) -> SAccountBalance {
+    pub fn new(an: EnumMap<EPlayerIndex, isize>) -> SAccountBalance {
+        let n_stock = -an.iter().sum::<isize>();
         let accountbalance = SAccountBalance {
             an,
             n_stock,

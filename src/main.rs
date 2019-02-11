@@ -139,7 +139,7 @@ fn communicate_via_channel<T: std::fmt::Debug>(f: impl FnOnce(mpsc::Sender<T>)) 
 }
 
 fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
-    let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_epi| 0), 0);
+    let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_epi| 0));
     for i_game in 0..n_games {
         let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset, accountbalance.get_stock());
         while let Some(epi) = dealcards.which_player_can_do_something() {
@@ -233,7 +233,6 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usi
             VStockOrT::Stock(n_stock) => {
                 accountbalance.apply_payout(&SAccountBalance::new(
                     EPlayerIndex::map_from_fn(|_epi| -n_stock),
-                    4*n_stock,
                 ));
             }
         }
