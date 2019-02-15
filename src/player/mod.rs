@@ -29,14 +29,14 @@ pub trait TPlayer {
         vecrulegroup: &'rules [SRuleGroup],
         n_stock: isize,
         opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
-        txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>
+        txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
     );
 
     fn ask_for_stoss(
         &self,
         epi: EPlayerIndex,
         doublings: &SDoublings,
-        rules: &TRules,
+        rules: &dyn TRules,
         hand: &SHand,
         vecstoss: &[SStoss],
         n_stock: isize,

@@ -155,7 +155,7 @@ fn detect_expensive_all_possible_hands() {
                     }
                 }
             },
-        )) as Box<TPlayer>),
+        )) as Box<dyn TPlayer>),
         /*n_games*/4,
         &verify!(SRuleSet::from_string(
             r"

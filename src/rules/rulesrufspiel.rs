@@ -205,7 +205,7 @@ impl TRules for SRulesRufspiel {
         }
     }
 
-    fn rulespecific_ai<'rules>(&'rules self) -> Option<Box<TRuleSpecificAI + 'rules>> {
+    fn rulespecific_ai<'rules>(&'rules self) -> Option<Box<dyn TRuleSpecificAI + 'rules>> {
         Some(Box::new(SAIRufspiel::new(self)))
     }
 }

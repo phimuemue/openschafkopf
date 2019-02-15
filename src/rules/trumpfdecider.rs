@@ -9,7 +9,7 @@ use crate::util::*;
 pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe;
 
-    fn trumpfs_in_descending_order() -> return_impl!(Box<Iterator<Item=SCard>>);
+    fn trumpfs_in_descending_order() -> return_impl!(Box<dyn Iterator<Item=SCard>>);
     fn compare_trumpf(card_fst: SCard, card_snd: SCard) -> Ordering;
 }
 
@@ -19,7 +19,7 @@ impl TTrumpfDecider for STrumpfDeciderNoTrumpf {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
         VTrumpfOrFarbe::Farbe(card.farbe())
     }
-    fn trumpfs_in_descending_order() -> return_impl!(Box<Iterator<Item=SCard>>) {
+    fn trumpfs_in_descending_order() -> return_impl!(Box<dyn Iterator<Item=SCard>>) {
         Box::new(None.into_iter())
     }
     fn compare_trumpf(_card_fst: SCard, _card_snd: SCard) -> Ordering {
@@ -39,7 +39,7 @@ impl<StaticSchlag: TStaticValue<ESchlag>, DeciderSec: TTrumpfDecider> TTrumpfDec
             DeciderSec::trumpforfarbe(card)
         }
     }
-    fn trumpfs_in_descending_order() -> return_impl!(Box<Iterator<Item=SCard>>) {
+    fn trumpfs_in_descending_order() -> return_impl!(Box<dyn Iterator<Item=SCard>>) {
         Box::new(
             EFarbe::values()
                 .map(|efarbe| SCard::new(efarbe, StaticSchlag::VALUE))
@@ -76,7 +76,7 @@ impl<StaticFarbe: TStaticValue<EFarbe>> TTrumpfDecider for STrumpfDeciderFarbe<S
             VTrumpfOrFarbe::Farbe(card.farbe())
         }
     }
-    fn trumpfs_in_descending_order() -> return_impl!(Box<Iterator<Item=SCard>>) {
+    fn trumpfs_in_descending_order() -> return_impl!(Box<dyn Iterator<Item=SCard>>) {
         Box::new(
             ESchlag::values()
                 .map(|eschlag| SCard::new(StaticFarbe::VALUE, eschlag))

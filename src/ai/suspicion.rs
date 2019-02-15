@@ -32,11 +32,11 @@ trait TSnapshotVisualizer {
 
 pub struct SForEachSnapshotHTMLVisualizer<'rules> {
     file_output: fs::File,
-    rules: &'rules TRules,
+    rules: &'rules dyn TRules,
     epi: EPlayerIndex,
 }
 impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
-    pub fn new(file_output: fs::File, rules: &'rules TRules, epi: EPlayerIndex) -> Self {
+    pub fn new(file_output: fs::File, rules: &'rules dyn TRules, epi: EPlayerIndex) -> Self {
         let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output, rules, epi};
         foreachsnapshothtmlvisualizer.write_all(
             b"<style>
@@ -154,7 +154,7 @@ impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
 pub fn explore_snapshots<ForEachSnapshot>(
     epi_self: EPlayerIndex,
     ahand: &mut EnumMap<EPlayerIndex, SHand>,
-    rules: &TRules,
+    rules: &dyn TRules,
     stichseq: &mut SStichSequence,
     func_filter_allowed_cards: &impl Fn(&SStichSequence, &mut SHandVector),
     foreachsnapshot: &ForEachSnapshot,
@@ -200,7 +200,7 @@ pub fn explore_snapshots<ForEachSnapshot>(
 fn explore_snapshots_internal<ForEachSnapshot>(
     epi_self: EPlayerIndex,
     ahand: &mut EnumMap<EPlayerIndex, SHand>,
-    rules: &TRules,
+    rules: &dyn TRules,
     rulestatecache: &mut SRuleStateCache,
     stichseq: &mut SStichSequence,
     func_filter_allowed_cards: &impl Fn(&SStichSequence, &mut SHandVector),
@@ -271,7 +271,7 @@ fn end_snapshot_minmax<ItTplCardNPayout: Iterator<Item=(SCard, isize)>>(epi_self
 
 #[derive(new, Clone)]
 pub struct SMinReachablePayoutParams<'rules> {
-    rules: &'rules TRules,
+    rules: &'rules dyn TRules,
     epi: EPlayerIndex,
     tpln_stoss_doubling: (usize, usize),
     n_stock: isize,

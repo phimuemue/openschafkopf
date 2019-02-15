@@ -412,7 +412,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
         });
     }
 
-    fn rulespecific_ai<'rules>(&'rules self) -> Option<Box<TRuleSpecificAI + 'rules>> {
+    fn rulespecific_ai<'rules>(&'rules self) -> Option<Box<dyn TRuleSpecificAI + 'rules>> {
         None
     }
 }
@@ -468,7 +468,7 @@ plain_enum_mod!(modebid, EBid {
 pub trait TActivelyPlayableRules : TRules {
     box_clone_require!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority;
-    fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<TActivelyPlayableRules>> {
+    fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<dyn TActivelyPlayableRules>> {
         if match ebid {
             EBid::AtLeast => {*prio<=self.priority()},
             EBid::Higher => {*prio<self.priority()},
@@ -478,7 +478,7 @@ pub trait TActivelyPlayableRules : TRules {
             self.with_increased_prio(prio, ebid)
         }
     }
-    fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Box<TActivelyPlayableRules>> {
+    fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Box<dyn TActivelyPlayableRules>> {
         None
     }
     fn active_playerindex(&self) -> EPlayerIndex {

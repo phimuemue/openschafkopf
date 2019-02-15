@@ -149,7 +149,7 @@ pub fn print_game_announcements(epi_myself: EPlayerIndex, gameannouncements: &SG
     }
 }
 
-pub fn print_game_info(rules: &TRules, doublings: &SDoublings, vecstoss: &[SStoss]) {
+pub fn print_game_info(rules: &dyn TRules, doublings: &SDoublings, vecstoss: &[SStoss]) {
     do_in_window(&VSkUiWindow::GameInfo, |ncwin| {
         wprint(ncwin, &format!("{}", rules));
         if let Some(epi) = rules.playerindex() {

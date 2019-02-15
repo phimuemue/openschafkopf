@@ -24,10 +24,10 @@ macro_rules! return_impl{($t:ty) => { $t }}
 // TODORUST Objects should be upcastable to supertraits: https://github.com/rust-lang/rust/issues/5665
 macro_rules! make_upcastable{($upcasttrait:ident, $trait:ident) => {
     pub trait $upcasttrait {
-        fn upcast(&self) -> &$trait;
+        fn upcast(&self) -> &dyn $trait;
     }
     impl<T: $trait> $upcasttrait for T {
-        fn upcast(&self) -> &$trait {
+        fn upcast(&self) -> &dyn $trait {
             self
         }
     }

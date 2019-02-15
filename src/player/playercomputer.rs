@@ -49,7 +49,7 @@ impl TPlayer for SPlayerComputer {
         vecrulegroup: &'rules [SRuleGroup],
         n_stock: isize,
         _opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
-        txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>
+        txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
     ) {
         // TODO: implement a more intelligent decision strategy
         verify!(txorules.send(verify!(allowed_rules(vecrulegroup, hand)
@@ -80,7 +80,7 @@ impl TPlayer for SPlayerComputer {
         &self,
         epi: EPlayerIndex,
         doublings: &SDoublings,
-        rules: &TRules,
+        rules: &dyn TRules,
         hand: &SHand,
         vecstoss: &[SStoss],
         n_stock: isize,

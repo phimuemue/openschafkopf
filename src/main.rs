@@ -1,4 +1,5 @@
 #![cfg_attr(feature="cargo-clippy", allow(clippy::block_in_if_condition_stmt))]
+#![deny(bare_trait_objects)]
 
 extern crate rand;
 extern crate ncurses;
@@ -115,7 +116,7 @@ fn main() {
         if let Ok(ruleset) =SRuleSet::from_file(Path::new(verify!(subcommand_matches.value_of("ruleset")).unwrap())) {
             skui::init_ui();
             let accountbalance = game_loop_cli(
-                &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
+                &EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
                     if EPlayerIndex::EPI1==epi {
                         Box::new(SPlayerHuman{ai : ai(subcommand_matches)})
                     } else {
@@ -137,7 +138,7 @@ fn communicate_via_channel<T: std::fmt::Debug>(f: impl FnOnce(mpsc::Sender<T>)) 
     verify!(rxt.recv()).unwrap()
 }
 
-fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
+fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
     let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_epi| 0), 0);
     for i_game in 0..n_games {
         let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset, accountbalance.get_stock());
@@ -319,7 +320,7 @@ fn test_game_loop() {
             .choose_multiple(&mut rng, 2)
     {
         game_loop_cli(
-            &EPlayerIndex::map_from_fn(|epi| -> Box<TPlayer> {
+            &EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
                 Box::new(SPlayerComputer{ai: {
                     if epi<EPlayerIndex::EPI2 {
                         ai::SAi::new_cheating(/*n_rank_rules_samples*/1, /*n_suggest_card_branches*/2)

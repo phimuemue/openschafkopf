@@ -88,7 +88,7 @@ impl SDealCards<'_> {
     }
 }
 
-pub type SGameAnnouncements = SPlayersInRound<Option<Box<TActivelyPlayableRules>>>;
+pub type SGameAnnouncements = SPlayersInRound<Option<Box<dyn TActivelyPlayableRules>>>;
 
 #[derive(Debug)]
 pub struct SGamePreparations<'rules> {
@@ -130,7 +130,7 @@ impl<'rules> TGamePhase for SGamePreparations<'rules> {
     }
 
     fn finish_success(self) -> Self::Finish {
-        let mut vecpairepirules : Vec<(_, Box<TActivelyPlayableRules>)> = self.gameannouncements.into_iter()
+        let mut vecpairepirules : Vec<(_, Box<dyn TActivelyPlayableRules>)> = self.gameannouncements.into_iter()
             .filter_map(|(epi, orules)| orules.map(|rules| (epi, rules)))
             .collect();
         if let Some(pairepirules_current_bid) = vecpairepirules.pop() {
@@ -177,7 +177,7 @@ macro_rules! impl_fullhand { () => {
 impl SGamePreparations<'_> {
     impl_fullhand!();
 
-    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<TActivelyPlayableRules>>) -> Result<(), Error> {
+    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<dyn TActivelyPlayableRules>>) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
@@ -198,9 +198,9 @@ pub struct SDetermineRules<'rules> {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,
     pub ruleset : &'rules SRuleSet,
-    pub vecpairepirules_queued : Vec<(EPlayerIndex, Box<TActivelyPlayableRules>)>,
+    pub vecpairepirules_queued : Vec<(EPlayerIndex, Box<dyn TActivelyPlayableRules>)>,
     pub n_stock : isize,
-    pairepirules_current_bid : (EPlayerIndex, Box<TActivelyPlayableRules>),
+    pairepirules_current_bid : (EPlayerIndex, Box<dyn TActivelyPlayableRules>),
 }
 
 impl TGamePhase for SDetermineRules<'_> {
@@ -257,7 +257,7 @@ impl SDetermineRules<'_> {
         (self.pairepirules_current_bid.0, self.pairepirules_current_bid.1.priority())
     }
 
-    pub fn announce_game(&mut self, epi: EPlayerIndex, rules: Box<TActivelyPlayableRules>) -> Result<(), Error> {
+    pub fn announce_game(&mut self, epi: EPlayerIndex, rules: Box<dyn TActivelyPlayableRules>) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
             bail!("announce_game not allowed for specified EPlayerIndex");
         }
@@ -371,11 +371,11 @@ impl SStichSequence {
         self.completed_stichs_custom_winner_index(move |stich| rules.winner_index(stich))
     }
 
-    pub fn zugeben(&mut self, card: SCard, rules: &TRules) {
+    pub fn zugeben(&mut self, card: SCard, rules: &dyn TRules) {
         self.zugeben_custom_winner_index(card, |stich| rules.winner_index(stich));
     }
 
-    pub fn zugeben_and_restore<F, R>(&mut self, card: SCard, rules: &TRules, func: F) -> R
+    pub fn zugeben_and_restore<F, R>(&mut self, card: SCard, rules: &dyn TRules, func: F) -> R
         where
             for<'inner> F: FnOnce(&mut Self)->R
     {
@@ -419,7 +419,7 @@ impl SStichSequence {
 pub struct SGame {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,
-    pub rules : Box<TRules>,
+    pub rules : Box<dyn TRules>,
     pub vecstoss : Vec<SStoss>,
     ostossparams : Option<SStossParams>,
     pub n_stock : isize,
@@ -475,7 +475,7 @@ impl SGame {
         ahand : EnumMap<EPlayerIndex, SHand>,
         doublings : SDoublings,
         ostossparams : Option<SStossParams>,
-        rules : Box<TRules>,
+        rules : Box<dyn TRules>,
         n_stock : isize,
     ) -> SGame {
         let epi_first = doublings.first_playerindex();

@@ -301,9 +301,9 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TActi
     fn priority(&self) -> VGameAnnouncementPriority {
         self.payoutdecider.priority()
     }
-    fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<TActivelyPlayableRules>> {
+    fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<dyn TActivelyPlayableRules>> {
         self.payoutdecider.with_increased_prio(prio, ebid)
-            .map(|payoutdecider| Box::new(Self::internal_new(self.epi, &self.str_name, payoutdecider)) as Box<TActivelyPlayableRules>)
+            .map(|payoutdecider| Box::new(Self::internal_new(self.epi, &self.str_name, payoutdecider)) as Box<dyn TActivelyPlayableRules>)
     }
 }
 
@@ -331,8 +331,8 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> SRule
     }
 }
 
-pub fn sololike<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike>(epi: EPlayerIndex, payoutdecider: PayoutDecider, str_rulename: &str) -> Box<TActivelyPlayableRules> {
-    Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(epi, payoutdecider, str_rulename)) as Box<TActivelyPlayableRules>
+pub fn sololike<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike>(epi: EPlayerIndex, payoutdecider: PayoutDecider, str_rulename: &str) -> Box<dyn TActivelyPlayableRules> {
+    Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(epi, payoutdecider, str_rulename)) as Box<dyn TActivelyPlayableRules>
 }
 
 pub type SCoreSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<

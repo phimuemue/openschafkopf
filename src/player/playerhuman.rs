@@ -19,7 +19,7 @@ fn choose_ruleset_or_rules<'t, T>(
     hand: &SHand,
     vect : &'t [T],
     fn_format: impl Fn(&T)->String,
-    fn_choose: impl Fn(usize)->Option<&'t TActivelyPlayableRules>,
+    fn_choose: impl Fn(usize)->Option<&'t dyn TActivelyPlayableRules>,
     opairepiprio: &Option<(EPlayerIndex, VGameAnnouncementPriority)>,
 ) -> &'t T {
     skui::ask_for_alternative(
@@ -113,14 +113,14 @@ impl TPlayer for SPlayerHuman {
         vecrulegroup: &'rules [SRuleGroup],
         _n_stock: isize,
         opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
-        txorules: mpsc::Sender<Option<&'rules TActivelyPlayableRules>>,
+        txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>,
     ) {
         skui::print_game_announcements(epi, gameannouncements);
         let vecrulegroup : Vec<&SRuleGroup> = vecrulegroup.iter()
             .filter(|rulegroup| 0 < rulegroup.allowed_rules(hand).count())
             .collect();
         loop {
-            let vecoorules : Vec<Option<Option<&TActivelyPlayableRules>>> = Some(None).into_iter() // stands for "back"
+            let vecoorules : Vec<Option<Option<&dyn TActivelyPlayableRules>>> = Some(None).into_iter() // stands for "back"
                 .chain(
                     choose_ruleset_or_rules(
                         hand.get(),
@@ -154,7 +154,7 @@ impl TPlayer for SPlayerHuman {
         &self,
         _epi: EPlayerIndex,
         doublings: &SDoublings,
-        rules: &TRules,
+        rules: &dyn TRules,
         hand: &SHand,
         vecstoss: &[SStoss],
         _n_stock: isize,

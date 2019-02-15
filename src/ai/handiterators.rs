@@ -83,7 +83,7 @@ fn make_handiterator<NextVecEPI: TNextVecEPI>(stichseq: &SStichSequence, hand_fi
     }
 }
 
-fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVecEPI+'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, rules: &'lifetime TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVecEPI+'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, rules: &'lifetime dyn TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     make_handiterator::<NextVecEPI>(stichseq, hand_fixed, epi_fixed)
         .filter(move |ahand| {
             let stich_current = stichseq.current_stich();
@@ -124,11 +124,11 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
         })
 }
 
-pub fn all_possible_hands<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, rules: &'lifetime TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+pub fn all_possible_hands<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, rules: &'lifetime dyn TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     make_handiterator_compatible_with_game_so_far::<SNextVecEPIPermutation>(stichseq, hand_fixed, epi_fixed, rules)
 }
 
-pub fn forever_rand_hands<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, rules: &'lifetime TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+pub fn forever_rand_hands<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, rules: &'lifetime dyn TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     make_handiterator_compatible_with_game_so_far::<SNextVecEPIShuffle>(stichseq, hand_fixed, epi_fixed, rules)
 }
 

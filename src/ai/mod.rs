@@ -72,7 +72,7 @@ impl SAi {
         }
     }
 
-    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &TRules, n_stock: isize) -> f64 {
+    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &dyn TRules, n_stock: isize) -> f64 {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
         let ekurzlang = EKurzLang::from_cards_per_player(hand_fixed.get().cards().len());
         forever_rand_hands(&SStichSequence::new(epi_first, ekurzlang), hand_fixed.get().clone(), epi_rank, rules)
@@ -291,7 +291,7 @@ fn test_is_compatible_with_game_so_far() {
         AssertFrei(EPlayerIndex, VTrumpfOrFarbe),
         AssertNotFrei(EPlayerIndex, VTrumpfOrFarbe),
     }
-    let test_game = |aacard_hand: [[SCard; 8]; 4], rules: &TRules, epi_first, vectestaction: Vec<VTestAction>| {
+    let test_game = |aacard_hand: [[SCard; 8]; 4], rules: &dyn TRules, epi_first, vectestaction: Vec<VTestAction>| {
         let ahand = EPlayerIndex::map_from_raw(aacard_hand)
             .map(|acard_hand|
                 SHand::new_from_vec(acard_hand.iter().cloned().collect())

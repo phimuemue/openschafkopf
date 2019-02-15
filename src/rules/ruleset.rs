@@ -19,7 +19,7 @@ use toml;
 #[derive(Debug)]
 pub struct SRuleGroup {
     pub str_name : String,
-    pub vecorules : Vec<Option<Box<TActivelyPlayableRules>>>,
+    pub vecorules : Vec<Option<Box<dyn TActivelyPlayableRules>>>,
 }
 
 impl SRuleGroup {
@@ -41,7 +41,7 @@ impl SRuleGroup {
         }
     }
 
-    pub fn allowed_rules<'retval, 'hand : 'retval, 'rules : 'retval>(&'rules self, hand: SFullHand<'hand>) -> impl Iterator<Item=Option<&'rules TActivelyPlayableRules>> + 'retval {
+    pub fn allowed_rules<'retval, 'hand : 'retval, 'rules : 'retval>(&'rules self, hand: SFullHand<'hand>) -> impl Iterator<Item=Option<&'rules dyn TActivelyPlayableRules>> + 'retval {
         self.vecorules.iter().map(|orules| orules.as_ref().map(|rules| rules.as_ref()))
             .filter(move |orules| orules.map_or(true, |rules| rules.can_be_played(hand)))
     }
@@ -67,13 +67,13 @@ pub struct SStossParams {
 #[derive(new, Debug)]
 pub struct SRuleSet {
     pub avecrulegroup : EnumMap<EPlayerIndex, Vec<SRuleGroup>>,
-    pub stockorramsch : VStockOrT<Box<TRules>>,
+    pub stockorramsch : VStockOrT<Box<dyn TRules>>,
     pub oedoublingscope : Option<EDoublingScope>,
     pub ostossparams : Option<SStossParams>,
     pub ekurzlang : EKurzLang,
 }
 
-pub fn allowed_rules<'retval, 'hand : 'retval, 'rules : 'retval>(vecrulegroup: &'rules [SRuleGroup], hand: SFullHand<'hand>) -> impl Iterator<Item=Option<&'rules (TActivelyPlayableRules + 'rules)>> + 'retval {
+pub fn allowed_rules<'retval, 'hand : 'retval, 'rules : 'retval>(vecrulegroup: &'rules [SRuleGroup], hand: SFullHand<'hand>) -> impl Iterator<Item=Option<&'rules (dyn TActivelyPlayableRules + 'rules)>> + 'retval {
     vecrulegroup.iter()
         .flat_map(move |rulegroup| rulegroup.allowed_rules(hand))
 }
@@ -117,7 +117,7 @@ impl SRuleSet {
                 read_int(val_ramsch, "price").map(|n_price|
                     VStockOrT::OrT(Box::new(
                         SRulesRamsch::new(n_price.as_num(), durchmarsch)
-                    ) as Box<TRules>)
+                    ) as Box<dyn TRules>)
                 )
             },
             (None, Some(val_stock)) => {
@@ -168,7 +168,7 @@ impl SRuleSet {
                             epi,
                             efarbe,
                             payoutparams.clone(),
-                        )) as Box<TActivelyPlayableRules>))
+                        )) as Box<dyn TActivelyPlayableRules>))
                         .collect()
                 }
             )?;
@@ -262,7 +262,7 @@ impl SRuleSet {
                                 epi,
                                 /*i_prio, large negative number to make less important than any sololike*/-999_999,
                                 n_payout_base.as_num::<isize>(),
-                            )) as Box<TActivelyPlayableRules>)],
+                            )) as Box<dyn TActivelyPlayableRules>)],
                         });
                     }
                     if Some(true) == tomlval_bettel.get("stichzwang").and_then(|tomlval| tomlval.as_bool()) {

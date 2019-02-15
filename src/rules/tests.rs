@@ -16,7 +16,7 @@ use crate::util::*;
 
 fn internal_test_rules(
     str_info: &str,
-    rules: &TRules,
+    rules: &dyn TRules,
     ahand: EnumMap<EPlayerIndex, SHand>,
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
@@ -86,7 +86,7 @@ impl TCardArrayKurzLand for [SCard; 8] {
 
 pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLand>(
     str_info: &str,
-    rules: &TRules,
+    rules: &dyn TRules,
     aacard_hand: [CardArrayKurzLang; 4],
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
@@ -108,7 +108,7 @@ pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLand>(
 
 pub fn test_rules_manual(
     str_info: &str,
-    rules: &TRules,
+    rules: &dyn TRules,
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
     n_stock: isize,
