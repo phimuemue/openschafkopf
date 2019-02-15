@@ -296,6 +296,7 @@ pub struct SStichSequence {
 }
 
 impl SStichSequence {
+    #[cfg(debug_assertions)]
     fn assert_invariant(&self) {
         assert!(!self.vecstich.is_empty());
         assert!(!self.current_stich_no_invariant().is_full());

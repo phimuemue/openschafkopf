@@ -96,6 +96,7 @@ pub struct SPayoutHint {
 }
 
 impl SPayoutHint {
+    #[cfg(debug_assertions)]
     fn contains_payouthint(&self, payouthint_other: &SPayoutHint) -> bool {
         (match (&self.tpln_payout.0, &payouthint_other.tpln_payout.0) {
             (None, _) => true,
