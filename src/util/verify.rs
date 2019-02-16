@@ -22,12 +22,21 @@ macro_rules! verify {($e: expr) => {
     }
 }}
 
-macro_rules! debug_verify_eq {($e: expr, $e_chk: expr) => {
+macro_rules! verify_eq {($e: expr, $e_chk: expr) => {
     {
         let e = $e;
-        debug_assert_eq!(e, $e_chk);;
+        assert_eq!(e, $e_chk);;
         e
     }
+}}
+
+#[cfg(debug_assertions)]
+macro_rules! debug_verify_eq {($e: expr, $e_chk: expr) => {
+    verify_eq!($e, $e_chk)
+}}
+#[cfg(not(debug_assertions))]
+macro_rules! debug_verify_eq {($e: expr, $e_chk: expr) => {
+    $e
 }}
 
 #[test]

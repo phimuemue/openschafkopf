@@ -57,9 +57,9 @@ fn internal_test_rules(
         assert_eq!(stich, &slcstich_test[i_stich]);
         println!("Stich {}: {}", i_stich, stich);
     }
-    let accountbalance_payout = verify!(game.finish()).unwrap().accountbalance;
-    assert_eq!(EPlayerIndex::map_from_fn(|epi| accountbalance_payout.get_player(epi)), EPlayerIndex::map_from_raw(an_payout));
-    assert_eq!(accountbalance_payout.get_stock(), n_stock_payout);
+    let an_payout_check = verify!(game.finish()).unwrap().an_payout;
+    assert_eq!(EPlayerIndex::map_from_fn(|epi| an_payout_check[epi]), EPlayerIndex::map_from_raw(an_payout));
+    assert_eq!(-an_payout.iter().sum::<isize>(), n_stock_payout);
 }
 
 fn make_stich_vector(vecpairnacard_stich: &[(usize, [SCard; 4])]) -> Vec<SStich> {

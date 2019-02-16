@@ -462,7 +462,7 @@ impl TGamePhase for SGame {
     fn finish_success(self) -> Self::Finish {
         assert!(self.kurzlang().cards_per_player()==self.completed_stichs().len());
         SGameResult {
-            accountbalance : self.rules.payout(
+            an_payout : self.rules.payout(
                 SStichSequenceGameFinished::new(&self.stichseq),
                 stoss_and_doublings(&self.vecstoss, &self.doublings),
                 self.n_stock,
@@ -554,7 +554,7 @@ impl SGame {
 #[derive(Debug)]
 pub struct SGameResult {
     // TODO store all information about finished game
-    pub accountbalance : SAccountBalance,
+    pub an_payout : EnumMap<EPlayerIndex, isize>,
 }
 
 impl TGamePhase for SGameResult { // "absorbing state"

@@ -228,12 +228,10 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usi
                     });
                     verify!(game.zugeben(card, gameaction.0)).unwrap();
                 }
-                accountbalance.apply_payout(&verify!(game.finish()).unwrap().accountbalance);
+                accountbalance.apply_payout(&verify!(game.finish()).unwrap().an_payout);
             },
             VStockOrT::Stock(n_stock) => {
-                accountbalance.apply_payout(&SAccountBalance::new(
-                    EPlayerIndex::map_from_fn(|_epi| -n_stock),
-                ));
+                accountbalance.apply_payout(&EPlayerIndex::map_from_fn(|_epi| -n_stock));
             }
         }
         skui::print_account_balance(&accountbalance);

@@ -255,7 +255,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
 
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
 
-    fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> SAccountBalance {
+    fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> EnumMap<EPlayerIndex, isize> {
         self.payout_with_cache(
             gamefinishedstiche,
             tpln_stoss_doubling,
@@ -264,7 +264,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
         )
     }
 
-    fn payout_with_cache(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> SAccountBalance {
+    fn payout_with_cache(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         let apayoutinfo = self.payoutinfos(
             gamefinishedstiche,
             debug_verify_eq!(
@@ -318,7 +318,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
                 );
             }
         }
-        SAccountBalance::new(apayoutinfo.map(|payoutinfo| payoutinfo.payout_including_stock(n_stock, tpln_stoss_doubling)))
+        apayoutinfo.map(|payoutinfo| payoutinfo.payout_including_stock(n_stock, tpln_stoss_doubling))
     }
 
     fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo>;

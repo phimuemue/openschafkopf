@@ -11,7 +11,7 @@ pub struct SAccountBalance {
 
 impl SAccountBalance {
     pub fn new(an: EnumMap<EPlayerIndex, isize>) -> SAccountBalance {
-        let n_stock = -an.iter().sum::<isize>();
+        let n_stock = verify_eq!(0, an.iter().sum::<isize>());
         let accountbalance = SAccountBalance {
             an,
             n_stock,
@@ -21,16 +21,20 @@ impl SAccountBalance {
     }
 
     fn assert_invariant(&self) {
+        assert!(0 <= self.n_stock);
         assert_eq!(self.n_stock + self.an.iter().sum::<isize>(), 0);
     }
 
-    pub fn apply_payout(&mut self, accountbalance: &SAccountBalance) {
-        accountbalance.assert_invariant();
-        self.assert_invariant();
+    pub fn apply_payout(&mut self, an: &EnumMap<EPlayerIndex, isize>) {
         for epi in EPlayerIndex::values() {
-            self.an[epi] += accountbalance.get_player(epi);
+            self.an[epi] += an[epi];
         }
-        self.n_stock += accountbalance.get_stock();
+        let n_pay_into_stock = -an.iter().sum::<isize>();
+        assert!(
+            n_pay_into_stock >= 0 // either pay into stock...
+            || n_pay_into_stock == -self.n_stock // ... or exactly empty it (assume that this is always possible)
+        );
+        self.n_stock += n_pay_into_stock;
         self.assert_invariant();
     }
 
