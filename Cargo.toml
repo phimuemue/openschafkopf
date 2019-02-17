@@ -5,7 +5,7 @@ authors = ["openschakfopf"]
 edition = "2018"
 
 [dependencies]
-combine = "1"
+combine = "3"
 rand = "0"
 ncurses = "5"
 itertools = "0"

@@ -1,24 +1,9 @@
 extern crate combine;
 
 use crate::primitives::card::*;
-use self::combine::*;
-use std::iter::FromIterator;
+use self::combine::{*, char::{spaces, letter, alpha_num,}, error::{StringStreamError},};
 
-pub fn parse_cards<C: FromIterator<SCard>>(str_cards: &str) -> Option<C> {
-    use std::fmt;
-    use std::error::Error as StdError;
-    #[derive(Debug)]
-    struct ParseEnumError;
-    impl fmt::Display for ParseEnumError {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, "error")
-        }
-    }
-    impl StdError for ParseEnumError {
-        fn description(&self) -> &str {
-            "error"
-        }
-    }
+pub fn parse_cards<C: std::iter::Extend<SCard>+Default>(str_cards: &str) -> Option<C> {
     spaces()
         .with(sep_by::<C,_,_>(
             (
@@ -27,7 +12,7 @@ pub fn parse_cards<C: FromIterator<SCard>>(str_cards: &str) -> Option<C> {
                     'g'|'G'=> Ok(EFarbe::Gras),
                     'h'|'H'=> Ok(EFarbe::Herz),
                     's'|'S'=> Ok(EFarbe::Schelln),
-                    _ => Err(ParseEnumError),
+                    _ => Err(StringStreamError::UnexpectedParse),
                 } } ),
                 alpha_num().and_then(|chr_schlag| { match chr_schlag {
                     '7'    => Ok(ESchlag::S7),
@@ -38,7 +23,7 @@ pub fn parse_cards<C: FromIterator<SCard>>(str_cards: &str) -> Option<C> {
                     'o'|'O'=> Ok(ESchlag::Ober),
                     'k'|'K'=> Ok(ESchlag::Koenig),
                     'a'|'A'=> Ok(ESchlag::Ass),
-                    _ => Err(ParseEnumError),
+                    _ => Err(StringStreamError::UnexpectedParse),
                 } } )
             ).map(|(efarbe, eschlag)| SCard::new(efarbe, eschlag)),
             spaces()
