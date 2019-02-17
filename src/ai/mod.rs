@@ -99,10 +99,10 @@ impl SAi {
     }
 
     pub fn suggest_card(&self, game: &SGame, ostr_file_out: Option<&str>) -> SCard {
-        let veccard_allowed = game.rules.all_allowed_cards(
-            &game.stichseq,
-            &game.ahand[debug_verify!(game.which_player_can_do_something()).unwrap().0]
-        );
+        let stich_current = game.current_playable_stich();
+        assert!(!stich_current.is_full());
+        let epi_fixed = debug_verify!(stich_current.current_playerindex()).unwrap();
+        let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &game.ahand[epi_fixed]);
         assert!(1<=veccard_allowed.len());
         if 1==veccard_allowed.len() {
             veccard_allowed[0]
@@ -113,8 +113,11 @@ impl SAi {
         } else {
             macro_rules! forward_to_determine_best_card_itahand{($itahand: expr, $func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
                 {
-                    let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
-                        game,
+                    let mapcardn_payout = determine_best_card_internal(
+                        epi_fixed,
+                        &veccard_allowed,
+                        game.rules.as_ref(),
+                        &game.stichseq,
                         $itahand,
                         $func_filter_allowed_cards,
                         $foreachsnapshot,
@@ -139,9 +142,6 @@ impl SAi {
                     ) },
                 }
             }}
-            let stich_current = game.current_playable_stich();
-            assert!(!stich_current.is_full());
-            let epi_fixed = debug_verify!(stich_current.current_playerindex()).unwrap();
             let hand_fixed = &game.ahand[epi_fixed];
             assert!(!hand_fixed.cards().is_empty());
             // TODORUST exhaustive_integer_patterns
@@ -203,14 +203,15 @@ fn test_unplayed_cards() {
 }
 
 fn determine_best_card_internal(
-    game: &SGame,
+    epi_fixed: EPlayerIndex,
+    slccard_allowed: &[SCard],
+    rules: &dyn TRules,
+    stichseq: &SStichSequence,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Sync),
     ostr_file_out: Option<&str>
-) -> (SHandVector, EnumMap<SCard, isize>) {
-    let epi_fixed = debug_verify!(game.current_playable_stich().current_playerindex()).unwrap();
-    let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &game.ahand[epi_fixed]);
+) -> EnumMap<SCard, isize> {
     let mapcardn_payout = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
         SCard::map_from_fn(|_card| std::isize::MAX),
@@ -219,21 +220,21 @@ fn determine_best_card_internal(
         .collect::<Vec<_>>() // TODO necessary?
         .into_par_iter()
         .flat_map(|(i_susp, ahand)|
-            veccard_allowed.par_iter()
+            slccard_allowed.par_iter()
                 .map(move |card| (i_susp, ahand.clone(), *card))
         )
         .for_each(|(i_susp, ahand, card)| {
             debug_assert!(ahand[epi_fixed].cards().contains(&card));
             let mut ahand = ahand.clone();
             let mapcardn_payout = Arc::clone(&mapcardn_payout);
-            assert!(ahand_vecstich_card_count_is_compatible(&game.stichseq, &ahand));
-            let mut stichseq = game.stichseq.clone();
+            assert!(ahand_vecstich_card_count_is_compatible(stichseq, &ahand));
+            let mut stichseq = stichseq.clone();
             ahand[epi_fixed].play_card(card);
-            stichseq.zugeben(card, game.rules.as_ref());
+            stichseq.zugeben(card, rules);
             let n_payout = explore_snapshots(
                 epi_fixed,
                 &mut ahand,
-                game.rules.as_ref(),
+                rules,
                 &mut stichseq,
                 func_filter_allowed_cards,
                 foreachsnapshot,
@@ -250,9 +251,9 @@ fn determine_best_card_internal(
             .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
     ).unwrap();
     assert!(<SCard as TPlainEnum>::values().any(|card| {
-        veccard_allowed.contains(&card) && mapcardn_payout[card] < std::isize::MAX
+        slccard_allowed.contains(&card) && mapcardn_payout[card] < std::isize::MAX
     }));
-    (veccard_allowed, mapcardn_payout)
+    mapcardn_payout
 }
 
 pub fn branching_factor(fn_stichseq_to_intvl: impl Fn(&SStichSequence)->(usize, usize)) -> impl Fn(&SStichSequence, &mut SHandVector) {
@@ -401,8 +402,15 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         epi_first_and_active_player,
         game.rules.as_ref(),
     ) {
-        let (veccard_allowed, mapcardpayout) = determine_best_card_internal(
-            &game,
+        let stich_current = game.current_playable_stich();
+        assert!(!stich_current.is_full());
+        let epi_fixed = debug_verify!(stich_current.current_playerindex()).unwrap();
+        let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &game.ahand[epi_fixed]);
+        let mapcardpayout = determine_best_card_internal(
+            epi_fixed,
+            &veccard_allowed,
+            game.rules.as_ref(),
+            &game.stichseq,
             Some(ahand).into_iter(),
             /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(&game)),
