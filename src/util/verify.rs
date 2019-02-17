@@ -30,13 +30,8 @@ macro_rules! verify_eq {($e: expr, $e_chk: expr) => {
     }
 }}
 
-#[cfg(debug_assertions)]
 macro_rules! debug_verify_eq {($e: expr, $e_chk: expr) => {
-    verify_eq!($e, $e_chk)
-}}
-#[cfg(not(debug_assertions))]
-macro_rules! debug_verify_eq {($e: expr, $e_chk: expr) => {
-    $e
+    if_dbg_else!({verify_eq!($e, $e_chk)}{$e})
 }}
 
 #[test]
