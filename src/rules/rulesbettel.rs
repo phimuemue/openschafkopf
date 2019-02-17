@@ -52,9 +52,9 @@ struct SPayoutDeciderBettel {
 impl TPayoutDecider for SPayoutDeciderBettel {
     fn payout<Rules>(
         &self,
-        rules: &Rules,
+        if_dbg_else!({rules}{_rules}): &Rules,
         rulestatecache: &SRuleStateCache,
-        gamefinishedstiche: SStichSequenceGameFinished,
+        if_dbg_else!({gamefinishedstiche}{_gamefinishedstiche}): SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
         perepi: impl TPerEPI,
     ) -> isize
@@ -74,8 +74,8 @@ impl TPayoutDecider for SPayoutDeciderBettel {
 
     fn payouthints<Rules>(
         &self,
-        rules: &Rules,
-        stichseq: &SStichSequence,
+        if_dbg_else!({rules}{_rules}): &Rules,
+        if_dbg_else!({stichseq}{_stichseq}): &SStichSequence,
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,

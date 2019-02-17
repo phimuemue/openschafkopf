@@ -45,6 +45,15 @@ pub fn tpl_flip_if<T>(b: bool, (t0, t1): (T, T)) -> (T, T) {
     }
 }
 
+#[cfg(debug_assertions)]
+macro_rules! if_dbg_else {({$tt_dbg: tt}{$tt_else: tt}) => {
+    $tt_dbg
+}}
+#[cfg(not(debug_assertions))]
+macro_rules! if_dbg_else {({$tt_dbg: tt}{$tt_else: tt}) => {
+    $tt_else
+}}
+
 // TODORUST is_sorted et al. should be part of std:
 // https://github.com/rust-lang/rfcs/pull/2351,
 // https://github.com/rust-lang/rfcs/blob/master/text/2351-is-sorted.md

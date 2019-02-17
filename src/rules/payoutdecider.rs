@@ -1,7 +1,6 @@
 use crate::primitives::*;
 use crate::rules::{
     *,
-    card_points::*,
     trumpfdecider::TTrumpfDecider,
 };
 use crate::util::*;
@@ -42,7 +41,7 @@ pub struct SPayoutDeciderPointBased<PointsToWin: TPointsToWin> {
 impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
     pub fn payout<Rules>(
         &self,
-        rules: &Rules,
+        if_dbg_else!({rules}{_rules}): &Rules,
         rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
@@ -58,7 +57,7 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
                 .sum::<isize>(),
             gamefinishedstiche.get().completed_stichs_winner_index(rules)
                 .filter(|&(_stich, epi_winner)| playerparties.is_primary_party(epi_winner))
-                .map(|(stich, _epi_winner)| points_stich(stich))
+                .map(|(stich, _epi_winner)| card_points::points_stich(stich))
                 .sum()
         );
         let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
@@ -89,8 +88,8 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
 
     pub fn payouthints<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(
         &self,
-        rules: &Rules,
-        stichseq: &SStichSequence,
+        if_dbg_else!({rules}{_rules}): &Rules,
+        if_dbg_else!({stichseq}{_stichseq}): &SStichSequence,
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
         playerparties: &PlayerParties,
@@ -104,7 +103,7 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
                 }),
             stichseq.completed_stichs_winner_index(rules)
                 .fold(bool::map_from_fn(|_b_primary| 0), |mut mapbn_points, (stich, epi_winner)| {
-                    mapbn_points[/*b_primary*/playerparties.is_primary_party(epi_winner)] += points_stich(stich);
+                    mapbn_points[/*b_primary*/playerparties.is_primary_party(epi_winner)] += card_points::points_stich(stich);
                     mapbn_points
                 })
         );

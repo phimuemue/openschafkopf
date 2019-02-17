@@ -129,7 +129,7 @@ pub struct SPayoutDeciderTout {
 impl TPayoutDecider for SPayoutDeciderTout {
     fn payout<Rules>(
         &self,
-        rules: &Rules,
+        if_dbg_else!({rules}{_rules}): &Rules,
         rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
@@ -152,7 +152,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
 
     fn payouthints<Rules>(
         &self,
-        rules: &Rules,
+        if_dbg_else!({rules}{_rules}): &Rules,
         stichseq: &SStichSequence,
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
