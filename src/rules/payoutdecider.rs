@@ -145,10 +145,10 @@ impl SLaufendeParams {
             assert!(SCard::values(ekurzlang).all(|card| mapcardoepi[card].is_some()));
         }
         let laufende_relevant = |card: SCard| { // TODO should we make this part of SRuleStateCacheFixed?
-            playerparties.is_primary_party(verify!(rulestatecache.fixed.mapcardoepi[card]).unwrap())
+            playerparties.is_primary_party(debug_verify!(rulestatecache.fixed.mapcardoepi[card]).unwrap())
         };
         let mut itcard_trumpf_descending = Rules::TrumpfDecider::trumpfs_in_descending_order();
-        let b_might_have_lauf = laufende_relevant(verify!(itcard_trumpf_descending.nth(0)).unwrap());
+        let b_might_have_lauf = laufende_relevant(debug_verify!(itcard_trumpf_descending.nth(0)).unwrap());
         let n_laufende = itcard_trumpf_descending
             .filter(|card| ekurzlang.supports_card(*card))
             .take_while(|card| b_might_have_lauf==laufende_relevant(*card))

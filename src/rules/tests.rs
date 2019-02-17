@@ -42,7 +42,7 @@ fn internal_test_rules(
         n_stock,
     );
     for n_epi_stoss in vecn_stoss {
-        verify!(game.stoss(EPlayerIndex::from_usize(n_epi_stoss))).unwrap();
+        debug_verify!(game.stoss(EPlayerIndex::from_usize(n_epi_stoss))).unwrap();
     }
     for (i_stich, stich) in slcstich_test.iter().enumerate() {
         println!("Stich {}: {}", i_stich, stich);
@@ -50,14 +50,14 @@ fn internal_test_rules(
         for (epi, card) in stich.iter() {
             assert_eq!(Some(epi), game.which_player_can_do_something().map(|gameaction| gameaction.0));
             println!("{}, {}", card, epi);
-            verify!(game.zugeben(*card, epi)).unwrap();
+            debug_verify!(game.zugeben(*card, epi)).unwrap();
         }
     }
     for (i_stich, stich) in game.stichseq.visible_stichs().enumerate() {
         assert_eq!(stich, &slcstich_test[i_stich]);
         println!("Stich {}: {}", i_stich, stich);
     }
-    let an_payout_check = verify!(game.finish()).unwrap().an_payout;
+    let an_payout_check = debug_verify!(game.finish()).unwrap().an_payout;
     assert_eq!(EPlayerIndex::map_from_fn(|epi| an_payout_check[epi]), EPlayerIndex::map_from_raw(an_payout));
     assert_eq!(-an_payout.iter().sum::<isize>(), n_stock_payout);
 }

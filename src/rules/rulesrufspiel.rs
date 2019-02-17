@@ -94,8 +94,8 @@ impl TRules for SRulesRufspiel {
 
     fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache, epi: EPlayerIndex) -> SPayoutInfo {
         let epi_coplayer = debug_verify_eq!(
-            verify!(rulestatecache.fixed.mapcardoepi[self.rufsau()]).unwrap(),
-            verify!(gamefinishedstiche.get().completed_stichs().iter()
+            debug_verify!(rulestatecache.fixed.mapcardoepi[self.rufsau()]).unwrap(),
+            debug_verify!(gamefinishedstiche.get().completed_stichs().iter()
                 .flat_map(|stich| stich.iter())
                 .find(|&(_, card)| *card==self.rufsau())
                 .map(|(epi, _)| epi))
@@ -136,13 +136,13 @@ impl TRules for SRulesRufspiel {
 
     fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache, epi: EPlayerIndex) -> SPayoutHint {
         let epi_coplayer = debug_verify_eq!(
-            verify!(rulestatecache.fixed.mapcardoepi[self.rufsau()]).unwrap(),
+            debug_verify!(rulestatecache.fixed.mapcardoepi[self.rufsau()]).unwrap(),
             stichseq.visible_stichs()
                 .flat_map(|stich| stich.iter())
                 .find(|&(_, card)| *card==self.rufsau())
                 .map(|(epi, _)| epi)
                 .unwrap_or_else(|| {
-                    verify!(EPlayerIndex::values().find(|epi|
+                    debug_verify!(EPlayerIndex::values().find(|epi|
                         ahand[*epi].cards().iter().any(|card| *card==self.rufsau())
                     )).unwrap()
                 })
@@ -185,7 +185,7 @@ impl TRules for SRulesRufspiel {
         if hand.cards().len()<=1 {
             hand.cards().clone()
         } else {
-            let epi = verify!(stichseq.current_stich().current_playerindex()).unwrap();
+            let epi = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
             let b_weggelaufen = stichseq.completed_stichs().iter()
                 .any(|stich| epi==stich.first_playerindex() && self.is_ruffarbe(*stich.first()));
             assert!(!stichseq.current_stich().is_empty());

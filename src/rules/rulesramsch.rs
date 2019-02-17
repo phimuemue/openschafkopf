@@ -67,7 +67,7 @@ impl TRules for SRulesRamsch {
                     }
                 )
         );
-        let n_points_max = verify!(EPlayerIndex::values().map(points_for_player).max()).unwrap();
+        let n_points_max = debug_verify!(EPlayerIndex::values().map(points_for_player).max()).unwrap();
         let vecepi_most_points = EPlayerIndex::values()
             .filter(|epi| n_points_max==points_for_player(*epi))
             .collect::<Vec<_>>();
@@ -95,7 +95,7 @@ impl TRules for SRulesRamsch {
                 if 1==vecepi_most_points.len() {
                     vecepi_most_points[0]
                 } else {
-                    verify!(vecepi_most_points.iter().cloned()
+                    debug_verify!(vecepi_most_points.iter().cloned()
                         .map(|epi| {(
                             epi,
                             gamefinishedstiche.get().completed_stichs().iter()

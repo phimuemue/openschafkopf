@@ -22,6 +22,10 @@ macro_rules! verify {($e: expr) => {
     }
 }}
 
+macro_rules! debug_verify{($e: expr) => {
+    if_dbg_else!({verify!($e)}{$e})
+}}
+
 macro_rules! verify_eq {($e: expr, $e_chk: expr) => {
     {
         let e = $e;

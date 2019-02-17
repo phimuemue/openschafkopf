@@ -488,7 +488,7 @@ pub trait TActivelyPlayableRules : TRules {
         None
     }
     fn active_playerindex(&self) -> EPlayerIndex {
-        verify!(self.playerindex()).unwrap()
+        debug_verify!(self.playerindex()).unwrap()
     }
 }
 box_clone_impl_box!(TActivelyPlayableRules);

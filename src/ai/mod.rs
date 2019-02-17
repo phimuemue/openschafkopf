@@ -101,7 +101,7 @@ impl SAi {
     pub fn suggest_card(&self, game: &SGame, ostr_file_out: Option<&str>) -> SCard {
         let veccard_allowed = game.rules.all_allowed_cards(
             &game.stichseq,
-            &game.ahand[verify!(game.which_player_can_do_something()).unwrap().0]
+            &game.ahand[debug_verify!(game.which_player_can_do_something()).unwrap().0]
         );
         assert!(1<=veccard_allowed.len());
         if 1==veccard_allowed.len() {
@@ -136,7 +136,7 @@ impl SAi {
             }}
             let stich_current = game.current_playable_stich();
             assert!(!stich_current.is_full());
-            let epi_fixed = verify!(stich_current.current_playerindex()).unwrap();
+            let epi_fixed = debug_verify!(stich_current.current_playerindex()).unwrap();
             let hand_fixed = &game.ahand[epi_fixed];
             assert!(!hand_fixed.cards().is_empty());
             // TODORUST exhaustive_integer_patterns
@@ -204,7 +204,7 @@ fn determine_best_card_internal(
     foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Sync),
     ostr_file_out: Option<&str>
 ) -> (SHandVector, EnumMap<SCard, isize>) {
-    let epi_fixed = verify!(game.current_playable_stich().current_playerindex()).unwrap();
+    let epi_fixed = debug_verify!(game.current_playable_stich().current_playerindex()).unwrap();
     let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &game.ahand[epi_fixed]);
     let mapcardn_payout = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
@@ -233,15 +233,15 @@ fn determine_best_card_internal(
                 func_filter_allowed_cards,
                 foreachsnapshot,
                 ostr_file_out.map(|str_file_out| {
-                    verify!(std::fs::create_dir_all(str_file_out)).unwrap();
+                    debug_verify!(std::fs::create_dir_all(str_file_out)).unwrap();
                     format!("{}/{}_{}", str_file_out, i_susp, card)
                 }).as_ref().map(|str_file_out| &str_file_out[..]),
             );
-            let mut mapcardn_payout = verify!(mapcardn_payout.lock()).unwrap();
+            let mut mapcardn_payout = debug_verify!(mapcardn_payout.lock()).unwrap();
             mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
         });
-    let mapcardn_payout = verify!(
-        verify!(Arc::try_unwrap(mapcardn_payout)).unwrap() // "Returns the contained value, if the Arc has exactly one strong reference"   
+    let mapcardn_payout = debug_verify!(
+        debug_verify!(Arc::try_unwrap(mapcardn_payout)).unwrap() // "Returns the contained value, if the Arc has exactly one strong reference"   
             .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
     ).unwrap();
     assert!(<SCard as TPlainEnum>::values().any(|card| {
@@ -275,7 +275,7 @@ fn determine_best_card(
         foreachsnapshot,
         ostr_file_out,
     );
-    verify!(veccard_allowed.into_iter()
+    debug_verify!(veccard_allowed.into_iter()
         .max_by_key(|card| mapcardn_payout[*card]))
         .unwrap()
 }
@@ -312,8 +312,8 @@ fn test_is_compatible_with_game_so_far() {
             match testaction {
                 VTestAction::PlayStich(acard) => {
                     for card in acard.iter() {
-                        let epi = verify!(game.which_player_can_do_something()).unwrap().0;
-                        verify!(game.zugeben(*card, epi)).unwrap();
+                        let epi = debug_verify!(game.which_player_can_do_something()).unwrap().0;
+                        debug_verify!(game.zugeben(*card, epi)).unwrap();
                     }
                 },
                 VTestAction::AssertFrei(epi, trumpforfarbe) => {
@@ -325,8 +325,8 @@ fn test_is_compatible_with_game_so_far() {
             }
             for ahand in forever_rand_hands(
                 &game.stichseq,
-                game.ahand[verify!(game.which_player_can_do_something()).unwrap().0].clone(),
-                verify!(game.which_player_can_do_something()).unwrap().0,
+                game.ahand[debug_verify!(game.which_player_can_do_something()).unwrap().0].clone(),
+                debug_verify!(game.which_player_can_do_something()).unwrap().0,
                 game.rules.as_ref(),
             )
                 .take(100)
@@ -406,7 +406,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
     for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]].iter() {
         assert_eq!(EPlayerIndex::values().nth(0), Some(epi_first_and_active_player));
         for (epi, card) in EPlayerIndex::values().zip(acard_stich.iter()) {
-            verify!(game.zugeben(*card, epi)).unwrap();
+            debug_verify!(game.zugeben(*card, epi)).unwrap();
         }
     }
     for ahand in all_possible_hands(

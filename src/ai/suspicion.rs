@@ -52,7 +52,7 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
     }
 
     fn write_all(&mut self, buf: &[u8]) {
-        verify!(self.file_output.write_all(buf)).unwrap() // TODO error handling
+        debug_verify!(self.file_output.write_all(buf)).unwrap() // TODO error handling
     }
 
     fn output_card(card: SCard, b_border: bool) -> String {
@@ -182,7 +182,7 @@ pub fn explore_snapshots<ForEachSnapshot>(
     }}
     if let Some(str_file_out) = ostr_file_out {
         forward_to_internal!(&mut SForEachSnapshotHTMLVisualizer::new(
-            verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap(),
+            debug_verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap(),
             rules,
             epi_self,
         ))
@@ -219,7 +219,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
         )
     } else {
         foreachsnapshot.pruned_output(stichseq, &ahand, rulestatecache).unwrap_or_else(|| {
-            let epi_current = verify!(stichseq.current_stich().current_playerindex()).unwrap();
+            let epi_current = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
             let mut veccard_allowed = rules.all_allowed_cards(stichseq, &ahand[epi_current]);
             func_filter_allowed_cards(stichseq, &mut veccard_allowed);
             // TODO? use equivalent card optimization
@@ -241,7 +241,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                         )}};
                         if stichseq.current_stich().is_empty() {
                             let unregisterstich = rulestatecache.register_stich(
-                                verify!(stichseq.completed_stichs().last()).unwrap(),
+                                debug_verify!(stichseq.completed_stichs().last()).unwrap(),
                                 stichseq.current_stich().first_playerindex(),
                             );
                             let output = next_step!();
@@ -262,7 +262,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
 }
 
 fn end_snapshot_minmax<ItTplCardNPayout: Iterator<Item=(SCard, isize)>>(epi_self: EPlayerIndex, epi_card: EPlayerIndex, ittplcardn_payout: ItTplCardNPayout) -> isize {
-    verify!(if epi_self==epi_card {
+    debug_verify!(if epi_self==epi_card {
         ittplcardn_payout.max_by_key(|&(_card, n_payout)| n_payout)
     } else {
         ittplcardn_payout.min_by_key(|&(_card, n_payout)| n_payout) // other players may play inconveniently for epi_stich
@@ -281,7 +281,7 @@ impl<'rules> SMinReachablePayoutParams<'rules> {
     pub fn new_from_game(game: &'rules SGame) -> Self {
         SMinReachablePayoutParams::new(
             game.rules.as_ref(),
-            verify!(game.current_playable_stich().current_playerindex()).unwrap(),
+            debug_verify!(game.current_playable_stich().current_playerindex()).unwrap(),
             /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
             game.n_stock,
         )

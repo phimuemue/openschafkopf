@@ -7,6 +7,7 @@ use crate::rules::{
 use crate::game::*;
 use crate::skui;
 use crate::ai::*;
+#[cfg(debug_assertions)]
 use crate::util::*;
 use std::sync::mpsc;
 use chrono::Local;
@@ -56,7 +57,7 @@ impl TPlayer for SPlayerHuman {
         txb_doubling: mpsc::Sender<bool>,
     ) {
         let vecb_doubling = vec![false, true];
-        verify!(txb_doubling.send(*skui::ask_for_alternative(
+        debug_verify!(txb_doubling.send(*skui::ask_for_alternative(
             &vecb_doubling,
             &skui::choose_alternative_from_list_key_bindings(),
             |_| true, // all alternatives allowed
@@ -76,9 +77,9 @@ impl TPlayer for SPlayerHuman {
     }
 
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
-        skui::print_stichseq(verify!(game.current_playable_stich().current_playerindex()).unwrap(), &game.stichseq);
+        skui::print_stichseq(debug_verify!(game.current_playable_stich().current_playerindex()).unwrap(), &game.stichseq);
         let hand = {
-            let mut veccard = game.ahand[verify!(game.which_player_can_do_something()).unwrap().0].cards().clone();
+            let mut veccard = game.ahand[debug_verify!(game.which_player_can_do_something()).unwrap().0].cards().clone();
             game.rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
             SHand::new_from_vec(veccard)
         };
@@ -144,7 +145,7 @@ impl TPlayer for SPlayerHuman {
                 |i_oorules_chosen| vecoorules[i_oorules_chosen].and_then(|orules| orules),
                 &opairepiprio,
             ) {
-                verify!(txorules.send(orules)).unwrap();
+                debug_verify!(txorules.send(orules)).unwrap();
                 return;
             }
         }
@@ -161,7 +162,7 @@ impl TPlayer for SPlayerHuman {
         txb: mpsc::Sender<bool>,
     ) {
         let vecb_stoss = vec![false, true];
-        verify!(txb.send(*skui::ask_for_alternative(
+        debug_verify!(txb.send(*skui::ask_for_alternative(
             &vecb_stoss,
             &skui::choose_alternative_from_list_key_bindings(),
             |_| true, // all alternatives allowed

@@ -5,6 +5,7 @@ use crate::rules::{
     ruleset::*,
 };
 use crate::game::*;
+#[cfg(debug_assertions)]
 use crate::util::*;
 use std::sync::mpsc;
 use rand::prelude::*;
@@ -20,16 +21,16 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
         _veccard: &[SCard],
         txb_doubling: mpsc::Sender<bool>,
     ) {
-        verify!(txb_doubling.send(rand::random())).unwrap();
+        debug_verify!(txb_doubling.send(rand::random())).unwrap();
     }
 
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         (self.fn_check_ask_for_card)(game);
-        verify!(txcard.send(
-            verify!(
+        debug_verify!(txcard.send(
+            debug_verify!(
                 game.rules.all_allowed_cards(
                     &game.stichseq,
-                    &game.ahand[verify!(game.which_player_can_do_something()).unwrap().0],
+                    &game.ahand[debug_verify!(game.which_player_can_do_something()).unwrap().0],
                 ).choose(&mut rand::thread_rng()).cloned()
             ).unwrap()
         )).unwrap();
@@ -45,8 +46,8 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
         _opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
     ) {
-        verify!(txorules.send(
-            verify!(allowed_rules(vecrulegroup, hand).choose(&mut rand::thread_rng())).unwrap()
+        debug_verify!(txorules.send(
+            debug_verify!(allowed_rules(vecrulegroup, hand).choose(&mut rand::thread_rng())).unwrap()
         )).unwrap();
     }
 
@@ -60,6 +61,6 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
         _n_stock: isize,
         txb: mpsc::Sender<bool>,
     ) {
-        verify!(txb.send(rand::random())).unwrap();
+        debug_verify!(txb.send(rand::random())).unwrap();
     }
 }

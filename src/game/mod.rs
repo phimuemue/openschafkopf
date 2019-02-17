@@ -269,7 +269,7 @@ impl SDetermineRules<'_> {
         }
         assert_ne!(epi, self.pairepirules_current_bid.0);
         assert!(!self.vecpairepirules_queued.is_empty());
-        let epi_check = verify!(self.vecpairepirules_queued.pop()).unwrap().0;
+        let epi_check = debug_verify!(self.vecpairepirules_queued.pop()).unwrap().0;
         assert_eq!(epi, epi_check);
         let mut pairepirules_current_bid = (epi, rules);
         mem::swap(&mut self.pairepirules_current_bid, &mut pairepirules_current_bid);
@@ -283,7 +283,7 @@ impl SDetermineRules<'_> {
             bail!("announce_game not allowed for specified EPlayerIndex");
         }
         assert!(!self.vecpairepirules_queued.is_empty());
-        let paireplayerindexorules = verify!(self.vecpairepirules_queued.pop()).unwrap();
+        let paireplayerindexorules = debug_verify!(self.vecpairepirules_queued.pop()).unwrap();
         assert_eq!(epi, paireplayerindexorules.0);
         Ok(())
     }
@@ -342,7 +342,7 @@ impl SStichSequence {
     }
 
     fn current_stich_no_invariant(&self) -> &SStich {
-        verify!(self.vecstich.last()).unwrap()
+        debug_verify!(self.vecstich.last()).unwrap()
     }
 
     pub fn current_stich(&self) -> &SStich {
@@ -352,7 +352,7 @@ impl SStichSequence {
 
     pub fn zugeben_custom_winner_index(&mut self, card: SCard, fn_winner_index: impl FnOnce(&SStich)->EPlayerIndex) {
         #[cfg(debug_assertions)]self.assert_invariant();
-        verify!(self.vecstich.last_mut()).unwrap().push(card);
+        debug_verify!(self.vecstich.last_mut()).unwrap().push(card);
         if self.current_stich_no_invariant().is_full() {
             self.vecstich.push(SStich::new(fn_winner_index(self.current_stich_no_invariant())));
         }
@@ -386,10 +386,10 @@ impl SStichSequence {
         self.zugeben(card, rules);
         let r = func(self);
         if self.current_stich().is_empty() {
-            verify!(self.vecstich.pop()).unwrap();
+            debug_verify!(self.vecstich.pop()).unwrap();
             assert!(self.current_stich_no_invariant().is_full());
         }
-        verify!(self.vecstich.last_mut()).unwrap().undo_most_recent();
+        debug_verify!(self.vecstich.last_mut()).unwrap().undo_most_recent();
         debug_assert_eq!(n_len, self.vecstich.len());
         #[cfg(debug_assertions)]self.assert_invariant();
         r
