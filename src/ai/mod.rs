@@ -112,13 +112,18 @@ impl SAi {
             card
         } else {
             macro_rules! forward_to_determine_best_card_itahand{($itahand: expr, $func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
-                determine_best_card(
-                    game,
-                    $itahand,
-                    $func_filter_allowed_cards,
-                    $foreachsnapshot,
-                    ostr_file_out,
-                )
+                {
+                    let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
+                        game,
+                        $itahand,
+                        $func_filter_allowed_cards,
+                        $foreachsnapshot,
+                        ostr_file_out,
+                    );
+                    debug_verify!(veccard_allowed.into_iter()
+                        .max_by_key(|card| mapcardn_payout[*card]))
+                        .unwrap()
+                }
             }}
             macro_rules! forward_to_determine_best_card{($itahand_simulating: expr, $func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
                 match self.aiparams {
@@ -259,25 +264,6 @@ pub fn branching_factor(fn_stichseq_to_intvl: impl Fn(&SStichSequence)->(usize, 
         let mut vect_sampled = vect_sampled_tmp.into_iter().collect::<SHandVector>();
         mem::swap(&mut vect_sampled, veccard_allowed);
     }
-}
-
-fn determine_best_card(
-    game: &SGame,
-    itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
-    func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
-    foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Sync),
-    ostr_file_out: Option<&str>,
-) -> SCard {
-    let (veccard_allowed, mapcardn_payout) = determine_best_card_internal(
-        game,
-        itahand,
-        func_filter_allowed_cards,
-        foreachsnapshot,
-        ostr_file_out,
-    );
-    debug_verify!(veccard_allowed.into_iter()
-        .max_by_key(|card| mapcardn_payout[*card]))
-        .unwrap()
 }
 
 #[test]
