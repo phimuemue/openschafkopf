@@ -46,7 +46,8 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
         rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
-    ) -> EnumMap<EPlayerIndex, isize>
+        perepi: impl TPerEPI,
+    ) -> isize
         where 
             Rules: TRulesNoObj,
     {
@@ -82,6 +83,7 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
                 + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(rulestatecache, gamefinishedstiche, playerparties),
             playerparties,
             b_primary_party_wins,
+            perepi,
         )
     }
 
@@ -92,7 +94,8 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
         playerparties: &PlayerParties,
-    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)> {
+        perepi: impl TPerEPI,
+    ) -> (Option<isize>, Option<isize>) {
         let mapbn_points = debug_verify_eq!(
             EPlayerIndex::values()
                 .fold(bool::map_from_fn(|_b_primary| 0), |mut mapbn_points, epi| {
@@ -106,22 +109,25 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
                 })
         );
         let internal_payouthints = |b_primary_party_wins| {
-            internal_payout(
-                /*n_payout_single_player*/ self.payoutparams.n_payout_base,
-                playerparties,
-                b_primary_party_wins,
+            perepi.per_epi_map(
+                internal_payout(
+                    /*n_payout_single_player*/ self.payoutparams.n_payout_base,
+                    playerparties,
+                    b_primary_party_wins,
+                    perepi,
+                ),
+                |_epi, n_payout| {
+                    assert_ne!(0, n_payout);
+                    tpl_flip_if(0<n_payout, (None, Some(n_payout)))
+                }
             )
-                .map(|n_payout| {
-                     assert_ne!(0, *n_payout);
-                     tpl_flip_if(0<*n_payout, (None, Some(*n_payout)))
-                })
         };
         if /*b_primary_party_wins*/ mapbn_points[/*b_primary*/true] >= self.pointstowin.points_to_win() {
             internal_payouthints(/*b_primary_party_wins*/true)
         } else if mapbn_points[/*b_primary*/false] > 120-self.pointstowin.points_to_win() {
             internal_payouthints(/*b_primary_party_wins*/false)
         } else {
-            EPlayerIndex::map_from_fn(|_epi| (None, None))
+            perepi.per_epi(|_epi| (None, None))
         }
     }
 }
@@ -154,8 +160,8 @@ impl SLaufendeParams {
     }
 }
 
-pub fn internal_payout(n_payout_single_player: isize, playerparties: &impl TPlayerParties, b_primary_party_wins: bool) -> EnumMap<EPlayerIndex, isize> {
-    EPlayerIndex::map_from_fn(|epi| {
+pub fn internal_payout(n_payout_single_player: isize, playerparties: &impl TPlayerParties, b_primary_party_wins: bool, perepi: impl TPerEPI) -> isize {
+    perepi.per_epi(|epi| {
         n_payout_single_player 
         * {
             if playerparties.is_primary_party(epi)==b_primary_party_wins {

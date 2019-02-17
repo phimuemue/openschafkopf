@@ -92,7 +92,7 @@ impl TRules for SRulesRufspiel {
         (epi==self.epi || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo> {
+    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache, epi: EPlayerIndex) -> SPayoutInfo {
         let epi_coplayer = debug_verify_eq!(
             verify!(rulestatecache.fixed.mapcardoepi[self.rufsau()]).unwrap(),
             verify!(gamefinishedstiche.get().completed_stichs().iter()
@@ -103,34 +103,38 @@ impl TRules for SRulesRufspiel {
         );
         assert_ne!(self.epi, epi_coplayer);
         let playerparties = SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]};
-        let an_payout_no_stock = &self.payoutdecider.payout(
-            self,
-            rulestatecache,
-            gamefinishedstiche,
-            &playerparties,
-        );
-        assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
-        assert_eq!(an_payout_no_stock[self.epi], an_payout_no_stock[epi_coplayer]);
-        assert_eq!(
-            an_payout_no_stock.iter()
-                .filter(|&n_payout_no_stock| 0<*n_payout_no_stock)
-                .count(),
-            2
-        );
-        let estockaction_playerparty = /*b_player_party_wins*/if 0<an_payout_no_stock[self.epi] {
-            EStockAction::TakeHalf
-        } else {
-            EStockAction::GiveHalf
-        };
-        EPlayerIndex::map_from_fn(|epi|
+        epi.per_epi(|epi| {
+            let n_payout_no_stock = self.payoutdecider.payout(
+                self,
+                rulestatecache,
+                gamefinishedstiche,
+                &playerparties,
+                epi,
+            );
+            assert!(0!=n_payout_no_stock);
+            // TODO assert_eq!(an_payout_no_stock[self.epi], an_payout_no_stock[epi_coplayer]);
+            // TODO assert_eq!(
+            //    an_payout_no_stock.iter()
+            //        .filter(|&n_payout_no_stock| 0<*n_payout_no_stock)
+            //        .count(),
+            //    2
+            //);
             SPayoutInfo::new(
-                an_payout_no_stock[epi],
-                if playerparties.is_primary_party(epi) {estockaction_playerparty} else {EStockAction::Ignore},
+                n_payout_no_stock,
+                if playerparties.is_primary_party(epi) {
+                    /*b_player_party_wins*/if 0<n_payout_no_stock {
+                        EStockAction::TakeHalf
+                    } else {
+                        EStockAction::GiveHalf
+                    }
+                } else {
+                    EStockAction::Ignore
+                },
             )
-        )
+        })
     }
 
-    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
+    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache, epi: EPlayerIndex) -> SPayoutHint {
         let epi_coplayer = debug_verify_eq!(
             verify!(rulestatecache.fixed.mapcardoepi[self.rufsau()]).unwrap(),
             stichseq.visible_stichs()
@@ -144,12 +148,14 @@ impl TRules for SRulesRufspiel {
                 })
         );
         assert_ne!(self.epi, epi_coplayer);
-        self.payoutdecider.payouthints(self, stichseq, ahand, rulestatecache, &SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]})
-            .map(|pairon_payout| SPayoutHint::new((
+        epi.per_epi_map(
+            self.payoutdecider.payouthints(self, stichseq, ahand, rulestatecache, &SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]}, epi),
+            |_epi, pairon_payout| SPayoutHint::new((
                 // TODO EStockAction
                 pairon_payout.0.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore)),
                 pairon_payout.1.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore)),
-            )))
+            )),
+        )
     }
 
     fn all_allowed_cards_first_in_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {

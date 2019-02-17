@@ -146,3 +146,26 @@ impl<T> IntoIterator for SPlayersInRound<T> {
         }
     }
 }
+
+// TODORUST TPerEPI should really be implemented for:
+// * EPlayerIndex (doing an operation for one single EPlayerIndex)
+// * an empty struct SAllEPI (doing the operation for each EPlayerIndex in EPlayerIndex::values())
+// However, doing this without generic associated types leads to ugly workarounds.
+// So, for now, we have per_epi on EPlayerIndex only and see how far we get.
+pub trait TPerEPI : Copy {
+    #[inline(always)]
+    fn per_epi<R>(self, f: impl FnOnce(EPlayerIndex)->R) -> R;
+    #[inline(always)]
+    fn per_epi_map<X, Y>(self, x: X, f: impl FnOnce(EPlayerIndex, X)->Y) -> Y;
+}
+
+impl TPerEPI for EPlayerIndex {
+    #[inline(always)]
+    fn per_epi<R>(self, f: impl FnOnce(EPlayerIndex)->R) -> R {
+        f(self)
+    }
+    #[inline(always)]
+    fn per_epi_map<X, Y>(self, x: X, f: impl FnOnce(EPlayerIndex, X)->Y) -> Y {
+        f(self, x)
+    }
+}

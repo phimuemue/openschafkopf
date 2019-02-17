@@ -255,32 +255,38 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
 
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
 
-    fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, epi: EPlayerIndex) -> isize {
         self.payout_with_cache(
             gamefinishedstiche,
             tpln_stoss_doubling,
             n_stock,
             &SRuleStateCache::new_from_gamefinishedstiche(gamefinishedstiche, |stich| self.winner_index(stich)),
+            epi,
         )
     }
 
-    fn payout_with_cache(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
-        let apayoutinfo = self.payoutinfos(
-            gamefinishedstiche,
-            debug_verify_eq!(
-                rulestatecache,
-                &SRuleStateCache::new_from_gamefinishedstiche(gamefinishedstiche, |stich| self.winner_index(stich))
-            ),
-        );
-        assert!({
-            let count_stockaction = |estockaction| {
-                apayoutinfo.iter().filter(|payoutinfo| estockaction==payoutinfo.estockaction).count()
-            };
-            count_stockaction(EStockAction::TakeHalf)==0 || count_stockaction(EStockAction::GiveHalf)==0
-        });
+    fn payout_with_cache(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache, epi: EPlayerIndex) -> isize {
+        let internal_payoutinfo = |epi| {
+            self.payoutinfos(
+                gamefinishedstiche,
+                debug_verify_eq!(
+                    rulestatecache,
+                    &SRuleStateCache::new_from_gamefinishedstiche(gamefinishedstiche, |stich| self.winner_index(stich))
+                ),
+                epi,
+            )
+        };
+        let payoutinfo = internal_payoutinfo(epi);
         assert_eq!(n_stock%2, 0);
         // TODO assert tpln_stoss_doubling consistent with stoss_allowed etc
         #[cfg(debug_assertions)] {
+            let apayoutinfo = EPlayerIndex::map_from_fn(internal_payoutinfo);
+            assert!({
+                let count_stockaction = |estockaction| {
+                    apayoutinfo.iter().filter(|payoutinfo| estockaction==payoutinfo.estockaction).count()
+                };
+                count_stockaction(EStockAction::TakeHalf)==0 || count_stockaction(EStockAction::GiveHalf)==0
+            });
             let mut mapepipayouthint = EPlayerIndex::map_from_fn(|_epi| SPayoutHint::new((None, None)));
             let mut stichseq_check = SStichSequence::new(
                 gamefinishedstiche.get().first_playerindex(),
@@ -293,7 +299,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
                 for (epi, card) in stich.iter() {
                     stichseq_check.zugeben_custom_winner_index(*card, |stich| self.winner_index(stich)); // TODO I could not simply pass rules. Why?
                     ahand_check[epi].play_card(*card);
-                    let mapepipayouthint_after = self.payouthints(
+                    let mapepipayouthint_after = EPlayerIndex::map_from_fn(|epi_check| self.payouthints(
                         &stichseq_check,
                         &ahand_check,
                         &SRuleStateCache::new(
@@ -301,7 +307,8 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
                             &ahand_check,
                             |stich| self.winner_index(stich),
                         ),
-                    );
+                        epi_check,
+                    ));
                     assert!(
                         mapepipayouthint.iter().zip(mapepipayouthint_after.iter())
                             .all(|(payouthint, payouthint_other)| payouthint.contains_payouthint(payouthint_other)),
@@ -318,12 +325,12 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
                 );
             }
         }
-        apayoutinfo.map(|payoutinfo| payoutinfo.payout_including_stock(n_stock, tpln_stoss_doubling))
+        payoutinfo.payout_including_stock(n_stock, tpln_stoss_doubling)
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo>;
+    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache, epi: EPlayerIndex) -> SPayoutInfo;
 
-    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint>;
+    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache, epi: EPlayerIndex) -> SPayoutHint;
 
     fn all_allowed_cards(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         assert!(!hand.cards().is_empty());

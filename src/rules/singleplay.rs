@@ -13,28 +13,34 @@ macro_rules! impl_single_play {() => {
         (epi==self.epi)==(vecstoss.len()%2==1)
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo> {
-        self.payoutdecider.payout(
-            self,
-            rulestatecache,
-            gamefinishedstiche,
-            &SPlayerParties13::new(self.epi),
+    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache, epi: EPlayerIndex) -> SPayoutInfo {
+        epi.per_epi_map(
+            self.payoutdecider.payout(
+                self,
+                rulestatecache,
+                gamefinishedstiche,
+                &SPlayerParties13::new(self.epi),
+                epi,
+            ),
+            |_epi, n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore),
         )
-            .map(|n_payout| SPayoutInfo::new(*n_payout, EStockAction::Ignore))
     }
 
-    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
-        self.payoutdecider.payouthints(
-            self,
-            stichseq,
-            ahand,
-            rulestatecache,
-            &SPlayerParties13::new(self.epi),
-        )
-            .map(|pairon_payout| SPayoutHint::new((
+    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache, epi: EPlayerIndex) -> SPayoutHint {
+        epi.per_epi_map(
+            self.payoutdecider.payouthints(
+                self,
+                stichseq,
+                ahand,
+                rulestatecache,
+                &SPlayerParties13::new(self.epi),
+                epi,
+            ),
+            |_epi, pairon_payout| SPayoutHint::new((
                  pairon_payout.0.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore)),
                  pairon_payout.1.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore)),
-            )))
+            )),
+        )
     }
 
 }}
