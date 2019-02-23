@@ -19,7 +19,6 @@ pub trait TForEachSnapshot {
     fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<Self::Output>;
     fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
         &self,
-        epi_self: EPlayerIndex,
         epi_card: EPlayerIndex,
         ittplcardoutput: ItTplCardOutput,
     ) -> Self::Output;
@@ -152,13 +151,12 @@ impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
 }
 
 pub fn explore_snapshots<ForEachSnapshot>(
-    epi_self: EPlayerIndex,
     ahand: &mut EnumMap<EPlayerIndex, SHand>,
     rules: &dyn TRules,
     stichseq: &mut SStichSequence,
     func_filter_allowed_cards: &impl Fn(&SStichSequence, &mut SHandVector),
     foreachsnapshot: &ForEachSnapshot,
-    ostr_file_out: Option<&str>,
+    opairstrepi_visualize: Option<(&str, EPlayerIndex)>,
 ) -> ForEachSnapshot::Output 
     where
         ForEachSnapshot: TForEachSnapshot,
@@ -166,7 +164,6 @@ pub fn explore_snapshots<ForEachSnapshot>(
 {
     macro_rules! forward_to_internal{($snapshotvisualizer: expr) => {
         explore_snapshots_internal(
-            epi_self,
             ahand,
             rules,
             &mut SRuleStateCache::new(
@@ -180,11 +177,11 @@ pub fn explore_snapshots<ForEachSnapshot>(
             $snapshotvisualizer,
         )
     }}
-    if let Some(str_file_out) = ostr_file_out {
+    if let Some((str_file_out, epi_self_visualize)) = opairstrepi_visualize {
         forward_to_internal!(&mut SForEachSnapshotHTMLVisualizer::new(
             debug_verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap(),
             rules,
-            epi_self,
+            epi_self_visualize,
         ))
     } else {
         struct SNoVisualization;
@@ -197,7 +194,6 @@ pub fn explore_snapshots<ForEachSnapshot>(
 }
 
 fn explore_snapshots_internal<ForEachSnapshot>(
-    epi_self: EPlayerIndex,
     ahand: &mut EnumMap<EPlayerIndex, SHand>,
     rules: &dyn TRules,
     rulestatecache: &mut SRuleStateCache,
@@ -223,13 +219,11 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             func_filter_allowed_cards(stichseq, &mut veccard_allowed);
             // TODO? use equivalent card optimization
             foreachsnapshot.combine_outputs(
-                epi_self,
                 epi_current,
                 veccard_allowed.into_iter().map(|card| {
                     ahand[epi_current].play_card(card);
                     let output = stichseq.zugeben_and_restore(card, rules, |stichseq| {
                         macro_rules! next_step {() => {explore_snapshots_internal(
-                            epi_self,
                             ahand,
                             rules,
                             rulestatecache,
@@ -303,11 +297,10 @@ impl TForEachSnapshot for SMinReachablePayout<'_> {
 
     fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
         &self,
-        epi_self: EPlayerIndex,
         epi_card: EPlayerIndex,
         ittplcardoutput: ItTplCardOutput,
     ) -> Self::Output {
-        end_snapshot_minmax(epi_self, epi_card, ittplcardoutput)
+        end_snapshot_minmax(/*epi_self*/self.0.epi, epi_card, ittplcardoutput)
     }
 }
 
@@ -333,10 +326,9 @@ impl TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'_> {
 
     fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
         &self,
-        epi_self: EPlayerIndex,
         epi_card: EPlayerIndex,
         ittplcardoutput: ItTplCardOutput,
     ) -> Self::Output {
-        end_snapshot_minmax(epi_self, epi_card, ittplcardoutput)
+        end_snapshot_minmax(/*epi_self*/self.0.epi, epi_card, ittplcardoutput)
     }
 }

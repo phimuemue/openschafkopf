@@ -133,7 +133,6 @@ fn detect_expensive_all_possible_hands() {
                             }
                             fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
                                 &self,
-                                _epi_self: EPlayerIndex,
                                 _epi_card: EPlayerIndex,
                                 ittplcardoutput: ItTplCardOutput,
                             ) -> Self::Output {
@@ -142,7 +141,6 @@ fn detect_expensive_all_possible_hands() {
                         }
                         assert_bound(
                             explore_snapshots(
-                                EPlayerIndex::EPI0, // TODO do this for all EPlayerIndex::values()?
                                 &mut ahand,
                                 game.rules.as_ref(),
                                 &mut game.stichseq.clone(),

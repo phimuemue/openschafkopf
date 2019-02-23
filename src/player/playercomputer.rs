@@ -116,7 +116,6 @@ impl TPlayer for SPlayerComputer {
             vecpairahandf_suspicion.into_iter()
                 .map(|(mut ahand, _f_rank_rules)| {
                     explore_snapshots(
-                        epi,
                         &mut ahand,
                         rules,
                         &mut SStichSequence::new(doublings.first_playerindex(), ekurzlang),

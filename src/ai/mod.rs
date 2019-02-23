@@ -81,7 +81,6 @@ impl SAi {
             .into_par_iter()
             .map(|mut ahand| {
                 explore_snapshots(
-                    epi_rank,
                     &mut ahand,
                     rules,
                     &mut SStichSequence::new(epi_first, ekurzlang),
@@ -232,7 +231,6 @@ fn determine_best_card_internal(
             ahand[epi_fixed].play_card(card);
             stichseq.zugeben(card, rules);
             let n_payout = explore_snapshots(
-                epi_fixed,
                 &mut ahand,
                 rules,
                 &mut stichseq,
@@ -241,7 +239,7 @@ fn determine_best_card_internal(
                 ostr_file_out.map(|str_file_out| {
                     debug_verify!(std::fs::create_dir_all(str_file_out)).unwrap();
                     format!("{}/{}_{}", str_file_out, i_susp, card)
-                }).as_ref().map(|str_file_out| &str_file_out[..]),
+                }).as_ref().map(|str_file_out| (&str_file_out[..], epi_fixed)),
             );
             let mut mapcardn_payout = debug_verify!(mapcardn_payout.lock()).unwrap();
             mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
