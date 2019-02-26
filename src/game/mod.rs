@@ -416,7 +416,7 @@ impl SStichSequence {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SGame {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,

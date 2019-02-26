@@ -4,7 +4,6 @@ use crate::primitives::{
 };
 use crate::rules::{
     *,
-    ruleset::*,
     rulesrufspiel::*,
     rulessolo::*,
     rulesramsch::*,
@@ -12,6 +11,8 @@ use crate::rules::{
     payoutdecider::*,
 };
 use crate::util::*;
+use crate::game::*;
+use crate::game_analysis::*;
 
 fn internal_test_rules(
     str_info: &str,
@@ -23,67 +24,37 @@ fn internal_test_rules(
     slcstich_test: &[SStich],
     (an_payout, n_stock_payout): ([isize; 4], isize),
 ) {
-    use crate::game::*;
     println!("Testing rules: {}", str_info);
-    let epi_first = EPlayerIndex::EPI0; // TODO parametrize w.r.t. epi_first
-    let mut game = SGame::new(
+    let game = analyze_game_internal(
+        /*epi_first*/EPlayerIndex::EPI0, // TODO parametrize w.r.t. epi_first
+        rules,
         ahand,
-        SDoublings::new_full(
-            epi_first,
-            EPlayerIndex::map_from_fn(|epi| 
-                vecn_doubling.contains(&epi.wrapping_add(epi_first.to_usize()).to_usize())
-            ).into_raw()
-        ),
-        Some(SStossParams::new(
-            /*n_stoss_max*/4,
-        )),
-        rules.box_clone(),
+        vecn_doubling,
+        vecn_stoss,
         n_stock,
+        slcstich_test,
+        /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
     );
-    for n_epi_stoss in vecn_stoss {
-        debug_verify!(game.stoss(EPlayerIndex::from_usize(n_epi_stoss))).unwrap();
-    }
-    for (i_stich, stich) in slcstich_test.iter().enumerate() {
-        println!("Stich {}: {}", i_stich, stich);
-        assert_eq!(Some(stich.first_playerindex()), game.which_player_can_do_something().map(|gameaction| gameaction.0));
-        for (epi, card) in stich.iter() {
-            assert_eq!(Some(epi), game.which_player_can_do_something().map(|gameaction| gameaction.0));
-            println!("{}, {}", card, epi);
-            debug_verify!(game.zugeben(*card, epi)).unwrap();
-        }
-    }
-    for (i_stich, stich) in game.stichseq.visible_stichs().enumerate() {
-        assert_eq!(stich, &slcstich_test[i_stich]);
-        println!("Stich {}: {}", i_stich, stich);
-    }
     let an_payout_check = debug_verify!(game.finish()).unwrap().an_payout;
     assert_eq!(EPlayerIndex::map_from_fn(|epi| an_payout_check[epi]), EPlayerIndex::map_from_raw(an_payout));
     assert_eq!(-an_payout.iter().sum::<isize>(), n_stock_payout);
 }
 
-fn make_stich_vector(vecpairnacard_stich: &[(usize, [SCard; 4])]) -> Vec<SStich> {
-    vecpairnacard_stich.iter()
-        .map(|&(n_epi, acard)| {
-            SStich::new_full(EPlayerIndex::from_usize(n_epi), acard)
-        })
-        .collect()
-}
-
-pub trait TCardArrayKurzLand {
+pub trait TCardArrayKurzLang {
     fn to_hand(&self) -> SHand; // TODO take self instead of &self
 }
-impl TCardArrayKurzLand for [SCard; 6] {
+impl TCardArrayKurzLang for [SCard; 6] {
     fn to_hand(&self) -> SHand {
         SHand::new_from_vec(self.iter().cloned().collect())
     }
 }
-impl TCardArrayKurzLand for [SCard; 8] {
+impl TCardArrayKurzLang for [SCard; 8] {
     fn to_hand(&self) -> SHand {
         SHand::new_from_vec(self.iter().cloned().collect())
     }
 }
 
-pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLand>(
+pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLang>(
     str_info: &str,
     rules: &dyn TRules,
     aacard_hand: [CardArrayKurzLang; 4],
@@ -96,7 +67,7 @@ pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLand>(
         str_info,
         rules,
         EPlayerIndex::map_from_raw(aacard_hand)
-            .map(TCardArrayKurzLand::to_hand),
+            .map(TCardArrayKurzLang::to_hand),
         vecn_doubling,
         vecn_stoss,
         /*n_stock*/0,

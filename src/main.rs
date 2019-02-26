@@ -32,6 +32,7 @@ mod player;
 mod ai;
 mod skui;
 mod subcommands;
+mod game_analysis;
 
 use crate::primitives::*;
 use crate::rules:: ruleset::*;
