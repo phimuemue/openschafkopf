@@ -146,7 +146,7 @@ impl SAi {
             // TODORUST exhaustive_integer_patterns
             // https://github.com/rust-lang/rfcs/issues/1550
             // https://github.com/rust-lang/rust/issues/50907
-            match /*n_incomplete_stichs*/ game.stichseq.kurzlang().cards_per_player()-game.stichseq.completed_stichs().len() {
+            match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(&game.stichseq)[epi_fixed] {
                 1|2|3 => forward_to_determine_best_card!(
                     |_n_suggest_card_samples| all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.rules.as_ref()),
                     &|_,_| (/*no filtering*/),
@@ -165,7 +165,7 @@ impl SAi {
                     }),
                     &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
                 ),
-                n_incomplete_stichs => panic!("internal_suggest_card called with {} remaining stichs", n_incomplete_stichs),
+                n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
             }
         }
     }
