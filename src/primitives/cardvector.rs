@@ -18,7 +18,7 @@ pub fn parse_cards<C: std::iter::Extend<SCard>+Default>(str_cards: &str) -> Opti
                     '7'    => Ok(ESchlag::S7),
                     '8'    => Ok(ESchlag::S8),
                     '9'    => Ok(ESchlag::S9),
-                    'z'|'Z'=> Ok(ESchlag::Zehn),
+                    'z'|'Z'|'x'|'X'=> Ok(ESchlag::Zehn), // support both our own and sauspiel notation
                     'u'|'U'=> Ok(ESchlag::Unter),
                     'o'|'O'=> Ok(ESchlag::Ober),
                     'k'|'K'=> Ok(ESchlag::Koenig),
