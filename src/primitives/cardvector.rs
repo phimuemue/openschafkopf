@@ -1,33 +1,33 @@
-extern crate combine;
-
 use crate::primitives::card::*;
-use self::combine::{*, char::{spaces, letter, alpha_num,}, error::{StringStreamError},};
+use crate::combine::{*, char::*};
+
+// adapted from https://docs.rs/combine/3.6.7/combine/index.html#examples
+pub fn card_parser<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = SCard>
+    where I::Error: ParseError<I::Item, I::Range, I::Position>, // Necessary due to rust-lang/rust#24159
+{
+    (
+        choice!(
+            choice!(char('e'), char('E')).map(|_chr| EFarbe::Eichel),
+            choice!(char('g'), char('G')).map(|_chr| EFarbe::Gras),
+            choice!(char('h'), char('H')).map(|_chr| EFarbe::Herz),
+            choice!(char('s'), char('S')).map(|_chr| EFarbe::Schelln)
+        ),
+        choice!(
+            char('7').map(|_chr| ESchlag::S7),
+            char('8').map(|_chr| ESchlag::S8),
+            char('9').map(|_chr| ESchlag::S9),
+            choice!(char('z'), char('Z'), char('x'), char('X')).map(|_chr| ESchlag::Zehn),
+            choice!(char('u'), char('U')).map(|_chr| ESchlag::Unter),
+            choice!(char('o'), char('O')).map(|_chr| ESchlag::Ober),
+            choice!(char('k'), char('K')).map(|_chr| ESchlag::Koenig),
+            choice!(char('a'), char('A')).map(|_chr| ESchlag::Ass)
+        )
+    ).map(|(efarbe, eschlag)| SCard::new(efarbe, eschlag))
+}
 
 pub fn parse_cards<C: std::iter::Extend<SCard>+Default>(str_cards: &str) -> Option<C> {
     spaces()
-        .with(sep_by::<C,_,_>(
-            (
-                letter().and_then(|chr_farbe| { match chr_farbe {
-                    'e'|'E'=> Ok(EFarbe::Eichel),
-                    'g'|'G'=> Ok(EFarbe::Gras),
-                    'h'|'H'=> Ok(EFarbe::Herz),
-                    's'|'S'=> Ok(EFarbe::Schelln),
-                    _ => Err(StringStreamError::UnexpectedParse),
-                } } ),
-                alpha_num().and_then(|chr_schlag| { match chr_schlag {
-                    '7'    => Ok(ESchlag::S7),
-                    '8'    => Ok(ESchlag::S8),
-                    '9'    => Ok(ESchlag::S9),
-                    'z'|'Z'|'x'|'X'=> Ok(ESchlag::Zehn), // support both our own and sauspiel notation
-                    'u'|'U'=> Ok(ESchlag::Unter),
-                    'o'|'O'=> Ok(ESchlag::Ober),
-                    'k'|'K'=> Ok(ESchlag::Koenig),
-                    'a'|'A'=> Ok(ESchlag::Ass),
-                    _ => Err(StringStreamError::UnexpectedParse),
-                } } )
-            ).map(|(efarbe, eschlag)| SCard::new(efarbe, eschlag)),
-            spaces()
-        ))
+        .with(sep_by::<C,_,_>(card_parser(), spaces()))
         .skip(spaces())
         .skip(eof())
         // end of parser
@@ -40,13 +40,14 @@ pub fn parse_cards<C: std::iter::Extend<SCard>+Default>(str_cards: &str) -> Opti
 fn test_cardvectorparser() {
     use crate::util::*;
     assert_eq!(
-        verify!(parse_cards::<Vec<_>>("ek gk hz hu s7")).unwrap(),
+        verify!(parse_cards::<Vec<_>>("ek Gk hZ hu s7 gZ")).unwrap(),
         vec![
             SCard::new(EFarbe::Eichel, ESchlag::Koenig),
             SCard::new(EFarbe::Gras, ESchlag::Koenig),
             SCard::new(EFarbe::Herz, ESchlag::Zehn),
             SCard::new(EFarbe::Herz, ESchlag::Unter),
             SCard::new(EFarbe::Schelln, ESchlag::S7),
+            SCard::new(EFarbe::Gras, ESchlag::Zehn),
         ]
     );
 }

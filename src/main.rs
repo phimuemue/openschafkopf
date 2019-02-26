@@ -21,6 +21,7 @@ extern crate toml;
 extern crate log;
 extern crate env_logger;
 extern crate chrono;
+extern crate combine;
 
 #[macro_use]
 mod util;
