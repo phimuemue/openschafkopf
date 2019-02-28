@@ -19,6 +19,8 @@ pub enum VDurchmarsch {
     AtLeast(isize),
 }
 
+// TODO add Jungfrau (needed for Sauspiel analysis, in particular)
+
 #[derive(new, Clone, Debug)]
 pub struct SRulesRamsch {
     n_price : isize,
