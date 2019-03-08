@@ -196,7 +196,6 @@ pub fn explore_snapshots<ForEachSnapshot>(
     }
 }
 
-// TODO Maybe something like payout_hint is useful to prune suspicion tree
 fn explore_snapshots_internal<ForEachSnapshot>(
     epi_self: EPlayerIndex,
     ahand: &mut EnumMap<EPlayerIndex, SHand>,
