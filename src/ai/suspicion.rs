@@ -53,61 +53,61 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
     fn write_all(&mut self, buf: &[u8]) {
         debug_verify!(self.file_output.write_all(buf)).unwrap() // TODO error handling
     }
+}
 
-    fn output_card(card: SCard, b_border: bool) -> String {
-        let (n_width, n_height) = (336 / ESchlag::SIZE.as_num::<isize>(), 232 / EFarbe::SIZE.as_num::<isize>());
-        format!(
-            "<div style=\"
-                margin: 0;
-                padding: 0;
-                width:{};
-                height:{};
-                display:inline-block;
-                background-image:url(https://www.sauspiel.de/images/redesign/cards/by/card-icons@2x.png);
-                background-position-x:{}px;
-                background-position-y:{}px;
-                border:{};
-            \"></div>",
-            n_width,
-            n_height,
-            // Do not use Enum::to_usize. Sauspiel's representation does not necessarily match ours.
-            -n_width * match card.schlag() {
-                ESchlag::Ass => 0,
-                ESchlag::Zehn => 1,
-                ESchlag::Koenig => 2,
-                ESchlag::Ober => 3,
-                ESchlag::Unter => 4,
-                ESchlag::S9 => 5,
-                ESchlag::S8 => 6,
-                ESchlag::S7 => 7,
-            },
-            -n_height * match card.farbe() {
-                EFarbe::Eichel => 0,
-                EFarbe::Gras => 1,
-                EFarbe::Herz => 2,
-                EFarbe::Schelln => 3,
-            },
-            if b_border {"solid"} else {"none"},
-        )
-    }
+pub fn output_card(card: SCard, b_border: bool) -> String {
+    let (n_width, n_height) = (336 / ESchlag::SIZE.as_num::<isize>(), 232 / EFarbe::SIZE.as_num::<isize>());
+    format!(
+        "<div style=\"
+            margin: 0;
+            padding: 0;
+            width:{}px;
+            height:{}px;
+            display:inline-block;
+            background-image:url(https://www.sauspiel.de/images/redesign/cards/by/card-icons@2x.png);
+            background-position-x:{}px;
+            background-position-y:{}px;
+            border:{};
+        \"></div>",
+        n_width,
+        n_height,
+        // Do not use Enum::to_usize. Sauspiel's representation does not necessarily match ours.
+        -n_width * match card.schlag() {
+            ESchlag::Ass => 0,
+            ESchlag::Zehn => 1,
+            ESchlag::Koenig => 2,
+            ESchlag::Ober => 3,
+            ESchlag::Unter => 4,
+            ESchlag::S9 => 5,
+            ESchlag::S8 => 6,
+            ESchlag::S7 => 7,
+        },
+        -n_height * match card.farbe() {
+            EFarbe::Eichel => 0,
+            EFarbe::Gras => 1,
+            EFarbe::Herz => 2,
+            EFarbe::Schelln => 3,
+        },
+        if b_border {"solid"} else {"none"},
+    )
+}
 
-    fn player_table<T: fmt::Display>(epi_self: EPlayerIndex, fn_per_player: impl Fn(EPlayerIndex)->Option<T>) -> String {
-        let fn_per_player_internal = move |epi: EPlayerIndex| {
-            fn_per_player(epi.wrapping_add(epi_self.to_usize()))
-                .map_or("".to_string(), |t| t.to_string())
-        };
-        format!(
-            "<table>
-              <tr><td align=\"center\" colspan=\"2\"><br>{}<br></td></tr>
-              <tr><td>{}</td><td>{}</td></tr>
-              <tr><td align=\"center\" colspan=\"2\">{}</td></tr>
-            </table>\n",
-            fn_per_player_internal(EPlayerIndex::EPI2),
-            fn_per_player_internal(EPlayerIndex::EPI1),
-            fn_per_player_internal(EPlayerIndex::EPI3),
-            fn_per_player_internal(EPlayerIndex::EPI0),
-        )
-    }
+pub fn player_table<T: fmt::Display>(epi_self: EPlayerIndex, fn_per_player: impl Fn(EPlayerIndex)->Option<T>) -> String {
+    let fn_per_player_internal = move |epi: EPlayerIndex| {
+        fn_per_player(epi.wrapping_add(epi_self.to_usize()))
+            .map_or("".to_string(), |t| t.to_string())
+    };
+    format!(
+        "<table>
+          <tr><td align=\"center\" colspan=\"2\"><br>{}<br></td></tr>
+          <tr><td>{}</td><td>{}</td></tr>
+          <tr><td align=\"center\" colspan=\"2\">{}</td></tr>
+        </table>\n",
+        fn_per_player_internal(EPlayerIndex::EPI2),
+        fn_per_player_internal(EPlayerIndex::EPI1),
+        fn_per_player_internal(EPlayerIndex::EPI3),
+        fn_per_player_internal(EPlayerIndex::EPI0),
+    )
 }
 
 impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
@@ -125,16 +125,16 @@ impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
         for stich in stichseq.visible_stichs() {
             self.write_all(b"<td>\n");
             let epi_0 = self.epi;
-            self.write_all(Self::player_table(epi_0, |epi| stich.get(epi).map(|card| Self::output_card(*card, epi==stich.first_playerindex()))).as_bytes());
+            self.write_all(player_table(epi_0, |epi| stich.get(epi).map(|card| output_card(*card, epi==stich.first_playerindex()))).as_bytes());
             self.write_all(b"</td>\n");
         }
         let str_table_hands = format!(
             "<td>{}</td>\n",
-            Self::player_table(self.epi, |epi| {
+            player_table(self.epi, |epi| {
                 let mut veccard = ahand[epi].cards().clone();
                 self.rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
                 Some(veccard.into_iter()
-                    .map(|card| Self::output_card(card, /*b_border*/false))
+                    .map(|card| output_card(card, /*b_border*/false))
                     .join(""))
             }),
         );
