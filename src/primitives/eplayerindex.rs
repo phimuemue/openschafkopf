@@ -153,9 +153,7 @@ impl<T> IntoIterator for SPlayersInRound<T> {
 // However, doing this without generic associated types leads to ugly workarounds.
 // So, for now, we have per_epi on EPlayerIndex only and see how far we get.
 pub trait TPerEPI : Copy {
-    #[inline(always)]
     fn per_epi<R>(self, f: impl FnOnce(EPlayerIndex)->R) -> R;
-    #[inline(always)]
     fn per_epi_map<X, Y>(self, x: X, f: impl FnOnce(EPlayerIndex, X)->Y) -> Y;
 }
 
