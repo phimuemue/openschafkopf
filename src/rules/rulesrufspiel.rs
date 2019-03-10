@@ -20,7 +20,7 @@ pub struct SRulesRufspiel {
 
 impl fmt::Display for SRulesRufspiel {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Rufspiel mit der {}-Sau von {}", self.efarbe, self.epi)
+        write!(f, "Rufspiel mit der {}-Sau", self.efarbe)
     }
 }
 
