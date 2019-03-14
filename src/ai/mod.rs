@@ -98,9 +98,7 @@ impl SAi {
     }
 
     pub fn suggest_card(&self, game: &SGame, ostr_file_out: Option<&str>) -> SCard {
-        let stich_current = game.current_playable_stich();
-        assert!(!stich_current.is_full());
-        let epi_fixed = debug_verify!(stich_current.current_playerindex()).unwrap();
+        let epi_fixed = debug_verify!(game.which_player_can_do_something()).unwrap().0;
         let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &game.ahand[epi_fixed]);
         assert!(1<=veccard_allowed.len());
         if 1==veccard_allowed.len() {
