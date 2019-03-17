@@ -1,0 +1,33 @@
+// TODO learn less css preprocessor
+
+@efarbe: E, G, H, S;
+@eschlag: A, Z, K, O, U, 9, 8, 7;
+@n_width: 336px / 8;
+@n_height: 232px / 4;
+
+table.player-table td {
+    text-align: center;
+}
+
+.card-image(@i_farbe; @i_schlag) {
+    margin: 0;
+    padding: 0;
+    display:inline-block;
+    background-image:url(cards.png);
+    width:@n_width;
+    height:@n_height;
+    background-position-x:-@n_width * (@i_schlag - 1);
+    background-position-y:-@n_height * (@i_farbe - 1);  
+}
+
+each(@efarbe, .(@efarbe, @_i_farbe, @i_farbe) {
+    each(@eschlag, .(@eschlag, @_i_schlag, @i_schlag) {
+        .card-image.@{efarbe}@{eschlag} {
+            .card-image(@i_farbe; @i_schlag);
+        }
+        .card-image.@{efarbe}@{eschlag}.border {
+            .card-image(@i_farbe; @i_schlag);
+            border: solid;
+        }
+    });
+});
