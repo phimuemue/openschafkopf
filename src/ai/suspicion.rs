@@ -98,10 +98,10 @@ pub fn player_table<T: fmt::Display>(epi_self: EPlayerIndex, fn_per_player: impl
             .map_or("".to_string(), |t| t.to_string())
     };
     format!(
-        "<table>
-          <tr><td align=\"center\" colspan=\"2\"><br>{}<br></td></tr>
+        "<table class=\"player-table\">
+          <tr><td colspan=\"2\"><br>{}<br></td></tr>
           <tr><td>{}</td><td>{}</td></tr>
-          <tr><td align=\"center\" colspan=\"2\">{}</td></tr>
+          <tr><td colspan=\"2\">{}</td></tr>
         </table>\n",
         fn_per_player_internal(EPlayerIndex::EPI2),
         fn_per_player_internal(EPlayerIndex::EPI1),
