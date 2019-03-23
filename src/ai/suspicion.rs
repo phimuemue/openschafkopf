@@ -56,39 +56,9 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
 }
 
 pub fn output_card(card: SCard, b_border: bool) -> String {
-    let (n_width, n_height) = (336 / ESchlag::SIZE.as_num::<isize>(), 232 / EFarbe::SIZE.as_num::<isize>());
-    format!(
-        "<div style=\"
-            margin: 0;
-            padding: 0;
-            width:{}px;
-            height:{}px;
-            display:inline-block;
-            background-image:url(https://www.sauspiel.de/images/redesign/cards/by/card-icons@2x.png);
-            background-position-x:{}px;
-            background-position-y:{}px;
-            border:{};
-        \"></div>",
-        n_width,
-        n_height,
-        // Do not use Enum::to_usize. Sauspiel's representation does not necessarily match ours.
-        -n_width * match card.schlag() {
-            ESchlag::Ass => 0,
-            ESchlag::Zehn => 1,
-            ESchlag::Koenig => 2,
-            ESchlag::Ober => 3,
-            ESchlag::Unter => 4,
-            ESchlag::S9 => 5,
-            ESchlag::S8 => 6,
-            ESchlag::S7 => 7,
-        },
-        -n_height * match card.farbe() {
-            EFarbe::Eichel => 0,
-            EFarbe::Gras => 1,
-            EFarbe::Herz => 2,
-            EFarbe::Schelln => 3,
-        },
-        if b_border {"solid"} else {"none"},
+    format!(r#"<div class="card-image {}{}"></div>"#,
+        card,
+        if b_border {" border"} else {""},
     )
 }
 
