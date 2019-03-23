@@ -54,6 +54,51 @@ pub struct SAi {
     aiparams: VAIParams,
 }
 
+pub struct SDetermineBestCard<'game> {
+    pub game: &'game SGame,
+    pub epi_fixed: EPlayerIndex,
+    pub veccard_allowed: SHandVector,
+}
+impl<'game> SDetermineBestCard<'game> {
+    pub fn new(game: &'game SGame) -> Self {
+        let epi_fixed = debug_verify!(game.which_player_can_do_something()).unwrap().0;
+        let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &game.ahand[epi_fixed]);
+        assert!(1<=veccard_allowed.len());
+        Self{
+            game,
+            epi_fixed,
+            veccard_allowed
+        }
+    }
+
+    pub fn single_allowed_card(&self) -> Option<SCard> {
+        self.veccard_allowed.iter().single().ok().cloned()
+    }
+}
+
+pub fn determine_best_card(
+    determinebestcard: &SDetermineBestCard,
+    itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
+    func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
+    foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Sync),
+    opath_out_dir: Option<std::path::PathBuf>,
+) -> (SCard, isize) {
+        let mapcardn_payout = determine_best_card_internal(
+            determinebestcard.epi_fixed,
+            &determinebestcard.veccard_allowed,
+            determinebestcard.game.rules.as_ref(),
+            &determinebestcard.game.stichseq,
+            itahand,
+            func_filter_allowed_cards,
+            foreachsnapshot,
+            opath_out_dir,
+        );
+        debug_verify!(determinebestcard.veccard_allowed.iter()
+            .max_by_key(|&card| mapcardn_payout[*card]))
+            .map(|card| (*card, mapcardn_payout[*card]))
+            .unwrap()
+}
+
 impl SAi {
     pub fn new_cheating(n_rank_rules_samples: usize, n_suggest_card_branches: usize) -> Self {
         SAi {
@@ -99,92 +144,86 @@ impl SAi {
     }
 
     pub fn suggest_card(&self, game: &SGame, opath_out_dir: Option<&std::path::Path>) -> SCard {
-        let epi_fixed = debug_verify!(game.which_player_can_do_something()).unwrap().0;
-        let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &game.ahand[epi_fixed]);
-        assert!(1<=veccard_allowed.len());
-        if 1==veccard_allowed.len() {
-            veccard_allowed[0]
-        } else if let Some(card) = game.rules.rulespecific_ai()
-            .and_then(|airulespecific| airulespecific.suggest_card(game))
-        {
-            card
-        } else {
-            macro_rules! forward_to_determine_best_card_itahand{($itahand: expr, $func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
+        let determinebestcard = SDetermineBestCard::new(game);
+        determinebestcard
+            .single_allowed_card()
+            .unwrap_or_else(|| {
+                if let Some(card) = game.rules.rulespecific_ai()
+                    .and_then(|airulespecific| airulespecific.suggest_card(game))
                 {
-                    let mapcardn_payout = determine_best_card_internal(
-                        epi_fixed,
-                        &veccard_allowed,
-                        game.rules.as_ref(),
-                        &game.stichseq,
-                        $itahand,
-                        $func_filter_allowed_cards,
-                        $foreachsnapshot,
-                        opath_out_dir.map(|path_out_dir| {
-                            debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
-                            macro_rules! write_auxiliary_file(($str_filename: expr) => {
-                                debug_verify!(
-                                    debug_verify!(std::fs::File::create(
-                                        path_out_dir
-                                            .join($str_filename)
-                                    )).unwrap()
-                                        .write_all(
-                                            include_bytes!(
-                                                concat!(env!("OUT_DIR"), "/", $str_filename) // https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
+                    card
+                } else {
+                    macro_rules! forward_to_determine_best_card_itahand{($itahand: expr, $func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
+                        {
+                            determine_best_card(
+                                &determinebestcard,
+                                $itahand,
+                                $func_filter_allowed_cards,
+                                $foreachsnapshot,
+                                opath_out_dir.map(|path_out_dir| {
+			            debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
+                                    macro_rules! write_auxiliary_file(($str_filename: expr) => {
+                                        debug_verify!(
+                                            debug_verify!(std::fs::File::create(
+                                                    path_out_dir
+                                                    .join($str_filename)
+                                            )).unwrap()
+                                            .write_all(
+                                                include_bytes!(
+                                                    concat!(env!("OUT_DIR"), "/", $str_filename) // https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
+                                                )
                                             )
-                                        )
-                                ).unwrap();
-                            });
-                            write_auxiliary_file!("cards.png");
-                            write_auxiliary_file!("css.css");
-                            path_out_dir
-                                .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
-                        }),
-                    );
-                    debug_verify!(veccard_allowed.into_iter()
-                        .max_by_key(|card| mapcardn_payout[*card]))
-                        .unwrap()
+                                        ).unwrap();
+                                    });
+                                    write_auxiliary_file!("cards.png");
+                                    write_auxiliary_file!("css.css");
+			            path_out_dir
+			                .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
+			        }),
+                            ).0
+                        }
+                    }}
+                    macro_rules! forward_to_determine_best_card{($itahand_simulating: expr, $func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
+                        match self.aiparams {
+                            VAIParams::Cheating => { forward_to_determine_best_card_itahand!(
+                                Some(game.ahand.clone()).into_iter(),
+                                $func_filter_allowed_cards,
+                                $foreachsnapshot,
+                            ) },
+                            VAIParams::Simulating{n_suggest_card_samples} => { forward_to_determine_best_card_itahand!(
+                                $itahand_simulating(n_suggest_card_samples),
+                                $func_filter_allowed_cards,
+                                $foreachsnapshot,
+                            ) },
+                        }
+                    }}
+                    let hand_fixed = &game.ahand[determinebestcard.epi_fixed];
+                    assert!(!hand_fixed.cards().is_empty());
+                    // TODORUST exhaustive_integer_patterns for isize/usize
+                    // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
+                    match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(&game.stichseq)[determinebestcard.epi_fixed] {
+                        1|2|3 => forward_to_determine_best_card!(
+                            |_n_suggest_card_samples| all_possible_hands(&game.stichseq, hand_fixed.clone(), determinebestcard.epi_fixed, game.rules.as_ref()),
+                            &|_,_| (/*no filtering*/),
+                            &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
+                        ),
+                        4 => forward_to_determine_best_card!(
+                            |_n_suggest_card_samples| all_possible_hands(&game.stichseq, hand_fixed.clone(), determinebestcard.epi_fixed, game.rules.as_ref()),
+                            &|_,_| (/*no filtering*/),
+                            &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
+                        ),
+                        5|6|7|8 => forward_to_determine_best_card!(
+                            |n_suggest_card_samples| forever_rand_hands(&game.stichseq, hand_fixed.clone(), determinebestcard.epi_fixed, game.rules.as_ref())
+                                .take(n_suggest_card_samples),
+                            &branching_factor(|_stichseq| {
+                                (1, self.n_suggest_card_branches+1)
+                            }),
+                            &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
+                        ),
+                        n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
+                    }
                 }
-            }}
-            macro_rules! forward_to_determine_best_card{($itahand_simulating: expr, $func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
-                match self.aiparams {
-                    VAIParams::Cheating => { forward_to_determine_best_card_itahand!(
-                        Some(game.ahand.clone()).into_iter(),
-                        $func_filter_allowed_cards,
-                        $foreachsnapshot,
-                    ) },
-                    VAIParams::Simulating{n_suggest_card_samples} => { forward_to_determine_best_card_itahand!(
-                        $itahand_simulating(n_suggest_card_samples),
-                        $func_filter_allowed_cards,
-                        $foreachsnapshot,
-                    ) },
-                }
-            }}
-            let hand_fixed = &game.ahand[epi_fixed];
-            assert!(!hand_fixed.cards().is_empty());
-            // TODORUST exhaustive_integer_patterns for isize/usize
-            // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
-            match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(&game.stichseq)[epi_fixed] {
-                1|2|3 => forward_to_determine_best_card!(
-                    |_n_suggest_card_samples| all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.rules.as_ref()),
-                    &|_,_| (/*no filtering*/),
-                    &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
-                ),
-                4 => forward_to_determine_best_card!(
-                    |_n_suggest_card_samples| all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.rules.as_ref()),
-                    &|_,_| (/*no filtering*/),
-                    &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
-                ),
-                5|6|7|8 => forward_to_determine_best_card!(
-                    |n_suggest_card_samples| forever_rand_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.rules.as_ref())
-                        .take(n_suggest_card_samples),
-                    &branching_factor(|_stichseq| {
-                        (1, self.n_suggest_card_branches+1)
-                    }),
-                    &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
-                ),
-                n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
-            }
-        }
+        })
     }
 }
 

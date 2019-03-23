@@ -94,9 +94,25 @@ pub trait IteratorExt : Iterator {
     {
         self.is_sorted_by_unstable_name_collision(|a, b| f(a).partial_cmp(&f(b)))
     }
+
+    // TODO this should be part of itertools (https://github.com/bluss/rust-itertools/issues/334)
+    fn single(&mut self) -> Result<Self::Item, ESingleError> {
+        match self.next() {
+            None => Err(ESingleError::Empty),
+            Some(element) => {
+                match self.next() {
+                    None => Ok(element),
+                    Some(_) => Err(ESingleError::MoreThanOne),
+                }
+            }
+        }
+    }
 }
 
 impl<It> IteratorExt for It where It: Iterator {}
+
+#[derive(Debug)]
+pub enum ESingleError {Empty, MoreThanOne}
 
 macro_rules! cartesian_match(
     (
