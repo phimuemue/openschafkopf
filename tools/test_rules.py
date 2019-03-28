@@ -28,27 +28,27 @@ def solo_payout(tarif):
 
 vecpairstrdictstrfnGame = [
     ("rufspiel", {
-        "Sauspiel auf die Alte" : lambda eplayerindex, tarif: "rulesrufspiel_new_test(EPlayerIndex::EPI%d, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3))"%(eplayerindex),
-        "Sauspiel auf die Blaue" : lambda eplayerindex, tarif: "rulesrufspiel_new_test(EPlayerIndex::EPI%d, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3))"%(eplayerindex),
-        "Sauspiel auf die Hundsgfickte" : lambda eplayerindex, tarif: "rulesrufspiel_new_test(EPlayerIndex::EPI%d, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3))"%(eplayerindex),
+        "Sauspiel auf die Alte" : lambda eplayerindex, tarif: "&rulesrufspiel_new_test(EPlayerIndex::EPI%d, EFarbe::Eichel, 20, 10, SLaufendeParams::new(10, 3))"%(eplayerindex),
+        "Sauspiel auf die Blaue" : lambda eplayerindex, tarif: "&rulesrufspiel_new_test(EPlayerIndex::EPI%d, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3))"%(eplayerindex),
+        "Sauspiel auf die Hundsgfickte" : lambda eplayerindex, tarif: "&rulesrufspiel_new_test(EPlayerIndex::EPI%d, EFarbe::Schelln, 20, 10, SLaufendeParams::new(10, 3))"%(eplayerindex),
     }),
     ("farbwenz", {
-        "Eichel-Farbwenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
-        "Gras-Farbwenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
-        "Herz-Farbwenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
-        "Schelln-Farbwenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeSchelln>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Eichel-Farbwenz" : lambda eplayerindex, tarif: "sololike(EPlayerIndex::EPI%d, EFarbe::Eichel, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))).upcast()"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Gras-Farbwenz" : lambda eplayerindex, tarif: "sololike(EPlayerIndex::EPI%d, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))).upcast()"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Herz-Farbwenz" : lambda eplayerindex, tarif: "sololike(EPlayerIndex::EPI%d, EFarbe::Herz, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))).upcast()"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Schelln-Farbwenz" : lambda eplayerindex, tarif: "sololike(EPlayerIndex::EPI%d, EFarbe::Schelln, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))).upcast()"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
     }),
     ("wenz", {
-        "Wenz" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericWenz<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 2))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Wenz" : lambda eplayerindex, tarif: "sololike(EPlayerIndex::EPI%d, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 2))).upcast()"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
     }),
     ("solo", {
-        "Eichel-Solo" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeEichel>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
-        "Gras-Solo" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
-        "Herz-Solo" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
-        "Schelln-Solo" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeSchelln>>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Eichel-Solo" : lambda eplayerindex, tarif: "sololike(EPlayerIndex::EPI%d, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))).upcast()"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Gras-Solo" : lambda eplayerindex, tarif: "sololike(EPlayerIndex::EPI%d, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))).upcast()"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Herz-Solo" : lambda eplayerindex, tarif: "sololike(EPlayerIndex::EPI%d, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))).upcast()"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Schelln-Solo" : lambda eplayerindex, tarif: "sololike(EPlayerIndex::EPI%d, EFarbe::Schelln, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 3))).upcast()"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
     }),
     ("geier", {
-        "Geier" : lambda eplayerindex, tarif: "rulessololike_new_test::<SCoreGenericGeier<STrumpfDeciderNoTrumpf>, SPayoutDeciderPointBased>(EPlayerIndex::EPI%d,/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 2))"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
+        "Geier" : lambda eplayerindex, tarif: "sololike(EPlayerIndex::EPI%d, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/%d, /*n_payout_schneider_schwarz*/%d, SLaufendeParams::new(10, 2))).upcast()"%(eplayerindex, solo_payout(tarif), solo_payout_schneider_schwarz(tarif)),
     }),
     ("ramsch", {
         "Ramscch" : lambda eplayerindex, tarif: "SRulesRamsch"%(eplayerindex),
@@ -90,7 +90,7 @@ def OpenFileParseGame(strFile, dictstrfnGame):
             if h1Game.startswith(strGame):
                 assert(not bGameFound)
                 bGameFound = True
-                AppendToResult("    &%s,"%(dictstrfnGame[strGame](dictstreplayerindex[h1Game.rsplit(" ")[-1]], tarif if tarif else [10, 20, 50])))
+                AppendToResult("    %s,"%(dictstrfnGame[strGame](dictstreplayerindex[h1Game.rsplit(" ")[-1]], tarif if tarif else [10, 20, 50])))
         AppendToResultNoNewline("    [")
         hands = soup.find_all(class_="show-hand")
         if len(hands)==0:
