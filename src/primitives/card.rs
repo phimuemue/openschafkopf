@@ -107,14 +107,14 @@ impl fmt::Display for SCard {
     }
 }
 
-macro_rules! card_new_const {($efarbe: expr, $eschlag: expr) => { // TODORUST const fn
-    SCard{n_internalrepresentation : ($efarbe as usize * ESchlag::SIZE + $eschlag as usize) as u8}
-}}
+const fn card_new_const(efarbe: EFarbe, eschlag: ESchlag) -> SCard { // TODO (plain_enum: to_usize should be const fn)
+    SCard{n_internalrepresentation : (efarbe as usize * ESchlag::SIZE + eschlag as usize) as u8}
+}
 
 impl SCard {
     pub fn new(efarbe : EFarbe, eschlag : ESchlag) -> SCard {
         let card = SCard{n_internalrepresentation : (efarbe.to_usize() * ESchlag::SIZE + eschlag.to_usize()).as_num()};
-        assert_eq!(card, card_new_const!(efarbe, eschlag));
+        assert_eq!(card, card_new_const(efarbe, eschlag));
         card
     }
     pub fn farbe(self) -> EFarbe {
@@ -174,7 +174,7 @@ impl<V> TInternalEnumMapType<V> for SCard {
 pub mod card_values {
     use crate::card::*;
     macro_rules! impl_card_val_internal {(($($card:ident,)*), ($($eschlag:ident,)*), $efarbe:ident) => {
-        $(pub const $card : SCard = card_new_const!(EFarbe::$efarbe, ESchlag::$eschlag);)*
+        $(pub const $card : SCard = card_new_const(EFarbe::$efarbe, ESchlag::$eschlag);)*
     }}
     macro_rules! impl_card_val {(($($card:ident,)*), $efarbe:ident) => {
         impl_card_val_internal!(($($card,)*), (S7, S8, S9, Zehn, Unter, Ober, Koenig, Ass,), $efarbe);
