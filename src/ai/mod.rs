@@ -379,11 +379,12 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         Some(SStossParams::new(
             /*n_stoss_max*/ 4,
         )),
-        TRules::box_clone(&SRulesSoloLike::<SCoreSolo<SStaticFarbeHerz>, SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike>>::new(
+        TRules::box_clone(sololike(
             epi_first_and_active_player,
+            EFarbe::Herz,
+            ESoloLike::Solo,
             SPayoutDeciderPointBased::default_payoutdecider(n_payout_base, n_payout_schneider_schwarz, SLaufendeParams::new(10, 3)),
-            /*str_rulename*/"-".to_string(), // should not matter within those tests
-        )),
+        ).as_ref()),
         /*n_stock*/ 0,
     );
     for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]].iter() {
