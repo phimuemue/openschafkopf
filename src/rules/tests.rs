@@ -171,7 +171,7 @@ fn rulessololike_new_test<
     SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(
         epi,
         PayoutDecider::default_payoutdecider(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
-        "-", // should not matter within those tests
+        "-".to_string(), // should not matter within those tests
     )
 }
 

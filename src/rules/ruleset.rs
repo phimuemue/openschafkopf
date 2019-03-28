@@ -183,7 +183,7 @@ impl SRuleSet {
                             Some(sololike::<$trumpfdecider<STrumpfDeciderFarbe<$staticfarbe>>, _> (
                                 epi,
                                 PayoutDecider::new(payoutparams.clone(), $i_prioindex),
-                                &format!("{}-{}", $staticfarbe::VALUE, $rulename),
+                                format!("{}-{}", $staticfarbe::VALUE, $rulename),
                             ))
                         }}}
                         vec! [
@@ -201,13 +201,13 @@ impl SRuleSet {
                 create_rulegroup_sololike!(
                     "solo",
                     &str_rulename,
-                    vecrules_farbe!(SCoreSolo, $fn_prio(0), &str_rulename)
+                    vecrules_farbe!(SCoreSolo, $fn_prio(0), str_rulename)
                 )?;
                 let str_rulename = internal_rulename("Wenz");
                 create_rulegroup_sololike!(
                     "wenz",
                     &str_rulename,
-                    vecrules_farblos!(SCoreGenericWenz, $fn_prio(-1), &str_rulename)
+                    vecrules_farblos!(SCoreGenericWenz, $fn_prio(-1), str_rulename)
                 )?;
                 create_rulegroup_sololike!(
                     "farbwenz",
@@ -218,7 +218,7 @@ impl SRuleSet {
                 create_rulegroup_sololike!(
                     "geier",
                     &str_rulename,
-                    vecrules_farblos!(SCoreGenericGeier, $fn_prio(-3), &str_rulename)
+                    vecrules_farblos!(SCoreGenericGeier, $fn_prio(-3), str_rulename)
                 )?;
                 create_rulegroup_sololike!(
                     "farbgeier",
@@ -246,7 +246,7 @@ impl SRuleSet {
             create_rulegroup_sololike!(
                 "solo",
                 "Sie",
-                &|payoutparams| vec![Some(sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, _>(epi, SPayoutDeciderSie::new(payoutparams) ,"Sie"))]
+                &|payoutparams| vec![Some(sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, _>(epi, SPayoutDeciderSie::new(payoutparams) ,"Sie".to_string()))]
             )?;
             { // Bettel
                 let str_rule_name_file = "bettel";

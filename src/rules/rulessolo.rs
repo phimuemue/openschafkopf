@@ -319,7 +319,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TActi
     }
     fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<dyn TActivelyPlayableRules>> {
         self.payoutdecider.with_increased_prio(prio, ebid)
-            .map(|payoutdecider| Box::new(Self::internal_new(self.epi, &self.str_name, payoutdecider)) as Box<dyn TActivelyPlayableRules>)
+            .map(|payoutdecider| Box::new(Self::internal_new(self.epi, self.str_name.clone(), payoutdecider)) as Box<dyn TActivelyPlayableRules>)
     }
 }
 
@@ -334,20 +334,20 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
 }
 
 impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
-    fn internal_new(epi: EPlayerIndex, str_rulename: &str, payoutdecider: PayoutDecider) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
+    fn internal_new(epi: EPlayerIndex, str_name: String, payoutdecider: PayoutDecider) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
         SRulesSoloLike::<TrumpfDecider, PayoutDecider> {
             epi,
             phantom: PhantomData,
             payoutdecider,
-            str_name: str_rulename.to_string(),
+            str_name,
         }
     }
-    pub fn new(epi: EPlayerIndex, payoutdecider: PayoutDecider, str_rulename: &str) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
+    pub fn new(epi: EPlayerIndex, payoutdecider: PayoutDecider, str_rulename: String) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
         Self::internal_new(epi, str_rulename, payoutdecider)
     }
 }
 
-pub fn sololike<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike>(epi: EPlayerIndex, payoutdecider: PayoutDecider, str_rulename: &str) -> Box<dyn TActivelyPlayableRules> {
+pub fn sololike<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike>(epi: EPlayerIndex, payoutdecider: PayoutDecider, str_rulename: String) -> Box<dyn TActivelyPlayableRules> {
     Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(epi, payoutdecider, str_rulename)) as Box<dyn TActivelyPlayableRules>
 }
 

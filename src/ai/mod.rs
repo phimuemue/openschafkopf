@@ -382,7 +382,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         TRules::box_clone(&SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike>>::new(
             epi_first_and_active_player,
             SPayoutDeciderPointBased::default_payoutdecider(n_payout_base, n_payout_schneider_schwarz, SLaufendeParams::new(10, 3)),
-            /*str_rulename*/"-", // should not matter within those tests
+            /*str_rulename*/"-".to_string(), // should not matter within those tests
         )),
         /*n_stock*/ 0,
     );
