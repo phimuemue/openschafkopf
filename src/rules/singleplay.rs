@@ -1,16 +1,16 @@
 macro_rules! impl_single_play {() => {
     fn playerindex(&self) -> Option<EPlayerIndex> {
-        Some(self.epi)
+        Some(self.internal_playerindex())
     }
 
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {
         assert!(
             vecstoss.iter()
                 .enumerate()
-                .all(|(i_stoss, stoss)| (i_stoss%2==0) == (stoss.epi!=self.epi))
+                .all(|(i_stoss, stoss)| (i_stoss%2==0) == (stoss.epi!=self.internal_playerindex()))
         );
         EKurzLang::from_cards_per_player(hand.cards().len());
-        (epi==self.epi)==(vecstoss.len()%2==1)
+        (epi==self.internal_playerindex())==(vecstoss.len()%2==1)
     }
 
     fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache, epi: EPlayerIndex) -> SPayoutInfo {
@@ -19,7 +19,7 @@ macro_rules! impl_single_play {() => {
                 self,
                 rulestatecache,
                 gamefinishedstiche,
-                &SPlayerParties13::new(self.epi),
+                &SPlayerParties13::new(self.internal_playerindex()),
                 epi,
             ),
             |_epi, n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore),
@@ -33,7 +33,7 @@ macro_rules! impl_single_play {() => {
                 stichseq,
                 ahand,
                 rulestatecache,
-                &SPlayerParties13::new(self.epi),
+                &SPlayerParties13::new(self.internal_playerindex()),
                 epi,
             ),
             |_epi, pairon_payout| SPayoutHint::new((

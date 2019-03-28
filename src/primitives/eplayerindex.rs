@@ -13,6 +13,10 @@ use crate::util::*;
 plain_enum_mod!(modepi, EPlayerIndex {
     EPI0, EPI1, EPI2, EPI3,
 });
+define_static_value!(pub SStaticEPI0, EPlayerIndex, EPlayerIndex::EPI0);
+define_static_value!(pub SStaticEPI1, EPlayerIndex, EPlayerIndex::EPI1);
+define_static_value!(pub SStaticEPI2, EPlayerIndex, EPlayerIndex::EPI2);
+define_static_value!(pub SStaticEPI3, EPlayerIndex, EPlayerIndex::EPI3);
 impl fmt::Display for EPlayerIndex {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.to_usize())

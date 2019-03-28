@@ -29,6 +29,9 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> SRules
             phantom: PhantomData,
         }
     }
+    fn internal_playerindex(&self) -> EPlayerIndex {
+        self.epi
+    }
 }
 
 impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> fmt::Display for SRulesBettel<BettelAllAllowedCardsWithinStich> {

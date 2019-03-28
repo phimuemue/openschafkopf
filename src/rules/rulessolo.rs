@@ -300,51 +300,52 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
 }
 
 #[derive(Clone, Debug)]
-pub struct SRulesSoloLike<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> {
+pub struct SRulesSoloLike<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> {
     pub str_name: String,
-    pub epi : EPlayerIndex,
-    phantom : PhantomData<TrumpfDecider>,
+    phantom : PhantomData<(StaticEPI, TrumpfDecider)>,
     payoutdecider: PayoutDecider,
 }
 
-impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> fmt::Display for SRulesSoloLike<TrumpfDecider, PayoutDecider> {
+impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> fmt::Display for SRulesSoloLike<StaticEPI, TrumpfDecider, PayoutDecider> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}{}", self.str_name, self.payoutdecider.priorityinfo())
     }
 }
 
-impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TActivelyPlayableRules for SRulesSoloLike<TrumpfDecider, PayoutDecider> {
+impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TActivelyPlayableRules for SRulesSoloLike<StaticEPI, TrumpfDecider, PayoutDecider> {
     box_clone_impl_by_clone!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority {
         self.payoutdecider.priority()
     }
     fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<dyn TActivelyPlayableRules>> {
         self.payoutdecider.with_increased_prio(prio, ebid)
-            .map(|payoutdecider| Box::new(Self::internal_new(self.epi, self.str_name.clone(), payoutdecider)) as Box<dyn TActivelyPlayableRules>)
+            .map(|payoutdecider| Box::new(Self::internal_new(self.str_name.clone(), payoutdecider)) as Box<dyn TActivelyPlayableRules>)
     }
 }
 
-impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRulesNoObj for SRulesSoloLike<TrumpfDecider, PayoutDecider> {
+impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRulesNoObj for SRulesSoloLike<StaticEPI, TrumpfDecider, PayoutDecider> {
     impl_rules_trumpf_noobj!(TrumpfDecider);
 }
 
-impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<TrumpfDecider, PayoutDecider> {
+impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<StaticEPI, TrumpfDecider, PayoutDecider> {
     box_clone_impl_by_clone!(TRules);
     impl_rules_trumpf!();
     impl_single_play!();
 }
 
-impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
-    fn internal_new(epi: EPlayerIndex, str_name: String, payoutdecider: PayoutDecider) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
-        SRulesSoloLike::<TrumpfDecider, PayoutDecider> {
-            epi,
+impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> SRulesSoloLike<StaticEPI, TrumpfDecider, PayoutDecider> {
+    fn internal_new(str_name: String, payoutdecider: PayoutDecider) -> Self {
+        Self {
             phantom: PhantomData,
             payoutdecider,
             str_name,
         }
     }
-    pub fn new(epi: EPlayerIndex, payoutdecider: PayoutDecider, str_rulename: String) -> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
-        Self::internal_new(epi, str_rulename, payoutdecider)
+    pub fn new(payoutdecider: PayoutDecider, str_rulename: String) -> Self {
+        Self::internal_new(str_rulename, payoutdecider)
+    }
+    fn internal_playerindex(&self) -> EPlayerIndex { // TODORUST const fn
+        StaticEPI::VALUE
     }
 }
 
@@ -375,21 +376,28 @@ pub fn sololike(
     payoutdecider: impl Into<VPayoutDeciderSoloLike>,
 ) -> Box<dyn TActivelyPlayableRules> {
     macro_rules! sololike_internal{(
+        $staticepi: ident,
         ($trumpfdecider_farbe: ident, $str_oefarbe: expr),
         ($trumpfdecider_core: ident, $str_esololike: expr),
         ($payoutdecider: expr, $str_payoutdecider: expr),
     ) => {
         Box::new(SRulesSoloLike::<
+            $staticepi,
             $trumpfdecider_core<$trumpfdecider_farbe>,
             _,
         >::new(
-            epi,
             $payoutdecider,
             format!("{}{}{}", $str_oefarbe, $str_esololike, $str_payoutdecider),
         )) as Box<dyn TActivelyPlayableRules>
     }};
     cartesian_match!(
         sololike_internal,
+        match (epi) {
+            EPlayerIndex::EPI0 => SStaticEPI0,
+            EPlayerIndex::EPI1 => SStaticEPI1,
+            EPlayerIndex::EPI2 => SStaticEPI2,
+            EPlayerIndex::EPI3 => SStaticEPI3,
+        },
         match (oefarbe.into()) {
             None => (STrumpfDeciderNoTrumpf, ""),
             Some(EFarbe::Eichel) => (SStaticFarbeEichel, "Eichel"),
