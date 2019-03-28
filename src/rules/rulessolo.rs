@@ -211,6 +211,7 @@ fn cards_valid_for_sie_internal<Rules: TRulesNoObj, ItCard: Iterator<Item=SCard>
     })
 }
 
+// TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
 fn cards_valid_for_sie<Rules: TRulesNoObj, ItCard: Iterator<Item=SCard>>(
     rules: &Rules,
     itcard: ItCard,
@@ -347,9 +348,17 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> SRule
     }
 }
 
-pub fn sololike<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike>(epi: EPlayerIndex, payoutdecider: PayoutDecider, str_rulename: String) -> Box<dyn TActivelyPlayableRules> {
-    Box::new(SRulesSoloLike::<TrumpfDecider, PayoutDecider>::new(epi, payoutdecider, str_rulename)) as Box<dyn TActivelyPlayableRules>
+pub enum ESoloLike {
+    Solo,
+    Wenz,
+    Geier,
 }
+
+type_dispatch_enum!(pub enum VPayoutDeciderSoloLike {
+    PointBased(SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike>),
+    Tout(SPayoutDeciderTout),
+    Sie(SPayoutDeciderSie),
+});
 
 pub type SCoreSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<
     SStaticSchlagOber, STrumpfDeciderSchlag<
@@ -359,16 +368,58 @@ pub type SCoreGenericWenz<TrumpfFarbDecider> = STrumpfDeciderSchlag<
 pub type SCoreGenericGeier<TrumpfFarbDecider> = STrumpfDeciderSchlag<
     SStaticSchlagOber, TrumpfFarbDecider>;
 
+pub fn sololike(
+    epi: EPlayerIndex,
+    oefarbe: impl Into<Option<EFarbe>>,
+    esololike: ESoloLike,
+    payoutdecider: impl Into<VPayoutDeciderSoloLike>,
+) -> Box<dyn TActivelyPlayableRules> {
+    macro_rules! sololike_internal{(
+        ($trumpfdecider_farbe: ident, $str_oefarbe: expr),
+        ($trumpfdecider_core: ident, $str_esololike: expr),
+        ($payoutdecider: expr, $str_payoutdecider: expr),
+    ) => {
+        Box::new(SRulesSoloLike::<
+            $trumpfdecider_core<$trumpfdecider_farbe>,
+            _,
+        >::new(
+            epi,
+            $payoutdecider,
+            format!("{}{}{}", $str_oefarbe, $str_esololike, $str_payoutdecider),
+        )) as Box<dyn TActivelyPlayableRules>
+    }};
+    cartesian_match!(
+        sololike_internal,
+        match (oefarbe.into()) {
+            None => (STrumpfDeciderNoTrumpf, ""),
+            Some(EFarbe::Eichel) => (SStaticFarbeEichel, "Eichel"),
+            Some(EFarbe::Gras) => (SStaticFarbeGras, "Gras"),
+            Some(EFarbe::Herz) => (SStaticFarbeHerz, "Herz"),
+            Some(EFarbe::Schelln) => (SStaticFarbeSchelln, "Schelln"),
+        },
+        match (esololike) {
+            ESoloLike::Solo => (SCoreSolo, "Solo"),
+            ESoloLike::Wenz => (SCoreGenericWenz, "Wenz"),
+            ESoloLike::Geier => (SCoreGenericGeier, "Geier"),
+        },
+        match (payoutdecider.into()) {
+            VPayoutDeciderSoloLike::PointBased(payoutdecider) => (payoutdecider, ""),
+            VPayoutDeciderSoloLike::Tout(payoutdecider) => (payoutdecider, "-Tout"),
+            VPayoutDeciderSoloLike::Sie(payoutdecider) => (payoutdecider, "-Sie"),
+        },
+    )
+}
+
 #[test]
 fn test_trumpfdecider() {
     use crate::card::card_values::*;
     assert_eq!(
-        <SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeGras>> as TTrumpfDecider>
+        <SCoreSolo<SStaticFarbeGras> as TTrumpfDecider>
             ::trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EO, GO, HO, SO, EU, GU, HU, SU, GA, GZ, GK, G9, G8, G7],
     );
     assert_eq!(
-        <SCoreGenericWenz<STrumpfDeciderFarbe<SStaticFarbeGras>> as TTrumpfDecider>
+        <SCoreGenericWenz<SStaticFarbeGras> as TTrumpfDecider>
             ::trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU, GA, GZ, GK, GO, G9, G8, G7],
     );

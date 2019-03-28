@@ -5,7 +5,6 @@ use crate::rules::{
     rulessolo::*,
     rulesbettel::*,
     rulesramsch::*,
-    trumpfdecider::*,
     payoutdecider::*,
 };
 use crate::util::*;
@@ -177,53 +176,44 @@ impl SRuleSet {
                 let internal_rulename = |str_rulename| {
                     format!("{}{}", str_rulename, $str_rulename_suffix)
                 };
-                macro_rules! vecrules_farbe {($trumpfdecider: ident, $i_prioindex: expr, $rulename: expr) => {
+                macro_rules! vecrules{($itoefarbe: expr, $esololike: expr, $i_prioindex: expr) => {
                     |payoutparams: SPayoutDeciderParams| {
-                        macro_rules! internal_generate_sololike_farbe {($staticfarbe: ident) => {{
-                            Some(sololike::<$trumpfdecider<STrumpfDeciderFarbe<$staticfarbe>>, _> (
-                                epi,
-                                PayoutDecider::new(payoutparams.clone(), $i_prioindex),
-                                format!("{}-{}", $staticfarbe::VALUE, $rulename),
-                            ))
-                        }}}
-                        vec! [
-                            internal_generate_sololike_farbe!(SStaticFarbeEichel),
-                            internal_generate_sololike_farbe!(SStaticFarbeGras),
-                            internal_generate_sololike_farbe!(SStaticFarbeHerz),
-                            internal_generate_sololike_farbe!(SStaticFarbeSchelln),
-                        ]
+                        $itoefarbe
+                            .map(|oefarbe| {
+                                Some(sololike(
+                                    epi,
+                                    oefarbe,
+                                    $esololike,
+                                    PayoutDecider::new(payoutparams.clone(), $i_prioindex),
+                                ))
+                            })
+                            .collect()
                     }
                 }}
-                macro_rules! vecrules_farblos {($trumpfdecider: ident, $i_prioindex: expr, $rulename: expr) => {
-                    |payoutparams| vec![Some(sololike::<$trumpfdecider<STrumpfDeciderNoTrumpf>, _>(epi, PayoutDecider::new(payoutparams, $i_prioindex), $rulename))]
-                }}
-                let str_rulename = internal_rulename("Solo");
                 create_rulegroup_sololike!(
                     "solo",
-                    &str_rulename,
-                    vecrules_farbe!(SCoreSolo, $fn_prio(0), str_rulename)
+                    &internal_rulename("Solo"),
+                    vecrules!(EFarbe::values(), ESoloLike::Solo, $fn_prio(0))
                 )?;
-                let str_rulename = internal_rulename("Wenz");
                 create_rulegroup_sololike!(
                     "wenz",
-                    &str_rulename,
-                    vecrules_farblos!(SCoreGenericWenz, $fn_prio(-1), str_rulename)
+                    &internal_rulename("Wenz"),
+                    vecrules!(Some(None).into_iter(), ESoloLike::Wenz, $fn_prio(-1))
                 )?;
                 create_rulegroup_sololike!(
                     "farbwenz",
                     &internal_rulename("Farbwenz"),
-                    vecrules_farbe!(SCoreGenericWenz, $fn_prio(-2), &internal_rulename("Wenz"))
+                    vecrules!(EFarbe::values(), ESoloLike::Wenz, $fn_prio(-2))
                 )?;
-                let str_rulename = internal_rulename("Geier");
                 create_rulegroup_sololike!(
                     "geier",
-                    &str_rulename,
-                    vecrules_farblos!(SCoreGenericGeier, $fn_prio(-3), str_rulename)
+                    &internal_rulename("Geier"),
+                    vecrules!(Some(None).into_iter(), ESoloLike::Geier, $fn_prio(-3))
                 )?;
                 create_rulegroup_sololike!(
                     "farbgeier",
                     &internal_rulename("Farbgeier"),
-                    vecrules_farbe!(SCoreGenericGeier, $fn_prio(-4), &internal_rulename("Geier"))
+                    vecrules!(EFarbe::values(), ESoloLike::Geier, $fn_prio(-4))
                 )?;
             }}}
             if let Some(tomlval_steigern) = tomltbl.get("steigern") {
@@ -246,7 +236,12 @@ impl SRuleSet {
             create_rulegroup_sololike!(
                 "solo",
                 "Sie",
-                &|payoutparams| vec![Some(sololike::<SCoreSolo<STrumpfDeciderNoTrumpf>, _>(epi, SPayoutDeciderSie::new(payoutparams) ,"Sie".to_string()))]
+                &|payoutparams| vec![Some(sololike(
+                    epi,
+                    /*oefarbe*/None,
+                    ESoloLike::Solo,
+                    SPayoutDeciderSie::new(payoutparams),
+                ))]
             )?;
             { // Bettel
                 let str_rule_name_file = "bettel";

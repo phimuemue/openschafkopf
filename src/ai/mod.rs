@@ -362,7 +362,7 @@ fn test_is_compatible_with_game_so_far() {
 fn test_very_expensive_exploration() { // this kind of abuses the test mechanism to benchmark the performance
     use crate::card::card_values::*;
     use crate::game::*;
-    use crate::rules::{ruleset::*, rulessolo::*, payoutdecider::*, trumpfdecider::*, tests::TPayoutDeciderSoloLikeDefault};
+    use crate::rules::{ruleset::*, rulessolo::*, payoutdecider::*, tests::TPayoutDeciderSoloLikeDefault};
     let epi_first_and_active_player = EPlayerIndex::EPI0;
     let n_payout_base = 50;
     let n_payout_schneider_schwarz = 10;
@@ -379,7 +379,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         Some(SStossParams::new(
             /*n_stoss_max*/ 4,
         )),
-        TRules::box_clone(&SRulesSoloLike::<SCoreSolo<STrumpfDeciderFarbe<SStaticFarbeHerz>>, SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike>>::new(
+        TRules::box_clone(&SRulesSoloLike::<SCoreSolo<SStaticFarbeHerz>, SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike>>::new(
             epi_first_and_active_player,
             SPayoutDeciderPointBased::default_payoutdecider(n_payout_base, n_payout_schneider_schwarz, SLaufendeParams::new(10, 3)),
             /*str_rulename*/"-".to_string(), // should not matter within those tests

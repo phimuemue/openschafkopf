@@ -64,11 +64,7 @@ impl<StaticSchlag: TStaticValue<ESchlag>, DeciderSec: TTrumpfDecider> TTrumpfDec
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct STrumpfDeciderFarbe<StaticFarbe> {
-    phantom: PhantomData<StaticFarbe>,
-}
-impl<StaticFarbe: TStaticValue<EFarbe>> TTrumpfDecider for STrumpfDeciderFarbe<StaticFarbe> {
+impl<StaticFarbe: TStaticValue<EFarbe>> TTrumpfDecider for StaticFarbe {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
         if StaticFarbe::VALUE == card.farbe() {
             VTrumpfOrFarbe::Trumpf

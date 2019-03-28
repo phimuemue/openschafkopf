@@ -35,8 +35,8 @@ impl fmt::Display for SRulesRamsch {
 
 pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag<
     SStaticSchlagOber, STrumpfDeciderSchlag<
-    SStaticSchlagUnter, STrumpfDeciderFarbe<
-    SStaticFarbeHerz>>>;
+    SStaticSchlagUnter,
+    SStaticFarbeHerz>>;
 
 impl TRulesNoObj for SRulesRamsch {
     impl_rules_trumpf_noobj!(STrumpfDeciderRamsch);

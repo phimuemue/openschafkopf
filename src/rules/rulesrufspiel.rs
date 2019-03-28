@@ -26,8 +26,8 @@ impl fmt::Display for SRulesRufspiel {
 
 pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag<
     SStaticSchlagOber, STrumpfDeciderSchlag<
-    SStaticSchlagUnter, STrumpfDeciderFarbe<
-    SStaticFarbeHerz>>>;
+    SStaticSchlagUnter, 
+    SStaticFarbeHerz>>;
 
 impl SRulesRufspiel {
     pub fn new(epi: EPlayerIndex, efarbe: EFarbe, payoutparams: SPayoutDeciderParams) -> SRulesRufspiel {
