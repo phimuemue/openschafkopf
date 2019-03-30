@@ -23,6 +23,6 @@ env_logger = "0"
 chrono = "0"
 
 [profile.release]
-lto = true
+#lto = true
 codegen-units = 1
 debug = true
