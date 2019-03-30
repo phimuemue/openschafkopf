@@ -98,7 +98,7 @@ impl TPlayer for SPlayerHuman {
                 },
                 || Some(self.ai.suggest_card(
                     game,
-                    /*ostr_file_out*/Some(&format!("suspicion_{}", Local::now().format("%Y%m%d%H%M%S")))
+                    /*ostr_file_out*/Some(&format!("suspicion/{}", Local::now().format("%Y%m%d%H%M%S")))
                 ))
             )
         ).is_err() {

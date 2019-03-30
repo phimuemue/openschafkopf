@@ -38,7 +38,8 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
     pub fn new(file_output: fs::File, rules: &'rules dyn TRules, epi: EPlayerIndex) -> Self {
         let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output, rules, epi};
         foreachsnapshothtmlvisualizer.write_all(
-            b"<style>
+            b"<link rel=\"stylesheet\" type=\"text/css\" href=\"../css.css\">
+            <style>
             input + label + ul {
                 display: none;
             }
