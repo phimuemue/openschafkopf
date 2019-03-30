@@ -127,7 +127,7 @@ pub fn explore_snapshots<ForEachSnapshot>(
     stichseq: &mut SStichSequence,
     func_filter_allowed_cards: &impl Fn(&SStichSequence, &mut SHandVector),
     foreachsnapshot: &ForEachSnapshot,
-    opairstrepi_visualize: Option<(&str, EPlayerIndex)>,
+    opairfileepi_visualize: Option<(fs::File, EPlayerIndex)>,
 ) -> ForEachSnapshot::Output 
     where
         ForEachSnapshot: TForEachSnapshot,
@@ -148,9 +148,9 @@ pub fn explore_snapshots<ForEachSnapshot>(
             $snapshotvisualizer,
         )
     }}
-    if let Some((str_file_out, epi_self_visualize)) = opairstrepi_visualize {
+    if let Some((file_output, epi_self_visualize)) = opairfileepi_visualize {
         forward_to_internal!(&mut SForEachSnapshotHTMLVisualizer::new(
-            debug_verify!(fs::File::create(format!("{}.html", str_file_out))).unwrap(),
+            file_output,
             rules,
             epi_self_visualize,
         ))
