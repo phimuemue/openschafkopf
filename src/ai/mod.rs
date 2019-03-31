@@ -16,7 +16,6 @@ use crate::ai::{
 use rand::prelude::*;
 use std::{
     self,
-    mem,
     sync::{
         Arc, Mutex,
     },
@@ -288,9 +287,11 @@ pub fn branching_factor(fn_stichseq_to_intvl: impl Fn(&SStichSequence)->(usize, 
         assert!(!veccard_allowed.is_empty());
         let (n_lo, n_hi) = fn_stichseq_to_intvl(stichseq);
         assert!(n_lo < n_hi);
-        let vect_sampled_tmp = veccard_allowed.iter().cloned().choose_multiple(&mut rand::thread_rng(), rand::thread_rng().gen_range(n_lo, n_hi)); // TODO can we choose_multiple directly into SHandVector?
-        let mut vect_sampled = vect_sampled_tmp.into_iter().collect::<SHandVector>();
-        mem::swap(&mut vect_sampled, veccard_allowed);
+        let mut rng = rand::thread_rng();
+        let n = rng.gen_range(n_lo, n_hi);
+        while n<veccard_allowed.len() {
+            veccard_allowed.swap_remove(rng.gen_range(0, veccard_allowed.len()));
+        }
     }
 }
 
