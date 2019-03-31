@@ -121,28 +121,21 @@ impl SAi {
                         $foreachsnapshot,
                         opath_out_dir.map(|path_out_dir| {
                             debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
-                            debug_verify!(
-                                debug_verify!(std::fs::File::create(
-                                    path_out_dir
-                                        .join("cards.png")
-                                )).unwrap()
-                                    .write_all(
-                                        include_bytes!(
-                                            concat!(env!("OUT_DIR"), "/cards.png") // https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
+                            macro_rules! write_auxiliary_file(($str_filename: expr) => {
+                                debug_verify!(
+                                    debug_verify!(std::fs::File::create(
+                                        path_out_dir
+                                            .join($str_filename)
+                                    )).unwrap()
+                                        .write_all(
+                                            include_bytes!(
+                                                concat!(env!("OUT_DIR"), "/", $str_filename) // https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
+                                            )
                                         )
-                                    )
-                            ).unwrap();
-                            debug_verify!(
-                                debug_verify!(std::fs::File::create(
-                                    path_out_dir
-                                        .join("css.css")
-                                )).unwrap()
-                                    .write_all(
-                                        include_str!(
-                                            concat!(env!("OUT_DIR"), "/css.css") // https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
-                                        ).as_bytes()
-                                    )
-                            ).unwrap();
+                                ).unwrap();
+                            });
+                            write_auxiliary_file!("cards.png");
+                            write_auxiliary_file!("css.css");
                             path_out_dir
                                 .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
                         }),
