@@ -288,7 +288,7 @@ impl TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'_> {
     fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
         self.0.rules.payouthints(stichseq, ahand, rulestatecache, self.0.epi)
             .lower_bound()
-            .clone() // TODO really needed?
+            .as_ref()
             .and_then(|payoutinfo| {
                 let n_payout = payoutinfo.payout_including_stock(self.0.n_stock, self.0.tpln_stoss_doubling);
                 if_then_option!(0<n_payout, n_payout)
