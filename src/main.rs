@@ -165,7 +165,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usi
                     txorules
                 );
             });
-            debug_verify!(gamepreparations.announce_game(epi, orules.map(|rules| TActivelyPlayableRules::box_clone(rules)))).unwrap();
+            debug_verify!(gamepreparations.announce_game(epi, orules.map(TActivelyPlayableRules::box_clone))).unwrap();
         }
         info!("Asked players if they want to play. Determining rules");
         let stockorgame = match debug_verify!(gamepreparations.finish()).unwrap() {
@@ -182,7 +182,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usi
                             txorules
                         );
                     });
-                    if let Some(rules) = orules.map(|rules| TActivelyPlayableRules::box_clone(rules)) {
+                    if let Some(rules) = orules.map(TActivelyPlayableRules::box_clone) {
                         debug_verify!(determinerules.announce_game(epi, rules)).unwrap();
                     } else {
                         debug_verify!(determinerules.resign(epi)).unwrap();
