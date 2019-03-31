@@ -65,6 +65,7 @@ fn test_determine_best_card() {
         /*n_rank_rules_samples*/1,
         /*n_suggest_card_branches*/2,
     );
+    #[cfg(not(debug_assertions))]
     let aisimulating = SAi::new_simulating(
         /*n_suggest_card_branches*/1,
         /*n_suggest_card_samples*/1,
@@ -77,15 +78,16 @@ fn test_determine_best_card() {
     // As far as I can tell, it is at least not necessarily wrong.
     // (HO ensures at least that no other player can take away rufsau.)
     // TODO examine optimal solution to this case.
-    assert_eq!(aisimulating.suggest_card(&game, /*opath_out_dir*/None), HO);
+    #[cfg(not(debug_assertions))] {
+        assert_eq!(aisimulating.suggest_card(&game, /*opath_out_dir*/None), HO);
+    }
     play_stichs(&mut game, &[
         (EPlayerIndex::EPI0, [HO, E7, HU, GK]),
     ]);
-    // TODO these asserts should hold
-    //assert_ne!(aicheating.suggest_card(&game, /*opath_out_dir*/None), SZ);
-    //assert_ne!(aisimulating.suggest_card(&game, /*opath_out_dir*/None), SZ);
-    //assert_eq!(aicheating.suggest_card(&game, /*opath_out_dir*/None), E8);
-    //assert_eq!(aisimulating.suggest_card(&game, /*opath_out_dir*/None), E8);
+    #[cfg(not(debug_assertions))] {
+        assert_eq!(aicheating.suggest_card(&game, /*opath_out_dir*/None), E8);
+        assert_eq!(aisimulating.suggest_card(&game, /*opath_out_dir*/None), E8);
+    }
     play_stichs(&mut game, &[
         (EPlayerIndex::EPI0, [SZ, EK, G7, SA]),
         (EPlayerIndex::EPI3, [SK, S7, GZ, EZ]),
