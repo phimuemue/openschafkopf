@@ -92,7 +92,7 @@ impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
             str_item_id,
             "TODO", // slccard_allowed.len(),
         ).as_bytes());
-        //TODO assert!(ahand_vecstich_card_count_is_compatible(slcstich, ahand, ekurzlang));
+        assert!(crate::ai::ahand_vecstich_card_count_is_compatible(stichseq, ahand));
         for stich in stichseq.visible_stichs() {
             self.write_all(b"<td>\n");
             let epi_0 = self.epi;
