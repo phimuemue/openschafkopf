@@ -21,9 +21,11 @@ use std::{
         Arc, Mutex,
     },
     cmp,
+    io::Write,
 };
 use rayon::prelude::*;
 use crate::util::*;
+use chrono::Local;
 
 pub fn remaining_cards_per_hand(stichseq: &SStichSequence) -> EnumMap<EPlayerIndex, usize> {
     EPlayerIndex::map_from_fn(|epi| {
@@ -91,13 +93,13 @@ impl SAi {
                         /*tpln_stoss_doubling*/(0, 0), // TODO do we need tpln_stoss_doubling from somewhere? 
                         n_stock,
                     )),
-                    /*ostr_file_out*/None,
+                    /*opath_out_dir*/None,
                 )
             })
             .sum::<isize>().as_num::<f64>() / (self.n_rank_rules_samples.as_num::<f64>())
     }
 
-    pub fn suggest_card(&self, game: &SGame, ostr_file_out: Option<&str>) -> SCard {
+    pub fn suggest_card(&self, game: &SGame, opath_out_dir: Option<&std::path::Path>) -> SCard {
         let epi_fixed = debug_verify!(game.which_player_can_do_something()).unwrap().0;
         let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &game.ahand[epi_fixed]);
         assert!(1<=veccard_allowed.len());
@@ -118,7 +120,22 @@ impl SAi {
                         $itahand,
                         $func_filter_allowed_cards,
                         $foreachsnapshot,
-                        ostr_file_out,
+                        opath_out_dir.map(|path_out_dir| {
+                            debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
+                            debug_verify!(
+                            debug_verify!(std::fs::File::create(
+                                path_out_dir
+                                    .join("css.css")
+                            )).unwrap()
+                                .write_all(
+                                    include_str!(
+                                        concat!(env!("OUT_DIR"), "/css.css") // https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
+                                    ).as_bytes()
+                                )
+                            ).unwrap();
+                            path_out_dir
+                                .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
+                        }),
                     );
                     debug_verify!(veccard_allowed.into_iter()
                         .max_by_key(|card| mapcardn_payout[*card]))
@@ -207,7 +224,7 @@ fn determine_best_card_internal(
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Sync),
-    ostr_file_out: Option<&str>
+    opath_out_dir: Option<std::path::PathBuf>
 ) -> EnumMap<SCard, isize> {
     let mapcardn_payout = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
@@ -234,9 +251,12 @@ fn determine_best_card_internal(
                 &mut stichseq,
                 func_filter_allowed_cards,
                 foreachsnapshot,
-                ostr_file_out.map(|str_file_out| {
-                    debug_verify!(std::fs::create_dir_all(str_file_out)).unwrap();
-                    debug_verify!(std::fs::File::create(format!("{}/{}_{}.html", str_file_out, i_susp, card))).unwrap()
+                opath_out_dir.as_ref().map(|path_out_dir| {
+                    debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
+                    debug_verify!(std::fs::File::create(
+                        path_out_dir
+                            .join(format!("{}_{}.html", i_susp, card))
+                    )).unwrap()
                 }).map(|file_output| (file_output, epi_fixed)),
             );
             let mut mapcardn_payout = debug_verify!(mapcardn_payout.lock()).unwrap();
@@ -411,7 +431,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             Some(ahand).into_iter(),
             /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(&game)),
-            /*ostr_file_out*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
+            /*opath_out_dir*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
         );
         for card in [H7, H8, H9].iter() {
             assert!(veccard_allowed.contains(card));

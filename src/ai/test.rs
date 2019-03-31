@@ -72,20 +72,20 @@ fn test_determine_best_card() {
     );
     // If we cheat (i.e. we know each players' cards), it makes - intuitively, not mathematically
     // proven - sense not to play HO since it only weakens the own partner.
-    assert_ne!(aicheating.suggest_card(&game, /*ostr_file_out*/None), HO);
+    assert_ne!(aicheating.suggest_card(&game, /*opath_out_dir*/None), HO);
     // If we do not cheat, tests indicated that playing HO is the best solution.
     // As far as I can tell, it is at least not necessarily wrong.
     // (HO ensures at least that no other player can take away rufsau.)
     // TODO examine optimal solution to this case.
-    assert_eq!(aisimulating.suggest_card(&game, /*ostr_file_out*/None), HO);
+    assert_eq!(aisimulating.suggest_card(&game, /*opath_out_dir*/None), HO);
     play_stichs(&mut game, &[
         (EPlayerIndex::EPI0, [HO, E7, HU, GK]),
     ]);
     // TODO these asserts should hold
-    //assert_ne!(aicheating.suggest_card(&game, /*ostr_file_out*/None), SZ);
-    //assert_ne!(aisimulating.suggest_card(&game, /*ostr_file_out*/None), SZ);
-    //assert_eq!(aicheating.suggest_card(&game, /*ostr_file_out*/None), E8);
-    //assert_eq!(aisimulating.suggest_card(&game, /*ostr_file_out*/None), E8);
+    //assert_ne!(aicheating.suggest_card(&game, /*opath_out_dir*/None), SZ);
+    //assert_ne!(aisimulating.suggest_card(&game, /*opath_out_dir*/None), SZ);
+    //assert_eq!(aicheating.suggest_card(&game, /*opath_out_dir*/None), E8);
+    //assert_eq!(aisimulating.suggest_card(&game, /*opath_out_dir*/None), E8);
     play_stichs(&mut game, &[
         (EPlayerIndex::EPI0, [SZ, EK, G7, SA]),
         (EPlayerIndex::EPI3, [SK, S7, GZ, EZ]),
@@ -146,7 +146,7 @@ fn detect_expensive_all_possible_hands() {
                                 &mut game.stichseq.clone(),
                                 &|_vecstich_complete, _vecstich_successor| {/*no filtering*/},
                                 &SLeafCounter{},
-                                /*ostr_file_out*/None,
+                                /*opath_out_dir*/None,
                             ),
                             2000
                         );

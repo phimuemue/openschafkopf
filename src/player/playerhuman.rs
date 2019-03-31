@@ -10,7 +10,6 @@ use crate::ai::*;
 #[cfg(debug_assertions)]
 use crate::util::*;
 use std::sync::mpsc;
-use chrono::Local;
 
 pub struct SPlayerHuman {
     pub ai : SAi,
@@ -98,7 +97,7 @@ impl TPlayer for SPlayerHuman {
                 },
                 || Some(self.ai.suggest_card(
                     game,
-                    /*ostr_file_out*/Some(&format!("suspicion/{}", Local::now().format("%Y%m%d%H%M%S")))
+                    /*opath_out_dir*/Some(&std::path::Path::new("suspicion"))
                 ))
             )
         ).is_err() {

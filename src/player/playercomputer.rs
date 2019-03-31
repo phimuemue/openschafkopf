@@ -38,7 +38,7 @@ impl TPlayer for SPlayerComputer {
     }
 
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
-        txcard.send(self.ai.suggest_card(game, /*ostr_file_out*/None)).ok();
+        txcard.send(self.ai.suggest_card(game, /*opath_out_dir*/None)).ok();
     }
 
     fn ask_for_game<'rules>(
@@ -126,7 +126,7 @@ impl TPlayer for SPlayerComputer {
                             /*tpln_stoss_doubling*/stoss_and_doublings(vecstoss, doublings),
                             n_stock,
                         )),
-                        /*ostr_file_out*/None,
+                        /*opath_out_dir*/None,
                     )
                 })
                 .sum::<isize>().as_num::<f64>()
