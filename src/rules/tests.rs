@@ -1932,42 +1932,44 @@ fn test_stock() {
         /*n_payout_schneider_schwarz*/10,
         SLaufendeParams::new(10, 3),
     );
-    let n_stock_initial = 80; // TODO randomize
-    assert_eq!(n_stock_initial%2, 0);
-    test_rules_manual(
-        "Rufspiel: Players win stock",
-        &rulesrufspiel,
-        vec![],
-        vec![],
-        n_stock_initial,
-        &[
-            (0, [EO, GO, HO, SO]),
-            (0, [EU, GU, HU, SU]),
-            (0, [HA, HZ, HK, H9]),
-            (0, [EZ, EA, EK, E9]),
-            (1, [E8, E7, S7, S8]),
-            (1, [SA, SZ, SK, S9]),
-            (1, [GA, GZ, GK, H8]),
-            (0, [H7, G9, G8, G7]),
-        ],
-        ([30+n_stock_initial/2, 30+n_stock_initial/2, -30, -30], -n_stock_initial),
-    );
-    test_rules_manual(
-        "Rufspiel: Players win stock",
-        &rulesrufspiel,
-        vec![],
-        vec![],
-        n_stock_initial,
-        &[
-            (0, [EZ, EA, EK, H7]),
-            (3, [EO, GO, HO, SO]),
-            (3, [EU, GU, HU, SU]),
-            (3, [HA, HZ, HK, H9]),
-            (3, [SA, SZ, SK, S9]),
-            (3, [GA, GZ, GK, G9]),
-            (3, [G8, G7, E9, E8]),
-            (3, [H8, E7, S8, S7]),
-        ],
-        ([-30-n_stock_initial/2, -30-n_stock_initial/2, 30, 30], n_stock_initial),
-    );
+    for n_stock_initial in [0isize, 20, 40, 80, 160, 240, 320].into_iter() {
+        let n_stock_initial = *n_stock_initial;
+        assert_eq!(n_stock_initial%2, 0);
+        test_rules_manual(
+            "Rufspiel: Players win stock",
+            &rulesrufspiel,
+            vec![],
+            vec![],
+            n_stock_initial,
+            &[
+                (0, [EO, GO, HO, SO]),
+                (0, [EU, GU, HU, SU]),
+                (0, [HA, HZ, HK, H9]),
+                (0, [EZ, EA, EK, E9]),
+                (1, [E8, E7, S7, S8]),
+                (1, [SA, SZ, SK, S9]),
+                (1, [GA, GZ, GK, H8]),
+                (0, [H7, G9, G8, G7]),
+            ],
+            ([30+n_stock_initial/2, 30+n_stock_initial/2, -30, -30], -n_stock_initial),
+        );
+        test_rules_manual(
+            "Rufspiel: Players win stock",
+            &rulesrufspiel,
+            vec![],
+            vec![],
+            n_stock_initial,
+            &[
+                (0, [EZ, EA, EK, H7]),
+                (3, [EO, GO, HO, SO]),
+                (3, [EU, GU, HU, SU]),
+                (3, [HA, HZ, HK, H9]),
+                (3, [SA, SZ, SK, S9]),
+                (3, [GA, GZ, GK, G9]),
+                (3, [G8, G7, E9, E8]),
+                (3, [H8, E7, S8, S7]),
+            ],
+            ([-30-n_stock_initial/2, -30-n_stock_initial/2, 30, 30], n_stock_initial),
+        );
+    }
 }
