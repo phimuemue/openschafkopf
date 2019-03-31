@@ -123,15 +123,26 @@ impl SAi {
                         opath_out_dir.map(|path_out_dir| {
                             debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
                             debug_verify!(
-                            debug_verify!(std::fs::File::create(
-                                path_out_dir
-                                    .join("css.css")
-                            )).unwrap()
-                                .write_all(
-                                    include_str!(
-                                        concat!(env!("OUT_DIR"), "/css.css") // https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
-                                    ).as_bytes()
-                                )
+                                debug_verify!(std::fs::File::create(
+                                    path_out_dir
+                                        .join("cards.png")
+                                )).unwrap()
+                                    .write_all(
+                                        include_bytes!(
+                                            concat!(env!("OUT_DIR"), "/cards.png") // https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
+                                        )
+                                    )
+                            ).unwrap();
+                            debug_verify!(
+                                debug_verify!(std::fs::File::create(
+                                    path_out_dir
+                                        .join("css.css")
+                                )).unwrap()
+                                    .write_all(
+                                        include_str!(
+                                            concat!(env!("OUT_DIR"), "/css.css") // https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
+                                        ).as_bytes()
+                                    )
                             ).unwrap();
                             path_out_dir
                                 .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
