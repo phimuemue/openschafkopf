@@ -88,10 +88,13 @@ fn main() {
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
         if let Ok(ruleset) =SRuleSet::from_file(Path::new(debug_verify!(subcommand_matches.value_of("ruleset")).unwrap())) {
             if let Some(str_hand) = subcommand_matches.value_of("hand") {
-                if let Some(hand_fixed) = cardvector::parse_cards(str_hand).map(SHand::new_from_vec) {
+                if let Some(hand_fixed) = cardvector::parse_cards(str_hand)
+                    .map(SHand::new_from_vec)
+                    .filter(|hand| hand.cards().len()==ruleset.ekurzlang.cards_per_player())
+                {
                     let epi_rank = value_t!(subcommand_matches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
                     println!("Hand: {}", hand_fixed);
-                    let hand_fixed = SFullHand::new(&hand_fixed, ruleset.ekurzlang); // TODO panics if incorrect size => error handling
+                    let hand_fixed = SFullHand::new(&hand_fixed, ruleset.ekurzlang);
                     for rules in allowed_rules(&ruleset.avecrulegroup[epi_rank], hand_fixed)
                         .filter_map(|orules| orules) // do not rank None
                     {
@@ -107,7 +110,7 @@ fn main() {
                         );
                     }
                 } else {
-                    println!("Could not convert \"{}\" to cards.", str_hand);
+                    println!("Could not convert \"{}\" to a full hand of cards.", str_hand);
                 }
             }
         }
