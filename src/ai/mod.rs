@@ -20,7 +20,6 @@ use std::{
         Arc, Mutex,
     },
     cmp,
-    io::Write,
 };
 use rayon::prelude::*;
 use crate::util::*;
@@ -162,21 +161,7 @@ impl SAi {
                                 $foreachsnapshot,
                                 opath_out_dir.map(|path_out_dir| {
 			            debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
-                                    macro_rules! write_auxiliary_file(($str_filename: expr) => {
-                                        debug_verify!(
-                                            debug_verify!(std::fs::File::create(
-                                                    path_out_dir
-                                                    .join($str_filename)
-                                            )).unwrap()
-                                            .write_all(
-                                                include_bytes!(
-                                                    concat!(env!("OUT_DIR"), "/", $str_filename) // https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
-                                                )
-                                            )
-                                        ).unwrap();
-                                    });
-                                    write_auxiliary_file!("cards.png");
-                                    write_auxiliary_file!("css.css");
+                                    crate::game_analysis::generate_html_auxiliary_files(path_out_dir).unwrap();
 			            path_out_dir
 			                .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
 			        }),

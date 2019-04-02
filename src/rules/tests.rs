@@ -27,12 +27,14 @@ fn internal_test_rules(
     println!("Testing rules: {}", str_info);
     let game = analyze_game_internal(
         /*epi_first*/EPlayerIndex::EPI0, // TODO parametrize w.r.t. epi_first
-        rules,
-        ahand,
-        vecn_doubling,
-        vecn_stoss,
-        n_stock,
-        slcstich_test,
+        SAnalyzeParams {
+            rules: rules.box_clone(),
+            ahand,
+            vecn_doubling,
+            vecn_stoss,
+            n_stock,
+            vecstich: slcstich_test.to_vec(),
+        },
         /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
     );
     let an_payout_check = debug_verify!(game.finish()).unwrap().an_payout;

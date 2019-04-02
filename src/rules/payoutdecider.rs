@@ -58,7 +58,7 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
             gamefinishedstiche.get().completed_stichs_winner_index(rules)
                 .filter(|&(_stich, epi_winner)| playerparties.is_primary_party(epi_winner))
                 .map(|(stich, _epi_winner)| card_points::points_stich(stich))
-                .sum()
+                .sum::<isize>()
         );
         let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
         internal_payout(

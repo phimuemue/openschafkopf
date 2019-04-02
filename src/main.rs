@@ -21,7 +21,9 @@ extern crate toml;
 extern crate log;
 extern crate env_logger;
 extern crate chrono;
+extern crate select;
 extern crate combine;
+extern crate glob;
 
 #[macro_use]
 mod util;
@@ -33,6 +35,7 @@ mod ai;
 mod skui;
 mod subcommands;
 mod game_analysis;
+mod sauspiel;
 
 use crate::primitives::*;
 use crate::rules:: ruleset::*;
@@ -65,7 +68,22 @@ fn main() -> Result<(), Error> {
             .arg(clap_arg("hand", ""))
             .arg(clap_arg("position", "0"))
         )
+        .subcommand(clap::SubCommand::with_name("analyze")
+            .arg(clap::Arg::with_name("sauspiel-files")
+                 .long("sauspiel-files")
+                 .takes_value(true)
+                 .multiple(true)
+            )
+        )
         .get_matches();
+    if let Some(subcommand_matches_analyze)=clapmatches.subcommand_matches("analyze") {
+        if let Some(itstr_sauspiel_html_file) = subcommand_matches_analyze.values_of("sauspiel-files") {
+            return subcommands::analyze::analyze(
+                &std::path::Path::new("./analyze"),
+                itstr_sauspiel_html_file,
+            );
+        }
+    }
     let ai = |subcommand_matches: &clap::ArgMatches| {
         match debug_verify!(subcommand_matches.value_of("ai")).unwrap() {
             "cheating" => SAi::new_cheating(/*n_rank_rules_samples*/50, /*n_suggest_card_branches*/2),
