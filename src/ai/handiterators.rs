@@ -71,7 +71,7 @@ fn make_handiterator<NextVecEPI: TNextVecEPI>(stichseq: &SStichSequence, hand_fi
         }
     }
     assert_eq!(veccard_unknown.len(), vecepi.len());
-    assert!(vecepi.iter().is_sorted());
+    assert!(vecepi.iter().is_sorted_unstable_name_collision());
     NextVecEPI::init(&mut vecepi);
     SHandIterator {
         epi_fixed,
