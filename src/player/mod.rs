@@ -27,6 +27,7 @@ pub trait TPlayer {
         hand: SFullHand,
         gameannouncements: &SGameAnnouncements,
         vecrulegroup: &'rules [SRuleGroup],
+        tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
         opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>

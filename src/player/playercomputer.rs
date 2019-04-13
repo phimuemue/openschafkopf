@@ -47,6 +47,7 @@ impl TPlayer for SPlayerComputer {
         hand: SFullHand,
         gameannouncements : &SGameAnnouncements,
         vecrulegroup: &'rules [SRuleGroup],
+        tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
         _opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
@@ -62,6 +63,7 @@ impl TPlayer for SPlayerComputer {
                         /*epi_first*/gameannouncements.first_playerindex(),
                         /*epi_rank*/rules.active_playerindex(),
                         rules.upcast(),
+                        tpln_stoss_doubling,
                         n_stock
                     )
                 )
@@ -98,6 +100,7 @@ impl TPlayer for SPlayerComputer {
                             /*epi_first*/doublings.first_playerindex(),
                             /*epi_rank*/epi_active,
                             rules,
+                            stoss_and_doublings(vecstoss, doublings),
                             n_stock,
                         )
                     } else {

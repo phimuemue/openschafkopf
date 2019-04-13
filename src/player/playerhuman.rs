@@ -111,6 +111,7 @@ impl TPlayer for SPlayerHuman {
         hand: SFullHand,
         gameannouncements : &SGameAnnouncements,
         vecrulegroup: &'rules [SRuleGroup],
+        _tpln_stoss_doubling: (usize, usize),
         _n_stock: isize,
         opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>,

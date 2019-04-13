@@ -93,7 +93,7 @@ pub type SGameAnnouncements = SPlayersInRound<Option<Box<dyn TActivelyPlayableRu
 #[derive(Debug)]
 pub struct SGamePreparations<'rules> {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
-    doublings : SDoublings,
+    pub doublings : SDoublings,
     pub ruleset : &'rules SRuleSet,
     pub gameannouncements : SGameAnnouncements,
     pub n_stock : isize,

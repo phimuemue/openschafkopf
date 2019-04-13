@@ -73,7 +73,7 @@ impl SAi {
         }
     }
 
-    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &dyn TRules, n_stock: isize) -> f64 {
+    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &dyn TRules, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> f64 {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
         let ekurzlang = EKurzLang::from_cards_per_player(hand_fixed.get().cards().len());
         forever_rand_hands(&SStichSequence::new(epi_first, ekurzlang), hand_fixed.get().clone(), epi_rank, rules)
@@ -89,7 +89,7 @@ impl SAi {
                     &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new(
                         rules,
                         epi_rank,
-                        /*tpln_stoss_doubling*/(0, 0), // TODO do we need tpln_stoss_doubling from somewhere? 
+                        tpln_stoss_doubling,
                         n_stock,
                     )),
                     /*opath_out_dir*/None,

@@ -105,6 +105,7 @@ fn main() {
                                 EPlayerIndex::EPI0,
                                 epi_rank,
                                 rules.upcast(),
+                                /*tpln_stoss_doubling*/(0, 0), // assume no stoss, no doublings in subcommand rank-rules
                                 /*n_stock*/0, // assume no stock in subcommand rank-rules
                             )
                         );
@@ -163,6 +164,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usi
                     gamepreparations.fullhand(epi),
                     &gamepreparations.gameannouncements,
                     &gamepreparations.ruleset.avecrulegroup[epi],
+                    stoss_and_doublings(/*vecstoss*/&[], &gamepreparations.doublings),
                     gamepreparations.n_stock,
                     None,
                     txorules
@@ -180,6 +182,7 @@ fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usi
                             determinerules.fullhand(epi),
                             /*gameannouncements*/&SPlayersInRound::new(determinerules.doublings.first_playerindex()),
                             &vecrulegroup_steigered,
+                            stoss_and_doublings(/*vecstoss*/&[], &determinerules.doublings),
                             determinerules.n_stock,
                             Some(determinerules.currently_offered_prio()),
                             txorules
