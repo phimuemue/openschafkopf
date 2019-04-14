@@ -161,9 +161,8 @@ impl SAi {
             }}
             let hand_fixed = &game.ahand[epi_fixed];
             assert!(!hand_fixed.cards().is_empty());
-            // TODORUST exhaustive_integer_patterns
-            // https://github.com/rust-lang/rfcs/issues/1550
-            // https://github.com/rust-lang/rust/issues/50907
+            // TODORUST exhaustive_integer_patterns for isize/usize
+            // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
             match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(&game.stichseq)[epi_fixed] {
                 1|2|3 => forward_to_determine_best_card!(
                     |_n_suggest_card_samples| all_possible_hands(&game.stichseq, hand_fixed.clone(), epi_fixed, game.rules.as_ref()),
