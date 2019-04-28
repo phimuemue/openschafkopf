@@ -1,4 +1,3 @@
-use crate::game_loop_cli;
 use crate::primitives::*;
 use crate::rules::{
     *,
@@ -97,7 +96,7 @@ fn test_determine_best_card() {
 
 #[test]
 fn detect_expensive_all_possible_hands() {
-    game_loop_cli(
+    crate::subcommands::cli::game_loop_cli(
         &EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
             /*fn_check_ask_for_card*/|game| {
                 if game.kurzlang().cards_per_player() - 4 < game.completed_stichs().len() {
