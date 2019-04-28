@@ -5,35 +5,50 @@
 
 This is a work in progress, aiming to model the game Schafkopf in a robust and extensible manner. Moreover, it aims to provide an AI playing the game. As of now, it does *not* provide any fancy user interface, but instead relies on the command line.
 
-[![asciicast](https://asciinema.org/a/q8IiXdkHZAnRvkC8yL4eOt6Gf.png)](https://asciinema.org/a/q8IiXdkHZAnRvkC8yL4eOt6Gf)
-
 ## Getting started
 
-You need the rust programming language to build OpenSchafkopf (see https://www.rust-lang.org/en-US/install.html).
+Build Requirements:
+* rust programming language (https://www.rust-lang.org/en-US/install.html)
+* inkscape (https://inkscape.org/)
+* less (http://lesscss.org/)
 
 ```
-curl https://sh.rustup.rs -sSf | sh
-git clone https://github.com/openschafkopf/openschafkopf.git
+git clone https://github.com/phimuemue/openschafkopf.git
 cd openschafkopf
 cargo build --release
-./target/release/openschafkopf cli
+./target/release/openschafkopf -h
+
+schafkopf 
+
+USAGE:
+    openschafkopf [SUBCOMMAND]
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+SUBCOMMANDS:
+    analyze       
+    cli           
+    help          Prints this message or the help of the given subcommand(s)
+    rank-rules    
 ```
+
+## Features
+
+* Estimate strength of own hand.
+* Simulate players to play against.
+* Analyze played games and spot suboptimal decisions.
 
 ## Supported variants
 
-* Rufspiel
-* Solo
-* Wenz
-* Farbwenz
-* Geier
-* Farbgeier
-* Tout/Sie
-* Bettel
-* Ramsch
-* Stock
-* Schneider/Schwarz
-* Laufende (adjustible per variant)
-* Stoss
-* Doppeln
-* Steigern
 * Kurze Karte/Lange Karte
+* Rufspiel
+* Solo/Wenz/Farbwenz/Geier/Farbgeier
+* Schneider/Schwarz/Laufende
+* Tout/Sie
+* Stoss/Doppeln
+* Ramsch
+* Bettel
+* Stock
+* Steigern
