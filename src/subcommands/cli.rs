@@ -4,12 +4,8 @@ use crate::rules::{
     TActivelyPlayableRules, // TODO improve trait-object behaviour
     ruleset::*,
 };
-use crate::ai;
 use std::sync::mpsc;
-use crate::player::{
-    *,
-    playercomputer::*,
-};
+use crate::player::*;
 use crate::util::*;
 use crate::skui;
 
@@ -131,6 +127,11 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
 #[test]
 fn test_game_loop() {
     use rand::prelude::IteratorRandom;
+    use crate::ai;
+    use crate::player::{
+        *,
+        playercomputer::*,
+    };
     let mut rng = rand::thread_rng();
     for ruleset in
         iproduct!(
