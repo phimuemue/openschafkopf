@@ -30,6 +30,7 @@ mod game;
 mod player;
 mod ai;
 mod skui;
+mod subcommands;
 
 use crate::game::*;
 use crate::primitives::*;
@@ -92,24 +93,12 @@ fn main() {
                     .map(SHand::new_from_vec)
                     .filter(|hand| hand.cards().len()==ruleset.ekurzlang.cards_per_player())
                 {
-                    let epi_rank = value_t!(subcommand_matches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
-                    println!("Hand: {}", hand_fixed);
-                    let hand_fixed = SFullHand::new(&hand_fixed, ruleset.ekurzlang);
-                    for rules in allowed_rules(&ruleset.avecrulegroup[epi_rank], hand_fixed)
-                        .filter_map(|orules| orules) // do not rank None
-                    {
-                        println!("{}: {}",
-                            rules,
-                            ai(subcommand_matches).rank_rules(
-                                hand_fixed,
-                                EPlayerIndex::EPI0,
-                                epi_rank,
-                                rules.upcast(),
-                                /*tpln_stoss_doubling*/(0, 0), // assume no stoss, no doublings in subcommand rank-rules
-                                /*n_stock*/0, // assume no stock in subcommand rank-rules
-                            )
-                        );
-                    }
+                    subcommands::rank_rules::rank_rules(
+                        &ruleset,
+                        SFullHand::new(&hand_fixed, ruleset.ekurzlang),
+                        /*epi_rank*/value_t!(subcommand_matches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0),
+                        &ai(subcommand_matches),
+                    );
                 } else {
                     println!("Could not convert \"{}\" to a full hand of cards.", str_hand);
                 }
