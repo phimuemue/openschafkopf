@@ -13,6 +13,7 @@ fn main() {
         .join("tools");
     let str_env_var_out_dir = env::var("OUT_DIR").unwrap();
     let path_out_dir = Path::new(&str_env_var_out_dir); // https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-build-scripts
+    // TODO can we avoid lessc depencency?
     let output_lessc = execute_external(
         Command::new("lessc")
             .arg(path_resources.join("css.less"))
@@ -21,6 +22,7 @@ fn main() {
     File::create(&path_out_dir.join("css.css"))
         .unwrap()
         .write_all(&output_lessc.stdout).unwrap();
+    // TODO can we avoid inkscape depencency?
     let output_inkscape = execute_external(
         Command::new("inkscape")
             .arg(path_resources.join("cards.svg"))
