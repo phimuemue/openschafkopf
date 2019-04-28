@@ -5,32 +5,17 @@ rust:
   - nightly
 matrix:
   allow_failures:
+    - rust: beta
     - rust: nightly
-    
+
 before_install:
   - sudo apt-get update
+  - sudo apt-get install inkscape
+  - sudo apt-get install npm
+  - npm config set strict-ssl false
+  - sudo npm install -g less
 
-addons:
-  apt:
-    packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - cmake
-      - gcc
-      - binutils-dev
-
-after_success: |
-  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
-  tar xzf master.tar.gz &&
-  cd kcov-master &&
-  mkdir build &&
-  cd build &&
-  cmake .. &&
-  make &&
-  sudo make install &&
-  cd ../.. &&
-  rm -rf kcov-master &&
-  for file in target/debug/openschafkopf-*; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-  bash <(curl -s https://codecov.io/bash) &&
-  echo "Uploaded code coverage"
+script:
+  - cargo check
+  - cargo test
+  - cargo test --release
