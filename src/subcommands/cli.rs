@@ -13,7 +13,14 @@ use crate::player::{
 use crate::util::*;
 use crate::skui;
 
-pub fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
+pub fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) {
+    skui::init_ui();
+    let accountbalance = game_loop_cli_internal(aplayer, n_games, ruleset);
+    println!("Results: {}", skui::account_balance_string(&accountbalance));
+    skui::end_ui();
+}
+
+pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
     let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_epi| 0));
     for i_game in 0..n_games {
         fn communicate_via_channel<T: std::fmt::Debug>(f: impl FnOnce(mpsc::Sender<T>)) -> T {
@@ -198,7 +205,7 @@ fn test_game_loop() {
             })
             .choose_multiple(&mut rng, 2)
     {
-        game_loop_cli(
+        game_loop_cli_internal(
             &EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
                 Box::new(SPlayerComputer{ai: {
                     if epi<EPlayerIndex::EPI2 {

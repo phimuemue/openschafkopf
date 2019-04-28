@@ -100,8 +100,7 @@ fn main() {
     }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("cli") {
         if let Ok(ruleset) =SRuleSet::from_file(Path::new(debug_verify!(subcommand_matches.value_of("ruleset")).unwrap())) {
-            skui::init_ui();
-            let accountbalance = subcommands::cli::game_loop_cli(
+            subcommands::cli::game_loop_cli(
                 &EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
                     if EPlayerIndex::EPI1==epi {
                         Box::new(SPlayerHuman{ai : ai(subcommand_matches)})
@@ -112,8 +111,6 @@ fn main() {
                 /*n_games*/ debug_verify!(subcommand_matches.value_of("numgames")).unwrap().parse::<usize>().unwrap_or(4),
                 &ruleset,
             );
-            println!("Results: {}", skui::account_balance_string(&accountbalance));
-            skui::end_ui();
         }
     }
 }
