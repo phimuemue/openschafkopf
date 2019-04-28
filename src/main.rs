@@ -43,7 +43,7 @@ use crate::player::{
 };
 use crate::util::*;
 
-fn main() {
+fn main() -> Result<(), Error> {
     env_logger::init();
     let clap_arg = |str_long, str_default| {
         clap::Arg::with_name(str_long)
@@ -79,40 +79,35 @@ fn main() {
             }
         }
     };
+    fn get_ruleset(subcommand_matches: &clap::ArgMatches) -> Result<SRuleSet, Error> {
+        SRuleSet::from_file(Path::new(debug_verify!(subcommand_matches.value_of("ruleset")).unwrap()))
+    }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
-        if let Ok(ruleset) =SRuleSet::from_file(Path::new(debug_verify!(subcommand_matches.value_of("ruleset")).unwrap())) {
-            if let Some(str_hand) = subcommand_matches.value_of("hand") {
-                if let Some(hand_fixed) = cardvector::parse_cards(str_hand)
-                    .map(SHand::new_from_vec)
-                    .filter(|hand| hand.cards().len()==ruleset.ekurzlang.cards_per_player())
-                {
-                    subcommands::rank_rules::rank_rules(
-                        &ruleset,
-                        SFullHand::new(&hand_fixed, ruleset.ekurzlang),
-                        /*epi_rank*/value_t!(subcommand_matches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0),
-                        &ai(subcommand_matches),
-                    );
-                } else {
-                    println!("Could not convert \"{}\" to a full hand of cards.", str_hand);
-                }
-            }
-        }
+        let ruleset = get_ruleset(subcommand_matches)?;
+        let str_hand = subcommand_matches.value_of("hand").ok_or_else(||format_err!("No hand given as parameter."))?;
+        let hand = SHand::new_from_vec(cardvector::parse_cards(str_hand).ok_or_else(||format_err!("Could not parse hand."))?);
+        let hand = Some(hand).filter(|hand| hand.cards().len()==ruleset.ekurzlang.cards_per_player()).ok_or_else(||format_err!("Could not convert hand to a full hand of cards"))?;
+        return Ok(subcommands::rank_rules::rank_rules(
+            &ruleset,
+            SFullHand::new(&hand, ruleset.ekurzlang),
+            /*epi_rank*/value_t!(subcommand_matches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0),
+            &ai(subcommand_matches),
+        ));
     }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("cli") {
-        if let Ok(ruleset) =SRuleSet::from_file(Path::new(debug_verify!(subcommand_matches.value_of("ruleset")).unwrap())) {
-            subcommands::cli::game_loop_cli(
-                &EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
-                    if EPlayerIndex::EPI1==epi {
-                        Box::new(SPlayerHuman{ai : ai(subcommand_matches)})
-                    } else {
-                        Box::new(SPlayerComputer{ai: ai(subcommand_matches)})
-                    }
-                }),
-                /*n_games*/ debug_verify!(subcommand_matches.value_of("numgames")).unwrap().parse::<usize>().unwrap_or(4),
-                &ruleset,
-            );
-        }
+        return Ok(subcommands::cli::game_loop_cli(
+            &EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
+                if EPlayerIndex::EPI1==epi {
+                    Box::new(SPlayerHuman{ai : ai(subcommand_matches)})
+                } else {
+                    Box::new(SPlayerComputer{ai: ai(subcommand_matches)})
+                }
+            }),
+            /*n_games*/ debug_verify!(subcommand_matches.value_of("numgames")).unwrap().parse::<usize>().unwrap_or(4),
+            &get_ruleset(subcommand_matches)?,
+        ));
     }
+    Ok(())
 }
 
 
