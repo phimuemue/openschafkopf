@@ -185,10 +185,10 @@ impl TRules for SRulesRufspiel {
         if hand.cards().len()<=1 {
             hand.cards().clone()
         } else {
+            assert!(!stichseq.current_stich().is_empty());
             let epi = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
             let b_weggelaufen = stichseq.completed_stichs().iter()
                 .any(|stich| epi==stich.first_playerindex() && self.is_ruffarbe(*stich.first()));
-            assert!(!stichseq.current_stich().is_empty());
             let card_first = *stichseq.current_stich().first();
             if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) && !b_weggelaufen {
                 return Some(self.rufsau()).into_iter().collect()
