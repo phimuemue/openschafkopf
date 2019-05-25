@@ -113,11 +113,11 @@ pub struct SBettelAllAllowedCardsWithinStichStichzwang {}
 
 impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichNormal {
     fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
+        assert!(!stichseq.current_stich().is_empty());
         all_allowed_cards_within_stich_distinguish_farbe_frei(
             rulesbettel,
-            stichseq,
+            /*card_first_in_stich*/ *stichseq.current_stich().first(),
             hand,
-            /*fn_farbe_frei*/|| hand.cards().clone(),
             /*fn_farbe_not_frei*/|veccard_same_farbe| veccard_same_farbe,
         )
     }
@@ -126,16 +126,11 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStic
     fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         let stich = stichseq.current_stich();
         let card_highest = stich[rulesbettel.preliminary_winner_index(stich)];
+        assert!(!stichseq.current_stich().is_empty());
         all_allowed_cards_within_stich_distinguish_farbe_frei(
             rulesbettel,
-            stichseq,
+            /*card_first_in_stich*/ *stichseq.current_stich().first(),
             hand,
-            /*fn_farbe_frei*/|| {
-                debug_assert!(hand.cards().iter().cloned().all(|card|
-                    Ordering::Greater==rulesbettel.compare_in_stich(card_highest, card)
-                ));
-                hand.cards().clone()
-            },
             /*fn_farbe_not_frei*/|veccard_same_farbe| {
                 let veccard_allowed_higher_than_current_best = veccard_same_farbe.iter().cloned()
                     .filter(|card| 
