@@ -30,7 +30,7 @@ pub fn analyze<
     }
     analyze_games(
         path_analysis,
-        /*fn_link*/|str_description: &str| format!("{}", str_description),
+        /*fn_link*/|str_description: &str| str_description.to_string(),
         vecanalyzeparams.into_iter(),
     )
 }

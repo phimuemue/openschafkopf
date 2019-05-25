@@ -107,15 +107,16 @@ fn main() -> Result<(), Error> {
         let str_hand = subcommand_matches.value_of("hand").ok_or_else(||format_err!("No hand given as parameter."))?;
         let hand = SHand::new_from_vec(cardvector::parse_cards(str_hand).ok_or_else(||format_err!("Could not parse hand."))?);
         let hand = Some(hand).filter(|hand| hand.cards().len()==ruleset.ekurzlang.cards_per_player()).ok_or_else(||format_err!("Could not convert hand to a full hand of cards"))?;
-        return Ok(subcommands::rank_rules::rank_rules(
+        subcommands::rank_rules::rank_rules(
             &ruleset,
             SFullHand::new(&hand, ruleset.ekurzlang),
             /*epi_rank*/value_t!(subcommand_matches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0),
             &ai(subcommand_matches),
-        ));
+        );
+        return Ok(())
     }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("cli") {
-        return Ok(subcommands::cli::game_loop_cli(
+        subcommands::cli::game_loop_cli(
             &EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
                 if EPlayerIndex::EPI1==epi {
                     Box::new(SPlayerHuman{ai : ai(subcommand_matches)})
@@ -125,7 +126,8 @@ fn main() -> Result<(), Error> {
             }),
             /*n_games*/ debug_verify!(subcommand_matches.value_of("numgames")).unwrap().parse::<usize>().unwrap_or(4),
             &get_ruleset(subcommand_matches)?,
-        ));
+        );
+        return Ok(())
     }
     Ok(())
 }
