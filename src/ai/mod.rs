@@ -71,7 +71,7 @@ impl<'game> SDetermineBestCard<'game> {
     }
 
     pub fn single_allowed_card(&self) -> Option<SCard> {
-        self.veccard_allowed.iter().single().ok().cloned()
+        self.veccard_allowed.iter().single().ok().copied()
     }
 }
 

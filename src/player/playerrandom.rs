@@ -31,7 +31,7 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
                 game.rules.all_allowed_cards(
                     &game.stichseq,
                     &game.ahand[debug_verify!(game.which_player_can_do_something()).unwrap().0],
-                ).choose(&mut rand::thread_rng()).cloned()
+                ).choose(&mut rand::thread_rng()).copied()
             ).unwrap()
         )).unwrap();
     }
