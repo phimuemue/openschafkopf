@@ -54,17 +54,21 @@ pub struct SAi {
 }
 
 pub struct SDetermineBestCard<'game> {
-    game: &'game SGame,
+    rules: &'game dyn TRules,
+    stichseq: &'game SStichSequence,
     pub epi_fixed: EPlayerIndex,
     pub veccard_allowed: SHandVector,
 }
 impl<'game> SDetermineBestCard<'game> {
     pub fn new(game: &'game SGame) -> Self {
         let epi_fixed = debug_verify!(game.which_player_can_do_something()).unwrap().0;
-        let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &game.ahand[epi_fixed]);
+        let rules = game.rules.as_ref();
+        let ref stichseq = game.stichseq;
+        let veccard_allowed = rules.all_allowed_cards(stichseq, &game.ahand[epi_fixed]);
         assert!(1<=veccard_allowed.len());
         Self{
-            game,
+            rules,
+            stichseq,
             epi_fixed,
             veccard_allowed
         }
@@ -85,8 +89,8 @@ pub fn determine_best_card(
         let mapcardn_payout = determine_best_card_internal(
             determinebestcard.epi_fixed,
             &determinebestcard.veccard_allowed,
-            determinebestcard.game.rules.as_ref(),
-            &determinebestcard.game.stichseq,
+            determinebestcard.rules,
+            &determinebestcard.stichseq,
             itahand,
             func_filter_allowed_cards,
             foreachsnapshot,
