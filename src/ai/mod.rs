@@ -54,7 +54,7 @@ pub struct SAi {
 }
 
 pub struct SDetermineBestCard<'game> {
-    pub game: &'game SGame,
+    game: &'game SGame,
     pub epi_fixed: EPlayerIndex,
     pub veccard_allowed: SHandVector,
 }
