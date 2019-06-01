@@ -128,7 +128,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
         analyzeparams,
         /*fn_before_zugeben*/|game, i_stich, epi, card| {
             if remaining_cards_per_hand(&game.stichseq)[epi] <= if_dbg_else!({2}{4}) {
-                let determinebestcard = SDetermineBestCard::new(game);
+                let determinebestcard = SDetermineBestCard::new_from_game(game);
                 macro_rules! look_for_mistakes{(
                     $itahand: expr,
                     $func_filter_allowed_cards: expr,

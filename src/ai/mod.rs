@@ -60,11 +60,8 @@ pub struct SDetermineBestCard<'game> {
     pub veccard_allowed: SHandVector,
 }
 impl<'game> SDetermineBestCard<'game> {
-    pub fn new(game: &'game SGame) -> Self {
-        let epi_fixed = debug_verify!(game.which_player_can_do_something()).unwrap().0;
-        let rules = game.rules.as_ref();
-        let ref stichseq = game.stichseq;
-        let veccard_allowed = rules.all_allowed_cards(stichseq, &game.ahand[epi_fixed]);
+    pub fn new(rules: &'game dyn TRules, stichseq: &'game SStichSequence, hand_fixed: &SHand, epi_fixed: EPlayerIndex) -> Self {
+        let veccard_allowed = rules.all_allowed_cards(stichseq, hand_fixed);
         assert!(1<=veccard_allowed.len());
         Self{
             rules,
@@ -72,6 +69,16 @@ impl<'game> SDetermineBestCard<'game> {
             epi_fixed,
             veccard_allowed
         }
+    }
+
+    pub fn new_from_game(game: &'game SGame) -> Self {
+        let epi_fixed = debug_verify!(game.which_player_can_do_something()).unwrap().0;
+        Self::new(
+            game.rules.as_ref(),
+            &game.stichseq,
+            /*hand_fixed*/&game.ahand[epi_fixed],
+            epi_fixed,
+        )
     }
 
     pub fn single_allowed_card(&self) -> Option<SCard> {
@@ -147,7 +154,13 @@ impl SAi {
     }
 
     pub fn suggest_card(&self, game: &SGame, opath_out_dir: Option<&std::path::Path>) -> SCard {
-        let determinebestcard = SDetermineBestCard::new(game);
+        let epi_fixed = debug_verify!(game.which_player_can_do_something()).unwrap().0;
+        let determinebestcard = SDetermineBestCard::new(
+            game.rules.as_ref(),
+            &game.stichseq,
+            /*hand_fixed*/&game.ahand[epi_fixed],
+            epi_fixed,
+        );
         determinebestcard
             .single_allowed_card()
             .unwrap_or_else(|| {
@@ -186,7 +199,7 @@ impl SAi {
                             ) },
                         }
                     }}
-                    let hand_fixed = &game.ahand[determinebestcard.epi_fixed];
+                    let hand_fixed = &game.ahand[verify_eq!(epi_fixed, determinebestcard.epi_fixed)];
                     assert!(!hand_fixed.cards().is_empty());
                     // TODORUST exhaustive_integer_patterns for isize/usize
                     // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
