@@ -154,21 +154,21 @@ impl SAi {
     }
 
     pub fn suggest_card(&self, game: &SGame, opath_out_dir: Option<&std::path::Path>) -> SCard {
-        let epi_fixed = debug_verify!(game.which_player_can_do_something()).unwrap().0;
-        let determinebestcard = SDetermineBestCard::new(
-            game.rules.as_ref(),
-            &game.stichseq,
-            /*hand_fixed*/&game.ahand[epi_fixed],
-            epi_fixed,
-        );
-        determinebestcard
-            .single_allowed_card()
-            .unwrap_or_else(|| {
-                if let Some(card) = game.rules.rulespecific_ai()
-                    .and_then(|airulespecific| airulespecific.suggest_card(game))
-                {
-                    card
-                } else {
+        if let Some(card) = game.rules.rulespecific_ai()
+            .and_then(|airulespecific| airulespecific.suggest_card(game))
+        {
+            card
+        } else {
+            let epi_fixed = debug_verify!(game.which_player_can_do_something()).unwrap().0;
+            let determinebestcard = SDetermineBestCard::new(
+                game.rules.as_ref(),
+                &game.stichseq,
+                /*hand_fixed*/&game.ahand[epi_fixed],
+                epi_fixed,
+            );
+            determinebestcard
+                .single_allowed_card()
+                .unwrap_or_else(|| {
                     macro_rules! forward_to_determine_best_card_itahand{($itahand: expr, $func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
                         {
                             determine_best_card(
@@ -177,11 +177,11 @@ impl SAi {
                                 $func_filter_allowed_cards,
                                 $foreachsnapshot,
                                 opath_out_dir.map(|path_out_dir| {
-			            debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
+                                    debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
                                     crate::game_analysis::generate_html_auxiliary_files(path_out_dir).unwrap();
-			            path_out_dir
-			                .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
-			        }),
+                                    path_out_dir
+                                        .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
+                                }),
                             ).0
                         }
                     }}
@@ -224,8 +224,8 @@ impl SAi {
                         ),
                         n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
                     }
-                }
-        })
+            })
+        }
     }
 }
 
