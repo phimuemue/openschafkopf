@@ -205,16 +205,24 @@ impl SAi {
                     }}
                     // TODORUST exhaustive_integer_patterns for isize/usize
                     // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
+                    let make_minreachablepayoutparams = || {
+                        SMinReachablePayoutParams::new(
+                            rules,
+                            debug_verify!(game.current_playable_stich().current_playerindex()).unwrap(),
+                            /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
+                            game.n_stock,
+                        )
+                    };
                     match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(stichseq)[determinebestcard.epi_fixed] {
                         1|2|3 => forward_to_determine_best_card!(
                             |_n_suggest_card_samples| all_possible_hands(stichseq, hand_fixed.clone(), determinebestcard.epi_fixed, rules),
                             &|_,_| (/*no filtering*/),
-                            &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
+                            &SMinReachablePayout(make_minreachablepayoutparams()),
                         ),
                         4 => forward_to_determine_best_card!(
                             |_n_suggest_card_samples| all_possible_hands(stichseq, hand_fixed.clone(), determinebestcard.epi_fixed, rules),
                             &|_,_| (/*no filtering*/),
-                            &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
+                            &SMinReachablePayoutLowerBoundViaHint(make_minreachablepayoutparams()),
                         ),
                         5|6|7|8 => forward_to_determine_best_card!(
                             |n_suggest_card_samples| forever_rand_hands(stichseq, hand_fixed.clone(), determinebestcard.epi_fixed, rules)
@@ -222,7 +230,7 @@ impl SAi {
                             &branching_factor(|_stichseq| {
                                 (1, self.n_suggest_card_branches+1)
                             }),
-                            &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new_from_game(game)),
+                            &SMinReachablePayoutLowerBoundViaHint(make_minreachablepayoutparams()),
                         ),
                         n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
                     }
