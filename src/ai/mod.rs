@@ -153,6 +153,109 @@ impl SAi {
             .sum::<isize>().as_num::<f64>() / (self.n_rank_rules_samples.as_num::<f64>())
     }
 
+    pub fn suggest_card_internal(
+        rules: &dyn TRules,
+        stichseq: &SStichSequence,
+        epi_fixed: EPlayerIndex,
+        hand_fixed: &SHand, // TODO is this needed if we have itahand?
+        itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
+        n_suggest_card_branches: usize,
+        tpln_stoss_doubling: (usize, usize),
+        n_stock: isize,
+        opath_out_dir: Option<&std::path::Path>,
+    ) -> SCard {
+        assert!(!hand_fixed.cards().is_empty()); // TODO? introduce verify_that or similar
+        let determinebestcard = SDetermineBestCard::new(
+            rules,
+            stichseq,
+            hand_fixed,
+            epi_fixed,
+        );
+        determinebestcard
+            .single_allowed_card()
+            .unwrap_or_else(|| {
+                macro_rules! forward_to_determine_best_card{($func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
+                    {
+                        determine_best_card(
+                            &determinebestcard,
+                            itahand,
+                            $func_filter_allowed_cards,
+                            $foreachsnapshot,
+                            opath_out_dir.map(|path_out_dir| {
+                                debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
+                                crate::game_analysis::generate_html_auxiliary_files(path_out_dir).unwrap();
+                                path_out_dir
+                                    .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
+                            }),
+                        ).0
+                    }
+                }}
+                // TODORUST exhaustive_integer_patterns for isize/usize
+                // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
+                let make_minreachablepayoutparams = || {
+                    SMinReachablePayoutParams::new(
+                        rules,
+                        epi_fixed,
+                        tpln_stoss_doubling,
+                        n_stock,
+                    )
+                };
+                match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(stichseq)[determinebestcard.epi_fixed] {
+                    1|2|3 => forward_to_determine_best_card!(
+                        &|_,_| (/*no filtering*/),
+                        &SMinReachablePayout(make_minreachablepayoutparams()),
+                    ),
+                    4 => forward_to_determine_best_card!(
+                        &|_,_| (/*no filtering*/),
+                        &SMinReachablePayoutLowerBoundViaHint(make_minreachablepayoutparams()),
+                    ),
+                    5|6|7|8 => forward_to_determine_best_card!(
+                        &branching_factor(|_stichseq| {
+                            (1, n_suggest_card_branches+1)
+                        }),
+                        &SMinReachablePayoutLowerBoundViaHint(make_minreachablepayoutparams()),
+                    ),
+                    n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
+                }
+        })
+    }
+
+    pub fn suggest_card_simulating(
+        rules: &dyn TRules,
+        stichseq: &SStichSequence,
+        epi_fixed: EPlayerIndex,
+        hand_fixed: &SHand,
+        n_suggest_card_samples: usize,
+        n_suggest_card_branches: usize,
+        tpln_stoss_doubling: (usize, usize),
+        n_stock: isize,
+        opath_out_dir: Option<&std::path::Path>,
+    ) -> SCard {
+        macro_rules! forward_to_determine_best_card{($itahand: expr) => { // TODORUST generic closures
+            Self::suggest_card_internal(
+                rules,
+                stichseq,
+                epi_fixed,
+                hand_fixed,
+                $itahand,
+                n_suggest_card_branches,
+                tpln_stoss_doubling,
+                n_stock,
+                opath_out_dir,
+            )
+        }}
+        match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(stichseq)[epi_fixed] {
+            1|2|3|4 => forward_to_determine_best_card!(
+                all_possible_hands(stichseq, hand_fixed.clone(), epi_fixed, rules)
+            ),
+            5|6|7|8 => forward_to_determine_best_card!(
+                forever_rand_hands(stichseq, hand_fixed.clone(), epi_fixed, rules)
+                    .take(n_suggest_card_samples)
+            ),
+            n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
+        }
+    }
+
     pub fn suggest_card(&self, game: &SGame, opath_out_dir: Option<&std::path::Path>) -> SCard {
         let rules = game.rules.as_ref();
         if let Some(card) = rules.rulespecific_ai()
@@ -164,80 +267,34 @@ impl SAi {
                 debug_verify!(game.which_player_can_do_something()).unwrap().0,
                 debug_verify!(game.current_playable_stich().current_playerindex()).unwrap()
             );
-            let stichseq = &game.stichseq;
-            let hand_fixed = &game.ahand[epi_fixed];
-            assert!(!hand_fixed.cards().is_empty()); // TODO? introduce verify_that or similar
-            let determinebestcard = SDetermineBestCard::new(
-                rules,
-                stichseq,
-                hand_fixed,
-                epi_fixed,
-            );
-            determinebestcard
-                .single_allowed_card()
-                .unwrap_or_else(|| {
-                    macro_rules! forward_to_determine_best_card_itahand{($itahand: expr, $func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
-                        {
-                            determine_best_card(
-                                &determinebestcard,
-                                $itahand,
-                                $func_filter_allowed_cards,
-                                $foreachsnapshot,
-                                opath_out_dir.map(|path_out_dir| {
-                                    debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
-                                    crate::game_analysis::generate_html_auxiliary_files(path_out_dir).unwrap();
-                                    path_out_dir
-                                        .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
-                                }),
-                            ).0
-                        }
-                    }}
-                    macro_rules! forward_to_determine_best_card{($itahand_simulating: expr, $func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
-                        match self.aiparams {
-                            VAIParams::Cheating => { forward_to_determine_best_card_itahand!(
-                                Some(game.ahand.clone()).into_iter(),
-                                $func_filter_allowed_cards,
-                                $foreachsnapshot,
-                            ) },
-                            VAIParams::Simulating{n_suggest_card_samples} => { forward_to_determine_best_card_itahand!(
-                                $itahand_simulating(n_suggest_card_samples),
-                                $func_filter_allowed_cards,
-                                $foreachsnapshot,
-                            ) },
-                        }
-                    }}
-                    // TODORUST exhaustive_integer_patterns for isize/usize
-                    // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
-                    let make_minreachablepayoutparams = || {
-                        SMinReachablePayoutParams::new(
-                            rules,
-                            epi_fixed,
-                            /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
-                            game.n_stock,
-                        )
-                    };
-                    match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(stichseq)[determinebestcard.epi_fixed] {
-                        1|2|3 => forward_to_determine_best_card!(
-                            |_n_suggest_card_samples| all_possible_hands(stichseq, hand_fixed.clone(), determinebestcard.epi_fixed, rules),
-                            &|_,_| (/*no filtering*/),
-                            &SMinReachablePayout(make_minreachablepayoutparams()),
-                        ),
-                        4 => forward_to_determine_best_card!(
-                            |_n_suggest_card_samples| all_possible_hands(stichseq, hand_fixed.clone(), determinebestcard.epi_fixed, rules),
-                            &|_,_| (/*no filtering*/),
-                            &SMinReachablePayoutLowerBoundViaHint(make_minreachablepayoutparams()),
-                        ),
-                        5|6|7|8 => forward_to_determine_best_card!(
-                            |n_suggest_card_samples| forever_rand_hands(stichseq, hand_fixed.clone(), determinebestcard.epi_fixed, rules)
-                                .take(n_suggest_card_samples),
-                            &branching_factor(|_stichseq| {
-                                (1, self.n_suggest_card_branches+1)
-                            }),
-                            &SMinReachablePayoutLowerBoundViaHint(make_minreachablepayoutparams()),
-                        ),
-                        n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
-                    }
-            })
+            match self.aiparams {
+                VAIParams::Cheating => {
+                    Self::suggest_card_internal(
+                        rules,
+                        &game.stichseq,
+                        epi_fixed,
+                        /*hand_fixed*/&game.ahand[epi_fixed],
+                        /*itahand*/Some(game.ahand.clone()).into_iter(),
+                        self.n_suggest_card_branches,
+                        /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
+                        game.n_stock,
+                        opath_out_dir,
+                    )
+                },
+                VAIParams::Simulating{n_suggest_card_samples} => {
+                    Self::suggest_card_simulating(
+                        rules,
+                        &game.stichseq,
+                        epi_fixed,
+                        /*hand_fixed*/&game.ahand[epi_fixed],
+                        n_suggest_card_samples,
+                        self.n_suggest_card_branches,
+                        /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
+                        game.n_stock,
+                        opath_out_dir,
+                    )
+                },
+            }
         }
     }
 }
