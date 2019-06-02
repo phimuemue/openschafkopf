@@ -160,7 +160,10 @@ impl SAi {
         {
             card
         } else {
-            let epi_fixed = debug_verify!(game.which_player_can_do_something()).unwrap().0;
+            let epi_fixed = debug_verify_eq!(
+                debug_verify!(game.which_player_can_do_something()).unwrap().0,
+                debug_verify!(game.current_playable_stich().current_playerindex()).unwrap()
+            );
             let stichseq = &game.stichseq;
             let hand_fixed = &game.ahand[epi_fixed];
             assert!(!hand_fixed.cards().is_empty()); // TODO? introduce verify_that or similar
@@ -208,7 +211,7 @@ impl SAi {
                     let make_minreachablepayoutparams = || {
                         SMinReachablePayoutParams::new(
                             rules,
-                            debug_verify!(game.current_playable_stich().current_playerindex()).unwrap(),
+                            epi_fixed,
                             /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                             game.n_stock,
                         )
