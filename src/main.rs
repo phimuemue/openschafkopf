@@ -68,9 +68,27 @@ fn main() -> Result<(), Error> {
             .arg(clap_arg("hand", ""))
             .arg(clap_arg("position", "0"))
         )
+        .subcommand(clap::SubCommand::with_name("suggest-card")
+            .arg(clap::Arg::with_name("first_player_index")
+                .index(1) // positional arguments start at index 1 (https://docs.rs/clap/2.33.0/clap/struct.Arg.html#method.index)
+                .required(true)
+            )
+            .arg(clap::Arg::with_name("rules")
+                .index(2)
+                .required(true)
+            )
+            .arg(clap::Arg::with_name("hand")
+                .index(3)
+                .required(true)
+            )
+            .arg(clap::Arg::with_name("cards_in_order")
+                .index(4)
+                .required(true)
+            )
+        )
         .subcommand(clap::SubCommand::with_name("analyze")
             .arg(clap::Arg::with_name("sauspiel-files")
-                 .long("sauspiel-files")
+                 .required(true)
                  .takes_value(true)
                  .multiple(true)
             )
@@ -102,10 +120,13 @@ fn main() -> Result<(), Error> {
     fn get_ruleset(subcommand_matches: &clap::ArgMatches) -> Result<SRuleSet, Error> {
         SRuleSet::from_file(Path::new(debug_verify!(subcommand_matches.value_of("ruleset")).unwrap()))
     }
+    fn str_to_hand(str_hand: &str) -> Result<SHand, Error> {
+        Ok(SHand::new_from_vec(cardvector::parse_cards(str_hand).ok_or_else(||format_err!("Could not parse hand."))?))
+    }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
         let ruleset = get_ruleset(subcommand_matches)?;
         let str_hand = subcommand_matches.value_of("hand").ok_or_else(||format_err!("No hand given as parameter."))?;
-        let hand = SHand::new_from_vec(cardvector::parse_cards(str_hand).ok_or_else(||format_err!("Could not parse hand."))?);
+        let hand = str_to_hand(&str_hand)?;
         let hand = Some(hand).filter(|hand| hand.cards().len()==ruleset.ekurzlang.cards_per_player()).ok_or_else(||format_err!("Could not convert hand to a full hand of cards"))?;
         subcommands::rank_rules::rank_rules(
             &ruleset,
@@ -114,6 +135,16 @@ fn main() -> Result<(), Error> {
             &ai(subcommand_matches),
         );
         return Ok(())
+    }
+    if let Some(subcommand_matches)=clapmatches.subcommand_matches("suggest-card") {
+        return subcommands::suggest_card::suggest_card(
+            &debug_verify!(subcommand_matches.value_of("first_player_index")).unwrap(),
+            &debug_verify!(subcommand_matches.value_of("rules")).unwrap(),
+            &str_to_hand(&debug_verify!(subcommand_matches.value_of("hand")).unwrap())?,
+            &cardvector::parse_cards::<Vec<_>>(
+                &debug_verify!(subcommand_matches.value_of("cards_in_order")).unwrap(),
+            ).ok_or_else(||format_err!("Could not parse played cards"))?,
+        )
     }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("cli") {
         subcommands::cli::game_loop_cli(

@@ -57,12 +57,28 @@ impl EKurzLang {
         }
     }
 
-    pub fn from_cards_per_player(n_cards_per_player: usize) -> EKurzLang {
+    fn internal_from_cards_per_player<R, FnOk: FnOnce(EKurzLang)->R, FnErr: FnOnce()->R>(
+        n_cards_per_player: usize,
+        fn_ok: FnOk,
+        fn_err: FnErr,
+    ) -> R {
         match n_cards_per_player {
-            6 => EKurzLang::Kurz,
-            8 => EKurzLang::Lang,
-            _ => panic!("Cannot convert {} to EKurzLang.", n_cards_per_player),
+            6 => fn_ok(EKurzLang::Kurz),
+            8 => fn_ok(EKurzLang::Lang),
+            _ => fn_err(),
         }
+    }
+
+    pub fn from_cards_per_player(n_cards_per_player: usize) -> EKurzLang {
+        Self::internal_from_cards_per_player(
+            n_cards_per_player,
+            |ekurzlang| ekurzlang,
+            || panic!("Cannot convert {} to EKurzLang.", n_cards_per_player),
+        )
+    }
+
+    pub fn checked_from_cards_per_player(n_cards_per_player: usize) -> Option<EKurzLang> {
+        Self::internal_from_cards_per_player(n_cards_per_player, Some, || None)
     }
 
     pub fn supports_card(self, card: SCard) -> bool {
