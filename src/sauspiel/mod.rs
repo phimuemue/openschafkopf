@@ -8,6 +8,106 @@ use select::{
 };
 use crate::game_analysis::*;
 use crate::combine::{*, char::*};
+use crate::rules::*;
+
+pub fn parse_rule_description(
+    str_rules_with_player: &str,
+    (n_tarif_extra, n_tarif_ruf, n_tarif_solo): (isize, isize, isize),
+    fn_player_to_epi: impl FnOnce(&str)->Result<EPlayerIndex, Error>,
+) -> Result<Box<dyn TRules>, Error> {
+    use crate::rules::rulesrufspiel::*;
+    use crate::rules::rulessolo::*;
+    use crate::rules::rulesramsch::*;
+    use crate::rules::payoutdecider::*;
+    // TODO use combine
+    let vecstr_rule_parts = str_rules_with_player.split(" von ").collect::<Vec<_>>();
+    let epi_active = if_then_option!(2==vecstr_rule_parts.len(), vecstr_rule_parts[1])
+        .ok_or_else(|| format_err!("Cannot understand rule description: {}", str_rules_with_player))
+        .and_then(fn_player_to_epi)?;
+    // Regarding laufende:
+    // https://www.sauspiel.de/hilfe#71-beim-farbwenz-wurden-meine-laufende-nicht-berechnet
+    // https://www.schafkopfschule.de/index.php/regeln.html?file=files/inhalte/dokumente/Spielen/Regeln/Schafkopfregeln-Aktuell-29.3.2007.pdf (Section 4.2 Spielabrechnung)
+    choice!(
+        choice!(
+            attempt(
+                string("Sauspiel auf die ").with(choice!(
+                    attempt(string("Alte").map(|_str| EFarbe::Eichel)),
+                    attempt(string("Blaue").map(|_str| EFarbe::Gras)),
+                    attempt(string("Hundsgfickte").map(|_str| EFarbe::Schelln))
+                ))
+                .map(|efarbe| {
+                    Box::new(SRulesRufspiel::new(
+                        epi_active,
+                        efarbe,
+                        SPayoutDeciderParams::new(
+                            /*n_payout_base*/n_tarif_ruf,
+                            /*n_payout_schneider_schwarz*/n_tarif_extra,
+                            SLaufendeParams::new(
+                                /*n_payout_single_player*/n_tarif_extra,
+                                /*n_lauf_lbound*/3,
+                            ),
+                        )
+                    )) as Box<dyn TRules>
+                })
+            ),
+            attempt(
+                (
+                    optional(
+                        choice!(
+                            attempt(string("Eichel")).map(|_str| EFarbe::Eichel),
+                            attempt(string("Gras")).map(|_str| EFarbe::Gras),
+                            attempt(string("Herz")).map(|_str| EFarbe::Herz),
+                            attempt(string("Schellen")).map(|_str| EFarbe::Schelln) // different spelling on Sauspiel
+                        ).skip(char('-'))
+                    ),
+                    choice!(
+                        attempt(string("Solo")).map(|_str| ESoloLike::Solo),
+                        attempt(string("Farbwenz")).map(|_str| ESoloLike::Wenz),
+                        attempt(string("Wenz")).map(|_str| ESoloLike::Wenz),
+                        attempt(string("Geier")).map(|_str| ESoloLike::Geier)
+                    ),
+                    optional(string("-Tout")),
+                ).map(|(oefarbe, esololike, ostr_tout)| {
+                    macro_rules! make_sololike {($payoutdecider: ident) => {
+                        sololike(
+                            epi_active,
+                            oefarbe,
+                            esololike,
+                            $payoutdecider::default_payoutdecider(
+                                /*n_payout_base*/n_tarif_solo,
+                                /*n_payout_schneider_schwarz*/n_tarif_extra,
+                                SLaufendeParams::new(
+                                    /*n_payout_single_player*/n_tarif_extra,
+                                    /*n_lauf_lbound*/if let Some(_efarbe)=oefarbe {3} else {2},
+                                ),
+                            ),
+                        ).upcast().box_clone() // TODO this is terrible. Can't we upcast without cloning?
+                    }};
+                    if let Some(_str_tout) = ostr_tout {
+                        make_sololike!(SPayoutDeciderTout)
+                    } else {
+                        make_sololike!(SPayoutDeciderPointBased)
+                    }
+                })
+            )
+        ).skip(optional((
+            choice!(attempt(string(" mit ")),attempt(string(" ohne "))),
+            many1::<String,_>(digit())
+        ))),
+        attempt(string("Ramsch")).map(|_str_ramsch| {
+            Box::new(SRulesRamsch::new(
+                /*n_price*/n_tarif_ruf,
+                VDurchmarsch::AtLeast(91), // https://www.sauspiel.de/blog/66-bei-sauspiel-wird-jetzt-mit-ramsch-gespielt
+                // TODO Jungfrau
+            )) as Box<dyn TRules>
+        })
+    )
+        .skip(eof())
+        // end of parser
+        .parse(vecstr_rule_parts[0])
+        .map_err(|err| format_err!("Error in rule parsing: {:?} on {}", err, vecstr_rule_parts[0]))
+        .map(|(rules, _str)| rules)
+}
 
 pub fn analyze_html(str_html: &str) -> Result<SAnalyzeParams, failure::Error> {
     let doc = Document::from(&str_html as &str);
@@ -107,100 +207,11 @@ pub fn analyze_html(str_html: &str) -> Result<SAnalyzeParams, failure::Error> {
         .single()
         .map_err(|err| format_err!("h1 is not single: {:?}", err))
         .and_then(|node_rules| {
-            use crate::rules::*;
-            use crate::rules::rulesrufspiel::*;
-            use crate::rules::rulessolo::*;
-            use crate::rules::rulesramsch::*;
-            use crate::rules::payoutdecider::*;
-            let str_rules_with_player = node_rules.text();
-            // TODO use combine
-            let vecstr_rule_parts = str_rules_with_player.split(" von ").collect::<Vec<_>>();
-            let epi_active = if_then_option!(2==vecstr_rule_parts.len(), vecstr_rule_parts[1])
-                .ok_or_else(|| format_err!("Cannot understand rule description: {}", str_rules_with_player))
-                .and_then(username_to_epi)?;
-            // Regarding laufende:
-            // https://www.sauspiel.de/hilfe#71-beim-farbwenz-wurden-meine-laufende-nicht-berechnet
-            // https://www.schafkopfschule.de/index.php/regeln.html?file=files/inhalte/dokumente/Spielen/Regeln/Schafkopfregeln-Aktuell-29.3.2007.pdf (Section 4.2 Spielabrechnung)
-            choice!(
-                choice!(
-                    attempt(
-                        string("Sauspiel auf die ").with(choice!(
-                            attempt(string("Alte").map(|_str| EFarbe::Eichel)),
-                            attempt(string("Blaue").map(|_str| EFarbe::Gras)),
-                            attempt(string("Hundsgfickte").map(|_str| EFarbe::Schelln))
-                        ))
-                        .map(|efarbe| {
-                            Box::new(SRulesRufspiel::new(
-                                epi_active,
-                                efarbe,
-                                SPayoutDeciderParams::new(
-                                    /*n_payout_base*/n_tarif_ruf,
-                                    /*n_payout_schneider_schwarz*/n_tarif_extra,
-                                    SLaufendeParams::new(
-                                        /*n_payout_single_player*/n_tarif_extra,
-                                        /*n_lauf_lbound*/3,
-                                    ),
-                                )
-                            )) as Box<dyn TRules>
-                        })
-                    ),
-                    attempt(
-                        (
-                            optional(
-                                choice!(
-                                    attempt(string("Eichel")).map(|_str| EFarbe::Eichel),
-                                    attempt(string("Gras")).map(|_str| EFarbe::Gras),
-                                    attempt(string("Herz")).map(|_str| EFarbe::Herz),
-                                    attempt(string("Schellen")).map(|_str| EFarbe::Schelln) // different spelling on Sauspiel
-                                ).skip(char('-'))
-                            ),
-                            choice!(
-                                attempt(string("Solo")).map(|_str| ESoloLike::Solo),
-                                attempt(string("Farbwenz")).map(|_str| ESoloLike::Wenz),
-                                attempt(string("Wenz")).map(|_str| ESoloLike::Wenz),
-                                attempt(string("Geier")).map(|_str| ESoloLike::Geier)
-                            ),
-                            optional(string("-Tout")),
-                        ).map(|(oefarbe, esololike, ostr_tout)| {
-                            macro_rules! make_sololike {($payoutdecider: ident) => {
-                                sololike(
-                                    epi_active,
-                                    oefarbe,
-                                    esololike,
-                                    $payoutdecider::default_payoutdecider(
-                                        /*n_payout_base*/n_tarif_solo,
-                                        /*n_payout_schneider_schwarz*/n_tarif_extra,
-                                        SLaufendeParams::new(
-                                            /*n_payout_single_player*/n_tarif_extra,
-                                            /*n_lauf_lbound*/if let Some(_efarbe)=oefarbe {3} else {2},
-                                        ),
-                                    ),
-                                ).upcast().box_clone() // TODO this is terrible. Can't we upcast without cloning?
-                            }};
-                            if let Some(_str_tout) = ostr_tout {
-                                make_sololike!(SPayoutDeciderTout)
-                            } else {
-                                make_sololike!(SPayoutDeciderPointBased)
-                            }
-                        })
-                    )
-                ).skip(optional((
-                    choice!(attempt(string(" mit ")),attempt(string(" ohne "))),
-                    many1::<String,_>(digit())
-                ))),
-                attempt(string("Ramsch")).map(|_str_ramsch| {
-                    Box::new(SRulesRamsch::new(
-                        /*n_price*/n_tarif_ruf,
-                        VDurchmarsch::AtLeast(91), // https://www.sauspiel.de/blog/66-bei-sauspiel-wird-jetzt-mit-ramsch-gespielt
-                        // TODO Jungfrau
-                    )) as Box<dyn TRules>
-                })
+            parse_rule_description(
+                &node_rules.text(),
+                (n_tarif_extra, n_tarif_ruf, n_tarif_solo),
+                /*fn_player_to_epi*/username_to_epi,
             )
-                .skip(eof())
-                // end of parser
-                .parse(vecstr_rule_parts[0])
-                .map_err(|err| format_err!("Error in rule parsing: {:?} on {}", err, vecstr_rule_parts[0]))
-                .map(|(rules, _str)| rules)
         })?;
     let vecstich = doc.find(|node: &Node| node.inner_html()=="Stich von")
         .try_fold((EPlayerIndex::EPI0, Vec::new()), |(epi_first, mut vecstich), node| -> Result<_, _> {
