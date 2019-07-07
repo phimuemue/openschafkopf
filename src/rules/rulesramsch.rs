@@ -97,7 +97,7 @@ impl TRules for SRulesRamsch {
                 if 1==vecepi_most_points.len() {
                     vecepi_most_points[0]
                 } else {
-                    debug_verify!(vecepi_most_points.iter().cloned()
+                    debug_verify!(vecepi_most_points.iter().copied()
                         .map(|epi| {(
                             epi,
                             gamefinishedstiche.get().completed_stichs().iter()

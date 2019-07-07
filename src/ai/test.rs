@@ -26,7 +26,7 @@ fn test_determine_best_card() {
             [GO, SO, GU, HU, HA, EA, EZ, G7],
             [H9, H8, H7, E9, GK, SA, SK, S9],
         ]).map(|acard_hand|
-            SHand::new_from_vec(acard_hand.iter().cloned().collect())
+            SHand::new_from_vec(acard_hand.iter().copied().collect())
         ),
         game::SDoublings::new(epi_first_and_active_player),
         Some(SStossParams::new(

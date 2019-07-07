@@ -21,7 +21,7 @@ impl TRuleSpecificAI for SAIRufspiel<'_> {
         if epi!=rules.active_playerindex() && game.stichseq.no_card_played() {
             let hand = &game.ahand[epi];
             if !hand.contains(rules.rufsau()) {
-                let veccard_ruffarbe : Vec<_> = hand.cards().iter().cloned()
+                let veccard_ruffarbe : Vec<_> = hand.cards().iter().copied()
                     .filter(|&card| rules.trumpforfarbe(card)==rules.trumpforfarbe(rules.rufsau()))
                     .collect();
                 match (veccard_ruffarbe.len(), game.kurzlang()) {

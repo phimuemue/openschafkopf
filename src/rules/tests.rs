@@ -47,12 +47,12 @@ pub trait TCardArrayKurzLang {
 }
 impl TCardArrayKurzLang for [SCard; 6] {
     fn to_hand(&self) -> SHand {
-        SHand::new_from_vec(self.iter().cloned().collect())
+        SHand::new_from_vec(self.iter().copied().collect())
     }
 }
 impl TCardArrayKurzLang for [SCard; 8] {
     fn to_hand(&self) -> SHand {
-        SHand::new_from_vec(self.iter().cloned().collect())
+        SHand::new_from_vec(self.iter().copied().collect())
     }
 }
 

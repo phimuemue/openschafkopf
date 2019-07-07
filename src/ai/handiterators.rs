@@ -174,7 +174,7 @@ fn test_all_possible_hands() {
             let mut i_hand = 0;
             for ahand in make_handiterator::<SNextVecEPIPermutation>(
                 &stichseq,
-                SHand::new_from_vec(veccard_hand.iter().cloned().collect()),
+                SHand::new_from_vec(veccard_hand.iter().copied().collect()),
                 epi_fixed,
             ) {
                 i_hand+=1;

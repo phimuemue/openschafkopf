@@ -132,7 +132,7 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStic
             /*card_first_in_stich*/ *stichseq.current_stich().first(),
             hand,
             /*fn_farbe_not_frei*/|veccard_same_farbe| {
-                let veccard_allowed_higher_than_current_best = veccard_same_farbe.iter().cloned()
+                let veccard_allowed_higher_than_current_best = veccard_same_farbe.iter().copied()
                     .filter(|card| 
                         match rulesbettel.compare_in_stich_same_farbe(card_highest, *card) {
                             Ordering::Less => true,

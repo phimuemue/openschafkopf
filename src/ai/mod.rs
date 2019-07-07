@@ -321,7 +321,7 @@ fn test_unplayed_cards() {
             stichseq.zugeben_custom_winner_index(*card, |_stich| epi_irrelevant);
         }
     }
-    let hand = &SHand::new_from_vec([GK, SK].iter().cloned().collect());
+    let hand = &SHand::new_from_vec([GK, SK].iter().copied().collect());
     let veccard_unplayed = unplayed_cards(&stichseq, &hand).collect::<Vec<_>>();
     let veccard_unplayed_check = [GZ, E7, SZ, H9, EZ, GU];
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
@@ -412,7 +412,7 @@ fn test_is_compatible_with_game_so_far() {
     let test_game = |aacard_hand: [[SCard; 8]; 4], rules: &dyn TRules, epi_first, vectestaction: Vec<VTestAction>| {
         let ahand = EPlayerIndex::map_from_raw(aacard_hand)
             .map(|acard_hand|
-                SHand::new_from_vec(acard_hand.iter().cloned().collect())
+                SHand::new_from_vec(acard_hand.iter().copied().collect())
             );
         use crate::rules::ruleset::*;
         let mut game = game::SGame::new(
@@ -509,7 +509,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             [HO,HU,E8,G8,S8,GA,GZ,GK],
             [SO,SU,E9,G9,S9,SA,SZ,SK],
         ]).map(|acard_hand|
-            SHand::new_from_vec(acard_hand.iter().cloned().collect())
+            SHand::new_from_vec(acard_hand.iter().copied().collect())
         ),
         SDoublings::new(epi_first_and_active_player),
         Some(SStossParams::new(

@@ -175,7 +175,7 @@ impl TRules for SRulesRufspiel {
             hand.cards().clone()
         } else {
             hand.cards().iter()
-                .cloned()
+                .copied()
                 .filter(|&card| !self.is_ruffarbe(card) || self.rufsau()==card)
                 .collect()
         }
@@ -193,7 +193,7 @@ impl TRules for SRulesRufspiel {
             if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) && !b_weggelaufen {
                 return Some(self.rufsau()).into_iter().collect()
             }
-            let veccard_allowed : SHandVector = hand.cards().iter().cloned()
+            let veccard_allowed : SHandVector = hand.cards().iter().copied()
                 .filter(|&card| 
                     self.rufsau()!=card 
                     && self.trumpforfarbe(card)==self.trumpforfarbe(card_first)
@@ -203,7 +203,7 @@ impl TRules for SRulesRufspiel {
                 if b_weggelaufen {
                     hand.cards().clone()
                 } else {
-                    hand.cards().iter().cloned().filter(|&card| self.rufsau()!=card).collect()
+                    hand.cards().iter().copied().filter(|&card| self.rufsau()!=card).collect()
                 }
             } else {
                 veccard_allowed

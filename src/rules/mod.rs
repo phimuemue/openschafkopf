@@ -52,7 +52,7 @@ fn all_allowed_cards_within_stich_distinguish_farbe_frei (
     fn_farbe_not_frei: impl Fn(SHandVector)->SHandVector,
 ) -> SHandVector {
     let trumpforfarbe_first = rules.trumpforfarbe(card_first_in_stich);
-    let veccard_same_farbe : SHandVector = hand.cards().iter().cloned()
+    let veccard_same_farbe : SHandVector = hand.cards().iter().copied()
         .filter(|&card| rules.trumpforfarbe(card)==trumpforfarbe_first)
         .collect();
     if veccard_same_farbe.is_empty() {

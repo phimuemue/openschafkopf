@@ -266,8 +266,8 @@ impl TPayoutDecider for SPayoutDeciderSie {
     ) -> (Option<isize>, Option<isize>)
         where Rules: TRulesNoObj
     {
-        let itcard = stichseq.visible_stichs().filter_map(|stich| stich.get(playerparties13.primary_player())).cloned()
-            .chain(ahand[playerparties13.primary_player()].cards().iter().cloned());
+        let itcard = stichseq.visible_stichs().filter_map(|stich| stich.get(playerparties13.primary_player())).copied()
+            .chain(ahand[playerparties13.primary_player()].cards().iter().copied());
         if
             !cards_valid_for_sie(
                 rules,
