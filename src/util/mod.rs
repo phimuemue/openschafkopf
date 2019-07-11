@@ -107,6 +107,16 @@ pub trait IteratorExt : Iterator {
             }
         }
     }
+
+    fn fold_mutating<B, F: FnMut(&mut B, Self::Item)>(self, init: B, mut f: F) -> B
+        where
+            Self: Sized,
+    {
+        self.fold(init, move |mut b, item| {
+            f(&mut b, item);
+            b
+        })
+    }
 }
 
 impl<It> IteratorExt for It where It: Iterator {}

@@ -169,7 +169,7 @@ impl SRuleStateCache {
                 mapcardoepi.iter().filter_map(|&oepi_card| oepi_card).filter(|epi_card| *epi_card==epi).count()==stichseq.kurzlang().cards_per_player()
             }));
         }
-        stichseq.completed_stichs_custom_winner_index(fn_winner_index).fold(
+        stichseq.completed_stichs_custom_winner_index(fn_winner_index).fold_mutating(
             Self {
                 changing: SRuleStateCacheChanging {
                     mapepipointstichcount: EPlayerIndex::map_from_fn(|_epi| SPointStichCount {
@@ -181,9 +181,8 @@ impl SRuleStateCache {
                     mapcardoepi,
                 }
             },
-            |mut rulestatecache, (stich, epi_winner)| {
+            |rulestatecache, (stich, epi_winner)| {
                 rulestatecache.register_stich(stich, epi_winner);
-                rulestatecache
             },
         )
     }

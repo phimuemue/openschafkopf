@@ -61,11 +61,10 @@ impl TRules for SRulesRamsch {
         debug_assert_eq!(
             EPlayerIndex::map_from_fn(points_for_player),
             gamefinishedstiche.get().completed_stichs_winner_index(self)
-                .fold(
+                .fold_mutating(
                     EPlayerIndex::map_from_fn(|_epi| 0),
-                    |mut an_points_accu, (stich, epi_winner)| {
+                    |an_points_accu, (stich, epi_winner)| {
                         an_points_accu[epi_winner] += points_stich(stich);
-                        an_points_accu
                     }
                 )
         );

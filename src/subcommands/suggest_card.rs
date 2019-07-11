@@ -23,14 +23,13 @@ pub fn suggest_card(
     )
         .ok_or_else(|| format_err!("Cannot determine ekurzlang from {} and {:?}.", hand_fixed, slccard_as_played))?;
     let stichseq = slccard_as_played.iter()
-        .fold(
+        .fold_mutating(
             SStichSequence::new(
                 fn_str_to_epi(str_epi_first)?,
                 ekurzlang,
             ),
-            |mut stichseq, card| {
+            |stichseq, card| {
                 stichseq.zugeben(*card, rules);
-                stichseq
             }
         );
     println!( // TODO interface should probably output payout interval per card
