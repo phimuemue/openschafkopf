@@ -28,17 +28,12 @@ FLAGS:
     -V, --version    Prints version information
 
 SUBCOMMANDS:
-    analyze       
-    cli           
-    help          Prints this message or the help of the given subcommand(s)
-    rank-rules    
+    analyze         Analyze played games and spot suboptimal decisions
+    cli             Simulate players to play against
+    help            Prints this message or the help of the given subcommand(s)
+    rank-rules      Estimate strength of own hand
+    suggest-card    Suggest a card to play given the game so far
 ```
-
-## Features
-
-* Estimate strength of own hand.
-* Simulate players to play against.
-* Analyze played games and spot suboptimal decisions.
 
 ## Supported variants
 
