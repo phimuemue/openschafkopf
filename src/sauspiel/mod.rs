@@ -21,7 +21,7 @@ pub fn parse_rule_description(
     use crate::rules::payoutdecider::*;
     // TODO use combine
     let vecstr_rule_parts = str_rules_with_player.split(" von ").collect::<Vec<_>>();
-    let epi_active = if_then_option!(2==vecstr_rule_parts.len(), vecstr_rule_parts[1])
+    let epi_active = if_then_some!(2==vecstr_rule_parts.len(), vecstr_rule_parts[1])
         .ok_or_else(|| format_err!("Cannot understand rule description: {}", str_rules_with_player))
         .and_then(fn_player_to_epi)?;
     // Regarding laufende:
@@ -112,7 +112,7 @@ pub fn parse_rule_description(
 pub fn analyze_html(str_html: &str) -> Result<SAnalyzeParams, failure::Error> {
     let doc = Document::from(&str_html as &str);
     fn vec_to_arr<T: std::fmt::Debug+Clone/*TODO can we avoid clone?*/>(vect: Vec<T>) -> Result<[T; EPlayerIndex::SIZE], failure::Error> {
-        if_then_option!(
+        if_then_some!(
             EPlayerIndex::SIZE==vect.len(),
             [vect[0].clone(), vect[1].clone(), vect[2].clone(), vect[3].clone()]
         ).ok_or_else(|| format_err!("Wrong number of elements ({}) in {:?}", vect.len(), vect))

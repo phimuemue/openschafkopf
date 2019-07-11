@@ -96,7 +96,7 @@ impl<T> SPlayersInRound<T> {
         self.epi_first
     }
     pub fn current_playerindex(&self) -> Option<EPlayerIndex> {
-        if_then_option!(
+        if_then_some!(
             !self.is_full(),
             self.first_playerindex().wrapping_add(self.size())
         )
@@ -136,7 +136,7 @@ impl<T> SPlayersInRound<T> {
         self.position(epi)<self.size()
     }
     pub fn get(&self, epi: EPlayerIndex) -> Option<&T> {
-        if_then_option!(self.valid_index(epi), &self[epi])
+        if_then_some!(self.valid_index(epi), &self[epi])
     }
 }
 

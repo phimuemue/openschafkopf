@@ -291,7 +291,7 @@ impl TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'_> {
             .as_ref()
             .and_then(|payoutinfo| {
                 let n_payout = payoutinfo.payout_including_stock(self.0.n_stock, self.0.tpln_stoss_doubling);
-                if_then_option!(0<n_payout, n_payout)
+                if_then_some!(0<n_payout, n_payout)
             })
     }
 
