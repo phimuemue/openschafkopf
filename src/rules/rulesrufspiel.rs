@@ -167,7 +167,7 @@ impl TRules for SRulesRufspiel {
                     || stich.iter().any(|(_, card)| *card==self.rufsau()) // We explicitly traverse all cards because it may be allowed (by exotic rules) to schmier rufsau even if not gesucht.
                 } )
             // Remark: Player must have 4 cards of ruffarbe on his hand *at this point of time* (i.e. not only at the beginning!)
-            || !hand.contains(self.rufsau()) 
+            || !hand.contains(self.rufsau())
             || 4 <= hand.cards().iter()
                 .filter(|&card| self.is_ruffarbe(*card))
                 .count()
