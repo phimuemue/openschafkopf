@@ -263,36 +263,29 @@ impl SAi {
         {
             card
         } else {
-            let epi_fixed = debug_verify_eq!(
-                debug_verify!(game.which_player_can_do_something()).unwrap().0,
-                debug_verify!(game.current_playable_stich().current_playerindex()).unwrap()
-            );
+            macro_rules! suggest_via{($fn_suggest: ident, $arg: expr) => {{ // TODORUST generic closures
+                let epi_fixed = debug_verify_eq!(
+                    debug_verify!(game.which_player_can_do_something()).unwrap().0,
+                    debug_verify!(game.current_playable_stich().current_playerindex()).unwrap()
+                );
+                Self::$fn_suggest(
+                    rules,
+                    &game.stichseq,
+                    epi_fixed,
+                    /*hand_fixed*/&game.ahand[epi_fixed],
+                    $arg,
+                    self.n_suggest_card_branches,
+                    /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
+                    game.n_stock,
+                    opath_out_dir,
+                )
+            }}}
             match self.aiparams {
                 VAIParams::Cheating => {
-                    Self::suggest_card_internal(
-                        rules,
-                        &game.stichseq,
-                        epi_fixed,
-                        /*hand_fixed*/&game.ahand[epi_fixed],
-                        /*itahand*/Some(game.ahand.clone()).into_iter(),
-                        self.n_suggest_card_branches,
-                        /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
-                        game.n_stock,
-                        opath_out_dir,
-                    )
+                    suggest_via!(suggest_card_internal, /*itahand*/Some(game.ahand.clone()).into_iter())
                 },
                 VAIParams::Simulating{n_suggest_card_samples} => {
-                    Self::suggest_card_simulating(
-                        rules,
-                        &game.stichseq,
-                        epi_fixed,
-                        /*hand_fixed*/&game.ahand[epi_fixed],
-                        n_suggest_card_samples,
-                        self.n_suggest_card_branches,
-                        /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
-                        game.n_stock,
-                        opath_out_dir,
-                    )
+                    suggest_via!(suggest_card_simulating, n_suggest_card_samples)
                 },
             }
         }
