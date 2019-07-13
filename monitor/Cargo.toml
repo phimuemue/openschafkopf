@@ -1,0 +1,10 @@
+[package]
+name = "openschafkopf_monitor"
+version = "0.1.0"
+authors = ["openschafkopf"]
+edition = "2018"
+
+[dependencies]
+serde_json = "1"
+byteorder = "1"
+as_num = "0"
