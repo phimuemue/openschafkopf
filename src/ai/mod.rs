@@ -313,12 +313,12 @@ pub struct SDetermineBestCardResult<T> {
 }
 
 impl<T> SDetermineBestCardResult<T> {
+    pub fn cards_and_ts(&self) -> impl Iterator<Item=(SCard, &T)> {
+        self.veccard_allowed.iter()
+            .map(move |card| (*card, &self.mapcardt[*card]))
+    }
     pub fn best_card(&self) -> (SCard, &T) where T: Ord+std::fmt::Debug {
-        let card = debug_verify!(
-            self.veccard_allowed.iter()
-                .max_by_key(|&card| &self.mapcardt[*card])
-        ).unwrap();
-        (*card, &self.mapcardt[*card])
+        debug_verify!(self.cards_and_ts().max_by_key(|&(_card, t)| t)).unwrap()
     }
 }
 

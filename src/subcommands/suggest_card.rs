@@ -1,6 +1,7 @@
 use crate::util::*;
 use crate::primitives::*;
 use crate::game::SStichSequence;
+use crate::ai::VSuggestCardResult;
 
 pub fn suggest_card(
     str_epi_first: &str,
@@ -32,19 +33,28 @@ pub fn suggest_card(
                 stichseq.zugeben(*card, rules);
             }
         );
-    println!( // TODO interface should probably output payout interval per card
-        "{}",
-        crate::ai::SAi::suggest_card_simulating(
-            rules,
-            &stichseq,
-            debug_verify!(stichseq.current_stich().current_playerindex()).unwrap(),
-            hand_fixed,
-            /*n_suggest_card_samples*/50, // TODO? make customizable
-            /*n_suggest_card_branches*/2, // TODO? make customizable
-            /*tpln_stoss_doubling*/(0, 0), // TODO
-            /*n_stock*/0, // TODO
-            /*opath_out_dir*/None,
-        ).best_card()
-    );
+    match crate::ai::SAi::suggest_card_simulating(
+        rules,
+        &stichseq,
+        debug_verify!(stichseq.current_stich().current_playerindex()).unwrap(),
+        hand_fixed,
+        /*n_suggest_card_samples*/50, // TODO? make customizable
+        /*n_suggest_card_branches*/2, // TODO? make customizable
+        /*tpln_stoss_doubling*/(0, 0), // TODO
+        /*n_stock*/0, // TODO
+        /*opath_out_dir*/None,
+    ) {
+        VSuggestCardResult::SingleAllowed(card) => {
+            println!("{}: no choice", card);
+        },
+        VSuggestCardResult::MultipleAllowed(determinebestcardresult) => {
+            // TODO interface should probably output payout interval per card
+            let mut veccardn_payout = determinebestcardresult.cards_and_ts().collect::<Vec<_>>();
+            veccardn_payout.sort_unstable_by_key(|&(_card, n_payout)| /*descending*/-n_payout);
+            for (card, n_payout) in veccardn_payout {
+                println!("{}: {}", card, n_payout);
+            }
+        },
+    }
     Ok(())
 }
