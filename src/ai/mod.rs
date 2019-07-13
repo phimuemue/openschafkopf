@@ -103,10 +103,11 @@ pub fn determine_best_card(
             foreachsnapshot,
             opath_out_dir,
         );
-        debug_verify!(determinebestcard.veccard_allowed.iter()
-            .max_by_key(|&card| mapcardn_payout[*card]))
-            .map(|card| (*card, mapcardn_payout[*card]))
-            .unwrap()
+        debug_verify!(
+            determinebestcard.veccard_allowed.iter()
+                .max_by_key(|&card| mapcardn_payout[*card])
+                .map(|card| (*card, mapcardn_payout[*card]))
+        ).unwrap()
 }
 
 impl SAi {
