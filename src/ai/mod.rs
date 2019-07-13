@@ -151,22 +151,20 @@ impl SAi {
         determinebestcard
             .single_allowed_card()
             .unwrap_or_else(|| {
-                macro_rules! forward_to_determine_best_card{($func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => { // TODORUST generic closures
-                    {
-                        determine_best_card(
-                            &determinebestcard,
-                            itahand,
-                            $func_filter_allowed_cards,
-                            $foreachsnapshot,
-                            opath_out_dir.map(|path_out_dir| {
-                                debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
-                                crate::game_analysis::generate_html_auxiliary_files(path_out_dir).unwrap();
-                                path_out_dir
-                                    .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
-                            }),
-                        ).best_card().0
-                    }
-                }}
+                macro_rules! forward_to_determine_best_card{($func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => {{ // TODORUST generic closures
+                    determine_best_card(
+                        &determinebestcard,
+                        itahand,
+                        $func_filter_allowed_cards,
+                        $foreachsnapshot,
+                        opath_out_dir.map(|path_out_dir| {
+                            debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
+                            crate::game_analysis::generate_html_auxiliary_files(path_out_dir).unwrap();
+                            path_out_dir
+                                .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
+                        }),
+                    ).best_card().0
+                }}}
                 // TODORUST exhaustive_integer_patterns for isize/usize
                 // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
                 let make_minreachablepayoutparams = || {
