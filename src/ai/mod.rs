@@ -131,23 +131,13 @@ impl SAi {
     }
 
     pub fn suggest_card_internal(
-        rules: &dyn TRules,
-        stichseq: &SStichSequence,
-        epi_fixed: EPlayerIndex,
-        hand_fixed: &SHand, // TODO is this needed if we have itahand?
+        determinebestcard: &SDetermineBestCard,
         itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
         n_suggest_card_branches: usize,
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
         opath_out_dir: Option<&std::path::Path>,
     ) -> SCard {
-        assert!(!hand_fixed.cards().is_empty()); // TODO? introduce verify_that or similar
-        let determinebestcard = SDetermineBestCard::new(
-            rules,
-            stichseq,
-            hand_fixed,
-            epi_fixed,
-        );
         determinebestcard
             .single_allowed_card()
             .unwrap_or_else(|| {
@@ -169,13 +159,13 @@ impl SAi {
                 // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
                 let make_minreachablepayoutparams = || {
                     SMinReachablePayoutParams::new(
-                        rules,
-                        epi_fixed,
+                        determinebestcard.rules,
+                        determinebestcard.epi_fixed,
                         tpln_stoss_doubling,
                         n_stock,
                     )
                 };
-                match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(stichseq)[determinebestcard.epi_fixed] {
+                match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[determinebestcard.epi_fixed] {
                     1|2|3 => forward_to_determine_best_card!(
                         &|_,_| (/*no filtering*/),
                         &SMinReachablePayout(make_minreachablepayoutparams()),
@@ -208,10 +198,12 @@ impl SAi {
     ) -> SCard {
         macro_rules! forward_to_determine_best_card{($itahand: expr) => { // TODORUST generic closures
             Self::suggest_card_internal(
-                rules,
-                stichseq,
-                epi_fixed,
-                hand_fixed,
+                &SDetermineBestCard::new(
+                    rules,
+                    stichseq,
+                    hand_fixed,
+                    epi_fixed,
+                ),
                 $itahand,
                 n_suggest_card_branches,
                 tpln_stoss_doubling,
@@ -232,23 +224,14 @@ impl SAi {
     }
 
     pub fn suggest_card(&self, game: &SGame, opath_out_dir: Option<&std::path::Path>) -> SCard {
-        let rules = game.rules.as_ref();
-        if let Some(card) = rules.rulespecific_ai()
+        if let Some(card) = game.rules.rulespecific_ai()
             .and_then(|airulespecific| airulespecific.suggest_card(game))
         {
             card
         } else {
-            macro_rules! suggest_via{($fn_suggest: ident, $arg: expr) => {{ // TODORUST generic closures
-                let epi_fixed = debug_verify_eq!(
-                    debug_verify!(game.which_player_can_do_something()).unwrap().0,
-                    debug_verify!(game.current_playable_stich().current_playerindex()).unwrap()
-                );
+            macro_rules! suggest_via{($fn_suggest: ident, $($arg: expr,)*) => {{ // TODORUST generic closures
                 Self::$fn_suggest(
-                    rules,
-                    &game.stichseq,
-                    epi_fixed,
-                    /*hand_fixed*/&game.ahand[epi_fixed],
-                    $arg,
+                    $($arg,)*
                     self.n_suggest_card_branches,
                     /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                     game.n_stock,
@@ -257,10 +240,23 @@ impl SAi {
             }}}
             match self.aiparams {
                 VAIParams::Cheating => {
-                    suggest_via!(suggest_card_internal, /*itahand*/Some(game.ahand.clone()).into_iter())
+                    suggest_via!(suggest_card_internal,
+                        &SDetermineBestCard::new_from_game(game),
+                        /*itahand*/Some(game.ahand.clone()).into_iter(),
+                    )
                 },
                 VAIParams::Simulating{n_suggest_card_samples} => {
-                    suggest_via!(suggest_card_simulating, n_suggest_card_samples)
+                    let epi_fixed = debug_verify_eq!(
+                        debug_verify!(game.which_player_can_do_something()).unwrap().0,
+                        debug_verify!(game.current_playable_stich().current_playerindex()).unwrap()
+                    );
+                    suggest_via!(suggest_card_simulating,
+                        game.rules.as_ref(),
+                        &game.stichseq,
+                        epi_fixed,
+                        /*hand_fixed*/&game.ahand[epi_fixed],
+                        n_suggest_card_samples,
+                    )
                 },
             }
         }
