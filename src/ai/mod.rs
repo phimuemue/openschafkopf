@@ -94,10 +94,7 @@ pub fn determine_best_card(
     opath_out_dir: Option<std::path::PathBuf>,
 ) -> (SCard, isize) {
         let mapcardn_payout = determine_best_card_internal(
-            determinebestcard.epi_fixed,
-            &determinebestcard.veccard_allowed,
-            determinebestcard.rules,
-            &determinebestcard.stichseq,
+            determinebestcard,
             itahand,
             func_filter_allowed_cards,
             foreachsnapshot,
@@ -324,10 +321,7 @@ fn test_unplayed_cards() {
 }
 
 fn determine_best_card_internal(
-    epi_fixed: EPlayerIndex,
-    slccard_allowed: &[SCard],
-    rules: &dyn TRules,
-    stichseq: &SStichSequence,
+    determinebestcard: &SDetermineBestCard,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Sync),
@@ -341,20 +335,20 @@ fn determine_best_card_internal(
         .collect::<Vec<_>>() // TODO necessary?
         .into_par_iter()
         .flat_map(|(i_susp, ahand)|
-            slccard_allowed.par_iter()
+            determinebestcard.veccard_allowed.par_iter()
                 .map(move |card| (i_susp, ahand.clone(), *card))
         )
         .for_each(|(i_susp, ahand, card)| {
-            debug_assert!(ahand[epi_fixed].cards().contains(&card));
+            debug_assert!(ahand[determinebestcard.epi_fixed].cards().contains(&card));
             let mut ahand = ahand.clone();
             let mapcardn_payout = Arc::clone(&mapcardn_payout);
-            assert!(ahand_vecstich_card_count_is_compatible(stichseq, &ahand));
-            let mut stichseq = stichseq.clone();
-            ahand[epi_fixed].play_card(card);
-            stichseq.zugeben(card, rules);
+            let mut stichseq = determinebestcard.stichseq.clone();
+            assert!(ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
+            ahand[determinebestcard.epi_fixed].play_card(card);
+            stichseq.zugeben(card, determinebestcard.rules);
             let n_payout = explore_snapshots(
                 &mut ahand,
-                rules,
+                determinebestcard.rules,
                 &mut stichseq,
                 func_filter_allowed_cards,
                 foreachsnapshot,
@@ -364,7 +358,7 @@ fn determine_best_card_internal(
                         path_out_dir
                             .join(format!("{}_{}.html", i_susp, card))
                     )).unwrap()
-                }).map(|file_output| (file_output, epi_fixed)),
+                }).map(|file_output| (file_output, determinebestcard.epi_fixed)),
             );
             let mut mapcardn_payout = debug_verify!(mapcardn_payout.lock()).unwrap();
             mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
@@ -374,7 +368,7 @@ fn determine_best_card_internal(
             .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
     ).unwrap();
     assert!(<SCard as TPlainEnum>::values().any(|card| {
-        slccard_allowed.contains(&card) && mapcardn_payout[card] < std::isize::MAX
+        determinebestcard.veccard_allowed.contains(&card) && mapcardn_payout[card] < std::isize::MAX
     }));
     mapcardn_payout
 }
@@ -531,20 +525,16 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
     ) {
         let stich_current = game.current_playable_stich();
         assert!(!stich_current.is_full());
-        let epi_fixed = debug_verify!(stich_current.current_playerindex()).unwrap();
-        let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &game.ahand[epi_fixed]);
+        let determinebestcard = SDetermineBestCard::new_from_game(&game);
         let mapcardpayout = determine_best_card_internal(
-            epi_fixed,
-            &veccard_allowed,
-            game.rules.as_ref(),
-            &game.stichseq,
+            &determinebestcard,
             Some(ahand).into_iter(),
             /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(&game)),
             /*opath_out_dir*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
         );
         for card in [H7, H8, H9].iter() {
-            assert!(veccard_allowed.contains(card));
+            assert!(determinebestcard.veccard_allowed.contains(card));
             assert!(
                 mapcardpayout[*card] == std::isize::MAX
                 || mapcardpayout[*card] == 3*(n_payout_base+2*n_payout_schneider_schwarz)
