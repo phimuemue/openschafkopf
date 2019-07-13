@@ -14,6 +14,7 @@ impl<TOk, TErr> TVerifiableByVerifyMacro for Result<TOk, TErr> {
     }
 }
 
+#[macro_export]
 macro_rules! verify {($e: expr) => {
     {
         let e = $e;
@@ -22,10 +23,12 @@ macro_rules! verify {($e: expr) => {
     }
 }}
 
+#[macro_export]
 macro_rules! debug_verify{($e: expr) => {
     if_dbg_else!({verify!($e)}{$e})
 }}
 
+#[macro_export]
 macro_rules! verify_eq {($e: expr, $e_chk: expr) => {
     {
         let e = $e;
@@ -34,6 +37,7 @@ macro_rules! verify_eq {($e: expr, $e_chk: expr) => {
     }
 }}
 
+#[macro_export]
 macro_rules! debug_verify_eq {($e: expr, $e_chk: expr) => {
     if_dbg_else!({verify_eq!($e, $e_chk)}{$e})
 }}

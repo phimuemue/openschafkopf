@@ -24,6 +24,8 @@ extern crate chrono;
 extern crate select;
 extern crate combine;
 extern crate glob;
+#[macro_use]
+extern crate openschafkopf_util;
 
 #[macro_use]
 mod util;

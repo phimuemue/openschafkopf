@@ -1,33 +1,14 @@
 extern crate serde_json;
 extern crate byteorder;
 extern crate as_num;
+extern crate openschafkopf_util;
+use openschafkopf_util::*;
 use as_num::AsNum;
 use byteorder::ByteOrder;
 use serde_json::json;
 use std::io::{Read, Write};
 
 // TODO proper logging
-
-macro_rules! debug_verify{($e: expr) => {$e}} // TODO same as in openschafkopf
-
-pub trait IteratorExt : Iterator { // TODO same as in openschafkopf
-    fn single(&mut self) -> Result<Self::Item, ESingleError> {
-        match self.next() {
-            None => Err(ESingleError::Empty),
-            Some(element) => {
-                match self.next() {
-                    None => Ok(element),
-                    Some(_) => Err(ESingleError::MoreThanOne),
-                }
-            }
-        }
-    }
-}
-
-impl<It> IteratorExt for It where It: Iterator {}
-
-#[derive(Debug)]
-pub enum ESingleError {Empty, MoreThanOne}
 
 fn main() {
     use std::sync::{Arc, Mutex};
