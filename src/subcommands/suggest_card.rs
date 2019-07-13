@@ -44,7 +44,7 @@ pub fn suggest_card(
             /*tpln_stoss_doubling*/(0, 0), // TODO
             /*n_stock*/0, // TODO
             /*opath_out_dir*/None,
-        )
+        ).best_card()
     );
     Ok(())
 }

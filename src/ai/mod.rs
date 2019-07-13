@@ -86,6 +86,20 @@ impl<'game> SDetermineBestCard<'game> {
     }
 }
 
+pub enum VSuggestCardResult<T> {
+    SingleAllowed(SCard),
+    MultipleAllowed(SDetermineBestCardResult<T>),
+}
+
+impl<T> VSuggestCardResult<T> {
+    pub fn best_card(&self) -> SCard where T: Ord+std::fmt::Debug {
+        match self {
+            VSuggestCardResult::SingleAllowed(card) => *card,
+            VSuggestCardResult::MultipleAllowed(determinebestcardresult) => determinebestcardresult.best_card().0,
+        }
+    }
+}
+
 impl SAi {
     pub fn new_cheating(n_rank_rules_samples: usize, n_suggest_card_branches: usize) -> Self {
         SAi {
@@ -137,52 +151,52 @@ impl SAi {
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
         opath_out_dir: Option<&std::path::Path>,
-    ) -> SCard {
-        determinebestcard
-            .single_allowed_card()
-            .unwrap_or_else(|| {
-                macro_rules! forward_to_determine_best_card{($func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => {{ // TODORUST generic closures
-                    determine_best_card(
-                        &determinebestcard,
-                        itahand,
-                        $func_filter_allowed_cards,
-                        $foreachsnapshot,
-                        opath_out_dir.map(|path_out_dir| {
-                            debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
-                            crate::game_analysis::generate_html_auxiliary_files(path_out_dir).unwrap();
-                            path_out_dir
-                                .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
-                        }),
-                    ).best_card().0
-                }}}
-                // TODORUST exhaustive_integer_patterns for isize/usize
-                // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
-                let make_minreachablepayoutparams = || {
-                    SMinReachablePayoutParams::new(
-                        determinebestcard.rules,
-                        determinebestcard.epi_fixed,
-                        tpln_stoss_doubling,
-                        n_stock,
-                    )
-                };
-                match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[determinebestcard.epi_fixed] {
-                    1|2|3 => forward_to_determine_best_card!(
-                        &|_,_| (/*no filtering*/),
-                        &SMinReachablePayout(make_minreachablepayoutparams()),
-                    ),
-                    4 => forward_to_determine_best_card!(
-                        &|_,_| (/*no filtering*/),
-                        &SMinReachablePayoutLowerBoundViaHint(make_minreachablepayoutparams()),
-                    ),
-                    5|6|7|8 => forward_to_determine_best_card!(
-                        &branching_factor(|_stichseq| {
-                            (1, n_suggest_card_branches+1)
-                        }),
-                        &SMinReachablePayoutLowerBoundViaHint(make_minreachablepayoutparams()),
-                    ),
-                    n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
-                }
-        })
+    ) -> VSuggestCardResult<isize> {
+        if let Some(card) = determinebestcard.single_allowed_card() {
+            VSuggestCardResult::SingleAllowed(card)
+        } else {
+            macro_rules! forward_to_determine_best_card{($func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => {{ // TODORUST generic closures
+                VSuggestCardResult::MultipleAllowed(determine_best_card(
+                    &determinebestcard,
+                    itahand,
+                    $func_filter_allowed_cards,
+                    $foreachsnapshot,
+                    opath_out_dir.map(|path_out_dir| {
+                        debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
+                        crate::game_analysis::generate_html_auxiliary_files(path_out_dir).unwrap();
+                        path_out_dir
+                            .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
+                    }),
+                ))
+            }}}
+            // TODORUST exhaustive_integer_patterns for isize/usize
+            // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
+            let make_minreachablepayoutparams = || {
+                SMinReachablePayoutParams::new(
+                    determinebestcard.rules,
+                    determinebestcard.epi_fixed,
+                    tpln_stoss_doubling,
+                    n_stock,
+                )
+            };
+            match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[determinebestcard.epi_fixed] {
+                1|2|3 => forward_to_determine_best_card!(
+                    &|_,_| (/*no filtering*/),
+                    &SMinReachablePayout(make_minreachablepayoutparams()),
+                ),
+                4 => forward_to_determine_best_card!(
+                    &|_,_| (/*no filtering*/),
+                    &SMinReachablePayoutLowerBoundViaHint(make_minreachablepayoutparams()),
+                ),
+                5|6|7|8 => forward_to_determine_best_card!(
+                    &branching_factor(|_stichseq| {
+                        (1, n_suggest_card_branches+1)
+                    }),
+                    &SMinReachablePayoutLowerBoundViaHint(make_minreachablepayoutparams()),
+                ),
+                n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
+            }
+        }
     }
 
     pub fn suggest_card_simulating(
@@ -195,7 +209,7 @@ impl SAi {
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
         opath_out_dir: Option<&std::path::Path>,
-    ) -> SCard {
+    ) -> VSuggestCardResult<isize> {
         macro_rules! forward_to_determine_best_card{($itahand: expr) => { // TODORUST generic closures
             Self::suggest_card_internal(
                 &SDetermineBestCard::new(
@@ -236,7 +250,7 @@ impl SAi {
                     /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                     game.n_stock,
                     opath_out_dir,
-                )
+                ).best_card()
             }}}
             match self.aiparams {
                 VAIParams::Cheating => {
@@ -293,28 +307,28 @@ fn test_unplayed_cards() {
     assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
 }
 
-pub struct SDetermineBestCardResult<'determinebestcard, T> {
-    determinebestcard: &'determinebestcard SDetermineBestCard<'determinebestcard>,
+pub struct SDetermineBestCardResult<T> {
+    veccard_allowed: SHandVector,
     mapcardt: EnumMap<SCard, T>,
 }
 
-impl<'determinebestcard, T> SDetermineBestCardResult<'determinebestcard, T> {
+impl<T> SDetermineBestCardResult<T> {
     pub fn best_card(&self) -> (SCard, &T) where T: Ord+std::fmt::Debug {
         let card = debug_verify!(
-            self.determinebestcard.veccard_allowed.iter()
+            self.veccard_allowed.iter()
                 .max_by_key(|&card| &self.mapcardt[*card])
         ).unwrap();
         (*card, &self.mapcardt[*card])
     }
 }
 
-pub fn determine_best_card<'determinebestcard>(
-    determinebestcard: &'determinebestcard SDetermineBestCard,
+pub fn determine_best_card(
+    determinebestcard: &SDetermineBestCard,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Sync),
     opath_out_dir: Option<std::path::PathBuf>
-) -> SDetermineBestCardResult<'determinebestcard, isize> {
+) -> SDetermineBestCardResult<isize> {
     let mapcardn_payout = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
         SCard::map_from_fn(|_card| std::isize::MAX),
@@ -359,7 +373,7 @@ pub fn determine_best_card<'determinebestcard>(
         determinebestcard.veccard_allowed.contains(&card) && mapcardn_payout[card] < std::isize::MAX
     }));
     SDetermineBestCardResult{
-        determinebestcard,
+        veccard_allowed: determinebestcard.veccard_allowed.clone(),
         mapcardt: mapcardn_payout,
     }
 }
