@@ -86,27 +86,6 @@ impl<'game> SDetermineBestCard<'game> {
     }
 }
 
-pub fn determine_best_card(
-    determinebestcard: &SDetermineBestCard,
-    itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
-    func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
-    foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Sync),
-    opath_out_dir: Option<std::path::PathBuf>,
-) -> (SCard, isize) {
-        let mapcardn_payout = determine_best_card_internal(
-            determinebestcard,
-            itahand,
-            func_filter_allowed_cards,
-            foreachsnapshot,
-            opath_out_dir,
-        );
-        debug_verify!(
-            determinebestcard.veccard_allowed.iter()
-                .max_by_key(|&card| mapcardn_payout[*card])
-                .map(|card| (*card, mapcardn_payout[*card]))
-        ).unwrap()
-}
-
 impl SAi {
     pub fn new_cheating(n_rank_rules_samples: usize, n_suggest_card_branches: usize) -> Self {
         SAi {
@@ -185,7 +164,7 @@ impl SAi {
                                 path_out_dir
                                     .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
                             }),
-                        ).0
+                        ).best_card().0
                     }
                 }}
                 // TODORUST exhaustive_integer_patterns for isize/usize
@@ -320,13 +299,28 @@ fn test_unplayed_cards() {
     assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
 }
 
-fn determine_best_card_internal(
-    determinebestcard: &SDetermineBestCard,
+pub struct SDetermineBestCardResult<'determinebestcard, T> {
+    determinebestcard: &'determinebestcard SDetermineBestCard<'determinebestcard>,
+    mapcardt: EnumMap<SCard, T>,
+}
+
+impl<'determinebestcard, T> SDetermineBestCardResult<'determinebestcard, T> {
+    pub fn best_card(&self) -> (SCard, &T) where T: Ord+std::fmt::Debug {
+        let card = debug_verify!(
+            self.determinebestcard.veccard_allowed.iter()
+                .max_by_key(|&card| &self.mapcardt[*card])
+        ).unwrap();
+        (*card, &self.mapcardt[*card])
+    }
+}
+
+pub fn determine_best_card<'determinebestcard>(
+    determinebestcard: &'determinebestcard SDetermineBestCard,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Sync),
     opath_out_dir: Option<std::path::PathBuf>
-) -> EnumMap<SCard, isize> {
+) -> SDetermineBestCardResult<'determinebestcard, isize> {
     let mapcardn_payout = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
         SCard::map_from_fn(|_card| std::isize::MAX),
@@ -370,7 +364,10 @@ fn determine_best_card_internal(
     assert!(<SCard as TPlainEnum>::values().any(|card| {
         determinebestcard.veccard_allowed.contains(&card) && mapcardn_payout[card] < std::isize::MAX
     }));
-    mapcardn_payout
+    SDetermineBestCardResult{
+        determinebestcard,
+        mapcardt: mapcardn_payout,
+    }
 }
 
 pub fn branching_factor(fn_stichseq_to_intvl: impl Fn(&SStichSequence)->(usize, usize)) -> impl Fn(&SStichSequence, &mut SHandVector) {
@@ -526,7 +523,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         let stich_current = game.current_playable_stich();
         assert!(!stich_current.is_full());
         let determinebestcard = SDetermineBestCard::new_from_game(&game);
-        let mapcardpayout = determine_best_card_internal(
+        let determinebestcardresult = determine_best_card(
             &determinebestcard,
             Some(ahand).into_iter(),
             /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
@@ -536,8 +533,8 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         for card in [H7, H8, H9].iter() {
             assert!(determinebestcard.veccard_allowed.contains(card));
             assert!(
-                mapcardpayout[*card] == std::isize::MAX
-                || mapcardpayout[*card] == 3*(n_payout_base+2*n_payout_schneider_schwarz)
+                determinebestcardresult.mapcardt[*card] == std::isize::MAX
+                || determinebestcardresult.mapcardt[*card] == 3*(n_payout_base+2*n_payout_schneider_schwarz)
             );
         }
     }

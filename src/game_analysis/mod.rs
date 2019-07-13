@@ -134,13 +134,13 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
                     $func_filter_allowed_cards: expr,
                 ) => {{
                     if determinebestcard.single_allowed_card().is_none() { // there is an actual choice
-                        let (card_suggested, n_payout) = determine_best_card(
+                        let (card_suggested, &n_payout) = determine_best_card(
                             &determinebestcard,
                             $itahand,
                             &|_,_| (/*no filtering*/),
                             &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
                             /*ostr_file_out*/None,
-                        );
+                        ).best_card();
                         if card!=card_suggested && an_payout[epi]<n_payout {
                             Some(SAnalysisCardAndPayout{card_suggested, n_payout})
                         } else {
