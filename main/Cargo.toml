@@ -24,7 +24,7 @@ chrono = "0"
 # TODO can we have a cfg feature "sauspiel" that does not use the corresponding crates?
 select = "0"
 glob = "0"
-openschafkopf_util = {path = "../openschafkopf/util"}
+openschafkopf_util = {path = "../util"}
 
 [profile.release]
 #lto = true
