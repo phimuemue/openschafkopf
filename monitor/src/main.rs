@@ -89,9 +89,14 @@ fn main() {
                 let ocmd_openschafkopf = ocmd_openschafkopf.clone();
                 let sendstr = sendstr.clone();
                 let mut cmd_openschafkopf = debug_verify!(
-                    std::process::Command::new(
-                        "/home/philipp/Documents/projekte/openschafkopf/target/release/openschafkopf"
-                    )
+                    std::process::Command::new({
+                        let path_self = debug_verify!(std::env::current_exe()).unwrap();
+                        assert!(!debug_verify!(path_self.symlink_metadata()).unwrap() // "Queries the metadata about a file without following symlinks" (https://doc.rust-lang.org/std/path/struct.PathBuf.html#method.symlink_metadata)
+                            .file_type()
+                            .is_symlink()
+                        );
+                        debug_verify!(path_self.parent()).unwrap().join("openschafkopf")
+                    })
                         .args(&[
                             "suggest-card".to_owned(),
                             format!("{}", n_epi_first), // first_player_index
