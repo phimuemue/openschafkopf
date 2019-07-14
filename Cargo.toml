@@ -1,0 +1,12 @@
+[workspace]
+
+members = [
+    "main",
+    "monitor",
+    "util",
+]
+
+[profile.release]
+#lto = true
+codegen-units = 1
+#debug = true
