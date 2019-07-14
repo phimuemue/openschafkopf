@@ -7,7 +7,6 @@ use crate::rules::{
 use crate::game::*;
 use crate::skui;
 use crate::ai::*;
-#[cfg(debug_assertions)]
 use crate::util::*;
 use std::sync::mpsc;
 
