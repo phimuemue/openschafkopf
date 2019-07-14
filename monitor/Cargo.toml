@@ -8,4 +8,4 @@ edition = "2018"
 serde_json = "1"
 byteorder = "1"
 as_num = "0"
-openschafkopf_util = {path = "../../openschafkopf/util"}
+openschafkopf_util = {path = "../util"}
