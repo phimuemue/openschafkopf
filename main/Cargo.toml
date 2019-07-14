@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["openschafkopf"]
 edition = "2018"
 
+[build-dependencies]
+openschafkopf_util = {path = "../util"}
+
 [dependencies]
 combine = "3"
 rand = "0"
