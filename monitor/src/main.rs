@@ -143,7 +143,7 @@ fn main() {
                 *debug_verify!(ocmd_openschafkopf.lock()).unwrap() = Some(cmd_openschafkopf);
                 std::thread::spawn(move || {
                     let mut str_openschafkopf_out = String::new();
-                    if let Ok(_) = std::io::BufReader::new(stdout).read_to_string(&mut str_openschafkopf_out) {
+                    if std::io::BufReader::new(stdout).read_to_string(&mut str_openschafkopf_out).is_ok() {
                         debug_verify!(sendstr.send(str_openschafkopf_out)).unwrap();
                         debug_verify!(ocmd_openschafkopf.lock()).unwrap().take();
                     }
