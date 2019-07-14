@@ -32,7 +32,7 @@ macro_rules! debug_verify{($e: expr) => {
 macro_rules! verify_eq {($e: expr, $e_chk: expr) => {
     {
         let e = $e;
-        assert_eq!(e, $e_chk);;
+        assert_eq!(e, $e_chk);
         e
     }
 }}
