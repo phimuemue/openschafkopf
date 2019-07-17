@@ -32,7 +32,7 @@ fn main() {
     let output_inkscape = execute_external(
         Command::new("inkscape")
             .arg(path_resources.join("cards.svg"))
-            .arg(format!("--export-png={}", /*debug_verify! impossible due to temporary*/path_out_dir.join("cards.png").to_str().unwrap()))
+            .arg(format!("--export-png={}", debug_verify!(path_out_dir.join("cards.png").to_str()).unwrap()))
     );
     assert!(output_inkscape.status.success(), output_inkscape);
 }

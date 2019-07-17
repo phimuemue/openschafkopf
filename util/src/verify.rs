@@ -14,14 +14,15 @@ impl<TOk, TErr> TVerifiableByVerifyMacro for Result<TOk, TErr> {
     }
 }
 
+pub fn verify_internal<E: TVerifiableByVerifyMacro+std::fmt::Debug>(e: E, str_e: &str) -> E {
+    assert!(e.is_verify_true(), "verify!({}): {:?}", str_e, e);
+    e
+}
+
 #[macro_export]
-macro_rules! verify {($e: expr) => {
-    {
-        let e = $e;
-        assert!(e.is_verify_true(), "verify!({}): {:?}", stringify!($e), e);;
-        e
-    }
-}}
+macro_rules! verify {($e: expr) => {{
+    verify_internal($e, stringify!($e)) // TODORUST why can we not make verify_internal a closure?
+}}}
 
 #[macro_export]
 macro_rules! debug_verify{($e: expr) => {
