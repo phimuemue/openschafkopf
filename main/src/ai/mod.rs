@@ -528,8 +528,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         epi_first_and_active_player,
         game.rules.as_ref(),
     ) {
-        let stich_current = game.current_playable_stich();
-        assert!(!stich_current.is_full());
+        assert!(!game.current_playable_stich().is_full());
         let determinebestcard = SDetermineBestCard::new_from_game(&game);
         let determinebestcardresult = determine_best_card(
             &determinebestcard,
