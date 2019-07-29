@@ -10,10 +10,9 @@ use crate::util::*;
 use crate::skui;
 
 pub fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) {
-    skui::init_ui();
+    let _tui = skui::STuiGuard::init_ui();
     let accountbalance = game_loop_cli_internal(aplayer, n_games, ruleset);
     println!("Results: {}", skui::account_balance_string(&accountbalance));
-    skui::end_ui();
 }
 
 pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {

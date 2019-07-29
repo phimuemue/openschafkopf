@@ -7,16 +7,27 @@ use itertools::Itertools;
 
 // TODO do we update output too often?
 
-pub fn init_ui() {
-    ncurses::initscr();
-    ncurses::keypad(ncurses::stdscr(), true);
-    ncurses::noecho();
-    ncurses::start_color();
+pub struct STuiGuard {
+    phantom: std::marker::PhantomData<()>,
 }
 
-pub fn end_ui() {
-    ncurses::endwin();
+impl STuiGuard {
+    pub fn init_ui() -> Self {
+        ncurses::initscr();
+        ncurses::keypad(ncurses::stdscr(), true);
+        ncurses::noecho();
+        ncurses::start_color();
+        STuiGuard{phantom: std::marker::PhantomData}
+    }
 }
+
+impl Drop for STuiGuard {
+    fn drop(&mut self) {
+        ncurses::endwin();
+    }
+}
+
+// TODO ideally, all tui methods would be members of STuiGuard
 
 pub fn wprintln(ncwin: ncurses::WINDOW, s: &str) {
     ncurses::waddstr(ncwin, s);
