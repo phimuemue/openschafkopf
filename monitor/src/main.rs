@@ -72,7 +72,6 @@ fn main() -> Result<(), failure::Error> {
                 let str_cards_as_played = json_get!("strCardsAsPlayed", as_str);
                 let str_hand = json_get!("strHand", as_str);
                 let str_selected_game_name = json_get!("selectedGameName", as_str);
-                let str_selected_game_suit = json_get!("selectedGameSuit", as_str);
                 let jsonarr_announcement = json_get!("announcements", as_array);
                 let n_epi_active = {
                     match jsonarr_announcement.iter()
@@ -107,11 +106,11 @@ fn main() -> Result<(), failure::Error> {
                                 {
                                     match str_selected_game_name {
                                         "Sauspiel" => format!("Sauspiel auf die {}", {
-                                            match str_selected_game_suit {
+                                            match json_get!("selectedGameSuit", as_str) {
                                                 "E" => "Alte",
                                                 "G" => "Blaue",
                                                 "S" => "Hundsgfickte",
-                                                _ => {
+                                                str_selected_game_suit => {
                                                     communicate_error(format!("Bad Sauspiel farbe: {}", str_selected_game_suit));
                                                     continue;
                                                 },
@@ -119,12 +118,12 @@ fn main() -> Result<(), failure::Error> {
                                         }),
                                         "Solo"|"Farbwenz" => format!("{}-{}",
                                             {
-                                                match str_selected_game_suit {
+                                                match json_get!("selectedGameSuit", as_str) {
                                                     "E" => "Eichel",
                                                     "G" => "Gras",
                                                     "H" => "Herz",
                                                     "S" => "Schellen",
-                                                    _ => {
+                                                    str_selected_game_suit => {
                                                         communicate_error(format!("Bad farbe: {}", str_selected_game_suit));
                                                         continue;
                                                     }
