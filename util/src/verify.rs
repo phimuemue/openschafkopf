@@ -2,6 +2,12 @@ pub trait TVerifiableByVerifyMacro {
     fn is_verify_true(&self) -> bool;
 }
 
+impl TVerifiableByVerifyMacro for bool {
+    fn is_verify_true(&self) -> bool {
+        *self
+    }
+}
+
 impl<T> TVerifiableByVerifyMacro for Option<T> {
     fn is_verify_true(&self) -> bool {
         self.is_some()

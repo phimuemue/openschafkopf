@@ -1,0 +1,16 @@
+[package]
+name = "openschafkopf_logging"
+version = "0.1.0"
+authors = ["philipp <descpl@yahoo.de>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+fern = "0"
+dirs = "2"
+itertools = "0"
+openschafkopf_util = {path = "../util"}
+failure = "0"
+log = "0"
+chrono = "0"

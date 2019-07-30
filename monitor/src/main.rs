@@ -2,15 +2,17 @@ extern crate serde_json;
 extern crate byteorder;
 extern crate as_num;
 extern crate openschafkopf_util;
+#[macro_use]
+extern crate openschafkopf_logging;
 use openschafkopf_util::*;
 use as_num::AsNum;
 use byteorder::ByteOrder;
 use serde_json::json;
 use std::io::{Read, Write};
+extern crate failure;
 
-// TODO proper logging
-
-fn main() {
+fn main() -> Result<(), failure::Error> {
+    openschafkopf_logging::init_logging()?;
     use std::sync::{Arc, Mutex};
     let ocmd_openschafkopf : Arc<Mutex<Option<std::process::Child>>> = Arc::new(Mutex::new(None));
     let (sendstr, recvstr) = std::sync::mpsc::channel();
@@ -37,6 +39,7 @@ fn main() {
             debug_verify!(String::from_utf8(vecbyte)).unwrap()
         };
         let communicate_error = |str_error_msg| {
+            warn!("Communicating error: {}", str_error_msg);
             debug_verify!(sendstr.send(json!({
                 "Err": {
                     "strErrorMsg": str_error_msg,
@@ -59,11 +62,11 @@ fn main() {
                             x
                         } else {
                             communicate_error(format!("{} not extractable {}", val, stringify!($fn_extract)));
-                            break;
+                            continue;
                         }
                     } else {
                         communicate_error(format!("Missing field: {}", $index));
-                        break;
+                        continue;
                     }
                 });
                 let str_cards_as_played = json_get!("strCardsAsPlayed", as_str);
@@ -81,7 +84,7 @@ fn main() {
                         },
                         Err(e) => {
                             communicate_error(format!("No single announcement: {:?}", e));
-                            break;
+                            continue;
                         }
                     }
                 };
@@ -110,7 +113,7 @@ fn main() {
                                                 "S" => "Hundsgfickte",
                                                 _ => {
                                                     communicate_error(format!("Bad Sauspiel farbe: {}", str_selected_game_suit));
-                                                    break;
+                                                    continue;
                                                 },
                                             }
                                         }),
@@ -123,7 +126,7 @@ fn main() {
                                                     "S" => "Schellen",
                                                     _ => {
                                                         communicate_error(format!("Bad farbe: {}", str_selected_game_suit));
-                                                        break;
+                                                        continue;
                                                     }
                                                 }
                                             },
@@ -132,7 +135,7 @@ fn main() {
                                         "Wenz"|"Geier" => str_selected_game_name.to_owned(),
                                         _ => {
                                             communicate_error(format!("Unknown game type: {}", str_selected_game_name));
-                                            break;
+                                            continue;
                                         },
                                     }
                                 },

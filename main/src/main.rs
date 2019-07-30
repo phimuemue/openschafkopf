@@ -18,8 +18,7 @@ extern crate plain_enum;
 extern crate derive_new;
 extern crate toml;
 #[macro_use]
-extern crate log;
-extern crate env_logger;
+extern crate openschafkopf_logging;
 extern crate chrono;
 extern crate select;
 extern crate combine;
@@ -50,7 +49,7 @@ use crate::player::{
 use crate::util::*;
 
 fn main() -> Result<(), Error> {
-    env_logger::init();
+    openschafkopf_logging::init_logging()?;
     let clap_arg = |str_long, str_default| {
         clap::Arg::with_name(str_long)
             .long(str_long)
