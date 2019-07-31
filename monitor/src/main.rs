@@ -30,13 +30,24 @@ fn main() -> Result<(), failure::Error> {
     });
     loop {
         let str_json_in = {
-            let mut abyte_buffer_msg_len = [0; 4];
+            const N_BYTES_FOR_MSG_LEN : usize = 4;
+            let mut abyte_buffer_msg_len = [0; N_BYTES_FOR_MSG_LEN];
             let n_bytes_read = debug_verify!(std::io::stdin().read(&mut abyte_buffer_msg_len)).unwrap();
-            assert_eq!(n_bytes_read, abyte_buffer_msg_len.len());
-            let n_bytes_msg_len = byteorder::NativeEndian::read_u32(&abyte_buffer_msg_len);
-            let mut vecbyte : Vec<u8> = (0..n_bytes_msg_len).map(|_| 0).collect();
-            debug_verify!(std::io::stdin().read(vecbyte.as_mut_slice())).unwrap();
-            debug_verify!(String::from_utf8(vecbyte)).unwrap()
+            match n_bytes_read {
+                0 => {
+                    info!("Received 0 bytes. Exiting.");
+                    return Ok(());
+                },
+                N_BYTES_FOR_MSG_LEN => {
+                    let n_bytes_msg_len = byteorder::NativeEndian::read_u32(&abyte_buffer_msg_len);
+                    let mut vecbyte : Vec<u8> = (0..n_bytes_msg_len).map(|_| 0).collect();
+                    debug_verify!(std::io::stdin().read(vecbyte.as_mut_slice())).unwrap();
+                    debug_verify!(String::from_utf8(vecbyte)).unwrap()
+                },
+                _ => {
+                    panic!("Unexpected value for n_bytes_read: {}", n_bytes_read)
+                }
+            }
         };
         let communicate_error = |str_error_msg| {
             warn!("Communicating error: {}", str_error_msg);
