@@ -1905,7 +1905,7 @@ fn test_stock() {
         /*n_payout_schneider_schwarz*/10,
         SLaufendeParams::new(10, 3),
     );
-    for n_stock_initial in [0isize, 20, 40, 80, 160, 240, 320].into_iter() {
+    for n_stock_initial in [0isize, 20, 40, 80, 160, 240, 320].iter() {
         let n_stock_initial = *n_stock_initial;
         assert_eq!(n_stock_initial%2, 0);
         test_rules_manual(
