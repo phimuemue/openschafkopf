@@ -54,16 +54,16 @@ impl TPlayer for SPlayerHuman {
         veccard: &[SCard],
         txb_doubling: mpsc::Sender<bool>,
     ) {
-        let vecb_doubling = vec![false, true];
+        let ab_doubling = [false, true];
         debug_verify!(txb_doubling.send(*skui::ask_for_alternative(
-            &vecb_doubling,
+            &ab_doubling,
             &skui::choose_alternative_from_list_key_bindings(),
             |_| true, // all alternatives allowed
             |ncwin, i_b_doubling_chosen, ob_doubling_suggest| {
                 assert!(ob_doubling_suggest.is_none());
                 // TODO show who else already doubled
                 skui::print_hand(veccard, None);
-                for (i_b_doubling, b_doubling) in vecb_doubling.iter().enumerate() {
+                for (i_b_doubling, b_doubling) in ab_doubling.iter().enumerate() {
                     skui::wprintln(ncwin, &format!("{} {}",
                         if i_b_doubling==i_b_doubling_chosen {"*"} else {" "},
                         if *b_doubling {"Doubling"} else {"No Doubling"},
@@ -160,9 +160,9 @@ impl TPlayer for SPlayerHuman {
         _n_stock: isize,
         txb: mpsc::Sender<bool>,
     ) {
-        let vecb_stoss = vec![false, true];
+        let ab_stoss = [false, true];
         debug_verify!(txb.send(*skui::ask_for_alternative(
-            &vecb_stoss,
+            &ab_stoss,
             &skui::choose_alternative_from_list_key_bindings(),
             |_| true, // all alternatives allowed
             |ncwin, i_b_stoss_chosen, ob_stoss_suggest| {
@@ -173,7 +173,7 @@ impl TPlayer for SPlayerHuman {
                     rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
                     skui::print_hand(&veccard, None);
                 }
-                for (i_b_stoss, b_stoss) in vecb_stoss.iter().enumerate() {
+                for (i_b_stoss, b_stoss) in ab_stoss.iter().enumerate() {
                     skui::wprintln(ncwin, &format!("{} {} {}",
                         if i_b_stoss==i_b_stoss_chosen {"*"} else {" "},
                         if *b_stoss {"Give"} else {"No"},
