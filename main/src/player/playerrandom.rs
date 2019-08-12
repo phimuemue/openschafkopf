@@ -5,7 +5,6 @@ use crate::rules::{
     ruleset::*,
 };
 use crate::game::*;
-#[cfg(debug_assertions)]
 use crate::util::*;
 use std::sync::mpsc;
 use rand::prelude::*;
