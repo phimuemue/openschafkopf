@@ -261,7 +261,7 @@ impl TForEachSnapshot for SMinReachablePayout<'_> {
     type Output = isize;
 
     fn final_output(&self, slcstich: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
-        self.0.rules.payout_with_cache(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock, rulestatecache, self.0.epi)
+        self.0.rules.payout_with_cache(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock, rulestatecache)[self.0.epi]
     }
 
     fn pruned_output(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
@@ -284,11 +284,11 @@ impl TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'_> {
     type Output = isize;
 
     fn final_output(&self, slcstich: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
-        self.0.rules.payout_with_cache(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock, rulestatecache, self.0.epi)
+        self.0.rules.payout_with_cache(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock, rulestatecache)[self.0.epi]
     }
 
     fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
-        self.0.rules.payouthints(stichseq, ahand, rulestatecache, self.0.epi)
+        self.0.rules.payouthints(stichseq, ahand, rulestatecache)[self.0.epi]
             .lower_bound()
             .as_ref()
             .and_then(|payoutinfo| {

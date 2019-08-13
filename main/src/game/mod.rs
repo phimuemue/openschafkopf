@@ -462,12 +462,11 @@ impl TGamePhase for SGame {
     fn finish_success(self) -> Self::Finish {
         assert!(self.kurzlang().cards_per_player()==self.completed_stichs().len());
         SGameResult {
-            an_payout : EPlayerIndex::map_from_fn(|epi| self.rules.payout(
+            an_payout : self.rules.payout(
                 SStichSequenceGameFinished::new(&self.stichseq),
                 stoss_and_doublings(&self.vecstoss, &self.doublings),
                 self.n_stock,
-                epi,
-            )),
+            ),
         }
     }
 }

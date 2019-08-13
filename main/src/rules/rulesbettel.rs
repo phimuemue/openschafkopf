@@ -59,8 +59,7 @@ impl TPayoutDecider for SPayoutDeciderBettel {
         rulestatecache: &SRuleStateCache,
         if_dbg_else!({gamefinishedstiche}{_gamefinishedstiche}): SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
-        perepi: impl TPerEPI,
-    ) -> isize
+    ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRules
     {
         internal_payout(
@@ -70,8 +69,7 @@ impl TPayoutDecider for SPayoutDeciderBettel {
                 rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==0,
                 gamefinishedstiche.get().completed_stichs_winner_index(rules)
                     .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
-            ),
-            perepi,
+            )
         )
     }
 
@@ -82,8 +80,7 @@ impl TPayoutDecider for SPayoutDeciderBettel {
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
-        perepi: impl TPerEPI,
-    ) -> (Option<isize>, Option<isize>)
+    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj
     {
         if debug_verify_eq!(
@@ -91,17 +88,14 @@ impl TPayoutDecider for SPayoutDeciderBettel {
             !stichseq.completed_stichs_winner_index(rules)
                 .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
         ) {
-            perepi.per_epi_map(
-                internal_payout(
-                    /*n_payout_single_player*/ self.n_payout_base,
-                    playerparties13,
-                    /*b_primary_party_wins*/ false,
-                    perepi,
-                ),
-                |_epi, n_payout| (Some(n_payout), Some(n_payout))
+            internal_payout(
+                /*n_payout_single_player*/ self.n_payout_base,
+                playerparties13,
+                /*b_primary_party_wins*/ false,
             )
+                .map(|n_payout| (Some(*n_payout), Some(*n_payout)))
         } else {
-            perepi.per_epi(|_epi| (None, None))
+            EPlayerIndex::map_from_fn(|_epi| (None, None))
         }
     }
 }

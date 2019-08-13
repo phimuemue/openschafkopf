@@ -18,8 +18,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
         rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
-        perepi: impl TPerEPI,
-    ) -> isize
+    ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRulesNoObj;
 
     fn payouthints<Rules>(
@@ -29,8 +28,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
         ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
-        perepi: impl TPerEPI,
-    ) -> (Option<isize>, Option<isize>)
+    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj;
 }
 
@@ -60,11 +58,10 @@ impl TPayoutDecider for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLi
         rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
-        perepi: impl TPerEPI,
-    ) -> isize
+    ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRulesNoObj
     {
-        self.payout(rules, rulestatecache, gamefinishedstiche, playerparties13, perepi)
+        self.payout(rules, rulestatecache, gamefinishedstiche, playerparties13)
     }
 
     fn payouthints<Rules>(
@@ -74,11 +71,10 @@ impl TPayoutDecider for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLi
         ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
-        perepi: impl TPerEPI,
-    ) -> (Option<isize>, Option<isize>)
+    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj
     {
-        self.payouthints(rules, stichseq, ahand, rulestatecache, playerparties13, perepi)
+        self.payouthints(rules, stichseq, ahand, rulestatecache, playerparties13)
     }
 }
 
@@ -131,8 +127,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
         rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
-        perepi: impl TPerEPI,
-    ) -> isize
+    ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRulesNoObj,
     {
         // TODORULES optionally count schneider/schwarz
@@ -144,7 +139,6 @@ impl TPayoutDecider for SPayoutDeciderTout {
                 gamefinishedstiche.get().completed_stichs_winner_index(rules)
                     .all(|(_stich, epi_winner)| playerparties13.is_primary_party(epi_winner))
             ),
-            perepi,
         )
     }
 
@@ -155,8 +149,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
-        perepi: impl TPerEPI,
-    ) -> (Option<isize>, Option<isize>)
+    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj
     {
         if debug_verify_eq!(
@@ -164,20 +157,17 @@ impl TPayoutDecider for SPayoutDeciderTout {
             !stichseq.completed_stichs_winner_index(rules)
                 .all(|(_stich, epi_winner)| playerparties13.is_primary_party(epi_winner))
         ) {
-            perepi.per_epi_map(
-                internal_payout(
-                    /*n_payout_single_player*/ (self.payoutparams.n_payout_base) * 2, // TODO laufende
-                    playerparties13,
-                    /*b_primary_party_wins*/ false,
-                    perepi,
-                ),
-                |_epi, n_payout| {
-                    assert_ne!(0, n_payout);
-                    tpl_flip_if(0<n_payout, (None, Some(n_payout)))
-                },
+            internal_payout(
+                /*n_payout_single_player*/ (self.payoutparams.n_payout_base) * 2, // TODO laufende
+                playerparties13,
+                /*b_primary_party_wins*/ false,
             )
+                .map(|n_payout| {
+                     assert_ne!(0, *n_payout);
+                     tpl_flip_if(0<*n_payout, (None, Some(*n_payout)))
+                })
         } else {
-            perepi.per_epi(|_epi| (None, None))
+            EPlayerIndex::map_from_fn(|_epi| (None, None))
         }
     }
 }
@@ -233,8 +223,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
         _rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
-        perepi: impl TPerEPI,
-    ) -> isize
+    ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRulesNoObj,
     {
         // TODORULES optionally count schneider/schwarz
@@ -248,8 +237,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
                 rules,
                 gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[playerparties13.primary_player()]),
                 gamefinishedstiche.get().kurzlang(),
-            ),
-            perepi,
+            )
         )
     }
 
@@ -260,8 +248,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
         ahand: &EnumMap<EPlayerIndex, SHand>,
         _rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
-        perepi: impl TPerEPI,
-    ) -> (Option<isize>, Option<isize>)
+    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj
     {
         let itcard = stichseq.visible_stichs().filter_map(|stich| stich.get(playerparties13.primary_player())).copied()
@@ -273,20 +260,17 @@ impl TPayoutDecider for SPayoutDeciderSie {
                 stichseq.kurzlang(),
             )
         {
-            perepi.per_epi_map(
-                internal_payout(
-                    /*n_payout_single_player*/ self.payoutparams.n_payout_base * 4,
-                    playerparties13,
-                    /*b_primary_party_wins*/ false,
-                    perepi,
-                ),
-                |_epi, n_payout| {
-                    assert_ne!(0, n_payout);
-                    tpl_flip_if(0<n_payout, (None, Some(n_payout)))
-                },
+            internal_payout(
+                /*n_payout_single_player*/ self.payoutparams.n_payout_base * 4,
+                playerparties13,
+                /*b_primary_party_wins*/ false,
             )
+                .map(|n_payout| {
+                     assert_ne!(0, *n_payout);
+                     tpl_flip_if(0<*n_payout, (None, Some(*n_payout)))
+                })
         } else {
-            perepi.per_epi(|_epi| (None, None))
+            EPlayerIndex::map_from_fn(|_epi| (None, None))
         }
     }
 }
