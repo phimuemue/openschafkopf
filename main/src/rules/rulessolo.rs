@@ -47,8 +47,8 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + TPayout
 impl TPointsToWin for VGameAnnouncementPrioritySoloLike {
     fn points_to_win(&self) -> isize {
         match self {
-            VGameAnnouncementPrioritySoloLike::SoloSimple(_) => 61,
-            VGameAnnouncementPrioritySoloLike::SoloSteigern{n_points_to_win, n_step: _n_step} => *n_points_to_win,
+            Self::SoloSimple(_) => 61,
+            Self::SoloSteigern{n_points_to_win, n_step: _n_step} => *n_points_to_win,
         }
     }
 }

@@ -94,8 +94,8 @@ pub enum VSuggestCardResult<T> {
 impl<T> VSuggestCardResult<T> {
     pub fn best_card(&self) -> SCard where T: Ord+std::fmt::Debug {
         match self {
-            VSuggestCardResult::SingleAllowed(card) => *card,
-            VSuggestCardResult::MultipleAllowed(determinebestcardresult) => determinebestcardresult.best_card().0,
+            Self::SingleAllowed(card) => *card,
+            Self::MultipleAllowed(determinebestcardresult) => determinebestcardresult.best_card().0,
         }
     }
 }

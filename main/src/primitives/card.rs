@@ -16,10 +16,10 @@ define_static_value!(pub SStaticFarbeSchelln, EFarbe, EFarbe::Schelln);
 impl fmt::Display for EFarbe {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", match *self {
-            EFarbe::Eichel => "Eichel",
-            EFarbe::Gras => "Gras",
-            EFarbe::Herz => "Herz",
-            EFarbe::Schelln => "Schelln",
+            Self::Eichel => "Eichel",
+            Self::Gras => "Gras",
+            Self::Herz => "Herz",
+            Self::Schelln => "Schelln",
         } )
     }
 }
@@ -52,8 +52,8 @@ plain_enum_mod!{modekurzlang, EKurzLang {
 impl EKurzLang {
     pub fn cards_per_player(self) -> usize {
         match self {
-            EKurzLang::Kurz => 6,
-            EKurzLang::Lang => 8,
+            Self::Kurz => 6,
+            Self::Lang => 8,
         }
     }
 
@@ -83,8 +83,8 @@ impl EKurzLang {
 
     pub fn supports_card(self, card: SCard) -> bool {
         match self {
-            EKurzLang::Lang => true,
-            EKurzLang::Kurz => card.schlag()!=ESchlag::S7 && card.schlag()!=ESchlag::S8,
+            Self::Lang => true,
+            Self::Kurz => card.schlag()!=ESchlag::S7 && card.schlag()!=ESchlag::S8,
         }
     }
 }
