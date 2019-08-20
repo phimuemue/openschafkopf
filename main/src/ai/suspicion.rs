@@ -52,7 +52,9 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
     }
 
     fn write_all(&mut self, buf: &[u8]) {
-        debug_verify!(self.file_output.write_all(buf)).unwrap() // TODO error handling
+        if let Err(err) = self.file_output.write_all(buf) {
+            error!("Error writing file: {}", err);
+        }
     }
 }
 
