@@ -134,7 +134,7 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStic
             /*fn_farbe_not_frei*/|veccard_same_farbe| {
                 let veccard_allowed_higher_than_current_best = veccard_same_farbe.iter().copied()
                     .filter(|card| 
-                        match rulesbettel.compare_in_stich_same_farbe(card_highest, *card) {
+                        match SCompareFarbcardsBettel::compare_farbcards(card_highest, *card) {
                             Ordering::Less => true,
                             Ordering::Equal => panic!("Unexpected comparison result in Bettel"),
                             Ordering::Greater => false,
@@ -152,7 +152,7 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStic
 }
 
 impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRulesNoObj for SRulesBettel<BettelAllAllowedCardsWithinStich> {
-    impl_rules_trumpf_noobj!(STrumpfDeciderNoTrumpf);
+    impl_rules_trumpf_noobj!(STrumpfDeciderNoTrumpf<SCompareFarbcardsBettel>);
 }
 
 impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules for SRulesBettel<BettelAllAllowedCardsWithinStich> {
@@ -163,9 +163,12 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
     fn all_allowed_cards_within_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         BettelAllAllowedCardsWithinStich::all_allowed_cards_within_stich(self, stichseq, hand)
     }
+}
 
-    fn compare_in_stich_same_farbe(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
-        assert_eq!(self.trumpforfarbe(card_fst), self.trumpforfarbe(card_snd));
+#[derive(Clone, Debug)]
+pub struct SCompareFarbcardsBettel;
+impl TCompareFarbcards for SCompareFarbcardsBettel {
+    fn compare_farbcards(card_fst: SCard, card_snd: SCard) -> Ordering {
         assert_eq!(card_fst.farbe(), card_snd.farbe());
         let get_schlag_value = |card: SCard| { match card.schlag() {
             ESchlag::S7 => 0,

@@ -242,7 +242,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
 
     // TTrumpfDecider
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
-    fn compare_trumpf(&self, card_fst: SCard, card_snd: SCard) -> Ordering;
+    fn compare_cards(&self, card_fst: SCard, card_snd: SCard) -> Option<Ordering>;
 
     fn playerindex(&self) -> Option<EPlayerIndex>;
 
@@ -369,48 +369,22 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
     fn preliminary_winner_index(&self, stich: &SStich) -> EPlayerIndex {
         let mut epi_best = stich.epi_first;
         for (epi, card) in stich.iter().skip(1) {
-            if Ordering::Less==self.compare_in_stich(stich[epi_best], *card) {
+            if let Some(Ordering::Less) = self.compare_cards(stich[epi_best], *card) {
                 epi_best = epi;
             }
         }
         epi_best
     }
 
-    fn compare_in_stich_same_farbe(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
-        assert_eq!(self.trumpforfarbe(card_fst), self.trumpforfarbe(card_snd));
-        assert_eq!(card_fst.farbe(), card_snd.farbe());
-        compare_farbcards_same_color(card_fst, card_snd)
-    }
-
-    fn compare_in_stich(&self, card_fst: SCard, card_snd: SCard) -> Ordering {
-        assert_ne!(card_fst, card_snd);
-        match (self.trumpforfarbe(card_fst), self.trumpforfarbe(card_snd)) {
-            (VTrumpfOrFarbe::Trumpf, VTrumpfOrFarbe::Farbe(_)) => Ordering::Greater,
-            (VTrumpfOrFarbe::Farbe(_), VTrumpfOrFarbe::Trumpf) => Ordering::Less,
-            (VTrumpfOrFarbe::Trumpf, VTrumpfOrFarbe::Trumpf) => self.compare_trumpf(card_fst, card_snd),
-            (VTrumpfOrFarbe::Farbe(efarbe_fst), VTrumpfOrFarbe::Farbe(efarbe_snd)) => {
-                if efarbe_fst != efarbe_snd {
-                    Ordering::Greater
-                } else {
-                    self.compare_in_stich_same_farbe(card_fst, card_snd)
-                }
-            }
-        }
-    }
-
     fn sort_cards_first_trumpf_then_farbe(&self, veccard: &mut [SCard]) {
         veccard.sort_unstable_by(|&card_lhs, &card_rhs| {
-            match(self.trumpforfarbe(card_lhs), self.trumpforfarbe(card_rhs)) {
-                (VTrumpfOrFarbe::Farbe(efarbe_lhs), VTrumpfOrFarbe::Farbe(efarbe_rhs)) => {
-                    if efarbe_lhs==efarbe_rhs {
-                        self.compare_in_stich_same_farbe(card_rhs, card_lhs)
-                    } else {
-                        efarbe_lhs.cmp(&efarbe_rhs)
-                    }
-                }
-                (_, _) => { // at least one of them is trumpf
-                    self.compare_in_stich(card_rhs, card_lhs)
-                }
+            match self.compare_cards(card_lhs, card_rhs) {
+                Some(ord) => ord.reverse(),
+                None => {
+                    assert_eq!(VTrumpfOrFarbe::Farbe(card_lhs.farbe()), self.trumpforfarbe(card_lhs));
+                    assert_eq!(VTrumpfOrFarbe::Farbe(card_rhs.farbe()), self.trumpforfarbe(card_rhs));
+                    card_lhs.farbe().cmp(&card_rhs.farbe())
+                },
             }
         });
     }
@@ -489,17 +463,3 @@ pub trait TActivelyPlayableRules : TRules {
     }
 }
 box_clone_impl_box!(TActivelyPlayableRules);
-
-pub fn compare_farbcards_same_color(card_fst: SCard, card_snd: SCard) -> Ordering {
-    let get_schlag_value = |card: SCard| { match card.schlag() {
-        ESchlag::S7 => 0,
-        ESchlag::S8 => 1,
-        ESchlag::S9 => 2,
-        ESchlag::Unter => 3,
-        ESchlag::Ober => 4,
-        ESchlag::Koenig => 5,
-        ESchlag::Zehn => 6,
-        ESchlag::Ass => 7,
-    } };
-    get_schlag_value(card_fst).cmp(&get_schlag_value(card_snd))
-}

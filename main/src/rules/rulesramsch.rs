@@ -105,13 +105,13 @@ impl TRules for SRulesRamsch {
                                 .max_by(|card_fst, card_snd| {
                                     assert!(self.trumpforfarbe(*card_fst).is_trumpf());
                                     assert!(self.trumpforfarbe(*card_snd).is_trumpf());
-                                    self.compare_trumpf(*card_fst, *card_snd)
+                                    debug_verify!(self.compare_cards(*card_fst, *card_snd)).unwrap()
                                 })
                         )})
                         .fold1(|pairepiocard_fst, pairepiocard_snd| {
                             match (pairepiocard_fst.1, pairepiocard_snd.1) {
                                 (Some(card_trumpf_fst), Some(card_trumpf_snd)) => {
-                                    if Ordering::Less==self.compare_trumpf(card_trumpf_fst, card_trumpf_snd) {
+                                    if Ordering::Less==debug_verify!(self.compare_cards(card_trumpf_fst, card_trumpf_snd)).unwrap() {
                                         pairepiocard_snd
                                     } else {
                                         pairepiocard_fst

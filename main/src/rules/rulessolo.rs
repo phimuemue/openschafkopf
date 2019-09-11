@@ -374,7 +374,7 @@ pub fn sololike(
 ) -> Box<dyn TActivelyPlayableRules> {
     macro_rules! sololike_internal{(
         $staticepi: ident,
-        ($trumpfdecider_farbe: ident, $str_oefarbe: expr),
+        ($trumpfdecider_farbe: ty, $str_oefarbe: expr),
         ($trumpfdecider_core: ident, $str_esololike: expr),
         ($payoutdecider: expr, $str_payoutdecider: expr),
     ) => {
@@ -396,7 +396,7 @@ pub fn sololike(
             EPlayerIndex::EPI3 => SStaticEPI3,
         },
         match (oefarbe.into()) {
-            None => (STrumpfDeciderNoTrumpf, ""),
+            None => (STrumpfDeciderNoTrumpf<SCompareFarbcardsSimple>, ""),
             Some(EFarbe::Eichel) => (SStaticFarbeEichel, "Eichel"),
             Some(EFarbe::Gras) => (SStaticFarbeGras, "Gras"),
             Some(EFarbe::Herz) => (SStaticFarbeHerz, "Herz"),
@@ -429,7 +429,7 @@ fn test_trumpfdecider() {
         vec![EU, GU, HU, SU, GA, GZ, GK, GO, G9, G8, G7],
     );
     assert_eq!(
-        <SCoreGenericWenz<STrumpfDeciderNoTrumpf> as TTrumpfDecider>
+        <SCoreGenericWenz<STrumpfDeciderNoTrumpf<SCompareFarbcardsSimple>> as TTrumpfDecider>
             ::trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU],
     );
