@@ -33,7 +33,7 @@ impl TPointsToWin for SPointsToWin61 {
 }
 
 #[derive(Clone, Debug, new)]
-pub struct SPayoutDeciderPointBased<PointsToWin: TPointsToWin> {
+pub struct SPayoutDeciderPointBased<PointsToWin> {
     pub payoutparams : SPayoutDeciderParams,
     pub pointstowin: PointsToWin,
 }

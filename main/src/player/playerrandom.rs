@@ -10,7 +10,7 @@ use std::sync::mpsc;
 use rand::prelude::*;
 
 #[derive(new)]
-pub struct SPlayerRandom<FnCheckAskForCard: Fn(&SGame)> {
+pub struct SPlayerRandom<FnCheckAskForCard> {
     fn_check_ask_for_card: FnCheckAskForCard,
 }
 

@@ -28,7 +28,7 @@ impl TNextVecEPI for SNextVecEPIPermutation {
     }
 }
 
-pub struct SHandIterator<NextVecEPI: TNextVecEPI> {
+pub struct SHandIterator<NextVecEPI> {
     epi_fixed : EPlayerIndex,
     veccard_unknown: Vec<SCard>,
     vecepi: Vec<EPlayerIndex>,

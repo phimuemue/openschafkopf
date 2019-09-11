@@ -47,7 +47,7 @@ impl<T: PartialEq> PartialEq for SPlayersInRound<T> {
 }
 impl<T: Eq> Eq for SPlayersInRound<T>{}
 
-pub struct SPlayersInRoundIterator<InternalIter: Iterator> {
+pub struct SPlayersInRoundIterator<InternalIter> {
     iter: InternalIter,
     n_epi: usize,
 }

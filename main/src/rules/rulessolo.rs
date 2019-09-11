@@ -300,7 +300,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
 }
 
 #[derive(Clone, Debug)]
-pub struct SRulesSoloLike<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> {
+pub struct SRulesSoloLike<StaticEPI, TrumpfDecider, PayoutDecider> {
     pub str_name: String,
     phantom : PhantomData<(StaticEPI, TrumpfDecider)>,
     payoutdecider: PayoutDecider,

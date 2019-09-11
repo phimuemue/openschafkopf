@@ -13,7 +13,7 @@ pub trait TBettelAllAllowedCardsWithinStich : Sync + 'static + Clone + fmt::Debu
 }
 
 #[derive(Clone, Debug)]
-pub struct SRulesBettel<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> {
+pub struct SRulesBettel<BettelAllAllowedCardsWithinStich> {
     epi : EPlayerIndex,
     i_prio : isize,
     payoutdecider : SPayoutDeciderBettel,
