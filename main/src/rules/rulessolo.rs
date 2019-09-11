@@ -319,7 +319,7 @@ impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, Payou
     }
     fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<dyn TActivelyPlayableRules>> {
         self.payoutdecider.with_increased_prio(prio, ebid)
-            .map(|payoutdecider| Box::new(Self::internal_new(self.str_name.clone(), payoutdecider)) as Box<dyn TActivelyPlayableRules>)
+            .map(|payoutdecider| Box::new(Self::new(payoutdecider, self.str_name.clone())) as Box<dyn TActivelyPlayableRules>)
     }
 }
 
@@ -334,15 +334,12 @@ impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, Payou
 }
 
 impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> SRulesSoloLike<StaticEPI, TrumpfDecider, PayoutDecider> {
-    fn internal_new(str_name: String, payoutdecider: PayoutDecider) -> Self {
+    pub fn new(payoutdecider: PayoutDecider, str_name: String) -> Self {
         Self {
             phantom: PhantomData,
             payoutdecider,
             str_name,
         }
-    }
-    pub fn new(payoutdecider: PayoutDecider, str_rulename: String) -> Self {
-        Self::internal_new(str_rulename, payoutdecider)
     }
     fn internal_playerindex(&self) -> EPlayerIndex { // TODORUST const fn
         StaticEPI::VALUE
