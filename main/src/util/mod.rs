@@ -119,7 +119,6 @@ macro_rules! cartesian_match(
             @unpacked(),
             $matched_packed,
         )
-        //$macro_callback!($matched_packed)
     };
     (@p2,
         $macro_callback: ident,
