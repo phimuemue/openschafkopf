@@ -66,7 +66,7 @@ fn main() -> Result<(), failure::Error> {
                     .take()
                 {
                     if let Ok(()) = cmd_openschafkopf.kill() {
-                        eprintln!("Process did not finish early enough.");
+                        communicate_error("Process did not finish early enough.");
                     }
                 }
                 macro_rules! json_get(($index: expr, $fn_extract: ident) => {
@@ -74,11 +74,11 @@ fn main() -> Result<(), failure::Error> {
                         if let Some(x) = val.$fn_extract() {
                             x
                         } else {
-                            communicate_error(format!("{} not extractable {}", val, stringify!($fn_extract)));
+                            communicate_error(&format!("{} not extractable {}", val, stringify!($fn_extract)));
                             continue;
                         }
                     } else {
-                        communicate_error(format!("Missing field: {}", $index));
+                        communicate_error(&format!("Missing field: {}", $index));
                         continue;
                     }
                 });
@@ -95,7 +95,7 @@ fn main() -> Result<(), failure::Error> {
                             n_epi_active
                         },
                         Err(e) => {
-                            communicate_error(format!("No single announcement: {:?}", e));
+                            communicate_error(&format!("No single announcement: {:?}", e));
                             continue;
                         }
                     }
@@ -124,7 +124,7 @@ fn main() -> Result<(), failure::Error> {
                                                 "G" => "Blaue",
                                                 "S" => "Hundsgfickte",
                                                 str_selected_game_suit => {
-                                                    communicate_error(format!("Bad Sauspiel farbe: {}", str_selected_game_suit));
+                                                    communicate_error(&format!("Bad Sauspiel farbe: {}", str_selected_game_suit));
                                                     continue;
                                                 },
                                             }
@@ -137,7 +137,7 @@ fn main() -> Result<(), failure::Error> {
                                                     "H" => "Herz",
                                                     "S" => "Schellen",
                                                     str_selected_game_suit => {
-                                                        communicate_error(format!("Bad farbe: {}", str_selected_game_suit));
+                                                        communicate_error(&format!("Bad farbe: {}", str_selected_game_suit));
                                                         continue;
                                                     }
                                                 }
@@ -146,7 +146,7 @@ fn main() -> Result<(), failure::Error> {
                                         ),
                                         "Wenz"|"Geier" => str_selected_game_name.to_owned(),
                                         _ => {
-                                            communicate_error(format!("Unknown game type: {}", str_selected_game_name));
+                                            communicate_error(&format!("Unknown game type: {}", str_selected_game_name));
                                             continue;
                                         },
                                     }
@@ -170,7 +170,7 @@ fn main() -> Result<(), failure::Error> {
                 });
             },
             Err(e) => {
-                communicate_error(format!("{:?} (category {:?})", e, e.classify()));
+                communicate_error(&format!("{:?} (category {:?})", e, e.classify()));
             }
         };
     }
