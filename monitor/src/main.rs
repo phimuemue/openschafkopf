@@ -21,6 +21,7 @@ fn main() -> Result<(), failure::Error> {
             let str_json_out = json!({
                 "strOpenschafkopfOut": str_openschafkopf_out
             }).to_string();
+            info!("Trying to send \"{}\"", str_json_out);
             let mut abyte_buffer_msg_len = [0; 4];
             byteorder::NativeEndian::write_u32(&mut abyte_buffer_msg_len, str_json_out.len().as_num::<u32>());
             debug_verify!(std::io::stdout().write(&abyte_buffer_msg_len)).unwrap();
