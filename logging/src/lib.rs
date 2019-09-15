@@ -41,6 +41,13 @@ pub fn init_logging() -> Result<(), failure::Error> {
         error!("panic: {}", panicinfo);
         fn_panic_handler_original(panicinfo)
     }));
-    info!("Started: {}", std::env::args().join(" "));
+    info!("Started: {}", std::env::args()
+        .format_with(
+            /*sep*/" ",
+            |str_arg, formatter| {
+                formatter(&format_args!("\"{}\"", str_arg))
+            },
+        )
+    );
     Ok(())
 }
