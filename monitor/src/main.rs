@@ -42,7 +42,9 @@ fn main() -> Result<(), failure::Error> {
                     let n_bytes_msg_len = byteorder::NativeEndian::read_u32(&abyte_buffer_msg_len);
                     let mut vecbyte : Vec<u8> = (0..n_bytes_msg_len).map(|_| 0).collect();
                     debug_verify!(std::io::stdin().read(vecbyte.as_mut_slice())).unwrap();
-                    debug_verify!(String::from_utf8(vecbyte)).unwrap()
+                    let str_json_in = debug_verify!(String::from_utf8(vecbyte)).unwrap();
+                    info!("Received \"{}\"", str_json_in);
+                    str_json_in
                 },
                 _ => {
                     panic!("Unexpected value for n_bytes_read: {}", n_bytes_read)
