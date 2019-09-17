@@ -1,4 +1,3 @@
-extern crate openschafkopf_util;
 use openschafkopf_util::*;
 
 use std::{

@@ -7,7 +7,7 @@ use select::{
     node::Node,
 };
 use crate::game_analysis::*;
-use crate::combine::{*, char::*};
+use combine::{*, char::*};
 use crate::rules::*;
 
 pub fn parse_rule_description(

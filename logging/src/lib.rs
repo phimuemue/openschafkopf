@@ -1,15 +1,8 @@
-extern crate fern;
-extern crate dirs;
-extern crate itertools;
-extern crate log;
-extern crate chrono;
-#[macro_use]
-extern crate failure;
-#[macro_use]
-extern crate openschafkopf_util;
-use crate::itertools::Itertools;
+use itertools::Itertools;
 
 pub use log::{trace, debug, info, warn, error};
+use openschafkopf_util::if_dbg_else;
+use failure::{bail, format_err};
 
 pub fn init_logging() -> Result<(), failure::Error> {
     fern::Dispatch::new()

@@ -8,8 +8,10 @@ pub use self::{
     box_clone::*,
     staticvalue::*,
 };
-pub use failure::Error;
+pub use failure::{bail, format_err, Error};
 pub use openschafkopf_util::*;
+pub use derive_new::new;
+pub use openschafkopf_logging::{error, info, warn};
 
 // TODORUST static_assert not available in rust
 macro_rules! static_assert{($assert_name:ident($($args:tt)*)) => {

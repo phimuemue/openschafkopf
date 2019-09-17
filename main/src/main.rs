@@ -1,30 +1,6 @@
 #![cfg_attr(feature="cargo-clippy", allow(clippy::block_in_if_condition_stmt))]
 #![deny(bare_trait_objects)]
 
-extern crate rand;
-extern crate ncurses;
-#[macro_use]
-extern crate itertools;
-extern crate permutohedron;
-#[macro_use]
-extern crate clap;
-extern crate arrayvec;
-extern crate rayon;
-#[macro_use]
-extern crate failure;
-extern crate as_num;
-extern crate plain_enum;
-#[macro_use]
-extern crate derive_new;
-extern crate toml;
-#[macro_use]
-extern crate openschafkopf_logging;
-extern crate chrono;
-extern crate select;
-extern crate combine;
-extern crate glob;
-extern crate openschafkopf_util;
-
 #[macro_use]
 mod util;
 mod primitives;
@@ -132,6 +108,7 @@ fn main() -> Result<(), Error> {
         let str_hand = subcommand_matches.value_of("hand").ok_or_else(||format_err!("No hand given as parameter."))?;
         let hand = str_to_hand(&str_hand)?;
         let hand = Some(hand).filter(|hand| hand.cards().len()==ruleset.ekurzlang.cards_per_player()).ok_or_else(||format_err!("Could not convert hand to a full hand of cards"))?;
+        use clap::value_t;
         subcommands::rank_rules::rank_rules(
             &ruleset,
             SFullHand::new(&hand, ruleset.ekurzlang),

@@ -1,15 +1,9 @@
-extern crate serde_json;
-extern crate byteorder;
-extern crate as_num;
-extern crate openschafkopf_util;
-#[macro_use]
-extern crate openschafkopf_logging;
 use openschafkopf_util::*;
+use openschafkopf_logging::*;
 use as_num::AsNum;
 use byteorder::ByteOrder;
 use serde_json::json;
 use std::io::{Read, Write};
-extern crate failure;
 
 fn main() -> Result<(), failure::Error> {
     openschafkopf_logging::init_logging()?;

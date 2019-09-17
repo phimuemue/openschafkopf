@@ -132,6 +132,7 @@ fn test_game_loop() {
         playercomputer::*,
     };
     let mut rng = rand::thread_rng();
+    use itertools::iproduct;
     for ruleset in
         iproduct!(
             [10, 20].iter(), // n_base_price

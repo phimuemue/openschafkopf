@@ -140,6 +140,7 @@ impl SCard {
         ESchlag::from_usize(self.n_internalrepresentation.as_num::<usize>() % ESchlag::SIZE)
     }
     pub fn values(ekurzlang: EKurzLang) -> impl Iterator<Item=SCard> {
+        use itertools::iproduct;
         iproduct!(
             EFarbe::values(),
             ESchlag::values()
