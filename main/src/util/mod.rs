@@ -4,9 +4,11 @@ pub use plain_enum::*;
 pub mod box_clone;
 #[macro_use]
 pub mod staticvalue;
+pub mod assign;
 pub use self::{
     box_clone::*,
     staticvalue::*,
+    assign::*,
 };
 pub use failure::{bail, format_err, Error};
 pub use openschafkopf_util::*;

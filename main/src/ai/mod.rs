@@ -19,7 +19,6 @@ use std::{
     sync::{
         Arc, Mutex,
     },
-    cmp,
 };
 use rayon::prelude::*;
 use crate::util::*;
@@ -362,8 +361,7 @@ pub fn determine_best_card(
                     )).unwrap()
                 }).map(|file_output| (file_output, determinebestcard.epi_fixed)),
             );
-            let mut mapcardn_payout = debug_verify!(mapcardn_payout.lock()).unwrap();
-            mapcardn_payout[card] = cmp::min(mapcardn_payout[card], n_payout);
+            assign_min(&mut debug_verify!(mapcardn_payout.lock()).unwrap()[card], n_payout);
         });
     let mapcardn_payout = debug_verify!(
         debug_verify!(Arc::try_unwrap(mapcardn_payout)).unwrap() // "Returns the contained value, if the Arc has exactly one strong reference"   
