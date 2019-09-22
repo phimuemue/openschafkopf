@@ -86,13 +86,13 @@ impl<'game> SDetermineBestCard<'game> {
     }
 }
 
-pub enum VSuggestCardResult<T> {
+pub enum VSuggestCardResult {
     SingleAllowed(SCard),
-    MultipleAllowed(SDetermineBestCardResult<T>),
+    MultipleAllowed(SDetermineBestCardResult<isize>),
 }
 
-impl<T> VSuggestCardResult<T> {
-    pub fn best_card(&self) -> SCard where T: Ord+std::fmt::Debug {
+impl VSuggestCardResult {
+    pub fn best_card(&self) -> SCard {
         match self {
             Self::SingleAllowed(card) => *card,
             Self::MultipleAllowed(determinebestcardresult) => determinebestcardresult.best_card().0,
@@ -151,7 +151,7 @@ impl SAi {
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
         opath_out_dir: Option<&std::path::Path>,
-    ) -> VSuggestCardResult<isize> {
+    ) -> VSuggestCardResult {
         if let Some(card) = determinebestcard.single_allowed_card() {
             VSuggestCardResult::SingleAllowed(card)
         } else {
@@ -209,7 +209,7 @@ impl SAi {
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
         opath_out_dir: Option<&std::path::Path>,
-    ) -> VSuggestCardResult<isize> {
+    ) -> VSuggestCardResult {
         macro_rules! forward_to_determine_best_card{($itahand: expr) => { // TODORUST generic closures
             Self::suggest_card_internal(
                 &SDetermineBestCard::new(
