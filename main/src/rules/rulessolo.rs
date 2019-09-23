@@ -90,15 +90,13 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
     fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Self> {
         use self::VGameAnnouncementPriority::*;
         use self::VGameAnnouncementPrioritySoloLike::*;
-        if let (SoloLike(SoloSteigern{..}), &SoloLike(SoloSteigern{n_points_to_win, n_step})) = (self.priority(), prio) {
-            let n_points_to_win_steigered = n_points_to_win + match ebid {
+        if let (SoloLike(SoloSteigern{..}), &SoloLike(SoloSteigern{mut n_points_to_win, n_step})) = (self.priority(), prio) {
+            n_points_to_win = n_points_to_win + match ebid {
                 EBid::AtLeast => 0,
                 EBid::Higher => n_step,
             };
-            if n_points_to_win_steigered<=120 {
-                let mut payoutdecider = self.clone();
-                payoutdecider.pointstowin = SoloSteigern{n_points_to_win: n_points_to_win_steigered, n_step};
-                return Some(payoutdecider)
+            if n_points_to_win<=120 {
+                return Some(Self{pointstowin:SoloSteigern{n_points_to_win, n_step}, ..self.clone()})
             }
         }
         None
