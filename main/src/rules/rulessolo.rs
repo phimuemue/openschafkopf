@@ -91,7 +91,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
         use self::VGameAnnouncementPriority::*;
         use self::VGameAnnouncementPrioritySoloLike::*;
         if let (SoloLike(SoloSteigern{..}), &SoloLike(SoloSteigern{mut n_points_to_win, n_step})) = (self.priority(), prio) {
-            n_points_to_win = n_points_to_win + match ebid {
+            n_points_to_win += match ebid {
                 EBid::AtLeast => 0,
                 EBid::Higher => n_step,
             };
