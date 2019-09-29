@@ -292,29 +292,34 @@ fn test_unplayed_cards() {
 
 pub struct SDetermineBestCardResult<T> {
     veccard_allowed: SHandVector,
-    mapcardt: EnumMap<SCard, T>,
+    mapcardt: EnumMap<SCard, Option<T>>,
 }
 
 impl<T> SDetermineBestCardResult<T> {
-    pub fn cards_and_ts(&self) -> impl Iterator<Item=(SCard, &T)> {
+    pub fn cards_and_ts(&self) -> impl Iterator<Item=(SCard, &T)> where T: std::fmt::Debug {
         self.veccard_allowed.iter()
-            .map(move |card| (*card, &self.mapcardt[*card]))
+            .map(move |card| (*card, debug_verify!(self.mapcardt[*card].as_ref()).unwrap()))
     }
     pub fn best_card(&self) -> (SCard, &T) where T: Ord+std::fmt::Debug {
         debug_verify!(self.cards_and_ts().max_by_key(|&(_card, t)| t)).unwrap()
     }
 }
 
-pub fn determine_best_card(
+pub fn determine_best_card<
+    ForEachSnapshot: TForEachSnapshot + Sync
+>(
     determinebestcard: &SDetermineBestCard,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
-    foreachsnapshot: &(impl TForEachSnapshot<Output=isize> + Sync),
+    foreachsnapshot: &ForEachSnapshot,
     opath_out_dir: Option<std::path::PathBuf>
-) -> SDetermineBestCardResult<isize> {
-    let mapcardn_payout = Arc::new(Mutex::new(
+) -> SDetermineBestCardResult<ForEachSnapshot::Output>
+    where
+        ForEachSnapshot::Output: std::fmt::Debug + std::cmp::Ord + Send,
+{
+    let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
-        SCard::map_from_fn(|_card| std::isize::MAX),
+        SCard::map_from_fn(|_card| None),
     ));
     itahand.enumerate()
         .collect::<Vec<_>>() // TODO necessary?
@@ -326,12 +331,12 @@ pub fn determine_best_card(
         .for_each(|(i_susp, ahand, card)| {
             debug_assert!(ahand[determinebestcard.epi_fixed].cards().contains(&card));
             let mut ahand = ahand.clone();
-            let mapcardn_payout = Arc::clone(&mapcardn_payout);
+            let mapcardooutput = Arc::clone(&mapcardooutput);
             let mut stichseq = determinebestcard.stichseq.clone();
             assert!(ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
             ahand[determinebestcard.epi_fixed].play_card(card);
             stichseq.zugeben(card, determinebestcard.rules);
-            let n_payout = explore_snapshots(
+            let output = explore_snapshots(
                 &mut ahand,
                 determinebestcard.rules,
                 &mut stichseq,
@@ -345,18 +350,22 @@ pub fn determine_best_card(
                     )).unwrap()
                 }).map(|file_output| (file_output, determinebestcard.epi_fixed)),
             );
-            assign_min(&mut debug_verify!(mapcardn_payout.lock()).unwrap()[card], n_payout);
+            let ref mut ooutput = debug_verify!(mapcardooutput.lock()).unwrap()[card];
+            match ooutput {
+                None => *ooutput = Some(output),
+                Some(ref mut output_return) => assign_min(output_return, output),
+            }
         });
-    let mapcardn_payout = debug_verify!(
-        debug_verify!(Arc::try_unwrap(mapcardn_payout)).unwrap() // "Returns the contained value, if the Arc has exactly one strong reference"   
+    let mapcardooutput = debug_verify!(
+        debug_verify!(Arc::try_unwrap(mapcardooutput)).unwrap() // "Returns the contained value, if the Arc has exactly one strong reference"   
             .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
     ).unwrap();
     assert!(<SCard as TPlainEnum>::values().any(|card| {
-        determinebestcard.veccard_allowed.contains(&card) && mapcardn_payout[card] < std::isize::MAX
+        determinebestcard.veccard_allowed.contains(&card) && mapcardooutput[card].is_some()
     }));
     SDetermineBestCardResult{
         veccard_allowed: determinebestcard.veccard_allowed.clone(),
-        mapcardt: mapcardn_payout,
+        mapcardt: mapcardooutput,
     }
 }
 
@@ -521,10 +530,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         );
         for card in [H7, H8, H9].iter() {
             assert!(determinebestcard.veccard_allowed.contains(card));
-            assert!(
-                determinebestcardresult.mapcardt[*card] == std::isize::MAX
-                || determinebestcardresult.mapcardt[*card] == 3*(n_payout_base+2*n_payout_schneider_schwarz)
-            );
+            assert_eq!(determinebestcardresult.mapcardt[*card], Some(3*(n_payout_base+2*n_payout_schneider_schwarz)));
         }
     }
 }
