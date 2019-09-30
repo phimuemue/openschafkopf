@@ -143,6 +143,7 @@ impl SAi {
                 itahand,
                 $func_filter_allowed_cards,
                 $foreachsnapshot,
+                assign_min,
                 opath_out_dir.map(|path_out_dir| {
                     debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
                     crate::game_analysis::generate_html_auxiliary_files(path_out_dir).unwrap();
@@ -306,16 +307,18 @@ impl<T> SDetermineBestCardResult<T> {
 }
 
 pub fn determine_best_card<
-    ForEachSnapshot: TForEachSnapshot + Sync
+    ForEachSnapshot: TForEachSnapshot + Sync,
+    FnCombineExploredOutput: Fn(&mut ForEachSnapshot::Output, ForEachSnapshot::Output) + Sync,
 >(
     determinebestcard: &SDetermineBestCard,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &ForEachSnapshot,
+    fn_combine_explored_output: FnCombineExploredOutput,
     opath_out_dir: Option<std::path::PathBuf>
 ) -> SDetermineBestCardResult<ForEachSnapshot::Output>
     where
-        ForEachSnapshot::Output: std::fmt::Debug + std::cmp::Ord + Send,
+        ForEachSnapshot::Output: std::fmt::Debug + Send,
 {
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
@@ -353,7 +356,7 @@ pub fn determine_best_card<
             let ref mut ooutput = debug_verify!(mapcardooutput.lock()).unwrap()[card];
             match ooutput {
                 None => *ooutput = Some(output),
-                Some(ref mut output_return) => assign_min(output_return, output),
+                Some(ref mut output_return) => fn_combine_explored_output(output_return, output),
             }
         });
     let mapcardooutput = debug_verify!(
@@ -526,6 +529,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             Some(ahand).into_iter(),
             /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(&game)),
+            assign_min,
             /*opath_out_dir*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
         );
         for card in [H7, H8, H9].iter() {

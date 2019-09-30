@@ -139,6 +139,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
                             $itahand,
                             &|_,_| (/*no filtering*/),
                             &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
+                            assign_min,
                             /*ostr_file_out*/None,
                         ).best_card();
                         if card!=card_suggested && an_payout[epi]<n_payout {
