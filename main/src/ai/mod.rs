@@ -124,7 +124,7 @@ impl SAi {
                         n_stock,
                     )),
                     /*opath_out_dir*/None,
-                )
+                ).aan_payout[EMinMaxStrategy::OthersMin][epi_rank]
             })
             .sum::<isize>().as_num::<f64>() / (self.n_rank_rules_samples.as_num::<f64>())
     }
@@ -136,14 +136,16 @@ impl SAi {
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
         opath_out_dir: Option<&std::path::Path>,
-    ) -> SDetermineBestCardResult<isize> {
+    ) -> SDetermineBestCardResult<SMinMax> {
         macro_rules! forward_to_determine_best_card{($func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => {{ // TODORUST generic closures
             determine_best_card(
                 &determinebestcard,
                 itahand,
                 $func_filter_allowed_cards,
                 $foreachsnapshot,
-                assign_min,
+                |minmax_acc, minmax| {
+                    minmax_acc.assign_min_by_key(&minmax, determinebestcard.epi_fixed);
+                },
                 opath_out_dir.map(|path_out_dir| {
                     debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
                     crate::game_analysis::generate_html_auxiliary_files(path_out_dir).unwrap();
@@ -191,7 +193,7 @@ impl SAi {
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
         opath_out_dir: Option<&std::path::Path>,
-    ) -> SDetermineBestCardResult<isize> { // we are interested in payout => single-card-optimization useless
+    ) -> SDetermineBestCardResult<SMinMax> { // we are interested in payout => single-card-optimization useless
         macro_rules! forward_to_determine_best_card{($itahand: expr) => { // TODORUST generic closures
             Self::suggest_card_internal(
                 &SDetermineBestCard::new(
@@ -227,6 +229,10 @@ impl SAi {
         {
             card
         } else {
+            let epi_fixed = debug_verify_eq!(
+                debug_verify!(game.which_player_can_do_something()).unwrap().0,
+                debug_verify!(game.current_playable_stich().current_playerindex()).unwrap()
+            );
             macro_rules! suggest_via{($fn_suggest: ident, $($arg: expr,)*) => {{ // TODORUST generic closures
                 Self::$fn_suggest(
                     $($arg,)*
@@ -234,20 +240,18 @@ impl SAi {
                     /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                     game.n_stock,
                     opath_out_dir,
-                ).best_card().0
+                ).best_card(|minmax| minmax.values_for(epi_fixed).into_raw()).0
             }}}
             match self.aiparams {
                 VAIParams::Cheating => {
+                    let determinebestcard = SDetermineBestCard::new_from_game(game);
+                    assert_eq!(determinebestcard.epi_fixed, epi_fixed);
                     suggest_via!(suggest_card_internal,
-                        &SDetermineBestCard::new_from_game(game),
+                        &determinebestcard,
                         /*itahand*/Some(game.ahand.clone()).into_iter(),
                     )
                 },
                 VAIParams::Simulating{n_suggest_card_samples} => {
-                    let epi_fixed = debug_verify_eq!(
-                        debug_verify!(game.which_player_can_do_something()).unwrap().0,
-                        debug_verify!(game.current_playable_stich().current_playerindex()).unwrap()
-                    );
                     suggest_via!(suggest_card_simulating, // should be fast, only SCard needed
                         game.rules.as_ref(),
                         &game.stichseq,
@@ -301,8 +305,8 @@ impl<T> SDetermineBestCardResult<T> {
         self.veccard_allowed.iter()
             .map(move |card| (*card, debug_verify!(self.mapcardt[*card].as_ref()).unwrap()))
     }
-    pub fn best_card(&self) -> (SCard, &T) where T: Ord+std::fmt::Debug {
-        debug_verify!(self.cards_and_ts().max_by_key(|&(_card, t)| t)).unwrap()
+    pub fn best_card<K: Ord>(&self, fn_key: impl Fn(&T)->K) -> (SCard, &T) where T: std::fmt::Debug {
+        debug_verify!(self.cards_and_ts().max_by_key(|&(_card, t)| fn_key(t))).unwrap()
     }
 }
 
@@ -529,12 +533,19 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             Some(ahand).into_iter(),
             /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(&game)),
-            assign_min,
+            |minmax_acc, minmax| {
+                minmax_acc.assign_min_by_key(&minmax, determinebestcard.epi_fixed);
+            },
             /*opath_out_dir*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
         );
         for card in [H7, H8, H9].iter() {
             assert!(determinebestcard.veccard_allowed.contains(card));
-            assert_eq!(determinebestcardresult.mapcardt[*card], Some(3*(n_payout_base+2*n_payout_schneider_schwarz)));
+            for eminmaxstrat in EMinMaxStrategy::values() {
+                assert_eq!(
+                    determinebestcardresult.mapcardt[*card].clone().map(|minmax| minmax.aan_payout[eminmaxstrat][epi_first_and_active_player]),
+                    Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
+                );
+            }
         }
     }
 }

@@ -8,7 +8,7 @@ use crate::game::*;
 use crate::ai::{
     *,
     handiterators::forever_rand_hands,
-    suspicion::{explore_snapshots, SMinReachablePayout, SMinReachablePayoutParams},
+    suspicion::{explore_snapshots, SMinReachablePayout, SMinReachablePayoutParams, EMinMaxStrategy},
 };
 use crate::util::*;
 use std::sync::mpsc;
@@ -130,7 +130,7 @@ impl TPlayer for SPlayerComputer {
                             n_stock,
                         )),
                         /*opath_out_dir*/None,
-                    )
+                    ).aan_payout[EMinMaxStrategy::OthersMin][epi]
                 })
                 .sum::<isize>().as_num::<f64>()
                 / n_samples_per_stoss.as_num::<f64>()

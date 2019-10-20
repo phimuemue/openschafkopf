@@ -1,5 +1,6 @@
 use crate::util::*;
 use crate::primitives::*;
+use crate::ai::suspicion::*;
 use crate::game::SStichSequence;
 
 pub fn suggest_card(
@@ -32,10 +33,11 @@ pub fn suggest_card(
                 stichseq.zugeben(*card, rules);
             }
         );
+    let epi = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
     let determinebestcardresult = crate::ai::SAi::suggest_card_simulating( // should not distinguish for SingleAllowed (we want to know expected payout anyway)
         rules,
         &stichseq,
-        debug_verify!(stichseq.current_stich().current_playerindex()).unwrap(),
+        epi,
         hand_fixed,
         /*n_suggest_card_samples*/50, // TODO? make customizable
         /*n_suggest_card_branches*/2, // TODO? make customizable
@@ -44,10 +46,15 @@ pub fn suggest_card(
         /*opath_out_dir*/None,
     );
     // TODO interface should probably output payout interval per card
-    let mut veccardn_payout = determinebestcardresult.cards_and_ts().collect::<Vec<_>>();
-    veccardn_payout.sort_unstable_by_key(|&(_card, n_payout)| /*descending*/-n_payout);
-    for (card, n_payout) in veccardn_payout {
-        println!("{}: {}", card, n_payout);
+    let mut veccardminmax = determinebestcardresult.cards_and_ts().collect::<Vec<_>>();
+    veccardminmax.sort_unstable_by_key(|&(_card, minmax)| minmax.values_for(epi).into_raw());
+    veccardminmax.reverse(); // descending
+    for (card, minmax) in veccardminmax {
+        println!("{}: {}/{}",
+            card,
+            minmax.aan_payout[EMinMaxStrategy::OthersMin][epi],
+            minmax.aan_payout[EMinMaxStrategy::MaxPerEpi][epi],
+        );
     }
     Ok(())
 }

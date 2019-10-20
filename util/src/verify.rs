@@ -14,6 +14,12 @@ impl<T> TVerifiableByVerifyMacro for Option<T> {
     }
 }
 
+impl<T: TVerifiableByVerifyMacro> TVerifiableByVerifyMacro for &T {
+    fn is_verify_true(&self) -> bool {
+        T::is_verify_true(self)
+    }
+}
+
 impl<TOk, TErr> TVerifiableByVerifyMacro for Result<TOk, TErr> {
     fn is_verify_true(&self) -> bool {
         self.is_ok()

@@ -6,7 +6,7 @@ pub enum ESingleError {Empty, MoreThanOne}
 // https://github.com/rust-lang/rfcs/blob/master/text/2351-is-sorted.md
 // https://github.com/rust-lang/rust/issues/53485
 // For now, use implementation from https://github.com/rust-lang/rust/blob/b5ab524ea7b536617d8abc5507a1d97b3e60a42d/src/libcore/iter/iterator.rs
-pub trait IteratorExt : Iterator {
+pub trait IteratorExt : itertools::Itertools {
     fn is_sorted_unstable_name_collision(self) -> bool
         where
             Self: Sized,
@@ -62,6 +62,16 @@ pub trait IteratorExt : Iterator {
         self.fold(init, move |mut b, item| {
             f(&mut b, item);
             b
+        })
+    }
+
+    fn fold1_mutating<F: FnMut(&mut Self::Item, Self::Item)>(self, mut f: F) -> Option<Self::Item>
+        where
+            Self: Sized,
+    {
+        self.fold1(move |mut lhs, rhs| {
+            f(&mut lhs, rhs);
+            lhs
         })
     }
 }

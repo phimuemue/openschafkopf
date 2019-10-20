@@ -134,16 +134,19 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
                     $func_filter_allowed_cards: expr,
                 ) => {{
                     if determinebestcard.single_allowed_card().is_none() { // there is an actual choice
-                        let (card_suggested, &n_payout) = determine_best_card(
+                        let determinebestcardresult = determine_best_card(
                             &determinebestcard,
                             $itahand,
                             &|_,_| (/*no filtering*/),
                             &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
-                            assign_min,
+                            |minmax_acc, minmax| {
+                                minmax_acc.assign_min_by_key(&minmax, determinebestcard.epi_fixed);
+                            },
                             /*ostr_file_out*/None,
-                        ).best_card();
-                        if card!=card_suggested && an_payout[epi]<n_payout {
-                            Some(SAnalysisCardAndPayout{card_suggested, n_payout})
+                        );
+                        let (card_suggested, minmax) = determinebestcardresult.best_card(|minmax| minmax.values_for(determinebestcard.epi_fixed).into_raw());
+                        if card!=card_suggested && an_payout[epi]<minmax.aan_payout[EMinMaxStrategy::OthersMin][epi] { // TODO can we improve this?
+                            Some(SAnalysisCardAndPayout{card_suggested, n_payout: minmax.aan_payout[EMinMaxStrategy::OthersMin][epi]})
                         } else {
                             // The decisive mistake must occur in subsequent stichs.
                             // TODO assert that it actually occurs

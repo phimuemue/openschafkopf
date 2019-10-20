@@ -7,6 +7,7 @@ use std::{
     fs,
     io::Write,
     fmt,
+    cmp::Ordering,
 };
 use rand::{
     self,
@@ -227,12 +228,14 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     output
 }
 
-fn end_snapshot_minmax<ItTplCardNPayout: Iterator<Item=(SCard, isize)>>(epi_self: EPlayerIndex, epi_card: EPlayerIndex, ittplcardn_payout: ItTplCardNPayout) -> isize {
+fn end_snapshot_minmax<ItTplCardNPayout: Iterator<Item=(SCard, SMinMax)>>(epi_self: EPlayerIndex, epi_card: EPlayerIndex, ittplcardminmax: ItTplCardNPayout) -> SMinMax {
+    let itminmax = ittplcardminmax.map(|(_card, minmax)| minmax);
     debug_verify!(if epi_self==epi_card {
-        ittplcardn_payout.max_by_key(|&(_card, n_payout)| n_payout)
+        itminmax.fold1_mutating(|minmax_acc, minmax| minmax_acc.assign_max_by_key(&minmax, epi_self))
     } else {
-        ittplcardn_payout.min_by_key(|&(_card, n_payout)| n_payout) // other players may play inconveniently for epi_stich
-    }).unwrap().1
+        // other players may play inconveniently for epi_stich
+        itminmax.fold1_mutating(|minmax_acc, minmax| minmax_acc.assign_by_key_ordering(&minmax, (epi_self, Ordering::Less), (epi_card, Ordering::Greater)))
+    }).unwrap()
 }
 
 #[derive(new, Clone)]
@@ -257,11 +260,55 @@ impl<'rules> SMinReachablePayoutParams<'rules> {
 #[derive(Clone)]
 pub struct SMinReachablePayout<'rules>(pub SMinReachablePayoutParams<'rules>);
 
+plain_enum_mod!(modeminmaxstrategy, EMinMaxStrategy {
+    OthersMin,
+    MaxPerEpi,
+});
+
+#[derive(Debug, Clone)]
+pub struct SMinMax {
+    pub aan_payout: EnumMap<EMinMaxStrategy, EnumMap<EPlayerIndex, isize>>,
+}
+
+impl SMinMax {
+    fn new_final(an_payout: EnumMap<EPlayerIndex, isize>) -> Self {
+        Self {
+            aan_payout: EMinMaxStrategy::map_from_fn(|_| an_payout.clone()),
+        }
+    }
+
+    fn assign_by_key_ordering(&mut self, minmax: &SMinMax, (epi_minmax, ordering_minmax): (EPlayerIndex, Ordering), (epi_max_per_epi, ordering_max_per_epi): (EPlayerIndex, Ordering)) {
+        let mapeminmaxstrattplepiordering = EMinMaxStrategy::map_from_raw([
+            (epi_minmax, ordering_minmax),
+            (epi_max_per_epi, ordering_max_per_epi),
+        ]);
+        for eminmaxstrat in EMinMaxStrategy::values() {
+            assign_by_key_ordering(
+                &mut self.aan_payout[eminmaxstrat],
+                minmax.aan_payout[eminmaxstrat].clone(),
+                |an_payout| an_payout[mapeminmaxstrattplepiordering[eminmaxstrat].0],
+                mapeminmaxstrattplepiordering[eminmaxstrat].1,
+            );
+        }
+    }
+
+    pub fn assign_min_by_key(&mut self, minmax: &SMinMax, epi: EPlayerIndex) {
+        self.assign_by_key_ordering(minmax, (epi, Ordering::Less), (epi, Ordering::Less))
+    }
+    fn assign_max_by_key(&mut self, minmax: &SMinMax, epi: EPlayerIndex) {
+        self.assign_by_key_ordering(minmax, (epi, Ordering::Greater), (epi, Ordering::Greater))
+    }
+
+    pub fn values_for(&self, epi: EPlayerIndex) -> EnumMap<EMinMaxStrategy, isize> {
+        self.aan_payout.map(|an_payout| an_payout[epi])
+    }
+}
+
 impl TForEachSnapshot for SMinReachablePayout<'_> {
-    type Output = isize;
+    type Output = SMinMax;
 
     fn final_output(&self, slcstich: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
-        self.0.rules.payout_with_cache(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock, rulestatecache)[self.0.epi]
+        SMinMax::new_final(self.0.rules.payout_with_cache(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock, rulestatecache))
     }
 
     fn pruned_output(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
@@ -281,20 +328,25 @@ impl TForEachSnapshot for SMinReachablePayout<'_> {
 pub struct SMinReachablePayoutLowerBoundViaHint<'rules>(pub SMinReachablePayoutParams<'rules>);
 
 impl TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'_> {
-    type Output = isize;
+    type Output = SMinMax;
 
     fn final_output(&self, slcstich: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
-        self.0.rules.payout_with_cache(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock, rulestatecache)[self.0.epi]
+        SMinMax::new_final(self.0.rules.payout_with_cache(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock, rulestatecache))
     }
 
     fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
-        self.0.rules.payouthints(stichseq, ahand, rulestatecache)[self.0.epi]
-            .lower_bound()
-            .as_ref()
-            .and_then(|payoutinfo| {
-                let n_payout = payoutinfo.payout_including_stock(self.0.n_stock, self.0.tpln_stoss_doubling);
-                if_then_some!(0<n_payout, n_payout)
-            })
+        let mapepion_payout = self.0.rules.payouthints(stichseq, ahand, rulestatecache).map(|payouthint| {
+            payouthint
+                .lower_bound()
+                .as_ref()
+                .map(|payoutinfo|
+                    payoutinfo.payout_including_stock(self.0.n_stock, self.0.tpln_stoss_doubling)
+                )
+        });
+        if_then_some!(
+            mapepion_payout.iter().all(Option::is_some) && 0<debug_verify!(mapepion_payout[self.0.epi]).unwrap(),
+            SMinMax::new_final(mapepion_payout.map(|opayout| debug_verify!(opayout).unwrap()))
+        )
     }
 
     fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
