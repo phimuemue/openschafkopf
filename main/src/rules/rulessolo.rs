@@ -328,11 +328,11 @@ impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, Payou
     }
 }
 
-pub enum ESoloLike {
+plain_enum_mod!(modesololike, ESoloLike {
     Solo,
     Wenz,
     Geier,
-}
+});
 
 type_dispatch_enum!(pub enum VPayoutDeciderSoloLike {
     PointBased(SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike>),
