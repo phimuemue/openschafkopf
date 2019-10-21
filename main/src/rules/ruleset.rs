@@ -314,9 +314,8 @@ impl SRuleSet {
 
     pub fn from_file(path: &Path) -> Result<SRuleSet, Error> {
         // TODO? ruleset creation wizard
-        let mut file = File::open(&path)?;
         let mut str_toml = String::new();
-        let _n_bytes = file.read_to_string(&mut str_toml)?;
+        let _n_bytes = File::open(&path)?.read_to_string(&mut str_toml)?;
         Self::from_string(&str_toml)
     }
 }

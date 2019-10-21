@@ -25,36 +25,40 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
         }
         let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset, accountbalance.get_stock());
         while let Some(epi) = dealcards.which_player_can_do_something() {
-            let b_doubling = communicate_via_channel(|txb_doubling| {
-                aplayer[epi].ask_for_doubling(
-                    dealcards.first_hand_for(epi),
-                    txb_doubling
-                );
-            });
-            debug_verify!(dealcards.announce_doubling(epi, b_doubling)).unwrap();
+            debug_verify!(dealcards.announce_doubling(
+                epi,
+                /*b_doubling*/communicate_via_channel(|txb_doubling| {
+                    aplayer[epi].ask_for_doubling(
+                        dealcards.first_hand_for(epi),
+                        txb_doubling
+                    );
+                })
+            )).unwrap();
         }
         let mut gamepreparations = debug_verify!(dealcards.finish()).unwrap();
         while let Some(epi) = gamepreparations.which_player_can_do_something() {
             info!("Asking player {} for game", epi);
-            let orules = communicate_via_channel(|txorules| {
-                aplayer[epi].ask_for_game(
-                    epi,
-                    gamepreparations.fullhand(epi),
-                    &gamepreparations.gameannouncements,
-                    &gamepreparations.ruleset.avecrulegroup[epi],
-                    stoss_and_doublings(/*vecstoss*/&[], &gamepreparations.doublings),
-                    gamepreparations.n_stock,
-                    None,
-                    txorules
-                );
-            });
-            debug_verify!(gamepreparations.announce_game(epi, orules.map(TActivelyPlayableRules::box_clone))).unwrap();
+            debug_verify!(gamepreparations.announce_game(
+                epi,
+                communicate_via_channel(|txorules| {
+                    aplayer[epi].ask_for_game(
+                        epi,
+                        gamepreparations.fullhand(epi),
+                        &gamepreparations.gameannouncements,
+                        &gamepreparations.ruleset.avecrulegroup[epi],
+                        stoss_and_doublings(/*vecstoss*/&[], &gamepreparations.doublings),
+                        gamepreparations.n_stock,
+                        None,
+                        txorules
+                    );
+                }).map(TActivelyPlayableRules::box_clone)
+            )).unwrap();
         }
         info!("Asked players if they want to play. Determining rules");
         let stockorgame = match debug_verify!(gamepreparations.finish()).unwrap() {
             VGamePreparationsFinish::DetermineRules(mut determinerules) => {
                 while let Some((epi, vecrulegroup_steigered))=determinerules.which_player_can_do_something() {
-                    let orules = communicate_via_channel(|txorules| {
+                    if let Some(rules) = communicate_via_channel(|txorules| {
                         aplayer[epi].ask_for_game(
                             epi,
                             determinerules.fullhand(epi),
@@ -65,8 +69,7 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
                             Some(determinerules.currently_offered_prio()),
                             txorules
                         );
-                    });
-                    if let Some(rules) = orules.map(TActivelyPlayableRules::box_clone) {
+                    }).map(TActivelyPlayableRules::box_clone) {
                         debug_verify!(determinerules.announce_game(epi, rules)).unwrap();
                     } else {
                         debug_verify!(determinerules.resign(epi)).unwrap();
@@ -104,13 +107,15 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
                             continue;
                         }
                     }
-                    let card = communicate_via_channel(|txcard| {
-                        aplayer[gameaction.0].ask_for_card(
-                            &game,
-                            txcard.clone()
-                        );
-                    });
-                    debug_verify!(game.zugeben(card, gameaction.0)).unwrap();
+                    debug_verify!(game.zugeben(
+                        communicate_via_channel(|txcard| {
+                            aplayer[gameaction.0].ask_for_card(
+                                &game,
+                                txcard.clone()
+                            );
+                        }),
+                        gameaction.0
+                    )).unwrap();
                 }
                 accountbalance.apply_payout(&debug_verify!(game.finish()).unwrap().an_payout);
             },

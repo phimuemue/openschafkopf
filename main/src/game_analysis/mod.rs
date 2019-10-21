@@ -305,8 +305,7 @@ fn create_dir_if_not_existent(path: &std::path::Path) -> Result<(), failure::Err
 }
 
 fn write_html(path: std::path::PathBuf, str_html: &str) -> Result<std::path::PathBuf, failure::Error> {
-    let mut file_analysis_html = std::fs::File::create(path.clone())?;
-    file_analysis_html.write_all(str_html.as_bytes())?;
+    std::fs::File::create(path.clone())?.write_all(str_html.as_bytes())?;
     Ok(path)
 }
 
