@@ -16,9 +16,9 @@ fn main() -> Result<(), failure::Error> {
                 "strOpenschafkopfOut": str_openschafkopf_out
             }).to_string();
             info!("Trying to send \"{}\"", str_json_out);
-            let mut abyte_buffer_msg_len = [0; 4];
-            byteorder::NativeEndian::write_u32(&mut abyte_buffer_msg_len, str_json_out.len().as_num::<u32>());
-            debug_verify!(std::io::stdout().write(&abyte_buffer_msg_len)).unwrap();
+            debug_verify!(std::io::stdout().write(&via_out_param(|abyte_buffer_msg_len: &mut [u8; 4]|
+                byteorder::NativeEndian::write_u32(abyte_buffer_msg_len, str_json_out.len().as_num::<u32>())
+            ).0)).unwrap();
             debug_verify!(std::io::stdout().write(str_json_out.as_bytes())).unwrap();
             debug_verify!(std::io::stdout().flush()).unwrap();
         }
@@ -26,8 +26,9 @@ fn main() -> Result<(), failure::Error> {
     loop {
         let str_json_in = {
             const N_BYTES_FOR_MSG_LEN : usize = 4;
-            let mut abyte_buffer_msg_len = [0; N_BYTES_FOR_MSG_LEN];
-            let n_bytes_read = debug_verify!(std::io::stdin().read(&mut abyte_buffer_msg_len)).unwrap();
+            let (abyte_buffer_msg_len, n_bytes_read) = via_out_param(|abyte_buffer_msg_len: &mut [u8; N_BYTES_FOR_MSG_LEN]|
+                debug_verify!(std::io::stdin().read(abyte_buffer_msg_len)).unwrap()
+            );
             match n_bytes_read {
                 0 => {
                     info!("Received 0 bytes. Exiting.");
@@ -36,7 +37,7 @@ fn main() -> Result<(), failure::Error> {
                 N_BYTES_FOR_MSG_LEN => {
                     let n_bytes_msg_len = byteorder::NativeEndian::read_u32(&abyte_buffer_msg_len);
                     let mut vecbyte : Vec<u8> = (0..n_bytes_msg_len).map(|_| 0).collect();
-                    debug_verify!(std::io::stdin().read(vecbyte.as_mut_slice())).unwrap();
+                    debug_verify!(std::io::stdin().read(vecbyte.as_mut_slice())).unwrap(); // TODO use version of via_out_param?
                     let str_json_in = debug_verify!(String::from_utf8(vecbyte)).unwrap();
                     info!("Received \"{}\"", str_json_in);
                     str_json_in
@@ -157,8 +158,9 @@ fn main() -> Result<(), failure::Error> {
                 let stdout = debug_verify!(cmd_openschafkopf.stdout.take()).unwrap();
                 *debug_verify!(ocmd_openschafkopf.lock()).unwrap() = Some(cmd_openschafkopf);
                 std::thread::spawn(move || {
-                    let mut str_openschafkopf_out = String::new();
-                    if std::io::BufReader::new(stdout).read_to_string(&mut str_openschafkopf_out).is_ok() {
+                    if let Ok((str_openschafkopf_out, _n_bytes)) = via_out_param_result(|str_openschafkopf_out|
+                        std::io::BufReader::new(stdout).read_to_string(str_openschafkopf_out)
+                    ) {
                         debug_verify!(sendstr.send(str_openschafkopf_out)).unwrap();
                         debug_verify!(ocmd_openschafkopf.lock()).unwrap().take();
                     }

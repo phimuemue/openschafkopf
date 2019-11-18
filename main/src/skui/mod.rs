@@ -79,11 +79,7 @@ enum VSkUiWindow {
 }
 
 fn do_in_window<RetVal>(skuiwin: &VSkUiWindow, fn_do: impl FnOnce(ncurses::WINDOW)->RetVal) -> RetVal {
-    let (n_height, n_width) = {
-        let (mut n_height, mut n_width) = (0, 0);
-        ncurses::getmaxyx(ncurses::stdscr(), &mut n_height, &mut n_width);
-        (n_height, n_width)
-    };
+    let (n_height, n_width) = via_out_param(|(n_height, n_width)| ncurses::getmaxyx(ncurses::stdscr(), n_height, n_width)).0;
     let create_fullwidth_window = |n_top, n_bottom| {
         ncurses::newwin(
             n_bottom-n_top, // height

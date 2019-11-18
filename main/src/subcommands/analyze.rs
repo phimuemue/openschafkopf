@@ -14,12 +14,12 @@ pub fn analyze<
             match globresult {
                 Ok(path) => {
                     println!("Opening {:?}", path);
-                    let mut str_html = String::new();
-                    std::fs::File::open(&path)?.read_to_string(&mut str_html)?;
                     vecanalyzeparams.push(SAnalyzeParamsWithDesc{
                         str_description: path.to_string_lossy().into_owned(),
                         str_link: format!("file://{}", path.to_string_lossy()),
-                        resanalyzeparams: analyze_html(&str_html),
+                        resanalyzeparams: analyze_html(&via_out_param_result(|str_html|
+                            std::fs::File::open(&path)?.read_to_string(str_html)
+                        )?.0),
                     });
                 },
                 Err(e) => {
