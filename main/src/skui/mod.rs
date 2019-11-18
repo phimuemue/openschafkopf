@@ -80,8 +80,7 @@ enum VSkUiWindow {
 
 fn do_in_window<RetVal>(skuiwin: &VSkUiWindow, fn_do: impl FnOnce(ncurses::WINDOW)->RetVal) -> RetVal {
     let (n_height, n_width) = {
-        let mut n_height = 0;
-        let mut n_width = 0;
+        let (mut n_height, mut n_width) = (0, 0);
         ncurses::getmaxyx(ncurses::stdscr(), &mut n_height, &mut n_width);
         (n_height, n_width)
     };
