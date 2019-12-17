@@ -171,3 +171,14 @@ fn detect_expensive_all_possible_hands() {
         )).unwrap()
     );
 }
+
+// TODO (Sauspiel 964899954)
+// Rufspiel(EPI2), EPI2 is first
+// 2 EK H7 E7 EA
+// 3 S7 S8 Sa S9
+// 1 HK HO H8 EO
+// 0 E9 EZ HA EU
+// 3 SZ SO G7 GO // TODO is SO best choice here?
+// 2 SU H9 Hz HU
+// 1 GK G9 GZ GA
+// 0 E8 G8 GU SK
