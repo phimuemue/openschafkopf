@@ -12,7 +12,7 @@ pub fn suggest_card(
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
     let fn_str_to_epi = |str_epi: &str| EPlayerIndex::checked_from_usize(str_epi.parse()?)
         .ok_or_else(|| format_err!("Cannot convert {} to EPlayerIndex.", str_epi));
-    let rules = crate::sauspiel::parse_rule_description(
+    let rules = crate::rules::parser::parse_rule_description(
         str_rules_with_epi,
         (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO make adjustable
         fn_str_to_epi,

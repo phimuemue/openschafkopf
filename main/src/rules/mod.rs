@@ -10,6 +10,7 @@ pub mod rulesbettel;
 pub mod ruleset;
 pub mod payoutdecider;
 pub mod card_points;
+pub mod parser;
 
 #[cfg(test)]
 pub mod tests;
