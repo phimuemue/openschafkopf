@@ -65,7 +65,12 @@ plain_enum_mod!{moderelativeplayerposition, ERelativePlayerPosition {
 impl EPlayerIndex {
     fn to_relativeplayerposition(self, epi_myself: EPlayerIndex) -> ERelativePlayerPosition {
         static_assert!(assert_eq(EPlayerIndex::SIZE, ERelativePlayerPosition::SIZE));
-        /*TODO[plain_enum]: could wrapped_difference return a wapped enum?*/unsafe {ERelativePlayerPosition::from_usize(self.wrapped_difference(epi_myself))}
+        match self.wrapped_difference(epi_myself).0 {
+            EPlayerIndex::EPI0 => ERelativePlayerPosition::Myself,
+            EPlayerIndex::EPI1 => ERelativePlayerPosition::Left,
+            EPlayerIndex::EPI2 => ERelativePlayerPosition::VisAVis,
+            EPlayerIndex::EPI3 => ERelativePlayerPosition::Right,
+        }
     }
 }
 
