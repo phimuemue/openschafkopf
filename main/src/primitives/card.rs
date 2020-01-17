@@ -91,7 +91,7 @@ impl EKurzLang {
 
 #[derive(PartialEq, Eq, Clone, Copy, Hash)]
 pub struct SCard {
-    n_internalrepresentation : u8,
+    n_internalrepresentation : u8, // TODO is there a simple method for bit fields?
 }
 
 impl fmt::Debug for SCard {
@@ -134,10 +134,10 @@ impl SCard {
         card
     }
     pub fn farbe(self) -> EFarbe {
-        EFarbe::from_usize(self.n_internalrepresentation.as_num::<usize>() / ESchlag::SIZE)
+        unsafe {EFarbe::from_usize(self.n_internalrepresentation.as_num::<usize>() / ESchlag::SIZE)}
     }
     pub fn schlag(self) -> ESchlag {
-        ESchlag::from_usize(self.n_internalrepresentation.as_num::<usize>() % ESchlag::SIZE)
+        unsafe {ESchlag::from_usize(self.n_internalrepresentation.as_num::<usize>() % ESchlag::SIZE)}
     }
     pub fn values(ekurzlang: EKurzLang) -> impl Iterator<Item=SCard> {
         use itertools::iproduct;
@@ -175,7 +175,7 @@ fn test_card_ctor() {
 
 impl TPlainEnum for SCard {
     const SIZE : usize = EFarbe::SIZE*ESchlag::SIZE;
-    fn from_usize(n: usize) -> Self {
+    unsafe fn from_usize(n: usize) -> Self {
         debug_assert!(n < Self::SIZE);
         SCard{n_internalrepresentation: n.as_num::<u8>()}
     }

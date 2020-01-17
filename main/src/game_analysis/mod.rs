@@ -33,7 +33,7 @@ impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderTout {
 pub fn make_stich_vector(vecpairnacard_stich: &[(usize, [SCard; 4])]) -> Vec<SStich> {
     vecpairnacard_stich.iter()
         .map(|&(n_epi, acard)| {
-            SStich::new_full(EPlayerIndex::from_usize(n_epi), acard)
+            SStich::new_full(unsafe/*TODO could we take EPlayerIndex?*/{EPlayerIndex::from_usize(n_epi)}, acard)
         })
         .collect()
 }
@@ -59,7 +59,7 @@ pub fn analyze_game_internal(
         analyzeparams.n_stock,
     );
     for n_epi_stoss in analyzeparams.vecn_stoss.iter() {
-        debug_verify!(game.stoss(EPlayerIndex::from_usize(*n_epi_stoss))).unwrap();
+        debug_verify!(game.stoss(/*TODO could this be EPlayerIndex?*/debug_verify!(EPlayerIndex::checked_from_usize(*n_epi_stoss)).unwrap())).unwrap();
     }
     for (i_stich, stich) in analyzeparams.vecstich.iter().enumerate() {
         assert_eq!(Some(stich.first_playerindex()), game.which_player_can_do_something().map(|gameaction| gameaction.0));
