@@ -127,7 +127,7 @@ def OpenFileParseGame(strFile, dictstrfnGame):
                     assert(len(vecstrClass)==3 and vecstrClass[-1] in ["highlighted", ""])
                     assert(vecstrClass[0]=="card")
                     assert(vecstrClass[1].startswith("position"))
-                AppendToResultNoNewline("(%d, [%s])," %(
+                AppendToResultNoNewline("(EPI%d, [%s])," %(
                     dictstreplayerindex[divtricks.find_all("div")[0].find("a")[strDataUsername]],
                     ",".join(CardString(divcard.find_all("span")[-1]["class"][-1]) for divcard in vecdivcard)
                 ))
@@ -168,6 +168,7 @@ vecstrFile.sort()
 for (strGame, dictstrfnGame) in vecpairstrdictstrfnGame:
     print("\n#[test]")
     print("fn test_rules%s() {"%strGame)
+    print("    use EPlayerIndex::*;")
     for strFile in vecstrFile:
         ostr = OpenFileParseGame(strFile, dictstrfnGame)
         if ostr:

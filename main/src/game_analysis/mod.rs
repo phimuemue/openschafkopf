@@ -30,10 +30,10 @@ impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderTout {
 }
 
 #[cfg(test)]
-pub fn make_stich_vector(vecpairnacard_stich: &[(usize, [SCard; 4])]) -> Vec<SStich> {
-    vecpairnacard_stich.iter()
-        .map(|&(n_epi, acard)| {
-            SStich::new_full(unsafe/*TODO could we take EPlayerIndex?*/{EPlayerIndex::from_usize(n_epi)}, acard)
+pub fn make_stich_vector(vecpairepiacard_stich: &[(EPlayerIndex, [SCard; 4])]) -> Vec<SStich> {
+    vecpairepiacard_stich.iter()
+        .map(|&(epi, acard)| {
+            SStich::new_full(epi, acard)
         })
         .collect()
 }
