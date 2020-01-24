@@ -113,33 +113,21 @@ fn main() -> Result<(), failure::Error> {
                             format!("{}", n_epi_first), // first_player_index
                             format!("{} von {}",
                                 {
-                                    match str_selected_game_name {
-                                        "Sauspiel" => format!("Sauspiel auf die {}", {
-                                            match json_get!("selectedGameSuit", as_str) {
-                                                "E" => "Alte",
-                                                "G" => "Blaue",
-                                                "S" => "Hundsgfickte",
-                                                str_selected_game_suit => {
-                                                    communicate_error(&format!("Bad Sauspiel farbe: {}", str_selected_game_suit));
-                                                    continue;
-                                                },
+                                    macro_rules! extract_farbe(() => {
+                                        match json_get!("selectedGameSuit", as_str) {
+                                            "E" => "Eichel",
+                                            "G" => "Gras",
+                                            "H" => "Herz",
+                                            "S" => "Schellen",
+                                            str_selected_game_suit => {
+                                                communicate_error(&format!("Bad farbe: {}", str_selected_game_suit));
+                                                continue;
                                             }
-                                        }),
-                                        "Solo"|"Farbwenz" => format!("{}-{}",
-                                            {
-                                                match json_get!("selectedGameSuit", as_str) {
-                                                    "E" => "Eichel",
-                                                    "G" => "Gras",
-                                                    "H" => "Herz",
-                                                    "S" => "Schellen",
-                                                    str_selected_game_suit => {
-                                                        communicate_error(&format!("Bad farbe: {}", str_selected_game_suit));
-                                                        continue;
-                                                    }
-                                                }
-                                            },
-                                            str_selected_game_name
-                                        ),
+                                        }
+                                    });
+                                    match str_selected_game_name {
+                                        "Sauspiel" => format!("Sauspiel auf die {}", extract_farbe!()),
+                                        "Solo"|"Farbwenz" => format!("{}-{}", extract_farbe!(), str_selected_game_name),
                                         "Wenz"|"Geier" => str_selected_game_name.to_owned(),
                                         _ => {
                                             communicate_error(&format!("Unknown game type: {}", str_selected_game_name));
