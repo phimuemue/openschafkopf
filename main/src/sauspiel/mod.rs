@@ -63,32 +63,27 @@ pub fn analyze_html(str_html: &str) -> Result<SAnalyzeParams, failure::Error> {
         let str_tarif = scrape_from_key_figure_table("Tarif")?.inner_html();
         let parser_digits = many1::<String,_>(digit())
             .map(|str_digits| str_digits.parse::<isize>());
-        let parser_digits_comma_digits = (parser_digits.clone(), char(','), count_min_max::<String,_>(2, 2, digit()))
-            .map(|(resn_before_comma, _str_comma, str_2_digits_after_comma)| -> Result<_, failure::Error> {
-                let n_before_comma : isize = resn_before_comma?;
-                let n_after_comma : isize = str_2_digits_after_comma.parse::<isize>()?;
-                Ok(n_before_comma * 100 + n_after_comma)
-            });
+        macro_rules! parser_tarif(($parser_currency: expr, $parser_digits: expr) => {
+            $parser_currency.with((
+                $parser_digits.clone(),
+                string(" / ").with($parser_digits.clone()),
+                string(" / ").with($parser_digits.clone()),
+            )).map(|(resn_extra, resn_ruf, resn_solo)| -> Result<_, failure::Error> {
+                Ok((resn_extra?, resn_ruf?, resn_solo?))
+            })
+        });
         spaces().with(
             choice!(
-                string("P ").with((
-                    parser_digits.clone(),
-                    string(" / "),
-                    parser_digits.clone(),
-                    string(" / "),
-                    parser_digits.clone(),
-                )).map(|(resn_extra, _, resn_ruf, _, resn_solo)| -> Result<_, failure::Error> {
-                    Ok((resn_extra?, resn_ruf?, resn_solo?))
-                }),
-                choice!(string("€ "), string("$ ")).with(( // Note: I could not find a game from Vereinsheim, but I suspect they use $
-                    parser_digits_comma_digits.clone(),
-                    string(" / "),
-                    parser_digits_comma_digits.clone(),
-                    string(" / "),
-                    parser_digits_comma_digits.clone(),
-                )).map(|(resn_extra, _, resn_ruf, _, resn_solo)| -> Result<_, failure::Error> {
-                    Ok((resn_extra?, resn_ruf?, resn_solo?))
-                })
+                parser_tarif!(string("P "), parser_digits),
+                parser_tarif!(
+                    choice!(string("€ "), string("$ ")), // Note: I could not find a game from Vereinsheim, but I suspect they use $
+                    (parser_digits.clone(), char(','), count_min_max::<String,_>(2, 2, digit()))
+                        .map(|(resn_before_comma, _str_comma, str_2_digits_after_comma)| -> Result<_, failure::Error> {
+                            let n_before_comma : isize = resn_before_comma?;
+                            let n_after_comma : isize = str_2_digits_after_comma.parse::<isize>()?;
+                            Ok(n_before_comma * 100 + n_after_comma)
+                        })
+                )
             )
         )
             .skip((spaces(), eof()))
