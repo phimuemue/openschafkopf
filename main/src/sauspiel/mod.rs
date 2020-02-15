@@ -8,6 +8,7 @@ use select::{
 };
 use crate::game_analysis::*;
 use combine::{*, char::*};
+use itertools::Itertools;
 
 pub fn analyze_html(str_html: &str) -> Result<SAnalyzeParams, failure::Error> {
     let doc = Document::from(&str_html as &str);
@@ -22,8 +23,8 @@ pub fn analyze_html(str_html: &str) -> Result<SAnalyzeParams, failure::Error> {
     }
     let mapepistr_username = vec_to_enummap(
         doc.find(Class("game-participants"))
-            .single()
-            .map_err(|err| format_err!("error on single: {:?}", err))?
+            .exactly_one()
+            .map_err(|it| format_err!("error on single: {} elements", it.count()))? // TODO could it implement Debug?
             .find(Attr("data-username", ()))
             .map(|node_username| debug_verify!(node_username.attr("data-username")).unwrap())
             .collect()
@@ -54,10 +55,10 @@ pub fn analyze_html(str_html: &str) -> Result<SAnalyzeParams, failure::Error> {
     };
     let scrape_from_key_figure_table = |str_key| -> Result<_, failure::Error> {
         doc.find(Name("th").and(|node: &Node| node.inner_html()==str_key))
-            .single().map_err(|err| format_err!("Error with {}: no single <th>{}</th>: {:?}", str_key, str_key, err))?
+            .exactly_one().map_err(|it| format_err!("Error with {}: no single <th>{}</th>: {} elements", str_key, str_key, it.count()))? // TODO could it implement Debug?
             .parent().ok_or_else(|| format_err!("Error with {}: {} has no parent", str_key, str_key))?
             .find(Name("td"))
-            .single().map_err(|err| format_err!("Error with {}: no single <td> containing {}: {:?}", str_key, str_key, err))
+            .exactly_one().map_err(|it| format_err!("Error with {}: no single <td> containing {}: {} elements", str_key, str_key, it.count())) // TODO could it implement Debug?
     };
     let (n_tarif_extra, n_tarif_ruf, n_tarif_solo) = {
         let str_tarif = scrape_from_key_figure_table("Tarif")?.inner_html();
@@ -95,12 +96,12 @@ pub fn analyze_html(str_html: &str) -> Result<SAnalyzeParams, failure::Error> {
                 ? // unpack parsed result
     };
     let rules = doc.find(Class("title-supertext"))
-        .single()
-        .map_err(|err| format_err!("title-supertext single failed {:?}", err))?
+        .exactly_one()
+        .map_err(|it| format_err!("title-supertext single failed {} elements", it.count()))? // TODO could it implement Debug?
         .parent().ok_or_else(|| format_err!("title-supertext has no parent"))?
         .find(Name("h1"))
-        .single()
-        .map_err(|err| format_err!("h1 is not single: {:?}", err))
+        .exactly_one()
+        .map_err(|it| format_err!("h1 is not single: {} elements", it.count())) // TODO could it implement Debug?
         .and_then(|node_rules| {
             crate::rules::parser::parse_rule_description(
                 &node_rules.text(),

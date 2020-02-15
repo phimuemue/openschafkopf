@@ -2,6 +2,7 @@ use crate::util::*;
 use crate::primitives::*;
 use crate::game_analysis::*;
 use crate::rules::*;
+use itertools::Itertools;
 
 pub fn parse_rule_description(
     str_rules_with_player: &str,
@@ -29,11 +30,16 @@ pub fn parse_rule_description(
         (EFarbe::Schelln, &["schelln", "schelle", "pump", "hundsgfickte"]),
     ].iter()
         .filter(|(_efarbe, slcstr_farbe)| str_rules_contains(slcstr_farbe))
-        .single()
+        .exactly_one()
     {
         Ok((efarbe, _)) => Some(*efarbe),
-        Err(ESingleError::Empty) => None,
-        Err(ESingleError::MoreThanOne) => return Err(format_err!("Could not clearly determine efarbe.")),
+        Err(itefarbeslcstr) => {
+            if 0==itefarbeslcstr.count() {
+                None
+            } else {
+                return Err(format_err!("Could not clearly determine efarbe."))
+            }
+        },
     };
     let make_sololike = |esololike| {
         macro_rules! make_sololike_internal {($payoutdecider: ident) => {
@@ -92,12 +98,17 @@ pub fn parse_rule_description(
         }),
     ].iter()
         .filter(|(slcstr, _)| str_rules_contains(slcstr))
-        .single()
+        .exactly_one()
     {
         Ok((_, Ok(rules))) => Ok(rules.box_clone()), // TODO do we really need to copy?
         Ok((_, Err(ref e))) => Err(format_err!("{}", &e.to_string())),
-        Err(ESingleError::Empty) => Err(format_err!("Cannot understand rule description.")),
-        Err(ESingleError::MoreThanOne) => return Err(format_err!("Rule description is ambiguous.")),
+        Err(itslcstrrules) => {
+            if 0==itslcstrrules.count() {
+                Err(format_err!("Cannot understand rule description."))
+            } else {
+                Err(format_err!("Rule description is ambiguous."))
+            }
+        }
     }
 }
 

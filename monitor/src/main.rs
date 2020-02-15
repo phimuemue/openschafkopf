@@ -4,6 +4,7 @@ use as_num::AsNum;
 use byteorder::ByteOrder;
 use serde_json::json;
 use std::io::{Read, Write};
+use itertools::Itertools;
 
 fn main() -> Result<(), failure::Error> {
     openschafkopf_logging::init_logging()?;
@@ -89,7 +90,7 @@ fn main() -> Result<(), failure::Error> {
                     match jsonarr_announcement.iter()
                         .enumerate()
                         .filter(|&(_n_epi, jsonval_announcement)| jsonval_announcement.is_string())
-                        .single() {
+                        .exactly_one() {
                         Ok((n_epi_active, _str_announcement)) => {
                             n_epi_active
                         },

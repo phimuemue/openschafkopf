@@ -23,6 +23,7 @@ use std::{
 use rayon::prelude::*;
 use crate::util::*;
 use chrono::Local;
+use itertools::Itertools;
 
 pub fn remaining_cards_per_hand(stichseq: &SStichSequence) -> EnumMap<EPlayerIndex, usize> {
     EPlayerIndex::map_from_fn(|epi| {
@@ -81,7 +82,7 @@ impl<'game> SDetermineBestCard<'game> {
     }
 
     pub fn single_allowed_card(&self) -> Option<SCard> {
-        self.veccard_allowed.iter().single().ok().copied()
+        self.veccard_allowed.iter().exactly_one().ok().copied()
     }
 }
 

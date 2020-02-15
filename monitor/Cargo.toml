@@ -11,3 +11,4 @@ as_num = "0"
 openschafkopf_util = {path = "../util"}
 openschafkopf_logging = {path = "../logging"}
 failure = "0"
+itertools = "0"
