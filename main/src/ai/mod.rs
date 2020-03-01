@@ -357,7 +357,7 @@ pub fn determine_best_card<
                     )).unwrap()
                 }).map(|file_output| (file_output, determinebestcard.epi_fixed)),
             );
-            let ref mut ooutput = debug_verify!(mapcardooutput.lock()).unwrap()[card];
+            let ooutput = &mut debug_verify!(mapcardooutput.lock()).unwrap()[card];
             match ooutput {
                 None => *ooutput = Some(output),
                 Some(ref mut output_return) => fn_combine_explored_output(output_return, output),
