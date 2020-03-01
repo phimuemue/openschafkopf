@@ -105,7 +105,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
             SoloSteigern{n_points_to_win, ..} => {
                 assert!(61<=n_points_to_win);
                 if n_points_to_win<61 {
-                    format!("for {}", n_points_to_win).to_string()
+                    format!("for {}", n_points_to_win)
                 } else {
                     "".to_string()
                 }
