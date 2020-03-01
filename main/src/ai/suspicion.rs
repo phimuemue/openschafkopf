@@ -273,7 +273,7 @@ pub struct SMinMax {
 impl SMinMax {
     fn new_final(an_payout: EnumMap<EPlayerIndex, isize>) -> Self {
         Self {
-            aan_payout: EMinMaxStrategy::map_from_fn(|_| an_payout.clone()),
+            aan_payout: EMinMaxStrategy::map_from_fn(|_| an_payout.explicit_clone()),
         }
     }
 
@@ -285,7 +285,7 @@ impl SMinMax {
         for eminmaxstrat in EMinMaxStrategy::values() {
             assign_by_key_ordering(
                 &mut self.aan_payout[eminmaxstrat],
-                minmax.aan_payout[eminmaxstrat].clone(),
+                minmax.aan_payout[eminmaxstrat].explicit_clone(),
                 |an_payout| an_payout[mapeminmaxstrattplepiordering[eminmaxstrat].0],
                 mapeminmaxstrattplepiordering[eminmaxstrat].1,
             );

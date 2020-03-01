@@ -159,3 +159,13 @@ macro_rules! type_dispatch_enum{(pub enum $e: ident {$($v: ident ($t: ty),)+}) =
         }
     )+
 }}
+
+// TODORUST some types should not implement copy (e.g. array), but do.
+// In these cases, clippy warns about using clone on a copy type.
+// To avoid this warning, use explicit_clone.
+pub trait TExplicitClone : Clone {
+    fn explicit_clone(&self) -> Self {
+        self.clone()
+    }
+}
+impl<T: Clone> TExplicitClone for T {}
