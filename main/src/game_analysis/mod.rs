@@ -118,7 +118,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
     let str_rules = format!("{}{}",
         analyzeparams.rules,
         if let Some(epi) = analyzeparams.rules.playerindex() {
-            format!(" von {}", epi).to_owned()
+            format!(" von {}", epi)
         } else {
             "".to_owned()
         },
@@ -249,7 +249,7 @@ pub fn generate_analysis_html(
         str_description=str_description,
         str_link=str_link,
         str_rules=str_rules,
-    ).to_owned()
+    )
     + &crate::ai::suspicion::player_table(epi_self, |epi| {
         let mut veccard = ahand[epi].cards().to_vec();
         game.rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
@@ -276,7 +276,7 @@ pub fn generate_analysis_html(
             card_suggested_cheating = analysisimpr.cardandpayout_cheating.card_suggested,
             n_payout_cheating = analysisimpr.cardandpayout_cheating.n_payout,
             n_payout_real = mapepin_payout[analysisimpr.epi],
-        ).to_owned();
+        );
         if let Some(ref cardandpayout) = analysisimpr.ocardandpayout_simulating {
             str_analysisimpr += &format!(
                 r###"
@@ -287,7 +287,7 @@ pub fn generate_analysis_html(
                 card_suggested = cardandpayout.card_suggested,
                 n_payout = cardandpayout.n_payout,
                 n_payout_real = mapepin_payout[analysisimpr.epi],
-            ).to_owned();
+            );
         }
         str_analysisimpr += "</li>";
         str_analysisimpr

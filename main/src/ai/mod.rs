@@ -336,9 +336,8 @@ pub fn determine_best_card<
             determinebestcard.veccard_allowed.par_iter()
                 .map(move |card| (i_susp, ahand.clone(), *card))
         )
-        .for_each(|(i_susp, ahand, card)| {
+        .for_each(|(i_susp, mut ahand, card)| {
             debug_assert!(ahand[determinebestcard.epi_fixed].cards().contains(&card));
-            let mut ahand = ahand.clone();
             let mapcardooutput = Arc::clone(&mapcardooutput);
             let mut stichseq = determinebestcard.stichseq.clone();
             assert!(ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));

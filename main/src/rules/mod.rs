@@ -310,7 +310,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
                 assert!(
                     mapepipayouthint.iter().zip(apayoutinfo.iter().cloned())
                         .all(|(payouthint, payoutinfo)|
-                            payouthint.contains_payouthint(&SPayoutHint::new((Some(payoutinfo.clone()), Some(payoutinfo.clone()))))
+                            payouthint.contains_payouthint(&SPayoutHint::new((Some(payoutinfo.clone()), Some(payoutinfo))))
                         ),
                     "{:?}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepipayouthint, apayoutinfo,
                 );

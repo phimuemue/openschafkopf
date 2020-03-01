@@ -20,7 +20,7 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
     for i_game in 0..n_games {
         fn communicate_via_channel<T: std::fmt::Debug>(f: impl FnOnce(mpsc::Sender<T>)) -> T {
             let (txt, rxt) = mpsc::channel::<T>();
-            f(txt.clone());
+            f(txt);
             debug_verify!(rxt.recv()).unwrap()
         }
         let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset, accountbalance.get_stock());
@@ -111,7 +111,7 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
                         communicate_via_channel(|txcard| {
                             aplayer[gameaction.0].ask_for_card(
                                 &game,
-                                txcard.clone()
+                                txcard,
                             );
                         }),
                         gameaction.0
