@@ -140,12 +140,12 @@ impl SLaufendeParams {
             playerparties.is_primary_party(debug_verify!(rulestatecache.fixed.mapcardoepi[card]).unwrap())
         };
         let mut itcard_trumpf_descending = Rules::TrumpfDecider::trumpfs_in_descending_order();
-        let b_might_have_lauf = laufende_relevant(debug_verify!(itcard_trumpf_descending.nth(0)).unwrap());
+        let b_might_have_lauf = laufende_relevant(debug_verify!(itcard_trumpf_descending.next()).unwrap());
         let n_laufende = itcard_trumpf_descending
             .filter(|card| ekurzlang.supports_card(*card))
             .take_while(|card| b_might_have_lauf==laufende_relevant(*card))
             .count()
-            + 1 // consumed by nth(0)
+            + 1 // consumed by next()
         ;
         (if n_laufende<self.n_lauf_lbound {0} else {n_laufende}).as_num::<isize>() * self.n_payout_per_lauf
     }

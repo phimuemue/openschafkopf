@@ -515,7 +515,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         /*n_stock*/ 0,
     );
     for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]].iter() {
-        assert_eq!(EPlayerIndex::values().nth(0), Some(epi_first_and_active_player));
+        assert_eq!(EPlayerIndex::values().next(), Some(epi_first_and_active_player));
         for (epi, card) in EPlayerIndex::values().zip(acard_stich.iter()) {
             debug_verify!(game.zugeben(*card, epi)).unwrap();
         }
