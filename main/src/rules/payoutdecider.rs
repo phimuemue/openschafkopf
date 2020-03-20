@@ -94,13 +94,13 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)> {
         let mapbn_points = debug_verify_eq!(
             EPlayerIndex::values()
-                .fold_mutating(bool::map_from_fn(|_b_primary| 0), |mapbn_points, epi| {
+                .fold(bool::map_from_fn(|_b_primary| 0), mutate_return!(|mapbn_points, epi| {
                     mapbn_points[/*b_primary*/playerparties.is_primary_party(epi)] += rulestatecache.changing.mapepipointstichcount[epi].n_point;
-                }),
+                })),
             stichseq.completed_stichs_winner_index(rules)
-                .fold_mutating(bool::map_from_fn(|_b_primary| 0), |mapbn_points, (stich, epi_winner)| {
+                .fold(bool::map_from_fn(|_b_primary| 0), mutate_return!(|mapbn_points, (stich, epi_winner)| {
                     mapbn_points[/*b_primary*/playerparties.is_primary_party(epi_winner)] += card_points::points_stich(stich);
-                })
+                }))
         );
         let internal_payouthints = |b_primary_party_wins| {
             internal_payout(

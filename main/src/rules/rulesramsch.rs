@@ -61,11 +61,11 @@ impl TRules for SRulesRamsch {
         debug_assert_eq!(
             EPlayerIndex::map_from_fn(points_for_player),
             gamefinishedstiche.get().completed_stichs_winner_index(self)
-                .fold_mutating(
+                .fold(
                     EPlayerIndex::map_from_fn(|_epi| 0),
-                    |an_points_accu, (stich, epi_winner)| {
+                    mutate_return!(|an_points_accu, (stich, epi_winner)| {
                         an_points_accu[epi_winner] += points_stich(stich);
-                    }
+                    })
                 )
         );
         let n_points_max = debug_verify!(EPlayerIndex::values().map(points_for_player).max()).unwrap();

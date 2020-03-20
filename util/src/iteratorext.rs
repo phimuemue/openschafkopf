@@ -38,26 +38,6 @@ pub trait IteratorExt : itertools::Itertools {
     {
         self.is_sorted_by_unstable_name_collision(|a, b| f(a).partial_cmp(&f(b)))
     }
-
-    fn fold_mutating<B, F: FnMut(&mut B, Self::Item)>(self, init: B, mut f: F) -> B
-        where
-            Self: Sized,
-    {
-        self.fold(init, move |mut b, item| {
-            f(&mut b, item);
-            b
-        })
-    }
-
-    fn fold1_mutating<F: FnMut(&mut Self::Item, Self::Item)>(self, mut f: F) -> Option<Self::Item>
-        where
-            Self: Sized,
-    {
-        self.fold1(move |mut lhs, rhs| {
-            f(&mut lhs, rhs);
-            lhs
-        })
-    }
 }
 
 impl<It> IteratorExt for It where It: Iterator {}

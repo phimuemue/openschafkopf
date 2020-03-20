@@ -24,14 +24,14 @@ pub fn suggest_card(
     )
         .ok_or_else(|| format_err!("Cannot determine ekurzlang from {} and {:?}.", hand_fixed, slccard_as_played))?;
     let stichseq = slccard_as_played.iter()
-        .fold_mutating(
+        .fold(
             SStichSequence::new(
                 fn_str_to_epi(str_epi_first)?,
                 ekurzlang,
             ),
-            |stichseq, card| {
+            mutate_return!(|stichseq, card| {
                 stichseq.zugeben(*card, rules);
-            }
+            })
         );
     let epi = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
     let determinebestcardresult = crate::ai::SAi::suggest_card_simulating( // should not distinguish for SingleAllowed (we want to know expected payout anyway)

@@ -5,6 +5,9 @@ pub mod iteratorext;
 pub use self::iteratorext::*;
 pub mod via_out_param;
 pub use self::via_out_param::*;
+#[macro_use]
+pub mod mutate_return;
+pub use mutate_return::*;
 
 #[cfg(debug_assertions)]
 #[macro_export]

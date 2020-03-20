@@ -231,10 +231,10 @@ fn explore_snapshots_internal<ForEachSnapshot>(
 fn end_snapshot_minmax<ItTplCardNPayout: Iterator<Item=(SCard, SMinMax)>>(epi_self: EPlayerIndex, epi_card: EPlayerIndex, ittplcardminmax: ItTplCardNPayout) -> SMinMax {
     let itminmax = ittplcardminmax.map(|(_card, minmax)| minmax);
     debug_verify!(if epi_self==epi_card {
-        itminmax.fold1_mutating(|minmax_acc, minmax| minmax_acc.assign_max_by_key(&minmax, epi_self))
+        itminmax.fold1(mutate_return!(|minmax_acc, minmax| minmax_acc.assign_max_by_key(&minmax, epi_self)))
     } else {
         // other players may play inconveniently for epi_stich
-        itminmax.fold1_mutating(|minmax_acc, minmax| minmax_acc.assign_by_key_ordering(&minmax, (epi_self, Ordering::Less), (epi_card, Ordering::Greater)))
+        itminmax.fold1(mutate_return!(|minmax_acc, minmax| minmax_acc.assign_by_key_ordering(&minmax, (epi_self, Ordering::Less), (epi_card, Ordering::Greater))))
     }).unwrap()
 }
 
