@@ -49,7 +49,6 @@ impl SRulesRufspiel {
 }
 
 impl TActivelyPlayableRules for SRulesRufspiel {
-    box_clone_impl_by_clone!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::RufspielLike
     }
@@ -73,7 +72,6 @@ impl TPlayerParties for SPlayerParties22 {
 }
 
 impl TRules for SRulesRufspiel {
-    box_clone_impl_by_clone!(TRules);
     impl_rules_trumpf!();
 
     fn can_be_played(&self, hand: SFullHand) -> bool {

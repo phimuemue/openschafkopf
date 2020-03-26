@@ -1,7 +1,7 @@
 use crate::game::*;
 use crate::primitives::*;
 use crate::rules::{
-    TActivelyPlayableRules, // TODO improve trait-object behaviour
+    TActivelyPlayableRulesBoxClone, // TODO improve trait-object behaviour
     ruleset::*,
 };
 use std::sync::mpsc;
@@ -51,7 +51,7 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
                         None,
                         txorules
                     );
-                }).map(TActivelyPlayableRules::box_clone)
+                }).map(TActivelyPlayableRulesBoxClone::box_clone)
             )).unwrap();
         }
         info!("Asked players if they want to play. Determining rules");
@@ -69,7 +69,7 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
                             Some(determinerules.currently_offered_prio()),
                             txorules
                         );
-                    }).map(TActivelyPlayableRules::box_clone) {
+                    }).map(TActivelyPlayableRulesBoxClone::box_clone) {
                         debug_verify!(determinerules.announce_game(epi, rules)).unwrap();
                     } else {
                         debug_verify!(determinerules.resign(epi)).unwrap();

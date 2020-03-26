@@ -295,7 +295,6 @@ impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, Payou
 }
 
 impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TActivelyPlayableRules for SRulesSoloLike<StaticEPI, TrumpfDecider, PayoutDecider> {
-    box_clone_impl_by_clone!(TActivelyPlayableRules);
     fn priority(&self) -> VGameAnnouncementPriority {
         self.payoutdecider.priority()
     }
@@ -310,7 +309,6 @@ impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, Payou
 }
 
 impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<StaticEPI, TrumpfDecider, PayoutDecider> {
-    box_clone_impl_by_clone!(TRules);
     impl_rules_trumpf!();
     impl_single_play!();
 }

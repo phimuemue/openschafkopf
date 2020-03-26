@@ -506,7 +506,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         Some(SStossParams::new(
             /*n_stoss_max*/ 4,
         )),
-        TRules::box_clone(sololike(
+        TRulesBoxClone::box_clone(sololike(
             epi_first_and_active_player,
             EFarbe::Herz,
             ESoloLike::Solo,

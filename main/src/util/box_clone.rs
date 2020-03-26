@@ -1,17 +1,17 @@
-macro_rules! box_clone_require {($trait_name: ident) => {
-    fn box_clone(&self) -> Box<dyn $trait_name>;
-}}
+macro_rules! make_box_clone{($box_clone_trait:ident, $trait:ident) => {
+    pub trait $box_clone_trait {
+        fn box_clone(&self) -> Box<dyn $trait>;
+    }
 
-macro_rules! box_clone_impl_box {($trait_name: ident) => {
-    impl Clone for Box<dyn $trait_name> {
-        fn clone(&self) -> Box<dyn $trait_name> {
-            $trait_name::box_clone(self.as_ref())
+    impl<T: $trait + Clone + 'static> $box_clone_trait for T {
+        fn box_clone(&self) -> Box<dyn $trait> {
+            Box::new(self.clone())
         }
     }
-}}
 
-macro_rules! box_clone_impl_by_clone {($trait_name: ident) => {
-    fn box_clone(&self) -> Box<dyn $trait_name> {
-        Box::new(self.clone())
+    impl Clone for Box<dyn $trait> {
+        fn clone(&self) -> Box<dyn $trait> {
+            $box_clone_trait::box_clone(self.as_ref())
+        }
     }
 }}

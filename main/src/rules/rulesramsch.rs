@@ -43,7 +43,6 @@ impl TRulesNoObj for SRulesRamsch {
 }
 
 impl TRules for SRulesRamsch {
-    box_clone_impl_by_clone!(TRules);
     impl_rules_trumpf!();
 
     fn stoss_allowed(&self, _epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {

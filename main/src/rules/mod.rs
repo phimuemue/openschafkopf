@@ -238,9 +238,7 @@ pub trait TRulesNoObj : TRules {
     type TrumpfDecider: trumpfdecider::TTrumpfDecider;
 }
 
-pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
-    box_clone_require!(TRules);
-
+pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone {
     // TTrumpfDecider
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
     fn compare_cards(&self, card_fst: SCard, card_snd: SCard) -> Option<Ordering>;
@@ -387,9 +385,9 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug {
         None
     }
 }
-box_clone_impl_box!(TRules);
 
 make_upcastable!(TAsRules, TRules);
+make_box_clone!(TRulesBoxClone, TRules);
 
 #[derive(PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]
 pub enum VGameAnnouncementPrioritySoloLike {
@@ -436,15 +434,14 @@ plain_enum_mod!(modebid, EBid {
     Higher,
 });
 
-pub trait TActivelyPlayableRules : TRules {
-    box_clone_require!(TActivelyPlayableRules);
+pub trait TActivelyPlayableRules : TRules + TActivelyPlayableRulesBoxClone {
     fn priority(&self) -> VGameAnnouncementPriority;
     fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<dyn TActivelyPlayableRules>> {
         if match ebid {
             EBid::AtLeast => {*prio<=self.priority()},
             EBid::Higher => {*prio<self.priority()},
         } {
-            Some(TActivelyPlayableRules::box_clone(self))
+            Some(TActivelyPlayableRulesBoxClone::box_clone(self))
         } else {
             self.with_increased_prio(prio, ebid)
         }
@@ -456,4 +453,4 @@ pub trait TActivelyPlayableRules : TRules {
         debug_verify!(self.playerindex()).unwrap()
     }
 }
-box_clone_impl_box!(TActivelyPlayableRules);
+make_box_clone!(TActivelyPlayableRulesBoxClone, TActivelyPlayableRules);
