@@ -34,7 +34,7 @@ pub fn analyze_html(str_html: &str) -> Result<SAnalyzeParams, failure::Error> {
             .find(|epi| mapepistr_username[*epi]==str_username)
             .ok_or_else(|| format_err!("username {} not part of mapepistr_username {:?}", str_username, mapepistr_username))
     };
-    let find_cards = |node: &Node| -> Result<Vec<SCard>, failure::Error> {
+    let find_cards = |node: &Node| {
         node.find(Class("card-image"))
             .map(|node_card| -> Result<SCard, _> {
                 let str_class = debug_verify!(node_card.attr("class")).unwrap(); // "class" must be present
