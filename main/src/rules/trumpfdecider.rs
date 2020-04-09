@@ -43,7 +43,7 @@ impl<CompareFarbcards: TCompareFarbcards> TTrumpfDecider for STrumpfDeciderNoTru
         VTrumpfOrFarbe::Farbe(card.farbe())
     }
     fn trumpfs_in_descending_order() -> return_impl!(Box<dyn Iterator<Item=SCard>>) {
-        Box::new(None.into_iter())
+        Box::new(std::iter::empty())
     }
     fn compare_cards(card_fst: SCard, card_snd: SCard) -> Option<Ordering> {
         if_then_some!(

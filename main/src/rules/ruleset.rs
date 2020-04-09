@@ -198,7 +198,7 @@ impl SRuleSet {
                 create_rulegroup_sololike!(
                     "wenz",
                     &internal_rulename("Wenz"),
-                    vecrules!(Some(None).into_iter(), ESoloLike::Wenz, $fn_prio(-1))
+                    vecrules!(std::iter::once(None), ESoloLike::Wenz, $fn_prio(-1))
                 )?;
                 create_rulegroup_sololike!(
                     "farbwenz",
@@ -208,7 +208,7 @@ impl SRuleSet {
                 create_rulegroup_sololike!(
                     "geier",
                     &internal_rulename("Geier"),
-                    vecrules!(Some(None).into_iter(), ESoloLike::Geier, $fn_prio(-3))
+                    vecrules!(std::iter::once(None), ESoloLike::Geier, $fn_prio(-3))
                 )?;
                 create_rulegroup_sololike!(
                     "farbgeier",

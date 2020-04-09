@@ -183,7 +183,7 @@ impl TRules for SRulesRufspiel {
                 .any(|stich| epi==stich.first_playerindex() && self.is_ruffarbe(*stich.first()));
             let card_first = *stichseq.current_stich().first();
             if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) && !b_weggelaufen {
-                return Some(self.rufsau()).into_iter().collect()
+                return std::iter::once(self.rufsau()).collect()
             }
             let veccard_allowed : SHandVector = hand.cards().iter().copied()
                 .filter(|&card| 

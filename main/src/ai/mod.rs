@@ -249,7 +249,7 @@ impl SAi {
                     assert_eq!(determinebestcard.epi_fixed, epi_fixed);
                     suggest_via!(suggest_card_internal,
                         &determinebestcard,
-                        /*itahand*/Some(game.ahand.clone()).into_iter(),
+                        /*itahand*/std::iter::once(game.ahand.clone()),
                     )
                 },
                 VAIParams::Simulating{n_suggest_card_samples} => {
@@ -530,7 +530,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         let determinebestcard = SDetermineBestCard::new_from_game(&game);
         let determinebestcardresult = determine_best_card(
             &determinebestcard,
-            Some(ahand).into_iter(),
+            std::iter::once(ahand),
             /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(&game)),
             |minmax_acc, minmax| {

@@ -168,7 +168,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
                     )
                 };
                 if let Some(analysisimpr) = look_for_mistakes!(
-                    Some(game.ahand.clone()).into_iter(),
+                    std::iter::once(game.ahand.clone()),
                     &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
                 )
                     .map(|cardandpayout_cheating| {

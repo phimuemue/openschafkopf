@@ -120,7 +120,7 @@ impl TPlayer for SPlayerHuman {
             .filter(|rulegroup| 0 < rulegroup.allowed_rules(hand).count())
             .collect();
         loop {
-            let vecoorules : Vec<Option<Option<&dyn TActivelyPlayableRules>>> = Some(None).into_iter() // stands for "back"
+            let vecoorules : Vec<Option<Option<&dyn TActivelyPlayableRules>>> = std::iter::once(None) // stands for "back"
                 .chain(
                     choose_ruleset_or_rules(
                         hand.get(),
