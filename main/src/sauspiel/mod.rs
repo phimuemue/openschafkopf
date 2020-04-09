@@ -12,11 +12,11 @@ use itertools::Itertools;
 
 pub fn analyze_html(str_html: &str) -> Result<SAnalyzeParams, failure::Error> {
     let doc = Document::from(&str_html as &str);
-    fn vec_to_arr<T: std::fmt::Debug+Clone/*TODO can we avoid clone?*/>(vect: Vec<T>) -> Result<[T; EPlayerIndex::SIZE], failure::Error> {
-        if_then_some!(
-            EPlayerIndex::SIZE==vect.len(),
-            [vect[0].clone(), vect[1].clone(), vect[2].clone(), vect[3].clone()]
-        ).ok_or_else(|| format_err!("Wrong number of elements ({}) in {:?}", vect.len(), vect))
+    fn vec_to_arr<T: std::fmt::Debug>(vect: Vec<T>) -> Result<[T; EPlayerIndex::SIZE], failure::Error> {
+        let (card0, card1, card2, card3) = vect.into_iter()
+            .collect_tuple()
+            .ok_or_else(|| format_err!("Wrong number of elements"))?;
+        Ok([card0, card1, card2, card3])
     }
     fn vec_to_enummap<T: std::fmt::Debug+Clone/*TODO can we avoid clone?*/>(vect: Vec<T>) -> Result<EnumMap<EPlayerIndex, T>, failure::Error> {
         vec_to_arr(vect).map(EPlayerIndex::map_from_raw)
