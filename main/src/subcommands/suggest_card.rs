@@ -33,11 +33,9 @@ pub fn suggest_card(
                 stichseq.zugeben(*card, rules);
             })
         );
-    let epi = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
     let determinebestcardresult = crate::ai::SAi::suggest_card_simulating( // should not distinguish for SingleAllowed (we want to know expected payout anyway)
         rules,
         &stichseq,
-        epi,
         hand_fixed,
         /*n_suggest_card_samples*/50, // TODO? make customizable
         /*n_suggest_card_branches*/2, // TODO? make customizable
@@ -46,6 +44,7 @@ pub fn suggest_card(
         /*opath_out_dir*/None,
     );
     // TODO interface should probably output payout interval per card
+    let epi = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
     let mut veccardminmax = determinebestcardresult.cards_and_ts().collect::<Vec<_>>();
     veccardminmax.sort_unstable_by_key(|&(_card, minmax)| minmax.values_for(epi).into_raw());
     veccardminmax.reverse(); // descending

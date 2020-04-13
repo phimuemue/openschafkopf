@@ -60,13 +60,13 @@ pub struct SDetermineBestCard<'game> {
     pub veccard_allowed: SHandVector,
 }
 impl<'game> SDetermineBestCard<'game> {
-    pub fn new(rules: &'game dyn TRules, stichseq: &'game SStichSequence, hand_fixed: &SHand, epi_fixed: EPlayerIndex) -> Self {
+    pub fn new(rules: &'game dyn TRules, stichseq: &'game SStichSequence, hand_fixed: &SHand) -> Self {
         let veccard_allowed = rules.all_allowed_cards(stichseq, hand_fixed);
         assert!(1<=veccard_allowed.len());
         Self{
             rules,
             stichseq,
-            epi_fixed,
+            epi_fixed: debug_verify!(stichseq.current_stich().current_playerindex()).unwrap(),
             veccard_allowed
         }
     }
@@ -77,7 +77,6 @@ impl<'game> SDetermineBestCard<'game> {
             game.rules.as_ref(),
             &game.stichseq,
             /*hand_fixed*/&game.ahand[epi_fixed],
-            epi_fixed,
         )
     }
 
@@ -187,7 +186,6 @@ impl SAi {
     pub fn suggest_card_simulating(
         rules: &dyn TRules,
         stichseq: &SStichSequence,
-        epi_fixed: EPlayerIndex,
         hand_fixed: &SHand,
         n_suggest_card_samples: usize,
         n_suggest_card_branches: usize,
@@ -201,7 +199,6 @@ impl SAi {
                     rules,
                     stichseq,
                     hand_fixed,
-                    epi_fixed,
                 ),
                 $itahand,
                 n_suggest_card_branches,
@@ -210,6 +207,7 @@ impl SAi {
                 opath_out_dir,
             )
         }}
+        let epi_fixed = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
         match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(stichseq)[epi_fixed] {
             1|2|3|4 => forward_to_determine_best_card!(
                 all_possible_hands(stichseq, hand_fixed.clone(), epi_fixed, rules)
@@ -256,7 +254,6 @@ impl SAi {
                     suggest_via!(suggest_card_simulating, // should be fast, only SCard needed
                         game.rules.as_ref(),
                         &game.stichseq,
-                        epi_fixed,
                         /*hand_fixed*/&game.ahand[epi_fixed],
                         n_suggest_card_samples,
                     )
