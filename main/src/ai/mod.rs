@@ -203,7 +203,7 @@ impl SAi {
                 opath_out_dir,
             )
         }}
-        let epi_fixed = debug_verify!(determinebestcard.stichseq.current_stich().current_playerindex()).unwrap();
+        let epi_fixed = determinebestcard.epi_fixed;
         match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] {
             1|2|3|4 => forward_to_determine_best_card!(
                 all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
