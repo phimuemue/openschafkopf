@@ -34,11 +34,11 @@ pub fn suggest_card(
             })
         );
     let determinebestcardresult = crate::ai::SAi::suggest_card_simulating( // should not distinguish for SingleAllowed (we want to know expected payout anyway)
-        &crate::ai::SPublicCardConfig {
+        &crate::ai::SDetermineBestCard::new(
             rules,
-            stichseq: &stichseq,
-            hand_fixed: &hand_fixed,
-        },
+            &stichseq,
+            &hand_fixed,
+        ),
         /*n_suggest_card_samples*/50, // TODO? make customizable
         /*n_suggest_card_branches*/2, // TODO? make customizable
         /*tpln_stoss_doubling*/(0, 0), // TODO

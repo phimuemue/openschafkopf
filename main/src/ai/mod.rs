@@ -53,26 +53,22 @@ pub struct SAi {
     aiparams: VAIParams,
 }
 
-pub struct SPublicCardConfig<'game> { // TODO? merge with SDetermineBestCard?
-    pub rules: &'game dyn TRules,
-    pub stichseq: &'game SStichSequence,
-    pub hand_fixed: &'game SHand,
-}
-
 pub struct SDetermineBestCard<'game> {
     rules: &'game dyn TRules,
     stichseq: &'game SStichSequence,
     pub epi_fixed: EPlayerIndex,
+    hand_fixed: &'game SHand,
     pub veccard_allowed: SHandVector,
 }
 impl<'game> SDetermineBestCard<'game> {
-    pub fn new(rules: &'game dyn TRules, stichseq: &'game SStichSequence, hand_fixed: &SHand) -> Self {
+    pub fn new(rules: &'game dyn TRules, stichseq: &'game SStichSequence, hand_fixed: &'game SHand) -> Self {
         let veccard_allowed = rules.all_allowed_cards(stichseq, hand_fixed);
         assert!(1<=veccard_allowed.len());
         Self{
             rules,
             stichseq,
             epi_fixed: debug_verify!(stichseq.current_stich().current_playerindex()).unwrap(),
+            hand_fixed,
             veccard_allowed
         }
     }
@@ -190,7 +186,7 @@ impl SAi {
     }
 
     pub fn suggest_card_simulating(
-        pubcardconfig: &SPublicCardConfig,
+        determinebestcard: &SDetermineBestCard,
         n_suggest_card_samples: usize,
         n_suggest_card_branches: usize,
         tpln_stoss_doubling: (usize, usize),
@@ -199,11 +195,7 @@ impl SAi {
     ) -> SDetermineBestCardResult<SMinMax> { // we are interested in payout => single-card-optimization useless
         macro_rules! forward_to_determine_best_card{($itahand: expr) => { // TODORUST generic closures
             Self::suggest_card_internal(
-                &SDetermineBestCard::new(
-                    pubcardconfig.rules,
-                    pubcardconfig.stichseq,
-                    pubcardconfig.hand_fixed,
-                ),
+                determinebestcard,
                 $itahand,
                 n_suggest_card_branches,
                 tpln_stoss_doubling,
@@ -211,13 +203,13 @@ impl SAi {
                 opath_out_dir,
             )
         }}
-        let epi_fixed = debug_verify!(pubcardconfig.stichseq.current_stich().current_playerindex()).unwrap();
-        match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(pubcardconfig.stichseq)[epi_fixed] {
+        let epi_fixed = debug_verify!(determinebestcard.stichseq.current_stich().current_playerindex()).unwrap();
+        match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] {
             1|2|3|4 => forward_to_determine_best_card!(
-                all_possible_hands(pubcardconfig.stichseq, pubcardconfig.hand_fixed.clone(), epi_fixed, pubcardconfig.rules)
+                all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
             ),
             5|6|7|8 => forward_to_determine_best_card!(
-                forever_rand_hands(pubcardconfig.stichseq, pubcardconfig.hand_fixed.clone(), epi_fixed, pubcardconfig.rules)
+                forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
                     .take(n_suggest_card_samples)
             ),
             n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
@@ -256,11 +248,11 @@ impl SAi {
                 },
                 VAIParams::Simulating{n_suggest_card_samples} => {
                     suggest_via!(suggest_card_simulating, // should be fast, only SCard needed
-                        &SPublicCardConfig {
-                            rules: game.rules.as_ref(),
-                            stichseq: &game.stichseq,
-                            hand_fixed: &game.ahand[epi_fixed],
-                        },
+                        &SDetermineBestCard::new(
+                            game.rules.as_ref(),
+                            &game.stichseq,
+                            /*hand_fixed*/&game.ahand[epi_fixed],
+                        ),
                         n_suggest_card_samples,
                     )
                 },
