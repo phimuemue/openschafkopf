@@ -53,6 +53,12 @@ pub struct SAi {
     aiparams: VAIParams,
 }
 
+pub struct SPublicCardConfig<'game> { // TODO? merge with SDetermineBestCard?
+    pub rules: &'game dyn TRules,
+    pub stichseq: &'game SStichSequence,
+    pub hand_fixed: &'game SHand,
+}
+
 pub struct SDetermineBestCard<'game> {
     rules: &'game dyn TRules,
     stichseq: &'game SStichSequence,
@@ -184,9 +190,7 @@ impl SAi {
     }
 
     pub fn suggest_card_simulating(
-        rules: &dyn TRules,
-        stichseq: &SStichSequence,
-        hand_fixed: &SHand,
+        pubcardconfig: &SPublicCardConfig,
         n_suggest_card_samples: usize,
         n_suggest_card_branches: usize,
         tpln_stoss_doubling: (usize, usize),
@@ -196,9 +200,9 @@ impl SAi {
         macro_rules! forward_to_determine_best_card{($itahand: expr) => { // TODORUST generic closures
             Self::suggest_card_internal(
                 &SDetermineBestCard::new(
-                    rules,
-                    stichseq,
-                    hand_fixed,
+                    pubcardconfig.rules,
+                    pubcardconfig.stichseq,
+                    pubcardconfig.hand_fixed,
                 ),
                 $itahand,
                 n_suggest_card_branches,
@@ -207,13 +211,13 @@ impl SAi {
                 opath_out_dir,
             )
         }}
-        let epi_fixed = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
-        match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(stichseq)[epi_fixed] {
+        let epi_fixed = debug_verify!(pubcardconfig.stichseq.current_stich().current_playerindex()).unwrap();
+        match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(pubcardconfig.stichseq)[epi_fixed] {
             1|2|3|4 => forward_to_determine_best_card!(
-                all_possible_hands(stichseq, hand_fixed.clone(), epi_fixed, rules)
+                all_possible_hands(pubcardconfig.stichseq, pubcardconfig.hand_fixed.clone(), epi_fixed, pubcardconfig.rules)
             ),
             5|6|7|8 => forward_to_determine_best_card!(
-                forever_rand_hands(stichseq, hand_fixed.clone(), epi_fixed, rules)
+                forever_rand_hands(pubcardconfig.stichseq, pubcardconfig.hand_fixed.clone(), epi_fixed, pubcardconfig.rules)
                     .take(n_suggest_card_samples)
             ),
             n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
@@ -252,9 +256,11 @@ impl SAi {
                 },
                 VAIParams::Simulating{n_suggest_card_samples} => {
                     suggest_via!(suggest_card_simulating, // should be fast, only SCard needed
-                        game.rules.as_ref(),
-                        &game.stichseq,
-                        /*hand_fixed*/&game.ahand[epi_fixed],
+                        &SPublicCardConfig {
+                            rules: game.rules.as_ref(),
+                            stichseq: &game.stichseq,
+                            hand_fixed: &game.ahand[epi_fixed],
+                        },
                         n_suggest_card_samples,
                     )
                 },
