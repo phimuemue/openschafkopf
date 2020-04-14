@@ -267,11 +267,10 @@ pub fn unplayed_cards<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed
     SCard::values(stichseq.kurzlang())
         .filter(move |card| 
              !hand_fixed.contains(*card)
-             && !stichseq.visible_stichs().any(|stich|
-                stich.iter().any(|(_epi, card_in_stich)|
+             && !stichseq.visible_stichs().flat_map(|stich| stich.iter())
+                .any(|(_epi, card_in_stich)|
                     card_in_stich==card
                 )
-             )
         )
 }
 
