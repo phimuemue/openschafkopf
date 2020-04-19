@@ -122,7 +122,35 @@ pub trait TPlayerParties {
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct SRuleStateCacheFixed {
-    pub mapcardoepi: EnumMap<SCard, Option<EPlayerIndex>>, // TODO? Option<EPlayerIndex> is clean for EKurzLang. Does it incur runtime overhead?
+    mapcardoepi: EnumMap<SCard, Option<EPlayerIndex>>, // TODO? Option<EPlayerIndex> is clean for EKurzLang. Does it incur runtime overhead?
+}
+impl SRuleStateCacheFixed {
+    fn new(stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Self {
+        debug_assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
+        let mut mapcardoepi = SCard::map_from_fn(|_| None);
+        let mut register_card = |card, epi| {
+            assert!(mapcardoepi[card].is_none());
+            mapcardoepi[card] = Some(epi);
+        };
+        for stich in stichseq.visible_stichs() {
+            for (epi, card) in stich.iter() {
+                register_card(*card, epi);
+            }
+        }
+        for epi in EPlayerIndex::values() {
+            for card in ahand[epi].cards().iter() {
+                register_card(*card, epi);
+            }
+        }
+        assert!(EPlayerIndex::values().all(|epi| {
+            mapcardoepi.iter().filter_map(|&oepi_card| oepi_card).filter(|epi_card| *epi_card==epi).count()==stichseq.kurzlang().cards_per_player()
+        }));
+        assert!(SCard::values(stichseq.kurzlang()).all(|card| mapcardoepi[card].is_some()));
+        Self {mapcardoepi}
+    }
+    fn who_has_card(&self, card: SCard) -> EPlayerIndex {
+        debug_verify!(self.mapcardoepi[card]).unwrap()
+    }
 }
 #[derive(Eq, PartialEq, Debug)]
 pub struct SPointStichCount {
@@ -150,26 +178,6 @@ impl SRuleStateCache {
         fn_winner_index: impl Fn(&SStich)->EPlayerIndex,
     ) -> Self {
         assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
-        let mut mapcardoepi = SCard::map_from_fn(|_| None);
-        {
-            let mut register_card = |card, epi| {
-                assert!(mapcardoepi[card].is_none());
-                mapcardoepi[card] = Some(epi);
-            };
-            for stich in stichseq.visible_stichs() {
-                for (epi, card) in stich.iter() {
-                    register_card(*card, epi);
-                }
-            }
-            for epi in EPlayerIndex::values() {
-                for card in ahand[epi].cards().iter() {
-                    register_card(*card, epi);
-                }
-            }
-            assert!(EPlayerIndex::values().all(|epi| {
-                mapcardoepi.iter().filter_map(|&oepi_card| oepi_card).filter(|epi_card| *epi_card==epi).count()==stichseq.kurzlang().cards_per_player()
-            }));
-        }
         stichseq.completed_stichs_custom_winner_index(fn_winner_index).fold(
             Self {
                 changing: SRuleStateCacheChanging {
@@ -178,9 +186,7 @@ impl SRuleStateCache {
                         n_point: 0,
                     }),
                 },
-                fixed: SRuleStateCacheFixed {
-                    mapcardoepi,
-                }
+                fixed: SRuleStateCacheFixed::new(stichseq, ahand),
             },
             mutate_return!(|rulestatecache, (stich, epi_winner)| {
                 rulestatecache.register_stich(stich, epi_winner);

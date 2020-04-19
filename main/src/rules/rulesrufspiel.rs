@@ -92,7 +92,7 @@ impl TRules for SRulesRufspiel {
 
     fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo> {
         let epi_coplayer = debug_verify_eq!(
-            debug_verify!(rulestatecache.fixed.mapcardoepi[self.rufsau()]).unwrap(),
+            rulestatecache.fixed.who_has_card(self.rufsau()),
             debug_verify!(gamefinishedstiche.get().completed_stichs().iter()
                 .flat_map(|stich| stich.iter())
                 .find(|&(_, card)| *card==self.rufsau())
@@ -130,7 +130,7 @@ impl TRules for SRulesRufspiel {
 
     fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
         let epi_coplayer = debug_verify_eq!(
-            debug_verify!(rulestatecache.fixed.mapcardoepi[self.rufsau()]).unwrap(),
+            rulestatecache.fixed.who_has_card(self.rufsau()),
             stichseq.visible_stichs()
                 .flat_map(|stich| stich.iter())
                 .find(|&(_, card)| *card==self.rufsau())

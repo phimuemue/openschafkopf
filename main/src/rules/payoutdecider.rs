@@ -126,18 +126,15 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
 impl SLaufendeParams {
     pub fn payout_laufende<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(&self, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, playerparties: &PlayerParties) -> isize {
         let ekurzlang = gamefinishedstiche.get().kurzlang();
-        #[cfg(debug_assertions)] {
-            let mut mapcardoepi = SCard::map_from_fn(|_card| None);
-            for (epi, card) in gamefinishedstiche.get().completed_stichs().iter().flat_map(|stich| stich.iter()) {
-                assert!(mapcardoepi[*card].is_none());
-                mapcardoepi[*card] = Some(epi);
-            }
-            assert_eq!(mapcardoepi, rulestatecache.fixed.mapcardoepi);
-            #[cfg(debug_assertions)]
-            assert!(SCard::values(ekurzlang).all(|card| mapcardoepi[card].is_some()));
-        }
+        debug_assert_eq!(
+            SRuleStateCacheFixed::new(
+                gamefinishedstiche.get(),
+                /*ahand*/&EPlayerIndex::map_from_fn(|_epi| SHand::new_from_vec(SHandVector::new())),
+            ),
+            rulestatecache.fixed,
+        );
         let laufende_relevant = |card: SCard| { // TODO should we make this part of SRuleStateCacheFixed?
-            playerparties.is_primary_party(debug_verify!(rulestatecache.fixed.mapcardoepi[card]).unwrap())
+            playerparties.is_primary_party(rulestatecache.fixed.who_has_card(card))
         };
         let mut itcard_trumpf_descending = Rules::TrumpfDecider::trumpfs_in_descending_order();
         let b_might_have_lauf = laufende_relevant(debug_verify!(itcard_trumpf_descending.next()).unwrap());
