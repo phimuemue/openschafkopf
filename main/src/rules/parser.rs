@@ -100,7 +100,7 @@ pub fn parse_rule_description(
         .filter(|(slcstr, _)| str_rules_contains(slcstr))
         .exactly_one()
     {
-        Ok((_, Ok(rules))) => Ok(rules.box_clone()), // TODO do we really need to copy?
+        Ok((_, Ok(rules))) => Ok(rules.box_clone()), // TODORUST avoid box_clone once arrays support proper into_iter
         Ok((_, Err(ref e))) => Err(format_err!("{}", &e.to_string())),
         Err(itslcstrrules) => {
             if 0==itslcstrrules.count() {
