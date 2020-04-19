@@ -132,10 +132,8 @@ impl SRuleStateCacheFixed {
             assert!(mapcardoepi[card].is_none());
             mapcardoepi[card] = Some(epi);
         };
-        for stich in stichseq.visible_stichs() {
-            for (epi, card) in stich.iter() {
-                register_card(*card, epi);
-            }
+        for (epi, card) in stichseq.visible_stichs().flat_map(SStich::iter) {
+            register_card(*card, epi);
         }
         for epi in EPlayerIndex::values() {
             for card in ahand[epi].cards().iter() {
