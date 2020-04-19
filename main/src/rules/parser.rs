@@ -55,7 +55,7 @@ pub fn parse_rule_description(
                         /*n_lauf_lbound*/if let Some(_efarbe)=oefarbe {3} else {2},
                     ),
                 ),
-            ).upcast().box_clone()) // TODO this is terrible. Can't we upcast without cloning?
+            ).upcast_box())
         }};
         if str_rules_contains(&["tout"]) {
             make_sololike_internal!(SPayoutDeciderTout)
