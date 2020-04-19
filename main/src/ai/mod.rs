@@ -313,9 +313,10 @@ pub fn determine_best_card<
         // aggregate n_payout per card in some way
         SCard::map_from_fn(|_card| None),
     ));
-    itahand.enumerate()
+    itahand
         .collect::<Vec<_>>() // TODO necessary?
         .into_par_iter()
+        .enumerate()
         .flat_map(|(i_susp, ahand)|
             determinebestcard.veccard_allowed.par_iter()
                 .map(move |card| (i_susp, ahand.clone(), *card))
