@@ -39,15 +39,9 @@ pub fn parse_cards<C: std::iter::Extend<SCard>+Default>(str_cards: &str) -> Opti
 #[test]
 fn test_cardvectorparser() {
     use crate::util::*;
+    use crate::primitives::card_values::*;
     assert_eq!(
         verify!(parse_cards::<Vec<_>>("ek Gk hZ hu s7 gZ")).unwrap(),
-        vec![
-            SCard::new(EFarbe::Eichel, ESchlag::Koenig),
-            SCard::new(EFarbe::Gras, ESchlag::Koenig),
-            SCard::new(EFarbe::Herz, ESchlag::Zehn),
-            SCard::new(EFarbe::Herz, ESchlag::Unter),
-            SCard::new(EFarbe::Schelln, ESchlag::S7),
-            SCard::new(EFarbe::Gras, ESchlag::Zehn),
-        ]
+        vec![EK, GK, HZ, HU, S7, GZ]
     );
 }
