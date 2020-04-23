@@ -1,6 +1,5 @@
 use crate::primitives::*;
 use crate::game::*;
-use ncurses;
 use crate::rules::*;
 use crate::util::*;
 use itertools::Itertools;

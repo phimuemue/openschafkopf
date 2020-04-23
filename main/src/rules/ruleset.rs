@@ -13,7 +13,6 @@ use std::{
     io::prelude::*,
     path::Path,
 };
-use toml;
 
 #[derive(Debug)]
 pub struct SRuleGroup {
