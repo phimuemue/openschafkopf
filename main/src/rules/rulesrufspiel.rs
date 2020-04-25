@@ -1,15 +1,8 @@
-use crate::primitives::*;
-use crate::rules::{
-    *,
-    trumpfdecider::*,
-    payoutdecider::*,
-};
-use std::{
-    fmt,
-    cmp::Ordering,
-};
-use crate::util::*;
 use crate::ai::rulespecific::airufspiel::*;
+use crate::primitives::*;
+use crate::rules::{payoutdecider::*, trumpfdecider::*, *};
+use crate::util::*;
+use std::{cmp::Ordering, fmt};
 
 #[derive(Clone, Debug)]
 pub struct SRulesRufspiel {

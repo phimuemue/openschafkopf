@@ -1,5 +1,5 @@
-use crate::primitives::*;
 use crate::game::*;
+use crate::primitives::*;
 use crate::rules::*;
 use crate::util::*;
 use itertools::Itertools;

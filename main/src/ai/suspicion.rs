@@ -1,18 +1,10 @@
+use crate::game::{stoss_and_doublings, SGame, SStichSequence};
 use crate::primitives::*;
 use crate::rules::*;
-use crate::game::{SGame, SStichSequence, stoss_and_doublings};
-use itertools::Itertools;
 use crate::util::*;
-use std::{
-    fs,
-    io::Write,
-    fmt,
-    cmp::Ordering,
-};
-use rand::{
-    self,
-    Rng,
-};
+use itertools::Itertools;
+use rand::{self, Rng};
+use std::{cmp::Ordering, fmt, fs, io::Write};
 
 pub trait TForEachSnapshot {
     type Output;

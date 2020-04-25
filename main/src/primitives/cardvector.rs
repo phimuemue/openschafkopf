@@ -1,5 +1,5 @@
 use crate::primitives::card::*;
-use combine::{*, char::*};
+use combine::{char::*, *};
 
 // adapted from https://docs.rs/combine/3.6.7/combine/index.html#examples
 pub fn card_parser<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = SCard>

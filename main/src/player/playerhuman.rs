@@ -1,12 +1,9 @@
-use crate::primitives::*;
-use crate::player::*;
-use crate::rules::{
-    *,
-    ruleset::*,
-};
-use crate::game::*;
-use crate::skui;
 use crate::ai::*;
+use crate::game::*;
+use crate::player::*;
+use crate::primitives::*;
+use crate::rules::{ruleset::*, *};
+use crate::skui;
 use crate::util::*;
 use std::sync::mpsc;
 

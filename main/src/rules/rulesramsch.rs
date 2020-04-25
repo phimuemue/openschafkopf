@@ -1,16 +1,8 @@
 use crate::primitives::*;
-use crate::rules::{
-    *,
-    trumpfdecider::*,
-    payoutdecider::internal_payout,
-    card_points::*,
-};
-use std::{
-    fmt,
-    cmp::Ordering,
-};
-use itertools::Itertools;
+use crate::rules::{card_points::*, payoutdecider::internal_payout, trumpfdecider::*, *};
 use crate::util::*;
+use itertools::Itertools;
+use std::{cmp::Ordering, fmt};
 
 #[derive(Clone, Debug)]
 pub enum VDurchmarsch {

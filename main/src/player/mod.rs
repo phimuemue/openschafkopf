@@ -3,12 +3,9 @@ pub mod playerhuman;
 #[cfg(test)]
 pub mod playerrandom;
 
-use crate::primitives::*;
-use crate::rules::{
-    *,
-    ruleset::*,
-};
 use crate::game::*;
+use crate::primitives::*;
+use crate::rules::{ruleset::*, *};
 
 use std::sync::mpsc;
 

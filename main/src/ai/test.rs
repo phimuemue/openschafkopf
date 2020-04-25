@@ -1,18 +1,9 @@
-use crate::primitives::*;
-use crate::rules::{
-    *,
-    ruleset::*,
-};
-use crate::player::{
-    TPlayer,
-    playerrandom::SPlayerRandom,
-};
-use crate::util::*;
-use crate::ai::{
-    *,
-    suspicion::*,
-};
+use crate::ai::{suspicion::*, *};
 use crate::game;
+use crate::player::{playerrandom::SPlayerRandom, TPlayer};
+use crate::primitives::*;
+use crate::rules::{ruleset::*, *};
+use crate::util::*;
 
 #[test]
 fn test_determine_best_card() {

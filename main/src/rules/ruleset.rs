@@ -1,18 +1,9 @@
 use crate::primitives::*;
 use crate::rules::{
-    *,
-    rulesrufspiel::*,
-    rulessolo::*,
-    rulesbettel::*,
-    rulesramsch::*,
-    payoutdecider::*,
+    payoutdecider::*, rulesbettel::*, rulesramsch::*, rulesrufspiel::*, rulessolo::*, *,
 };
 use crate::util::*;
-use std::{
-    fs::File,
-    io::prelude::*,
-    path::Path,
-};
+use std::{fs::File, io::prelude::*, path::Path};
 
 #[derive(Debug)]
 pub struct SRuleGroup {

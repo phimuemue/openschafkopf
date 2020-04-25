@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::util::*;
+use std::fmt;
 
 plain_enum_mod!{modefarbe, EFarbe {
     Eichel,

@@ -1,6 +1,6 @@
+use crate::ai::*;
 use crate::primitives::*;
 use crate::rules::ruleset::*;
-use crate::ai::*;
 
 pub fn rank_rules(ruleset: &SRuleSet, hand: SFullHand, epi: EPlayerIndex, ai: &SAi) {
     for rules in allowed_rules(&ruleset.avecrulegroup[epi], hand)

@@ -1,16 +1,9 @@
-pub mod card;
-pub mod eplayerindex;
-pub mod stich;
-pub mod hand;
 pub mod accountbalance;
+pub mod card;
 pub mod cardvector;
+pub mod eplayerindex;
+pub mod hand;
+pub mod stich;
 pub mod wrappers;
 
-pub use self::{
-    card::*,
-    eplayerindex::*,
-    stich::*,
-    hand::*,
-    accountbalance::*,
-    wrappers::*,
-};
+pub use self::{accountbalance::*, card::*, eplayerindex::*, hand::*, stich::*, wrappers::*};

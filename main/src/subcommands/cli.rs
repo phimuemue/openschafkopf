@@ -1,13 +1,13 @@
 use crate::game::*;
+use crate::player::*;
 use crate::primitives::*;
 use crate::rules::{
-    TActivelyPlayableRulesBoxClone, // TODO improve trait-object behaviour
     ruleset::*,
+    TActivelyPlayableRulesBoxClone, // TODO improve trait-object behaviour
 };
-use std::sync::mpsc;
-use crate::player::*;
-use crate::util::*;
 use crate::skui;
+use crate::util::*;
+use std::sync::mpsc;
 
 pub fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) {
     let _tui = skui::STuiGuard::init_ui();

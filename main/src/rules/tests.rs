@@ -1,18 +1,10 @@
-use crate::primitives::{
-    *,
-    card::card_values::*
-};
-use crate::rules::{
-    *,
-    rulesrufspiel::*,
-    rulessolo::*,
-    rulesramsch::*,
-    rulesbettel::*,
-    payoutdecider::*,
-};
-use crate::util::*;
 use crate::game::*;
 use crate::game_analysis::*;
+use crate::primitives::{card::card_values::*, *};
+use crate::rules::{
+    payoutdecider::*, rulesbettel::*, rulesramsch::*, rulesrufspiel::*, rulessolo::*, *,
+};
+use crate::util::*;
 
 fn internal_test_rules(
     str_info: &str,

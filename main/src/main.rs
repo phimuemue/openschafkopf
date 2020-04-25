@@ -1,28 +1,24 @@
-#![cfg_attr(feature="cargo-clippy", allow(clippy::block_in_if_condition_stmt))]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::block_in_if_condition_stmt))]
 #![deny(bare_trait_objects)]
 
 #[macro_use]
 mod util;
+mod ai;
+mod game;
+mod game_analysis;
+mod player;
 mod primitives;
 mod rules;
-mod game;
-mod player;
-mod ai;
+mod sauspiel;
 mod skui;
 mod subcommands;
-mod game_analysis;
-mod sauspiel;
 
-use crate::primitives::*;
-use crate::rules:: ruleset::*;
 use crate::ai::*;
-use std::path::Path;
-use crate::player::{
-    *,
-    playerhuman::*,
-    playercomputer::*,
-};
+use crate::player::{playercomputer::*, playerhuman::*, *};
+use crate::primitives::*;
+use crate::rules::ruleset::*;
 use crate::util::*;
+use std::path::Path;
 
 fn main() -> Result<(), Error> {
     openschafkopf_logging::init_logging()?;

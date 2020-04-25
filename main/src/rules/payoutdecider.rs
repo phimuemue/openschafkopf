@@ -1,8 +1,5 @@
 use crate::primitives::*;
-use crate::rules::{
-    *,
-    trumpfdecider::TTrumpfDecider,
-};
+use crate::rules::{trumpfdecider::TTrumpfDecider, *};
 use crate::util::*;
 
 #[derive(Clone, new, Debug)]

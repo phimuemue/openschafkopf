@@ -1,15 +1,7 @@
 use crate::primitives::*;
-use crate::rules::{
-    *,
-    trumpfdecider::*,
-    payoutdecider::*,
-};
-use std::{
-    fmt::self,
-    cmp::Ordering,
-    marker::PhantomData,
-};
+use crate::rules::{payoutdecider::*, trumpfdecider::*, *};
 use crate::util::*;
+use std::{cmp::Ordering, fmt, marker::PhantomData};
 
 pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
     fn payout<Rules>(

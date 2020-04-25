@@ -1,7 +1,7 @@
-use crate::util::*;
-use crate::primitives::*;
 use crate::ai::suspicion::*;
 use crate::game::SStichSequence;
+use crate::primitives::*;
+use crate::util::*;
 
 pub fn suggest_card(
     str_epi_first: &str,

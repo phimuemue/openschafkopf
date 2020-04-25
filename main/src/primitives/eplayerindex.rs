@@ -1,14 +1,6 @@
-use arrayvec::{
-    self,
-    ArrayVec,
-};
-use std::{
-    ops::Index,
-    fmt,
-    str::FromStr,
-    slice,
-};
 use crate::util::*;
+use arrayvec::{self, ArrayVec};
+use std::{fmt, ops::Index, slice, str::FromStr};
 
 plain_enum_mod!(modepi, EPlayerIndex {
     EPI0, EPI1, EPI2, EPI3,

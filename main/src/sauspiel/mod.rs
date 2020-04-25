@@ -1,14 +1,10 @@
-use crate::util::*;
+use crate::game_analysis::*;
 use crate::primitives::cardvector::*;
 use crate::primitives::*;
-use select::{
-    document::Document,
-    predicate::*,
-    node::Node,
-};
-use crate::game_analysis::*;
-use combine::{*, char::*};
+use crate::util::*;
+use combine::{char::*, *};
 use itertools::Itertools;
+use select::{document::Document, node::Node, predicate::*};
 
 pub fn analyze_html(str_html: &str) -> Result<SAnalyzeParams, failure::Error> {
     let doc = Document::from(&str_html as &str);

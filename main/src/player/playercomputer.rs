@@ -1,15 +1,14 @@
-use crate::primitives::*;
-use crate::player::*;
-use crate::rules::{
+use crate::ai::{
+    handiterators::forever_rand_hands,
+    suspicion::{
+        explore_snapshots, EMinMaxStrategy, SMinReachablePayout, SMinReachablePayoutParams,
+    },
     *,
-    ruleset::*,
 };
 use crate::game::*;
-use crate::ai::{
-    *,
-    handiterators::forever_rand_hands,
-    suspicion::{explore_snapshots, SMinReachablePayout, SMinReachablePayoutParams, EMinMaxStrategy},
-};
+use crate::player::*;
+use crate::primitives::*;
+use crate::rules::{ruleset::*, *};
 use crate::util::*;
 use std::sync::mpsc;
 

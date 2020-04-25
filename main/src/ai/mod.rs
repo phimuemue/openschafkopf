@@ -1,29 +1,22 @@
-pub mod suspicion;
 pub mod handiterators;
 pub mod rulespecific;
+pub mod suspicion;
 #[cfg(test)]
 pub mod test;
 
-use crate::primitives::*;
-use crate::rules::{
-    *,
-};
+use crate::ai::{handiterators::*, suspicion::*};
 use crate::game::*;
-use crate::ai::{
-    suspicion::*,
-    handiterators::*,
-};
-use rand::prelude::*;
-use std::{
-    self,
-    sync::{
-        Arc, Mutex,
-    },
-};
-use rayon::prelude::*;
+use crate::primitives::*;
+use crate::rules::*;
 use crate::util::*;
 use chrono::Local;
 use itertools::Itertools;
+use rand::prelude::*;
+use rayon::prelude::*;
+use std::{
+    self,
+    sync::{Arc, Mutex},
+};
 
 pub fn remaining_cards_per_hand(stichseq: &SStichSequence) -> EnumMap<EPlayerIndex, usize> {
     EPlayerIndex::map_from_fn(|epi| {

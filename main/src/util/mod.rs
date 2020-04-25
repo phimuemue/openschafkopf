@@ -5,15 +5,11 @@ pub mod box_clone;
 #[macro_use]
 pub mod staticvalue;
 pub mod assign;
-pub use self::{
-    box_clone::*,
-    staticvalue::*,
-    assign::*,
-};
-pub use failure::{bail, format_err, Error};
-pub use openschafkopf_util::*;
+pub use self::{assign::*, box_clone::*, staticvalue::*};
 pub use derive_new::new;
+pub use failure::{bail, format_err, Error};
 pub use openschafkopf_logging::{error, info, warn};
+pub use openschafkopf_util::*;
 
 // TODORUST static_assert not available in rust
 macro_rules! static_assert{($assert_name:ident($($args:tt)*)) => {

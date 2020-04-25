@@ -1,13 +1,10 @@
-use crate::primitives::*;
-use crate::player::*;
-use crate::rules::{
-    *,
-    ruleset::*,
-};
 use crate::game::*;
+use crate::player::*;
+use crate::primitives::*;
+use crate::rules::{ruleset::*, *};
 use crate::util::*;
-use std::sync::mpsc;
 use rand::prelude::*;
+use std::sync::mpsc;
 
 #[derive(new)]
 pub struct SPlayerRandom<FnCheckAskForCard> {

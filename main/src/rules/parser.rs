@@ -1,7 +1,7 @@
-use crate::util::*;
-use crate::primitives::*;
 use crate::game_analysis::*;
+use crate::primitives::*;
 use crate::rules::*;
+use crate::util::*;
 use itertools::Itertools;
 
 pub fn parse_rule_description(

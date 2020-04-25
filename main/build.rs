@@ -1,12 +1,6 @@
 use openschafkopf_util::*;
 
-use std::{
-    env,
-    fs::File,
-    io::Write,
-    path::Path,
-    process::Command,
-};
+use std::{env, fs::File, io::Write, path::Path, process::Command};
 
 fn main() {
     // adapted from https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation

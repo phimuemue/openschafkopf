@@ -1,6 +1,6 @@
 use crate::primitives::card::*;
-use std::fmt;
 use arrayvec::ArrayVec;
+use std::fmt;
 
 pub type SHandVector = ArrayVec<[SCard; 8]>;
 

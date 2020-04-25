@@ -1,7 +1,7 @@
+use crate::ai::*;
 use crate::primitives::*;
 use crate::util::*;
 use permutohedron::LexicalPermutation;
-use crate::ai::*;
 use rand::prelude::*;
 
 pub trait TNextVecEPI {

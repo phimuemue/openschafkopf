@@ -1,8 +1,8 @@
-use crate::primitives::*;
-use crate::util::*;
+use crate::ai::{handiterators::*, suspicion::*, *};
 use crate::game::*;
-use crate::rules::{*, rulessolo::*, ruleset::*, payoutdecider::*};
-use crate::ai::{*, suspicion::*, handiterators::*};
+use crate::primitives::*;
+use crate::rules::{payoutdecider::*, ruleset::*, rulessolo::*, *};
+use crate::util::*;
 use itertools::Itertools;
 use std::{
     io::Write,

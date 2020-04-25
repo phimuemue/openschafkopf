@@ -4,27 +4,24 @@ pub mod trumpfdecider;
 pub mod singleplay;
 pub mod rulesrufspiel;
 // TODORULES implement Hochzeit
-pub mod rulessolo;
-pub mod rulesramsch;
-pub mod rulesbettel;
-pub mod ruleset;
-pub mod payoutdecider;
 pub mod card_points;
 pub mod parser;
+pub mod payoutdecider;
+pub mod rulesbettel;
+pub mod ruleset;
+pub mod rulesramsch;
+pub mod rulessolo;
 
 #[cfg(test)]
 pub mod tests;
 
-use crate::primitives::*;
-use std::{
-    cmp::Ordering,
-    fmt,
-};
-use crate::util::*;
+use crate::ai::ahand_vecstich_card_count_is_compatible;
 use crate::ai::rulespecific::*;
 use crate::game::SStichSequence;
-use crate::ai::ahand_vecstich_card_count_is_compatible;
+use crate::primitives::*;
 use crate::rules::card_points::points_stich;
+use crate::util::*;
+use std::{cmp::Ordering, fmt};
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum VTrumpfOrFarbe {

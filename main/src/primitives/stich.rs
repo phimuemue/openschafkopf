@@ -1,6 +1,6 @@
 use crate::primitives::*;
-use std::fmt;
 use crate::util::*;
+use std::fmt;
 
 pub type SStich = SPlayersInRound<SCard>;
 

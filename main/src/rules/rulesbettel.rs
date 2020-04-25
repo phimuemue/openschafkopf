@@ -1,12 +1,9 @@
 use crate::primitives::*;
 use crate::rules::{
-    *,
-    trumpfdecider::*,
-    rulessolo::TPayoutDecider,
-    payoutdecider::internal_payout,
+    payoutdecider::internal_payout, rulessolo::TPayoutDecider, trumpfdecider::*, *,
 };
-use std::marker::PhantomData;
 use crate::util::*;
+use std::marker::PhantomData;
 
 pub trait TBettelAllAllowedCardsWithinStich : Sync + 'static + Clone + fmt::Debug {
     fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, stichseq: &SStichSequence, hand: &SHand) -> SHandVector;

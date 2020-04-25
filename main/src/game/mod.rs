@@ -1,12 +1,9 @@
 use crate::primitives::*;
-use crate::rules::{
-    *,
-    ruleset::*,
-};
+use crate::rules::{ruleset::*, *};
 use crate::util::*;
+use arrayvec::ArrayVec;
 use rand::{self, Rng};
 use std::mem;
-use arrayvec::ArrayVec;
 
 pub trait TGamePhase : Sized {
     type ActivePlayerInfo;

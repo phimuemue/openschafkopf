@@ -1,6 +1,6 @@
-use crate::util::*;
 use crate::game_analysis::*;
 use crate::sauspiel::*;
+use crate::util::*;
 use std::io::Read;
 
 pub fn analyze<
