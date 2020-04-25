@@ -26,7 +26,7 @@ impl<TOk, TErr> TVerifiableByVerifyMacro for Result<TOk, TErr> {
     }
 }
 
-pub fn verify_internal<E: TVerifiableByVerifyMacro+std::fmt::Debug>(e: E, str_e: &str) -> E {
+pub fn verify_internal<E: TVerifiableByVerifyMacro + std::fmt::Debug>(e: E, str_e: &str) -> E {
     assert!(e.is_verify_true(), "verify!({}): {:?}", str_e, e);
     e
 }
@@ -42,13 +42,13 @@ macro_rules! debug_verify{($e: expr) => {
 }}
 
 #[macro_export]
-macro_rules! verify_eq {($e: expr, $e_chk: expr) => {
-    {
+macro_rules! verify_eq {
+    ($e: expr, $e_chk: expr) => {{
         let e = $e;
         assert_eq!(e, $e_chk);
         e
-    }
-}}
+    }};
+}
 
 #[macro_export]
 macro_rules! debug_verify_eq {($e: expr, $e_chk: expr) => {
