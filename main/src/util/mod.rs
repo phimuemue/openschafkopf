@@ -17,27 +17,44 @@ macro_rules! static_assert{($assert_name:ident($($args:tt)*)) => {
 }}
 
 // TODORUST return impl
-macro_rules! return_impl{($t:ty) => { $t }}
+macro_rules! return_impl {
+    ($t:ty) => {
+        $t
+    };
+}
 
 // TODORUST Objects should be upcastable to supertraits: https://github.com/rust-lang/rust/issues/5665
-macro_rules! make_upcastable{($upcasttrait:ident, $trait:ident) => {
-    pub trait $upcasttrait {
-        fn upcast(&self) -> &dyn $trait;
-        fn upcast_box(self: Box<Self>) -> Box<dyn $trait> where Self: 'static;
-    }
-    impl<T: $trait> $upcasttrait for T {
-        fn upcast(&self) -> &dyn $trait {
-            self
+macro_rules! make_upcastable {
+    ($upcasttrait:ident, $trait:ident) => {
+        pub trait $upcasttrait {
+            fn upcast(&self) -> &dyn $trait;
+            fn upcast_box(self: Box<Self>) -> Box<dyn $trait>
+            where
+                Self: 'static;
         }
-        fn upcast_box(self: Box<Self>) -> Box<dyn $trait> where Self: 'static {
-            self as Box<dyn $trait>
+        impl<T: $trait> $upcasttrait for T {
+            fn upcast(&self) -> &dyn $trait {
+                self
+            }
+            fn upcast_box(self: Box<Self>) -> Box<dyn $trait>
+            where
+                Self: 'static,
+            {
+                self as Box<dyn $trait>
+            }
         }
-    }
-}}
+    };
+}
 
-macro_rules! if_then_some{($cond: expr, $val: expr) => {
-    if $cond {Some($val)} else {None}
-}}
+macro_rules! if_then_some {
+    ($cond: expr, $val: expr) => {
+        if $cond {
+            Some($val)
+        } else {
+            None
+        }
+    };
+}
 
 pub fn tpl_flip_if<T>(b: bool, (t0, t1): (T, T)) -> (T, T) {
     if b {
@@ -163,7 +180,7 @@ macro_rules! type_dispatch_enum{(pub enum $e: ident {$($v: ident ($t: ty),)+}) =
 // TODORUST some types should not implement copy (e.g. array), but do.
 // In these cases, clippy warns about using clone on a copy type.
 // To avoid this warning, use explicit_clone.
-pub trait TExplicitClone : Clone {
+pub trait TExplicitClone: Clone {
     fn explicit_clone(&self) -> Self {
         self.clone()
     }

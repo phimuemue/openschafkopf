@@ -1,14 +1,20 @@
-pub fn assign_better<T>(dst: &mut T, src: T, fn_better: impl FnOnce(&T, &T)->bool) {
+pub fn assign_better<T>(dst: &mut T, src: T, fn_better: impl FnOnce(&T, &T) -> bool) {
     if fn_better(&src, dst) {
         *dst = src;
     }
 }
 
-pub fn assign_by_key_ordering<T, K: Ord, FnKey>(dst: &mut T, src: T, mut fn_key: FnKey, ordering: std::cmp::Ordering)
-    where
-        FnKey: FnMut(&T)->K,
+pub fn assign_by_key_ordering<T, K: Ord, FnKey>(
+    dst: &mut T,
+    src: T,
+    mut fn_key: FnKey,
+    ordering: std::cmp::Ordering,
+) where
+    FnKey: FnMut(&T) -> K,
 {
-    assign_better(dst, src, |lhs, rhs| ordering==fn_key(lhs).cmp(&fn_key(rhs)))
+    assign_better(dst, src, |lhs, rhs| {
+        ordering == fn_key(lhs).cmp(&fn_key(rhs))
+    })
 }
 
 #[test]
