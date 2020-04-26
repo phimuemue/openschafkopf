@@ -125,7 +125,9 @@ fn main() -> Result<(), failure::Error> {
                     })
                         .args(&[
                             "suggest-card".to_owned(),
-                            format!("{}", n_epi_first), // first_player_index
+                            "--first".to_owned(),
+                            format!("{}", n_epi_first),
+                            "--rules".to_owned(),
                             format!("{} von {}",
                                 {
                                     macro_rules! extract_farbe(() => {
@@ -152,8 +154,10 @@ fn main() -> Result<(), failure::Error> {
                                 },
                                 n_epi_active,
                             ),
-                            str_hand.to_owned(), // hand
-                            str_cards_as_played.to_owned(), // cards in order
+                            "--hand".to_owned(),
+                            str_hand.to_owned(),
+                            "--cards-on-table".to_owned(),
+                            str_cards_as_played.to_owned(),
                         ])
                         .stdout(std::process::Stdio::piped())
                         .spawn()

@@ -45,20 +45,24 @@ fn main() -> Result<(), Error> {
         .subcommand(clap::SubCommand::with_name("suggest-card")
             .about("Suggest a card to play given the game so far")
             .arg(clap::Arg::with_name("first_player_index")
-                .index(1) // positional arguments start at index 1 (https://docs.rs/clap/2.33.0/clap/struct.Arg.html#method.index)
+                .long("first")
                 .required(true)
+                .takes_value(true)
             )
             .arg(clap::Arg::with_name("rules")
-                .index(2)
+                .long("rules")
                 .required(true)
+                .takes_value(true)
             )
             .arg(clap::Arg::with_name("hand")
-                .index(3)
+                .long("hand")
                 .required(true)
+                .takes_value(true)
             )
-            .arg(clap::Arg::with_name("cards_in_order")
-                .index(4)
+            .arg(clap::Arg::with_name("cards_on_table")
+                .long("cards-on-table")
                 .required(true)
+                .takes_value(true)
             )
         )
         .subcommand(clap::SubCommand::with_name("analyze")
@@ -119,7 +123,7 @@ fn main() -> Result<(), Error> {
             &debug_verify!(subcommand_matches.value_of("rules")).unwrap(),
             &str_to_hand(&debug_verify!(subcommand_matches.value_of("hand")).unwrap())?,
             &cardvector::parse_cards::<Vec<_>>(
-                &debug_verify!(subcommand_matches.value_of("cards_in_order")).unwrap(),
+                &debug_verify!(subcommand_matches.value_of("cards_on_table")).unwrap(),
             ).ok_or_else(||format_err!("Could not parse played cards"))?,
         )
     }
