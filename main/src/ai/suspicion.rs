@@ -220,16 +220,6 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     output
 }
 
-fn end_snapshot_minmax<ItTplCardNPayout: Iterator<Item=(SCard, SMinMax)>>(epi_self: EPlayerIndex, epi_card: EPlayerIndex, ittplcardminmax: ItTplCardNPayout) -> SMinMax {
-    let itminmax = ittplcardminmax.map(|(_card, minmax)| minmax);
-    debug_verify!(if epi_self==epi_card {
-        itminmax.fold1(mutate_return!(|minmax_acc, minmax| minmax_acc.assign_max_by_key(&minmax, epi_self)))
-    } else {
-        // other players may play inconveniently for epi_stich
-        itminmax.fold1(mutate_return!(|minmax_acc, minmax| minmax_acc.assign_by_key_ordering(&minmax, (epi_self, Ordering::Less), (epi_card, Ordering::Greater))))
-    }).unwrap()
-}
-
 #[derive(new, Clone)]
 pub struct SMinReachablePayoutParams<'rules> {
     rules: &'rules dyn TRules,
@@ -326,7 +316,13 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         epi_card: EPlayerIndex,
         ittplcardoutput: ItTplCardOutput,
     ) -> Self::Output {
-        end_snapshot_minmax(/*epi_self*/self.params.epi, epi_card, ittplcardoutput)
+        let itminmax = ittplcardoutput.map(|(_card, minmax)| minmax);
+        debug_verify!(if self.params.epi==epi_card {
+            itminmax.fold1(mutate_return!(|minmax_acc, minmax| minmax_acc.assign_max_by_key(&minmax, self.params.epi)))
+        } else {
+            // other players may play inconveniently for epi_stich
+            itminmax.fold1(mutate_return!(|minmax_acc, minmax| minmax_acc.assign_by_key_ordering(&minmax, (self.params.epi, Ordering::Less), (epi_card, Ordering::Greater))))
+        }).unwrap()
     }
 }
 
