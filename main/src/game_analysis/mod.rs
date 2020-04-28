@@ -129,10 +129,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
         /*fn_before_zugeben*/|game, i_stich, epi, card| {
             if remaining_cards_per_hand(&game.stichseq)[epi] <= if_dbg_else!({2}{4}) {
                 let determinebestcard = SDetermineBestCard::new_from_game(game);
-                macro_rules! look_for_mistakes{(
-                    $itahand: expr,
-                    $func_filter_allowed_cards: expr,
-                ) => {{
+                macro_rules! look_for_mistakes{($itahand: expr,) => {{
                     if determinebestcard.single_allowed_card().is_none() { // there is an actual choice
                         let determinebestcardresult = determine_best_card(
                             &determinebestcard,
@@ -164,12 +161,10 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
                             determinebestcard.epi_fixed,
                             game.rules.as_ref(),
                         ),
-                        &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
                     )
                 };
                 if let Some(analysisimpr) = look_for_mistakes!(
                     std::iter::once(game.ahand.clone()),
-                    &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
                 )
                     .map(|cardandpayout_cheating| {
                         SAnalysisImprovement {
