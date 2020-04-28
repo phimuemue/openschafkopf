@@ -207,7 +207,8 @@ impl SAi {
     }
 
     pub fn suggest_card(&self, game: &SGame, opath_out_dir: Option<&std::path::Path>) -> SCard {
-        if let Some(card)=SDetermineBestCard::new_from_game(game).single_allowed_card() {
+        let determinebestcard = SDetermineBestCard::new_from_game(game);
+        if let Some(card)=determinebestcard.single_allowed_card() {
             card
         } else if let Some(card) = game.rules.rulespecific_ai()
             .and_then(|airulespecific| airulespecific.suggest_card(game))
@@ -215,7 +216,6 @@ impl SAi {
             card
         } else {
             macro_rules! suggest_via{($fn_suggest: ident, $arg: expr,) => {{ // TODORUST generic closures
-                let determinebestcard = SDetermineBestCard::new_from_game(game);
                 Self::$fn_suggest(
                     &determinebestcard,
                     $arg,
