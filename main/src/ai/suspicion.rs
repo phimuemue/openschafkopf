@@ -220,7 +220,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     output
 }
 
-#[derive(Clone)]
+#[derive(Clone, new)]
 pub struct SMinReachablePayoutBase<'rules, Pruner> {
     rules: &'rules dyn TRules,
     epi: EPlayerIndex,
@@ -229,21 +229,6 @@ pub struct SMinReachablePayoutBase<'rules, Pruner> {
     phantom: std::marker::PhantomData<Pruner>,
 }
 impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
-    pub fn new(
-        rules: &'rules dyn TRules,
-        epi: EPlayerIndex,
-        tpln_stoss_doubling: (usize, usize),
-        n_stock: isize,
-    ) -> Self {
-        Self {
-            rules,
-            epi,
-            tpln_stoss_doubling,
-            n_stock,
-            phantom: Default::default(),
-        }
-    }
-
     pub fn new_from_game(game: &'rules SGame) -> Self {
         Self::new(
             game.rules.as_ref(),
