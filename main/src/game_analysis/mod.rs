@@ -138,7 +138,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
                             &determinebestcard,
                             $itahand,
                             &|_,_| (/*no filtering*/),
-                            &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(game)),
+                            &SMinReachablePayout::new_from_game(game),
                             |minmax_acc, minmax| {
                                 minmax_acc.assign_min_by_key(&minmax, determinebestcard.epi_fixed);
                             },

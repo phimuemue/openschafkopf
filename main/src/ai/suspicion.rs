@@ -238,9 +238,26 @@ pub struct SMinReachablePayoutParams<'rules> {
     n_stock: isize,
 }
 
-impl<'rules> SMinReachablePayoutParams<'rules> {
+#[derive(Clone)]
+pub struct SMinReachablePayoutBase<'rules, Pruner>{
+    pub params: SMinReachablePayoutParams<'rules>,
+    phantom: std::marker::PhantomData<Pruner>,
+}
+impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
+    pub fn new(
+        rules: &'rules dyn TRules,
+        epi: EPlayerIndex,
+        tpln_stoss_doubling: (usize, usize),
+        n_stock: isize,
+    ) -> Self {
+        Self {
+            params: SMinReachablePayoutParams::new(rules, epi, tpln_stoss_doubling, n_stock),
+            phantom: Default::default(),
+        }
+    }
+
     pub fn new_from_game(game: &'rules SGame) -> Self {
-        SMinReachablePayoutParams::new(
+        Self::new(
             game.rules.as_ref(),
             debug_verify!(game.current_playable_stich().current_playerindex()).unwrap(),
             /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
@@ -248,9 +265,6 @@ impl<'rules> SMinReachablePayoutParams<'rules> {
         )
     }
 }
-
-#[derive(Clone)]
-pub struct SMinReachablePayout<'rules>(pub SMinReachablePayoutParams<'rules>);
 
 plain_enum_mod!(modeminmaxstrategy, EMinMaxStrategy {
     OthersMin,
@@ -296,15 +310,15 @@ impl SMinMax {
     }
 }
 
-impl TForEachSnapshot for SMinReachablePayout<'_> {
+impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     type Output = SMinMax;
 
     fn final_output(&self, slcstich: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
-        SMinMax::new_final(self.0.rules.payout_with_cache(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock, rulestatecache))
+        SMinMax::new_final(self.params.rules.payout_with_cache(slcstich, self.params.tpln_stoss_doubling, self.params.n_stock, rulestatecache))
     }
 
-    fn pruned_output(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
-        None
+    fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
+        Pruner::pruned_output(&self.params, stichseq, ahand, rulestatecache)
     }
 
     fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
@@ -312,40 +326,38 @@ impl TForEachSnapshot for SMinReachablePayout<'_> {
         epi_card: EPlayerIndex,
         ittplcardoutput: ItTplCardOutput,
     ) -> Self::Output {
-        end_snapshot_minmax(/*epi_self*/self.0.epi, epi_card, ittplcardoutput)
+        end_snapshot_minmax(/*epi_self*/self.params.epi, epi_card, ittplcardoutput)
     }
 }
 
-#[derive(Clone)]
-pub struct SMinReachablePayoutLowerBoundViaHint<'rules>(pub SMinReachablePayoutParams<'rules>);
+pub type SMinReachablePayout<'rules> = SMinReachablePayoutBase<'rules, SPrunerNothing>;
+pub type SMinReachablePayoutLowerBoundViaHint<'rules> = SMinReachablePayoutBase<'rules, SPrunerViaHint>;
 
-impl TForEachSnapshot for SMinReachablePayoutLowerBoundViaHint<'_> {
-    type Output = SMinMax;
+pub trait TPruner {
+    fn pruned_output(params: &SMinReachablePayoutParams, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<SMinMax>;
+}
 
-    fn final_output(&self, slcstich: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
-        SMinMax::new_final(self.0.rules.payout_with_cache(slcstich, self.0.tpln_stoss_doubling, self.0.n_stock, rulestatecache))
+pub struct SPrunerNothing;
+impl TPruner for SPrunerNothing {
+    fn pruned_output(_params: &SMinReachablePayoutParams, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
+        None
     }
+}
 
-    fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
-        let mapepion_payout = self.0.rules.payouthints(stichseq, ahand, rulestatecache).map(|payouthint| {
+pub struct SPrunerViaHint;
+impl TPruner for SPrunerViaHint {
+    fn pruned_output(params: &SMinReachablePayoutParams, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
+        let mapepion_payout = params.rules.payouthints(stichseq, ahand, rulestatecache).map(|payouthint| {
             payouthint
                 .lower_bound()
                 .as_ref()
                 .map(|payoutinfo|
-                    payoutinfo.payout_including_stock(self.0.n_stock, self.0.tpln_stoss_doubling)
+                    payoutinfo.payout_including_stock(params.n_stock, params.tpln_stoss_doubling)
                 )
         });
         if_then_some!(
-            mapepion_payout.iter().all(Option::is_some) && 0<debug_verify!(mapepion_payout[self.0.epi]).unwrap(),
+            mapepion_payout.iter().all(Option::is_some) && 0<debug_verify!(mapepion_payout[params.epi]).unwrap(),
             SMinMax::new_final(mapepion_payout.map(|opayout| debug_verify!(opayout).unwrap()))
         )
-    }
-
-    fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
-        &self,
-        epi_card: EPlayerIndex,
-        ittplcardoutput: ItTplCardOutput,
-    ) -> Self::Output {
-        end_snapshot_minmax(/*epi_self*/self.0.epi, epi_card, ittplcardoutput)
     }
 }

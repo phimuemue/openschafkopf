@@ -112,12 +112,12 @@ impl SAi {
                     rules,
                     &mut SStichSequence::new(epi_first, ekurzlang),
                     &branching_factor(|_stichseq| (1, 2)),
-                    &SMinReachablePayoutLowerBoundViaHint(SMinReachablePayoutParams::new(
+                    &SMinReachablePayoutLowerBoundViaHint::new(
                         rules,
                         epi_rank,
                         tpln_stoss_doubling,
                         n_stock,
-                    )),
+                    ),
                     /*opath_out_dir*/None,
                 ).aan_payout[EMinMaxStrategy::OthersMin][epi_rank]
             })
@@ -132,12 +132,17 @@ impl SAi {
         n_stock: isize,
         opath_out_dir: Option<&std::path::Path>,
     ) -> SDetermineBestCardResult<SMinMax> {
-        macro_rules! forward_to_determine_best_card{($func_filter_allowed_cards: expr, $foreachsnapshot: expr,) => {{ // TODORUST generic closures
+        macro_rules! forward_to_determine_best_card{($func_filter_allowed_cards: expr, $foreachsnapshot: ident,) => {{ // TODORUST generic closures
             determine_best_card(
                 &determinebestcard,
                 itahand,
                 $func_filter_allowed_cards,
-                $foreachsnapshot,
+                &$foreachsnapshot::new(
+                    determinebestcard.rules,
+                    determinebestcard.epi_fixed,
+                    tpln_stoss_doubling,
+                    n_stock,
+                ),
                 |minmax_acc, minmax| {
                     minmax_acc.assign_min_by_key(&minmax, determinebestcard.epi_fixed);
                 },
@@ -151,28 +156,20 @@ impl SAi {
         }}}
         // TODORUST exhaustive_integer_patterns for isize/usize
         // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
-        let make_minreachablepayoutparams = || {
-            SMinReachablePayoutParams::new(
-                determinebestcard.rules,
-                determinebestcard.epi_fixed,
-                tpln_stoss_doubling,
-                n_stock,
-            )
-        };
         match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[determinebestcard.epi_fixed] {
             1|2|3 => forward_to_determine_best_card!(
                 &|_,_| (/*no filtering*/),
-                &SMinReachablePayout(make_minreachablepayoutparams()),
+                SMinReachablePayout,
             ),
             4 => forward_to_determine_best_card!(
                 &|_,_| (/*no filtering*/),
-                &SMinReachablePayoutLowerBoundViaHint(make_minreachablepayoutparams()),
+                SMinReachablePayoutLowerBoundViaHint,
             ),
             5|6|7|8 => forward_to_determine_best_card!(
                 &branching_factor(|_stichseq| {
                     (1, n_suggest_card_branches+1)
                 }),
-                &SMinReachablePayoutLowerBoundViaHint(make_minreachablepayoutparams()),
+                SMinReachablePayoutLowerBoundViaHint,
             ),
             n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
         }
@@ -510,7 +507,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             &determinebestcard,
             std::iter::once(ahand),
             /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
-            &SMinReachablePayout(SMinReachablePayoutParams::new_from_game(&game)),
+            &SMinReachablePayout::new_from_game(&game),
             |minmax_acc, minmax| {
                 minmax_acc.assign_min_by_key(&minmax, determinebestcard.epi_fixed);
             },

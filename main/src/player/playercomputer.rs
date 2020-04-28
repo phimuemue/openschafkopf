@@ -1,7 +1,7 @@
 use crate::ai::{
     handiterators::forever_rand_hands,
     suspicion::{
-        explore_snapshots, EMinMaxStrategy, SMinReachablePayout, SMinReachablePayoutParams,
+        explore_snapshots, EMinMaxStrategy, SMinReachablePayout,
     },
     *,
 };
@@ -122,12 +122,12 @@ impl TPlayer for SPlayerComputer {
                         rules,
                         &mut SStichSequence::new(doublings.first_playerindex(), ekurzlang),
                         &branching_factor(|_stichseq| (1, 2)),
-                        &SMinReachablePayout(SMinReachablePayoutParams::new(
+                        &SMinReachablePayout::new(
                             rules,
                             epi,
                             /*tpln_stoss_doubling*/stoss_and_doublings(vecstoss, doublings),
                             n_stock,
-                        )),
+                        ),
                         /*opath_out_dir*/None,
                     ).aan_payout[EMinMaxStrategy::OthersMin][epi]
                 })
