@@ -44,7 +44,7 @@ impl TPlayer for SPlayerComputer {
         &self,
         _epi: EPlayerIndex,
         hand: SFullHand,
-        gameannouncements : &SGameAnnouncements,
+        _gameannouncements : &SGameAnnouncements,
         vecrulegroup: &'rules [SRuleGroup],
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
@@ -59,7 +59,6 @@ impl TPlayer for SPlayerComputer {
                     0., // TODO how to rank None?
                     |rules| self.ai.rank_rules(
                         hand,
-                        /*epi_first*/gameannouncements.first_playerindex(),
                         /*epi_rank*/rules.active_playerindex(),
                         rules.upcast(),
                         tpln_stoss_doubling,
@@ -89,14 +88,13 @@ impl TPlayer for SPlayerComputer {
     ) {
         let n_samples_per_stoss = 5; // TODO move to ai, make adjustable
         let ekurzlang = EKurzLang::from_cards_per_player(hand.cards().len());
-        let mut vecpairahandf_suspicion = forever_rand_hands(/*stichseq*/&SStichSequence::new(doublings.first_playerindex(), ekurzlang), hand.clone(), epi, rules)
+        let mut vecpairahandf_suspicion = forever_rand_hands(/*stichseq*/&SStichSequence::new(ekurzlang), hand.clone(), epi, rules)
             .take(2*n_samples_per_stoss)
             .map(|ahand| {
                 let f_rank_rules = rules.playerindex().map_or(0f64, |epi_active| {
                     if epi!=epi_active {
                         self.ai.rank_rules(
                             SFullHand::new(&ahand[epi_active], ekurzlang),
-                            /*epi_first*/doublings.first_playerindex(),
                             /*epi_rank*/epi_active,
                             rules,
                             stoss_and_doublings(vecstoss, doublings),
@@ -120,7 +118,7 @@ impl TPlayer for SPlayerComputer {
                     explore_snapshots(
                         &mut ahand,
                         rules,
-                        &mut SStichSequence::new(doublings.first_playerindex(), ekurzlang),
+                        &mut SStichSequence::new(ekurzlang),
                         &branching_factor(|_stichseq| (1, 2)),
                         &SMinReachablePayout::new(
                             rules,

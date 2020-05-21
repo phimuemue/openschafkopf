@@ -102,7 +102,7 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
             )
             && {
                 let mut b_valid_up_to_now = true;
-                let mut stichseq_simulate = SStichSequence::new(stichseq.first_playerindex(), stichseq.kurzlang());
+                let mut stichseq_simulate = SStichSequence::new(stichseq.kurzlang());
                 'loopstich: for stich in stichseq.visible_stichs() {
                     for (epi, card) in stich.iter() {
                         if rules.card_is_allowed(
@@ -136,7 +136,7 @@ pub fn forever_rand_hands<'lifetime>(stichseq: &'lifetime SStichSequence, hand_f
 fn test_all_possible_hands() {
     use crate::card::card_values::*;
     let epi_irrelevant = EPlayerIndex::EPI0;
-    let mut stichseq = SStichSequence::new(epi_irrelevant, EKurzLang::Lang);
+    let mut stichseq = SStichSequence::new(EKurzLang::Lang);
     for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8]].iter() {
         for card in acard_stich {
             stichseq.zugeben_custom_winner_index(*card, |_stich| epi_irrelevant);

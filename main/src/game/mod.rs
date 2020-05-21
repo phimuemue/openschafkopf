@@ -21,7 +21,7 @@ pub trait TGamePhase : Sized {
     }
 }
 
-pub type SDoublings = SPlayersInRound<bool>;
+pub type SDoublings = SPlayersInRound<bool, SStaticEPI0>;
 
 #[derive(Debug)]
 pub struct SDealCards<'rules> {
@@ -42,19 +42,19 @@ impl<'rules> TGamePhase for SDealCards<'rules> {
     }
 
     fn finish_success(self) -> Self::Finish {
-        let epi_first = self.doublings.first_playerindex();
+        assert_eq!(self.doublings.first_playerindex(), EPlayerIndex::EPI0);
         SGamePreparations {
             ahand : self.ahand,
             doublings : self.doublings,
             ruleset: self.ruleset,
-            gameannouncements : SGameAnnouncements::new(epi_first),
+            gameannouncements : SGameAnnouncements::new(SStaticEPI0{}),
             n_stock: self.n_stock,
         }
     }
 }
 
 impl SDealCards<'_> {
-    pub fn new(epi_first: EPlayerIndex, ruleset: &SRuleSet, n_stock: isize) -> SDealCards {
+    pub fn new(ruleset: &SRuleSet, n_stock: isize) -> SDealCards {
         SDealCards {
             ahand : {
                 let mut veccard = SCard::values(ruleset.ekurzlang).collect::<Vec<_>>();
@@ -63,7 +63,7 @@ impl SDealCards<'_> {
                     random_hand(ruleset.ekurzlang.cards_per_player(), &mut veccard)
                 )
             },
-            doublings: SDoublings::new(epi_first),
+            doublings: SDoublings::new(SStaticEPI0{}),
             ruleset,
             n_stock,
         }
@@ -85,7 +85,7 @@ impl SDealCards<'_> {
     }
 }
 
-pub type SGameAnnouncements = SPlayersInRound<Option<Box<dyn TActivelyPlayableRules>>>;
+pub type SGameAnnouncements = SPlayersInRound<Option<Box<dyn TActivelyPlayableRules>>, SStaticEPI0>;
 
 #[derive(Debug)]
 pub struct SGamePreparations<'rules> {
@@ -296,6 +296,7 @@ impl SStichSequence {
     #[cfg(debug_assertions)]
     fn assert_invariant(&self) {
         assert!(!self.vecstich.is_empty());
+        assert_eq!(self.vecstich[0].first_playerindex(), EPlayerIndex::EPI0);
         assert!(!self.current_stich_no_invariant().is_full());
         assert_eq!(self.vecstich[0..self.vecstich.len()-1].len(), self.vecstich.len()-1);
         assert!(self.vecstich[0..self.vecstich.len()-1].iter().all(SStich::is_full));
@@ -305,11 +306,11 @@ impl SStichSequence {
         }
     }
 
-    pub fn new(epi_first: EPlayerIndex, ekurzlang: EKurzLang) -> Self {
+    pub fn new(ekurzlang: EKurzLang) -> Self {
         let stichseq = SStichSequence {
             vecstich: {
                 let mut vecstich = ArrayVec::new();
-                vecstich.push(SStich::new(epi_first));
+                vecstich.push(SStich::new(EPlayerIndex::EPI0));
                 vecstich
             },
             ekurzlang,
@@ -396,9 +397,10 @@ impl SStichSequence {
         self.vecstich.iter().take(self.ekurzlang.cards_per_player())
     }
 
-    pub fn first_playerindex(&self) -> EPlayerIndex {
+    pub fn first_playerindex(&self) -> SStaticEPI0 {
         #[cfg(debug_assertions)]self.assert_invariant();
-        self.vecstich[0].first_playerindex()
+        assert_eq!(self.vecstich[0].first_playerindex(), EPlayerIndex::EPI0);
+        SStaticEPI0{}
     }
 
     pub fn kurzlang(&self) -> EKurzLang {
@@ -439,7 +441,6 @@ impl TGamePhase for SGame {
                         && self.vecstoss.len() < stossparams.n_stoss_max
                     {
                         EPlayerIndex::values()
-                            .map(|epi| epi.wrapping_add(self.doublings.first_playerindex().to_usize()))
                             .filter(|epi| {
                                 self.rules.stoss_allowed(*epi, &self.vecstoss, &self.ahand[*epi])
                             })
@@ -476,7 +477,6 @@ impl SGame {
         rules : Box<dyn TRules>,
         n_stock : isize,
     ) -> SGame {
-        let epi_first = doublings.first_playerindex();
         let n_cards_per_player = ahand[EPlayerIndex::EPI0].cards().len();
         assert!(ahand.iter().all(|hand| hand.cards().len()==n_cards_per_player));
         SGame {
@@ -486,7 +486,7 @@ impl SGame {
             vecstoss: Vec::new(),
             ostossparams,
             n_stock,
-            stichseq: SStichSequence::new(epi_first, EKurzLang::from_cards_per_player(n_cards_per_player)),
+            stichseq: SStichSequence::new(EKurzLang::from_cards_per_player(n_cards_per_player)),
         }
     }
 

@@ -99,10 +99,10 @@ impl SAi {
         }
     }
 
-    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_first: EPlayerIndex, epi_rank: EPlayerIndex, rules: &dyn TRules, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> f64 {
+    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &dyn TRules, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> f64 {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
         let ekurzlang = EKurzLang::from_cards_per_player(hand_fixed.get().cards().len());
-        forever_rand_hands(&SStichSequence::new(epi_first, ekurzlang), hand_fixed.get().clone(), epi_rank, rules)
+        forever_rand_hands(&SStichSequence::new(ekurzlang), hand_fixed.get().clone(), epi_rank, rules)
             .take(self.n_rank_rules_samples)
             .collect::<Vec<_>>() // TODO necessary?
             .into_par_iter()
@@ -110,7 +110,7 @@ impl SAi {
                 explore_snapshots(
                     &mut ahand,
                     rules,
-                    &mut SStichSequence::new(epi_first, ekurzlang),
+                    &mut SStichSequence::new(ekurzlang),
                     &branching_factor(|_stichseq| (1, 2)),
                     &SMinReachablePayoutLowerBoundViaHint::new(
                         rules,
@@ -255,11 +255,10 @@ pub fn unplayed_cards<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed
 #[test]
 fn test_unplayed_cards() {
     use crate::card::card_values::*;
-    let epi_irrelevant = EPlayerIndex::EPI0;
-    let mut stichseq = SStichSequence::new(epi_irrelevant, EKurzLang::Lang);
+    let mut stichseq = SStichSequence::new(EKurzLang::Lang);
     for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]].iter() {
         for card in acard_stich.iter() {
-            stichseq.zugeben_custom_winner_index(*card, |_stich| epi_irrelevant);
+            stichseq.zugeben_custom_winner_index(*card, |_stich| EPlayerIndex::EPI0 /*irrelevant*/);
         }
     }
     let hand = &SHand::new_from_vec([GK, SK].iter().copied().collect());
@@ -383,7 +382,7 @@ fn test_is_compatible_with_game_so_far() {
         use crate::rules::ruleset::*;
         let mut game = game::SGame::new(
             ahand,
-            SDoublings::new(EPlayerIndex::EPI0),
+            SDoublings::new(SStaticEPI0{}),
             Some(SStossParams::new( // TODO implement tests for SStoss
                 /*n_stoss_max*/ 4,
             )),
@@ -463,7 +462,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
     use crate::game::*;
     use crate::rules::{ruleset::*, rulessolo::*, payoutdecider::*};
     use crate::game_analysis::TPayoutDeciderSoloLikeDefault;
-    let epi_first_and_active_player = EPlayerIndex::EPI0;
+    let epi_active = EPlayerIndex::EPI0;
     let n_payout_base = 50;
     let n_payout_schneider_schwarz = 10;
     let mut game = SGame::new(
@@ -475,12 +474,12 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         ]).map(|acard_hand|
             SHand::new_from_vec(acard_hand.iter().copied().collect())
         ),
-        SDoublings::new(epi_first_and_active_player),
+        SDoublings::new(SStaticEPI0{}),
         Some(SStossParams::new(
             /*n_stoss_max*/ 4,
         )),
         TRulesBoxClone::box_clone(sololike(
-            epi_first_and_active_player,
+            epi_active,
             EFarbe::Herz,
             ESoloLike::Solo,
             SPayoutDeciderPointBased::default_payoutdecider(n_payout_base, n_payout_schneider_schwarz, SLaufendeParams::new(10, 3)),
@@ -488,15 +487,15 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         /*n_stock*/ 0,
     );
     for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]].iter() {
-        assert_eq!(EPlayerIndex::values().next(), Some(epi_first_and_active_player));
+        assert_eq!(EPlayerIndex::values().next(), Some(epi_active));
         for (epi, card) in EPlayerIndex::values().zip(acard_stich.iter()) {
             debug_verify!(game.zugeben(*card, epi)).unwrap();
         }
     }
     for ahand in all_possible_hands(
         &game.stichseq,
-        game.ahand[epi_first_and_active_player].clone(),
-        epi_first_and_active_player,
+        game.ahand[epi_active].clone(),
+        epi_active,
         game.rules.as_ref(),
     ) {
         assert!(!game.current_playable_stich().is_full());
@@ -515,7 +514,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             assert!(determinebestcard.veccard_allowed.contains(card));
             for eminmaxstrat in EMinMaxStrategy::values() {
                 assert_eq!(
-                    determinebestcardresult.mapcardt[*card].clone().map(|minmax| minmax.aan_payout[eminmaxstrat][epi_first_and_active_player]),
+                    determinebestcardresult.mapcardt[*card].clone().map(|minmax| minmax.aan_payout[eminmaxstrat][epi_active]),
                     Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
                 );
             }

@@ -51,7 +51,6 @@ fn main() -> Result<(), Error> {
             };
             clap::SubCommand::with_name("suggest-card")
                 .about("Suggest a card to play given the game so far")
-                .arg(single_arg("first_player_index", "first"))
                 .arg(single_arg("rules", "rules"))
                 .arg(single_arg("hand", "hand"))
                 .arg(single_arg("cards_on_table", "cards-on-table"))
@@ -110,7 +109,6 @@ fn main() -> Result<(), Error> {
     }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("suggest-card") {
         return subcommands::suggest_card::suggest_card(
-            &debug_verify!(subcommand_matches.value_of("first_player_index")).unwrap(),
             &debug_verify!(subcommand_matches.value_of("rules")).unwrap(),
             &str_to_hand(&debug_verify!(subcommand_matches.value_of("hand")).unwrap())?,
             &cardvector::parse_cards::<Vec<_>>(

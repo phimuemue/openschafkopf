@@ -279,10 +279,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
         // TODO assert tpln_stoss_doubling consistent with stoss_allowed etc
         #[cfg(debug_assertions)] {
             let mut mapepipayouthint = EPlayerIndex::map_from_fn(|_epi| SPayoutHint::new((None, None)));
-            let mut stichseq_check = SStichSequence::new(
-                gamefinishedstiche.get().first_playerindex(),
-                gamefinishedstiche.get().kurzlang(),
-            );
+            let mut stichseq_check = SStichSequence::new(gamefinishedstiche.get().kurzlang());
             let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
                 SHand::new_from_vec(gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[epi]).collect())
             );

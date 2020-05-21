@@ -18,7 +18,6 @@ fn internal_test_rules(
 ) {
     println!("Testing rules: {}", str_info);
     let game = analyze_game_internal(
-        /*epi_first*/EPlayerIndex::EPI0, // TODO parametrize w.r.t. epi_first
         SAnalyzeParams {
             rules: rules.box_clone(),
             ahand,

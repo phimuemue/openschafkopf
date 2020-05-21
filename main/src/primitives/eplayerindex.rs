@@ -26,18 +26,18 @@ impl FromStr for EPlayerIndex {
 }
 
 #[derive(Clone, Debug)]
-pub struct SPlayersInRound<T> {
-    pub epi_first: EPlayerIndex,
+pub struct SPlayersInRound<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>> {
+    pub epi_first: PlayerIndex,
     vect: ArrayVec<[T; EPlayerIndex::SIZE]>,
 }
 
-impl<T: PartialEq> PartialEq for SPlayersInRound<T> {
-    fn eq(&self, playersinround_other: &SPlayersInRound<T>) -> bool {
+impl<T: PartialEq, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> PartialEq for SPlayersInRound<T, PlayerIndex> {
+    fn eq(&self, playersinround_other: &Self) -> bool {
         self.size()==playersinround_other.size()
         && self.equal_up_to_size(playersinround_other, self.size())
     }
 }
-impl<T: Eq> Eq for SPlayersInRound<T>{}
+impl<T: Eq, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> Eq for SPlayersInRound<T, PlayerIndex>{}
 
 pub struct SPlayersInRoundIterator<InternalIter> {
     iter: InternalIter,
@@ -54,7 +54,7 @@ impl<InternalIter: Iterator> Iterator for SPlayersInRoundIterator<InternalIter> 
     }
 }
 
-impl<T> Index<EPlayerIndex> for SPlayersInRound<T> {
+impl<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> Index<EPlayerIndex> for SPlayersInRound<T, PlayerIndex> {
     type Output = T;
     fn index(&self, epi : EPlayerIndex) -> &T {
         assert!(self.valid_index(epi));
@@ -62,8 +62,8 @@ impl<T> Index<EPlayerIndex> for SPlayersInRound<T> {
     }
 }
 
-impl<T: PartialEq> SPlayersInRound<T> {
-    pub fn equal_up_to_size(&self, playersinround_other: &SPlayersInRound<T>, n_size: usize) -> bool {
+impl<T: PartialEq, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> SPlayersInRound<T, PlayerIndex> {
+    pub fn equal_up_to_size(&self, playersinround_other: &SPlayersInRound<T, PlayerIndex>, n_size: usize) -> bool {
         self.iter()
             .zip(playersinround_other.iter())
             .take(n_size)
@@ -71,21 +71,21 @@ impl<T: PartialEq> SPlayersInRound<T> {
     }
 }
 
-impl<T> SPlayersInRound<T> {
-    pub fn new(epi_first: EPlayerIndex) -> SPlayersInRound<T> {
+impl<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> SPlayersInRound<T, PlayerIndex> {
+    pub fn new(epi_first: PlayerIndex) -> Self {
         SPlayersInRound {
             epi_first,
             vect: ArrayVec::new(),
         }
     }
-    pub fn new_full(epi_first: EPlayerIndex, at: [T; EPlayerIndex::SIZE]) -> SPlayersInRound<T> {
+    pub fn new_full(epi_first: PlayerIndex, at: [T; EPlayerIndex::SIZE]) -> Self {
         SPlayersInRound {
             epi_first,
             vect: ArrayVec::from(at),
         }
     }
     pub fn first_playerindex(&self) -> EPlayerIndex {
-        self.epi_first
+        self.epi_first.value()
     }
     pub fn current_playerindex(&self) -> Option<EPlayerIndex> {
         if_then_some!(
@@ -113,16 +113,16 @@ impl<T> SPlayersInRound<T> {
 
     pub fn first(&self) -> &T {
         assert!(!self.is_empty());
-        &self[self.epi_first]
+        &self[self.epi_first.value()]
     }
     pub fn iter(&self) -> SPlayersInRoundIterator<slice::Iter<T>> {
         SPlayersInRoundIterator {
             iter: self.vect.iter(),
-            n_epi: self.epi_first.to_usize(),
+            n_epi: self.epi_first.value().to_usize(),
         }
     }
     pub fn position(&self, epi: EPlayerIndex) -> usize {
-        epi.wrapped_difference_usize(self.epi_first)
+        epi.wrapped_difference_usize(self.epi_first.value())
     }
     fn valid_index(&self, epi: EPlayerIndex) -> bool {
         self.position(epi)<self.size()
@@ -132,13 +132,13 @@ impl<T> SPlayersInRound<T> {
     }
 }
 
-impl<T> IntoIterator for SPlayersInRound<T> {
+impl<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>> IntoIterator for SPlayersInRound<T, PlayerIndex> {
     type Item = (EPlayerIndex, T);
     type IntoIter = SPlayersInRoundIterator<arrayvec::IntoIter<[T; EPlayerIndex::SIZE]>>;
     fn into_iter(self) -> Self::IntoIter {
         SPlayersInRoundIterator {
             iter: self.vect.into_iter(),
-            n_epi: self.epi_first.to_usize(),
+            n_epi: self.epi_first.value().to_usize(),
         }
     }
 }

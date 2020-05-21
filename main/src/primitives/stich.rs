@@ -2,7 +2,7 @@ use crate::primitives::*;
 use crate::util::*;
 use std::fmt;
 
-pub type SStich = SPlayersInRound<SCard>;
+pub type SStich = SPlayersInRound<SCard, EPlayerIndex>;
 
 impl fmt::Display for SStich {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

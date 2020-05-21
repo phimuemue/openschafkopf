@@ -9,7 +9,6 @@ use crate::util::*;
 fn test_determine_best_card() {
     // https://www.sauspiel.de/spiele/785105783
     use crate::card::card_values::*;
-    let epi_first_and_active_player = EPlayerIndex::EPI0;
     let mut game = game::SGame::new(
         EPlayerIndex::map_from_raw([
             [EO, HO, EU, SU, HZ, E8, SZ, S7],
@@ -19,11 +18,11 @@ fn test_determine_best_card() {
         ]).map(|acard_hand|
             SHand::new_from_vec(acard_hand.iter().copied().collect())
         ),
-        game::SDoublings::new(epi_first_and_active_player),
+        game::SDoublings::new(SStaticEPI0{}),
         Some(SStossParams::new(
             /*n_stoss_max*/4,
         )),
-        TRules::box_clone(&rulesrufspiel::SRulesRufspiel::new(epi_first_and_active_player, EFarbe::Eichel, payoutdecider::SPayoutDeciderParams::new(
+        TRules::box_clone(&rulesrufspiel::SRulesRufspiel::new(EPlayerIndex::EPI0, EFarbe::Eichel, payoutdecider::SPayoutDeciderParams::new(
             /*n_payout_base*/100,
             /*n_payout_schneider_schwarz*/50,
             payoutdecider::SLaufendeParams::new(

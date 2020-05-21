@@ -11,7 +11,6 @@ pub fn rank_rules(ruleset: &SRuleSet, hand: SFullHand, epi: EPlayerIndex, ai: &S
                 rules,
                 ai.rank_rules(
                     hand,
-                    EPlayerIndex::EPI0,
                     epi,
                     rules.upcast(),
                     /*tpln_stoss_doubling*/(0, 0), // assume no stoss, no doublings in subcommand rank-rules

@@ -39,14 +39,13 @@ pub fn make_stich_vector(vecpairepiacard_stich: &[(EPlayerIndex, [SCard; 4])]) -
 }
 
 pub fn analyze_game_internal(
-    epi_first: EPlayerIndex,
     analyzeparams: SAnalyzeParams,
     mut fn_before_zugeben: impl FnMut(&SGame, /*i_stich*/usize, EPlayerIndex, SCard),
 ) -> SGame { // TODO return SGameResult
     let doublings = SDoublings::new_full(
-        epi_first,
+        SStaticEPI0{},
         EPlayerIndex::map_from_fn(|epi| 
-            analyzeparams.vecn_doubling.contains(&epi.wrapping_add(epi_first.to_usize()).to_usize())
+            analyzeparams.vecn_doubling.contains(&epi.to_usize())
         ).into_raw()
     );
     let mut game = SGame::new(
@@ -109,9 +108,7 @@ pub struct SGameAnalysis {
 pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnalyzeParams) -> SGameAnalysis {
     let instant_begin = Instant::now();
     let mut vecanalysisimpr = Vec::new();
-    let epi_first = EPlayerIndex::EPI0; // TODO parametrize w.r.t. epi_first
     let an_payout = debug_verify!(analyze_game_internal(
-        epi_first,
         analyzeparams.clone(),
         /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {}
     ).finish()).unwrap().an_payout;
@@ -124,7 +121,6 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
         },
     );
     let game = analyze_game_internal(
-        epi_first,
         analyzeparams,
         /*fn_before_zugeben*/|game, i_stich, epi, card| {
             if remaining_cards_per_hand(&game.stichseq)[epi] <= if_dbg_else!({2}{4}) {

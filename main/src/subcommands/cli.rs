@@ -34,7 +34,7 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
             f(txt);
             debug_verify!(rxt.recv()).unwrap()
         }
-        let mut dealcards = SDealCards::new(/*epi_first - TODO remove*/EPlayerIndex::EPI0, ruleset, n_stock);
+        let mut dealcards = SDealCards::new(ruleset, n_stock);
         while let Some(epi) = dealcards.which_player_can_do_something() {
             debug_verify!(dealcards.announce_doubling(
                 epi,
@@ -73,7 +73,7 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
                         aattable[epi].player.ask_for_game(
                             epi,
                             determinerules.fullhand(epi),
-                            /*gameannouncements*/&SPlayersInRound::new(determinerules.doublings.first_playerindex()),
+                            /*gameannouncements*/&SPlayersInRound::new(SStaticEPI0{}),
                             &vecrulegroup_steigered,
                             stoss_and_doublings(/*vecstoss*/&[], &determinerules.doublings),
                             determinerules.n_stock,
