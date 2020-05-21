@@ -187,4 +187,8 @@ impl TPlayer for SPlayerHuman {
             || None, // TODO implement suggestions
         ))).unwrap()
     }
+
+    fn name(&self) -> &str {
+        "SPlayerHuman" // TODO
+    }
 }

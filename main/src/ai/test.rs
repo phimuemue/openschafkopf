@@ -88,7 +88,7 @@ fn test_determine_best_card() {
 #[test]
 fn detect_expensive_all_possible_hands() {
     crate::subcommands::cli::game_loop_cli_internal(
-        &EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
+        EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
             /*fn_check_ask_for_card*/|game: &SGame| {
                 if game.kurzlang().cards_per_player() - 4 < game.completed_stichs().len() {
                     let epi_fixed = debug_verify!(game.current_playable_stich().current_playerindex()).unwrap();

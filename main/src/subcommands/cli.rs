@@ -9,26 +9,37 @@ use crate::skui;
 use crate::util::*;
 use std::sync::mpsc;
 
-pub fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) {
-    let _tui = skui::STuiGuard::init_ui();
-    let accountbalance = game_loop_cli_internal(aplayer, n_games, ruleset);
-    println!("Results: {}", skui::account_balance_string(&accountbalance.money(), accountbalance.get_stock()));
+pub struct SAtTable {
+    player: Box<dyn TPlayer>,
+    n_money: isize,
 }
 
-pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
-    let mut accountbalance = SAccountBalance::new(EPlayerIndex::map_from_fn(|_epi| 0));
+pub fn game_loop_cli(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) {
+    let _tui = skui::STuiGuard::init_ui();
+    let (mut aattable, n_stock) = game_loop_cli_internal(aplayer, n_games, ruleset);
+    aattable.sort_unstable_by_key(|attable| attable.n_money);
+    println!("Results:");
+    for attable in aattable.iter() {
+        println!("{} {}", attable.player.name(), attable.n_money);
+    }
+    println!("Stock: {}", n_stock);
+}
+
+pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> ([SAtTable; 4], isize) {
+    let mut aattable = aplayer.map_into(|player| SAtTable{player, n_money:0});
+    let mut n_stock = 0;
     for i_game in 0..n_games {
         fn communicate_via_channel<T: std::fmt::Debug>(f: impl FnOnce(mpsc::Sender<T>)) -> T {
             let (txt, rxt) = mpsc::channel::<T>();
             f(txt);
             debug_verify!(rxt.recv()).unwrap()
         }
-        let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset, accountbalance.get_stock());
+        let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset, n_stock);
         while let Some(epi) = dealcards.which_player_can_do_something() {
             debug_verify!(dealcards.announce_doubling(
                 epi,
                 /*b_doubling*/communicate_via_channel(|txb_doubling| {
-                    aplayer[epi].ask_for_doubling(
+                    aattable[epi].player.ask_for_doubling(
                         dealcards.first_hand_for(epi),
                         txb_doubling
                     );
@@ -41,7 +52,7 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
             debug_verify!(gamepreparations.announce_game(
                 epi,
                 communicate_via_channel(|txorules| {
-                    aplayer[epi].ask_for_game(
+                    aattable[epi].player.ask_for_game(
                         epi,
                         gamepreparations.fullhand(epi),
                         &gamepreparations.gameannouncements,
@@ -59,7 +70,7 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
             VGamePreparationsFinish::DetermineRules(mut determinerules) => {
                 while let Some((epi, vecrulegroup_steigered))=determinerules.which_player_can_do_something() {
                     if let Some(rules) = communicate_via_channel(|txorules| {
-                        aplayer[epi].ask_for_game(
+                        aattable[epi].player.ask_for_game(
                             epi,
                             determinerules.fullhand(epi),
                             /*gameannouncements*/&SPlayersInRound::new(determinerules.doublings.first_playerindex()),
@@ -84,14 +95,14 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
                 VStockOrT::Stock(n_stock)
             }
         };
-        match stockorgame {
+        let an_payout = match stockorgame {
             VStockOrT::OrT(mut game) => {
                 while let Some(gameaction)=game.which_player_can_do_something() {
                     if !gameaction.1.is_empty() {
                         if let Some(epi_stoss) = gameaction.1.iter()
                             .find(|epi| {
                                 communicate_via_channel(|txb_stoss| {
-                                    aplayer[**epi].ask_for_stoss(
+                                    aattable[**epi].player.ask_for_stoss(
                                         **epi,
                                         &game.doublings,
                                         game.rules.as_ref(),
@@ -109,7 +120,7 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
                     }
                     debug_verify!(game.zugeben(
                         communicate_via_channel(|txcard| {
-                            aplayer[gameaction.0].ask_for_card(
+                            aattable[gameaction.0].player.ask_for_card(
                                 &game,
                                 txcard,
                             );
@@ -117,15 +128,26 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
                         gameaction.0
                     )).unwrap();
                 }
-                accountbalance.apply_payout(&debug_verify!(game.finish()).unwrap().an_payout);
+                debug_verify!(game.finish()).unwrap().an_payout
             },
             VStockOrT::Stock(n_stock) => {
-                accountbalance.apply_payout(&EPlayerIndex::map_from_fn(|_epi| -n_stock));
+                EPlayerIndex::map_from_fn(|_epi| -n_stock)
             }
+        };
+        for epi in EPlayerIndex::values() {
+            aattable[epi].n_money += an_payout[epi];
         }
-        skui::print_account_balance(accountbalance.money(), accountbalance.get_stock());
+        let n_pay_into_stock = -an_payout.iter().sum::<isize>();
+        assert!(
+            n_pay_into_stock >= 0 // either pay into stock...
+            || n_pay_into_stock == -n_stock // ... or exactly empty it (assume that this is always possible)
+        );
+        n_stock += n_pay_into_stock;
+        assert!(0 <= n_stock);
+        assert_eq!(n_stock + aattable.iter().map(|attable| attable.n_money).sum::<isize>(), 0);
+        skui::print_account_balance(&aattable.map(|attable| attable.n_money), n_stock);
     }
-    accountbalance
+    (aattable.into_raw(), n_stock)
 }
 
 #[test]
@@ -212,7 +234,7 @@ fn test_game_loop() {
             .choose_multiple(&mut rng, 2)
     {
         game_loop_cli_internal(
-            &EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
+            EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
                 Box::new(SPlayerComputer{ai: {
                     if epi<EPlayerIndex::EPI2 {
                         ai::SAi::new_cheating(/*n_rank_rules_samples*/1, /*n_suggest_card_branches*/2)

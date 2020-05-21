@@ -120,7 +120,7 @@ fn main() -> Result<(), Error> {
     }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("cli") {
         subcommands::cli::game_loop_cli(
-            &EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
+            EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
                 if EPlayerIndex::EPI1==epi {
                     Box::new(SPlayerHuman{ai : ai(subcommand_matches)})
                 } else {

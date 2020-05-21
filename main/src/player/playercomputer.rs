@@ -136,4 +136,8 @@ impl TPlayer for SPlayerComputer {
                 > 10f64
         )).unwrap()
     }
+
+    fn name(&self) -> &str {
+        "SPlayerComputer" // TODO
+    }
 }

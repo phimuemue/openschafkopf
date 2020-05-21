@@ -40,4 +40,6 @@ pub trait TPlayer {
         n_stock: isize,
         txb: mpsc::Sender<bool>,
     );
+
+    fn name(&self) -> &str;
 }

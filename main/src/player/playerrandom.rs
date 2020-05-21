@@ -60,4 +60,8 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
     ) {
         debug_verify!(txb.send(rand::random())).unwrap();
     }
+
+    fn name(&self) -> &str {
+        "SPlayerRandom" // TODO
+    }
 }
