@@ -121,7 +121,7 @@ impl<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> SPlayersInRound<T
             n_epi: self.epi_first.value().to_usize(),
         }
     }
-    pub fn position(&self, epi: EPlayerIndex) -> usize {
+    fn position(&self, epi: EPlayerIndex) -> usize {
         epi.wrapped_difference_usize(self.epi_first.value())
     }
     fn valid_index(&self, epi: EPlayerIndex) -> bool {

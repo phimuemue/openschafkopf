@@ -222,8 +222,7 @@ impl TGamePhase for SDetermineRules<'_> {
                     &self.currently_offered_prio().1,
                     {
                         assert_ne!(epi, self.pairepirules_current_bid.0);
-                        let doublings = &self.doublings;
-                        if doublings.position(epi) < doublings.position(self.pairepirules_current_bid.0) {
+                        if epi < self.pairepirules_current_bid.0 {
                             EBid::AtLeast
                         } else {
                             EBid::Higher
