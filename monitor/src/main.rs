@@ -111,7 +111,6 @@ fn main() -> Result<(), failure::Error> {
                         }
                     }
                 };
-                let n_epi_first = json_get!("firstPosition", as_u64);
                 let ocmd_openschafkopf = ocmd_openschafkopf.clone();
                 let sendstr = sendstr.clone();
                 let mut cmd_openschafkopf = debug_verify!(
@@ -125,8 +124,6 @@ fn main() -> Result<(), failure::Error> {
                     })
                         .args(&[
                             "suggest-card".to_owned(),
-                            "--first".to_owned(),
-                            format!("{}", n_epi_first),
                             "--rules".to_owned(),
                             format!("{} von {}",
                                 {
