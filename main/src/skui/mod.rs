@@ -189,16 +189,16 @@ pub fn print_game_info(rules: &dyn TRules, doublings: &SDoublings, vecstoss: &[S
     })
 }
 
-pub fn account_balance_string(accountbalance: &SAccountBalance) -> String {
+pub fn account_balance_string(an: &EnumMap<EPlayerIndex, isize>, n_stock: isize) -> String {
     EPlayerIndex::values()
-        .map(|epi| format!("{}: {} | ", epi, accountbalance.get_player(epi)))
+        .map(|epi| format!("{}: {} | ", epi, an[epi]))
         .join("")
-        + &format!("Stock: {}", accountbalance.get_stock())
+        + &format!("Stock: {}", n_stock)
 }
 
-pub fn print_account_balance(accountbalance : &SAccountBalance) {
+pub fn print_account_balance(an: &EnumMap<EPlayerIndex, isize>, n_stock: isize) {
     do_in_window(&VSkUiWindow::AccountBalance, |ncwin| {
-        wprint(ncwin, &account_balance_string(accountbalance));
+        wprint(ncwin, &account_balance_string(an, n_stock));
     })
 }
 

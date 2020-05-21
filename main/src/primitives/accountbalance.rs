@@ -38,9 +38,9 @@ impl SAccountBalance {
         self.assert_invariant();
     }
 
-    pub fn get_player(&self, epi : EPlayerIndex) -> isize {
+    pub fn money(&self) -> &EnumMap<EPlayerIndex, isize> {
         self.assert_invariant();
-        self.an[epi]
+        &self.an
     }
 
     pub fn get_stock(&self) -> isize {

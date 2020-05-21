@@ -12,7 +12,7 @@ use std::sync::mpsc;
 pub fn game_loop_cli(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) {
     let _tui = skui::STuiGuard::init_ui();
     let accountbalance = game_loop_cli_internal(aplayer, n_games, ruleset);
-    println!("Results: {}", skui::account_balance_string(&accountbalance));
+    println!("Results: {}", skui::account_balance_string(&accountbalance.money(), accountbalance.get_stock()));
 }
 
 pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> SAccountBalance {
@@ -123,7 +123,7 @@ pub fn game_loop_cli_internal(aplayer: &EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
                 accountbalance.apply_payout(&EPlayerIndex::map_from_fn(|_epi| -n_stock));
             }
         }
-        skui::print_account_balance(&accountbalance);
+        skui::print_account_balance(accountbalance.money(), accountbalance.get_stock());
     }
     accountbalance
 }
