@@ -397,12 +397,6 @@ impl SStichSequence {
         self.vecstich.iter().take(self.ekurzlang.cards_per_player())
     }
 
-    pub fn first_playerindex(&self) -> SStaticEPI0 {
-        #[cfg(debug_assertions)]self.assert_invariant();
-        assert_eq!(self.vecstich[0].first_playerindex(), EPlayerIndex::EPI0);
-        SStaticEPI0{}
-    }
-
     pub fn kurzlang(&self) -> EKurzLang {
         #[cfg(debug_assertions)]self.assert_invariant();
         self.ekurzlang
