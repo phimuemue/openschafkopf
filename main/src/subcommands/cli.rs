@@ -28,13 +28,13 @@ pub fn game_loop_cli(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: 
 pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> ([SAtTable; 4], isize) {
     let mut aattable = aplayer.map_into(|player| SAtTable{player, n_money:0});
     let mut n_stock = 0;
-    for i_game in 0..n_games {
+    for _i_game in 0..n_games {
         fn communicate_via_channel<T: std::fmt::Debug>(f: impl FnOnce(mpsc::Sender<T>)) -> T {
             let (txt, rxt) = mpsc::channel::<T>();
             f(txt);
             debug_verify!(rxt.recv()).unwrap()
         }
-        let mut dealcards = SDealCards::new(/*epi_first*/EPlayerIndex::wrapped_from_usize(i_game), ruleset, n_stock);
+        let mut dealcards = SDealCards::new(/*epi_first - TODO remove*/EPlayerIndex::EPI0, ruleset, n_stock);
         while let Some(epi) = dealcards.which_player_can_do_something() {
             debug_verify!(dealcards.announce_doubling(
                 epi,
@@ -146,6 +146,7 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
         assert!(0 <= n_stock);
         assert_eq!(n_stock + aattable.iter().map(|attable| attable.n_money).sum::<isize>(), 0);
         skui::print_account_balance(&aattable.map(|attable| attable.n_money), n_stock);
+        aattable.as_raw_mut().rotate_left(1);
     }
     (aattable.into_raw(), n_stock)
 }
