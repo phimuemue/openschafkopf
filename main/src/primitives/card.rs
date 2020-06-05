@@ -183,8 +183,9 @@ impl TPlainEnum for SCard {
         self.n_internalrepresentation.as_num::<usize>()
     }
 }
-impl<V> TInternalEnumMapType<V> for SCard {
+impl<V, W> TInternalEnumMapType<V, W> for SCard {
     type InternalEnumMapType = [V; SCard::SIZE];
+    type MappedType = [W; SCard::SIZE];
 }
 
 #[cfg(test)]
