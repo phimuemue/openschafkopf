@@ -14,7 +14,7 @@ macro_rules! define_static_value {
         impl TStaticValue<$type> for $struct {
             const VALUE: $type = $value;
         }
-        impl TStaticOrDynamicValue<$type> for $struct { // TODO can this be implemented outside of macro?
+        impl TStaticOrDynamicValue<$type> for $struct {
             fn value(self) -> $type {
                 $value
             }
