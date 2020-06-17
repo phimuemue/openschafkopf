@@ -24,16 +24,16 @@ pub trait TGamePhase : Sized {
 pub type SDoublings = SPlayersInRound<bool, SStaticEPI0>;
 
 #[derive(Debug)]
-pub struct SDealCards<'rules> {
+pub struct SDealCards {
     ahand : EnumMap<EPlayerIndex, SHand>,
     doublings : SDoublings,
-    ruleset : &'rules SRuleSet,
+    ruleset : SRuleSet,
     n_stock : isize,
 }
 
-impl<'rules> TGamePhase for SDealCards<'rules> {
+impl TGamePhase for SDealCards {
     type ActivePlayerInfo = EPlayerIndex;
-    type Finish = SGamePreparations<'rules>;
+    type Finish = SGamePreparations;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         self.ruleset.oedoublingscope.as_ref().and_then(|_edoublingscope|
@@ -53,14 +53,15 @@ impl<'rules> TGamePhase for SDealCards<'rules> {
     }
 }
 
-impl SDealCards<'_> {
-    pub fn new(ruleset: &SRuleSet, n_stock: isize) -> SDealCards {
+impl SDealCards {
+    pub fn new(ruleset: SRuleSet, n_stock: isize) -> SDealCards {
+        let ekurzlang = ruleset.ekurzlang;
         SDealCards {
             ahand : {
-                let mut veccard = SCard::values(ruleset.ekurzlang).collect::<Vec<_>>();
-                assert_eq!(veccard.len(), EPlayerIndex::SIZE*ruleset.ekurzlang.cards_per_player());
+                let mut veccard = SCard::values(ekurzlang).collect::<Vec<_>>();
+                assert_eq!(veccard.len(), EPlayerIndex::SIZE*ekurzlang.cards_per_player());
                 EPlayerIndex::map_from_fn(move |_epi|
-                    random_hand(ruleset.ekurzlang.cards_per_player(), &mut veccard)
+                    random_hand(ekurzlang.cards_per_player(), &mut veccard)
                 )
             },
             doublings: SDoublings::new(SStaticEPI0{}),
@@ -88,10 +89,10 @@ impl SDealCards<'_> {
 pub type SGameAnnouncements = SPlayersInRound<Option<Box<dyn TActivelyPlayableRules>>, SStaticEPI0>;
 
 #[derive(Debug)]
-pub struct SGamePreparations<'rules> {
+pub struct SGamePreparations {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,
-    pub ruleset : &'rules SRuleSet,
+    pub ruleset : SRuleSet,
     pub gameannouncements : SGameAnnouncements,
     pub n_stock : isize,
 }
@@ -111,15 +112,15 @@ pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
 
 #[allow(clippy::large_enum_variant)] // It is ok for DirectGame to be so large
 #[derive(Debug)]
-pub enum VGamePreparationsFinish<'rules> {
-    DetermineRules(SDetermineRules<'rules>),
+pub enum VGamePreparationsFinish {
+    DetermineRules(SDetermineRules),
     DirectGame(SGame),
     Stock(SGameResult),
 }
 
-impl<'rules> TGamePhase for SGamePreparations<'rules> {
+impl TGamePhase for SGamePreparations {
     type ActivePlayerInfo = EPlayerIndex;
-    type Finish = VGamePreparationsFinish<'rules>;
+    type Finish = VGamePreparationsFinish;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         self.gameannouncements.current_playerindex()
@@ -173,7 +174,7 @@ macro_rules! impl_fullhand { () => {
     }
 }}
 
-impl SGamePreparations<'_> {
+impl SGamePreparations {
     impl_fullhand!();
 
     pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<dyn TActivelyPlayableRules>>) -> Result<(), Error> {
@@ -193,16 +194,16 @@ impl SGamePreparations<'_> {
 }
 
 #[derive(new, Debug)]
-pub struct SDetermineRules<'rules> {
+pub struct SDetermineRules {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,
-    pub ruleset : &'rules SRuleSet,
+    pub ruleset : SRuleSet,
     pub vecpairepirules_queued : Vec<(EPlayerIndex, Box<dyn TActivelyPlayableRules>)>,
     pub n_stock : isize,
     pairepirules_current_bid : (EPlayerIndex, Box<dyn TActivelyPlayableRules>),
 }
 
-impl TGamePhase for SDetermineRules<'_> {
+impl TGamePhase for SDetermineRules {
     type ActivePlayerInfo = (EPlayerIndex, Vec<SRuleGroup>);
     type Finish = SGame;
 
@@ -248,7 +249,7 @@ impl TGamePhase for SDetermineRules<'_> {
     }
 }
 
-impl SDetermineRules<'_> {
+impl SDetermineRules {
     impl_fullhand!();
 
     pub fn currently_offered_prio(&self) -> (EPlayerIndex, VGameAnnouncementPriority) {

@@ -140,7 +140,7 @@ fn main() -> Result<(), Error> {
                 }
             }),
             /*n_games*/ debug_verify!(subcommand_matches.value_of("numgames")).unwrap().parse::<usize>().unwrap_or(4),
-            &get_ruleset(subcommand_matches)?,
+            get_ruleset(subcommand_matches)?,
         );
         return Ok(())
     }

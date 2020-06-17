@@ -5,7 +5,7 @@ use crate::rules::{
 use crate::util::*;
 use std::{fs::File, io::prelude::*, path::Path};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SRuleGroup {
     pub str_name : String,
     pub vecorules : Vec<Option<Box<dyn TActivelyPlayableRules>>>,
@@ -36,13 +36,13 @@ impl SRuleGroup {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum VStockOrT<Stock, T> {
     Stock(Stock), // number must be positive, but use isize since it is essentially a payment
     OrT(T),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum EDoublingScope {
     Games,
     GamesAndStock,
@@ -53,7 +53,7 @@ pub struct SStossParams {
     pub n_stoss_max : usize,
 }
 
-#[derive(new, Debug)]
+#[derive(new, Debug, Clone)]
 pub struct SRuleSet {
     pub avecrulegroup : EnumMap<EPlayerIndex, Vec<SRuleGroup>>,
     pub stockorramsch : VStockOrT</*n_stock*/isize, Box<dyn TRules>>,

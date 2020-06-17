@@ -14,7 +14,7 @@ pub struct SAtTable {
     n_money: isize,
 }
 
-pub fn game_loop_cli(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) {
+pub fn game_loop_cli(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: SRuleSet) {
     let _tui = skui::STuiGuard::init_ui();
     let (mut aattable, n_stock) = game_loop_cli_internal(aplayer, n_games, ruleset);
     aattable.sort_unstable_by_key(|attable| attable.n_money);
@@ -25,7 +25,7 @@ pub fn game_loop_cli(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: 
     println!("Stock: {}", n_stock);
 }
 
-pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: &SRuleSet) -> ([SAtTable; 4], isize) {
+pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: SRuleSet) -> ([SAtTable; 4], isize) {
     let mut aattable = aplayer.map_into(|player| SAtTable{player, n_money:0});
     let mut n_stock = 0;
     for _i_game in 0..n_games {
@@ -34,7 +34,7 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
             f(txt);
             debug_verify!(rxt.recv()).unwrap()
         }
-        let mut dealcards = SDealCards::new(ruleset, n_stock);
+        let mut dealcards = SDealCards::new(ruleset.clone(), n_stock);
         while let Some(epi) = dealcards.which_player_can_do_something() {
             debug_verify!(dealcards.announce_doubling(
                 epi,
@@ -236,7 +236,7 @@ fn test_game_loop() {
                 }})
             }),
             /*n_games*/4,
-            &ruleset,
+            ruleset,
         );
     }
 }

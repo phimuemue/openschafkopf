@@ -147,7 +147,7 @@ fn detect_expensive_all_possible_hands() {
             },
         )) as Box<dyn TPlayer>),
         /*n_games*/4,
-        &debug_verify!(SRuleSet::from_string(
+        debug_verify!(SRuleSet::from_string(
             r"
             base-price=10
             solo-price=50
