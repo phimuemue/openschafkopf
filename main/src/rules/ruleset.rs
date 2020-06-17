@@ -82,7 +82,7 @@ impl SRuleSet {
             }
         };
         let fallback = |str_not_found: &str, str_fallback: &str| {
-            println!("Did not find {}. Falling back to {}.", str_not_found, str_fallback);
+            info!("SRuleSet: Did not find {}. Falling back to {}.", str_not_found, str_fallback);
             read_int(&tomltbl, str_fallback)
         };
         // TODORULES "Der Alte muss"
@@ -211,11 +211,11 @@ impl SRuleSet {
                     if 0<n_step {
                         n_step.as_num::<isize>()
                     } else {
-                        println!("Negative steigern.steps not permitted.");
+                        info!("SRuleSet: Negative steigern.steps not permitted.");
                         10
                     }
                 } else {
-                    println!("steigern.steps not specified");
+                    info!("SRuleSet: steigern.steps not specified");
                     10
                 };
                 read_sololike!(SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike>, |_i_prio| VGameAnnouncementPrioritySoloLike::SoloSteigern{n_points_to_win: 61, n_step}, "");
@@ -267,12 +267,12 @@ impl SRuleSet {
                         EDoublingScope::GamesAndStock
                     } else {
                         if "no"!=str_doubling_stock {
-                            println!("doubling.stock has invalid value '{}'. Falling back to 'no'", str_doubling_stock);
+                            info!("SRuleSet: doubling.stock has invalid value '{}'. Falling back to 'no'", str_doubling_stock);
                         }
                         EDoublingScope::Games
                     }
                 } else {
-                    println!("doubling.stock not specified; falling back to 'stock=yes'");
+                    info!("SRuleSet: doubling.stock not specified; falling back to 'stock=yes'");
                     EDoublingScope::GamesAndStock
                 }
             }),
@@ -283,7 +283,7 @@ impl SRuleSet {
                         .and_then(|tomlval| tomlval.as_integer())
                         .map_or(n_stoss_max_default, |n_stoss_max| {
                             if n_stoss_max<=0 {
-                                println!("stoss.max less than 0. Defaulting to {}.", n_stoss_max_default);
+                                info!("SRuleSet: stoss.max less than 0. Defaulting to {}.", n_stoss_max_default);
                                 n_stoss_max_default
                             } else {
                                 n_stoss_max.as_num::<usize>()
@@ -295,7 +295,7 @@ impl SRuleSet {
                 Some("kurz") => EKurzLang::Kurz,
                 None | Some("lang") => EKurzLang::Lang,
                 Some(str_kurzlang) => {
-                    println!("{} is not a valid value for 'deck' (supported values: kurz, lang). Defaulting to 'lang'", str_kurzlang);
+                    info!("SRuleSet: {} is not a valid value for 'deck' (supported values: kurz, lang). Defaulting to 'lang'", str_kurzlang);
                     EKurzLang::Lang
                 },
             },
