@@ -5,7 +5,7 @@ use crate::rules::{
 use crate::util::*;
 use std::marker::PhantomData;
 
-pub trait TBettelAllAllowedCardsWithinStich : Sync + 'static + Clone + fmt::Debug {
+pub trait TBettelAllAllowedCardsWithinStich : Sync + 'static + Clone + fmt::Debug + Send {
     fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, stichseq: &SStichSequence, hand: &SHand) -> SHandVector;
 }
 

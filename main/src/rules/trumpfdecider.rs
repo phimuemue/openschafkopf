@@ -3,14 +3,14 @@ use crate::rules::*;
 use crate::util::*;
 use std::{cmp::Ordering, marker::PhantomData};
 
-pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug {
+pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug + Send {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe;
 
     fn trumpfs_in_descending_order() -> return_impl!(Box<dyn Iterator<Item=SCard>>);
     fn compare_cards(card_fst: SCard, card_snd: SCard) -> Option<Ordering>;
 }
 
-pub trait TCompareFarbcards : Sync + 'static + Clone + fmt::Debug {
+pub trait TCompareFarbcards : Sync + 'static + Clone + fmt::Debug + Send {
     fn compare_farbcards(card_fst: SCard, card_snd: SCard) -> Ordering;
 }
 #[derive(Clone, Debug)]

@@ -24,7 +24,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
         where Rules: TRulesNoObj;
 }
 
-pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + TPayoutDecider {
+pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + TPayoutDecider + Send {
     fn priority(&self) -> VGameAnnouncementPriority;
     fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Self> {
         None

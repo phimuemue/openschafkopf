@@ -239,7 +239,7 @@ pub trait TRulesNoObj : TRules {
     type TrumpfDecider: trumpfdecider::TTrumpfDecider;
 }
 
-pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone {
+pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone + Send {
     // TTrumpfDecider
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
     fn compare_cards(&self, card_fst: SCard, card_snd: SCard) -> Option<Ordering>;

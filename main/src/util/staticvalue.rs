@@ -3,7 +3,7 @@ use std::fmt;
 // TODORUST this should become superfluous once we have const generics
 pub trait TStaticValue<
     V: Copy/*prevent interior mutation (suggested by clippy)*/
-> : Sync + 'static + Clone + fmt::Debug {
+> : Sync + 'static + Clone + fmt::Debug + Send {
     const VALUE : V;
 }
 
