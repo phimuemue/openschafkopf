@@ -30,7 +30,7 @@ impl SRuleGroup {
         }
     }
 
-    pub fn allowed_rules<'retval, 'hand : 'retval, 'rules : 'retval>(&'rules self, hand: SFullHand<'hand>) -> impl Iterator<Item=Option<&'rules dyn TActivelyPlayableRules>> + 'retval {
+    pub fn allowed_rules<'retval, 'hand : 'retval, 'rules : 'retval>(&'rules self, hand: SFullHand<'hand>) -> impl Clone + Iterator<Item=Option<&'rules dyn TActivelyPlayableRules>> + 'retval {
         self.vecorules.iter().map(|orules| orules.as_ref().map(|rules| rules.as_ref()))
             .filter(move |orules| orules.map_or(true, |rules| rules.can_be_played(hand)))
     }
@@ -62,7 +62,7 @@ pub struct SRuleSet {
     pub ekurzlang : EKurzLang,
 }
 
-pub fn allowed_rules<'retval, 'hand : 'retval, 'rules : 'retval>(vecrulegroup: &'rules [SRuleGroup], hand: SFullHand<'hand>) -> impl Iterator<Item=Option<&'rules (dyn TActivelyPlayableRules + 'rules)>> + 'retval {
+pub fn allowed_rules<'retval, 'hand : 'retval, 'rules : 'retval>(vecrulegroup: &'rules [SRuleGroup], hand: SFullHand<'hand>) -> impl Clone + Iterator<Item=Option<&'rules (dyn TActivelyPlayableRules + 'rules)>> + 'retval {
     vecrulegroup.iter()
         .flat_map(move |rulegroup| rulegroup.allowed_rules(hand))
 }

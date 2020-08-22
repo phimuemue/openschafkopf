@@ -1,5 +1,6 @@
 use crate::util::*;
 use std::fmt;
+use serde::{Serialize, Deserialize};
 
 plain_enum_mod!{modefarbe, EFarbe {
     Eichel,
@@ -89,7 +90,7 @@ impl EKurzLang {
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Hash)]
+#[derive(PartialEq, Eq, Clone, Copy, Hash, Deserialize, Serialize)]
 pub struct SCard {
     n_internalrepresentation : u8, // TODO is there a simple method for bit fields?
 }

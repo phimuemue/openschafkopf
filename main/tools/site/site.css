@@ -1,0 +1,370 @@
+#table {
+  /*! height: 99%; */
+  /*! width: 99%; */
+  /*background-color: #eeffee;*/
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 10px;
+  right: 0;
+}
+.card_stich {
+  width: 50%;
+  height: 50%;
+  position: absolute;
+}
+.card_stich_0 {
+    animation-fill-mode: forwards;
+    animation-name: card_stich_0_slidein;
+}
+@keyframes card_stich_0_slidein {
+    from {
+        opacity: 0;
+        left: 25%;
+        top: 100%;
+    }
+    to {
+        opacity: 1;
+        left: 25%;
+        top: 50%;
+    }
+}
+.card_stich_1 {
+    animation-fill-mode: forwards;
+    animation-name: card_stich_1_slidein;
+}
+@keyframes card_stich_1_slidein {
+    from {
+        opacity: 0;
+        left: -50%;
+        top: 25%;
+    }
+    to {
+        opacity: 1;
+        left: 0%;
+        top: 25%;
+    }
+}
+.card_stich_2 {
+    animation-fill-mode: forwards;
+    animation-name: card_stich_2_slidein;
+}
+@keyframes card_stich_2_slidein {
+    from {
+        opacity: 0;
+        left: 25%;
+        top: -50%;
+    }
+    to {
+        opacity: 1;
+        left: 25%;
+        top: 0%;
+    }
+}
+.card_stich_3 {
+    animation-fill-mode: forwards;
+    animation-name: card_stich_3_slidein;
+}
+@keyframes card_stich_3_slidein {
+    from {
+        opacity: 0;
+        left: 100%;
+        top: 25%;
+    }
+    to {
+        opacity: 1;
+        left: 50%;
+        top: 25%;
+    }
+}
+.card {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.card_hand {
+  width: 40px;
+  /*background-color: #ff000017;*/
+  display: inline-block;
+  margin: 2px;
+  position: unset;
+  height: 100%;
+  max-width: 10%;
+  top: 0;
+}
+.card_checked {
+    background-position: top;
+}
+#hand {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+  max-height: 20%;
+  /*background-color: #0000ff45;*/
+  height: 80px;
+  z-index: 999;
+}
+
+li {
+  marker: none;
+  display: block;
+}
+
+#askpanel {
+    position: absolute;
+    left: 10%;
+    top: 10%;
+    right: 10%;
+    bottom: 20%;
+    overflow-x: visible;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+#askpanel button {
+    padding: 5px;
+    margin: 5px;
+    display: block;
+}
+
+#stich {
+  /*background-color: #00ffcf55;*/
+  position: absolute;
+  left: 30%;
+  top: 30%;
+  width: 40%;
+  height: 40%;
+}
+
+#stich_old.stich_old_0 {
+    animation-fill-mode: forwards;
+    animation-name: stich_old_stich_old_0;
+}
+@keyframes stich_old_stich_old_0 {
+    from {
+        /*background-color: #00ffcf;*/
+        position: absolute;
+        left: 30%;
+        top: 30%;
+        width: 40%;
+        height: 40%;
+    }
+    to {
+        /*background-color: #00ffcf;*/
+        position: absolute;
+        width: 20%;
+        height: 20%;
+        left: 40%;
+        top: 70%;
+    }
+}
+#stich_old.stich_old_1 {
+    animation-fill-mode: forwards;
+    animation-name: stich_old_stich_old_1;
+}
+@keyframes stich_old_stich_old_1 {
+    from {
+        /*background-color: #00ffcf;*/
+        position: absolute;
+        left: 30%;
+        top: 30%;
+        width: 40%;
+        height: 40%;
+    }
+    to {
+        /*background-color: #00ffcf;*/
+        position: absolute;
+        width: 20%;
+        height: 20%;
+        left: 5%;
+        top: 40%;
+    }
+}
+#stich_old.stich_old_2 {
+    animation-fill-mode: forwards;
+    animation-name: stich_old_stich_old_2;
+}
+@keyframes stich_old_stich_old_2 {
+    from {
+        /*background-color: #00ffcf;*/
+        position: absolute;
+        left: 30%;
+        top: 30%;
+        width: 40%;
+        height: 40%;
+    }
+    to {
+        /*background-color: #00ffcf;*/
+        position: absolute;
+        width: 20%;
+        height: 20%;
+        left: 40%;
+        top: 5%;
+    }
+}
+#stich_old.stich_old_3 {
+    animation-fill-mode: forwards;
+    animation-name: stich_old_stich_old_3;
+}
+@keyframes stich_old_stich_old_3 {
+    from {
+        /*background-color: #00ffcf;*/
+        position: absolute;
+        left: 30%;
+        top: 30%;
+        width: 40%;
+        height: 40%;
+    }
+    to {
+        /*background-color: #00ffcf;*/
+        position: absolute;
+        width: 20%;
+        height: 20%;
+        left: 75%;
+        top: 40%;
+    }
+}
+
+.playerpanel_active {
+    box-shadow: 0px 0px 10px red;
+}
+#playerpanel_player_0 {
+    border-color: green;
+    border-style: inset;
+    padding: 5px;
+    border-radius: 10px;
+    position: absolute;
+    width: 30%;
+    right: 0%;
+    bottom: 10%;
+}
+#playerpanel_player_1 {
+    border-color: green;
+    border-style: inset;
+    padding: 5px;
+    border-radius: 10px;
+    position: absolute;
+    width: 20%;
+    bottom: 60%;
+    left: 5%;
+}
+#playerpanel_player_2 {
+    border-color: green;
+    border-style: inset;
+    padding: 5px;
+    border-radius: 10px;
+    position: absolute;
+    width: 40%; /*override*/
+    left:30%;
+    top: 0%;
+}
+#playerpanel_player_3 {
+    border-color: green;
+    border-style: inset;
+    padding: 5px;
+    border-radius: 10px;
+    position: absolute;
+    width: 20%;
+    bottom: 60%;
+    left: 75%;
+}
+
+.card_E7 {
+  background-image: url("img/E7.png");
+}
+.card_E8 {
+    background-image: url("img/E8.png");
+}
+.card_E9 {
+    background-image: url("img/E9.png");
+}
+.card_EZ {
+    background-image: url("img/EZ.png");
+}
+.card_EU {
+    background-image: url("img/EU.png");
+}
+.card_EO {
+    background-image: url("img/EO.png");
+}
+.card_EK {
+    background-image: url("img/EK.png");
+}
+.card_EA {
+    background-image: url("img/EA.png");
+}
+.card_G7 {
+    background-image: url("img/G7.png");
+}
+.card_G8 {
+    background-image: url("img/G8.png");
+}
+.card_G9 {
+    background-image: url("img/G9.png");
+}
+.card_GZ {
+    background-image: url("img/GZ.png");
+}
+.card_GU {
+    background-image: url("img/GU.png");
+}
+.card_GO {
+    background-image: url("img/GO.png");
+}
+.card_GK {
+    background-image: url("img/GK.png");
+}
+.card_GA {
+    background-image: url("img/GA.png");
+}
+.card_H7 {
+    background-image: url("img/H7.png");
+}
+.card_H8 {
+    background-image: url("img/H8.png");
+}
+.card_H9 {
+    background-image: url("img/H9.png");
+}
+.card_HZ {
+    background-image: url("img/HZ.png");
+}
+.card_HU {
+    background-image: url("img/HU.png");
+}
+.card_HO {
+    background-image: url("img/HO.png");
+}
+.card_HK {
+    background-image: url("img/HK.png");
+}
+.card_HA {
+    background-image: url("img/HA.png");
+}
+.card_S7 {
+    background-image: url("img/S7.png");
+}
+.card_S8 {
+    background-image: url("img/S8.png");
+}
+.card_S9 {
+    background-image: url("img/S9.png");
+}
+.card_SZ {
+    background-image: url("img/SZ.png");
+}
+.card_SU {
+    background-image: url("img/SU.png");
+}
+.card_SO {
+    background-image: url("img/SO.png");
+}
+.card_SK {
+    background-image: url("img/SK.png");
+}
+.card_SA {
+    background-image: url("img/SA.png");
+}
+

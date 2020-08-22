@@ -67,7 +67,16 @@ fn main() -> Result<(), Error> {
                  .multiple(true)
             )
         )
+        .subcommand(clap::SubCommand::with_name("websocket")
+            .arg(clap_arg("ruleset", "rulesets/default.toml"))
+        )
         .get_matches();
+    fn get_ruleset(subcommand_matches: &clap::ArgMatches) -> Result<SRuleSet, Error> {
+        SRuleSet::from_file(Path::new(debug_verify!(subcommand_matches.value_of("ruleset")).unwrap()))
+    }
+    if let Some(subcommand_matches_websocket)=clapmatches.subcommand_matches("websocket") {
+        return subcommands::websocket::run(get_ruleset(subcommand_matches_websocket)?);
+    }
     if let Some(subcommand_matches_analyze)=clapmatches.subcommand_matches("analyze") {
         if let Some(itstr_sauspiel_html_file) = subcommand_matches_analyze.values_of("sauspiel-files") {
             return subcommands::analyze::analyze(
@@ -91,9 +100,6 @@ fn main() -> Result<(), Error> {
             }
         }
     };
-    fn get_ruleset(subcommand_matches: &clap::ArgMatches) -> Result<SRuleSet, Error> {
-        SRuleSet::from_file(Path::new(debug_verify!(subcommand_matches.value_of("ruleset")).unwrap()))
-    }
     fn str_to_hand(str_hand: &str) -> Result<SHand, Error> {
         Ok(SHand::new_from_vec(cardvector::parse_cards(str_hand).ok_or_else(||format_err!("Could not parse hand."))?))
     }
