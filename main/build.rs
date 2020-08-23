@@ -6,7 +6,7 @@ fn main() {
     // adapted from https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
     let execute_external = |cmd: &mut Command| {
         let output = debug_verify!(cmd.output()).unwrap();
-        assert!(output.status.success(), output);
+        assert!(output.status.success(), "{:?}: {:?}", cmd, output);
         output
     };
     let path_resources = Path::new("tools");
