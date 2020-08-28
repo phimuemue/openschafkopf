@@ -54,6 +54,13 @@ macro_rules! if_then_some {
             None
         }
     };
+    (let $pattern:pat = $expr: expr, $val: expr) => {
+        if let $pattern = $expr {
+            Some($val)
+        } else {
+            None
+        }
+    };
 }
 
 pub fn tpl_flip_if<T>(b: bool, (t0, t1): (T, T)) -> (T, T) {
