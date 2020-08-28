@@ -561,6 +561,21 @@ impl TGamePhase for SGameResult { // "absorbing state"
     }
 }
 
+impl SGameResult {
+    pub fn apply_payout(self, n_stock: &mut isize, mut fn_payout_to_epi: impl FnMut(EPlayerIndex, isize)) { // TODO should n_stock be member of SGameResult?
+        for epi in EPlayerIndex::values() {
+            fn_payout_to_epi(epi, self.an_payout[epi]);
+        }
+        let n_pay_into_stock = -self.an_payout.iter().sum::<isize>();
+        assert!(
+            n_pay_into_stock >= 0 // either pay into stock...
+            || n_pay_into_stock == -*n_stock // ... or exactly empty it (assume that this is always possible)
+        );
+        *n_stock += n_pay_into_stock;
+        assert!(0 <= *n_stock);
+    }
+}
+
 pub fn stoss_and_doublings(vecstoss: &[SStoss], doublings: &SDoublings) -> (usize, usize) {
     (
         vecstoss.len(),

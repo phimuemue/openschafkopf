@@ -95,7 +95,7 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
                 VStockOrT::Stock(gameresult)
             }
         };
-        let an_payout = match stockorgame {
+        let gameresult = match stockorgame {
             VStockOrT::OrT(mut game) => {
                 while let Some(gameaction)=game.which_player_can_do_something() {
                     if !gameaction.1.is_empty() {
@@ -128,20 +128,13 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
                         gameaction.0
                     )).unwrap();
                 }
-                debug_verify!(game.finish()).unwrap().an_payout
+                debug_verify!(game.finish()).unwrap()
             },
-            VStockOrT::Stock(gameresult) => gameresult.an_payout,
+            VStockOrT::Stock(gameresult) => gameresult,
         };
-        for epi in EPlayerIndex::values() {
-            aattable[epi].n_money += an_payout[epi];
-        }
-        let n_pay_into_stock = -an_payout.iter().sum::<isize>();
-        assert!(
-            n_pay_into_stock >= 0 // either pay into stock...
-            || n_pay_into_stock == -n_stock // ... or exactly empty it (assume that this is always possible)
-        );
-        n_stock += n_pay_into_stock;
-        assert!(0 <= n_stock);
+        gameresult.apply_payout(&mut n_stock, |epi, n_payout| {
+            aattable[epi].n_money += n_payout;
+        });
         assert_eq!(n_stock + aattable.iter().map(|attable| attable.n_money).sum::<isize>(), 0);
         skui::print_account_balance(&aattable.map(|attable| attable.n_money), n_stock);
         aattable.as_raw_mut().rotate_left(1);
