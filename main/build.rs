@@ -30,7 +30,7 @@ fn main() {
     execute_external(
         Command::new("inkscape")
             .arg(path_svg_in)
-            .arg(format!("--export-png={}", debug_verify!(path_out_dir.join("cards.png").to_str()).unwrap()))
+            .arg(format!("--export-filename={}", debug_verify!(path_out_dir.join("cards.png").to_str()).unwrap()))
     );
 }
 
