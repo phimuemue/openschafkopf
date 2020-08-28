@@ -91,8 +91,8 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
             VGamePreparationsFinish::DirectGame(game) => {
                 VStockOrT::OrT(game)
             },
-            VGamePreparationsFinish::Stock(n_stock) => {
-                VStockOrT::Stock(n_stock)
+            VGamePreparationsFinish::Stock(gameresult) => {
+                VStockOrT::Stock(gameresult)
             }
         };
         let an_payout = match stockorgame {
@@ -130,9 +130,7 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
                 }
                 debug_verify!(game.finish()).unwrap().an_payout
             },
-            VStockOrT::Stock(n_stock) => {
-                EPlayerIndex::map_from_fn(|_epi| -n_stock)
-            }
+            VStockOrT::Stock(gameresult) => gameresult.an_payout,
         };
         for epi in EPlayerIndex::values() {
             aattable[epi].n_money += an_payout[epi];

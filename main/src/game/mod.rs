@@ -114,8 +114,7 @@ pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
 pub enum VGamePreparationsFinish<'rules> {
     DetermineRules(SDetermineRules<'rules>),
     DirectGame(SGame),
-    Stock(/*n_stock*/isize),
-
+    Stock(SGameResult),
 }
 
 impl<'rules> TGamePhase for SGamePreparations<'rules> {
@@ -151,13 +150,16 @@ impl<'rules> TGamePhase for SGamePreparations<'rules> {
                     ))
                 },
                 VStockOrT::Stock(n_stock) => {
-                    VGamePreparationsFinish::Stock(match self.ruleset.oedoublingscope {
+                    let n_stock = match self.ruleset.oedoublingscope {
                         None | Some(EDoublingScope::Games) => n_stock,
                         Some(EDoublingScope::GamesAndStock) => {
                             n_stock * 2isize.pow(
                                 self.doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count().as_num()
                             )
                         }
+                    };
+                    VGamePreparationsFinish::Stock(SGameResult{
+                        an_payout: EPlayerIndex::map_from_fn(|_epi| -n_stock),
                     })
                 }
             }

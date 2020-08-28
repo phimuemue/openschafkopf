@@ -37,8 +37,8 @@ impl SRuleGroup {
 }
 
 #[derive(Debug)]
-pub enum VStockOrT<T> {
-    Stock(/*n_stock*/isize), // number must be positive, but use isize since it is essentially a payment
+pub enum VStockOrT<Stock, T> {
+    Stock(Stock), // number must be positive, but use isize since it is essentially a payment
     OrT(T),
 }
 
@@ -56,7 +56,7 @@ pub struct SStossParams {
 #[derive(new, Debug)]
 pub struct SRuleSet {
     pub avecrulegroup : EnumMap<EPlayerIndex, Vec<SRuleGroup>>,
-    pub stockorramsch : VStockOrT<Box<dyn TRules>>,
+    pub stockorramsch : VStockOrT</*n_stock*/isize, Box<dyn TRules>>,
     pub oedoublingscope : Option<EDoublingScope>,
     pub ostossparams : Option<SStossParams>,
     pub ekurzlang : EKurzLang,
