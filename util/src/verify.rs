@@ -26,6 +26,7 @@ impl<TOk, TErr> TVerifiableByVerifyMacro for Result<TOk, TErr> {
     }
 }
 
+#[track_caller]
 pub fn verify_internal<E: TVerifiableByVerifyMacro + std::fmt::Debug>(e: E, str_e: &str) -> E {
     assert!(e.is_verify_true(), "verify!({}): {:?}", str_e, e);
     e
