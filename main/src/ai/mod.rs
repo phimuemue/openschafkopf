@@ -216,14 +216,14 @@ impl SAi {
             card
         } else {
             macro_rules! suggest_via{($fn_suggest: ident, $arg: expr,) => {{ // TODORUST generic closures
-                Self::$fn_suggest(
+                *debug_verify!(Self::$fn_suggest(
                     &determinebestcard,
                     $arg,
                     self.n_suggest_card_branches,
                     /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                     game.n_stock,
                     opath_out_dir,
-                ).best_card(|minmax| minmax.values_for(determinebestcard.epi_fixed).into_raw()).0
+                ).best_card(|minmax| minmax.values_for(determinebestcard.epi_fixed).into_raw()).0.first()).unwrap()
             }}}
             match self.aiparams {
                 VAIParams::Cheating => {
@@ -279,8 +279,12 @@ impl<T> SDetermineBestCardResult<T> {
         self.veccard_allowed.iter()
             .map(move |card| (*card, debug_verify!(self.mapcardt[*card].as_ref()).unwrap()))
     }
-    pub fn best_card<K: Ord>(&self, fn_key: impl Fn(&T)->K) -> (SCard, &T) where T: std::fmt::Debug {
-        debug_verify!(self.cards_and_ts().max_by_key(|&(_card, t)| fn_key(t))).unwrap()
+    pub fn best_card<K: Ord>(&self, fn_key: impl Fn(&T)->K) -> (Vec<SCard>, &T) where T: std::fmt::Debug {
+        let veccard = self.veccard_allowed.iter().copied()
+            .max_set_by_key(|card| fn_key(debug_verify!(self.mapcardt[*card].as_ref()).unwrap()));
+        assert!(!veccard.is_empty());
+        let t = debug_verify!(self.mapcardt[veccard[0]].as_ref()).unwrap();
+        (veccard, t)
     }
 }
 

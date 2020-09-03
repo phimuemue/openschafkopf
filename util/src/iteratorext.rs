@@ -41,6 +41,24 @@ pub trait IteratorExt: itertools::Itertools {
     {
         self.is_sorted_by_unstable_name_collision(|a, b| f(a).partial_cmp(&f(b)))
     }
+
+    // TODO itertools
+    fn max_set_by_key<K: Ord>(mut self, mut fn_key: impl FnMut(&Self::Item) -> K) -> Vec<Self::Item>
+    where
+        Self: Sized,
+        K: Ord,
+    {
+        self.next().map_or(vec![], |item_0| {
+            self.fold(vec![item_0], |mut vecitem, item| {
+                match fn_key(&vecitem[0]).cmp(&fn_key(&item)) {
+                    std::cmp::Ordering::Less => vecitem = vec![item],
+                    std::cmp::Ordering::Equal => vecitem.push(item),
+                    std::cmp::Ordering::Greater => (),
+                }
+                vecitem
+            })
+        })
+    }
 }
 
 impl<It> IteratorExt for It where It: Iterator {}

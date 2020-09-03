@@ -137,9 +137,12 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
                             },
                             /*ostr_file_out*/None,
                         );
-                        let (card_suggested, minmax) = determinebestcardresult.best_card(|minmax| minmax.values_for(determinebestcard.epi_fixed).into_raw());
-                        if card!=card_suggested && an_payout[epi]<minmax.aan_payout[EMinMaxStrategy::OthersMin][epi] { // TODO can we improve this?
-                            Some(SAnalysisCardAndPayout{card_suggested, n_payout: minmax.aan_payout[EMinMaxStrategy::OthersMin][epi]})
+                        let (veccard, minmax) = determinebestcardresult.best_card(|minmax| minmax.values_for(determinebestcard.epi_fixed)[EMinMaxStrategy::OthersMin]);
+                        if 
+                            !veccard.contains(&card) // TODO can we improve this?
+                            && an_payout[epi]<minmax.aan_payout[EMinMaxStrategy::OthersMin][epi]
+                        {
+                            Some(SAnalysisCardAndPayout{card_suggested: veccard[0], n_payout: minmax.aan_payout[EMinMaxStrategy::MaxPerEpi][epi]})
                         } else {
                             // The decisive mistake must occur in subsequent stichs.
                             // TODO assert that it actually occurs
