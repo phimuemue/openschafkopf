@@ -76,7 +76,7 @@ pub fn analyze_game_internal(
 
 #[derive(Clone)]
 pub struct SAnalysisCardAndPayout {
-    pub card_suggested: SCard,
+    pub veccard: Vec<SCard>,
     pub n_payout: isize,
 }
 
@@ -142,7 +142,10 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
                             !veccard.contains(&card) // TODO can we improve this?
                             && an_payout[epi]<minmax.aan_payout[EMinMaxStrategy::OthersMin][epi]
                         {
-                            Some(SAnalysisCardAndPayout{card_suggested: veccard[0], n_payout: minmax.aan_payout[EMinMaxStrategy::MaxPerEpi][epi]})
+                            Some(SAnalysisCardAndPayout{
+                                veccard,
+                                n_payout: minmax.aan_payout[EMinMaxStrategy::MaxPerEpi][epi]
+                            })
                         } else {
                             // The decisive mistake must occur in subsequent stichs.
                             // TODO assert that it actually occurs
@@ -263,11 +266,14 @@ pub fn generate_analysis_html(
         let mut str_analysisimpr = format!(
             r###"<li>
                 Stich {i_stich}, Spieler {epi}:
-                Bei gegebener Kartenverteilung: {card_suggested_cheating} garantierter Mindestgewinn: {n_payout_cheating} (statt {n_payout_real}).
+                Bei gegebener Kartenverteilung: {str_card_suggested_cheating} garantierter Mindestgewinn: {n_payout_cheating} (statt {n_payout_real}).
             </li>"###,
             i_stich = analysisimpr.i_stich + 1, // humans start counting at 1
             epi = analysisimpr.epi,
-            card_suggested_cheating = analysisimpr.cardandpayout_cheating.card_suggested,
+            str_card_suggested_cheating = analysisimpr.cardandpayout_cheating.veccard
+                .iter()
+                .map(SCard::to_string)
+                .join(", "),
             n_payout_cheating = analysisimpr.cardandpayout_cheating.n_payout,
             n_payout_real = mapepin_payout[analysisimpr.epi],
         );
@@ -275,10 +281,13 @@ pub fn generate_analysis_html(
             str_analysisimpr += &format!(
                 r###"
                     <ul><li>
-                    Bei unbekannter Kartenverteilung: {card_suggested} garantierter Mindestgewinn {n_payout} (statt {n_payout_real}).
+                    Bei unbekannter Kartenverteilung: {str_card_suggested} garantierter Mindestgewinn {n_payout} (statt {n_payout_real}).
                     </ul></li>
                 </li>"###,
-                card_suggested = cardandpayout.card_suggested,
+                str_card_suggested = cardandpayout.veccard
+                    .iter()
+                    .map(SCard::to_string)
+                    .join(", "),
                 n_payout = cardandpayout.n_payout,
                 n_payout_real = mapepin_payout[analysisimpr.epi],
             );
