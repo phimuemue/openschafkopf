@@ -68,7 +68,7 @@ pub fn analyze_game_internal(
             debug_verify!(game.zugeben(*card, epi)).unwrap();
         }
     }
-    for (i_stich, stich) in game.stichseq.visible_stichs().enumerate() {
+    for (i_stich, stich) in game.stichseq.visible_stichs().iter().enumerate() {
         assert_eq!(stich, &analyzeparams.vecstich[i_stich]);
     }
     game

@@ -243,7 +243,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
     ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
         where Rules: TRulesNoObj
     {
-        let itcard = stichseq.visible_stichs().filter_map(|stich| stich.get(playerparties13.primary_player())).copied()
+        let itcard = stichseq.visible_stichs().iter().filter_map(|stich| stich.get(playerparties13.primary_player())).copied()
             .chain(ahand[playerparties13.primary_player()].cards().iter().copied());
         if
             !cards_valid_for_sie(

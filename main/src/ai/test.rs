@@ -107,6 +107,7 @@ fn detect_expensive_all_possible_hands() {
                                 .map(ToString::to_string)
                                 .collect::<Vec<_>>(),
                             game.stichseq.visible_stichs()
+                                .iter()
                                 .map(ToString::to_string)
                                 .collect::<Vec<_>>(),
                         );

@@ -400,8 +400,8 @@ impl SStichSequence {
         r
     }
 
-    pub fn visible_stichs(&self) -> impl Iterator<Item=&SStich>+Clone {
-        self.vecstich.iter().take(self.ekurzlang.cards_per_player())
+    pub fn visible_stichs(&self) -> &[SStich] {
+        &self.vecstich[0..self.vecstich.len().min(self.ekurzlang.cards_per_player())]
     }
 
     pub fn kurzlang(&self) -> EKurzLang {
