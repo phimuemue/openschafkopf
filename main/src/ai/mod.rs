@@ -104,8 +104,7 @@ impl SAi {
         let ekurzlang = EKurzLang::from_cards_per_player(hand_fixed.get().cards().len());
         forever_rand_hands(&SStichSequence::new(ekurzlang), hand_fixed.get().clone(), epi_rank, rules)
             .take(self.n_rank_rules_samples)
-            .collect::<Vec<_>>() // TODO necessary?
-            .into_par_iter()
+            .par_bridge() // TODO can we derive a true parallel iterator?
             .map(|mut ahand| {
                 explore_snapshots(
                     &mut ahand,
@@ -126,7 +125,7 @@ impl SAi {
 
     pub fn suggest_card_internal(
         determinebestcard: &SDetermineBestCard,
-        itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
+        itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
         n_suggest_card_branches: usize,
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
@@ -293,7 +292,7 @@ pub fn determine_best_card<
     FnCombineExploredOutput: Fn(&mut ForEachSnapshot::Output, ForEachSnapshot::Output) + Sync,
 >(
     determinebestcard: &SDetermineBestCard,
-    itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>,
+    itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &ForEachSnapshot,
     fn_combine_explored_output: FnCombineExploredOutput,
@@ -307,9 +306,8 @@ pub fn determine_best_card<
         SCard::map_from_fn(|_card| None),
     ));
     itahand
-        .collect::<Vec<_>>() // TODO necessary?
-        .into_par_iter()
         .enumerate()
+        .par_bridge() // TODO can we derive a true parallel iterator?
         .flat_map(|(i_susp, ahand)|
             determinebestcard.veccard_allowed.par_iter()
                 .map(move |card| (i_susp, ahand.clone(), *card))
