@@ -198,24 +198,24 @@ pub fn analyze<
                         std::fs::File::open(&path)?.read_to_string(str_html)
                     )?.0;
                     let mut b_found = false;
-                    let mut push_analyzeparams = |resanalyzeparams: Result<_, _>| {
+                    let mut push_analyzeparams = |str_description, resanalyzeparams: Result<_, _>| {
                         b_found = b_found || resanalyzeparams.is_ok();
                         vecanalyzeparams.push(SAnalyzeParamsWithDesc{
-                            str_description: path.to_string_lossy().into_owned(),
+                            str_description,
                             str_link: format!("file://{}", path.to_string_lossy()),
                             resanalyzeparams,
                         });
                     };
                     if let resanalyzeparams@Ok(_) = analyze_sauspiel_html(&str_input) {
-                        push_analyzeparams(resanalyzeparams)
+                        push_analyzeparams(path.to_string_lossy().into_owned(), resanalyzeparams)
                     } else {
                         let mut b_found_plain = false;
-                        for resanalyzeparams in analyze_plain(&str_input).filter(|res| res.is_ok()) {
+                        for (i, resanalyzeparams) in analyze_plain(&str_input).filter(|res| res.is_ok()).enumerate() {
                             b_found_plain = true;
-                            push_analyzeparams(resanalyzeparams)
+                            push_analyzeparams(format!("{}_{}", path.to_string_lossy(), i), resanalyzeparams)
                         }
                         if !b_found_plain {
-                            push_analyzeparams(Err(format_err!("Nothing found in {:?}: Trying to continue.", path)));
+                            push_analyzeparams(path.to_string_lossy().into_owned(), Err(format_err!("Nothing found in {:?}: Trying to continue.", path)));
                         }
                     }
                     if !b_found {
