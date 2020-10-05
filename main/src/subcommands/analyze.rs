@@ -5,8 +5,7 @@ use std::io::Read;
 
 pub fn analyze<
     'str_sauspiel_html_file,
-    ItStrSauspielHtmlFile: Iterator<Item=&'str_sauspiel_html_file str>,
->(path_analysis: &std::path::Path, itstr_sauspiel_html_file: ItStrSauspielHtmlFile) -> Result<(), Error> {
+>(path_analysis: &std::path::Path, itstr_sauspiel_html_file: impl Iterator<Item=&'str_sauspiel_html_file str>) -> Result<(), Error> {
     let mut vecanalyzeparams = Vec::new();
     for str_file_sauspiel_html in itstr_sauspiel_html_file {
         let itglobresult = glob::glob(str_file_sauspiel_html)?;
