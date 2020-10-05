@@ -171,16 +171,16 @@ fn test_all_possible_hands() {
         ],
     ].iter() {
         for (card, veccard_hand, n_hand_count, an_size_hand) in atplcardslccardnan.iter() {
-            let mut i_hand = 0;
-            for ahand in make_handiterator::<SNextVecEPIPermutation>(
-                &stichseq,
-                SHand::new_from_vec(veccard_hand.iter().copied().collect()),
-                epi_fixed,
-            ) {
-                i_hand+=1;
-                assert_eq!(EnumMap::from_raw(*an_size_hand), ahand.map(|hand| hand.cards().len()));
-            }
-            assert_eq!(i_hand, *n_hand_count);
+            assert_eq!(
+                make_handiterator::<SNextVecEPIPermutation>(
+                    &stichseq,
+                    SHand::new_from_vec(veccard_hand.iter().copied().collect()),
+                    epi_fixed,
+                )
+                    .inspect(|ahand| assert_eq!(EnumMap::from_raw(*an_size_hand), ahand.map(|hand| hand.cards().len())))
+                    .count(),
+                *n_hand_count
+            );
             stichseq.zugeben_custom_winner_index(*card, |_stich| epi_irrelevant);
         }
     }
