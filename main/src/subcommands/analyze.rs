@@ -16,40 +16,18 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
             .ok_or_else(|| format_err!("Wrong number of elements"))?;
         Ok([card0, card1, card2, card3])
     }
-    fn vec_to_enummap<T: std::fmt::Debug+Clone/*TODO can we avoid clone?*/>(vect: Vec<T>) -> Result<EnumMap<EPlayerIndex, T>, failure::Error> {
-        vec_to_arr(vect).map(EPlayerIndex::map_from_raw)
-    }
-    let mapepistr_username = vec_to_enummap(
+    let mapepistr_username = vec_to_arr(
         doc.find(Class("game-participants"))
             .exactly_one()
             .map_err(|it| format_err!("error on single: {} elements", it.count()))? // TODO could it implement Debug?
             .find(Attr("data-username", ()))
             .map(|node_username| debug_verify!(node_username.attr("data-username")).unwrap())
             .collect()
-    )?;
+    ).map(EPlayerIndex::map_from_raw)?;
     let username_to_epi = |str_username: &str| {
         EPlayerIndex::values()
             .find(|epi| mapepistr_username[*epi]==str_username)
             .ok_or_else(|| format_err!("username {} not part of mapepistr_username {:?}", str_username, mapepistr_username))
-    };
-    let find_cards = |node: &Node| {
-        node.find(Class("card-image"))
-            .map(|node_card| -> Result<SCard, _> {
-                let str_class = debug_verify!(node_card.attr("class")).unwrap(); // "class" must be present
-                (
-                    string("card-image by g"),
-                    digit(),
-                    space(),
-                )
-                .with(card_parser())
-                .skip(optional(string(" highlight")))
-                .skip(eof())
-                    // end of parser
-                    .parse(str_class)
-                    .map_err(|err| format_err!("Card parsing: {:?} on {}", err, str_class))
-                    .map(|(card, _str)| card)
-            })
-            .collect::<Result<Vec<_>,_>>()
     };
     let scrape_from_key_figure_table = |str_key| -> Result<_, failure::Error> {
         doc.find(Name("th").and(|node: &Node| node.inner_html()==str_key))
@@ -109,10 +87,28 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
         })?;
     let vecstich = doc.find(|node: &Node| node.inner_html()=="Stich von")
         .try_fold((EPlayerIndex::EPI0, Vec::new()), |(epi_first, mut vecstich), node| -> Result<_, _> {
-            vec_to_arr(find_cards(
-                &node.parent().ok_or_else(|| format_err!(r#""Stich von" has no parent"#))?
+            vec_to_arr(
+                node.parent().ok_or_else(|| format_err!(r#""Stich von" has no parent"#))?
                     .parent().ok_or_else(|| format_err!("walking html failed"))?
-            )?).map(|acard| {
+                    .find(Class("card-image"))
+                    .map(|node_card| -> Result<SCard, _> {
+                        let str_class = debug_verify!(node_card.attr("class")).unwrap(); // "class" must be present
+                        (
+                            string("card-image by g"),
+                            digit(),
+                            space(),
+                        )
+                        .with(card_parser())
+                        .skip(optional(string(" highlight")))
+                        .skip(eof())
+                            // end of parser
+                            .parse(str_class)
+                            .map_err(|err| format_err!("Card parsing: {:?} on {}", err, str_class))
+                            .map(|(card, _str)| card)
+                    })
+                    .collect::<Result<Vec<_>,_>>()?
+                
+            ).map(|acard| {
                 let stich = SStich::new_full(epi_first, acard);
                 let epi_winner = rules.winner_index(&stich);
                 vecstich.push(stich);
