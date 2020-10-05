@@ -9,7 +9,6 @@ mod game_analysis;
 mod player;
 mod primitives;
 mod rules;
-mod sauspiel;
 mod skui;
 mod subcommands;
 
