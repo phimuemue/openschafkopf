@@ -8,8 +8,7 @@ pub fn analyze<
 >(path_analysis: &std::path::Path, itstr_sauspiel_html_file: impl Iterator<Item=&'str_sauspiel_html_file str>) -> Result<(), Error> {
     let mut vecanalyzeparams = Vec::new();
     for str_file_sauspiel_html in itstr_sauspiel_html_file {
-        let itglobresult = glob::glob(str_file_sauspiel_html)?;
-        for globresult in itglobresult {
+        for globresult in glob::glob(str_file_sauspiel_html)? {
             match globresult {
                 Ok(path) => {
                     println!("Opening {:?}", path);
