@@ -120,20 +120,6 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
             })
         })?
         .1;
-    let ahand = vec_to_enummap(
-        doc.find(|node: &Node| node.inner_html()=="Karten von:")
-            .map(|node| -> Result<SHand, failure::Error> {
-                let node_parent = node.parent().ok_or_else(|| format_err!(r#""Karten von" has no parent"#))?;
-                let node_hand = node_parent.parent().ok_or_else(|| format_err!("walking html failed"))?;
-                let veccard_hand = find_cards(&node_hand)?;
-                EKurzLang::values().find(|ekurzlang| ekurzlang.cards_per_player()==veccard_hand.len())
-                    .ok_or_else(|| format_err!("invalid hand size: {}", veccard_hand.len()))
-                    .map(move |_ekurzlang| {
-                        SHand::new_from_vec(veccard_hand.into_iter().collect())
-                    })
-            })
-            .collect::<Result<Vec<_>, _>>()?
-    )?;
     let get_doublings_stoss = |str_key| -> Result<_, failure::Error> {
         scrape_from_key_figure_table(str_key)?
             .find(Name("a"))
@@ -142,7 +128,14 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
     };
     Ok(SAnalyzeParams {
         rules,
-        ahand,
+        ahand: EPlayerIndex::map_from_fn(|epi|
+            SHand::new_from_vec(
+                vecstich
+                    .iter()
+                    .map(|stich| stich[epi])
+                    .collect()
+            )
+        ),
         vecn_doubling: get_doublings_stoss("Klopfer")?,
         vecn_stoss: get_doublings_stoss("Kontra und Retour")?,
         n_stock: 0, // Sauspiel does not support stock
