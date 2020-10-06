@@ -148,12 +148,7 @@ fn analyze_plain<'str_lines>(str_lines: &'str_lines str) -> impl Iterator<Item=R
                 .collect_tuple()
                 .ok_or_else(|| format_err!("':' does not separate rules from stichs."))?;
             let str_cards = str_cards.trim();
-            let rules = crate::rules::parser::parse_rule_description(
-                str_rules,
-                (/*n_tarif_extra*/10, /*n_tarif_ruf*/10, /*n_tarif_solo*/50), // TODO? make customizable
-                /*fn_player_to_epi*/|str_epi| EPlayerIndex::checked_from_usize(str_epi.parse()?)
-                    .ok_or_else(|| format_err!("Cannot convert {} to EPlayerIndex.", str_epi)),
-            )?;
+            let rules = crate::rules::parser::parse_rule_description_simple(str_rules)?;
             let veccard = parse_cards::<Vec<_>>(str_cards)
                 .ok_or_else(|| format_err!("Could not parse cards: {}", str_cards))?;
             let stichseq = veccard.iter().fold(

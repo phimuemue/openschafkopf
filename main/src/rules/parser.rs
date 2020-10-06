@@ -112,4 +112,11 @@ pub fn parse_rule_description(
     }
 }
 
-
+pub fn parse_rule_description_simple(str_rules: &str) -> Result<Box<dyn TRules>, Error> {
+    crate::rules::parser::parse_rule_description(
+        str_rules,
+        (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO? make customizable
+        /*fn_player_to_epi*/|str_epi| EPlayerIndex::checked_from_usize(str_epi.parse()?)
+            .ok_or_else(|| format_err!("Cannot convert {} to EPlayerIndex.", str_epi)),
+    )
+}
