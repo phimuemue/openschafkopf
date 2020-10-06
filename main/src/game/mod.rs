@@ -320,6 +320,12 @@ impl SStichSequence {
         stichseq
     }
 
+    pub fn new_from_cards(ekurzlang: EKurzLang, itcard: impl Iterator<Item=SCard>, rules: &dyn TRules) -> Self {
+        itcard.fold(Self::new(ekurzlang), mutate_return!(|stichseq, card| {
+            stichseq.zugeben(card, rules);
+        }))
+    }
+
     pub fn game_finished(&self) -> bool {
         #[cfg(debug_assertions)]self.assert_invariant();
         assert!(self.completed_stichs().len()<=self.ekurzlang.cards_per_player());

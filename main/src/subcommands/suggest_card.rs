@@ -16,13 +16,11 @@ pub fn suggest_card(
             + hand_fixed.cards().len()
     )
         .ok_or_else(|| format_err!("Cannot determine ekurzlang from {} and {:?}.", hand_fixed, slccard_as_played))?;
-    let stichseq = slccard_as_played.iter()
-        .fold(
-            SStichSequence::new(ekurzlang),
-            mutate_return!(|stichseq, card| {
-                stichseq.zugeben(*card, rules);
-            })
-        );
+    let stichseq = SStichSequence::new_from_cards(
+        ekurzlang,
+        slccard_as_played.iter().copied(),
+        rules
+    );
     let determinebestcardresult = crate::ai::SAi::suggest_card_simulating( // should not distinguish for SingleAllowed (we want to know expected payout anyway)
         &crate::ai::SDetermineBestCard::new(
             rules,

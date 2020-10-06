@@ -151,15 +151,12 @@ fn analyze_plain<'str_lines>(str_lines: &'str_lines str) -> impl Iterator<Item=R
             let rules = crate::rules::parser::parse_rule_description_simple(str_rules)?;
             let veccard = parse_cards::<Vec<_>>(str_cards)
                 .ok_or_else(|| format_err!("Could not parse cards: {}", str_cards))?;
-            let stichseq = veccard.iter().fold(
-                SStichSequence::new(
-                    /*ekurzlang*/EKurzLang::values()
-                        .find(|ekurzlang| ekurzlang.cards_per_player()*EPlayerIndex::SIZE==veccard.len())
-                        .ok_or_else(|| format_err!("Incorrect number of cards: {}", veccard.len()))?
-                ),
-                mutate_return!(|stichseq, &card| {
-                    stichseq.zugeben(card, rules.as_ref());
-                })
+            let stichseq = SStichSequence::new_from_cards(
+                /*ekurzlang*/EKurzLang::values()
+                    .find(|ekurzlang| ekurzlang.cards_per_player()*EPlayerIndex::SIZE==veccard.len())
+                    .ok_or_else(|| format_err!("Incorrect number of cards: {}", veccard.len()))?,
+                veccard.iter().copied(),
+                rules.as_ref(),
             );
             Ok(SAnalyzeParams {
                 rules,
