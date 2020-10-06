@@ -173,14 +173,17 @@ fn explore_snapshots_internal<ForEachSnapshot>(
         ForEachSnapshot::Output : fmt::Debug,
 {
     snapshotvisualizer.begin_snapshot(stichseq, &ahand);
-    let output = if ahand.iter().all(|hand| hand.cards().is_empty()) {
+    let epi_current = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
+    let output = if debug_verify_eq!(
+        ahand[epi_current].cards().is_empty(),
+        ahand.iter().all(|hand| hand.cards().is_empty())
+    ) {
         foreachsnapshot.final_output(
             SStichSequenceGameFinished::new(stichseq),
             rulestatecache,
         )
     } else {
         foreachsnapshot.pruned_output(stichseq, &ahand, rulestatecache).unwrap_or_else(|| {
-            let epi_current = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
             let mut veccard_allowed = rules.all_allowed_cards(stichseq, &ahand[epi_current]);
             func_filter_allowed_cards(stichseq, &mut veccard_allowed);
             // TODO? use equivalent card optimization
