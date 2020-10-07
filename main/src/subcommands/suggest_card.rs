@@ -12,6 +12,7 @@ pub fn suggest_card(
     otpln_branching_factor: Option<(usize, usize)>,
     ostr_itahand: Option<&str>,
     b_verbose: bool,
+    ostr_prune: Option<&str>,
 ) -> Result<(), Error> {
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
     let rules = crate::rules::parser::parse_rule_description_simple(str_rules_with_epi)?;
@@ -89,9 +90,9 @@ pub fn suggest_card(
                 (None,_1)|(None,_2)|(None,_3)|(None,_4) => (&|_,_| (/*no filtering*/)),
                 (None,_5)|(None,_6)|(None,_7)|(None,_8) => (&branching_factor(|_stichseq| (1, 3))),
             },
-            match (eremainingcards) {
-                _1|_2|_3 => (SMinReachablePayout),
-                _4|_5|_6|_7|_8 => (SMinReachablePayoutLowerBoundViaHint),
+            match ((ostr_prune, eremainingcards)) {
+                (Some("none"),_)|(_, _1)|(_, _2)|(_, _3) => (SMinReachablePayout),
+                (Some("hint"),_)|(_, _4)|(_, _5)|(_, _6)|(_, _7)|(_, _8) => (SMinReachablePayoutLowerBoundViaHint),
             },
         )
     };

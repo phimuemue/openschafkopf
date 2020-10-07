@@ -57,6 +57,7 @@ fn main() -> Result<(), Error> {
                 .arg(clap::Arg::with_name("branching").long("branching").takes_value(true))
                 .arg(clap::Arg::with_name("simulate_hands").long("simulate-hands").takes_value(true))
                 .arg(clap::Arg::with_name("verbose").long("verbose").short("v"))
+                .arg(clap::Arg::with_name("prune").long("prune").takes_value(true))
         })
         .subcommand(clap::SubCommand::with_name("analyze")
             .about("Analyze played games and spot suboptimal decisions")
@@ -126,6 +127,7 @@ fn main() -> Result<(), Error> {
             }),
             /*ostr_itahand*/subcommand_matches.value_of("simulate_hands"),
             /*b_verbose*/subcommand_matches.is_present("verbose"),
+            /*ostr_prune*/subcommand_matches.value_of("prune"),
         )
     }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("cli") {
