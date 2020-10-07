@@ -18,6 +18,7 @@ use crate::primitives::*;
 use crate::rules::ruleset::*;
 use crate::util::*;
 use std::path::Path;
+use itertools::Itertools;
 
 fn main() -> Result<(), Error> {
     openschafkopf_logging::init_logging()?;
@@ -53,6 +54,7 @@ fn main() -> Result<(), Error> {
                 .arg(single_arg("rules", "rules"))
                 .arg(single_arg("hand", "hand"))
                 .arg(single_arg("cards_on_table", "cards-on-table"))
+                .arg(clap::Arg::with_name("branching").long("branching").takes_value(true))
         })
         .subcommand(clap::SubCommand::with_name("analyze")
             .about("Analyze played games and spot suboptimal decisions")
@@ -113,6 +115,13 @@ fn main() -> Result<(), Error> {
             &cardvector::parse_cards::<Vec<_>>(
                 &debug_verify!(subcommand_matches.value_of("cards_on_table")).unwrap(),
             ).ok_or_else(||format_err!("Could not parse played cards"))?,
+            /*otpln_branching_factor*/ if_then_some!(let Some(str_tpln_branching) = subcommand_matches.value_of("branching"), {
+                let (str_lo, str_hi) = str_tpln_branching
+                    .split(",")
+                    .collect_tuple()
+                    .ok_or_else(|| format_err!("Could not parse branching"))?;
+                (str_lo.trim().parse()?, str_hi.trim().parse()?)
+            }),
         )
     }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("cli") {

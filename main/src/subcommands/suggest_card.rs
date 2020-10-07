@@ -9,6 +9,7 @@ pub fn suggest_card(
     str_rules_with_epi: &str,
     hand_fixed: &SHand,
     slccard_as_played: &[SCard],
+    otpln_branching_factor: Option<(usize, usize)>,
 ) -> Result<(), Error> {
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
     let rules = crate::rules::parser::parse_rule_description_simple(str_rules_with_epi)?;
@@ -28,7 +29,6 @@ pub fn suggest_card(
         &hand_fixed,
     );
     let n_suggest_card_samples = 50; // TODO? make customizable
-    let n_suggest_card_branches = 2; // TODO? make customizable
     let epi_fixed = determinebestcard.epi_fixed;
     let eremainingcards = debug_verify!(ERemainingCards::checked_from_usize(remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] - 1)).unwrap();
     let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
@@ -57,9 +57,13 @@ pub fn suggest_card(
                 _5|_6|_7|_8 => (forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
                     .take(n_suggest_card_samples)),
             },
-            match (eremainingcards) {
-                _1|_2|_3|_4 => (&|_,_| (/*no filtering*/)),
-                _5|_6|_7|_8 => (&branching_factor(|_stichseq| (1, n_suggest_card_branches+1))),
+            match ((otpln_branching_factor, eremainingcards)) {
+                (Some((n_lo, n_hi)), _) => (&branching_factor(move |_stichseq| {
+                    let n_lo = n_lo.max(1);
+                    (n_lo, (n_hi.max(n_lo+1)))
+                })),
+                (None,_1)|(None,_2)|(None,_3)|(None,_4) => (&|_,_| (/*no filtering*/)),
+                (None,_5)|(None,_6)|(None,_7)|(None,_8) => (&branching_factor(|_stichseq| (1, 3))),
             },
             match (eremainingcards) {
                 _1|_2|_3 => (SMinReachablePayout),
