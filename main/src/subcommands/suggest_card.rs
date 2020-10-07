@@ -3,6 +3,8 @@ use crate::game::SStichSequence;
 use crate::primitives::*;
 use crate::util::*;
 
+plain_enum_mod!(moderemainingcards, ERemainingCards {_1, _2, _3, _4, _5, _6, _7, _8,});
+
 pub fn suggest_card(
     str_rules_with_epi: &str,
     hand_fixed: &SHand,
@@ -27,8 +29,10 @@ pub fn suggest_card(
     );
     let n_suggest_card_samples = 50; // TODO? make customizable
     let n_suggest_card_branches = 2; // TODO? make customizable
+    let epi_fixed = determinebestcard.epi_fixed;
+    let eremainingcards = debug_verify!(ERemainingCards::checked_from_usize(remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] - 1)).unwrap();
     let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
-        macro_rules! forward_step_2{($itahand: expr, $func_filter_allowed_cards: expr, $foreachsnapshot: ident,) => {{ // TODORUST generic closures
+        macro_rules! forward{(($itahand: expr), ($func_filter_allowed_cards: expr, $foreachsnapshot: ident,),) => {{ // TODORUST generic closures
             determine_best_card(
                 &determinebestcard,
                 $itahand,
@@ -45,43 +49,29 @@ pub fn suggest_card(
                 /*opath_out_dir*/None, // TODO? make customizable
             )
         }}}
-        macro_rules! forward_step_1{($itahand: expr) => { // TODORUST generic closures
-            // TODORUST exhaustive_integer_patterns for isize/usize
-            // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
-            match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[determinebestcard.epi_fixed] {
-                1|2|3 => forward_step_2!(
-                    $itahand,
+        use ERemainingCards::*;
+        cartesian_match!(
+            forward,
+            match (eremainingcards) {
+                _1|_2|_3|_4 => (all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)),
+                _5|_6|_7|_8 => (forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
+                    .take(n_suggest_card_samples)),
+            },
+            match (eremainingcards) {
+                _1|_2|_3 => (
                     &|_,_| (/*no filtering*/),
                     SMinReachablePayout,
                 ),
-                4 => forward_step_2!(
-                    $itahand,
+                _4 => (
                     &|_,_| (/*no filtering*/),
                     SMinReachablePayoutLowerBoundViaHint,
                 ),
-                5|6|7|8 => forward_step_2!(
-                    $itahand,
-                    &branching_factor(|_stichseq| {
-                        (1, n_suggest_card_branches+1)
-                    }),
+                _5|_6|_7|_8 => (
+                    &branching_factor(|_stichseq| (1, n_suggest_card_branches+1)),
                     SMinReachablePayoutLowerBoundViaHint,
                 ),
-                n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
-            }
-
-
-        }}
-        let epi_fixed = determinebestcard.epi_fixed;
-        match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] {
-            1|2|3|4 => forward_step_1!(
-                all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
-            ),
-            5|6|7|8 => forward_step_1!(
-                forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
-                    .take(n_suggest_card_samples)
-            ),
-            n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
-        }
+            },
+        )
     };
     // TODO interface should probably output payout interval per card
     let epi = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
