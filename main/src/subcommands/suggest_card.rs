@@ -32,7 +32,7 @@ pub fn suggest_card(
     let epi_fixed = determinebestcard.epi_fixed;
     let eremainingcards = debug_verify!(ERemainingCards::checked_from_usize(remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] - 1)).unwrap();
     let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
-        macro_rules! forward{(($itahand: expr), ($func_filter_allowed_cards: expr, $foreachsnapshot: ident,),) => {{ // TODORUST generic closures
+        macro_rules! forward{(($itahand: expr), ($func_filter_allowed_cards: expr), ($foreachsnapshot: ident),) => {{ // TODORUST generic closures
             determine_best_card(
                 &determinebestcard,
                 $itahand,
@@ -58,18 +58,12 @@ pub fn suggest_card(
                     .take(n_suggest_card_samples)),
             },
             match (eremainingcards) {
-                _1|_2|_3 => (
-                    &|_,_| (/*no filtering*/),
-                    SMinReachablePayout,
-                ),
-                _4 => (
-                    &|_,_| (/*no filtering*/),
-                    SMinReachablePayoutLowerBoundViaHint,
-                ),
-                _5|_6|_7|_8 => (
-                    &branching_factor(|_stichseq| (1, n_suggest_card_branches+1)),
-                    SMinReachablePayoutLowerBoundViaHint,
-                ),
+                _1|_2|_3|_4 => (&|_,_| (/*no filtering*/)),
+                _5|_6|_7|_8 => (&branching_factor(|_stichseq| (1, n_suggest_card_branches+1))),
+            },
+            match (eremainingcards) {
+                _1|_2|_3 => (SMinReachablePayout),
+                _4|_5|_6|_7|_8 => (SMinReachablePayoutLowerBoundViaHint),
             },
         )
     };
