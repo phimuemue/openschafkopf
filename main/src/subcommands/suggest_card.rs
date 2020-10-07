@@ -11,6 +11,7 @@ pub fn suggest_card(
     slccard_as_played: &[SCard],
     otpln_branching_factor: Option<(usize, usize)>,
     ostr_itahand: Option<&str>,
+    b_verbose: bool,
 ) -> Result<(), Error> {
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
     let rules = crate::rules::parser::parse_rule_description_simple(str_rules_with_epi)?;
@@ -35,7 +36,16 @@ pub fn suggest_card(
         macro_rules! forward{(($itahand: expr), ($func_filter_allowed_cards: expr), ($foreachsnapshot: ident),) => {{ // TODORUST generic closures
             determine_best_card(
                 &determinebestcard,
-                $itahand,
+                $itahand
+                    .inspect(|ahand| {
+                        if b_verbose { // TODO? dispatch statically
+                            // TODO make output pretty
+                            for hand in ahand.iter() {
+                                print!("{} | ", hand);
+                            }
+                            println!("");
+                        }
+                    }),
                 $func_filter_allowed_cards,
                 &$foreachsnapshot::new(
                     rules,
