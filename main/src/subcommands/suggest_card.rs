@@ -10,6 +10,7 @@ pub fn suggest_card(
     hand_fixed: &SHand,
     slccard_as_played: &[SCard],
     otpln_branching_factor: Option<(usize, usize)>,
+    ostr_itahand: Option<&str>,
 ) -> Result<(), Error> {
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
     let rules = crate::rules::parser::parse_rule_description_simple(str_rules_with_epi)?;
@@ -28,7 +29,6 @@ pub fn suggest_card(
         &stichseq,
         &hand_fixed,
     );
-    let n_suggest_card_samples = 50; // TODO? make customizable
     let epi_fixed = determinebestcard.epi_fixed;
     let eremainingcards = debug_verify!(ERemainingCards::checked_from_usize(remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] - 1)).unwrap();
     let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
@@ -49,13 +49,27 @@ pub fn suggest_card(
                 /*opath_out_dir*/None, // TODO? make customizable
             )
         }}}
+        enum VChooseItAhand {
+            All,
+            Sample(usize),
+        };
+        use VChooseItAhand::*;
+        let oiteratehands = if_then_some!(let Some(str_itahand)=ostr_itahand,
+            if "all"==str_itahand.to_lowercase() {
+                All
+            } else {
+                Sample(str_itahand.parse()?)
+            }
+        );
         use ERemainingCards::*;
         cartesian_match!(
             forward,
-            match (eremainingcards) {
-                _1|_2|_3|_4 => (all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)),
-                _5|_6|_7|_8 => (forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
-                    .take(n_suggest_card_samples)),
+            match ((oiteratehands, eremainingcards)) {
+                (Some(All), _)|(None, _1)|(None, _2)|(None, _3)|(None, _4) => (all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)),
+                (Some(Sample(n_samples)), _) => (forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
+                    .take(n_samples)),
+                (None, _5)|(None, _6)|(None, _7)|(None, _8) => (forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
+                    .take(/*n_suggest_card_samples*/50)),
             },
             match ((otpln_branching_factor, eremainingcards)) {
                 (Some((n_lo, n_hi)), _) => (&branching_factor(move |_stichseq| {
