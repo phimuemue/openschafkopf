@@ -11,13 +11,12 @@ pub fn suggest_card(
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
     let rules = crate::rules::parser::parse_rule_description_simple(str_rules_with_epi)?;
     let rules = rules.as_ref();
-    let ekurzlang = EKurzLang::checked_from_cards_per_player(
-        /*n_stichs_complete*/slccard_as_played.len() / EPlayerIndex::SIZE
-            + hand_fixed.cards().len()
-    )
-        .ok_or_else(|| format_err!("Cannot determine ekurzlang from {} and {:?}.", hand_fixed, slccard_as_played))?;
     let stichseq = SStichSequence::new_from_cards(
-        ekurzlang,
+        /*ekurzlang*/EKurzLang::checked_from_cards_per_player(
+            /*n_stichs_complete*/slccard_as_played.len() / EPlayerIndex::SIZE
+                + hand_fixed.cards().len()
+        )
+            .ok_or_else(|| format_err!("Cannot determine ekurzlang from {} and {:?}.", hand_fixed, slccard_as_played))?,
         slccard_as_played.iter().copied(),
         rules
     );
