@@ -1,4 +1,4 @@
-use crate::ai::suspicion::*;
+use crate::ai::{*, handiterators::*, suspicion::*};
 use crate::game::SStichSequence;
 use crate::primitives::*;
 use crate::util::*;
@@ -21,18 +21,36 @@ pub fn suggest_card(
         slccard_as_played.iter().copied(),
         rules
     );
-    let determinebestcardresult = crate::ai::SAi::suggest_card_simulating( // should not distinguish for SingleAllowed (we want to know expected payout anyway)
-        &crate::ai::SDetermineBestCard::new(
-            rules,
-            &stichseq,
-            &hand_fixed,
-        ),
-        /*n_suggest_card_samples*/50, // TODO? make customizable
-        /*n_suggest_card_branches*/2, // TODO? make customizable
-        /*tpln_stoss_doubling*/(0, 0), // TODO
-        /*n_stock*/0, // TODO
-        /*opath_out_dir*/None,
+    let determinebestcard =  SDetermineBestCard::new(
+        rules,
+        &stichseq,
+        &hand_fixed,
     );
+    let n_suggest_card_samples = 50; // TODO? make customizable
+    let n_suggest_card_branches = 2; // TODO? make customizable
+    let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
+        macro_rules! forward_to_determine_best_card{($itahand: expr) => { // TODORUST generic closures
+            SAi::suggest_card_internal(
+                &determinebestcard,
+                $itahand,
+                n_suggest_card_branches,
+                /*tpln_stoss_doubling*/(0, 0), // TODO? make customizable
+                /*n_stock*/0, // TODO? make customizable
+                /*opath_out_dir*/None, // TODO? make customizable
+            )
+        }}
+        let epi_fixed = determinebestcard.epi_fixed;
+        match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] {
+            1|2|3|4 => forward_to_determine_best_card!(
+                all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
+            ),
+            5|6|7|8 => forward_to_determine_best_card!(
+                forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
+                    .take(n_suggest_card_samples)
+            ),
+            n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
+        }
+    };
     // TODO interface should probably output payout interval per card
     let epi = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
     let mut veccardminmax = determinebestcardresult.cards_and_ts().collect::<Vec<_>>();

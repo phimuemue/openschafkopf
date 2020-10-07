@@ -47,10 +47,10 @@ pub struct SAi {
 }
 
 pub struct SDetermineBestCard<'game> {
-    rules: &'game dyn TRules,
-    stichseq: &'game SStichSequence,
+    pub rules: &'game dyn TRules,
+    pub stichseq: &'game SStichSequence,
     pub epi_fixed: EPlayerIndex,
-    hand_fixed: &'game SHand,
+    pub hand_fixed: &'game SHand,
     pub veccard_allowed: SHandVector,
 }
 impl<'game> SDetermineBestCard<'game> {
