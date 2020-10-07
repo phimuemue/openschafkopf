@@ -174,37 +174,6 @@ impl SAi {
         }
     }
 
-    pub fn suggest_card_simulating(
-        determinebestcard: &SDetermineBestCard,
-        n_suggest_card_samples: usize,
-        n_suggest_card_branches: usize,
-        tpln_stoss_doubling: (usize, usize),
-        n_stock: isize,
-        opath_out_dir: Option<&std::path::Path>,
-    ) -> SDetermineBestCardResult<SMinMax> { // we are interested in payout => single-card-optimization useless
-        macro_rules! forward_to_determine_best_card{($itahand: expr) => { // TODORUST generic closures
-            Self::suggest_card_internal(
-                determinebestcard,
-                $itahand,
-                n_suggest_card_branches,
-                tpln_stoss_doubling,
-                n_stock,
-                opath_out_dir,
-            )
-        }}
-        let epi_fixed = determinebestcard.epi_fixed;
-        match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] {
-            1|2|3|4 => forward_to_determine_best_card!(
-                all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
-            ),
-            5|6|7|8 => forward_to_determine_best_card!(
-                forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
-                    .take(n_suggest_card_samples)
-            ),
-            n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
-        }
-    }
-
     pub fn suggest_card(&self, game: &SGame, opath_out_dir: Option<&std::path::Path>) -> SCard {
         let determinebestcard = SDetermineBestCard::new_from_game(game);
         if let Some(card)=determinebestcard.single_allowed_card() {
@@ -214,10 +183,10 @@ impl SAi {
         {
             card
         } else {
-            macro_rules! suggest_via{($fn_suggest: ident, $arg: expr,) => {{ // TODORUST generic closures
-                *debug_verify!(Self::$fn_suggest(
+            macro_rules! suggest_via{($itahand: expr,) => {{ // TODORUST generic closures
+                *debug_verify!(Self::suggest_card_internal(
                     &determinebestcard,
-                    $arg,
+                    $itahand,
                     self.n_suggest_card_branches,
                     /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                     game.n_stock,
@@ -226,14 +195,22 @@ impl SAi {
             }}}
             match self.aiparams {
                 VAIParams::Cheating => {
-                    suggest_via!(suggest_card_internal,
+                    suggest_via!(
                         /*itahand*/std::iter::once(game.ahand.clone()),
                     )
                 },
                 VAIParams::Simulating{n_suggest_card_samples} => {
-                    suggest_via!(suggest_card_simulating, // should be fast, only SCard needed
-                        n_suggest_card_samples,
-                    )
+                    let epi_fixed = determinebestcard.epi_fixed;
+                    match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] {
+                        1|2|3|4 => suggest_via!(
+                            all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules),
+                        ),
+                        5|6|7|8 => suggest_via!(
+                            forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
+                                .take(n_suggest_card_samples),
+                        ),
+                        n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
+                    }
                 },
             }
         }
