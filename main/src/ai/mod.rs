@@ -123,7 +123,7 @@ impl SAi {
             .sum::<isize>().as_num::<f64>() / (self.n_rank_rules_samples.as_num::<f64>())
     }
 
-    pub fn suggest_card_internal(
+    fn suggest_card_internal(
         determinebestcard: &SDetermineBestCard,
         itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
         n_suggest_card_branches: usize,
