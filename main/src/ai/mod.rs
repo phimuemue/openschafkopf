@@ -143,9 +143,6 @@ impl SAi {
                         /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                         game.n_stock,
                     ),
-                    |minmax_acc, minmax| {
-                        minmax_acc.assign_min_by_key(&minmax, determinebestcard.epi_fixed);
-                    },
                     opath_out_dir.map(|path_out_dir| {
                         debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
                         crate::game_analysis::generate_html_auxiliary_files(path_out_dir).unwrap();
@@ -252,14 +249,12 @@ impl<T> SDetermineBestCardResult<T> {
 }
 
 pub fn determine_best_card<
-    ForEachSnapshot: TForEachSnapshot + Sync,
-    FnCombineExploredOutput: Fn(&mut ForEachSnapshot::Output, ForEachSnapshot::Output) + Sync,
+    ForEachSnapshot: TForEachSnapshot<Output=SMinMax> + Sync,
 >(
     determinebestcard: &SDetermineBestCard,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &ForEachSnapshot,
-    fn_combine_explored_output: FnCombineExploredOutput,
     opath_out_dir: Option<std::path::PathBuf>
 ) -> SDetermineBestCardResult<ForEachSnapshot::Output>
     where
@@ -300,7 +295,7 @@ pub fn determine_best_card<
             let ooutput = &mut debug_verify!(mapcardooutput.lock()).unwrap()[card];
             match ooutput {
                 None => *ooutput = Some(output),
-                Some(ref mut output_return) => fn_combine_explored_output(output_return, output),
+                Some(ref mut output_return) => output_return.assign_min_by_key(&output, determinebestcard.epi_fixed),
             }
         });
     let mapcardooutput = debug_verify!(
@@ -471,9 +466,6 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             std::iter::once(ahand),
             /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout::new_from_game(&game),
-            |minmax_acc, minmax| {
-                minmax_acc.assign_min_by_key(&minmax, determinebestcard.epi_fixed);
-            },
             /*opath_out_dir*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
         );
         for card in [H7, H8, H9].iter() {

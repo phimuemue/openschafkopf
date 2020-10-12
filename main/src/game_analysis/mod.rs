@@ -132,9 +132,6 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
                             $itahand,
                             &|_,_| (/*no filtering*/),
                             &SMinReachablePayout::new_from_game(game),
-                            |minmax_acc, minmax| {
-                                minmax_acc.assign_min_by_key(&minmax, determinebestcard.epi_fixed);
-                            },
                             /*ostr_file_out*/None,
                         );
                         let (veccard, minmax) = determinebestcardresult.best_card(|minmax| minmax.values_for(determinebestcard.epi_fixed)[EMinMaxStrategy::OthersMin]);
