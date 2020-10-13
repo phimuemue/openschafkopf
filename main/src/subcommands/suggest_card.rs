@@ -142,6 +142,7 @@ pub fn suggest_card(
             } else {
                 ColorChoice::Never
             });
+            #[allow(clippy::float_cmp)]
             if f_min!=f_max {
                 let mut set_color = |color| {
                     unwrap!(stdout.set_color(ColorSpec::new().set_fg(Some(color))));
