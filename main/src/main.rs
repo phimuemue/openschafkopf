@@ -126,7 +126,7 @@ fn main() -> Result<(), Error> {
             ).ok_or_else(||format_err!("Could not parse played cards"))?,
             /*otpln_branching_factor*/ if_then_some!(let Some(str_tpln_branching) = subcommand_matches.value_of("branching"), {
                 let (str_lo, str_hi) = str_tpln_branching
-                    .split(",")
+                    .split(',')
                     .collect_tuple()
                     .ok_or_else(|| format_err!("Could not parse branching"))?;
                 (str_lo.trim().parse()?, str_hi.trim().parse()?)

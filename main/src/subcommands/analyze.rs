@@ -144,7 +144,7 @@ fn analyze_plain<'str_lines>(str_lines: &'str_lines str) -> impl Iterator<Item=R
         .lines()
         .map(|str_plain| {
             let (str_rules, str_cards) = str_plain
-                .split(":")
+                .split(':')
                 .collect_tuple()
                 .ok_or_else(|| format_err!("':' does not separate rules from stichs."))?;
             let str_cards = str_cards.trim();
