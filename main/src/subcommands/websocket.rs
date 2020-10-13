@@ -209,7 +209,7 @@ impl SPlayers {
                 .opeer
                 .as_ref()
                 .map(|peer| peer.str_name.clone())
-                .unwrap_or("<BOT>".to_string())
+                .unwrap_or_else(||"<BOT>".to_string())
         );
         let communicate = |oepi: Option<EPlayerIndex>, veccard: Vec<SCard>, msg, peer: &mut SPeer| {
             let i_epi_relative = oepi.unwrap_or(EPlayerIndex::EPI0).to_usize();
