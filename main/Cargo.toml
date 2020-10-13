@@ -10,6 +10,8 @@ image = "0"
 as_num = "0"
 
 [dependencies]
+atty = "0"
+termcolor = "1"
 combine = "3"
 rand = "0"
 ncurses = "5"

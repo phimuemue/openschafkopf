@@ -2,6 +2,7 @@ use crate::ai::{*, handiterators::*, suspicion::*};
 use crate::game::SStichSequence;
 use crate::primitives::*;
 use crate::util::*;
+use itertools::*;
 
 plain_enum_mod!(moderemainingcards, ERemainingCards {_1, _2, _3, _4, _5, _6, _7, _8,});
 
@@ -97,16 +98,64 @@ pub fn suggest_card(
     let mut veccardminmax = determinebestcardresult.cards_and_ts().collect::<Vec<_>>();
     veccardminmax.sort_unstable_by_key(|&(_card, minmax)| minmax);
     veccardminmax.reverse(); // descending
+    // crude formatting: treat all numbers as f32, and convert structured input to a plain number table
+    const N_COLUMNS : usize = EMinMaxStrategy::SIZE*3;
+    let mut vecaf = Vec::new();
+    let mut veclinestrings : Vec<(/*card*/String, /*numbers*/[String; N_COLUMNS])> = Vec::new();
+    let mut an_width = [0; N_COLUMNS];
+    let mut af_min = [f32::MAX; N_COLUMNS];
+    let mut af_max = [f32::MIN; N_COLUMNS];
     for (card, minmax) in veccardminmax {
-        println!("{}: {} {} {} / {} {} {}",
-            card,
-            minmax.0[EMinMaxStrategy::OthersMin].min(),
+        let af = [
+            minmax.0[EMinMaxStrategy::OthersMin].min().as_num::<f32>(),
             minmax.0[EMinMaxStrategy::OthersMin].avg(),
-            minmax.0[EMinMaxStrategy::OthersMin].max(),
-            minmax.0[EMinMaxStrategy::MaxPerEpi].min(),
+            minmax.0[EMinMaxStrategy::OthersMin].max().as_num::<f32>(),
+            minmax.0[EMinMaxStrategy::MaxPerEpi].min().as_num::<f32>(),
             minmax.0[EMinMaxStrategy::MaxPerEpi].avg(),
-            minmax.0[EMinMaxStrategy::MaxPerEpi].max(),
-        );
+            minmax.0[EMinMaxStrategy::MaxPerEpi].max().as_num::<f32>(),
+        ];
+        let astr = [
+            format!("{} ", af[0]),
+            format!("{:.2} ", af[1]),
+            format!("{} ", af[2]),
+            format!("{} ", af[3]),
+            format!("{:.2} ", af[4]),
+            format!("{}", af[5]),
+        ];
+        for (n_width, str) in an_width.iter_mut().zip(astr.iter()) {
+            *n_width = (*n_width).max(str.len());
+        }
+        for (f_min, f_max, f) in izip!(af_min.iter_mut(), af_max.iter_mut(), af.iter()) {
+            // TODO? assign_min/assign_max
+            *f_min = f_min.min(*f);
+            *f_max = f_max.max(*f);
+        }
+        veclinestrings.push((format!("{}", card), astr));
+        vecaf.push(af);
+    }
+    for ((card, astr), af) in veclinestrings.iter().zip(vecaf) {
+        print!("{}: ", card); // all cards have same width
+        for (str_num, f, n_width, f_min, f_max) in izip!(astr.iter(), af.iter(), an_width.iter(), af_min.iter(), af_max.iter()) {
+            use termcolor::*;
+            let mut stdout = StandardStream::stdout(if atty::is(atty::Stream::Stdout) {
+                ColorChoice::Auto
+            } else {
+                ColorChoice::Never
+            });
+            if f_min!=f_max {
+                let mut set_color = |color| {
+                    debug_verify!(stdout.set_color(ColorSpec::new().set_fg(Some(color)))).unwrap();
+                };
+                if f==f_min {
+                    set_color(Color::Red);
+                } else if f==f_max {
+                    set_color(Color::Green);
+                }
+            }
+            print!("{:>width$}", str_num, width=n_width);
+            debug_verify!(stdout.reset()).unwrap();
+        }
+        println!("");
     }
     Ok(())
 }
