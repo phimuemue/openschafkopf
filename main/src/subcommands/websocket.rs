@@ -520,7 +520,7 @@ impl STable {
                                             gamepreparations.fullhand(epi_announce_game),
                                             VGamePhaseAction::GamePreparations,
                                         );
-                                        let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1.clone();
+                                        let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1;
                                         ask_with_timeout(
                                             otimeoutcmd,
                                             epi_announce_game,
@@ -587,7 +587,7 @@ impl STable {
                                             determinerules.fullhand(epi_determine),
                                             VGamePhaseAction::DetermineRules,
                                         );
-                                        let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1.clone();
+                                        let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1;
                                         ask_with_timeout(
                                             otimeoutcmd,
                                             epi_determine,
