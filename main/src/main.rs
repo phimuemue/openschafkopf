@@ -1,4 +1,4 @@
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::block_in_if_condition_stmt))]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::blocks_in_if_conditions))]
 #![deny(bare_trait_objects)]
 
 #[macro_use]
