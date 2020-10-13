@@ -273,17 +273,6 @@ impl SMinMax {
             );
         }
     }
-
-    pub fn assign_min_by_key(&mut self, minmax: &SMinMax, epi: EPlayerIndex) {
-        self.assign_by_key_ordering(minmax, (epi, Ordering::Less), (epi, Ordering::Less))
-    }
-    fn assign_max_by_key(&mut self, minmax: &SMinMax, epi: EPlayerIndex) {
-        self.assign_by_key_ordering(minmax, (epi, Ordering::Greater), (epi, Ordering::Greater))
-    }
-
-    pub fn values_for(&self, epi: EPlayerIndex) -> EnumMap<EMinMaxStrategy, isize> {
-        self.aan_payout.map(|an_payout| an_payout[epi])
-    }
 }
 
 impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
@@ -304,7 +293,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     ) -> Self::Output {
         let itminmax = ittplcardoutput.map(|(_card, minmax)| minmax);
         debug_verify!(if self.epi==epi_card {
-            itminmax.fold1(mutate_return!(|minmax_acc, minmax| minmax_acc.assign_max_by_key(&minmax, self.epi)))
+            itminmax.fold1(mutate_return!(|minmax_acc, minmax| minmax_acc.assign_by_key_ordering(&minmax, (self.epi, Ordering::Greater), (self.epi, Ordering::Greater))))
         } else {
             // other players may play inconveniently for epi_stich
             itminmax.fold1(mutate_return!(|minmax_acc, minmax| minmax_acc.assign_by_key_ordering(&minmax, (self.epi, Ordering::Less), (epi_card, Ordering::Greater))))

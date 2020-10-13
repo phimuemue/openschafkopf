@@ -4,6 +4,14 @@ pub fn assign_better<T>(dst: &mut T, src: T, fn_better: impl FnOnce(&T, &T) -> b
     }
 }
 
+pub fn assign_min<T: Ord>(dst: &mut T, src: T) {
+    assign_better(dst, src, |lhs, rhs| lhs<rhs)
+}
+
+pub fn assign_max<T: Ord>(dst: &mut T, src: T) {
+    assign_better(dst, src, |lhs, rhs| lhs>rhs)
+}
+
 pub fn assign_by_key_ordering<T, K: Ord, FnKey>(
     dst: &mut T,
     src: T,

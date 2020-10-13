@@ -134,14 +134,14 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
                             &SMinReachablePayout::new_from_game(game),
                             /*ostr_file_out*/None,
                         );
-                        let (veccard, minmax) = determinebestcardresult.best_card(|minmax| minmax.values_for(determinebestcard.epi_fixed)[EMinMaxStrategy::OthersMin]);
+                        let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value();
                         if 
                             !veccard.contains(&card) // TODO can we improve this?
-                            && an_payout[epi]<minmax.aan_payout[EMinMaxStrategy::OthersMin][epi]
+                            && an_payout[epi]<minmax.0[EMinMaxStrategy::OthersMin].min()
                         {
                             Some(SAnalysisCardAndPayout{
                                 veccard,
-                                n_payout: minmax.aan_payout[EMinMaxStrategy::MaxPerEpi][epi]
+                                n_payout: minmax.0[EMinMaxStrategy::MaxPerEpi].min(),
                             })
                         } else {
                             // The decisive mistake must occur in subsequent stichs.

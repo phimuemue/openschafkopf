@@ -94,15 +94,18 @@ pub fn suggest_card(
         )
     };
     // TODO interface should probably output payout interval per card
-    let epi = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
     let mut veccardminmax = determinebestcardresult.cards_and_ts().collect::<Vec<_>>();
-    veccardminmax.sort_unstable_by_key(|&(_card, minmax)| minmax.values_for(epi).into_raw());
+    veccardminmax.sort_unstable_by_key(|&(_card, minmax)| minmax);
     veccardminmax.reverse(); // descending
     for (card, minmax) in veccardminmax {
-        println!("{}: {}/{}",
+        println!("{}: {} {} {} / {} {} {}",
             card,
-            minmax.aan_payout[EMinMaxStrategy::OthersMin][epi],
-            minmax.aan_payout[EMinMaxStrategy::MaxPerEpi][epi],
+            minmax.0[EMinMaxStrategy::OthersMin].min(),
+            minmax.0[EMinMaxStrategy::OthersMin].avg(),
+            minmax.0[EMinMaxStrategy::OthersMin].max(),
+            minmax.0[EMinMaxStrategy::MaxPerEpi].min(),
+            minmax.0[EMinMaxStrategy::MaxPerEpi].avg(),
+            minmax.0[EMinMaxStrategy::MaxPerEpi].max(),
         );
     }
     Ok(())

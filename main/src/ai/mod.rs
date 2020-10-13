@@ -174,7 +174,7 @@ impl SAi {
                             $itahand,
                         ),
                         n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
-                    }.best_card(|minmax| minmax.values_for(determinebestcard.epi_fixed).into_raw()).0.first())
+                    }.cards_with_maximum_value().0.first())
                 .unwrap()
             }}}
             match self.aiparams {
@@ -239,12 +239,87 @@ impl<T> SDetermineBestCardResult<T> {
         self.veccard_allowed.iter()
             .map(move |card| (*card, debug_verify!(self.mapcardt[*card].as_ref()).unwrap()))
     }
-    pub fn best_card<K: Ord>(&self, fn_key: impl Fn(&T)->K) -> (Vec<SCard>, &T) where T: std::fmt::Debug {
+    pub fn cards_with_maximum_value(&self) -> (Vec<SCard>, &T) where T: std::fmt::Debug + Ord {
         let veccard = self.veccard_allowed.iter().copied()
-            .max_set_by_key(|card| fn_key(debug_verify!(self.mapcardt[*card].as_ref()).unwrap()));
+            .max_set_by_key(|card| debug_verify!(self.mapcardt[*card].as_ref()).unwrap());
         assert!(!veccard.is_empty());
         let t = debug_verify!(self.mapcardt[veccard[0]].as_ref()).unwrap();
         (veccard, t)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct SPayoutStats {
+    n_min: isize,
+    n_sum: isize,
+    n_max: isize,
+    n_count: usize,
+}
+
+impl SPayoutStats {
+    fn new_1(n_payout: isize) -> Self {
+        Self {
+            n_min: n_payout,
+            n_max: n_payout,
+            n_sum: n_payout,
+            n_count: 1,
+        }
+    }
+
+    fn accumulate(&mut self, paystats: &Self) {
+        assign_min(&mut self.n_min, paystats.n_min);
+        assign_max(&mut self.n_max, paystats.n_max);
+        self.n_sum += paystats.n_sum;
+        self.n_count += paystats.n_count;
+    }
+
+    pub fn min(&self) -> isize {
+        self.n_min
+    }
+    pub fn max(&self) -> isize {
+        self.n_max
+    }
+    pub fn avg(&self) -> f32 {
+        self.n_sum.as_num::<f32>() / self.n_count.as_num::<f32>()
+    }
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub struct SPayoutStatsPerStrategy(pub EnumMap<EMinMaxStrategy, SPayoutStats>);
+
+impl SPayoutStatsPerStrategy {
+    fn accumulate(&mut self, paystats: &Self) {
+        for eminmaxstrat in EMinMaxStrategy::values() {
+            self.0[eminmaxstrat].accumulate(&paystats.0[eminmaxstrat]);
+        }
+    }
+}
+
+impl std::cmp::PartialOrd for SPayoutStatsPerStrategy {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl std::cmp::Ord for SPayoutStatsPerStrategy {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        use std::cmp::Ordering::*;
+        use EMinMaxStrategy::*;
+        let n_min_self = self.0[OthersMin].n_min;
+        let n_min_other = other.0[OthersMin].n_min;
+        match (n_min_self.cmp(&0), n_min_other.cmp(&0)) {
+            (Greater, Greater) => match n_min_self.cmp(&n_min_other) {
+                Equal => debug_verify!(self.0[MaxPerEpi].avg().partial_cmp(&other.0[MaxPerEpi].avg())).unwrap(),
+                Greater => Greater,
+                Less => Less,
+            },
+            (Greater, _) => Greater,
+            (_, Greater) => Less,
+            (Equal, Less) => Greater,
+            (Less, Equal) => Less,
+            (Less, Less)|(Equal, Equal) => {
+                debug_verify!(self.0[MaxPerEpi].avg().partial_cmp(&other.0[MaxPerEpi].avg())).unwrap()
+            },
+        }
     }
 }
 
@@ -256,7 +331,7 @@ pub fn determine_best_card<
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &ForEachSnapshot,
     opath_out_dir: Option<std::path::PathBuf>
-) -> SDetermineBestCardResult<ForEachSnapshot::Output>
+) -> SDetermineBestCardResult<SPayoutStatsPerStrategy>
     where
         ForEachSnapshot::Output: std::fmt::Debug + Send,
 {
@@ -293,9 +368,14 @@ pub fn determine_best_card<
                 }).map(|file_output| (file_output, determinebestcard.epi_fixed)),
             );
             let ooutput = &mut debug_verify!(mapcardooutput.lock()).unwrap()[card];
+            let payoutstats = SPayoutStatsPerStrategy(
+                EMinMaxStrategy::map_from_fn(|eminmaxstrat|
+                    SPayoutStats::new_1(output.aan_payout[eminmaxstrat][determinebestcard.epi_fixed])
+               )
+            );
             match ooutput {
-                None => *ooutput = Some(output),
-                Some(ref mut output_return) => output_return.assign_min_by_key(&output, determinebestcard.epi_fixed),
+                None => *ooutput = Some(payoutstats),
+                Some(ref mut output_return) => output_return.accumulate(&payoutstats),
             }
         });
     let mapcardooutput = debug_verify!(
