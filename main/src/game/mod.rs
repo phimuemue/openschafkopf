@@ -568,7 +568,7 @@ impl TGamePhase for SGameResult { // "absorbing state"
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         if_then_some!(self.mapepib_confirmed.iter().any(|b_confirmed| !b_confirmed),
-            self.mapepib_confirmed.clone()
+            self.mapepib_confirmed.explicit_clone()
         )
     }
     fn finish_success(self) -> Self::Finish {
