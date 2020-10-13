@@ -245,8 +245,8 @@ impl SPlayers {
             let card_in_stich = |stich: &SStich, epi| {
                 stich.get(playerindex_client_to_server(epi)).map(SCard::to_string)
             };
-            debug_verify!(peer.txmsg.unbounded_send(
-                debug_verify!(serde_json::to_string(&SSiteState::new(
+            unwrap!(peer.txmsg.unbounded_send(
+                unwrap!(serde_json::to_string(&SSiteState::new(
                     veccard.into_iter()
                         .map(|card| (card.to_string(), VGamePhaseAction::Game(VGameAction::Zugeben(card))))
                         .collect::<Vec<_>>(),
@@ -267,7 +267,7 @@ impl SPlayers {
                                         .last()
                                         .map(|stich_prev| SDisplayedStichPrev{
                                             mapepistr_card: EPlayerIndex
-                                                ::map_from_fn(|epi| debug_verify!(card_in_stich(stich_prev, epi)).unwrap())
+                                                ::map_from_fn(|epi| unwrap!(card_in_stich(stich_prev, epi)))
                                                 .into_raw()
                                         })
                                 }
@@ -284,8 +284,8 @@ impl SPlayers {
                         format!("{}", rules),
                     )),
                     oepi_timeout.map(playerindex_server_to_client),
-                ))).unwrap().into()
-            )).unwrap();
+                ))).into()
+            ));
         };
         for epi in EPlayerIndex::values() {
             let ref mut activepeer = self.mapepiopeer[epi];
@@ -520,7 +520,7 @@ impl STable {
                                             gamepreparations.fullhand(epi_announce_game),
                                             VGamePhaseAction::GamePreparations,
                                         );
-                                        let gamephaseaction_rules_default = debug_verify!(itgamephaseaction_rules.clone().next()).unwrap().1.clone();
+                                        let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1.clone();
                                         ask_with_timeout(
                                             otimeoutcmd,
                                             epi_announce_game,
@@ -587,7 +587,7 @@ impl STable {
                                             determinerules.fullhand(epi_determine),
                                             VGamePhaseAction::DetermineRules,
                                         );
-                                        let gamephaseaction_rules_default = debug_verify!(itgamephaseaction_rules.clone().next()).unwrap().1.clone();
+                                        let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1.clone();
                                         ask_with_timeout(
                                             otimeoutcmd,
                                             epi_determine,
@@ -626,10 +626,10 @@ impl STable {
                                             ostrgamephaseaction.into_iter(),
                                             self_mutex.clone(),
                                             VGamePhaseAction::Game(VGameAction::Zugeben(
-                                                *debug_verify!(game.rules.all_allowed_cards(
+                                                *unwrap!(game.rules.all_allowed_cards(
                                                     &game.stichseq,
                                                     &game.ahand[epi_card],
-                                                ).choose(&mut rand::thread_rng())).unwrap()
+                                                ).choose(&mut rand::thread_rng()))
                                             )),
                                         )
                                     } else if let Some(strgamephaseaction) = ostrgamephaseaction {
@@ -708,6 +708,7 @@ struct STimerFuture {
     epi: EPlayerIndex,
 }
 
+#[derive(Debug)]
 struct STimerFutureState {
     b_completed: bool,
     owaker: Option<Waker>,
@@ -716,10 +717,10 @@ struct STimerFutureState {
 impl Future for STimerFuture {
     type Output = ();
     fn poll(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let mut state = self.state.lock().unwrap();
+        let mut state = unwrap!(self.state.lock());
         if state.b_completed {
             let table_mutex = self.table.clone();
-            let mut table = debug_verify!(self.table.lock()).unwrap();
+            let mut table = unwrap!(self.table.lock());
             if let Some(timeoutcmd) = table.players.mapepiopeer[self.epi].otimeoutcmd.take() {
                 table.on_incoming_message(table_mutex, Some(self.epi), Some(timeoutcmd.gamephaseaction));
             }
@@ -740,7 +741,7 @@ impl STimerFuture {
         let thread_shared_state = state.clone();
         std::thread::spawn(move || {
             std::thread::sleep(std::time::Duration::new(n_secs, /*nanos*/0));
-            let mut state = thread_shared_state.lock().unwrap();
+            let mut state = unwrap!(thread_shared_state.lock());
             state.b_completed = true;
             if let Some(waker) = state.owaker.take() {
                 waker.wake()
@@ -752,12 +753,12 @@ impl STimerFuture {
 
 async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sockaddr: SocketAddr) {
     println!("Incoming TCP connection from: {}", sockaddr);
-    let wsstream = debug_verify!(async_tungstenite::accept_async(tcpstream).await).unwrap();
+    let wsstream = unwrap!(async_tungstenite::accept_async(tcpstream).await);
     println!("WebSocket connection established: {}", sockaddr);
     // Insert the write part of this peer to the peer map.
     let (txmsg, rxmsg) = unbounded();
     let table_mutex = table.clone();
-    debug_verify!(table.lock()).unwrap().insert(table_mutex.clone(), SPeer{
+    unwrap!(table.lock()).insert(table_mutex.clone(), SPeer{
         sockaddr,
         txmsg,
         n_money: 0,
@@ -771,8 +772,8 @@ async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sock
             future::ready(!msg.is_close())
         })
         .try_for_each(|msg| {
-            let str_msg = debug_verify!(msg.to_text()).unwrap();
-            let mut table = debug_verify!(table.lock()).unwrap();
+            let str_msg = unwrap!(msg.to_text());
+            let mut table = unwrap!(table.lock());
             let oepi = EPlayerIndex::values()
                 .find(|epi| table.players.mapepiopeer[*epi].opeer.as_ref().map(|peer| peer.sockaddr)==Some(sockaddr));
             println!(
@@ -801,14 +802,14 @@ async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sock
     pin_mut!(broadcast_incoming, receive_from_others); // TODO Is this really needed?
     future::select(broadcast_incoming, receive_from_others).await;
     println!("{} disconnected", &sockaddr);
-    debug_verify!(table.lock()).unwrap().remove(&sockaddr);
+    unwrap!(table.lock()).remove(&sockaddr);
 }
 
 async fn internal_run(ruleset: SRuleSet) -> Result<(), Error> {
     let str_addr = "127.0.0.1:8080";
     let table = Arc::new(Mutex::new(STable::new(ruleset)));
     // Create the event loop and TCP listener we'll accept connections on.
-    let listener = debug_verify!(TcpListener::bind(&str_addr).await).unwrap();
+    let listener = unwrap!(TcpListener::bind(&str_addr).await);
     println!("Listening on: {}", str_addr);
     // Let's spawn the handling of each connection in a separate task.
     while let Ok((tcpstream, sockaddr)) = listener.accept().await {

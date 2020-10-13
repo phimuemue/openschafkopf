@@ -58,14 +58,14 @@ pub fn analyze_game_internal(
         analyzeparams.n_stock,
     );
     for n_epi_stoss in analyzeparams.vecn_stoss.iter() {
-        debug_verify!(game.stoss(/*TODO could this be EPlayerIndex?*/debug_verify!(EPlayerIndex::checked_from_usize(*n_epi_stoss)).unwrap())).unwrap();
+        unwrap!(game.stoss(/*TODO could this be EPlayerIndex?*/unwrap!(EPlayerIndex::checked_from_usize(*n_epi_stoss))));
     }
     for (i_stich, stich) in analyzeparams.vecstich.iter().enumerate() {
         assert_eq!(Some(stich.first_playerindex()), game.which_player_can_do_something().map(|gameaction| gameaction.0));
         for (epi, card) in stich.iter() {
             assert_eq!(Some(epi), game.which_player_can_do_something().map(|gameaction| gameaction.0));
             fn_before_zugeben(&game, i_stich, epi, *card);
-            debug_verify!(game.zugeben(*card, epi)).unwrap();
+            unwrap!(game.zugeben(*card, epi));
         }
     }
     for (i_stich, stich) in game.stichseq.visible_stichs().iter().enumerate() {
@@ -108,10 +108,10 @@ pub struct SGameAnalysis {
 pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnalyzeParams) -> SGameAnalysis {
     let instant_begin = Instant::now();
     let mut vecanalysisimpr = Vec::new();
-    let an_payout = debug_verify!(analyze_game_internal(
+    let an_payout = unwrap!(analyze_game_internal(
         analyzeparams.clone(),
         /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {}
-    ).finish()).unwrap().an_payout;
+    ).finish()).an_payout;
     let str_rules = format!("{}{}",
         analyzeparams.rules,
         if let Some(epi) = analyzeparams.rules.playerindex() {
@@ -187,7 +187,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
             str_description,
             str_link,
             &str_rules,
-            &debug_verify!(game.clone().finish()).unwrap().an_payout,
+            &unwrap!(game.clone().finish()).an_payout,
             &vecanalysisimpr,
         ),
         n_findings_cheating: vecanalysisimpr.len(),
@@ -353,9 +353,9 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                         ({chr_stopwatch} {str_duration_as_secs})
                     </td>
                 </tr>"#,
-                str_path = debug_verify!(
-                    debug_verify!(path.strip_prefix(path_analysis)).unwrap().to_str()
-                ).unwrap(),
+                str_path = unwrap!(
+                    unwrap!(path.strip_prefix(path_analysis)).to_str()
+                ),
                 str_rules = str_rules,
                 n_findings_simulating = gameanalysis.n_findings_simulating,
                 n_findings_cheating = gameanalysis.n_findings_cheating,

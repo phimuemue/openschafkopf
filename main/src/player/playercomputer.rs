@@ -52,7 +52,7 @@ impl TPlayer for SPlayerComputer {
         txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
     ) {
         // TODO: implement a more intelligent decision strategy
-        debug_verify!(txorules.send(debug_verify!(allowed_rules(vecrulegroup, hand)
+        unwrap!(txorules.send(unwrap!(allowed_rules(vecrulegroup, hand)
             .map(|orules| (
                 orules,
                 orules.map_or(
@@ -69,11 +69,9 @@ impl TPlayer for SPlayerComputer {
             .max_by(|&(_orules_lhs, f_payout_avg_lhs), &(_orules_rhs, f_payout_avg_rhs)| {
                 assert!(!f_payout_avg_lhs.is_nan());
                 assert!(!f_payout_avg_rhs.is_nan());
-                debug_verify!(f_payout_avg_lhs.partial_cmp(&f_payout_avg_rhs)).unwrap()
-            }))
-            .unwrap()
-            .0
-        )).unwrap();
+                unwrap!(f_payout_avg_lhs.partial_cmp(&f_payout_avg_rhs))
+            })
+        ).0));
     }
 
     fn ask_for_stoss(
@@ -108,11 +106,11 @@ impl TPlayer for SPlayerComputer {
             })
             .collect::<Vec<_>>();
         vecpairahandf_suspicion.sort_unstable_by(|&(ref _ahand_l, f_rank_l), &(ref _ahand_r, f_rank_r)|
-            debug_verify!(f_rank_r.partial_cmp(&f_rank_l)).unwrap()
+            unwrap!(f_rank_r.partial_cmp(&f_rank_l))
         );
         vecpairahandf_suspicion.truncate(n_samples_per_stoss);
         assert_eq!(n_samples_per_stoss, vecpairahandf_suspicion.len());
-        debug_verify!(txb.send(
+        unwrap!(txb.send(
             vecpairahandf_suspicion.into_iter()
                 .map(|(mut ahand, _f_rank_rules)| {
                     explore_snapshots(
@@ -132,7 +130,7 @@ impl TPlayer for SPlayerComputer {
                 .sum::<isize>().as_num::<f64>()
                 / n_samples_per_stoss.as_num::<f64>()
                 > 10f64
-        )).unwrap()
+        ))
     }
 
     fn name(&self) -> &str {

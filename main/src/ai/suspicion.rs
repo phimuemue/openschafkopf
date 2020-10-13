@@ -173,7 +173,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
         ForEachSnapshot::Output : fmt::Debug,
 {
     snapshotvisualizer.begin_snapshot(stichseq, &ahand);
-    let epi_current = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
+    let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
     let output = if debug_verify_eq!(
         ahand[epi_current].cards().is_empty(),
         ahand.iter().all(|hand| hand.cards().is_empty())
@@ -203,7 +203,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                         )}};
                         if stichseq.current_stich().is_empty() {
                             let unregisterstich = rulestatecache.register_stich(
-                                debug_verify!(stichseq.completed_stichs().last()).unwrap(),
+                                unwrap!(stichseq.completed_stichs().last()),
                                 stichseq.current_stich().first_playerindex(),
                             );
                             let output = next_step!();
@@ -235,7 +235,7 @@ impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
     pub fn new_from_game(game: &'rules SGame) -> Self {
         Self::new(
             game.rules.as_ref(),
-            debug_verify!(game.current_playable_stich().current_playerindex()).unwrap(),
+            unwrap!(game.current_playable_stich().current_playerindex()),
             /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
             game.n_stock,
         )
@@ -292,12 +292,12 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         ittplcardoutput: ItTplCardOutput,
     ) -> Self::Output {
         let itminmax = ittplcardoutput.map(|(_card, minmax)| minmax);
-        debug_verify!(if self.epi==epi_card {
+        unwrap!(if self.epi==epi_card {
             itminmax.fold1(mutate_return!(|minmax_acc, minmax| minmax_acc.assign_by_key_ordering(&minmax, (self.epi, Ordering::Greater), (self.epi, Ordering::Greater))))
         } else {
             // other players may play inconveniently for epi_stich
             itminmax.fold1(mutate_return!(|minmax_acc, minmax| minmax_acc.assign_by_key_ordering(&minmax, (self.epi, Ordering::Less), (epi_card, Ordering::Greater))))
-        }).unwrap()
+        })
     }
 }
 
@@ -327,8 +327,8 @@ impl TPruner for SPrunerViaHint {
                 )
         });
         if_then_some!(
-            mapepion_payout.iter().all(Option::is_some) && 0<debug_verify!(mapepion_payout[params.epi]).unwrap(),
-            SMinMax::new_final(mapepion_payout.map(|opayout| debug_verify!(opayout).unwrap()))
+            mapepion_payout.iter().all(Option::is_some) && 0<unwrap!(mapepion_payout[params.epi]),
+            SMinMax::new_final(mapepion_payout.map(|opayout| unwrap!(opayout)))
         )
     }
 }

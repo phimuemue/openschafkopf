@@ -15,7 +15,7 @@ fn main() -> Result<(), failure::Error> {
         while let Ok(str_openschafkopf_out) = recvstr.recv() {
             let str_json_out = json!({ "strOpenschafkopfOut": str_openschafkopf_out }).to_string();
             info!("Trying to send \"{}\"", str_json_out);
-            debug_verify!(std::io::stdout().write(
+            unwrap!(std::io::stdout().write(
                 &via_out_param(|abyte_buffer_msg_len: &mut [u8; 4]| {
                     byteorder::NativeEndian::write_u32(
                         abyte_buffer_msg_len,
@@ -23,10 +23,9 @@ fn main() -> Result<(), failure::Error> {
                     )
                 })
                 .0
-            ))
-            .unwrap();
-            debug_verify!(std::io::stdout().write(str_json_out.as_bytes())).unwrap();
-            debug_verify!(std::io::stdout().flush()).unwrap();
+            ));
+            unwrap!(std::io::stdout().write(str_json_out.as_bytes()));
+            unwrap!(std::io::stdout().flush());
         }
     });
     loop {
@@ -34,7 +33,7 @@ fn main() -> Result<(), failure::Error> {
             const N_BYTES_FOR_MSG_LEN: usize = 4;
             let (abyte_buffer_msg_len, n_bytes_read) =
                 via_out_param(|abyte_buffer_msg_len: &mut [u8; N_BYTES_FOR_MSG_LEN]| {
-                    debug_verify!(std::io::stdin().read(abyte_buffer_msg_len)).unwrap()
+                    unwrap!(std::io::stdin().read(abyte_buffer_msg_len))
                 });
             match n_bytes_read {
                 0 => {
@@ -43,15 +42,12 @@ fn main() -> Result<(), failure::Error> {
                 }
                 N_BYTES_FOR_MSG_LEN => {
                     let n_bytes_msg_len = byteorder::NativeEndian::read_u32(&abyte_buffer_msg_len);
-                    let str_json_in = debug_verify!(String::from_utf8(
-                        debug_verify!(via_out_param_init_result(
+                    let str_json_in = unwrap!(String::from_utf8(
+                        unwrap!(via_out_param_init_result(
                             (0..n_bytes_msg_len).map(|_| 0).collect::<Vec<_>>(),
                             |vecbyte| std::io::stdin().read(vecbyte)
-                        ))
-                        .unwrap()
-                        .0
-                    ))
-                    .unwrap();
+                        )).0
+                    ));
                     info!("Received \"{}\"", str_json_in);
                     str_json_in
                 }
@@ -60,7 +56,7 @@ fn main() -> Result<(), failure::Error> {
         };
         let communicate_error = |str_error_msg| {
             warn!("Communicating error: {}", str_error_msg);
-            debug_verify!(sendstr.send(
+            unwrap!(sendstr.send(
                 json!({
                     "Err": {
                         "strErrorMsg": str_error_msg,
@@ -68,13 +64,12 @@ fn main() -> Result<(), failure::Error> {
                     }
                 })
                 .to_string() /*TODO? better to avoid digression via json value?*/
-            ))
-            .unwrap();
+            ));
         };
         match serde_json::de::from_str::<serde_json::Value>(&str_json_in) {
             Ok(jsonval) => {
                 if let Some(mut cmd_openschafkopf) =
-                    debug_verify!(ocmd_openschafkopf.lock()).unwrap().take()
+                    unwrap!(ocmd_openschafkopf.lock()).take()
                 {
                     if let Ok(()) = cmd_openschafkopf.kill() {
                         communicate_error("Process did not finish early enough.");
@@ -115,12 +110,12 @@ fn main() -> Result<(), failure::Error> {
                 let sendstr = sendstr.clone();
                 let mut cmd_openschafkopf = debug_verify!(
                     std::process::Command::new({
-                        let path_self = debug_verify!(std::env::current_exe()).unwrap();
-                        assert!(!debug_verify!(path_self.symlink_metadata()).unwrap() // "Queries the metadata about a file without following symlinks" (https://doc.rust-lang.org/std/path/struct.PathBuf.html#method.symlink_metadata)
+                        let path_self = unwrap!(std::env::current_exe());
+                        assert!(!unwrap!(path_self.symlink_metadata()) // "Queries the metadata about a file without following symlinks" (https://doc.rust-lang.org/std/path/struct.PathBuf.html#method.symlink_metadata)
                             .file_type()
                             .is_symlink()
                         );
-                        debug_verify!(path_self.parent()).unwrap().join("openschafkopf")
+                        unwrap!(path_self.parent()).join("openschafkopf")
                     })
                         .args(&[
                             "suggest-card".to_owned(),
@@ -159,16 +154,16 @@ fn main() -> Result<(), failure::Error> {
                         .stdout(std::process::Stdio::piped())
                         .spawn()
                 ).expect("Could not spawn process");
-                let stdout = debug_verify!(cmd_openschafkopf.stdout.take()).unwrap();
-                *debug_verify!(ocmd_openschafkopf.lock()).unwrap() = Some(cmd_openschafkopf);
+                let stdout = unwrap!(cmd_openschafkopf.stdout.take());
+                *unwrap!(ocmd_openschafkopf.lock()) = Some(cmd_openschafkopf);
                 std::thread::spawn(move || {
                     if let Ok((str_openschafkopf_out, _n_bytes)) =
                         via_out_param_result(|str_openschafkopf_out| {
                             std::io::BufReader::new(stdout).read_to_string(str_openschafkopf_out)
                         })
                     {
-                        debug_verify!(sendstr.send(str_openschafkopf_out)).unwrap();
-                        debug_verify!(ocmd_openschafkopf.lock()).unwrap().take();
+                        unwrap!(sendstr.send(str_openschafkopf_out));
+                        unwrap!(ocmd_openschafkopf.lock()).take();
                     }
                 });
             }

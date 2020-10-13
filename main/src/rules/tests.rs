@@ -28,7 +28,7 @@ fn internal_test_rules(
         },
         /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
     );
-    let an_payout_check = debug_verify!(game.finish()).unwrap().an_payout;
+    let an_payout_check = unwrap!(game.finish()).an_payout;
     assert_eq!(EPlayerIndex::map_from_fn(|epi| an_payout_check[epi]), EPlayerIndex::map_from_raw(an_payout));
     assert_eq!(-an_payout.iter().sum::<isize>(), n_stock_payout);
 }

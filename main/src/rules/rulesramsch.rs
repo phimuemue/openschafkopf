@@ -59,7 +59,7 @@ impl TRules for SRulesRamsch {
                     })
                 )
         );
-        let n_points_max = debug_verify!(EPlayerIndex::values().map(points_for_player).max()).unwrap();
+        let n_points_max = unwrap!(EPlayerIndex::values().map(points_for_player).max());
         let vecepi_most_points = EPlayerIndex::values()
             .filter(|epi| n_points_max==points_for_player(*epi))
             .collect::<Vec<_>>();
@@ -87,7 +87,7 @@ impl TRules for SRulesRamsch {
                 if 1==vecepi_most_points.len() {
                     vecepi_most_points[0]
                 } else {
-                    debug_verify!(vecepi_most_points.iter().copied()
+                    unwrap!(vecepi_most_points.iter().copied()
                         .map(|epi| {(
                             epi,
                             gamefinishedstiche.get().completed_stichs().iter()
@@ -96,13 +96,13 @@ impl TRules for SRulesRamsch {
                                 .max_by(|card_fst, card_snd| {
                                     assert!(self.trumpforfarbe(*card_fst).is_trumpf());
                                     assert!(self.trumpforfarbe(*card_snd).is_trumpf());
-                                    debug_verify!(self.compare_cards(*card_fst, *card_snd)).unwrap()
+                                    unwrap!(self.compare_cards(*card_fst, *card_snd))
                                 })
                         )})
                         .fold1(|pairepiocard_fst, pairepiocard_snd| {
                             match (pairepiocard_fst.1, pairepiocard_snd.1) {
                                 (Some(card_trumpf_fst), Some(card_trumpf_snd)) => {
-                                    if Ordering::Less==debug_verify!(self.compare_cards(card_trumpf_fst, card_trumpf_snd)).unwrap() {
+                                    if Ordering::Less==unwrap!(self.compare_cards(card_trumpf_fst, card_trumpf_snd)) {
                                         pairepiocard_snd
                                     } else {
                                         pairepiocard_fst
@@ -115,7 +115,6 @@ impl TRules for SRulesRamsch {
                                 (None, None) => panic!("Two losing players with same points, but none of them with trumpf."),
                             }
                         }))
-                        .unwrap()
                         .0
                 }
             };

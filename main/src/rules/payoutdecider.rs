@@ -134,7 +134,7 @@ impl SLaufendeParams {
             playerparties.is_primary_party(rulestatecache.fixed.who_has_card(card))
         };
         let mut itcard_trumpf_descending = Rules::TrumpfDecider::trumpfs_in_descending_order();
-        let b_might_have_lauf = laufende_relevant(debug_verify!(itcard_trumpf_descending.next()).unwrap());
+        let b_might_have_lauf = laufende_relevant(unwrap!(itcard_trumpf_descending.next()));
         let n_laufende = itcard_trumpf_descending
             .filter(|card| ekurzlang.supports_card(*card))
             .take_while(|card| b_might_have_lauf==laufende_relevant(*card))

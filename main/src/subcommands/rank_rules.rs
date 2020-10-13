@@ -19,7 +19,7 @@ pub fn rank_rules(ruleset: &SRuleSet, hand: SFullHand, epi: EPlayerIndex, ai: &S
             )
         }))
         .collect::<Vec<_>>();
-    vecpairrulesf.sort_unstable_by(|pairrulesf_lhs, pairrulesf_rhs| debug_verify!(pairrulesf_rhs.1.partial_cmp(&pairrulesf_lhs.1)).unwrap());
+    vecpairrulesf.sort_unstable_by(|pairrulesf_lhs, pairrulesf_rhs| unwrap!(pairrulesf_rhs.1.partial_cmp(&pairrulesf_lhs.1)));
     for (rules, f_avg_payout) in vecpairrulesf {
         println!("{}: {}", rules, f_avg_payout);
     }

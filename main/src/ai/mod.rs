@@ -60,14 +60,14 @@ impl<'game> SDetermineBestCard<'game> {
         Self{
             rules,
             stichseq,
-            epi_fixed: debug_verify!(stichseq.current_stich().current_playerindex()).unwrap(),
+            epi_fixed: unwrap!(stichseq.current_stich().current_playerindex()),
             hand_fixed,
             veccard_allowed
         }
     }
 
     pub fn new_from_game(game: &'game SGame) -> Self {
-        let epi_fixed = debug_verify!(game.which_player_can_do_something()).unwrap().0;
+        let epi_fixed = unwrap!(game.which_player_can_do_something()).0;
         Self::new(
             game.rules.as_ref(),
             &game.stichseq,
@@ -144,15 +144,15 @@ impl SAi {
                         game.n_stock,
                     ),
                     opath_out_dir.map(|path_out_dir| {
-                        debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
-                        crate::game_analysis::generate_html_auxiliary_files(path_out_dir).unwrap();
+                        unwrap!(std::fs::create_dir_all(path_out_dir));
+                        unwrap!(crate::game_analysis::generate_html_auxiliary_files(path_out_dir));
                         path_out_dir
                             .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
                     }),
                 )
             }}}
             macro_rules! suggest_via{($itahand: expr,) => {{ // TODORUST generic closures
-                *debug_verify!(
+                *unwrap!(
                     // TODORUST exhaustive_integer_patterns for isize/usize
                     // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
                     match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[determinebestcard.epi_fixed] {
@@ -174,8 +174,8 @@ impl SAi {
                             $itahand,
                         ),
                         n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
-                    }.cards_with_maximum_value().0.first())
-                .unwrap()
+                    }.cards_with_maximum_value().0.first()
+                )
             }}}
             match self.aiparams {
                 VAIParams::Cheating => {
@@ -237,13 +237,13 @@ pub struct SDetermineBestCardResult<T> {
 impl<T> SDetermineBestCardResult<T> {
     pub fn cards_and_ts(&self) -> impl Iterator<Item=(SCard, &T)> where T: std::fmt::Debug {
         self.veccard_allowed.iter()
-            .map(move |card| (*card, debug_verify!(self.mapcardt[*card].as_ref()).unwrap()))
+            .map(move |card| (*card, unwrap!(self.mapcardt[*card].as_ref())))
     }
     pub fn cards_with_maximum_value(&self) -> (Vec<SCard>, &T) where T: std::fmt::Debug + Ord {
         let veccard = self.veccard_allowed.iter().copied()
-            .max_set_by_key(|card| debug_verify!(self.mapcardt[*card].as_ref()).unwrap());
+            .max_set_by_key(|card| unwrap!(self.mapcardt[*card].as_ref()));
         assert!(!veccard.is_empty());
-        let t = debug_verify!(self.mapcardt[veccard[0]].as_ref()).unwrap();
+        let t = unwrap!(self.mapcardt[veccard[0]].as_ref());
         (veccard, t)
     }
 }
@@ -308,7 +308,7 @@ impl std::cmp::Ord for SPayoutStatsPerStrategy {
         let n_min_other = other.0[OthersMin].n_min;
         match (n_min_self.cmp(&0), n_min_other.cmp(&0)) {
             (Greater, Greater) => match n_min_self.cmp(&n_min_other) {
-                Equal => debug_verify!(self.0[MaxPerEpi].avg().partial_cmp(&other.0[MaxPerEpi].avg())).unwrap(),
+                Equal => unwrap!(self.0[MaxPerEpi].avg().partial_cmp(&other.0[MaxPerEpi].avg())),
                 Greater => Greater,
                 Less => Less,
             },
@@ -317,7 +317,7 @@ impl std::cmp::Ord for SPayoutStatsPerStrategy {
             (Equal, Less) => Greater,
             (Less, Equal) => Less,
             (Less, Less)|(Equal, Equal) => {
-                debug_verify!(self.0[MaxPerEpi].avg().partial_cmp(&other.0[MaxPerEpi].avg())).unwrap()
+                unwrap!(self.0[MaxPerEpi].avg().partial_cmp(&other.0[MaxPerEpi].avg()))
             },
         }
     }
@@ -360,14 +360,14 @@ pub fn determine_best_card<
                 func_filter_allowed_cards,
                 foreachsnapshot,
                 opath_out_dir.as_ref().map(|path_out_dir| {
-                    debug_verify!(std::fs::create_dir_all(path_out_dir)).unwrap();
-                    debug_verify!(std::fs::File::create(
+                    unwrap!(std::fs::create_dir_all(path_out_dir));
+                    unwrap!(std::fs::File::create(
                         path_out_dir
                             .join(format!("{}_{}.html", i_susp, card))
-                    )).unwrap()
+                    ))
                 }).map(|file_output| (file_output, determinebestcard.epi_fixed)),
             );
-            let ooutput = &mut debug_verify!(mapcardooutput.lock()).unwrap()[card];
+            let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
             let payoutstats = SPayoutStatsPerStrategy(
                 EMinMaxStrategy::map_from_fn(|eminmaxstrat|
                     SPayoutStats::new_1(output.aan_payout[eminmaxstrat][determinebestcard.epi_fixed])
@@ -378,10 +378,10 @@ pub fn determine_best_card<
                 Some(ref mut output_return) => output_return.accumulate(&payoutstats),
             }
         });
-    let mapcardooutput = debug_verify!(
-        debug_verify!(Arc::try_unwrap(mapcardooutput)).unwrap() // "Returns the contained value, if the Arc has exactly one strong reference"   
+    let mapcardooutput = unwrap!(
+        unwrap!(Arc::try_unwrap(mapcardooutput)) // "Returns the contained value, if the Arc has exactly one strong reference"   
             .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
-    ).unwrap();
+    );
     assert!(<SCard as TPlainEnum>::values().any(|card| {
         determinebestcard.veccard_allowed.contains(&card) && mapcardooutput[card].is_some()
     }));
@@ -436,8 +436,8 @@ fn test_is_compatible_with_game_so_far() {
             match testaction {
                 VTestAction::PlayStich(acard) => {
                     for card in acard.iter() {
-                        let epi = debug_verify!(game.which_player_can_do_something()).unwrap().0;
-                        debug_verify!(game.zugeben(*card, epi)).unwrap();
+                        let epi = unwrap!(game.which_player_can_do_something()).0;
+                        unwrap!(game.zugeben(*card, epi));
                     }
                 },
                 VTestAction::AssertFrei(epi, trumpforfarbe) => {
@@ -449,8 +449,8 @@ fn test_is_compatible_with_game_so_far() {
             }
             for ahand in forever_rand_hands(
                 &game.stichseq,
-                game.ahand[debug_verify!(game.which_player_can_do_something()).unwrap().0].clone(),
-                debug_verify!(game.which_player_can_do_something()).unwrap().0,
+                game.ahand[unwrap!(game.which_player_can_do_something()).0].clone(),
+                unwrap!(game.which_player_can_do_something()).0,
                 game.rules.as_ref(),
             )
                 .take(100)
@@ -530,7 +530,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
     for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]].iter() {
         assert_eq!(EPlayerIndex::values().next(), Some(epi_active));
         for (epi, card) in EPlayerIndex::values().zip(acard_stich.iter()) {
-            debug_verify!(game.zugeben(*card, epi)).unwrap();
+            unwrap!(game.zugeben(*card, epi));
         }
     }
     for ahand in all_possible_hands(

@@ -38,7 +38,7 @@ fn test_determine_best_card() {
                 .map(|epi| epi.wrapping_add(epi_stich_first.to_usize()))
                 .zip(acard_stich.iter())
             {
-                debug_verify!(game.zugeben(*card, epi)).unwrap();
+                unwrap!(game.zugeben(*card, epi));
             }
         }
     };
@@ -90,7 +90,7 @@ fn detect_expensive_all_possible_hands() {
         EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
             /*fn_check_ask_for_card*/|game: &SGame| {
                 if game.kurzlang().cards_per_player() - 4 < game.completed_stichs().len() {
-                    let epi_fixed = debug_verify!(game.current_playable_stich().current_playerindex()).unwrap();
+                    let epi_fixed = unwrap!(game.current_playable_stich().current_playerindex());
                     let vecahand = all_possible_hands(
                         &game.stichseq,
                         game.ahand[epi_fixed].clone(),
@@ -147,7 +147,7 @@ fn detect_expensive_all_possible_hands() {
             },
         )) as Box<dyn TPlayer>),
         /*n_games*/4,
-        debug_verify!(SRuleSet::from_string(
+        unwrap!(SRuleSet::from_string(
             r"
             base-price=10
             solo-price=50
@@ -159,7 +159,7 @@ fn detect_expensive_all_possible_hands() {
             [stoss]
             max=3
             ",
-        )).unwrap()
+        ))
     );
 }
 

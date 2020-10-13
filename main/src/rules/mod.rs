@@ -144,7 +144,7 @@ impl SRuleStateCacheFixed {
         Self {mapcardoepi}
     }
     fn who_has_card(&self, card: SCard) -> EPlayerIndex {
-        debug_verify!(self.mapcardoepi[card]).unwrap()
+        unwrap!(self.mapcardoepi[card])
     }
 }
 #[derive(Eq, PartialEq, Debug)]
@@ -448,7 +448,7 @@ pub trait TActivelyPlayableRules : TRules + TActivelyPlayableRulesBoxClone {
         None
     }
     fn active_playerindex(&self) -> EPlayerIndex {
-        debug_verify!(self.playerindex()).unwrap()
+        unwrap!(self.playerindex())
     }
 }
 make_box_clone!(TActivelyPlayableRulesBoxClone, TActivelyPlayableRules);

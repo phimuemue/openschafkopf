@@ -17,19 +17,19 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
         _veccard: &[SCard],
         txb_doubling: mpsc::Sender<bool>,
     ) {
-        debug_verify!(txb_doubling.send(rand::random())).unwrap();
+        unwrap!(txb_doubling.send(rand::random()));
     }
 
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         (self.fn_check_ask_for_card)(game);
-        debug_verify!(txcard.send(
-            debug_verify!(
+        unwrap!(txcard.send(
+            unwrap!(
                 game.rules.all_allowed_cards(
                     &game.stichseq,
-                    &game.ahand[debug_verify!(game.which_player_can_do_something()).unwrap().0],
+                    &game.ahand[unwrap!(game.which_player_can_do_something()).0],
                 ).choose(&mut rand::thread_rng()).copied()
-            ).unwrap()
-        )).unwrap();
+            )
+        ));
     }
 
     fn ask_for_game<'rules>(
@@ -43,9 +43,9 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
         _opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
     ) {
-        debug_verify!(txorules.send(
-            debug_verify!(allowed_rules(vecrulegroup, hand).choose(&mut rand::thread_rng())).unwrap()
-        )).unwrap();
+        unwrap!(txorules.send(
+            unwrap!(allowed_rules(vecrulegroup, hand).choose(&mut rand::thread_rng()))
+        ));
     }
 
     fn ask_for_stoss(
@@ -58,7 +58,7 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
         _n_stock: isize,
         txb: mpsc::Sender<bool>,
     ) {
-        debug_verify!(txb.send(rand::random())).unwrap();
+        unwrap!(txb.send(rand::random()));
     }
 
     fn name(&self) -> &str {

@@ -32,11 +32,11 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
         fn communicate_via_channel<T: std::fmt::Debug>(f: impl FnOnce(mpsc::Sender<T>)) -> T {
             let (txt, rxt) = mpsc::channel::<T>();
             f(txt);
-            debug_verify!(rxt.recv()).unwrap()
+            unwrap!(rxt.recv())
         }
         let mut dealcards = SDealCards::new(ruleset.clone(), n_stock);
         while let Some(epi) = dealcards.which_player_can_do_something() {
-            debug_verify!(dealcards.announce_doubling(
+            unwrap!(dealcards.announce_doubling(
                 epi,
                 /*b_doubling*/communicate_via_channel(|txb_doubling| {
                     aattable[epi].player.ask_for_doubling(
@@ -44,12 +44,12 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
                         txb_doubling
                     );
                 })
-            )).unwrap();
+            ));
         }
-        let mut gamepreparations = debug_verify!(dealcards.finish()).unwrap();
+        let mut gamepreparations = unwrap!(dealcards.finish());
         while let Some(epi) = gamepreparations.which_player_can_do_something() {
             info!("Asking player {} for game", epi);
-            debug_verify!(gamepreparations.announce_game(
+            unwrap!(gamepreparations.announce_game(
                 epi,
                 communicate_via_channel(|txorules| {
                     aattable[epi].player.ask_for_game(
@@ -63,10 +63,10 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
                         txorules
                     );
                 }).map(TActivelyPlayableRulesBoxClone::box_clone)
-            )).unwrap();
+            ));
         }
         info!("Asked players if they want to play. Determining rules");
-        let stockorgame = match debug_verify!(gamepreparations.finish()).unwrap() {
+        let stockorgame = match unwrap!(gamepreparations.finish()) {
             VGamePreparationsFinish::DetermineRules(mut determinerules) => {
                 while let Some((epi, vecrulegroup_steigered))=determinerules.which_player_can_do_something() {
                     if let Some(rules) = communicate_via_channel(|txorules| {
@@ -81,12 +81,12 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
                             txorules
                         );
                     }).map(TActivelyPlayableRulesBoxClone::box_clone) {
-                        debug_verify!(determinerules.announce_game(epi, rules)).unwrap();
+                        unwrap!(determinerules.announce_game(epi, rules));
                     } else {
-                        debug_verify!(determinerules.resign(epi)).unwrap();
+                        unwrap!(determinerules.resign(epi));
                     }
                 }
-                VStockOrT::OrT(debug_verify!(determinerules.finish()).unwrap())
+                VStockOrT::OrT(unwrap!(determinerules.finish()))
             },
             VGamePreparationsFinish::DirectGame(game) => {
                 VStockOrT::OrT(game)
@@ -114,11 +114,11 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
                                 })
                             })
                         {
-                            debug_verify!(game.stoss(*epi_stoss)).unwrap();
+                            unwrap!(game.stoss(*epi_stoss));
                             continue;
                         }
                     }
-                    debug_verify!(game.zugeben(
+                    unwrap!(game.zugeben(
                         communicate_via_channel(|txcard| {
                             aattable[gameaction.0].player.ask_for_card(
                                 &game,
@@ -126,9 +126,9 @@ pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, 
                             );
                         }),
                         gameaction.0
-                    )).unwrap();
+                    ));
                 }
-                debug_verify!(game.finish()).unwrap()
+                unwrap!(game.finish())
             },
             VStockOrT::Stock(gameresult) => gameresult,
         };
@@ -221,7 +221,7 @@ fn test_game_loop() {
                     n_base_price, n_solo_price, n_lauf_min, str_allowed_games, str_no_active_game, str_extras
                 );
                 println!("{}", str_ruleset);
-                debug_verify!(SRuleSet::from_string(&str_ruleset)).unwrap()
+                unwrap!(SRuleSet::from_string(&str_ruleset))
             })
             .choose_multiple(&mut rng, 2)
     {

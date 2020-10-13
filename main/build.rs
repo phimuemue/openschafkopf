@@ -8,43 +8,43 @@ use std::{env, fs::File, io::Write, path::Path, process::Command};
 fn main() {
     // adapted from https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
     let execute_external = |path_in: &Path, cmd: &mut Command| {
-        println!("cargo:rerun-if-changed={}", debug_verify!(path_in.to_str()).unwrap());
-        let output = debug_verify!(cmd.output()).unwrap();
+        println!("cargo:rerun-if-changed={}", unwrap!(path_in.to_str()));
+        let output = unwrap!(cmd.output());
         assert!(output.status.success(), "{:?}: {:?}", cmd, output);
         output
     };
     let path_resources = Path::new("tools");
-    let str_env_var_out_dir = debug_verify!(env::var("OUT_DIR")).unwrap();
+    let str_env_var_out_dir = unwrap!(env::var("OUT_DIR"));
     let path_out_dir = Path::new(&str_env_var_out_dir); // https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-build-scripts
     // TODO can we avoid lessc depencency?
     let path_css_in = path_resources.join("css.less");
-    debug_verify!(
-        debug_verify!(
+    unwrap!(
+        unwrap!(
             File::create(&path_out_dir.join("css.css"))
-        ).unwrap()
+        )
             .write_all(&execute_external(
                 &path_css_in,
                 Command::new("lessc")
                     .arg(&path_css_in)
             ).stdout)
-    ).unwrap();
+    );
     // TODO can we avoid inkscape depencency?
     let path_svg_in = path_resources.join("cards.svg");
     execute_external(
         &path_svg_in,
         Command::new("inkscape")
             .arg(&path_svg_in)
-            .arg(format!("--export-filename={}", debug_verify!(path_out_dir.join("cards.png").to_str()).unwrap()))
+            .arg(format!("--export-filename={}", unwrap!(path_out_dir.join("cards.png").to_str())))
     );
     let path_svg_3dpi = path_out_dir.join("cards_3dpi.png");
     execute_external(
         &path_svg_in,
         Command::new("inkscape")
             .arg(&path_svg_in)
-            .arg(format!("--export-filename={}", debug_verify!(path_svg_3dpi.to_str()).unwrap()))
+            .arg(format!("--export-filename={}", unwrap!(path_svg_3dpi.to_str())))
             .arg(format!("--export-dpi={}", 3*/*default DPI*/96))
     );
-    let img = /*TODO debug_verify!*/image::open(path_svg_3dpi).unwrap();
+    let img = /*TODO unwrap!*/(image::open(path_svg_3dpi)).unwrap();
     let (n_width, n_height) = img.dimensions();
     let str_efarbe = "EGHS";
     let str_eschlag = "AZKOU987";
@@ -54,7 +54,7 @@ fn main() {
     let n_height_card = n_height / str_efarbe.len().as_num::<u32>();
     for (i_efarbe, ch_efarbe) in str_efarbe.chars().enumerate() {
         for (i_eschlag, ch_eschlag) in str_eschlag.chars().enumerate() {
-            debug_verify!(
+            unwrap!(
                 img.view(
                     /*x*/n_width_card * i_eschlag.as_num::<u32>(),
                     /*y*/n_height_card * i_efarbe.as_num::<u32>(),
@@ -68,7 +68,7 @@ fn main() {
                             .join("img")
                             .join(format!("{}{}.png", ch_efarbe, ch_eschlag))
                     )
-            ).unwrap();
+            );
         }
     }
 }

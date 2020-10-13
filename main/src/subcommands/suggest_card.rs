@@ -33,7 +33,7 @@ pub fn suggest_card(
         &hand_fixed,
     );
     let epi_fixed = determinebestcard.epi_fixed;
-    let eremainingcards = debug_verify!(ERemainingCards::checked_from_usize(remaining_cards_per_hand(&stichseq)[epi_fixed] - 1)).unwrap();
+    let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(remaining_cards_per_hand(&stichseq)[epi_fixed] - 1));
     let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
         macro_rules! forward{(($itahand: expr), ($func_filter_allowed_cards: expr), ($foreachsnapshot: ident),) => {{ // TODORUST generic closures
             determine_best_card(
@@ -144,7 +144,7 @@ pub fn suggest_card(
             });
             if f_min!=f_max {
                 let mut set_color = |color| {
-                    debug_verify!(stdout.set_color(ColorSpec::new().set_fg(Some(color)))).unwrap();
+                    unwrap!(stdout.set_color(ColorSpec::new().set_fg(Some(color))));
                 };
                 if f==f_min {
                     set_color(Color::Red);
@@ -153,7 +153,7 @@ pub fn suggest_card(
                 }
             }
             print!("{:>width$}", str_num, width=n_width);
-            debug_verify!(stdout.reset()).unwrap();
+            unwrap!(stdout.reset());
         }
         println!("");
     }

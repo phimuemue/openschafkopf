@@ -52,7 +52,7 @@ impl TPlayer for SPlayerHuman {
         txb_doubling: mpsc::Sender<bool>,
     ) {
         let ab_doubling = [false, true];
-        debug_verify!(txb_doubling.send(*skui::ask_for_alternative(
+        unwrap!(txb_doubling.send(*skui::ask_for_alternative(
             &ab_doubling,
             &skui::choose_alternative_from_list_key_bindings(),
             |_| true, // all alternatives allowed
@@ -68,13 +68,13 @@ impl TPlayer for SPlayerHuman {
                 }
             },
             || None, // TODO implement suggestions
-        ))).unwrap()
+        )))
     }
 
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
-        skui::print_stichseq(debug_verify!(game.current_playable_stich().current_playerindex()).unwrap(), &game.stichseq);
+        skui::print_stichseq(unwrap!(game.current_playable_stich().current_playerindex()), &game.stichseq);
         let hand = {
-            let mut veccard = game.ahand[debug_verify!(game.which_player_can_do_something()).unwrap().0].cards().clone();
+            let mut veccard = game.ahand[unwrap!(game.which_player_can_do_something()).0].cards().clone();
             game.rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
             SHand::new_from_vec(veccard)
         };
@@ -141,7 +141,7 @@ impl TPlayer for SPlayerHuman {
                 |i_oorules_chosen| vecoorules[i_oorules_chosen].and_then(|orules| orules),
                 &opairepiprio,
             ) {
-                debug_verify!(txorules.send(orules)).unwrap();
+                unwrap!(txorules.send(orules));
                 return;
             }
         }
@@ -158,7 +158,7 @@ impl TPlayer for SPlayerHuman {
         txb: mpsc::Sender<bool>,
     ) {
         let ab_stoss = [false, true];
-        debug_verify!(txb.send(*skui::ask_for_alternative(
+        unwrap!(txb.send(*skui::ask_for_alternative(
             &ab_stoss,
             &skui::choose_alternative_from_list_key_bindings(),
             |_| true, // all alternatives allowed
@@ -185,7 +185,7 @@ impl TPlayer for SPlayerHuman {
                 }
             },
             || None, // TODO implement suggestions
-        ))).unwrap()
+        )))
     }
 
     fn name(&self) -> &str {

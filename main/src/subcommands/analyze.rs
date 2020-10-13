@@ -21,7 +21,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
             .exactly_one()
             .map_err(|it| format_err!("error on single: {} elements", it.count()))? // TODO could it implement Debug?
             .find(Attr("data-username", ()))
-            .map(|node_username| debug_verify!(node_username.attr("data-username")).unwrap())
+            .map(|node_username| unwrap!(node_username.attr("data-username")))
             .collect()
     ).map(EPlayerIndex::map_from_raw)?;
     let username_to_epi = |str_username: &str| {
@@ -92,7 +92,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
                     .parent().ok_or_else(|| format_err!("walking html failed"))?
                     .find(Class("card-image"))
                     .map(|node_card| -> Result<SCard, _> {
-                        let str_class = debug_verify!(node_card.attr("class")).unwrap(); // "class" must be present
+                        let str_class = unwrap!(node_card.attr("class")); // "class" must be present
                         (
                             string("card-image by g"),
                             digit(),

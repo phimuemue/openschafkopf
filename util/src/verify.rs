@@ -43,6 +43,11 @@ macro_rules! debug_verify{($e: expr) => {
 }}
 
 #[macro_export]
+macro_rules! unwrap{($e: expr) => {
+    debug_verify!($e).unwrap()
+}}
+
+#[macro_export]
 macro_rules! verify_eq {
     ($e: expr, $e_chk: expr) => {{
         let e = $e;

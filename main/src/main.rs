@@ -72,7 +72,7 @@ fn main() -> Result<(), Error> {
         )
         .get_matches();
     fn get_ruleset(subcommand_matches: &clap::ArgMatches) -> Result<SRuleSet, Error> {
-        SRuleSet::from_file(Path::new(debug_verify!(subcommand_matches.value_of("ruleset")).unwrap()))
+        SRuleSet::from_file(Path::new(unwrap!(subcommand_matches.value_of("ruleset"))))
     }
     if let Some(subcommand_matches_websocket)=clapmatches.subcommand_matches("websocket") {
         return subcommands::websocket::run(get_ruleset(subcommand_matches_websocket)?);
@@ -86,7 +86,7 @@ fn main() -> Result<(), Error> {
         }
     }
     let ai = |subcommand_matches: &clap::ArgMatches| {
-        match debug_verify!(subcommand_matches.value_of("ai")).unwrap() {
+        match unwrap!(subcommand_matches.value_of("ai")) {
             "cheating" => SAi::new_cheating(/*n_rank_rules_samples*/50, /*n_suggest_card_branches*/2),
             "simulating" => 
                 SAi::new_simulating(
@@ -119,10 +119,10 @@ fn main() -> Result<(), Error> {
     }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("suggest-card") {
         return subcommands::suggest_card::suggest_card(
-            &debug_verify!(subcommand_matches.value_of("rules")).unwrap(),
-            &str_to_hand(&debug_verify!(subcommand_matches.value_of("hand")).unwrap())?,
+            &unwrap!(subcommand_matches.value_of("rules")),
+            &str_to_hand(&unwrap!(subcommand_matches.value_of("hand")))?,
             &cardvector::parse_cards::<Vec<_>>(
-                &debug_verify!(subcommand_matches.value_of("cards_on_table")).unwrap(),
+                &unwrap!(subcommand_matches.value_of("cards_on_table")),
             ).ok_or_else(||format_err!("Could not parse played cards"))?,
             /*otpln_branching_factor*/ if_then_some!(let Some(str_tpln_branching) = subcommand_matches.value_of("branching"), {
                 let (str_lo, str_hi) = str_tpln_branching
@@ -145,7 +145,7 @@ fn main() -> Result<(), Error> {
                     Box::new(SPlayerComputer{ai: ai(subcommand_matches)})
                 }
             }),
-            /*n_games*/ debug_verify!(subcommand_matches.value_of("numgames")).unwrap().parse::<usize>().unwrap_or(4),
+            /*n_games*/ unwrap!(subcommand_matches.value_of("numgames")).parse::<usize>().unwrap_or(4),
             get_ruleset(subcommand_matches)?,
         );
         return Ok(())

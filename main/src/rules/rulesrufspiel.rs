@@ -86,11 +86,10 @@ impl TRules for SRulesRufspiel {
     fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo> {
         let epi_coplayer = debug_verify_eq!(
             rulestatecache.fixed.who_has_card(self.rufsau()),
-            debug_verify!(gamefinishedstiche.get().completed_stichs().iter()
+            unwrap!(gamefinishedstiche.get().completed_stichs().iter()
                 .flat_map(|stich| stich.iter())
                 .find(|&(_, card)| *card==self.rufsau())
                 .map(|(epi, _)| epi))
-                .unwrap()
         );
         assert_ne!(self.epi, epi_coplayer);
         let playerparties = SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]};
@@ -130,9 +129,9 @@ impl TRules for SRulesRufspiel {
                 .find(|&(_, card)| *card==self.rufsau())
                 .map(|(epi, _)| epi)
                 .unwrap_or_else(|| {
-                    debug_verify!(EPlayerIndex::values().find(|epi|
+                    unwrap!(EPlayerIndex::values().find(|epi|
                         ahand[*epi].cards().iter().any(|card| *card==self.rufsau())
-                    )).unwrap()
+                    ))
                 })
         );
         assert_ne!(self.epi, epi_coplayer);
@@ -172,7 +171,7 @@ impl TRules for SRulesRufspiel {
             hand.cards().clone()
         } else {
             assert!(!stichseq.current_stich().is_empty());
-            let epi = debug_verify!(stichseq.current_stich().current_playerindex()).unwrap();
+            let epi = unwrap!(stichseq.current_stich().current_playerindex());
             let b_weggelaufen = stichseq.completed_stichs().iter()
                 .any(|stich| epi==stich.first_playerindex() && self.is_ruffarbe(*stich.first()));
             let card_first = *stichseq.current_stich().first();

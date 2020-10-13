@@ -11,7 +11,7 @@ pub struct SAIRufspiel<'rules> {
 
 impl TRuleSpecificAI for SAIRufspiel<'_> {
     fn suggest_card(&self, game: &SGame) -> Option<SCard> {
-        let epi = debug_verify!(game.which_player_can_do_something()).unwrap().0;
+        let epi = unwrap!(game.which_player_can_do_something()).0;
         let rules = self.rules;
         // suchen
         if epi!=rules.active_playerindex() && game.stichseq.no_card_played() {
