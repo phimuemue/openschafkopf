@@ -155,7 +155,7 @@ pub fn suggest_card(
             print!("{:>width$}", str_num, width=n_width);
             unwrap!(stdout.reset());
         }
-        println!("");
+        println!();
     }
     Ok(())
 }
