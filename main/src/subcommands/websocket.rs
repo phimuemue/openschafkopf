@@ -288,7 +288,7 @@ impl SPlayers {
             ));
         };
         for epi in EPlayerIndex::values() {
-            let ref mut activepeer = self.mapepiopeer[epi];
+            let activepeer = &mut self.mapepiopeer[epi];
             let msg = f_active(epi, &mut activepeer.otimeoutcmd);
             if let Some(ref mut peer) = activepeer.opeer.as_mut() {
                 let mut veccard = f_cards(epi);
