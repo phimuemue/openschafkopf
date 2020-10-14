@@ -2,9 +2,232 @@ use crate::ai::{*, handiterators::*, suspicion::*};
 use crate::game::SStichSequence;
 use crate::primitives::*;
 use crate::util::*;
+use crate::rules::*;
+use crate::cardvector::*;
 use itertools::*;
+use combine::{char::*, *};
 
 plain_enum_mod!(moderemainingcards, ERemainingCards {_1, _2, _3, _4, _5, _6, _7, _8,});
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+enum VNumVal {
+    Const(usize),
+    Card(SCard, EPlayerIndex),
+    TrumpfOrFarbe(VTrumpfOrFarbe, EPlayerIndex),
+    Schlag(ESchlag, EPlayerIndex),
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+enum VConstraint {
+    Not(Box<VConstraint>),
+    Relation {
+        numval_lhs: VNumVal,
+        ord: std::cmp::Ordering,
+        numval_rhs: VNumVal,
+    },
+    Conjunction(Box<VConstraint>, Box<VConstraint>),
+    Disjunction(Box<VConstraint>, Box<VConstraint>),
+}
+
+impl VNumVal {
+    fn eval(&self, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules) -> usize {
+        fn count(hand: &SHand, fn_pred: impl Fn(&SCard)->bool) -> usize {
+            hand.cards().iter().copied().filter(fn_pred).count()
+        }
+        match self {
+            VNumVal::Const(n) => *n,
+            VNumVal::Card(card, epi) => count(&ahand[*epi], |card_hand| card_hand==card),
+            VNumVal::TrumpfOrFarbe(trumpforfarbe, epi) => count(&ahand[*epi], |card|
+                trumpforfarbe==&rules.trumpforfarbe(*card)
+            ),
+            VNumVal::Schlag(eschlag, epi) => count(&ahand[*epi], |card|
+                card.schlag()==*eschlag
+            ),
+        }
+    }
+}
+
+impl std::fmt::Display for VNumVal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            VNumVal::Const(n) => write!(f, "{}", n),
+            VNumVal::Card(card, epi) => write!(f, "{}({})", card, epi),
+            VNumVal::TrumpfOrFarbe(trumpforfarbe, epi) => match trumpforfarbe {
+                VTrumpfOrFarbe::Trumpf => write!(f, "t({})", epi),
+                VTrumpfOrFarbe::Farbe(efarbe) => write!(f, "{}({})", efarbe, epi),
+            },
+            VNumVal::Schlag(eschlag, epi) => write!(f, "{}({})", eschlag, epi),
+        }
+    }
+}
+
+impl VConstraint {
+    fn eval(&self, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules) -> bool {
+        match self {
+            VConstraint::Not(constraint) => !constraint.eval(ahand, rules),
+            VConstraint::Relation{numval_lhs, ord, numval_rhs} => *ord == numval_lhs.eval(ahand, rules).cmp(&numval_rhs.eval(ahand, rules)),
+            VConstraint::Conjunction(constraint_lhs, constraint_rhs) => constraint_lhs.eval(ahand, rules) && constraint_rhs.eval(ahand, rules),
+            VConstraint::Disjunction(constraint_lhs, constraint_rhs) => constraint_lhs.eval(ahand, rules) || constraint_rhs.eval(ahand, rules),
+        }
+    }
+}
+
+impl std::fmt::Display for VConstraint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            VConstraint::Not(constraint) => write!(f, "!({})", constraint),
+            VConstraint::Relation{numval_lhs, ord, numval_rhs} => write!(f, "({}){}({})",
+                numval_lhs,
+                match ord {
+                    std::cmp::Ordering::Less => "<",
+                    std::cmp::Ordering::Equal => "=",
+                    std::cmp::Ordering::Greater => ">",
+                },
+                numval_rhs
+            ),
+            VConstraint::Conjunction(constraint_lhs, constraint_rhs) => write!(f, "({})&({})", constraint_lhs, constraint_rhs),
+            VConstraint::Disjunction(constraint_lhs, constraint_rhs) => write!(f, "({})|({})", constraint_lhs, constraint_rhs),
+        }
+    }
+}
+
+fn numval_parser<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = VNumVal>
+    where I::Error: ParseError<I::Item, I::Range, I::Position>, // Necessary due to rust-lang/rust#24159
+{
+    pub fn epi_parser<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = EPlayerIndex>
+        where I::Error: ParseError<I::Item, I::Range, I::Position>, // Necessary due to rust-lang/rust#24159
+    {
+        (spaces(), char('('), spaces())
+            .with(choice!(
+                char('0').map(|_chr| EPlayerIndex::EPI0),
+                char('1').map(|_chr| EPlayerIndex::EPI1),
+                char('2').map(|_chr| EPlayerIndex::EPI2),
+                char('3').map(|_chr| EPlayerIndex::EPI3)
+            ))
+            .skip((spaces(), char(')'), spaces()))
+    }
+    choice!(
+        attempt((card_parser(), epi_parser()).map(|(card, epi)| VNumVal::Card(card, epi))),
+        (
+            choice!(
+                choice!(char('t'), char('T')).map(|_| VTrumpfOrFarbe::Trumpf),
+                farbe_parser().map(VTrumpfOrFarbe::Farbe)
+            ),
+            epi_parser()
+        ).map(|(trumpforfarbe, epi)| VNumVal::TrumpfOrFarbe(trumpforfarbe, epi)),
+        attempt((schlag_parser(), epi_parser()).map(|(eschlag, epi)| VNumVal::Schlag(eschlag, epi))),
+        (many1(digit())./*TODO use and_then and get rid of unwrap*/map(|string: /*TODO String needed?*/String|
+            unwrap!(string.parse::<usize>())
+        )).map(|n| VNumVal::Const(n))
+    )
+}
+
+fn single_constraint_parser_<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = VConstraint>
+    where I::Error: ParseError<I::Item, I::Range, I::Position>, // Necessary due to rust-lang/rust#24159
+{
+    choice!(
+        (char('!').with(single_constraint_parser())).map(|constraint| VConstraint::Not(Box::new(constraint))),
+        char('(').with(constraint_parser()).skip(char(')')),
+        (
+            numval_parser(),
+            optional((
+                choice!(
+                    char('<').map(|_chr| std::cmp::Ordering::Less),
+                    char('=').map(|_chr| std::cmp::Ordering::Equal),
+                    char('>').map(|_chr| std::cmp::Ordering::Greater)
+                ),
+                numval_parser()
+            ))
+        ).map(|(numval_lhs, otplordnumval_rhs)| {
+            let (ord, numval_rhs) = otplordnumval_rhs.unwrap_or((
+                std::cmp::Ordering::Greater,
+                VNumVal::Const(0)
+            ));
+            VConstraint::Relation{numval_lhs, ord, numval_rhs}
+        })
+    )
+}
+parser!{
+    fn single_constraint_parser[I]()(I) -> VConstraint
+        where [I: Stream<Item = char>]
+    {
+        single_constraint_parser_()
+    }
+}
+
+fn constraint_parser_<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = VConstraint>
+    where I::Error: ParseError<I::Item, I::Range, I::Position>, // Necessary due to rust-lang/rust#24159
+{
+    choice!(
+        attempt((sep_by1::<Vec<_>,_,_>(single_constraint_parser(), (spaces(), char('&').map(|x|dbg!(x)), spaces())))
+            .map(|vecconstraint| unwrap!(vecconstraint.into_iter().fold1(|constraint_lhs, constraint_rhs|
+                VConstraint::Conjunction(Box::new(constraint_lhs), Box::new(constraint_rhs))
+            )))),
+        attempt((sep_by1::<Vec<_>,_,_>(single_constraint_parser(), (spaces(), char('|'), spaces())))
+            .map(|vecconstraint| unwrap!(vecconstraint.into_iter().fold1(|constraint_lhs, constraint_rhs|
+                VConstraint::Disjunction(Box::new(constraint_lhs), Box::new(constraint_rhs))
+            )))),
+        attempt(single_constraint_parser())
+    )
+}
+
+parser!{
+    fn constraint_parser[I]()(I) -> VConstraint
+        where [I: Stream<Item = char>]
+    {
+        constraint_parser_()
+    }
+}
+
+#[test]
+fn test_constraint_parser() {
+    fn test_internal(str_in: &str, constraint: VConstraint) {
+        assert_eq!(str_in.parse(), Ok(constraint));
+    }
+    use VConstraint::*;
+    use VNumVal::*;
+    use EFarbe::*;
+    use ESchlag::*;
+    use EPlayerIndex::*;
+    use VTrumpfOrFarbe::*;
+    use std::cmp::Ordering::*;
+    fn test_comparison(str_in: &str, numval_lhs: VNumVal, ord: std::cmp::Ordering, numval_rhs: VNumVal) {
+        let relation = Relation{numval_lhs, ord, numval_rhs};
+        test_internal(str_in, relation.clone());
+        test_internal(&format!("!{}", str_in), Not(Box::new(relation.clone())));
+        test_internal(&format!("!!{}", str_in), Not(Box::new(Not(Box::new(relation)))));
+    }
+    fn test_simple_greater_0(str_in: &str, numval_lhs: VNumVal) {
+        test_comparison(str_in, numval_lhs, Greater, Const(0));
+    }
+    test_simple_greater_0("ea(1)", Card(SCard::new(Eichel, Ass), EPI1));
+    test_simple_greater_0("t(2)", TrumpfOrFarbe(Trumpf, EPI2));
+    test_simple_greater_0("e(0)", TrumpfOrFarbe(Farbe(Eichel), EPI0));
+    test_simple_greater_0("o(0)", Schlag(Ober, EPI0));
+    test_simple_greater_0("7(0)", Schlag(S7, EPI0));
+    test_simple_greater_0("7", Const(7));
+    test_comparison("ea(1)>e(0)", Card(SCard::new(Eichel, Ass), EPI1), Greater, TrumpfOrFarbe(Farbe(Eichel), EPI0));
+    test_comparison("t(2)=t(3)", TrumpfOrFarbe(Trumpf, EPI2), Equal, TrumpfOrFarbe(Trumpf, EPI3));
+    test_comparison("e(0)>3", TrumpfOrFarbe(Farbe(Eichel), EPI0), Greater, Const(3));
+    test_comparison("o(0)<3", Schlag(Ober, EPI0), Less, Const(3));
+    test_comparison("8(0)<2", Schlag(S8, EPI0), Less, Const(2));
+    test_comparison("8<2", Const(8), Less, Const(2));
+    // TODO more tests
+}
+
+impl std::str::FromStr for VConstraint {
+    type Err = (); // TODO? better type
+    fn from_str(str_in: &str) -> Result<Self, Self::Err> {
+        spaces()
+            .with(constraint_parser())
+            .skip(spaces())
+            .skip(eof())
+            // end of parser
+            .parse(str_in)
+            .map_err(|_| ())
+            .map(|pairoutconsumed| pairoutconsumed.0)
+    }
+}
 
 pub fn suggest_card(
     str_rules_with_epi: &str,
@@ -14,6 +237,7 @@ pub fn suggest_card(
     ostr_itahand: Option<&str>,
     b_verbose: bool,
     ostr_prune: Option<&str>,
+    ostr_constrain_hands: Option<&str>,
 ) -> Result<(), Error> {
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
     let rules = crate::rules::parser::parse_rule_description_simple(str_rules_with_epi)?;
@@ -71,14 +295,36 @@ pub fn suggest_card(
             }
         );
         use ERemainingCards::*;
+        let orelation = if_then_some!(let Some(str_constrain_hands)=ostr_constrain_hands, {
+            let relation = str_constrain_hands.parse::<VConstraint>().map_err(|()|format_err!("Cannot parse hand constraints"))?;
+            if b_verbose {
+                println!("Constraint parsed as: {}", relation);
+            }
+            relation
+        });
         cartesian_match!(
             forward,
             match ((oiteratehands, eremainingcards)) {
-                (Some(All), _)|(None, _1)|(None, _2)|(None, _3)|(None, _4) => (all_possible_hands(&stichseq, hand_fixed.clone(), epi_fixed, rules)),
-                (Some(Sample(n_samples)), _) => (forever_rand_hands(&stichseq, hand_fixed.clone(), epi_fixed, rules)
-                    .take(n_samples)),
-                (None, _5)|(None, _6)|(None, _7)|(None, _8) => (forever_rand_hands(&stichseq, hand_fixed.clone(), epi_fixed, rules)
-                    .take(/*n_suggest_card_samples*/50)),
+                (Some(All), _)|(None, _1)|(None, _2)|(None, _3)|(None, _4) => (
+                    all_possible_hands(&stichseq, hand_fixed.clone(), epi_fixed, rules)
+                        .filter(|ahand| orelation.as_ref().map_or(true, |relation|
+                            relation.eval(ahand, rules)
+                        ))
+                ),
+                (Some(Sample(n_samples)), _) => (
+                    forever_rand_hands(&stichseq, hand_fixed.clone(), epi_fixed, rules)
+                        .filter(|ahand| orelation.as_ref().map_or(true, |relation|
+                            relation.eval(ahand, rules)
+                        ))
+                        .take(n_samples)
+                ),
+                (None, _5)|(None, _6)|(None, _7)|(None, _8) => (
+                    forever_rand_hands(&stichseq, hand_fixed.clone(), epi_fixed, rules)
+                        .filter(|ahand| orelation.as_ref().map_or(true, |relation|
+                            relation.eval(ahand, rules)
+                        ))
+                        .take(/*n_suggest_card_samples*/50)
+                ),
             },
             match ((otpln_branching_factor, eremainingcards)) {
                 (Some((n_lo, n_hi)), _) => (&branching_factor(move |_stichseq| {

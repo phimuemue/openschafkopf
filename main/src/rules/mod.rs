@@ -23,7 +23,7 @@ use crate::rules::card_points::points_stich;
 use crate::util::*;
 use std::{cmp::Ordering, fmt};
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum VTrumpfOrFarbe {
     Trumpf,
     Farbe (EFarbe),
