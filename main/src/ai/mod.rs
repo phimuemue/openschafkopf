@@ -248,7 +248,7 @@ impl<T> SDetermineBestCardResult<T> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct SPayoutStats {
     n_min: isize,
     n_sum: isize,
@@ -284,7 +284,7 @@ impl SPayoutStats {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct SPayoutStatsPerStrategy(pub EnumMap<EMinMaxStrategy, SPayoutStats>);
 
 impl SPayoutStatsPerStrategy {
@@ -552,7 +552,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             assert!(determinebestcard.veccard_allowed.contains(card));
             for eminmaxstrat in EMinMaxStrategy::values() {
                 assert_eq!(
-                    determinebestcardresult.mapcardt[*card].clone().map(|minmax| minmax.aan_payout[eminmaxstrat][epi_active]),
+                    determinebestcardresult.mapcardt[*card].clone().map(|minmax| minmax.0[eminmaxstrat].min()),
                     Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
                 );
             }
