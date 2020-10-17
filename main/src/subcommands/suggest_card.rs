@@ -326,12 +326,22 @@ pub fn suggest_card(
                         .take(/*n_suggest_card_samples*/50)
                 ),
             },
-            match ((otpln_branching_factor, eremainingcards)) {
-                (Some((n_lo, n_hi)), _) => (&branching_factor(move |_stichseq| {
+            match ((
+                otpln_branching_factor.map(|(n_lo, n_hi)| {
+                    if_then_some!(n_lo < hand_fixed.cards().len(), {
+                        if b_verbose {
+                            println!("Branching bounds are large enough to eliminate branching factor.");
+                        }
+                        (n_lo, n_hi)
+                    })
+                }),
+                eremainingcards
+            )) {
+                (Some(None), _)|(None,_1)|(None,_2)|(None,_3)|(None,_4) => (&|_,_| (/*no filtering*/)),
+                (Some(Some((n_lo, n_hi))), _) => (&branching_factor(move |_stichseq| {
                     let n_lo = n_lo.max(1);
                     (n_lo, (n_hi.max(n_lo+1)))
                 })),
-                (None,_1)|(None,_2)|(None,_3)|(None,_4) => (&|_,_| (/*no filtering*/)),
                 (None,_5)|(None,_6)|(None,_7)|(None,_8) => (&branching_factor(|_stichseq| (1, 3))),
             },
             match ((ostr_prune, eremainingcards)) {
