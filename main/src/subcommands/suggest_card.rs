@@ -118,7 +118,7 @@ fn numval_parser<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = VNum
         attempt((schlag_parser(), epi_parser()).map(|(eschlag, epi)| VNumVal::Schlag(eschlag, epi))),
         (many1(digit())./*TODO use and_then and get rid of unwrap*/map(|string: /*TODO String needed?*/String|
             unwrap!(string.parse::<usize>())
-        )).map(|n| VNumVal::Const(n))
+        )).map(VNumVal::Const)
     )
 }
 
