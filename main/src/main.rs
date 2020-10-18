@@ -15,9 +15,8 @@ mod subcommands;
 use crate::ai::*;
 use crate::player::{playercomputer::*, playerhuman::*, *};
 use crate::primitives::*;
-use crate::rules::ruleset::*;
 use crate::util::*;
-use std::path::Path;
+use crate::subcommands::get_ruleset;
 use itertools::Itertools;
 
 fn main() -> Result<(), Error> {
@@ -72,11 +71,8 @@ fn main() -> Result<(), Error> {
             .arg(clap_arg("ruleset", "rulesets/default.toml"))
         )
         .get_matches();
-    fn get_ruleset(subcommand_matches: &clap::ArgMatches) -> Result<SRuleSet, Error> {
-        SRuleSet::from_file(Path::new(unwrap!(subcommand_matches.value_of("ruleset"))))
-    }
-    if let Some(subcommand_matches_websocket)=clapmatches.subcommand_matches("websocket") {
-        return subcommands::websocket::run(get_ruleset(subcommand_matches_websocket)?);
+    if let Some(clapmatches_websocket)=clapmatches.subcommand_matches("websocket") {
+        return subcommands::websocket::run(clapmatches_websocket);
     }
     if let Some(subcommand_matches_analyze)=clapmatches.subcommand_matches("analyze") {
         if let Some(itstr_sauspiel_html_file) = subcommand_matches_analyze.values_of("sauspiel-files") {

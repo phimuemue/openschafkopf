@@ -818,7 +818,7 @@ async fn internal_run(ruleset: SRuleSet) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn run(ruleset: SRuleSet) -> Result<(), Error> {
-    task::block_on(internal_run(ruleset))
+pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
+    task::block_on(internal_run(super::get_ruleset(clapmatches)?))
 }
 
