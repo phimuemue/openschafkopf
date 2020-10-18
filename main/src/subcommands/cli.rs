@@ -1,5 +1,5 @@
 use crate::game::*;
-use crate::player::*;
+use crate::player::{*, playercomputer::*, playerhuman::*};
 use crate::primitives::*;
 use crate::rules::{
     ruleset::*,
@@ -14,15 +14,26 @@ pub struct SAtTable {
     n_money: isize,
 }
 
-pub fn game_loop_cli(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: SRuleSet) {
+pub fn game_loop_cli(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let _tui = skui::STuiGuard::init_ui();
-    let (mut aattable, n_stock) = game_loop_cli_internal(aplayer, n_games, ruleset);
+    let (mut aattable, n_stock) = game_loop_cli_internal(
+        /*aplayer*/EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
+            if EPlayerIndex::EPI1==epi {
+                Box::new(SPlayerHuman{ai : super::ai(clapmatches)})
+            } else {
+                Box::new(SPlayerComputer{ai: super::ai(clapmatches)})
+            }
+        }),
+        /*n_games*/unwrap!(clapmatches.value_of("numgames")).parse::<usize>().unwrap_or(4),
+        super::get_ruleset(clapmatches)?,
+    );
     aattable.sort_unstable_by_key(|attable| attable.n_money);
     println!("Results:");
     for attable in aattable.iter() {
         println!("{} {}", attable.player.name(), attable.n_money);
     }
     println!("Stock: {}", n_stock);
+    Ok(())
 }
 
 pub fn game_loop_cli_internal(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: SRuleSet) -> ([SAtTable; 4], isize) {

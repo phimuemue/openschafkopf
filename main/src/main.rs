@@ -12,10 +12,8 @@ mod rules;
 mod skui;
 mod subcommands;
 
-use crate::player::{playercomputer::*, playerhuman::*, *};
 use crate::primitives::*;
 use crate::util::*;
-use crate::subcommands::{ai, get_ruleset};
 
 fn main() -> Result<(), Error> {
     openschafkopf_logging::init_logging()?;
@@ -81,19 +79,8 @@ fn main() -> Result<(), Error> {
     if let Some(clapmatches_suggest_card)=clapmatches.subcommand_matches("suggest-card") {
         return subcommands::suggest_card::suggest_card(clapmatches_suggest_card);
     }
-    if let Some(subcommand_matches)=clapmatches.subcommand_matches("cli") {
-        subcommands::cli::game_loop_cli(
-            EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
-                if EPlayerIndex::EPI1==epi {
-                    Box::new(SPlayerHuman{ai : ai(subcommand_matches)})
-                } else {
-                    Box::new(SPlayerComputer{ai: ai(subcommand_matches)})
-                }
-            }),
-            /*n_games*/ unwrap!(subcommand_matches.value_of("numgames")).parse::<usize>().unwrap_or(4),
-            get_ruleset(subcommand_matches)?,
-        );
-        return Ok(())
+    if let Some(clapmatches_cli)=clapmatches.subcommand_matches("cli") {
+        return subcommands::cli::game_loop_cli(clapmatches_cli);
     }
     Ok(())
 }
