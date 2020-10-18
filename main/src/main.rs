@@ -15,8 +15,7 @@ mod subcommands;
 use crate::player::{playercomputer::*, playerhuman::*, *};
 use crate::primitives::*;
 use crate::util::*;
-use crate::subcommands::{ai, get_ruleset, str_to_hand};
-use itertools::Itertools;
+use crate::subcommands::{ai, get_ruleset};
 
 fn main() -> Result<(), Error> {
     openschafkopf_logging::init_logging()?;
@@ -79,25 +78,8 @@ fn main() -> Result<(), Error> {
     if let Some(clapmatches_rank_rules)=clapmatches.subcommand_matches("rank-rules") {
         return subcommands::rank_rules::rank_rules(clapmatches_rank_rules);
     }
-    if let Some(subcommand_matches)=clapmatches.subcommand_matches("suggest-card") {
-        return subcommands::suggest_card::suggest_card(
-            &unwrap!(subcommand_matches.value_of("rules")),
-            &str_to_hand(&unwrap!(subcommand_matches.value_of("hand")))?,
-            &cardvector::parse_cards::<Vec<_>>(
-                &unwrap!(subcommand_matches.value_of("cards_on_table")),
-            ).ok_or_else(||format_err!("Could not parse played cards"))?,
-            /*otpln_branching_factor*/ if_then_some!(let Some(str_tpln_branching) = subcommand_matches.value_of("branching"), {
-                let (str_lo, str_hi) = str_tpln_branching
-                    .split(',')
-                    .collect_tuple()
-                    .ok_or_else(|| format_err!("Could not parse branching"))?;
-                (str_lo.trim().parse()?, str_hi.trim().parse()?)
-            }),
-            /*ostr_itahand*/subcommand_matches.value_of("simulate_hands"),
-            /*b_verbose*/subcommand_matches.is_present("verbose"),
-            /*ostr_prune*/subcommand_matches.value_of("prune"),
-            /*ostr_constrain_hands*/subcommand_matches.value_of("constrain_hands"),
-        )
+    if let Some(clapmatches_suggest_card)=clapmatches.subcommand_matches("suggest-card") {
+        return subcommands::suggest_card::suggest_card(clapmatches_suggest_card);
     }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("cli") {
         subcommands::cli::game_loop_cli(

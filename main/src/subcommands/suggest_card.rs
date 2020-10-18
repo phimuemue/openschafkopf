@@ -229,26 +229,22 @@ impl std::str::FromStr for VConstraint {
     }
 }
 
-pub fn suggest_card(
-    str_rules_with_epi: &str,
-    hand_fixed: &SHand,
-    slccard_as_played: &[SCard],
-    otpln_branching_factor: Option<(usize, usize)>,
-    ostr_itahand: Option<&str>,
-    b_verbose: bool,
-    ostr_prune: Option<&str>,
-    ostr_constrain_hands: Option<&str>,
-) -> Result<(), Error> {
+pub fn suggest_card(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
+    let b_verbose = clapmatches.is_present("verbose");
+    let hand_fixed = super::str_to_hand(&unwrap!(clapmatches.value_of("hand")))?;
+    let veccard_as_played = &cardvector::parse_cards::<Vec<_>>(
+        &unwrap!(clapmatches.value_of("cards_on_table")),
+    ).ok_or_else(||format_err!("Could not parse played cards"))?;
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
-    let rules = crate::rules::parser::parse_rule_description_simple(str_rules_with_epi)?;
+    let rules = crate::rules::parser::parse_rule_description_simple(&unwrap!(clapmatches.value_of("rules")))?;
     let rules = rules.as_ref();
     let stichseq = SStichSequence::new_from_cards(
         /*ekurzlang*/EKurzLang::checked_from_cards_per_player(
-            /*n_stichs_complete*/slccard_as_played.len() / EPlayerIndex::SIZE
+            /*n_stichs_complete*/veccard_as_played.len() / EPlayerIndex::SIZE
                 + hand_fixed.cards().len()
         )
-            .ok_or_else(|| format_err!("Cannot determine ekurzlang from {} and {:?}.", hand_fixed, slccard_as_played))?,
-        slccard_as_played.iter().copied(),
+            .ok_or_else(|| format_err!("Cannot determine ekurzlang from {} and {:?}.", hand_fixed, veccard_as_played))?,
+        veccard_as_played.iter().copied(),
         rules
     );
     let determinebestcard =  SDetermineBestCard::new(
@@ -287,7 +283,7 @@ pub fn suggest_card(
             Sample(usize),
         };
         use VChooseItAhand::*;
-        let oiteratehands = if_then_some!(let Some(str_itahand)=ostr_itahand,
+        let oiteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
             if "all"==str_itahand.to_lowercase() {
                 All
             } else {
@@ -295,7 +291,7 @@ pub fn suggest_card(
             }
         );
         use ERemainingCards::*;
-        let orelation = if_then_some!(let Some(str_constrain_hands)=ostr_constrain_hands, {
+        let orelation = if_then_some!(let Some(str_constrain_hands)=clapmatches.value_of("constrain_hands"), {
             let relation = str_constrain_hands.parse::<VConstraint>().map_err(|()|format_err!("Cannot parse hand constraints"))?;
             if b_verbose {
                 println!("Constraint parsed as: {}", relation);
@@ -327,14 +323,23 @@ pub fn suggest_card(
                 ),
             },
             match ((
-                otpln_branching_factor.map(|(n_lo, n_hi)| {
-                    if_then_some!(n_lo < hand_fixed.cards().len(), {
-                        if b_verbose {
-                            println!("Branching bounds are large enough to eliminate branching factor.");
-                        }
-                        (n_lo, n_hi)
+                {
+                    let otpln_branching_factor = if_then_some!(let Some(str_tpln_branching) = clapmatches.value_of("branching"), {
+                        let (str_lo, str_hi) = str_tpln_branching
+                            .split(',')
+                            .collect_tuple()
+                            .ok_or_else(|| format_err!("Could not parse branching"))?;
+                        (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?)
+                    });
+                    otpln_branching_factor.map(|(n_lo, n_hi)| {
+                        if_then_some!(n_lo < hand_fixed.cards().len(), {
+                            if b_verbose {
+                                println!("Branching bounds are large enough to eliminate branching factor.");
+                            }
+                            (n_lo, n_hi)
+                        })
                     })
-                }),
+                },
                 eremainingcards
             )) {
                 (Some(None), _)|(None,_1)|(None,_2)|(None,_3)|(None,_4) => (&|_,_| (/*no filtering*/)),
@@ -344,7 +349,7 @@ pub fn suggest_card(
                 })),
                 (None,_5)|(None,_6)|(None,_7)|(None,_8) => (&branching_factor(|_stichseq| (1, 3))),
             },
-            match ((ostr_prune, eremainingcards)) {
+            match ((clapmatches.value_of("prune"), eremainingcards)) {
                 (Some("none"),_)|(_, _1)|(_, _2)|(_, _3) => (SMinReachablePayout),
                 (Some("hint"),_)|(_, _4)|(_, _5)|(_, _6)|(_, _7)|(_, _8) => (SMinReachablePayoutLowerBoundViaHint),
             },
