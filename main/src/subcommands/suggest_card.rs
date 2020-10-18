@@ -323,23 +323,19 @@ pub fn suggest_card(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 ),
             },
             match ((
-                {
-                    let otpln_branching_factor = if_then_some!(let Some(str_tpln_branching) = clapmatches.value_of("branching"), {
-                        let (str_lo, str_hi) = str_tpln_branching
-                            .split(',')
-                            .collect_tuple()
-                            .ok_or_else(|| format_err!("Could not parse branching"))?;
-                        (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?)
-                    });
-                    otpln_branching_factor.map(|(n_lo, n_hi)| {
-                        if_then_some!(n_lo < hand_fixed.cards().len(), {
-                            if b_verbose {
-                                println!("Branching bounds are large enough to eliminate branching factor.");
-                            }
-                            (n_lo, n_hi)
-                        })
+                if_then_some!(let Some(str_tpln_branching) = clapmatches.value_of("branching"), {
+                    let (str_lo, str_hi) = str_tpln_branching
+                        .split(',')
+                        .collect_tuple()
+                        .ok_or_else(|| format_err!("Could not parse branching"))?;
+                    let (n_lo, n_hi) = (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?);
+                    if_then_some!(n_lo < hand_fixed.cards().len(), {
+                        if b_verbose {
+                            println!("Branching bounds are large enough to eliminate branching factor.");
+                        }
+                        (n_lo, n_hi)
                     })
-                },
+                }),
                 eremainingcards
             )) {
                 (Some(None), _)|(None,_1)|(None,_2)|(None,_3)|(None,_4) => (&|_,_| (/*no filtering*/)),
