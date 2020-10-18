@@ -12,11 +12,10 @@ mod rules;
 mod skui;
 mod subcommands;
 
-use crate::ai::*;
 use crate::player::{playercomputer::*, playerhuman::*, *};
 use crate::primitives::*;
 use crate::util::*;
-use crate::subcommands::get_ruleset;
+use crate::subcommands::{ai, get_ruleset, str_to_hand};
 use itertools::Itertools;
 
 fn main() -> Result<(), Error> {
@@ -77,37 +76,8 @@ fn main() -> Result<(), Error> {
     if let Some(clapmatches_analyze)=clapmatches.subcommand_matches("analyze") {
         return subcommands::analyze::analyze(clapmatches_analyze);
     }
-    let ai = |subcommand_matches: &clap::ArgMatches| {
-        match unwrap!(subcommand_matches.value_of("ai")) {
-            "cheating" => SAi::new_cheating(/*n_rank_rules_samples*/50, /*n_suggest_card_branches*/2),
-            "simulating" => 
-                SAi::new_simulating(
-                    /*n_rank_rules_samples*/50,
-                    /*n_suggest_card_branches*/2,
-                    /*n_suggest_card_samples*/10,
-                ),
-            _ => {
-                println!("Warning: AI not recognized. Defaulting to 'cheating'");
-                SAi::new_cheating(/*n_rank_rules_samples*/50, /*n_suggest_card_branches*/2)
-            }
-        }
-    };
-    fn str_to_hand(str_hand: &str) -> Result<SHand, Error> {
-        Ok(SHand::new_from_vec(cardvector::parse_cards(str_hand).ok_or_else(||format_err!("Could not parse hand."))?))
-    }
-    if let Some(subcommand_matches)=clapmatches.subcommand_matches("rank-rules") {
-        let ruleset = get_ruleset(subcommand_matches)?;
-        let str_hand = subcommand_matches.value_of("hand").ok_or_else(||format_err!("No hand given as parameter."))?;
-        let hand = str_to_hand(&str_hand)?;
-        let hand = Some(hand).filter(|hand| hand.cards().len()==ruleset.ekurzlang.cards_per_player()).ok_or_else(||format_err!("Could not convert hand to a full hand of cards"))?;
-        use clap::value_t;
-        subcommands::rank_rules::rank_rules(
-            &ruleset,
-            SFullHand::new(&hand, ruleset.ekurzlang),
-            /*epi_rank*/value_t!(subcommand_matches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0),
-            &ai(subcommand_matches),
-        );
-        return Ok(())
+    if let Some(clapmatches_rank_rules)=clapmatches.subcommand_matches("rank-rules") {
+        return subcommands::rank_rules::rank_rules(clapmatches_rank_rules);
     }
     if let Some(subcommand_matches)=clapmatches.subcommand_matches("suggest-card") {
         return subcommands::suggest_card::suggest_card(
