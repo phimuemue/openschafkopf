@@ -384,10 +384,7 @@ impl SStichSequence {
         self.zugeben_custom_winner_index(card, |stich| rules.winner_index(stich));
     }
 
-    pub fn zugeben_and_restore<F, R>(&mut self, card: SCard, rules: &dyn TRules, func: F) -> R
-        where
-            for<'inner> F: FnOnce(&mut Self)->R
-    {
+    pub fn zugeben_and_restore<R>(&mut self, card: SCard, rules: &dyn TRules, func: impl FnOnce(&mut Self)->R) -> R {
         #[cfg(debug_assertions)]self.assert_invariant();
         let n_len = self.vecstich.len();
         assert!(!self.current_stich().is_full());
