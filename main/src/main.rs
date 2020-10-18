@@ -74,13 +74,8 @@ fn main() -> Result<(), Error> {
     if let Some(clapmatches_websocket)=clapmatches.subcommand_matches("websocket") {
         return subcommands::websocket::run(clapmatches_websocket);
     }
-    if let Some(subcommand_matches_analyze)=clapmatches.subcommand_matches("analyze") {
-        if let Some(itstr_sauspiel_html_file) = subcommand_matches_analyze.values_of("sauspiel-files") {
-            return subcommands::analyze::analyze(
-                &std::path::Path::new("./analyze"),
-                itstr_sauspiel_html_file,
-            );
-        }
+    if let Some(clapmatches_analyze)=clapmatches.subcommand_matches("analyze") {
+        return subcommands::analyze::analyze(clapmatches_analyze);
     }
     let ai = |subcommand_matches: &clap::ArgMatches| {
         match unwrap!(subcommand_matches.value_of("ai")) {

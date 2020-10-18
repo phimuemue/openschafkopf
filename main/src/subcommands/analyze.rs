@@ -177,51 +177,51 @@ fn analyze_plain<'str_lines>(str_lines: &'str_lines str) -> impl Iterator<Item=R
         })
 }
 
-pub fn analyze<
-    'str_sauspiel_html_file,
->(path_analysis: &std::path::Path, itstr_sauspiel_html_file: impl Iterator<Item=&'str_sauspiel_html_file str>) -> Result<(), Error> {
+pub fn analyze(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let mut vecanalyzeparams = Vec::new();
-    for str_file_sauspiel_html in itstr_sauspiel_html_file {
-        for globresult in glob::glob(str_file_sauspiel_html)? {
-            match globresult {
-                Ok(path) => {
-                    println!("Opening {:?}", path);
-                    let str_input = &via_out_param_result(|str_html|
-                        std::fs::File::open(&path)?.read_to_string(str_html)
-                    )?.0;
-                    let mut b_found = false;
-                    let mut push_analyzeparams = |str_description, resanalyzeparams: Result<_, _>| {
-                        b_found = b_found || resanalyzeparams.is_ok();
-                        vecanalyzeparams.push(SAnalyzeParamsWithDesc{
-                            str_description,
-                            str_link: format!("file://{}", path.to_string_lossy()),
-                            resanalyzeparams,
-                        });
-                    };
-                    if let resanalyzeparams@Ok(_) = analyze_sauspiel_html(&str_input) {
-                        push_analyzeparams(path.to_string_lossy().into_owned(), resanalyzeparams)
-                    } else {
-                        let mut b_found_plain = false;
-                        for (i, resanalyzeparams) in analyze_plain(&str_input).filter(|res| res.is_ok()).enumerate() {
-                            b_found_plain = true;
-                            push_analyzeparams(format!("{}_{}", path.to_string_lossy(), i), resanalyzeparams)
+    if let Some(itstr_sauspiel_html_file) = clapmatches.values_of("sauspiel-files") {
+        for str_file_sauspiel_html in itstr_sauspiel_html_file {
+            for globresult in glob::glob(str_file_sauspiel_html)? {
+                match globresult {
+                    Ok(path) => {
+                        println!("Opening {:?}", path);
+                        let str_input = &via_out_param_result(|str_html|
+                            std::fs::File::open(&path)?.read_to_string(str_html)
+                        )?.0;
+                        let mut b_found = false;
+                        let mut push_analyzeparams = |str_description, resanalyzeparams: Result<_, _>| {
+                            b_found = b_found || resanalyzeparams.is_ok();
+                            vecanalyzeparams.push(SAnalyzeParamsWithDesc{
+                                str_description,
+                                str_link: format!("file://{}", path.to_string_lossy()),
+                                resanalyzeparams,
+                            });
+                        };
+                        if let resanalyzeparams@Ok(_) = analyze_sauspiel_html(&str_input) {
+                            push_analyzeparams(path.to_string_lossy().into_owned(), resanalyzeparams)
+                        } else {
+                            let mut b_found_plain = false;
+                            for (i, resanalyzeparams) in analyze_plain(&str_input).filter(|res| res.is_ok()).enumerate() {
+                                b_found_plain = true;
+                                push_analyzeparams(format!("{}_{}", path.to_string_lossy(), i), resanalyzeparams)
+                            }
+                            if !b_found_plain {
+                                push_analyzeparams(path.to_string_lossy().into_owned(), Err(format_err!("Nothing found in {:?}: Trying to continue.", path)));
+                            }
                         }
-                        if !b_found_plain {
-                            push_analyzeparams(path.to_string_lossy().into_owned(), Err(format_err!("Nothing found in {:?}: Trying to continue.", path)));
+                        if !b_found {
+                            println!("Nothing found in {:?}: Trying to continue.", path);
                         }
-                    }
-                    if !b_found {
-                        println!("Nothing found in {:?}: Trying to continue.", path);
-                    }
-                },
-                Err(e) => {
-                    println!("Error: {:?}. Trying to continue.", e);
-                },
+                    },
+                    Err(e) => {
+                        println!("Error: {:?}. Trying to continue.", e);
+                    },
+                }
             }
         }
     }
     analyze_games(
-        path_analysis,
+        &std::path::Path::new("./analyze"), // TODO make customizable
         /*fn_link*/|str_description: &str| str_description.to_string(),
         vecanalyzeparams.into_iter(),
     )
