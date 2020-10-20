@@ -159,7 +159,7 @@ fn constraint_parser_<I: Stream<Item=char>>() -> impl Parser<Input = I, Output =
     where I::Error: ParseError<I::Item, I::Range, I::Position>, // Necessary due to rust-lang/rust#24159
 {
     choice!(
-        attempt((sep_by1::<Vec<_>,_,_>(single_constraint_parser(), (spaces(), char('&').map(|x|dbg!(x)), spaces())))
+        attempt((sep_by1::<Vec<_>,_,_>(single_constraint_parser(), (spaces(), char('&'), spaces())))
             .map(|vecconstraint| unwrap!(vecconstraint.into_iter().fold1(|constraint_lhs, constraint_rhs|
                 VConstraint::Conjunction(Box::new(constraint_lhs), Box::new(constraint_rhs))
             )))),
