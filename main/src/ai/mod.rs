@@ -56,7 +56,7 @@ pub struct SDetermineBestCard<'game> {
 impl<'game> SDetermineBestCard<'game> {
     pub fn new(rules: &'game dyn TRules, stichseq: &'game SStichSequence, hand_fixed: &'game SHand) -> Self {
         let veccard_allowed = rules.all_allowed_cards(stichseq, hand_fixed);
-        assert!(1<=veccard_allowed.len());
+        assert!(!veccard_allowed.is_empty());
         Self{
             rules,
             stichseq,
