@@ -175,13 +175,48 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     snapshotvisualizer.begin_snapshot(stichseq, &ahand);
     let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
     let output = if debug_verify_eq!(
-        ahand[epi_current].cards().is_empty(),
-        ahand.iter().all(|hand| hand.cards().is_empty())
+        ahand[epi_current].cards().len() <= 1,
+        ahand.iter().all(|hand| hand.cards().len() <= 1)
     ) {
-        foreachsnapshot.final_output(
-            SStichSequenceGameFinished::new(stichseq),
-            rulestatecache,
-        )
+        macro_rules! for_each_allowed_card{
+            (($i_offset_0: expr, $($i_offset: expr,)*), $stichseq: expr) => {{
+                let epi = epi_current.wrapping_add($i_offset_0);
+                let card = debug_verify_eq!(
+                    ahand[epi].cards(),
+                    &rules.all_allowed_cards($stichseq, &ahand[epi])
+                )[0];
+                //ahand[epi].play_card(card); // not necessary
+                let output = $stichseq.zugeben_and_restore(
+                    card,
+                    rules,
+                    |stichseq| {for_each_allowed_card!(($($i_offset,)*), stichseq)}
+                );
+                //ahand[epi].add_card(card); // not necessary
+                output
+            }};
+            ((), $stichseq: expr) => {{
+                let unregisterstich = rulestatecache.register_stich(
+                    unwrap!($stichseq.completed_stichs().last()),
+                    $stichseq.current_stich().first_playerindex(),
+                );
+                let output = foreachsnapshot.final_output(
+                    SStichSequenceGameFinished::new($stichseq),
+                    rulestatecache,
+                );
+                rulestatecache.unregister_stich(unregisterstich);
+                output
+            }};
+        };
+        match stichseq.current_stich().size() {
+            0 => for_each_allowed_card!((0, 1, 2, 3,), stichseq),
+            1 => for_each_allowed_card!((0, 1, 2,), stichseq),
+            2 => for_each_allowed_card!((0, 1,), stichseq),
+            3 => for_each_allowed_card!((0,), stichseq),
+            n_stich_size => {
+                assert_eq!(n_stich_size, 4);
+                for_each_allowed_card!((), stichseq)
+            },
+        }
     } else {
         foreachsnapshot.pruned_output(stichseq, &ahand, rulestatecache).unwrap_or_else(|| {
             let mut veccard_allowed = rules.all_allowed_cards(stichseq, &ahand[epi_current]);
