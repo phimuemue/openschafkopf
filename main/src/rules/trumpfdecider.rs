@@ -6,7 +6,8 @@ use std::{cmp::Ordering, marker::PhantomData};
 pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug + Send {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe;
 
-    fn trumpfs_in_descending_order() -> return_impl!(Box<dyn Iterator<Item=SCard>>);
+    type ItCardTrumpf: Iterator<Item=SCard>;
+    fn trumpfs_in_descending_order() -> return_impl!(Self::ItCardTrumpf);
     fn compare_cards(card_fst: SCard, card_snd: SCard) -> Option<Ordering>;
 }
 
@@ -39,8 +40,9 @@ impl<CompareFarbcards: TCompareFarbcards> TTrumpfDecider for STrumpfDeciderNoTru
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
         VTrumpfOrFarbe::Farbe(card.farbe())
     }
-    fn trumpfs_in_descending_order() -> return_impl!(Box<dyn Iterator<Item=SCard>>) {
-        Box::new(std::iter::empty())
+    type ItCardTrumpf = std::iter::Empty<SCard>;
+    fn trumpfs_in_descending_order() -> return_impl!(Self::ItCardTrumpf) {
+        std::iter::empty()
     }
     fn compare_cards(card_fst: SCard, card_snd: SCard) -> Option<Ordering> {
         if_then_some!(
@@ -54,6 +56,9 @@ impl<CompareFarbcards: TCompareFarbcards> TTrumpfDecider for STrumpfDeciderNoTru
 pub struct STrumpfDeciderSchlag<StaticSchlag, DeciderSec> {
     phantom: PhantomData<(StaticSchlag, DeciderSec)>,
 }
+fn static_schlag<StaticSchlag: TStaticValue<ESchlag>>(card: &SCard) -> bool {
+    StaticSchlag::VALUE!=card.schlag()
+}
 impl<StaticSchlag: TStaticValue<ESchlag>, DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<StaticSchlag, DeciderSec> {
     fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
         if StaticSchlag::VALUE == card.schlag() {
@@ -62,13 +67,14 @@ impl<StaticSchlag: TStaticValue<ESchlag>, DeciderSec: TTrumpfDecider> TTrumpfDec
             DeciderSec::trumpforfarbe(card)
         }
     }
-    fn trumpfs_in_descending_order() -> return_impl!(Box<dyn Iterator<Item=SCard>>) {
+    type ItCardTrumpf = Box<dyn Iterator<Item=SCard>>; // TODO concrete type
+    fn trumpfs_in_descending_order() -> return_impl!(Self::ItCardTrumpf) {
         Box::new(
             EFarbe::values()
                 .map(|efarbe| SCard::new(efarbe, StaticSchlag::VALUE))
                 .chain(
                     DeciderSec::trumpfs_in_descending_order()
-                        .filter(|card| StaticSchlag::VALUE!=card.schlag())
+                        .filter(static_schlag::<StaticSchlag>)
                 )
         )
     }
@@ -95,11 +101,10 @@ impl<StaticFarbe: TStaticValue<EFarbe>> TTrumpfDecider for StaticFarbe {
             VTrumpfOrFarbe::Farbe(card.farbe())
         }
     }
-    fn trumpfs_in_descending_order() -> return_impl!(Box<dyn Iterator<Item=SCard>>) {
-        Box::new(
-            ESchlag::values()
-                .map(|eschlag| SCard::new(StaticFarbe::VALUE, eschlag))
-        )
+    type ItCardTrumpf = std::iter::Map<std::iter::Map<std::ops::Range<usize>, fn(usize) -> ESchlag>, fn(ESchlag) -> SCard>;
+    fn trumpfs_in_descending_order() -> return_impl!(Self::ItCardTrumpf) {
+        ESchlag::values()
+            .map(|eschlag| SCard::new(StaticFarbe::VALUE, eschlag))
     }
     fn compare_cards(card_fst: SCard, card_snd: SCard) -> Option<Ordering> {
         match (StaticFarbe::VALUE==card_fst.farbe(), StaticFarbe::VALUE==card_snd.farbe()) {
