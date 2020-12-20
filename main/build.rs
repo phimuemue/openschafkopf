@@ -16,6 +16,7 @@ fn main() {
     let path_resources = Path::new("tools");
     let str_env_var_out_dir = unwrap!(env::var("OUT_DIR"));
     let path_out_dir = Path::new(&str_env_var_out_dir); // https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-build-scripts
+    unwrap!(std::fs::create_dir_all(&path_out_dir));
     // TODO can we avoid lessc depencency?
     let path_css_in = path_resources.join("css.less");
     unwrap!(
@@ -62,12 +63,13 @@ fn main() {
                     n_height_card,
                 )
                     .to_image()
-                    .save(
-                        path_resources // TODO allowed to write into this directory?
+                    .save({
+                        let path_img = path_resources // TODO allowed to write into this directory?
                             .join("site")
-                            .join("img")
-                            .join(format!("{}{}.png", ch_efarbe, ch_eschlag))
-                    )
+                            .join("img");
+                        unwrap!(std::fs::create_dir_all(&path_img));
+                        path_img.join(format!("{}{}.png", ch_efarbe, ch_eschlag))
+                    })
             );
         }
     }
