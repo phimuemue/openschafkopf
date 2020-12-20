@@ -102,7 +102,7 @@ pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
     SHand::new_from_vec({
         let mut veccard_hand = SHandVector::new();
         for _i in 0..n_size {
-            let i_card = rand::thread_rng().gen_range(0, veccard.len());
+            let i_card = rand::thread_rng().gen_range(0..veccard.len());
             veccard_hand.push(veccard.swap_remove(i_card));
         }
         assert_eq!(veccard_hand.len(), n_size);

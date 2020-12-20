@@ -397,9 +397,9 @@ pub fn branching_factor(fn_stichseq_to_intvl: impl Fn(&SStichSequence)->(usize, 
         let (n_lo, n_hi) = fn_stichseq_to_intvl(stichseq);
         assert!(n_lo < n_hi);
         let mut rng = rand::thread_rng();
-        let n = rng.gen_range(n_lo, n_hi);
+        let n = rng.gen_range(n_lo..n_hi);
         while n<veccard_allowed.len() {
-            veccard_allowed.swap_remove(rng.gen_range(0, veccard_allowed.len()));
+            veccard_allowed.swap_remove(rng.gen_range(0..veccard_allowed.len()));
         }
     }
 }

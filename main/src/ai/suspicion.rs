@@ -80,7 +80,7 @@ impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
     fn begin_snapshot(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) {
         let str_item_id = format!("{}{}",
             stichseq.count_played_cards(),
-            rand::thread_rng().sample_iter(&rand::distributions::Alphanumeric).take(16).collect::<String>(), // we simply assume no collisions here
+            rand::thread_rng().sample_iter(&rand::distributions::Alphanumeric).take(16).join(""), // we simply assume no collisions here TODO uuid
         );
         self.write_all(format!("<li><<input type=\"checkbox\" id=\"{}\" />>\n", str_item_id).as_bytes());
         self.write_all(format!("<label for=\"{}\">{} direct successors<table><tr>\n",
