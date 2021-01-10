@@ -44,9 +44,14 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
             $parser_currency.with((
                 $parser_digits.clone(),
                 string(" / ").with($parser_digits.clone()),
-                string(" / ").with($parser_digits.clone()),
-            )).map(|(resn_extra, resn_ruf, resn_solo)| -> Result<_, failure::Error> {
-                Ok((resn_extra?, resn_ruf?, resn_solo?))
+                optional(string(" / ").with($parser_digits.clone())),
+            )).map(|(resn_1, resn_2, oresn_3)| -> Result<_, failure::Error> {
+                Ok(if let Some(resn_3)=oresn_3 {
+                    (resn_1?, resn_2?, resn_3?)
+                } else {
+                    let n_2 = resn_2?;
+                    (resn_1?, n_2, n_2)
+                })
             })
         });
         spaces().with(
