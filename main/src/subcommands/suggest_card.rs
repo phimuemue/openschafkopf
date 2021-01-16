@@ -1,7 +1,7 @@
 use crate::ai::{*, handiterators::*, suspicion::*};
 use crate::game::SStichSequence;
 use crate::primitives::*;
-use crate::util::*;
+use crate::util::{*, parser::*};
 use crate::rules::*;
 use crate::cardvector::*;
 use itertools::*;
@@ -182,7 +182,7 @@ parser!{
 #[test]
 fn test_constraint_parser() {
     fn test_internal(str_in: &str, constraint: VConstraint) {
-        assert_eq!(str_in.parse(), Ok(constraint));
+        assert_eq!(unwrap!(str_in.parse::<VConstraint>()), constraint);
     }
     use VConstraint::*;
     use VNumVal::*;
@@ -216,15 +216,9 @@ fn test_constraint_parser() {
 }
 
 impl std::str::FromStr for VConstraint {
-    type Err = (); // TODO? better type
+    type Err = Error;
     fn from_str(str_in: &str) -> Result<Self, Self::Err> {
-        spaces()
-            .with(constraint_parser())
-            .skip((spaces(), eof()))
-            // end of parser
-            .parse(str_in)
-            .map_err(|_| ())
-            .map(|pairoutconsumed| pairoutconsumed.0)
+        parse_trimmed(str_in, "constraint", constraint_parser())
     }
 }
 
@@ -291,7 +285,7 @@ pub fn suggest_card(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         );
         use ERemainingCards::*;
         let orelation = if_then_some!(let Some(str_constrain_hands)=clapmatches.value_of("constrain_hands"), {
-            let relation = str_constrain_hands.parse::<VConstraint>().map_err(|()|format_err!("Cannot parse hand constraints"))?;
+            let relation = str_constrain_hands.parse::<VConstraint>()?;
             if b_verbose {
                 println!("Constraint parsed as: {}", relation);
             }

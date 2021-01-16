@@ -5,6 +5,7 @@ pub mod box_clone;
 #[macro_use]
 pub mod staticvalue;
 pub mod assign;
+pub mod parser;
 pub use self::{assign::*, box_clone::*, staticvalue::*};
 pub use derive_new::new;
 pub use failure::{bail, format_err, Error};

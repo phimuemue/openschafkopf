@@ -2,7 +2,7 @@ use crate::game_analysis::*;
 use crate::game::*;
 use crate::primitives::*;
 use crate::primitives::cardvector::*;
-use crate::util::*;
+use crate::util::{*, parser::*};
 use std::io::Read;
 use itertools::Itertools;
 
@@ -54,7 +54,9 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
                 })
             })
         });
-        spaces().with(
+        parse_trimmed(
+            &str_tarif,
+            "tarif",
             choice!(
                 parser_tarif!(string("P "), parser_digits),
                 parser_tarif!(
@@ -68,13 +70,8 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
                 )
             )
         )
-            .skip((spaces(), eof()))
-            // end of parser
-            .parse(&str_tarif as &str)
-            .map_err(|err| format_err!("Error in tarif parsing: {:?} on {}", err, str_tarif))
-            .map(|(resnnn, _str)| resnnn)
-                ? // unpack result of combine::parse call
-                ? // unpack parsed result
+            ? // unpack result of combine::parse call
+            ? // unpack parsed result
     };
     let rules = doc.find(Class("title-supertext"))
         .exactly_one()
