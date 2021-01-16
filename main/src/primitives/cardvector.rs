@@ -39,8 +39,7 @@ pub fn card_parser<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = SC
 pub fn parse_cards<C: std::iter::Extend<SCard>+Default>(str_cards: &str) -> Option<C> {
     spaces()
         .with(sep_by::<C,_,_>(card_parser(), spaces()))
-        .skip(spaces())
-        .skip(eof())
+        .skip((spaces(), eof()))
         // end of parser
         .parse(str_cards)
         .ok()

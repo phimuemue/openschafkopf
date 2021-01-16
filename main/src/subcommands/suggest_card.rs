@@ -220,8 +220,7 @@ impl std::str::FromStr for VConstraint {
     fn from_str(str_in: &str) -> Result<Self, Self::Err> {
         spaces()
             .with(constraint_parser())
-            .skip(spaces())
-            .skip(eof())
+            .skip((spaces(), eof()))
             // end of parser
             .parse(str_in)
             .map_err(|_| ())
