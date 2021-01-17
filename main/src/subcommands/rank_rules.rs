@@ -12,7 +12,7 @@ pub fn subcommand(str_subcommand: &str) -> clap::App {
         .arg(clap_arg("position", "0"))
 }
 
-pub fn rank_rules(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
+pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let ruleset = super::get_ruleset(clapmatches)?;
     let hand = super::str_to_hand(&clapmatches.value_of("hand").ok_or_else(||format_err!("No hand given as parameter."))?)?;
     let hand = Some(hand).filter(|hand| hand.cards().len()==ruleset.ekurzlang.cards_per_player()).ok_or_else(||format_err!("Could not convert hand to a full hand of cards"))?;

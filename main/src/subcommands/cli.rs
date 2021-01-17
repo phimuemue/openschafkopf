@@ -23,7 +23,7 @@ pub struct SAtTable {
     n_money: isize,
 }
 
-pub fn game_loop_cli(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
+pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let _tui = skui::STuiGuard::init_ui();
     let (mut aattable, n_stock) = game_loop_cli_internal(
         /*aplayer*/EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {

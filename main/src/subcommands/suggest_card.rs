@@ -241,7 +241,7 @@ impl std::str::FromStr for VConstraint {
     }
 }
 
-pub fn suggest_card(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
+pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let b_verbose = clapmatches.is_present("verbose");
     let hand_fixed = super::str_to_hand(&unwrap!(clapmatches.value_of("hand")))?;
     let veccard_as_played = &cardvector::parse_cards::<Vec<_>>(

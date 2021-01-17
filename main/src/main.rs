@@ -17,29 +17,23 @@ use crate::util::*;
 
 fn main() -> Result<(), Error> {
     openschafkopf_logging::init_logging()?;
-    // TODO clean up command line arguments and possibly avoid repetitions
-    let clapmatches = clap::App::new("schafkopf")
-        .subcommand(subcommands::cli::subcommand("cli"))
-        .subcommand(subcommands::rank_rules::subcommand("rank-rules"))
-        .subcommand(subcommands::suggest_card::subcommand("suggest-card"))
-        .subcommand(subcommands::analyze::subcommand("analyze"))
-        .subcommand(subcommands::websocket::subcommand("websocket"))
-        .get_matches();
-    if let Some(clapmatches_websocket)=clapmatches.subcommand_matches("websocket") {
-        return subcommands::websocket::run(clapmatches_websocket);
-    }
-    if let Some(clapmatches_analyze)=clapmatches.subcommand_matches("analyze") {
-        return subcommands::analyze::analyze(clapmatches_analyze);
-    }
-    if let Some(clapmatches_rank_rules)=clapmatches.subcommand_matches("rank-rules") {
-        return subcommands::rank_rules::rank_rules(clapmatches_rank_rules);
-    }
-    if let Some(clapmatches_suggest_card)=clapmatches.subcommand_matches("suggest-card") {
-        return subcommands::suggest_card::suggest_card(clapmatches_suggest_card);
-    }
-    if let Some(clapmatches_cli)=clapmatches.subcommand_matches("cli") {
-        return subcommands::cli::game_loop_cli(clapmatches_cli);
-    }
+    macro_rules! subcommands{($(($mod:ident, $str_cmd:expr))*) => {
+        let clapmatches = clap::App::new("schafkopf")
+            $(.subcommand(subcommands::$mod::subcommand($str_cmd)))*
+            .get_matches();
+        $(
+            if let Some(clapmatches_subcommand)=clapmatches.subcommand_matches($str_cmd) {
+                return subcommands::$mod::run(clapmatches_subcommand);
+            }
+        )*
+    }}
+    subcommands!(
+        (cli, "cli")
+        (rank_rules, "rank-rules")
+        (suggest_card, "suggest-card")
+        (analyze, "analyze")
+        (websocket, "websocket")
+    );
     Ok(())
 }
 

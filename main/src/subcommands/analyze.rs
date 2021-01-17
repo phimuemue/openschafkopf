@@ -189,7 +189,7 @@ fn analyze_plain<'str_lines>(str_lines: &'str_lines str) -> impl Iterator<Item=R
         })
 }
 
-pub fn analyze(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
+pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let mut vecanalyzeparams = Vec::new();
     if let Some(itstr_sauspiel_html_file) = clapmatches.values_of("sauspiel-files") {
         for str_file_sauspiel_html in itstr_sauspiel_html_file {
