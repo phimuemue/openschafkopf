@@ -17,55 +17,13 @@ use crate::util::*;
 
 fn main() -> Result<(), Error> {
     openschafkopf_logging::init_logging()?;
-    let clap_arg = |str_long, str_default| {
-        clap::Arg::with_name(str_long)
-            .long(str_long)
-            .default_value(str_default)
-    };
     // TODO clean up command line arguments and possibly avoid repetitions
     let clapmatches = clap::App::new("schafkopf")
-        .subcommand(clap::SubCommand::with_name("cli")
-            .about("Simulate players to play against")
-            .arg(clap_arg("ruleset", "rulesets/default.toml"))
-            .arg(clap_arg("ai", "cheating"))
-            .arg(clap_arg("numgames", "4"))
-        )
-        .subcommand(clap::SubCommand::with_name("rank-rules")
-            .about("Estimate strength of own hand")
-            .arg(clap_arg("ruleset", "rulesets/default.toml"))
-            .arg(clap_arg("ai", "cheating"))
-            .arg(clap_arg("hand", ""))
-            .arg(clap_arg("position", "0"))
-        )
-        .subcommand({
-            let single_arg = |str_name, str_long| {
-                clap::Arg::with_name(str_name)
-                    .long(str_long)
-                    .required(true)
-                    .takes_value(true)
-            };
-            clap::SubCommand::with_name("suggest-card")
-                .about("Suggest a card to play given the game so far")
-                .arg(single_arg("rules", "rules"))
-                .arg(single_arg("hand", "hand"))
-                .arg(single_arg("cards_on_table", "cards-on-table"))
-                .arg(clap::Arg::with_name("branching").long("branching").takes_value(true))
-                .arg(clap::Arg::with_name("simulate_hands").long("simulate-hands").takes_value(true))
-                .arg(clap::Arg::with_name("verbose").long("verbose").short("v"))
-                .arg(clap::Arg::with_name("prune").long("prune").takes_value(true))
-                .arg(clap::Arg::with_name("constrain_hands").long("constrain-hands").takes_value(true))
-        })
-        .subcommand(clap::SubCommand::with_name("analyze")
-            .about("Analyze played games and spot suboptimal decisions")
-            .arg(clap::Arg::with_name("sauspiel-files")
-                 .required(true)
-                 .takes_value(true)
-                 .multiple(true)
-            )
-        )
-        .subcommand(clap::SubCommand::with_name("websocket")
-            .arg(clap_arg("ruleset", "rulesets/default.toml"))
-        )
+        .subcommand(subcommands::cli::subcommand("cli"))
+        .subcommand(subcommands::rank_rules::subcommand("rank-rules"))
+        .subcommand(subcommands::suggest_card::subcommand("suggest-card"))
+        .subcommand(subcommands::analyze::subcommand("analyze"))
+        .subcommand(subcommands::websocket::subcommand("websocket"))
         .get_matches();
     if let Some(clapmatches_websocket)=clapmatches.subcommand_matches("websocket") {
         return subcommands::websocket::run(clapmatches_websocket);

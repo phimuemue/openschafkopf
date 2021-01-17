@@ -9,6 +9,12 @@ use crate::rules::ruleset::SRuleSet;
 use crate::ai::SAi;
 use crate::primitives::hand::SHand;
 
+fn clap_arg(str_long: &'static str, str_default: &'static str) -> clap::Arg<'static, 'static> {
+    clap::Arg::with_name(str_long)
+        .long(str_long)
+        .default_value(str_default)
+}
+
 pub fn get_ruleset(clapmatches: &clap::ArgMatches) -> Result<SRuleSet, Error> {
     SRuleSet::from_file(std::path::Path::new(unwrap!(clapmatches.value_of("ruleset"))))
 }

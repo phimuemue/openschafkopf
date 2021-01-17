@@ -26,6 +26,11 @@ use crate::primitives::*;
 use rand::prelude::*;
 use itertools::Itertools;
 
+pub fn subcommand(str_subcommand: &str) -> clap::App {
+    clap::SubCommand::with_name(str_subcommand)
+        .arg(super::clap_arg("ruleset", "rulesets/default.toml"))
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 enum VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, GameResult> {
     DealCards(DealCards),

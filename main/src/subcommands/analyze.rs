@@ -6,6 +6,16 @@ use crate::util::{*, parser::*};
 use std::io::Read;
 use itertools::Itertools;
 
+pub fn subcommand(str_subcommand: &str) -> clap::App {
+    clap::SubCommand::with_name(str_subcommand)
+        .about("Analyze played games and spot suboptimal decisions")
+        .arg(clap::Arg::with_name("sauspiel-files")
+            .required(true)
+            .takes_value(true)
+            .multiple(true)
+        )
+}
+
 pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::Error> {
     use combine::{char::*, *};
     use select::{document::Document, node::Node, predicate::*};

@@ -2,6 +2,16 @@ use crate::primitives::*;
 use crate::rules::ruleset::*;
 use crate::util::*;
 
+pub fn subcommand(str_subcommand: &str) -> clap::App {
+    use super::clap_arg;
+    clap::SubCommand::with_name(str_subcommand)
+        .about("Estimate strength of own hand")
+        .arg(clap_arg("ruleset", "rulesets/default.toml"))
+        .arg(clap_arg("ai", "cheating"))
+        .arg(clap_arg("hand", ""))
+        .arg(clap_arg("position", "0"))
+}
+
 pub fn rank_rules(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let ruleset = super::get_ruleset(clapmatches)?;
     let hand = super::str_to_hand(&clapmatches.value_of("hand").ok_or_else(||format_err!("No hand given as parameter."))?)?;

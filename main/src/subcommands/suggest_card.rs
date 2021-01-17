@@ -7,6 +7,25 @@ use crate::cardvector::*;
 use itertools::*;
 use combine::{char::*, *};
 
+pub fn subcommand(str_subcommand: &str) -> clap::App {
+    let single_arg = |str_name, str_long| {
+        clap::Arg::with_name(str_name)
+            .long(str_long)
+            .required(true)
+            .takes_value(true)
+    };
+    clap::SubCommand::with_name(str_subcommand)
+        .about("Suggest a card to play given the game so far")
+        .arg(single_arg("rules", "rules"))
+        .arg(single_arg("hand", "hand"))
+        .arg(single_arg("cards_on_table", "cards-on-table"))
+        .arg(clap::Arg::with_name("branching").long("branching").takes_value(true))
+        .arg(clap::Arg::with_name("simulate_hands").long("simulate-hands").takes_value(true))
+        .arg(clap::Arg::with_name("verbose").long("verbose").short("v"))
+        .arg(clap::Arg::with_name("prune").long("prune").takes_value(true))
+        .arg(clap::Arg::with_name("constrain_hands").long("constrain-hands").takes_value(true))
+}
+
 plain_enum_mod!(moderemainingcards, ERemainingCards {_1, _2, _3, _4, _5, _6, _7, _8,});
 
 #[derive(Clone, Debug, Eq, PartialEq)]

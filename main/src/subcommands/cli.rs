@@ -9,6 +9,15 @@ use crate::skui;
 use crate::util::*;
 use std::sync::mpsc;
 
+pub fn subcommand(str_subcommand: &str) -> clap::App {
+    use super::clap_arg;
+    clap::SubCommand::with_name(str_subcommand)
+        .about("Simulate players to play against")
+        .arg(clap_arg("ruleset", "rulesets/default.toml"))
+        .arg(clap_arg("ai", "cheating"))
+        .arg(clap_arg("numgames", "4"))
+}
+
 pub struct SAtTable {
     player: Box<dyn TPlayer>,
     n_money: isize,
