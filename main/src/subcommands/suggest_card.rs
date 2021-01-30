@@ -39,6 +39,7 @@ enum VNumVal {
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum VConstraint {
     Not(Box<VConstraint>),
+    Num(VNumVal),
     Relation {
         numval_lhs: VNumVal,
         ord: std::cmp::Ordering,
@@ -84,6 +85,7 @@ impl VConstraint {
     fn eval(&self, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules) -> bool {
         match self {
             VConstraint::Not(constraint) => !constraint.eval(ahand, rules),
+            VConstraint::Num(numval) => numval.eval(ahand, rules)!=0,
             VConstraint::Relation{numval_lhs, ord, numval_rhs} => *ord == numval_lhs.eval(ahand, rules).cmp(&numval_rhs.eval(ahand, rules)),
             VConstraint::Conjunction(constraint_lhs, constraint_rhs) => constraint_lhs.eval(ahand, rules) && constraint_rhs.eval(ahand, rules),
             VConstraint::Disjunction(constraint_lhs, constraint_rhs) => constraint_lhs.eval(ahand, rules) || constraint_rhs.eval(ahand, rules),
@@ -95,6 +97,7 @@ impl std::fmt::Display for VConstraint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
             VConstraint::Not(constraint) => write!(f, "!({})", constraint),
+            VConstraint::Num(numval) => write!(f, "{}", numval),
             VConstraint::Relation{numval_lhs, ord, numval_rhs} => write!(f, "({}){}({})",
                 numval_lhs,
                 match ord {
@@ -158,11 +161,11 @@ fn single_constraint_parser_<I: Stream<Item=char>>() -> impl Parser<Input = I, O
                 numval_parser()
             ))
         ).map(|(numval_lhs, otplordnumval_rhs)| {
-            let (ord, numval_rhs) = otplordnumval_rhs.unwrap_or((
-                std::cmp::Ordering::Greater,
-                VNumVal::Const(0)
-            ));
-            VConstraint::Relation{numval_lhs, ord, numval_rhs}
+            if let Some((ord, numval_rhs)) = otplordnumval_rhs {
+                VConstraint::Relation{numval_lhs, ord, numval_rhs}
+            } else {
+                VConstraint::Num(numval_lhs)
+            }
         })
     )
 }
