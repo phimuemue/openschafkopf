@@ -35,11 +35,7 @@ pub fn run<'argmatches>(clapmatches: &'argmatches clap::ArgMatches) -> Result<()
                         itahand
                             .inspect(|ahand| {
                                 if b_verbose { // TODO? dispatch statically
-                                    // TODO make output pretty
-                                    for hand in ahand.iter() {
-                                        print!("{} | ", hand);
-                                    }
-                                    println!("");
+                                    println!("{}", ahand.iter().join(" | "));
                                 }
                             }),
                         $func_filter_allowed_cards,
