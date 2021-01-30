@@ -5,6 +5,7 @@ pub mod rank_rules;
 pub mod suggest_card;
 pub mod websocket;
 mod handconstraint;
+mod common_given_game;
 
 use crate::util::*;
 use crate::rules::ruleset::SRuleSet;

@@ -3,8 +3,7 @@ use crate::primitives::*;
 use crate::rules::*;
 use crate::util::*;
 
-use super::handconstraint::*;
-use super::suggest_card::*;
+use super::common_given_game::*;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::App {
     subcommand_given_game(str_subcommand, "Statistics about hands that could be dealt.")
@@ -15,7 +14,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     struct SWithCommonArgs<'argmatches> {
         clapmatches: &'argmatches clap::ArgMatches<'argmatches>,
     }
-    impl<'argmatches> super::suggest_card::TWithCommonArgs for SWithCommonArgs<'argmatches> {
+    impl<'argmatches> TWithCommonArgs for SWithCommonArgs<'argmatches> {
         fn call(
             self,
             rules: &dyn TRules,
@@ -69,5 +68,5 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             Ok(())
         }
     }
-    super::suggest_card::with_common_args(clapmatches, SWithCommonArgs{clapmatches})
+    with_common_args(clapmatches, SWithCommonArgs{clapmatches})
 }
