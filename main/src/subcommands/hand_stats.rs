@@ -3,6 +3,7 @@ use crate::primitives::*;
 use crate::rules::*;
 use crate::util::*;
 
+use super::handconstraint::*;
 use super::suggest_card::*;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::App {
