@@ -33,6 +33,7 @@ fn main() -> Result<(), Error> {
         (suggest_card, "suggest-card")
         (analyze, "analyze")
         (websocket, "websocket")
+        (hand_stats, "hand-stats")
     );
     Ok(())
 }
