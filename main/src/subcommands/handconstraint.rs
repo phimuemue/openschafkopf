@@ -205,8 +205,11 @@ fn test_constraint_parser() {
         test_internal(&format!("!{}", str_in), Not(Box::new(relation.clone())));
         test_internal(&format!("!!{}", str_in), Not(Box::new(Not(Box::new(relation)))));
     }
-    fn test_simple_greater_0(str_in: &str, numval_lhs: VNumVal) {
-        test_comparison(str_in, numval_lhs, Greater, Const(0));
+    fn test_simple_greater_0(str_in: &str, numval: VNumVal) {
+        let relation = Num(numval);
+        test_internal(str_in, relation.clone());
+        test_internal(&format!("!{}", str_in), Not(Box::new(relation.clone())));
+        test_internal(&format!("!!{}", str_in), Not(Box::new(Not(Box::new(relation)))));
     }
     test_simple_greater_0("ea(1)", Card(SCard::new(Eichel, Ass), EPI1));
     test_simple_greater_0("t(2)", TrumpfOrFarbe(Trumpf, EPI2));
