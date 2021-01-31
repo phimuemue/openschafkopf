@@ -166,17 +166,15 @@ parser!{
 fn constraint_parser_<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = VConstraint>
     where I::Error: ParseError<I::Item, I::Range, I::Position>, // Necessary due to rust-lang/rust#24159
 {
-    choice!(
-        attempt((sep_by1::<Vec<_>,_,_>(single_constraint_parser(), (spaces(), char('&'), spaces())))
-            .map(|vecconstraint| unwrap!(vecconstraint.into_iter().fold1(|constraint_lhs, constraint_rhs|
-                VConstraint::Conjunction(Box::new(constraint_lhs), Box::new(constraint_rhs))
-            )))),
-        attempt((sep_by1::<Vec<_>,_,_>(single_constraint_parser(), (spaces(), char('|'), spaces())))
-            .map(|vecconstraint| unwrap!(vecconstraint.into_iter().fold1(|constraint_lhs, constraint_rhs|
-                VConstraint::Disjunction(Box::new(constraint_lhs), Box::new(constraint_rhs))
-            )))),
-        attempt(single_constraint_parser())
-    )
+    macro_rules! make_bin_op_parser{($parser:ident, $chr:expr, $op:ident) => {
+        let $parser = attempt((single_constraint_parser(), many1::<Vec<_>, _>((spaces(), char($chr), spaces()).with(single_constraint_parser()))))
+            .map(|(constraint, vecconstraint)| unwrap!(std::iter::once(constraint).chain(vecconstraint.into_iter()).fold1(|constraint_lhs, constraint_rhs|
+                VConstraint::$op(Box::new(constraint_lhs), Box::new(constraint_rhs))
+            )));
+    }};
+    make_bin_op_parser!(conjunction, '&', Conjunction);
+    make_bin_op_parser!(disjunction, '|', Disjunction);
+    choice!(conjunction, disjunction, attempt(single_constraint_parser()))
 }
 
 parser!{
@@ -223,6 +221,20 @@ fn test_constraint_parser() {
     test_comparison("o(0)<3", Schlag(Ober, EPI0), Less, Const(3));
     test_comparison("8(0)<2", Schlag(S8, EPI0), Less, Const(2));
     test_comparison("8<2", Const(8), Less, Const(2));
+    test_internal(
+        "e(1)&e(2)",
+        Conjunction(
+            Box::new(Num(TrumpfOrFarbe(Farbe(Eichel), EPI1))),
+            Box::new(Num(TrumpfOrFarbe(Farbe(Eichel), EPI2))),
+        )
+    );
+    test_internal(
+        "e(1)|e(2)",
+        Disjunction(
+            Box::new(Num(TrumpfOrFarbe(Farbe(Eichel), EPI1))),
+            Box::new(Num(TrumpfOrFarbe(Farbe(Eichel), EPI2))),
+        )
+    );
     // TODO more tests
 }
 
