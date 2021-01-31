@@ -41,15 +41,11 @@ impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
     type Item = EnumMap<EPlayerIndex, SHand>;
     fn next(&mut self) -> Option<Self::Item> {
         if_then_some!(self.b_valid, {
-            let ahand = EPlayerIndex::map_from_fn(|epi| {
-                if self.epi_fixed==epi {
-                    self.hand_known.clone()
-                } else {
-                    SHand::new_from_vec(self.vecepi.iter().enumerate()
-                        .filter(|&(_i, epi_susp)| *epi_susp == epi)
-                        .map(|(i, _epi_susp)| self.veccard_unknown[i]).collect())
-                }
-            });
+            let mut ahand = EPlayerIndex::map_from_fn(|_| SHand::new_from_vec(SHandVector::new()));
+            ahand[self.epi_fixed] = self.hand_known.clone();
+            for (i, epi) in self.vecepi.iter().copied().enumerate() {
+                ahand[epi].add_card(self.veccard_unknown[i]);
+            }
             self.b_valid = NextVecEPI::next(self.vecepi.as_mut_slice());
             ahand
         })
