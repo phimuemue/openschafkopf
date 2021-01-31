@@ -40,7 +40,7 @@ pub struct SHandIterator<NextVecEPI> {
 impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
     type Item = EnumMap<EPlayerIndex, SHand>;
     fn next(&mut self) -> Option<Self::Item> {
-        if self.b_valid {
+        if_then_some!(self.b_valid, {
             let ahand = EPlayerIndex::map_from_fn(|epi| {
                 if self.epi_fixed==epi {
                     self.hand_known.clone()
@@ -51,11 +51,8 @@ impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
                 }
             });
             self.b_valid = NextVecEPI::next(self.vecepi.as_mut_slice());
-            Some(ahand)
-        } else {
-            assert!(!self.vecepi[..].next_permutation());
-            None
-        }
+            ahand
+        })
     }
 }
 
