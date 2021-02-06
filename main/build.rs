@@ -45,7 +45,7 @@ fn main() {
             .arg(format!("--export-filename={}", unwrap!(path_svg_3dpi.to_str())))
             .arg(format!("--export-dpi={}", 3*/*default DPI*/96))
     );
-    let img = /*TODO unwrap!*/(image::open(path_svg_3dpi)).unwrap();
+    let img = unwrap!(image::open(path_svg_3dpi));
     let (n_width, n_height) = img.dimensions();
     let str_efarbe = "EGHS";
     let str_eschlag = "AZKOU987";
