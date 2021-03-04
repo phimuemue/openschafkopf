@@ -151,7 +151,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
     })
 }
 
-fn analyze_plain<'str_lines>(str_lines: &'str_lines str) -> impl Iterator<Item=Result<SAnalyzeParams, failure::Error>> + 'str_lines {
+fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SAnalyzeParams, failure::Error>> + '_ {
     str_lines
         .lines()
         .map(|str_plain| {
