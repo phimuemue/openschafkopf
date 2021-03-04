@@ -13,7 +13,7 @@ enum VChooseItAhand {
 
 plain_enum_mod!(moderemainingcards, ERemainingCards {_1, _2, _3, _4, _5, _6, _7, _8,});
 
-pub fn subcommand_given_game<'a>(str_subcommand: &'static str, str_about: &'static str) -> clap::App<'static, 'static> {
+pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::App<'static, 'static> {
     let single_arg = |str_name, str_long| {
         clap::Arg::with_name(str_name)
             .long(str_long)
