@@ -12,7 +12,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::App {
         .arg(clap::Arg::with_name("prune").long("prune").takes_value(true))
 }
 
-pub fn run<'argmatches>(clapmatches: &'argmatches clap::ArgMatches) -> Result<(), Error> {
+pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     struct SWithCommonArgs<'argmatches> {
         clapmatches: &'argmatches clap::ArgMatches<'argmatches>,
     }
