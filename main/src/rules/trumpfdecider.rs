@@ -101,6 +101,7 @@ impl<StaticFarbe: TStaticValue<EFarbe>> TTrumpfDecider for StaticFarbe {
             VTrumpfOrFarbe::Farbe(card.farbe())
         }
     }
+    #[allow(clippy::type_complexity)] // covered by the fact that return_impl should go away
     type ItCardTrumpf = std::iter::Map<std::iter::Map<std::ops::Range<usize>, fn(usize) -> ESchlag>, fn(ESchlag) -> SCard>;
     fn trumpfs_in_descending_order() -> return_impl!(Self::ItCardTrumpf) {
         ESchlag::values()
