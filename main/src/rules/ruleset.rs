@@ -98,7 +98,7 @@ impl SRuleSet {
                     Some(&toml::Value::String(ref str_durchmarsch)) if "all"==str_durchmarsch => {
                         Ok(VDurchmarsch::All)
                     },
-                    Some(&toml::Value::Integer(n_durchmarsch)) if 61<=n_durchmarsch && n_durchmarsch<=120 => {
+                    Some(&toml::Value::Integer(n_durchmarsch)) if (61..=120).contains(&n_durchmarsch) => {
                         Ok(VDurchmarsch::AtLeast(n_durchmarsch.as_num()))
                     },
                     _ => bail!("Invalid value for ramsch.durchmarsch. \"All\" or a number in [61; 120] is supported.")
