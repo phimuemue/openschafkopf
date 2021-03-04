@@ -4,6 +4,7 @@
 // https://github.com/rust-lang/rust/issues/53485
 // For now, use implementation from https://github.com/rust-lang/rust/blob/b5ab524ea7b536617d8abc5507a1d97b3e60a42d/src/libcore/iter/iterator.rs
 pub trait IteratorExt: itertools::Itertools {
+    #[allow(clippy::wrong_self_convention)] // consuming self ok as per https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.is_sorted
     fn is_sorted_unstable_name_collision(self) -> bool
     where
         Self: Sized,
@@ -12,6 +13,7 @@ pub trait IteratorExt: itertools::Itertools {
         self.is_sorted_by_unstable_name_collision(|a, b| a.partial_cmp(b))
     }
 
+    #[allow(clippy::wrong_self_convention)] // consuming self ok as per https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.is_sorted_by
     fn is_sorted_by_unstable_name_collision<F>(mut self, mut compare: F) -> bool
     where
         Self: Sized,
@@ -33,6 +35,7 @@ pub trait IteratorExt: itertools::Itertools {
         true
     }
 
+    #[allow(clippy::wrong_self_convention)] // consuming self ok as per https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.is_sorted_by_key
     fn is_sorted_by_key_unstable_name_collision<F, K>(self, mut f: F) -> bool
     where
         Self: Sized,
