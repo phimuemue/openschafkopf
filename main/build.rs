@@ -1,5 +1,4 @@
 use openschafkopf_util::*;
-use image;
 use image::GenericImageView;
 use as_num::*;
 
