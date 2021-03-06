@@ -21,7 +21,12 @@ fn internal_test_rules(
         SAnalyzeParams {
             rules: rules.box_clone(),
             ahand,
-            vecn_doubling,
+            doublings: SDoublings::new_full(
+                SStaticEPI0{},
+                EPlayerIndex::map_from_fn(|epi| 
+                    vecn_doubling.contains(&epi.to_usize())
+                ).into_raw(),
+            ),
             vecn_stoss,
             n_stock,
             vecstich: slcstich_test.to_vec(),

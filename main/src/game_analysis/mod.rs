@@ -42,15 +42,9 @@ pub fn analyze_game_internal(
     analyzeparams: SAnalyzeParams,
     mut fn_before_zugeben: impl FnMut(&SGame, /*i_stich*/usize, EPlayerIndex, SCard),
 ) -> SGame { // TODO return SGameResult
-    let doublings = SDoublings::new_full(
-        SStaticEPI0{},
-        EPlayerIndex::map_from_fn(|epi| 
-            analyzeparams.vecn_doubling.contains(&epi.to_usize())
-        ).into_raw()
-    );
     let mut game = SGame::new(
         analyzeparams.ahand,
-        doublings,
+        analyzeparams.doublings,
         Some(SStossParams::new(
             /*n_stoss_max*/4,
         )),
@@ -92,7 +86,7 @@ pub struct SAnalysisImprovement {
 pub struct SAnalyzeParams {
     pub rules: Box<dyn TRules>,
     pub ahand: EnumMap<EPlayerIndex, SHand>,
-    pub vecn_doubling: Vec<usize>,
+    pub doublings: SDoublings,
     pub vecn_stoss: Vec<usize>,
     pub n_stock: isize,
     pub vecstich: Vec<SStich>,

@@ -144,7 +144,15 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
                     .collect()
             )
         ),
-        vecn_doubling: get_doublings_stoss("Klopfer")?,
+        doublings: {
+            let vecn_doubling = get_doublings_stoss("Klopfer")?;
+            SDoublings::new_full(
+                SStaticEPI0{},
+                EPlayerIndex::map_from_fn(|epi| 
+                    vecn_doubling.contains(&epi.to_usize())
+                ).into_raw(),
+            )
+        },
         vecn_stoss: get_doublings_stoss("Kontra und Retour")?,
         n_stock: 0, // Sauspiel does not support stock
         vecstich,
@@ -181,7 +189,10 @@ fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SAnalyzeParams, f
                             .collect()
                     )
                 ),
-                vecn_doubling: vec![],
+                doublings: SDoublings::new_full(
+                    SStaticEPI0{},
+                    EPlayerIndex::map_from_fn(|_epi| false).into_raw(),
+                ),
                 vecn_stoss: vec![],
                 n_stock: 0,
                 vecstich: stichseq.completed_stichs().to_vec(),
