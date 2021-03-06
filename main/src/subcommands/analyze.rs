@@ -129,10 +129,9 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
         })?
         .1;
     let get_doublings_stoss = |str_key| -> Result<_, failure::Error> {
-        scrape_from_key_figure_table(str_key)?
+        Ok(scrape_from_key_figure_table(str_key)?
             .find(Name("a"))
-            .map(|node| username_to_epi(&node.inner_html()).map(|epi| epi.to_usize()))
-            .collect::<Result<Vec<_>, _>>()
+            .map(|node| username_to_epi(&node.inner_html())))
     };
     Ok(SAnalyzeParams {
         rules,
@@ -145,18 +144,17 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
             )
         ),
         doublings: {
-            let vecn_doubling = get_doublings_stoss("Klopfer")?;
+            let vecepi_doubling = get_doublings_stoss("Klopfer")?.collect::<Result<Vec<_>, _>>()?;
             SDoublings::new_full(
                 SStaticEPI0{},
                 EPlayerIndex::map_from_fn(|epi| 
-                    vecn_doubling.contains(&epi.to_usize())
+                    vecepi_doubling.contains(&epi)
                 ).into_raw(),
             )
         },
         vecstoss: get_doublings_stoss("Kontra und Retour")?
-            .into_iter()
-            .map(|i_epi| crate::rules::SStoss{epi: unwrap!(EPlayerIndex::checked_from_usize(i_epi))})
-            .collect(),
+            .map(|resepi| resepi.map(|epi| crate::rules::SStoss{epi}))
+            .collect::<Result<Vec<_>, _>>()?,
         n_stock: 0, // Sauspiel does not support stock
         vecstich,
     })
