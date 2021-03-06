@@ -215,7 +215,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         let mut b_found = false;
                         let mut push_game = |str_description, resgame: Result<_, _>| {
                             b_found = b_found || resgame.is_ok();
-                            vecgame.push(SAnalyzeParamsWithDesc{
+                            vecgame.push(SGameWithDesc{
                                 str_description,
                                 str_link: format!("file://{}", path.to_string_lossy()),
                                 resgame,

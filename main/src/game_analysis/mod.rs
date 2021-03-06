@@ -265,13 +265,13 @@ fn write_html(path: std::path::PathBuf, str_html: &str) -> Result<std::path::Pat
     Ok(path)
 }
 
-pub struct SAnalyzeParamsWithDesc {
+pub struct SGameWithDesc {
     pub str_description: String,
     pub str_link: String,
     pub resgame: Result<SGame, failure::Error>,
 }
 
-pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String, itgamewithdesc: impl Iterator<Item=SAnalyzeParamsWithDesc>) -> Result<(), failure::Error> {
+pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String, itgamewithdesc: impl Iterator<Item=SGameWithDesc>) -> Result<(), failure::Error> {
     create_dir_if_not_existent(&path_analysis)?;
     generate_html_auxiliary_files(path_analysis)?;
     let str_date = format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S"));
