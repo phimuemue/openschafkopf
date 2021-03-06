@@ -1,5 +1,6 @@
 use crate::game_analysis::*;
 use crate::game::*;
+use crate::rules::ruleset::SStossParams;
 use crate::primitives::*;
 use crate::primitives::cardvector::*;
 use crate::util::{*, parser::*};
@@ -16,7 +17,7 @@ pub fn subcommand(str_subcommand: &str) -> clap::App {
         )
 }
 
-pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::Error> {
+pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGame, failure::Error> {
     use combine::{char::*, *};
     use select::{document::Document, node::Node, predicate::*};
     let doc = Document::from(&str_html as &str);
@@ -133,9 +134,8 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
             .find(Name("a"))
             .map(|node| username_to_epi(&node.inner_html())))
     };
-    Ok(SAnalyzeParams {
-        rules,
-        ahand: EPlayerIndex::map_from_fn(|epi|
+    let mut game = SGame::new(
+        /*ahand*/EPlayerIndex::map_from_fn(|epi|
             SHand::new_from_vec(
                 vecstich
                     .iter()
@@ -143,7 +143,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
                     .collect()
             )
         ),
-        doublings: {
+        /*doublings*/{
             let vecepi_doubling = get_doublings_stoss("Klopfer")?.collect::<Result<Vec<_>, _>>()?;
             SDoublings::new_full(
                 SStaticEPI0{},
@@ -152,15 +152,22 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
                 ).into_raw(),
             )
         },
-        vecstoss: get_doublings_stoss("Kontra und Retour")?
-            .map(|resepi| resepi.map(|epi| crate::rules::SStoss{epi}))
-            .collect::<Result<Vec<_>, _>>()?,
-        n_stock: 0, // Sauspiel does not support stock
-        vecstich,
-    })
+        /*ostossparams*/Some(SStossParams::new(/*n_stoss_max*/4)),
+        rules,
+        /*n_stock*/0, // Sauspiel does not support stock
+    );
+    for resepi in get_doublings_stoss("Kontra und Retour")? {
+        let () = game.stoss(resepi?)?;
+    }
+    for stich in vecstich.into_iter() {
+        for (epi, card) in stich.iter() {
+            let () = game.zugeben(*card, epi)?;
+        }
+    }
+    Ok(game)
 }
 
-fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SAnalyzeParams, failure::Error>> + '_ {
+fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failure::Error>> + '_ {
     str_lines
         .lines()
         .map(|str_plain| {
@@ -179,25 +186,18 @@ fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SAnalyzeParams, f
                 veccard.iter().copied(),
                 rules.as_ref(),
             );
-            Ok(SAnalyzeParams {
+            SGame::new_finished(
                 rules,
-                ahand: EPlayerIndex::map_from_fn(|epi|
-                    SHand::new_from_vec(
-                        stichseq
-                            .completed_stichs()
-                            .iter()
-                            .map(|stich| stich[epi])
-                            .collect()
-                    )
-                ),
-                doublings: SDoublings::new_full(
+                SDoublings::new_full(
                     SStaticEPI0{},
                     EPlayerIndex::map_from_fn(|_epi| false).into_raw(),
                 ),
-                vecstoss: vec![],
-                n_stock: 0,
-                vecstich: stichseq.completed_stichs().to_vec(),
-            })
+                /*ostossparams*/None,
+                /*vecstoss*/vec![],
+                /*n_stock*/0,
+                SStichSequenceGameFinished::new(&stichseq),
+                /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
+            )
         })
 }
 

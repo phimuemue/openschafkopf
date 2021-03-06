@@ -1,7 +1,7 @@
 use crate::ai::{handiterators::*, suspicion::*, *};
 use crate::game::*;
 use crate::primitives::*;
-use crate::rules::{payoutdecider::*, ruleset::*, rulessolo::*, *};
+use crate::rules::{payoutdecider::*, rulessolo::*, *};
 use crate::util::*;
 use itertools::Itertools;
 use std::{
@@ -38,36 +38,6 @@ pub fn make_stich_vector(vecpairepiacard_stich: &[(EPlayerIndex, [SCard; 4])]) -
         .collect()
 }
 
-pub fn analyze_game_internal(
-    analyzeparams: SAnalyzeParams,
-    mut fn_before_zugeben: impl FnMut(&SGame, /*i_stich*/usize, EPlayerIndex, SCard),
-) -> SGame { // TODO return SGameResult
-    let mut game = SGame::new(
-        analyzeparams.ahand,
-        analyzeparams.doublings,
-        Some(SStossParams::new(
-            /*n_stoss_max*/4,
-        )),
-        analyzeparams.rules.box_clone(),
-        analyzeparams.n_stock,
-    );
-    for stoss in analyzeparams.vecstoss.iter() {
-        unwrap!(game.stoss(stoss.epi));
-    }
-    for (i_stich, stich) in analyzeparams.vecstich.iter().enumerate() {
-        assert_eq!(Some(stich.first_playerindex()), game.which_player_can_do_something().map(|gameaction| gameaction.0));
-        for (epi, card) in stich.iter() {
-            assert_eq!(Some(epi), game.which_player_can_do_something().map(|gameaction| gameaction.0));
-            fn_before_zugeben(&game, i_stich, epi, *card);
-            unwrap!(game.zugeben(*card, epi));
-        }
-    }
-    for (i_stich, stich) in game.stichseq.visible_stichs().iter().enumerate() {
-        assert_eq!(stich, &analyzeparams.vecstich[i_stich]);
-    }
-    game
-}
-
 #[derive(Clone)]
 pub struct SAnalysisCardAndPayout {
     pub veccard: Vec<SCard>,
@@ -82,16 +52,6 @@ pub struct SAnalysisImprovement {
     pub ocardandpayout_simulating: Option<SAnalysisCardAndPayout>,
 }
 
-#[derive(Debug, Clone)]
-pub struct SAnalyzeParams {
-    pub rules: Box<dyn TRules>,
-    pub ahand: EnumMap<EPlayerIndex, SHand>,
-    pub doublings: SDoublings,
-    pub vecstoss: Vec<SStoss>,
-    pub n_stock: isize,
-    pub vecstich: Vec<SStich>,
-}
-
 pub struct SGameAnalysis {
     pub str_html: String,
     pub n_findings_cheating: usize,
@@ -99,13 +59,10 @@ pub struct SGameAnalysis {
     pub duration: Duration,
 }
 
-pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnalyzeParams) -> SGameAnalysis {
+pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SGame) -> SGameAnalysis {
     let instant_begin = Instant::now();
     let mut vecanalysisimpr = Vec::new();
-    let an_payout = unwrap!(analyze_game_internal(
-        analyzeparams.clone(),
-        /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {}
-    ).finish()).an_payout;
+    let an_payout = unwrap!(analyzeparams.clone().finish()).an_payout;
     let str_rules = format!("{}{}",
         analyzeparams.rules,
         if let Some(epi) = analyzeparams.rules.playerindex() {
@@ -114,8 +71,13 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
             "".to_owned()
         },
     );
-    let game = analyze_game_internal(
-        analyzeparams,
+    let game = unwrap!(SGame::new_finished(
+        analyzeparams.rules.clone(),
+        analyzeparams.doublings.clone(),
+        analyzeparams.ostossparams.clone(),
+        analyzeparams.vecstoss.clone(),
+        analyzeparams.n_stock,
+        SStichSequenceGameFinished::new(&analyzeparams.stichseq),
         /*fn_before_zugeben*/|game, i_stich, epi, card| {
             if remaining_cards_per_hand(&game.stichseq)[epi] <= if_dbg_else!({2}{4}) {
                 let determinebestcard = SDetermineBestCard::new_from_game(game);
@@ -174,7 +136,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SAnaly
                 }
             }
         },
-    );
+    ));
     SGameAnalysis {
         str_html: generate_analysis_html(
             &game,
@@ -306,7 +268,7 @@ fn write_html(path: std::path::PathBuf, str_html: &str) -> Result<std::path::Pat
 pub struct SAnalyzeParamsWithDesc {
     pub str_description: String,
     pub str_link: String,
-    pub resanalyzeparams: Result<SAnalyzeParams, failure::Error>,
+    pub resanalyzeparams: Result<SGame, failure::Error>,
 }
 
 pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String, itanalyzeparamswithdesc: impl Iterator<Item=SAnalyzeParamsWithDesc>) -> Result<(), failure::Error> {

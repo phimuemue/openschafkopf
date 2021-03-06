@@ -422,7 +422,7 @@ pub struct SGame {
     pub doublings : SDoublings,
     pub rules : Box<dyn TRules>,
     pub vecstoss : Vec<SStoss>,
-    ostossparams : Option<SStossParams>,
+    pub ostossparams : Option<SStossParams>,
     pub n_stock : isize,
     pub stichseq: SStichSequence,
 }
@@ -491,6 +491,42 @@ impl SGame {
             n_stock,
             stichseq: SStichSequence::new(EKurzLang::from_cards_per_player(n_cards_per_player)),
         }
+    }
+
+    pub fn new_finished(
+        rules : Box<dyn TRules>,
+        doublings : SDoublings,
+        ostossparams : Option<SStossParams>,
+        vecstoss: Vec<SStoss>,
+        n_stock : isize,
+        stichseq: SStichSequenceGameFinished, // TODO take value instead of wrapper
+        mut fn_before_zugeben: impl FnMut(&SGame, /*i_stich*/usize, EPlayerIndex, SCard),
+    ) -> Result<SGame, Error> {
+        let ahand = EPlayerIndex::map_from_fn(|epi|
+            SHand::new_from_vec(
+                stichseq.get()
+                    .completed_stichs()
+                    .iter()
+                    .map(|stich| stich[epi])
+                    .collect()
+            )
+        );
+        let mut game = SGame::new(ahand, doublings, ostossparams, rules, n_stock);
+        for stoss in vecstoss.into_iter() {
+            if game.stoss(stoss.epi).is_err() {
+                bail!("Error in stoss.")
+            }
+        }
+        for (i_stich, stich) in stichseq.get().completed_stichs().iter().enumerate() {
+            for (epi, card) in stich.iter() {
+                fn_before_zugeben(&game, i_stich, epi, *card);
+                if game.zugeben(*card, epi).is_err() {
+                    bail!("Error in zugeben.")
+                }
+            }
+        }
+        assert!(game.which_player_can_do_something().is_none());
+        Ok(game)
     }
 
     pub fn current_playable_stich(&self) -> &SStich {

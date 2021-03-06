@@ -1,4 +1,5 @@
 use crate::game::*;
+use crate::rules::ruleset::SStossParams;
 use crate::game_analysis::*;
 use crate::primitives::{card::card_values::*, *};
 use crate::rules::{
@@ -17,24 +18,27 @@ fn internal_test_rules(
     (an_payout, n_stock_payout): ([isize; 4], isize),
 ) {
     println!("Testing rules: {}", str_info);
-    let game = analyze_game_internal(
-        SAnalyzeParams {
-            rules: rules.box_clone(),
-            ahand,
-            doublings: SDoublings::new_full(
-                SStaticEPI0{},
-                EPlayerIndex::map_from_fn(|epi| 
-                    vecn_doubling.contains(&epi.to_usize())
-                ).into_raw(),
-            ),
-            vecstoss: vecn_stoss.into_iter()
-                .map(|i_epi| crate::rules::SStoss{epi: unwrap!(EPlayerIndex::checked_from_usize(i_epi))})
-                .collect(),
-            n_stock,
-            vecstich: slcstich_test.to_vec(),
-        },
-        /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
+    // TODO? check _ahand
+    let mut game = SGame::new(
+        ahand,
+        SDoublings::new_full(
+            SStaticEPI0{},
+            EPlayerIndex::map_from_fn(|epi| 
+                vecn_doubling.contains(&epi.to_usize())
+            ).into_raw(),
+        ),
+        /*ostossparams*/Some(SStossParams::new(/*n_stoss_max*/4)),
+        rules.box_clone(),
+        n_stock,
     );
+    for i_epi in vecn_stoss.into_iter() {
+        unwrap!(game.stoss(unwrap!(EPlayerIndex::checked_from_usize(i_epi))));
+    }
+    for stich in slcstich_test.iter() {
+        for (epi, card) in stich.iter() {
+            unwrap!(game.zugeben(*card, epi));
+        }
+    }
     let an_payout_check = unwrap!(game.finish()).an_payout;
     assert_eq!(EPlayerIndex::map_from_fn(|epi| an_payout_check[epi]), EPlayerIndex::map_from_raw(an_payout));
     assert_eq!(-an_payout.iter().sum::<isize>(), n_stock_payout);
