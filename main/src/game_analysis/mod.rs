@@ -59,25 +59,25 @@ pub struct SGameAnalysis {
     pub duration: Duration,
 }
 
-pub fn analyze_game(str_description: &str, str_link: &str, analyzeparams: SGame) -> SGameAnalysis {
+pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SGameAnalysis {
     let instant_begin = Instant::now();
     let mut vecanalysisimpr = Vec::new();
-    let an_payout = unwrap!(analyzeparams.clone().finish()).an_payout;
+    let an_payout = unwrap!(game_in.clone().finish()).an_payout;
     let str_rules = format!("{}{}",
-        analyzeparams.rules,
-        if let Some(epi) = analyzeparams.rules.playerindex() {
+        game_in.rules,
+        if let Some(epi) = game_in.rules.playerindex() {
             format!(" von {}", epi)
         } else {
             "".to_owned()
         },
     );
     let game = unwrap!(SGame::new_finished(
-        analyzeparams.rules.clone(),
-        analyzeparams.doublings.clone(),
-        analyzeparams.ostossparams.clone(),
-        analyzeparams.vecstoss.clone(),
-        analyzeparams.n_stock,
-        SStichSequenceGameFinished::new(&analyzeparams.stichseq),
+        game_in.rules.clone(),
+        game_in.doublings.clone(),
+        game_in.ostossparams.clone(),
+        game_in.vecstoss.clone(),
+        game_in.n_stock,
+        SStichSequenceGameFinished::new(&game_in.stichseq),
         /*fn_before_zugeben*/|game, i_stich, epi, card| {
             if remaining_cards_per_hand(&game.stichseq)[epi] <= if_dbg_else!({2}{4}) {
                 let determinebestcard = SDetermineBestCard::new_from_game(game);
@@ -268,10 +268,10 @@ fn write_html(path: std::path::PathBuf, str_html: &str) -> Result<std::path::Pat
 pub struct SAnalyzeParamsWithDesc {
     pub str_description: String,
     pub str_link: String,
-    pub resanalyzeparams: Result<SGame, failure::Error>,
+    pub resgame: Result<SGame, failure::Error>,
 }
 
-pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String, itanalyzeparamswithdesc: impl Iterator<Item=SAnalyzeParamsWithDesc>) -> Result<(), failure::Error> {
+pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String, itgamewithdesc: impl Iterator<Item=SAnalyzeParamsWithDesc>) -> Result<(), failure::Error> {
     create_dir_if_not_existent(&path_analysis)?;
     generate_html_auxiliary_files(path_analysis)?;
     let str_date = format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S"));
@@ -289,13 +289,13 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
         str_date = str_date,
     );
     str_index_html += "<table>";
-    for analyzeparamswithdesc in itanalyzeparamswithdesc {
-        if let Ok(analyzeparams) = analyzeparamswithdesc.resanalyzeparams {
-            let str_rules = format!("{}", analyzeparams.rules);
-            let path_analysis_game = path_analysis.join(analyzeparamswithdesc.str_description.replace("/", "_").replace(".", "_"));
+    for gamewithdesc in itgamewithdesc {
+        if let Ok(game) = gamewithdesc.resgame {
+            let str_rules = format!("{}", game.rules);
+            let path_analysis_game = path_analysis.join(gamewithdesc.str_description.replace("/", "_").replace(".", "_"));
             create_dir_if_not_existent(&path_analysis_game)?;
             let path = path_analysis_game.join("analysis.html");
-            let gameanalysis = analyze_game(&analyzeparamswithdesc.str_description, &fn_link(&analyzeparamswithdesc.str_description), analyzeparams);
+            let gameanalysis = analyze_game(&gamewithdesc.str_description, &fn_link(&gamewithdesc.str_description), game);
             let path = write_html(path, &gameanalysis.str_html)?;
             str_index_html += &format!(
                 r#"<tr>
@@ -326,7 +326,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                 },
             );
         } else {
-            str_index_html += &format!("<tr><td>Fehler ({})</td></tr>", analyzeparamswithdesc.str_description);
+            str_index_html += &format!("<tr><td>Fehler ({})</td></tr>", gamewithdesc.str_description);
         }
     }
     str_index_html += "</table>";
