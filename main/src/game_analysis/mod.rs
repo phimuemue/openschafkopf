@@ -51,8 +51,8 @@ pub fn analyze_game_internal(
         analyzeparams.rules.box_clone(),
         analyzeparams.n_stock,
     );
-    for n_epi_stoss in analyzeparams.vecn_stoss.iter() {
-        unwrap!(game.stoss(/*TODO could this be EPlayerIndex?*/unwrap!(EPlayerIndex::checked_from_usize(*n_epi_stoss))));
+    for stoss in analyzeparams.vecstoss.iter() {
+        unwrap!(game.stoss(stoss.epi));
     }
     for (i_stich, stich) in analyzeparams.vecstich.iter().enumerate() {
         assert_eq!(Some(stich.first_playerindex()), game.which_player_can_do_something().map(|gameaction| gameaction.0));
@@ -87,7 +87,7 @@ pub struct SAnalyzeParams {
     pub rules: Box<dyn TRules>,
     pub ahand: EnumMap<EPlayerIndex, SHand>,
     pub doublings: SDoublings,
-    pub vecn_stoss: Vec<usize>,
+    pub vecstoss: Vec<SStoss>,
     pub n_stock: isize,
     pub vecstich: Vec<SStich>,
 }

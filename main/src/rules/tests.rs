@@ -27,7 +27,9 @@ fn internal_test_rules(
                     vecn_doubling.contains(&epi.to_usize())
                 ).into_raw(),
             ),
-            vecn_stoss,
+            vecstoss: vecn_stoss.into_iter()
+                .map(|i_epi| crate::rules::SStoss{epi: unwrap!(EPlayerIndex::checked_from_usize(i_epi))})
+                .collect(),
             n_stock,
             vecstich: slcstich_test.to_vec(),
         },

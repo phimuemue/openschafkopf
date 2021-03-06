@@ -153,7 +153,10 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SAnalyzeParams, failure::
                 ).into_raw(),
             )
         },
-        vecn_stoss: get_doublings_stoss("Kontra und Retour")?,
+        vecstoss: get_doublings_stoss("Kontra und Retour")?
+            .into_iter()
+            .map(|i_epi| crate::rules::SStoss{epi: unwrap!(EPlayerIndex::checked_from_usize(i_epi))})
+            .collect(),
         n_stock: 0, // Sauspiel does not support stock
         vecstich,
     })
@@ -193,7 +196,7 @@ fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SAnalyzeParams, f
                     SStaticEPI0{},
                     EPlayerIndex::map_from_fn(|_epi| false).into_raw(),
                 ),
-                vecn_stoss: vec![],
+                vecstoss: vec![],
                 n_stock: 0,
                 vecstich: stichseq.completed_stichs().to_vec(),
             })
