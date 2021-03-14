@@ -107,7 +107,9 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGame, failure::Error> {
                     .map(|node_card| -> Result<SCard, _> {
                         let str_class = unwrap!(node_card.attr("class")); // "class" must be present
                         (
-                            string("card-image by g"),
+                            string("card-image "),
+                            choice!(string("by"), string("fn")),
+                            string(" g"),
                             digit(),
                             space(),
                         )
