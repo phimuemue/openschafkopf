@@ -8,6 +8,7 @@ use super::common_given_game::*;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::App {
     subcommand_given_game(str_subcommand, "Suggest a card to play given the game so far")
+        .arg(clap::Arg::with_name("repeat_hands").long("repeat-hands").takes_value(true))
         .arg(clap::Arg::with_name("branching").long("branching").takes_value(true))
         .arg(clap::Arg::with_name("prune").long("prune").takes_value(true))
 }
@@ -30,6 +31,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             let epi_fixed = determinebestcard.epi_fixed;
             let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
                 macro_rules! forward{(($func_filter_allowed_cards: expr), ($foreachsnapshot: ident),) => {{ // TODORUST generic closures
+                    let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                     determine_best_card(
                         &determinebestcard,
                         itahand
@@ -37,6 +39,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 if b_verbose { // TODO? dispatch statically
                                     println!("{}", ahand.iter().join(" | "));
                                 }
+                            })
+                            .flat_map(|ahand| {
+                                itertools::repeat_n(
+                                    ahand,
+                                    n_repeat_hand,
+                                )
                             }),
                         $func_filter_allowed_cards,
                         &$foreachsnapshot::new(
