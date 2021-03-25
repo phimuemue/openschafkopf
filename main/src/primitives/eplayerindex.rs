@@ -29,7 +29,7 @@ impl FromStr for EPlayerIndex {
 #[derive(Clone, Debug)]
 pub struct SPlayersInRound<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>> {
     pub epi_first: PlayerIndex,
-    vect: ArrayVec<[T; EPlayerIndex::SIZE]>,
+    vect: ArrayVec<T, {EPlayerIndex::SIZE}>,
 }
 
 impl<T: PartialEq, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> PartialEq for SPlayersInRound<T, PlayerIndex> {
@@ -135,7 +135,7 @@ impl<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> SPlayersInRound<T
 
 impl<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>> IntoIterator for SPlayersInRound<T, PlayerIndex> {
     type Item = (EPlayerIndex, T);
-    type IntoIter = SPlayersInRoundIterator<arrayvec::IntoIter<[T; EPlayerIndex::SIZE]>>;
+    type IntoIter = SPlayersInRoundIterator<arrayvec::IntoIter<T, {EPlayerIndex::SIZE}>>;
     fn into_iter(self) -> Self::IntoIter {
         SPlayersInRoundIterator {
             iter: self.vect.into_iter(),

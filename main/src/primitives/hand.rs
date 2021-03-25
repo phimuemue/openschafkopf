@@ -2,7 +2,7 @@ use crate::primitives::card::*;
 use arrayvec::ArrayVec;
 use std::fmt;
 
-pub type SHandVector = ArrayVec<[SCard; 8]>;
+pub type SHandVector = ArrayVec<SCard, 8>;
 
 #[derive(Clone, Debug)]
 pub struct SHand {
