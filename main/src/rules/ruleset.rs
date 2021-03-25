@@ -138,10 +138,10 @@ impl SRuleSet {
                 } else {
                     Ok(())
                 }
-            }};
+            }}
             macro_rules! create_rulegroup_sololike {($str_rule_name_file: expr, $str_group_name: expr, $fn_rules: expr) => {
                 create_rulegroup!($str_rule_name_file, "solo-price", $str_group_name, $fn_rules)
-            }};
+            }}
             vecrulegroup.push(SRuleGroup{
                 str_name: "Nothing".to_string(),
                 vecorules: vec![None],

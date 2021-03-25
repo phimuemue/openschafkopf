@@ -41,7 +41,7 @@ fn test_determine_best_card() {
                 unwrap!(game.zugeben(*card, epi));
             }
         }
-    };
+    }
     play_stichs(&mut game, &[
         (EPlayerIndex::EPI0, [EO, HK, HA, H8]),
         (EPlayerIndex::EPI0, [SU, GA, GO, H9]),

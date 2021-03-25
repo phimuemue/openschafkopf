@@ -206,7 +206,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                 rulestatecache.unregister_stich(unregisterstich);
                 output
             }};
-        };
+        }
         match stichseq.current_stich().size() {
             0 => for_each_allowed_card!((0, 1, 2, 3,), stichseq),
             1 => for_each_allowed_card!((0, 1, 2,), stichseq),
@@ -235,7 +235,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                             func_filter_allowed_cards,
                             foreachsnapshot,
                             snapshotvisualizer,
-                        )}};
+                        )}}
                         if stichseq.current_stich().is_empty() {
                             let unregisterstich = rulestatecache.register_stich(
                                 unwrap!(stichseq.completed_stichs().last()),

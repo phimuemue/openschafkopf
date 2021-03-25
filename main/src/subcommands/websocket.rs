@@ -411,7 +411,7 @@ impl STable {
                         VGamePhase::DealCards(SDealCards::new(table.ruleset.clone(), table.n_stock))
                     )
                     // TODO should we clear timeouts?
-                };
+                }
                 fn simple_transition<GamePhase: TGamePhase>(
                     phase: GamePhase,
                     fn_ok: impl FnOnce(GamePhase::Finish) -> VGamePhase,

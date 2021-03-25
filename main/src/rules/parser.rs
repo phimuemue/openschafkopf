@@ -56,7 +56,7 @@ pub fn parse_rule_description(
                     ),
                 ),
             ).upcast_box())
-        }};
+        }}
         if str_rules_contains(&["tout"]) {
             make_sololike_internal!(SPayoutDeciderTout)
         } else {

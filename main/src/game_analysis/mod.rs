@@ -107,7 +107,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SG
                     } else {
                         None
                     }
-                }}};
+                }}}
                 let look_for_mistakes_simulating = || {
                     look_for_mistakes!(
                         all_possible_hands(

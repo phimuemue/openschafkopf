@@ -95,7 +95,7 @@ pub fn with_common_args(
             determinebestcard,
             b_verbose,
         )
-    }};
+    }}
     cartesian_match!(forward,
         match ((oiteratehands, eremainingcards)) {
             (Some(All), _)|(None, _1)|(None, _2)|(None, _3)|(None, _4) => (

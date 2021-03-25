@@ -358,7 +358,7 @@ pub fn sololike(
             $payoutdecider,
             format!("{}{}{}", $str_oefarbe, $str_esololike, $str_payoutdecider),
         )) as Box<dyn TActivelyPlayableRules>
-    }};
+    }}
     cartesian_match!(
         sololike_internal,
         match (epi) {

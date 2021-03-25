@@ -171,7 +171,7 @@ fn constraint_parser_<I: Stream<Item=char>>() -> impl Parser<Input = I, Output =
             .map(|(constraint, vecconstraint)| unwrap!(std::iter::once(constraint).chain(vecconstraint.into_iter()).fold1(|constraint_lhs, constraint_rhs|
                 VConstraint::$op(Box::new(constraint_lhs), Box::new(constraint_rhs))
             )));
-    }};
+    }}
     make_bin_op_parser!(conjunction, '&', Conjunction);
     make_bin_op_parser!(disjunction, '|', Disjunction);
     choice!(conjunction, disjunction, attempt(single_constraint_parser()))
