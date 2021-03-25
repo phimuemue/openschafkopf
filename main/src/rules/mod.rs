@@ -404,6 +404,7 @@ pub enum VGameAnnouncementPriority {
 }
 
 #[test]
+#[allow(clippy::eq_op)] // this method tests equality operators
 fn test_gameannouncementprio() {
     use self::VGameAnnouncementPriority::*;
     use self::VGameAnnouncementPrioritySoloLike::*;
