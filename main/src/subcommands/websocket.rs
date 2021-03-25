@@ -498,9 +498,9 @@ impl STable {
                                             epi_doubling,
                                             "Doppeln?".into(),
                                             [(true, "Doppeln"), (false, "Nicht doppeln")]
-                                                .iter()
+                                                .into_iter()
                                                 .map(|(b_doubling, str_doubling)| 
-                                                    (str_doubling.to_string(), VGamePhaseAction::DealCards(*b_doubling))
+                                                    (str_doubling.to_string(), VGamePhaseAction::DealCards(b_doubling))
                                                 ),
                                             self_mutex.clone(),
                                             VGamePhaseAction::DealCards(/*b_doubling*/false),

@@ -8,6 +8,8 @@ pub use self::via_out_param::*;
 #[macro_use]
 pub mod mutate_return;
 pub use mutate_return::*;
+pub mod array_into_iter;
+pub use array_into_iter::*;
 
 #[cfg(debug_assertions)]
 #[macro_export]

@@ -130,9 +130,9 @@ fn test_all_possible_hands() {
     use crate::card::card_values::*;
     let epi_irrelevant = EPlayerIndex::EPI0;
     let mut stichseq = SStichSequence::new(EKurzLang::Lang);
-    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8]].iter() {
-        for card in acard_stich {
-            stichseq.zugeben_custom_winner_index(*card, |_stich| epi_irrelevant);
+    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8]].into_iter() {
+        for card in acard_stich.into_iter() {
+            stichseq.zugeben_custom_winner_index(card, |_stich| epi_irrelevant);
         }
     }
     // see combinatorics.ods for computation of n_hand_count
@@ -162,19 +162,19 @@ fn test_all_possible_hands() {
             (E7, vec![SK], 1, [0, 0, 1, 1]),
             (SK, vec![SK], 1, [0, 0, 0, 1]),
         ],
-    ].iter() {
-        for (card, veccard_hand, n_hand_count, an_size_hand) in atplcardslccardnan.iter() {
+    ].into_iter() {
+        for (card, veccard_hand, n_hand_count, an_size_hand) in atplcardslccardnan.into_iter() {
             assert_eq!(
                 make_handiterator::<SNextVecEPIPermutation>(
                     &stichseq,
-                    SHand::new_from_vec(veccard_hand.iter().copied().collect()),
+                    SHand::new_from_vec(veccard_hand.into_iter().collect()),
                     epi_fixed,
                 )
-                    .inspect(|ahand| assert_eq!(EnumMap::from_raw(*an_size_hand), ahand.map(|hand| hand.cards().len())))
+                    .inspect(|ahand| assert_eq!(EnumMap::from_raw(an_size_hand), ahand.map(|hand| hand.cards().len())))
                     .count(),
-                *n_hand_count
+                n_hand_count
             );
-            stichseq.zugeben_custom_winner_index(*card, |_stich| epi_irrelevant);
+            stichseq.zugeben_custom_winner_index(card, |_stich| epi_irrelevant);
         }
     }
 }

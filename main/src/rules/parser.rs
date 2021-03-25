@@ -28,11 +28,11 @@ pub fn parse_rule_description(
         (EFarbe::Gras, &["gras", "grün", "laub", "blatt", "blau"]),
         (EFarbe::Herz, &["herz", "rot"]),
         (EFarbe::Schelln, &["schelln", "schelle", "pump", "hundsgfickte"]),
-    ].iter()
+    ].into_iter()
         .filter(|(_efarbe, slcstr_farbe)| str_rules_contains(slcstr_farbe))
         .exactly_one()
     {
-        Ok((efarbe, _)) => Some(*efarbe),
+        Ok((efarbe, _)) => Some(efarbe),
         Err(itefarbeslcstr) => {
             if 0==itefarbeslcstr.count() {
                 None
@@ -96,7 +96,7 @@ pub fn parse_rule_description(
                 // TODO Jungfrau
             )) as Box<dyn TRules>)
         }),
-    ].iter()
+    ].into_iter()
         .filter(|(slcstr, _)| str_rules_contains(slcstr))
         .exactly_one()
     {

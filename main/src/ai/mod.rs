@@ -216,12 +216,12 @@ pub fn unplayed_cards<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed
 fn test_unplayed_cards() {
     use crate::card::card_values::*;
     let mut stichseq = SStichSequence::new(EKurzLang::Lang);
-    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]].iter() {
-        for card in acard_stich.iter() {
-            stichseq.zugeben_custom_winner_index(*card, |_stich| EPlayerIndex::EPI0 /*irrelevant*/);
+    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]].into_iter() {
+        for card in acard_stich.into_iter() {
+            stichseq.zugeben_custom_winner_index(card, |_stich| EPlayerIndex::EPI0 /*irrelevant*/);
         }
     }
-    let hand = &SHand::new_from_vec([GK, SK].iter().copied().collect());
+    let hand = &SHand::new_from_vec([GK, SK].into_iter().collect());
     let veccard_unplayed = unplayed_cards(&stichseq, &hand).collect::<Vec<_>>();
     let veccard_unplayed_check = [GZ, E7, SZ, H9, EZ, GU];
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
@@ -527,10 +527,10 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         ).as_ref()),
         /*n_stock*/ 0,
     );
-    for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]].iter() {
+    for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]].into_iter() {
         assert_eq!(EPlayerIndex::values().next(), Some(epi_active));
-        for (epi, card) in EPlayerIndex::values().zip(acard_stich.iter()) {
-            unwrap!(game.zugeben(*card, epi));
+        for (epi, card) in EPlayerIndex::values().zip(acard_stich.into_iter()) {
+            unwrap!(game.zugeben(card, epi));
         }
     }
     for ahand in all_possible_hands(
@@ -548,11 +548,11 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             &SMinReachablePayout::new_from_game(&game),
             /*opath_out_dir*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
         );
-        for card in [H7, H8, H9].iter() {
-            assert!(determinebestcard.veccard_allowed.contains(card));
+        for card in [H7, H8, H9].into_iter() {
+            assert!(determinebestcard.veccard_allowed.contains(&card));
             for eminmaxstrat in EMinMaxStrategy::values() {
                 assert_eq!(
-                    determinebestcardresult.mapcardt[*card].clone().map(|minmax| minmax.0[eminmaxstrat].min()),
+                    determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.0[eminmaxstrat].min()),
                     Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
                 );
             }
