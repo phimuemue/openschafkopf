@@ -5,6 +5,8 @@ use arrayvec::ArrayVec;
 use rand::{self, Rng};
 use std::mem;
 
+pub mod run;
+
 pub trait TGamePhase : Sized {
     type ActivePlayerInfo;
     type Finish;
