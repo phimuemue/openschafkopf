@@ -1,4 +1,8 @@
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::blocks_in_if_conditions, clippy::just_underscores_and_digits))]
+#![cfg_attr(feature = "cargo-clippy", allow(
+    clippy::blocks_in_if_conditions,
+    clippy::just_underscores_and_digits,
+    clippy::upper_case_acronyms,
+))]
 #![deny(bare_trait_objects)]
 
 #[macro_use]
