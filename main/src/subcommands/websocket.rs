@@ -412,12 +412,12 @@ impl STable {
                     )
                     // TODO should we clear timeouts?
                 }
-                fn simple_transition<GamePhase: TGamePhase>(
+                fn simple_transition<R: From<VGamePhase>, GamePhase: TGamePhase>(
                     phase: GamePhase,
                     fn_ok: impl FnOnce(GamePhase::Finish) -> VGamePhase,
                     fn_err: impl FnOnce(GamePhase) -> VGamePhase,
-                ) -> Option<VGamePhase> {
-                    Some(phase.finish().map_or_else(fn_err, fn_ok))
+                ) -> R {
+                    phase.finish().map_or_else(fn_err, fn_ok).into()
                 }
                 if let Some(gamephase) = self.ogamephase.take() {
                     self.ogamephase = match gamephase {
