@@ -58,7 +58,7 @@ type SActivelyPlayableRulesIdentifier = String;
 fn find_rules_by_id(slcrulegroup: &[SRuleGroup], hand: SFullHand, orulesid: &Option<SActivelyPlayableRulesIdentifier>) -> Result<Option<Box<dyn TActivelyPlayableRules>>, ()> {
     allowed_rules(slcrulegroup, hand)
         .find(|orules|
-            &orules.map(TActivelyPlayableRules::to_string)==orulesid
+            &orules.map(<dyn TActivelyPlayableRules>::to_string)==orulesid
         )
         .map(|orules| orules.map(TActivelyPlayableRulesBoxClone::box_clone)) // TODO box_clone needed?
         .ok_or(())
@@ -73,7 +73,7 @@ fn rules_to_gamephaseaction<'retval, 'rules : 'retval, 'hand : 'retval>(slcruleg
                  } else {
                      "Weiter".to_string()
                  },
-                 fn_gamephaseaction(orules.map(TActivelyPlayableRules::to_string)),
+                 fn_gamephaseaction(orules.map(<dyn TActivelyPlayableRules>::to_string)),
              )
         )
 }
