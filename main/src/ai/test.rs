@@ -22,7 +22,7 @@ fn test_determine_best_card() {
         Some(SStossParams::new(
             /*n_stoss_max*/4,
         )),
-        TRules::box_clone(&rulesrufspiel::SRulesRufspiel::new(EPlayerIndex::EPI0, EFarbe::Eichel, payoutdecider::SPayoutDeciderParams::new(
+        <dyn TRules>::box_clone(&rulesrufspiel::SRulesRufspiel::new(EPlayerIndex::EPI0, EFarbe::Eichel, payoutdecider::SPayoutDeciderParams::new(
             /*n_payout_base*/100,
             /*n_payout_schneider_schwarz*/50,
             payoutdecider::SLaufendeParams::new(
