@@ -658,7 +658,7 @@ impl STable {
                                 if_then_some!(let VStockOrT::OrT(ref game) = gameresult.stockorgame,
                                     game.rules.as_ref()
                                 ),
-                                |_epi| vec![],
+                                |_epi| Vec::new(),
                                 |epi, otimeoutcmd| {
                                     if !mapepib_confirmed[epi] {
                                         ask_with_timeout(
@@ -688,7 +688,7 @@ impl STable {
             self.players.for_each(
                 /*oslcstich*/None,
                 None,
-                |_epi| vec![],
+                |_epi| Vec::new(),
                 |_oepi, _otimeoutcmd| VMessage::Info("Waiting for more players.".into()),
                 |_peer| VMessage::Info("Waiting for more players.".into()),
                 None,
