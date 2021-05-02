@@ -758,7 +758,13 @@ impl STimerFuture {
 
 async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sockaddr: SocketAddr) {
     println!("Incoming TCP connection from: {}", sockaddr);
-    let wsstream = unwrap!(async_tungstenite::accept_async(tcpstream).await);
+    let wsstream = match async_tungstenite::accept_async(tcpstream).await {
+        Ok(wsstream) => wsstream,
+        Err(e) => {
+            println!("Error in accepting tcpstream: {}", e);
+            return;
+        }
+    };
     println!("WebSocket connection established: {}", sockaddr);
     // Insert the write part of this peer to the peer map.
     let (txmsg, rxmsg) = unbounded();
