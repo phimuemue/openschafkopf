@@ -12,7 +12,7 @@ use crate::rules::ruleset::{SRuleGroup, SRuleSet, VStockOrT, allowed_rules};
 use futures::prelude::*;
 use futures::{
     channel::mpsc::{unbounded, UnboundedSender},
-    future, pin_mut,
+    future,
 };
 use serde::{Serialize, Deserialize};
 use std::task::{Context, Poll, Waker};
@@ -810,7 +810,6 @@ async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sock
             future::ok(())
         });
     let receive_from_others = rxmsg.map(Ok).forward(sink_ws_out);
-    pin_mut!(broadcast_incoming, receive_from_others); // TODO Is this really needed?
     future::select(broadcast_incoming, receive_from_others).await;
     println!("{} disconnected", &sockaddr);
     unwrap!(table.lock()).remove(&sockaddr);
