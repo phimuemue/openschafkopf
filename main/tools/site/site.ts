@@ -62,6 +62,11 @@ function dbg(t: any) {
     return t;
 }
 
+function unwrap<T>(t: T | null) : T {
+    assert(!(t===null));
+    return t as T;
+}
+
 function new_div_with_id(str_id: string) {
     let div = document.createElement("DIV");
     div.id = str_id;
@@ -90,7 +95,7 @@ function set_animationDuration_if(div: HTMLElement, b: boolean) {
 }
 
 function replace_div_with(div_old: HTMLElement, div_new: HTMLElement) {
-    div_old.parentNode.replaceChild(div_new, div_old);
+    unwrap(div_old.parentNode).replaceChild(div_new, div_old);
 }
 
 let str_player_name = prompt("Name:");
@@ -110,9 +115,9 @@ ws.onmessage = function(msg) {
                 ws.send(JSON.stringify({"GamePhaseAction": dbg(tplstrstr[1])}));
             };
         }
-        replace_div_with(document.getElementById("hand"), div_hand_new);
+        replace_div_with(unwrap(document.getElementById("hand")), div_hand_new);
     }
-    let div_askpanel = document.getElementById("askpanel");
+    let div_askpanel = unwrap(document.getElementById("askpanel"));
     let oask = getAsk(sitestate.msg);
     if (oask) {
         dbg("ASK: " + oask.vecstrgamephaseaction[0]);
@@ -154,7 +159,7 @@ ws.onmessage = function(msg) {
                 div_stich_new.appendChild(div_card);
             }
         }
-        replace_div_with(document.getElementById("stich"), div_stich_new);
+        replace_div_with(unwrap(document.getElementById("stich")), div_stich_new);
         // previous stich
         let div_stich_prev = new_div_with_id("stich_old");
         if (displayedstichs.ostichprev) {
@@ -167,13 +172,13 @@ ws.onmessage = function(msg) {
             set_animationDuration_if(div_stich_prev, 0==displayedstichs.stichcurrent.vecstr_card.length);
             div_stich_prev.className = "stich_old_" + dbg(displayedstichs.stichcurrent.epi_first);
         }
-        replace_div_with(document.getElementById("stich_old"), div_stich_prev);
+        replace_div_with(unwrap(document.getElementById("stich_old")), div_stich_prev);
     }
     {
         dbg(sitestate.mapepistr);
         dbg(sitestate.oepi_timeout);
         for (let i_epi = 0; i_epi<4; i_epi++) {
-            let div_player = document.getElementById("playerpanel_player_" + i_epi);
+            let div_player = unwrap(document.getElementById("playerpanel_player_" + i_epi));
             div_player.textContent = sitestate.mapepistr[i_epi];
             if (dbg(sitestate.otplepistr_rules) && i_epi==sitestate.otplepistr_rules[0]) {
                 div_player.textContent += ": " + sitestate.otplepistr_rules[1];
