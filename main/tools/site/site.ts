@@ -51,13 +51,13 @@ class SSiteState {
     readonly oepi_timeout: null | EPlayerIndex;
 }
 
-function assert(b) {
+function assert(b: any) {
     if (!b) {
         throw {};
     }
 }
 
-function dbg(t) {
+function dbg(t: any) {
     console.log(t);
     return t;
 }
