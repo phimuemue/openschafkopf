@@ -182,7 +182,7 @@ pub fn generate_analysis_html(
     use crate::game::*;
     assert!(game.which_player_can_do_something().is_none()); // TODO use SGameResult (see comment in SGameResult)
     let ahand = EPlayerIndex::map_from_fn(|epi| {
-        SHand::new_from_vec(game.stichseq.completed_stichs().iter().map(|stich| stich[epi]).collect())
+        SHand::new_from_iter(game.stichseq.completed_stichs().iter().map(|stich| stich[epi]))
     });
     let epi_self = EPlayerIndex::EPI0;
     format!(

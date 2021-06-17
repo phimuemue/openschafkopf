@@ -167,7 +167,7 @@ fn test_all_possible_hands() {
             assert_eq!(
                 make_handiterator::<SNextVecEPIPermutation>(
                     &stichseq,
-                    SHand::new_from_vec(veccard_hand.into_iter().collect()),
+                    SHand::new_from_iter(veccard_hand),
                     epi_fixed,
                 )
                     .inspect(|ahand| assert_eq!(EnumMap::from_raw(an_size_hand), ahand.map(|hand| hand.cards().len())))

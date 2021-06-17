@@ -281,7 +281,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
             let mut mapepipayouthint = EPlayerIndex::map_from_fn(|_epi| SPayoutHint::new((None, None)));
             let mut stichseq_check = SStichSequence::new(gamefinishedstiche.get().kurzlang());
             let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
-                SHand::new_from_vec(gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[epi]).collect())
+                SHand::new_from_iter(gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[epi]))
             );
             for stich in gamefinishedstiche.get().completed_stichs().iter() {
                 for (epi, card) in stich.iter() {

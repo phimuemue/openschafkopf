@@ -23,6 +23,9 @@ impl SHand {
     pub fn new_from_vec(veccard: SHandVector) -> SHand {
         SHand {veccard}
     }
+    pub fn new_from_iter(itcard: impl IntoIterator<Item=SCard>) -> SHand {
+        Self::new_from_vec(itcard.into_iter().collect())
+    }
     pub fn contains(&self, card_check: SCard) -> bool {
         self.contains_pred(|&card| card==card_check)
     }
@@ -55,13 +58,11 @@ impl fmt::Display for SHand {
 
 #[test]
 fn test_hand() {
-    let hand = SHand::new_from_vec(
-        vec![
-            SCard::new(EFarbe::Eichel, ESchlag::Unter),
-            SCard::new(EFarbe::Herz, ESchlag::Koenig),
-            SCard::new(EFarbe::Schelln, ESchlag::S7),
-        ].into_iter().collect()
-    );
+    let hand = SHand::new_from_iter([
+        SCard::new(EFarbe::Eichel, ESchlag::Unter),
+        SCard::new(EFarbe::Herz, ESchlag::Koenig),
+        SCard::new(EFarbe::Schelln, ESchlag::S7),
+    ]);
     let hand2 = hand.new_from_hand(SCard::new(EFarbe::Herz, ESchlag::Koenig));
     assert_eq!(hand.cards().len()-1, hand2.cards().len());
     assert!(hand2.cards()[0]==SCard::new(EFarbe::Eichel, ESchlag::Unter));

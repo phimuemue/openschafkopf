@@ -138,11 +138,10 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGame, failure::Error> {
     };
     let mut game = SGame::new(
         /*ahand*/EPlayerIndex::map_from_fn(|epi|
-            SHand::new_from_vec(
+            SHand::new_from_iter(
                 vecstich
                     .iter()
                     .map(|stich| stich[epi])
-                    .collect()
             )
         ),
         /*doublings*/{

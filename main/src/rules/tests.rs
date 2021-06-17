@@ -49,12 +49,12 @@ pub trait TCardArrayKurzLang {
 }
 impl TCardArrayKurzLang for [SCard; 6] {
     fn to_hand(&self) -> SHand {
-        SHand::new_from_vec(self.iter().copied().collect())
+        SHand::new_from_iter(self.iter().copied())
     }
 }
 impl TCardArrayKurzLang for [SCard; 8] {
     fn to_hand(&self) -> SHand {
-        SHand::new_from_vec(self.iter().copied().collect())
+        SHand::new_from_iter(self.iter().copied())
     }
 }
 
@@ -94,7 +94,7 @@ pub fn test_rules_manual(
         str_info,
         rules,
         EPlayerIndex::map_from_fn(|epi|
-            SHand::new_from_vec(vecstich.iter().map(|stich| stich[epi]).collect())
+            SHand::new_from_iter(vecstich.iter().map(|stich| stich[epi]))
         ),
         vecn_doubling,
         vecn_stoss,

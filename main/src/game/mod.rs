@@ -505,12 +505,11 @@ impl SGame {
         mut fn_before_zugeben: impl FnMut(&SGame, /*i_stich*/usize, EPlayerIndex, SCard),
     ) -> Result<SGame, Error> {
         let ahand = EPlayerIndex::map_from_fn(|epi|
-            SHand::new_from_vec(
+            SHand::new_from_iter(
                 stichseq.get()
                     .completed_stichs()
                     .iter()
                     .map(|stich| stich[epi])
-                    .collect()
             )
         );
         let mut game = SGame::new(ahand, doublings, ostossparams, rules, n_stock);
