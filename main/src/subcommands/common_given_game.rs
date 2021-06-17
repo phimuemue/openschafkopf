@@ -98,7 +98,7 @@ pub fn with_common_args(
     }}
     cartesian_match!(forward,
         match ((oiteratehands, eremainingcards)) {
-            (Some(All), _)|(None, _1)|(None, _2)|(None, _3)|(None, _4) => (
+            (Some(All), _)|(None, _1|_2|_3|_4) => (
                 all_possible_hands(&stichseq, hand_fixed.clone(), epi_fixed, rules)
                     .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
                         relation.eval(ahand, rules)
@@ -111,7 +111,7 @@ pub fn with_common_args(
                     ))
                     .take(n_samples)
             ),
-            (None, _5)|(None, _6)|(None, _7)|(None, _8) => (
+            (None, _5|_6|_7|_8) => (
                 forever_rand_hands(&stichseq, hand_fixed.clone(), epi_fixed, rules)
                     .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
                         relation.eval(ahand, rules)

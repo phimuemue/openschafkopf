@@ -25,7 +25,7 @@ impl TRuleSpecificAI for SAIRufspiel<'_> {
                     (1, _kurzlang) => return Some(veccard_ruffarbe[0]),
                     (2, EKurzLang::Kurz) => return verify!(veccard_ruffarbe.into_iter().max_by_key(|&card| points_card(card))),
                     (2, EKurzLang::Lang) => return verify!(veccard_ruffarbe.into_iter().min_by_key(|&card| points_card(card))),
-                    (3, EKurzLang::Lang) | (4, EKurzLang::Lang) => return verify!(veccard_ruffarbe.into_iter().max_by_key(|&card| points_card(card))),
+                    (3 | 4, EKurzLang::Lang) => return verify!(veccard_ruffarbe.into_iter().max_by_key(|&card| points_card(card))),
                     _ => panic!("Found too many ruffarbe cards"),
                 }
             }

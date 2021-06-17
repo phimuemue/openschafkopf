@@ -75,16 +75,16 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         }),
                         eremainingcards
                     )) {
-                        (Some(None), _)|(None,_1)|(None,_2)|(None,_3)|(None,_4) => (&|_,_| (/*no filtering*/)),
+                        (Some(None), _)|(None,_1|_2|_3|_4) => (&|_,_| (/*no filtering*/)),
                         (Some(Some((n_lo, n_hi))), _) => (&branching_factor(move |_stichseq| {
                             let n_lo = n_lo.max(1);
                             (n_lo, (n_hi.max(n_lo+1)))
                         })),
-                        (None,_5)|(None,_6)|(None,_7)|(None,_8) => (&branching_factor(|_stichseq| (1, 3))),
+                        (None,_5|_6|_7|_8) => (&branching_factor(|_stichseq| (1, 3))),
                     },
                     match ((clapmatches.value_of("prune"), eremainingcards)) {
-                        (Some("none"),_)|(_, _1)|(_, _2)|(_, _3) => (SMinReachablePayout),
-                        (Some("hint"),_)|(_, _4)|(_, _5)|(_, _6)|(_, _7)|(_, _8) => (SMinReachablePayoutLowerBoundViaHint),
+                        (Some("none"),_)|(_, _1|_2|_3) => (SMinReachablePayout),
+                        (Some("hint"),_)|(_, _4|_5|_6|_7|_8) => (SMinReachablePayoutLowerBoundViaHint),
                     },
                 )
             };
