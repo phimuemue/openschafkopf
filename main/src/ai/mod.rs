@@ -216,8 +216,8 @@ pub fn unplayed_cards<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed
 fn test_unplayed_cards() {
     use crate::card::card_values::*;
     let mut stichseq = SStichSequence::new(EKurzLang::Lang);
-    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]].into_iter() {
-        for card in acard_stich.into_iter() {
+    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]] {
+        for card in acard_stich {
             stichseq.zugeben_custom_winner_index(card, |_stich| EPlayerIndex::EPI0 /*irrelevant*/);
         }
     }
@@ -527,9 +527,9 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         ).as_ref()),
         /*n_stock*/ 0,
     );
-    for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]].into_iter() {
+    for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]] {
         assert_eq!(EPlayerIndex::values().next(), Some(epi_active));
-        for (epi, card) in EPlayerIndex::values().zip(acard_stich.into_iter()) {
+        for (epi, card) in EPlayerIndex::values().zip(acard_stich) {
             unwrap!(game.zugeben(card, epi));
         }
     }
@@ -548,7 +548,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             &SMinReachablePayout::new_from_game(&game),
             /*opath_out_dir*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
         );
-        for card in [H7, H8, H9].into_iter() {
+        for card in [H7, H8, H9] {
             assert!(determinebestcard.veccard_allowed.contains(&card));
             for eminmaxstrat in EMinMaxStrategy::values() {
                 assert_eq!(

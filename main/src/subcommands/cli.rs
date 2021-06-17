@@ -47,9 +47,9 @@ fn test_game_loop() {
     use itertools::iproduct;
     for ruleset in
         iproduct!(
-            [10, 20].into_iter(), // n_base_price
-            [50, 100].into_iter(), // n_solo_price
-            [2, 3].into_iter(), // n_lauf_min
+            [10, 20], // n_base_price
+            [50, 100], // n_solo_price
+            [2, 3], // n_lauf_min
             [ // str_allowed_games
                 r"
                 [rufspiel]
@@ -74,7 +74,7 @@ fn test_game_loop() {
                 [bettel]
                 stichzwang=true
                 ",
-            ].into_iter(),
+            ],
             [ // str_no_active_game
                 r"[ramsch]
                 price=20
@@ -89,7 +89,7 @@ fn test_game_loop() {
                 r"[stock]
                 price=30",
                 r"",
-            ].into_iter(),
+            ],
             [ // str_extras
                 r"[steigern]",
                 r"[steigern]
@@ -101,7 +101,7 @@ fn test_game_loop() {
                 r"[stoss]
                 max=3
                 ",
-            ].into_iter()
+            ]
         )
             .map(|(n_base_price, n_solo_price, n_lauf_min, str_allowed_games, str_no_active_game, str_extras)| {
                 let str_ruleset = format!(
