@@ -344,11 +344,10 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
             itminmax.fold1(mutate_return!(|minmax_acc, minmax| {
                 // self.epi can always play as good as possible
                 let play_best = |an_payout_acc, an_payout_new: &EnumMap<EPlayerIndex, isize>| {
-                    assign_by_key_ordering(
+                    assign_max_by_key(
                         an_payout_acc,
                         an_payout_new.explicit_clone(),
                         |an_payout| an_payout[self.epi],
-                        Ordering::Greater,
                     );
                 };
                 play_best(&mut minmax_acc.t_min, &minmax.t_min);
@@ -359,11 +358,10 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         } else {
             // other players may play inconveniently for epi_stich
             itminmax.fold1(mutate_return!(|minmax_acc, minmax| {
-                assign_by_key_ordering(
+                assign_min_by_key(
                     &mut minmax_acc.t_min,
                     minmax.t_min.explicit_clone(),
                     |an_payout| an_payout[self.epi],
-                    Ordering::Less,
                 );
                 assign_better(
                     &mut minmax_acc.t_selfish_min,
@@ -387,11 +385,10 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                         }
                     },
                 );
-                assign_by_key_ordering(
+                assign_max_by_key(
                     &mut minmax_acc.t_max,
                     minmax.t_max.explicit_clone(),
                     |an_payout| an_payout[self.epi],
-                    Ordering::Greater,
                 );
 
             }))

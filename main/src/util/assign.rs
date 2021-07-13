@@ -12,24 +12,19 @@ pub fn assign_max<T: Ord>(dst: &mut T, src: T) {
     assign_better(dst, src, |lhs, rhs| lhs>rhs)
 }
 
-pub fn assign_by_key_ordering<T, K: Ord, FnKey>(
-    dst: &mut T,
-    src: T,
-    mut fn_key: FnKey,
-    ordering: std::cmp::Ordering,
-) where
-    FnKey: FnMut(&T) -> K,
-{
-    assign_better(dst, src, |lhs, rhs| {
-        ordering == fn_key(lhs).cmp(&fn_key(rhs))
-    })
+pub fn assign_min_by_key<T, K: Ord>(dst: &mut T, src: T, mut fn_key: impl FnMut(&T)->K) {
+    assign_better(dst, src, |lhs, rhs| fn_key(lhs) < fn_key(rhs))
+}
+
+pub fn assign_max_by_key<T, K: Ord>(dst: &mut T, src: T, mut fn_key: impl FnMut(&T)->K) {
+    assign_better(dst, src, |lhs, rhs| fn_key(lhs) > fn_key(rhs))
 }
 
 #[test]
-fn test_assign_by_key_ordering() {
+fn test_assign_by_key() {
     let mut n = 0;
-    assign_by_key_ordering(&mut n, 1, |t| *t, std::cmp::Ordering::Greater);
+    assign_max_by_key(&mut n, 1, |t| *t);
     assert_eq!(n, 1);
-    assign_by_key_ordering(&mut n, 0, |t| *t, std::cmp::Ordering::Less);
+    assign_min_by_key(&mut n, 0, |t| *t);
     assert_eq!(n, 0);
 }
