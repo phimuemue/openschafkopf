@@ -23,6 +23,7 @@ fn main() -> Result<(), Error> {
     openschafkopf_logging::init_logging()?;
     macro_rules! subcommands{($(($mod:ident, $str_cmd:expr))*) => {
         let clapmatches = clap::App::new("schafkopf")
+            .setting(clap::AppSettings::ArgRequiredElseHelp)
             $(.subcommand(subcommands::$mod::subcommand($str_cmd)))*
             .get_matches();
         $(
