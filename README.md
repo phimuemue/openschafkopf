@@ -30,9 +30,11 @@ FLAGS:
 SUBCOMMANDS:
     analyze         Analyze played games and spot suboptimal decisions
     cli             Simulate players to play against
+    hand-stats      Statistics about hands that could be dealt.
     help            Prints this message or the help of the given subcommand(s)
     rank-rules      Estimate strength of own hand
     suggest-card    Suggest a card to play given the game so far
+    websocket       
 ```
 
 ## Supported variants
