@@ -90,8 +90,7 @@ impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(stichseq, ahand));
         for stich in stichseq.visible_stichs() {
             self.write_all(b"<td>\n");
-            let epi_0 = self.epi;
-            self.write_all(player_table(epi_0, |epi| stich.get(epi).map(|card| output_card(*card, epi==stich.first_playerindex()))).as_bytes());
+            self.write_all(player_table(self.epi, |epi| stich.get(epi).map(|card| output_card(*card, epi==stich.first_playerindex()))).as_bytes());
             self.write_all(b"</td>\n");
         }
         let str_table_hands = format!(
