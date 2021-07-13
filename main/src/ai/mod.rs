@@ -289,7 +289,9 @@ type SPayoutStatsPerStrategy = SPerMinMaxStrategy<SPayoutStats>;
 impl SPayoutStatsPerStrategy {
     fn accumulate(&mut self, paystats: &Self) {
         self.t_min.accumulate(&paystats.t_min);
-        self.t_selfish.accumulate(&paystats.t_selfish);
+        self.t_selfish_min.accumulate(&paystats.t_selfish_min);
+        self.t_selfish_max.accumulate(&paystats.t_selfish_max);
+        self.t_max.accumulate(&paystats.t_max);
     }
 }
 
@@ -303,9 +305,10 @@ impl std::cmp::Ord for SPayoutStatsPerStrategy {
         use std::cmp::Ordering::*;
         let n_min_self = self.t_min.n_min;
         let n_min_other = other.t_min.n_min;
+        // TODO improve logic wrt t_selfish_min/t_selfish_max/t_max
         match (n_min_self.cmp(&0), n_min_other.cmp(&0)) {
             (Greater, Greater) => match n_min_self.cmp(&n_min_other) {
-                Equal => unwrap!(self.t_selfish.avg().partial_cmp(&other.t_selfish.avg())),
+                Equal => unwrap!(self.t_selfish_min.avg().partial_cmp(&other.t_selfish_min.avg())),
                 Greater => Greater,
                 Less => Less,
             },
@@ -314,7 +317,7 @@ impl std::cmp::Ord for SPayoutStatsPerStrategy {
             (Equal, Less) => Greater,
             (Less, Equal) => Less,
             (Less, Less)|(Equal, Equal) => {
-                unwrap!(self.t_selfish.avg().partial_cmp(&other.t_selfish.avg()))
+                unwrap!(self.t_selfish_min.avg().partial_cmp(&other.t_selfish_min.avg()))
             },
         }
     }
@@ -367,7 +370,9 @@ pub fn determine_best_card<
             let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
             let payoutstats = SPayoutStatsPerStrategy{
                 t_min: SPayoutStats::new_1(output.t_min[determinebestcard.epi_fixed]),
-                t_selfish: SPayoutStats::new_1(output.t_selfish[determinebestcard.epi_fixed]),
+                t_selfish_min: SPayoutStats::new_1(output.t_selfish_min[determinebestcard.epi_fixed]),
+                t_selfish_max: SPayoutStats::new_1(output.t_selfish_max[determinebestcard.epi_fixed]),
+                t_max: SPayoutStats::new_1(output.t_max[determinebestcard.epi_fixed]),
             };
             match ooutput {
                 None => *ooutput = Some(payoutstats),
@@ -547,7 +552,15 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.t_selfish.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.t_selfish_min.min()),
+                Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
+            );
+            assert_eq!(
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.t_selfish_max.min()),
+                Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
+            );
+            assert_eq!(
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.t_max.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
         }

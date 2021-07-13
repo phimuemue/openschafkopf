@@ -97,7 +97,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SG
                         {
                             Some(SAnalysisCardAndPayout{
                                 veccard,
-                                n_payout: minmax.t_selfish.min(),
+                                n_payout: minmax.t_selfish_min.min(),
                             })
                         } else {
                             // The decisive mistake must occur in subsequent stichs.

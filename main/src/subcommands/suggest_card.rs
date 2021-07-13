@@ -93,7 +93,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             veccardminmax.sort_unstable_by_key(|&(_card, minmax)| minmax);
             veccardminmax.reverse(); // descending
             // crude formatting: treat all numbers as f32, and convert structured input to a plain number table
-            const N_COLUMNS : usize = 2*3;
+            const N_COLUMNS : usize = 12;
             let mut vecaf = Vec::new();
             let mut veclinestrings : Vec<(/*card*/String, /*numbers*/[String; N_COLUMNS])> = Vec::new();
             let mut an_width = [0; N_COLUMNS];
@@ -104,9 +104,15 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     minmax.t_min.min().as_num::<f32>(),
                     minmax.t_min.avg(),
                     minmax.t_min.max().as_num::<f32>(),
-                    minmax.t_selfish.min().as_num::<f32>(),
-                    minmax.t_selfish.avg(),
-                    minmax.t_selfish.max().as_num::<f32>(),
+                    minmax.t_selfish_min.min().as_num::<f32>(),
+                    minmax.t_selfish_min.avg(),
+                    minmax.t_selfish_min.max().as_num::<f32>(),
+                    minmax.t_selfish_max.min().as_num::<f32>(),
+                    minmax.t_selfish_max.avg(),
+                    minmax.t_selfish_max.max().as_num::<f32>(),
+                    minmax.t_max.min().as_num::<f32>(),
+                    minmax.t_max.avg(),
+                    minmax.t_max.max().as_num::<f32>(),
                 ];
                 let astr = [
                     format!("{} ", af[0]),
@@ -114,7 +120,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     format!("{} ", af[2]),
                     format!("{} ", af[3]),
                     format!("{:.2} ", af[4]),
-                    format!("{}", af[5]),
+                    format!("{} ", af[5]),
+                    format!("{} ", af[6]),
+                    format!("{:.2} ", af[7]),
+                    format!("{} ", af[8]),
+                    format!("{} ", af[9]),
+                    format!("{:.2} ", af[10]),
+                    format!("{}", af[11]),
                 ];
                 for (n_width, str) in an_width.iter_mut().zip(astr.iter()) {
                     *n_width = (*n_width).max(str.len());

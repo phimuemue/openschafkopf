@@ -280,11 +280,9 @@ impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SPerMinMaxStrategy<T> {
     pub t_min: T,
-    pub t_selfish: T,
-    // TODO split t_selfish into min/max and implement the following
-    // pub t_selfish_min: T,
-    // pub t_selfish_max: T,
-    // pub t_max: T,
+    pub t_selfish_min: T,
+    pub t_selfish_max: T,
+    pub t_max: T,
 }
 
 pub type SMinMax = SPerMinMaxStrategy<EnumMap<EPlayerIndex, isize>>;
@@ -293,28 +291,10 @@ impl SMinMax {
     fn new_final(an_payout: EnumMap<EPlayerIndex, isize>) -> Self {
         Self {
             t_min: an_payout.explicit_clone(),
-            t_selfish: an_payout.explicit_clone(),
+            t_selfish_min: an_payout.explicit_clone(),
+            t_selfish_max: an_payout.explicit_clone(),
+            t_max: an_payout.explicit_clone(),
         }
-    }
-
-    fn assign_by_key_ordering(
-        &mut self,
-        minmax: &SMinMax,
-        (epi_min, ordering_min): (EPlayerIndex, Ordering),
-        (epi_selfish, ordering_selfish): (EPlayerIndex, Ordering)
-    ) {
-        assign_by_key_ordering(
-            &mut self.t_min,
-            minmax.t_min.explicit_clone(),
-            |an_payout| an_payout[epi_min],
-            ordering_min,
-        );
-        assign_by_key_ordering(
-            &mut self.t_selfish,
-            minmax.t_selfish.explicit_clone(),
-            |an_payout| an_payout[epi_selfish],
-            ordering_selfish,
-        );
     }
 }
 
@@ -336,10 +316,60 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     ) -> Self::Output {
         let itminmax = ittplcardoutput.map(|(_card, minmax)| minmax);
         unwrap!(if self.epi==epi_card {
-            itminmax.fold1(mutate_return!(|minmax_acc, minmax| minmax_acc.assign_by_key_ordering(&minmax, (self.epi, Ordering::Greater), (self.epi, Ordering::Greater))))
+            itminmax.fold1(mutate_return!(|minmax_acc, minmax| {
+                // self.epi can always play as good as possible
+                let play_best = |an_payout_acc, an_payout_new: &EnumMap<EPlayerIndex, isize>| {
+                    assign_by_key_ordering(
+                        an_payout_acc,
+                        an_payout_new.explicit_clone(),
+                        |an_payout| an_payout[self.epi],
+                        Ordering::Greater,
+                    );
+                };
+                play_best(&mut minmax_acc.t_min, &minmax.t_min);
+                play_best(&mut minmax_acc.t_selfish_min, &minmax.t_selfish_min);
+                play_best(&mut minmax_acc.t_selfish_max, &minmax.t_selfish_max);
+                play_best(&mut minmax_acc.t_max, &minmax.t_max);
+            }))
         } else {
             // other players may play inconveniently for epi_stich
-            itminmax.fold1(mutate_return!(|minmax_acc, minmax| minmax_acc.assign_by_key_ordering(&minmax, (self.epi, Ordering::Less), (epi_card, Ordering::Greater))))
+            itminmax.fold1(mutate_return!(|minmax_acc, minmax| {
+                assign_by_key_ordering(
+                    &mut minmax_acc.t_min,
+                    minmax.t_min.explicit_clone(),
+                    |an_payout| an_payout[self.epi],
+                    Ordering::Less,
+                );
+                assign_better(
+                    &mut minmax_acc.t_selfish_min,
+                    minmax.t_selfish_min.explicit_clone(),
+                    |an_payout_lhs, an_payout_rhs| {
+                        match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
+                            Ordering::Less => false,
+                            Ordering::Equal => an_payout_lhs[self.epi] < an_payout_rhs[self.epi],
+                            Ordering::Greater => true,
+                        }
+                    },
+                );
+                assign_better(
+                    &mut minmax_acc.t_selfish_max,
+                    minmax.t_selfish_max.explicit_clone(),
+                    |an_payout_lhs, an_payout_rhs| {
+                        match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
+                            Ordering::Less => false,
+                            Ordering::Equal => an_payout_lhs[self.epi] > an_payout_rhs[self.epi],
+                            Ordering::Greater => true,
+                        }
+                    },
+                );
+                assign_by_key_ordering(
+                    &mut minmax_acc.t_max,
+                    minmax.t_max.explicit_clone(),
+                    |an_payout| an_payout[self.epi],
+                    Ordering::Greater,
+                );
+
+            }))
         })
     }
 }
