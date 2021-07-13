@@ -1,7 +1,7 @@
 use crate::ai::{
     handiterators::forever_rand_hands,
     suspicion::{
-        explore_snapshots, EMinMaxStrategy, SMinReachablePayout,
+        explore_snapshots, SMinReachablePayout,
     },
     *,
 };
@@ -125,7 +125,7 @@ impl TPlayer for SPlayerComputer {
                             n_stock,
                         ),
                         /*opath_out_dir*/None,
-                    ).aan_payout[EMinMaxStrategy::OthersMin][epi]
+                    ).t_min[epi]
                 })
                 .sum::<isize>().as_num::<f64>()
                 / n_samples_per_stoss.as_num::<f64>()

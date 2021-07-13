@@ -93,7 +93,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             veccardminmax.sort_unstable_by_key(|&(_card, minmax)| minmax);
             veccardminmax.reverse(); // descending
             // crude formatting: treat all numbers as f32, and convert structured input to a plain number table
-            const N_COLUMNS : usize = EMinMaxStrategy::SIZE*3;
+            const N_COLUMNS : usize = 2*3;
             let mut vecaf = Vec::new();
             let mut veclinestrings : Vec<(/*card*/String, /*numbers*/[String; N_COLUMNS])> = Vec::new();
             let mut an_width = [0; N_COLUMNS];
@@ -101,12 +101,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             let mut af_max = [f32::MIN; N_COLUMNS];
             for (card, minmax) in veccardminmax {
                 let af = [
-                    minmax.0[EMinMaxStrategy::OthersMin].min().as_num::<f32>(),
-                    minmax.0[EMinMaxStrategy::OthersMin].avg(),
-                    minmax.0[EMinMaxStrategy::OthersMin].max().as_num::<f32>(),
-                    minmax.0[EMinMaxStrategy::MaxPerEpi].min().as_num::<f32>(),
-                    minmax.0[EMinMaxStrategy::MaxPerEpi].avg(),
-                    minmax.0[EMinMaxStrategy::MaxPerEpi].max().as_num::<f32>(),
+                    minmax.t_min.min().as_num::<f32>(),
+                    minmax.t_min.avg(),
+                    minmax.t_min.max().as_num::<f32>(),
+                    minmax.t_selfish.min().as_num::<f32>(),
+                    minmax.t_selfish.avg(),
+                    minmax.t_selfish.max().as_num::<f32>(),
                 ];
                 let astr = [
                     format!("{} ", af[0]),

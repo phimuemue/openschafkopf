@@ -277,36 +277,44 @@ impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
     }
 }
 
-plain_enum_mod!(modeminmaxstrategy, EMinMaxStrategy {
-    OthersMin,
-    MaxPerEpi,
-});
-
-#[derive(Debug, Clone)]
-pub struct SMinMax {
-    pub aan_payout: EnumMap<EMinMaxStrategy, EnumMap<EPlayerIndex, isize>>,
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SPerMinMaxStrategy<T> {
+    pub t_min: T,
+    pub t_selfish: T,
+    // TODO split t_selfish into min/max and implement the following
+    // pub t_selfish_min: T,
+    // pub t_selfish_max: T,
+    // pub t_max: T,
 }
+
+pub type SMinMax = SPerMinMaxStrategy<EnumMap<EPlayerIndex, isize>>;
 
 impl SMinMax {
     fn new_final(an_payout: EnumMap<EPlayerIndex, isize>) -> Self {
         Self {
-            aan_payout: EMinMaxStrategy::map_from_fn(|_| an_payout.explicit_clone()),
+            t_min: an_payout.explicit_clone(),
+            t_selfish: an_payout.explicit_clone(),
         }
     }
 
-    fn assign_by_key_ordering(&mut self, minmax: &SMinMax, (epi_minmax, ordering_minmax): (EPlayerIndex, Ordering), (epi_max_per_epi, ordering_max_per_epi): (EPlayerIndex, Ordering)) {
-        let mapeminmaxstrattplepiordering = EMinMaxStrategy::map_from_raw([
-            (epi_minmax, ordering_minmax),
-            (epi_max_per_epi, ordering_max_per_epi),
-        ]);
-        for eminmaxstrat in EMinMaxStrategy::values() {
-            assign_by_key_ordering(
-                &mut self.aan_payout[eminmaxstrat],
-                minmax.aan_payout[eminmaxstrat].explicit_clone(),
-                |an_payout| an_payout[mapeminmaxstrattplepiordering[eminmaxstrat].0],
-                mapeminmaxstrattplepiordering[eminmaxstrat].1,
-            );
-        }
+    fn assign_by_key_ordering(
+        &mut self,
+        minmax: &SMinMax,
+        (epi_min, ordering_min): (EPlayerIndex, Ordering),
+        (epi_selfish, ordering_selfish): (EPlayerIndex, Ordering)
+    ) {
+        assign_by_key_ordering(
+            &mut self.t_min,
+            minmax.t_min.explicit_clone(),
+            |an_payout| an_payout[epi_min],
+            ordering_min,
+        );
+        assign_by_key_ordering(
+            &mut self.t_selfish,
+            minmax.t_selfish.explicit_clone(),
+            |an_payout| an_payout[epi_selfish],
+            ordering_selfish,
+        );
     }
 }
 

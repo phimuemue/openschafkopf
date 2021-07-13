@@ -93,11 +93,11 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SG
                         let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value();
                         if 
                             !veccard.contains(&card) // TODO can we improve this?
-                            && an_payout[epi]<minmax.0[EMinMaxStrategy::OthersMin].min()
+                            && an_payout[epi]<minmax.t_min.min()
                         {
                             Some(SAnalysisCardAndPayout{
                                 veccard,
-                                n_payout: minmax.0[EMinMaxStrategy::MaxPerEpi].min(),
+                                n_payout: minmax.t_selfish.min(),
                             })
                         } else {
                             // The decisive mistake must occur in subsequent stichs.
