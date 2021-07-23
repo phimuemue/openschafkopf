@@ -125,6 +125,7 @@ impl SAi {
 
     pub fn suggest_card(&self, game: &SGame, opath_out_dir: Option<&std::path::Path>) -> SCard {
         let determinebestcard = SDetermineBestCard::new_from_game(game);
+        let epi_fixed = determinebestcard.epi_fixed;
         if let Some(card)=determinebestcard.single_allowed_card() {
             card
         } else if let Some(card) = game.rules.rulespecific_ai()
@@ -139,7 +140,7 @@ impl SAi {
                     $func_filter_allowed_cards,
                     &$foreachsnapshot::new(
                         determinebestcard.rules,
-                        determinebestcard.epi_fixed,
+                        epi_fixed,
                         /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                         game.n_stock,
                     ),
@@ -155,7 +156,7 @@ impl SAi {
                 *unwrap!(
                     // TODORUST exhaustive_integer_patterns for isize/usize
                     // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
-                    match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[determinebestcard.epi_fixed] {
+                    match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] {
                         1|2|3 => forward_to_determine_best_card!(
                             &|_,_| (/*no filtering*/),
                             SMinReachablePayout,
@@ -184,7 +185,6 @@ impl SAi {
                     )
                 },
                 VAIParams::Simulating{n_suggest_card_samples} => {
-                    let epi_fixed = determinebestcard.epi_fixed;
                     match /*n_remaining_cards_on_hand*/remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] {
                         1|2|3|4 => suggest_via!(
                             all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules),
