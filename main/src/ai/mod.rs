@@ -18,6 +18,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+plain_enum_mod!(moderemainingcards, ERemainingCards {_1, _2, _3, _4, _5, _6, _7, _8,});
+
 pub fn remaining_cards_per_hand(stichseq: &SStichSequence) -> EnumMap<EPlayerIndex, usize> {
     EPlayerIndex::map_from_fn(|epi| {
         stichseq.kurzlang().cards_per_player()
@@ -133,7 +135,10 @@ impl SAi {
         {
             card
         } else {
-            macro_rules! forward_to_determine_best_card{($func_filter_allowed_cards: expr, $foreachsnapshot: ident, $itahand: expr,) => {{ // TODORUST generic closures
+            macro_rules! forward_to_determine_best_card{(
+                ($func_filter_allowed_cards: expr, $foreachsnapshot: ident,),
+                $itahand: expr,
+            ) => {{ // TODORUST generic closures
                 determine_best_card(
                     &determinebestcard,
                     $itahand,
@@ -152,54 +157,41 @@ impl SAi {
                     }),
                 )
             }}}
-            let n_remaining_cards_on_hand = remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed];
-            macro_rules! suggest_via{($itahand: expr,) => {{ // TODORUST generic closures
-                *unwrap!(
-                    // TODORUST exhaustive_integer_patterns for isize/usize
-                    // https://github.com/rust-lang/rfcs/pull/2591/commits/46135303146c660f3c5d34484e0ede6295c8f4e7#diff-8fe9cb03c196455367c9e539ea1964e8R70
-                    match n_remaining_cards_on_hand {
-                        1|2|3 => forward_to_determine_best_card!(
-                            &|_,_| (/*no filtering*/),
-                            SMinReachablePayout,
-                            $itahand,
-                        ),
-                        4 => forward_to_determine_best_card!(
-                            &|_,_| (/*no filtering*/),
-                            SMinReachablePayoutLowerBoundViaHint,
-                            $itahand,
-                        ),
-                        5|6|7|8 => forward_to_determine_best_card!(
-                            &branching_factor(|_stichseq| {
-                                (1, self.n_suggest_card_branches+1)
-                            }),
-                            SMinReachablePayoutLowerBoundViaHint,
-                            $itahand,
-                        ),
-                        n_remaining_cards_on_hand => panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand),
-                    }.cards_with_maximum_value().0.first()
-                )
-            }}}
-            match (&self.aiparams, n_remaining_cards_on_hand) {
-                (&VAIParams::Cheating, _) => {
-                    suggest_via!(
-                        /*itahand*/std::iter::once(game.ahand.clone()),
-                    )
+            let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(
+                remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] - 1 // ERemainingCards starts with 1
+            ));
+            use ERemainingCards::*;
+            *unwrap!(cartesian_match!(
+                forward_to_determine_best_card,
+                match (eremainingcards) {
+                    _1|_2|_3 => (
+                        &|_,_| (/*no filtering*/),
+                        SMinReachablePayout,
+                    ),
+                    _4 => (
+                        &|_,_| (/*no filtering*/),
+                        SMinReachablePayoutLowerBoundViaHint,
+                    ),
+                    _5|_6|_7|_8 => (
+                        &branching_factor(|_stichseq| {
+                            (1, self.n_suggest_card_branches+1)
+                        }),
+                        SMinReachablePayoutLowerBoundViaHint,
+                    ),
                 },
-                (&VAIParams::Simulating{n_suggest_card_samples:_}, 1|2|3|4) => {
-                    suggest_via!(
-                        all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules),
-                    )
-                },
-                (&VAIParams::Simulating{n_suggest_card_samples}, 5|6|7|8) => {
-                    suggest_via!(
+                match ((&self.aiparams, eremainingcards)) {
+                    (&VAIParams::Cheating, _) => {
+                        std::iter::once(game.ahand.clone())
+                    },
+                    (&VAIParams::Simulating{n_suggest_card_samples:_}, _1|_2|_3|_4) => {
+                        all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
+                    },
+                    (&VAIParams::Simulating{n_suggest_card_samples}, _5|_6|_7|_8) =>{ 
                         forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
-                            .take(n_suggest_card_samples),
-                    )
+                            .take(n_suggest_card_samples)
+                    },
                 },
-                (&VAIParams::Simulating{n_suggest_card_samples:_}, n_remaining_cards_on_hand) => {
-                    panic!("internal_suggest_card called with {} cards on hand", n_remaining_cards_on_hand)
-                },
-            }
+            ).cards_with_maximum_value().0.first())
         }
     }
 }

@@ -56,7 +56,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         /*opath_out_dir*/None, // TODO? make customizable
                     )
                 }}}
-                use super::common_given_game::ERemainingCards::*;
+                use ERemainingCards::*;
                 cartesian_match!(
                     forward,
                     match ((
