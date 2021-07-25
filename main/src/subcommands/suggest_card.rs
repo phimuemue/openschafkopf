@@ -90,7 +90,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     match (clapmatches.value_of("visualize")) {
                         None => (|_,_| SNoVisualization),
                         Some(str_path) => {
-                            SHtmlVisualizerFolder::new(
+                            visualizer_factory(
                                 std::path::Path::new(str_path).to_path_buf(),
                                 rules,
                                 epi_fixed,

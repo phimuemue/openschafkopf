@@ -95,7 +95,7 @@ impl TPlayer for SPlayerHuman {
                 || {
                     Some(self.ai.suggest_card(
                         game,
-                        SHtmlVisualizerFolder::new(
+                        visualizer_factory(
                             std::path::Path::new("suspicion").to_path_buf(),
                             game.rules.as_ref(),
                             epi,

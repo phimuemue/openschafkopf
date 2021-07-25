@@ -23,32 +23,19 @@ pub trait TSnapshotVisualizer<Output> {
 }
 
 
-pub struct SHtmlVisualizerFolder<'rules> {
-    path: std::path::PathBuf,
-    rules: &'rules dyn TRules,
-    epi: EPlayerIndex,
-}
-
-impl<'rules> SHtmlVisualizerFolder<'rules> {
-    pub fn new(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> impl Fn(/*i_susp*/usize, SCard) -> SForEachSnapshotHTMLVisualizer<'rules> {
-        unwrap!(std::fs::create_dir_all(&path));
-        unwrap!(crate::game_analysis::generate_html_auxiliary_files(&path));
-        let htmlvisfolder = Self{path, rules, epi};
-        move |i_susp, card| {
-            htmlvisfolder.visualizer(
-                &std::path::Path::new(&format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S")))
-                    .join(format!("{}_{}.html", i_susp, card)),
-            )
-        }
-    }
-
-    pub fn visualizer(&self, path_rel: &std::path::Path) -> SForEachSnapshotHTMLVisualizer<'rules> {
-        let path = self.path.join(path_rel);
-        unwrap!(std::fs::create_dir_all(unwrap!(path.parent())));
+pub fn visualizer_factory<'rules>(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> impl Fn(/*i_susp*/usize, SCard) -> SForEachSnapshotHTMLVisualizer<'rules> {
+    unwrap!(std::fs::create_dir_all(&path));
+    unwrap!(crate::game_analysis::generate_html_auxiliary_files(&path));
+    move |i_susp, card| {
+        let path_abs = path.join(
+            &std::path::Path::new(&format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S")))
+                .join(format!("{}_{}.html", i_susp, card)),
+        );
+        unwrap!(std::fs::create_dir_all(unwrap!(path_abs.parent())));
         SForEachSnapshotHTMLVisualizer::new(
-            unwrap!(std::fs::File::create(path)),
-            self.rules,
-            self.epi
+            unwrap!(std::fs::File::create(path_abs)),
+            rules,
+            epi
         )
     }
 }
