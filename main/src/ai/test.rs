@@ -60,7 +60,7 @@ fn test_determine_best_card() {
     );
     // If we cheat (i.e. we know each players' cards), it makes - intuitively, not mathematically
     // proven - sense not to play HO since it only weakens the own partner.
-    assert_ne!(aicheating.suggest_card(&game, /*opath_out_dir*/None), HO);
+    assert_ne!(aicheating.suggest_card(&game, |_,_| SNoVisualization), HO);
     // If we do not cheat, tests indicated that playing HO is the best solution.
     // As far as I can tell, it is at least not necessarily wrong.
     // (HO ensures at least that no other player can take away rufsau.)
@@ -136,7 +136,7 @@ fn detect_expensive_all_possible_hands() {
                                 &mut game.stichseq.clone(),
                                 &|_vecstich_complete, _vecstich_successor| {/*no filtering*/},
                                 &SLeafCounter{},
-                                /*opath_out_dir*/None,
+                                &mut SNoVisualization,
                             ),
                             2000
                         );

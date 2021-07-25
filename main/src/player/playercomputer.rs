@@ -1,7 +1,7 @@
 use crate::ai::{
     handiterators::forever_rand_hands,
     suspicion::{
-        explore_snapshots, SMinReachablePayout,
+        explore_snapshots, SMinReachablePayout, SNoVisualization,
     },
     *,
 };
@@ -37,7 +37,7 @@ impl TPlayer for SPlayerComputer {
     }
 
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
-        txcard.send(self.ai.suggest_card(game, /*opath_out_dir*/None)).ok();
+        txcard.send(self.ai.suggest_card(game, /*fn_visualizer*/|_,_| SNoVisualization)).ok();
     }
 
     fn ask_for_game<'rules>(
@@ -124,7 +124,7 @@ impl TPlayer for SPlayerComputer {
                             /*tpln_stoss_doubling*/stoss_and_doublings(vecstoss, doublings),
                             n_stock,
                         ),
-                        /*opath_out_dir*/None,
+                        &mut SNoVisualization,
                     ).t_min[epi]
                 })
                 .sum::<isize>().as_num::<f64>()

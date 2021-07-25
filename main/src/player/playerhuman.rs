@@ -1,4 +1,4 @@
-use crate::ai::*;
+use crate::ai::{*, suspicion::*};
 use crate::game::*;
 use crate::player::*;
 use crate::primitives::*;
@@ -73,8 +73,9 @@ impl TPlayer for SPlayerHuman {
 
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         skui::print_stichseq(unwrap!(game.current_playable_stich().current_playerindex()), &game.stichseq);
+        let epi = unwrap!(game.which_player_can_do_something()).0;
         let hand = {
-            let mut veccard = game.ahand[unwrap!(game.which_player_can_do_something()).0].cards().clone();
+            let mut veccard = game.ahand[epi].cards().clone();
             game.rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
             SHand::new_from_vec(veccard)
         };
@@ -91,10 +92,22 @@ impl TPlayer for SPlayerHuman {
                     skui::print_hand(hand.cards(), Some(i_card_chosen));
                     skui::print_game_info(game.rules.as_ref(), &game.doublings, &game.vecstoss);
                 },
-                || Some(self.ai.suggest_card(
-                    game,
-                    /*opath_out_dir*/Some(&std::path::Path::new("suspicion"))
-                ))
+                || {
+                    let htmlvisfolder = SHtmlVisualizerFolder::new(
+                        std::path::Path::new("suspicion").to_path_buf(),
+                        game.rules.as_ref(),
+                        epi,
+                    );
+                    Some(self.ai.suggest_card(
+                        game,
+                        |i_susp, card| {
+                            htmlvisfolder.visualizer(
+                                &std::path::Path::new(&format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S")))
+                                    .join(format!("{}_{}.html", i_susp, card)),
+                            )
+                        }
+                    ))
+                }
             )
         ).is_err() {
             unimplemented!() // we possibly want to be able to deal with "blocked" plays (timeout etc.)

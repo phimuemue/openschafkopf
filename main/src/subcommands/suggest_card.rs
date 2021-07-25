@@ -53,7 +53,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             /*tpln_stoss_doubling*/(0, 0), // TODO? make customizable
                             /*n_stock*/0, // TODO? make customizable
                         ),
-                        /*opath_out_dir*/None, // TODO? make customizable
+                        |_,_| SNoVisualization, // TODO? make customizable
                     )
                 }}}
                 use ERemainingCards::*;

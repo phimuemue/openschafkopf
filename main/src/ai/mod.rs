@@ -9,7 +9,6 @@ use crate::game::*;
 use crate::primitives::*;
 use crate::rules::*;
 use crate::util::*;
-use chrono::Local;
 use itertools::Itertools;
 use rand::prelude::*;
 use rayon::prelude::*;
@@ -119,13 +118,17 @@ impl SAi {
                         tpln_stoss_doubling,
                         n_stock,
                     ),
-                    /*opath_out_dir*/None,
+                    &mut SNoVisualization{},
                 ).t_min[epi_rank]
             })
             .sum::<isize>().as_num::<f64>() / (self.n_rank_rules_samples.as_num::<f64>())
     }
 
-    pub fn suggest_card(&self, game: &SGame, opath_out_dir: Option<&std::path::Path>) -> SCard {
+    pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer>(
+        &self,
+        game: &SGame,
+        fn_visualizer: impl Fn(usize/*i_susp*/, SCard) -> SnapshotVisualizer + std::marker::Sync,
+    ) -> SCard {
         let determinebestcard = SDetermineBestCard::new_from_game(game);
         let epi_fixed = determinebestcard.epi_fixed;
         if let Some(card)=determinebestcard.single_allowed_card() {
@@ -149,12 +152,7 @@ impl SAi {
                         /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                         game.n_stock,
                     ),
-                    opath_out_dir.map(|path_out_dir| {
-                        unwrap!(std::fs::create_dir_all(path_out_dir));
-                        unwrap!(crate::game_analysis::generate_html_auxiliary_files(path_out_dir));
-                        path_out_dir
-                            .join(format!("{}", Local::now().format("%Y%m%d%H%M%S")))
-                    }),
+                    fn_visualizer,
                 )
             }}}
             let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(
@@ -320,12 +318,13 @@ impl std::cmp::Ord for SPayoutStatsPerStrategy {
 
 pub fn determine_best_card<
     ForEachSnapshot: TForEachSnapshot<Output=SMinMax> + Sync,
+    SnapshotVisualizer: TSnapshotVisualizer,
 >(
     determinebestcard: &SDetermineBestCard,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &ForEachSnapshot,
-    opath_out_dir: Option<std::path::PathBuf>
+    fn_visualizer: impl Fn(usize/*i_susp*/, SCard) -> SnapshotVisualizer + std::marker::Sync,
 ) -> SDetermineBestCardResult<SPayoutStatsPerStrategy>
     where
         ForEachSnapshot::Output: std::fmt::Debug + Send,
@@ -354,13 +353,7 @@ pub fn determine_best_card<
                 &mut stichseq,
                 func_filter_allowed_cards,
                 foreachsnapshot,
-                opath_out_dir.as_ref().map(|path_out_dir| {
-                    unwrap!(std::fs::create_dir_all(path_out_dir));
-                    unwrap!(std::fs::File::create(
-                        path_out_dir
-                            .join(format!("{}_{}.html", i_susp, card))
-                    ))
-                }).map(|file_output| (file_output, determinebestcard.epi_fixed)),
+                &mut fn_visualizer(i_susp, card),
             );
             let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
             let payoutstats = SPayoutStatsPerStrategy{
@@ -538,7 +531,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             std::iter::once(ahand),
             /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout::new_from_game(&game),
-            /*opath_out_dir*/None, //Some(&format!("suspicion_test/{:?}", ahand)), // to inspect search tree
+            /*fn_visualizer*/|_,_| SNoVisualization,
         );
         for card in [H7, H8, H9] {
             assert!(determinebestcard.veccard_allowed.contains(&card));

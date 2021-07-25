@@ -88,7 +88,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SG
                             $itahand,
                             &|_,_| (/*no filtering*/),
                             &SMinReachablePayout::new_from_game(game),
-                            /*ostr_file_out*/None,
+                            /*fn_visualizer*/|_,_| SNoVisualization,
                         );
                         let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value();
                         if 

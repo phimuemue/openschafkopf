@@ -17,9 +17,34 @@ pub trait TForEachSnapshot {
     ) -> Self::Output;
 }
 
-trait TSnapshotVisualizer {
+pub trait TSnapshotVisualizer {
     fn begin_snapshot(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>);
     fn end_snapshot<Output: fmt::Debug>(&mut self, output: &Output);
+}
+
+
+pub struct SHtmlVisualizerFolder<'rules> {
+    path: std::path::PathBuf,
+    rules: &'rules dyn TRules,
+    epi: EPlayerIndex,
+}
+
+impl<'rules> SHtmlVisualizerFolder<'rules> {
+    pub fn new(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> Self {
+        unwrap!(std::fs::create_dir_all(&path));
+        unwrap!(crate::game_analysis::generate_html_auxiliary_files(&path));
+        Self{path, rules, epi}
+    }
+
+    pub fn visualizer(&self, path_rel: &std::path::Path) -> SForEachSnapshotHTMLVisualizer<'rules> {
+        let path = self.path.join(path_rel);
+        unwrap!(std::fs::create_dir_all(unwrap!(path.parent())));
+        SForEachSnapshotHTMLVisualizer::new(
+            unwrap!(std::fs::File::create(path)),
+            self.rules,
+            self.epi
+        )
+    }
 }
 
 pub struct SForEachSnapshotHTMLVisualizer<'rules> {
@@ -28,7 +53,7 @@ pub struct SForEachSnapshotHTMLVisualizer<'rules> {
     epi: EPlayerIndex,
 }
 impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
-    pub fn new(file_output: fs::File, rules: &'rules dyn TRules, epi: EPlayerIndex) -> Self {
+    fn new(file_output: fs::File, rules: &'rules dyn TRules, epi: EPlayerIndex) -> Self {
         let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output, rules, epi};
         foreachsnapshothtmlvisualizer.write_all(
             b"<link rel=\"stylesheet\" type=\"text/css\" href=\"../css.css\">
@@ -115,47 +140,37 @@ impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
     }
 }
 
+pub struct SNoVisualization;
+impl TSnapshotVisualizer for SNoVisualization {
+    fn begin_snapshot(&mut self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) {}
+    fn end_snapshot<Output: fmt::Debug>(&mut self, _output: &Output) {}
+}
+
 pub fn explore_snapshots<ForEachSnapshot>(
     ahand: &mut EnumMap<EPlayerIndex, SHand>,
     rules: &dyn TRules,
     stichseq: &mut SStichSequence,
     func_filter_allowed_cards: &impl Fn(&SStichSequence, &mut SHandVector),
     foreachsnapshot: &ForEachSnapshot,
-    opairfileepi_visualize: Option<(fs::File, EPlayerIndex)>,
+    snapshotvisualizer: &mut impl TSnapshotVisualizer,
 ) -> ForEachSnapshot::Output 
     where
         ForEachSnapshot: TForEachSnapshot,
         ForEachSnapshot::Output: fmt::Debug,
 {
-    macro_rules! forward_to_internal{($snapshotvisualizer: expr) => {
-        explore_snapshots_internal(
-            ahand,
-            rules,
-            &mut SRuleStateCache::new(
-                stichseq,
-                ahand,
-                |stich| rules.winner_index(stich),
-            ),
+    explore_snapshots_internal(
+        ahand,
+        rules,
+        &mut SRuleStateCache::new(
             stichseq,
-            func_filter_allowed_cards,
-            foreachsnapshot,
-            $snapshotvisualizer,
-        )
-    }}
-    if let Some((file_output, epi_self_visualize)) = opairfileepi_visualize {
-        forward_to_internal!(&mut SForEachSnapshotHTMLVisualizer::new(
-            file_output,
-            rules,
-            epi_self_visualize,
-        ))
-    } else {
-        struct SNoVisualization;
-        impl TSnapshotVisualizer for SNoVisualization {
-            fn begin_snapshot(&mut self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) {}
-            fn end_snapshot<Output: fmt::Debug>(&mut self, _output: &Output) {}
-        }
-        forward_to_internal!(&mut SNoVisualization{})
-    }
+            ahand,
+            |stich| rules.winner_index(stich),
+        ),
+        stichseq,
+        func_filter_allowed_cards,
+        foreachsnapshot,
+        snapshotvisualizer,
+    )
 }
 
 fn explore_snapshots_internal<ForEachSnapshot>(
