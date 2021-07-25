@@ -11,6 +11,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::App {
         .arg(clap::Arg::with_name("repeat_hands").long("repeat-hands").takes_value(true))
         .arg(clap::Arg::with_name("branching").long("branching").takes_value(true))
         .arg(clap::Arg::with_name("prune").long("prune").takes_value(true))
+        .arg(clap::Arg::with_name("visualize").long("visualize").takes_value(true))
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
@@ -30,7 +31,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             let clapmatches = self.clapmatches;
             let epi_fixed = determinebestcard.epi_fixed;
             let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
-                macro_rules! forward{(($func_filter_allowed_cards: expr), ($foreachsnapshot: ident),) => {{ // TODORUST generic closures
+                macro_rules! forward{(($func_filter_allowed_cards: expr), ($foreachsnapshot: ident), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                     determine_best_card(
                         &determinebestcard,
@@ -53,7 +54,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             /*tpln_stoss_doubling*/(0, 0), // TODO? make customizable
                             /*n_stock*/0, // TODO? make customizable
                         ),
-                        |_,_| SNoVisualization, // TODO? make customizable
+                        $fn_visualizer,
                     )
                 }}}
                 use ERemainingCards::*;
@@ -85,6 +86,16 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     match ((clapmatches.value_of("prune"), eremainingcards)) {
                         (Some("none"),_)|(_, _1|_2|_3) => (SMinReachablePayout),
                         (Some("hint"),_)|(_, _4|_5|_6|_7|_8) => (SMinReachablePayoutLowerBoundViaHint),
+                    },
+                    match (clapmatches.value_of("visualize")) {
+                        None => (|_,_| SNoVisualization),
+                        Some(str_path) => {
+                            SHtmlVisualizerFolder::new(
+                                std::path::Path::new(str_path).to_path_buf(),
+                                rules,
+                                epi_fixed,
+                            )
+                        },
                     },
                 )
             };

@@ -30,10 +30,16 @@ pub struct SHtmlVisualizerFolder<'rules> {
 }
 
 impl<'rules> SHtmlVisualizerFolder<'rules> {
-    pub fn new(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> Self {
+    pub fn new(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> impl Fn(/*i_susp*/usize, SCard) -> SForEachSnapshotHTMLVisualizer<'rules> {
         unwrap!(std::fs::create_dir_all(&path));
         unwrap!(crate::game_analysis::generate_html_auxiliary_files(&path));
-        Self{path, rules, epi}
+        let htmlvisfolder = Self{path, rules, epi};
+        move |i_susp, card| {
+            htmlvisfolder.visualizer(
+                &std::path::Path::new(&format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S")))
+                    .join(format!("{}_{}.html", i_susp, card)),
+            )
+        }
     }
 
     pub fn visualizer(&self, path_rel: &std::path::Path) -> SForEachSnapshotHTMLVisualizer<'rules> {

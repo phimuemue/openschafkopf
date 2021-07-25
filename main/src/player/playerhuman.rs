@@ -93,19 +93,13 @@ impl TPlayer for SPlayerHuman {
                     skui::print_game_info(game.rules.as_ref(), &game.doublings, &game.vecstoss);
                 },
                 || {
-                    let htmlvisfolder = SHtmlVisualizerFolder::new(
-                        std::path::Path::new("suspicion").to_path_buf(),
-                        game.rules.as_ref(),
-                        epi,
-                    );
                     Some(self.ai.suggest_card(
                         game,
-                        |i_susp, card| {
-                            htmlvisfolder.visualizer(
-                                &std::path::Path::new(&format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S")))
-                                    .join(format!("{}_{}.html", i_susp, card)),
-                            )
-                        }
+                        SHtmlVisualizerFolder::new(
+                            std::path::Path::new("suspicion").to_path_buf(),
+                            game.rules.as_ref(),
+                            epi,
+                        ),
                     ))
                 }
             )
