@@ -88,7 +88,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         (Some("hint"),_)|(_, _4|_5|_6|_7|_8) => (SMinReachablePayoutLowerBoundViaHint),
                     },
                     match (clapmatches.value_of("visualize")) {
-                        None => (|_,_| SNoVisualization),
+                        None => (|_,_,_| SNoVisualization),
                         Some(str_path) => {
                             visualizer_factory(
                                 std::path::Path::new(str_path).to_path_buf(),

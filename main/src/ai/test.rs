@@ -60,7 +60,7 @@ fn test_determine_best_card() {
     );
     // If we cheat (i.e. we know each players' cards), it makes - intuitively, not mathematically
     // proven - sense not to play HO since it only weakens the own partner.
-    assert_ne!(aicheating.suggest_card(&game, |_,_| SNoVisualization), HO);
+    assert_ne!(aicheating.suggest_card(&game, |_,_,_| SNoVisualization), HO);
     // If we do not cheat, tests indicated that playing HO is the best solution.
     // As far as I can tell, it is at least not necessarily wrong.
     // (HO ensures at least that no other player can take away rufsau.)

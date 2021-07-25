@@ -126,7 +126,7 @@ impl SAi {
     pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer<SMinMax>>(
         &self,
         game: &SGame,
-        fn_visualizer: impl Fn(&EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
+        fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
     ) -> SCard {
         let determinebestcard = SDetermineBestCard::new_from_game(game);
         let epi_fixed = determinebestcard.epi_fixed;
@@ -323,7 +323,7 @@ pub fn determine_best_card<
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &ForEachSnapshot,
-    fn_visualizer: impl Fn(&EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
+    fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
 ) -> SDetermineBestCardResult<SPayoutStatsPerStrategy>
     where
         ForEachSnapshot::Output: std::fmt::Debug + Send,
@@ -333,13 +333,14 @@ pub fn determine_best_card<
         SCard::map_from_fn(|_card| None),
     ));
     itahand
+        .enumerate()
         .par_bridge() // TODO can we derive a true parallel iterator?
-        .flat_map(|ahand|
+        .flat_map(|(i_ahand, ahand)|
             determinebestcard.veccard_allowed.par_iter()
-                .map(move |card| (ahand.clone(), *card))
+                .map(move |card| (i_ahand, ahand.clone(), *card))
         )
-        .for_each(|(mut ahand, card)| {
-            let mut visualizer = fn_visualizer(&ahand, card); // do before ahand is modified
+        .for_each(|(i_ahand, mut ahand, card)| {
+            let mut visualizer = fn_visualizer(i_ahand, &ahand, card); // do before ahand is modified
             debug_assert!(ahand[determinebestcard.epi_fixed].cards().contains(&card));
             let mapcardooutput = Arc::clone(&mapcardooutput);
             let mut stichseq = determinebestcard.stichseq.clone();
@@ -530,7 +531,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             std::iter::once(ahand),
             /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout::new_from_game(&game),
-            /*fn_visualizer*/|_,_| SNoVisualization,
+            /*fn_visualizer*/|_,_,_| SNoVisualization,
         );
         for card in [H7, H8, H9] {
             assert!(determinebestcard.veccard_allowed.contains(&card));
