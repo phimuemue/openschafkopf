@@ -127,7 +127,7 @@ impl SAi {
     pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer<SMinMax>>(
         &self,
         game: &SGame,
-        fn_visualizer: impl Fn(usize/*i_susp*/, SCard) -> SnapshotVisualizer + std::marker::Sync,
+        fn_visualizer: impl Fn(&EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
     ) -> SCard {
         let determinebestcard = SDetermineBestCard::new_from_game(game);
         let epi_fixed = determinebestcard.epi_fixed;
@@ -324,7 +324,7 @@ pub fn determine_best_card<
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
     func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
     foreachsnapshot: &ForEachSnapshot,
-    fn_visualizer: impl Fn(usize/*i_susp*/, SCard) -> SnapshotVisualizer + std::marker::Sync,
+    fn_visualizer: impl Fn(&EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
 ) -> SDetermineBestCardResult<SPayoutStatsPerStrategy>
     where
         ForEachSnapshot::Output: std::fmt::Debug + Send,
@@ -334,13 +334,13 @@ pub fn determine_best_card<
         SCard::map_from_fn(|_card| None),
     ));
     itahand
-        .enumerate()
         .par_bridge() // TODO can we derive a true parallel iterator?
-        .flat_map(|(i_susp, ahand)|
+        .flat_map(|ahand|
             determinebestcard.veccard_allowed.par_iter()
-                .map(move |card| (i_susp, ahand.clone(), *card))
+                .map(move |card| (ahand.clone(), *card))
         )
-        .for_each(|(i_susp, mut ahand, card)| {
+        .for_each(|(mut ahand, card)| {
+            let mut visualizer = fn_visualizer(&ahand, card); // do before ahand is modified
             debug_assert!(ahand[determinebestcard.epi_fixed].cards().contains(&card));
             let mapcardooutput = Arc::clone(&mapcardooutput);
             let mut stichseq = determinebestcard.stichseq.clone();
@@ -353,7 +353,7 @@ pub fn determine_best_card<
                 &mut stichseq,
                 func_filter_allowed_cards,
                 foreachsnapshot,
-                &mut fn_visualizer(i_susp, card),
+                &mut visualizer,
             );
             let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
             let payoutstats = SPayoutStatsPerStrategy{

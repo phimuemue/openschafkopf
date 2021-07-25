@@ -23,13 +23,18 @@ pub trait TSnapshotVisualizer<Output> {
 }
 
 
-pub fn visualizer_factory<'rules>(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> impl Fn(/*i_susp*/usize, SCard) -> SForEachSnapshotHTMLVisualizer<'rules> {
+pub fn visualizer_factory<'rules>(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> impl Fn(&EnumMap<EPlayerIndex, SHand>, SCard) -> SForEachSnapshotHTMLVisualizer<'rules> {
     unwrap!(std::fs::create_dir_all(&path));
     unwrap!(crate::game_analysis::generate_html_auxiliary_files(&path));
-    move |i_susp, card| {
+    move |ahand, card| {
         let path_abs = path.join(
             &std::path::Path::new(&format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S")))
-                .join(format!("{}_{}.html", i_susp, card)),
+                .join(format!("{}_{}.html",
+                    ahand.iter()
+                        .map(|hand| hand.cards().iter().join(""))
+                        .join("_"),
+                    card
+                )),
         );
         unwrap!(std::fs::create_dir_all(unwrap!(path_abs.parent())));
         SForEachSnapshotHTMLVisualizer::new(
