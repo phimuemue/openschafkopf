@@ -124,7 +124,7 @@ impl SAi {
             .sum::<isize>().as_num::<f64>() / (self.n_rank_rules_samples.as_num::<f64>())
     }
 
-    pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer>(
+    pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer<SMinMax>>(
         &self,
         game: &SGame,
         fn_visualizer: impl Fn(usize/*i_susp*/, SCard) -> SnapshotVisualizer + std::marker::Sync,
@@ -318,7 +318,7 @@ impl std::cmp::Ord for SPayoutStatsPerStrategy {
 
 pub fn determine_best_card<
     ForEachSnapshot: TForEachSnapshot<Output=SMinMax> + Sync,
-    SnapshotVisualizer: TSnapshotVisualizer,
+    SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
 >(
     determinebestcard: &SDetermineBestCard,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,

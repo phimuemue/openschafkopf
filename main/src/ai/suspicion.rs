@@ -17,9 +17,9 @@ pub trait TForEachSnapshot {
     ) -> Self::Output;
 }
 
-pub trait TSnapshotVisualizer {
+pub trait TSnapshotVisualizer<Output> {
     fn begin_snapshot(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>);
-    fn end_snapshot<Output: fmt::Debug>(&mut self, output: &Output);
+    fn end_snapshot(&mut self, output: &Output);
 }
 
 
@@ -107,7 +107,7 @@ pub fn player_table<T: fmt::Display>(epi_self: EPlayerIndex, fn_per_player: impl
     )
 }
 
-impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
+impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
     fn begin_snapshot(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) {
         let str_item_id = format!("{}{}",
             stichseq.count_played_cards(),
@@ -139,17 +139,24 @@ impl TSnapshotVisualizer for SForEachSnapshotHTMLVisualizer<'_> {
         self.write_all(b"<ul>\n");
     }
 
-    fn end_snapshot<Output: fmt::Debug>(&mut self, output: &Output) {
+    fn end_snapshot(&mut self, minmax: &SMinMax) {
         self.write_all(b"</ul>\n");
         self.write_all(b"</li>\n");
-        self.write_all(format!("<p>{:?}</p>\n", output).as_bytes());
+        self.write_all(player_table(self.epi, |epi| {
+            Some(format!("{}/{}/{}/{}",
+                minmax.t_min[epi],
+                minmax.t_selfish_min[epi],
+                minmax.t_selfish_max[epi],
+                minmax.t_max[epi],
+            ))
+        }).as_bytes());
     }
 }
 
 pub struct SNoVisualization;
-impl TSnapshotVisualizer for SNoVisualization {
+impl<Output> TSnapshotVisualizer<Output> for SNoVisualization {
     fn begin_snapshot(&mut self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) {}
-    fn end_snapshot<Output: fmt::Debug>(&mut self, _output: &Output) {}
+    fn end_snapshot(&mut self, _output: &Output) {}
 }
 
 pub fn explore_snapshots<ForEachSnapshot>(
@@ -158,11 +165,10 @@ pub fn explore_snapshots<ForEachSnapshot>(
     stichseq: &mut SStichSequence,
     func_filter_allowed_cards: &impl Fn(&SStichSequence, &mut SHandVector),
     foreachsnapshot: &ForEachSnapshot,
-    snapshotvisualizer: &mut impl TSnapshotVisualizer,
+    snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
     where
         ForEachSnapshot: TForEachSnapshot,
-        ForEachSnapshot::Output: fmt::Debug,
 {
     explore_snapshots_internal(
         ahand,
@@ -186,11 +192,10 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     stichseq: &mut SStichSequence,
     func_filter_allowed_cards: &impl Fn(&SStichSequence, &mut SHandVector),
     foreachsnapshot: &ForEachSnapshot,
-    snapshotvisualizer: &mut impl TSnapshotVisualizer,
+    snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
     where
         ForEachSnapshot: TForEachSnapshot,
-        ForEachSnapshot::Output : fmt::Debug,
 {
     snapshotvisualizer.begin_snapshot(stichseq, &ahand);
     let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
