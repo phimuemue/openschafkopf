@@ -4,6 +4,7 @@ use crate::util::*;
 use arrayvec::ArrayVec;
 use rand::{self, Rng};
 use std::mem;
+use itertools::Itertools;
 
 pub mod run;
 
@@ -372,9 +373,10 @@ impl SStichSequence {
     pub fn completed_stichs_custom_winner_index(&self, if_dbg_else!({fn_winner_index}{_fn_winner_index}): impl Fn(&SStich)->EPlayerIndex) -> impl Iterator<Item=(&SStich, EPlayerIndex)> {
         #[cfg(debug_assertions)]self.assert_invariant();
         self.vecstich[0..self.vecstich.len()]
-            .windows(2) // TODO is this the most efficient way?
-            .map(move |astich| {
-                (&astich[0], debug_verify_eq!(astich[1].first_playerindex(), fn_winner_index(&astich[0])))
+            .iter()
+            .tuple_windows()
+            .map(move |(stich_0, stich_1)| {
+                (stich_0, debug_verify_eq!(stich_1.first_playerindex(), fn_winner_index(stich_0)))
             })
     }
 
