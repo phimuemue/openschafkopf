@@ -20,7 +20,7 @@ pub fn subcommand(str_subcommand: &str) -> clap::App {
 pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGame, failure::Error> {
     use combine::{char::*, *};
     use select::{document::Document, node::Node, predicate::*};
-    let doc = Document::from(&str_html as &str);
+    let doc = Document::from(str_html);
     fn vec_to_arr<T: std::fmt::Debug>(vect: Vec<T>) -> Result<[T; EPlayerIndex::SIZE], failure::Error> {
         let (card0, card1, card2, card3) = vect.into_iter()
             .collect_tuple()
@@ -222,11 +222,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 resgame,
                             });
                         };
-                        if let resgame@Ok(_) = analyze_sauspiel_html(&str_input) {
+                        if let resgame@Ok(_) = analyze_sauspiel_html(str_input) {
                             push_game(path.to_string_lossy().into_owned(), resgame)
                         } else {
                             let mut b_found_plain = false;
-                            for (i, resgame) in analyze_plain(&str_input).filter(|res| res.is_ok()).enumerate() {
+                            for (i, resgame) in analyze_plain(str_input).filter(|res| res.is_ok()).enumerate() {
                                 b_found_plain = true;
                                 push_game(format!("{}_{}", path.to_string_lossy(), i), resgame)
                             }
@@ -246,7 +246,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         }
     }
     analyze_games(
-        &std::path::Path::new("./analyze"), // TODO make customizable
+        std::path::Path::new("./analyze"), // TODO make customizable
         /*fn_link*/|str_description: &str| str_description.to_string(),
         vecgame.into_iter(),
     )

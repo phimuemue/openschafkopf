@@ -45,12 +45,12 @@ pub fn with_common_args(
     withcommanargs: impl TWithCommonArgs
 ) -> Result<(), Error> {
     let b_verbose = clapmatches.is_present("verbose");
-    let hand_fixed = super::str_to_hand(&unwrap!(clapmatches.value_of("hand")))?;
+    let hand_fixed = super::str_to_hand(unwrap!(clapmatches.value_of("hand")))?;
     let veccard_as_played = &cardvector::parse_cards::<Vec<_>>(
-        &unwrap!(clapmatches.value_of("cards_on_table")),
+        unwrap!(clapmatches.value_of("cards_on_table")),
     ).ok_or_else(||format_err!("Could not parse played cards"))?;
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
-    let rules = crate::rules::parser::parse_rule_description_simple(&unwrap!(clapmatches.value_of("rules")))?;
+    let rules = crate::rules::parser::parse_rule_description_simple(unwrap!(clapmatches.value_of("rules")))?;
     let rules = rules.as_ref();
     let stichseq = SStichSequence::new_from_cards(
         /*ekurzlang*/EKurzLang::checked_from_cards_per_player(

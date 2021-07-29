@@ -272,7 +272,7 @@ pub struct SGameWithDesc {
 }
 
 pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String, itgamewithdesc: impl Iterator<Item=SGameWithDesc>) -> Result<(), failure::Error> {
-    create_dir_if_not_existent(&path_analysis)?;
+    create_dir_if_not_existent(path_analysis)?;
     generate_html_auxiliary_files(path_analysis)?;
     let str_date = format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S"));
     let mut str_index_html = format!(

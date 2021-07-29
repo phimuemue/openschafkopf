@@ -197,7 +197,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     where
         ForEachSnapshot: TForEachSnapshot,
 {
-    snapshotvisualizer.begin_snapshot(stichseq, &ahand);
+    snapshotvisualizer.begin_snapshot(stichseq, ahand);
     let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
     let output = if debug_verify_eq!(
         ahand[epi_current].cards().len() <= 1,
@@ -243,7 +243,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             },
         }
     } else {
-        foreachsnapshot.pruned_output(stichseq, &ahand, rulestatecache).unwrap_or_else(|| {
+        foreachsnapshot.pruned_output(stichseq, ahand, rulestatecache).unwrap_or_else(|| {
             let mut veccard_allowed = rules.all_allowed_cards(stichseq, &ahand[epi_current]);
             func_filter_allowed_cards(stichseq, &mut veccard_allowed);
             // TODO? use equivalent card optimization
@@ -331,7 +331,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     }
 
     fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
-        Pruner::pruned_output(&self, stichseq, ahand, rulestatecache)
+        Pruner::pruned_output(self, stichseq, ahand, rulestatecache)
     }
 
     fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(

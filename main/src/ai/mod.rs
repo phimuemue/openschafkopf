@@ -215,7 +215,7 @@ fn test_unplayed_cards() {
         }
     }
     let hand = &SHand::new_from_iter([GK, SK]);
-    let veccard_unplayed = unplayed_cards(&stichseq, &hand).collect::<Vec<_>>();
+    let veccard_unplayed = unplayed_cards(&stichseq, hand).collect::<Vec<_>>();
     let veccard_unplayed_check = [GZ, E7, SZ, H9, EZ, GU];
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
     assert!(veccard_unplayed.iter().all(|card| veccard_unplayed_check.contains(card)));
