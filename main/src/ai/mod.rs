@@ -68,11 +68,10 @@ impl<'game> SDetermineBestCard<'game> {
     }
 
     pub fn new_from_game(game: &'game SGame) -> Self {
-        let epi_fixed = unwrap!(game.which_player_can_do_something()).0;
         Self::new(
             game.rules.as_ref(),
             &game.stichseq,
-            /*hand_fixed*/&game.ahand[epi_fixed],
+            /*hand_fixed*/&game.ahand[unwrap!(game.which_player_can_do_something()).0],
         )
     }
 
