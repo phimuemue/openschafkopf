@@ -39,6 +39,7 @@ fn main() -> Result<(), Error> {
         (analyze, "analyze")
         (websocket, "websocket")
         (hand_stats, "hand-stats")
+        (dl, "dl")
     );
     Ok(())
 }

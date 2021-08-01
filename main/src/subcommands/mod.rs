@@ -1,5 +1,6 @@
 pub mod analyze;
 pub mod cli;
+pub mod dl;
 pub mod hand_stats;
 pub mod rank_rules;
 pub mod suggest_card;
