@@ -55,13 +55,21 @@ async fn internal_run(
                 println!("{}/{}: {}", i.clone() - i_lo.clone(), n_count, str_url);
                 let mut file = unwrap!(async_std::fs::File::create(path_dst.join(&format!("{}.html", i))).await);
                 loop {
-                    match unwrap!(client.get(&str_url).basic_auth(str_user, Some(str_pass)).try_clone()).send().await {
-                        Ok(response) => {
-                            unwrap!(file.write_all(unwrap!(response.text().await).as_bytes()).await);
+                    match 
+                        client
+                            .get(&str_url)
+                            .basic_auth(str_user, Some(str_pass))
+                            .timeout(std::time::Duration::from_secs(5)) // getting something from sauspiel should be pretty fast
+                            .send()
+                            .and_then(|response| response.text())
+                            .await
+                    {
+                        Ok(str_text) => {
+                            unwrap!(file.write_all(str_text.as_bytes()).await);
                             break;
                         },
                         Err(e) => {
-                            println!("Error at {}: {:?}", i, e);
+                            println!("Error at {}: {}. Retrying...", i, e);
                         },
                     }
                 }
