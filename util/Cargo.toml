@@ -3,6 +3,7 @@ name = "openschafkopf_util"
 version = "0.1.0"
 authors = ["openschafkopf <openschafkopf>"]
 edition = "2018"
+license-file = "../LICENSE"
 
 [dependencies]
 itertools = "0"
