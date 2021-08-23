@@ -299,6 +299,18 @@ pub struct SStichSequence {
     ekurzlang: EKurzLang,
 }
 
+use std::fmt;
+
+impl std::fmt::Display for SStichSequence {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for stich in self.completed_stichs() {
+            write!(f, "{} | ", stich)?;
+        }
+        write!(f, "{}", self.current_stich())?;
+        Ok(())
+    }
+}
+
 impl SStichSequence {
     #[cfg(debug_assertions)]
     fn assert_invariant(&self) {

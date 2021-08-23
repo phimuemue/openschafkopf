@@ -299,7 +299,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                     assert!(
                         mapepipayouthint.iter().zip(mapepipayouthint_after.iter())
                             .all(|(payouthint, payouthint_other)| payouthint.contains_payouthint(payouthint_other)),
-                        "{:?}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepipayouthint, mapepipayouthint_after,
+                        "{}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepipayouthint, mapepipayouthint_after,
                     );
                     mapepipayouthint = mapepipayouthint_after;
                 }
@@ -308,7 +308,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                         .all(|(payouthint, payoutinfo)|
                             payouthint.contains_payouthint(&SPayoutHint::new((Some(payoutinfo.clone()), Some(payoutinfo))))
                         ),
-                    "{:?}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepipayouthint, apayoutinfo,
+                    "{}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepipayouthint, apayoutinfo,
                 );
             }
         }
