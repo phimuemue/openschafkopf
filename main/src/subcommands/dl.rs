@@ -75,7 +75,7 @@ async fn internal_run(
                 }
             }
         })
-    ).buffer_unordered(n_jobs).for_each(|_| async {()}).await;
+    ).buffer_unordered(n_jobs).for_each(|_| async {}).await;
     Ok(())
 }
 
