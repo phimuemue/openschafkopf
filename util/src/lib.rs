@@ -1,4 +1,7 @@
 #[macro_use]
+pub mod if_dbg_else;
+pub use self::if_dbg_else::*;
+#[macro_use]
 pub mod verify;
 pub use self::verify::*;
 pub mod iteratorext;
@@ -10,14 +13,3 @@ pub mod mutate_return;
 pub use mutate_return::*;
 pub mod array_into_iter;
 pub use array_into_iter::*;
-
-#[cfg(debug_assertions)]
-#[macro_export]
-macro_rules! if_dbg_else {({$($tt_dbg: tt)*}{$($tt_else: tt)*}) => {
-    $($tt_dbg)*
-}}
-#[cfg(not(debug_assertions))]
-#[macro_export]
-macro_rules! if_dbg_else {({$($tt_dbg: tt)*}{$($tt_else: tt)*}) => {
-    $($tt_else)*
-}}
