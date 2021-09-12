@@ -1,5 +1,4 @@
 use futures::prelude::*;
-use num::BigUint;
 
 use crate::util::*;
 
@@ -33,14 +32,14 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::App {
 }
 
 async fn internal_run(
-    i_lo: BigUint,
-    i_hi: BigUint,
+    i_lo: u128,
+    i_hi: u128,
     str_user: &str,
     str_pass: &str,
     n_jobs: usize,
 ) -> Result<(), Error> {
     let client = reqwest::Client::new();
-    let n_count = i_hi.clone() - i_lo.clone();
+    let n_count = i_hi - i_lo;
     let path_dst = std::path::PathBuf::from(&format!("downloaded/{}_{}_{}",
         i_lo,
         i_hi,
@@ -48,11 +47,11 @@ async fn internal_run(
     ));
     unwrap!(std::fs::create_dir_all(&path_dst));
     futures::stream::iter(
-        num::range(i_lo.clone(), i_hi).map(|i| {
-            let (i_lo, path_dst, n_count, client) = (i_lo.clone(), path_dst.clone(), n_count.clone(), client.clone());
+        (i_lo..i_hi).map(|i| {
+            let (i_lo, path_dst, n_count, client) = (i_lo, path_dst.clone(), n_count, client.clone());
             let str_url = format!("https://www.sauspiel.de/spiele/{}", i);
             async move {
-                println!("{}/{}: {}", i.clone() - i_lo.clone(), n_count, str_url);
+                println!("{}/{}: {}", i - i_lo, n_count, str_url);
                 let mut file = unwrap!(async_std::fs::File::create(path_dst.join(&format!("{}.html", i))).await);
                 loop {
                     match 
