@@ -5,18 +5,18 @@ pub fn assign_better<T>(dst: &mut T, src: T, fn_better: impl FnOnce(&T, &T) -> b
 }
 
 pub fn assign_min<T: Ord>(dst: &mut T, src: T) {
-    assign_better(dst, src, |lhs, rhs| lhs<rhs)
+    assign_better(dst, src, |lhs, rhs| lhs < rhs)
 }
 
 pub fn assign_max<T: Ord>(dst: &mut T, src: T) {
-    assign_better(dst, src, |lhs, rhs| lhs>rhs)
+    assign_better(dst, src, |lhs, rhs| lhs > rhs)
 }
 
-pub fn assign_min_by_key<T, K: Ord>(dst: &mut T, src: T, mut fn_key: impl FnMut(&T)->K) {
+pub fn assign_min_by_key<T, K: Ord>(dst: &mut T, src: T, mut fn_key: impl FnMut(&T) -> K) {
     assign_better(dst, src, |lhs, rhs| fn_key(lhs) < fn_key(rhs))
 }
 
-pub fn assign_max_by_key<T, K: Ord>(dst: &mut T, src: T, mut fn_key: impl FnMut(&T)->K) {
+pub fn assign_max_by_key<T, K: Ord>(dst: &mut T, src: T, mut fn_key: impl FnMut(&T) -> K) {
     assign_better(dst, src, |lhs, rhs| fn_key(lhs) > fn_key(rhs))
 }
 
