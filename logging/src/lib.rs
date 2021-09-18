@@ -1,8 +1,8 @@
 use itertools::Itertools;
 
-pub use log::{trace, debug, info, warn, error};
-use openschafkopf_util::if_dbg_else;
 use failure::{bail, format_err};
+pub use log::{debug, error, info, trace, warn};
+use openschafkopf_util::if_dbg_else;
 
 pub fn init_logging() -> Result<(), failure::Error> {
     fern::Dispatch::new()
@@ -22,10 +22,12 @@ pub fn init_logging() -> Result<(), failure::Error> {
             if !path_log.set_extension("log") {
                 bail!("set_extension error");
             }
-            dirs::home_dir().ok_or_else(||format_err!("home_dir error"))?
-                .join(path_log
-                    .file_name()
-                    .ok_or_else(||format_err!("file_name error"))?
+            dirs::home_dir()
+                .ok_or_else(|| format_err!("home_dir error"))?
+                .join(
+                    path_log
+                        .file_name()
+                        .ok_or_else(|| format_err!("file_name error"))?,
                 )
         })?)
         .apply()?;
@@ -34,13 +36,11 @@ pub fn init_logging() -> Result<(), failure::Error> {
         error!("panic: {}", panicinfo);
         fn_panic_handler_original(panicinfo)
     }));
-    info!("Started: {}", std::env::args()
-        .format_with(
-            /*sep*/" ",
-            |str_arg, formatter| {
-                formatter(&format_args!("\"{}\"", str_arg))
-            },
-        )
+    info!(
+        "Started: {}",
+        std::env::args().format_with(/*sep*/ " ", |str_arg, formatter| {
+            formatter(&format_args!("\"{}\"", str_arg))
+        }),
     );
     Ok(())
 }
