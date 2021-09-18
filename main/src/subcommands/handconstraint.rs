@@ -155,13 +155,13 @@ fn single_constraint_parser_<I: Stream<Item=char>>() -> impl Parser<Input = I, O
         })
     )
 }
-parser!{
+parser!(
     fn single_constraint_parser[I]()(I) -> VConstraint
         where [I: Stream<Item = char>]
     {
         single_constraint_parser_()
     }
-}
+);
 
 fn constraint_parser_<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = VConstraint>
     where I::Error: ParseError<I::Item, I::Range, I::Position>, // Necessary due to rust-lang/rust#24159
@@ -177,13 +177,13 @@ fn constraint_parser_<I: Stream<Item=char>>() -> impl Parser<Input = I, Output =
     choice!(conjunction, disjunction, attempt(single_constraint_parser()))
 }
 
-parser!{
+parser!(
     fn constraint_parser[I]()(I) -> VConstraint
         where [I: Stream<Item = char>]
     {
         constraint_parser_()
     }
-}
+);
 
 #[test]
 fn test_constraint_parser() {
