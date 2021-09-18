@@ -566,7 +566,6 @@ impl STable {
                                                         }
                                                     }
                                                 }
-                                                    
                                             ),
                                             itgamephaseaction_rules,
                                             self_mutex.clone(),
