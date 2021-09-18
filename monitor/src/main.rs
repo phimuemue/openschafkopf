@@ -46,7 +46,8 @@ fn main() -> Result<(), failure::Error> {
                         unwrap!(via_out_param_init_result(
                             (0..n_bytes_msg_len).map(|_| 0).collect::<Vec<_>>(),
                             |vecbyte| std::io::stdin().read(vecbyte)
-                        )).0
+                        ))
+                        .0
                     ));
                     info!("Received \"{}\"", str_json_in);
                     str_json_in
@@ -68,9 +69,7 @@ fn main() -> Result<(), failure::Error> {
         };
         match serde_json::de::from_str::<serde_json::Value>(&str_json_in) {
             Ok(jsonval) => {
-                if let Some(mut cmd_openschafkopf) =
-                    unwrap!(ocmd_openschafkopf.lock()).take()
-                {
+                if let Some(mut cmd_openschafkopf) = unwrap!(ocmd_openschafkopf.lock()).take() {
                     if let Ok(()) = cmd_openschafkopf.kill() {
                         communicate_error("Process did not finish early enough.");
                     }
