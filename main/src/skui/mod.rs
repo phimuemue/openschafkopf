@@ -54,12 +54,12 @@ fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: SCard) {
     ncurses::wattroff(ncwin, nccolorpair);
 }
 
-plain_enum_mod!{moderelativeplayerposition, ERelativePlayerPosition {
+plain_enum_mod!(moderelativeplayerposition, ERelativePlayerPosition {
     Myself,
     Left,
     VisAVis,
     Right,
-}}
+});
 
 impl EPlayerIndex {
     fn to_relativeplayerposition(self, epi_myself: EPlayerIndex) -> ERelativePlayerPosition {

@@ -2,12 +2,12 @@ use crate::util::*;
 use std::fmt;
 use serde::{Serialize, Deserialize};
 
-plain_enum_mod!{modefarbe, EFarbe {
+plain_enum_mod!(modefarbe, EFarbe {
     Eichel,
     Gras,
     Herz,
     Schelln,
-}}
+});
 
 define_static_value!(pub SStaticFarbeEichel, EFarbe, EFarbe::Eichel);
 define_static_value!(pub SStaticFarbeGras, EFarbe, EFarbe::Gras);
@@ -25,7 +25,7 @@ impl fmt::Display for EFarbe {
     }
 }
 
-plain_enum_mod!{modeschlag, ESchlag {
+plain_enum_mod!(modeschlag, ESchlag {
     Ass,
     Zehn,
     Koenig,
@@ -34,7 +34,7 @@ plain_enum_mod!{modeschlag, ESchlag {
     S9,
     S8,
     S7,
-}}
+});
 
 define_static_value!(pub SStaticSchlagOber, ESchlag, ESchlag::Ober);
 define_static_value!(pub SStaticSchlagUnter, ESchlag, ESchlag::Unter);
@@ -45,10 +45,10 @@ impl fmt::Display for ESchlag {
     }
 }
 
-plain_enum_mod!{modekurzlang, EKurzLang {
+plain_enum_mod!(modekurzlang, EKurzLang {
     Kurz,
     Lang,
-}}
+});
 
 impl EKurzLang {
     pub fn cards_per_player(self) -> usize {
