@@ -28,7 +28,7 @@ pub type SDoublings = SPlayersInRound<bool, SStaticEPI0>;
 
 #[derive(Debug)]
 pub struct SDealCards {
-    ahand : EnumMap<EPlayerIndex, SHand>,
+    aveccard : EnumMap<EPlayerIndex, /*not yet a "hand"*/SHandVector>,
     doublings : SDoublings,
     ruleset : SRuleSet,
     n_stock : isize,
@@ -47,7 +47,7 @@ impl TGamePhase for SDealCards {
     fn finish_success(self) -> Self::Finish {
         assert_eq!(self.doublings.first_playerindex(), EPlayerIndex::EPI0);
         SGamePreparations {
-            ahand : self.ahand,
+            ahand : self.aveccard.map_into(SHand::new_from_vec),
             doublings : self.doublings,
             ruleset: self.ruleset,
             gameannouncements : SGameAnnouncements::new(SStaticEPI0{}),
@@ -60,7 +60,7 @@ impl SDealCards {
     pub fn new(ruleset: SRuleSet, n_stock: isize) -> SDealCards {
         let ekurzlang = ruleset.ekurzlang;
         SDealCards {
-            ahand : {
+            aveccard : {
                 let mut veccard = SCard::values(ekurzlang).collect::<Vec<_>>();
                 assert_eq!(veccard.len(), EPlayerIndex::SIZE*ekurzlang.cards_per_player());
                 EPlayerIndex::map_from_fn(move |_epi|
@@ -74,7 +74,7 @@ impl SDealCards {
     }
 
     pub fn first_hand_for(&self, epi: EPlayerIndex) -> &[SCard] {
-        let veccard = self.ahand[epi].cards();
+        let veccard = &self.aveccard[epi];
         assert_eq!(veccard.len(), self.ruleset.ekurzlang.cards_per_player());
         &veccard[0..veccard.len()/2]
     }
@@ -100,17 +100,15 @@ pub struct SGamePreparations {
     pub n_stock : isize,
 }
 
-pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHand {
+pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHandVector {
     assert!(veccard.len()>=n_size);
-    SHand::new_from_vec({
-        let mut veccard_hand = SHandVector::new();
-        for _i in 0..n_size {
-            let i_card = rand::thread_rng().gen_range(0..veccard.len());
-            veccard_hand.push(veccard.swap_remove(i_card));
-        }
-        assert_eq!(veccard_hand.len(), n_size);
-        veccard_hand
-    })
+    let mut veccard_hand = SHandVector::new();
+    for _i in 0..n_size {
+        let i_card = rand::thread_rng().gen_range(0..veccard.len());
+        veccard_hand.push(veccard.swap_remove(i_card));
+    }
+    assert_eq!(veccard_hand.len(), n_size);
+    veccard_hand
 }
 
 #[allow(clippy::large_enum_variant)] // It is ok for DirectGame to be so large
