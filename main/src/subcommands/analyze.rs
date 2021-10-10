@@ -181,8 +181,7 @@ fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failure::E
             let veccard = parse_cards::<Vec<_>>(str_cards)
                 .ok_or_else(|| format_err!("Could not parse cards: {}", str_cards))?;
             let stichseq = SStichSequence::new_from_cards(
-                /*ekurzlang*/EKurzLang::values()
-                    .find(|ekurzlang| ekurzlang.cards_per_player()*EPlayerIndex::SIZE==veccard.len())
+                EKurzLang::checked_from_cards_per_player(veccard.len())
                     .ok_or_else(|| format_err!("Incorrect number of cards: {}", veccard.len()))?,
                 veccard.iter().copied(),
                 rules.as_ref(),
