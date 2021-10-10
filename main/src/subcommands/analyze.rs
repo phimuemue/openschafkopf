@@ -352,7 +352,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
     }
 }
 
-fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failure::Error>> + '_ {
+fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failure::Error>> + std::fmt::Debug + '_ {
     str_lines
         .lines()
         .map(|str_plain| {
@@ -365,7 +365,8 @@ fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failure::E
             let veccard = parse_cards::<Vec<_>>(str_cards)
                 .ok_or_else(|| format_err!("Could not parse cards: {}", str_cards))?;
             let stichseq = SStichSequence::new_from_cards(
-                EKurzLang::checked_from_cards_per_player(veccard.len())
+                if_then_some!(veccard.len()%EPlayerIndex::SIZE==0, veccard.len()/EPlayerIndex::SIZE)
+                    .and_then(EKurzLang::checked_from_cards_per_player)
                     .ok_or_else(|| format_err!("Incorrect number of cards: {}", veccard.len()))?,
                 veccard.iter().copied(),
                 rules.as_ref(),
@@ -383,6 +384,15 @@ fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failure::E
                 /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
             )
         })
+}
+
+#[test]
+fn test_analyze_plain() {
+    fn internal_test(str_in: &str) {
+        unwrap!(unwrap!(analyze_plain(str_in).exactly_one()));
+    }
+    internal_test("Rufspiel Blaue von 3: so h7 go eo ho hz hk eu gu h9 su g8 g9 ga gk e9 ea ek ez e7 g7 ha s7 gz sa s9 h8 sz e8 sk hu s8");
+    internal_test("Schelln-Wenz von 2: ea ek e7 ez gz g7 ga go eu e9 so s9 gu h7 sa hu su h8 e8 sz s8 ha eo g9 s7 h9 hk g8 sk hz ho gk");
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
