@@ -10,16 +10,6 @@ pub struct SHand {
 }
 
 impl SHand {
-    pub fn new_from_hand(&self, card: SCard) -> SHand {
-        SHand {
-            veccard : self
-                .veccard
-                .iter()
-                .copied()
-                .filter(|&card_in_hand| card_in_hand!=card)
-                .collect()
-        }
-    }
     pub fn new_from_vec(veccard: SHandVector) -> SHand {
         SHand {veccard}
     }
@@ -63,7 +53,11 @@ fn test_hand() {
         SCard::new(EFarbe::Herz, ESchlag::Koenig),
         SCard::new(EFarbe::Schelln, ESchlag::S7),
     ]);
-    let hand2 = hand.new_from_hand(SCard::new(EFarbe::Herz, ESchlag::Koenig));
+    let hand2 = {
+        let mut hand2 = hand.clone();
+        hand2.play_card(SCard::new(EFarbe::Herz, ESchlag::Koenig));
+        hand2
+    };
     assert_eq!(hand.cards().len()-1, hand2.cards().len());
     assert!(hand2.cards()[0]==SCard::new(EFarbe::Eichel, ESchlag::Unter));
     assert!(hand2.cards()[1]==SCard::new(EFarbe::Schelln, ESchlag::S7));
