@@ -125,6 +125,17 @@ impl fmt::Display for SCard {
     }
 }
 
+pub struct SDisplayCardSlice<'slccard>(pub &'slccard [SCard]);
+
+impl<'slccard> fmt::Display for SDisplayCardSlice<'slccard> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for card in self.0.iter() {
+            write!(f, "{}, ", card)?;
+        }
+        write!(f, "")
+    }
+}
+
 const fn card_new_const(efarbe: EFarbe, eschlag: ESchlag) -> SCard { // TODO (plain_enum: to_usize should be const fn)
     SCard{n_internalrepresentation : (efarbe as usize * ESchlag::SIZE + eschlag as usize) as u8}
 }

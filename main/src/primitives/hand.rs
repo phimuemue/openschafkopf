@@ -39,10 +39,7 @@ impl SHand {
 
 impl fmt::Display for SHand {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for card in self.veccard.iter() {
-            write!(f, "{}, ", card)?;
-        }
-        write!(f, "")
+        (SDisplayCardSlice(&self.veccard)).fmt(f)
     }
 }
 

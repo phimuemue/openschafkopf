@@ -175,7 +175,7 @@ impl TGamePhase for SGamePreparations {
 
 macro_rules! impl_fullhand { () => {
     pub fn fullhand(&self, epi: EPlayerIndex) -> SFullHand {
-        SFullHand::new(&self.ahand[epi], self.ruleset.ekurzlang)
+        SFullHand::new(&self.ahand[epi].cards(), self.ruleset.ekurzlang)
     }
 }}
 

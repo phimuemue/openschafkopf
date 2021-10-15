@@ -517,7 +517,7 @@ impl STable {
                             self.players.for_each(
                                 /*oslcstich*/None,
                                 None,
-                                |epi| gamepreparations.fullhand(epi).get().cards().to_vec(),
+                                |epi| gamepreparations.fullhand(epi).get().to_vec(),
                                 |epi, otimeoutcmd| {
                                     if epi_announce_game==epi {
                                         let itgamephaseaction_rules = rules_to_gamephaseaction(
@@ -583,7 +583,7 @@ impl STable {
                             self.players.for_each(
                                 /*oslcstich*/None,
                                 None,
-                                |epi| determinerules.fullhand(epi).get().cards().to_vec(),
+                                |epi| determinerules.fullhand(epi).get().to_vec(),
                                 |epi, otimeoutcmd| {
                                     if epi_determine==epi {
                                         let itgamephaseaction_rules = rules_to_gamephaseaction(

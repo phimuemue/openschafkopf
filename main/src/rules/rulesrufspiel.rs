@@ -68,7 +68,7 @@ impl TRules for SRulesRufspiel {
     impl_rules_trumpf!();
 
     fn can_be_played(&self, hand: SFullHand) -> bool {
-        let it = || {hand.get().cards().iter().filter(|&card| self.is_ruffarbe(*card))};
+        let it = || {hand.get().iter().filter(|&card| self.is_ruffarbe(*card))};
         it().all(|card| card.schlag()!=ESchlag::Ass)
         && 0<it().count()
     }

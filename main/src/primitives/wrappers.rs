@@ -4,14 +4,14 @@ use crate::primitives::*;
 // thin wrappers ensuring invariants
 
 #[derive(Copy, Clone)]
-pub struct SFullHand<'hand>(&'hand SHand);
+pub struct SFullHand<'hand>(&'hand [SCard]);
 
 impl<'hand> SFullHand<'hand> {
-    pub fn new(hand: &SHand, ekurzlang: EKurzLang) -> SFullHand {
-        assert_eq!(hand.cards().len(), ekurzlang.cards_per_player());
-        SFullHand(hand)
+    pub fn new(slccard: &[SCard], ekurzlang: EKurzLang) -> SFullHand {
+        assert_eq!(slccard.len(), ekurzlang.cards_per_player());
+        SFullHand(slccard)
     }
-    pub fn get(self) -> &'hand SHand {
+    pub fn get(self) -> &'hand [SCard] {
         self.0
     }
 }
