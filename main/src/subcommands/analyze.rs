@@ -137,12 +137,11 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGame, failure::Error> {
             .map(|node| username_to_epi(&node.inner_html())))
     };
     let mut game = SGame::new(
-        /*ahand*/EPlayerIndex::map_from_fn(|epi|
-            SHand::new_from_iter(
-                vecstich
-                    .iter()
-                    .map(|stich| stich[epi])
-            )
+        /*aveccard*/EPlayerIndex::map_from_fn(|epi|
+            vecstich
+                .iter()
+                .map(|stich| stich[epi])
+                .collect()
         ),
         /*doublings*/{
             let vecepi_doubling = get_doublings_stoss("Klopfer")?.collect::<Result<Vec<_>, _>>()?;

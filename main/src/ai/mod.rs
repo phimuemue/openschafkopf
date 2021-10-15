@@ -406,7 +406,7 @@ fn test_is_compatible_with_game_so_far() {
     }
     let test_game = |aacard_hand: [[SCard; 8]; 4], rules: &dyn TRules, vectestaction: Vec<VTestAction>| {
         let ahand = EPlayerIndex::map_from_raw(aacard_hand)
-            .map_into(SHand::new_from_iter);
+            .map_into(|acard| acard.into());
         use crate::rules::ruleset::*;
         let mut game = game::SGame::new(
             ahand,
@@ -499,7 +499,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             [GO,GU,E7,G7,S7,EA,EZ,EK],
             [HO,HU,E8,G8,S8,GA,GZ,GK],
             [SO,SU,E9,G9,S9,SA,SZ,SK],
-        ]).map_into(SHand::new_from_iter),
+        ]).map_into(|acard| acard.into()),
         SDoublings::new(SStaticEPI0{}),
         Some(SStossParams::new(
             /*n_stoss_max*/ 4,

@@ -47,7 +47,7 @@ impl TGamePhase for SDealCards {
     fn finish_success(self) -> Self::Finish {
         assert_eq!(self.doublings.first_playerindex(), EPlayerIndex::EPI0);
         SGamePreparations {
-            ahand : self.aveccard.map_into(SHand::new_from_vec),
+            aveccard : self.aveccard,
             doublings : self.doublings,
             ruleset: self.ruleset,
             gameannouncements : SGameAnnouncements::new(SStaticEPI0{}),
@@ -93,7 +93,7 @@ pub type SGameAnnouncements = SPlayersInRound<Option<Box<dyn TActivelyPlayableRu
 
 #[derive(Debug)]
 pub struct SGamePreparations {
-    pub ahand : EnumMap<EPlayerIndex, SHand>,
+    pub aveccard : EnumMap<EPlayerIndex, SHandVector>,
     pub doublings : SDoublings,
     pub ruleset : SRuleSet,
     pub gameannouncements : SGameAnnouncements,
@@ -133,7 +133,7 @@ impl TGamePhase for SGamePreparations {
             .collect();
         if let Some(tplepirules_current_bid) = vectplepirules.pop() {
             VGamePreparationsFinish::DetermineRules(SDetermineRules::new(
-                self.ahand,
+                self.aveccard,
                 self.doublings,
                 self.ruleset,
                 vectplepirules,
@@ -144,7 +144,7 @@ impl TGamePhase for SGamePreparations {
             match self.ruleset.stockorramsch {
                 VStockOrT::OrT(ref rulesramsch) => {
                     VGamePreparationsFinish::DirectGame(SGame::new(
-                        self.ahand,
+                        self.aveccard,
                         self.doublings,
                         self.ruleset.ostossparams.clone(),
                         rulesramsch.clone(),
@@ -173,7 +173,7 @@ impl TGamePhase for SGamePreparations {
 
 macro_rules! impl_fullhand { () => {
     pub fn fullhand(&self, epi: EPlayerIndex) -> SFullHand {
-        SFullHand::new(&self.ahand[epi].cards(), self.ruleset.ekurzlang)
+        SFullHand::new(&self.aveccard[epi], self.ruleset.ekurzlang)
     }
 }}
 
@@ -188,7 +188,7 @@ impl SGamePreparations {
             bail!("Only actively playable rules can be announced");
         }
         if !orules.as_ref().map_or(true, |rules| rules.can_be_played(self.fullhand(epi))) {
-            bail!("Rules cannot be played. {}", self.ahand[epi]);
+            bail!("Rules cannot be played. {}", SDisplayCardSlice(&self.aveccard[epi]));
         }
         self.gameannouncements.push(orules);
         assert!(!self.gameannouncements.is_empty());
@@ -198,7 +198,7 @@ impl SGamePreparations {
 
 #[derive(new, Debug)]
 pub struct SDetermineRules {
-    pub ahand : EnumMap<EPlayerIndex, SHand>,
+    pub aveccard : EnumMap<EPlayerIndex, SHandVector>,
     pub doublings : SDoublings,
     pub ruleset : SRuleSet,
     pub vectplepirules_queued : Vec<(EPlayerIndex, Box<dyn TActivelyPlayableRules>)>,
@@ -241,9 +241,9 @@ impl TGamePhase for SDetermineRules {
 
     fn finish_success(self) -> Self::Finish {
         assert!(self.vectplepirules_queued.is_empty());
-        assert_eq!(self.ruleset.ekurzlang, EKurzLang::from_cards_per_player(self.ahand[EPlayerIndex::EPI0].cards().len()));
+        assert_eq!(self.ruleset.ekurzlang, EKurzLang::from_cards_per_player(self.aveccard[EPlayerIndex::EPI0].len()));
         SGame::new(
-            self.ahand,
+            self.aveccard,
             self.doublings,
             self.ruleset.ostossparams.clone(),
             self.tplepirules_current_bid.1.upcast().box_clone(),
@@ -267,7 +267,7 @@ impl SDetermineRules {
             bail!("announced rules' priority must be at least as large as the latest announced priority");
         }
         if !rules.can_be_played(self.fullhand(epi)) {
-            bail!("Rules cannot be played. {}", self.ahand[epi]);
+            bail!("Rules cannot be played. {}", SDisplayCardSlice(&self.aveccard[epi]));
         }
         assert_ne!(epi, self.tplepirules_current_bid.0);
         assert!(!self.vectplepirules_queued.is_empty());
@@ -488,12 +488,13 @@ impl TGamePhase for SGame {
 
 impl SGame {
     pub fn new(
-        ahand : EnumMap<EPlayerIndex, SHand>,
+        aveccard : EnumMap<EPlayerIndex, SHandVector>,
         doublings : SDoublings,
         ostossparams : Option<SStossParams>,
         rules : Box<dyn TRules>,
         n_stock : isize,
     ) -> SGame {
+        let ahand = aveccard.map(|veccard| SHand::new_from_iter(veccard.iter().copied()));
         let n_cards_per_player = ahand[EPlayerIndex::EPI0].cards().len();
         assert!(ahand.iter().all(|hand| hand.cards().len()==n_cards_per_player));
         SGame {
@@ -516,15 +517,14 @@ impl SGame {
         stichseq: SStichSequenceGameFinished, // TODO take value instead of wrapper
         mut fn_before_zugeben: impl FnMut(&SGame, /*i_stich*/usize, EPlayerIndex, SCard),
     ) -> Result<SGame, Error> {
-        let ahand = EPlayerIndex::map_from_fn(|epi|
-            SHand::new_from_iter(
-                stichseq.get()
-                    .completed_stichs()
-                    .iter()
-                    .map(|stich| stich[epi])
-            )
+        let aveccard = EPlayerIndex::map_from_fn(|epi|
+            stichseq.get()
+                .completed_stichs()
+                .iter()
+                .map(|stich| stich[epi])
+                .collect()
         );
-        let mut game = SGame::new(ahand, doublings, ostossparams, rules, n_stock);
+        let mut game = SGame::new(aveccard, doublings, ostossparams, rules, n_stock);
         for stoss in vecstoss.into_iter() {
             if game.stoss(stoss.epi).is_err() {
                 bail!("Error in stoss.")

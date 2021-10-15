@@ -10,7 +10,7 @@ use crate::util::*;
 fn internal_test_rules(
     str_info: &str,
     rules: &dyn TRules,
-    ahand: EnumMap<EPlayerIndex, SHand>,
+    aveccard: EnumMap<EPlayerIndex, SHandVector>,
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
     n_stock: isize,
@@ -20,7 +20,7 @@ fn internal_test_rules(
     println!("Testing rules: {}", str_info);
     // TODO? check _ahand
     let mut game = SGame::new(
-        ahand,
+        aveccard,
         SDoublings::new_full(
             SStaticEPI0{},
             EPlayerIndex::map_from_fn(|epi| 
@@ -45,16 +45,16 @@ fn internal_test_rules(
 }
 
 pub trait TCardArrayKurzLang {
-    fn to_hand(&self) -> SHand; // TODO take self instead of &self
+    fn to_hand_vector(&self) -> SHandVector; // TODO take self instead of &self
 }
 impl TCardArrayKurzLang for [SCard; 6] {
-    fn to_hand(&self) -> SHand {
-        SHand::new_from_iter(self.iter().copied())
+    fn to_hand_vector(&self) -> SHandVector {
+        self.iter().copied().collect()
     }
 }
 impl TCardArrayKurzLang for [SCard; 8] {
-    fn to_hand(&self) -> SHand {
-        SHand::new_from_iter(self.iter().copied())
+    fn to_hand_vector(&self) -> SHandVector {
+        self.iter().copied().collect()
     }
 }
 
@@ -71,7 +71,7 @@ pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLang>(
         str_info,
         rules,
         EPlayerIndex::map_from_raw(aacard_hand)
-            .map(TCardArrayKurzLang::to_hand),
+            .map(TCardArrayKurzLang::to_hand_vector),
         vecn_doubling,
         vecn_stoss,
         /*n_stock*/0,
@@ -94,7 +94,7 @@ pub fn test_rules_manual(
         str_info,
         rules,
         EPlayerIndex::map_from_fn(|epi|
-            SHand::new_from_iter(vecstich.iter().map(|stich| stich[epi]))
+            vecstich.iter().map(|stich| stich[epi]).collect()
         ),
         vecn_doubling,
         vecn_stoss,

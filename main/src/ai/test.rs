@@ -15,7 +15,7 @@ fn test_determine_best_card() {
             [HK, EK, E7, GA, GZ, G9, G8, S8],
             [GO, SO, GU, HU, HA, EA, EZ, G7],
             [H9, H8, H7, E9, GK, SA, SK, S9],
-        ]).map_into(SHand::new_from_iter),
+        ]).map_into(|acard| acard.into()),
         game::SDoublings::new(SStaticEPI0{}),
         Some(SStossParams::new(
             /*n_stoss_max*/4,
