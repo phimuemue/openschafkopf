@@ -432,6 +432,7 @@ impl SStichSequence {
 
 #[derive(Debug, Clone)]
 pub struct SGame {
+    aveccard: EnumMap<EPlayerIndex, SHandVector>, // remembers order of dealt cards
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,
     pub rules : Box<dyn TRules>,
@@ -498,6 +499,7 @@ impl SGame {
         let n_cards_per_player = ahand[EPlayerIndex::EPI0].cards().len();
         assert!(ahand.iter().all(|hand| hand.cards().len()==n_cards_per_player));
         SGame {
+            aveccard,
             ahand,
             doublings,
             rules,
