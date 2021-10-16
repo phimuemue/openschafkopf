@@ -98,32 +98,54 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGame, failure::Error> {
                 /*fn_player_to_epi*/username_to_epi,
             )
         })?;
+    fn get_cards<T>(
+        node: &Node,
+        fn_card_highlight: impl Fn(SCard, Option<&str>)->T
+    ) -> Result<Vec<T>, failure::Error> {
+        node
+            .find(Class("card-image"))
+            .map(|node_card| -> Result<T, _> {
+                let str_class = unwrap!(node_card.attr("class")); // "class" must be present
+                (
+                    string("card-image "),
+                    choice!(string("by"), string("fn")),
+                    string(" g"),
+                    digit(),
+                    space(),
+                )
+                .with((
+                    card_parser(),
+                    optional(string(" highlight")),
+                ))
+                .skip(eof())
+                    // end of parser
+                    .parse(str_class)
+                    .map_err(|err| format_err!("Card parsing: {:?} on {}", err, str_class))
+                    .map(|((card, ostr_highlight), _str)| fn_card_highlight(card, ostr_highlight))
+            })
+            .collect::<Result<Vec<_>,_>>()
+    }
+    let aveccard = vec_to_arr(
+        doc.find(|node: &Node| node.inner_html()=="Karten von:")
+            .try_fold(Vec::new(), |mut vecveccard, node| -> Result<_, failure::Error> {
+                let mut veccardb = get_cards(
+                    &node
+                        .parent().ok_or_else(|| format_err!(r#""Karten von:" has no parent"#))?
+                        .parent().ok_or_else(|| format_err!("walking html failed"))?,
+                    /*fn_card_highlight*/|card, ostr_highlight| (card, ostr_highlight.is_some()),
+                )?;
+                veccardb.sort_unstable_by_key(|&(_card, b_highlight)| !b_highlight);
+                vecveccard.push(veccardb.into_iter().map(|(card, _b_highlight)| card).collect());
+                Ok(vecveccard)
+        })?
+    ).map(EPlayerIndex::map_from_raw)?;
     let vecstich = doc.find(|node: &Node| node.inner_html()=="Stich von")
         .try_fold((EPlayerIndex::EPI0, Vec::new()), |(epi_first, mut vecstich), node| -> Result<_, _> {
-            vec_to_arr(
-                node.parent().ok_or_else(|| format_err!(r#""Stich von" has no parent"#))?
-                    .parent().ok_or_else(|| format_err!("walking html failed"))?
-                    .find(Class("card-image"))
-                    .map(|node_card| -> Result<SCard, _> {
-                        let str_class = unwrap!(node_card.attr("class")); // "class" must be present
-                        (
-                            string("card-image "),
-                            choice!(string("by"), string("fn")),
-                            string(" g"),
-                            digit(),
-                            space(),
-                        )
-                        .with(card_parser())
-                        .skip(optional(string(" highlight")))
-                        .skip(eof())
-                            // end of parser
-                            .parse(str_class)
-                            .map_err(|err| format_err!("Card parsing: {:?} on {}", err, str_class))
-                            .map(|(card, _str)| card)
-                    })
-                    .collect::<Result<Vec<_>,_>>()?
-                
-            ).map(|acard| {
+            vec_to_arr(get_cards(
+                &node.parent().ok_or_else(|| format_err!(r#""Stich von" has no parent"#))?
+                    .parent().ok_or_else(|| format_err!("walking html failed"))?,
+                /*fn_card_highlight*/|card, _ostr_highlight| card,
+            )?).map(|acard| {
                 let stich = SStich::new_full(epi_first, acard);
                 let epi_winner = rules.winner_index(&stich);
                 vecstich.push(stich);
@@ -137,12 +159,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGame, failure::Error> {
             .map(|node| username_to_epi(&node.inner_html())))
     };
     let mut game = SGame::new(
-        /*aveccard*/EPlayerIndex::map_from_fn(|epi|
-            vecstich
-                .iter()
-                .map(|stich| stich[epi])
-                .collect()
-        ),
+        aveccard,
         /*doublings*/{
             let vecepi_doubling = get_doublings_stoss("Klopfer")?.collect::<Result<Vec<_>, _>>()?;
             SDoublings::new_full(
