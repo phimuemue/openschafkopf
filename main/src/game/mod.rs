@@ -431,7 +431,7 @@ impl SStichSequence {
 }
 
 #[derive(Debug, Clone)]
-pub struct SGame {
+pub struct SGameGeneric<Ruleset> {
     aveccard: EnumMap<EPlayerIndex, SHandVector>, // remembers order of dealt cards
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,
@@ -440,13 +440,15 @@ pub struct SGame {
     pub ostossparams : Option<SStossParams>,
     pub n_stock : isize,
     pub stichseq: SStichSequence,
+    ruleset: Ruleset,
 }
+pub type SGame = SGameGeneric<()>; // forgets ruleset
 
 pub type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
 
-impl TGamePhase for SGame {
+impl<Ruleset> TGamePhase for SGameGeneric<Ruleset> {
     type ActivePlayerInfo = SGameAction;
-    type Finish = SGameResult;
+    type Finish = SGameResultGeneric<Ruleset>;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         if self.stichseq.completed_stichs().len() < self.kurzlang().cards_per_player() {
@@ -475,7 +477,7 @@ impl TGamePhase for SGame {
 
     fn finish_success(self) -> Self::Finish {
         assert!(self.kurzlang().cards_per_player()==self.completed_stichs().len());
-        SGameResult {
+        SGameResultGeneric {
             mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false),
             an_payout : self.rules.payout(
                 SStichSequenceGameFinished::new(&self.stichseq),
@@ -495,10 +497,30 @@ impl SGame {
         rules : Box<dyn TRules>,
         n_stock : isize,
     ) -> SGame {
+        SGame::new_with_ruleset(
+            aveccard,
+            doublings,
+            ostossparams,
+            rules,
+            n_stock,
+            /*ruleset*/(),
+        )
+    }
+}
+
+impl<Ruleset> SGameGeneric<Ruleset> {
+    pub fn new_with_ruleset(
+        aveccard : EnumMap<EPlayerIndex, SHandVector>,
+        doublings : SDoublings,
+        ostossparams : Option<SStossParams>,
+        rules : Box<dyn TRules>,
+        n_stock : isize,
+        ruleset: Ruleset,
+    ) -> SGameGeneric<Ruleset> {
         let ahand = aveccard.map(|veccard| SHand::new_from_iter(veccard.iter().copied()));
         let n_cards_per_player = ahand[EPlayerIndex::EPI0].cards().len();
         assert!(ahand.iter().all(|hand| hand.cards().len()==n_cards_per_player));
-        SGame {
+        SGameGeneric {
             aveccard,
             ahand,
             doublings,
@@ -507,6 +529,7 @@ impl SGame {
             ostossparams,
             n_stock,
             stichseq: SStichSequence::new(EKurzLang::from_cards_per_player(n_cards_per_player)),
+            ruleset,
         }
     }
 
@@ -603,12 +626,13 @@ impl SGame {
 }
 
 #[derive(Debug)]
-pub struct SGameResult {
+pub struct SGameResultGeneric<Ruleset> {
     mapepib_confirmed: EnumMap<EPlayerIndex, bool>, // TODO? enumset
     // TODO store all information about finished game
     pub an_payout : EnumMap<EPlayerIndex, isize>,
-    pub stockorgame: VStockOrT<(), SGame>,
+    pub stockorgame: VStockOrT<(), SGameGeneric<Ruleset>>,
 }
+pub type SGameResult = SGameResultGeneric<()>;
 
 impl TGamePhase for SGameResult { // "absorbing state"
     type ActivePlayerInfo = EnumMap<EPlayerIndex, bool>;
