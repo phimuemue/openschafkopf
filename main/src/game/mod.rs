@@ -567,6 +567,31 @@ impl<Ruleset> SGameGeneric<Ruleset> {
         Ok(game)
     }
 
+    pub fn map_ruleset<Ruleset2>(self, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameGeneric<Ruleset2> {
+        let SGameGeneric {
+            aveccard,
+            ahand,
+            doublings,
+            rules,
+            vecstoss,
+            ostossparams,
+            n_stock,
+            stichseq,
+            ruleset,
+        } = self;
+        SGameGeneric {
+            aveccard,
+            ahand,
+            doublings,
+            rules,
+            vecstoss,
+            ostossparams,
+            n_stock,
+            stichseq,
+            ruleset: fn_ruleset(ruleset),
+        }
+    }
+
     pub fn current_playable_stich(&self) -> &SStich {
         assert!(self.stichseq.completed_stichs().len()<self.kurzlang().cards_per_player());
         self.stichseq.current_stich()

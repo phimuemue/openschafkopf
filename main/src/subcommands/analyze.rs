@@ -17,7 +17,19 @@ pub fn subcommand(str_subcommand: &str) -> clap::App {
         )
 }
 
-pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGame, failure::Error> {
+#[derive(Debug)]
+pub struct SSauspielRuleset {
+    // Sauspiel, Solo, Wenz: implicitly allowed
+    b_farbwenz: bool,
+    b_geier: bool,
+    b_ramsch: bool,
+    n_tarif_extra: isize,
+    n_tarif_ruf: isize,
+    n_tarif_solo: isize,
+    // TODO store ekurzlang explicitly?
+}
+
+pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRuleset>, failure::Error> {
     use combine::{char::*, *};
     use select::{document::Document, node::Node, predicate::*};
     let doc = Document::from(str_html);
@@ -158,7 +170,44 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGame, failure::Error> {
             .find(Name("a"))
             .map(|node| username_to_epi(&node.inner_html())))
     };
-    let mut game = SGame::new(
+    let ruleset = scrape_from_key_figure_table("Sonderregeln")?
+        .children()
+        .filter(|node|
+            !matches!(node.data(), select::node::Data::Text(str_text) if str_text.trim().is_empty() || str_text.trim()!="-")
+        )
+        .try_fold(
+            SSauspielRuleset{
+                b_farbwenz: false,
+                b_geier: false,
+                b_ramsch: false,
+                n_tarif_extra,
+                n_tarif_ruf,
+                n_tarif_solo,
+            },
+            |mut ruleset, node| {
+                if !matches!(node.data(), select::node::Data::Element(_,_)) {
+                    return Err(format_err!("Unexpected data {:?} in Sonderregeln", node.data()));
+                } else if node.name()!=Some("img") {
+                    return Err(format_err!("Unexpected name {:?} in Sonderregeln", node.name()));
+                } else if node.attr("class")!=Some("rules__rule") {
+                    return Err(format_err!("Unexpected class {:?} in Sonderregeln", node.attr("class")));
+                } else if node.attr("alt")!=node.attr("title") {
+                    return Err(format_err!("alt {:?} differs from title {:?} in Sonderregeln", node.attr("alt"), node.attr("title")));
+                } else {
+                    match node.attr("title") {
+                        Some("Kurze Karte") => {/* TODO assert/check consistency */},
+                        Some("Farbwenz") => ruleset.b_farbwenz = true,
+                        Some("Geier") => ruleset.b_geier = true,
+                        Some("Ramsch") => ruleset.b_ramsch = true,
+                        _ => {
+                            return Err(format_err!("Unknown Sonderregeln: {:?}", node.attr("title")));
+                        }
+                    }
+                }
+                Ok(ruleset)
+            },
+        )?;
+    let mut game = SGameGeneric::new_with_ruleset(
         aveccard,
         /*doublings*/{
             let vecepi_doubling = get_doublings_stoss("Klopfer")?.collect::<Result<Vec<_>, _>>()?;
@@ -172,6 +221,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGame, failure::Error> {
         /*ostossparams*/Some(SStossParams::new(/*n_stoss_max*/4)),
         rules,
         /*n_stock*/0, // Sauspiel does not support stock
+        ruleset,
     );
     for resepi in get_doublings_stoss("Kontra und Retour")? {
         let () = game.stoss(resepi?)?;
@@ -238,7 +288,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             });
                         };
                         if let resgame@Ok(_) = analyze_sauspiel_html(str_input) {
-                            push_game(path.to_string_lossy().into_owned(), resgame)
+                            push_game(
+                                path.to_string_lossy().into_owned(),
+                                resgame.map(|game| game.map_ruleset(|_| ()))
+                            )
                         } else {
                             let mut b_found_plain = false;
                             for (i, resgame) in analyze_plain(str_input).filter(|res| res.is_ok()).enumerate() {
