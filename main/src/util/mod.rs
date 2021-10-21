@@ -72,11 +72,12 @@ pub fn tpl_flip_if<T>(b: bool, (t0, t1): (T, T)) -> (T, T) {
     }
 }
 
+// TODO: can we get rid of pat_param in the following macro? (See https://doc.rust-lang.org/stable/edition-guide/rust-2021/or-patterns-macro-rules.html.)
 macro_rules! cartesian_match(
     (
         $macro_callback: ident,
         $(match ($e: expr) {
-            $($x: pat $(| $xs: pat)* => $y: tt,)*
+            $($x: pat_param $(| $xs: pat_param)* => $y: tt,)*
         },)*
     ) => {
         cartesian_match!(@p0,
@@ -91,10 +92,10 @@ macro_rules! cartesian_match(
         $macro_callback: ident,
         $rest_packed: tt,
         match ($e: expr) {
-            $($x: pat $(| $xs: pat)* => $y: tt,)*
+            $($x: pat_param $(| $xs: pat_param)* => $y: tt,)*
         },
         $(match ($e2: expr) {
-            $($x2: pat $(| $xs2: pat)* => $y2: tt,)*
+            $($x2: pat_param $(| $xs2: pat_param)* => $y2: tt,)*
         },)*
     ) => {
         cartesian_match!(@p0,
@@ -125,7 +126,7 @@ macro_rules! cartesian_match(
         @matched{$matched_packed: tt},
         (
             match ($e: expr) {
-                $($x: pat $(| $xs: pat)* => $y: tt,)*
+                $($x: pat_param $(| $xs: pat_param)* => $y: tt,)*
             },
             $rest_packed: tt,
         ),
