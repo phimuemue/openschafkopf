@@ -29,7 +29,7 @@ pub struct SSauspielRuleset {
     // TODO store ekurzlang explicitly?
 }
 
-pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRuleset>, failure::Error> {
+pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRuleset, ()>, failure::Error> {
     use combine::{char::*, *};
     use select::{document::Document, node::Node, predicate::*};
     let doc = Document::from(str_html);
@@ -207,7 +207,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRul
                 Ok(ruleset)
             },
         )?;
-    let mut game = SGameGeneric::new_with_ruleset(
+    let mut game = SGameGeneric::new_with_ruleset_and_announcements(
         aveccard,
         /*doublings*/{
             let vecepi_doubling = get_doublings_stoss("Klopfer")?.collect::<Result<Vec<_>, _>>()?;
@@ -222,6 +222,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRul
         rules,
         /*n_stock*/0, // Sauspiel does not support stock
         ruleset,
+        /*TODO gameannouncements*/(),
     );
     for resepi in get_doublings_stoss("Kontra und Retour")? {
         let () = game.stoss(resepi?)?;

@@ -431,10 +431,11 @@ impl SStichSequence {
 }
 
 #[derive(Debug, Clone)]
-pub struct SGameGeneric<Ruleset> {
+pub struct SGameGeneric<Ruleset, GameAnnouncements> {
     aveccard: EnumMap<EPlayerIndex, SHandVector>, // remembers order of dealt cards
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,
+    gameannouncements : GameAnnouncements,
     pub rules : Box<dyn TRules>,
     pub vecstoss : Vec<SStoss>,
     pub ostossparams : Option<SStossParams>,
@@ -442,13 +443,13 @@ pub struct SGameGeneric<Ruleset> {
     pub stichseq: SStichSequence,
     ruleset: Ruleset,
 }
-pub type SGame = SGameGeneric<()>; // forgets ruleset
+pub type SGame = SGameGeneric<(), ()>; // forgets ruleset and gameannouncements
 
 pub type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
 
-impl<Ruleset> TGamePhase for SGameGeneric<Ruleset> {
+impl<Ruleset, GameAnnouncements> TGamePhase for SGameGeneric<Ruleset, GameAnnouncements> {
     type ActivePlayerInfo = SGameAction;
-    type Finish = SGameResultGeneric<Ruleset>;
+    type Finish = SGameResultGeneric<Ruleset, GameAnnouncements>;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         if self.stichseq.completed_stichs().len() < self.kurzlang().cards_per_player() {
@@ -497,26 +498,28 @@ impl SGame {
         rules : Box<dyn TRules>,
         n_stock : isize,
     ) -> SGame {
-        SGame::new_with_ruleset(
+        SGame::new_with_ruleset_and_announcements(
             aveccard,
             doublings,
             ostossparams,
             rules,
             n_stock,
             /*ruleset*/(),
+            (),
         )
     }
 }
 
-impl<Ruleset> SGameGeneric<Ruleset> {
-    pub fn new_with_ruleset(
+impl<Ruleset, GameAnnouncements> SGameGeneric<Ruleset, GameAnnouncements> {
+    pub fn new_with_ruleset_and_announcements(
         aveccard : EnumMap<EPlayerIndex, SHandVector>,
         doublings : SDoublings,
         ostossparams : Option<SStossParams>,
         rules : Box<dyn TRules>,
         n_stock : isize,
         ruleset: Ruleset,
-    ) -> SGameGeneric<Ruleset> {
+        gameannouncements: GameAnnouncements,
+    ) -> SGameGeneric<Ruleset, GameAnnouncements> {
         let ahand = aveccard.map(|veccard| SHand::new_from_iter(veccard.iter().copied()));
         let n_cards_per_player = ahand[EPlayerIndex::EPI0].cards().len();
         assert!(ahand.iter().all(|hand| hand.cards().len()==n_cards_per_player));
@@ -524,6 +527,7 @@ impl<Ruleset> SGameGeneric<Ruleset> {
             aveccard,
             ahand,
             doublings,
+            gameannouncements,
             rules,
             vecstoss: Vec::new(),
             ostossparams,
@@ -567,11 +571,12 @@ impl<Ruleset> SGameGeneric<Ruleset> {
         Ok(game)
     }
 
-    pub fn map_ruleset<Ruleset2>(self, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameGeneric<Ruleset2> {
+    pub fn map_ruleset<Ruleset2>(self, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameGeneric<Ruleset2, GameAnnouncements> {
         let SGameGeneric {
             aveccard,
             ahand,
             doublings,
+            gameannouncements,
             rules,
             vecstoss,
             ostossparams,
@@ -583,6 +588,7 @@ impl<Ruleset> SGameGeneric<Ruleset> {
             aveccard,
             ahand,
             doublings,
+            gameannouncements,
             rules,
             vecstoss,
             ostossparams,
@@ -651,13 +657,13 @@ impl<Ruleset> SGameGeneric<Ruleset> {
 }
 
 #[derive(Debug)]
-pub struct SGameResultGeneric<Ruleset> {
+pub struct SGameResultGeneric<Ruleset, GameAnnouncements> {
     mapepib_confirmed: EnumMap<EPlayerIndex, bool>, // TODO? enumset
     // TODO store all information about finished game
     pub an_payout : EnumMap<EPlayerIndex, isize>,
-    pub stockorgame: VStockOrT<(), SGameGeneric<Ruleset>>,
+    pub stockorgame: VStockOrT<(), SGameGeneric<Ruleset, GameAnnouncements>>,
 }
-pub type SGameResult = SGameResultGeneric<()>;
+pub type SGameResult = SGameResultGeneric<(), ()>;
 
 impl TGamePhase for SGameResult { // "absorbing state"
     type ActivePlayerInfo = EnumMap<EPlayerIndex, bool>;
