@@ -16,7 +16,7 @@ fn choose_ruleset_or_rules<'t, T>(
     vect : &'t [T],
     fn_format: impl Fn(&T)->String,
     fn_choose: impl Fn(usize)->Option<&'t dyn TActivelyPlayableRules>,
-    opairepiprio: &Option<(EPlayerIndex, VGameAnnouncementPriority)>,
+    otplepiprio: &Option<(EPlayerIndex, VGameAnnouncementPriority)>,
 ) -> &'t T {
     skui::ask_for_alternative(
         vect,
@@ -25,8 +25,8 @@ fn choose_ruleset_or_rules<'t, T>(
         |ncwin, i_ot_chosen, _ot_suggest| {
             assert!(_ot_suggest.is_none());
             skui::wprintln(ncwin, &format!("Your cards: {}. What do you want to play?", hand));
-            if let Some(ref pairepiprio) = *opairepiprio {
-                skui::wprintln(ncwin, &format!("{} offers {:?}", pairepiprio.0, pairepiprio.1)); // TODO improve output here
+            if let Some(ref tplepiprio) = *otplepiprio {
+                skui::wprintln(ncwin, &format!("{} offers {:?}", tplepiprio.0, tplepiprio.1)); // TODO improve output here
             }
             for (i_t, t) in vect.iter().enumerate() {
                 skui::wprintln(ncwin, &format!("{} {} ({})",
@@ -116,7 +116,7 @@ impl TPlayer for SPlayerHuman {
         vecrulegroup: &'rules [SRuleGroup],
         _tpln_stoss_doubling: (usize, usize),
         _n_stock: isize,
-        opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
+        otplepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>,
     ) {
         skui::print_game_announcements(epi, gameannouncements);
@@ -131,7 +131,7 @@ impl TPlayer for SPlayerHuman {
                         &vecrulegroup,
                         |rulegroup| rulegroup.str_name.clone(),
                         |i_rulegroup_chosen| vecrulegroup[i_rulegroup_chosen].vecorules[0].as_ref().map(|rules| rules.as_ref()),
-                        &opairepiprio,
+                        &otplepiprio,
                     )
                         .allowed_rules(hand)
                         .map(Some)
@@ -146,7 +146,7 @@ impl TPlayer for SPlayerHuman {
                     Some(Some(rules)) => rules.to_string()
                 },
                 |i_oorules_chosen| vecoorules[i_oorules_chosen].and_then(|orules| orules),
-                &opairepiprio,
+                &otplepiprio,
             ) {
                 unwrap!(txorules.send(orules));
                 return;

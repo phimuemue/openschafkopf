@@ -48,7 +48,7 @@ impl TPlayer for SPlayerComputer {
         vecrulegroup: &'rules [SRuleGroup],
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
-        _opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
+        _otplepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
     ) {
         // TODO: implement a more intelligent decision strategy
@@ -86,7 +86,7 @@ impl TPlayer for SPlayerComputer {
     ) {
         let n_samples_per_stoss = 5; // TODO move to ai, make adjustable
         let ekurzlang = EKurzLang::from_cards_per_player(hand.cards().len());
-        let mut vecpairahandf_suspicion = forever_rand_hands(/*stichseq*/&SStichSequence::new(ekurzlang), hand.clone(), epi, rules)
+        let mut vectplahandf_suspicion = forever_rand_hands(/*stichseq*/&SStichSequence::new(ekurzlang), hand.clone(), epi, rules)
             .take(2*n_samples_per_stoss)
             .map(|ahand| {
                 let f_rank_rules = rules.playerindex().map_or(0f64, |epi_active| {
@@ -105,13 +105,13 @@ impl TPlayer for SPlayerComputer {
                 (ahand, f_rank_rules)
             })
             .collect::<Vec<_>>();
-        vecpairahandf_suspicion.sort_unstable_by(|&(ref _ahand_l, f_rank_l), &(ref _ahand_r, f_rank_r)|
+        vectplahandf_suspicion.sort_unstable_by(|&(ref _ahand_l, f_rank_l), &(ref _ahand_r, f_rank_r)|
             unwrap!(f_rank_r.partial_cmp(&f_rank_l))
         );
-        vecpairahandf_suspicion.truncate(n_samples_per_stoss);
-        assert_eq!(n_samples_per_stoss, vecpairahandf_suspicion.len());
+        vectplahandf_suspicion.truncate(n_samples_per_stoss);
+        assert_eq!(n_samples_per_stoss, vectplahandf_suspicion.len());
         unwrap!(txb.send(
-            vecpairahandf_suspicion.into_iter()
+            vectplahandf_suspicion.into_iter()
                 .map(|(mut ahand, _f_rank_rules)| {
                     explore_snapshots(
                         &mut ahand,

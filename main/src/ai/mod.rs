@@ -417,7 +417,7 @@ fn test_is_compatible_with_game_so_far() {
             rules.box_clone(),
             /*n_stock*/ 0,
         );
-        let mut vecpairepitrumpforfarbe_frei = Vec::new();
+        let mut vectplepitrumpforfarbe_frei = Vec::new();
         for testaction in vectestaction {
             let mut oassertnotfrei = None;
             match testaction {
@@ -428,7 +428,7 @@ fn test_is_compatible_with_game_so_far() {
                     }
                 },
                 VTestAction::AssertFrei(epi, trumpforfarbe) => {
-                    vecpairepitrumpforfarbe_frei.push((epi, trumpforfarbe));
+                    vectplepitrumpforfarbe_frei.push((epi, trumpforfarbe));
                 },
                 VTestAction::AssertNotFrei(epi, trumpforfarbe) => {
                     oassertnotfrei = Some((epi, trumpforfarbe));
@@ -445,7 +445,7 @@ fn test_is_compatible_with_game_so_far() {
                 for epi in EPlayerIndex::values() {
                     println!("{}: {}", epi, ahand[epi]);
                 }
-                for &(epi, ref trumpforfarbe) in vecpairepitrumpforfarbe_frei.iter() {
+                for &(epi, ref trumpforfarbe) in vectplepitrumpforfarbe_frei.iter() {
                     assert!(!ahand[epi].contains_pred(|card| *trumpforfarbe==game.rules.trumpforfarbe(*card)));
                 }
                 if let Some((epi_not_frei, ref trumpforfarbe))=oassertnotfrei {

@@ -40,7 +40,7 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
         vecrulegroup: &'rules [SRuleGroup],
         _tpln_stoss_doubling: (usize, usize),
         _n_stock: isize,
-        _opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
+        _otplepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
     ) {
         unwrap!(txorules.send(

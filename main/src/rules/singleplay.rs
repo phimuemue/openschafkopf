@@ -29,9 +29,9 @@ macro_rules! impl_single_play {() => {
             ahand,
             rulestatecache,
             &SPlayerParties13::new(self.internal_playerindex()),
-        ).map(|pairon_payout| SPayoutHint::new((
-             pairon_payout.0.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore)),
-             pairon_payout.1.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore)),
+        ).map(|tplon_payout| SPayoutHint::new((
+             tplon_payout.0.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore)),
+             tplon_payout.1.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore)),
         )))
     }
 

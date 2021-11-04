@@ -64,7 +64,7 @@ pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLang>(
     aacard_hand: [CardArrayKurzLang; 4],
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
-    vecpairepiacard_stich: &[(EPlayerIndex, [SCard; 4])],
+    vectplepiacard_stich: &[(EPlayerIndex, [SCard; 4])],
     an_payout: [isize; 4],
 ) {
     internal_test_rules(
@@ -75,7 +75,7 @@ pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLang>(
         vecn_doubling,
         vecn_stoss,
         /*n_stock*/0,
-        &make_stich_vector(vecpairepiacard_stich),
+        &make_stich_vector(vectplepiacard_stich),
         (an_payout, 0),
     );
 }
@@ -86,10 +86,10 @@ pub fn test_rules_manual(
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
     n_stock: isize,
-    vecpairepiacard_stich: &[(EPlayerIndex, [SCard; 4])],
+    vectplepiacard_stich: &[(EPlayerIndex, [SCard; 4])],
     (an_payout, n_stock_payout): ([isize; 4], isize),
 ) {
-    let vecstich = make_stich_vector(vecpairepiacard_stich);
+    let vecstich = make_stich_vector(vectplepiacard_stich);
     internal_test_rules(
         str_info,
         rules,

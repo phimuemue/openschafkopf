@@ -21,7 +21,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let epi = value_t!(clapmatches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
     let ai = super::ai(clapmatches);
     println!("Hand: {}", hand.get());
-    let mut vecpairrulesf = allowed_rules(&ruleset.avecrulegroup[epi], hand)
+    let mut vectplrulesf = allowed_rules(&ruleset.avecrulegroup[epi], hand)
         .filter_map(|orules| orules.map(|rules| { // do not rank None
             (
                 rules,
@@ -35,8 +35,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             )
         }))
         .collect::<Vec<_>>();
-    vecpairrulesf.sort_unstable_by(|pairrulesf_lhs, pairrulesf_rhs| unwrap!(pairrulesf_rhs.1.partial_cmp(&pairrulesf_lhs.1)));
-    for (rules, f_avg_payout) in vecpairrulesf {
+    vectplrulesf.sort_unstable_by(|tplrulesf_lhs, tplrulesf_rhs| unwrap!(tplrulesf_rhs.1.partial_cmp(&tplrulesf_lhs.1)));
+    for (rules, f_avg_payout) in vectplrulesf {
         println!("{}: {}", rules, f_avg_payout);
     }
     Ok(())

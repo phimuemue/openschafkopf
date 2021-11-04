@@ -130,17 +130,17 @@ impl TGamePhase for SGamePreparations {
     }
 
     fn finish_success(self) -> Self::Finish {
-        let mut vecpairepirules : Vec<(_, Box<dyn TActivelyPlayableRules>)> = self.gameannouncements.into_iter()
+        let mut vectplepirules : Vec<(_, Box<dyn TActivelyPlayableRules>)> = self.gameannouncements.into_iter()
             .filter_map(|(epi, orules)| orules.map(|rules| (epi, rules)))
             .collect();
-        if let Some(pairepirules_current_bid) = vecpairepirules.pop() {
+        if let Some(tplepirules_current_bid) = vectplepirules.pop() {
             VGamePreparationsFinish::DetermineRules(SDetermineRules::new(
                 self.ahand,
                 self.doublings,
                 self.ruleset,
-                vecpairepirules,
+                vectplepirules,
                 self.n_stock,
-                pairepirules_current_bid,
+                tplepirules_current_bid,
             ))
         } else {
             match self.ruleset.stockorramsch {
@@ -203,9 +203,9 @@ pub struct SDetermineRules {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,
     pub ruleset : SRuleSet,
-    pub vecpairepirules_queued : Vec<(EPlayerIndex, Box<dyn TActivelyPlayableRules>)>,
+    pub vectplepirules_queued : Vec<(EPlayerIndex, Box<dyn TActivelyPlayableRules>)>,
     pub n_stock : isize,
-    pub pairepirules_current_bid : (EPlayerIndex, Box<dyn TActivelyPlayableRules>),
+    pub tplepirules_current_bid : (EPlayerIndex, Box<dyn TActivelyPlayableRules>),
 }
 
 impl TGamePhase for SDetermineRules {
@@ -215,22 +215,22 @@ impl TGamePhase for SDetermineRules {
     /*
         Example:
         0: Rufspiel, 1: Wenz, 2: Farbwenz, 3: Rufspiel
-        self.vecpairepirules_queued | self.pairepirules_current_bid
+        self.vectplepirules_queued | self.tplepirules_current_bid
         0r 1w 2fw                | 3r EBid::AtLeast (indicating that 2fw needs a prio of at least the one offered by 3)
         => ask 2, and tell him that 3 offers r
         => if 2 announces game, we get 0r 1w 3r | 2fw EBid::Higher (indicating that 3 has to offer a strictly better prio)
            otherwise we get 0r 1w | 3r EBid::AtLeast
-        => continue until self.vecpairepirules_queued is empty
+        => continue until self.vectplepirules_queued is empty
     */
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
-        self.vecpairepirules_queued.last().as_ref().map(|&&(epi, ref _rules)| (
+        self.vectplepirules_queued.last().as_ref().map(|&&(epi, ref _rules)| (
             epi,
             self.ruleset.avecrulegroup[epi].iter()
                 .filter_map(|rulegroup| rulegroup.with_higher_prio_than(
                     &self.currently_offered_prio().1,
                     {
-                        assert_ne!(epi, self.pairepirules_current_bid.0);
-                        if epi < self.pairepirules_current_bid.0 {
+                        assert_ne!(epi, self.tplepirules_current_bid.0);
+                        if epi < self.tplepirules_current_bid.0 {
                             EBid::AtLeast
                         } else {
                             EBid::Higher
@@ -242,13 +242,13 @@ impl TGamePhase for SDetermineRules {
     }
 
     fn finish_success(self) -> Self::Finish {
-        assert!(self.vecpairepirules_queued.is_empty());
+        assert!(self.vectplepirules_queued.is_empty());
         assert_eq!(self.ruleset.ekurzlang, EKurzLang::from_cards_per_player(self.ahand[EPlayerIndex::EPI0].cards().len()));
         SGame::new(
             self.ahand,
             self.doublings,
             self.ruleset.ostossparams.clone(),
-            self.pairepirules_current_bid.1.upcast().box_clone(),
+            self.tplepirules_current_bid.1.upcast().box_clone(),
             self.n_stock,
         )
     }
@@ -258,7 +258,7 @@ impl SDetermineRules {
     impl_fullhand!();
 
     pub fn currently_offered_prio(&self) -> (EPlayerIndex, VGameAnnouncementPriority) {
-        (self.pairepirules_current_bid.0, self.pairepirules_current_bid.1.priority())
+        (self.tplepirules_current_bid.0, self.tplepirules_current_bid.1.priority())
     }
 
     pub fn announce_game(&mut self, epi: EPlayerIndex, rules: Box<dyn TActivelyPlayableRules>) -> Result<(), Error> {
@@ -271,14 +271,14 @@ impl SDetermineRules {
         if !rules.can_be_played(self.fullhand(epi)) {
             bail!("Rules cannot be played. {}", self.ahand[epi]);
         }
-        assert_ne!(epi, self.pairepirules_current_bid.0);
-        assert!(!self.vecpairepirules_queued.is_empty());
-        let epi_check = unwrap!(self.vecpairepirules_queued.pop()).0;
+        assert_ne!(epi, self.tplepirules_current_bid.0);
+        assert!(!self.vectplepirules_queued.is_empty());
+        let epi_check = unwrap!(self.vectplepirules_queued.pop()).0;
         assert_eq!(epi, epi_check);
-        let mut pairepirules_current_bid = (epi, rules);
-        mem::swap(&mut self.pairepirules_current_bid, &mut pairepirules_current_bid);
-        self.vecpairepirules_queued.push(pairepirules_current_bid);
-        assert_eq!(epi, self.pairepirules_current_bid.0);
+        let mut tplepirules_current_bid = (epi, rules);
+        mem::swap(&mut self.tplepirules_current_bid, &mut tplepirules_current_bid);
+        self.vectplepirules_queued.push(tplepirules_current_bid);
+        assert_eq!(epi, self.tplepirules_current_bid.0);
         Ok(())
     }
 
@@ -286,9 +286,9 @@ impl SDetermineRules {
         if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
             bail!("announce_game not allowed for specified EPlayerIndex");
         }
-        assert!(!self.vecpairepirules_queued.is_empty());
-        let paireplayerindexorules = unwrap!(self.vecpairepirules_queued.pop());
-        assert_eq!(epi, paireplayerindexorules.0);
+        assert!(!self.vectplepirules_queued.is_empty());
+        let tpleplayerindexorules = unwrap!(self.vectplepirules_queued.pop());
+        assert_eq!(epi, tpleplayerindexorules.0);
         Ok(())
     }
 }

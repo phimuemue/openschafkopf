@@ -26,7 +26,7 @@ pub trait TPlayer {
         vecrulegroup: &'rules [SRuleGroup],
         tpln_stoss_doubling: (usize, usize),
         n_stock: isize,
-        opairepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
+        otplepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
     );
 

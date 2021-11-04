@@ -10,6 +10,6 @@ pub fn parse_trimmed<'str_in, P: combine::Parser<Input = &'str_in str>>(
         .with(parser)
         .skip((spaces(), eof()))
         .parse(str_in)
-        .map(|pairoutconsumed| pairoutconsumed.0)
+        .map(|tploutconsumed| tploutconsumed.0)
         .map_err(|err| format_err!("Error in parsing {}: {:?}", str_semantics, err))
 }

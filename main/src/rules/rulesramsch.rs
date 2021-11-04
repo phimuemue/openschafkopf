@@ -99,17 +99,17 @@ impl TRules for SRulesRamsch {
                                     unwrap!(self.compare_cards(*card_fst, *card_snd))
                                 })
                         )})
-                        .fold1(|pairepiocard_fst, pairepiocard_snd| {
-                            match (pairepiocard_fst.1, pairepiocard_snd.1) {
+                        .fold1(|tplepiocard_fst, tplepiocard_snd| {
+                            match (tplepiocard_fst.1, tplepiocard_snd.1) {
                                 (Some(card_trumpf_fst), Some(card_trumpf_snd)) => {
                                     if Ordering::Less==unwrap!(self.compare_cards(card_trumpf_fst, card_trumpf_snd)) {
-                                        pairepiocard_snd
+                                        tplepiocard_snd
                                     } else {
-                                        pairepiocard_fst
+                                        tplepiocard_fst
                                     }
                                 },
-                                (Some(_), None) => pairepiocard_fst,
-                                (None, Some(_)) => pairepiocard_snd,
+                                (Some(_), None) => tplepiocard_fst,
+                                (None, Some(_)) => tplepiocard_snd,
                                 // If two ore more players have the maximum number of points,
                                 // at least one of them must have had at least one trumpf.
                                 (None, None) => panic!("Two losing players with same points, but none of them with trumpf."),

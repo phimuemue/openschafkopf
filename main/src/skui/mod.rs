@@ -40,15 +40,15 @@ fn wprint(ncwin: ncurses::WINDOW, s: &str) {
 }
 
 fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: SCard) {
-    let paircolorcolor = { match card.farbe() {
+    let tplcolorcolor = { match card.farbe() {
         EFarbe::Eichel => (ncurses::COLOR_YELLOW, ncurses::COLOR_BLACK),
         EFarbe::Gras => (ncurses::COLOR_GREEN, ncurses::COLOR_BLACK),
         EFarbe::Herz => (ncurses::COLOR_RED, ncurses::COLOR_BLACK),
         EFarbe::Schelln => (ncurses::COLOR_CYAN, ncurses::COLOR_BLACK),
     }};
-    let i_color_pair = paircolorcolor.0 * 8 + paircolorcolor.1;
-    ncurses::init_pair(i_color_pair, paircolorcolor.0, paircolorcolor.1);
-    let nccolorpair = ncurses::COLOR_PAIR(i_color_pair);
+    let i_color_tpl = tplcolorcolor.0 * 8 + tplcolorcolor.1;
+    ncurses::init_pair(i_color_tpl, tplcolorcolor.0, tplcolorcolor.1);
+    let nccolorpair = ncurses::COLOR_PAIR(i_color_tpl);
     ncurses::wattron(ncwin, nccolorpair);
     wprint(ncwin, &format!("{}", card));
     ncurses::wattroff(ncwin, nccolorpair);
