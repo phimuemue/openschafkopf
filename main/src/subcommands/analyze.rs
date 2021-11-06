@@ -29,7 +29,10 @@ pub struct SSauspielRuleset {
     // TODO store ekurzlang explicitly?
 }
 
-pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRuleset, ()>, failure::Error> {
+#[derive(Debug)]
+pub struct SGameAnnouncementAnonymous;
+
+pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>>, failure::Error> {
     use combine::{char::*, *};
     use select::{document::Document, node::Node, predicate::*};
     let doc = Document::from(str_html);
@@ -151,6 +154,39 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRul
                 Ok(vecveccard)
         })?
     ).map(EPlayerIndex::map_from_raw)?;
+    let mut itnode_gameannouncement = ((((doc.find(Name("h4").and(|node: &Node| node.inner_html()=="Spielermittlung"))
+        .exactly_one()
+        .map_err(|it| format_err!("error on single: {} elements", it.count())))? // TODO could it implement Debug?
+        .parent().ok_or_else(|| format_err!("Spielermittlung has no parent")))?
+        .parent().ok_or_else(|| format_err!("Spielermittlung parent has no parent")))?
+        .find(Class("card-rows"))
+        .exactly_one()
+        .map_err(|it| format_err!("error on single: {} elements", it.count())))? // TODO could it implement Debug?
+        .find(Class("card-row"));
+    let gameannouncements = SGameAnnouncementsGeneric::new_full(
+        SStaticEPI0{},
+        vec_to_arr(
+            mapepistr_username.iter().zip(itnode_gameannouncement.by_ref())
+                .map(|(str_username, node_gameannouncement)| -> Result<_, _> {
+                    parse_trimmed(
+                        &node_gameannouncement.inner_html().trim(), // trim to avoid newlines // TODO move newlines into parser
+                        "gameannouncement 1",
+                        (
+                            combine::tokens2(|l,r|l==r, str_username.chars()), // TODO? can we use combine::char::string?
+                            newline(),
+                            spaces(),
+                        )
+                            .with(choice!(
+                                (string("sagt weiter."), optional((newline(), spaces(), string("(timeout)"))))
+                                    .map(|_| None),
+                                (string("dad gern."))
+                                    .map(|_| Some(SGameAnnouncementAnonymous))
+                            ))
+                    )
+                })
+                .collect::<Result<Vec<_>, _>>()?
+        )?
+    );
     let vecstich = doc.find(|node: &Node| node.inner_html()=="Stich von")
         .try_fold((EPlayerIndex::EPI0, Vec::new()), |(epi_first, mut vecstich), node| -> Result<_, _> {
             vec_to_arr(get_cards(
@@ -222,7 +258,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRul
         rules,
         /*n_stock*/0, // Sauspiel does not support stock
         ruleset,
-        /*TODO gameannouncements*/(),
+        gameannouncements,
     );
     for resepi in get_doublings_stoss("Kontra und Retour")? {
         let () = game.stoss(resepi?)?;
@@ -291,7 +327,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         if let resgame@Ok(_) = analyze_sauspiel_html(str_input) {
                             push_game(
                                 path.to_string_lossy().into_owned(),
-                                resgame.map(|game| game.map_ruleset(|_| ()))
+                                resgame.map(|game| game.map_announcements_ruleset(|_|(), |_|()))
                             )
                         } else {
                             let mut b_found_plain = false;

@@ -89,7 +89,8 @@ impl SDealCards {
     }
 }
 
-pub type SGameAnnouncements = SPlayersInRound<Option<Box<dyn TActivelyPlayableRules>>, SStaticEPI0>;
+pub type SGameAnnouncementsGeneric<GameAnnouncement> = SPlayersInRound<Option<GameAnnouncement>, SStaticEPI0>;
+pub type SGameAnnouncements = SGameAnnouncementsGeneric<Box<dyn TActivelyPlayableRules>>;
 
 #[derive(Debug)]
 pub struct SGamePreparations {
@@ -571,7 +572,7 @@ impl<Ruleset, GameAnnouncements> SGameGeneric<Ruleset, GameAnnouncements> {
         Ok(game)
     }
 
-    pub fn map_ruleset<Ruleset2>(self, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameGeneric<Ruleset2, GameAnnouncements> {
+    pub fn map_announcements_ruleset<Ruleset2, GameAnnouncements2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameGeneric<Ruleset2, GameAnnouncements2> {
         let SGameGeneric {
             aveccard,
             ahand,
@@ -588,7 +589,7 @@ impl<Ruleset, GameAnnouncements> SGameGeneric<Ruleset, GameAnnouncements> {
             aveccard,
             ahand,
             doublings,
-            gameannouncements,
+            gameannouncements: fn_announcements(gameannouncements),
             rules,
             vecstoss,
             ostossparams,
