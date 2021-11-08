@@ -32,7 +32,7 @@ pub struct SSauspielRuleset {
 #[derive(Debug)]
 pub struct SGameAnnouncementAnonymous;
 
-pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>>, failure::Error> {
+pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error> {
     use combine::{char::*, *};
     use select::{document::Document, node::Node, predicate::*};
     let doc = Document::from(str_html);
@@ -243,7 +243,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRul
                 Ok(ruleset)
             },
         )?;
-    let mut game = SGameGeneric::new_with_ruleset_and_announcements(
+    let mut game = SGameGeneric::new_with(
         aveccard,
         /*doublings*/{
             let vecepi_doubling = get_doublings_stoss("Klopfer")?.collect::<Result<Vec<_>, _>>()?;
@@ -259,6 +259,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRul
         /*n_stock*/0, // Sauspiel does not support stock
         ruleset,
         gameannouncements,
+        /*determinerules*/Vec::new(),
     );
     for resepi in get_doublings_stoss("Kontra und Retour")? {
         let () = game.stoss(resepi?)?;
@@ -327,7 +328,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         if let resgame@Ok(_) = analyze_sauspiel_html(str_input) {
                             push_game(
                                 path.to_string_lossy().into_owned(),
-                                resgame.map(|game| game.map_announcements_ruleset(|_|(), |_|()))
+                                resgame.map(|game| game.map(|_|(), |_|(), |_|()))
                             )
                         } else {
                             let mut b_found_plain = false;

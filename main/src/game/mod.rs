@@ -432,11 +432,12 @@ impl SStichSequence {
 }
 
 #[derive(Debug, Clone)]
-pub struct SGameGeneric<Ruleset, GameAnnouncements> {
+pub struct SGameGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     aveccard: EnumMap<EPlayerIndex, SHandVector>, // remembers order of dealt cards
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,
     gameannouncements : GameAnnouncements,
+    determinerules: DetermineRules,
     pub rules : Box<dyn TRules>,
     pub vecstoss : Vec<SStoss>,
     pub ostossparams : Option<SStossParams>,
@@ -444,13 +445,13 @@ pub struct SGameGeneric<Ruleset, GameAnnouncements> {
     pub stichseq: SStichSequence,
     ruleset: Ruleset,
 }
-pub type SGame = SGameGeneric<(), ()>; // forgets ruleset and gameannouncements
+pub type SGame = SGameGeneric<(), (), ()>; // forgets ruleset and gameannouncements
 
 pub type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
 
-impl<Ruleset, GameAnnouncements> TGamePhase for SGameGeneric<Ruleset, GameAnnouncements> {
+impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     type ActivePlayerInfo = SGameAction;
-    type Finish = SGameResultGeneric<Ruleset, GameAnnouncements>;
+    type Finish = SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules>;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         if self.stichseq.completed_stichs().len() < self.kurzlang().cards_per_player() {
@@ -499,20 +500,21 @@ impl SGame {
         rules : Box<dyn TRules>,
         n_stock : isize,
     ) -> SGame {
-        SGame::new_with_ruleset_and_announcements(
+        SGame::new_with(
             aveccard,
             doublings,
             ostossparams,
             rules,
             n_stock,
             /*ruleset*/(),
-            (),
+            /*gameannouncements*/(),
+            /*determinerules*/(),
         )
     }
 }
 
-impl<Ruleset, GameAnnouncements> SGameGeneric<Ruleset, GameAnnouncements> {
-    pub fn new_with_ruleset_and_announcements(
+impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnouncements, DetermineRules> {
+    pub fn new_with(
         aveccard : EnumMap<EPlayerIndex, SHandVector>,
         doublings : SDoublings,
         ostossparams : Option<SStossParams>,
@@ -520,7 +522,8 @@ impl<Ruleset, GameAnnouncements> SGameGeneric<Ruleset, GameAnnouncements> {
         n_stock : isize,
         ruleset: Ruleset,
         gameannouncements: GameAnnouncements,
-    ) -> SGameGeneric<Ruleset, GameAnnouncements> {
+        determinerules: DetermineRules,
+    ) -> SGameGeneric<Ruleset, GameAnnouncements, DetermineRules> {
         let ahand = aveccard.map(|veccard| SHand::new_from_iter(veccard.iter().copied()));
         let n_cards_per_player = ahand[EPlayerIndex::EPI0].cards().len();
         assert!(ahand.iter().all(|hand| hand.cards().len()==n_cards_per_player));
@@ -529,6 +532,7 @@ impl<Ruleset, GameAnnouncements> SGameGeneric<Ruleset, GameAnnouncements> {
             ahand,
             doublings,
             gameannouncements,
+            determinerules,
             rules,
             vecstoss: Vec::new(),
             ostossparams,
@@ -572,12 +576,13 @@ impl<Ruleset, GameAnnouncements> SGameGeneric<Ruleset, GameAnnouncements> {
         Ok(game)
     }
 
-    pub fn map_announcements_ruleset<Ruleset2, GameAnnouncements2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameGeneric<Ruleset2, GameAnnouncements2> {
+    pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameGeneric<Ruleset2, GameAnnouncements2, DetermineRules2> {
         let SGameGeneric {
             aveccard,
             ahand,
             doublings,
             gameannouncements,
+            determinerules,
             rules,
             vecstoss,
             ostossparams,
@@ -590,6 +595,7 @@ impl<Ruleset, GameAnnouncements> SGameGeneric<Ruleset, GameAnnouncements> {
             ahand,
             doublings,
             gameannouncements: fn_announcements(gameannouncements),
+            determinerules: fn_determinerules(determinerules),
             rules,
             vecstoss,
             ostossparams,
@@ -658,13 +664,13 @@ impl<Ruleset, GameAnnouncements> SGameGeneric<Ruleset, GameAnnouncements> {
 }
 
 #[derive(Debug)]
-pub struct SGameResultGeneric<Ruleset, GameAnnouncements> {
+pub struct SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     mapepib_confirmed: EnumMap<EPlayerIndex, bool>, // TODO? enumset
     // TODO store all information about finished game
     pub an_payout : EnumMap<EPlayerIndex, isize>,
-    pub stockorgame: VStockOrT<(), SGameGeneric<Ruleset, GameAnnouncements>>,
+    pub stockorgame: VStockOrT<(), SGameGeneric<Ruleset, GameAnnouncements, DetermineRules>>,
 }
-pub type SGameResult = SGameResultGeneric<(), ()>;
+pub type SGameResult = SGameResultGeneric<(), (), ()>;
 
 impl TGamePhase for SGameResult { // "absorbing state"
     type ActivePlayerInfo = EnumMap<EPlayerIndex, bool>;
