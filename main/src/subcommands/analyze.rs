@@ -33,6 +33,7 @@ pub struct SSauspielRuleset {
 pub struct SGameAnnouncementAnonymous;
 
 pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error> {
+    // TODO acknowledge timeouts
     use combine::{char::*, *};
     use select::{document::Document, node::Node, predicate::*};
     let doc = Document::from(str_html);
@@ -55,6 +56,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRul
             .find(|epi| mapepistr_username[*epi]==str_username)
             .ok_or_else(|| format_err!("username {} not part of mapepistr_username {:?}", str_username, mapepistr_username))
     };
+    // TODO ensure that "key_figure_table" looks exactly as we expect
     let scrape_from_key_figure_table = |str_key| -> Result<_, failure::Error> {
         doc.find(Name("th").and(|node: &Node| node.inner_html()==str_key))
             .exactly_one().map_err(|it| format_err!("Error with {}: no single <th>{}</th>: {} elements", str_key, str_key, it.count()))? // TODO could it implement Debug?
@@ -291,7 +293,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRul
                 ).into_raw(),
             )
         },
-        /*ostossparams*/Some(SStossParams::new(/*n_stoss_max*/4)),
+        /*ostossparams*/Some(SStossParams::new(/*n_stoss_max*/4)), // TODO? is this correct
         rules,
         /*n_stock*/0, // Sauspiel does not support stock
         ruleset,
