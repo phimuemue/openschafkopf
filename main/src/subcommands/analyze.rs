@@ -156,6 +156,20 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRul
                 Ok(vecveccard)
         })?
     ).map(EPlayerIndex::map_from_raw)?;
+    let get_doublings_stoss = |str_key| -> Result<_, failure::Error> {
+        Ok(scrape_from_key_figure_table(str_key)?
+            .find(Name("a"))
+            .map(|node| username_to_epi(&node.inner_html())))
+    };
+    let doublings = {
+        let vecepi_doubling = get_doublings_stoss("Klopfer")?.collect::<Result<Vec<_>, _>>()?;
+        SDoublings::new_full(
+            SStaticEPI0{},
+            EPlayerIndex::map_from_fn(|epi| 
+                vecepi_doubling.contains(&epi)
+            ).into_raw(),
+        )
+    };
     let username_parser = |epi| {
         combine::tokens2(|l,r|l==r, mapepistr_username[epi].chars()) // TODO? can we use combine::char::string?
             .map(move |mut str_username| verify_eq!(epi, unwrap!(username_to_epi(&str_username.join("")))))
@@ -240,11 +254,6 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRul
             })
         })?
         .1;
-    let get_doublings_stoss = |str_key| -> Result<_, failure::Error> {
-        Ok(scrape_from_key_figure_table(str_key)?
-            .find(Name("a"))
-            .map(|node| username_to_epi(&node.inner_html())))
-    };
     let ruleset = scrape_from_key_figure_table("Sonderregeln")?
         .children()
         .filter(|node|
@@ -284,15 +293,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRul
         )?;
     let mut game = SGameGeneric::new_with(
         aveccard,
-        /*doublings*/{
-            let vecepi_doubling = get_doublings_stoss("Klopfer")?.collect::<Result<Vec<_>, _>>()?;
-            SDoublings::new_full(
-                SStaticEPI0{},
-                EPlayerIndex::map_from_fn(|epi| 
-                    vecepi_doubling.contains(&epi)
-                ).into_raw(),
-            )
-        },
+        doublings,
         /*ostossparams*/Some(SStossParams::new(/*n_stoss_max*/4)), // TODO? is this correct
         rules,
         /*n_stock*/0, // Sauspiel does not support stock
