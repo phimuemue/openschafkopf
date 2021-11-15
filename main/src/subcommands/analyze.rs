@@ -18,11 +18,22 @@ pub fn subcommand(str_subcommand: &str) -> clap::App {
 }
 
 #[derive(Debug)]
-pub struct SSauspielRuleset {
+pub struct SSauspielAllowedRules {
     // Sauspiel, Solo, Wenz: implicitly allowed
     b_farbwenz: bool,
     b_geier: bool,
     b_ramsch: bool,
+}
+
+#[derive(Debug)]
+pub enum VSauspielAllowedRules {
+    Turnier(String),
+    AllowedRules(SSauspielAllowedRules),
+}
+
+#[derive(Debug)]
+pub struct SSauspielRuleset {
+    allowedrules: VSauspielAllowedRules,
     n_tarif_extra: isize,
     n_tarif_ruf: isize,
     n_tarif_solo: isize,
@@ -64,9 +75,9 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             .find(Name("td"))
             .exactly_one().map_err(|it| format_err!("Error with {}: no single <td> containing {}: {} elements", str_key, str_key, it.count())) // TODO could it implement Debug?
     };
-    let ruleset = {
+    let ruleset = if let Ok(node_tarif) = scrape_from_key_figure_table("Tarif") {
         let (n_tarif_extra, n_tarif_ruf, n_tarif_solo) = {
-            let str_tarif = scrape_from_key_figure_table("Tarif")?.inner_html();
+            let str_tarif = node_tarif.inner_html();
             let parser_digits = many1::<String,_>(digit())
                 .map(|str_digits| str_digits.parse::<isize>());
             macro_rules! parser_tarif(($parser_currency: expr, $parser_digits: expr) => {
@@ -102,43 +113,56 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 ? // unpack result of combine::parse call
                 ? // unpack parsed result
         };
-        scrape_from_key_figure_table("Sonderregeln")?
-            .children()
-            .filter(|node|
-                !matches!(node.data(), select::node::Data::Text(str_text) if str_text.trim().is_empty() || str_text.trim()!="-")
-            )
-            .try_fold(
-                SSauspielRuleset{
-                    b_farbwenz: false,
-                    b_geier: false,
-                    b_ramsch: false,
-                    n_tarif_extra,
-                    n_tarif_ruf,
-                    n_tarif_solo,
-                },
-                |mut ruleset, node| {
-                    if !matches!(node.data(), select::node::Data::Element(_,_)) {
-                        return Err(format_err!("Unexpected data {:?} in Sonderregeln", node.data()));
-                    } else if node.name()!=Some("img") {
-                        return Err(format_err!("Unexpected name {:?} in Sonderregeln", node.name()));
-                    } else if node.attr("class")!=Some("rules__rule") {
-                        return Err(format_err!("Unexpected class {:?} in Sonderregeln", node.attr("class")));
-                    } else if node.attr("alt")!=node.attr("title") {
-                        return Err(format_err!("alt {:?} differs from title {:?} in Sonderregeln", node.attr("alt"), node.attr("title")));
-                    } else {
-                        match node.attr("title") {
-                            Some("Kurze Karte") => {/* TODO assert/check consistency */},
-                            Some("Farbwenz") => ruleset.b_farbwenz = true,
-                            Some("Geier") => ruleset.b_geier = true,
-                            Some("Ramsch") => ruleset.b_ramsch = true,
-                            _ => {
-                                return Err(format_err!("Unknown Sonderregeln: {:?}", node.attr("title")));
+        SSauspielRuleset{
+            n_tarif_extra,
+            n_tarif_ruf,
+            n_tarif_solo,
+            allowedrules: VSauspielAllowedRules::AllowedRules(scrape_from_key_figure_table("Sonderregeln")?
+                .children()
+                .filter(|node|
+                    !matches!(node.data(), select::node::Data::Text(str_text) if str_text.trim().is_empty() || str_text.trim()!="-")
+                )
+                .try_fold(
+                    SSauspielAllowedRules{
+                        b_farbwenz: false,
+                        b_geier: false,
+                        b_ramsch: false,
+                    },
+                    |mut ruleset, node| {
+                        if !matches!(node.data(), select::node::Data::Element(_,_)) {
+                            return Err(format_err!("Unexpected data {:?} in Sonderregeln", node.data()));
+                        } else if node.name()!=Some("img") {
+                            return Err(format_err!("Unexpected name {:?} in Sonderregeln", node.name()));
+                        } else if node.attr("class")!=Some("rules__rule") {
+                            return Err(format_err!("Unexpected class {:?} in Sonderregeln", node.attr("class")));
+                        } else if node.attr("alt")!=node.attr("title") {
+                            return Err(format_err!("alt {:?} differs from title {:?} in Sonderregeln", node.attr("alt"), node.attr("title")));
+                        } else {
+                            match node.attr("title") {
+                                Some("Kurze Karte") => {/* TODO assert/check consistency */},
+                                Some("Farbwenz") => ruleset.b_farbwenz = true,
+                                Some("Geier") => ruleset.b_geier = true,
+                                Some("Ramsch") => ruleset.b_ramsch = true,
+                                _ => {
+                                    return Err(format_err!("Unknown Sonderregeln: {:?}", node.attr("title")));
+                                }
                             }
                         }
-                    }
-                    Ok(ruleset)
-                },
-            )?;
+                        Ok(ruleset)
+                    },
+                )?
+            )
+        }
+    } else if let Ok(node_turnier) = scrape_from_key_figure_table("Turnier") {
+        SSauspielRuleset{
+            // TODO tarif is tricky, as it might also be paid.
+            n_tarif_extra: 1,
+            n_tarif_ruf: 1,
+            n_tarif_solo: 2,
+            allowedrules: VSauspielAllowedRules::Turnier(node_turnier.inner_html().to_owned()),
+        }
+    } else {
+        return Err(format_err!("Ruleset"));
     };
     let orules = doc.find(Class("title-supertext"))
         .exactly_one()
