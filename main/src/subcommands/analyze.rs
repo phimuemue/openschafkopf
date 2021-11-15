@@ -32,7 +32,7 @@ pub struct SSauspielRuleset {
 #[derive(Debug)]
 pub struct SGameAnnouncementAnonymous;
 
-pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error> {
+pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error> {
     // TODO acknowledge timeouts
     use combine::{char::*, *};
     use select::{document::Document, node::Node, predicate::*};
@@ -309,7 +309,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameGeneric<SSauspielRul
             let () = game.zugeben(*card, epi)?;
         }
     }
-    Ok(game)
+    game.finish().map_err(|_game| format_err!("Could not game.finish"))
 }
 
 fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failure::Error>> + '_ {
@@ -357,24 +357,27 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             std::fs::File::open(&path)?.read_to_string(str_html)
                         )?.0;
                         let mut b_found = false;
-                        let mut push_game = |str_description, resgame: Result<_, _>| {
-                            b_found = b_found || resgame.is_ok();
+                        let mut push_game = |str_description, resgameresult: Result<_, _>| {
+                            b_found = b_found || resgameresult.is_ok();
                             vecgame.push(SGameWithDesc{
                                 str_description,
                                 str_link: format!("file://{}", path.to_string_lossy()),
-                                resgame,
+                                resgameresult,
                             });
                         };
-                        if let resgame@Ok(_) = analyze_sauspiel_html(str_input) {
+                        if let resgameresult@Ok(_) = analyze_sauspiel_html(str_input) {
                             push_game(
                                 path.to_string_lossy().into_owned(),
-                                resgame.map(|game| game.map(|_|(), |_|(), |_|()))
+                                resgameresult.map(|game| game.map(|_|(), |_|(), |_|()))
                             )
                         } else {
                             let mut b_found_plain = false;
                             for (i, resgame) in analyze_plain(str_input).filter(|res| res.is_ok()).enumerate() {
                                 b_found_plain = true;
-                                push_game(format!("{}_{}", path.to_string_lossy(), i), resgame)
+                                push_game(
+                                    format!("{}_{}", path.to_string_lossy(), i),
+                                    resgame.and_then(|game| game.finish().map_err(|_game| format_err!("Could not game.finish")))
+                                )
                             }
                             if !b_found_plain {
                                 push_game(path.to_string_lossy().into_owned(), Err(format_err!("Nothing found in {:?}: Trying to continue.", path)));

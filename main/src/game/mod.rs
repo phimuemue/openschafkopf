@@ -665,7 +665,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
 
 #[derive(Debug)]
 pub struct SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules> {
-    mapepib_confirmed: EnumMap<EPlayerIndex, bool>, // TODO? enumset
+    pub mapepib_confirmed: EnumMap<EPlayerIndex, bool>, // TODO? enumset
     // TODO store all information about finished game
     pub an_payout : EnumMap<EPlayerIndex, isize>,
     pub stockorgame: VStockOrT<(), SGameGeneric<Ruleset, GameAnnouncements, DetermineRules>>,
@@ -686,7 +686,7 @@ impl TGamePhase for SGameResult { // "absorbing state"
     }
 }
 
-impl SGameResult {
+impl<Ruleset, GameAnnouncements, DetermineRules> SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     pub fn apply_payout(self, n_stock: &mut isize, mut fn_payout_to_epi: impl FnMut(EPlayerIndex, isize)) { // TODO should n_stock be member of SGameResult?
         for epi in EPlayerIndex::values() {
             fn_payout_to_epi(epi, self.an_payout[epi]);
@@ -702,6 +702,22 @@ impl SGameResult {
 
     pub fn confirm(&mut self, epi: EPlayerIndex) {
         self.mapepib_confirmed[epi] = true;
+    }
+
+    pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameResultGeneric<Ruleset2, GameAnnouncements2, DetermineRules2> {
+        let SGameResultGeneric {
+            mapepib_confirmed,
+            an_payout,
+            stockorgame,
+        } = self;
+        SGameResultGeneric {
+            mapepib_confirmed,
+            an_payout,
+            stockorgame: match stockorgame {
+                VStockOrT::Stock(stock) => VStockOrT::Stock(stock),
+                VStockOrT::OrT(game) => VStockOrT::OrT(game.map(fn_announcements, fn_determinerules, fn_ruleset)),
+            },
+        }
     }
 }
 
