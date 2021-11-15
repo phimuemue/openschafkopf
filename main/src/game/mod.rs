@@ -666,7 +666,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
 #[derive(Debug)]
 pub struct SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     pub mapepib_confirmed: EnumMap<EPlayerIndex, bool>, // TODO? enumset
-    // TODO store all information about finished game
+    // TODO store all information about finished game, even in case of stock
     pub an_payout : EnumMap<EPlayerIndex, isize>,
     pub stockorgame: VStockOrT<(), SGameGeneric<Ruleset, GameAnnouncements, DetermineRules>>,
 }

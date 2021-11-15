@@ -1,6 +1,6 @@
 use crate::game_analysis::*;
 use crate::game::*;
-use crate::rules::ruleset::SStossParams;
+use crate::rules::ruleset::{SStossParams, VStockOrT};
 use crate::primitives::*;
 use crate::primitives::cardvector::*;
 use crate::util::{*, parser::*};
@@ -101,7 +101,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             ? // unpack result of combine::parse call
             ? // unpack parsed result
     };
-    let rules = doc.find(Class("title-supertext"))
+    let orules = doc.find(Class("title-supertext"))
         .exactly_one()
         .map_err(|it| format_err!("title-supertext single failed {} elements", it.count()))? // TODO could it implement Debug?
         .parent().ok_or_else(|| format_err!("title-supertext has no parent"))?
@@ -109,11 +109,17 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         .exactly_one()
         .map_err(|it| format_err!("h1 is not single: {} elements", it.count())) // TODO could it implement Debug?
         .and_then(|node_rules| {
-            crate::rules::parser::parse_rule_description(
+            if let Ok(rules) = crate::rules::parser::parse_rule_description(
                 &node_rules.text(),
                 (n_tarif_extra, n_tarif_ruf, n_tarif_solo),
                 /*fn_player_to_epi*/username_to_epi,
-            )
+            ) {
+                Ok(Some(rules))
+            } else if node_rules.text()=="Zamgworfen" {
+                Ok(None)
+            } else {
+                Err(format_err!("Could not parse rules"))
+            }
         })?;
     fn get_cards<T>(
         node: &Node,
@@ -277,39 +283,48 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             )
         })
         .collect::<Result<Vec<(EPlayerIndex, &'static str)>, _>>()?;
-    let vecstich = doc.find(|node: &Node| node.inner_html()=="Stich von")
-        .try_fold((EPlayerIndex::EPI0, Vec::new()), |(epi_first, mut vecstich), node| -> Result<_, _> {
-            vec_to_arr(get_cards(
-                &node.parent().ok_or_else(|| format_err!(r#""Stich von" has no parent"#))?
-                    .parent().ok_or_else(|| format_err!("walking html failed"))?,
-                /*fn_card_highlight*/|card, _ostr_highlight| card,
-            )?).map(|acard| {
-                let stich = SStich::new_full(epi_first, acard);
-                let epi_winner = rules.winner_index(&stich);
-                vecstich.push(stich);
-                (epi_winner, vecstich)
-            })
-        })?
-        .1;
-    let mut game = SGameGeneric::new_with(
-        aveccard,
-        doublings,
-        /*ostossparams*/Some(SStossParams::new(/*n_stoss_max*/4)), // TODO? is this correct
-        rules,
-        /*n_stock*/0, // Sauspiel does not support stock
-        ruleset,
-        gameannouncements,
-        vecvectplepistr_determinerules,
-    );
-    for resepi in get_doublings_stoss("Kontra und Retour")? {
-        let () = game.stoss(resepi?)?;
-    }
-    for stich in vecstich.into_iter() {
-        for (epi, card) in stich.iter() {
-            let () = game.zugeben(*card, epi)?;
+    if let Some(rules) = orules {
+        let vecstich = doc.find(|node: &Node| node.inner_html()=="Stich von")
+            .try_fold((EPlayerIndex::EPI0, Vec::new()), |(epi_first, mut vecstich), node| -> Result<_, _> {
+                vec_to_arr(get_cards(
+                    &node.parent().ok_or_else(|| format_err!(r#""Stich von" has no parent"#))?
+                        .parent().ok_or_else(|| format_err!("walking html failed"))?,
+                    /*fn_card_highlight*/|card, _ostr_highlight| card,
+                )?).map(|acard| {
+                    let stich = SStich::new_full(epi_first, acard);
+                    let epi_winner = rules.winner_index(&stich);
+                    vecstich.push(stich);
+                    (epi_winner, vecstich)
+                })
+            })?
+            .1;
+        let mut game = SGameGeneric::new_with(
+            aveccard,
+            doublings,
+            /*ostossparams*/Some(SStossParams::new(/*n_stoss_max*/4)), // TODO? is this correct
+            rules,
+            /*n_stock*/0, // Sauspiel does not support stock
+            ruleset,
+            gameannouncements,
+            vecvectplepistr_determinerules,
+        );
+        for resepi in get_doublings_stoss("Kontra und Retour")? {
+            let () = game.stoss(resepi?)?;
         }
+        for stich in vecstich.into_iter() {
+            for (epi, card) in stich.iter() {
+                let () = game.zugeben(*card, epi)?;
+            }
+        }
+        game.finish().map_err(|_game| format_err!("Could not game.finish"))
+    } else {
+        // TODO assert that there are actually no stichs in doc
+        Ok(SGameResultGeneric {
+            mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false), // TODO? remove this field
+            an_payout: EPlayerIndex::map_from_fn(|_epi| /*Sauspiel does not know stock*/0),
+            stockorgame: VStockOrT::Stock(()),
+        })
     }
-    game.finish().map_err(|_game| format_err!("Could not game.finish"))
 }
 
 fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failure::Error>> + '_ {
