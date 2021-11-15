@@ -64,80 +64,82 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             .find(Name("td"))
             .exactly_one().map_err(|it| format_err!("Error with {}: no single <td> containing {}: {} elements", str_key, str_key, it.count())) // TODO could it implement Debug?
     };
-    let (n_tarif_extra, n_tarif_ruf, n_tarif_solo) = {
-        let str_tarif = scrape_from_key_figure_table("Tarif")?.inner_html();
-        let parser_digits = many1::<String,_>(digit())
-            .map(|str_digits| str_digits.parse::<isize>());
-        macro_rules! parser_tarif(($parser_currency: expr, $parser_digits: expr) => {
-            $parser_currency.with((
-                $parser_digits.clone(),
-                string(" / ").with($parser_digits.clone()),
-                optional(string(" / ").with($parser_digits.clone())),
-            )).map(|(resn_1, resn_2, oresn_3)| -> Result<_, failure::Error> {
-                Ok(if let Some(resn_3)=oresn_3 {
-                    (resn_1?, resn_2?, resn_3?)
-                } else {
-                    let n_2 = resn_2?;
-                    (resn_1?, n_2, n_2)
+    let ruleset = {
+        let (n_tarif_extra, n_tarif_ruf, n_tarif_solo) = {
+            let str_tarif = scrape_from_key_figure_table("Tarif")?.inner_html();
+            let parser_digits = many1::<String,_>(digit())
+                .map(|str_digits| str_digits.parse::<isize>());
+            macro_rules! parser_tarif(($parser_currency: expr, $parser_digits: expr) => {
+                $parser_currency.with((
+                    $parser_digits.clone(),
+                    string(" / ").with($parser_digits.clone()),
+                    optional(string(" / ").with($parser_digits.clone())),
+                )).map(|(resn_1, resn_2, oresn_3)| -> Result<_, failure::Error> {
+                    Ok(if let Some(resn_3)=oresn_3 {
+                        (resn_1?, resn_2?, resn_3?)
+                    } else {
+                        let n_2 = resn_2?;
+                        (resn_1?, n_2, n_2)
+                    })
                 })
-            })
-        });
-        parse_trimmed(
-            &str_tarif,
-            "tarif",
-            choice!(
-                parser_tarif!(string("P "), parser_digits),
-                parser_tarif!(
-                    choice!(string("€ "), string("$ ")), // Note: I could not find a game from Vereinsheim, but I suspect they use $
-                    (parser_digits.clone(), char(','), count_min_max::<String,_>(2, 2, digit()))
-                        .map(|(resn_before_comma, _str_comma, str_2_digits_after_comma)| -> Result<_, failure::Error> {
-                            let n_before_comma : isize = resn_before_comma?;
-                            let n_after_comma : isize = str_2_digits_after_comma.parse::<isize>()?;
-                            Ok(n_before_comma * 100 + n_after_comma)
-                        })
+            });
+            parse_trimmed(
+                &str_tarif,
+                "tarif",
+                choice!(
+                    parser_tarif!(string("P "), parser_digits),
+                    parser_tarif!(
+                        choice!(string("€ "), string("$ ")), // Note: I could not find a game from Vereinsheim, but I suspect they use $
+                        (parser_digits.clone(), char(','), count_min_max::<String,_>(2, 2, digit()))
+                            .map(|(resn_before_comma, _str_comma, str_2_digits_after_comma)| -> Result<_, failure::Error> {
+                                let n_before_comma : isize = resn_before_comma?;
+                                let n_after_comma : isize = str_2_digits_after_comma.parse::<isize>()?;
+                                Ok(n_before_comma * 100 + n_after_comma)
+                            })
+                    )
                 )
             )
-        )
-            ? // unpack result of combine::parse call
-            ? // unpack parsed result
-    };
-    let ruleset = scrape_from_key_figure_table("Sonderregeln")?
-        .children()
-        .filter(|node|
-            !matches!(node.data(), select::node::Data::Text(str_text) if str_text.trim().is_empty() || str_text.trim()!="-")
-        )
-        .try_fold(
-            SSauspielRuleset{
-                b_farbwenz: false,
-                b_geier: false,
-                b_ramsch: false,
-                n_tarif_extra,
-                n_tarif_ruf,
-                n_tarif_solo,
-            },
-            |mut ruleset, node| {
-                if !matches!(node.data(), select::node::Data::Element(_,_)) {
-                    return Err(format_err!("Unexpected data {:?} in Sonderregeln", node.data()));
-                } else if node.name()!=Some("img") {
-                    return Err(format_err!("Unexpected name {:?} in Sonderregeln", node.name()));
-                } else if node.attr("class")!=Some("rules__rule") {
-                    return Err(format_err!("Unexpected class {:?} in Sonderregeln", node.attr("class")));
-                } else if node.attr("alt")!=node.attr("title") {
-                    return Err(format_err!("alt {:?} differs from title {:?} in Sonderregeln", node.attr("alt"), node.attr("title")));
-                } else {
-                    match node.attr("title") {
-                        Some("Kurze Karte") => {/* TODO assert/check consistency */},
-                        Some("Farbwenz") => ruleset.b_farbwenz = true,
-                        Some("Geier") => ruleset.b_geier = true,
-                        Some("Ramsch") => ruleset.b_ramsch = true,
-                        _ => {
-                            return Err(format_err!("Unknown Sonderregeln: {:?}", node.attr("title")));
+                ? // unpack result of combine::parse call
+                ? // unpack parsed result
+        };
+        scrape_from_key_figure_table("Sonderregeln")?
+            .children()
+            .filter(|node|
+                !matches!(node.data(), select::node::Data::Text(str_text) if str_text.trim().is_empty() || str_text.trim()!="-")
+            )
+            .try_fold(
+                SSauspielRuleset{
+                    b_farbwenz: false,
+                    b_geier: false,
+                    b_ramsch: false,
+                    n_tarif_extra,
+                    n_tarif_ruf,
+                    n_tarif_solo,
+                },
+                |mut ruleset, node| {
+                    if !matches!(node.data(), select::node::Data::Element(_,_)) {
+                        return Err(format_err!("Unexpected data {:?} in Sonderregeln", node.data()));
+                    } else if node.name()!=Some("img") {
+                        return Err(format_err!("Unexpected name {:?} in Sonderregeln", node.name()));
+                    } else if node.attr("class")!=Some("rules__rule") {
+                        return Err(format_err!("Unexpected class {:?} in Sonderregeln", node.attr("class")));
+                    } else if node.attr("alt")!=node.attr("title") {
+                        return Err(format_err!("alt {:?} differs from title {:?} in Sonderregeln", node.attr("alt"), node.attr("title")));
+                    } else {
+                        match node.attr("title") {
+                            Some("Kurze Karte") => {/* TODO assert/check consistency */},
+                            Some("Farbwenz") => ruleset.b_farbwenz = true,
+                            Some("Geier") => ruleset.b_geier = true,
+                            Some("Ramsch") => ruleset.b_ramsch = true,
+                            _ => {
+                                return Err(format_err!("Unknown Sonderregeln: {:?}", node.attr("title")));
+                            }
                         }
                     }
-                }
-                Ok(ruleset)
-            },
-        )?;
+                    Ok(ruleset)
+                },
+            )?;
+    };
     let orules = doc.find(Class("title-supertext"))
         .exactly_one()
         .map_err(|it| format_err!("title-supertext single failed {} elements", it.count()))? // TODO could it implement Debug?
@@ -148,7 +150,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         .and_then(|node_rules| {
             if let Ok(rules) = crate::rules::parser::parse_rule_description(
                 &node_rules.text(),
-                (n_tarif_extra, n_tarif_ruf, n_tarif_solo),
+                (ruleset.n_tarif_extra, ruleset.n_tarif_ruf, ruleset.n_tarif_solo),
                 /*fn_player_to_epi*/username_to_epi,
             ) {
                 Ok(Some(rules))
