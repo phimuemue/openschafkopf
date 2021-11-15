@@ -101,6 +101,43 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             ? // unpack result of combine::parse call
             ? // unpack parsed result
     };
+    let ruleset = scrape_from_key_figure_table("Sonderregeln")?
+        .children()
+        .filter(|node|
+            !matches!(node.data(), select::node::Data::Text(str_text) if str_text.trim().is_empty() || str_text.trim()!="-")
+        )
+        .try_fold(
+            SSauspielRuleset{
+                b_farbwenz: false,
+                b_geier: false,
+                b_ramsch: false,
+                n_tarif_extra,
+                n_tarif_ruf,
+                n_tarif_solo,
+            },
+            |mut ruleset, node| {
+                if !matches!(node.data(), select::node::Data::Element(_,_)) {
+                    return Err(format_err!("Unexpected data {:?} in Sonderregeln", node.data()));
+                } else if node.name()!=Some("img") {
+                    return Err(format_err!("Unexpected name {:?} in Sonderregeln", node.name()));
+                } else if node.attr("class")!=Some("rules__rule") {
+                    return Err(format_err!("Unexpected class {:?} in Sonderregeln", node.attr("class")));
+                } else if node.attr("alt")!=node.attr("title") {
+                    return Err(format_err!("alt {:?} differs from title {:?} in Sonderregeln", node.attr("alt"), node.attr("title")));
+                } else {
+                    match node.attr("title") {
+                        Some("Kurze Karte") => {/* TODO assert/check consistency */},
+                        Some("Farbwenz") => ruleset.b_farbwenz = true,
+                        Some("Geier") => ruleset.b_geier = true,
+                        Some("Ramsch") => ruleset.b_ramsch = true,
+                        _ => {
+                            return Err(format_err!("Unknown Sonderregeln: {:?}", node.attr("title")));
+                        }
+                    }
+                }
+                Ok(ruleset)
+            },
+        )?;
     let orules = doc.find(Class("title-supertext"))
         .exactly_one()
         .map_err(|it| format_err!("title-supertext single failed {} elements", it.count()))? // TODO could it implement Debug?
@@ -162,43 +199,6 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 Ok(vecveccard)
         })?
     ).map(EPlayerIndex::map_from_raw)?;
-    let ruleset = scrape_from_key_figure_table("Sonderregeln")?
-        .children()
-        .filter(|node|
-            !matches!(node.data(), select::node::Data::Text(str_text) if str_text.trim().is_empty() || str_text.trim()!="-")
-        )
-        .try_fold(
-            SSauspielRuleset{
-                b_farbwenz: false,
-                b_geier: false,
-                b_ramsch: false,
-                n_tarif_extra,
-                n_tarif_ruf,
-                n_tarif_solo,
-            },
-            |mut ruleset, node| {
-                if !matches!(node.data(), select::node::Data::Element(_,_)) {
-                    return Err(format_err!("Unexpected data {:?} in Sonderregeln", node.data()));
-                } else if node.name()!=Some("img") {
-                    return Err(format_err!("Unexpected name {:?} in Sonderregeln", node.name()));
-                } else if node.attr("class")!=Some("rules__rule") {
-                    return Err(format_err!("Unexpected class {:?} in Sonderregeln", node.attr("class")));
-                } else if node.attr("alt")!=node.attr("title") {
-                    return Err(format_err!("alt {:?} differs from title {:?} in Sonderregeln", node.attr("alt"), node.attr("title")));
-                } else {
-                    match node.attr("title") {
-                        Some("Kurze Karte") => {/* TODO assert/check consistency */},
-                        Some("Farbwenz") => ruleset.b_farbwenz = true,
-                        Some("Geier") => ruleset.b_geier = true,
-                        Some("Ramsch") => ruleset.b_ramsch = true,
-                        _ => {
-                            return Err(format_err!("Unknown Sonderregeln: {:?}", node.attr("title")));
-                        }
-                    }
-                }
-                Ok(ruleset)
-            },
-        )?;
     let get_doublings_stoss = |str_key| -> Result<_, failure::Error> {
         Ok(scrape_from_key_figure_table(str_key)?
             .find(Name("a"))
