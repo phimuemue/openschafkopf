@@ -60,12 +60,6 @@ impl TGamePhase for SWebsocketGameResult {
     }
 }
 
-impl SWebsocketGameResult {
-    pub fn confirm(&mut self, epi: EPlayerIndex) {
-        self.mapepib_confirmed[epi] = true;
-    }
-}
-
 type VGamePhase = VGamePhaseGeneric<
     SDealCards,
     SGamePreparations,
@@ -399,7 +393,7 @@ impl STable {
                                 });
                             },
                             (VGamePhase::GameResult(gameresult), VGamePhaseAction::GameResult(())) => {
-                                gameresult.confirm(epi);
+                                gameresult.mapepib_confirmed[epi] = true;
                             },
                             (_gamephase, _cmd) => {
                             },
