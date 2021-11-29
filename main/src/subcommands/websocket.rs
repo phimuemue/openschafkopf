@@ -40,19 +40,45 @@ enum VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, GameRe
     GameResult(GameResult),
 }
 
+#[derive(Debug)]
+struct SWebsocketGameResult {
+    gameresult: SGameResult,
+    mapepib_confirmed: EnumMap<EPlayerIndex, bool>, // TODO? enumset
+}
+impl TGamePhase for SWebsocketGameResult {
+    type ActivePlayerInfo = EnumMap<EPlayerIndex, bool>;
+    type Finish = SWebsocketGameResult;
+    fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
+        let oinfallible : /*mention type to get compiler error upon change*/Option<std::convert::Infallible> = self.gameresult.which_player_can_do_something(); // TODO simplify
+        verify!(oinfallible.is_none());
+        if_then_some!(self.mapepib_confirmed.iter().any(|b_confirmed| !b_confirmed),
+            self.mapepib_confirmed.explicit_clone()
+        )
+    }
+    fn finish_success(self) -> Self::Finish {
+        self
+    }
+}
+
+impl SWebsocketGameResult {
+    pub fn confirm(&mut self, epi: EPlayerIndex) {
+        self.mapepib_confirmed[epi] = true;
+    }
+}
+
 type VGamePhase = VGamePhaseGeneric<
     SDealCards,
     SGamePreparations,
     SDetermineRules,
     SGame,
-    SGameResult,
+    SWebsocketGameResult,
 >;
 type VGamePhaseActivePlayerInfo<'a> = VGamePhaseGeneric<
     (&'a SDealCards, <SDealCards as TGamePhase>::ActivePlayerInfo),
     (&'a SGamePreparations, <SGamePreparations as TGamePhase>::ActivePlayerInfo),
     (&'a SDetermineRules, <SDetermineRules as TGamePhase>::ActivePlayerInfo),
     (&'a SGame, <SGame as TGamePhase>::ActivePlayerInfo),
-    (&'a SGameResult, <SGameResult as TGamePhase>::ActivePlayerInfo),
+    (&'a SWebsocketGameResult, <SWebsocketGameResult as TGamePhase>::ActivePlayerInfo),
 >;
 type SActivelyPlayableRulesIdentifier = String;
 fn find_rules_by_id(slcrulegroup: &[SRuleGroup], hand: SFullHand, orulesid: &Option<SActivelyPlayableRulesIdentifier>) -> Result<Option<Box<dyn TActivelyPlayableRules>>, ()> {
@@ -437,11 +463,18 @@ impl STable {
                             Err(gamepreparations) => Some(GamePreparations(gamepreparations)),
                         }
                         DetermineRules(determinerules) => simple_transition(determinerules, Game, DetermineRules),
-                        Game(game) => simple_transition(game, GameResult, Game),
+                        Game(game) => simple_transition(
+                            game,
+                            |gameresult| GameResult(SWebsocketGameResult{
+                                gameresult,
+                                mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false),
+                            }),
+                            Game
+                        ),
                         GameResult(gameresult) => match gameresult.finish() {
                             Ok(gameresult) => {
                                 let mapepiopeer = &mut self.players.mapepiopeer;
-                                gameresult.apply_payout(&mut self.n_stock, |epi, n_payout| {
+                                gameresult.gameresult.apply_payout(&mut self.n_stock, |epi, n_payout| {
                                     if let Some(ref mut peer) = mapepiopeer[epi].opeer {
                                         peer.n_money += n_payout;
                                     }
@@ -651,10 +684,10 @@ impl STable {
                         },
                         GameResult((gameresult, mapepib_confirmed)) => {
                             self.players.for_each(
-                                /*oslcstich*/if_then_some!(let VStockOrT::OrT(ref game) = gameresult.stockorgame,
+                                /*oslcstich*/if_then_some!(let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame,
                                     game.stichseq.completed_stichs()
                                 ),
-                                if_then_some!(let VStockOrT::OrT(ref game) = gameresult.stockorgame,
+                                if_then_some!(let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame,
                                     game.rules.as_ref()
                                 ),
                                 |_epi| Vec::new(),
@@ -663,10 +696,10 @@ impl STable {
                                         ask_with_timeout(
                                             otimeoutcmd,
                                             epi,
-                                            format!("Spiel beendet. {}", if gameresult.an_payout[epi] < 0 {
-                                                format!("Verlust: {}", -gameresult.an_payout[epi])
+                                            format!("Spiel beendet. {}", if gameresult.gameresult.an_payout[epi] < 0 {
+                                                format!("Verlust: {}", -gameresult.gameresult.an_payout[epi])
                                             } else {
-                                                format!("Gewinn: {}", gameresult.an_payout[epi])
+                                                format!("Gewinn: {}", gameresult.gameresult.an_payout[epi])
                                             }),
                                             std::iter::once(("Ok".into(), VGamePhaseAction::GameResult(()))),
                                             self_mutex.clone(),

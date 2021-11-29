@@ -162,7 +162,6 @@ impl TGamePhase for SGamePreparations {
                         }
                     };
                     VGamePreparationsFinish::Stock(SGameResult{
-                        mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false),
                         an_payout: EPlayerIndex::map_from_fn(|_epi| -n_stock),
                         stockorgame: VStockOrT::Stock(()),
                     })
@@ -481,7 +480,6 @@ impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Rul
     fn finish_success(self) -> Self::Finish {
         assert!(self.kurzlang().cards_per_player()==self.completed_stichs().len());
         SGameResultGeneric {
-            mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false),
             an_payout : self.rules.payout(
                 SStichSequenceGameFinished::new(&self.stichseq),
                 stoss_and_doublings(&self.vecstoss, &self.doublings),
@@ -665,7 +663,6 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
 
 #[derive(Debug)]
 pub struct SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules> {
-    pub mapepib_confirmed: EnumMap<EPlayerIndex, bool>, // TODO? enumset
     // TODO store all information about finished game, even in case of stock
     pub an_payout : EnumMap<EPlayerIndex, isize>,
     pub stockorgame: VStockOrT<(), SGameGeneric<Ruleset, GameAnnouncements, DetermineRules>>,
@@ -673,13 +670,11 @@ pub struct SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules> {
 pub type SGameResult = SGameResultGeneric<(), (), ()>;
 
 impl TGamePhase for SGameResult { // "absorbing state"
-    type ActivePlayerInfo = EnumMap<EPlayerIndex, bool>;
+    type ActivePlayerInfo = std::convert::Infallible;
     type Finish = SGameResult;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
-        if_then_some!(self.mapepib_confirmed.iter().any(|b_confirmed| !b_confirmed),
-            self.mapepib_confirmed.explicit_clone()
-        )
+        None
     }
     fn finish_success(self) -> Self::Finish {
         self
@@ -700,18 +695,12 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameResultGeneric<Ruleset, Gam
         assert!(0 <= *n_stock);
     }
 
-    pub fn confirm(&mut self, epi: EPlayerIndex) {
-        self.mapepib_confirmed[epi] = true;
-    }
-
     pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameResultGeneric<Ruleset2, GameAnnouncements2, DetermineRules2> {
         let SGameResultGeneric {
-            mapepib_confirmed,
             an_payout,
             stockorgame,
         } = self;
         SGameResultGeneric {
-            mapepib_confirmed,
             an_payout,
             stockorgame: match stockorgame {
                 VStockOrT::Stock(stock) => VStockOrT::Stock(stock),

@@ -346,7 +346,6 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
     } else {
         // TODO assert that there are actually no stichs in doc
         Ok(SGameResultGeneric {
-            mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false), // TODO? remove this field
             an_payout: EPlayerIndex::map_from_fn(|_epi| /*Sauspiel does not know stock*/0),
             stockorgame: VStockOrT::Stock(()),
         })
