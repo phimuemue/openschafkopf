@@ -4,7 +4,6 @@
     clippy::upper_case_acronyms,
     clippy::type_complexity, // TODO could this be solved via type-complexity-threshold?
 ))]
-#![deny(bare_trait_objects)]
 
 #[macro_use]
 mod util;
