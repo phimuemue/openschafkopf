@@ -1,6 +1,6 @@
 use crate::util::*;
 use std::fmt;
-use serde::{Serialize, Deserialize};
+use serde::{Serializer};
 
 plain_enum_mod!(modefarbe, EFarbe {
     Eichel,
@@ -91,9 +91,49 @@ impl EKurzLang {
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Hash, Deserialize, Serialize)]
+#[derive(PartialEq, Eq, Clone, Copy, Hash)]
 pub struct SCard {
     n_internalrepresentation : u8, // TODO is there a simple method for bit fields?
+}
+
+impl serde::Serialize for SCard {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        serializer.collect_str(self)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for SCard {
+    fn deserialize<D>(deserializer: D) -> Result<SCard, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+    {
+        crate::util::parser::parse_trimmed(
+            &String::deserialize(deserializer)?,
+            "card",
+            crate::primitives::cardvector::card_parser(),
+        ).map_err(serde::de::Error::custom)
+    }
+}
+
+#[test]
+fn test_serialization() {
+    macro_rules! test_card(($($card:ident)*) => {
+        $(
+            let card = card_values::$card;
+            serde_test::assert_tokens(&card, &[
+                serde_test::Token::Str(stringify!($card)),
+            ]);
+        )*
+    });
+    test_card!(
+        E7 E8 E9 EZ EU EO EK EA
+        G7 G8 G9 GZ GU GO GK GA
+        H7 H8 H9 HZ HU HO HK HA
+        S7 S8 S9 SZ SU SO SK SA
+    );
 }
 
 impl fmt::Debug for SCard {
