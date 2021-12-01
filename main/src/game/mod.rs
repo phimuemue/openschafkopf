@@ -646,7 +646,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
             bail!("card not contained in player's hand");
         }
         if !self.rules.card_is_allowed(&self.stichseq, &self.ahand[epi], card) {
-            bail!("{} is not allowed");
+            bail!("{} is not allowed", card);
         }
         self.ahand[epi].play_card(card);
         self.stichseq.zugeben(card, self.rules.as_ref());
