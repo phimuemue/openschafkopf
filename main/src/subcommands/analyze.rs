@@ -258,7 +258,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             EPlayerIndex::values().zip(itnode_gameannouncement.by_ref())
                 .map(|(epi, node_gameannouncement)| -> Result<_, _> {
                     parse_trimmed(
-                        &node_gameannouncement.inner_html().trim(), // trim to avoid newlines // TODO move newlines into parser
+                        node_gameannouncement.inner_html().trim(), // trim to avoid newlines // TODO move newlines into parser
                         "gameannouncement 1",
                         (
                             username_parser(epi),

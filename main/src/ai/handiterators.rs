@@ -91,7 +91,7 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
                 SHand::new_from_vec(veccard)
             });
             rules.playerindex().map_or(true, |epi_active|
-                rules.can_be_played(SFullHand::new(&ahand_simulate[epi_active].cards(), stichseq.kurzlang()))
+                rules.can_be_played(SFullHand::new(ahand_simulate[epi_active].cards(), stichseq.kurzlang()))
             )
             && {
                 let mut b_valid_up_to_now = true;
