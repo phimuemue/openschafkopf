@@ -117,9 +117,9 @@ fn main() -> Result<(), failure::Error> {
                         unwrap!(path_self.parent()).join("openschafkopf")
                     })
                         .args(&[
-                            "suggest-card".to_owned(),
-                            "--rules".to_owned(),
-                            format!("{} von {}",
+                            "suggest-card",
+                            "--rules",
+                            &format!("{} von {}",
                                 {
                                     macro_rules! extract_farbe(() => {
                                         match json_get!("selectedGameSuit", as_str) {
@@ -145,10 +145,10 @@ fn main() -> Result<(), failure::Error> {
                                 },
                                 n_epi_active,
                             ),
-                            "--hand".to_owned(),
-                            str_hand.to_owned(),
-                            "--cards-on-table".to_owned(),
-                            str_cards_as_played.to_owned(),
+                            "--hand",
+                            str_hand,
+                            "--cards-on-table",
+                            str_cards_as_played,
                         ])
                         .stdout(std::process::Stdio::piped())
                         .spawn()
