@@ -2,6 +2,7 @@
     clippy::blocks_in_if_conditions,
     clippy::just_underscores_and_digits,
     clippy::upper_case_acronyms,
+    clippy::type_complexity, // TODO could this be solved via type-complexity-threshold?
 ))]
 #![deny(bare_trait_objects)]
 
