@@ -159,7 +159,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             n_tarif_extra: 1,
             n_tarif_ruf: 1,
             n_tarif_solo: 2,
-            allowedrules: VSauspielAllowedRules::Turnier(node_turnier.inner_html().to_owned()),
+            allowedrules: VSauspielAllowedRules::Turnier(node_turnier.inner_html()),
         }
     } else {
         return Err(format_err!("Ruleset"));
