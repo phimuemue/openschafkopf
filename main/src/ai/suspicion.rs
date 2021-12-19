@@ -334,7 +334,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     ) -> Self::Output {
         let itminmax = ittplcardoutput.map(|(_card, minmax)| minmax);
         unwrap!(if self.epi==epi_card {
-            itminmax.fold1(mutate_return!(|minmax_acc, minmax| {
+            itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
                 // self.epi can always play as good as possible
                 let play_best = |an_payout_acc, an_payout_new: &EnumMap<EPlayerIndex, isize>| {
                     assign_max_by_key(
@@ -350,7 +350,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
             }))
         } else {
             // other players may play inconveniently for epi_stich
-            itminmax.fold1(mutate_return!(|minmax_acc, minmax| {
+            itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
                 assign_min_by_key(
                     &mut minmax_acc.t_min,
                     minmax.t_min.explicit_clone(),

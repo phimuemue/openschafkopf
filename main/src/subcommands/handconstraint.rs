@@ -2,7 +2,6 @@ use crate::primitives::*;
 use crate::util::{*, parser::*};
 use crate::rules::*;
 use crate::cardvector::*;
-use itertools::*;
 use combine::{char::*, *};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -168,7 +167,7 @@ fn constraint_parser_<I: Stream<Item=char>>() -> impl Parser<Input = I, Output =
 {
     macro_rules! make_bin_op_parser{($parser:ident, $chr:expr, $op:ident) => {
         let $parser = attempt((single_constraint_parser(), many1::<Vec<_>, _>((spaces(), char($chr), spaces()).with(single_constraint_parser()))))
-            .map(|(constraint, vecconstraint)| unwrap!(std::iter::once(constraint).chain(vecconstraint.into_iter()).fold1(|constraint_lhs, constraint_rhs|
+            .map(|(constraint, vecconstraint)| unwrap!(std::iter::once(constraint).chain(vecconstraint.into_iter()).reduce(|constraint_lhs, constraint_rhs|
                 VConstraint::$op(Box::new(constraint_lhs), Box::new(constraint_rhs))
             )));
     }}
