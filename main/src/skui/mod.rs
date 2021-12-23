@@ -193,7 +193,7 @@ pub fn account_balance_string(an: &EnumMap<EPlayerIndex, isize>, n_stock: isize)
     EPlayerIndex::values()
         .map(|epi| format!("{}: {} | ", epi, an[epi]))
         .join("")
-        + &format!("Stock: {}", n_stock)
+        + type_inference!(&str, &format!("Stock: {}", n_stock))
 }
 
 pub fn print_account_balance(an: &EnumMap<EPlayerIndex, isize>, n_stock: isize) {

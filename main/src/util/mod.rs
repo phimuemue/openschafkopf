@@ -20,6 +20,11 @@ pub use openschafkopf_util::*;
 #[macro_use]
 pub mod bitfield;
 
+// TODORUST this macro should not be necessary
+macro_rules! type_inference{($type:ty, $e:expr) => {
+    $e as $type
+}}
+
 // TODORUST static_assert not available in rust
 macro_rules! static_assert{($assert_name:ident($($args:tt)*)) => {
     $assert_name!($($args)*)

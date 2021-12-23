@@ -308,12 +308,12 @@ fn generate_analysis_html(
         str_rules=str_rules,
     )
     + "<table><tr>"
-    + &crate::ai::gametree::player_table_ahand(epi_self, &ahand, game.rules.as_ref(), /*fn_border*/|_card| false)
+    + type_inference!(&str, &crate::ai::gametree::player_table_ahand(epi_self, &ahand, game.rules.as_ref(), /*fn_border*/|_card| false))
     + "</tr></table><table><tr>"
-    + &crate::ai::gametree::player_table_stichseq(epi_self, &game.stichseq)
+    + type_inference!(&str, &crate::ai::gametree::player_table_stichseq(epi_self, &game.stichseq))
     + "</tr></table>"
     + "<ul>"
-    + &format!("{}", slcanalysispercard.iter()
+    + type_inference!(&str, &format!("{}", slcanalysispercard.iter()
         .filter_map(|analysispercard| analysispercard.oanalysisimpr.as_ref().map(|analysisimpr|
             (analysisimpr, &analysispercard.stichseq)
         ))
@@ -359,9 +359,10 @@ fn generate_analysis_html(
             str_analysisimpr += "</li>";
             str_analysisimpr
         }).format(""))
+    )
     + "</ul>"
     + "<h2>Gewinnspanne pro Karte</h2>"
-    + &crate::ai::gametree::player_table(
+    + type_inference!(&str, &crate::ai::gametree::player_table(
         epi_self,
         |epi| {
             // TODO? replace this by a line/area chart
@@ -375,7 +376,7 @@ fn generate_analysis_html(
                         )
                         .join("")
                 )
-                    + &EMinMaxStrategy::values().rev().map(|emmstrategy| {
+                    + type_inference!(&str, &EMinMaxStrategy::values().rev().map(|emmstrategy| {
                         format!("<tr>{}</tr>",
                             vecpossiblepayout.iter()
                                 .map(|possiblepayout|
@@ -387,11 +388,12 @@ fn generate_analysis_html(
                         )
                     })
                     .join("")
+                    )
             ))
         },
-    )
+    ))
     + "<h2>Details</h2>"
-    + &format!("{}", slcanalysispercard.iter()
+    + type_inference!(&str, &format!("{}", slcanalysispercard.iter()
         .map(|analysispercard| {
             let vecoutputline = table(
                 &analysispercard.determinebestcardresult_cheating,
@@ -476,7 +478,7 @@ fn generate_analysis_html(
             str_per_card += "</table>";
             str_per_card
         }).format("")
-    )
+    ))
     + "</body></html>"
 }
 
