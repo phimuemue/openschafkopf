@@ -1,246 +1,200 @@
 use crate::primitives::*;
-use crate::util::{*, parser::*};
+use crate::util::*;
 use crate::rules::*;
-use crate::cardvector::*;
-use combine::{char::*, *};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum VNumVal {
-    Const(usize),
-    Card(ECard, EPlayerIndex),
-    TrumpfOrFarbe(VTrumpfOrFarbe, EPlayerIndex),
-    Schlag(ESchlag, EPlayerIndex),
+#[derive(Debug)]
+pub struct SConstraint {
+    engine: rhai::Engine,
+    ast: rhai::AST,
+    str_display: String,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum VConstraint {
-    Not(Box<VConstraint>),
-    Num(VNumVal),
-    Relation {
-        numval_lhs: VNumVal,
-        ord: std::cmp::Ordering,
-        numval_rhs: VNumVal,
-    },
-    Conjunction(Box<VConstraint>, Box<VConstraint>),
-    Disjunction(Box<VConstraint>, Box<VConstraint>),
+type SRhaiUsize = i64; // TODO good idea?
+
+#[derive(Clone)]
+struct SContext {
+    ahand: EnumMap<EPlayerIndex, SHand>,
+    rules: Box<dyn TRules>,
 }
 
-impl VNumVal {
-    pub fn eval(&self, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules) -> usize {
-        fn count(hand: &SHand, fn_pred: impl Fn(&ECard)->bool) -> usize {
-            hand.cards().iter().copied().filter(fn_pred).count()
-        }
-        match self {
-            VNumVal::Const(n) => *n,
-            VNumVal::Card(card, epi) => count(&ahand[*epi], |card_hand| card_hand==card),
-            VNumVal::TrumpfOrFarbe(trumpforfarbe, epi) => count(&ahand[*epi], |card|
-                trumpforfarbe==&rules.trumpforfarbe(*card)
-            ),
-            VNumVal::Schlag(eschlag, epi) => count(&ahand[*epi], |card|
-                card.schlag()==*eschlag
-            ),
-        }
+fn epi_from_rhai(i: SRhaiUsize) -> EPlayerIndex {
+    unwrap!(EPlayerIndex::checked_from_usize(i.as_num::<usize>()))
+}
+
+impl SContext {
+    fn internal_count(&self, epi: EPlayerIndex, fn_pred: impl Fn(ECard)->bool) -> SRhaiUsize {
+        self.ahand[epi]
+            .cards()
+            .iter()
+            .copied()
+            .filter(|card| fn_pred(*card))
+            .count()
+            .as_num::<SRhaiUsize>()
+    }
+
+    fn count(&self, i_epi: SRhaiUsize, fn_pred: impl Fn(ECard)->bool) -> SRhaiUsize {
+        self.internal_count(epi_from_rhai(i_epi), fn_pred)
+    }
+
+    fn counts(&self, fn_pred: impl Fn(ECard)->bool) -> rhai::Array {
+        EPlayerIndex::map_from_fn(|epi| self.internal_count(epi, &fn_pred))
+            .into_raw()
+            .into_iter()
+            .map(rhai::Dynamic::from)
+            .collect()
     }
 }
 
-impl std::fmt::Display for VNumVal {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        match self {
-            VNumVal::Const(n) => write!(f, "{}", n),
-            VNumVal::Card(card, epi) => write!(f, "{}({})", card, epi),
-            VNumVal::TrumpfOrFarbe(trumpforfarbe, epi) => match trumpforfarbe {
-                VTrumpfOrFarbe::Trumpf => write!(f, "t({})", epi),
-                VTrumpfOrFarbe::Farbe(efarbe) => write!(f, "{}({})", efarbe, epi),
-            },
-            VNumVal::Schlag(eschlag, epi) => write!(f, "{}({})", eschlag, epi),
-        }
-    }
-}
-
-impl VConstraint {
+impl SConstraint {
     pub fn internal_eval<R>(
         &self,
         ahand: &EnumMap<EPlayerIndex, SHand>,
         rules: &dyn TRules,
         fn_bool: impl Fn(bool)->R,
         fn_usize: impl Fn(usize)->R,
+        fn_rhai: impl Fn(Option<rhai::Dynamic>)->R,
     ) -> R {
-        match self {
-            VConstraint::Not(constraint) => fn_bool(!constraint.eval(ahand, rules)),
-            VConstraint::Num(numval) => fn_usize(numval.eval(ahand, rules)),
-            VConstraint::Relation{numval_lhs, ord, numval_rhs} => fn_bool(*ord == numval_lhs.eval(ahand, rules).cmp(&numval_rhs.eval(ahand, rules))),
-            VConstraint::Conjunction(constraint_lhs, constraint_rhs) => fn_bool(constraint_lhs.eval(ahand, rules) && constraint_rhs.eval(ahand, rules)),
-            VConstraint::Disjunction(constraint_lhs, constraint_rhs) => fn_bool(constraint_lhs.eval(ahand, rules) || constraint_rhs.eval(ahand, rules)),
+        let resdynamic : Result<rhai::Dynamic,_> = self.engine.call_fn(
+            &mut rhai::Scope::new(),
+            &self.ast,
+            "inspect",
+            (SContext{ahand: ahand.clone(), rules: rules.box_clone()},)
+        );
+        match resdynamic {
+            Ok(dynamic) => {
+                if let Ok(n) = dynamic.as_int() {
+                    fn_usize(n.as_num::<usize>())
+                } else if let Ok(b) = dynamic.as_bool() {
+                    fn_bool(b)
+                } else {
+                    fn_rhai(Some(dynamic))
+                }
+            },
+            Err(e) => {
+                println!("Error evaluating script ({:?}).", e);
+                fn_rhai(None)
+            }
         }
     }
     pub fn eval(&self, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules) -> bool {
-        self.internal_eval(ahand, rules, |b| b, |n| n!=0)
-    }
-}
-
-impl std::fmt::Display for VConstraint {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        match self {
-            VConstraint::Not(constraint) => write!(f, "!({})", constraint),
-            VConstraint::Num(numval) => write!(f, "{}", numval),
-            VConstraint::Relation{numval_lhs, ord, numval_rhs} => write!(f, "({}){}({})",
-                numval_lhs,
-                match ord {
-                    std::cmp::Ordering::Less => "<",
-                    std::cmp::Ordering::Equal => "=",
-                    std::cmp::Ordering::Greater => ">",
-                },
-                numval_rhs
-            ),
-            VConstraint::Conjunction(constraint_lhs, constraint_rhs) => write!(f, "({})&({})", constraint_lhs, constraint_rhs),
-            VConstraint::Disjunction(constraint_lhs, constraint_rhs) => write!(f, "({})|({})", constraint_lhs, constraint_rhs),
-        }
-    }
-}
-
-fn numval_parser<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = VNumVal>
-    where I::Error: ParseError<I::Item, I::Range, I::Position>, // Necessary due to rust-lang/rust#24159
-{
-    pub fn epi_parser<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = EPlayerIndex>
-        where I::Error: ParseError<I::Item, I::Range, I::Position>, // Necessary due to rust-lang/rust#24159
-    {
-        (spaces(), char('('), spaces())
-            .with(choice!(
-                char('0').map(|_chr| EPlayerIndex::EPI0),
-                char('1').map(|_chr| EPlayerIndex::EPI1),
-                char('2').map(|_chr| EPlayerIndex::EPI2),
-                char('3').map(|_chr| EPlayerIndex::EPI3)
-            ))
-            .skip((spaces(), char(')'), spaces()))
-    }
-    choice!(
-        attempt((card_parser(), epi_parser()).map(|(card, epi)| VNumVal::Card(card, epi))),
-        (
-            choice!(
-                choice!(char('t'), char('T')).map(|_| VTrumpfOrFarbe::Trumpf),
-                farbe_parser().map(VTrumpfOrFarbe::Farbe)
-            ),
-            epi_parser()
-        ).map(|(trumpforfarbe, epi)| VNumVal::TrumpfOrFarbe(trumpforfarbe, epi)),
-        attempt((schlag_parser(), epi_parser()).map(|(eschlag, epi)| VNumVal::Schlag(eschlag, epi))),
-        (many1(digit())./*TODO use and_then and get rid of unwrap*/map(|string: /*TODO String needed?*/String|
-            unwrap!(string.parse::<usize>())
-        )).map(VNumVal::Const)
-    )
-}
-
-fn single_constraint_parser_<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = VConstraint>
-    where I::Error: ParseError<I::Item, I::Range, I::Position>, // Necessary due to rust-lang/rust#24159
-{
-    choice!(
-        (char('!').with(single_constraint_parser())).map(|constraint| VConstraint::Not(Box::new(constraint))),
-        char('(').with(constraint_parser()).skip(char(')')),
-        (
-            numval_parser(),
-            optional((
-                choice!(
-                    char('<').map(|_| std::cmp::Ordering::Less),
-                    string("==").map(|_| std::cmp::Ordering::Equal),
-                    char('>').map(|_| std::cmp::Ordering::Greater)
-                ),
-                numval_parser()
-            ))
-        ).map(|(numval_lhs, otplordnumval_rhs)| {
-            if let Some((ord, numval_rhs)) = otplordnumval_rhs {
-                VConstraint::Relation{numval_lhs, ord, numval_rhs}
-            } else {
-                VConstraint::Num(numval_lhs)
-            }
+        self.internal_eval(ahand, rules, |b| b, |n| n!=0, |_odynamic| {
+            println!("Unknown result data type.");
+            false
         })
-    )
-}
-parser!(
-    fn single_constraint_parser[I]()(I) -> VConstraint
-        where [I: Stream<Item = char>]
-    {
-        single_constraint_parser_()
     }
-);
-
-fn constraint_parser_<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = VConstraint>
-    where I::Error: ParseError<I::Item, I::Range, I::Position>, // Necessary due to rust-lang/rust#24159
-{
-    macro_rules! make_bin_op_parser{($parser:ident, $chr:expr, $op:ident) => {
-        let $parser = attempt((single_constraint_parser(), many1::<Vec<_>, _>((spaces(), char($chr), spaces()).with(single_constraint_parser()))))
-            .map(|(constraint, vecconstraint)| unwrap!(std::iter::once(constraint).chain(vecconstraint.into_iter()).reduce(|constraint_lhs, constraint_rhs|
-                VConstraint::$op(Box::new(constraint_lhs), Box::new(constraint_rhs))
-            )));
-    }}
-    make_bin_op_parser!(conjunction, '&', Conjunction);
-    make_bin_op_parser!(disjunction, '|', Disjunction);
-    choice!(conjunction, disjunction, attempt(single_constraint_parser()))
 }
 
-parser!(
-    fn constraint_parser[I]()(I) -> VConstraint
-        where [I: Stream<Item = char>]
-    {
-        constraint_parser_()
+impl std::fmt::Display for SConstraint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "{}", self.str_display)
     }
-);
-
-#[test]
-fn test_constraint_parser() {
-    fn test_internal(str_in: &str, constraint: VConstraint) {
-        assert_eq!(unwrap!(str_in.parse::<VConstraint>()), constraint);
-    }
-    use VConstraint::*;
-    use VNumVal::*;
-    use EFarbe::*;
-    use ESchlag::*;
-    use EPlayerIndex::*;
-    use VTrumpfOrFarbe::*;
-    use std::cmp::Ordering::*;
-    fn test_comparison(str_in: &str, numval_lhs: VNumVal, ord: std::cmp::Ordering, numval_rhs: VNumVal) {
-        let relation = Relation{numval_lhs, ord, numval_rhs};
-        test_internal(str_in, relation.clone());
-        test_internal(&format!("!{}", str_in), Not(Box::new(relation.clone())));
-        test_internal(&format!("!!{}", str_in), Not(Box::new(Not(Box::new(relation)))));
-    }
-    fn test_simple_greater_0(str_in: &str, numval: VNumVal) {
-        let relation = Num(numval);
-        test_internal(str_in, relation.clone());
-        test_internal(&format!("!{}", str_in), Not(Box::new(relation.clone())));
-        test_internal(&format!("!!{}", str_in), Not(Box::new(Not(Box::new(relation)))));
-    }
-    test_simple_greater_0("ea(1)", Card(ECard::new(Eichel, Ass), EPI1));
-    test_simple_greater_0("t(2)", TrumpfOrFarbe(Trumpf, EPI2));
-    test_simple_greater_0("e(0)", TrumpfOrFarbe(Farbe(Eichel), EPI0));
-    test_simple_greater_0("o(0)", Schlag(Ober, EPI0));
-    test_simple_greater_0("7(0)", Schlag(S7, EPI0));
-    test_simple_greater_0("7", Const(7));
-    test_comparison("ea(1)>e(0)", Card(ECard::new(Eichel, Ass), EPI1), Greater, TrumpfOrFarbe(Farbe(Eichel), EPI0));
-    test_comparison("t(2)==t(3)", TrumpfOrFarbe(Trumpf, EPI2), Equal, TrumpfOrFarbe(Trumpf, EPI3));
-    test_comparison("e(0)>3", TrumpfOrFarbe(Farbe(Eichel), EPI0), Greater, Const(3));
-    test_comparison("o(0)<3", Schlag(Ober, EPI0), Less, Const(3));
-    test_comparison("8(0)<2", Schlag(S8, EPI0), Less, Const(2));
-    test_comparison("8<2", Const(8), Less, Const(2));
-    test_internal(
-        "e(1)&e(2)",
-        Conjunction(
-            Box::new(Num(TrumpfOrFarbe(Farbe(Eichel), EPI1))),
-            Box::new(Num(TrumpfOrFarbe(Farbe(Eichel), EPI2))),
-        )
-    );
-    test_internal(
-        "e(1)|e(2)",
-        Disjunction(
-            Box::new(Num(TrumpfOrFarbe(Farbe(Eichel), EPI1))),
-            Box::new(Num(TrumpfOrFarbe(Farbe(Eichel), EPI2))),
-        )
-    );
-    // TODO more tests
 }
 
-impl std::str::FromStr for VConstraint {
+impl std::str::FromStr for SConstraint {
     type Err = Error;
     fn from_str(str_in: &str) -> Result<Self, Self::Err> {
-        parse_trimmed(str_in, "constraint", constraint_parser())
+        let mut engine = rhai::Engine::new();
+        engine.set_strict_variables(true);
+        engine
+            .register_type::<SContext>();
+        fn register_count_fn(
+            engine: &mut rhai::Engine,
+            str_name: &str,
+            fn_pred: impl Fn(&SContext, ECard)->bool + Clone + Send + Sync + 'static,
+        ) {
+            let fn_pred_clone = fn_pred.clone();
+            engine.register_fn(str_name, move |ctx: SContext, i_epi: SRhaiUsize| {
+                ctx.count(i_epi, |card| fn_pred_clone(&ctx, card))
+            });
+            engine.register_fn(str_name, move |ctx: SContext| {
+                ctx.counts(|card| fn_pred(&ctx, card))
+            });
+        }
+        for (str_trumpforfarbe, trumpforfarbe) in [
+            ("trumpf", VTrumpfOrFarbe::Trumpf),
+            ("eichel", VTrumpfOrFarbe::Farbe(EFarbe::Eichel)),
+            ("gras", VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
+            ("herz", VTrumpfOrFarbe::Farbe(EFarbe::Herz)),
+            ("schelln", VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
+        ] {
+            register_count_fn(&mut engine, str_trumpforfarbe, move |ctx, card| {
+                ctx.rules.trumpforfarbe(card)==trumpforfarbe
+            });
+        }
+        for (str_schlag, eschlag) in [
+            ("sieben", ESchlag::S7),
+            ("acht", ESchlag::S8),
+            ("neun", ESchlag::S9),
+            ("zehn", ESchlag::Zehn),
+            ("unter", ESchlag::Unter),
+            ("ober", ESchlag::Ober),
+            ("koenig", ESchlag::Koenig),
+            ("ass", ESchlag::Ass),
+        ] {
+            register_count_fn(&mut engine, str_schlag, move |_ctx, card| {
+                card.schlag()==eschlag
+            });
+        }
+        for (str_card, card) in <ECard as PlainEnum>::values().map(|card| (card.to_string(), card)) {
+            engine.register_fn(str_card, move |ctx: SContext, i_epi: SRhaiUsize| {
+                match ctx.count(i_epi, |card_hand| card_hand==card) {
+                    0 => false,
+                    1 => true,
+                    n => panic!("Unexpected card count: {n}"),
+                }
+            });
+        }
+        engine
+            .register_type::<EPlayerIndex>()
+            .register_fn("to_string", EPlayerIndex::to_string)
+        ;
+        engine.compile(format!("fn inspect(ctx) {{ {} }}", {
+            let mut str_in = str_in.to_string();
+            if !str_in.contains("ctx") {
+                let mut replace_old_style = |str_fn_old: &str, str_fn_new: &str| {
+                    let re = unwrap!(
+                        regex::RegexBuilder::new(&format!("\\b{}\\b", str_fn_old))
+                            .case_insensitive(true)
+                            .build()
+                    );
+                    str_in = re.replace_all(&str_in, format!("ctx.{}", str_fn_new)).to_string();
+                };
+                for str_card in <ECard as PlainEnum>::values().map(|card| card.to_string()) {
+                    replace_old_style(&str_card, &str_card);
+                }
+                for (str_fn_old, str_fn_new) in [
+                    ("e", "eichel"),
+                    ("g", "gras"),
+                    ("h", "herz"),
+                    ("s", "schelln"),
+                    ("t", "trumpf"),
+                    ("7", "sieben"),
+                    ("8", "acht"),
+                    ("9", "neun"),
+                    ("z", "zehn"),
+                    ("x", "zehn"),
+                    ("u", "unter"),
+                    ("o", "ober"),
+                    ("k", "koenig"),
+                    ("a", "ass"),
+                ] {
+                    replace_old_style(str_fn_old, str_fn_new);
+                }
+            }
+            str_in
+        }))
+            .or_else(|_err|
+                str_in.parse()
+                    .map_err(|err| format_err!("Cannot parse path: {:?}", err))
+                    .and_then(|path| engine.compile_file(path)
+                        .map_err(|err| format_err!("Cannot compile file: {:?}", err))
+                    )
+            )
+            .map(|ast| SConstraint{
+                engine,
+                ast,
+                str_display: str_in.to_string(),
+            })
     }
 }
 
