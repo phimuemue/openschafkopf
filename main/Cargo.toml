@@ -45,6 +45,8 @@ byteorder = "1"
 fern = "0"
 dirs = "2"
 log = "0"
+rhai = {version="1", features = ["sync"]}
+regex = "1"
 
 [dev-dependencies]
 serde_test = "1"

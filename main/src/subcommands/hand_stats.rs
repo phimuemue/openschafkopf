@@ -9,14 +9,14 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
             .takes_value(true)
             .multiple_occurrences(true)
             .help("Describes inspection target")
-            .long_help("Describes what the software will inspect. Example: \"EA(0)\" checks if player 0 has Eichel-Ass, \"T(2)\" counts the trumpf cards held by player 2. (Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).)")
+            .long_help("Describes what the software will inspect. Example: \"ctx.ea(0)\" checks if player 0 has Eichel-Ass, \"ctx.trumpf(2)\" counts the trumpf cards held by player 2. (Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).)") // TODO improve docs.
         )
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let vecconstraint = unwrap!(clapmatches.values_of("inspect"))
         .map(|str_inspect| /*-> Result<_, Error>*/ {
-            str_inspect.parse::<VConstraint>()
+            str_inspect.parse::<SConstraint>()
                 .map_err(|_| format_err!("Cannot parse inspection target."))
         })
         .collect::<Result<Vec<_>,_>>()?;
@@ -32,6 +32,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             enum VInspectValue {
                 Usize(usize),
                 Bool(bool),
+                Str(String), // For now, all "special" things are represented as strings. TODO? good idea?
+                Error,
             }
             let mut mapvecinspectvaluen = std::collections::HashMap::<Vec<_>,_>::new();
             for ahand in itahand {
@@ -40,7 +42,19 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     .entry(
                         vecconstraint.iter()
                             .map(|constraint| 
-                                constraint.internal_eval(&ahand, rules, VInspectValue::Bool, VInspectValue::Usize),
+                                constraint.internal_eval(
+                                    &ahand,
+                                    rules,
+                                    VInspectValue::Bool,
+                                    VInspectValue::Usize,
+                                    |odynamic| {
+                                        if let Some(dynamic)=odynamic {
+                                            VInspectValue::Str(dynamic.to_string())
+                                        } else {
+                                            VInspectValue::Error
+                                        }
+                                    },
+                                ),
                             )
                             .collect()
                     )
@@ -55,6 +69,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         match inspectvalue {
                             VInspectValue::Usize(n_val) => format!("{}", n_val),
                             VInspectValue::Bool(b_val) => format!("{}", b_val),
+                            VInspectValue::Str(str_val) => str_val,
+                            VInspectValue::Error => "<Error>".into(),
                         }
                     );
                 }

@@ -51,7 +51,7 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
             .long("constrain-hands")
             .takes_value(true)
             .help("Constrain simulated hands")
-            .long_help("Constrain simulated hands so that certain criteria are fulfilled. Example: \"4<T(0)&EA(1)\" only considers card distributions where player 0 has more than 4 Trumpf and player 1 has Eichel-Ass. (Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).)")
+            .long_help("Constrain simulated hands so that certain criteria are fulfilled. Example: \"4<ctx.trumpf(0) && ctx.ea(1)\" only considers card distributions where player 0 has more than 4 Trumpf and player 1 has Eichel-Ass. (Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).)") // TODO improve docs
         )
 }
 
@@ -184,7 +184,7 @@ pub fn with_common_args<FnWithArgs>(
             }
         }
         let oconstraint = if_then_some!(let Some(str_constrain_hands)=clapmatches.value_of("constrain_hands"), {
-            let relation = str_constrain_hands.parse::<VConstraint>().map_err(|_|format_err!("Cannot parse hand constraints"))?;
+            let relation = str_constrain_hands.parse::<SConstraint>().map_err(|_|format_err!("Cannot parse hand constraints"))?;
             if b_verbose {
                 println!("Constraint parsed as: {}", relation);
             }
