@@ -20,12 +20,14 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 .map_err(|_| format_err!("Cannot parse inspection target."))
         })
         .collect::<Result<Vec<_>,_>>()?;
-    for constraint in vecconstraint.iter() {
-        println!("{:?}", constraint);
-    }
     with_common_args(
         clapmatches,
-        |itahand, rules, _stichseq, _ahand_fixed_with_holes, _epi_position, _b_verbose| {
+        |itahand, rules, _stichseq, _ahand_fixed_with_holes, _epi_position, b_verbose| {
+            if b_verbose {
+                for constraint in vecconstraint.iter() {
+                    println!("{}", constraint);
+                }
+            }
             #[derive(PartialOrd, Ord, Hash, PartialEq, Eq)]
             enum VInspectValue {
                 Usize(usize),
