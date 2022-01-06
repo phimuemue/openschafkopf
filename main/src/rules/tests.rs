@@ -138,6 +138,20 @@ impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderTout {
 }
 
 #[test]
+fn test_rulesrufspiel_weglaufen() {
+    use EPlayerIndex::*;
+    test_rules(
+        "https://www.sauspiel.de/spiele/1180324214",
+        &rulesrufspiel_new_test(EPlayerIndex::EPI0, EFarbe::Gras, 20, 10, SLaufendeParams::new(10, 3)),
+        [[HO,GU,SU,HA,H9,H8,GK,G8],[GO,EU,HU,H7,EA,E9,SK,S7],[EO,SO,HK,EZ,E8,E7,SA,S9],[HZ,EK,GA,GZ,G9,G7,SZ,S8],],
+        vec![0,],
+        vec![],
+        &[(EPI0, [H8,H7,HK,HZ]),(EPI3, [G7,G8,HU,SO]),(EPI2, [SA,S8,HA,S7]),(EPI0, [SU,GO,EO,G9]),(EPI2, [E7,EK,H9,E9]),(EPI0, [HO,EU,S9,SZ]),(EPI0, [GK,SK,E8,GA]),(EPI3, [GZ,GU,EA,EZ]),],
+        [60, -60, -60, 60],
+    );
+}
+
+#[test]
 fn test_rulesrufspiel() {
     use EPlayerIndex::*;
     test_rules(
