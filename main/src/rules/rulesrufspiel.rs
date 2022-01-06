@@ -172,26 +172,30 @@ impl TRules for SRulesRufspiel {
         } else {
             assert!(!stichseq.current_stich().is_empty());
             let epi = unwrap!(stichseq.current_stich().current_playerindex());
-            let b_weggelaufen = stichseq.completed_stichs().iter()
-                .any(|stich| epi==stich.first_playerindex() && self.is_ruffarbe(*stich.first()));
             let card_first = *stichseq.current_stich().first();
-            if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) && !b_weggelaufen {
-                return std::iter::once(self.rufsau()).collect()
-            }
-            let veccard_allowed : SHandVector = hand.cards().iter().copied()
-                .filter(|&card| 
-                    self.rufsau()!=card 
-                    && self.trumpforfarbe(card)==self.trumpforfarbe(card_first)
+            if /*either weggelaufen or epi is not partner, and accordingly does not hold rufsau*/stichseq.completed_stichs().iter()
+                .any(|stich| epi==stich.first_playerindex() && self.is_ruffarbe(*stich.first()))
+            {
+                all_allowed_cards_within_stich_distinguish_farbe_frei(
+                    self,
+                    card_first,
+                    hand,
+                    /*fn_farbe_not_frei*/|veccard_same_farbe_nonempty| veccard_same_farbe_nonempty,
                 )
-                .collect();
-            if veccard_allowed.is_empty() {
-                if b_weggelaufen {
-                    hand.cards().clone()
-                } else {
-                    hand.cards().iter().copied().filter(|&card| self.rufsau()!=card).collect()
-                }
+            } else if self.is_ruffarbe(card_first) && hand.contains(self.rufsau()) {
+                std::iter::once(self.rufsau()).collect()
             } else {
-                veccard_allowed
+                let veccard_allowed : SHandVector = hand.cards().iter().copied()
+                    .filter(|&card| 
+                        self.rufsau()!=card 
+                        && self.trumpforfarbe(card)==self.trumpforfarbe(card_first)
+                    )
+                    .collect();
+                if veccard_allowed.is_empty() {
+                    hand.cards().iter().copied().filter(|&card| self.rufsau()!=card).collect()
+                } else {
+                    veccard_allowed
+                }
             }
         }
     }
