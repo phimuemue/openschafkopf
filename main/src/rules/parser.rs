@@ -7,16 +7,19 @@ use itertools::Itertools;
 pub fn parse_rule_description(
     str_rules_with_player: &str,
     (n_tarif_extra, n_tarif_ruf, n_tarif_solo): (isize, isize, isize),
-    fn_player_to_epi: impl FnOnce(&str)->Result<EPlayerIndex, Error>,
+    fn_player_to_epi: impl Fn(&str)->Result<EPlayerIndex, Error>,
 ) -> Result<Box<dyn TRules>, Error> {
     use crate::rules::rulesrufspiel::*;
     use crate::rules::rulessolo::*;
     use crate::rules::rulesramsch::*;
     use crate::rules::payoutdecider::*;
     let vecstr_rule_parts = str_rules_with_player.split(" von ").collect::<Vec<_>>();
-    let epi_active = if_then_some!(2==vecstr_rule_parts.len(), vecstr_rule_parts[1])
-        .ok_or_else(|| format_err!("Cannot determine active player: {}", str_rules_with_player)) // TODO not needed for ramsch
-        .and_then(fn_player_to_epi)?;
+    let ostr_epi_active = if_then_some!(2==vecstr_rule_parts.len(), vecstr_rule_parts[1]);
+    let get_epi_active = || -> Result<EPlayerIndex, Error> {
+        ostr_epi_active
+            .ok_or_else(|| format_err!("Cannot determine active player: {}", str_rules_with_player))
+            .and_then(|epi| fn_player_to_epi(epi))
+    };
     // Regarding laufende:
     // https://www.sauspiel.de/hilfe#71-beim-farbwenz-wurden-meine-laufende-nicht-berechnet
     // https://www.schafkopfschule.de/index.php/regeln.html?file=files/inhalte/dokumente/Spielen/Regeln/Schafkopfregeln-Aktuell-29.3.2007.pdf (Section 4.2 Spielabrechnung)
@@ -44,7 +47,7 @@ pub fn parse_rule_description(
     let make_sololike = |esololike| {
         macro_rules! make_sololike_internal {($payoutdecider: ident) => {
             Ok(sololike(
-                epi_active,
+                get_epi_active()?,
                 oefarbe,
                 esololike,
                 $payoutdecider::default_payoutdecider(
@@ -71,7 +74,7 @@ pub fn parse_rule_description(
                     EFarbe::Herz => Err(format_err!("Rufspiel incompatible with EFarbe::Herz")),
                     EFarbe::Eichel | EFarbe::Gras | EFarbe::Schelln => {
                         Ok(Box::new(SRulesRufspiel::new(
-                            epi_active,
+                            get_epi_active()?,
                             efarbe,
                             SPayoutDeciderParams::new(
                                 /*n_payout_base*/n_tarif_ruf,
