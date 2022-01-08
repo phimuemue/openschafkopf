@@ -291,7 +291,7 @@ impl SDetermineRules {
     }
 }
 
-#[derive(Debug, Clone)] // TODO? custom impl Debug
+#[derive(Debug, Clone, PartialEq, Eq)] // TODO? custom impl Debug
 pub struct SStichSequence {
     vecstich: ArrayVec<SStich, 9>,
     ekurzlang: EKurzLang,

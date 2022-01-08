@@ -36,6 +36,7 @@ fn main() -> Result<(), Error> {
         (cli, "cli")
         (rank_rules, "rank-rules")
         (suggest_card, "suggest-card")
+        (parse, "parse")
         (analyze, "analyze")
         (websocket, "websocket")
         (hand_stats, "hand-stats")

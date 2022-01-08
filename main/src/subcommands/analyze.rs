@@ -352,7 +352,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
     }
 }
 
-fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failure::Error>> + std::fmt::Debug + '_ {
+pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failure::Error>> + std::fmt::Debug + '_ {
     str_lines
         .lines()
         .map(|str_plain| {
