@@ -638,7 +638,6 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
     }
 
     pub fn zugeben(&mut self, card: SCard, epi: EPlayerIndex) -> Result<(), Error> {
-        info!("Player {} wants to play {}", epi, card);
         if Some(epi)!=self.which_player_can_do_something().map(|gameaction| gameaction.0) {
             bail!("Wrong player index");
         }
@@ -650,9 +649,6 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         }
         self.ahand[epi].play_card(card);
         self.stichseq.zugeben(card, self.rules.as_ref());
-        for epi in EPlayerIndex::values() {
-            info!("Hand {}: {}", epi, self.ahand[epi]);
-        }
         Ok(())
     }
 
