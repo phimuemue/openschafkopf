@@ -2,7 +2,6 @@ use crate::subcommands::analyze::{analyze_sauspiel_html, analyze_plain}; // TODO
 use crate::game::*;
 use crate::rules::ruleset::{VStockOrT};
 use crate::util::*;
-use std::io::Read;
 use itertools::Itertools;
 
 pub fn subcommand(str_subcommand: &str) -> clap::App {
@@ -16,40 +15,29 @@ pub fn subcommand(str_subcommand: &str) -> clap::App {
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
-    let itstr_file = unwrap!(clapmatches.values_of("file"));
-    for str_file in itstr_file {
-        for globresult in glob::glob(str_file)? {
-            match globresult {
-                Ok(path) => {
-                    let str_input = &via_out_param_result(|str_html|
-                        std::fs::File::open(&path)?.read_to_string(str_html)
-                    )?.0;
-                    if let Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game), ..}) = analyze_sauspiel_html(str_input) {
-                        let str_out = format!("{}{}: {}",
-                            game.rules.to_string(),
-                            if let Some(epi) = game.rules.playerindex() {
-                                format!(" von {}", epi)
-                            } else {
-                                "".into()
-                            },
-                            game.stichseq.visible_cards()
-                                .map(|(_epi, card)| card)
-                                .join(" "),
-                        );
-                        let game_check = unwrap!(unwrap!(analyze_plain(&str_out).exactly_one()));
-                        assert_eq!(game_check.rules.to_string(), game.rules.to_string()); // TODO? better comparison?
-                        assert_eq!(game_check.rules.playerindex(), game.rules.playerindex());
-                        assert_eq!(game_check.stichseq, game.stichseq);
-                        println!("{}", str_out);
+    super::glob_files(
+        unwrap!(clapmatches.values_of("file")),
+        |path, str_input| {
+            if let Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game), ..}) = analyze_sauspiel_html(&str_input) {
+                let str_out = format!("{}{}: {}",
+                    game.rules.to_string(),
+                    if let Some(epi) = game.rules.playerindex() {
+                        format!(" von {}", epi)
                     } else {
-                        eprintln!("Nothing found in {:?}: Trying to continue.", path);
-                    }
-                },
-                Err(e) => {
-                    eprintln!("Error: {:?}. Trying to continue.", e);
-                },
+                        "".into()
+                    },
+                    game.stichseq.visible_cards()
+                        .map(|(_epi, card)| card)
+                        .join(" "),
+                );
+                let game_check = unwrap!(unwrap!(analyze_plain(&str_out).exactly_one()));
+                assert_eq!(game_check.rules.to_string(), game.rules.to_string()); // TODO? better comparison?
+                assert_eq!(game_check.rules.playerindex(), game.rules.playerindex());
+                assert_eq!(game_check.stichseq, game.stichseq);
+                println!("{}", str_out);
+            } else {
+                eprintln!("Nothing found in {:?}: Trying to continue.", path);
             }
-        }
-    }
-    Ok(())
+        },
+    )
 }

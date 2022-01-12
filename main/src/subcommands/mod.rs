@@ -13,6 +13,7 @@ use crate::util::*;
 use crate::rules::ruleset::SRuleSet;
 use crate::ai::SAi;
 use crate::primitives::hand::SHand;
+use std::io::Read;
 
 fn clap_arg(str_long: &'static str, str_default: &'static str) -> clap::Arg<'static, 'static> {
     clap::Arg::with_name(str_long)
@@ -42,4 +43,26 @@ pub fn ai(subcommand_matches: &clap::ArgMatches) -> SAi {
 
 pub fn str_to_hand(str_hand: &str) -> Result<SHand, Error> {
     Ok(SHand::new_from_vec(crate::primitives::cardvector::parse_cards(str_hand).ok_or_else(||format_err!("Could not parse hand."))?))
+}
+
+pub fn glob_files<'str_glob>(
+    itstr_glob: impl Iterator<Item=&'str_glob str>,
+    mut fn_ok: impl FnMut(std::path::PathBuf, String),
+) -> Result<(), Error> {
+    for str_glob in itstr_glob {
+        for globresult in glob::glob(str_glob)? {
+            match globresult {
+                Ok(path) => {
+                    let str_input = via_out_param_result(|str_html|
+                        std::fs::File::open(&path)?.read_to_string(str_html)
+                    )?.0;
+                    fn_ok(path, str_input);
+                },
+                Err(e) => {
+                    eprintln!("Error: {:?}. Trying to continue.", e);
+                },
+            }
+        }
+    }
+    Ok(())
 }
