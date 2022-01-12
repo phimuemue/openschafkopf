@@ -32,8 +32,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             } else {
                                 "".into()
                             },
-                            game.stichseq.visible_stichs().iter()
-                                .flat_map(|stich| stich.iter().map(|(_epi, card)| card))
+                            game.stichseq.visible_cards()
+                                .map(|(_epi, card)| card)
                                 .join(" "),
                         );
                         let game_check = unwrap!(unwrap!(analyze_plain(&str_out).exactly_one()));

@@ -123,9 +123,7 @@ impl TRules for SRulesRufspiel {
     fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
         let epi_coplayer = debug_verify_eq!(
             rulestatecache.fixed.who_has_card(self.rufsau()),
-            stichseq.visible_stichs()
-                .iter()
-                .flat_map(|stich| stich.iter())
+            stichseq.visible_cards()
                 .find(|&(_, card)| *card==self.rufsau())
                 .map(|(epi, _)| epi)
                 .unwrap_or_else(|| {
