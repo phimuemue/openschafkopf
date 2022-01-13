@@ -18,7 +18,7 @@ pub fn parse_rule_description(
     let get_epi_active = || -> Result<EPlayerIndex, Error> {
         ostr_epi_active
             .ok_or_else(|| format_err!("Cannot determine active player: {}", str_rules_with_player))
-            .and_then(|epi| fn_player_to_epi(epi))
+            .and_then(&fn_player_to_epi)
     };
     // Regarding laufende:
     // https://www.sauspiel.de/hilfe#71-beim-farbwenz-wurden-meine-laufende-nicht-berechnet
