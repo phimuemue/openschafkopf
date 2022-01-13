@@ -20,7 +20,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         |path, str_input| {
             if let Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game), ..}) = analyze_sauspiel_html(&str_input) {
                 let str_out = format!("{}{}: {}",
-                    game.rules.to_string(),
+                    game.rules,
                     if let Some(epi) = game.rules.playerindex() {
                         format!(" von {}", epi)
                     } else {

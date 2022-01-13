@@ -626,7 +626,7 @@ impl STable {
                                                 "Du bist an {}. Stelle. Von {}. Stelle wird {} geboten. Spielst Du etwas staerkeres?", // TODO umlaut-tactics?
                                                 epi.to_usize() + 1, // EPlayerIndex is 0-based
                                                 determinerules.tplepirules_current_bid.0.to_usize() + 1, // EPlayerIndex is 0-based
-                                                determinerules.tplepirules_current_bid.1.to_string(),
+                                                determinerules.tplepirules_current_bid.1,
                                             ),
                                             itgamephaseaction_rules,
                                             self_mutex.clone(),
