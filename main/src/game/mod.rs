@@ -436,7 +436,7 @@ impl SStichSequence {
 
 #[derive(Debug, Clone)]
 pub struct SGameGeneric<Ruleset, GameAnnouncements, DetermineRules> {
-    aveccard: EnumMap<EPlayerIndex, SHandVector>, // remembers order of dealt cards
+    pub aveccard: EnumMap<EPlayerIndex, SHandVector>, // remembers order of dealt cards
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     pub doublings : SDoublings,
     gameannouncements : GameAnnouncements,
