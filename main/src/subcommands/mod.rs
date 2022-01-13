@@ -10,9 +10,11 @@ mod handconstraint;
 mod common_given_game;
 
 use crate::util::*;
-use crate::rules::ruleset::SRuleSet;
+use crate::rules::ruleset::{SRuleSet, VStockOrT};
 use crate::ai::SAi;
 use crate::primitives::hand::SHand;
+use crate::primitives::card::EKurzLang;
+use crate::game::*;
 use std::io::Read;
 
 fn clap_arg(str_long: &'static str, str_default: &'static str) -> clap::Arg<'static, 'static> {
@@ -65,4 +67,26 @@ pub fn glob_files<'str_glob>(
         }
     }
     Ok(())
+}
+
+pub fn gameresult_to_dir<Ruleset, GameAnnouncements, DetermineRules>(
+    gameresult: &SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules>,
+) -> std::path::PathBuf {
+    let path_dst = std::path::PathBuf::new();
+    match &gameresult.stockorgame {
+        VStockOrT::Stock(()) => path_dst.join("stock"),
+        VStockOrT::OrT(game) => {
+            let mut path_gameresult = path_dst
+                .join(match game.kurzlang() {
+                    EKurzLang::Kurz => "kurz",
+                    EKurzLang::Lang => "lang",
+                })
+                .join(game.rules.to_string());
+            if let Some(epi) = game.rules.playerindex() {
+                path_gameresult = path_gameresult
+                    .join(&format!("von {}", epi.to_usize()));
+            }
+            path_gameresult
+        },
+    }
 }

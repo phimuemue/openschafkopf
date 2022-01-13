@@ -2,8 +2,6 @@ use futures::prelude::*;
 
 use crate::util::*;
 use crate::subcommands::analyze::analyze_sauspiel_html; // TODO? own, shared module
-use crate::rules::ruleset::VStockOrT;
-use crate::primitives::card::EKurzLang;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::App {
     clap::SubCommand::with_name(str_subcommand)
@@ -68,22 +66,7 @@ async fn internal_run(
                         Ok(str_text) => {
                             match analyze_sauspiel_html(&str_text) {
                                 Ok(gameresult) => {
-                                    let path_gameresult = match gameresult.stockorgame {
-                                        VStockOrT::Stock(()) => path_dst.join("stock"),
-                                        VStockOrT::OrT(game) => {
-                                            let mut path_gameresult = path_dst
-                                                .join(match game.kurzlang() {
-                                                    EKurzLang::Kurz => "kurz",
-                                                    EKurzLang::Lang => "lang",
-                                                })
-                                                .join(game.rules.to_string());
-                                            if let Some(epi) = game.rules.playerindex() {
-                                                path_gameresult = path_gameresult
-                                                    .join(&format!("von {}", epi.to_usize()));
-                                            }
-                                            path_gameresult
-                                        },
-                                    };
+                                    let path_gameresult = path_dst.join(super::gameresult_to_dir(&gameresult));
                                     unwrap!(async_std::fs::create_dir_all(&path_gameresult).await);
                                     unwrap!(unwrap!(async_std::fs::File::create(
                                         path_gameresult.join(&format!("{}.html", i))
