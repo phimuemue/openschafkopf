@@ -98,16 +98,11 @@ fn detect_expensive_all_possible_hands() {
                         .collect::<Vec<_>>();
                     let assert_bound = |n, n_detect| {
                         assert!(n < n_detect,
-                            "n: {}\nrules: {}\nahand: {:#?}\nvecstich:{:?}",
+                            "n: {}\nrules: {}\nahand: {}\nvecstich:{}",
                             n,
                             game.rules,
-                            game.ahand.iter()
-                                .map(ToString::to_string)
-                                .collect::<Vec<_>>(),
-                            game.stichseq.visible_stichs()
-                                .iter()
-                                .map(ToString::to_string)
-                                .collect::<Vec<_>>(),
+                            game.ahand.iter().join(", "),
+                            game.stichseq.visible_stichs().iter().join(", "),
                         );
                     };
                     assert_bound(vecahand.len(), 2000);
