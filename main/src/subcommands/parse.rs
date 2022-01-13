@@ -1,4 +1,4 @@
-use crate::subcommands::analyze::{analyze_sauspiel_html, analyze_plain}; // TODO move functions to own module
+use crate::subcommands::analyze::analyze_sauspiel_html; // TODO move functions to own module
 use crate::game::*;
 use crate::rules::ruleset::{VStockOrT};
 use crate::util::*;
@@ -86,23 +86,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         unwrap!(clapmatches.values_of("file")),
         |path, str_input| {
             if let Ok(ref gameresult@SGameResultGeneric{stockorgame: VStockOrT::OrT(ref game), ..}) = analyze_sauspiel_html(&str_input) {
-                let str_out = format!("{}{}: {}",
-                    game.rules,
-                    if let Some(epi) = game.rules.playerindex() {
-                        format!(" von {}", epi)
-                    } else {
-                        "".into()
-                    },
-                    game.stichseq.visible_cards()
-                        .map(|(_epi, card)| card)
-                        .join(" "),
-                );
-                {
-                    let game_check = unwrap!(unwrap!(analyze_plain(&str_out).exactly_one()));
-                    assert_eq!(game_check.rules.to_string(), game.rules.to_string()); // TODO? better comparison?
-                    assert_eq!(game_check.rules.playerindex(), game.rules.playerindex());
-                    assert_eq!(game_check.stichseq, game.stichseq);
-                }
                 let mut game_csv = SGame::new(
                     game.aveccard.clone(),
                     game.doublings.clone(),
