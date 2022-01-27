@@ -3,7 +3,7 @@ use crate::rules::{payoutdecider::*, trumpfdecider::*, *};
 use crate::util::*;
 use std::{cmp::Ordering, fmt, marker::PhantomData};
 
-pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + TPayoutDecider + Send {
+pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + TPayoutDecider<SPlayerParties13> + Send {
     fn priority(&self) -> VGameAnnouncementPriority;
     fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Self> {
         None
@@ -22,7 +22,7 @@ impl TPointsToWin for VGameAnnouncementPrioritySoloLike {
     }
 }
 
-impl TPayoutDecider for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
+impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
     fn payout<Rules>(
         &self,
         rules: &Rules,
@@ -91,7 +91,7 @@ pub struct SPayoutDeciderTout {
     i_prio: isize,
 }
 
-impl TPayoutDecider for SPayoutDeciderTout {
+impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderTout {
     fn payout<Rules>(
         &self,
         if_dbg_else!({rules}{_rules}): &Rules,
@@ -187,7 +187,7 @@ fn cards_valid_for_sie<Rules: TRulesNoObj, ItCard: Iterator<Item=SCard>>(
     }
 }
 
-impl TPayoutDecider for SPayoutDeciderSie {
+impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderSie {
     fn payout<Rules>(
         &self,
         rules: &Rules,

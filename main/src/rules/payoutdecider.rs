@@ -159,13 +159,13 @@ pub fn internal_payout(n_payout_single_player: isize, playerparties: &impl TPlay
     })
 }
 
-pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
+pub trait TPayoutDecider<PlayerParties> : Sync + 'static + Clone + fmt::Debug {
     fn payout<Rules>(
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
-        playerparties13: &SPlayerParties13,
+        playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRulesNoObj;
 
@@ -175,7 +175,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
         stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
-        playerparties13: &SPlayerParties13,
+        playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>
         where Rules: TRulesNoObj;
 }

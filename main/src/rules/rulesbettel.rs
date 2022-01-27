@@ -48,7 +48,7 @@ struct SPayoutDeciderBettel {
     n_payout_base : isize,
 }
 
-impl TPayoutDecider for SPayoutDeciderBettel {
+impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderBettel {
     fn payout<Rules>(
         &self,
         if_dbg_else!({rules}{_rules}): &Rules,
