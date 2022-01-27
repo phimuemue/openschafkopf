@@ -1,6 +1,6 @@
 use crate::primitives::*;
 use crate::rules::{
-    payoutdecider::internal_payout, rulessolo::TPayoutDecider, trumpfdecider::*, *,
+    payoutdecider::{internal_payout, TPayoutDecider}, trumpfdecider::*, *,
 };
 use crate::util::*;
 use std::marker::PhantomData;

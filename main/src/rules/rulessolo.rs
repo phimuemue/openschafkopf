@@ -3,27 +3,6 @@ use crate::rules::{payoutdecider::*, trumpfdecider::*, *};
 use crate::util::*;
 use std::{cmp::Ordering, fmt, marker::PhantomData};
 
-pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
-    fn payout<Rules>(
-        &self,
-        rules: &Rules,
-        rulestatecache: &SRuleStateCache,
-        gamefinishedstiche: SStichSequenceGameFinished,
-        playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, isize>
-        where Rules: TRulesNoObj;
-
-    fn payouthints<Rules>(
-        &self,
-        rules: &Rules,
-        stichseq: &SStichSequence,
-        ahand: &EnumMap<EPlayerIndex, SHand>,
-        rulestatecache: &SRuleStateCache,
-        playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>
-        where Rules: TRulesNoObj;
-}
-
 pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + TPayoutDecider + Send {
     fn priority(&self) -> VGameAnnouncementPriority;
     fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Self> {
