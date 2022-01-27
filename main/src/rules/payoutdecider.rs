@@ -35,13 +35,87 @@ pub struct SPayoutDeciderPointBased<PointsToWin> {
     pub pointstowin: PointsToWin,
 }
 
+fn payout_point_based (
+    pointstowin: &impl TPointsToWin,
+    if_dbg_else!({rules}{_rules}): &impl TRulesNoObj,
+    rulestatecache: &SRuleStateCache,
+    if_dbg_else!({gamefinishedstiche}{_gamefinishedstiche}): SStichSequenceGameFinished,
+    playerparties: &impl TPlayerParties,
+    fn_payout_one_player: impl FnOnce(isize, bool)->isize,
+) -> EnumMap<EPlayerIndex, isize> {
+    let n_points_primary_party = debug_verify_eq!(
+        EPlayerIndex::values()
+            .filter(|epi| playerparties.is_primary_party(*epi))
+            .map(|epi| rulestatecache.changing.mapepipointstichcount[epi].n_point)
+            .sum::<isize>(),
+        gamefinishedstiche.get().completed_stichs_winner_index(rules)
+            .filter(|&(_stich, epi_winner)| playerparties.is_primary_party(epi_winner))
+            .map(|(stich, _epi_winner)| card_points::points_stich(stich))
+            .sum::<isize>()
+    );
+    let b_primary_party_wins = n_points_primary_party >= pointstowin.points_to_win();
+    internal_payout(
+        fn_payout_one_player(n_points_primary_party, b_primary_party_wins),
+        playerparties,
+        b_primary_party_wins,
+    )
+}
+
+fn payouthints_point_based(
+    pointstowin: &impl TPointsToWin,
+    if_dbg_else!({rules}{_rules}): &impl TRulesNoObj,
+    if_dbg_else!({stichseq}{_stichseq}): &SStichSequence,
+    _ahand: &EnumMap<EPlayerIndex, SHand>,
+    rulestatecache: &SRuleStateCache,
+    playerparties: &impl TPlayerParties,
+    fn_payout_one_player_if_premature_winner: impl FnOnce(isize)->isize,
+) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    let mapbn_points = debug_verify_eq!(
+        EPlayerIndex::values()
+            .fold(bool::map_from_fn(|_b_primary| 0), mutate_return!(|mapbn_points, epi| {
+                mapbn_points[/*b_primary*/playerparties.is_primary_party(epi)] += rulestatecache.changing.mapepipointstichcount[epi].n_point;
+            })),
+        stichseq.completed_stichs_winner_index(rules)
+            .fold(bool::map_from_fn(|_b_primary| 0), mutate_return!(|mapbn_points, (stich, epi_winner)| {
+                mapbn_points[/*b_primary*/playerparties.is_primary_party(epi_winner)] += card_points::points_stich(stich);
+            }))
+    );
+    let internal_payouthints = |n_points_primary_party, b_premature_winner_is_primary_party| {
+        internal_payout(
+            fn_payout_one_player_if_premature_winner(n_points_primary_party),
+            playerparties,
+            b_premature_winner_is_primary_party,
+        )
+            .map(|n_payout| {
+                 assert_ne!(0, *n_payout);
+                 SInterval::from_tuple(tpl_flip_if(0<*n_payout, (None, Some(*n_payout))))
+            })
+    };
+    if /*b_premature_winner_is_primary_party*/ mapbn_points[/*b_primary*/true] >= pointstowin.points_to_win() {
+        internal_payouthints(
+            /*minimum number of points that primary party can reach*/mapbn_points[/*b_primary*/true],
+            /*b_premature_winner_is_primary_party*/true,
+        )
+    } else if mapbn_points[/*b_primary*/false] > 120-pointstowin.points_to_win() {
+        // mapbn_points[/*b_primary*/false] > 120-pointstowin.points_to_win()
+        // pointstowin.points_to_win() > 120-mapbn_points[/*b_primary*/false]
+        // 120-mapbn_points[/*b_primary*/false] < pointstowin.points_to_win()
+        internal_payouthints(
+            /*maximum number of points that primary party can reach*/120-mapbn_points[/*b_primary*/false],
+            /*b_premature_winner_is_primary_party*/false,
+        )
+    } else {
+        EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
+    }
+}
+
 impl<
     PointsToWin: TPointsToWin,
     PlayerParties: TPlayerParties,
 > TPayoutDecider<PlayerParties> for SPayoutDeciderPointBased<PointsToWin> {
     fn payout<Rules>(
         &self,
-        if_dbg_else!({rules}{_rules}): &Rules,
+        rules: &Rules,
         rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties: &PlayerParties,
@@ -49,19 +123,14 @@ impl<
         where 
             Rules: TRulesNoObj,
     {
-        let n_points_primary_party = debug_verify_eq!(
-            EPlayerIndex::values()
-                .filter(|epi| playerparties.is_primary_party(*epi))
-                .map(|epi| rulestatecache.changing.mapepipointstichcount[epi].n_point)
-                .sum::<isize>(),
-            gamefinishedstiche.get().completed_stichs_winner_index(rules)
-                .filter(|&(_stich, epi_winner)| playerparties.is_primary_party(epi_winner))
-                .map(|(stich, _epi_winner)| card_points::points_stich(stich))
-                .sum::<isize>()
-        );
-        let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
-        internal_payout(
-            /*n_payout_single_player*/ self.payoutparams.n_payout_base
+        payout_point_based(
+            &self.pointstowin,
+            rules,
+            rulestatecache,
+            gamefinishedstiche,
+            playerparties,
+            /*fn_payout_one_player*/|n_points_primary_party, b_primary_party_wins| {
+                self.payoutparams.n_payout_base
                 + { 
                     if debug_verify_eq!(
                         EPlayerIndex::values()
@@ -78,48 +147,30 @@ impl<
                         0 // "nothing", i.e. neither schneider nor schwarz
                     }
                 }
-                + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(rulestatecache, gamefinishedstiche, playerparties),
-            playerparties,
-            b_primary_party_wins,
+                + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(rulestatecache, gamefinishedstiche, playerparties)
+            },
         )
     }
 
     fn payouthints<Rules: TRulesNoObj>(
         &self,
-        if_dbg_else!({rules}{_rules}): &Rules,
-        if_dbg_else!({stichseq}{_stichseq}): &SStichSequence,
-        _ahand: &EnumMap<EPlayerIndex, SHand>,
+        rules: &Rules,
+        stichseq: &SStichSequence,
+        ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-        let mapbn_points = debug_verify_eq!(
-            EPlayerIndex::values()
-                .fold(bool::map_from_fn(|_b_primary| 0), mutate_return!(|mapbn_points, epi| {
-                    mapbn_points[/*b_primary*/playerparties.is_primary_party(epi)] += rulestatecache.changing.mapepipointstichcount[epi].n_point;
-                })),
-            stichseq.completed_stichs_winner_index(rules)
-                .fold(bool::map_from_fn(|_b_primary| 0), mutate_return!(|mapbn_points, (stich, epi_winner)| {
-                    mapbn_points[/*b_primary*/playerparties.is_primary_party(epi_winner)] += card_points::points_stich(stich);
-                }))
-        );
-        let internal_payouthints = |b_primary_party_wins| {
-            internal_payout(
-                /*n_payout_single_player*/ self.payoutparams.n_payout_base,
-                playerparties,
-                b_primary_party_wins,
-            )
-                .map(|n_payout| {
-                     assert_ne!(0, *n_payout);
-                     SInterval::from_tuple(tpl_flip_if(0<*n_payout, (None, Some(*n_payout))))
-                })
-        };
-        if /*b_primary_party_wins*/ mapbn_points[/*b_primary*/true] >= self.pointstowin.points_to_win() {
-            internal_payouthints(/*b_primary_party_wins*/true)
-        } else if mapbn_points[/*b_primary*/false] > 120-self.pointstowin.points_to_win() {
-            internal_payouthints(/*b_primary_party_wins*/false)
-        } else {
-            EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
-        }
+        payouthints_point_based(
+            &self.pointstowin,
+            rules,
+            stichseq,
+            ahand,
+            rulestatecache,
+            playerparties,
+            /*fn_payout_one_player_if_premature_winner*/|_n_points_primary_party| {
+                self.payoutparams.n_payout_base
+            },
+        )
     }
 }
 
