@@ -5,11 +5,13 @@ use crate::util::*;
 use std::{cmp::Ordering, fmt};
 
 #[derive(Clone, Debug)]
-pub struct SRulesRufspiel {
+pub struct SRulesRufspielGeneric<PayoutDecider: TPayoutDecider<SPlayerParties22>> {
     epi : EPlayerIndex,
     efarbe : EFarbe,
-    payoutdecider: SPayoutDeciderPointBased<SPointsToWin61>,
+    payoutdecider: PayoutDecider,
 }
+
+pub type SRulesRufspiel = SRulesRufspielGeneric<SPayoutDeciderPointBased<SPointsToWin61>>;
 
 impl fmt::Display for SRulesRufspiel {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -51,7 +53,7 @@ impl TRulesNoObj for SRulesRufspiel {
     impl_rules_trumpf_noobj!(STrumpfDeciderRufspiel);
 }
 
-struct SPlayerParties22 {
+pub struct SPlayerParties22 {
     aepi_pri: [EPlayerIndex; 2],
 }
 

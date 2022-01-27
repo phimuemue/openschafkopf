@@ -35,13 +35,16 @@ pub struct SPayoutDeciderPointBased<PointsToWin> {
     pub pointstowin: PointsToWin,
 }
 
-impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
-    pub fn payout<Rules>(
+impl<
+    PointsToWin: TPointsToWin,
+    PlayerParties: TPlayerParties,
+> TPayoutDecider<PlayerParties> for SPayoutDeciderPointBased<PointsToWin> {
+    fn payout<Rules>(
         &self,
         if_dbg_else!({rules}{_rules}): &Rules,
         rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
-        playerparties: &impl TPlayerParties,
+        playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
         where 
             Rules: TRulesNoObj,
@@ -81,7 +84,7 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
         )
     }
 
-    pub fn payouthints<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(
+    fn payouthints<Rules: TRulesNoObj>(
         &self,
         if_dbg_else!({rules}{_rules}): &Rules,
         if_dbg_else!({stichseq}{_stichseq}): &SStichSequence,

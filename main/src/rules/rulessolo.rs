@@ -22,33 +22,6 @@ impl TPointsToWin for VGameAnnouncementPrioritySoloLike {
     }
 }
 
-impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
-    fn payout<Rules>(
-        &self,
-        rules: &Rules,
-        rulestatecache: &SRuleStateCache,
-        gamefinishedstiche: SStichSequenceGameFinished,
-        playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, isize>
-        where Rules: TRulesNoObj
-    {
-        self.payout(rules, rulestatecache, gamefinishedstiche, playerparties13)
-    }
-
-    fn payouthints<Rules>(
-        &self,
-        rules: &Rules,
-        stichseq: &SStichSequence,
-        ahand: &EnumMap<EPlayerIndex, SHand>,
-        rulestatecache: &SRuleStateCache,
-        playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>
-        where Rules: TRulesNoObj
-    {
-        self.payouthints(rules, stichseq, ahand, rulestatecache, playerparties13)
-    }
-}
-
 impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::SoloLike(self.pointstowin.clone())
