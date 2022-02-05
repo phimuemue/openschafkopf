@@ -483,11 +483,16 @@ impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Rul
 
     fn finish_success(self) -> Self::Finish {
         assert!(self.kurzlang().cards_per_player()==self.completed_stichs().len());
+        let gamefinishedstiche = SStichSequenceGameFinished::new(&self.stichseq);
         SGameResultGeneric {
-            an_payout : self.rules.payout(
-                SStichSequenceGameFinished::new(&self.stichseq),
+            an_payout : self.rules.payout_with_cache(
+                gamefinishedstiche,
                 stoss_and_doublings(&self.vecstoss, &self.doublings),
                 self.n_stock,
+                &SRuleStateCache::new_from_gamefinishedstiche(
+                    gamefinishedstiche,
+                    |stich| self.rules.winner_index(stich),
+                ),
             ),
             stockorgame: VStockOrT::OrT(self),
         }
