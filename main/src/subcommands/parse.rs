@@ -80,17 +80,19 @@ fn neural_network_input_to_card(n: usize) -> Result<Option<SCard>, Error> {
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let mut mapstrfile = std::collections::HashMap::new();
     fn write_columns<
-        PlayerIndex: std::fmt::Display,
+        PlayerIndexActive: std::fmt::Display,
+        PlayerIndexStichSeq: std::fmt::Display,
         CardIndicatorVariable: std::fmt::Display,
         CardStichSeq: std::fmt::Display,
         CardZugeben: std::fmt::Display,
     >(
         wrtr: &mut impl std::io::Write,
-        oepi_active: Option<PlayerIndex>,
+        oepi_active: Option<PlayerIndexActive>,
         fn_card_in_hand: impl Fn(usize, SCard) -> CardIndicatorVariable,
         fn_card_allowed: impl Fn(usize, SCard) -> CardIndicatorVariable,
         stichseq: &SStichSequence,
         fn_card_stichseq: impl Fn(usize, Option<SCard>) -> CardStichSeq,
+        fn_epi_stichseq: impl Fn(usize, Option<EPlayerIndex>) -> PlayerIndexStichSeq,
         card_zugeben: CardZugeben,
     ) {
         if let Some(ref epi_active)=oepi_active {
@@ -116,12 +118,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         }
         write_indicator_vars(wrtr, n_cards_total, fn_card_in_hand);
         write_indicator_vars(wrtr, n_cards_total, fn_card_allowed);
-        for (i_card_stichseq, ocard_stichseq) in stichseq.visible_cards()
-            .map(|(_epi, &card_stichseq)| Some(card_stichseq))
+        for (i_card_stichseq, otplepicard_stichseq) in stichseq.visible_cards()
+            .map(|(epi, &card_stichseq)| (Some((epi, card_stichseq))))
             .pad_using(n_cards_total, |_| None)
             .enumerate()
         {
-            unwrap!(write!(wrtr, "{},", fn_card_stichseq(i_card_stichseq, ocard_stichseq)));
+            unwrap!(write!(wrtr, "{},", fn_card_stichseq(i_card_stichseq, otplepicard_stichseq.map(|tplepicard| tplepicard.1))));
+            unwrap!(write!(wrtr, "{},", fn_epi_stichseq(i_card_stichseq, otplepicard_stichseq.map(|tplepicard| tplepicard.0))));
         }
         unwrap!(write!(wrtr, "{}", card_zugeben));
         unwrap!(write!(wrtr, "\n"));
@@ -154,6 +157,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             /*fn_card_allowed*/|i_card, _card| format!("card_allowed_{}", i_card),
                             &game.stichseq,
                             /*fn_card_stichseq*/|i_card, _ocard| format!("card_stichseq_{}", i_card),
+                            /*fn_epi_stichseq*/|i_card, _oepi| format!("epi_stichseq_{}", i_card),
                             /*card_zugeben*/"card_zugeben",
                         );
                         file
@@ -170,6 +174,15 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         &game_csv.stichseq,
                         /*fn_card_stichseq*/|_i_card, ocard| {
                             card_to_neural_network_input(ocard)
+                        },
+                        /*fn_epi_stichseq*/|_i_card, oepi| {
+                            if let Some(epi) = oepi {
+                                let i_epi_1_based = epi.to_usize() + 1;
+                                assert!(0!=i_epi_1_based);
+                                i_epi_1_based
+                            } else {
+                                0
+                            }
                         },
                         /*card_zugeben*/card_to_neural_network_input(Some(card_zugeben)),
                     );
