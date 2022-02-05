@@ -79,6 +79,53 @@ fn neural_network_input_to_card(n: usize) -> Result<Option<SCard>, Error> {
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let mut mapstrfile = std::collections::HashMap::new();
+    fn write_columns<
+        PlayerIndex: std::fmt::Display,
+        CardIndicatorVariable: std::fmt::Display,
+        CardStichSeq: std::fmt::Display,
+        CardZugeben: std::fmt::Display,
+    >(
+        wrtr: &mut impl std::io::Write,
+        oepi_active: Option<PlayerIndex>,
+        fn_card_in_hand: impl Fn(usize, SCard) -> CardIndicatorVariable,
+        fn_card_allowed: impl Fn(usize, SCard) -> CardIndicatorVariable,
+        stichseq: &SStichSequence,
+        fn_card_stichseq: impl Fn(usize, Option<SCard>) -> CardStichSeq,
+        card_zugeben: CardZugeben,
+    ) {
+        if let Some(ref epi_active)=oepi_active {
+            unwrap!(write!(wrtr, "{},", epi_active));
+        }
+        let n_cards_total = stichseq.kurzlang().cards_per_player() * EPlayerIndex::SIZE;
+        fn write_indicator_vars<CardIndicatorVariable: std::fmt::Display>(
+            wrtr: &mut impl std::io::Write,
+            n_cards_total: usize,
+            fn_card_indicator_variable: impl Fn(usize, SCard)->CardIndicatorVariable,
+        ) {
+            for i_card_0_based in 0..n_cards_total {
+                let i_card = i_card_0_based + 1;
+                unwrap!(write!(
+                    wrtr,
+                    "{},",
+                    fn_card_indicator_variable(
+                        i_card,
+                        unwrap!(unwrap!(neural_network_input_to_card(i_card))),
+                    ),
+                ));
+            }
+        }
+        write_indicator_vars(wrtr, n_cards_total, fn_card_in_hand);
+        write_indicator_vars(wrtr, n_cards_total, fn_card_allowed);
+        for (i_card_stichseq, ocard_stichseq) in stichseq.visible_cards()
+            .map(|(_epi, &card_stichseq)| Some(card_stichseq))
+            .pad_using(n_cards_total, |_| None)
+            .enumerate()
+        {
+            unwrap!(write!(wrtr, "{},", fn_card_stichseq(i_card_stichseq, ocard_stichseq)));
+        }
+        unwrap!(write!(wrtr, "{}", card_zugeben));
+        unwrap!(write!(wrtr, "\n"));
+    }
     let path_dst = std::path::PathBuf::from(&format!("neural_network_input/{}",
         chrono::Local::now().format("%Y%m%d%H%M%S"),
     ));
@@ -95,31 +142,37 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 );
                 assert_eq!(game.stichseq.visible_stichs(), game.stichseq.completed_stichs());
                 let path_gameresult = path_dst.join(super::gameresult_to_dir(&gameresult));
+                let oepi_active = verify_eq!(game_csv.rules.playerindex(), game.rules.playerindex());
                 let file = mapstrfile.entry(path_gameresult.clone())
                     .or_insert_with(|| {
                         unwrap!(std::fs::create_dir_all(&path_gameresult));
-                        std::io::BufWriter::new(unwrap!(std::fs::File::create(path_gameresult.join("csv.csv"))))
+                        let mut file = std::io::BufWriter::new(unwrap!(std::fs::File::create(path_gameresult.join("csv.csv"))));
+                        write_columns(
+                            &mut file,
+                            oepi_active.map(|_epi| "epi_active"),
+                            /*fn_card_in_hand*/|i_card, _card| format!("card_hand_{}", i_card),
+                            /*fn_card_allowed*/|i_card, _card| format!("card_allowed_{}", i_card),
+                            &game.stichseq,
+                            /*fn_card_stichseq*/|i_card, _ocard| format!("card_stichseq_{}", i_card),
+                            /*card_zugeben*/"card_zugeben",
+                        );
+                        file
                     });
-                let oepi_active = verify_eq!(game_csv.rules.playerindex(), game.rules.playerindex());
-                let ekurzlang = verify_eq!(game_csv.kurzlang(), game.kurzlang());
                 for (epi, &card_zugeben) in game.stichseq.visible_cards() {
                     assert_eq!(epi, unwrap!(game_csv.which_player_can_do_something()).0);
-                    if let Some(ref epi_active)=oepi_active {
-                        unwrap!(write!(file, "{},", epi_active));
-                    }
-                    for ocard_hand in game_csv.ahand[epi].cards().iter().copied().map(Some)
-                        .pad_using(ekurzlang.cards_per_player(), |_| None)
-                    {
-                        unwrap!(write!(file, "{},", card_to_neural_network_input(ocard_hand)));
-                    }
-                    for ocard_played_so_far in game_csv.stichseq.visible_cards()
-                        .map(|(_epi, &card_played_so_far)| Some(card_played_so_far))
-                        .pad_using(ekurzlang.cards_per_player() * EPlayerIndex::SIZE, |_| None)
-                    {
-                        unwrap!(write!(file, "{},", card_to_neural_network_input(ocard_played_so_far)));
-                    }
-                    unwrap!(write!(file, "{}", card_to_neural_network_input(Some(card_zugeben))));
-                    unwrap!(write!(file, "\n"));
+                    let veccard_allowed = game_csv.rules.all_allowed_cards(&game_csv.stichseq, &game_csv.ahand[epi]);
+                    let bool_to_usize = |b| if b {1} else {0};
+                    write_columns(
+                        file,
+                        oepi_active,
+                        /*fn_card_in_hand*/|_i_card, card| bool_to_usize(game_csv.ahand[epi].contains(card)),
+                        /*fn_card_allowed*/|_i_card, card| bool_to_usize(veccard_allowed.contains(&card)),
+                        &game_csv.stichseq,
+                        /*fn_card_stichseq*/|_i_card, ocard| {
+                            card_to_neural_network_input(ocard)
+                        },
+                        /*card_zugeben*/card_to_neural_network_input(Some(card_zugeben)),
+                    );
                     unwrap!(game_csv.zugeben(card_zugeben, epi)); // validated by analyze_sauspiel_html
                 }
             } else {
