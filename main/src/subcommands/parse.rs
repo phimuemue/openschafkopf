@@ -1,6 +1,9 @@
 use crate::subcommands::analyze::analyze_sauspiel_html; // TODO move functions to own module
 use crate::game::*;
-use crate::rules::ruleset::{VStockOrT};
+use crate::rules::{
+    SRuleStateCache,
+    ruleset::{VStockOrT},
+};
 use crate::util::*;
 use itertools::Itertools;
 use crate::primitives::*;
@@ -85,6 +88,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         CardIndicatorVariable: std::fmt::Display,
         CardStichSeq: std::fmt::Display,
         CardZugeben: std::fmt::Display,
+        PointsPerPlayer: std::fmt::Display,
+        StichsPerPlayer: std::fmt::Display,
     >(
         wrtr: &mut impl std::io::Write,
         oepi_active: Option<PlayerIndexActive>,
@@ -93,6 +98,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         stichseq: &SStichSequence,
         fn_card_stichseq: impl Fn(usize, Option<SCard>) -> CardStichSeq,
         fn_epi_stichseq: impl Fn(usize, Option<EPlayerIndex>) -> PlayerIndexStichSeq,
+        fn_points_for_player: impl Fn(EPlayerIndex) -> PointsPerPlayer,
+        fn_stichs_for_player: impl Fn(EPlayerIndex) -> StichsPerPlayer,
         card_zugeben: CardZugeben,
     ) {
         if let Some(ref epi_active)=oepi_active {
@@ -126,6 +133,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             unwrap!(write!(wrtr, "{},", fn_card_stichseq(i_card_stichseq, otplepicard_stichseq.map(|tplepicard| tplepicard.1))));
             unwrap!(write!(wrtr, "{},", fn_epi_stichseq(i_card_stichseq, otplepicard_stichseq.map(|tplepicard| tplepicard.0))));
         }
+        for epi in EPlayerIndex::values() {
+            unwrap!(write!(wrtr, "{},", fn_points_for_player(epi)));
+            unwrap!(write!(wrtr, "{},", fn_stichs_for_player(epi)));
+        }
         unwrap!(write!(wrtr, "{}", card_zugeben));
         unwrap!(write!(wrtr, "\n"));
     }
@@ -158,35 +169,55 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             &game.stichseq,
                             /*fn_card_stichseq*/|i_card, _ocard| format!("card_stichseq_{}", i_card),
                             /*fn_epi_stichseq*/|i_card, _oepi| format!("epi_stichseq_{}", i_card),
+                            /*fn_points_for_player*/|epi| format!("n_points_{}", epi),
+                            /*fn_stichs_for_player*/|epi| format!("n_stichs_{}", epi),
                             /*card_zugeben*/"card_zugeben",
                         );
                         file
                     });
-                for (epi, &card_zugeben) in game.stichseq.visible_cards() {
-                    assert_eq!(epi, unwrap!(game_csv.which_player_can_do_something()).0);
-                    let veccard_allowed = game_csv.rules.all_allowed_cards(&game_csv.stichseq, &game_csv.ahand[epi]);
-                    let bool_to_usize = |b| if b {1} else {0};
-                    write_columns(
-                        file,
-                        oepi_active,
-                        /*fn_card_in_hand*/|_i_card, card| bool_to_usize(game_csv.ahand[epi].contains(card)),
-                        /*fn_card_allowed*/|_i_card, card| bool_to_usize(veccard_allowed.contains(&card)),
-                        &game_csv.stichseq,
-                        /*fn_card_stichseq*/|_i_card, ocard| {
-                            card_to_neural_network_input(ocard)
-                        },
-                        /*fn_epi_stichseq*/|_i_card, oepi| {
-                            if let Some(epi) = oepi {
-                                let i_epi_1_based = epi.to_usize() + 1;
-                                assert!(0!=i_epi_1_based);
-                                i_epi_1_based
-                            } else {
-                                0
-                            }
-                        },
-                        /*card_zugeben*/card_to_neural_network_input(Some(card_zugeben)),
+                let mut rulestatecache = SRuleStateCache::new(
+                    &game_csv.stichseq,
+                    &game_csv.ahand,
+                    /*fn_winner_index*/|stich| game_csv.rules.winner_index(stich),
+                );
+                for stich in game.stichseq.visible_stichs() {
+                    for (epi, &card_zugeben) in stich.iter() {
+                        assert_eq!(epi, unwrap!(game_csv.which_player_can_do_something()).0);
+                        let veccard_allowed = game_csv.rules.all_allowed_cards(&game_csv.stichseq, &game_csv.ahand[epi]);
+                        let bool_to_usize = |b| if b {1} else {0};
+                        write_columns(
+                            file,
+                            oepi_active,
+                            /*fn_card_in_hand*/|_i_card, card| bool_to_usize(game_csv.ahand[epi].contains(card)),
+                            /*fn_card_allowed*/|_i_card, card| bool_to_usize(veccard_allowed.contains(&card)),
+                            &game_csv.stichseq,
+                            /*fn_card_stichseq*/|_i_card, ocard| {
+                                card_to_neural_network_input(ocard)
+                            },
+                            /*fn_epi_stichseq*/|_i_card, oepi| {
+                                if let Some(epi) = oepi {
+                                    let i_epi_1_based = epi.to_usize() + 1;
+                                    assert!(0!=i_epi_1_based);
+                                    i_epi_1_based
+                                } else {
+                                    0
+                                }
+                            },
+                            /*fn_points_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].n_point,
+                            /*fn_stichs_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].n_stich,
+                            /*card_zugeben*/card_to_neural_network_input(Some(card_zugeben)),
+                        );
+                        unwrap!(game_csv.zugeben(card_zugeben, epi)); // validated by analyze_sauspiel_html
+                    }
+                    rulestatecache.register_stich(stich, game_csv.rules.winner_index(stich));
+                    debug_assert_eq!(
+                        rulestatecache,
+                        SRuleStateCache::new(
+                            &game_csv.stichseq,
+                            &game_csv.ahand,
+                            /*fn_winner_index*/|stich| game_csv.rules.winner_index(stich),
+                        ),
                     );
-                    unwrap!(game_csv.zugeben(card_zugeben, epi)); // validated by analyze_sauspiel_html
                 }
             } else {
                 eprintln!("Nothing found in {:?}: Trying to continue.", path);
