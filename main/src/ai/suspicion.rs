@@ -320,7 +320,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     type Output = SMinMax;
 
     fn final_output(&self, slcstich: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
-        SMinMax::new_final(self.rules.payout_with_cache(slcstich, self.tpln_stoss_doubling, self.n_stock, rulestatecache))
+        SMinMax::new_final(self.rules.payout(slcstich, self.tpln_stoss_doubling, self.n_stock, rulestatecache))
     }
 
     fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<Self::Output> {

@@ -485,7 +485,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Rul
         assert!(self.kurzlang().cards_per_player()==self.completed_stichs().len());
         let gamefinishedstiche = SStichSequenceGameFinished::new(&self.stichseq);
         SGameResultGeneric {
-            an_payout : self.rules.payout_with_cache(
+            an_payout : self.rules.payout(
                 gamefinishedstiche,
                 stoss_and_doublings(&self.vecstoss, &self.doublings),
                 self.n_stock,
