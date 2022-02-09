@@ -271,7 +271,7 @@ pub struct SGameWithDesc {
     pub resgameresult: Result<SGameResult, failure::Error>,
 }
 
-pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String, itgamewithdesc: impl Iterator<Item=SGameWithDesc>) -> Result<(), failure::Error> {
+pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String, itgamewithdesc: impl Iterator<Item=SGameWithDesc>, b_include_no_findings: bool) -> Result<(), failure::Error> {
     create_dir_if_not_existent(path_analysis)?;
     generate_html_auxiliary_files(path_analysis)?;
     let str_date = format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S"));
@@ -293,17 +293,19 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
         if let Ok(gameresult) = gamewithdesc.resgameresult {
             match gameresult.stockorgame {
                 VStockOrT::Stock(_) => {
-                    str_index_html += &format!(
-                        r#"<tr>
-                            <td>
-                                Stock: {}/{}/{}/{}
-                            </td>
-                        </tr>"#,
-                        gameresult.an_payout[EPlayerIndex::EPI0],
-                        gameresult.an_payout[EPlayerIndex::EPI1],
-                        gameresult.an_payout[EPlayerIndex::EPI2],
-                        gameresult.an_payout[EPlayerIndex::EPI3],
-                    );
+                    if b_include_no_findings {
+                        str_index_html += &format!(
+                            r#"<tr>
+                                <td>
+                                    Stock: {}/{}/{}/{}
+                                </td>
+                            </tr>"#,
+                            gameresult.an_payout[EPlayerIndex::EPI0],
+                            gameresult.an_payout[EPlayerIndex::EPI1],
+                            gameresult.an_payout[EPlayerIndex::EPI2],
+                            gameresult.an_payout[EPlayerIndex::EPI3],
+                        );
+                    }
                 },
                 VStockOrT::OrT(game) => {
                     let str_rules = format!("{}", game.rules);
@@ -312,34 +314,39 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                     let path = path_analysis_game.join("analysis.html");
                     let gameanalysis = analyze_game(&gamewithdesc.str_description, &fn_link(&gamewithdesc.str_description), game);
                     let path = write_html(path, &gameanalysis.str_html)?;
-                    str_index_html += &format!(
-                        r#"<tr>
-                            <td>
-                                <a href="{str_path}">{str_rules}</a>
-                            </td>
-                            <td>
-                                ({n_findings_simulating}/{n_findings_cheating} Funde)
-                            </td>
-                            <td>
-                                ({chr_stopwatch} {str_duration_as_secs})
-                            </td>
-                        </tr>"#,
-                        str_path = unwrap!(
-                            unwrap!(path.strip_prefix(path_analysis)).to_str()
-                        ),
-                        str_rules = str_rules,
-                        n_findings_simulating = gameanalysis.n_findings_simulating,
-                        n_findings_cheating = gameanalysis.n_findings_cheating,
-                        chr_stopwatch = '\u{23F1}',
-                        str_duration_as_secs = {
-                            let n_secs = gameanalysis.duration.as_secs();
-                            if 0==n_secs {
-                                "&lt;1s".to_owned()
-                            } else {
-                                format!("{}s", n_secs)
-                            }
-                        },
-                    );
+                    let n_findings_simulating = gameanalysis.n_findings_simulating;
+                    let n_findings_cheating = gameanalysis.n_findings_cheating;
+                    assert!(n_findings_simulating <= n_findings_cheating);
+                    if b_include_no_findings || 0 < n_findings_cheating {
+                        str_index_html += &format!(
+                            r#"<tr>
+                                <td>
+                                    <a href="{str_path}">{str_rules}</a>
+                                </td>
+                                <td>
+                                    ({n_findings_simulating}/{n_findings_cheating} Funde)
+                                </td>
+                                <td>
+                                    ({chr_stopwatch} {str_duration_as_secs})
+                                </td>
+                            </tr>"#,
+                            str_path = unwrap!(
+                                unwrap!(path.strip_prefix(path_analysis)).to_str()
+                            ),
+                            str_rules = str_rules,
+                            n_findings_simulating = n_findings_simulating,
+                            n_findings_cheating = n_findings_cheating,
+                            chr_stopwatch = '\u{23F1}',
+                            str_duration_as_secs = {
+                                let n_secs = gameanalysis.duration.as_secs();
+                                if 0==n_secs {
+                                    "&lt;1s".to_owned()
+                                } else {
+                                    format!("{}s", n_secs)
+                                }
+                            },
+                        );
+                    }
                 },
             }
         } else {

@@ -14,6 +14,9 @@ pub fn subcommand(str_subcommand: &str) -> clap::App {
             .takes_value(true)
             .multiple(true)
         )
+        .arg(clap::Arg::with_name("include-no-findings")
+            .long("include-no-findings")
+        )
 }
 
 #[derive(Debug)]
@@ -436,5 +439,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         std::path::Path::new("./analyze"), // TODO make customizable
         /*fn_link*/|str_description: &str| str_description.to_string(),
         vecgame.into_iter(),
+        /*b_include_no_findings*/clapmatches.is_present("include-no-findings"),
     )
 }
