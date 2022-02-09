@@ -12,6 +12,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::App {
         .arg(clap::Arg::with_name("branching").long("branching").takes_value(true))
         .arg(clap::Arg::with_name("prune").long("prune").takes_value(true))
         .arg(clap::Arg::with_name("visualize").long("visualize").takes_value(true))
+        // TODO Add possibility to request analysis by points/stichs
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
