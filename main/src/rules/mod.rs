@@ -157,7 +157,7 @@ pub struct SRuleStateCacheChanging {
     pub mapepipointstichcount: EnumMap<EPlayerIndex, SPointStichCount>,
 }
 #[derive(Eq, PartialEq, Debug)]
-pub struct SRuleStateCache { // TODO should we have a cache typer per rules? (Would possibly forbid having TRules trait objects.)
+pub struct SRuleStateCache { // TODO should we have a cache type per rules? (Would possibly forbid having TRules trait objects.)
     pub fixed: SRuleStateCacheFixed,
     pub changing: SRuleStateCacheChanging,
 }
