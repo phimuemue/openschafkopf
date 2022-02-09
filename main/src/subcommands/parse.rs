@@ -155,7 +155,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     game.n_stock,
                 );
                 assert_eq!(game.stichseq.visible_stichs(), game.stichseq.completed_stichs());
-                let path_gameresult = path_dst.join(super::gameresult_to_dir(&gameresult));
+                let path_gameresult = path_dst.join(super::gameresult_to_dir(gameresult));
                 let oepi_active = verify_eq!(game_csv.rules.playerindex(), game.rules.playerindex());
                 let file = mapstrfile.entry(path_gameresult.clone())
                     .or_insert_with(|| {
