@@ -10,6 +10,7 @@ pub fn subcommand(str_subcommand: &str) -> clap::App {
         .arg(clap_arg("ai", "cheating"))
         .arg(clap_arg("hand", ""))
         .arg(clap_arg("position", "0"))
+        // TODO align arguments with suggest-card
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
