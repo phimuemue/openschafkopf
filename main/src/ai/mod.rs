@@ -244,7 +244,7 @@ pub struct SPayoutStats {
     n_min: isize,
     n_sum: isize,
     n_max: isize,
-    n_count: usize,
+    n_count: usize, // TODO replace this by lost/zero/won
 }
 
 impl SPayoutStats {
