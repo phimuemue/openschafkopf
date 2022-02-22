@@ -277,6 +277,9 @@ impl SPayoutStats {
     pub fn avg(&self) -> f32 {
         self.n_sum.as_num::<f32>() / self.maporderingn_histogram_cmp_vs_0.iter().sum::<usize>().as_num::<f32>()
     }
+    pub fn counts(&self) -> &EnumMap<std::cmp::Ordering, usize> {
+        &self.maporderingn_histogram_cmp_vs_0
+    }
 }
 
 type SPayoutStatsPerStrategy = SPerMinMaxStrategy<SPayoutStats>;
