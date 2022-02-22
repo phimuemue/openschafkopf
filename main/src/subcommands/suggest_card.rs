@@ -105,7 +105,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             veccardminmax.sort_unstable_by_key(|&(_card, minmax)| minmax);
             veccardminmax.reverse(); // descending
             // crude formatting: treat all numbers as f32, and convert structured input to a plain number table
-            const N_COLUMNS : usize = 12;
+            const N_COLUMNS : usize = 16;
             let mut vecaf = Vec::new();
             let mut veclinestrings : Vec<(/*card*/String, /*numbers*/_)> = Vec::new();
             let mut an_width = [0; N_COLUMNS];
@@ -116,7 +116,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     (paystats.counts()[std::cmp::Ordering::Equal]+paystats.counts()[std::cmp::Ordering::Greater])
                         .as_num::<f32>()
                 };
-                let af = [
+                let af : [_; N_COLUMNS] = [
                     minmax.t_min.min().as_num::<f32>(),
                     minmax.t_min.avg(),
                     minmax.t_min.max().as_num::<f32>(),
@@ -137,22 +137,22 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 let displayable_count =  |paystats: &SPayoutStats| {
                     format!("{} ", paystats.counts().iter().join("/"))
                 };
-                let astr = [
+                let astr : [_; N_COLUMNS] = [
                     format!("{} ", af[0]),
                     format!("{:.2} ", af[1]),
                     format!("{} ", af[2]),
                     displayable_count(&minmax.t_min),
-                    format!("{} ", af[3]),
-                    format!("{:.2} ", af[4]),
-                    format!("{} ", af[5]),
-                    displayable_count(&minmax.t_selfish_min),
+                    format!("{} ", af[4]),
+                    format!("{:.2} ", af[5]),
                     format!("{} ", af[6]),
-                    format!("{:.2} ", af[7]),
+                    displayable_count(&minmax.t_selfish_min),
                     format!("{} ", af[8]),
+                    format!("{:.2} ", af[9]),
+                    format!("{} ", af[10]),
                     displayable_count(&minmax.t_selfish_max),
-                    format!("{} ", af[9]),
-                    format!("{:.2} ", af[10]),
-                    format!("{}", af[11]),
+                    format!("{} ", af[12]),
+                    format!("{:.2} ", af[13]),
+                    format!("{} ", af[14]),
                     displayable_count(&minmax.t_max),
                 ];
                 for (n_width, str) in an_width.iter_mut().zip(astr.iter()) {
