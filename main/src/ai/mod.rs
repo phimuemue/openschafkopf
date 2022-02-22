@@ -244,7 +244,7 @@ pub struct SPayoutStats {
     n_min: isize,
     n_sum: isize,
     n_max: isize,
-    n_count: usize, // TODO replace this by lost/zero/won
+    maporderingn_histogram_cmp_vs_0: EnumMap<std::cmp::Ordering, usize>,
 }
 
 impl SPayoutStats {
@@ -253,7 +253,9 @@ impl SPayoutStats {
             n_min: n_payout,
             n_max: n_payout,
             n_sum: n_payout,
-            n_count: 1,
+            maporderingn_histogram_cmp_vs_0: std::cmp::Ordering::map_from_fn(|ordering|
+                if ordering==n_payout.cmp(&0) {1} else {0}
+            ),
         }
     }
 
@@ -261,7 +263,9 @@ impl SPayoutStats {
         assign_min(&mut self.n_min, paystats.n_min);
         assign_max(&mut self.n_max, paystats.n_max);
         self.n_sum += paystats.n_sum;
-        self.n_count += paystats.n_count;
+        for ordering in std::cmp::Ordering::values() {
+            self.maporderingn_histogram_cmp_vs_0[ordering] += paystats.maporderingn_histogram_cmp_vs_0[ordering];
+        }
     }
 
     pub fn min(&self) -> isize {
@@ -271,7 +275,7 @@ impl SPayoutStats {
         self.n_max
     }
     pub fn avg(&self) -> f32 {
-        self.n_sum.as_num::<f32>() / self.n_count.as_num::<f32>()
+        self.n_sum.as_num::<f32>() / self.maporderingn_histogram_cmp_vs_0.iter().sum::<usize>().as_num::<f32>()
     }
 }
 
