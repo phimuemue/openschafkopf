@@ -86,20 +86,28 @@ impl SPayoutInfo {
     }
 }
 
-#[derive(Debug, new, Clone)]
+plain_enum_mod!(modelohi, ELoHi {Lo, Hi,});
+
+#[derive(Debug, Clone)]
 pub struct SPayoutHint {
-    tpln_payout: (Option<SPayoutInfo>, Option<SPayoutInfo>),
+    aopayoutinfo: EnumMap<ELoHi, Option<SPayoutInfo>>,
 }
 
 impl SPayoutHint {
+    fn new(tplopayoutinfo: (Option<SPayoutInfo>, Option<SPayoutInfo>)) -> Self {
+        Self {
+            aopayoutinfo: ELoHi::map_from_raw([tplopayoutinfo.0, tplopayoutinfo.1]),
+        }
+    }
+
     #[cfg(debug_assertions)]
     fn contains_payouthint(&self, payouthint_other: &SPayoutHint) -> bool {
-        (match (&self.tpln_payout.0, &payouthint_other.tpln_payout.0) {
+        (match (&self.aopayoutinfo[ELoHi::Lo], &payouthint_other.aopayoutinfo[ELoHi::Lo]) {
             (None, _) => true,
             (Some(_), None) => false,
             (Some(payoutinfo_self), Some(payoutinfo_other)) => payoutinfo_self.n_payout<=payoutinfo_other.n_payout,
         })
-        && match (&self.tpln_payout.1, &payouthint_other.tpln_payout.1) {
+        && match (&self.aopayoutinfo[ELoHi::Hi], &payouthint_other.aopayoutinfo[ELoHi::Hi]) {
             (None, _) => true,
             (Some(_), None) => false,
             (Some(payoutinfo_self), Some(payoutinfo_other)) => payoutinfo_self.n_payout>=payoutinfo_other.n_payout,
@@ -108,7 +116,7 @@ impl SPayoutHint {
     }
 
     pub fn lower_bound(&self) -> &Option<SPayoutInfo> {
-        &self.tpln_payout.0
+        &self.aopayoutinfo[ELoHi::Lo]
     }
 }
 
