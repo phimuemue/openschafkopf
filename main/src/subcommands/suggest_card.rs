@@ -111,9 +111,20 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 atplstrf: [(String, f32); N_COLUMNS],
             }
             let mut vecoutputline : Vec<SOutputLine> = Vec::new();
-            let mut an_width = [0; N_COLUMNS];
-            let mut af_min = [f32::MAX; N_COLUMNS];
-            let mut af_max = [f32::MIN; N_COLUMNS];
+            #[derive(Clone, /*TODO really needed for array construction?*/Copy)]
+            struct SFormatInfo {
+                f_min: f32,
+                f_max: f32,
+                n_width: usize,
+            }
+            let mut aformatinfo = [
+                SFormatInfo {
+                    f_min: f32::MAX,
+                    f_max: f32::MIN,
+                    n_width: 0,
+                };
+                N_COLUMNS
+            ];
             for (card, minmax) in veccardminmax {
                 let column_counts = |paystats: &SPayoutStats| {(
                     format!("{} ", paystats.counts().iter().join("/")),
@@ -145,19 +156,17 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     column_no_decimals(minmax.t_max.max()),
                     column_counts(&minmax.t_max),
                 ];
-                for (n_width, (str_val, _f_val)) in an_width.iter_mut().zip_eq(atplstrf.iter()) {
-                    *n_width = (*n_width).max(str_val.len());
-                }
-                for (f_min, f_max, (_str_val, f_val)) in izip!(af_min.iter_mut(), af_max.iter_mut(), atplstrf.iter()) {
+                for ((str_val, f_val), formatinfo) in atplstrf.iter().zip_eq(aformatinfo.iter_mut()) {
+                    formatinfo.n_width = formatinfo.n_width.max(str_val.len());
                     // TODO? assign_min/assign_max
-                    *f_min = f_min.min(*f_val);
-                    *f_max = f_max.max(*f_val);
+                    formatinfo.f_min = formatinfo.f_min.min(*f_val);
+                    formatinfo.f_max = formatinfo.f_max.max(*f_val);
                 }
                 vecoutputline.push(SOutputLine{card, atplstrf});
             }
             for SOutputLine{card, atplstrf} in vecoutputline.iter() {
                 print!("{}: ", card); // all cards have same width
-                for ((str_num, f), n_width, f_min, f_max) in izip!(atplstrf.iter(), an_width.iter(), af_min.iter(), af_max.iter()) {
+                for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
                     use termcolor::*;
                     let mut stdout = StandardStream::stdout(if atty::is(atty::Stream::Stdout) {
                         ColorChoice::Auto
