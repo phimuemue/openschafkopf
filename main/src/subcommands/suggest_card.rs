@@ -106,8 +106,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             veccardminmax.reverse(); // descending
             // crude formatting: treat all numbers as f32, and convert structured input to a plain number table
             const N_COLUMNS : usize = 16;
-            let mut vecaf = Vec::new();
-            let mut veclinestrings : Vec<(SCard, /*numbers*/_)> = Vec::new();
+            let mut veclinestrings : Vec<(SCard, /*strings*/_, /*numbers*/_)> = Vec::new();
             let mut an_width = [0; N_COLUMNS];
             let mut af_min = [f32::MAX; N_COLUMNS];
             let mut af_max = [f32::MIN; N_COLUMNS];
@@ -163,10 +162,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     *f_min = f_min.min(*f);
                     *f_max = f_max.max(*f);
                 }
-                veclinestrings.push((card, astr));
-                vecaf.push(af);
+                veclinestrings.push((card, astr, af));
             }
-            for ((card, astr), af) in veclinestrings.iter().zip(vecaf) {
+            for (card, astr, af) in veclinestrings.iter() {
                 print!("{}: ", card); // all cards have same width
                 for (str_num, f, n_width, f_min, f_max) in izip!(astr.iter(), af.iter(), an_width.iter(), af_min.iter(), af_max.iter()) {
                     use termcolor::*;
