@@ -107,7 +107,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             // crude formatting: treat all numbers as f32, and convert structured input to a plain number table
             const N_COLUMNS : usize = 16;
             let mut vecaf = Vec::new();
-            let mut veclinestrings : Vec<(/*card*/String, /*numbers*/_)> = Vec::new();
+            let mut veclinestrings : Vec<(SCard, /*numbers*/_)> = Vec::new();
             let mut an_width = [0; N_COLUMNS];
             let mut af_min = [f32::MAX; N_COLUMNS];
             let mut af_max = [f32::MIN; N_COLUMNS];
@@ -163,7 +163,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     *f_min = f_min.min(*f);
                     *f_max = f_max.max(*f);
                 }
-                veclinestrings.push((format!("{}", card), astr));
+                veclinestrings.push((card, astr));
                 vecaf.push(af);
             }
             for ((card, astr), af) in veclinestrings.iter().zip(vecaf) {
