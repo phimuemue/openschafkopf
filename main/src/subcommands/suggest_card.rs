@@ -106,67 +106,58 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             veccardminmax.reverse(); // descending
             // crude formatting: treat all numbers as f32, and convert structured input to a plain number table
             const N_COLUMNS : usize = 16;
-            let mut veclinestrings : Vec<(SCard, /*strings*/_, /*numbers*/_)> = Vec::new();
+            struct SOutputLine {
+                card: SCard,
+                atplstrf: [(String, f32); N_COLUMNS],
+            }
+            let mut vecoutputline : Vec<SOutputLine> = Vec::new();
             let mut an_width = [0; N_COLUMNS];
             let mut af_min = [f32::MAX; N_COLUMNS];
             let mut af_max = [f32::MIN; N_COLUMNS];
             for (card, minmax) in veccardminmax {
-                let sortable_count = |paystats: &SPayoutStats| {
+                let column_counts = |paystats: &SPayoutStats| {(
+                    format!("{} ", paystats.counts().iter().join("/")),
                     (paystats.counts()[std::cmp::Ordering::Equal]+paystats.counts()[std::cmp::Ordering::Greater])
-                        .as_num::<f32>()
-                };
-                let af : [_; N_COLUMNS] = [
-                    minmax.t_min.min().as_num::<f32>(),
-                    minmax.t_min.avg(),
-                    minmax.t_min.max().as_num::<f32>(),
-                    sortable_count(&minmax.t_min),
-                    minmax.t_selfish_min.min().as_num::<f32>(),
-                    minmax.t_selfish_min.avg(),
-                    minmax.t_selfish_min.max().as_num::<f32>(),
-                    sortable_count(&minmax.t_selfish_min),
-                    minmax.t_selfish_max.min().as_num::<f32>(),
-                    minmax.t_selfish_max.avg(),
-                    minmax.t_selfish_max.max().as_num::<f32>(),
-                    sortable_count(&minmax.t_selfish_max),
-                    minmax.t_max.min().as_num::<f32>(),
-                    minmax.t_max.avg(),
-                    minmax.t_max.max().as_num::<f32>(),
-                    sortable_count(&minmax.t_max),
-                ];
-                let displayable_count =  |paystats: &SPayoutStats| {
-                    format!("{} ", paystats.counts().iter().join("/"))
-                };
-                let astr : [_; N_COLUMNS] = [
-                    format!("{} ", af[0]),
-                    format!("{:.2} ", af[1]),
-                    format!("{} ", af[2]),
-                    displayable_count(&minmax.t_min),
-                    format!("{} ", af[4]),
-                    format!("{:.2} ", af[5]),
-                    format!("{} ", af[6]),
-                    displayable_count(&minmax.t_selfish_min),
-                    format!("{} ", af[8]),
-                    format!("{:.2} ", af[9]),
-                    format!("{} ", af[10]),
-                    displayable_count(&minmax.t_selfish_max),
-                    format!("{} ", af[12]),
-                    format!("{:.2} ", af[13]),
-                    format!("{} ", af[14]),
-                    displayable_count(&minmax.t_max),
-                ];
-                for (n_width, str) in an_width.iter_mut().zip(astr.iter()) {
-                    *n_width = (*n_width).max(str.len());
+                        .as_num::<f32>(),
+                )};
+                fn column_no_decimals(n: isize) -> (String, f32) {
+                    (format!("{} ", n), n.as_num::<f32>())
                 }
-                for (f_min, f_max, f) in izip!(af_min.iter_mut(), af_max.iter_mut(), af.iter()) {
+                fn column_average(paystats: &SPayoutStats) -> (String, f32) {
+                    let f_avg = paystats.avg();
+                    (format!("{:.2} ", f_avg), f_avg)
+                }
+                let atplstrf = [
+                    column_no_decimals(minmax.t_min.min()),
+                    column_average(&minmax.t_min),
+                    column_no_decimals(minmax.t_min.max()),
+                    column_counts(&minmax.t_min),
+                    column_no_decimals(minmax.t_selfish_min.min()),
+                    column_average(&minmax.t_selfish_min),
+                    column_no_decimals(minmax.t_selfish_min.max()),
+                    column_counts(&minmax.t_selfish_min),
+                    column_no_decimals(minmax.t_selfish_max.min()),
+                    column_average(&minmax.t_selfish_max),
+                    column_no_decimals(minmax.t_selfish_max.max()),
+                    column_counts(&minmax.t_selfish_max),
+                    column_no_decimals(minmax.t_max.min()),
+                    column_average(&minmax.t_max),
+                    column_no_decimals(minmax.t_max.max()),
+                    column_counts(&minmax.t_max),
+                ];
+                for (n_width, (str_val, _f_val)) in an_width.iter_mut().zip_eq(atplstrf.iter()) {
+                    *n_width = (*n_width).max(str_val.len());
+                }
+                for (f_min, f_max, (_str_val, f_val)) in izip!(af_min.iter_mut(), af_max.iter_mut(), atplstrf.iter()) {
                     // TODO? assign_min/assign_max
-                    *f_min = f_min.min(*f);
-                    *f_max = f_max.max(*f);
+                    *f_min = f_min.min(*f_val);
+                    *f_max = f_max.max(*f_val);
                 }
-                veclinestrings.push((card, astr, af));
+                vecoutputline.push(SOutputLine{card, atplstrf});
             }
-            for (card, astr, af) in veclinestrings.iter() {
+            for SOutputLine{card, atplstrf} in vecoutputline.iter() {
                 print!("{}: ", card); // all cards have same width
-                for (str_num, f, n_width, f_min, f_max) in izip!(astr.iter(), af.iter(), an_width.iter(), af_min.iter(), af_max.iter()) {
+                for ((str_num, f), n_width, f_min, f_max) in izip!(atplstrf.iter(), an_width.iter(), af_min.iter(), af_max.iter()) {
                     use termcolor::*;
                     let mut stdout = StandardStream::stdout(if atty::is(atty::Stream::Stdout) {
                         ColorChoice::Auto
