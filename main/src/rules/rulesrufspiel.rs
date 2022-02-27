@@ -136,11 +136,10 @@ impl TRules for SRulesRufspiel {
         );
         assert_ne!(self.epi, epi_coplayer);
         self.payoutdecider.payouthints(self, stichseq, ahand, rulestatecache, &SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]})
-            .map(|tplon_payout| SPayoutInterval::from_raw([
+            .map(|intvlon_payout| intvlon_payout.map(|on_payout|
                 // TODO Stock
-                tplon_payout.0.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
-                tplon_payout.1.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
-            ]))
+                on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
+            ))
     }
 
     fn all_allowed_cards_first_in_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {

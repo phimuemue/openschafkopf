@@ -20,7 +20,7 @@ pub trait TPayoutDecider : Sync + 'static + Clone + fmt::Debug {
         ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
+    ) -> EnumMap<EPlayerIndex, SPayoutInterval>
         where Rules: TRulesNoObj;
 }
 
@@ -63,7 +63,7 @@ impl TPayoutDecider for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLi
         ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
+    ) -> EnumMap<EPlayerIndex, SPayoutInterval>
         where Rules: TRulesNoObj
     {
         self.payouthints(rules, stichseq, ahand, rulestatecache, playerparties13)
@@ -141,7 +141,7 @@ impl TPayoutDecider for SPayoutDeciderTout {
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
+    ) -> EnumMap<EPlayerIndex, SPayoutInterval>
         where Rules: TRulesNoObj
     {
         if debug_verify_eq!(
@@ -156,10 +156,10 @@ impl TPayoutDecider for SPayoutDeciderTout {
             )
                 .map(|n_payout| {
                      assert_ne!(0, *n_payout);
-                     tpl_flip_if(0<*n_payout, (None, Some(*n_payout)))
+                     SPayoutInterval::from_tuple(tpl_flip_if(0<*n_payout, (None, Some(*n_payout))))
                 })
         } else {
-            EPlayerIndex::map_from_fn(|_epi| (None, None))
+            EPlayerIndex::map_from_fn(|_epi| SPayoutInterval::from_raw([None, None]))
         }
     }
 }
@@ -240,7 +240,7 @@ impl TPayoutDecider for SPayoutDeciderSie {
         ahand: &EnumMap<EPlayerIndex, SHand>,
         _rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, (Option<isize>, Option<isize>)>
+    ) -> EnumMap<EPlayerIndex, SPayoutInterval>
         where Rules: TRulesNoObj
     {
         let itcard = stichseq.visible_stichs().iter().filter_map(|stich| stich.get(playerparties13.primary_player())).copied()
@@ -259,10 +259,10 @@ impl TPayoutDecider for SPayoutDeciderSie {
             )
                 .map(|n_payout| {
                      assert_ne!(0, *n_payout);
-                     tpl_flip_if(0<*n_payout, (None, Some(*n_payout)))
+                     SPayoutInterval::from_tuple(tpl_flip_if(0<*n_payout, (None, Some(*n_payout))))
                 })
         } else {
-            EPlayerIndex::map_from_fn(|_epi| (None, None))
+            EPlayerIndex::map_from_fn(|_epi| SPayoutInterval::from_raw([None, None]))
         }
     }
 }

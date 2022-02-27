@@ -29,10 +29,9 @@ macro_rules! impl_single_play {() => {
             ahand,
             rulestatecache,
             &SPlayerParties13::new(self.internal_playerindex()),
-        ).map(|tplon_payout| SPayoutInterval::from_raw([
-             tplon_payout.0.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
-             tplon_payout.1.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
-        ]))
+        ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
+             on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
+        ))
     }
 
 }}
