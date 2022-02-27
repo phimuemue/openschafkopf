@@ -46,7 +46,7 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payoutinfos2(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         let points_for_player = |epi| rulestatecache.changing.mapepipointstichcount[epi].n_point;
         debug_assert_eq!(
             EPlayerIndex::map_from_fn(points_for_player),
@@ -126,7 +126,7 @@ impl TRules for SRulesRamsch {
         ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
     }
 
-    fn payouthints2(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _tpln_stoss_doubling: (usize, usize), _n_stock: isize, _rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInterval> {
+    fn payouthints(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _tpln_stoss_doubling: (usize, usize), _n_stock: isize, _rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInterval> {
         // TODO sensible payouthints
         EPlayerIndex::map_from_fn(|_epi| SPayoutInterval::from_raw([None, None]))
     }
