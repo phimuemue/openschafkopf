@@ -13,17 +13,17 @@ macro_rules! impl_single_play {() => {
         (epi==self.internal_playerindex())==(vecstoss.len()%2==1)
     }
 
-    fn payoutinfos2(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payoutinfos2(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         self.payoutdecider.payout(
             self,
             rulestatecache,
             gamefinishedstiche,
             &SPlayerParties13::new(self.internal_playerindex()),
-        ).map(|n_payout| SPayoutInfo::new(*n_payout, EStockAction::Ignore))
-            .map(|payoutinfo| payoutinfo.payout_including_stock(n_stock, tpln_stoss_doubling))
+        ).map(|n_payout| SPayoutInfo::new(*n_payout))
+            .map(|payoutinfo| payoutinfo.payout_including_stoss_doubling(tpln_stoss_doubling))
     }
 
-    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
+    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
         self.payoutdecider.payouthints(
             self,
             stichseq,
@@ -31,8 +31,8 @@ macro_rules! impl_single_play {() => {
             rulestatecache,
             &SPlayerParties13::new(self.internal_playerindex()),
         ).map(|tplon_payout| SPayoutHint::new((
-             tplon_payout.0.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore).payout_including_stock(n_stock, tpln_stoss_doubling)),
-             tplon_payout.1.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore).payout_including_stock(n_stock, tpln_stoss_doubling)),
+             tplon_payout.0.map(|n_payout| SPayoutInfo::new(n_payout).payout_including_stoss_doubling(tpln_stoss_doubling)),
+             tplon_payout.1.map(|n_payout| SPayoutInfo::new(n_payout).payout_including_stoss_doubling(tpln_stoss_doubling)),
         )))
     }
 

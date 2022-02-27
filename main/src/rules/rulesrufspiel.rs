@@ -107,20 +107,23 @@ impl TRules for SRulesRufspiel {
                 .count(),
             2
         );
-        let estockaction_playerparty = /*b_player_party_wins*/if 0<an_payout_no_stock[self.epi] {
-            EStockAction::TakeHalf
-        } else {
-            EStockAction::GiveHalf
-        };
+        assert_eq!(n_stock%2, 0);
         EPlayerIndex::map_from_fn(|epi|
-            SPayoutInfo::new(
-                an_payout_no_stock[epi],
-                if playerparties.is_primary_party(epi) {estockaction_playerparty} else {EStockAction::Ignore},
-            )
-        ).map(|payoutinfo| payoutinfo.payout_including_stock(n_stock, tpln_stoss_doubling))
+            SPayoutInfo::new(an_payout_no_stock[epi])
+                .payout_including_stoss_doubling(tpln_stoss_doubling)
+                + if playerparties.is_primary_party(epi) {
+                    if 0<verify_eq!(an_payout_no_stock[epi], an_payout_no_stock[self.epi]) {
+                        n_stock/2
+                    } else {
+                        -n_stock/2
+                    }
+                } else {
+                    0
+                },
+        )
     }
 
-    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
+    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
         let epi_coplayer = debug_verify_eq!(
             rulestatecache.fixed.who_has_card(self.rufsau()),
             stichseq.visible_cards()
@@ -135,9 +138,9 @@ impl TRules for SRulesRufspiel {
         assert_ne!(self.epi, epi_coplayer);
         self.payoutdecider.payouthints(self, stichseq, ahand, rulestatecache, &SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]})
             .map(|tplon_payout| SPayoutHint::new((
-                // TODO EStockAction
-                tplon_payout.0.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore).payout_including_stock(n_stock, tpln_stoss_doubling)),
-                tplon_payout.1.map(|n_payout| SPayoutInfo::new(n_payout, EStockAction::Ignore).payout_including_stock(n_stock, tpln_stoss_doubling)),
+                // TODO Stock
+                tplon_payout.0.map(|n_payout| SPayoutInfo::new(n_payout).payout_including_stoss_doubling(tpln_stoss_doubling)),
+                tplon_payout.1.map(|n_payout| SPayoutInfo::new(n_payout).payout_including_stoss_doubling(tpln_stoss_doubling)),
             )))
     }
 

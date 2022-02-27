@@ -60,29 +60,14 @@ fn all_allowed_cards_within_stich_distinguish_farbe_frei (
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub enum EStockAction {
-    Ignore,
-    TakeHalf,
-    GiveHalf,
-}
-
 #[derive(Eq, PartialEq, Clone, Debug, new)]
 pub struct SPayoutInfo {
     n_payout: isize,
-    estockaction: EStockAction,
 }
 
 impl SPayoutInfo {
-    pub fn payout_including_stock(&self, n_stock: isize, tpln_stoss_doubling: (usize, usize)) -> isize {
-        assert_eq!(n_stock%2, 0);
-        assert!(self.estockaction!=EStockAction::TakeHalf || 0<self.n_payout);
-        assert!(self.estockaction!=EStockAction::GiveHalf || self.n_payout<0);
-        self.n_payout * 2isize.pow((tpln_stoss_doubling.0 + tpln_stoss_doubling.1).as_num::<u32>()) + match self.estockaction {
-            EStockAction::Ignore => 0,
-            EStockAction::TakeHalf => n_stock/2,
-            EStockAction::GiveHalf => -n_stock/2,
-        }
+    pub fn payout_including_stoss_doubling(&self, tpln_stoss_doubling: (usize, usize)) -> isize {
+        self.n_payout * 2isize.pow((tpln_stoss_doubling.0 + tpln_stoss_doubling.1).as_num::<u32>())
     }
 }
 
@@ -112,7 +97,6 @@ impl SPayoutHint {
             (Some(_), None) => false,
             (Some(n_payout_self), Some(n_payout_other)) => n_payout_self>=n_payout_other,
         }
-        // TODO check estockaction
     }
 
     pub fn lower_bound(&self) -> &Option<isize> {
@@ -270,13 +254,6 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                 &SRuleStateCache::new_from_gamefinishedstiche(gamefinishedstiche, |stich| self.winner_index(stich))
             ),
         );
-        // assert!({
-        //     let count_stockaction = |estockaction| {
-        //         apayoutinfo.iter().filter(|payoutinfo| estockaction==payoutinfo.estockaction).count()
-        //     };
-        //     count_stockaction(EStockAction::TakeHalf)==0 || count_stockaction(EStockAction::GiveHalf)==0
-        // });
-        //assert_eq!(n_stock%2, 0);
         // TODO assert tpln_stoss_doubling consistent with stoss_allowed etc
         #[cfg(debug_assertions)] {
             let mut mapepipayouthint = EPlayerIndex::map_from_fn(|_epi| SPayoutHint::new((None, None)));
