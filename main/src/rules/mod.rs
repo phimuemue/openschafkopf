@@ -234,7 +234,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
         );
         // TODO assert tpln_stoss_doubling consistent with stoss_allowed etc
         #[cfg(debug_assertions)] {
-            let mut mapepipayouthint = EPlayerIndex::map_from_fn(|_epi| SPayoutInterval::from_raw([None, None]));
+            let mut mapepiintvlon_payout = EPlayerIndex::map_from_fn(|_epi| SPayoutInterval::from_raw([None, None]));
             let mut stichseq_check = SStichSequence::new(gamefinishedstiche.get().kurzlang());
             let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
                 SHand::new_from_iter(gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[epi]))
@@ -243,7 +243,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                 for (epi, card) in stich.iter() {
                     stichseq_check.zugeben_custom_winner_index(*card, |stich| self.winner_index(stich)); // TODO I could not simply pass rules. Why?
                     ahand_check[epi].play_card(*card);
-                    let mapepipayouthint_after = self.payouthints2(
+                    let mapepiintvlon_payout_after = self.payouthints2(
                         &stichseq_check,
                         &ahand_check,
                         tpln_stoss_doubling,
@@ -255,20 +255,20 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                         ),
                     );
                     assert!(
-                        mapepipayouthint.iter().zip(mapepipayouthint_after.iter())
-                            .all(|(payouthint, payouthint_other)| payouthint_contains(&payouthint, payouthint_other)),
-                        "{}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepipayouthint, mapepipayouthint_after,
+                        mapepiintvlon_payout.iter().zip(mapepiintvlon_payout_after.iter())
+                            .all(|(intvlon_payout, intvlon_payout_other)| payouthint_contains(&intvlon_payout, intvlon_payout_other)),
+                        "{}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepiintvlon_payout, mapepiintvlon_payout_after,
                     );
-                    mapepipayouthint = mapepipayouthint_after;
+                    mapepiintvlon_payout = mapepiintvlon_payout_after;
                 }
                 assert!(
-                    mapepipayouthint.iter().zip(apayoutinfo.iter().cloned())
-                        .all(|(payouthint, payoutinfo)|
-                            payouthint_contains(&payouthint, &ELoHi::map_from_fn(|_lohi| {
+                    mapepiintvlon_payout.iter().zip(apayoutinfo.iter().cloned())
+                        .all(|(intvlon_payout, payoutinfo)|
+                            payouthint_contains(&intvlon_payout, &ELoHi::map_from_fn(|_lohi| {
                                 Some(payoutinfo)
                             }))
                         ),
-                    "{}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepipayouthint, apayoutinfo,
+                    "{}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepiintvlon_payout, apayoutinfo,
                 );
             }
         }
