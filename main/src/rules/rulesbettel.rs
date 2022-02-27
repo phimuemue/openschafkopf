@@ -76,7 +76,7 @@ impl TPayoutDecider for SPayoutDeciderBettel {
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, SPayoutInterval>
+    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>
         where Rules: TRulesNoObj
     {
         if debug_verify_eq!(
@@ -89,9 +89,9 @@ impl TPayoutDecider for SPayoutDeciderBettel {
                 playerparties13,
                 /*b_primary_party_wins*/ false,
             )
-                .map(|n_payout| SPayoutInterval::from_raw([Some(*n_payout), Some(*n_payout)]))
+                .map(|n_payout| SInterval::from_raw([Some(*n_payout), Some(*n_payout)]))
         } else {
-            EPlayerIndex::map_from_fn(|_epi| SPayoutInterval::from_raw([None, None]))
+            EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
         }
     }
 }

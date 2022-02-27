@@ -64,12 +64,8 @@ pub fn payout_including_stoss_doubling(n_payout: isize, tpln_stoss_doubling: (us
     n_payout * 2isize.pow((tpln_stoss_doubling.0 + tpln_stoss_doubling.1).as_num::<u32>())
 }
 
-plain_enum_mod!(modelohi, ELoHi {Lo, Hi,});
-
-pub type SPayoutInterval = EnumMap<ELoHi, Option<isize>>;
-
 #[cfg(debug_assertions)]
-fn payouthint_contains(intvlon_payout_lhs: &SPayoutInterval, intvlon_payout_rhs: &SPayoutInterval) -> bool {
+fn payouthint_contains(intvlon_payout_lhs: &SInterval<Option<isize>>, intvlon_payout_rhs: &SInterval<Option<isize>>) -> bool {
     (match (&intvlon_payout_lhs[ELoHi::Lo], &intvlon_payout_rhs[ELoHi::Lo]) {
         (None, _) => true,
         (Some(_), None) => false,
@@ -234,7 +230,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
         );
         // TODO assert tpln_stoss_doubling consistent with stoss_allowed etc
         #[cfg(debug_assertions)] {
-            let mut mapepiintvlon_payout = EPlayerIndex::map_from_fn(|_epi| SPayoutInterval::from_raw([None, None]));
+            let mut mapepiintvlon_payout = EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]));
             let mut stichseq_check = SStichSequence::new(gamefinishedstiche.get().kurzlang());
             let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
                 SHand::new_from_iter(gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[epi]))
@@ -277,7 +273,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
 
     fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize>;
 
-    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInterval>;
+    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 
     fn all_allowed_cards(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         assert!(!hand.cards().is_empty());

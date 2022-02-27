@@ -126,9 +126,9 @@ impl TRules for SRulesRamsch {
         ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
     }
 
-    fn payouthints(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _tpln_stoss_doubling: (usize, usize), _n_stock: isize, _rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInterval> {
+    fn payouthints(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _tpln_stoss_doubling: (usize, usize), _n_stock: isize, _rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         // TODO sensible payouthints
-        EPlayerIndex::map_from_fn(|_epi| SPayoutInterval::from_raw([None, None]))
+        EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
     }
 
 }

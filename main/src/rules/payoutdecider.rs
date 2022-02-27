@@ -88,7 +88,7 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
         _ahand: &EnumMap<EPlayerIndex, SHand>,
         rulestatecache: &SRuleStateCache,
         playerparties: &PlayerParties,
-    ) -> EnumMap<EPlayerIndex, SPayoutInterval> {
+    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         let mapbn_points = debug_verify_eq!(
             EPlayerIndex::values()
                 .fold(bool::map_from_fn(|_b_primary| 0), mutate_return!(|mapbn_points, epi| {
@@ -107,7 +107,7 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
             )
                 .map(|n_payout| {
                      assert_ne!(0, *n_payout);
-                     SPayoutInterval::from_tuple(tpl_flip_if(0<*n_payout, (None, Some(*n_payout))))
+                     SInterval::from_tuple(tpl_flip_if(0<*n_payout, (None, Some(*n_payout))))
                 })
         };
         if /*b_primary_party_wins*/ mapbn_points[/*b_primary*/true] >= self.pointstowin.points_to_win() {
@@ -115,7 +115,7 @@ impl<PointsToWin: TPointsToWin> SPayoutDeciderPointBased<PointsToWin> {
         } else if mapbn_points[/*b_primary*/false] > 120-self.pointstowin.points_to_win() {
             internal_payouthints(/*b_primary_party_wins*/false)
         } else {
-            EPlayerIndex::map_from_fn(|_epi| SPayoutInterval::from_raw([None, None]))
+            EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
         }
     }
 }
