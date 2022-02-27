@@ -309,7 +309,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                 },
                 VStockOrT::OrT(game) => {
                     let str_rules = format!("{}", game.rules);
-                    let path_analysis_game = path_analysis.join(gamewithdesc.str_description.replace("/", "_").replace(".", "_"));
+                    let path_analysis_game = path_analysis.join(gamewithdesc.str_description.replace('/', "_").replace('.', "_"));
                     create_dir_if_not_existent(&path_analysis_game)?;
                     let path = path_analysis_game.join("analysis.html");
                     let gameanalysis = analyze_game(&gamewithdesc.str_description, &fn_link(&gamewithdesc.str_description), game);
