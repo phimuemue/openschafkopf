@@ -19,8 +19,7 @@ macro_rules! impl_single_play {() => {
             rulestatecache,
             gamefinishedstiche,
             &SPlayerParties13::new(self.internal_playerindex()),
-        ).map(|n_payout| SPayoutInfo::new(*n_payout))
-            .map(|payoutinfo| payoutinfo.payout_including_stoss_doubling(tpln_stoss_doubling))
+        ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
     }
 
     fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
@@ -31,8 +30,8 @@ macro_rules! impl_single_play {() => {
             rulestatecache,
             &SPlayerParties13::new(self.internal_playerindex()),
         ).map(|tplon_payout| SPayoutHint::new((
-             tplon_payout.0.map(|n_payout| SPayoutInfo::new(n_payout).payout_including_stoss_doubling(tpln_stoss_doubling)),
-             tplon_payout.1.map(|n_payout| SPayoutInfo::new(n_payout).payout_including_stoss_doubling(tpln_stoss_doubling)),
+             tplon_payout.0.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
+             tplon_payout.1.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
         )))
     }
 

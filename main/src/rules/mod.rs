@@ -60,15 +60,8 @@ fn all_allowed_cards_within_stich_distinguish_farbe_frei (
     }
 }
 
-#[derive(Eq, PartialEq, Clone, Debug, new)]
-pub struct SPayoutInfo {
-    n_payout: isize,
-}
-
-impl SPayoutInfo {
-    pub fn payout_including_stoss_doubling(&self, tpln_stoss_doubling: (usize, usize)) -> isize {
-        self.n_payout * 2isize.pow((tpln_stoss_doubling.0 + tpln_stoss_doubling.1).as_num::<u32>())
-    }
+pub fn payout_including_stoss_doubling(n_payout: isize, tpln_stoss_doubling: (usize, usize)) -> isize {
+    n_payout * 2isize.pow((tpln_stoss_doubling.0 + tpln_stoss_doubling.1).as_num::<u32>())
 }
 
 plain_enum_mod!(modelohi, ELoHi {Lo, Hi,});

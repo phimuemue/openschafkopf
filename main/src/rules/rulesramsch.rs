@@ -123,9 +123,7 @@ impl TRules for SRulesRamsch {
             self.n_price,
             &SPlayerParties13::new(epi_single),
             b_epi_single_wins,
-        )
-            .map(|n_payout| SPayoutInfo::new(*n_payout))
-            .map(|payoutinfo| payoutinfo.payout_including_stoss_doubling(tpln_stoss_doubling))
+        ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
     }
 
     fn payouthints2(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _tpln_stoss_doubling: (usize, usize), _n_stock: isize, _rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {

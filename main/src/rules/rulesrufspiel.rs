@@ -109,8 +109,7 @@ impl TRules for SRulesRufspiel {
         );
         assert_eq!(n_stock%2, 0);
         EPlayerIndex::map_from_fn(|epi|
-            SPayoutInfo::new(an_payout_no_stock[epi])
-                .payout_including_stoss_doubling(tpln_stoss_doubling)
+            payout_including_stoss_doubling(an_payout_no_stock[epi], tpln_stoss_doubling)
                 + if playerparties.is_primary_party(epi) {
                     if 0<verify_eq!(an_payout_no_stock[epi], an_payout_no_stock[self.epi]) {
                         n_stock/2
@@ -139,8 +138,8 @@ impl TRules for SRulesRufspiel {
         self.payoutdecider.payouthints(self, stichseq, ahand, rulestatecache, &SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]})
             .map(|tplon_payout| SPayoutHint::new((
                 // TODO Stock
-                tplon_payout.0.map(|n_payout| SPayoutInfo::new(n_payout).payout_including_stoss_doubling(tpln_stoss_doubling)),
-                tplon_payout.1.map(|n_payout| SPayoutInfo::new(n_payout).payout_including_stoss_doubling(tpln_stoss_doubling)),
+                tplon_payout.0.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
+                tplon_payout.1.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
             )))
     }
 
