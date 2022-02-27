@@ -122,7 +122,7 @@ impl TRules for SRulesRufspiel {
         )
     }
 
-    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
+    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInterval> {
         let epi_coplayer = debug_verify_eq!(
             rulestatecache.fixed.who_has_card(self.rufsau()),
             stichseq.visible_cards()
@@ -136,11 +136,11 @@ impl TRules for SRulesRufspiel {
         );
         assert_ne!(self.epi, epi_coplayer);
         self.payoutdecider.payouthints(self, stichseq, ahand, rulestatecache, &SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]})
-            .map(|tplon_payout| SPayoutHint::new((
+            .map(|tplon_payout| SPayoutInterval::from_raw([
                 // TODO Stock
                 tplon_payout.0.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
                 tplon_payout.1.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
-            )))
+            ]))
     }
 
     fn all_allowed_cards_first_in_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {

@@ -22,17 +22,17 @@ macro_rules! impl_single_play {() => {
         ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
     }
 
-    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
+    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInterval> {
         self.payoutdecider.payouthints(
             self,
             stichseq,
             ahand,
             rulestatecache,
             &SPlayerParties13::new(self.internal_playerindex()),
-        ).map(|tplon_payout| SPayoutHint::new((
+        ).map(|tplon_payout| SPayoutInterval::from_raw([
              tplon_payout.0.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
              tplon_payout.1.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
-        )))
+        ]))
     }
 
 }}

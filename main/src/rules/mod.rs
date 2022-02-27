@@ -66,34 +66,19 @@ pub fn payout_including_stoss_doubling(n_payout: isize, tpln_stoss_doubling: (us
 
 plain_enum_mod!(modelohi, ELoHi {Lo, Hi,});
 
-#[derive(Debug, Clone)]
-pub struct SPayoutHint {
-    aopayoutinfo: EnumMap<ELoHi, Option<isize>>,
-}
+pub type SPayoutInterval = EnumMap<ELoHi, Option<isize>>;
 
-impl SPayoutHint {
-    fn new(tplopayoutinfo: (Option<isize>, Option<isize>)) -> Self {
-        Self {
-            aopayoutinfo: ELoHi::map_from_raw([tplopayoutinfo.0, tplopayoutinfo.1]),
-        }
-    }
-
-    #[cfg(debug_assertions)]
-    fn contains_payouthint(&self, aon_payout_bound: EnumMap<ELoHi, Option<isize>>) -> bool {
-        (match (&self.aopayoutinfo[ELoHi::Lo], &aon_payout_bound[ELoHi::Lo]) {
-            (None, _) => true,
-            (Some(_), None) => false,
-            (Some(n_payout_self), Some(n_payout_other)) => n_payout_self<=n_payout_other,
-        })
-        && match (&self.aopayoutinfo[ELoHi::Hi], &aon_payout_bound[ELoHi::Hi]) {
-            (None, _) => true,
-            (Some(_), None) => false,
-            (Some(n_payout_self), Some(n_payout_other)) => n_payout_self>=n_payout_other,
-        }
-    }
-
-    pub fn lower_bound(&self) -> &Option<isize> {
-        &self.aopayoutinfo[ELoHi::Lo]
+#[cfg(debug_assertions)]
+fn payouthint_contains(intvlon_payout_lhs: &SPayoutInterval, intvlon_payout_rhs: &SPayoutInterval) -> bool {
+    (match (&intvlon_payout_lhs[ELoHi::Lo], &intvlon_payout_rhs[ELoHi::Lo]) {
+        (None, _) => true,
+        (Some(_), None) => false,
+        (Some(n_payout_self), Some(n_payout_other)) => n_payout_self<=n_payout_other,
+    })
+    && match (&intvlon_payout_lhs[ELoHi::Hi], &intvlon_payout_rhs[ELoHi::Hi]) {
+        (None, _) => true,
+        (Some(_), None) => false,
+        (Some(n_payout_self), Some(n_payout_other)) => n_payout_self>=n_payout_other,
     }
 }
 
@@ -249,7 +234,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
         );
         // TODO assert tpln_stoss_doubling consistent with stoss_allowed etc
         #[cfg(debug_assertions)] {
-            let mut mapepipayouthint = EPlayerIndex::map_from_fn(|_epi| SPayoutHint::new((None, None)));
+            let mut mapepipayouthint = EPlayerIndex::map_from_fn(|_epi| SPayoutInterval::from_raw([None, None]));
             let mut stichseq_check = SStichSequence::new(gamefinishedstiche.get().kurzlang());
             let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
                 SHand::new_from_iter(gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[epi]))
@@ -271,7 +256,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                     );
                     assert!(
                         mapepipayouthint.iter().zip(mapepipayouthint_after.iter())
-                            .all(|(payouthint, payouthint_other)| payouthint.contains_payouthint(payouthint_other.aopayoutinfo)),
+                            .all(|(payouthint, payouthint_other)| payouthint_contains(&payouthint, payouthint_other)),
                         "{}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepipayouthint, mapepipayouthint_after,
                     );
                     mapepipayouthint = mapepipayouthint_after;
@@ -279,7 +264,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                 assert!(
                     mapepipayouthint.iter().zip(apayoutinfo.iter().cloned())
                         .all(|(payouthint, payoutinfo)|
-                            payouthint.contains_payouthint(ELoHi::map_from_fn(|_lohi| {
+                            payouthint_contains(&payouthint, &ELoHi::map_from_fn(|_lohi| {
                                 Some(payoutinfo)
                             }))
                         ),
@@ -292,7 +277,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
 
     fn payoutinfos2(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize>;
 
-    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint>;
+    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInterval>;
 
     fn all_allowed_cards(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         assert!(!hand.cards().is_empty());
