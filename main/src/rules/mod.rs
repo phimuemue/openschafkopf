@@ -286,7 +286,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                 for (epi, card) in stich.iter() {
                     stichseq_check.zugeben_custom_winner_index(*card, |stich| self.winner_index(stich)); // TODO I could not simply pass rules. Why?
                     ahand_check[epi].play_card(*card);
-                    let mapepipayouthint_after = self.payouthints(
+                    let mapepipayouthint_after = self.payouthints2(
                         &stichseq_check,
                         &ahand_check,
                         &SRuleStateCache::new(
@@ -316,7 +316,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
 
     fn payoutinfos2(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo>;
 
-    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint>;
+    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint>;
 
     fn all_allowed_cards(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         assert!(!hand.cards().is_empty());

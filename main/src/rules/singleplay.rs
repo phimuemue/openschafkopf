@@ -22,7 +22,7 @@ macro_rules! impl_single_play {() => {
         ).map(|n_payout| SPayoutInfo::new(*n_payout, EStockAction::Ignore))
     }
 
-    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
+    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint> {
         self.payoutdecider.payouthints(
             self,
             stichseq,

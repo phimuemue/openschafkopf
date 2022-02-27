@@ -406,7 +406,7 @@ impl TPruner for SPrunerNothing {
 pub struct SPrunerViaHint;
 impl TPruner for SPrunerViaHint {
     fn pruned_output(params: &SMinReachablePayoutBase<'_, Self>, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
-        let mapepion_payout = params.rules.payouthints(stichseq, ahand, rulestatecache).map(|payouthint| {
+        let mapepion_payout = params.rules.payouthints2(stichseq, ahand, rulestatecache).map(|payouthint| {
             payouthint
                 .lower_bound()
                 .as_ref()
