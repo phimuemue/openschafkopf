@@ -46,7 +46,7 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo> {
+    fn payoutinfos2(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo> {
         let points_for_player = |epi| rulestatecache.changing.mapepipointstichcount[epi].n_point;
         debug_assert_eq!(
             EPlayerIndex::map_from_fn(points_for_player),

@@ -83,7 +83,7 @@ impl TRules for SRulesRufspiel {
         (epi==self.epi || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }
 
-    fn payoutinfos(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo> {
+    fn payoutinfos2(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo> {
         let epi_coplayer = debug_verify_eq!(
             rulestatecache.fixed.who_has_card(self.rufsau()),
             unwrap!(gamefinishedstiche.get().completed_stichs().iter()
