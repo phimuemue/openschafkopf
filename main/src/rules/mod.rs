@@ -90,32 +90,32 @@ plain_enum_mod!(modelohi, ELoHi {Lo, Hi,});
 
 #[derive(Debug, Clone)]
 pub struct SPayoutHint {
-    aopayoutinfo: EnumMap<ELoHi, Option<SPayoutInfo>>,
+    aopayoutinfo: EnumMap<ELoHi, Option<isize>>,
 }
 
 impl SPayoutHint {
-    fn new(tplopayoutinfo: (Option<SPayoutInfo>, Option<SPayoutInfo>)) -> Self {
+    fn new(tplopayoutinfo: (Option<isize>, Option<isize>)) -> Self {
         Self {
             aopayoutinfo: ELoHi::map_from_raw([tplopayoutinfo.0, tplopayoutinfo.1]),
         }
     }
 
     #[cfg(debug_assertions)]
-    fn contains_payouthint(&self, payouthint_other: &SPayoutHint) -> bool {
-        (match (&self.aopayoutinfo[ELoHi::Lo], &payouthint_other.aopayoutinfo[ELoHi::Lo]) {
+    fn contains_payouthint(&self, aon_payout_bound: EnumMap<ELoHi, Option<isize>>) -> bool {
+        (match (&self.aopayoutinfo[ELoHi::Lo], &aon_payout_bound[ELoHi::Lo]) {
             (None, _) => true,
             (Some(_), None) => false,
-            (Some(payoutinfo_self), Some(payoutinfo_other)) => payoutinfo_self.n_payout<=payoutinfo_other.n_payout,
+            (Some(n_payout_self), Some(n_payout_other)) => n_payout_self<=n_payout_other,
         })
-        && match (&self.aopayoutinfo[ELoHi::Hi], &payouthint_other.aopayoutinfo[ELoHi::Hi]) {
+        && match (&self.aopayoutinfo[ELoHi::Hi], &aon_payout_bound[ELoHi::Hi]) {
             (None, _) => true,
             (Some(_), None) => false,
-            (Some(payoutinfo_self), Some(payoutinfo_other)) => payoutinfo_self.n_payout>=payoutinfo_other.n_payout,
+            (Some(n_payout_self), Some(n_payout_other)) => n_payout_self>=n_payout_other,
         }
         // TODO check estockaction
     }
 
-    pub fn lower_bound(&self) -> &Option<SPayoutInfo> {
+    pub fn lower_bound(&self) -> &Option<isize> {
         &self.aopayoutinfo[ELoHi::Lo]
     }
 }
@@ -263,18 +263,20 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
     fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         let apayoutinfo = self.payoutinfos2(
             gamefinishedstiche,
+            tpln_stoss_doubling,
+            n_stock,
             debug_verify_eq!(
                 rulestatecache,
                 &SRuleStateCache::new_from_gamefinishedstiche(gamefinishedstiche, |stich| self.winner_index(stich))
             ),
         );
-        assert!({
-            let count_stockaction = |estockaction| {
-                apayoutinfo.iter().filter(|payoutinfo| estockaction==payoutinfo.estockaction).count()
-            };
-            count_stockaction(EStockAction::TakeHalf)==0 || count_stockaction(EStockAction::GiveHalf)==0
-        });
-        assert_eq!(n_stock%2, 0);
+        // assert!({
+        //     let count_stockaction = |estockaction| {
+        //         apayoutinfo.iter().filter(|payoutinfo| estockaction==payoutinfo.estockaction).count()
+        //     };
+        //     count_stockaction(EStockAction::TakeHalf)==0 || count_stockaction(EStockAction::GiveHalf)==0
+        // });
+        //assert_eq!(n_stock%2, 0);
         // TODO assert tpln_stoss_doubling consistent with stoss_allowed etc
         #[cfg(debug_assertions)] {
             let mut mapepipayouthint = EPlayerIndex::map_from_fn(|_epi| SPayoutHint::new((None, None)));
@@ -289,6 +291,8 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                     let mapepipayouthint_after = self.payouthints2(
                         &stichseq_check,
                         &ahand_check,
+                        tpln_stoss_doubling,
+                        n_stock,
                         &SRuleStateCache::new(
                             &stichseq_check,
                             &ahand_check,
@@ -297,7 +301,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                     );
                     assert!(
                         mapepipayouthint.iter().zip(mapepipayouthint_after.iter())
-                            .all(|(payouthint, payouthint_other)| payouthint.contains_payouthint(payouthint_other)),
+                            .all(|(payouthint, payouthint_other)| payouthint.contains_payouthint(payouthint_other.aopayoutinfo)),
                         "{}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepipayouthint, mapepipayouthint_after,
                     );
                     mapepipayouthint = mapepipayouthint_after;
@@ -305,18 +309,20 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                 assert!(
                     mapepipayouthint.iter().zip(apayoutinfo.iter().cloned())
                         .all(|(payouthint, payoutinfo)|
-                            payouthint.contains_payouthint(&SPayoutHint::new((Some(payoutinfo.clone()), Some(payoutinfo))))
+                            payouthint.contains_payouthint(ELoHi::map_from_fn(|_lohi| {
+                                Some(payoutinfo)
+                            }))
                         ),
                     "{}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepipayouthint, apayoutinfo,
                 );
             }
         }
-        apayoutinfo.map(|payoutinfo| payoutinfo.payout_including_stock(n_stock, tpln_stoss_doubling))
+        apayoutinfo
     }
 
-    fn payoutinfos2(&self, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutInfo>;
+    fn payoutinfos2(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize>;
 
-    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint>;
+    fn payouthints2(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SPayoutHint>;
 
     fn all_allowed_cards(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         assert!(!hand.cards().is_empty());
