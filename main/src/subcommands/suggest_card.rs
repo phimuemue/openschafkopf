@@ -12,7 +12,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::App {
         .arg(clap::Arg::with_name("branching").long("branching").takes_value(true))
         .arg(clap::Arg::with_name("prune").long("prune").takes_value(true))
         .arg(clap::Arg::with_name("visualize").long("visualize").takes_value(true))
-        // TODO Add possibility to request analysis by points/stichs
+        .arg(clap::Arg::with_name("points").long("points")) // TODO? also support by stichs
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
@@ -22,7 +22,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     impl<'argmatches> TWithCommonArgs for SWithCommonArgs<'argmatches> {
         fn call(
             self,
-            rules: &dyn TRules,
+            rules_raw: &dyn TRules,
             hand_fixed: SHand,
             itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send,
             eremainingcards: ERemainingCards,
@@ -30,6 +30,25 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             b_verbose: bool,
         ) -> Result<(), Error> {
             let clapmatches = self.clapmatches;
+            let otplrulesfn_points_as_payout = if clapmatches.is_present("points") {
+                if let Some(tplrulesfn_points_as_payout) = rules_raw.points_as_payout() {
+                    Some(tplrulesfn_points_as_payout)
+                } else {
+                    if b_verbose { // TODO? dispatch statically
+                        println!("Rules {} do not support point based variant.", rules_raw);
+                    }
+                    None
+                }
+            } else {
+                None
+            };
+            let mut ofn_payout_to_points = None;
+            let rules = if let Some((rules, fn_payout_to_points)) = &otplrulesfn_points_as_payout {
+                ofn_payout_to_points = Some(fn_payout_to_points);
+                rules.as_ref()
+            } else {
+                rules_raw
+            };
             let epi_fixed = determinebestcard.epi_fixed;
             let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
                 macro_rules! forward{(($func_filter_allowed_cards: expr), ($foreachsnapshot: ident), $fn_visualizer: expr,) => {{ // TODORUST generic closures
@@ -131,29 +150,41 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     (paystats.counts()[std::cmp::Ordering::Equal]+paystats.counts()[std::cmp::Ordering::Greater])
                         .as_num::<f32>(),
                 )};
-                fn column_no_decimals(n: isize) -> (String, f32) {
-                    (format!("{} ", n), n.as_num::<f32>())
-                }
-                fn column_average(paystats: &SPayoutStats) -> (String, f32) {
-                    let f_avg = paystats.avg();
-                    (format!("{:.2} ", f_avg), f_avg)
-                }
+                let human_readable_payout = |f_payout| {
+                    if let Some(fn_payout_to_points) = &ofn_payout_to_points {
+                        fn_payout_to_points(
+                            &determinebestcard.stichseq,
+                            &determinebestcard.hand_fixed,
+                            f_payout
+                        )
+                    } else {
+                        f_payout
+                    }
+                };
+                let column_min_or_max = |n: isize| {
+                    let f_human_readable_payout = human_readable_payout(n.as_num::<f32>());
+                    (format!("{} ", f_human_readable_payout), f_human_readable_payout)
+                };
+                let column_average = |paystats: &SPayoutStats| {
+                    let f_human_readable_payout = human_readable_payout(paystats.avg());
+                    (format!("{:.2} ", f_human_readable_payout), f_human_readable_payout)
+                };
                 let atplstrf = [
-                    column_no_decimals(minmax.t_min.min()),
+                    column_min_or_max(minmax.t_min.min()),
                     column_average(&minmax.t_min),
-                    column_no_decimals(minmax.t_min.max()),
+                    column_min_or_max(minmax.t_min.max()),
                     column_counts(&minmax.t_min),
-                    column_no_decimals(minmax.t_selfish_min.min()),
+                    column_min_or_max(minmax.t_selfish_min.min()),
                     column_average(&minmax.t_selfish_min),
-                    column_no_decimals(minmax.t_selfish_min.max()),
+                    column_min_or_max(minmax.t_selfish_min.max()),
                     column_counts(&minmax.t_selfish_min),
-                    column_no_decimals(minmax.t_selfish_max.min()),
+                    column_min_or_max(minmax.t_selfish_max.min()),
                     column_average(&minmax.t_selfish_max),
-                    column_no_decimals(minmax.t_selfish_max.max()),
+                    column_min_or_max(minmax.t_selfish_max.max()),
                     column_counts(&minmax.t_selfish_max),
-                    column_no_decimals(minmax.t_max.min()),
+                    column_min_or_max(minmax.t_max.min()),
                     column_average(&minmax.t_max),
-                    column_no_decimals(minmax.t_max.max()),
+                    column_min_or_max(minmax.t_max.max()),
                     column_counts(&minmax.t_max),
                 ];
                 for ((str_val, f_val), formatinfo) in atplstrf.iter().zip_eq(aformatinfo.iter_mut()) {

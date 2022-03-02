@@ -16,7 +16,7 @@ pub struct SPayoutDeciderParams {
 }
 
 
-pub trait TPointsToWin : Sync + 'static + Clone + fmt::Debug {
+pub trait TPointsToWin : Sync + Send + 'static + Clone + fmt::Debug {
     fn points_to_win(&self) -> isize;
 }
 
@@ -32,6 +32,11 @@ impl TPointsToWin for SPointsToWin61 {
 #[derive(Clone, Debug, new)]
 pub struct SPayoutDeciderPointBased<PointsToWin> {
     pub payoutparams : SPayoutDeciderParams,
+    pub pointstowin: PointsToWin,
+}
+
+#[derive(Clone, Debug, new)]
+pub struct SPayoutDeciderPointsAsPayout<PointsToWin> {
     pub pointstowin: PointsToWin,
 }
 
@@ -174,6 +179,90 @@ impl<
     }
 }
 
+fn primary_points_to_normalized_points(n_points_primary_party: isize, pointstowin: &impl TPointsToWin) -> isize {
+    // General idea: Just use the n_points_primary_party as payout.
+    // => Problem: By convention a lost game is determined by a negative payout,
+    //    i.e. we cannot simply use n_points_primary_party as payout 
+    //    (with 0 <= n_points_primary_party <= 60 the game is actually lost).
+    // To resolve this, we could subtract 60.5 from n_points_primary_party:
+    // * n_points_primary_party - 60.5 > 0: game won
+    // * n_points_primary_party - 60.5 < 0: game lost
+    // * n_points_primary_party - 60.5 == 0: impossible as n_points_primary_party is integral
+    // => Problem: would use f32/f64, but we generally use isize for points and payouts.
+    // To resolve this, we can multiply the above equations with 2 to get "normalized points":
+    // n_points_normalized = 2*n_points_primary_party - 121
+    let n_points_normalized = 2*n_points_primary_party - 2*pointstowin.points_to_win() + 1;
+    debug_assert_eq!(
+        normalized_points_to_primary_points(n_points_normalized.as_num::<f32>(), pointstowin).as_num::<isize>(),
+        n_points_primary_party
+    );
+    n_points_normalized
+}
+
+fn normalized_points_to_primary_points(f_points_normalized: f32, pointstowin: &impl TPointsToWin) -> f32 {
+    (f_points_normalized - 1. + 2.*pointstowin.points_to_win().as_num::<f32>()) / 2.
+}
+
+pub fn normalized_points_to_points(f_points_normalized: f32, pointstowin: &impl TPointsToWin, b_primary: bool) -> f32 {
+    let f_primary_points = normalized_points_to_primary_points(
+        if b_primary { f_points_normalized } else { -f_points_normalized },
+        pointstowin
+    );
+    if b_primary {
+        f_primary_points
+    } else {
+        120. - f_primary_points
+    }
+}
+
+impl<
+    PointsToWin: TPointsToWin,
+    PlayerParties: TPlayerParties,
+> TPayoutDecider<PlayerParties> for SPayoutDeciderPointsAsPayout<PointsToWin> {
+    fn payout<Rules>(
+        &self,
+        rules: &Rules,
+        rulestatecache: &SRuleStateCache,
+        gamefinishedstiche: SStichSequenceGameFinished,
+        playerparties: &PlayerParties,
+    ) -> EnumMap<EPlayerIndex, isize>
+        where 
+            Rules: TRulesNoObj,
+    {
+        payout_point_based(
+            &self.pointstowin,
+            rules,
+            rulestatecache,
+            gamefinishedstiche,
+            playerparties,
+            /*fn_payout_one_player*/|n_points_primary_party, _b_primary_party_wins| {
+                primary_points_to_normalized_points(n_points_primary_party, &self.pointstowin).abs()
+            },
+        )
+    }
+
+    fn payouthints<Rules: TRulesNoObj>(
+        &self,
+        rules: &Rules,
+        stichseq: &SStichSequence,
+        ahand: &EnumMap<EPlayerIndex, SHand>,
+        rulestatecache: &SRuleStateCache,
+        playerparties: &PlayerParties,
+    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+        payouthints_point_based(
+            &self.pointstowin,
+            rules,
+            stichseq,
+            ahand,
+            rulestatecache,
+            playerparties,
+            /*fn_payout_one_player_if_premature_winner*/|n_points_primary_party| {
+                primary_points_to_normalized_points(n_points_primary_party, &self.pointstowin).abs()
+            },
+        )
+    }
+}
+
 impl SLaufendeParams {
     pub fn payout_laufende<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(&self, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, playerparties: &PlayerParties) -> isize {
         let ekurzlang = gamefinishedstiche.get().kurzlang();
@@ -213,7 +302,7 @@ pub fn internal_payout(n_payout_single_player: isize, playerparties: &impl TPlay
     })
 }
 
-pub trait TPayoutDecider<PlayerParties> : Sync + 'static + Clone + fmt::Debug {
+pub trait TPayoutDecider<PlayerParties> : Sync + Send + 'static + Clone + fmt::Debug {
     fn payout<Rules>(
         &self,
         rules: &Rules,
