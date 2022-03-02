@@ -9,30 +9,56 @@ struct SRufspielPayout {
     payoutdecider: SPayoutDeciderPointBased<SPointsToWin61>,
 }
 
+fn rufspiel_payout_no_stock_stoss_doubling(payoutdecider: &impl TPayoutDecider<SPlayerParties22>, rules: &SRulesRufspiel, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> (EnumMap<EPlayerIndex, isize>, SPlayerParties22) {
+    let epi_coplayer = debug_verify_eq!(
+        rulestatecache.fixed.who_has_card(rules.rufsau()),
+        unwrap!(gamefinishedstiche.get().completed_stichs().iter()
+            .flat_map(|stich| stich.iter())
+            .find(|&(_, card)| *card==rules.rufsau())
+            .map(|(epi, _)| epi))
+    );
+    assert_ne!(rules.epi, epi_coplayer);
+    let playerparties = SPlayerParties22{aepi_pri: [rules.epi, epi_coplayer]};
+    let an_payout_no_stock = payoutdecider.payout(
+        rules,
+        rulestatecache,
+        gamefinishedstiche,
+        &playerparties,
+    );
+    assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
+    assert_eq!(an_payout_no_stock[rules.epi], an_payout_no_stock[epi_coplayer]);
+    assert_eq!(
+        an_payout_no_stock.iter()
+            .filter(|&n_payout_no_stock| 0<*n_payout_no_stock)
+            .count(),
+        2
+    );
+    (an_payout_no_stock, playerparties)
+}
+
+fn rufspiel_payouthints_no_stock_stoss_doubling(payoutdecider: &impl TPayoutDecider<SPlayerParties22>, rules: &SRulesRufspiel, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    let epi_coplayer = debug_verify_eq!(
+        rulestatecache.fixed.who_has_card(rules.rufsau()),
+        stichseq.visible_cards()
+            .find(|&(_, card)| *card==rules.rufsau())
+            .map(|(epi, _)| epi)
+            .unwrap_or_else(|| {
+                unwrap!(EPlayerIndex::values().find(|epi|
+                    ahand[*epi].cards().iter().any(|card| *card==rules.rufsau())
+                ))
+            })
+    );
+    assert_ne!(rules.epi, epi_coplayer);
+    payoutdecider.payouthints(rules, stichseq, ahand, rulestatecache, &SPlayerParties22{aepi_pri: [rules.epi, epi_coplayer]})
+}
+
 impl SRufspielPayout {
     fn payout(&self, rules: &SRulesRufspiel, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
-        let epi_coplayer = debug_verify_eq!(
-            rulestatecache.fixed.who_has_card(rules.rufsau()),
-            unwrap!(gamefinishedstiche.get().completed_stichs().iter()
-                .flat_map(|stich| stich.iter())
-                .find(|&(_, card)| *card==rules.rufsau())
-                .map(|(epi, _)| epi))
-        );
-        assert_ne!(rules.epi, epi_coplayer);
-        let playerparties = SPlayerParties22{aepi_pri: [rules.epi, epi_coplayer]};
-        let an_payout_no_stock = &self.payoutdecider.payout(
+        let (an_payout_no_stock, playerparties) = rufspiel_payout_no_stock_stoss_doubling(
+            &self.payoutdecider,
             rules,
-            rulestatecache,
             gamefinishedstiche,
-            &playerparties,
-        );
-        assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
-        assert_eq!(an_payout_no_stock[rules.epi], an_payout_no_stock[epi_coplayer]);
-        assert_eq!(
-            an_payout_no_stock.iter()
-                .filter(|&n_payout_no_stock| 0<*n_payout_no_stock)
-                .count(),
-            2
+            rulestatecache,
         );
         assert_eq!(n_stock%2, 0);
         EPlayerIndex::map_from_fn(|epi|
@@ -49,23 +75,16 @@ impl SRufspielPayout {
         )
     }
     fn payouthints(&self, rules: &SRulesRufspiel, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-        let epi_coplayer = debug_verify_eq!(
-            rulestatecache.fixed.who_has_card(rules.rufsau()),
-            stichseq.visible_cards()
-                .find(|&(_, card)| *card==rules.rufsau())
-                .map(|(epi, _)| epi)
-                .unwrap_or_else(|| {
-                    unwrap!(EPlayerIndex::values().find(|epi|
-                        ahand[*epi].cards().iter().any(|card| *card==rules.rufsau())
-                    ))
-                })
-        );
-        assert_ne!(rules.epi, epi_coplayer);
-        self.payoutdecider.payouthints(rules, stichseq, ahand, rulestatecache, &SPlayerParties22{aepi_pri: [rules.epi, epi_coplayer]})
-            .map(|intvlon_payout| intvlon_payout.map(|on_payout|
-                // TODO Stock
-                on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
-            ))
+        rufspiel_payouthints_no_stock_stoss_doubling(
+            &self.payoutdecider,
+            rules,
+            stichseq,
+            ahand,
+            rulestatecache,
+        ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
+            // TODO Stock
+            on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
+        ))
     }
 }
 
