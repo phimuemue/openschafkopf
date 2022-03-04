@@ -13,6 +13,17 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
     }
     fn payout<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider>(&self, rules: &SRulesSoloLike<StaticEPI, TrumpfDecider, Self>, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize>;
     fn payouthints<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider>(&self, rules: &SRulesSoloLike<StaticEPI, TrumpfDecider, Self>, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
+
+    fn points_as_payout<
+        StaticEPI: TStaticValue<EPlayerIndex>,
+        TrumpfDecider: TTrumpfDecider,
+        PayoutDecider: TPayoutDeciderSoloLike
+    >(&self, _rules: &SRulesSoloLike<StaticEPI, TrumpfDecider, PayoutDecider>) -> Option<(
+        Box<dyn TRules>,
+        Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
+    )> {
+        None
+    }
 }
 
 impl TPointsToWin for VGameAnnouncementPrioritySoloLike {
@@ -78,6 +89,102 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
              on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
         ))
+    }
+
+    fn points_as_payout<
+        StaticEPI: TStaticValue<EPlayerIndex>,
+        TrumpfDecider: TTrumpfDecider,
+        PayoutDecider: TPayoutDeciderSoloLike
+    >(&self, rules: &SRulesSoloLike<StaticEPI, TrumpfDecider, PayoutDecider>) -> Option<(
+        Box<dyn TRules>,
+        Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
+    )> {
+        //assert_eq!(self, rules.payoutdecider); // TODO
+        let pointstowin = self.pointstowin.clone();
+        let epi_active = rules.internal_playerindex();
+        Some((
+            Box::new(SRulesSoloLike{
+                str_name: rules.str_name.clone(),
+                phantom: rules.phantom,
+                payoutdecider: SPayoutDeciderPointsAsPayout{
+                    pointstowin: pointstowin.clone(),
+                },
+            }) as Box<dyn TRules>,
+            Box::new(move |stichseq: &SStichSequence, _hand: &SHand, f_payout: f32| {
+                SPayoutDeciderPointsAsPayout::payout_to_points(
+                    epi_active,
+                    stichseq,
+                    &pointstowin,
+                    f_payout,
+                )
+            }) as Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
+        )
+    )}
+}
+
+impl SPayoutDeciderPointsAsPayout<VGameAnnouncementPrioritySoloLike> {
+    fn payout_to_points(epi_active: EPlayerIndex, stichseq: &SStichSequence, pointstowin: &impl TPointsToWin, f_payout: f32) -> f32 {
+        let epi = unwrap!(stichseq.current_stich().current_playerindex());
+        normalized_points_to_points(
+            f_payout / SPlayerParties13::new(epi_active).multiplier(epi).as_num::<f32>(),
+            pointstowin,
+            /*b_primary*/ epi==epi_active,
+        )
+    }
+}
+
+impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPrioritySoloLike> {
+    fn priority(&self) -> VGameAnnouncementPriority {
+        VGameAnnouncementPriority::SoloLike(self.pointstowin.clone())
+    }
+
+    fn payout<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider>(&self, rules: &SRulesSoloLike<StaticEPI, TrumpfDecider, Self>, gamefinishedstiche: SStichSequenceGameFinished, _tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+        let an_payout = TPayoutDecider::payout(self,
+            rules,
+            rulestatecache,
+            gamefinishedstiche,
+            &SPlayerParties13::new(rules.internal_playerindex()),
+        );
+        #[cfg(debug_assertions)] {
+            let mut stichseq_check = SStichSequence::new(gamefinishedstiche.get().kurzlang());
+            let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
+                SHand::new_from_iter(gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[epi]))
+            );
+            let playerparties = SPlayerParties13::new(rules.internal_playerindex());
+            for stich in gamefinishedstiche.get().completed_stichs().iter() {
+                for (epi_card, card) in stich.iter() {
+                    let b_primary = playerparties.is_primary_party(epi_card);
+                    assert_eq!(
+                        Self::payout_to_points(
+                            /*epi_active*/rules.internal_playerindex(),
+                            &stichseq_check,
+                            &self.pointstowin,
+                            an_payout[epi_card].as_num::<f32>(),
+                        ).as_num::<isize>(),
+                        EPlayerIndex::values()
+                            .filter(|epi| playerparties.is_primary_party(*epi)==b_primary)
+                            .map(|epi|
+                                rulestatecache.changing.mapepipointstichcount[epi].n_point
+                            )
+                            .sum::<isize>(),
+                    );
+                    stichseq_check.zugeben_custom_winner_index(*card, |stich| rules.winner_index(stich)); // TODO I could not simply pass rules. Why?
+                    ahand_check[epi_card].play_card(*card);
+                }
+            }
+
+        }
+        an_payout
+    }
+
+    fn payouthints<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider>(&self, rules: &SRulesSoloLike<StaticEPI, TrumpfDecider, Self>, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, _tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+        TPayoutDecider::payouthints(self,
+            rules,
+            stichseq,
+            ahand,
+            rulestatecache,
+            &SPlayerParties13::new(rules.internal_playerindex()),
+        )
     }
 }
 
@@ -340,6 +447,13 @@ impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, Payou
             n_stock,
             rulestatecache,
         )
+    }
+
+    fn points_as_payout(&self) -> Option<(
+        Box<dyn TRules>,
+        Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
+    )> {
+        self.payoutdecider.points_as_payout(self)
     }
 }
 
