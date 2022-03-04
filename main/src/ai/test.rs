@@ -34,7 +34,7 @@ fn test_determine_best_card() {
         for (epi_stich_first, acard_stich) in slctplepistich.iter() {
             for (epi, card) in EPlayerIndex::values()
                 .map(|epi| epi.wrapping_add(epi_stich_first.to_usize()))
-                .zip(acard_stich.iter())
+                .zip_eq(acard_stich.iter())
             {
                 unwrap!(game.zugeben(*card, epi));
             }

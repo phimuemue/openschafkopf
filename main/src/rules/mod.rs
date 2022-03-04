@@ -22,6 +22,7 @@ use crate::primitives::*;
 use crate::rules::card_points::points_stich;
 use crate::util::*;
 use std::{cmp::Ordering, fmt};
+use itertools::Itertools;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum VTrumpfOrFarbe {
@@ -251,14 +252,14 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                         ),
                     );
                     assert!(
-                        mapepiintvlon_payout.iter().zip(mapepiintvlon_payout_after.iter())
+                        mapepiintvlon_payout.iter().zip_eq(mapepiintvlon_payout_after.iter())
                             .all(|(intvlon_payout, intvlon_payout_other)| payouthint_contains(intvlon_payout, intvlon_payout_other)),
                         "{}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepiintvlon_payout, mapepiintvlon_payout_after,
                     );
                     mapepiintvlon_payout = mapepiintvlon_payout_after;
                 }
                 assert!(
-                    mapepiintvlon_payout.iter().zip(apayoutinfo.iter().cloned())
+                    mapepiintvlon_payout.iter().zip_eq(apayoutinfo.iter().cloned())
                         .all(|(intvlon_payout, payoutinfo)|
                             payouthint_contains(intvlon_payout, &ELoHi::map_from_fn(|_lohi| {
                                 Some(payoutinfo)
