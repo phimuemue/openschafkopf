@@ -493,6 +493,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Rul
                     gamefinishedstiche,
                     |stich| self.rules.winner_index(stich),
                 ),
+                /*b_test_points_as_payout*/if_dbg_else!({true}{()}),
             ),
             stockorgame: VStockOrT::OrT(self),
         }

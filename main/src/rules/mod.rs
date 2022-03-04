@@ -206,6 +206,8 @@ pub trait TRulesNoObj : TRules {
     type TrumpfDecider: trumpfdecider::TTrumpfDecider;
 }
 
+pub type SIfDebugBool = if_dbg_else!({bool}{()}); // TODO can we get rid of this?
+
 pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone + Send {
     // TTrumpfDecider
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
@@ -219,7 +221,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
 
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
 
-    fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache, b_test_points_as_payout: SIfDebugBool) -> EnumMap<EPlayerIndex, isize> {
         let apayoutinfo = self.payout_no_invariant(
             gamefinishedstiche,
             tpln_stoss_doubling,
@@ -267,6 +269,17 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                         ),
                     "{}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepiintvlon_payout, apayoutinfo,
                 );
+            }
+            if b_test_points_as_payout {
+                if let Some((rules, _fn_payout_to_points)) = self.points_as_payout() {
+                    rules.payout(
+                        gamefinishedstiche,
+                        tpln_stoss_doubling,
+                        n_stock,
+                        rulestatecache,
+                        /*b_test_points_as_payout*/false,
+                    );
+                }
             }
         }
         apayoutinfo
