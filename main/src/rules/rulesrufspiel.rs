@@ -54,7 +54,7 @@ fn rufspiel_payouthints_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>
             })
     );
     assert_ne!(rules.epi, epi_coplayer);
-    payoutdecider.payouthints(rules, stichseq, ahand, rulestatecache, &SPlayerParties22{aepi_pri: [rules.epi, epi_coplayer]})
+    payoutdecider.payouthints(rules, rulestatecache, stichseq, ahand, &SPlayerParties22{aepi_pri: [rules.epi, epi_coplayer]})
 }
 
 impl TRufspielPayout for SRufspielPayout {

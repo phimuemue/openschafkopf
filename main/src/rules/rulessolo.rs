@@ -82,9 +82,9 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
     fn payouthints<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider>(&self, rules: &SRulesSoloLike<StaticEPI, TrumpfDecider, Self>, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         TPayoutDecider::payouthints(self,
             rules,
+            rulestatecache,
             stichseq,
             ahand,
-            rulestatecache,
             &SPlayerParties13::new(rules.internal_playerindex()),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
              on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
@@ -180,9 +180,9 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
     fn payouthints<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider>(&self, rules: &SRulesSoloLike<StaticEPI, TrumpfDecider, Self>, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, _tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         TPayoutDecider::payouthints(self,
             rules,
+            rulestatecache,
             stichseq,
             ahand,
-            rulestatecache,
             &SPlayerParties13::new(rules.internal_playerindex()),
         )
     }
@@ -219,9 +219,9 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderTout {
     fn payouthints<Rules>(
         &self,
         if_dbg_else!({rules}{_rules}): &Rules,
+        rulestatecache: &SRuleStateCache,
         stichseq: &SStichSequence,
         _ahand: &EnumMap<EPlayerIndex, SHand>,
-        rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>
         where Rules: TRulesNoObj
@@ -263,9 +263,9 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
     fn payouthints<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider>(&self, rules: &SRulesSoloLike<StaticEPI, TrumpfDecider, Self>, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         TPayoutDecider::payouthints(self,
             rules,
+            rulestatecache,
             stichseq,
             ahand,
-            rulestatecache,
             &SPlayerParties13::new(rules.internal_playerindex()),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
              on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
@@ -339,9 +339,9 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderSie {
     fn payouthints<Rules>(
         &self,
         rules: &Rules,
+        _rulestatecache: &SRuleStateCache,
         stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
-        _rulestatecache: &SRuleStateCache,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>
         where Rules: TRulesNoObj
@@ -387,9 +387,9 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
     fn payouthints<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider>(&self, rules: &SRulesSoloLike<StaticEPI, TrumpfDecider, Self>, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         TPayoutDecider::payouthints(self,
             rules,
+            rulestatecache,
             stichseq,
             ahand,
-            rulestatecache,
             &SPlayerParties13::new(rules.internal_playerindex()),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
              on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),

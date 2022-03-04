@@ -160,9 +160,9 @@ impl<
     fn payouthints<Rules: TRulesNoObj>(
         &self,
         rules: &Rules,
+        rulestatecache: &SRuleStateCache,
         stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
-        rulestatecache: &SRuleStateCache,
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         payouthints_point_based(
@@ -244,9 +244,9 @@ impl<
     fn payouthints<Rules: TRulesNoObj>(
         &self,
         rules: &Rules,
+        rulestatecache: &SRuleStateCache,
         stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
-        rulestatecache: &SRuleStateCache,
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         payouthints_point_based(
@@ -315,9 +315,9 @@ pub trait TPayoutDecider<PlayerParties> : Sync + Send + 'static + Clone + fmt::D
     fn payouthints<Rules>(
         &self,
         rules: &Rules,
+        rulestatecache: &SRuleStateCache,
         stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
-        rulestatecache: &SRuleStateCache,
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>
         where Rules: TRulesNoObj;
