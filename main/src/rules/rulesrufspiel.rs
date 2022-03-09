@@ -5,8 +5,8 @@ use crate::util::*;
 use std::{cmp::Ordering, fmt};
 
 pub trait TRufspielPayout : Clone + Sync + fmt::Debug + Send + 'static {
-    fn payout(&self, rules: &SRulesRufspielGeneric<Self>, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize>;
-    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
+    fn payout(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> EnumMap<EPlayerIndex, isize>;
+    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 }
 
 #[derive(Debug, Clone)]
@@ -14,7 +14,7 @@ pub struct SRufspielPayout {
     payoutdecider: SPayoutDeciderPointBased<SPointsToWin61>,
 }
 
-fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider<SPlayerParties22>, rules: &SRulesRufspielGeneric<RufspielPayout>, gamefinishedstiche: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> (EnumMap<EPlayerIndex, isize>, SPlayerParties22) {
+fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider<SPlayerParties22>, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished) -> (EnumMap<EPlayerIndex, isize>, SPlayerParties22) {
     let epi_coplayer = debug_verify_eq!(
         rulestatecache.fixed.who_has_card(rules.rufsau()),
         unwrap!(gamefinishedstiche.get().completed_stichs().iter()
@@ -41,7 +41,7 @@ fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payo
     (an_payout_no_stock, playerparties)
 }
 
-fn rufspiel_payouthints_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider<SPlayerParties22>, rules: &SRulesRufspielGeneric<RufspielPayout>, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+fn rufspiel_payouthints_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider<SPlayerParties22>, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
     let epi_coplayer = debug_verify_eq!(
         rulestatecache.fixed.who_has_card(rules.rufsau()),
         stichseq.visible_cards()
@@ -58,12 +58,12 @@ fn rufspiel_payouthints_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>
 }
 
 impl TRufspielPayout for SRufspielPayout {
-    fn payout(&self, rules: &SRulesRufspielGeneric<Self>, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> EnumMap<EPlayerIndex, isize> {
         let (an_payout_no_stock, playerparties) = rufspiel_payout_no_stock_stoss_doubling(
             &self.payoutdecider,
             rules,
-            gamefinishedstiche,
             rulestatecache,
+            gamefinishedstiche,
         );
         assert_eq!(n_stock%2, 0);
         EPlayerIndex::map_from_fn(|epi|
@@ -79,13 +79,13 @@ impl TRufspielPayout for SRufspielPayout {
                 },
         )
     }
-    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         rufspiel_payouthints_no_stock_stoss_doubling(
             &self.payoutdecider,
             rules,
+            rulestatecache,
             stichseq,
             ahand,
-            rulestatecache,
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
             // TODO Stock
             on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
@@ -183,21 +183,21 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
     fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         self.rufspielpayout.payout(
             self,
+            rulestatecache,
             gamefinishedstiche,
             tpln_stoss_doubling,
             n_stock,
-            rulestatecache,
         )
     }
 
     fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         self.rufspielpayout.payouthints(
             self,
+            rulestatecache,
             stichseq,
             ahand,
             tpln_stoss_doubling,
             n_stock,
-            rulestatecache,
         )
     }
 
@@ -285,12 +285,12 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
             }
         }
         impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
-            fn payout(&self, rules: &SRulesRufspielGeneric<Self>, gamefinishedstiche: SStichSequenceGameFinished, _tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+            fn payout(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, _tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> EnumMap<EPlayerIndex, isize> {
                 let (an_payout, if_dbg_else!({playerparties}{_playerparties})) = rufspiel_payout_no_stock_stoss_doubling(
                     &self.payoutdecider,
                     rules,
-                    gamefinishedstiche,
                     rulestatecache,
+                    gamefinishedstiche,
                 );
                 #[cfg(debug_assertions)] {
                     let mut stichseq_check = SStichSequence::new(gamefinishedstiche.get().kurzlang());
@@ -323,13 +323,13 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 }
                 an_payout
             }
-            fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, _tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+            fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, _tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
                 rufspiel_payouthints_no_stock_stoss_doubling(
                     &self.payoutdecider,
                     rules,
+                    rulestatecache,
                     stichseq,
                     ahand,
-                    rulestatecache,
                 )
             }
         }
