@@ -69,9 +69,9 @@ fn payout_point_based (
 fn payouthints_point_based(
     pointstowin: &impl TPointsToWin,
     if_dbg_else!({rules}{_rules}): &impl TRulesNoObj,
+    rulestatecache: &SRuleStateCache,
     if_dbg_else!({stichseq}{_stichseq}): &SStichSequence,
     _ahand: &EnumMap<EPlayerIndex, SHand>,
-    rulestatecache: &SRuleStateCache,
     playerparties: &impl TPlayerParties,
     fn_payout_one_player_if_premature_winner: impl FnOnce(isize)->isize,
 ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
@@ -168,9 +168,9 @@ impl<
         payouthints_point_based(
             &self.pointstowin,
             rules,
+            rulestatecache,
             stichseq,
             ahand,
-            rulestatecache,
             playerparties,
             /*fn_payout_one_player_if_premature_winner*/|_n_points_primary_party| {
                 self.payoutparams.n_payout_base
@@ -252,9 +252,9 @@ impl<
         payouthints_point_based(
             &self.pointstowin,
             rules,
+            rulestatecache,
             stichseq,
             ahand,
-            rulestatecache,
             playerparties,
             /*fn_payout_one_player_if_premature_winner*/|n_points_primary_party| {
                 primary_points_to_normalized_points(n_points_primary_party, &self.pointstowin).abs()
