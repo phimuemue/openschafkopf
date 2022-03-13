@@ -458,7 +458,7 @@ impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, Payou
 }
 
 impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> SRulesSoloLike<StaticEPI, TrumpfDecider, PayoutDecider> {
-    pub fn new(payoutdecider: PayoutDecider, str_name: String) -> Self {
+    fn new(payoutdecider: PayoutDecider, str_name: String) -> Self {
         Self {
             phantom: PhantomData,
             payoutdecider,
