@@ -9,6 +9,26 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug + Send {
     type ItCardTrumpf: Iterator<Item=SCard>;
     fn trumpfs_in_descending_order() -> return_impl!(Self::ItCardTrumpf);
     fn compare_cards(card_fst: SCard, card_snd: SCard) -> Option<Ordering>;
+
+    fn equivalent_when_on_same_hand() -> (EnumMap<EFarbe, Vec<SCard>>, /*veccard_trumpf*/Vec<SCard>) {
+        let mut mapefarbeveccard = EFarbe::map_from_fn(|_efarbe| Vec::new());
+        let mut veccard_trumpf = Vec::new();
+        for card in <SCard as TPlainEnum>::values() {
+            match Self::trumpforfarbe(card) {
+                VTrumpfOrFarbe::Trumpf => veccard_trumpf.push(card),
+                VTrumpfOrFarbe::Farbe(efarbe) => mapefarbeveccard[efarbe].push(card),
+            }
+        }
+        for veccard in mapefarbeveccard.iter_mut() {
+            veccard.sort_unstable_by(|card_lhs, card_rhs|
+                unwrap!(Self::compare_cards(*card_lhs, *card_rhs)).reverse()
+            );
+        }
+        veccard_trumpf.sort_unstable_by(|card_lhs, card_rhs|
+            unwrap!(Self::compare_cards(*card_lhs, *card_rhs)).reverse()
+        );
+        (mapefarbeveccard, veccard_trumpf)
+    }
 }
 
 pub trait TCompareFarbcards : Sync + 'static + Clone + fmt::Debug + Send {
@@ -129,3 +149,20 @@ macro_rules! impl_rules_trumpf {() => {
 macro_rules! impl_rules_trumpf_noobj{($trumpfdecider: ty) => {
     type TrumpfDecider = $trumpfdecider;
 }}
+
+#[test]
+fn test_equivalent_when_on_same_hand_trumpfdecider() {
+    type TrumpfDecider = STrumpfDeciderSchlag<
+        SStaticSchlagOber, STrumpfDeciderSchlag<
+        SStaticSchlagUnter, SStaticFarbeHerz>>;
+    let (mapefarbeveccard, veccard_trumpf) = TrumpfDecider::equivalent_when_on_same_hand();
+    fn assert_eq_cards(slccard_lhs: &[SCard], slccard_rhs: &[SCard]) {
+        assert_eq!(slccard_lhs, slccard_rhs);
+    }
+    use crate::primitives::card_values::*;
+    assert_eq_cards(&veccard_trumpf, &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7]);
+    assert_eq_cards(&mapefarbeveccard[EFarbe::Eichel], &[EA, EZ, EK, E9, E8, E7]);
+    assert_eq_cards(&mapefarbeveccard[EFarbe::Gras], &[GA, GZ, GK, G9, G8, G7]);
+    assert_eq_cards(&mapefarbeveccard[EFarbe::Herz], &[]);
+    assert_eq_cards(&mapefarbeveccard[EFarbe::Schelln], &[SA, SZ, SK, S9, S8, S7]);
+}
