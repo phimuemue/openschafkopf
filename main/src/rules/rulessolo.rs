@@ -13,6 +13,7 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
     }
     fn payout<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider>(&self, rules: &SRulesSoloLike<StaticEPI, TrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> EnumMap<EPlayerIndex, isize>;
     fn payouthints<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider>(&self, rules: &SRulesSoloLike<StaticEPI, TrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
+    fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>>;
 
     fn points_as_payout<
         StaticEPI: TStaticValue<EPlayerIndex>,
@@ -89,6 +90,10 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
              on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
         ))
+    }
+
+    fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
+        equivalent_when_on_same_hand_point_based(slccard_ordered)
     }
 
     fn points_as_payout<
@@ -186,6 +191,10 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
             &SPlayerParties13::new(rules.internal_playerindex()),
         )
     }
+
+    fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
+        equivalent_when_on_same_hand_point_based(slccard_ordered)
+    }
 }
 
 #[derive(Clone, Debug, new)]
@@ -270,6 +279,10 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
              on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
         ))
+    }
+
+    fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
+        vec![slccard_ordered.to_vec()] // In Tout, neighboring cards are equivalent regardless of points_card.
     }
 }
 
@@ -395,6 +408,18 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
              on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
         ))
     }
+
+    fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
+        use crate::card::card_values::*;
+        assert!(matches!(slccard_ordered, // TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
+            &[EO, GO, HO, SO, EU, GU, HU, SU]
+            | &[HA, HZ, HK, H9, H8, H7]
+            | &[EA, EZ, EK, E9, E8, E7]
+            | &[GA, GZ, GK, G9, G8, G7]
+            | &[SA, SZ, SK, S9, S8, S7]
+        ));
+        vec![slccard_ordered.to_vec()] // In Sie, neighboring cards are equivalent regardless of points_card.
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -449,6 +474,17 @@ impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, Payou
         )
     }
 
+    fn equivalent_when_on_same_hand(&self) -> Option<SEnumChains<SCard>> {
+        let (mapefarbeveccard, veccard_trumpf) = TrumpfDecider::equivalent_when_on_same_hand();
+        let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
+            .flat_map(|veccard| PayoutDecider::equivalent_when_on_same_hand(&veccard))
+            .collect::<Vec<_>>();
+        Some(SEnumChains::new_from_slices(
+            &vecveccard.iter()
+                .map(|veccard| &veccard as &[SCard]).collect::<Vec<_>>(),
+        ))
+    }
+
     fn points_as_payout(&self) -> Option<(
         Box<dyn TRules>,
         Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
@@ -496,6 +532,8 @@ pub fn sololike(
     esololike: ESoloLike,
     payoutdecider: impl Into<VPayoutDeciderSoloLike>,
 ) -> Box<dyn TActivelyPlayableRules> {
+    let (oefarbe, payoutdecider) = (oefarbe.into(), payoutdecider.into());
+    assert!(!matches!(payoutdecider, VPayoutDeciderSoloLike::Sie(_)) || oefarbe.is_none()); // TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
     macro_rules! sololike_internal{(
         $staticepi: ident,
         ($trumpfdecider_farbe: ty, $str_oefarbe: expr),
@@ -519,7 +557,7 @@ pub fn sololike(
             EPlayerIndex::EPI2 => SStaticEPI2,
             EPlayerIndex::EPI3 => SStaticEPI3,
         },
-        match (oefarbe.into()) {
+        match (oefarbe) {
             None => (STrumpfDeciderNoTrumpf<SCompareFarbcardsSimple>, ""),
             Some(EFarbe::Eichel) => (SStaticFarbeEichel, "Eichel"),
             Some(EFarbe::Gras) => (SStaticFarbeGras, "Gras"),
@@ -531,7 +569,7 @@ pub fn sololike(
             ESoloLike::Wenz => (SCoreGenericWenz, "Wenz"),
             ESoloLike::Geier => (SCoreGenericGeier, "Geier"),
         },
-        match (payoutdecider.into()) {
+        match (payoutdecider) {
             VPayoutDeciderSoloLike::PointBased(payoutdecider) => (payoutdecider, ""),
             VPayoutDeciderSoloLike::Tout(payoutdecider) => (payoutdecider, "-Tout"),
             VPayoutDeciderSoloLike::Sie(payoutdecider) => (payoutdecider, "-Sie"),
@@ -557,4 +595,77 @@ fn test_trumpfdecider() {
             ::trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU],
     );
+}
+
+#[test]
+fn test_equivalent_when_on_same_hand_rulessolo() {
+    use crate::card::card_values::*;
+    for epi in EPlayerIndex::values() {
+        let sololike_internal = |
+            oefarbe: Option<EFarbe>,
+            payoutdecider: VPayoutDeciderSoloLike,
+        | -> Box<dyn TActivelyPlayableRules> {
+            sololike(
+                epi,
+                oefarbe,
+                ESoloLike::Solo,
+                payoutdecider,
+            )
+        };
+        let payoutparams = SPayoutDeciderParams::new(
+            /*n_payout_base*/50,
+            /*n_payout_schneider_schwarz*/10,
+            SLaufendeParams::new(
+                /*n_payout_per_lauf*/10,
+                /*n_lauf_lbound*/3,
+            ),
+        );
+        assert_eq!(
+            unwrap!(sololike_internal(
+                Some(EFarbe::Herz),
+                SPayoutDeciderPointBased::<VGameAnnouncementPrioritySoloLike>::new(
+                    payoutparams.clone(),
+                    /*i_prioindex*/VGameAnnouncementPrioritySoloLike::SoloSimple(0),
+                ).into(),
+            ).equivalent_when_on_same_hand()),
+            SEnumChains::new_from_slices(&[
+                &[EO, GO, HO, SO] as &[SCard],
+                &[EU, GU, HU, SU],
+                &[H9, H8, H7],
+                &[E9, E8, E7],
+                &[G9, G8, G7],
+                &[S9, S8, S7],
+            ])
+        );
+        assert_eq!(
+            unwrap!(sololike_internal(
+                Some(EFarbe::Herz),
+                SPayoutDeciderTout::new(
+                    payoutparams.clone(),
+                    /*i_prioindex*/0,
+                ).into(),
+            ).equivalent_when_on_same_hand()),
+            SEnumChains::new_from_slices(&[
+                &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7] as &[SCard],
+                &[EA, EZ, EK, E9, E8, E7],
+                &[GA, GZ, GK, G9, G8, G7],
+                &[SA, SZ, SK, S9, S8, S7],
+            ])
+        );
+        assert_eq!(
+            unwrap!(sololike_internal(
+                /*oefarbe*/None,
+                SPayoutDeciderSie::new(
+                    payoutparams.clone()
+                ).into(),
+            ).equivalent_when_on_same_hand()),
+            SEnumChains::new_from_slices(&[
+                &[EO, GO, HO, SO, EU, GU, HU, SU,] as &[SCard],
+                &[HA, HZ, HK, H9, H8, H7],
+                &[EA, EZ, EK, E9, E8, E7],
+                &[GA, GZ, GK, G9, G8, G7],
+                &[SA, SZ, SK, S9, S8, S7],
+            ])
+        );
+    }
 }
