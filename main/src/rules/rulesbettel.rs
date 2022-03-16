@@ -141,8 +141,10 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStic
     }
 }
 
+type STrumpfDeciderBettel = STrumpfDeciderNoTrumpf<SCompareFarbcardsBettel>;
+
 impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRulesNoObj for SRulesBettel<BettelAllAllowedCardsWithinStich> {
-    impl_rules_trumpf_noobj!(STrumpfDeciderNoTrumpf<SCompareFarbcardsBettel>);
+    impl_rules_trumpf_noobj!(STrumpfDeciderBettel);
 }
 
 impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules for SRulesBettel<BettelAllAllowedCardsWithinStich> {
@@ -170,6 +172,26 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
         ))
     }
 
+    fn equivalent_when_on_same_hand(&self) -> Option<SEnumChains<SCard>> {
+        use crate::primitives::card_values::*;
+        debug_verify_eq!(
+            Some(SEnumChains::new_from_slices(&[
+                &[EA, EK, EO, EU, EZ, E9, E8, E7] as &[SCard],
+                &[GA, GK, GO, GU, GZ, G9, G8, G7],
+                &[HA, HK, HO, HU, HZ, H9, H8, H7],
+                &[SA, SK, SO, SU, SZ, S9, S8, S7],
+            ])),
+            {
+                let (mapefarbeveccard, veccard_trumpf) = STrumpfDeciderBettel::equivalent_when_on_same_hand();
+                assert!(veccard_trumpf.is_empty());
+                Some(SEnumChains::new_from_slices(
+                    &mapefarbeveccard.iter()
+                        .map(|veccard| &veccard as &[SCard]).collect::<Vec<_>>(),
+                ))
+            }
+        )
+    }
+
     fn all_allowed_cards_within_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         BettelAllAllowedCardsWithinStich::all_allowed_cards_within_stich(self, stichseq, hand)
     }
@@ -192,4 +214,24 @@ impl TCompareFarbcards for SCompareFarbcardsBettel {
         } };
         get_schlag_value(card_fst).cmp(&get_schlag_value(card_snd))
     }
+}
+
+#[test]
+fn test_equivalent_when_on_same_hand_rulesbettel() {
+    SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>{
+        epi: EPlayerIndex::EPI0,
+        i_prio: 0,
+        payoutdecider: SPayoutDeciderBettel{
+            n_payout_base: 10,
+        },
+        phantom: PhantomData,
+    }.equivalent_when_on_same_hand(); // does test internally
+    SRulesBettel::<SBettelAllAllowedCardsWithinStichStichzwang>{
+        epi: EPlayerIndex::EPI0,
+        i_prio: 0,
+        payoutdecider: SPayoutDeciderBettel{
+            n_payout_base: 10,
+        },
+        phantom: PhantomData,
+    }.equivalent_when_on_same_hand(); // does test internally
 }
