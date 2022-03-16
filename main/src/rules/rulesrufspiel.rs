@@ -201,6 +201,30 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         )
     }
 
+    fn equivalent_when_on_same_hand(&self) -> Option<SEnumChains<SCard>> {
+        use crate::primitives::card_values::*;
+        debug_verify_eq!(
+            Some(SEnumChains::new_from_slices(&[
+                &[EO, GO, HO, SO] as &[SCard],
+                &[EU, GU, HU, SU],
+                &[H9, H8, H7],
+                &[E9, E8, E7],
+                &[G9, G8, G7],
+                &[S9, S8, S7],
+            ])),
+            {
+                let (mapefarbeveccard, veccard_trumpf) = STrumpfDeciderRufspiel::equivalent_when_on_same_hand();
+                let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
+                    .flat_map(|veccard| equivalent_when_on_same_hand_point_based(&veccard))
+                    .collect::<Vec<_>>();
+                Some(SEnumChains::new_from_slices(
+                    &vecveccard.iter()
+                        .map(|veccard| &veccard as &[SCard]).collect::<Vec<_>>(),
+                ))
+            }
+        )
+    }
+
     fn all_allowed_cards_first_in_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         if // do we already know who had the rufsau?
             stichseq.completed_stichs().iter()

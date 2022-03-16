@@ -241,11 +241,13 @@ impl<V, W> TInternalEnumMapType<V, W> for SCard {
     type MappedType = [W; SCard::SIZE];
 }
 
-#[cfg(test)]
 pub mod card_values {
     use crate::card::*;
     macro_rules! impl_card_val_internal {(($($card:ident,)*), ($($eschlag:ident,)*), $efarbe:ident) => {
-        $(pub const $card : SCard = card_new_const(EFarbe::$efarbe, ESchlag::$eschlag);)*
+        $(
+            #[allow(dead_code)]
+            pub const $card : SCard = card_new_const(EFarbe::$efarbe, ESchlag::$eschlag);
+        )*
     }}
     macro_rules! impl_card_val {(($($card:ident,)*), $efarbe:ident) => {
         impl_card_val_internal!(($($card,)*), (S7, S8, S9, Zehn, Unter, Ober, Koenig, Ass,), $efarbe);
