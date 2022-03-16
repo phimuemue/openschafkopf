@@ -1,5 +1,5 @@
 use crate::primitives::*;
-use crate::rules::{card_points::*, payoutdecider::internal_payout, trumpfdecider::*, *};
+use crate::rules::{card_points::*, payoutdecider::{internal_payout, equivalent_when_on_same_hand_point_based}, trumpfdecider::*, *};
 use crate::util::*;
 use std::{cmp::Ordering, fmt};
 
@@ -131,4 +131,27 @@ impl TRules for SRulesRamsch {
         EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
     }
 
+    fn equivalent_when_on_same_hand(&self) -> Option<SEnumChains<SCard>> {
+        use crate::primitives::card_values::*;
+        debug_verify_eq!(
+            Some(SEnumChains::new_from_slices(&[
+                &[EO, GO, HO, SO] as &[SCard],
+                &[EU, GU, HU, SU],
+                &[H9, H8, H7],
+                &[E9, E8, E7],
+                &[G9, G8, G7],
+                &[S9, S8, S7],
+            ])),
+            {
+                let (mapefarbeveccard, veccard_trumpf) = STrumpfDeciderRamsch::equivalent_when_on_same_hand();
+                let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
+                    .flat_map(|veccard| equivalent_when_on_same_hand_point_based(&veccard))
+                    .collect::<Vec<_>>();
+                Some(SEnumChains::new_from_slices(
+                    &vecveccard.iter()
+                        .map(|veccard| &veccard as &[SCard]).collect::<Vec<_>>(),
+                ))
+            }
+        )
+    }
 }
