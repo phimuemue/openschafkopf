@@ -21,11 +21,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         clapmatches: &'argmatches clap::ArgMatches<'argmatches>,
     }
     impl<'argmatches> TWithCommonArgs for SWithCommonArgs<'argmatches> {
-        fn call(
+        fn call<'rules>(
             self,
-            rules_raw: &dyn TRules,
+            rules_raw: &'rules dyn TRules,
             hand_fixed: SHand,
-            itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send,
+            itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
             eremainingcards: ERemainingCards,
             determinebestcard: SDetermineBestCard,
             b_verbose: bool,

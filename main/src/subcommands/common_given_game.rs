@@ -29,11 +29,11 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
 }
 
 pub trait TWithCommonArgs {
-    fn call(
+    fn call<'rules>(
         self,
-        rules: &dyn TRules,
+        rules: &'rules dyn TRules,
         hand_fixed: SHand,
-        itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send,
+        itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
         eremainingcards: ERemainingCards,
         determinebestcard: SDetermineBestCard,
         b_verbose: bool,
@@ -88,7 +88,7 @@ pub fn with_common_args(
         withcommanargs.call(
             rules,
             hand_fixed.clone(),
-            $itahand,
+            Box::new($itahand),
             eremainingcards,
             determinebestcard,
             b_verbose,
