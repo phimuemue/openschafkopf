@@ -39,7 +39,7 @@ pub struct SPayoutDeciderPointBased<PointsToWin> {
 pub fn equivalent_when_on_same_hand_point_based(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
     slccard_ordered.iter()
         .group_by(|card| card_points::points_card(**card)).into_iter()
-        .map(|(_n_points, grpcard)| grpcard.map(|card| *card).collect())
+        .map(|(_n_points, grpcard)| grpcard.copied().collect())
         .collect()
 }
 
