@@ -162,11 +162,11 @@ impl SAi {
                 forward_to_determine_best_card,
                 match (eremainingcards) {
                     _1|_2|_3 => (
-                        &|_,_| (/*no filtering*/),
+                        &|_: &SStichSequence,_: &mut SHandVector| (/*no filtering*/),
                         SMinReachablePayout,
                     ),
                     _4 => (
-                        &|_,_| (/*no filtering*/),
+                        &|_: &SStichSequence,_: &mut SHandVector| (/*no filtering*/),
                         SMinReachablePayoutLowerBoundViaHint,
                     ),
                     _5|_6|_7|_8 => (
@@ -327,7 +327,7 @@ pub fn determine_best_card<
 >(
     determinebestcard: &SDetermineBestCard,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
-    func_filter_allowed_cards: &(impl Fn(&SStichSequence, &mut SHandVector) + std::marker::Sync),
+    func_filter_allowed_cards: &(impl TFilterAllowedCards + std::marker::Sync),
     foreachsnapshot: &ForEachSnapshot,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
 ) -> SDetermineBestCardResult<SPayoutStatsPerStrategy>
@@ -386,8 +386,8 @@ pub fn determine_best_card<
     }
 }
 
-pub fn branching_factor(fn_stichseq_to_intvl: impl Fn(&SStichSequence)->(usize, usize)) -> impl Fn(&SStichSequence, &mut SHandVector) {
-    move |stichseq, veccard_allowed| {
+pub fn branching_factor(fn_stichseq_to_intvl: impl Fn(&SStichSequence)->(usize, usize)) -> impl TFilterAllowedCards {
+    move |stichseq: &SStichSequence, veccard_allowed: &mut SHandVector| {
         assert!(!veccard_allowed.is_empty());
         let (n_lo, n_hi) = fn_stichseq_to_intvl(stichseq);
         assert!(n_lo < n_hi);

@@ -3,6 +3,7 @@ use crate::primitives::*;
 use crate::util::*;
 use crate::rules::*;
 use itertools::*;
+use crate::game::SStichSequence;
 
 use super::common_given_game::*;
 
@@ -96,7 +97,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         }),
                         eremainingcards
                     )) {
-                        (Some(None), _)|(None,_1|_2|_3|_4) => (&|_,_| (/*no filtering*/)),
+                        (Some(None), _)|(None,_1|_2|_3|_4) => (&|_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/)),
                         (Some(Some((n_lo, n_hi))), _) => (&branching_factor(move |_stichseq| {
                             let n_lo = n_lo.max(1);
                             (n_lo, (n_hi.max(n_lo+1)))

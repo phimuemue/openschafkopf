@@ -152,11 +152,21 @@ impl<Output> TSnapshotVisualizer<Output> for SNoVisualization {
     fn end_snapshot(&mut self, _output: &Output) {}
 }
 
+pub trait TFilterAllowedCards {
+    fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector);
+}
+
+impl<F: Fn(&SStichSequence, &mut SHandVector)> TFilterAllowedCards for F {
+    fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
+        self(stichseq, veccard)
+    }
+}
+
 pub fn explore_snapshots<ForEachSnapshot>(
     ahand: &mut EnumMap<EPlayerIndex, SHand>,
     rules: &dyn TRules,
     stichseq: &mut SStichSequence,
-    func_filter_allowed_cards: &impl Fn(&SStichSequence, &mut SHandVector),
+    func_filter_allowed_cards: &impl TFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
     snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
@@ -183,7 +193,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     rules: &dyn TRules,
     rulestatecache: &mut SRuleStateCache,
     stichseq: &mut SStichSequence,
-    func_filter_allowed_cards: &impl Fn(&SStichSequence, &mut SHandVector),
+    func_filter_allowed_cards: &impl TFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
     snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
@@ -238,7 +248,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     } else {
         foreachsnapshot.pruned_output(stichseq, ahand, rulestatecache).unwrap_or_else(|| {
             let mut veccard_allowed = rules.all_allowed_cards(stichseq, &ahand[epi_current]);
-            func_filter_allowed_cards(stichseq, &mut veccard_allowed);
+            func_filter_allowed_cards.filter_allowed_cards(stichseq, &mut veccard_allowed);
             // TODO? use equivalent card optimization
             foreachsnapshot.combine_outputs(
                 epi_current,
