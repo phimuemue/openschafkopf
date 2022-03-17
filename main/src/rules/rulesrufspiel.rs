@@ -219,7 +219,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     .collect::<Vec<_>>();
                 SEnumChains::new_from_slices(
                     &vecveccard.iter()
-                        .map(|veccard| &veccard as &[SCard]).collect::<Vec<_>>(),
+                        .map(|veccard| veccard as &[SCard]).collect::<Vec<_>>(),
                 )
             }
         )

@@ -481,7 +481,7 @@ impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, Payou
             .collect::<Vec<_>>();
         SEnumChains::new_from_slices(
             &vecveccard.iter()
-                .map(|veccard| &veccard as &[SCard]).collect::<Vec<_>>(),
+                .map(|veccard| veccard as &[SCard]).collect::<Vec<_>>(),
         )
     }
 

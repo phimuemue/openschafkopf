@@ -186,7 +186,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
                 assert!(veccard_trumpf.is_empty());
                 SEnumChains::new_from_slices(
                     &mapefarbeveccard.iter()
-                        .map(|veccard| &veccard as &[SCard]).collect::<Vec<_>>(),
+                        .map(|veccard| veccard as &[SCard]).collect::<Vec<_>>(),
                 )
             }
         )

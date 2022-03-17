@@ -194,7 +194,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     } else {
                                         #[cfg(debug_assertions)] {
                                             veccard.sort_unstable_by_key(|card| card.to_usize());
-                                            debug_assert_eq!(&veccard as &[SCard], &veccard_out as &[SCard]);
+                                            debug_assert_eq!(veccard as &[SCard], &veccard_out as &[SCard]);
                                         }
                                     }
                                     *veccard = unwrap!((&veccard_out as &[SCard]).try_into());
@@ -258,8 +258,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 let human_readable_payout = |f_payout| {
                     if let Some(fn_payout_to_points) = &ofn_payout_to_points {
                         fn_payout_to_points(
-                            &determinebestcard.stichseq,
-                            &determinebestcard.hand_fixed,
+                            determinebestcard.stichseq,
+                            determinebestcard.hand_fixed,
                             f_payout
                         )
                     } else {
