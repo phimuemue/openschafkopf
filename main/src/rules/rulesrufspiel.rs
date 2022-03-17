@@ -303,8 +303,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     /*b_primary*/ epi==epi_active
                         || stichseq.visible_stichs().iter().filter_map(|stich| stich.get(epi))
                             .chain(hand.cards().iter())
-                            .find(|&card| *card==card_rufsau)
-                            .is_some(),
+                            .any(|&card| card==card_rufsau),
                 )
             }
         }
