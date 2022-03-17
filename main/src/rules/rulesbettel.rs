@@ -172,22 +172,22 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
         ))
     }
 
-    fn equivalent_when_on_same_hand(&self) -> Option<SEnumChains<SCard>> {
+    fn equivalent_when_on_same_hand(&self) -> SEnumChains<SCard> {
         use crate::primitives::card_values::*;
         debug_verify_eq!(
-            Some(SEnumChains::new_from_slices(&[
+            SEnumChains::new_from_slices(&[
                 &[EA, EK, EO, EU, EZ, E9, E8, E7] as &[SCard],
                 &[GA, GK, GO, GU, GZ, G9, G8, G7],
                 &[HA, HK, HO, HU, HZ, H9, H8, H7],
                 &[SA, SK, SO, SU, SZ, S9, S8, S7],
-            ])),
+            ]),
             {
                 let (mapefarbeveccard, veccard_trumpf) = STrumpfDeciderBettel::equivalent_when_on_same_hand();
                 assert!(veccard_trumpf.is_empty());
-                Some(SEnumChains::new_from_slices(
+                SEnumChains::new_from_slices(
                     &mapefarbeveccard.iter()
                         .map(|veccard| &veccard as &[SCard]).collect::<Vec<_>>(),
-                ))
+                )
             }
         )
     }

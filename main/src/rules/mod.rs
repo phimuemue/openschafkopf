@@ -289,9 +289,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
 
     fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 
-    fn equivalent_when_on_same_hand(&self) -> Option<SEnumChains<SCard>> {
-        None // technically, we could also return SEnumChains::new here, but having None explicitly can be used to easily avoid equivalence calculations statically
-    }
+    fn equivalent_when_on_same_hand(&self) -> SEnumChains<SCard>;
 
     fn all_allowed_cards(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         assert!(!hand.cards().is_empty());

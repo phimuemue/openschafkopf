@@ -90,12 +90,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     match ((
                         if_then_some!(let Some(str_branching) = clapmatches.value_of("branching"), {
                             let make_equivalent = |n_until_remaining_cards| {
-                                if let Some(enumchainscard) = rules.equivalent_when_on_same_hand() {
-                                    Equivalent(n_until_remaining_cards, enumchainscard)
-                                } else {
-                                    println!("Rules do not support equivalent card filtering.");
-                                    NoFilter
-                                }
+                                Equivalent(n_until_remaining_cards, rules.equivalent_when_on_same_hand())
                             };
                             if str_branching=="equiv0" {
                                 make_equivalent(0)

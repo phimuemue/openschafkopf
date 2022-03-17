@@ -474,15 +474,15 @@ impl<StaticEPI: TStaticValue<EPlayerIndex>, TrumpfDecider: TTrumpfDecider, Payou
         )
     }
 
-    fn equivalent_when_on_same_hand(&self) -> Option<SEnumChains<SCard>> {
+    fn equivalent_when_on_same_hand(&self) -> SEnumChains<SCard> {
         let (mapefarbeveccard, veccard_trumpf) = TrumpfDecider::equivalent_when_on_same_hand();
         let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
             .flat_map(|veccard| PayoutDecider::equivalent_when_on_same_hand(&veccard))
             .collect::<Vec<_>>();
-        Some(SEnumChains::new_from_slices(
+        SEnumChains::new_from_slices(
             &vecveccard.iter()
                 .map(|veccard| &veccard as &[SCard]).collect::<Vec<_>>(),
-        ))
+        )
     }
 
     fn points_as_payout(&self) -> Option<(
@@ -621,13 +621,13 @@ fn test_equivalent_when_on_same_hand_rulessolo() {
             ),
         );
         assert_eq!(
-            unwrap!(sololike_internal(
+            sololike_internal(
                 Some(EFarbe::Herz),
                 SPayoutDeciderPointBased::<VGameAnnouncementPrioritySoloLike>::new(
                     payoutparams.clone(),
                     /*i_prioindex*/VGameAnnouncementPrioritySoloLike::SoloSimple(0),
                 ).into(),
-            ).equivalent_when_on_same_hand()),
+            ).equivalent_when_on_same_hand(),
             SEnumChains::new_from_slices(&[
                 &[EO, GO, HO, SO] as &[SCard],
                 &[EU, GU, HU, SU],
@@ -638,13 +638,13 @@ fn test_equivalent_when_on_same_hand_rulessolo() {
             ])
         );
         assert_eq!(
-            unwrap!(sololike_internal(
+            sololike_internal(
                 Some(EFarbe::Herz),
                 SPayoutDeciderTout::new(
                     payoutparams.clone(),
                     /*i_prioindex*/0,
                 ).into(),
-            ).equivalent_when_on_same_hand()),
+            ).equivalent_when_on_same_hand(),
             SEnumChains::new_from_slices(&[
                 &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7] as &[SCard],
                 &[EA, EZ, EK, E9, E8, E7],
@@ -653,12 +653,12 @@ fn test_equivalent_when_on_same_hand_rulessolo() {
             ])
         );
         assert_eq!(
-            unwrap!(sololike_internal(
+            sololike_internal(
                 /*oefarbe*/None,
                 SPayoutDeciderSie::new(
                     payoutparams.clone()
                 ).into(),
-            ).equivalent_when_on_same_hand()),
+            ).equivalent_when_on_same_hand(),
             SEnumChains::new_from_slices(&[
                 &[EO, GO, HO, SO, EU, GU, HU, SU,] as &[SCard],
                 &[HA, HZ, HK, H9, H8, H7],
