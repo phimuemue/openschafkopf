@@ -153,10 +153,16 @@ impl<Output> TSnapshotVisualizer<Output> for SNoVisualization {
 }
 
 pub trait TFilterAllowedCards {
+    type UnregisterStich;
+    fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich;
+    fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich);
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector);
 }
 
 impl<F: Fn(&SStichSequence, &mut SHandVector)> TFilterAllowedCards for F {
+    type UnregisterStich = ();
+    fn register_stich(&mut self, _stich: &SStich) -> Self::UnregisterStich {}
+    fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {}
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
         self(stichseq, veccard)
     }
@@ -166,13 +172,16 @@ pub fn explore_snapshots<ForEachSnapshot>(
     ahand: &mut EnumMap<EPlayerIndex, SHand>,
     rules: &dyn TRules,
     stichseq: &mut SStichSequence,
-    func_filter_allowed_cards: &impl TFilterAllowedCards,
+    func_filter_allowed_cards: &mut impl TFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
     snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
     where
         ForEachSnapshot: TForEachSnapshot,
 {
+    for stich in stichseq.completed_stichs() {
+        func_filter_allowed_cards.register_stich(stich);
+    }
     explore_snapshots_internal(
         ahand,
         rules,
@@ -193,7 +202,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     rules: &dyn TRules,
     rulestatecache: &mut SRuleStateCache,
     stichseq: &mut SStichSequence,
-    func_filter_allowed_cards: &impl TFilterAllowedCards,
+    func_filter_allowed_cards: &mut impl TFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
     snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
@@ -265,12 +274,15 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                             snapshotvisualizer,
                         )}}
                         if stichseq.current_stich().is_empty() {
-                            let unregisterstich = rulestatecache.register_stich(
-                                unwrap!(stichseq.completed_stichs().last()),
+                            let stich = unwrap!(stichseq.completed_stichs().last());
+                            let unregisterstich_filter = func_filter_allowed_cards.register_stich(stich);
+                            let unregisterstich_cache = rulestatecache.register_stich(
+                                stich,
                                 stichseq.current_stich().first_playerindex(),
                             );
                             let output = next_step!();
-                            rulestatecache.unregister_stich(unregisterstich);
+                            rulestatecache.unregister_stich(unregisterstich_cache);
+                            func_filter_allowed_cards.unregister_stich(unregisterstich_filter);
                             output
                         } else {
                             next_step!()

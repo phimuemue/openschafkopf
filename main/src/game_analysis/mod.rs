@@ -86,7 +86,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SG
                         let determinebestcardresult = determine_best_card(
                             &determinebestcard,
                             $itahand,
-                            &|_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/),
+                            || |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/),
                             &SMinReachablePayout::new_from_game(game),
                             /*fn_visualizer*/|_,_,_| SNoVisualization,
                         );

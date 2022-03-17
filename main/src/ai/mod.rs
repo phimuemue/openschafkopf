@@ -110,7 +110,7 @@ impl SAi {
                     &mut ahand,
                     rules,
                     &mut SStichSequence::new(ekurzlang),
-                    &branching_factor(|_stichseq| (1, 2)),
+                    &mut branching_factor(|_stichseq| (1, 2)),
                     &SMinReachablePayoutLowerBoundViaHint::new(
                         rules,
                         epi_rank,
@@ -162,15 +162,15 @@ impl SAi {
                 forward_to_determine_best_card,
                 match (eremainingcards) {
                     _1|_2|_3 => (
-                        &|_: &SStichSequence,_: &mut SHandVector| (/*no filtering*/),
+                        || |_: &SStichSequence,_: &mut SHandVector| (/*no filtering*/),
                         SMinReachablePayout,
                     ),
                     _4 => (
-                        &|_: &SStichSequence,_: &mut SHandVector| (/*no filtering*/),
+                        || |_: &SStichSequence,_: &mut SHandVector| (/*no filtering*/),
                         SMinReachablePayoutLowerBoundViaHint,
                     ),
                     _5|_6|_7|_8 => (
-                        &branching_factor(|_stichseq| {
+                        || branching_factor(|_stichseq| {
                             (1, self.n_suggest_card_branches+1)
                         }),
                         SMinReachablePayoutLowerBoundViaHint,
@@ -324,10 +324,11 @@ impl std::cmp::Ord for SPayoutStatsPerStrategy {
 pub fn determine_best_card<
     ForEachSnapshot: TForEachSnapshot<Output=SMinMax> + Sync,
     SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
+    FilterAllowedCards: TFilterAllowedCards,
 >(
     determinebestcard: &SDetermineBestCard,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
-    func_filter_allowed_cards: &(impl TFilterAllowedCards + std::marker::Sync),
+    fn_make_filter: impl Fn()->FilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
 ) -> SDetermineBestCardResult<SPayoutStatsPerStrategy>
@@ -357,7 +358,7 @@ pub fn determine_best_card<
                 &mut ahand,
                 determinebestcard.rules,
                 &mut stichseq,
-                func_filter_allowed_cards,
+                &mut fn_make_filter(),
                 foreachsnapshot,
                 &mut visualizer,
             );
@@ -386,7 +387,7 @@ pub fn determine_best_card<
     }
 }
 
-pub fn branching_factor(fn_stichseq_to_intvl: impl Fn(&SStichSequence)->(usize, usize)) -> impl TFilterAllowedCards {
+pub fn branching_factor(fn_stichseq_to_intvl: impl Fn(&SStichSequence)->(usize, usize)) -> impl Fn(&SStichSequence, &mut SHandVector) {
     move |stichseq: &SStichSequence, veccard_allowed: &mut SHandVector| {
         assert!(!veccard_allowed.is_empty());
         let (n_lo, n_hi) = fn_stichseq_to_intvl(stichseq);
@@ -535,7 +536,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         let determinebestcardresult = determine_best_card(
             &determinebestcard,
             std::iter::once(ahand),
-            /*func_filter_allowed_cards*/&branching_factor(|_stichseq| (1, 2)),
+            /*fn_make_filter*/|| branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout::new_from_game(&game),
             /*fn_visualizer*/|_,_,_| SNoVisualization,
         );

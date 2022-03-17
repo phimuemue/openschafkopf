@@ -117,7 +117,7 @@ impl TPlayer for SPlayerComputer {
                         &mut ahand,
                         rules,
                         &mut SStichSequence::new(ekurzlang),
-                        &branching_factor(|_stichseq| (1, 2)),
+                        &mut branching_factor(|_stichseq| (1, 2)),
                         &SMinReachablePayout::new(
                             rules,
                             epi,
