@@ -35,6 +35,7 @@ pub enum VSauspielAllowedRules {
 
 #[derive(Debug)]
 pub struct SSauspielRuleset {
+    #[allow(dead_code)] // TODO
     allowedrules: VSauspielAllowedRules,
     n_tarif_extra: isize,
     n_tarif_ruf: isize,
