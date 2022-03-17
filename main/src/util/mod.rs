@@ -4,11 +4,13 @@ pub use plain_enum::*;
 pub mod box_clone;
 #[macro_use]
 pub mod staticvalue;
+#[macro_use]
+pub mod if_then;
 pub mod assign;
 pub mod parser;
 pub mod interval;
 pub mod enumchains;
-pub use self::{assign::*, box_clone::*, staticvalue::*, interval::*, enumchains::*};
+pub use self::{assign::*, box_clone::*, staticvalue::*, interval::*, enumchains::*, if_then::*};
 pub use derive_new::new;
 pub use failure::{bail, format_err, Error};
 pub use openschafkopf_logging::{error, info, warn};
@@ -45,23 +47,6 @@ macro_rules! make_upcastable {
             {
                 self as Box<dyn $trait>
             }
-        }
-    };
-}
-
-macro_rules! if_then_some {
-    ($cond: expr, $val: expr) => {
-        if $cond {
-            Some($val)
-        } else {
-            None
-        }
-    };
-    (let $pattern:pat = $expr: expr, $val: expr) => {
-        if let $pattern = $expr {
-            Some($val)
-        } else {
-            None
         }
     };
 }

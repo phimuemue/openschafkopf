@@ -130,11 +130,7 @@ impl<E: TPlainEnum + TInternalEnumMapType<E, E> + Copy + std::cmp::Eq + std::fmt
 
     pub fn next_no_invariant(&self, e: E) -> Option<E> {
         let e_raw_next = self.mapee_next[e];
-        if e_raw_next!=e { // TODO if_then_some
-            Some(e_raw_next)
-        } else {
-            None
-        }
+        if_then_some!(e_raw_next!=e, e_raw_next)
     }
 
     pub fn prev(&self, e: E) -> Option<E> {
@@ -144,11 +140,7 @@ impl<E: TPlainEnum + TInternalEnumMapType<E, E> + Copy + std::cmp::Eq + std::fmt
 
     pub fn prev_no_invariant(&self, e: E) -> Option<E> {
         let e_raw_prev = self.mapee_prev[e];
-        if e_raw_prev!=e { // TODO if_then_some
-            Some(e_raw_prev)
-        } else {
-            None
-        }
+        if_then_some!(e_raw_prev!=e, e_raw_prev)
     }
 
     pub fn prev_while(&self, e: E, fn_pred: impl Fn(E)->bool) -> E {
