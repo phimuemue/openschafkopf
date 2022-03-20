@@ -1,7 +1,7 @@
 use crate::primitives::*;
 use crate::rules::{payoutdecider::*, trumpfdecider::*, *};
 use crate::util::*;
-use std::{cmp::Ordering, fmt, marker::PhantomData};
+use std::{cmp::Ordering, fmt};
 
 pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
     fn priority(&self) -> VGameAnnouncementPriority;
@@ -109,10 +109,10 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
             Box::new(SRulesSoloLike{
                 str_name: rules.str_name.clone(),
                 epi: rules.epi,
-                phantom: rules.phantom,
                 payoutdecider: SPayoutDeciderPointsAsPayout{
                     pointstowin: pointstowin.clone(),
                 },
+                trumpfdecider: rules.trumpfdecider.clone(),
             }) as Box<dyn TRules>,
             Box::new(move |stichseq: &SStichSequence, _hand: &SHand, f_payout: f32| {
                 SPayoutDeciderPointsAsPayout::payout_to_points(
@@ -205,7 +205,7 @@ pub struct SPayoutDeciderTout {
 impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderTout {
     fn payout<Rules>(
         &self,
-        if_dbg_else!({rules}{_rules}): &Rules,
+        rules: &Rules,
         rulestatecache: &SRuleStateCache,
         gamefinishedstiche: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
@@ -214,7 +214,7 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderTout {
     {
         // TODORULES optionally count schneider/schwarz
         internal_payout(
-            /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(rulestatecache, gamefinishedstiche, playerparties13)) * 2,
+            /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(rules, rulestatecache, gamefinishedstiche, playerparties13)) * 2,
             playerparties13,
             /*b_primary_party_wins*/ debug_verify_eq!(
                 rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==gamefinishedstiche.get().kurzlang().cards_per_player(),
@@ -424,9 +424,9 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
 #[derive(Clone, Debug)]
 pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider> {
     pub str_name: String,
-    phantom : PhantomData<TrumpfDecider>,
     epi: EPlayerIndex,
     payoutdecider: PayoutDecider,
+    trumpfdecider: TrumpfDecider,
 }
 
 impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> fmt::Display for SRulesSoloLike<TrumpfDecider, PayoutDecider> {
@@ -441,7 +441,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TActi
     }
     fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<dyn TActivelyPlayableRules>> {
         self.payoutdecider.with_increased_prio(prio, ebid)
-            .map(|payoutdecider| Box::new(Self::new(payoutdecider, self.epi, self.str_name.clone())) as Box<dyn TActivelyPlayableRules>)
+            .map(|payoutdecider| Box::new(Self::new(payoutdecider, self.trumpfdecider.clone(), self.epi, self.str_name.clone())) as Box<dyn TActivelyPlayableRules>)
     }
 }
 
@@ -475,7 +475,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
     }
 
     fn equivalent_when_on_same_hand(&self) -> SEnumChains<SCard> {
-        let (mapefarbeveccard, veccard_trumpf) = TrumpfDecider::equivalent_when_on_same_hand();
+        let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
         let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
             .flat_map(|veccard| PayoutDecider::equivalent_when_on_same_hand(&veccard))
             .collect::<Vec<_>>();
@@ -494,10 +494,10 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
 }
 
 impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
-    fn new(payoutdecider: PayoutDecider, epi: EPlayerIndex, str_name: String) -> Self {
+    fn new(payoutdecider: PayoutDecider, trumpfdecider: TrumpfDecider, epi: EPlayerIndex, str_name: String) -> Self {
         Self {
-            phantom: PhantomData,
             payoutdecider,
+            trumpfdecider,
             epi,
             str_name,
         }
@@ -540,11 +540,9 @@ pub fn sololike(
         ($trumpfdecider_core: ident, $str_esololike: expr),
         ($payoutdecider: expr, $str_payoutdecider: expr),
     ) => {
-        Box::new(SRulesSoloLike::<
-            $trumpfdecider_core<$trumpfdecider_farbe>,
-            _,
-        >::new(
+        Box::new(SRulesSoloLike::new(
             $payoutdecider,
+            $trumpfdecider_core::<$trumpfdecider_farbe>::default(),
             epi,
             format!("{}{}{}", $str_oefarbe, $str_esololike, $str_payoutdecider),
         )) as Box<dyn TActivelyPlayableRules>
@@ -575,18 +573,18 @@ pub fn sololike(
 fn test_trumpfdecider() {
     use crate::card::card_values::*;
     assert_eq!(
-        <SCoreSolo<SStaticFarbeGras> as TTrumpfDecider>
-            ::trumpfs_in_descending_order().collect::<Vec<_>>(),
+        SCoreSolo::<SStaticFarbeGras>::default()
+            .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EO, GO, HO, SO, EU, GU, HU, SU, GA, GZ, GK, G9, G8, G7],
     );
     assert_eq!(
-        <SCoreGenericWenz<SStaticFarbeGras> as TTrumpfDecider>
-            ::trumpfs_in_descending_order().collect::<Vec<_>>(),
+        SCoreGenericWenz::<SStaticFarbeGras>::default()
+            .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU, GA, GZ, GK, GO, G9, G8, G7],
     );
     assert_eq!(
-        <SCoreGenericWenz<STrumpfDeciderNoTrumpf<SCompareFarbcardsSimple>> as TTrumpfDecider>
-            ::trumpfs_in_descending_order().collect::<Vec<_>>(),
+        SCoreGenericWenz::<STrumpfDeciderNoTrumpf<SCompareFarbcardsSimple>>::default()
+            .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU],
     );
 }

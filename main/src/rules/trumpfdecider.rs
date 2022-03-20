@@ -4,28 +4,28 @@ use crate::util::*;
 use std::{cmp::Ordering, marker::PhantomData};
 
 pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug + Send {
-    fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe;
+    fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
 
     type ItCardTrumpf: Iterator<Item=SCard>;
-    fn trumpfs_in_descending_order() -> return_impl!(Self::ItCardTrumpf);
-    fn compare_cards(card_fst: SCard, card_snd: SCard) -> Option<Ordering>;
+    fn trumpfs_in_descending_order(&self, ) -> return_impl!(Self::ItCardTrumpf);
+    fn compare_cards(&self, card_fst: SCard, card_snd: SCard) -> Option<Ordering>;
 
-    fn equivalent_when_on_same_hand() -> (EnumMap<EFarbe, Vec<SCard>>, /*veccard_trumpf*/Vec<SCard>) {
+    fn equivalent_when_on_same_hand(&self, ) -> (EnumMap<EFarbe, Vec<SCard>>, /*veccard_trumpf*/Vec<SCard>) {
         let mut mapefarbeveccard = EFarbe::map_from_fn(|_efarbe| Vec::new());
         let mut veccard_trumpf = Vec::new();
         for card in <SCard as TPlainEnum>::values() {
-            match Self::trumpforfarbe(card) {
+            match self.trumpforfarbe(card) {
                 VTrumpfOrFarbe::Trumpf => veccard_trumpf.push(card),
                 VTrumpfOrFarbe::Farbe(efarbe) => mapefarbeveccard[efarbe].push(card),
             }
         }
         for veccard in mapefarbeveccard.iter_mut() {
             veccard.sort_unstable_by(|card_lhs, card_rhs|
-                unwrap!(Self::compare_cards(*card_lhs, *card_rhs)).reverse()
+                unwrap!(self.compare_cards(*card_lhs, *card_rhs)).reverse()
             );
         }
         veccard_trumpf.sort_unstable_by(|card_lhs, card_rhs|
-            unwrap!(Self::compare_cards(*card_lhs, *card_rhs)).reverse()
+            unwrap!(self.compare_cards(*card_lhs, *card_rhs)).reverse()
         );
         (mapefarbeveccard, veccard_trumpf)
     }
@@ -34,7 +34,7 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug + Send {
 pub trait TCompareFarbcards : Sync + 'static + Clone + fmt::Debug + Send {
     fn compare_farbcards(card_fst: SCard, card_snd: SCard) -> Ordering;
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct SCompareFarbcardsSimple;
 impl TCompareFarbcards for SCompareFarbcardsSimple {
     fn compare_farbcards(card_fst: SCard, card_snd: SCard) -> Ordering {
@@ -52,19 +52,19 @@ impl TCompareFarbcards for SCompareFarbcardsSimple {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct STrumpfDeciderNoTrumpf<CompareFarbcards> {
     phantom: PhantomData<CompareFarbcards>
 }
 impl<CompareFarbcards: TCompareFarbcards> TTrumpfDecider for STrumpfDeciderNoTrumpf<CompareFarbcards> {
-    fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
+    fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
         VTrumpfOrFarbe::Farbe(card.farbe())
     }
     type ItCardTrumpf = std::iter::Empty<SCard>;
-    fn trumpfs_in_descending_order() -> return_impl!(Self::ItCardTrumpf) {
+    fn trumpfs_in_descending_order(&self, ) -> return_impl!(Self::ItCardTrumpf) {
         std::iter::empty()
     }
-    fn compare_cards(card_fst: SCard, card_snd: SCard) -> Option<Ordering> {
+    fn compare_cards(&self, card_fst: SCard, card_snd: SCard) -> Option<Ordering> {
         if_then_some!(
             card_fst.farbe()==card_snd.farbe(),
             CompareFarbcards::compare_farbcards(card_fst, card_snd)
@@ -72,33 +72,34 @@ impl<CompareFarbcards: TCompareFarbcards> TTrumpfDecider for STrumpfDeciderNoTru
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct STrumpfDeciderSchlag<StaticSchlag, DeciderSec> {
-    phantom: PhantomData<(StaticSchlag, DeciderSec)>,
+    phantom: PhantomData<StaticSchlag>,
+    trumpfdecider_sec: DeciderSec,
 }
 fn static_schlag<StaticSchlag: TStaticValue<ESchlag>>(card: &SCard) -> bool {
     StaticSchlag::VALUE!=card.schlag()
 }
 impl<StaticSchlag: TStaticValue<ESchlag>, DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<StaticSchlag, DeciderSec> {
-    fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
+    fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
         if StaticSchlag::VALUE == card.schlag() {
             VTrumpfOrFarbe::Trumpf
         } else {
-            DeciderSec::trumpforfarbe(card)
+            self.trumpfdecider_sec.trumpforfarbe(card)
         }
     }
     type ItCardTrumpf = Box<dyn Iterator<Item=SCard>>; // TODO concrete type
-    fn trumpfs_in_descending_order() -> return_impl!(Self::ItCardTrumpf) {
+    fn trumpfs_in_descending_order(&self, ) -> return_impl!(Self::ItCardTrumpf) {
         Box::new(
             EFarbe::values()
                 .map(|efarbe| SCard::new(efarbe, StaticSchlag::VALUE))
                 .chain(
-                    DeciderSec::trumpfs_in_descending_order()
+                    self.trumpfdecider_sec.trumpfs_in_descending_order()
                         .filter(static_schlag::<StaticSchlag>)
                 )
         )
     }
-    fn compare_cards(card_fst: SCard, card_snd: SCard) -> Option<Ordering> {
+    fn compare_cards(&self, card_fst: SCard, card_snd: SCard) -> Option<Ordering> {
         match (StaticSchlag::VALUE==card_fst.schlag(), StaticSchlag::VALUE==card_snd.schlag()) {
             (true, true) => {
                 static_assert!(assert(EFarbe::Eichel < EFarbe::Gras, "Farb-Sorting can't be used here"));
@@ -108,13 +109,13 @@ impl<StaticSchlag: TStaticValue<ESchlag>, DeciderSec: TTrumpfDecider> TTrumpfDec
             },
             (true, false) => Some(Ordering::Greater),
             (false, true) => Some(Ordering::Less),
-            (false, false) => DeciderSec::compare_cards(card_fst, card_snd),
+            (false, false) => self.trumpfdecider_sec.compare_cards(card_fst, card_snd),
         }
     }
 }
 
 impl<StaticFarbe: TStaticValue<EFarbe>> TTrumpfDecider for StaticFarbe {
-    fn trumpforfarbe(card: SCard) -> VTrumpfOrFarbe {
+    fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
         if StaticFarbe::VALUE == card.farbe() {
             VTrumpfOrFarbe::Trumpf
         } else {
@@ -123,31 +124,34 @@ impl<StaticFarbe: TStaticValue<EFarbe>> TTrumpfDecider for StaticFarbe {
     }
     #[allow(clippy::type_complexity)] // covered by the fact that return_impl should go away
     type ItCardTrumpf = std::iter::Map<std::iter::Map<std::ops::Range<usize>, fn(usize) -> ESchlag>, fn(ESchlag) -> SCard>;
-    fn trumpfs_in_descending_order() -> return_impl!(Self::ItCardTrumpf) {
+    fn trumpfs_in_descending_order(&self, ) -> return_impl!(Self::ItCardTrumpf) {
         ESchlag::values()
             .map(|eschlag| SCard::new(StaticFarbe::VALUE, eschlag))
     }
-    fn compare_cards(card_fst: SCard, card_snd: SCard) -> Option<Ordering> {
+    fn compare_cards(&self, card_fst: SCard, card_snd: SCard) -> Option<Ordering> {
         match (StaticFarbe::VALUE==card_fst.farbe(), StaticFarbe::VALUE==card_snd.farbe()) {
             (true, true) => Some(SCompareFarbcardsSimple::compare_farbcards(card_fst, card_snd)),
             (true, false) => Some(Ordering::Greater),
             (false, true) => Some(Ordering::Less),
-            (false, false) => STrumpfDeciderNoTrumpf::<SCompareFarbcardsSimple>::compare_cards(card_fst, card_snd),
+            (false, false) => STrumpfDeciderNoTrumpf::<SCompareFarbcardsSimple>{phantom: PhantomData}.compare_cards(card_fst, card_snd),
         }
     }
 }
 
 macro_rules! impl_rules_trumpf {() => {
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        <Self as TRulesNoObj>::TrumpfDecider::trumpforfarbe(card)
+        self.trumpfdecider.trumpforfarbe(card)
     }
     fn compare_cards(&self, card_fst: SCard, card_snd: SCard) -> Option<Ordering> {
-        <Self as TRulesNoObj>::TrumpfDecider::compare_cards(card_fst, card_snd)
+        self.trumpfdecider.compare_cards(card_fst, card_snd)
     }
 }}
 
 macro_rules! impl_rules_trumpf_noobj{($trumpfdecider: ty) => {
     type TrumpfDecider = $trumpfdecider;
+    fn trumpfdecider(&self) -> &Self::TrumpfDecider {
+        &self.trumpfdecider
+    }
 }}
 
 #[test]
@@ -155,7 +159,7 @@ fn test_equivalent_when_on_same_hand_trumpfdecider() {
     type TrumpfDecider = STrumpfDeciderSchlag<
         SStaticSchlagOber, STrumpfDeciderSchlag<
         SStaticSchlagUnter, SStaticFarbeHerz>>;
-    let (mapefarbeveccard, veccard_trumpf) = TrumpfDecider::equivalent_when_on_same_hand();
+    let (mapefarbeveccard, veccard_trumpf) = TrumpfDecider::default().equivalent_when_on_same_hand();
     fn assert_eq_cards(slccard_lhs: &[SCard], slccard_rhs: &[SCard]) {
         assert_eq!(slccard_lhs, slccard_rhs);
     }

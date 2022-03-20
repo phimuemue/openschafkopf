@@ -160,7 +160,7 @@ impl<
                         0 // "nothing", i.e. neither schneider nor schwarz
                     }
                 }
-                + self.payoutparams.laufendeparams.payout_laufende::<Rules, _>(rulestatecache, gamefinishedstiche, playerparties)
+                + self.payoutparams.laufendeparams.payout_laufende(rules, rulestatecache, gamefinishedstiche, playerparties)
             },
         )
     }
@@ -272,7 +272,7 @@ impl<
 }
 
 impl SLaufendeParams {
-    pub fn payout_laufende<Rules: TRulesNoObj, PlayerParties: TPlayerParties>(&self, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, playerparties: &PlayerParties) -> isize {
+    pub fn payout_laufende<PlayerParties: TPlayerParties>(&self, rules: &impl TRulesNoObj, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, playerparties: &PlayerParties) -> isize {
         let ekurzlang = gamefinishedstiche.get().kurzlang();
         debug_assert_eq!(
             SRuleStateCacheFixed::new(
@@ -284,7 +284,7 @@ impl SLaufendeParams {
         let laufende_relevant = |card: SCard| { // TODO should we make this part of SRuleStateCacheFixed?
             playerparties.is_primary_party(rulestatecache.fixed.who_has_card(card))
         };
-        let mut itcard_trumpf_descending = Rules::TrumpfDecider::trumpfs_in_descending_order();
+        let mut itcard_trumpf_descending = rules.trumpfdecider().trumpfs_in_descending_order();
         let b_might_have_lauf = laufende_relevant(unwrap!(itcard_trumpf_descending.next()));
         let n_laufende = itcard_trumpf_descending
             .filter(|card| ekurzlang.supports_card(*card))

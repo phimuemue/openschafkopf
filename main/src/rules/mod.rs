@@ -204,6 +204,7 @@ impl TPlayerParties for SPlayerParties13 {
 
 pub trait TRulesNoObj : TRules {
     type TrumpfDecider: trumpfdecider::TTrumpfDecider;
+    fn trumpfdecider(&self) -> &Self::TrumpfDecider;
 }
 
 pub type SIfDebugBool = if_dbg_else!({bool}{()}); // TODO can we get rid of this?

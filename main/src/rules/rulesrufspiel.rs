@@ -98,6 +98,7 @@ pub struct SRulesRufspielGeneric<RufspielPayout: TRufspielPayout> {
     epi : EPlayerIndex,
     efarbe : EFarbe,
     rufspielpayout: RufspielPayout,
+    trumpfdecider: STrumpfDeciderRufspiel,
 }
 
 pub type SRulesRufspiel = SRulesRufspielGeneric<SRufspielPayout>;
@@ -121,7 +122,8 @@ impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
             efarbe,
             rufspielpayout: SRufspielPayout {
                 payoutdecider: SPayoutDeciderPointBased::new(payoutparams, SPointsToWin61{}),
-            }
+            },
+            trumpfdecider: STrumpfDeciderRufspiel::default(),
         }
     }
 
@@ -213,7 +215,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 &[S9, S8, S7],
             ]),
             {
-                let (mapefarbeveccard, veccard_trumpf) = STrumpfDeciderRufspiel::equivalent_when_on_same_hand();
+                let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
                 let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
                     .flat_map(|veccard| equivalent_when_on_same_hand_point_based(&veccard))
                     .collect::<Vec<_>>();
@@ -365,6 +367,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 rufspielpayout: SRufspielPayoutPointsAsPayout {
                     payoutdecider: SPayoutDeciderPointsAsPayout::new(SPointsToWin61{}),
                 },
+                trumpfdecider: self.trumpfdecider.clone(),
             }) as Box<dyn TRules>,
             Box::new(move |stichseq: &SStichSequence, hand: &SHand, f_payout: f32| {
                 SRufspielPayoutPointsAsPayout::payout_to_points(

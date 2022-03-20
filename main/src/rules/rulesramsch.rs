@@ -12,10 +12,21 @@ pub enum VDurchmarsch {
 
 // TODO add Jungfrau (needed for Sauspiel analysis, in particular)
 
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct SRulesRamsch {
     n_price : isize,
     durchmarsch : VDurchmarsch,
+    trumpfdecider: STrumpfDeciderRamsch,
+}
+
+impl SRulesRamsch {
+    pub fn new(n_price: isize, durchmarsch: VDurchmarsch) -> Self {
+        Self {
+            n_price,
+            durchmarsch,
+            trumpfdecider: STrumpfDeciderRamsch::default(),
+        }
+    }
 }
 
 impl fmt::Display for SRulesRamsch {
@@ -143,7 +154,7 @@ impl TRules for SRulesRamsch {
                 &[S9, S8, S7],
             ]),
             {
-                let (mapefarbeveccard, veccard_trumpf) = STrumpfDeciderRamsch::equivalent_when_on_same_hand();
+                let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
                 let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
                     .flat_map(|veccard| equivalent_when_on_same_hand_point_based(&veccard))
                     .collect::<Vec<_>>();

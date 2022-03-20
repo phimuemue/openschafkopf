@@ -14,6 +14,7 @@ pub struct SRulesBettel<BettelAllAllowedCardsWithinStich> {
     epi : EPlayerIndex,
     i_prio : isize,
     payoutdecider : SPayoutDeciderBettel,
+    trumpfdecider: STrumpfDeciderBettel,
     phantom : PhantomData<BettelAllAllowedCardsWithinStich>,
 }
 
@@ -23,6 +24,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> SRules
             epi,
             i_prio,
             payoutdecider: SPayoutDeciderBettel{n_payout_base},
+            trumpfdecider: STrumpfDeciderBettel::default(),
             phantom: PhantomData,
         }
     }
@@ -182,7 +184,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
                 &[SA, SK, SO, SU, SZ, S9, S8, S7],
             ]),
             {
-                let (mapefarbeveccard, veccard_trumpf) = STrumpfDeciderBettel::equivalent_when_on_same_hand();
+                let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
                 assert!(veccard_trumpf.is_empty());
                 SEnumChains::new_from_slices(
                     &mapefarbeveccard.iter()
@@ -197,7 +199,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct SCompareFarbcardsBettel;
 impl TCompareFarbcards for SCompareFarbcardsBettel {
     fn compare_farbcards(card_fst: SCard, card_snd: SCard) -> Ordering {
@@ -225,6 +227,7 @@ fn test_equivalent_when_on_same_hand_rulesbettel() {
             n_payout_base: 10,
         },
         phantom: PhantomData,
+        trumpfdecider: STrumpfDeciderBettel::default(),
     }.equivalent_when_on_same_hand(); // does test internally
     SRulesBettel::<SBettelAllAllowedCardsWithinStichStichzwang>{
         epi: EPlayerIndex::EPI0,
@@ -233,5 +236,6 @@ fn test_equivalent_when_on_same_hand_rulesbettel() {
             n_payout_base: 10,
         },
         phantom: PhantomData,
+        trumpfdecider: STrumpfDeciderBettel::default(),
     }.equivalent_when_on_same_hand(); // does test internally
 }
