@@ -536,13 +536,13 @@ pub fn sololike(
     let (oefarbe, payoutdecider) = (oefarbe.into(), payoutdecider.into());
     assert!(!matches!(payoutdecider, VPayoutDeciderSoloLike::Sie(_)) || oefarbe.is_none()); // TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
     macro_rules! sololike_internal{(
-        ($trumpfdecider_farbe: ty, $str_oefarbe: expr),
-        ($trumpfdecider_core: ident, $str_esololike: expr),
+        ($trumpfdecider_farbe: expr, $str_oefarbe: expr),
+        ($trumpfdecider_core: expr, $str_esololike: expr),
         ($payoutdecider: expr, $str_payoutdecider: expr),
     ) => {
         Box::new(SRulesSoloLike::new(
             $payoutdecider,
-            $trumpfdecider_core::<$trumpfdecider_farbe>::default(),
+            $trumpfdecider_core($trumpfdecider_farbe),
             epi,
             format!("{}{}{}", $str_oefarbe, $str_esololike, $str_payoutdecider),
         )) as Box<dyn TActivelyPlayableRules>
@@ -550,16 +550,13 @@ pub fn sololike(
     cartesian_match!(
         sololike_internal,
         match (oefarbe) {
-            None => (STrumpfDeciderNoTrumpf<SCompareFarbcardsSimple>, ""),
-            Some(EFarbe::Eichel) => (SStaticFarbeEichel, "Eichel"),
-            Some(EFarbe::Gras) => (SStaticFarbeGras, "Gras"),
-            Some(EFarbe::Herz) => (SStaticFarbeHerz, "Herz"),
-            Some(EFarbe::Schelln) => (SStaticFarbeSchelln, "Schelln"),
+            None => (STrumpfDeciderNoTrumpf::<SCompareFarbcardsSimple>::default(), ""),
+            Some(efarbe) => (efarbe, efarbe.to_string()),
         },
         match (esololike) {
-            ESoloLike::Solo => (SCoreSolo, "Solo"),
-            ESoloLike::Wenz => (SCoreGenericWenz, "Wenz"),
-            ESoloLike::Geier => (SCoreGenericGeier, "Geier"),
+            ESoloLike::Solo => (|trumpfdecider_farbe| SCoreSolo::new(STrumpfDeciderSchlag::new(trumpfdecider_farbe)), "Solo"),
+            ESoloLike::Wenz => (|trumpfdecider_farbe| SCoreGenericWenz::new(trumpfdecider_farbe), "Wenz"),
+            ESoloLike::Geier => (|trumpfdecider_farbe| SCoreGenericGeier::new(trumpfdecider_farbe), "Geier"),
         },
         match (payoutdecider) {
             VPayoutDeciderSoloLike::PointBased(payoutdecider) => (payoutdecider, ""),

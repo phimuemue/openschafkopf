@@ -77,6 +77,16 @@ pub struct STrumpfDeciderSchlag<StaticSchlag, DeciderSec> {
     phantom: PhantomData<StaticSchlag>,
     trumpfdecider_sec: DeciderSec,
 }
+
+impl<StaticSchlag, DeciderSec> STrumpfDeciderSchlag<StaticSchlag, DeciderSec> {
+    pub fn new(trumpfdecider_sec: DeciderSec) -> Self {
+        Self {
+            phantom: PhantomData,
+            trumpfdecider_sec,
+        }
+    }
+}
+
 fn static_schlag<StaticSchlag: TStaticValue<ESchlag>>(card: &SCard) -> bool {
     StaticSchlag::VALUE!=card.schlag()
 }
