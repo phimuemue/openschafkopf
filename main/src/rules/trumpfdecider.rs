@@ -114,22 +114,24 @@ impl<StaticSchlag: TStaticValue<ESchlag>, DeciderSec: TTrumpfDecider> TTrumpfDec
     }
 }
 
-impl<StaticFarbe: TStaticValue<EFarbe>> TTrumpfDecider for StaticFarbe {
+impl<Farbe: TStaticOrDynamicValue<EFarbe> + Send + fmt::Debug + Copy + Sync + 'static> TTrumpfDecider for Farbe {
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        if StaticFarbe::VALUE == card.farbe() {
+        if (*self).value() == card.farbe() {
             VTrumpfOrFarbe::Trumpf
         } else {
             VTrumpfOrFarbe::Farbe(card.farbe())
         }
     }
-    #[allow(clippy::type_complexity)] // covered by the fact that return_impl should go away
-    type ItCardTrumpf = std::iter::Map<std::iter::Map<std::ops::Range<usize>, fn(usize) -> ESchlag>, fn(ESchlag) -> SCard>;
+    type ItCardTrumpf = Box<dyn Iterator<Item=SCard>>; // TODO concrete type
     fn trumpfs_in_descending_order(&self, ) -> return_impl!(Self::ItCardTrumpf) {
-        ESchlag::values()
-            .map(|eschlag| SCard::new(StaticFarbe::VALUE, eschlag))
+        let efarbe = (*self).value();
+        Box::new(
+            ESchlag::values()
+                .map(move |eschlag| SCard::new(efarbe, eschlag))
+        )
     }
     fn compare_cards(&self, card_fst: SCard, card_snd: SCard) -> Option<Ordering> {
-        match (StaticFarbe::VALUE==card_fst.farbe(), StaticFarbe::VALUE==card_snd.farbe()) {
+        match ((*self).value()==card_fst.farbe(), (*self).value()==card_snd.farbe()) {
             (true, true) => Some(SCompareFarbcardsSimple::compare_farbcards(card_fst, card_snd)),
             (true, false) => Some(Ordering::Greater),
             (false, true) => Some(Ordering::Less),
