@@ -523,9 +523,9 @@ pub type SCoreSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<
     SStaticSchlagOber, STrumpfDeciderSchlag<
     SStaticSchlagUnter, TrumpfFarbDecider>>;
 pub type SCoreGenericWenz<TrumpfFarbDecider> = STrumpfDeciderSchlag<
-    SStaticSchlagUnter, TrumpfFarbDecider>;
+    ESchlag, TrumpfFarbDecider>;
 pub type SCoreGenericGeier<TrumpfFarbDecider> = STrumpfDeciderSchlag<
-    SStaticSchlagOber, TrumpfFarbDecider>;
+    ESchlag, TrumpfFarbDecider>;
 
 pub fn sololike(
     epi: EPlayerIndex,
@@ -554,9 +554,9 @@ pub fn sololike(
             Some(efarbe) => (efarbe, efarbe.to_string()),
         },
         match (esololike) {
-            ESoloLike::Solo => (|trumpfdecider_farbe| SCoreSolo::new(STrumpfDeciderSchlag::new(trumpfdecider_farbe)), "Solo"),
-            ESoloLike::Wenz => (|trumpfdecider_farbe| SCoreGenericWenz::new(trumpfdecider_farbe), "Wenz"),
-            ESoloLike::Geier => (|trumpfdecider_farbe| SCoreGenericGeier::new(trumpfdecider_farbe), "Geier"),
+            ESoloLike::Solo => (|trumpfdecider_farbe| SCoreSolo::new(SStaticSchlagOber{}, STrumpfDeciderSchlag::new(SStaticSchlagUnter{}, trumpfdecider_farbe)), "Solo"),
+            ESoloLike::Wenz => (|trumpfdecider_farbe| SCoreGenericWenz::new(ESchlag::Unter, trumpfdecider_farbe), "Wenz"),
+            ESoloLike::Geier => (|trumpfdecider_farbe| SCoreGenericGeier::new(ESchlag::Ober, trumpfdecider_farbe), "Geier"),
         },
         match (payoutdecider) {
             VPayoutDeciderSoloLike::PointBased(payoutdecider) => (payoutdecider, ""),
@@ -575,12 +575,12 @@ fn test_trumpfdecider() {
         vec![EO, GO, HO, SO, EU, GU, HU, SU, GA, GZ, GK, G9, G8, G7],
     );
     assert_eq!(
-        SCoreGenericWenz::<SStaticFarbeGras>::default()
+        SCoreGenericWenz::new(ESchlag::Unter, EFarbe::Gras)
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU, GA, GZ, GK, GO, G9, G8, G7],
     );
     assert_eq!(
-        SCoreGenericWenz::<STrumpfDeciderNoTrumpf<SCompareFarbcardsSimple>>::default()
+        SCoreGenericWenz::new(ESchlag::Unter, STrumpfDeciderNoTrumpf::<SCompareFarbcardsSimple>::default())
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU],
     );

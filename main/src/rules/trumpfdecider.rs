@@ -72,27 +72,15 @@ impl<CompareFarbcards: TCompareFarbcards> TTrumpfDecider for STrumpfDeciderNoTru
     }
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct STrumpfDeciderSchlag<StaticSchlag, DeciderSec> {
-    phantom: PhantomData<StaticSchlag>,
+#[derive(Clone, Debug, Default, new)]
+pub struct STrumpfDeciderSchlag<Schlag, DeciderSec> {
+    schlag: Schlag,
     trumpfdecider_sec: DeciderSec,
 }
 
-impl<StaticSchlag, DeciderSec> STrumpfDeciderSchlag<StaticSchlag, DeciderSec> {
-    pub fn new(trumpfdecider_sec: DeciderSec) -> Self {
-        Self {
-            phantom: PhantomData,
-            trumpfdecider_sec,
-        }
-    }
-}
-
-fn static_schlag<StaticSchlag: TStaticValue<ESchlag>>(card: &SCard) -> bool {
-    StaticSchlag::VALUE!=card.schlag()
-}
-impl<StaticSchlag: TStaticValue<ESchlag>, DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<StaticSchlag, DeciderSec> {
+impl<Schlag: TStaticOrDynamicValue<ESchlag>+Send+fmt::Debug+Copy+Sync+'static, DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<Schlag, DeciderSec> {
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe {
-        if StaticSchlag::VALUE == card.schlag() {
+        if self.schlag.value() == card.schlag() {
             VTrumpfOrFarbe::Trumpf
         } else {
             self.trumpfdecider_sec.trumpforfarbe(card)
@@ -100,17 +88,18 @@ impl<StaticSchlag: TStaticValue<ESchlag>, DeciderSec: TTrumpfDecider> TTrumpfDec
     }
     type ItCardTrumpf = Box<dyn Iterator<Item=SCard>>; // TODO concrete type
     fn trumpfs_in_descending_order(&self, ) -> return_impl!(Self::ItCardTrumpf) {
+        let eschlag = self.schlag.value();
         Box::new(
             EFarbe::values()
-                .map(|efarbe| SCard::new(efarbe, StaticSchlag::VALUE))
+                .map(move |efarbe| SCard::new(efarbe, eschlag))
                 .chain(
                     self.trumpfdecider_sec.trumpfs_in_descending_order()
-                        .filter(static_schlag::<StaticSchlag>)
+                        .filter(move |card| eschlag!=card.schlag())
                 )
         )
     }
     fn compare_cards(&self, card_fst: SCard, card_snd: SCard) -> Option<Ordering> {
-        match (StaticSchlag::VALUE==card_fst.schlag(), StaticSchlag::VALUE==card_snd.schlag()) {
+        match (self.schlag.value()==card_fst.schlag(), self.schlag.value()==card_snd.schlag()) {
             (true, true) => {
                 static_assert!(assert(EFarbe::Eichel < EFarbe::Gras, "Farb-Sorting can't be used here"));
                 static_assert!(assert(EFarbe::Gras < EFarbe::Herz, "Farb-Sorting can't be used here"));
