@@ -441,7 +441,12 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TActi
     }
     fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<dyn TActivelyPlayableRules>> {
         self.payoutdecider.with_increased_prio(prio, ebid)
-            .map(|payoutdecider| Box::new(Self::new(payoutdecider, self.trumpfdecider.clone(), self.epi, self.str_name.clone())) as Box<dyn TActivelyPlayableRules>)
+            .map(|payoutdecider| Box::new(Self{
+                payoutdecider,
+                trumpfdecider: self.trumpfdecider.clone(),
+                epi: self.epi,
+                str_name: self.str_name.clone(),
+            }) as Box<dyn TActivelyPlayableRules>)
     }
 }
 
@@ -494,14 +499,6 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
 }
 
 impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
-    fn new(payoutdecider: PayoutDecider, trumpfdecider: TrumpfDecider, epi: EPlayerIndex, str_name: String) -> Self {
-        Self {
-            payoutdecider,
-            trumpfdecider,
-            epi,
-            str_name,
-        }
-    }
     fn internal_playerindex(&self) -> EPlayerIndex { // TODORUST const fn
         self.epi
     }
@@ -541,12 +538,12 @@ pub fn sololike(
         ($trumpfdecider_core: expr, $str_esololike: expr),
         ($payoutdecider: expr, $str_payoutdecider: expr),
     ) => {
-        Box::new(SRulesSoloLike::new(
-            $payoutdecider,
-            $trumpfdecider_core($trumpfdecider_farbe),
+        Box::new(SRulesSoloLike{
+            payoutdecider: $payoutdecider,
+            trumpfdecider: $trumpfdecider_core($trumpfdecider_farbe),
             epi,
-            format!("{}{}{}", $str_oefarbe, $str_esololike, $str_payoutdecider),
-        )) as Box<dyn TActivelyPlayableRules>
+            str_name: format!("{}{}{}", $str_oefarbe, $str_esololike, $str_payoutdecider),
+        }) as Box<dyn TActivelyPlayableRules>
     }}
     cartesian_match!(
         sololike_internal,
