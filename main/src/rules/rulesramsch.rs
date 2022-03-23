@@ -1,5 +1,5 @@
 use crate::primitives::*;
-use crate::rules::{card_points::*, payoutdecider::{internal_payout, equivalent_when_on_same_hand_point_based}, trumpfdecider::*, *};
+use crate::rules::{card_points::*, payoutdecider::internal_payout, trumpfdecider::*, *};
 use crate::util::*;
 use std::{cmp::Ordering, fmt};
 
@@ -156,7 +156,7 @@ impl TRules for SRulesRamsch {
             {
                 let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
                 let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
-                    .flat_map(|veccard| equivalent_when_on_same_hand_point_based(&veccard))
+                    .flat_map(|veccard| payoutdecider::equivalent_when_on_same_hand_point_based(&veccard))
                     .collect::<Vec<_>>();
                 SEnumChains::new_from_slices(
                     &vecveccard.iter()
