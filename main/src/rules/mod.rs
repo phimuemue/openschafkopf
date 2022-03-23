@@ -222,7 +222,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
 
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
 
-    fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache, b_test_points_as_payout: SIfDebugBool) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache, if_dbg_else!({b_test_points_as_payout}{_}): SIfDebugBool) -> EnumMap<EPlayerIndex, isize> {
         let apayoutinfo = self.payout_no_invariant(
             gamefinishedstiche,
             tpln_stoss_doubling,
