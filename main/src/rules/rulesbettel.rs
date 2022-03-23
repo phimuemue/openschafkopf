@@ -28,9 +28,6 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> SRules
             phantom: PhantomData,
         }
     }
-    fn internal_playerindex(&self) -> EPlayerIndex {
-        self.epi
-    }
 }
 
 impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> fmt::Display for SRulesBettel<BettelAllAllowedCardsWithinStich> {
@@ -158,7 +155,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
             self,
             rulestatecache,
             gamefinishedstiche,
-            &SPlayerParties13::new(self.internal_playerindex()),
+            &SPlayerParties13::new(self.epi),
         ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
     }
 
@@ -168,7 +165,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
             rulestatecache,
             stichseq,
             ahand,
-            &SPlayerParties13::new(self.internal_playerindex()),
+            &SPlayerParties13::new(self.epi),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
              on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
         ))

@@ -75,7 +75,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
             rules,
             rulestatecache,
             gamefinishedstiche,
-            &SPlayerParties13::new(rules.internal_playerindex()),
+            &SPlayerParties13::new(rules.epi),
         ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
     }
 
@@ -85,7 +85,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
             rulestatecache,
             stichseq,
             ahand,
-            &SPlayerParties13::new(rules.internal_playerindex()),
+            &SPlayerParties13::new(rules.epi),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
              on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
         ))
@@ -104,7 +104,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
     )> {
         //assert_eq!(self, rules.payoutdecider); // TODO
         let pointstowin = self.pointstowin.clone();
-        let epi_active = rules.internal_playerindex();
+        let epi_active = rules.epi;
         Some((
             Box::new(SRulesSoloLike{
                 str_name: rules.str_name.clone(),
@@ -147,20 +147,20 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
             rules,
             rulestatecache,
             gamefinishedstiche,
-            &SPlayerParties13::new(rules.internal_playerindex()),
+            &SPlayerParties13::new(rules.epi),
         );
         #[cfg(debug_assertions)] {
             let mut stichseq_check = SStichSequence::new(gamefinishedstiche.get().kurzlang());
             let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
                 SHand::new_from_iter(gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[epi]))
             );
-            let playerparties = SPlayerParties13::new(rules.internal_playerindex());
+            let playerparties = SPlayerParties13::new(rules.epi);
             for stich in gamefinishedstiche.get().completed_stichs().iter() {
                 for (epi_card, card) in stich.iter() {
                     let b_primary = playerparties.is_primary_party(epi_card);
                     assert_eq!(
                         Self::payout_to_points(
-                            /*epi_active*/rules.internal_playerindex(),
+                            /*epi_active*/rules.epi,
                             &stichseq_check,
                             &self.pointstowin,
                             an_payout[epi_card].as_num::<f32>(),
@@ -187,7 +187,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
             rulestatecache,
             stichseq,
             ahand,
-            &SPlayerParties13::new(rules.internal_playerindex()),
+            &SPlayerParties13::new(rules.epi),
         )
     }
 
@@ -264,7 +264,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
             rules,
             rulestatecache,
             gamefinishedstiche,
-            &SPlayerParties13::new(rules.internal_playerindex()),
+            &SPlayerParties13::new(rules.epi),
         ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
     }
 
@@ -274,7 +274,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
             rulestatecache,
             stichseq,
             ahand,
-            &SPlayerParties13::new(rules.internal_playerindex()),
+            &SPlayerParties13::new(rules.epi),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
              on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
         ))
@@ -392,7 +392,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
             rules,
             rulestatecache,
             gamefinishedstiche,
-            &SPlayerParties13::new(rules.internal_playerindex()),
+            &SPlayerParties13::new(rules.epi),
         ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
     }
 
@@ -402,7 +402,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
             rulestatecache,
             stichseq,
             ahand,
-            &SPlayerParties13::new(rules.internal_playerindex()),
+            &SPlayerParties13::new(rules.epi),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
              on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
         ))
@@ -495,12 +495,6 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
         Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
     )> {
         self.payoutdecider.points_as_payout(self)
-    }
-}
-
-impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> SRulesSoloLike<TrumpfDecider, PayoutDecider> {
-    fn internal_playerindex(&self) -> EPlayerIndex { // TODORUST const fn
-        self.epi
     }
 }
 
