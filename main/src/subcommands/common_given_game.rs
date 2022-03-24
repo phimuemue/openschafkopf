@@ -77,8 +77,10 @@ pub fn with_common_args(
     let oiteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
         if "all"==str_itahand.to_lowercase() {
             All
+        } else if let Ok(n_samples)=str_itahand.parse() {
+            Sample(n_samples)
         } else {
-            Sample(str_itahand.parse()?)
+            bail!("Failed to parse simulate_hands");
         }
     );
     let epi_fixed = determinebestcard.epi_fixed;
