@@ -51,12 +51,12 @@ pub fn with_common_args(
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
     let rules = crate::rules::parser::parse_rule_description_simple(unwrap!(clapmatches.value_of("rules")))?;
     let rules = rules.as_ref();
+    let ekurzlang = EKurzLang::checked_from_cards_per_player(
+        /*n_stichs_complete*/veccard_as_played.len() / EPlayerIndex::SIZE
+            + hand_fixed.cards().len()
+    ).ok_or_else(|| format_err!("Cannot determine ekurzlang from {} and {:?}.", hand_fixed, veccard_as_played))?;
     let stichseq = SStichSequence::new_from_cards(
-        /*ekurzlang*/EKurzLang::checked_from_cards_per_player(
-            /*n_stichs_complete*/veccard_as_played.len() / EPlayerIndex::SIZE
-                + hand_fixed.cards().len()
-        )
-            .ok_or_else(|| format_err!("Cannot determine ekurzlang from {} and {:?}.", hand_fixed, veccard_as_played))?,
+        ekurzlang,
         veccard_as_played.iter().copied(),
         rules
     );
