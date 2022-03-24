@@ -9,6 +9,7 @@ pub use super::handconstraint::*;
 enum VChooseItAhand {
     All,
     Sample(usize),
+    Concrete(Vec<SCard>),
 }
 
 pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::App<'static, 'static> {
@@ -79,12 +80,16 @@ pub fn with_common_args(
             All
         } else if let Ok(n_samples)=str_itahand.parse() {
             Sample(n_samples)
+        } else if let Some(veccard)=cardvector::parse_cards(str_itahand) {
+            Concrete(veccard)
         } else {
             bail!("Failed to parse simulate_hands");
         }
     );
     let epi_fixed = determinebestcard.epi_fixed;
-    let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(remaining_cards_per_hand(&stichseq)[epi_fixed] - 1));
+    let mapepin_cards_per_hand = remaining_cards_per_hand(&stichseq);
+    assert_eq!(mapepin_cards_per_hand[epi_fixed], hand_fixed.cards().len());
+    let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(mapepin_cards_per_hand[epi_fixed] - 1));
     macro_rules! forward{(($itahand: expr), ) => { // TODORUST generic closures
         withcommanargs.call(
             rules,
@@ -96,6 +101,22 @@ pub fn with_common_args(
     }}
     cartesian_match!(forward,
         match ((oiteratehands, eremainingcards)) {
+            (Some(Concrete(veccard)), _) => ({
+                // TODO error handling
+                // TODO should we offer an option such that hand_fixed can be specified in line with other hands?
+                let mut ahand = EPlayerIndex::map_from_fn(|_epi| SHand::new_from_vec(SHandVector::new()));
+                let mut i_card_lo = 0;
+                for epi in EPlayerIndex::values() {
+                    if epi==epi_fixed {
+                        ahand[verify_eq!(epi, epi_fixed)] = hand_fixed.clone();
+                    } else {
+                        let i_card_hi = i_card_lo + mapepin_cards_per_hand[epi];
+                        ahand[epi] = SHand::new_from_iter(veccard[i_card_lo..i_card_hi].iter().copied()); 
+                        i_card_lo = i_card_hi;
+                    }
+                }
+                std::iter::once(ahand)
+            }),
             (Some(All), _)|(None, _1|_2|_3|_4) => (
                 all_possible_hands(&stichseq, hand_fixed.clone(), epi_fixed, rules)
                     .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
