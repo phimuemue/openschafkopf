@@ -32,7 +32,6 @@ pub trait TWithCommonArgs {
     fn call<'rules>(
         self,
         rules: &'rules dyn TRules,
-        hand_fixed: SHand,
         itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
         eremainingcards: ERemainingCards,
         determinebestcard: SDetermineBestCard,
@@ -87,7 +86,6 @@ pub fn with_common_args(
     macro_rules! forward{(($itahand: expr), ) => { // TODORUST generic closures
         withcommanargs.call(
             rules,
-            hand_fixed.clone(),
             Box::new($itahand),
             eremainingcards,
             determinebestcard,

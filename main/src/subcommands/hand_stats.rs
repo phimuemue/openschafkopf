@@ -18,7 +18,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         fn call<'rules>(
             self,
             rules: &'rules dyn TRules,
-            _hand_fixed: SHand,
             itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
             _eremainingcards: ERemainingCards,
             _determinebestcard: SDetermineBestCard,

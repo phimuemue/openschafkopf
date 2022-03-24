@@ -24,7 +24,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         fn call<'rules>(
             self,
             rules_raw: &'rules dyn TRules,
-            hand_fixed: SHand,
             itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
             eremainingcards: ERemainingCards,
             determinebestcard: SDetermineBestCard,
@@ -116,7 +115,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     .collect_tuple()
                                     .ok_or_else(|| format_err!("Could not parse branching"))?;
                                 let (n_lo, n_hi) = (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?);
-                                if n_lo < hand_fixed.cards().len() {
+                                if n_lo < determinebestcard.hand_fixed.cards().len() {
                                     Branching(n_lo, n_hi)
                                 } else {
                                     if b_verbose {
