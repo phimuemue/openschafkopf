@@ -123,24 +123,25 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SG
                         ),
                     )
                 };
-                if let Some(analysispercard) = look_for_mistakes!(
-                    std::iter::once(game.ahand.clone()),
-                )
-                    .map(|cardandpayout_cheating| {
-                        SAnalysisPerCard {
-                            i_stich,
-                            epi,
-                            oanalysisimpr: Some(SAnalysisImprovement {
-                                cardandpayout_cheating,
-                                ocardandpayout_simulating: look_for_mistakes_simulating(),
-                            }),
+                vecanalysispercard.push(SAnalysisPerCard {
+                    i_stich,
+                    epi,
+                    oanalysisimpr: /*TODO? if_then_some*/if let Some(analysisimpr) = look_for_mistakes!(
+                            std::iter::once(game.ahand.clone()),
+                        )
+                            .map(|cardandpayout_cheating| {
+                                SAnalysisImprovement {
+                                    cardandpayout_cheating,
+                                    ocardandpayout_simulating: look_for_mistakes_simulating(),
+                                }
+                            })
+                        {
+                            Some(analysisimpr)
+                        } else {
+                            debug_assert!(look_for_mistakes_simulating().is_none());
+                            None
                         }
-                    })
-                {
-                    vecanalysispercard.push(analysispercard);
-                } else {
-                    debug_assert!(look_for_mistakes_simulating().is_none());
-                }
+                })
             }
         },
     ));
