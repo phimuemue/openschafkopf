@@ -3,6 +3,7 @@ use crate::game::*;
 use crate::primitives::*;
 use crate::rules::{payoutdecider::*, ruleset::VStockOrT, rulessolo::*, *};
 use crate::util::*;
+use crate::game_analysis::determine_best_card_table::{table, SOutputLine, SFormatInfo};
 use itertools::Itertools;
 use std::{
     io::Write,
@@ -40,7 +41,7 @@ pub fn make_stich_vector(vectplepiacard_stich: &[(EPlayerIndex, [SCard; 4])]) ->
         .collect()
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SAnalysisCardAndPayout {
     pub veccard: Vec<SCard>,
     pub n_payout: isize,
@@ -50,6 +51,7 @@ pub struct SAnalysisCardAndPayout {
 pub struct SAnalysisPerCard {
     i_stich: usize,
     epi: EPlayerIndex,
+    determinebestcardresult_cheating: SDetermineBestCardResult<SPayoutStatsPerStrategy>,
     oanalysisimpr: Option<SAnalysisImprovement>,
 }
 
@@ -89,7 +91,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SG
             if remaining_cards_per_hand(&game.stichseq)[epi] <= if_dbg_else!({2}{4}) {
                 let determinebestcard = SDetermineBestCard::new_from_game(game);
                 macro_rules! look_for_mistakes{($itahand: expr,) => {{
-                    if determinebestcard.single_allowed_card().is_none() { // there is an actual choice
+                    if determinebestcard.single_allowed_card().is_none() { // there is an actual choice // TODO? also check if there is no choice?
                         let determinebestcardresult = determine_best_card(
                             &determinebestcard,
                             $itahand,
@@ -98,19 +100,22 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SG
                             /*fn_visualizer*/|_,_,_| SNoVisualization,
                         );
                         let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value();
-                        if 
-                            !veccard.contains(&card) // TODO can we improve this?
-                            && an_payout[epi]<minmax.t_min.min()
-                        {
-                            Some(SAnalysisCardAndPayout{
-                                veccard,
-                                n_payout: minmax.t_selfish_min.min(),
-                            })
-                        } else {
-                            // The decisive mistake must occur in subsequent stichs.
-                            // TODO assert that it actually occurs
-                            None
-                        }
+                        Some((
+                            determinebestcardresult.clone(),
+                            if 
+                                !veccard.contains(&card) // TODO can we improve this?
+                                && an_payout[epi]<minmax.t_min.min()
+                            {
+                                Some(SAnalysisCardAndPayout{
+                                    veccard,
+                                    n_payout: minmax.t_selfish_min.min(),
+                                })
+                            } else {
+                                // The decisive mistake must occur in subsequent stichs.
+                                // TODO assert that it actually occurs
+                                None
+                            }
+                        ))
                     } else {
                         None
                     }
@@ -125,25 +130,31 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SG
                         ),
                     )
                 };
-                vecanalysispercard.push(SAnalysisPerCard {
-                    i_stich,
-                    epi,
-                    oanalysisimpr: /*TODO? if_then_some*/if let Some(analysisimpr) = look_for_mistakes!(
-                            std::iter::once(game.ahand.clone()),
-                        )
-                            .map(|cardandpayout_cheating| {
-                                SAnalysisImprovement {
-                                    cardandpayout_cheating,
-                                    ocardandpayout_simulating: look_for_mistakes_simulating(),
-                                }
-                            })
-                        {
-                            Some(analysisimpr)
-                        } else {
-                            debug_assert!(look_for_mistakes_simulating().is_none());
-                            None
-                        }
-                })
+                if let Some((determinebestcardresult_cheating, ocardandpayout_cheating)) = look_for_mistakes!(
+                    std::iter::once(game.ahand.clone()),
+                ) {
+                    vecanalysispercard.push(SAnalysisPerCard {
+                        determinebestcardresult_cheating,
+                        i_stich,
+                        epi,
+                        oanalysisimpr: /*TODO? if_then_some*/if let Some(analysisimpr) = ocardandpayout_cheating
+                                .map(|cardandpayout_cheating| {
+                                    SAnalysisImprovement {
+                                        cardandpayout_cheating,
+                                        ocardandpayout_simulating: look_for_mistakes_simulating()
+                                            .and_then(|(_determinebestcardresult_simulating, ocardandpayout_simulating)|
+                                                ocardandpayout_simulating
+                                            ),
+                                    }
+                                })
+                            {
+                                Some(analysisimpr)
+                            } else {
+                                debug_assert!(unwrap!(look_for_mistakes_simulating()).1.is_none());
+                                None
+                            }
+                    })
+                }
             }
         },
     ));
@@ -265,6 +276,36 @@ pub fn generate_analysis_html(
             str_analysisimpr
         }).format(""))
     + "</ul>"
+    + "<h2>Details</h2>"
+    + &format!("{}", slcanalysispercard.iter()
+        .map(|analysispercard| {
+            let (vecoutputline, aformatinfo) = table(
+                &analysispercard.determinebestcardresult_cheating,
+                /*fn_human_readable_payout*/&|f_payout| f_payout,
+            );
+            let mut str_per_card = format!(
+                r###"<h3>Stich {i_stich}, Spieler {epi}</h3>"###,
+                i_stich = analysispercard.i_stich + 1, // humans start counting at 1
+                epi = analysispercard.epi,
+            );
+            str_per_card += "<table>";
+            for SOutputLine{card, atplstrf} in vecoutputline.iter() {
+                str_per_card += "<tr>";
+                str_per_card += "<td>";
+                str_per_card += &crate::ai::suspicion::output_card(*card, /*b_border*/false);
+                str_per_card += "</td>";
+                for ((str_num, _f), SFormatInfo{f_min:_, f_max:_, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
+                    str_per_card += "<td>";
+                    // TODO colored output as in suggest_card
+                    str_per_card += &format!("{:>width$}", str_num, width=n_width);
+                    str_per_card += "</td>";
+                }
+                str_per_card += "</tr>";
+            }
+            str_per_card += "</table>";
+            str_per_card
+        }).format("")
+    )
     + "</body></html>"
 }
 

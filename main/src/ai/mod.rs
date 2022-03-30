@@ -220,6 +220,7 @@ fn test_unplayed_cards() {
     assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
 }
 
+#[derive(Clone, Debug)]
 pub struct SDetermineBestCardResult<T> {
     veccard_allowed: SHandVector,
     mapcardt: EnumMap<SCard, Option<T>>,
