@@ -45,9 +45,14 @@ pub struct SAnalysisCardAndPayout {
 }
 
 #[derive(Clone)]
+pub struct SAnalysisPerCard {
+    i_stich: usize,
+    epi: EPlayerIndex,
+    oanalysisimpr: Option<SAnalysisImprovement>,
+}
+
+#[derive(Clone)]
 pub struct SAnalysisImprovement {
-    pub i_stich: usize,
-    pub epi: EPlayerIndex,
     pub cardandpayout_cheating: SAnalysisCardAndPayout,
     pub ocardandpayout_simulating: Option<SAnalysisCardAndPayout>,
 }
@@ -61,7 +66,7 @@ pub struct SGameAnalysis {
 
 pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SGameAnalysis {
     let instant_begin = Instant::now();
-    let mut vecanalysisimpr = Vec::new();
+    let mut vecanalysispercard = Vec::new();
     let an_payout = unwrap!(game_in.clone().finish()).an_payout;
     let str_rules = format!("{}{}",
         game_in.rules,
@@ -118,25 +123,29 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SG
                         ),
                     )
                 };
-                if let Some(analysisimpr) = look_for_mistakes!(
+                if let Some(analysispercard) = look_for_mistakes!(
                     std::iter::once(game.ahand.clone()),
                 )
                     .map(|cardandpayout_cheating| {
-                        SAnalysisImprovement {
+                        SAnalysisPerCard {
                             i_stich,
                             epi,
-                            cardandpayout_cheating,
-                            ocardandpayout_simulating: look_for_mistakes_simulating(),
+                            oanalysisimpr: Some(SAnalysisImprovement {
+                                cardandpayout_cheating,
+                                ocardandpayout_simulating: look_for_mistakes_simulating(),
+                            }),
                         }
                     })
                 {
-                    vecanalysisimpr.push(analysisimpr);
+                    vecanalysispercard.push(analysispercard);
                 } else {
                     debug_assert!(look_for_mistakes_simulating().is_none());
                 }
             }
         },
     ));
+    let itanalysisimpr = vecanalysispercard.iter()
+        .filter_map(|analysispercard| analysispercard.oanalysisimpr.as_ref());
     SGameAnalysis {
         str_html: generate_analysis_html(
             &game,
@@ -144,10 +153,10 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SG
             str_link,
             &str_rules,
             &unwrap!(game.clone().finish()).an_payout,
-            &vecanalysisimpr,
+            &vecanalysispercard,
         ),
-        n_findings_cheating: vecanalysisimpr.len(),
-        n_findings_simulating: vecanalysisimpr.iter()
+        n_findings_cheating: itanalysisimpr.clone().count(),
+        n_findings_simulating: itanalysisimpr.clone()
             .filter(|analysisimpr| analysisimpr.ocardandpayout_simulating.is_some())
             .count(),
         duration: instant_begin.elapsed(),
@@ -177,7 +186,7 @@ pub fn generate_analysis_html(
     str_link: &str,
     str_rules: &str,
     mapepin_payout: &EnumMap<EPlayerIndex, isize>,
-    slcanalysisimpr: &[SAnalysisImprovement],
+    slcanalysispercard: &[SAnalysisPerCard],
 ) -> String {
     use crate::game::*;
     assert!(game.which_player_can_do_something().is_none()); // TODO use SGameResult (see comment in SGameResult)
@@ -215,39 +224,43 @@ pub fn generate_analysis_html(
     }).format("\n"))
     + "</tr></table>"
     + "<ul>"
-    + &format!("{}", slcanalysisimpr.iter().map(|analysisimpr| {
-        let mut str_analysisimpr = format!(
-            r###"<li>
-                Stich {i_stich}, Spieler {epi}:
-                Bei gegebener Kartenverteilung: {str_card_suggested_cheating} garantierter Mindestgewinn: {n_payout_cheating} (statt {n_payout_real}).
-            </li>"###,
-            i_stich = analysisimpr.i_stich + 1, // humans start counting at 1
-            epi = analysisimpr.epi,
-            str_card_suggested_cheating = analysisimpr.cardandpayout_cheating.veccard
-                .iter()
-                .map(SCard::to_string)
-                .join(", "),
-            n_payout_cheating = analysisimpr.cardandpayout_cheating.n_payout,
-            n_payout_real = mapepin_payout[analysisimpr.epi],
-        );
-        if let Some(ref cardandpayout) = analysisimpr.ocardandpayout_simulating {
-            str_analysisimpr += &format!(
-                r###"
-                    <ul><li>
-                    Bei unbekannter Kartenverteilung: {str_card_suggested} garantierter Mindestgewinn {n_payout} (statt {n_payout_real}).
-                    </ul></li>
+    + &format!("{}", slcanalysispercard.iter()
+        .filter_map(|analysispercard| analysispercard.oanalysisimpr.as_ref().map(|analysisimpr|
+            (analysisimpr, analysispercard.i_stich, analysispercard.epi)
+        ))
+        .map(|(analysisimpr, i_stich, epi)| {
+            let mut str_analysisimpr = format!(
+                r###"<li>
+                    Stich {i_stich}, Spieler {epi}:
+                    Bei gegebener Kartenverteilung: {str_card_suggested_cheating} garantierter Mindestgewinn: {n_payout_cheating} (statt {n_payout_real}).
                 </li>"###,
-                str_card_suggested = cardandpayout.veccard
+                i_stich = i_stich + 1, // humans start counting at 1
+                epi = epi,
+                str_card_suggested_cheating = analysisimpr.cardandpayout_cheating.veccard
                     .iter()
                     .map(SCard::to_string)
                     .join(", "),
-                n_payout = cardandpayout.n_payout,
-                n_payout_real = mapepin_payout[analysisimpr.epi],
+                n_payout_cheating = analysisimpr.cardandpayout_cheating.n_payout,
+                n_payout_real = mapepin_payout[epi],
             );
-        }
-        str_analysisimpr += "</li>";
-        str_analysisimpr
-    }).format(""))
+            if let Some(ref cardandpayout) = analysisimpr.ocardandpayout_simulating {
+                str_analysisimpr += &format!(
+                    r###"
+                        <ul><li>
+                        Bei unbekannter Kartenverteilung: {str_card_suggested} garantierter Mindestgewinn {n_payout} (statt {n_payout_real}).
+                        </ul></li>
+                    </li>"###,
+                    str_card_suggested = cardandpayout.veccard
+                        .iter()
+                        .map(SCard::to_string)
+                        .join(", "),
+                    n_payout = cardandpayout.n_payout,
+                    n_payout_real = mapepin_payout[epi],
+                );
+            }
+            str_analysisimpr += "</li>";
+            str_analysisimpr
+        }).format(""))
     + "</ul>"
     + "</body></html>"
 }
