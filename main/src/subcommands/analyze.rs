@@ -17,6 +17,7 @@ pub fn subcommand(str_subcommand: &str) -> clap::App {
         .arg(clap::Arg::with_name("include-no-findings")
             .long("include-no-findings")
         )
+        .arg(super::clap_arg("max-remaining-cards", if_dbg_else!({"2"}{"4"})))
 }
 
 #[derive(Debug)]
@@ -441,5 +442,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         /*fn_link*/|str_description: &str| str_description.to_string(),
         vecgame.into_iter(),
         /*b_include_no_findings*/clapmatches.is_present("include-no-findings"),
+        /*n_max_remaining_cards*/unwrap!(clapmatches.value_of("max-remaining-cards")).parse()?,
     )
 }

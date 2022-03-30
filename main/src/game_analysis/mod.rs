@@ -68,7 +68,7 @@ pub struct SGameAnalysis {
     pub duration: Duration,
 }
 
-pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SGameAnalysis {
+pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame, n_max_remaining_cards: usize) -> SGameAnalysis {
     let instant_begin = Instant::now();
     let mut vecanalysispercard = Vec::new();
     let an_payout = unwrap!(game_in.clone().finish()).an_payout;
@@ -88,7 +88,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame) -> SG
         game_in.n_stock,
         SStichSequenceGameFinished::new(&game_in.stichseq),
         /*fn_before_zugeben*/|game, i_stich, epi, card| {
-            if remaining_cards_per_hand(&game.stichseq)[epi] <= if_dbg_else!({2}{4}) {
+            if remaining_cards_per_hand(&game.stichseq)[epi] <= n_max_remaining_cards {
                 let determinebestcard = SDetermineBestCard::new_from_game(game);
                 macro_rules! look_for_mistakes{($itahand: expr,) => {{
                     if determinebestcard.single_allowed_card().is_none() { // there is an actual choice // TODO? also check if there is no choice?
@@ -328,7 +328,7 @@ pub struct SGameWithDesc {
     pub resgameresult: Result<SGameResult, failure::Error>,
 }
 
-pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String, itgamewithdesc: impl Iterator<Item=SGameWithDesc>, b_include_no_findings: bool) -> Result<(), failure::Error> {
+pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String, itgamewithdesc: impl Iterator<Item=SGameWithDesc>, b_include_no_findings: bool, n_max_remaining_cards: usize) -> Result<(), failure::Error> {
     create_dir_if_not_existent(path_analysis)?;
     generate_html_auxiliary_files(path_analysis)?;
     let str_date = format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S"));
@@ -369,7 +369,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                     let path_analysis_game = path_analysis.join(gamewithdesc.str_description.replace('/', "_").replace('.', "_"));
                     create_dir_if_not_existent(&path_analysis_game)?;
                     let path = path_analysis_game.join("analysis.html");
-                    let gameanalysis = analyze_game(&gamewithdesc.str_description, &fn_link(&gamewithdesc.str_description), game);
+                    let gameanalysis = analyze_game(&gamewithdesc.str_description, &fn_link(&gamewithdesc.str_description), game, n_max_remaining_cards);
                     let path = write_html(path, &gameanalysis.str_html)?;
                     let n_findings_simulating = gameanalysis.n_findings_simulating;
                     let n_findings_cheating = gameanalysis.n_findings_cheating;
