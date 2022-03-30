@@ -55,10 +55,17 @@ pub struct SAnalysisPerCard {
     oanalysisimpr: Option<SAnalysisImprovement>,
 }
 
+#[derive(Clone, Debug)]
+pub enum VImprovementSimulating {
+    NotRequested,
+    NothingFound,
+    Found(SAnalysisCardAndPayout),
+}
+
 #[derive(Clone)]
 pub struct SAnalysisImprovement {
     pub cardandpayout_cheating: SAnalysisCardAndPayout,
-    pub ocardandpayout_simulating: Option<SAnalysisCardAndPayout>,
+    pub improvementsimulating: VImprovementSimulating,
 }
 
 pub struct SGameAnalysis {
@@ -68,7 +75,13 @@ pub struct SGameAnalysis {
     pub duration: Duration,
 }
 
-pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame, n_max_remaining_cards: usize) -> SGameAnalysis {
+pub fn analyze_game(
+    str_description: &str,
+    str_link: &str,
+    game_in: SGame,
+    n_max_remaining_cards: usize,
+    b_simulate_all_hands: bool,
+) -> SGameAnalysis {
     let instant_begin = Instant::now();
     let mut vecanalysispercard = Vec::new();
     let an_payout = unwrap!(game_in.clone().finish()).an_payout;
@@ -117,14 +130,20 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame, n_max
                     )
                 }}}
                 let look_for_mistakes_simulating = || {
-                    look_for_mistakes!(
+                    if !b_simulate_all_hands {
+                        VImprovementSimulating::NotRequested
+                    } else if let Some(cardandpayout_simulating) = look_for_mistakes!(
                         all_possible_hands(
                             &game.stichseq,
                             game.ahand[determinebestcard.epi_fixed].clone(),
                             determinebestcard.epi_fixed,
                             game.rules.as_ref(),
                         ),
-                    )
+                    ).1 {
+                        VImprovementSimulating::Found(cardandpayout_simulating)
+                    } else {
+                        VImprovementSimulating::NothingFound
+                    }
                 };
                 let (determinebestcardresult_cheating, ocardandpayout_cheating) = look_for_mistakes!(
                     std::iter::once(game.ahand.clone()),
@@ -137,13 +156,13 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame, n_max
                             .map(|cardandpayout_cheating| {
                                 SAnalysisImprovement {
                                     cardandpayout_cheating,
-                                    ocardandpayout_simulating: look_for_mistakes_simulating().1,
+                                    improvementsimulating: look_for_mistakes_simulating(),
                                 }
                             })
                         {
                             Some(analysisimpr)
                         } else {
-                            debug_assert!(look_for_mistakes_simulating().1.is_none());
+                            debug_assert!(matches!(look_for_mistakes_simulating(), VImprovementSimulating::NothingFound));
                             None
                         }
                 })
@@ -163,7 +182,7 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame, n_max
         ),
         n_findings_cheating: itanalysisimpr.clone().count(),
         n_findings_simulating: itanalysisimpr.clone()
-            .filter(|analysisimpr| analysisimpr.ocardandpayout_simulating.is_some())
+            .filter(|analysisimpr| matches!(analysisimpr.improvementsimulating, VImprovementSimulating::Found(_)))
             .count(),
         duration: instant_begin.elapsed(),
     }
@@ -249,7 +268,7 @@ pub fn generate_analysis_html(
                 n_payout_cheating = analysisimpr.cardandpayout_cheating.n_payout,
                 n_payout_real = mapepin_payout[epi],
             );
-            if let Some(ref cardandpayout) = analysisimpr.ocardandpayout_simulating {
+            if let VImprovementSimulating::Found(ref cardandpayout) = analysisimpr.improvementsimulating {
                 str_analysisimpr += &format!(
                     r###"
                         <ul><li>
@@ -320,7 +339,7 @@ pub struct SGameWithDesc {
     pub resgameresult: Result<SGameResult, failure::Error>,
 }
 
-pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String, itgamewithdesc: impl Iterator<Item=SGameWithDesc>, b_include_no_findings: bool, n_max_remaining_cards: usize) -> Result<(), failure::Error> {
+pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String, itgamewithdesc: impl Iterator<Item=SGameWithDesc>, b_include_no_findings: bool, n_max_remaining_cards: usize, b_simulate_all_hands: bool) -> Result<(), failure::Error> {
     create_dir_if_not_existent(path_analysis)?;
     generate_html_auxiliary_files(path_analysis)?;
     let str_date = format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S"));
@@ -361,7 +380,13 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                     let path_analysis_game = path_analysis.join(gamewithdesc.str_description.replace('/', "_").replace('.', "_"));
                     create_dir_if_not_existent(&path_analysis_game)?;
                     let path = path_analysis_game.join("analysis.html");
-                    let gameanalysis = analyze_game(&gamewithdesc.str_description, &fn_link(&gamewithdesc.str_description), game, n_max_remaining_cards);
+                    let gameanalysis = analyze_game(
+                        &gamewithdesc.str_description,
+                        &fn_link(&gamewithdesc.str_description),
+                        game,
+                        n_max_remaining_cards,
+                        b_simulate_all_hands,
+                    );
                     let path = write_html(path, &gameanalysis.str_html)?;
                     let n_findings_simulating = gameanalysis.n_findings_simulating;
                     let n_findings_cheating = gameanalysis.n_findings_cheating;

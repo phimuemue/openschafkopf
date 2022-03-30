@@ -17,6 +17,9 @@ pub fn subcommand(str_subcommand: &str) -> clap::App {
         .arg(clap::Arg::with_name("include-no-findings")
             .long("include-no-findings")
         )
+        .arg(clap::Arg::with_name("simulate-all-hands")
+            .long("simulate-all-hands")
+        )
         .arg(super::clap_arg("max-remaining-cards", if_dbg_else!({"2"}{"4"})))
 }
 
@@ -443,5 +446,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         vecgame.into_iter(),
         /*b_include_no_findings*/clapmatches.is_present("include-no-findings"),
         /*n_max_remaining_cards*/unwrap!(clapmatches.value_of("max-remaining-cards")).parse()?,
+        /*b_simulate_all_hands*/clapmatches.is_present("simulate-all-hands"),
     )
 }
