@@ -282,7 +282,7 @@ impl SPayoutStats {
     }
 }
 
-type SPayoutStatsPerStrategy = SPerMinMaxStrategy<SPayoutStats>;
+pub type SPayoutStatsPerStrategy = SPerMinMaxStrategy<SPayoutStats>;
 
 impl SPayoutStatsPerStrategy {
     fn accumulate(&mut self, paystats: &Self) {
