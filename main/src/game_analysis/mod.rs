@@ -91,34 +91,30 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame, n_max
             if remaining_cards_per_hand(&game.stichseq)[epi] <= n_max_remaining_cards {
                 let determinebestcard = SDetermineBestCard::new_from_game(game);
                 macro_rules! look_for_mistakes{($itahand: expr,) => {{
-                    if determinebestcard.single_allowed_card().is_none() { // there is an actual choice // TODO? also check if there is no choice?
-                        let determinebestcardresult = determine_best_card(
-                            &determinebestcard,
-                            $itahand,
-                            || |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/),
-                            &SMinReachablePayout::new_from_game(game),
-                            /*fn_visualizer*/|_,_,_| SNoVisualization,
-                        );
-                        let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value();
-                        Some((
-                            determinebestcardresult.clone(),
-                            if 
-                                !veccard.contains(&card) // TODO can we improve this?
-                                && an_payout[epi]<minmax.t_min.min()
-                            {
-                                Some(SAnalysisCardAndPayout{
-                                    veccard,
-                                    n_payout: minmax.t_selfish_min.min(),
-                                })
-                            } else {
-                                // The decisive mistake must occur in subsequent stichs.
-                                // TODO assert that it actually occurs
-                                None
-                            }
-                        ))
-                    } else {
-                        None
-                    }
+                    let determinebestcardresult = determine_best_card(
+                        &determinebestcard,
+                        $itahand,
+                        || |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/),
+                        &SMinReachablePayout::new_from_game(game),
+                        /*fn_visualizer*/|_,_,_| SNoVisualization,
+                    );
+                    let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value();
+                    (
+                        determinebestcardresult.clone(),
+                        if 
+                            !veccard.contains(&card) // TODO can we improve this?
+                            && an_payout[epi]<minmax.t_min.min()
+                        {
+                            Some(SAnalysisCardAndPayout{
+                                veccard,
+                                n_payout: minmax.t_selfish_min.min(),
+                            })
+                        } else {
+                            // The decisive mistake must occur in subsequent stichs.
+                            // TODO assert that it actually occurs
+                            None
+                        }
+                    )
                 }}}
                 let look_for_mistakes_simulating = || {
                     look_for_mistakes!(
@@ -130,31 +126,27 @@ pub fn analyze_game(str_description: &str, str_link: &str, game_in: SGame, n_max
                         ),
                     )
                 };
-                if let Some((determinebestcardresult_cheating, ocardandpayout_cheating)) = look_for_mistakes!(
+                let (determinebestcardresult_cheating, ocardandpayout_cheating) = look_for_mistakes!(
                     std::iter::once(game.ahand.clone()),
-                ) {
-                    vecanalysispercard.push(SAnalysisPerCard {
-                        determinebestcardresult_cheating,
-                        i_stich,
-                        epi,
-                        oanalysisimpr: /*TODO? if_then_some*/if let Some(analysisimpr) = ocardandpayout_cheating
-                                .map(|cardandpayout_cheating| {
-                                    SAnalysisImprovement {
-                                        cardandpayout_cheating,
-                                        ocardandpayout_simulating: look_for_mistakes_simulating()
-                                            .and_then(|(_determinebestcardresult_simulating, ocardandpayout_simulating)|
-                                                ocardandpayout_simulating
-                                            ),
-                                    }
-                                })
-                            {
-                                Some(analysisimpr)
-                            } else {
-                                debug_assert!(unwrap!(look_for_mistakes_simulating()).1.is_none());
-                                None
-                            }
-                    })
-                }
+                );
+                vecanalysispercard.push(SAnalysisPerCard {
+                    determinebestcardresult_cheating,
+                    i_stich,
+                    epi,
+                    oanalysisimpr: /*TODO? if_then_some*/if let Some(analysisimpr) = ocardandpayout_cheating
+                            .map(|cardandpayout_cheating| {
+                                SAnalysisImprovement {
+                                    cardandpayout_cheating,
+                                    ocardandpayout_simulating: look_for_mistakes_simulating().1,
+                                }
+                            })
+                        {
+                            Some(analysisimpr)
+                        } else {
+                            debug_assert!(look_for_mistakes_simulating().1.is_none());
+                            None
+                        }
+                })
             }
         },
     ));
