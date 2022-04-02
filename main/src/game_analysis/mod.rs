@@ -107,7 +107,11 @@ pub fn analyze_game(
                     let determinebestcardresult = determine_best_card(
                         &determinebestcard,
                         $itahand,
-                        || |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/),
+                        equivalent_cards_filter(
+                            /*n_until_remaining_cards, determined heuristically*/7,
+                            epi,
+                            game.rules.equivalent_when_on_same_hand(),
+                        ),
                         &SMinReachablePayout::new_from_game(game),
                         /*fn_visualizer*/|_,_,_| SNoVisualization,
                     );
