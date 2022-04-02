@@ -223,6 +223,12 @@ pub fn generate_analysis_html(
         SHand::new_from_iter(game.stichseq.completed_stichs().iter().map(|stich| stich[epi]))
     });
     let epi_self = EPlayerIndex::EPI0;
+    let stich_caption = |i_stich, epi| {
+        format!("Stich {}, Spieler {}",
+            i_stich+1, // humans count 1-based
+            epi,
+        )
+    };
     format!(
         r###"<!DOCTYPE html>
         <html lang="de" class="no-js">
@@ -260,11 +266,10 @@ pub fn generate_analysis_html(
         .map(|(analysisimpr, i_stich, epi)| {
             let mut str_analysisimpr = format!(
                 r###"<li>
-                    Stich {i_stich}, Spieler {epi}:
+                    {str_stich_caption}:
                     Bei gegebener Kartenverteilung: {str_card_suggested_cheating} garantierter Mindestgewinn: {n_payout_cheating} (statt {n_payout_real}).
                 </li>"###,
-                i_stich = i_stich + 1, // humans start counting at 1
-                epi = epi,
+                str_stich_caption=stich_caption(i_stich, epi),
                 str_card_suggested_cheating = analysisimpr.cardandpayout_cheating.veccard
                     .iter()
                     .map(SCard::to_string)
@@ -298,11 +303,7 @@ pub fn generate_analysis_html(
                 &analysispercard.determinebestcardresult_cheating,
                 /*fn_human_readable_payout*/&|f_payout| f_payout,
             );
-            let mut str_per_card = format!(
-                r###"<h3>Stich {i_stich}, Spieler {epi}</h3>"###,
-                i_stich = analysispercard.i_stich + 1, // humans start counting at 1
-                epi = analysispercard.epi,
-            );
+            let mut str_per_card = format!(r###"<h3>{}</h3>"###, stich_caption(analysispercard.i_stich, analysispercard.epi));
             str_per_card += "<table>";
             for SOutputLine{card, atplstrf} in vecoutputline.iter() {
                 str_per_card += "<tr>";
