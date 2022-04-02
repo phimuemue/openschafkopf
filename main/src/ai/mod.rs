@@ -354,14 +354,25 @@ pub fn determine_best_card<
             assert!(ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
             ahand[determinebestcard.epi_fixed].play_card(card);
             stichseq.zugeben(card, determinebestcard.rules);
-            let output = explore_snapshots(
-                &mut ahand,
-                determinebestcard.rules,
-                &mut stichseq,
-                &mut fn_make_filter(),
-                foreachsnapshot,
-                &mut visualizer,
-            );
+            let output = if ahand.iter().all(|hand| hand.cards().is_empty()) {
+                let gamefinishedstiche = SStichSequenceGameFinished::new(&stichseq);
+                foreachsnapshot.final_output(
+                    gamefinishedstiche,
+                    &SRuleStateCache::new_from_gamefinishedstiche(
+                        gamefinishedstiche,
+                        |stich| determinebestcard.rules.winner_index(stich),
+                    ),
+                )
+            } else {
+                explore_snapshots(
+                    &mut ahand,
+                    determinebestcard.rules,
+                    &mut stichseq,
+                    &mut fn_make_filter(),
+                    foreachsnapshot,
+                    &mut visualizer,
+                )
+            };
             let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
             let payoutstats = SPayoutStatsPerStrategy{
                 t_min: SPayoutStats::new_1(output.t_min[determinebestcard.epi_fixed]),
