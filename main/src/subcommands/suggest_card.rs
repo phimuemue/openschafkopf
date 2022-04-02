@@ -133,79 +133,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             let n_lo = n_lo.max(1);
                             (n_lo, (n_hi.max(n_lo+1)))
                         })),
-                        (Some(Equivalent(n_until_remaining_cards, enumchainscard)), _) => (|| {
-                            #[derive(Clone, PartialEq, Debug)]
-                            struct SSimpleEquivalentCards {
-                                enumchainscard: SEnumChains<SCard>,
-                                epi_fixed: EPlayerIndex,
-                                n_until_remaining_cards: usize,
-                            }
-                            impl TFilterAllowedCards for SSimpleEquivalentCards {
-                                type UnregisterStich = EnumMap<EPlayerIndex, SRemoved<SCard>>;
-                                fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich {
-                                    assert!(stich.is_full());
-                                    #[cfg(debug_assertions)] let self_original = self.clone();
-                                    // TODO Can we use EPlayerIndex::map_from_fn? (Unsure about evaluation order.)
-                                    let mut remove_from_chain = |epi| self.enumchainscard.remove_from_chain(stich[epi]);
-                                    let removed_0 = remove_from_chain(EPlayerIndex::EPI0);
-                                    let removed_1 = remove_from_chain(EPlayerIndex::EPI1);
-                                    let removed_2 = remove_from_chain(EPlayerIndex::EPI2);
-                                    let removed_3 = remove_from_chain(EPlayerIndex::EPI3);
-                                    let unregisterstich = EPlayerIndex::map_from_raw([removed_0, removed_1, removed_2, removed_3]);
-                                    #[cfg(debug_assertions)] {
-                                        let mut self_clone = self.clone();
-                                        self_clone.unregister_stich(unregisterstich.clone());
-                                        assert_eq!(self_original, self_clone);
-                                    }
-                                    unregisterstich
-                                }
-                                fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich) {
-                                    for removed in unregisterstich.into_raw().into_iter().rev() {
-                                        self.enumchainscard.readd(removed);
-                                    }
-                                }
-                                fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
-                                    // TODO assert that we actually have the correct enumchains
-                                    // for (_epi, card) in stichseq.completed_stichs().iter().flat_map(SStich::iter) {
-                                    //     enumchainscard.remove_from_chain(*card);
-                                    // }
-                                    // assert_eq!(enumchainscard, self.enumchainscard);
-                                    if remaining_cards_per_hand(stichseq)[self.epi_fixed] >= self.n_until_remaining_cards {
-                                        return; // hope that afterwards normal iteration is fast enough
-                                    }
-                                    // example: First stich was SO GU H8 E7
-                                    // then, we have chains EO-GO-HO EU-HU-SU H9-H7, E9-E8, G9-G8-G7, S9-S8-S7
-                                    // => If some cards from veccard form a contiguous sequence within enumchainscard, we only need to propagate one of the cards.
-                                    let mut veccard_out = Vec::new(); // TODO use SHandVector
-                                    for card_allowed in veccard.iter() {
-                                        let card_first_in_chain = self.enumchainscard.prev_while(*card_allowed, |card|
-                                            veccard.contains(&card)
-                                        );
-                                        veccard_out.push(card_first_in_chain);
-                                    }
-                                    veccard_out.sort_unstable_by_key(|card| card.to_usize());
-                                    veccard_out.dedup();
-                                    if veccard.len()!=veccard_out.len() {
-                                        // println!("Found equivalent cards:\n stichseq: {}\n veccard_in : {:?}\n veccard_out: {:?}",
-                                        //     stichseq,
-                                        //     veccard,
-                                        //     veccard_out,
-                                        // )
-                                    } else {
-                                        #[cfg(debug_assertions)] {
-                                            veccard.sort_unstable_by_key(|card| card.to_usize());
-                                            debug_assert_eq!(veccard as &[SCard], &veccard_out as &[SCard]);
-                                        }
-                                    }
-                                    *veccard = unwrap!((&veccard_out as &[SCard]).try_into());
-                                }
-                            }
-                            SSimpleEquivalentCards {
-                                enumchainscard: enumchainscard.clone(),
-                                epi_fixed,
+                        (Some(Equivalent(n_until_remaining_cards, enumchainscard)), _) => (
+                            equivalent_cards_filter(
                                 n_until_remaining_cards,
-                            }
-                        }),
+                                epi_fixed,
+                                enumchainscard,
+                            )
+                        ),
                         (None,_5|_6|_7|_8) => (|| branching_factor(|_stichseq| (1, 3))),
                     },
                     match ((clapmatches.value_of("prune"), eremainingcards)) {
