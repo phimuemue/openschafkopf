@@ -3,7 +3,7 @@ use crate::game::*;
 use crate::primitives::*;
 use crate::rules::{payoutdecider::*, ruleset::VStockOrT, rulessolo::*, *};
 use crate::util::*;
-use crate::game_analysis::determine_best_card_table::{table, SOutputLine, SFormatInfo};
+use crate::game_analysis::determine_best_card_table::{table, SOutputLine};
 use itertools::Itertools;
 use std::{
     io::Write,
@@ -300,7 +300,7 @@ pub fn generate_analysis_html(
     + &format!("{}", slcanalysispercard.iter()
         .map(|analysispercard| {
             // TODO show whole game so far for better overview
-            let (vecoutputline, aformatinfo) = table(
+            let (vecoutputline, _aformatinfo) = table(
                 &analysispercard.determinebestcardresult_cheating,
                 /*fn_human_readable_payout*/&|f_payout| f_payout,
             );
@@ -314,10 +314,10 @@ pub fn generate_analysis_html(
                 str_per_card += "<td>";
                 str_per_card += &crate::ai::suspicion::output_card(*card, /*b_border*/false);
                 str_per_card += "</td>";
-                for ((str_num, _f), SFormatInfo{f_min:_, f_max:_, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
+                for (str_num, _f) in atplstrf.iter() {
                     str_per_card += "<td>";
                     // TODO colored output as in suggest_card
-                    str_per_card += &format!("{:>width$}", str_num, width=n_width);
+                    str_per_card += str_num;
                     str_per_card += "</td>";
                 }
                 str_per_card += "</tr>";
