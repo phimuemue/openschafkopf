@@ -226,7 +226,7 @@ impl SRuleSet {
             create_rulegroup_sololike!(
                 "solo",
                 "Sie",
-                &|payoutparams| vec![Some(sololike(
+                |payoutparams| vec![Some(sololike(
                     epi,
                     /*oefarbe*/None,
                     ESoloLike::Solo,
