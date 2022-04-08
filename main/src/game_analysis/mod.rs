@@ -50,6 +50,7 @@ pub struct SAnalysisCardAndPayout {
 #[derive(Clone)]
 pub struct SAnalysisPerCard {
     stichseq: SStichSequence, // TODO this is space-inefficient
+    ahand: EnumMap<EPlayerIndex, SHand>, // TODO this is space-inefficient
     determinebestcardresult_cheating: SDetermineBestCardResult<SPayoutStatsPerStrategy>,
     oanalysisimpr: Option<SAnalysisImprovement>,
 }
@@ -154,6 +155,7 @@ pub fn analyze_game(
                 vecanalysispercard.push(SAnalysisPerCard {
                     determinebestcardresult_cheating,
                     stichseq: game.stichseq.clone(),
+                    ahand: game.ahand.clone(),
                     oanalysisimpr: /*TODO? if_then_some*/if let Some(analysisimpr) = ocardandpayout_cheating
                             .map(|cardandpayout_cheating| {
                                 SAnalysisImprovement {
@@ -298,8 +300,9 @@ pub fn generate_analysis_html(
             // TODO? show unplayable cards as separate row
             // TODO simplify output (as it currently only shows results from one ahand)
             let mut str_per_card = format!(r###"<h3>{}</h3>"###, stich_caption(&analysispercard.stichseq));
-            str_per_card += &format!("<table><tr>{}</tr></table>",
-                player_table_stichseq(epi_self, &analysispercard.stichseq)
+            str_per_card += &format!("<table><tr>{}{}</tr></table>",
+                player_table_stichseq(epi_self, &analysispercard.stichseq),
+                player_table_ahand(epi_self, &analysispercard.ahand, game.rules.as_ref()),
             );
             str_per_card += "<table>";
             for SOutputLine{card, atplstrf} in vecoutputline.iter() {
