@@ -49,8 +49,7 @@ pub struct SAnalysisCardAndPayout {
 
 #[derive(Clone)]
 pub struct SAnalysisPerCard {
-    i_stich: usize,
-    epi: EPlayerIndex,
+    stichseq: SStichSequence, // TODO this is space-inefficient
     determinebestcardresult_cheating: SDetermineBestCardResult<SPayoutStatsPerStrategy>,
     oanalysisimpr: Option<SAnalysisImprovement>,
 }
@@ -100,7 +99,7 @@ pub fn analyze_game(
         game_in.vecstoss.clone(),
         game_in.n_stock,
         SStichSequenceGameFinished::new(&game_in.stichseq),
-        /*fn_before_zugeben*/|game, i_stich, epi, card| {
+        /*fn_before_zugeben*/|game, _i_stich, epi, card| {
             if remaining_cards_per_hand(&game.stichseq)[epi] <= n_max_remaining_cards {
                 let determinebestcard = SDetermineBestCard::new_from_game(game);
                 macro_rules! look_for_mistakes{($itahand: expr,) => {{
@@ -154,8 +153,7 @@ pub fn analyze_game(
                 );
                 vecanalysispercard.push(SAnalysisPerCard {
                     determinebestcardresult_cheating,
-                    i_stich,
-                    epi,
+                    stichseq: game.stichseq.clone(),
                     oanalysisimpr: /*TODO? if_then_some*/if let Some(analysisimpr) = ocardandpayout_cheating
                             .map(|cardandpayout_cheating| {
                                 SAnalysisImprovement {
@@ -223,10 +221,10 @@ pub fn generate_analysis_html(
         SHand::new_from_iter(game.stichseq.completed_stichs().iter().map(|stich| stich[epi]))
     });
     let epi_self = EPlayerIndex::EPI0;
-    let stich_caption = |i_stich, epi| {
+    let stich_caption = |stichseq: &SStichSequence| {
         format!("Stich {}, Spieler {}",
-            i_stich+1, // humans count 1-based
-            epi,
+            stichseq.completed_stichs().len() + 1, // humans count 1-based
+            unwrap!(stichseq.current_stich().current_playerindex()),
         )
     };
     format!(
@@ -252,15 +250,16 @@ pub fn generate_analysis_html(
     + "<ul>"
     + &format!("{}", slcanalysispercard.iter()
         .filter_map(|analysispercard| analysispercard.oanalysisimpr.as_ref().map(|analysisimpr|
-            (analysisimpr, analysispercard.i_stich, analysispercard.epi)
+            (analysisimpr, &analysispercard.stichseq)
         ))
-        .map(|(analysisimpr, i_stich, epi)| {
+        .map(|(analysisimpr, stichseq)| {
+            let epi = unwrap!(stichseq.current_stich().current_playerindex());
             let mut str_analysisimpr = format!(
                 r###"<li>
                     {str_stich_caption}:
                     Bei gegebener Kartenverteilung: {str_card_suggested_cheating} garantierter Mindestgewinn: {n_payout_cheating} (statt {n_payout_real}).
                 </li>"###,
-                str_stich_caption=stich_caption(i_stich, epi),
+                str_stich_caption=stich_caption(stichseq),
                 str_card_suggested_cheating = analysisimpr.cardandpayout_cheating.veccard
                     .iter()
                     .map(SCard::to_string)
@@ -298,7 +297,7 @@ pub fn generate_analysis_html(
             // TODO group vecoutputline to show equivalent cards in same row
             // TODO? show unplayable cards as separate row
             // TODO simplify output (as it currently only shows results from one ahand)
-            let mut str_per_card = format!(r###"<h3>{}</h3>"###, stich_caption(analysispercard.i_stich, analysispercard.epi));
+            let mut str_per_card = format!(r###"<h3>{}</h3>"###, stich_caption(&analysispercard.stichseq));
             str_per_card += "<table>";
             for SOutputLine{card, atplstrf} in vecoutputline.iter() {
                 str_per_card += "<tr>";
