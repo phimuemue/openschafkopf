@@ -252,11 +252,7 @@ pub fn generate_analysis_html(
         ).format(""))
     })
     + "<table><tr>"
-    + &format!("{}", game.stichseq.completed_stichs().iter().map(|stich| {
-        format!("<td>{}</td>", crate::ai::suspicion::player_table(epi_self, |epi| {
-            Some(crate::ai::suspicion::output_card(stich[epi], /*b_border*/epi==stich.first_playerindex()))
-        }))
-    }).format("\n"))
+    + &crate::ai::suspicion::player_table_stichseq(epi_self, &game.stichseq)
     + "</tr></table>"
     + "<ul>"
     + &format!("{}", slcanalysispercard.iter()

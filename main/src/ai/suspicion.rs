@@ -101,6 +101,16 @@ pub fn player_table<T: fmt::Display>(epi_self: EPlayerIndex, fn_per_player: impl
     )
 }
 
+pub fn player_table_stichseq(epi_self: EPlayerIndex, stichseq: &SStichSequence) -> String {
+    format!("{}", stichseq.visible_stichs().iter().map(|stich| {
+        format!("<td>{}</td>", player_table(epi_self, |epi| {
+            stich.get(epi).map(|card| {
+                output_card(*card, /*b_border*/epi==stich.first_playerindex())
+            })
+        }))
+    }).format("\n"))
+}
+
 impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
     fn begin_snapshot(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) {
         let str_item_id = format!("{}{}",
@@ -113,11 +123,7 @@ impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
             "TODO", // slccard_allowed.len(),
         ).as_bytes());
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(stichseq, ahand));
-        for stich in stichseq.visible_stichs() {
-            self.write_all(b"<td>\n");
-            self.write_all(player_table(self.epi, |epi| stich.get(epi).map(|card| output_card(*card, epi==stich.first_playerindex()))).as_bytes());
-            self.write_all(b"</td>\n");
-        }
+        self.write_all(player_table_stichseq(self.epi, &stichseq).as_bytes());
         let str_table_hands = format!(
             "<td>{}</td>\n",
             player_table(self.epi, |epi| {
