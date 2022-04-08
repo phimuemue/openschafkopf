@@ -298,6 +298,9 @@ pub fn generate_analysis_html(
             // TODO? show unplayable cards as separate row
             // TODO simplify output (as it currently only shows results from one ahand)
             let mut str_per_card = format!(r###"<h3>{}</h3>"###, stich_caption(&analysispercard.stichseq));
+            str_per_card += &format!("<table><tr>{}</tr></table>",
+                player_table_stichseq(epi_self, &analysispercard.stichseq)
+            );
             str_per_card += "<table>";
             for SOutputLine{card, atplstrf} in vecoutputline.iter() {
                 str_per_card += "<tr>";
