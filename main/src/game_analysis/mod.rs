@@ -244,14 +244,9 @@ pub fn generate_analysis_html(
         str_link=str_link,
         str_rules=str_rules,
     )
-    + &crate::ai::suspicion::player_table(epi_self, |epi| {
-        let mut veccard = ahand[epi].cards().to_vec();
-        game.rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
-        Some(veccard.into_iter().map(|card|
-            crate::ai::suspicion::output_card(card, /*b_border*/false)
-        ).format(""))
-    })
     + "<table><tr>"
+    + &crate::ai::suspicion::player_table_ahand(epi_self, &ahand, game.rules.as_ref())
+    + "</tr></table><table><tr>"
     + &crate::ai::suspicion::player_table_stichseq(epi_self, &game.stichseq)
     + "</tr></table>"
     + "<ul>"
