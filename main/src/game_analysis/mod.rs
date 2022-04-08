@@ -291,7 +291,6 @@ pub fn generate_analysis_html(
     + "<h2>Details</h2>"
     + &format!("{}", slcanalysispercard.iter()
         .map(|analysispercard| {
-            // TODO show whole game so far for better overview
             let (vecoutputline, _aformatinfo) = table(
                 &analysispercard.determinebestcardresult_cheating,
                 /*fn_human_readable_payout*/&|f_payout| f_payout,
