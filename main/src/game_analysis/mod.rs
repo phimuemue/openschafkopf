@@ -124,7 +124,7 @@ pub fn analyze_game(
                         {
                             Some(SAnalysisCardAndPayout{
                                 veccard,
-                                n_payout: minmax.t_selfish_min.min(),
+                                n_payout: minmax.t_min.min(),
                             })
                         } else {
                             // The decisive mistake must occur in subsequent stichs.
