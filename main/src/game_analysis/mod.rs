@@ -295,7 +295,6 @@ pub fn generate_analysis_html(
                 &analysispercard.determinebestcardresult_cheating,
                 /*fn_human_readable_payout*/&|f_payout| f_payout,
             );
-            // TODO group vecoutputline to show equivalent cards in same row
             // TODO? show unplayable cards as separate row
             // TODO simplify output (as it currently only shows results from one ahand)
             let mut str_per_card = format!(r###"<h3>{}</h3>"###, stich_caption(&analysispercard.stichseq));
