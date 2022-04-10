@@ -310,8 +310,12 @@ pub fn generate_analysis_html(
             {
                 str_per_card += "<tr>";
                 str_per_card += "<td>";
-                for SOutputLine{card, atplstrf:_} in grpoutputline {
-                    str_per_card += &crate::ai::suspicion::output_card(*card, /*b_border*/false);
+                let mut veccard : Vec<SCard> = grpoutputline.into_iter()
+                    .map(|SOutputLine{card, atplstrf:_}| *card)
+                    .collect();
+                game.rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
+                for card in veccard {
+                    str_per_card += &crate::ai::suspicion::output_card(card, /*b_border*/false);
                 }
                 str_per_card += "</td>";
                 for (str_num, _f) in atplstrf.iter() {
