@@ -302,23 +302,33 @@ impl std::cmp::PartialOrd for SPayoutStatsPerStrategy {
 impl std::cmp::Ord for SPayoutStatsPerStrategy {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         use std::cmp::Ordering::*;
-        let n_min_self = self.t_min.n_min;
-        let n_min_other = other.t_min.n_min;
-        // TODO improve logic wrt t_selfish_min/t_selfish_max/t_max
-        match (n_min_self.cmp(&0), n_min_other.cmp(&0)) {
-            (Greater, Greater) => match n_min_self.cmp(&n_min_other) {
-                Equal => unwrap!(self.t_selfish_min.avg().partial_cmp(&other.t_selfish_min.avg())),
-                Greater => Greater,
-                Less => Less,
-            },
-            (Greater, _) => Greater,
-            (_, Greater) => Less,
-            (Equal, Less) => Greater,
-            (Less, Equal) => Less,
-            (Less, Less)|(Equal, Equal) => {
-                unwrap!(self.t_selfish_min.avg().partial_cmp(&other.t_selfish_min.avg()))
-            },
-        }
+        macro_rules! internal_cmp{($field:ident) => {
+            // prioritize positive vs non-positive and zero vs negative payouts.
+            match (self.$field.n_min.cmp(&0), other.$field.n_min.cmp(&0)) {
+                (Greater, Greater) => match self.$field.n_min.cmp(&other.$field.n_min) {
+                    Equal => match unwrap!(self.$field.avg().partial_cmp(&other.$field.avg())) {
+                        Greater => Greater,
+                        Less => Less,
+                        Equal => unwrap!(self.$field.n_max.partial_cmp(&other.$field.n_max)),
+                    },
+                    Greater => Greater,
+                    Less => Less,
+                },
+                (Greater, _) => Greater,
+                (_, Greater) => Less,
+                (Equal, Less) => Greater,
+                (Less, Equal) => Less,
+                (Less, Less)|(Equal, Equal) => match unwrap!(self.$field.avg().partial_cmp(&other.$field.avg())) {
+                    Greater => Greater,
+                    Less => Less,
+                    Equal => unwrap!(self.$field.n_max.partial_cmp(&other.$field.n_max)),
+                },
+            }
+        }}
+        internal_cmp!(t_min)
+            .then_with(|| internal_cmp!(t_selfish_min))
+            .then_with(|| internal_cmp!(t_selfish_max))
+            .then_with(|| internal_cmp!(t_max))
     }
 }
 
