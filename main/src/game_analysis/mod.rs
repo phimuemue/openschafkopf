@@ -369,6 +369,10 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
         str_date = str_date,
     );
     str_index_html += "<table>";
+    let n_games_total = vecgamewithdesc.len();
+    let mut n_games_done = 0;
+    let mut n_games_non_stock = 0;
+    let mut n_games_findings = 0;
     for gamewithdesc in vecgamewithdesc {
         if let Ok(gameresult) = gamewithdesc.resgameresult {
             match gameresult.stockorgame {
@@ -388,6 +392,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                     }
                 },
                 VStockOrT::OrT(game) => {
+                    n_games_non_stock += 1;
                     let str_rules = format!("{}", game.rules);
                     let path_analysis_game = path_analysis.join(gamewithdesc.str_description.replace('/', "_").replace('.', "_"));
                     create_dir_if_not_existent(&path_analysis_game)?;
@@ -403,6 +408,9 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                     let n_findings_simulating = gameanalysis.n_findings_simulating;
                     let n_findings_cheating = gameanalysis.n_findings_cheating;
                     assert!(n_findings_simulating <= n_findings_cheating);
+                    if 0<n_findings_cheating {
+                        n_games_findings += 1;
+                    }
                     if b_include_no_findings || 0 < n_findings_cheating {
                         str_index_html += &format!(
                             r#"<tr>
@@ -438,6 +446,8 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
         } else {
             str_index_html += &format!("<tr><td>Fehler ({})</td></tr>", gamewithdesc.str_description);
         }
+        n_games_done += 1;
+        println!("Total: {n_games_total}. Done: {n_games_done}. Non-stock: {n_games_non_stock}. With findings: {n_games_findings}");
     }
     str_index_html += "</table>";
     str_index_html += "</body></html>";
