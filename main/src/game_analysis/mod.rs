@@ -304,10 +304,15 @@ pub fn generate_analysis_html(
                 player_table_ahand(epi_self, &analysispercard.ahand, game.rules.as_ref()),
             );
             str_per_card += "<table>";
-            for SOutputLine{card, atplstrf} in vecoutputline.iter() {
+            for (atplstrf, grpoutputline) in vecoutputline.iter()
+                .group_by(|&SOutputLine{card:_, atplstrf}| atplstrf)
+                .into_iter()
+            {
                 str_per_card += "<tr>";
                 str_per_card += "<td>";
-                str_per_card += &crate::ai::suspicion::output_card(*card, /*b_border*/false);
+                for SOutputLine{card, atplstrf:_} in grpoutputline {
+                    str_per_card += &crate::ai::suspicion::output_card(*card, /*b_border*/false);
+                }
                 str_per_card += "</td>";
                 for (str_num, _f) in atplstrf.iter() {
                     str_per_card += "<td>";

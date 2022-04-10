@@ -6,6 +6,7 @@ use crate::util::*;
 pub const N_COLUMNS : usize = 16;
 
 // crude formatting: treat all numbers as f32, and convert structured input to a plain number table
+#[derive(PartialEq)]
 pub struct SOutputLine {
     pub card: SCard,
     pub atplstrf: [(String, f32); N_COLUMNS],
