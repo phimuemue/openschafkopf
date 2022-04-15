@@ -103,7 +103,7 @@ pub fn analyze_game(
         /*fn_before_zugeben*/|game, _i_stich, epi, card| {
             if remaining_cards_per_hand(&game.stichseq)[epi] <= n_max_remaining_cards {
                 let determinebestcard = SDetermineBestCard::new_from_game(game);
-                macro_rules! look_for_mistakes{($itahand: expr,) => {{
+                macro_rules! look_for_mistakes{($itahand: expr$(,)?) => {{
                     let determinebestcardresult = determine_best_card(
                         &determinebestcard,
                         $itahand,
@@ -134,20 +134,12 @@ pub fn analyze_game(
                     )
                 }}}
                 let look_for_mistakes_simulating = || {
-                    if !b_simulate_all_hands {
-                        VImprovementSimulating::NotRequested
-                    } else if let Some(cardandpayout_simulating) = look_for_mistakes!(
-                        all_possible_hands(
-                            &game.stichseq,
-                            game.ahand[determinebestcard.epi_fixed].clone(),
-                            determinebestcard.epi_fixed,
-                            game.rules.as_ref(),
-                        ),
-                    ).1 {
-                        VImprovementSimulating::Found(cardandpayout_simulating)
-                    } else {
-                        VImprovementSimulating::NothingFound
-                    }
+                    look_for_mistakes!(all_possible_hands(
+                        &game.stichseq,
+                        game.ahand[determinebestcard.epi_fixed].clone(),
+                        determinebestcard.epi_fixed,
+                        game.rules.as_ref(),
+                    )).1
                 };
                 let (determinebestcardresult_cheating, ocardandpayout_cheating) = look_for_mistakes!(
                     std::iter::once(game.ahand.clone()),
@@ -160,16 +152,19 @@ pub fn analyze_game(
                             .map(|cardandpayout_cheating| {
                                 SAnalysisImprovement {
                                     cardandpayout_cheating,
-                                    improvementsimulating: look_for_mistakes_simulating(),
+                                    improvementsimulating: if !b_simulate_all_hands {
+                                        VImprovementSimulating::NotRequested
+                                    } else if let Some(cardandpayout_simulating) = look_for_mistakes_simulating() {
+                                        VImprovementSimulating::Found(cardandpayout_simulating)
+                                    } else {
+                                        VImprovementSimulating::NothingFound
+                                    },
                                 }
                             })
                         {
                             Some(analysisimpr)
                         } else {
-                            debug_assert!(match look_for_mistakes_simulating() {
-                                VImprovementSimulating::NotRequested|VImprovementSimulating::NothingFound => true,
-                                VImprovementSimulating::Found(_) => false,
-                            });
+                            debug_assert!(look_for_mistakes_simulating().is_none());
                             None
                         }
                 })
