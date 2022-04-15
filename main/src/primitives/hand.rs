@@ -25,7 +25,7 @@ impl SHand {
             .any(pred)
     }
     pub fn play_card(&mut self, card: SCard) {
-        self.veccard.retain(|&mut card_in_hand| card_in_hand!=card)
+        self.veccard.retain(|card_in_hand| *card_in_hand!=card)
     }
     pub fn add_card(&mut self, card: SCard) {
         debug_assert!(!self.contains(card));
