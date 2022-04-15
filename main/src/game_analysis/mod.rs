@@ -166,7 +166,10 @@ pub fn analyze_game(
                         {
                             Some(analysisimpr)
                         } else {
-                            debug_assert!(matches!(look_for_mistakes_simulating(), VImprovementSimulating::NothingFound));
+                            debug_assert!(match look_for_mistakes_simulating() {
+                                VImprovementSimulating::NotRequested|VImprovementSimulating::NothingFound => true,
+                                VImprovementSimulating::Found(_) => false,
+                            });
                             None
                         }
                 })
