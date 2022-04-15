@@ -239,6 +239,18 @@ pub fn generate_analysis_html(
                 <title>Schafkopf-Analyse: {str_description}</title>
                 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
                 <link rel="stylesheet" type="text/css" href="../css.css">
+                <script>
+                    function copyToClipboard(str, btn) {{
+                        navigator.clipboard.writeText(str).then(
+                            function() {{
+                                btn.innerHTML = "Copied (" + (new Date()).toLocaleString() + ")";
+                            }},
+                            function() {{
+                                // indicate fail by doing nothing
+                            }},
+                        );
+                    }}
+                </script>
             </head>
             <body>
                 <h1>Schafkopf-Analyse: <a href="{str_link}">{str_description}</a></h1>
@@ -300,10 +312,28 @@ pub fn generate_analysis_html(
             );
             // TODO? show unplayable cards as separate row
             // TODO simplify output (as it currently only shows results from one ahand)
-            let mut str_per_card = format!(r###"<h3>{}</h3>"###, stich_caption(&analysispercard.stichseq));
+            let stichseq = &analysispercard.stichseq;
+            let ahand = &analysispercard.ahand;
+            let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
+            let hand_to_command_line = |hand: &SHand| hand.cards().iter().join(" ");
+            let mut str_per_card = format!(r###"<h3>{} <button onclick='copyToClipboard("{}", this)'>&#128203</button></h3>"###,
+                stich_caption(&stichseq),
+                format!("{str_exe} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand}\" --simulate-hands \"{str_simulate_hands}\" --branching \"equiv7\"",
+                    // TODO error handling
+                    str_exe=unwrap!(unwrap!(unwrap!(std::env::current_exe()).canonicalize()).to_str()),
+                    str_cards_on_table=stichseq.visible_stichs().iter()
+                        .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
+                        .join("  "),
+                    str_hand=hand_to_command_line(&ahand[epi_current]),
+                    str_simulate_hands=EPlayerIndex::values()
+                        .filter_map(|epi| if_then_some!(epi!=epi_current, hand_to_command_line(&ahand[epi])))
+                        .join("  "),
+                        
+                ).replace("\"", "\\\""),
+            );
             str_per_card += &format!("<table><tr>{}{}</tr></table>",
-                player_table_stichseq(epi_self, &analysispercard.stichseq),
-                player_table_ahand(epi_self, &analysispercard.ahand, game.rules.as_ref()),
+                player_table_stichseq(epi_self, &stichseq),
+                player_table_ahand(epi_self, &ahand, game.rules.as_ref()),
             );
             str_per_card += "<table>";
             for (atplstrf, grpoutputline) in vecoutputline.iter()
