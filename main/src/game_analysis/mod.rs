@@ -310,7 +310,6 @@ pub fn generate_analysis_html(
                 &analysispercard.determinebestcardresult_cheating,
                 /*fn_human_readable_payout*/&|f_payout| f_payout,
             );
-            // TODO? show unplayable cards as separate row
             // TODO simplify output (as it currently only shows results from one ahand)
             let stichseq = &analysispercard.stichseq;
             let ahand = &analysispercard.ahand;
@@ -358,6 +357,35 @@ pub fn generate_analysis_html(
                 }
                 str_per_card += "</tr>";
             }
+            str_per_card += "<tr>";
+            // TODO? should veccard_non_allowed be a separate row in determine_best_card_table::table?
+            let veccard_allowed = game.rules.all_allowed_cards(
+                stichseq,
+                &ahand[epi_current],
+            );
+            let mut veccard_non_allowed = ahand[epi_current].cards().iter()
+                .filter_map(|card| if_then_some!(!veccard_allowed.contains(card), *card))
+                .collect::<Vec<_>>();
+            game.rules.sort_cards_first_trumpf_then_farbe(&mut veccard_non_allowed);
+            if !veccard_non_allowed.is_empty() {
+                str_per_card += "<td>";
+                for card in veccard_non_allowed {
+                    str_per_card += &crate::ai::suspicion::output_card(card, /*b_border*/false);
+                }
+                str_per_card += "</td>";
+                str_per_card += &format!("<td colspan=\"{}\">N.A.</td>",
+                    verify_eq!(
+                        determine_best_card_table::N_COLUMNS,
+                        {
+                            // TODO itertools: all_equal_item
+                            let mut itn_columns = vecoutputline.iter().map(|outputline| outputline.atplstrf.len());
+                            assert!(itn_columns.clone().all_equal());
+                            unwrap!(itn_columns.next())
+                        }
+                    ),
+                );
+            }
+            str_per_card += "</tr>";
             str_per_card += "</table>";
             str_per_card
         }).format("")
