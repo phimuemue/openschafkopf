@@ -74,22 +74,22 @@ impl TPlayer for SPlayerHuman {
     fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
         skui::print_stichseq(unwrap!(game.current_playable_stich().current_playerindex()), &game.stichseq);
         let epi = unwrap!(game.which_player_can_do_something()).0;
-        let hand = {
+        let veccard = {
             let mut veccard = game.ahand[epi].cards().clone();
             game.rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
-            SHand::new_from_vec(veccard)
+            veccard
         };
-        let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &hand);
+        let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &SHand::new_from_vec(veccard.clone()));
         if txcard.send(
             *skui::ask_for_alternative(
-                hand.cards(),
+                &veccard,
                 &skui::choose_card_from_hand_key_bindings(),
                 |card| {veccard_allowed.iter().any(|card_allowed| card_allowed==card)},
                 |ncwin, i_card_chosen, ocard_suggest| {
                     if let Some(card) = *ocard_suggest {
                         skui::wprintln(ncwin, &format!("AI: {}", card));
                     }
-                    skui::print_hand(hand.cards(), Some(i_card_chosen));
+                    skui::print_hand(&veccard, Some(i_card_chosen));
                     skui::print_game_info(game.rules.as_ref(), &game.doublings, &game.vecstoss);
                 },
                 || {
