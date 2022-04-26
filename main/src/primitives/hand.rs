@@ -12,17 +12,23 @@ pub struct SHand {
 
 impl SHand {
     #[cfg(debug_assertions)]
-    fn assert_invariant(&self) {
-        let mut setcardb = SCard::map_from_fn(|_card| false); // TODO enumset
-        for card in self.veccard.iter() {
-            assert!(!setcardb[*card]); // TODO? introduce assign::assign_other with return value bool?
-            setcardb[*card] = true;
+    fn finalize_and_assert_invariant(&mut self) {
+        { // SHand is actually a set-like container, users must not rely on the ordering of cards.
+            use rand::prelude::SliceRandom;
+            self.veccard.shuffle(&mut rand::thread_rng());
+        }
+        { // invariants
+            let mut setcardb = SCard::map_from_fn(|_card| false); // TODO enumset
+            for card in self.veccard.iter() {
+                assert!(!setcardb[*card]); // TODO? introduce assign::assign_other with return value bool?
+                setcardb[*card] = true;
+            }
         }
     }
 
     pub fn new_from_vec(veccard: SHandVector) -> SHand {
-        let hand = SHand {veccard};
-        #[cfg(debug_assertions)]hand.assert_invariant();
+        let mut hand = SHand {veccard};
+        #[cfg(debug_assertions)]hand.finalize_and_assert_invariant();
         hand
     }
     pub fn new_from_iter(itcard: impl IntoIterator<Item=SCard>) -> SHand {
@@ -39,12 +45,12 @@ impl SHand {
     pub fn play_card(&mut self, card: SCard) {
         debug_assert!(self.contains(card));
         self.veccard.retain(|card_in_hand| *card_in_hand!=card);
-        #[cfg(debug_assertions)]self.assert_invariant();
+        #[cfg(debug_assertions)]self.finalize_and_assert_invariant();
     }
     pub fn add_card(&mut self, card: SCard) {
         debug_assert!(!self.contains(card));
         self.veccard.push(card);
-        #[cfg(debug_assertions)]self.assert_invariant();
+        #[cfg(debug_assertions)]self.finalize_and_assert_invariant();
     }
 
     pub fn cards(&self) -> &SHandVector {
