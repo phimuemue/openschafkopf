@@ -66,17 +66,14 @@ impl fmt::Display for SHand {
 
 #[test]
 fn test_hand() {
-    let hand = SHand::new_from_iter([
-        SCard::new(EFarbe::Eichel, ESchlag::Unter),
-        SCard::new(EFarbe::Herz, ESchlag::Koenig),
-        SCard::new(EFarbe::Schelln, ESchlag::S7),
-    ]);
+    use super::card::card_values::*;
+    let hand = SHand::new_from_iter([EU, HK, S7]);
     let hand2 = {
         let mut hand2 = hand.clone();
         hand2.play_card(SCard::new(EFarbe::Herz, ESchlag::Koenig));
         hand2
     };
     assert_eq!(hand.cards().len()-1, hand2.cards().len());
-    assert!(hand2.cards()[0]==SCard::new(EFarbe::Eichel, ESchlag::Unter));
-    assert!(hand2.cards()[1]==SCard::new(EFarbe::Schelln, ESchlag::S7));
+    assert!(hand2.contains(EU));
+    assert!(hand2.contains(S7));
 }
