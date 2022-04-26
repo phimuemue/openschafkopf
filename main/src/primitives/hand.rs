@@ -1,6 +1,7 @@
 use crate::primitives::card::*;
 use arrayvec::ArrayVec;
 use std::fmt;
+use plain_enum::TPlainEnum;
 
 pub type SHandVector = ArrayVec<SCard, 8>;
 
@@ -10,8 +11,19 @@ pub struct SHand {
 }
 
 impl SHand {
+    #[cfg(debug_assertions)]
+    fn assert_invariant(&self) {
+        let mut setcardb = SCard::map_from_fn(|_card| false); // TODO enumset
+        for card in self.veccard.iter() {
+            assert!(!setcardb[*card]); // TODO? introduce assign::assign_other with return value bool?
+            setcardb[*card] = true;
+        }
+    }
+
     pub fn new_from_vec(veccard: SHandVector) -> SHand {
-        SHand {veccard}
+        let hand = SHand {veccard};
+        #[cfg(debug_assertions)]hand.assert_invariant();
+        hand
     }
     pub fn new_from_iter(itcard: impl IntoIterator<Item=SCard>) -> SHand {
         Self::new_from_vec(itcard.into_iter().collect())
@@ -25,11 +37,14 @@ impl SHand {
             .any(pred)
     }
     pub fn play_card(&mut self, card: SCard) {
-        self.veccard.retain(|card_in_hand| *card_in_hand!=card)
+        debug_assert!(self.contains(card));
+        self.veccard.retain(|card_in_hand| *card_in_hand!=card);
+        #[cfg(debug_assertions)]self.assert_invariant();
     }
     pub fn add_card(&mut self, card: SCard) {
         debug_assert!(!self.contains(card));
-        self.veccard.push(card)
+        self.veccard.push(card);
+        #[cfg(debug_assertions)]self.assert_invariant();
     }
 
     pub fn cards(&self) -> &SHandVector {
