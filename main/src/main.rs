@@ -22,26 +22,31 @@ use crate::util::*;
 
 fn main() -> Result<(), Error> {
     openschafkopf_logging::init_logging()?;
-    macro_rules! subcommands{($(($mod:ident, $str_cmd:expr))*) => {
+    macro_rules! subcommands{($(($([$($t:tt)*])? $mod:ident, $str_cmd:expr))*) => {
         let clapmatches = clap::App::new("schafkopf")
-            .setting(clap::AppSettings::ArgRequiredElseHelp)
-            $(.subcommand(subcommands::$mod::subcommand($str_cmd)))*
-            .get_matches();
+            .setting(clap::AppSettings::ArgRequiredElseHelp);
+            $(
+                $(#[$($t)*])?
+                let clapmatches = clapmatches
+                    .subcommand(subcommands::$mod::subcommand($str_cmd));
+            )*
+            let clapmatches = clapmatches.get_matches();
         $(
+            $(#[$($t)*])?
             if let Some(clapmatches_subcommand)=clapmatches.subcommand_matches($str_cmd) {
                 return subcommands::$mod::run(clapmatches_subcommand);
             }
         )*
     }}
     subcommands!(
-        (cli, "cli")
-        (rank_rules, "rank-rules")
-        (suggest_card, "suggest-card")
-        (parse, "parse")
-        (analyze, "analyze")
-        (websocket, "websocket")
-        (hand_stats, "hand-stats")
-        (dl, "dl")
+        ([cfg(feature="cli")] cli, "cli")
+        ([cfg(feature="rank-rules")] rank_rules, "rank-rules")
+        ([cfg(feature="suggest-card")] suggest_card, "suggest-card")
+        ([cfg(feature="parse")] parse, "parse")
+        ([cfg(feature="analyze")] analyze, "analyze")
+        ([cfg(feature="websocket")] websocket, "websocket")
+        ([cfg(feature="hand-stats")] hand_stats, "hand-stats")
+        ([cfg(feature="dl")] dl, "dl")
     );
     Ok(())
 }

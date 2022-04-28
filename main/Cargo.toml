@@ -43,3 +43,14 @@ tokio = { version = "1", features = ["full"] } # TODO can we get rid of this?
 
 [dev-dependencies]
 serde_test = "1"
+
+[features]
+default = ["cli", "rank-rules", "suggest-card", "parse", "analyze", "websocket", "hand-stats", "dl"]
+cli = []
+rank-rules = []
+suggest-card = []
+parse = []
+analyze = []
+websocket = []
+hand-stats = []
+dl = []
