@@ -89,27 +89,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     forward,
                     match ((
                         if_then_some!(let Some(str_branching) = clapmatches.value_of("branching"), {
-                            let make_equivalent = |n_until_remaining_cards| {
+                            if let Some(n_until_remaining_cards) = str_branching.strip_prefix("equiv")
+                                .and_then(|str_n_until_remaining_cards| str_n_until_remaining_cards.parse().ok())
+                            {
                                 Equivalent(n_until_remaining_cards, rules.equivalent_when_on_same_hand())
-                            };
-                            if str_branching=="equiv0" {
-                                make_equivalent(0)
-                            } else if str_branching=="equiv1" {
-                                make_equivalent(1)
-                            } else if str_branching=="equiv2" {
-                                make_equivalent(2)
-                            } else if str_branching=="equiv3" {
-                                make_equivalent(3)
-                            } else if str_branching=="equiv4" {
-                                make_equivalent(4)
-                            } else if str_branching=="equiv5" {
-                                make_equivalent(5)
-                            } else if str_branching=="equiv6" {
-                                make_equivalent(6)
-                            } else if str_branching=="equiv7" {
-                                make_equivalent(7)
-                            } else if str_branching=="equiv8" {
-                                make_equivalent(8)
                             } else {
                                 let (str_lo, str_hi) = str_branching
                                     .split(',')
