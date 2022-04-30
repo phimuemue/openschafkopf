@@ -11,6 +11,7 @@ pub fn parse_rule_description(
 ) -> Result<Box<dyn TRules>, Error> {
     use crate::rules::rulesrufspiel::*;
     use crate::rules::rulessolo::*;
+    use crate::rules::rulesbettel::*;
     use crate::rules::rulesramsch::*;
     use crate::rules::payoutdecider::*;
     let vecstr_rule_parts = str_rules_with_player.split(" von ").collect::<Vec<_>>();
@@ -92,6 +93,20 @@ pub fn parse_rule_description(
         (&["solo", "sticht"], make_sololike(ESoloLike::Solo)),
         (&["wenz"], make_sololike(ESoloLike::Wenz)),
         (&["geier"], make_sololike(ESoloLike::Geier)),
+        (&["bettel normal"], {
+            Ok(Box::new(SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>::new(
+                get_epi_active()?,
+                /*i_prio*/-999_999,
+                /*n_payout_base*/n_tarif_solo,
+            )))
+        }),
+        (&["bettel stich"], {
+            Ok(Box::new(SRulesBettel::<SBettelAllAllowedCardsWithinStichStichzwang>::new(
+                get_epi_active()?,
+                /*i_prio*/-999_999,
+                /*n_payout_base*/n_tarif_solo,
+            )))
+        }),
         (&["ramsch"], {
             Ok(Box::new(SRulesRamsch::new(
                 /*n_price*/n_tarif_ruf,
