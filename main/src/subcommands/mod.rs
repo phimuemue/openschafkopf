@@ -17,8 +17,8 @@ use crate::primitives::card::EKurzLang;
 use crate::game::*;
 use std::io::Read;
 
-fn clap_arg(str_long: &'static str, str_default: &'static str) -> clap::Arg<'static, 'static> {
-    clap::Arg::with_name(str_long)
+fn clap_arg(str_long: &'static str, str_default: &'static str) -> clap::Arg<'static> {
+    clap::Arg::new(str_long)
         .long(str_long)
         .default_value(str_default)
 }

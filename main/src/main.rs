@@ -23,8 +23,8 @@ use crate::util::*;
 fn main() -> Result<(), Error> {
     openschafkopf_logging::init_logging()?;
     macro_rules! subcommands{($(($([$($t:tt)*])? $mod:ident, $str_cmd:expr))*) => {
-        let clapmatches = clap::App::new("schafkopf")
-            .setting(clap::AppSettings::ArgRequiredElseHelp);
+        let clapmatches = clap::Command::new("schafkopf")
+            .arg_required_else_help(true);
             $(
                 $(#[$($t)*])?
                 let clapmatches = clapmatches

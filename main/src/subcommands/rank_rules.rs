@@ -2,9 +2,9 @@ use crate::primitives::*;
 use crate::rules::ruleset::*;
 use crate::util::*;
 
-pub fn subcommand(str_subcommand: &str) -> clap::App {
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     use super::clap_arg;
-    clap::SubCommand::with_name(str_subcommand)
+    clap::Command::new(str_subcommand)
         .about("Estimate strength of own hand")
         .arg(clap_arg("ruleset", "rulesets/default.toml"))
         .arg(clap_arg("ai", "cheating"))
@@ -18,8 +18,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let hand = super::str_to_hand(clapmatches.value_of("hand").ok_or_else(||format_err!("No hand given as parameter."))?)?;
     let hand = Some(hand).filter(|hand| hand.cards().len()==ruleset.ekurzlang.cards_per_player()).ok_or_else(||format_err!("Could not convert hand to a full hand of cards"))?;
     let hand = SFullHand::new(hand.cards(), ruleset.ekurzlang);
-    use clap::value_t;
-    let epi = value_t!(clapmatches.value_of("position"), EPlayerIndex).unwrap_or(EPlayerIndex::EPI0);
+    let epi = clapmatches.value_of_t("position").unwrap_or(EPlayerIndex::EPI0);
     let ai = super::ai(clapmatches);
     println!("Hand: {}", SDisplayCardSlice(hand.get()));
     let mut vectplrulesf = allowed_rules(&ruleset.avecrulegroup[epi], hand)

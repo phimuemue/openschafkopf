@@ -8,18 +8,18 @@ use crate::game_analysis::determine_best_card_table::{table, SOutputLine, SForma
 
 use super::common_given_game::*;
 
-pub fn subcommand(str_subcommand: &'static str) -> clap::App {
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     subcommand_given_game(str_subcommand, "Suggest a card to play given the game so far")
-        .arg(clap::Arg::with_name("repeat_hands").long("repeat-hands").takes_value(true))
-        .arg(clap::Arg::with_name("branching").long("branching").takes_value(true))
-        .arg(clap::Arg::with_name("prune").long("prune").takes_value(true))
-        .arg(clap::Arg::with_name("visualize").long("visualize").takes_value(true))
-        .arg(clap::Arg::with_name("points").long("points")) // TODO? also support by stichs
+        .arg(clap::Arg::new("repeat_hands").long("repeat-hands").takes_value(true))
+        .arg(clap::Arg::new("branching").long("branching").takes_value(true))
+        .arg(clap::Arg::new("prune").long("prune").takes_value(true))
+        .arg(clap::Arg::new("visualize").long("visualize").takes_value(true))
+        .arg(clap::Arg::new("points").long("points")) // TODO? also support by stichs
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     struct SWithCommonArgs<'argmatches> {
-        clapmatches: &'argmatches clap::ArgMatches<'argmatches>,
+        clapmatches: &'argmatches clap::ArgMatches,
     }
     impl<'argmatches> TWithCommonArgs for SWithCommonArgs<'argmatches> {
         fn call<'rules>(

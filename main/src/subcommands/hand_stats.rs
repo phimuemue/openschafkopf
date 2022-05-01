@@ -5,14 +5,14 @@ use crate::util::*;
 
 use super::common_given_game::*;
 
-pub fn subcommand(str_subcommand: &'static str) -> clap::App {
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     subcommand_given_game(str_subcommand, "Statistics about hands that could be dealt.")
-        .arg(clap::Arg::with_name("inspect").long("inspect").takes_value(true).multiple(true))
+        .arg(clap::Arg::new("inspect").long("inspect").takes_value(true).multiple_occurrences(true))
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     struct SWithCommonArgs<'argmatches> {
-        clapmatches: &'argmatches clap::ArgMatches<'argmatches>,
+        clapmatches: &'argmatches clap::ArgMatches,
     }
     impl<'argmatches> TWithCommonArgs for SWithCommonArgs<'argmatches> {
         fn call<'rules>(

@@ -6,18 +6,18 @@ use crate::primitives::cardvector::*;
 use crate::util::{*, parser::*};
 use itertools::Itertools;
 
-pub fn subcommand(str_subcommand: &str) -> clap::App {
-    clap::SubCommand::with_name(str_subcommand)
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
+    clap::Command::new(str_subcommand)
         .about("Analyze played games and spot suboptimal decisions")
-        .arg(clap::Arg::with_name("sauspiel-files")
+        .arg(clap::Arg::new("sauspiel-files")
             .required(true)
             .takes_value(true)
-            .multiple(true)
+            .multiple_occurrences(true)
         )
-        .arg(clap::Arg::with_name("include-no-findings")
+        .arg(clap::Arg::new("include-no-findings")
             .long("include-no-findings")
         )
-        .arg(clap::Arg::with_name("simulate-all-hands")
+        .arg(clap::Arg::new("simulate-all-hands")
             .long("simulate-all-hands")
         )
         .arg(super::clap_arg("max-remaining-cards", if_dbg_else!({"2"}{"4"})))

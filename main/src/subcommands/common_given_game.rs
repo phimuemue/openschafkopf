@@ -12,21 +12,21 @@ enum VChooseItAhand {
     Concrete(Vec<SCard>),
 }
 
-pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::App<'static, 'static> {
+pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::Command<'static> {
     let single_arg = |str_name, str_long| {
-        clap::Arg::with_name(str_name)
+        clap::Arg::new(str_name)
             .long(str_long)
             .required(true)
             .takes_value(true)
     };
-    clap::SubCommand::with_name(str_subcommand)
+    clap::Command::new(str_subcommand)
         .about(str_about)
         .arg(single_arg("rules", "rules"))
         .arg(single_arg("hand", "hand"))
         .arg(single_arg("cards_on_table", "cards-on-table"))
-        .arg(clap::Arg::with_name("simulate_hands").long("simulate-hands").takes_value(true))
-        .arg(clap::Arg::with_name("verbose").long("verbose").short("v"))
-        .arg(clap::Arg::with_name("constrain_hands").long("constrain-hands").takes_value(true))
+        .arg(clap::Arg::new("simulate_hands").long("simulate-hands").takes_value(true))
+        .arg(clap::Arg::new("verbose").long("verbose").short('v'))
+        .arg(clap::Arg::new("constrain_hands").long("constrain-hands").takes_value(true))
 }
 
 pub trait TWithCommonArgs {

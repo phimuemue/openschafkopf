@@ -9,13 +9,13 @@ use itertools::Itertools;
 use crate::primitives::*;
 use std::io::Write;
 
-pub fn subcommand(str_subcommand: &str) -> clap::App {
-    clap::SubCommand::with_name(str_subcommand)
+pub fn subcommand(str_subcommand: &str) -> clap::Command {
+    clap::Command::new(str_subcommand)
         .about("Parse a game into a simple format")
-        .arg(clap::Arg::with_name("file") // TODO? shared function to glob for files
+        .arg(clap::Arg::new("file") // TODO? shared function to glob for files
             .required(true)
             .takes_value(true)
-            .multiple(true)
+            .multiple_occurrences(true)
         )
 }
 

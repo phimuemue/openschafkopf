@@ -4,9 +4,9 @@ use crate::primitives::*;
 use crate::skui;
 use crate::util::*;
 
-pub fn subcommand(str_subcommand: &str) -> clap::App {
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     use super::clap_arg;
-    clap::SubCommand::with_name(str_subcommand)
+    clap::Command::new(str_subcommand)
         .about("Simulate players to play against")
         .arg(clap_arg("ruleset", "rulesets/default.toml"))
         .arg(clap_arg("ai", "cheating"))
