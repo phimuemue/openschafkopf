@@ -74,18 +74,20 @@ pub fn parse_rule_description(
                 Some(efarbe) => match efarbe {
                     EFarbe::Herz => Err(format_err!("Rufspiel incompatible with EFarbe::Herz")),
                     EFarbe::Eichel | EFarbe::Gras | EFarbe::Schelln => {
-                        Ok(Box::new(SRulesRufspiel::new(
-                            get_epi_active()?,
-                            efarbe,
-                            SPayoutDeciderParams::new(
-                                /*n_payout_base*/n_tarif_ruf,
-                                /*n_payout_schneider_schwarz*/n_tarif_extra,
-                                SLaufendeParams::new(
-                                    /*n_payout_single_player*/n_tarif_extra,
-                                    /*n_lauf_lbound*/3,
-                                ),
-                            )
-                        )) as Box<dyn TRules>)
+                        get_epi_active().map(|epi| {
+                            Box::new(SRulesRufspiel::new(
+                                epi,
+                                efarbe,
+                                SPayoutDeciderParams::new(
+                                    /*n_payout_base*/n_tarif_ruf,
+                                    /*n_payout_schneider_schwarz*/n_tarif_extra,
+                                    SLaufendeParams::new(
+                                        /*n_payout_single_player*/n_tarif_extra,
+                                        /*n_lauf_lbound*/3,
+                                    ),
+                                )
+                            )) as Box<dyn TRules>
+                        })
                     }
                 }
             }
@@ -94,18 +96,22 @@ pub fn parse_rule_description(
         (&["wenz"], make_sololike(ESoloLike::Wenz)),
         (&["geier"], make_sololike(ESoloLike::Geier)),
         (&["bettel normal"], {
-            Ok(Box::new(SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>::new(
-                get_epi_active()?,
-                /*i_prio*/-999_999,
-                /*n_payout_base*/n_tarif_solo,
-            )))
+            get_epi_active().map(|epi| {
+                Box::new(SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>::new(
+                    epi,
+                    /*i_prio*/-999_999,
+                    /*n_payout_base*/n_tarif_solo,
+                )) as Box<dyn TRules>
+            })
         }),
         (&["bettel stich"], {
-            Ok(Box::new(SRulesBettel::<SBettelAllAllowedCardsWithinStichStichzwang>::new(
-                get_epi_active()?,
-                /*i_prio*/-999_999,
-                /*n_payout_base*/n_tarif_solo,
-            )))
+            get_epi_active().map(|epi| {
+                Box::new(SRulesBettel::<SBettelAllAllowedCardsWithinStichStichzwang>::new(
+                    epi,
+                    /*i_prio*/-999_999,
+                    /*n_payout_base*/n_tarif_solo,
+                )) as Box<dyn TRules>
+            })
         }),
         (&["ramsch"], {
             Ok(Box::new(SRulesRamsch::new(
