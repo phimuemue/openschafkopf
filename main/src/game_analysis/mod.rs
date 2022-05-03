@@ -101,7 +101,7 @@ pub fn analyze_game(
         game_in.n_stock,
         SStichSequenceGameFinished::new(&game_in.stichseq),
         /*fn_before_zugeben*/|game, _i_stich, epi, card| {
-            if remaining_cards_per_hand(&game.stichseq)[epi] <= n_max_remaining_cards {
+            if game.stichseq.remaining_cards_per_hand()[epi] <= n_max_remaining_cards {
                 let determinebestcard = SDetermineBestCard::new_from_game(game);
                 macro_rules! look_for_mistakes{($itahand: expr$(,)?) => {{
                     let determinebestcardresult = determine_best_card(

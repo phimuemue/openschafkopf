@@ -5,7 +5,6 @@ use crate::util::*;
 use itertools::Itertools;
 use rand::{self, Rng};
 use std::{cmp::Ordering, fmt, fs, io::Write};
-use super::remaining_cards_per_hand;
 
 pub trait TForEachSnapshot {
     type Output;
@@ -490,7 +489,7 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
         //     enumchainscard.remove_from_chain(*card);
         // }
         // assert_eq!(enumchainscard, self.enumchainscard);
-        if remaining_cards_per_hand(stichseq)[self.epi_fixed] >= self.n_until_remaining_cards {
+        if stichseq.remaining_cards_per_hand()[self.epi_fixed] >= self.n_until_remaining_cards {
             return; // hope that afterwards normal iteration is fast enough
         }
         // example: First stich was SO GU H8 E7

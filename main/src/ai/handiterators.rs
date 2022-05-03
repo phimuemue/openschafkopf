@@ -54,7 +54,7 @@ impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
 
 fn make_handiterator<NextVecEPI: TNextVecEPI>(stichseq: &SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex) -> SHandIterator<NextVecEPI> {
     let veccard_unknown = unplayed_cards(stichseq, &hand_fixed).collect::<Vec<_>>();
-    let mapepin_cards_per_hand = remaining_cards_per_hand(stichseq);
+    let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
     let mut vecepi = Vec::new();
     for epi in EPlayerIndex::values() {
         if epi==epi_fixed {

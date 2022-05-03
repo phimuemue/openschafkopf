@@ -432,6 +432,18 @@ impl SStichSequence {
         self.completed_stichs().len() * EPlayerIndex::SIZE
             + self.current_stich().size()
     }
+
+
+    pub fn remaining_cards_per_hand(&self) -> EnumMap<EPlayerIndex, usize> {
+        EPlayerIndex::map_from_fn(|epi| {
+            self.kurzlang().cards_per_player()
+                - self.completed_stichs().len()
+                - match self.current_stich().get(epi) {
+                    None => 0,
+                    Some(_card) => 1,
+                }
+        })
+    }
 }
 
 #[derive(Debug, Clone)]

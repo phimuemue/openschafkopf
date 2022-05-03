@@ -19,19 +19,8 @@ use std::{
 
 plain_enum_mod!(moderemainingcards, ERemainingCards {_1, _2, _3, _4, _5, _6, _7, _8,});
 
-pub fn remaining_cards_per_hand(stichseq: &SStichSequence) -> EnumMap<EPlayerIndex, usize> {
-    EPlayerIndex::map_from_fn(|epi| {
-        stichseq.kurzlang().cards_per_player()
-            - stichseq.completed_stichs().len()
-            - match stichseq.current_stich().get(epi) {
-                None => 0,
-                Some(_card) => 1,
-            }
-    })
-}
-
 pub fn ahand_vecstich_card_count_is_compatible(stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> bool {
-    ahand.map(|hand| hand.cards().len()) == remaining_cards_per_hand(stichseq)
+    ahand.map(|hand| hand.cards().len()) == stichseq.remaining_cards_per_hand()
 }
 
 pub enum VAIParams {
@@ -155,7 +144,7 @@ impl SAi {
                 )
             }}}
             let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(
-                remaining_cards_per_hand(determinebestcard.stichseq)[epi_fixed] - 1 // ERemainingCards starts with 1
+                determinebestcard.stichseq.remaining_cards_per_hand()[epi_fixed] - 1 // ERemainingCards starts with 1
             ));
             use ERemainingCards::*;
             *unwrap!(cartesian_match!(

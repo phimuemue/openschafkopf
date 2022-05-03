@@ -87,7 +87,7 @@ pub fn with_common_args(
         }
     );
     let epi_fixed = determinebestcard.epi_fixed;
-    let mapepin_cards_per_hand = remaining_cards_per_hand(&stichseq);
+    let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
     assert_eq!(mapepin_cards_per_hand[epi_fixed], hand_fixed.cards().len());
     let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(mapepin_cards_per_hand[epi_fixed] - 1));
     macro_rules! forward{(($itahand: expr), ) => { // TODORUST generic closures
