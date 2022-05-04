@@ -10,7 +10,7 @@ pub use super::handconstraint::*;
 enum VChooseItAhand {
     All,
     Sample(usize),
-    Concrete(Vec<SCard>),
+    Concrete(Vec<SCard>), // TODO remove (allow in-line hand specification)
 }
 
 pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::Command<'static> {
@@ -69,26 +69,55 @@ pub fn with_common_args(
         }
         Some(stichseq)
     });
-    let ekurzlang = EKurzLang::values()
+    #[derive(Debug)]
+    enum VHandDescription {
+        Single(SHand),
+        All(EnumMap<EPlayerIndex, SHand>),
+    }
+    let (ekurzlang, handdesc) = EKurzLang::values()
         .filter_map(|ekurzlang| {
             mapekurzlangostichseq[ekurzlang].as_ref().and_then(|stichseq| {
                 if_then_some!(
                     stichseq.remaining_cards_per_hand()[
                         unwrap!(stichseq.current_stich().current_playerindex())
                     ]==veccard_hand.len(),
-                    ekurzlang
-                )
+                    (
+                        ekurzlang,
+                        VHandDescription::Single(SHand::new_from_iter(
+                            veccard_hand.iter().copied()
+                        )),
+                    )
+                ).or_else(|| {
+                    let n_cards_total = ekurzlang.cards_per_player()*EPlayerIndex::SIZE;
+                    if_then_some!(
+                        stichseq.visible_cards().count()+veccard_hand.len()==n_cards_total,
+                        {
+                            let mut an_remaining = stichseq.remaining_cards_per_hand();
+                            let make_hand = |i_lo, i_hi| {
+                                SHand::new_from_iter(veccard_hand[i_lo..i_hi].iter().copied())
+                            };
+                            let mut n_remaining = 0;
+                            for epi in EPlayerIndex::values() {
+                                an_remaining[epi] += n_remaining;
+                                n_remaining = an_remaining[epi];
+                            }
+                            use EPlayerIndex::*;
+                            (
+                                ekurzlang,
+                                VHandDescription::All(EPlayerIndex::map_from_raw([
+                                    make_hand(0, an_remaining[EPI0]),
+                                    make_hand(an_remaining[EPI0], an_remaining[EPI1]),
+                                    make_hand(an_remaining[EPI1], an_remaining[EPI2]),
+                                    make_hand(an_remaining[EPI2], an_remaining[EPI3]),
+                                ])),
+                            )
+                        }
+                    )
+                })
             })
         })
         .exactly_one()
         .map_err(|err| format_err!("Could not determine ekurzlang: {}", err))?;
-    assert_eq!(
-        ekurzlang,
-        unwrap!(EKurzLang::checked_from_cards_per_player(
-            /*n_stichs_complete*/veccard_as_played.len() / EPlayerIndex::SIZE
-                + veccard_hand.len()
-        ))
-    );
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
     let stichseq = unwrap!(mapekurzlangostichseq[ekurzlang].as_ref());
     let oconstraint = if_then_some!(let Some(str_constrain_hands)=clapmatches.value_of("constrain_hands"), {
@@ -111,13 +140,17 @@ pub fn with_common_args(
             bail!("Failed to parse simulate_hands");
         }
     );
-    let hand_fixed = SHand::new_from_iter(veccard_hand.into_iter());
+    let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
+    let hand_fixed = match &handdesc {
+        VHandDescription::Single(hand) => hand.clone(),
+        VHandDescription::All(ahand) => ahand[epi_fixed].clone(),
+    };
     let determinebestcard =  SDetermineBestCard::new(
         rules,
         &stichseq,
         &hand_fixed,
     );
-    let epi_fixed = determinebestcard.epi_fixed;
+    assert_eq!(epi_fixed, determinebestcard.epi_fixed);
     let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
     assert_eq!(mapepin_cards_per_hand[epi_fixed], hand_fixed.cards().len());
     let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(mapepin_cards_per_hand[epi_fixed] - 1));
@@ -131,8 +164,12 @@ pub fn with_common_args(
         )
     }}
     cartesian_match!(forward,
-        match ((oiteratehands, eremainingcards)) {
-            (Some(Concrete(veccard)), _) => ({
+        match ((oiteratehands, handdesc, eremainingcards)) {
+            (_, VHandDescription::All(ahand), _) => ({
+                // TODO offer option to only specify parts of other hands
+                std::iter::once(ahand)
+            }),
+            (Some(Concrete(veccard)), _, _) => ({
                 // TODO error handling
                 // TODO should we offer an option such that hand_fixed can be specified in line with other hands?
                 let mut ahand = EPlayerIndex::map_from_fn(|_epi| SHand::new_from_vec(SHandVector::new()));
@@ -148,20 +185,20 @@ pub fn with_common_args(
                 }
                 std::iter::once(ahand)
             }),
-            (Some(All), _)|(None, _1|_2|_3|_4) => (
+            (Some(All), _, _)|(None, _, _1|_2|_3|_4) => (
                 all_possible_hands(&stichseq, hand_fixed.clone(), epi_fixed, rules)
                     .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
                         relation.eval(ahand, rules)
                     ))
             ),
-            (Some(Sample(n_samples)), _) => (
+            (Some(Sample(n_samples)), _, _) => (
                 forever_rand_hands(&stichseq, hand_fixed.clone(), epi_fixed, rules)
                     .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
                         relation.eval(ahand, rules)
                     ))
                     .take(n_samples)
             ),
-            (None, _5|_6|_7|_8) => (
+            (None, _, _5|_6|_7|_8) => (
                 forever_rand_hands(&stichseq, hand_fixed.clone(), epi_fixed, rules)
                     .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
                         relation.eval(ahand, rules)
