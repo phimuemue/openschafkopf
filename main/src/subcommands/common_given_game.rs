@@ -16,13 +16,12 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
     let single_arg = |str_name, str_long| {
         clap::Arg::new(str_name)
             .long(str_long)
-            .required(true)
             .takes_value(true)
     };
     clap::Command::new(str_subcommand)
         .about(str_about)
-        .arg(single_arg("rules", "rules"))
-        .arg(single_arg("hand", "hand"))
+        .arg(single_arg("rules", "rules").required(true))
+        .arg(single_arg("hand", "hand").required(true))
         .arg(single_arg("cards_on_table", "cards-on-table"))
         .arg(clap::Arg::new("simulate_hands").long("simulate-hands").takes_value(true))
         .arg(clap::Arg::new("verbose").long("verbose").short('v'))
@@ -46,9 +45,11 @@ pub fn with_common_args(
 ) -> Result<(), Error> {
     let b_verbose = clapmatches.is_present("verbose");
     let hand_fixed = super::str_to_hand(unwrap!(clapmatches.value_of("hand")))?;
-    let veccard_as_played = &cardvector::parse_cards::<Vec<_>>(
-        unwrap!(clapmatches.value_of("cards_on_table")),
-    ).ok_or_else(||format_err!("Could not parse played cards"))?;
+    let veccard_as_played = match clapmatches.value_of("cards_on_table") {
+        None => Vec::new(),
+        Some(str_cards_on_table) => cardvector::parse_cards(str_cards_on_table)
+            .ok_or_else(||format_err!("Could not parse played cards"))?,
+    };
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
     let rules = crate::rules::parser::parse_rule_description_simple(unwrap!(clapmatches.value_of("rules")))?;
     let rules = rules.as_ref();
