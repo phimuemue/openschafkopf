@@ -39,6 +39,8 @@ pub fn with_common_args(
     withcommanargs: impl TWithCommonArgs
 ) -> Result<(), Error> {
     let b_verbose = clapmatches.is_present("verbose");
+    let rules = crate::rules::parser::parse_rule_description_simple(unwrap!(clapmatches.value_of("rules")))?;
+    let rules = rules.as_ref();
     let hand_fixed = super::str_to_hand(unwrap!(clapmatches.value_of("hand")))?;
     let veccard_as_played = match clapmatches.value_of("cards_on_table") {
         None => Vec::new(),
@@ -46,8 +48,6 @@ pub fn with_common_args(
             .ok_or_else(||format_err!("Could not parse played cards"))?,
     };
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
-    let rules = crate::rules::parser::parse_rule_description_simple(unwrap!(clapmatches.value_of("rules")))?;
-    let rules = rules.as_ref();
     let ekurzlang = EKurzLang::checked_from_cards_per_player(
         /*n_stichs_complete*/veccard_as_played.len() / EPlayerIndex::SIZE
             + hand_fixed.cards().len()
