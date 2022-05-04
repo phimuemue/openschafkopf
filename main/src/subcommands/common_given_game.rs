@@ -3,6 +3,7 @@ use crate::game::SStichSequence;
 use crate::primitives::*;
 use crate::util::*;
 use crate::rules::*;
+use itertools::Itertools;
 
 pub use super::handconstraint::*;
 
@@ -47,6 +48,13 @@ pub fn with_common_args(
         Some(str_cards_on_table) => cardvector::parse_cards(str_cards_on_table)
             .ok_or_else(||format_err!("Could not parse played cards"))?,
     };
+    let veccard_duplicate = veccard_as_played.iter()
+        .chain(hand_fixed.cards().iter())
+        .duplicates()
+        .collect::<Vec<_>>();
+    if !veccard_duplicate.is_empty() {
+        bail!("Cards are used more than once: {}", veccard_duplicate.iter().join(", "));
+    }
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
     let ekurzlang = EKurzLang::checked_from_cards_per_player(
         /*n_stichs_complete*/veccard_as_played.len() / EPlayerIndex::SIZE
