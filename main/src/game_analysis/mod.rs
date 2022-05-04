@@ -312,17 +312,15 @@ pub fn generate_analysis_html(
             let hand_to_command_line = |hand: &SHand| hand.cards().iter().join(" ");
             let mut str_per_card = format!(r###"<h3>{} <button onclick='copyToClipboard("{}", this)'>&#128203</button></h3>"###,
                 stich_caption(&stichseq),
-                format!("{str_exe} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand}\" --simulate-hands \"{str_simulate_hands}\" --branching \"equiv7\"",
+                format!("{str_exe} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand}\" --branching \"equiv7\"",
                     // TODO error handling
                     str_exe=unwrap!(unwrap!(unwrap!(std::env::current_exe()).canonicalize()).to_str()),
                     str_cards_on_table=stichseq.visible_stichs().iter()
                         .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
                         .join("  "),
-                    str_hand=hand_to_command_line(&ahand[epi_current]),
-                    str_simulate_hands=EPlayerIndex::values()
-                        .filter_map(|epi| if_then_some!(epi!=epi_current, hand_to_command_line(&ahand[epi])))
+                    str_hand=EPlayerIndex::values()
+                        .map(|epi| hand_to_command_line(&ahand[epi]))
                         .join("  "),
-                        
                 ).replace("\"", "\\\""),
             );
             str_per_card += &format!("<table><tr>{}{}</tr></table>",
