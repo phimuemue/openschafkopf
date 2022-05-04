@@ -13,16 +13,11 @@ enum VChooseItAhand {
 }
 
 pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::Command<'static> {
-    let single_arg = |str_name, str_long| {
-        clap::Arg::new(str_name)
-            .long(str_long)
-            .takes_value(true)
-    };
     clap::Command::new(str_subcommand)
         .about(str_about)
-        .arg(single_arg("rules", "rules").required(true))
-        .arg(single_arg("hand", "hand").required(true))
-        .arg(single_arg("cards_on_table", "cards-on-table"))
+        .arg(clap::Arg::new("rules").long("rules").takes_value(true).required(true))
+        .arg(clap::Arg::new("hand").long("hand").takes_value(true).required(true))
+        .arg(clap::Arg::new("cards_on_table").long("cards-on-table").takes_value(true))
         .arg(clap::Arg::new("simulate_hands").long("simulate-hands").takes_value(true))
         .arg(clap::Arg::new("verbose").long("verbose").short('v'))
         .arg(clap::Arg::new("constrain_hands").long("constrain-hands").takes_value(true))
