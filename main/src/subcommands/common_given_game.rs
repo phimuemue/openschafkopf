@@ -89,14 +89,8 @@ pub fn with_common_args(
                 + veccard_hand.len()
         ))
     );
-    let hand_fixed = SHand::new_from_iter(veccard_hand.into_iter());
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
     let stichseq = unwrap!(mapekurzlangostichseq[ekurzlang].as_ref());
-    let determinebestcard =  SDetermineBestCard::new(
-        rules,
-        &stichseq,
-        &hand_fixed,
-    );
     let oconstraint = if_then_some!(let Some(str_constrain_hands)=clapmatches.value_of("constrain_hands"), {
         let relation = str_constrain_hands.parse::<VConstraint>().map_err(|_|format_err!("Cannot parse hand constraints"))?;
         if b_verbose {
@@ -116,6 +110,12 @@ pub fn with_common_args(
         } else {
             bail!("Failed to parse simulate_hands");
         }
+    );
+    let hand_fixed = SHand::new_from_iter(veccard_hand.into_iter());
+    let determinebestcard =  SDetermineBestCard::new(
+        rules,
+        &stichseq,
+        &hand_fixed,
     );
     let epi_fixed = determinebestcard.epi_fixed;
     let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
