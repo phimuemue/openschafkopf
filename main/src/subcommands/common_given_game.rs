@@ -55,16 +55,41 @@ pub fn with_common_args(
     if !veccard_duplicate.is_empty() {
         bail!("Cards are used more than once: {}", veccard_duplicate.iter().join(", "));
     }
-    // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
-    let ekurzlang = EKurzLang::checked_from_cards_per_player(
-        /*n_stichs_complete*/veccard_as_played.len() / EPlayerIndex::SIZE
-            + hand_fixed.cards().len()
-    ).ok_or_else(|| format_err!("Cannot determine ekurzlang from {} and {:?}.", hand_fixed, veccard_as_played))?;
-    let stichseq = SStichSequence::new_from_cards(
+    let mapekurzlangostichseq = EKurzLang::map_from_fn(|ekurzlang| {
+        let mut stichseq = SStichSequence::new(ekurzlang);
+        for &card in veccard_as_played.iter() {
+            if !ekurzlang.supports_card(card) {
+                return None; // TODO distinguish error
+            }
+            if stichseq.game_finished() {
+                return None; // TODO distinguish error
+            }
+            stichseq.zugeben(card, rules);
+        }
+        Some(stichseq)
+    });
+    let ekurzlang = EKurzLang::values()
+        .filter_map(|ekurzlang| {
+            mapekurzlangostichseq[ekurzlang].as_ref().and_then(|stichseq| {
+                if_then_some!(
+                    stichseq.remaining_cards_per_hand()[
+                        unwrap!(stichseq.current_stich().current_playerindex())
+                    ]==hand_fixed.cards().len(),
+                    ekurzlang
+                )
+            })
+        })
+        .exactly_one()
+        .map_err(|err| format_err!("Could not determine ekurzlang: {}", err))?;
+    assert_eq!(
         ekurzlang,
-        veccard_as_played.iter().copied(),
-        rules
+        unwrap!(EKurzLang::checked_from_cards_per_player(
+            /*n_stichs_complete*/veccard_as_played.len() / EPlayerIndex::SIZE
+                + hand_fixed.cards().len()
+        ))
     );
+    // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
+    let stichseq = unwrap!(mapekurzlangostichseq[ekurzlang].as_ref());
     let determinebestcard =  SDetermineBestCard::new(
         rules,
         &stichseq,

@@ -45,11 +45,10 @@ impl fmt::Display for ESchlag {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-pub enum EKurzLang {
+plain_enum_mod!(modekurzlang, EKurzLang {
     Kurz,
     Lang,
-}
+});
 
 impl EKurzLang {
     pub fn cards_per_player(self) -> usize {
