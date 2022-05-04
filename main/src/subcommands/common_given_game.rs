@@ -42,14 +42,15 @@ pub fn with_common_args(
     let b_verbose = clapmatches.is_present("verbose");
     let rules = crate::rules::parser::parse_rule_description_simple(unwrap!(clapmatches.value_of("rules")))?;
     let rules = rules.as_ref();
-    let hand_fixed = super::str_to_hand(unwrap!(clapmatches.value_of("hand")))?;
+    let veccard_hand = cardvector::parse_cards::<Vec<_>>(unwrap!(clapmatches.value_of("hand")))
+        .ok_or_else(||format_err!("Could not parse hand."))?;
     let veccard_as_played = match clapmatches.value_of("cards_on_table") {
         None => Vec::new(),
         Some(str_cards_on_table) => cardvector::parse_cards(str_cards_on_table)
             .ok_or_else(||format_err!("Could not parse played cards"))?,
     };
     let veccard_duplicate = veccard_as_played.iter()
-        .chain(hand_fixed.cards().iter())
+        .chain(veccard_hand.iter())
         .duplicates()
         .collect::<Vec<_>>();
     if !veccard_duplicate.is_empty() {
@@ -74,7 +75,7 @@ pub fn with_common_args(
                 if_then_some!(
                     stichseq.remaining_cards_per_hand()[
                         unwrap!(stichseq.current_stich().current_playerindex())
-                    ]==hand_fixed.cards().len(),
+                    ]==veccard_hand.len(),
                     ekurzlang
                 )
             })
@@ -85,9 +86,10 @@ pub fn with_common_args(
         ekurzlang,
         unwrap!(EKurzLang::checked_from_cards_per_player(
             /*n_stichs_complete*/veccard_as_played.len() / EPlayerIndex::SIZE
-                + hand_fixed.cards().len()
+                + veccard_hand.len()
         ))
     );
+    let hand_fixed = SHand::new_from_iter(veccard_hand.into_iter());
     // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
     let stichseq = unwrap!(mapekurzlangostichseq[ekurzlang].as_ref());
     let determinebestcard =  SDetermineBestCard::new(
