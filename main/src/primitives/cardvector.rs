@@ -44,6 +44,20 @@ pub fn parse_cards<C: std::iter::Extend<SCard>+Default>(str_cards: &str) -> Opti
     ).ok()
 }
 
+pub fn parse_optional_cards<C: std::iter::Extend<Option<SCard>>+Default>(str_cards: &str) -> Option<C> {
+    crate::util::parser::parse_trimmed(
+        str_cards,
+        "optional_cards",
+        sep_by::<C,_,_>(
+            choice((
+                skip_many1(char('_')).map(|_| None),
+                card_parser().map(Some)
+            )),
+            spaces()
+        ),
+    ).ok()
+}
+
 #[test]
 fn test_cardvectorparser() {
     use crate::util::*;
@@ -51,5 +65,9 @@ fn test_cardvectorparser() {
     assert_eq!(
         verify!(parse_cards::<Vec<_>>("ek Gk hZ hu s7 gZ")).unwrap(),
         vec![EK, GK, HZ, HU, S7, GZ]
+    );
+    assert_eq!(
+        verify!(parse_optional_cards::<Vec<_>>("ek _  hZ __ ____  gZ")).unwrap(),
+        vec![Some(EK), None, Some(HZ), None, None, Some(GZ)]
     );
 }
