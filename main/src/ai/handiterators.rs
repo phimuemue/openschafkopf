@@ -52,6 +52,33 @@ impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
     }
 }
 
+pub fn unplayed_cards<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: &'lifetime SHand) -> impl Iterator<Item=SCard> + 'lifetime {
+    SCard::values(stichseq.kurzlang())
+        .filter(move |card| 
+             !hand_fixed.contains(*card)
+             && !stichseq.visible_cards().any(|(_epi, card_in_stich)|
+                card_in_stich==card
+            )
+        )
+}
+
+#[test]
+fn test_unplayed_cards() {
+    use crate::card::card_values::*;
+    let mut stichseq = SStichSequence::new(EKurzLang::Lang);
+    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]] {
+        for card in acard_stich {
+            stichseq.zugeben_custom_winner_index(card, |_stich| EPlayerIndex::EPI0 /*irrelevant*/);
+        }
+    }
+    let hand = &SHand::new_from_iter([GK, SK]);
+    let veccard_unplayed = unplayed_cards(&stichseq, hand).collect::<Vec<_>>();
+    let veccard_unplayed_check = [GZ, E7, SZ, H9, EZ, GU];
+    assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
+    assert!(veccard_unplayed.iter().all(|card| veccard_unplayed_check.contains(card)));
+    assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
+}
+
 fn make_handiterator<NextVecEPI: TNextVecEPI>(stichseq: &SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex) -> SHandIterator<NextVecEPI> {
     let veccard_unknown = unplayed_cards(stichseq, &hand_fixed).collect::<Vec<_>>();
     let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
