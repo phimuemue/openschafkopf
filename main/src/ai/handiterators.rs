@@ -73,13 +73,7 @@ fn test_unplayed_cards() {
     }
     let veccard_unplayed = unplayed_cards(
         &stichseq,
-        &EPlayerIndex::map_from_fn(|epi| {
-            if epi==EPlayerIndex::EPI0 {
-                SHand::new_from_iter([GK, SK])
-            } else {
-                SHand::new_from_iter(None.into_iter())
-            }
-        })
+        &SHand::new_from_iter([GK, SK]).to_ahand(EPlayerIndex::EPI0),
     ).collect::<Vec<_>>();
     let veccard_unplayed_check = [GZ, E7, SZ, H9, EZ, GU];
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
@@ -226,13 +220,7 @@ fn test_all_possible_hands() {
             assert_eq!(
                 make_handiterator::<SNextVecEPIPermutation>(
                     &stichseq,
-                    EPlayerIndex::map_from_fn(|epi| {
-                        if epi==epi_fixed {
-                            SHand::new_from_iter(veccard_hand.iter().copied())
-                        } else {
-                            SHand::new_from_iter(None.into_iter())
-                        }
-                    }),
+                    SHand::new_from_iter(veccard_hand.iter().copied()).to_ahand(epi_fixed),
                     epi_fixed,
                 )
                     .inspect(|ahand| assert_eq!(EnumMap::from_raw(an_size_hand), ahand.map(|hand| hand.cards().len())))
