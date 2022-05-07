@@ -32,7 +32,7 @@ pub struct SHandIterator<NextVecEPI> {
     epi_fixed : EPlayerIndex,
     veccard_unknown: Vec<SCard>,
     vecepi: Vec<EPlayerIndex>,
-    hand_known: SHand,
+    ahand_known: EnumMap<EPlayerIndex, SHand>,
     b_valid: bool,
     phantom: std::marker::PhantomData<NextVecEPI>,
 }
@@ -41,9 +41,9 @@ impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
     type Item = EnumMap<EPlayerIndex, SHand>;
     fn next(&mut self) -> Option<Self::Item> {
         if_then_some!(self.b_valid, {
-            let mut ahand = EPlayerIndex::map_from_fn(|_| SHand::new_from_vec(SHandVector::new()));
-            ahand[self.epi_fixed] = self.hand_known.clone();
+            let mut ahand = self.ahand_known.clone();
             for (i, epi) in self.vecepi.iter().copied().enumerate() {
+                assert_ne!(epi, self.epi_fixed); // TODO introduce verify_ne
                 ahand[epi].add_card(self.veccard_unknown[i]);
             }
             self.b_valid = NextVecEPI::next(self.vecepi.as_mut_slice());
@@ -70,7 +70,13 @@ fn make_handiterator<NextVecEPI: TNextVecEPI>(stichseq: &SStichSequence, hand_fi
         epi_fixed,
         veccard_unknown,
         vecepi,
-        hand_known: hand_fixed,
+        ahand_known: EPlayerIndex::map_from_fn(|epi| {
+            if epi_fixed==epi {
+                hand_fixed.clone()
+            } else {
+                SHand::new_from_iter(None.into_iter())
+            }
+        }),
         b_valid: true, // in the beginning, there should be a valid assignment of cards to players
         phantom: std::marker::PhantomData,
     }
