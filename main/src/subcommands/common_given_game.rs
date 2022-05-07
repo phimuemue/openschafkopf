@@ -68,12 +68,7 @@ pub fn with_common_args(
         }
         Some(stichseq)
     });
-    #[derive(Debug)]
-    enum VHandDescription {
-        Single(SHand),
-        All(EnumMap<EPlayerIndex, SHand>),
-    }
-    let (ekurzlang, handdesc) = EKurzLang::values()
+    let (ekurzlang, ahand_fixed) = EKurzLang::values()
         .filter_map(|ekurzlang| {
             mapekurzlangostichseq[ekurzlang].as_ref().and_then(|stichseq| {
                 let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
@@ -82,9 +77,9 @@ pub fn with_common_args(
                         && stichseq.remaining_cards_per_hand()[epi_fixed]==vecocard_hand.len(),
                     (
                         ekurzlang,
-                        VHandDescription::Single(SHand::new_from_iter(
+                        SHand::new_from_iter(
                             vecocard_hand.iter().map(|ocard| unwrap!(ocard))
-                        )),
+                        ).to_ahand(epi_fixed),
                     )
                 ).or_else(|| {
                     let n_cards_total = ekurzlang.cards_per_player()*EPlayerIndex::SIZE;
@@ -116,7 +111,7 @@ pub fn with_common_args(
                         if ahand[epi_fixed].cards().len()==an_remaining[epi_fixed] {
                             Some((
                                 ekurzlang,
-                                VHandDescription::All(ahand),
+                                ahand,
                             ))
                         } else {
                             None
@@ -150,10 +145,6 @@ pub fn with_common_args(
         }
     );
     let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
-    let ahand_fixed = match handdesc {
-        VHandDescription::Single(hand) => hand.to_ahand(epi_fixed),
-        VHandDescription::All(ahand) => ahand.to_ahand(epi_fixed),
-    };
     let hand_fixed = ahand_fixed[epi_fixed].clone(); // TODO can we get rid of this?
     let determinebestcard =  SDetermineBestCard::new(
         rules,
