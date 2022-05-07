@@ -110,16 +110,10 @@ fn make_handiterator<NextVecEPI: TNextVecEPI>(stichseq: &SStichSequence, ahand_k
     }
 }
 
-fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVecEPI+'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, rules: &'lifetime dyn TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVecEPI+'lifetime>(stichseq: &'lifetime SStichSequence, ahand_known: EnumMap<EPlayerIndex, SHand>, epi_fixed: EPlayerIndex, rules: &'lifetime dyn TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     make_handiterator::<NextVecEPI>(
         stichseq,
-        EPlayerIndex::map_from_fn(|epi| {
-            if epi==epi_fixed {
-                hand_fixed.clone()
-            } else {
-                SHand::new_from_iter(None.into_iter())
-            }
-        }),
+        ahand_known,
         epi_fixed
     )
         .filter(move |ahand| {
@@ -161,12 +155,33 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
         })
 }
 
-pub fn all_possible_hands<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, rules: &'lifetime dyn TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SNextVecEPIPermutation>(stichseq, hand_fixed, epi_fixed, rules)
+pub trait TToAHand {
+    fn to_ahand(self, epi_pri: EPlayerIndex) -> EnumMap<EPlayerIndex, SHand>;
 }
 
-pub fn forever_rand_hands<'lifetime>(stichseq: &'lifetime SStichSequence, hand_fixed: SHand, epi_fixed: EPlayerIndex, rules: &'lifetime dyn TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SNextVecEPIShuffle>(stichseq, hand_fixed, epi_fixed, rules)
+impl TToAHand for EnumMap<EPlayerIndex, SHand> {
+    fn to_ahand(self, _epi_pri: EPlayerIndex) -> EnumMap<EPlayerIndex, SHand> {
+        self
+    }
+}
+impl TToAHand for SHand {
+    fn to_ahand(self, epi_pri: EPlayerIndex) -> EnumMap<EPlayerIndex, SHand> {
+        EPlayerIndex::map_from_fn(|epi| {
+            if epi==epi_pri {
+                self.clone()
+            } else {
+                SHand::new_from_iter(None.into_iter())
+            }
+        })
+    }
+}
+
+pub fn all_possible_hands<'lifetime>(stichseq: &'lifetime SStichSequence, tohand: impl TToAHand, epi_fixed: EPlayerIndex, rules: &'lifetime dyn TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+    make_handiterator_compatible_with_game_so_far::<SNextVecEPIPermutation>(stichseq, tohand.to_ahand(epi_fixed), epi_fixed, rules)
+}
+
+pub fn forever_rand_hands<'lifetime>(stichseq: &'lifetime SStichSequence, tohand: impl TToAHand, epi_fixed: EPlayerIndex, rules: &'lifetime dyn TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+    make_handiterator_compatible_with_game_so_far::<SNextVecEPIShuffle>(stichseq, tohand.to_ahand(epi_fixed), epi_fixed, rules)
 }
 
 #[test]
