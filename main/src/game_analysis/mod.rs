@@ -321,7 +321,7 @@ pub fn generate_analysis_html(
                     str_hand=EPlayerIndex::values()
                         .map(|epi| hand_to_command_line(&ahand[epi]))
                         .join("  "),
-                ).replace("\"", "\\\""),
+                ).replace('\"', "\\\""),
             );
             str_per_card += &format!("<table><tr>{}{}</tr></table>",
                 player_table_stichseq(epi_self, stichseq),
