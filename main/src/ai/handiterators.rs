@@ -5,16 +5,16 @@ use permutohedron::LexicalPermutation;
 use rand::prelude::*;
 
 pub trait TNextVecEPI {
-    fn init(slcepi: &mut[EPlayerIndex]);
-    fn next(slcepi: &mut[EPlayerIndex]) -> bool;
+    fn init(slcepi: &mut [EPlayerIndex]);
+    fn next(slcepi: &mut [EPlayerIndex]) -> bool;
 }
 
 pub struct SNextVecEPIShuffle;
 impl TNextVecEPI for SNextVecEPIShuffle {
-    fn init(slcepi: &mut[EPlayerIndex]) {
+    fn init(slcepi: &mut [EPlayerIndex]) {
         slcepi.shuffle(&mut rand::thread_rng());
     }
-    fn next(slcepi: &mut[EPlayerIndex]) -> bool {
+    fn next(slcepi: &mut [EPlayerIndex]) -> bool {
         Self::init(slcepi);
         true
     }
@@ -22,14 +22,16 @@ impl TNextVecEPI for SNextVecEPIShuffle {
 
 pub struct SNextVecEPIPermutation;
 impl TNextVecEPI for SNextVecEPIPermutation {
-    fn init(_slcepi: &mut[EPlayerIndex]) {/*noop*/}
-    fn next(slcepi: &mut[EPlayerIndex]) -> bool {
+    fn init(_slcepi: &mut [EPlayerIndex]) {
+        // noop
+    }
+    fn next(slcepi: &mut [EPlayerIndex]) -> bool {
         slcepi.next_permutation()
     }
 }
 
 pub struct SHandIterator<NextVecEPI> {
-    epi_fixed : EPlayerIndex,
+    epi_fixed: EPlayerIndex,
     veccard_unknown: Vec<SCard>,
     vecepi: Vec<EPlayerIndex>,
     ahand_known: EnumMap<EPlayerIndex, SHand>,
@@ -52,43 +54,62 @@ impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
     }
 }
 
-pub fn unplayed_cards<'lifetime>(stichseq: &'lifetime SStichSequence, ahand_fixed: &'lifetime EnumMap<EPlayerIndex, SHand>) -> impl Iterator<Item=SCard> + 'lifetime {
-    SCard::values(stichseq.kurzlang())
-        .filter(move |card| 
-             !ahand_fixed.iter().any(|hand| hand.contains(*card))
-             && !stichseq.visible_cards().any(|(_epi, card_in_stich)|
-                card_in_stich==card
-            )
-        )
+pub fn unplayed_cards<'lifetime>(
+    stichseq: &'lifetime SStichSequence,
+    ahand_fixed: &'lifetime EnumMap<EPlayerIndex, SHand>,
+) -> impl Iterator<Item = SCard> + 'lifetime {
+    SCard::values(stichseq.kurzlang()).filter(move |card| {
+        !ahand_fixed.iter().any(|hand| hand.contains(*card))
+            && !stichseq
+                .visible_cards()
+                .any(|(_epi, card_in_stich)| card_in_stich == card)
+    })
 }
 
 #[test]
 fn test_unplayed_cards() {
     use crate::card::card_values::*;
     let mut stichseq = SStichSequence::new(EKurzLang::Lang);
-    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8], [E9, EK, E8, EA], [SA, EU, SO, HA]] {
+    for acard_stich in [
+        [G7, G8, GA, G9],
+        [S8, HO, S7, S9],
+        [H7, HK, HU, SU],
+        [EO, GO, HZ, H8],
+        [E9, EK, E8, EA],
+        [SA, EU, SO, HA],
+    ] {
         for card in acard_stich {
-            stichseq.zugeben_custom_winner_index(card, |_stich| EPlayerIndex::EPI0 /*irrelevant*/);
+            stichseq
+                .zugeben_custom_winner_index(card, |_stich| EPlayerIndex::EPI0 /*irrelevant*/);
         }
     }
     let veccard_unplayed = unplayed_cards(
         &stichseq,
         &SHand::new_from_iter([GK, SK]).to_ahand(EPlayerIndex::EPI0),
-    ).collect::<Vec<_>>();
+    )
+    .collect::<Vec<_>>();
     let veccard_unplayed_check = [GZ, E7, SZ, H9, EZ, GU];
     assert_eq!(veccard_unplayed.len(), veccard_unplayed_check.len());
-    assert!(veccard_unplayed.iter().all(|card| veccard_unplayed_check.contains(card)));
-    assert!(veccard_unplayed_check.iter().all(|card| veccard_unplayed.contains(card)));
+    assert!(veccard_unplayed
+        .iter()
+        .all(|card| veccard_unplayed_check.contains(card)));
+    assert!(veccard_unplayed_check
+        .iter()
+        .all(|card| veccard_unplayed.contains(card)));
 }
 
-fn make_handiterator<NextVecEPI: TNextVecEPI>(stichseq: &SStichSequence, ahand_known: EnumMap<EPlayerIndex, SHand>, epi_fixed: EPlayerIndex) -> SHandIterator<NextVecEPI> {
+fn make_handiterator<NextVecEPI: TNextVecEPI>(
+    stichseq: &SStichSequence,
+    ahand_known: EnumMap<EPlayerIndex, SHand>,
+    epi_fixed: EPlayerIndex,
+) -> SHandIterator<NextVecEPI> {
     let veccard_unknown = unplayed_cards(stichseq, &ahand_known).collect::<Vec<_>>();
     let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
     let mut vecepi = Vec::new();
     for epi in EPlayerIndex::values() {
         assert!(ahand_known[epi].cards().len() <= mapepin_cards_per_hand[epi]);
         let n_unknown_per_hand = mapepin_cards_per_hand[epi] - ahand_known[epi].cards().len();
-        assert!(epi!=epi_fixed || 0==n_unknown_per_hand);
+        assert!(epi != epi_fixed || 0 == n_unknown_per_hand);
         vecepi.extend(std::iter::repeat(epi).take(n_unknown_per_hand));
     }
     assert_eq!(veccard_unknown.len(), vecepi.len());
@@ -104,49 +125,53 @@ fn make_handiterator<NextVecEPI: TNextVecEPI>(stichseq: &SStichSequence, ahand_k
     }
 }
 
-fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVecEPI+'lifetime>(stichseq: &'lifetime SStichSequence, ahand_known: EnumMap<EPlayerIndex, SHand>, epi_fixed: EPlayerIndex, rules: &'lifetime dyn TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator::<NextVecEPI>(
-        stichseq,
-        ahand_known,
-        epi_fixed
-    )
-        .filter(move |ahand| {
-            let stich_current = stichseq.current_stich();
-            assert!(!stich_current.is_full());
-            assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
-            // hands must not contain other cards preventing farbe/trumpf frei
-            let mut ahand_simulate = EPlayerIndex::map_from_fn(|epi| {
-                let mut veccard = ahand[epi].cards().clone();
-                veccard.extend(stich_current.get(epi).copied().into_iter());
-                veccard.extend(stichseq.completed_stichs().iter().rev().map(|stich| stich[epi]));
-                assert_eq!(veccard.len(), stichseq.kurzlang().cards_per_player());
-                SHand::new_from_vec(veccard)
-            });
-            rules.playerindex().map_or(true, |epi_active|
-                rules.can_be_played(SFullHand::new(ahand_simulate[epi_active].cards(), stichseq.kurzlang()))
-            )
-            && {
-                let mut b_valid_up_to_now = true;
-                let mut stichseq_simulate = SStichSequence::new(stichseq.kurzlang());
-                'loopstich: for stich in stichseq.visible_stichs() {
-                    for (epi, card) in stich.iter() {
-                        if rules.card_is_allowed(
-                            &stichseq_simulate,
-                            &ahand_simulate[epi],
-                            *card
-                        ) {
-                            assert!(ahand_simulate[epi].contains(*card));
-                            ahand_simulate[epi].play_card(*card);
-                            stichseq_simulate.zugeben(*card, rules);
-                        } else {
-                            b_valid_up_to_now = false;
-                            break 'loopstich;
-                        }
+fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVecEPI + 'lifetime>(
+    stichseq: &'lifetime SStichSequence,
+    ahand_known: EnumMap<EPlayerIndex, SHand>,
+    epi_fixed: EPlayerIndex,
+    rules: &'lifetime dyn TRules,
+) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+    make_handiterator::<NextVecEPI>(stichseq, ahand_known, epi_fixed).filter(move |ahand| {
+        let stich_current = stichseq.current_stich();
+        assert!(!stich_current.is_full());
+        assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
+        // hands must not contain other cards preventing farbe/trumpf frei
+        let mut ahand_simulate = EPlayerIndex::map_from_fn(|epi| {
+            let mut veccard = ahand[epi].cards().clone();
+            veccard.extend(stich_current.get(epi).copied().into_iter());
+            veccard.extend(
+                stichseq
+                    .completed_stichs()
+                    .iter()
+                    .rev()
+                    .map(|stich| stich[epi]),
+            );
+            assert_eq!(veccard.len(), stichseq.kurzlang().cards_per_player());
+            SHand::new_from_vec(veccard)
+        });
+        rules.playerindex().map_or(true, |epi_active| {
+            rules.can_be_played(SFullHand::new(
+                ahand_simulate[epi_active].cards(),
+                stichseq.kurzlang(),
+            ))
+        }) && {
+            let mut b_valid_up_to_now = true;
+            let mut stichseq_simulate = SStichSequence::new(stichseq.kurzlang());
+            'loopstich: for stich in stichseq.visible_stichs() {
+                for (epi, card) in stich.iter() {
+                    if rules.card_is_allowed(&stichseq_simulate, &ahand_simulate[epi], *card) {
+                        assert!(ahand_simulate[epi].contains(*card));
+                        ahand_simulate[epi].play_card(*card);
+                        stichseq_simulate.zugeben(*card, rules);
+                    } else {
+                        b_valid_up_to_now = false;
+                        break 'loopstich;
                     }
                 }
-                b_valid_up_to_now
             }
-        })
+            b_valid_up_to_now
+        }
+    })
 }
 
 pub trait TToAHand {
@@ -161,7 +186,7 @@ impl TToAHand for EnumMap<EPlayerIndex, SHand> {
 impl TToAHand for SHand {
     fn to_ahand(self, epi_pri: EPlayerIndex) -> EnumMap<EPlayerIndex, SHand> {
         EPlayerIndex::map_from_fn(|epi| {
-            if epi==epi_pri {
+            if epi == epi_pri {
                 self.clone()
             } else {
                 SHand::new_from_iter(None.into_iter())
@@ -170,12 +195,32 @@ impl TToAHand for SHand {
     }
 }
 
-pub fn all_possible_hands<'lifetime>(stichseq: &'lifetime SStichSequence, tohand: impl TToAHand, epi_fixed: EPlayerIndex, rules: &'lifetime dyn TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SNextVecEPIPermutation>(stichseq, tohand.to_ahand(epi_fixed), epi_fixed, rules)
+pub fn all_possible_hands<'lifetime>(
+    stichseq: &'lifetime SStichSequence,
+    tohand: impl TToAHand,
+    epi_fixed: EPlayerIndex,
+    rules: &'lifetime dyn TRules,
+) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+    make_handiterator_compatible_with_game_so_far::<SNextVecEPIPermutation>(
+        stichseq,
+        tohand.to_ahand(epi_fixed),
+        epi_fixed,
+        rules,
+    )
 }
 
-pub fn forever_rand_hands<'lifetime>(stichseq: &'lifetime SStichSequence, tohand: impl TToAHand, epi_fixed: EPlayerIndex, rules: &'lifetime dyn TRules) -> impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SNextVecEPIShuffle>(stichseq, tohand.to_ahand(epi_fixed), epi_fixed, rules)
+pub fn forever_rand_hands<'lifetime>(
+    stichseq: &'lifetime SStichSequence,
+    tohand: impl TToAHand,
+    epi_fixed: EPlayerIndex,
+    rules: &'lifetime dyn TRules,
+) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+    make_handiterator_compatible_with_game_so_far::<SNextVecEPIShuffle>(
+        stichseq,
+        tohand.to_ahand(epi_fixed),
+        epi_fixed,
+        rules,
+    )
 }
 
 #[test]
@@ -183,7 +228,12 @@ fn test_all_possible_hands() {
     use crate::card::card_values::*;
     let epi_irrelevant = EPlayerIndex::EPI0;
     let mut stichseq = SStichSequence::new(EKurzLang::Lang);
-    for acard_stich in [[G7, G8, GA, G9], [S8, HO, S7, S9], [H7, HK, HU, SU], [EO, GO, HZ, H8]] {
+    for acard_stich in [
+        [G7, G8, GA, G9],
+        [S8, HO, S7, S9],
+        [H7, HK, HU, SU],
+        [EO, GO, HZ, H8],
+    ] {
         for card in acard_stich {
             stichseq.zugeben_custom_winner_index(card, |_stich| epi_irrelevant);
         }
@@ -194,20 +244,20 @@ fn test_all_possible_hands() {
         [
             (E9, vec![EA, GK, SK, SA], 34650, [4, 4, 4, 4]),
             (EK, vec![EA, GK, SK, SA], 11550, [3, 4, 4, 4]),
-            (E8, vec![EA, GK, SK, SA], 4200,  [3, 3, 4, 4]),
-            (EA, vec![EA, GK, SK, SA], 1680,  [3, 3, 3, 4]),
+            (E8, vec![EA, GK, SK, SA], 4200, [3, 3, 4, 4]),
+            (EA, vec![EA, GK, SK, SA], 1680, [3, 3, 3, 4]),
         ],
         [
             (SA, vec![HA, GK, SK], 1680, [3, 3, 3, 3]),
-            (EU, vec![HA, GK, SK], 560,  [2, 3, 3, 3]),
-            (SO, vec![HA, GK, SK], 210,  [2, 2, 3, 3]),
-            (HA, vec![HA, GK, SK], 90,   [2, 2, 2, 3]),
+            (EU, vec![HA, GK, SK], 560, [2, 3, 3, 3]),
+            (SO, vec![HA, GK, SK], 210, [2, 2, 3, 3]),
+            (HA, vec![HA, GK, SK], 90, [2, 2, 2, 3]),
         ],
         [
             (H9, vec![GK, SK], 90, [2, 2, 2, 2]),
             (GZ, vec![GK, SK], 30, [1, 2, 2, 2]),
             (GU, vec![GK, SK], 12, [1, 1, 2, 2]),
-            (GK, vec![GK, SK], 6,  [1, 1, 1, 2]),
+            (GK, vec![GK, SK], 6, [1, 1, 1, 2]),
         ],
         [
             (EZ, vec![SK], 6, [1, 1, 1, 1]),
@@ -223,12 +273,14 @@ fn test_all_possible_hands() {
                     SHand::new_from_iter(veccard_hand.iter().copied()).to_ahand(epi_fixed),
                     epi_fixed,
                 )
-                    .inspect(|ahand| assert_eq!(EnumMap::from_raw(an_size_hand), ahand.map(|hand| hand.cards().len())))
-                    .count(),
+                .inspect(|ahand| assert_eq!(
+                    EnumMap::from_raw(an_size_hand),
+                    ahand.map(|hand| hand.cards().len())
+                ))
+                .count(),
                 n_hand_count
             );
             stichseq.zugeben_custom_winner_index(card, |_stich| epi_irrelevant);
         }
     }
 }
-
