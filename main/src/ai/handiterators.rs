@@ -45,8 +45,7 @@ impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
         if_then_some!(self.b_valid, {
             let mut ahand = self.ahand_known.clone();
             for (i, epi) in self.vecepi.iter().copied().enumerate() {
-                assert_ne!(epi, self.epi_fixed); // TODO introduce verify_ne
-                ahand[epi].add_card(self.veccard_unknown[i]);
+                ahand[verify_ne!(epi, self.epi_fixed)].add_card(self.veccard_unknown[i]);
             }
             self.b_valid = NextVecEPI::next(self.vecepi.as_mut_slice());
             ahand

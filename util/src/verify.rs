@@ -63,6 +63,20 @@ macro_rules! debug_verify_eq {($e: expr, $e_chk: expr) => {
     if_dbg_else!({verify_eq!($e, $e_chk)}{$e})
 }}
 
+#[macro_export]
+macro_rules! verify_ne {
+    ($e: expr, $e_chk: expr) => {{
+        let e = $e;
+        assert_ne!(e, $e_chk);
+        e
+    }};
+}
+
+#[macro_export]
+macro_rules! debug_verify_ne {($e: expr, $e_chk: expr) => {
+    if_dbg_else!({verify_ne!($e, $e_chk)}{$e})
+}}
+
 #[test]
 fn test_verify() {
     verify!(Some(4));

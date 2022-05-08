@@ -116,10 +116,9 @@ pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag<
 
 impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
     pub fn new(epi: EPlayerIndex, efarbe: EFarbe, payoutparams: SPayoutDeciderParams) -> SRulesRufspiel {
-        assert_ne!(efarbe, EFarbe::Herz);
         SRulesRufspiel {
             epi,
-            efarbe,
+            efarbe: verify_ne!(efarbe, EFarbe::Herz),
             rufspielpayout: SRufspielPayout {
                 payoutdecider: SPayoutDeciderPointBased::new(payoutparams, SPointsToWin61{}),
             },

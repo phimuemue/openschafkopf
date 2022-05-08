@@ -100,8 +100,7 @@ fn payouthints_point_based(
             b_premature_winner_is_primary_party,
         )
             .map(|n_payout| {
-                 assert_ne!(0, *n_payout);
-                 SInterval::from_tuple(tpl_flip_if(0<*n_payout, (None, Some(*n_payout))))
+                 SInterval::from_tuple(tpl_flip_if(0<verify_ne!(*n_payout, 0), (None, Some(*n_payout))))
             })
     };
     if /*b_premature_winner_is_primary_party*/ mapbn_points[/*b_primary*/true] >= pointstowin.points_to_win() {

@@ -245,8 +245,7 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderTout {
                 /*b_primary_party_wins*/ false,
             )
                 .map(|n_payout| {
-                     assert_ne!(0, *n_payout);
-                     SInterval::from_tuple(tpl_flip_if(0<*n_payout, (None, Some(*n_payout))))
+                     SInterval::from_tuple(tpl_flip_if(0<verify_ne!(*n_payout, 0), (None, Some(*n_payout))))
                 })
         } else {
             EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
@@ -373,8 +372,7 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderSie {
                 /*b_primary_party_wins*/ false,
             )
                 .map(|n_payout| {
-                     assert_ne!(0, *n_payout);
-                     SInterval::from_tuple(tpl_flip_if(0<*n_payout, (None, Some(*n_payout))))
+                     SInterval::from_tuple(tpl_flip_if(0<verify_ne!(*n_payout, 0), (None, Some(*n_payout))))
                 })
         } else {
             EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
