@@ -133,7 +133,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         },
                     },
                 )
-            };
+            }.ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
             let (vecoutputline, aformatinfo) = table(
                 &determinebestcardresult,
                 /*fn_human_readable_payout*/&|f_payout| {

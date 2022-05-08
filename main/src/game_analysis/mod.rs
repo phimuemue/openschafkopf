@@ -104,7 +104,7 @@ pub fn analyze_game(
             if game.stichseq.remaining_cards_per_hand()[epi] <= n_max_remaining_cards {
                 let determinebestcard = SDetermineBestCard::new_from_game(game);
                 macro_rules! look_for_mistakes{($itahand: expr$(,)?) => {{
-                    let determinebestcardresult = determine_best_card(
+                    let determinebestcardresult = unwrap!(determine_best_card(
                         &determinebestcard,
                         $itahand,
                         equivalent_cards_filter(
@@ -114,7 +114,7 @@ pub fn analyze_game(
                         ),
                         &SMinReachablePayout::new_from_game(game),
                         /*fn_visualizer*/|_,_,_| SNoVisualization,
-                    );
+                    ));
                     let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value();
                     (
                         determinebestcardresult.clone(),

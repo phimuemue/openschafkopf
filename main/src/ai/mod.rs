@@ -147,7 +147,7 @@ impl SAi {
                 determinebestcard.stichseq.remaining_cards_per_hand()[epi_fixed] - 1 // ERemainingCards starts with 1
             ));
             use ERemainingCards::*;
-            *unwrap!(cartesian_match!(
+            *unwrap!(unwrap!(cartesian_match!(
                 forward_to_determine_best_card,
                 match (eremainingcards) {
                     _1|_2|_3 => (
@@ -177,7 +177,7 @@ impl SAi {
                             .take(n_suggest_card_samples)
                     },
                 },
-            ).cards_with_maximum_value().0.first())
+            )).cards_with_maximum_value().0.first())
         }
     }
 }
@@ -304,7 +304,7 @@ pub fn determine_best_card<
     fn_make_filter: impl Fn()->FilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
-) -> SDetermineBestCardResult<SPayoutStatsPerStrategy>
+) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>>
     where
         ForEachSnapshot::Output: std::fmt::Debug + Send,
 {
@@ -362,13 +362,15 @@ pub fn determine_best_card<
         unwrap!(Arc::try_unwrap(mapcardooutput)) // "Returns the contained value, if the Arc has exactly one strong reference"   
             .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
     );
-    assert!(<SCard as TPlainEnum>::values().any(|card| {
-        determinebestcard.veccard_allowed.contains(&card) && mapcardooutput[card].is_some()
-    }));
-    SDetermineBestCardResult{
-        veccard_allowed: determinebestcard.veccard_allowed.clone(),
-        mapcardt: mapcardooutput,
-    }
+    if_then_some!(mapcardooutput.iter().any(Option::is_some), {
+        assert!(<SCard as TPlainEnum>::values().all(|card| {
+            !determinebestcard.veccard_allowed.contains(&card) || mapcardooutput[card].is_some()
+        }));
+        SDetermineBestCardResult{
+            veccard_allowed: determinebestcard.veccard_allowed.clone(),
+            mapcardt: mapcardooutput,
+        }
+    })
 }
 
 pub fn branching_factor(fn_stichseq_to_intvl: impl Fn(&SStichSequence)->(usize, usize)) -> impl Fn(&SStichSequence, &mut SHandVector) {
@@ -517,13 +519,13 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
     ) {
         assert!(!game.current_playable_stich().is_full());
         let determinebestcard = SDetermineBestCard::new_from_game(&game);
-        let determinebestcardresult = determine_best_card(
+        let determinebestcardresult = unwrap!(determine_best_card(
             &determinebestcard,
             std::iter::once(ahand),
             /*fn_make_filter*/|| branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout::new_from_game(&game),
             /*fn_visualizer*/|_,_,_| SNoVisualization,
-        );
+        ));
         for card in [H7, H8, H9] {
             assert!(determinebestcard.veccard_allowed.contains(&card));
             assert_eq!(
