@@ -85,7 +85,7 @@ pub fn with_common_args(
                     let n_cards_total = ekurzlang.cards_per_player()*EPlayerIndex::SIZE;
                     if stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total {
                         let an_remaining = stichseq.remaining_cards_per_hand();
-                        let mut ai_card = an_remaining.clone();
+                        let mut ai_card = an_remaining.explicit_clone();
                         let mut n_remaining = 0;
                         for epi in EPlayerIndex::values() {
                             ai_card[epi] += n_remaining;
