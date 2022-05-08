@@ -96,7 +96,7 @@ pub fn with_common_args(
                             SHand::new_from_iter(
                                 vecocard_hand[i_lo..i_hi].iter()
                                     .copied()
-                                    .filter_map(|ocard| ocard)
+                                    .flatten()
                             )
                         };
                         let ahand = EPlayerIndex::map_from_raw([
