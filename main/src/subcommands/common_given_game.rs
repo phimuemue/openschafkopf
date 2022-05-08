@@ -159,32 +159,69 @@ pub fn with_common_args(
         &hand_fixed,
     );
     assert_eq!(epi_fixed, determinebestcard.epi_fixed);
-    assert_eq!(mapepin_cards_per_hand[epi_fixed], hand_fixed.cards().len());
-    macro_rules! forward{(($itahand: expr), ) => { // TODORUST generic closures
+    for epi in EPlayerIndex::values() {
+        assert!(ahand_fixed[epi].cards().len() <= mapepin_cards_per_hand[epi]);
+    }
+    assert_eq!(ahand_fixed[epi_fixed].cards().len(), mapepin_cards_per_hand[epi_fixed]);
+    macro_rules! forward{($n_ahand_total: expr, $itahand_factory: expr, $fn_take: expr) => {{ // TODORUST generic closures
+        let mut n_ahand_seen = 0;
+        let mut n_ahand_valid = 0;
         withcommanargs.call(
             rules,
-            Box::new($itahand),
+            Box::new($fn_take($itahand_factory(
+                stichseq,
+                ahand_fixed,
+                epi_fixed,
+                rules,
+                /*fn_inspect*/|b_valid_so_far, ahand| {
+                    n_ahand_seen += 1;
+                    let b_valid = b_valid_so_far
+                        && oconstraint.as_ref().map_or(true, |relation|
+                            relation.eval(ahand, rules)
+                        );
+                    if b_valid {
+                        n_ahand_valid += 1;
+                    }
+                    if b_verbose {
+                        println!("{} {}/{}/{} {}",
+                            if b_valid {
+                                '>'
+                            } else {
+                                '|'
+                            },
+                            n_ahand_valid,
+                            n_ahand_seen,
+                            $n_ahand_total,
+                            ahand.iter().join(" | "),
+                        )
+                    }
+                    b_valid
+                }
+            ))),
             eremainingcards,
             determinebestcard,
             b_verbose,
         )
-    }}
-    cartesian_match!(forward,
-        match (iteratehands) {
-            All => (
-                all_possible_hands(stichseq, ahand_fixed, epi_fixed, rules)
-                    .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
-                        relation.eval(ahand, rules)
-                    ))
-            ),
-            Sample(n_samples) => (
-                forever_rand_hands(stichseq, ahand_fixed, epi_fixed, rules)
-                    .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
-                        relation.eval(ahand, rules)
-                    ))
-                    .take(n_samples)
-            ),
+    }}}
+    match iteratehands {
+        All => {
+            let mut n_cards_unknown = mapepin_cards_per_hand.iter().sum::<usize>()
+                - ahand_fixed.iter().map(|hand| hand.cards().len()).sum::<usize>();
+            let n_ahand_total = EPlayerIndex::values()
+                .fold(1u64, |n_ahand_total, epi| {
+                    let n_cards_sampled = mapepin_cards_per_hand[epi]-ahand_fixed[epi].cards().len();
+                    let n_binom = num_integer::binomial(
+                        n_cards_unknown.as_num::<u64>(),
+                        n_cards_sampled.as_num::<u64>(),
+                    );
+                    n_cards_unknown -= n_cards_sampled;
+                    n_ahand_total*n_binom
+                });
+            forward!(n_ahand_total, internal_all_possible_hands, |itahand| itahand)
         },
-    )
+        Sample(n_samples) => {
+            forward!(n_samples, internal_forever_rand_hands, |itahand| Iterator::take(itahand, n_samples))
+        },
+    }
 }
 

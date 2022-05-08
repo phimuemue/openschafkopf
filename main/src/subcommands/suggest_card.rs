@@ -57,11 +57,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     determine_best_card(
                         &determinebestcard,
                         itahand
-                            .inspect(|ahand| {
-                                if b_verbose { // TODO? dispatch statically
-                                    println!("{}", ahand.iter().join(" | "));
-                                }
-                            })
                             .flat_map(|ahand| {
                                 itertools::repeat_n(
                                     ahand,
