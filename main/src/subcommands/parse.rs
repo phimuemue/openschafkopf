@@ -1,4 +1,4 @@
-use crate::subcommands::analyze::analyze_sauspiel_html; // TODO move functions to own module
+use crate::game_analysis::parser::analyze_sauspiel_html;
 use crate::game::*;
 use crate::rules::{
     SRuleStateCache,

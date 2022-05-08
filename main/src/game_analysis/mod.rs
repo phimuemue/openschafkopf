@@ -11,6 +11,7 @@ use std::{
 };
 
 pub mod determine_best_card_table;
+pub mod parser;
 
 pub trait TPayoutDeciderSoloLikeDefault : TPayoutDeciderSoloLike {
     fn default_payoutdecider(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self;

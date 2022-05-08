@@ -1,7 +1,7 @@
 use futures::prelude::*;
 
 use crate::util::*;
-use crate::subcommands::analyze::analyze_sauspiel_html; // TODO? own, shared module
+use crate::game_analysis::parser::analyze_sauspiel_html;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     clap::Command::new(str_subcommand)
