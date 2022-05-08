@@ -311,7 +311,7 @@ pub fn generate_analysis_html(
             let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
             let hand_to_command_line = |hand: &SHand| hand.cards().iter().join(" ");
             let mut str_per_card = format!(r###"<h3>{} <button onclick='copyToClipboard("{}", this)'>&#128203</button></h3>"###,
-                stich_caption(&stichseq),
+                stich_caption(stichseq),
                 format!("{str_exe} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand}\" --branching \"equiv7\"",
                     // TODO error handling
                     str_exe=unwrap!(unwrap!(unwrap!(std::env::current_exe()).canonicalize()).to_str()),
@@ -324,8 +324,8 @@ pub fn generate_analysis_html(
                 ).replace("\"", "\\\""),
             );
             str_per_card += &format!("<table><tr>{}{}</tr></table>",
-                player_table_stichseq(epi_self, &stichseq),
-                player_table_ahand(epi_self, &ahand, game.rules.as_ref()),
+                player_table_stichseq(epi_self, stichseq),
+                player_table_ahand(epi_self, ahand, game.rules.as_ref()),
             );
             str_per_card += "<table>";
             for (atplstrf, grpoutputline) in vecoutputline.iter()

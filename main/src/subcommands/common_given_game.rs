@@ -148,7 +148,7 @@ pub fn with_common_args(
     let hand_fixed = ahand_fixed[epi_fixed].clone(); // TODO can we get rid of this?
     let determinebestcard =  SDetermineBestCard::new(
         rules,
-        &stichseq,
+        stichseq,
         &hand_fixed,
     );
     assert_eq!(epi_fixed, determinebestcard.epi_fixed);
@@ -167,20 +167,20 @@ pub fn with_common_args(
     cartesian_match!(forward,
         match ((oiteratehands, eremainingcards)) {
             (Some(All), _)|(None, _1|_2|_3|_4) => (
-                all_possible_hands(&stichseq, ahand_fixed, epi_fixed, rules)
+                all_possible_hands(stichseq, ahand_fixed, epi_fixed, rules)
                     .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
                         relation.eval(ahand, rules)
                     ))
             ),
             (Some(Sample(n_samples)), _) => (
-                forever_rand_hands(&stichseq, ahand_fixed, epi_fixed, rules)
+                forever_rand_hands(stichseq, ahand_fixed, epi_fixed, rules)
                     .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
                         relation.eval(ahand, rules)
                     ))
                     .take(n_samples)
             ),
             (None, _5|_6|_7|_8) => (
-                forever_rand_hands(&stichseq, ahand_fixed, epi_fixed, rules)
+                forever_rand_hands(stichseq, ahand_fixed, epi_fixed, rules)
                     .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
                         relation.eval(ahand, rules)
                     ))
