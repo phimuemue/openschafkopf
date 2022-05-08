@@ -2,7 +2,6 @@ use crate::ai::{*, handiterators::*};
 use crate::game::SStichSequence;
 use crate::primitives::*;
 use crate::util::*;
-use crate::rules::*;
 use itertools::Itertools;
 
 pub use super::handconstraint::*;
@@ -26,7 +25,6 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
 pub trait TWithCommonArgs {
     fn call<'rules>(
         self,
-        rules: &'rules dyn TRules,
         itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
         eremainingcards: ERemainingCards,
         determinebestcard: SDetermineBestCard,
@@ -152,7 +150,7 @@ pub fn with_common_args(
             _5|_6|_7|_8 => Sample(50),
         }
     });
-    let hand_fixed = ahand_fixed[epi_fixed].clone(); // TODO can we get rid of this?
+    let hand_fixed = ahand_fixed[epi_fixed].clone();
     let determinebestcard =  SDetermineBestCard::new(
         rules,
         stichseq,
@@ -167,7 +165,6 @@ pub fn with_common_args(
         let mut n_ahand_seen = 0;
         let mut n_ahand_valid = 0;
         withcommanargs.call(
-            rules,
             Box::new($fn_take($itahand_factory(
                 stichseq,
                 ahand_fixed,

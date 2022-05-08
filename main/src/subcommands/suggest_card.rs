@@ -1,7 +1,6 @@
 use crate::ai::{*, suspicion::*};
 use crate::primitives::*;
 use crate::util::*;
-use crate::rules::*;
 use itertools::*;
 use crate::game::SStichSequence;
 use crate::game_analysis::determine_best_card_table::{table, SOutputLine, SFormatInfo};
@@ -24,7 +23,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     impl<'argmatches> TWithCommonArgs for SWithCommonArgs<'argmatches> {
         fn call<'rules>(
             self,
-            rules_raw: &'rules dyn TRules,
             itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
             eremainingcards: ERemainingCards,
             determinebestcard: SDetermineBestCard,
@@ -32,11 +30,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         ) -> Result<(), Error> {
             let clapmatches = self.clapmatches;
             let otplrulesfn_points_as_payout = if clapmatches.is_present("points") {
-                if let Some(tplrulesfn_points_as_payout) = rules_raw.points_as_payout() {
+                if let Some(tplrulesfn_points_as_payout) = determinebestcard.rules.points_as_payout() {
                     Some(tplrulesfn_points_as_payout)
                 } else {
                     if b_verbose { // TODO? dispatch statically
-                        println!("Rules {} do not support point based variant.", rules_raw);
+                        println!("Rules {} do not support point based variant.", determinebestcard.rules);
                     }
                     None
                 }
@@ -48,7 +46,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 ofn_payout_to_points = Some(fn_payout_to_points);
                 rules.as_ref()
             } else {
-                rules_raw
+                determinebestcard.rules
             };
             let epi_fixed = determinebestcard.epi_fixed;
             let determinebestcardresult = { // we are interested in payout => single-card-optimization useless

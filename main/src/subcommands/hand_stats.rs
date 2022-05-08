@@ -1,6 +1,5 @@
 use crate::ai::*;
 use crate::primitives::*;
-use crate::rules::*;
 use crate::util::*;
 
 use super::common_given_game::*;
@@ -17,10 +16,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     impl<'argmatches> TWithCommonArgs for SWithCommonArgs<'argmatches> {
         fn call<'rules>(
             self,
-            rules: &'rules dyn TRules,
             itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
             _eremainingcards: ERemainingCards,
-            _determinebestcard: SDetermineBestCard,
+            determinebestcard: SDetermineBestCard,
             _b_verbose: bool,
         ) -> Result<(), Error> {
             let clapmatches = self.clapmatches;
@@ -44,7 +42,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     .entry(
                         vecconstraint.iter()
                             .map(|constraint| 
-                                constraint.internal_eval(&ahand, rules, VInspectValue::Bool, VInspectValue::Usize),
+                                constraint.internal_eval(&ahand, determinebestcard.rules, VInspectValue::Bool, VInspectValue::Usize),
                             )
                             .collect()
                     )
