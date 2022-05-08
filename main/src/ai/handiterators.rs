@@ -125,52 +125,56 @@ fn make_handiterator<NextVecEPI: TNextVecEPI>(
     }
 }
 
-fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVecEPI + 'lifetime>(
+fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVecEPI + 'lifetime, FnInspect: FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime>(
     stichseq: &'lifetime SStichSequence,
     ahand_known: EnumMap<EPlayerIndex, SHand>,
     epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
+    mut fn_inspect: FnInspect,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     make_handiterator::<NextVecEPI>(stichseq, ahand_known, epi_fixed).filter(move |ahand| {
-        let stich_current = stichseq.current_stich();
-        assert!(!stich_current.is_full());
-        assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
-        // hands must not contain other cards preventing farbe/trumpf frei
-        let mut ahand_simulate = EPlayerIndex::map_from_fn(|epi| {
-            let mut veccard = ahand[epi].cards().clone();
-            veccard.extend(stich_current.get(epi).copied().into_iter());
-            veccard.extend(
-                stichseq
-                    .completed_stichs()
-                    .iter()
-                    .rev()
-                    .map(|stich| stich[epi]),
-            );
-            assert_eq!(veccard.len(), stichseq.kurzlang().cards_per_player());
-            SHand::new_from_vec(veccard)
-        });
-        rules.playerindex().map_or(true, |epi_active| {
-            rules.can_be_played(SFullHand::new(
-                ahand_simulate[epi_active].cards(),
-                stichseq.kurzlang(),
-            ))
-        }) && {
-            let mut b_valid_up_to_now = true;
-            let mut stichseq_simulate = SStichSequence::new(stichseq.kurzlang());
-            'loopstich: for stich in stichseq.visible_stichs() {
-                for (epi, card) in stich.iter() {
-                    if rules.card_is_allowed(&stichseq_simulate, &ahand_simulate[epi], *card) {
-                        assert!(ahand_simulate[epi].contains(*card));
-                        ahand_simulate[epi].play_card(*card);
-                        stichseq_simulate.zugeben(*card, rules);
-                    } else {
-                        b_valid_up_to_now = false;
-                        break 'loopstich;
+        let b_valid = {
+            let stich_current = stichseq.current_stich();
+            assert!(!stich_current.is_full());
+            assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
+            // hands must not contain other cards preventing farbe/trumpf frei
+            let mut ahand_simulate = EPlayerIndex::map_from_fn(|epi| {
+                let mut veccard = ahand[epi].cards().clone();
+                veccard.extend(stich_current.get(epi).copied().into_iter());
+                veccard.extend(
+                    stichseq
+                        .completed_stichs()
+                        .iter()
+                        .rev()
+                        .map(|stich| stich[epi]),
+                );
+                assert_eq!(veccard.len(), stichseq.kurzlang().cards_per_player());
+                SHand::new_from_vec(veccard)
+            });
+            rules.playerindex().map_or(true, |epi_active| {
+                rules.can_be_played(SFullHand::new(
+                    ahand_simulate[epi_active].cards(),
+                    stichseq.kurzlang(),
+                ))
+            }) && {
+                let mut b_valid_up_to_now = true;
+                let mut stichseq_simulate = SStichSequence::new(stichseq.kurzlang());
+                'loopstich: for stich in stichseq.visible_stichs() {
+                    for (epi, card) in stich.iter() {
+                        if rules.card_is_allowed(&stichseq_simulate, &ahand_simulate[epi], *card) {
+                            assert!(ahand_simulate[epi].contains(*card));
+                            ahand_simulate[epi].play_card(*card);
+                            stichseq_simulate.zugeben(*card, rules);
+                        } else {
+                            b_valid_up_to_now = false;
+                            break 'loopstich;
+                        }
                     }
                 }
+                b_valid_up_to_now
             }
-            b_valid_up_to_now
-        }
+        };
+        fn_inspect(b_valid, ahand) && b_valid
     })
 }
 
@@ -195,31 +199,65 @@ impl TToAHand for SHand {
     }
 }
 
-pub fn all_possible_hands<'lifetime>(
+pub fn internal_all_possible_hands<'lifetime>(
     stichseq: &'lifetime SStichSequence,
-    tohand: impl TToAHand,
+    tohand: impl TToAHand + 'lifetime,
     epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
+    fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SNextVecEPIPermutation>(
+    make_handiterator_compatible_with_game_so_far::<SNextVecEPIPermutation, _>(
         stichseq,
         tohand.to_ahand(epi_fixed),
         epi_fixed,
         rules,
+        fn_inspect,
+    )
+}
+
+pub fn all_possible_hands<'lifetime>(
+    stichseq: &'lifetime SStichSequence,
+    tohand: impl TToAHand + 'lifetime,
+    epi_fixed: EPlayerIndex,
+    rules: &'lifetime dyn TRules,
+) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+    internal_all_possible_hands(
+        stichseq,
+        tohand,
+        epi_fixed,
+        rules,
+        /*fn_inspect*/|_b_valid, _ahand| true,
+    )
+}
+
+pub fn internal_forever_rand_hands<'lifetime>(
+    stichseq: &'lifetime SStichSequence,
+    tohand: impl TToAHand,
+    epi_fixed: EPlayerIndex,
+    rules: &'lifetime dyn TRules,
+    fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
+) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
+    make_handiterator_compatible_with_game_so_far::<SNextVecEPIShuffle, _>(
+        stichseq,
+        tohand.to_ahand(epi_fixed),
+        epi_fixed,
+        rules,
+        fn_inspect,
     )
 }
 
 pub fn forever_rand_hands<'lifetime>(
     stichseq: &'lifetime SStichSequence,
-    tohand: impl TToAHand,
+    tohand: impl TToAHand + 'lifetime,
     epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SNextVecEPIShuffle>(
+    internal_forever_rand_hands(
         stichseq,
-        tohand.to_ahand(epi_fixed),
+        tohand,
         epi_fixed,
         rules,
+        /*fn_inspect*/|_b_valid, _ahand| true,
     )
 }
 
