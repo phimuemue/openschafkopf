@@ -133,9 +133,11 @@ pub fn with_common_args(
         }
         relation
     });
+    let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
+    let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
+    let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(mapepin_cards_per_hand[epi_fixed] - 1));
     use VChooseItAhand::*;
-    use ERemainingCards::*;
-    let oiteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
+    let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
         if "all"==str_itahand.to_lowercase() {
             All
         } else if let Ok(n_samples)=str_itahand.parse() {
@@ -143,8 +145,13 @@ pub fn with_common_args(
         } else {
             bail!("Failed to parse simulate_hands");
         }
-    );
-    let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
+    ).unwrap_or_else(|| {
+        use ERemainingCards::*;
+        match eremainingcards {
+            _1|_2|_3|_4 => All,
+            _5|_6|_7|_8 => Sample(50),
+        }
+    });
     let hand_fixed = ahand_fixed[epi_fixed].clone(); // TODO can we get rid of this?
     let determinebestcard =  SDetermineBestCard::new(
         rules,
@@ -152,9 +159,7 @@ pub fn with_common_args(
         &hand_fixed,
     );
     assert_eq!(epi_fixed, determinebestcard.epi_fixed);
-    let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
     assert_eq!(mapepin_cards_per_hand[epi_fixed], hand_fixed.cards().len());
-    let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(mapepin_cards_per_hand[epi_fixed] - 1));
     macro_rules! forward{(($itahand: expr), ) => { // TODORUST generic closures
         withcommanargs.call(
             rules,
@@ -165,26 +170,19 @@ pub fn with_common_args(
         )
     }}
     cartesian_match!(forward,
-        match ((oiteratehands, eremainingcards)) {
-            (Some(All), _)|(None, _1|_2|_3|_4) => (
+        match (iteratehands) {
+            All => (
                 all_possible_hands(stichseq, ahand_fixed, epi_fixed, rules)
                     .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
                         relation.eval(ahand, rules)
                     ))
             ),
-            (Some(Sample(n_samples)), _) => (
+            Sample(n_samples) => (
                 forever_rand_hands(stichseq, ahand_fixed, epi_fixed, rules)
                     .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
                         relation.eval(ahand, rules)
                     ))
                     .take(n_samples)
-            ),
-            (None, _5|_6|_7|_8) => (
-                forever_rand_hands(stichseq, ahand_fixed, epi_fixed, rules)
-                    .filter(|ahand| oconstraint.as_ref().map_or(true, |relation|
-                        relation.eval(ahand, rules)
-                    ))
-                    .take(/*n_suggest_card_samples*/50)
             ),
         },
     )
