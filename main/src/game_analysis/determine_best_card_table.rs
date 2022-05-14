@@ -27,7 +27,9 @@ pub fn table(
 ) -> (Vec<SOutputLine>, usize/*n_max_cards*/, [SFormatInfo; N_COLUMNS]) {
     let mut n_max_cards = 0;
     let mut veccardminmax = determinebestcardresult.cards_and_ts().collect::<Vec<_>>();
-    veccardminmax.sort_unstable_by_key(|&(_card, minmax)| minmax);
+    veccardminmax.sort_unstable_by(|&(_card_lhs, minmax_lhs), &(_card_rhs, minmax_rhs)| {
+        minmax_lhs.compare_canonical(minmax_rhs)
+    });
     veccardminmax.reverse(); // descending
     let mut vecoutputline : Vec<SOutputLine> = Vec::new();
     let mut aformatinfo = [

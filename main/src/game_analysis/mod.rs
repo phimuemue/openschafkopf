@@ -116,7 +116,7 @@ pub fn analyze_game(
                         &SMinReachablePayout::new_from_game(game),
                         /*fn_visualizer*/|_,_,_| SNoVisualization,
                     ));
-                    let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value();
+                    let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(SPayoutStatsPerStrategy::compare_canonical);
                     (
                         determinebestcardresult.clone(),
                         if 

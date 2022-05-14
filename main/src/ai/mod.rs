@@ -177,7 +177,7 @@ impl SAi {
                             .take(n_suggest_card_samples)
                     },
                 },
-            )).cards_with_maximum_value().0.first())
+            )).cards_with_maximum_value(/*TODO? good idea*/SPayoutStatsPerStrategy::compare_canonical).0.first())
         }
     }
 }
@@ -193,9 +193,12 @@ impl<T> SDetermineBestCardResult<T> {
         self.veccard_allowed.iter()
             .map(move |card| (*card, unwrap!(self.mapcardt[*card].as_ref())))
     }
-    pub fn cards_with_maximum_value(&self) -> (Vec<SCard>, &T) where T: std::fmt::Debug + Ord {
+    pub fn cards_with_maximum_value(&self, mut fn_cmp: impl FnMut(&T, &T)->std::cmp::Ordering) -> (Vec<SCard>, &T) where T: std::fmt::Debug {
         let veccard = self.veccard_allowed.iter().copied()
-            .max_set_by_key(|card| unwrap!(self.mapcardt[*card].as_ref()));
+            .max_set_by(|card_lhs, card_rhs| fn_cmp(
+                unwrap!(self.mapcardt[*card_lhs].as_ref()),
+                unwrap!(self.mapcardt[*card_rhs].as_ref()),
+            ));
         assert!(!veccard.is_empty());
         let t = unwrap!(self.mapcardt[veccard[0]].as_ref());
         (veccard, t)
@@ -256,13 +259,8 @@ impl SPayoutStatsPerStrategy {
     }
 }
 
-impl std::cmp::PartialOrd for SPayoutStatsPerStrategy {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-impl std::cmp::Ord for SPayoutStatsPerStrategy {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+impl SPayoutStatsPerStrategy {
+    pub fn compare_canonical(&self, other: &Self) -> std::cmp::Ordering {
         use std::cmp::Ordering::*;
         macro_rules! internal_cmp{($field:ident) => {
             // prioritize positive vs non-positive and zero vs negative payouts.
