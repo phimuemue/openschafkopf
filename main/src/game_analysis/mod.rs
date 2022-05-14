@@ -46,6 +46,7 @@ pub fn make_stich_vector(vectplepiacard_stich: &[(EPlayerIndex, [SCard; 4])]) ->
 pub struct SAnalysisCardAndPayout {
     pub veccard: Vec<SCard>,
     pub n_payout: isize,
+    pub eminmaxstrategy: EMinMaxStrategy,
 }
 
 #[derive(Clone)]
@@ -117,25 +118,28 @@ pub fn analyze_game(
                         &SMinReachablePayout::new_from_game(game),
                         /*fn_visualizer*/|_,_,_| SNoVisualization,
                     ));
-                    let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(
-                        |minmax_lhs, minmax_rhs| minmax_lhs.0[EMinMaxStrategy::Min].min().cmp(&minmax_rhs.0[EMinMaxStrategy::Min].min())
-                    );
-                    (
-                        determinebestcardresult.clone(),
+                    let mut ocardandpayout = None;
+                    for eminmaxstrategy in [EMinMaxStrategy::Min, EMinMaxStrategy::SelfishMin].into_iter() {
+                        assert!(ocardandpayout.is_none());
+                        let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(
+                            |minmax_lhs, minmax_rhs| minmax_lhs.0[eminmaxstrategy].min().cmp(&minmax_rhs.0[eminmaxstrategy].min())
+                        );
                         if 
-                            an_payout[epi]<minmax.0[EMinMaxStrategy::Min].min()
+                            an_payout[epi]<minmax.0[eminmaxstrategy].min()
                             && !veccard.contains(&card_played) // TODO can we improve this?
                         {
-                            Some(SAnalysisCardAndPayout{
+                            ocardandpayout = Some(SAnalysisCardAndPayout{
                                 veccard,
-                                n_payout: minmax.0[EMinMaxStrategy::Min].min(),
-                            })
+                                n_payout: minmax.0[eminmaxstrategy].min(),
+                                eminmaxstrategy,
+                            });
+                            break;
                         } else {
                             // The decisive mistake must occur in subsequent stichs.
                             // TODO assert that it actually occurs
-                            None
                         }
-                    )
+                    }
+                    (determinebestcardresult.clone(), ocardandpayout)
                 }}}
                 let look_for_mistakes_simulating = || {
                     look_for_mistakes!(all_possible_hands(
@@ -187,8 +191,8 @@ pub fn analyze_game(
             &unwrap!(game.clone().finish()).an_payout,
             &vecanalysispercard,
         ),
-        n_findings_cheating: itanalysisimpr.clone().count(),
-        n_findings_simulating: itanalysisimpr.clone()
+        n_findings_cheating: itanalysisimpr.clone().count(), // TODO distinguish eminmaxstrategy
+        n_findings_simulating: itanalysisimpr.clone() // TODO distinguish eminmaxstrategy
             .filter(|analysisimpr| matches!(analysisimpr.improvementsimulating, VImprovementSimulating::Found(_)))
             .count(),
         duration: instant_begin.elapsed(),
@@ -274,13 +278,18 @@ pub fn generate_analysis_html(
             let mut str_analysisimpr = format!(
                 r###"<li>
                     {str_stich_caption}:
-                    Bei gegebener Kartenverteilung: {str_card_suggested_cheating} garantierter Mindestgewinn: {n_payout_cheating} (statt {n_payout_real}).
+                    Bei gegebener Kartenverteilung: {str_card_suggested_cheating} {str_gewinn}: {n_payout_cheating} (statt {n_payout_real}).
                 </li>"###,
                 str_stich_caption=stich_caption(stichseq),
                 str_card_suggested_cheating = analysisimpr.cardandpayout_cheating.veccard
                     .iter()
                     .map(SCard::to_string)
                     .join(", "),
+                str_gewinn = match analysisimpr.cardandpayout_cheating.eminmaxstrategy {
+                    EMinMaxStrategy::Min => "garantierter Mindestgewinn",
+                    EMinMaxStrategy::SelfishMin => "Mindestgewinn, wenn jeder Spieler optimal spielt",
+                    EMinMaxStrategy::SelfishMax|EMinMaxStrategy::Max => panic!("Unsupported EMinMaxStrategy.")
+                },
                 n_payout_cheating = analysisimpr.cardandpayout_cheating.n_payout,
                 n_payout_real = mapepin_payout[epi],
             );
@@ -288,13 +297,18 @@ pub fn generate_analysis_html(
                 str_analysisimpr += &format!(
                     r###"
                         <ul><li>
-                        Bei unbekannter Kartenverteilung: {str_card_suggested} garantierter Mindestgewinn {n_payout} (statt {n_payout_real}).
+                        Bei unbekannter Kartenverteilung: {str_card_suggested} {str_gewinn}: {n_payout} (statt {n_payout_real}).
                         </ul></li>
                     </li>"###,
                     str_card_suggested = cardandpayout.veccard
                         .iter()
                         .map(SCard::to_string)
                         .join(", "),
+                    str_gewinn = match cardandpayout.eminmaxstrategy {
+                        EMinMaxStrategy::Min => "garantierter Mindestgewinn",
+                        EMinMaxStrategy::SelfishMin => "Mindestgewinn, wenn jeder Spieler optimal spielt",
+                        EMinMaxStrategy::SelfishMax|EMinMaxStrategy::Max => panic!("Unsupported EMinMaxStrategy.")
+                    },
                     n_payout = cardandpayout.n_payout,
                     n_payout_real = mapepin_payout[epi],
                 );
