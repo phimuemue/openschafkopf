@@ -118,17 +118,17 @@ pub fn analyze_game(
                         /*fn_visualizer*/|_,_,_| SNoVisualization,
                     ));
                     let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(
-                        |minmax_lhs, minmax_rhs| minmax_lhs.t_min.min().cmp(&minmax_rhs.t_min.min())
+                        |minmax_lhs, minmax_rhs| minmax_lhs.0[EMinMaxStrategy::Min].min().cmp(&minmax_rhs.0[EMinMaxStrategy::Min].min())
                     );
                     (
                         determinebestcardresult.clone(),
                         if 
-                            an_payout[epi]<minmax.t_min.min()
+                            an_payout[epi]<minmax.0[EMinMaxStrategy::Min].min()
                             && !veccard.contains(&card_played) // TODO can we improve this?
                         {
                             Some(SAnalysisCardAndPayout{
                                 veccard,
-                                n_payout: minmax.t_min.min(),
+                                n_payout: minmax.0[EMinMaxStrategy::Min].min(),
                             })
                         } else {
                             // The decisive mistake must occur in subsequent stichs.

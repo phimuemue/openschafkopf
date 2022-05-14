@@ -107,7 +107,7 @@ impl SAi {
                         n_stock,
                     ),
                     &mut SNoVisualization{},
-                ).t_min[epi_rank]
+                ).0[EMinMaxStrategy::Min][epi_rank]
             })
             .sum::<isize>().as_num::<f64>() / (self.n_rank_rules_samples.as_num::<f64>())
     }
@@ -252,24 +252,23 @@ pub type SPayoutStatsPerStrategy = SPerMinMaxStrategy<SPayoutStats>;
 
 impl SPayoutStatsPerStrategy {
     fn accumulate(&mut self, paystats: &Self) {
-        self.t_min.accumulate(&paystats.t_min);
-        self.t_selfish_min.accumulate(&paystats.t_selfish_min);
-        self.t_selfish_max.accumulate(&paystats.t_selfish_max);
-        self.t_max.accumulate(&paystats.t_max);
+        for emmstrategy in EMinMaxStrategy::values() {
+            self.0[emmstrategy].accumulate(&paystats.0[emmstrategy]);
+        }
     }
 }
 
 impl SPayoutStatsPerStrategy {
     pub fn compare_canonical(&self, other: &Self) -> std::cmp::Ordering {
         use std::cmp::Ordering::*;
-        macro_rules! internal_cmp{($field:ident) => {
+        let internal_cmp = |emmstrategy| {
             // prioritize positive vs non-positive and zero vs negative payouts.
-            match (self.$field.n_min.cmp(&0), other.$field.n_min.cmp(&0)) {
-                (Greater, Greater) => match self.$field.n_min.cmp(&other.$field.n_min) {
-                    Equal => match unwrap!(self.$field.avg().partial_cmp(&other.$field.avg())) {
+            match (self.0[emmstrategy].n_min.cmp(&0), other.0[emmstrategy].n_min.cmp(&0)) {
+                (Greater, Greater) => match self.0[emmstrategy].n_min.cmp(&other.0[emmstrategy].n_min) {
+                    Equal => match unwrap!(self.0[emmstrategy].avg().partial_cmp(&other.0[emmstrategy].avg())) {
                         Greater => Greater,
                         Less => Less,
-                        Equal => unwrap!(self.$field.n_max.partial_cmp(&other.$field.n_max)),
+                        Equal => unwrap!(self.0[emmstrategy].n_max.partial_cmp(&other.0[emmstrategy].n_max)),
                     },
                     Greater => Greater,
                     Less => Less,
@@ -278,17 +277,17 @@ impl SPayoutStatsPerStrategy {
                 (_, Greater) => Less,
                 (Equal, Less) => Greater,
                 (Less, Equal) => Less,
-                (Less, Less)|(Equal, Equal) => match unwrap!(self.$field.avg().partial_cmp(&other.$field.avg())) {
+                (Less, Less)|(Equal, Equal) => match unwrap!(self.0[emmstrategy].avg().partial_cmp(&other.0[emmstrategy].avg())) {
                     Greater => Greater,
                     Less => Less,
-                    Equal => unwrap!(self.$field.n_max.partial_cmp(&other.$field.n_max)),
+                    Equal => unwrap!(self.0[emmstrategy].n_max.partial_cmp(&other.0[emmstrategy].n_max)),
                 },
             }
-        }}
-        internal_cmp!(t_min)
-            .then_with(|| internal_cmp!(t_selfish_min))
-            .then_with(|| internal_cmp!(t_selfish_max))
-            .then_with(|| internal_cmp!(t_max))
+        };
+        internal_cmp(EMinMaxStrategy::Min)
+            .then_with(|| internal_cmp(EMinMaxStrategy::SelfishMin))
+            .then_with(|| internal_cmp(EMinMaxStrategy::SelfishMax))
+            .then_with(|| internal_cmp(EMinMaxStrategy::Max))
     }
 }
 
@@ -345,12 +344,11 @@ pub fn determine_best_card<
                 )
             };
             let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
-            let payoutstats = SPayoutStatsPerStrategy{
-                t_min: SPayoutStats::new_1(output.t_min[determinebestcard.epi_fixed]),
-                t_selfish_min: SPayoutStats::new_1(output.t_selfish_min[determinebestcard.epi_fixed]),
-                t_selfish_max: SPayoutStats::new_1(output.t_selfish_max[determinebestcard.epi_fixed]),
-                t_max: SPayoutStats::new_1(output.t_max[determinebestcard.epi_fixed]),
-            };
+            let payoutstats = SPerMinMaxStrategy( // TODO should be SPayoutStatsPerStrategy
+                EMinMaxStrategy::map_from_fn(|emmstrategy| {
+                    SPayoutStats::new_1(output.0[emmstrategy][determinebestcard.epi_fixed])
+                })
+            );
             match ooutput {
                 None => *ooutput = Some(payoutstats),
                 Some(ref mut output_return) => output_return.accumulate(&payoutstats),
@@ -527,19 +525,19 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         for card in [H7, H8, H9] {
             assert!(determinebestcard.veccard_allowed.contains(&card));
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.t_min.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.0[EMinMaxStrategy::Min].min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.t_selfish_min.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.0[EMinMaxStrategy::SelfishMin].min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.t_selfish_max.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.0[EMinMaxStrategy::SelfishMax].min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.t_max.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.0[EMinMaxStrategy::Max].min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
         }

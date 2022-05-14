@@ -1,4 +1,4 @@
-use crate::ai::{SDetermineBestCardResult, SPayoutStats, SPayoutStatsPerStrategy};
+use crate::ai::{SDetermineBestCardResult, SPayoutStats, SPayoutStatsPerStrategy, suspicion::EMinMaxStrategy};
 use crate::primitives::*;
 use itertools::*;
 use crate::util::*;
@@ -58,22 +58,22 @@ pub fn table(
             (
                 card,
                 [
-                    column_min_or_max(minmax.t_min.min()),
-                    column_average(&minmax.t_min),
-                    column_min_or_max(minmax.t_min.max()),
-                    column_counts(&minmax.t_min),
-                    column_min_or_max(minmax.t_selfish_min.min()),
-                    column_average(&minmax.t_selfish_min),
-                    column_min_or_max(minmax.t_selfish_min.max()),
-                    column_counts(&minmax.t_selfish_min),
-                    column_min_or_max(minmax.t_selfish_max.min()),
-                    column_average(&minmax.t_selfish_max),
-                    column_min_or_max(minmax.t_selfish_max.max()),
-                    column_counts(&minmax.t_selfish_max),
-                    column_min_or_max(minmax.t_max.min()),
-                    column_average(&minmax.t_max),
-                    column_min_or_max(minmax.t_max.max()),
-                    column_counts(&minmax.t_max),
+                    column_min_or_max(minmax.0[EMinMaxStrategy::Min].min()),
+                    column_average(&minmax.0[EMinMaxStrategy::Min]),
+                    column_min_or_max(minmax.0[EMinMaxStrategy::Min].max()),
+                    column_counts(&minmax.0[EMinMaxStrategy::Min]),
+                    column_min_or_max(minmax.0[EMinMaxStrategy::SelfishMin].min()),
+                    column_average(&minmax.0[EMinMaxStrategy::SelfishMin]),
+                    column_min_or_max(minmax.0[EMinMaxStrategy::SelfishMin].max()),
+                    column_counts(&minmax.0[EMinMaxStrategy::SelfishMin]),
+                    column_min_or_max(minmax.0[EMinMaxStrategy::SelfishMax].min()),
+                    column_average(&minmax.0[EMinMaxStrategy::SelfishMax]),
+                    column_min_or_max(minmax.0[EMinMaxStrategy::SelfishMax].max()),
+                    column_counts(&minmax.0[EMinMaxStrategy::SelfishMax]),
+                    column_min_or_max(minmax.0[EMinMaxStrategy::Max].min()),
+                    column_average(&minmax.0[EMinMaxStrategy::Max]),
+                    column_min_or_max(minmax.0[EMinMaxStrategy::Max].max()),
+                    column_counts(&minmax.0[EMinMaxStrategy::Max]),
                 ],
             )
         })
