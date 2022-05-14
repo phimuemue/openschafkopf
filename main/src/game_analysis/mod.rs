@@ -116,12 +116,14 @@ pub fn analyze_game(
                         &SMinReachablePayout::new_from_game(game),
                         /*fn_visualizer*/|_,_,_| SNoVisualization,
                     ));
-                    let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(SPayoutStatsPerStrategy::compare_canonical);
+                    let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(
+                        |minmax_lhs, minmax_rhs| minmax_lhs.t_min.min().cmp(&minmax_rhs.t_min.min())
+                    );
                     (
                         determinebestcardresult.clone(),
                         if 
-                            !veccard.contains(&card) // TODO can we improve this?
-                            && an_payout[epi]<minmax.t_min.min()
+                            an_payout[epi]<minmax.t_min.min()
+                            && !veccard.contains(&card) // TODO can we improve this?
                         {
                             Some(SAnalysisCardAndPayout{
                                 veccard,
