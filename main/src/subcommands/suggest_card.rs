@@ -134,8 +134,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     },
                 )
             }.ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
-            let (vecoutputline, aformatinfo) = table(
+            let (vecoutputline, n_max_cards, aformatinfo) = table(
                 &determinebestcardresult,
+                rules,
                 /*fn_human_readable_payout*/&|f_payout| {
                     if let Some(fn_payout_to_points) = &ofn_payout_to_points {
                         fn_payout_to_points(
@@ -149,8 +150,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 },
             );
             // TODO interface should probably output payout interval per card
-            for SOutputLine{card, atplstrf} in vecoutputline.iter() {
-                print!("{}: ", card); // all cards have same width
+            for SOutputLine{veccard, atplstrf} in vecoutputline.iter() {
+                print!("{itcard:<n_width$}: ",
+                    itcard = veccard.iter().join(" "),
+                    n_width = n_max_cards*3 - 1 // assume a card occpuies two characters
+                );
                 for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
                     use termcolor::*;
                     let mut stdout = StandardStream::stdout(if atty::is(atty::Stream::Stdout) {

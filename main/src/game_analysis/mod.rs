@@ -3,7 +3,7 @@ use crate::game::*;
 use crate::primitives::*;
 use crate::rules::{payoutdecider::*, ruleset::VStockOrT, rulessolo::*, *};
 use crate::util::*;
-use crate::game_analysis::determine_best_card_table::{table, SOutputLine};
+use crate::game_analysis::determine_best_card_table::table;
 use itertools::Itertools;
 use std::{
     io::Write,
@@ -302,8 +302,9 @@ pub fn generate_analysis_html(
     + "<h2>Details</h2>"
     + &format!("{}", slcanalysispercard.iter()
         .map(|analysispercard| {
-            let (vecoutputline, _aformatinfo) = table(
+            let (vecoutputline, _n_max_cards, _aformatinfo) = table(
                 &analysispercard.determinebestcardresult_cheating,
+                game.rules.as_ref(),
                 /*fn_human_readable_payout*/&|f_payout| f_payout,
             );
             // TODO simplify output (as it currently only shows results from one ahand)
@@ -329,21 +330,14 @@ pub fn generate_analysis_html(
                 player_table_ahand(epi_self, ahand, game.rules.as_ref()),
             );
             str_per_card += "<table>";
-            for (atplstrf, grpoutputline) in vecoutputline.iter()
-                .group_by(|&SOutputLine{card:_, atplstrf}| atplstrf)
-                .into_iter()
-            {
+            for outputline in vecoutputline.iter() {
                 str_per_card += "<tr>";
                 str_per_card += "<td>";
-                let mut veccard : Vec<SCard> = grpoutputline.into_iter()
-                    .map(|SOutputLine{card, atplstrf:_}| *card)
-                    .collect();
-                game.rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
-                for card in veccard {
+                for &card in outputline.veccard.iter() {
                     str_per_card += &crate::ai::suspicion::output_card(card, /*b_border*/false);
                 }
                 str_per_card += "</td>";
-                for (str_num, _f) in atplstrf.iter() {
+                for (str_num, _f) in outputline.atplstrf.iter() {
                     str_per_card += "<td>";
                     // TODO colored output as in suggest_card
                     str_per_card += str_num;
