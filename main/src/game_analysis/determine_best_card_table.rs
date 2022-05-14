@@ -69,9 +69,8 @@ pub fn table(
         ];
         for ((str_val, f_val), formatinfo) in atplstrf.iter().zip_eq(aformatinfo.iter_mut()) {
             formatinfo.n_width = formatinfo.n_width.max(str_val.len());
-            // TODO? assign_min/assign_max
-            formatinfo.f_min = formatinfo.f_min.min(*f_val);
-            formatinfo.f_max = formatinfo.f_max.max(*f_val);
+            assign_min_partial_ord(&mut formatinfo.f_min, *f_val);
+            assign_max_partial_ord(&mut formatinfo.f_max, *f_val);
         }
         vecoutputline.push(SOutputLine{card, atplstrf});
     }

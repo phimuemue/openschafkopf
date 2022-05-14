@@ -12,6 +12,14 @@ pub fn assign_max<T: Ord>(dst: &mut T, src: T) {
     assign_better(dst, src, |lhs, rhs| lhs > rhs)
 }
 
+pub fn assign_min_partial_ord<T: PartialOrd>(dst: &mut T, src: T) {
+    assign_better(dst, src, |lhs, rhs| lhs < rhs)
+}
+
+pub fn assign_max_partial_ord<T: PartialOrd>(dst: &mut T, src: T) {
+    assign_better(dst, src, |lhs, rhs| lhs > rhs)
+}
+
 pub fn assign_min_by_key<T, K: Ord>(dst: &mut T, src: T, mut fn_key: impl FnMut(&T) -> K) {
     assign_better(dst, src, |lhs, rhs| fn_key(lhs) < fn_key(rhs))
 }
