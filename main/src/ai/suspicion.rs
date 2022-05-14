@@ -110,14 +110,14 @@ pub fn player_table_stichseq(epi_self: EPlayerIndex, stichseq: &SStichSequence) 
     }).format("\n"))
 }
 
-pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules) -> String {
+pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules, fn_border: impl Fn(SCard)->bool) -> String {
     format!(
         "<td>{}</td>\n",
         player_table(epi_self, |epi| {
             let mut veccard = ahand[epi].cards().clone();
             rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
             Some(veccard.into_iter()
-                .map(|card| output_card(card, /*b_border*/false))
+                .map(|card| output_card(card, fn_border(card)))
                 .join(""))
         }),
     )
@@ -136,7 +136,7 @@ impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
         ).as_bytes());
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(stichseq, ahand));
         self.write_all(player_table_stichseq(self.epi, stichseq).as_bytes());
-        self.write_all(player_table_ahand(self.epi, ahand, self.rules).as_bytes());
+        self.write_all(player_table_ahand(self.epi, ahand, self.rules, /*fn_border*/|_card| false).as_bytes());
         self.write_all(b"</tr></table></label>\n");
         self.write_all(b"<ul>\n");
     }
