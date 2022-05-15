@@ -3,6 +3,8 @@ use crate::rules::{card_points::*, payoutdecider::internal_payout, trumpfdecider
 use crate::util::*;
 use std::{cmp::Ordering, fmt};
 
+// TODO Ramsch with Stichzwang
+
 #[derive(Clone, Debug)]
 pub enum VDurchmarsch {
     None,
@@ -105,6 +107,9 @@ impl TRules for SRulesRamsch {
         } else {
             let epi_loser : EPlayerIndex = {
                 vecepi_most_points.iter().copied().exactly_one().unwrap_or_else(|_err| {
+                    // TODO highest stich count loses
+                    // TODO most trumpf in stichs loses
+                    // TODO combination of all of the tie breakers
                     unwrap!(vecepi_most_points.iter().copied()
                         .map(|epi| {(
                             epi,
