@@ -13,7 +13,8 @@ pub enum VDurchmarsch {
 #[derive(Clone, Debug)]
 pub enum VJungfrau {
     DoubleAll,
-    // TODO DoubleOnlyJungfrau
+    DoubleIndividuallyOnce,
+    // TODO DoubleIndividuallyMultiple
 }
 
 #[derive(Clone, Debug)]
@@ -64,7 +65,8 @@ impl TRules for SRulesRamsch {
     }
 
     fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
-        let points_for_player = |epi| rulestatecache.changing.mapepipointstichcount[epi].n_point;
+        let mapepipointstichcount = &rulestatecache.changing.mapepipointstichcount;
+        let points_for_player = |epi| mapepipointstichcount[epi].n_point;
         debug_assert_eq!(
             EPlayerIndex::map_from_fn(points_for_player),
             gamefinishedstiche.get().completed_stichs_winner_index(self)
@@ -84,7 +86,7 @@ impl TRules for SRulesRamsch {
         if match self.durchmarsch {
             VDurchmarsch::All if 120==n_points_max =>
                 debug_verify_eq!(
-                    rulestatecache.changing.mapepipointstichcount[the_one_epi()].n_stich==gamefinishedstiche.get().kurzlang().cards_per_player(),
+                    mapepipointstichcount[the_one_epi()].n_stich==gamefinishedstiche.get().kurzlang().cards_per_player(),
                     gamefinishedstiche.get().completed_stichs_winner_index(self).all(|(_stich, epi_winner)| epi_winner==the_one_epi())
                 ),
             VDurchmarsch::All | VDurchmarsch::None =>
@@ -134,21 +136,41 @@ impl TRules for SRulesRamsch {
                         .0
                 })
             };
-            internal_payout(
-                self.n_price * {
-                    match self.ojungfrau {
-                        None => 1,
-                        Some(VJungfrau::DoubleAll) => 2isize.pow(
-                            rulestatecache.changing.mapepipointstichcount.iter()
+            match self.ojungfrau {
+                None => {
+                    internal_payout(
+                        self.n_price,
+                        &SPlayerParties13::new(epi_loser),
+                        /*b_primary_party_wins*/false,
+                    ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+                },
+                Some(VJungfrau::DoubleAll) => {
+                    internal_payout(
+                        self.n_price * 2isize.pow(
+                            mapepipointstichcount.iter()
                                 .filter(|pointstichcount| pointstichcount.n_stich==0)
                                 .count()
                                 .as_num::<u32>()
                         ),
-                    }
+                        &SPlayerParties13::new(epi_loser),
+                        /*b_primary_party_wins*/false,
+                    ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
                 },
-                &SPlayerParties13::new(epi_loser),
-                /*b_primary_party_wins*/false,
-            ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+                Some(VJungfrau::DoubleIndividuallyOnce) => {
+                    let mut an_payout = EPlayerIndex::map_from_fn(|_epi| 0);
+                    for epi in EPlayerIndex::values() {
+                        if epi != epi_loser {
+                            assert_eq!(an_payout[epi], 0);
+                            an_payout[epi] = self.n_price;
+                            if mapepipointstichcount[epi].n_stich==0 {
+                                an_payout[epi] *= 2;
+                            }
+                            an_payout[epi_loser] -= an_payout[epi];
+                        }
+                    }
+                    an_payout.map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+                },
+            }
         }
     }
 

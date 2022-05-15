@@ -1930,6 +1930,24 @@ fn test_rulesramsch() {
         ],
         ([-120, 40, 40, 40], 0),
     );
+    test_rules_manual(
+        "0 has 120, but no durchmarsch",
+        &SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/Some(VJungfrau::DoubleIndividuallyOnce)),
+        vec![],
+        vec![],
+        /*n_stock*/40,
+        &[
+            (EPI0, [EO,GO,HO,SO]),
+            (EPI0, [EU,GU,HU,SU]),
+            (EPI0, [HA,HZ,HK,H9]),
+            (EPI0, [EA,EZ,EK,E9]),
+            (EPI0, [GA,GZ,GK,G9]),
+            (EPI0, [SA,SZ,SK,S9]),
+            (EPI0, [E8,E7,G8,G7]),
+            (EPI0, [H7,H8,S8,S7]),
+        ],
+        ([-50, 10, 20, 20], 0),
+    );
 }
 
 #[test]
