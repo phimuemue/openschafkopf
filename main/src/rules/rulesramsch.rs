@@ -69,10 +69,8 @@ impl TRules for SRulesRamsch {
                     })
                 )
         );
-        let n_points_max = unwrap!(EPlayerIndex::values().map(points_for_player).max());
-        let vecepi_most_points = EPlayerIndex::values()
-            .filter(|epi| n_points_max==points_for_player(*epi))
-            .collect::<Vec<_>>();
+        let vecepi_most_points = EPlayerIndex::values().max_set_by_key(|epi| points_for_player(*epi));
+        let n_points_max = points_for_player(vecepi_most_points[0]); // TODO use all_equal_item
         let the_one_epi = || -> EPlayerIndex {
             assert!(n_points_max>=61);
             assert_eq!(1, vecepi_most_points.len());
