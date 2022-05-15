@@ -6,7 +6,7 @@ use std::{
 };
 use crate::util::*;
 use crate::game::*;
-use crate::rules::*;
+use crate::rules::{*, trumpfdecider::TTrumpfDecider};
 use crate::rules::ruleset::{SRuleGroup, SRuleSet, VStockOrT, allowed_rules};
 
 use futures::prelude::*;
@@ -320,11 +320,8 @@ impl SPlayers {
                 if let Some(rules) = orules {
                     rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
                 } else {
-                    rulesramsch::SRulesRamsch::new( // TODO rules dummy is ugly
-                        /*n_price*/0, // irrelevant
-                        rulesramsch::VDurchmarsch::None, // irrelevant
-                        /*ojungfrau*/None,
-                    ).sort_cards_first_trumpf_then_farbe(&mut veccard);
+                    rulesrufspiel::STrumpfDeciderRufspiel::default()
+                        .sort_cards_first_trumpf_then_farbe(&mut veccard)
                 }
                 communicate(Some(epi), veccard, msg, peer);
             }
