@@ -142,50 +142,40 @@ impl TRules for SRulesRamsch {
                     .count()
                     .as_num::<u32>()
             };
+            let payout_jungfrau_double_all = |n_jungfrau_exponent| {
+                internal_payout(
+                    self.n_price * 2isize.pow(n_jungfrau_exponent),
+                    &SPlayerParties13::new(epi_loser),
+                    /*b_primary_party_wins*/false,
+                )
+            };
+            let payout_jungfrau_double_individually = |n_jungfrau_exponent| {
+                let mut an_payout = EPlayerIndex::map_from_fn(|_epi| 0);
+                for epi in EPlayerIndex::values() {
+                    if epi != epi_loser {
+                        assert_eq!(an_payout[epi], 0);
+                        an_payout[epi] = self.n_price;
+                        if mapepipointstichcount[epi].n_stich==0 {
+                            assert!(1<=n_jungfrau_exponent);
+                            an_payout[epi] *= 2isize.pow(n_jungfrau_exponent);
+                        }
+                        an_payout[epi_loser] -= an_payout[epi];
+                    }
+                }
+                an_payout
+            };
             match self.ojungfrau {
                 None => {
-                    internal_payout(
-                        self.n_price,
-                        &SPlayerParties13::new(epi_loser),
-                        /*b_primary_party_wins*/false,
-                    )
+                    payout_jungfrau_double_all(0)
                 },
                 Some(VJungfrau::DoubleAll) => {
-                    internal_payout(
-                        self.n_price * 2isize.pow(count_jungfrau_occurences()),
-                        &SPlayerParties13::new(epi_loser),
-                        /*b_primary_party_wins*/false,
-                    )
+                    payout_jungfrau_double_all(count_jungfrau_occurences())
                 },
                 Some(VJungfrau::DoubleIndividuallyOnce) => {
-                    let mut an_payout = EPlayerIndex::map_from_fn(|_epi| 0);
-                    for epi in EPlayerIndex::values() {
-                        if epi != epi_loser {
-                            assert_eq!(an_payout[epi], 0);
-                            an_payout[epi] = self.n_price;
-                            if mapepipointstichcount[epi].n_stich==0 {
-                                an_payout[epi] *= 2;
-                            }
-                            an_payout[epi_loser] -= an_payout[epi];
-                        }
-                    }
-                    an_payout
+                    payout_jungfrau_double_individually(1)
                 },
                 Some(VJungfrau::DoubleIndividuallyMultiple) => {
-                    let mut an_payout = EPlayerIndex::map_from_fn(|_epi| 0);
-                    let n_jungfrau_occurences = count_jungfrau_occurences();
-                    for epi in EPlayerIndex::values() {
-                        if epi != epi_loser {
-                            assert_eq!(an_payout[epi], 0);
-                            an_payout[epi] = self.n_price;
-                            if mapepipointstichcount[epi].n_stich==0 {
-                                assert!(1<=n_jungfrau_occurences);
-                                an_payout[epi] *= 2isize.pow(n_jungfrau_occurences);
-                            }
-                            an_payout[epi_loser] -= an_payout[epi];
-                        }
-                    }
-                    an_payout
+                    payout_jungfrau_double_individually(count_jungfrau_occurences())
                 },
             }
         }.map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
