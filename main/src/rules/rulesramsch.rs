@@ -14,7 +14,7 @@ pub enum VDurchmarsch {
 pub enum VJungfrau {
     DoubleAll,
     DoubleIndividuallyOnce,
-    // TODO DoubleIndividuallyMultiple
+    DoubleIndividuallyMultiple,
 }
 
 #[derive(Clone, Debug)]
@@ -136,6 +136,12 @@ impl TRules for SRulesRamsch {
                         .0
                 })
             };
+            let count_jungfrau_occurences = || {
+                mapepipointstichcount.iter()
+                    .filter(|pointstichcount| pointstichcount.n_stich==0)
+                    .count()
+                    .as_num::<u32>()
+            };
             match self.ojungfrau {
                 None => {
                     internal_payout(
@@ -146,12 +152,7 @@ impl TRules for SRulesRamsch {
                 },
                 Some(VJungfrau::DoubleAll) => {
                     internal_payout(
-                        self.n_price * 2isize.pow(
-                            mapepipointstichcount.iter()
-                                .filter(|pointstichcount| pointstichcount.n_stich==0)
-                                .count()
-                                .as_num::<u32>()
-                        ),
+                        self.n_price * 2isize.pow(count_jungfrau_occurences()),
                         &SPlayerParties13::new(epi_loser),
                         /*b_primary_party_wins*/false,
                     ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
@@ -164,6 +165,22 @@ impl TRules for SRulesRamsch {
                             an_payout[epi] = self.n_price;
                             if mapepipointstichcount[epi].n_stich==0 {
                                 an_payout[epi] *= 2;
+                            }
+                            an_payout[epi_loser] -= an_payout[epi];
+                        }
+                    }
+                    an_payout.map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+                },
+                Some(VJungfrau::DoubleIndividuallyMultiple) => {
+                    let mut an_payout = EPlayerIndex::map_from_fn(|_epi| 0);
+                    let n_jungfrau_occurences = count_jungfrau_occurences();
+                    for epi in EPlayerIndex::values() {
+                        if epi != epi_loser {
+                            assert_eq!(an_payout[epi], 0);
+                            an_payout[epi] = self.n_price;
+                            if mapepipointstichcount[epi].n_stich==0 {
+                                assert!(1<=n_jungfrau_occurences);
+                                an_payout[epi] *= 2isize.pow(n_jungfrau_occurences);
                             }
                             an_payout[epi_loser] -= an_payout[epi];
                         }
