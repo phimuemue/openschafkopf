@@ -323,6 +323,7 @@ impl SPlayers {
                     rulesramsch::SRulesRamsch::new( // TODO rules dummy is ugly
                         /*n_price*/0, // irrelevant
                         rulesramsch::VDurchmarsch::None, // irrelevant
+                        /*ojungfrau*/None,
                     ).sort_cards_first_trumpf_then_farbe(&mut veccard);
                 }
                 communicate(Some(epi), veccard, msg, peer);

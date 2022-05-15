@@ -117,7 +117,7 @@ pub fn parse_rule_description(
             Ok(Box::new(SRulesRamsch::new(
                 /*n_price*/n_tarif_ruf,
                 VDurchmarsch::AtLeast(91), // https://www.sauspiel.de/blog/66-bei-sauspiel-wird-jetzt-mit-ramsch-gespielt
-                // TODO Jungfrau
+                Some(VJungfrau::DoubleAll),
             )) as Box<dyn TRules>)
         }),
     ].into_iter()

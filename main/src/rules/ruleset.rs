@@ -105,7 +105,11 @@ impl SRuleSet {
                 } as Result<_, Error>)?;
                 read_int(val_ramsch, "price").map(|n_price|
                     VStockOrT::OrT(Box::new(
-                        SRulesRamsch::new(n_price.as_num(), durchmarsch)
+                        SRulesRamsch::new(
+                            n_price.as_num(),
+                            durchmarsch,
+                            /*ojungfrau*/None, // TODO make customizable
+                        )
                     ) as Box<dyn TRules>)
                 )
             },

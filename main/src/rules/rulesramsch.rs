@@ -10,21 +10,27 @@ pub enum VDurchmarsch {
     AtLeast(isize),
 }
 
-// TODO add Jungfrau (needed for Sauspiel analysis, in particular)
+#[derive(Clone, Debug)]
+pub enum VJungfrau {
+    DoubleAll,
+    // TODO DoubleOnlyJungfrau
+}
 
 #[derive(Clone, Debug)]
 pub struct SRulesRamsch {
     n_price : isize,
     durchmarsch : VDurchmarsch,
     trumpfdecider: STrumpfDeciderRamsch,
+    ojungfrau: Option<VJungfrau>,
 }
 
 impl SRulesRamsch {
-    pub fn new(n_price: isize, durchmarsch: VDurchmarsch) -> Self {
+    pub fn new(n_price: isize, durchmarsch: VDurchmarsch, ojungfrau: Option<VJungfrau>) -> Self {
         Self {
             n_price,
             durchmarsch,
             trumpfdecider: STrumpfDeciderRamsch::default(),
+            ojungfrau,
         }
     }
 }
@@ -88,6 +94,7 @@ impl TRules for SRulesRamsch {
                 n_points_max>=n_points_durchmarsch
             },
         } {
+            // TODO? Jungfrau meaningful?
             internal_payout(
                 self.n_price,
                 &SPlayerParties13::new(the_one_epi()),
@@ -128,7 +135,17 @@ impl TRules for SRulesRamsch {
                 })
             };
             internal_payout(
-                self.n_price,
+                self.n_price * {
+                    match self.ojungfrau {
+                        None => 1,
+                        Some(VJungfrau::DoubleAll) => 2isize.pow(
+                            rulestatecache.changing.mapepipointstichcount.iter()
+                                .filter(|pointstichcount| pointstichcount.n_stich==0)
+                                .count()
+                                .as_num::<u32>()
+                        ),
+                    }
+                },
                 &SPlayerParties13::new(epi_loser),
                 /*b_primary_party_wins*/false,
             ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))

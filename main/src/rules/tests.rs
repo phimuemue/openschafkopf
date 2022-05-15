@@ -1824,7 +1824,25 @@ fn test_rulesramsch() {
     use EPlayerIndex::*;
     test_rules_manual(
         "0 has durchmarsch all",
-        &SRulesRamsch::new(10, VDurchmarsch::All),
+        &SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/None),
+        vec![],
+        vec![],
+        /*n_stock*/20,
+        &[
+            (EPI0, [EO,GO,HO,SO]),
+            (EPI0, [EU,GU,HU,SU]),
+            (EPI0, [HA,HZ,HK,H9]),
+            (EPI0, [EA,EZ,EK,E9]),
+            (EPI0, [GA,GZ,GK,G9]),
+            (EPI0, [SA,SZ,SK,S9]),
+            (EPI0, [E8,E7,G8,G7]),
+            (EPI0, [H8,H7,S8,S7]),
+        ],
+        ([30, -10, -10, -10], 0),
+    );
+    test_rules_manual(
+        "0 has durchmarsch all",
+        &SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/Some(VJungfrau::DoubleAll)),
         vec![],
         vec![],
         /*n_stock*/20,
@@ -1842,7 +1860,25 @@ fn test_rulesramsch() {
     );
     test_rules_manual(
         "0 has durchmarsch 120",
-        &SRulesRamsch::new(10, VDurchmarsch::AtLeast(120)),
+        &SRulesRamsch::new(10, VDurchmarsch::AtLeast(120), /*ojungfrau*/None),
+        vec![],
+        vec![],
+        /*n_stock*/160,
+        &[
+            (EPI0, [EO,GO,HO,SO]),
+            (EPI0, [EU,GU,HU,SU]),
+            (EPI0, [HA,HZ,HK,H9]),
+            (EPI0, [EA,EZ,EK,E9]),
+            (EPI0, [GA,GZ,GK,G9]),
+            (EPI0, [SA,SZ,SK,S9]),
+            (EPI0, [E8,E7,G8,G7]),
+            (EPI0, [H8,H7,S8,S7]),
+        ],
+        ([30, -10, -10, -10], 0),
+    );
+    test_rules_manual(
+        "0 has durchmarsch 120",
+        &SRulesRamsch::new(10, VDurchmarsch::AtLeast(120), /*ojungfrau*/Some(VJungfrau::DoubleAll)),
         vec![],
         vec![],
         /*n_stock*/160,
@@ -1860,7 +1896,7 @@ fn test_rulesramsch() {
     );
     test_rules_manual(
         "0 has 120, but no durchmarsch",
-        &SRulesRamsch::new(10, VDurchmarsch::All),
+        &SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/None),
         vec![],
         vec![],
         /*n_stock*/40,
@@ -1875,6 +1911,24 @@ fn test_rulesramsch() {
             (EPI0, [H7,H8,S8,S7]),
         ],
         ([-30, 10, 10, 10], 0),
+    );
+    test_rules_manual(
+        "0 has 120, but no durchmarsch",
+        &SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/Some(VJungfrau::DoubleAll)),
+        vec![],
+        vec![],
+        /*n_stock*/40,
+        &[
+            (EPI0, [EO,GO,HO,SO]),
+            (EPI0, [EU,GU,HU,SU]),
+            (EPI0, [HA,HZ,HK,H9]),
+            (EPI0, [EA,EZ,EK,E9]),
+            (EPI0, [GA,GZ,GK,G9]),
+            (EPI0, [SA,SZ,SK,S9]),
+            (EPI0, [E8,E7,G8,G7]),
+            (EPI0, [H7,H8,S8,S7]),
+        ],
+        ([-120, 40, 40, 40], 0),
     );
 }
 
