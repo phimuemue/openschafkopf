@@ -101,7 +101,7 @@ impl TRules for SRulesRamsch {
                 self.n_price,
                 &SPlayerParties13::new(the_one_epi()),
                 /*b_primary_party_wins*/true,
-            ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+            )
         } else {
             let epi_loser : EPlayerIndex = {
                 vecepi_most_points.iter().copied().exactly_one().unwrap_or_else(|_err| {
@@ -148,14 +148,14 @@ impl TRules for SRulesRamsch {
                         self.n_price,
                         &SPlayerParties13::new(epi_loser),
                         /*b_primary_party_wins*/false,
-                    ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+                    )
                 },
                 Some(VJungfrau::DoubleAll) => {
                     internal_payout(
                         self.n_price * 2isize.pow(count_jungfrau_occurences()),
                         &SPlayerParties13::new(epi_loser),
                         /*b_primary_party_wins*/false,
-                    ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+                    )
                 },
                 Some(VJungfrau::DoubleIndividuallyOnce) => {
                     let mut an_payout = EPlayerIndex::map_from_fn(|_epi| 0);
@@ -169,7 +169,7 @@ impl TRules for SRulesRamsch {
                             an_payout[epi_loser] -= an_payout[epi];
                         }
                     }
-                    an_payout.map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+                    an_payout
                 },
                 Some(VJungfrau::DoubleIndividuallyMultiple) => {
                     let mut an_payout = EPlayerIndex::map_from_fn(|_epi| 0);
@@ -185,10 +185,10 @@ impl TRules for SRulesRamsch {
                             an_payout[epi_loser] -= an_payout[epi];
                         }
                     }
-                    an_payout.map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+                    an_payout
                 },
             }
-        }
+        }.map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
     }
 
     fn payouthints(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _tpln_stoss_doubling: (usize, usize), _n_stock: isize, _rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
