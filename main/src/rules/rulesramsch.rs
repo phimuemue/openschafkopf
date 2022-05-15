@@ -91,9 +91,7 @@ impl TRules for SRulesRamsch {
             (the_one_epi(), true)
         } else {
             let epi_loser : EPlayerIndex = {
-                if 1==vecepi_most_points.len() {
-                    vecepi_most_points[0]
-                } else {
+                vecepi_most_points.iter().copied().exactly_one().unwrap_or_else(|_err| {
                     unwrap!(vecepi_most_points.iter().copied()
                         .map(|epi| {(
                             epi,
@@ -123,7 +121,7 @@ impl TRules for SRulesRamsch {
                             }
                         }))
                         .0
-                }
+                })
             };
             (epi_loser, false)
         };
