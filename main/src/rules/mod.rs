@@ -213,6 +213,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
     // TTrumpfDecider
     fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
     fn compare_cards(&self, card_fst: SCard, card_snd: SCard) -> Option<Ordering>;
+    fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [SCard]);
 
     fn playerindex(&self) -> Option<EPlayerIndex>;
 
@@ -337,19 +338,6 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
             }
         }
         epi_best
-    }
-
-    fn sort_cards_first_trumpf_then_farbe(&self, veccard: &mut [SCard]) {
-        veccard.sort_unstable_by(|&card_lhs, &card_rhs| {
-            match self.compare_cards(card_lhs, card_rhs) {
-                Some(ord) => ord.reverse(),
-                None => {
-                    assert_eq!(VTrumpfOrFarbe::Farbe(card_lhs.farbe()), self.trumpforfarbe(card_lhs));
-                    assert_eq!(VTrumpfOrFarbe::Farbe(card_rhs.farbe()), self.trumpforfarbe(card_rhs));
-                    card_lhs.farbe().cmp(&card_rhs.farbe())
-                },
-            }
-        });
     }
 
     fn rulespecific_ai<'rules>(&'rules self) -> Option<Box<dyn TRuleSpecificAI + 'rules>> {

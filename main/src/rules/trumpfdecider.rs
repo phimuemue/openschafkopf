@@ -29,6 +29,19 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug + Send {
         );
         (mapefarbeveccard, veccard_trumpf)
     }
+
+    fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [SCard]) {
+        slccard.sort_unstable_by(|&card_lhs, &card_rhs| {
+            match self.compare_cards(card_lhs, card_rhs) {
+                Some(ord) => ord.reverse(),
+                None => {
+                    assert_eq!(VTrumpfOrFarbe::Farbe(card_lhs.farbe()), self.trumpforfarbe(card_lhs));
+                    assert_eq!(VTrumpfOrFarbe::Farbe(card_rhs.farbe()), self.trumpforfarbe(card_rhs));
+                    card_lhs.farbe().cmp(&card_rhs.farbe())
+                },
+            }
+        });
+    }
 }
 
 pub trait TCompareFarbcards : Sync + 'static + Clone + fmt::Debug + Send {
@@ -145,6 +158,9 @@ macro_rules! impl_rules_trumpf {() => {
     }
     fn compare_cards(&self, card_fst: SCard, card_snd: SCard) -> Option<Ordering> {
         self.trumpfdecider.compare_cards(card_fst, card_snd)
+    }
+    fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [SCard]) {
+        self.trumpfdecider.sort_cards_first_trumpf_then_farbe(slccard)
     }
 }}
 
