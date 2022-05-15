@@ -75,7 +75,7 @@ impl TRules for SRulesRamsch {
             assert!(n_points_max>=61);
             *unwrap!(vecepi_most_points.iter().exactly_one())
         };
-        let (epi_single, b_epi_single_wins) = if match self.durchmarsch {
+        if match self.durchmarsch {
             VDurchmarsch::All if 120==n_points_max =>
                 debug_verify_eq!(
                     rulestatecache.changing.mapepipointstichcount[the_one_epi()].n_stich==gamefinishedstiche.get().kurzlang().cards_per_player(),
@@ -88,7 +88,11 @@ impl TRules for SRulesRamsch {
                 n_points_max>=n_points_durchmarsch
             },
         } {
-            (the_one_epi(), true)
+            internal_payout(
+                self.n_price,
+                &SPlayerParties13::new(the_one_epi()),
+                /*b_primary_party_wins*/true,
+            ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
         } else {
             let epi_loser : EPlayerIndex = {
                 vecepi_most_points.iter().copied().exactly_one().unwrap_or_else(|_err| {
@@ -123,13 +127,12 @@ impl TRules for SRulesRamsch {
                         .0
                 })
             };
-            (epi_loser, false)
-        };
-        internal_payout(
-            self.n_price,
-            &SPlayerParties13::new(epi_single),
-            b_epi_single_wins,
-        ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+            internal_payout(
+                self.n_price,
+                &SPlayerParties13::new(epi_loser),
+                /*b_primary_party_wins*/false,
+            ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+        }
     }
 
     fn payouthints(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _tpln_stoss_doubling: (usize, usize), _n_stock: isize, _rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
