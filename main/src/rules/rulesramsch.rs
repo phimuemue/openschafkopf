@@ -73,8 +73,7 @@ impl TRules for SRulesRamsch {
         let n_points_max = points_for_player(vecepi_most_points[0]); // TODO use all_equal_item
         let the_one_epi = || -> EPlayerIndex {
             assert!(n_points_max>=61);
-            assert_eq!(1, vecepi_most_points.len());
-            vecepi_most_points[0]
+            *unwrap!(vecepi_most_points.iter().exactly_one())
         };
         let (epi_single, b_epi_single_wins) = if match self.durchmarsch {
             VDurchmarsch::All if 120==n_points_max =>
