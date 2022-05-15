@@ -89,6 +89,18 @@ fn test_game_loop() {
                 r"[stock]
                 price=30",
                 r"",
+                r#"[ramsch]
+                price=20
+                jungfrau="DoubleAll"
+                "#,
+                r#"[ramsch]
+                price=20
+                jungfrau="DoubleIndividuallyOnce"
+                "#,
+                r#"[ramsch]
+                price=20
+                jungfrau="DoubleIndividuallyMultiple"
+                "#,
             ],
             [ // str_extras
                 r"[steigern]",

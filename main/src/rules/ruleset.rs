@@ -103,12 +103,27 @@ impl SRuleSet {
                     },
                     _ => bail!("Invalid value for ramsch.durchmarsch. \"All\" or a number in [61; 120] is supported.")
                 } as Result<_, Error>)?;
+                let ojungfrau = (match val_ramsch.get("jungfrau") {
+                    None => Ok(None),
+                    Some(&toml::Value::String(ref str_jungfrau)) if str_jungfrau=="DoubleAll" => {
+                        Ok(Some(VJungfrau::DoubleAll))
+                    },
+                    Some(&toml::Value::String(ref str_jungfrau)) if str_jungfrau=="DoubleIndividuallyOnce" => {
+                        Ok(Some(VJungfrau::DoubleIndividuallyOnce))
+                    },
+                    Some(&toml::Value::String(ref str_jungfrau)) if str_jungfrau=="DoubleIndividuallyMultiple" => {
+                        Ok(Some(VJungfrau::DoubleIndividuallyMultiple))
+                    },
+                    _ => {
+                        bail!("Invalid value for ramsch.jungfrau. \"DoubleAll\", \"DoubleIndividuallyMultiple\" or \"DoubleIndividuallyOnce\" is supported.")
+                    }
+                } as Result<_, Error>)?;
                 read_int(val_ramsch, "price").map(|n_price|
                     VStockOrT::OrT(Box::new(
                         SRulesRamsch::new(
                             n_price.as_num(),
                             durchmarsch,
-                            /*ojungfrau*/None, // TODO make customizable
+                            ojungfrau,
                         )
                     ) as Box<dyn TRules>)
                 )
