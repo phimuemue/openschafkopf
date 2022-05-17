@@ -7,7 +7,7 @@ use std::{
 use crate::util::*;
 use crate::game::*;
 use crate::rules::{*, trumpfdecider::TTrumpfDecider};
-use crate::rules::ruleset::{SRuleGroup, SRuleSet, VStockOrT, allowed_rules};
+use crate::rules::ruleset::{SRuleSet, VStockOrT};
 
 use futures::prelude::*;
 use futures::{
@@ -26,111 +26,26 @@ use crate::primitives::*;
 use rand::prelude::*;
 use itertools::Itertools;
 
+mod gamephase;
+use gamephase::{
+    VGamePhase,
+    VGamePhaseAction,
+    VGameAction,
+    VGamePhaseGeneric,
+    SWebsocketGameResult,
+    find_rules_by_id,
+    rules_to_gamephaseaction,
+};
+
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     clap::Command::new(str_subcommand)
         .arg(super::clap_arg("ruleset", "rulesets/default.toml"))
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-enum VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, GameResult> {
-    DealCards(DealCards),
-    GamePreparations(GamePreparations),
-    DetermineRules(DetermineRules),
-    Game(Game),
-    GameResult(GameResult),
-}
-
-#[derive(Debug)]
-struct SWebsocketGameResult {
-    gameresult: SGameResult,
-    mapepib_confirmed: EnumMap<EPlayerIndex, bool>, // TODO? enumset
-}
-impl TGamePhase for SWebsocketGameResult {
-    type ActivePlayerInfo = EnumMap<EPlayerIndex, bool>;
-    type Finish = SWebsocketGameResult;
-    fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
-        let oinfallible : /*mention type to get compiler error upon change*/Option<std::convert::Infallible> = self.gameresult.which_player_can_do_something(); // TODO simplify
-        verify!(oinfallible.is_none());
-        if_then_some!(self.mapepib_confirmed.iter().any(|b_confirmed| !b_confirmed),
-            self.mapepib_confirmed.explicit_clone()
-        )
-    }
-    fn finish_success(self) -> Self::Finish {
-        self
-    }
-}
-
-type VGamePhase = VGamePhaseGeneric<
-    SDealCards,
-    SGamePreparations,
-    SDetermineRules,
-    SGame,
-    SWebsocketGameResult,
->;
-type VGamePhaseActivePlayerInfo<'a> = VGamePhaseGeneric<
-    (&'a SDealCards, <SDealCards as TGamePhase>::ActivePlayerInfo),
-    (&'a SGamePreparations, <SGamePreparations as TGamePhase>::ActivePlayerInfo),
-    (&'a SDetermineRules, <SDetermineRules as TGamePhase>::ActivePlayerInfo),
-    (&'a SGame, <SGame as TGamePhase>::ActivePlayerInfo),
-    (&'a SWebsocketGameResult, <SWebsocketGameResult as TGamePhase>::ActivePlayerInfo),
->;
-type SActivelyPlayableRulesIdentifier = String;
-fn find_rules_by_id(slcrulegroup: &[SRuleGroup], hand: SFullHand, orulesid: &Option<SActivelyPlayableRulesIdentifier>) -> Result<Option<Box<dyn TActivelyPlayableRules>>, ()> {
-    allowed_rules(slcrulegroup, hand)
-        .find(|orules|
-            &orules.map(<dyn TActivelyPlayableRules>::to_string)==orulesid
-        )
-        .map(|orules| orules.map(TActivelyPlayableRulesBoxClone::box_clone)) // TODO box_clone needed?
-        .ok_or(())
-}
-
-fn rules_to_gamephaseaction<'retval, 'rules : 'retval, 'hand : 'retval>(slcrulegroup: &'rules [SRuleGroup], hand: SFullHand<'hand>, fn_gamephaseaction: impl 'static + Clone + Fn(Option<SActivelyPlayableRulesIdentifier>)->VGamePhaseAction) -> impl Clone + Iterator<Item=(SActivelyPlayableRulesIdentifier, VGamePhaseAction)> + 'retval {
-    allowed_rules(slcrulegroup, hand)
-        .map(move |orules|
-             (
-                 if let Some(rules) = orules {
-                     rules.to_string()
-                 } else {
-                     "Weiter".to_string()
-                 },
-                 fn_gamephaseaction(orules.map(<dyn TActivelyPlayableRules>::to_string)),
-             )
-        )
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-enum VGameAction {
-    Stoss,
-    Zugeben(SCard),
-}
-type VGamePhaseAction = VGamePhaseGeneric<
-    /*DealCards announce_doubling*/ /*b_doubling*/bool,
-    /*GamePreparations announce_game*/Option<SActivelyPlayableRulesIdentifier>,
-    /*DetermineRules*/Option<SActivelyPlayableRulesIdentifier>,
-    /*Game*/VGameAction,
-    /*GameResult*/(),
->;
 #[derive(Serialize, Deserialize)]
 enum VPlayerCmd {
     GamePhaseAction(VGamePhaseAction),
     PlayerLogin{str_player_name: String},
-}
-
-impl VGamePhase {
-    fn which_player_can_do_something(&self) -> Option<VGamePhaseActivePlayerInfo> {
-        use VGamePhaseGeneric::*;
-        fn internal<GamePhase: TGamePhase>(gamephase: &GamePhase) -> Option<(&GamePhase, GamePhase::ActivePlayerInfo)> {
-            gamephase.which_player_can_do_something()
-                .map(|activeplayerinfo| (gamephase, activeplayerinfo))
-        }
-        match self {
-            DealCards(dealcards) => internal(dealcards).map(DealCards),
-            GamePreparations(gamepreparations) => internal(gamepreparations).map(GamePreparations),
-            DetermineRules(determinerules) => internal(determinerules).map(DetermineRules),
-            Game(game) => internal(game).map(Game),
-            GameResult(gameresult) => internal(gameresult).map(GameResult),
-        }
-    }
 }
 
 #[derive(Debug)]
