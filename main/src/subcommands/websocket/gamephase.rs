@@ -15,6 +15,14 @@ pub enum VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, Ga
     GameResult(GameResult),
 }
 
+
+impl<DealCards, GamePreparations, DetermineRules, Game, GameResult> VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, GameResult> {
+    pub fn matches_phase(&self, gamephase: &Self) -> bool {
+        use std::mem::discriminant;
+        discriminant(self)==discriminant(gamephase)
+    }
+}
+
 #[derive(Debug)]
 pub struct SWebsocketGameResult {
     // TODO? should the members be private?

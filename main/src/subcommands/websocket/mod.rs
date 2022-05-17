@@ -260,11 +260,10 @@ impl STable {
                     };
                 }
                 if let Some(gamephaseaction) = ogamephaseaction {
-                    use std::mem::discriminant;
                     match self.players.mapepiopeer[epi].otimeoutcmd.as_ref() {
                         None => (),
                         Some(timeoutcmd) => {
-                            if discriminant(&gamephaseaction)==discriminant(&timeoutcmd.gamephaseaction) {
+                            if gamephaseaction.matches_phase(&timeoutcmd.gamephaseaction) {
                                 timeoutcmd.aborthandle.abort();
                                 self.players.mapepiopeer[epi].otimeoutcmd = None;
                             }
@@ -408,12 +407,9 @@ impl STable {
                             table_mutex,
                             epi,
                         ));
-                        assert!({
-                            use std::mem::discriminant;
-                            otimeoutcmd.as_ref().map_or(true, |timeoutcmd|
-                                discriminant(&timeoutcmd.gamephaseaction)==discriminant(&gamephaseaction_timeout)
-                            )
-                        }); // only one active timeout cmd
+                        assert!(otimeoutcmd.as_ref().map_or(true, |timeoutcmd|
+                            timeoutcmd.gamephaseaction.matches_phase(&gamephaseaction_timeout)
+                        )); // only one active timeout cmd
                         *otimeoutcmd = Some(STimeoutCmd{
                             gamephaseaction: gamephaseaction_timeout,
                             aborthandle,
