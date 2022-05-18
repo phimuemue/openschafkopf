@@ -15,7 +15,10 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
             .help("Perform analysis as if other cards are unknown")
             .long_help("Perform analysis not only for the given distribution of cards, but instead for all possible combinations from the respective player's point of view.")
         )
-        .arg(super::clap_arg("max-remaining-cards", if_dbg_else!({"2"}{"4"})))
+        .arg(super::clap_arg("max-remaining-cards", if_dbg_else!({"2"}{"4"}))
+            .help("Analyze only if a hand contains at most a certain amount of cards")
+            .long_help("Perform analysis only if the respective player at the respective point of the game has at most a certain amount of cards left. Can be used to reduce computation time.")
+        )
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
