@@ -38,8 +38,9 @@ use gamephase::{
 };
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
+    use super::shared_args::*;
     clap::Command::new(str_subcommand)
-        .arg(super::clap_arg("ruleset", "rulesets/default.toml"))
+        .arg(ruleset_arg())
 }
 
 #[derive(Serialize, Deserialize)]

@@ -4,9 +4,10 @@ use crate::util::*;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     use super::clap_arg;
+    use super::shared_args::*;
     clap::Command::new(str_subcommand)
         .about("Estimate strength of own hand")
-        .arg(clap_arg("ruleset", "rulesets/default.toml"))
+        .arg(ruleset_arg())
         .arg(clap_arg("ai", "cheating"))
         .arg(clap_arg("hand", ""))
         .arg(clap_arg("position", "0"))
