@@ -19,7 +19,7 @@ ncurses = "5"
 itertools = "0"
 plain_enum = "0"
 permutohedron = "0"
-clap = "3"
+clap = {version="3", features = ["std", "color", "suggestions", "wrap_help"]} # see https://docs.rs/clap/latest/clap/index.html#feature-flags
 arrayvec = "0"
 rayon = "1"
 toml = "0"
