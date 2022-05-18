@@ -28,7 +28,12 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
             .help("The cards on someone's hand")
             .long_help("The cards on the current player's hand (simply separated by spaces, such as \"eo go ho so eu gu hu su\" for a Sie), or the hands of all players. Specifying all player's hands works by first listing cards of player 0, then player 1, then player 2, then player 3 (Example: \"ea ez  ga gz  ha hz  sa sz\" means player 0 has Eichel-Ass and Eichel-Zehn, player 1 has Gras-Ass and Gras-Zehn, and so forth). You can use underscore to leave \"holes\" in other players' hands (Example: \"ea __  ga __  ha __  sa __\" means player 0 has Eichel-Ass and another unknown card, player 1 has Gras-Ass and unknown card, and so forth).")
         )
-        .arg(clap::Arg::new("cards_on_table").long("cards-on-table").takes_value(true))
+        .arg(clap::Arg::new("cards_on_table")
+            .long("cards-on-table") // TODO rename to played-cards
+            .takes_value(true)
+            .help("Cards played so far")
+            .long_help("Cards played so far in the order they have been played. The software matches the cards to the respective player.")
+        )
         .arg(clap::Arg::new("simulate_hands").long("simulate-hands").takes_value(true))
         .arg(clap::Arg::new("verbose").long("verbose").short('v'))
         .arg(clap::Arg::new("constrain_hands").long("constrain-hands").takes_value(true))
