@@ -45,7 +45,12 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
             .short('v')
             .help("Show more output")
         )
-        .arg(clap::Arg::new("constrain_hands").long("constrain-hands").takes_value(true))
+        .arg(clap::Arg::new("constrain_hands")
+            .long("constrain-hands")
+            .takes_value(true)
+            .help("Constrain simulated hands")
+            .long_help("Constrain simulated hands so that certain criteria are fulfilled. Example: \"4<T(0)&EA(1)\" only considers card distributions where player 0 has more than 4 Trumpf and player 1 has Eichel-Ass. (Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).)")
+        )
 }
 
 pub trait TWithCommonArgs {
