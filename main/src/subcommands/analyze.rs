@@ -12,6 +12,8 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
         )
         .arg(clap::Arg::new("simulate-all-hands")
             .long("simulate-all-hands")
+            .help("Perform analysis as if other cards are unknown")
+            .long_help("Perform analysis not only for the given distribution of cards, but instead for all possible combinations from the respective player's point of view.")
         )
         .arg(super::clap_arg("max-remaining-cards", if_dbg_else!({"2"}{"4"})))
 }
