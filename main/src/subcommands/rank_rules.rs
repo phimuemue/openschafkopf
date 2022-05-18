@@ -8,7 +8,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     clap::Command::new(str_subcommand)
         .about("Estimate strength of own hand")
         .arg(ruleset_arg())
-        .arg(clap_arg("ai", "cheating"))
+        .arg(ai_arg())
         .arg(clap_arg("hand", ""))
         .arg(clap_arg("position", "0"))
         // TODO align arguments with suggest-card

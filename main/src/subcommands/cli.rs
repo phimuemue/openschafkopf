@@ -10,7 +10,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     clap::Command::new(str_subcommand)
         .about("Simulate players to play against")
         .arg(ruleset_arg())
-        .arg(clap_arg("ai", "cheating"))
+        .arg(ai_arg())
         .arg(clap_arg("numgames", "4"))
 }
 
