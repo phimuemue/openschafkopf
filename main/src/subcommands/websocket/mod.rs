@@ -40,6 +40,7 @@ use gamephase::{
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     use super::shared_args::*;
     clap::Command::new(str_subcommand)
+        .about("Play in the browser")
         .arg(ruleset_arg())
 }
 
