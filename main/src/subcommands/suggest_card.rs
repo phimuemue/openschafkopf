@@ -9,11 +9,34 @@ use super::common_given_game::*;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     subcommand_given_game(str_subcommand, "Suggest a card to play given the game so far")
-        .arg(clap::Arg::new("repeat_hands").long("repeat-hands").takes_value(true))
-        .arg(clap::Arg::new("branching").long("branching").takes_value(true))
-        .arg(clap::Arg::new("prune").long("prune").takes_value(true))
-        .arg(clap::Arg::new("visualize").long("visualize").takes_value(true))
-        .arg(clap::Arg::new("points").long("points")) // TODO? also support by stichs
+        .arg(clap::Arg::new("repeat_hands")
+            .long("repeat-hands")
+            .takes_value(true)
+            .help("Repeat each simulated card distribution")
+        )
+        .arg(clap::Arg::new("branching")
+            .long("branching")
+            .takes_value(true)
+            .help("Braching strategy for game tree search")
+            .long_help("Branching strategy for game tree search. Supported values are either \"equiv<N>\" where <N> is a number or \"<Min>,<Max>\" where <Min> and <Max> are numbers. \"equiv6\" will eliminate equivalent cards in branching up to the 6th stich, after that it will do full exploration; similarily \"equiv3\" will do this up to the 3rd stich. \"2,5\" will limit the branching factor of each game tree's node to a random value between 2 and 5 (exclusively). If you specify a branching limit that is too higher than 8 (e.g. \"99,100\"), the software will not prune the game tree in any way and do a full exploration.")
+        )
+        .arg(clap::Arg::new("prune")
+            .long("prune")
+            .takes_value(true)
+            .help("Prematurely stop game tree exploration if result is tenatively known")
+            .long_help("Prematurely stop game tree exploration if result is tenatively known. Example: If, for a Solo, someone already reached 70 points after the fifth stich, the Solo is surely won, so the exploration can just stop right there (at the expense of a more inaccurate result).")
+            .possible_values(["none", "hint"])
+        )
+        .arg(clap::Arg::new("visualize")
+            .long("visualize")
+            .takes_value(true)
+            .help("Output game trees as HTML")
+        )
+        .arg(clap::Arg::new("points") // TODO? also support by stichs
+            .long("points")
+            .help("Use points as criterion")
+            .long_help("When applicable (e.g. for Solo, Rufspiel), investigate the points reached instead of the raw payout.")
+        )
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
