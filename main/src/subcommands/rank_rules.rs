@@ -9,8 +9,14 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
         .about("Estimate strength of own hand")
         .arg(ruleset_arg())
         .arg(ai_arg())
-        .arg(clap_arg("hand", ""))
-        .arg(clap_arg("position", "0"))
+        .arg(clap_arg("hand", "")
+            .help("The cards on someone's hand")
+            .long_help("The cards on someone's hand. Must be complete.")
+        )
+        .arg(clap_arg("position", "0")
+            .help("Position of the player")
+            .long_help("Position of the player. Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).")
+        )
         // TODO align arguments with suggest-card
 }
 
