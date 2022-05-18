@@ -6,7 +6,13 @@ use super::common_given_game::*;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     subcommand_given_game(str_subcommand, "Statistics about hands that could be dealt.")
-        .arg(clap::Arg::new("inspect").long("inspect").takes_value(true).multiple_occurrences(true))
+        .arg(clap::Arg::new("inspect")
+            .long("inspect")
+            .takes_value(true)
+            .multiple_occurrences(true)
+            .help("Describes inspection target")
+            .long_help("Describes what the software will inspect. Example: \"EA(0)\" checks if player 0 has Eichel-Ass, \"T(2)\" counts the trumpf cards held by player 2. (Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).)")
+        )
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
