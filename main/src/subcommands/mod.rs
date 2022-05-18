@@ -36,6 +36,15 @@ mod shared_args {
             .long_help("Describes whether the AI plays fair or has access to all players' cards.")
             .possible_values(["cheating", "simulating"]) // TODO custom validator?
     }
+
+    pub fn input_files_arg(str_name: &'static str) -> clap::Arg<'static> { // TODO? unify str_name
+        clap::Arg::new(str_name)
+            .required(true)
+            .takes_value(true)
+            .multiple_occurrences(true)
+            .help("Paths to files containing played games")
+            .long_help("Paths or glob patterns to files containing played games. Files can either be saved HTML from sauspiel.de or plain text files containing one game per line (each line consisting of the rules, followed by a colon and the cards in the order they have been played).")
+    }
 }
 
 pub fn get_ruleset(clapmatches: &clap::ArgMatches) -> Result<SRuleSet, Error> {

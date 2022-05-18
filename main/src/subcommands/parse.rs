@@ -9,14 +9,11 @@ use itertools::Itertools;
 use crate::primitives::*;
 use std::io::Write;
 
-pub fn subcommand(str_subcommand: &str) -> clap::Command {
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
+    use super::shared_args::*;
     clap::Command::new(str_subcommand)
         .about("Parse a game into a simple format")
-        .arg(clap::Arg::new("file") // TODO? shared function to glob for files
-            .required(true)
-            .takes_value(true)
-            .multiple_occurrences(true)
-        )
+        .arg(input_files_arg("file"))
 }
 
 macro_rules! card_neural_network_mapping(($macro:ident) => {

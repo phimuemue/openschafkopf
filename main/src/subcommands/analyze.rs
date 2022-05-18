@@ -3,13 +3,10 @@ use crate::game::*;
 use crate::util::*;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
+    use super::shared_args::*;
     clap::Command::new(str_subcommand)
         .about("Analyze played games and spot suboptimal decisions")
-        .arg(clap::Arg::new("sauspiel-files")
-            .required(true)
-            .takes_value(true)
-            .multiple_occurrences(true)
-        )
+        .arg(input_files_arg("sauspiel-files"))
         .arg(clap::Arg::new("include-no-findings")
             .long("include-no-findings")
         )
