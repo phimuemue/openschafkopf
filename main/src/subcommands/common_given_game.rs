@@ -34,7 +34,12 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
             .help("Cards played so far")
             .long_help("Cards played so far in the order they have been played. The software matches the cards to the respective player.")
         )
-        .arg(clap::Arg::new("simulate_hands").long("simulate-hands").takes_value(true))
+        .arg(clap::Arg::new("simulate_hands")
+            .long("simulate-hands")
+            .takes_value(true)
+            .help("Number of hands to simulate")
+            .long_help("Number of unknown hands to simulate. Can either be a number or \"all\", causing the software to generate all possible combinations.")
+        )
         .arg(clap::Arg::new("verbose").long("verbose").short('v'))
         .arg(clap::Arg::new("constrain_hands").long("constrain-hands").takes_value(true))
 }
@@ -153,7 +158,7 @@ pub fn with_common_args(
     let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(mapepin_cards_per_hand[epi_fixed] - 1));
     use VChooseItAhand::*;
     let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
-        if "all"==str_itahand.to_lowercase() {
+        if "all"==str_itahand.to_lowercase() { // TODO replace this case by simply "0"?
             All
         } else if let Ok(n_samples)=str_itahand.parse() {
             Sample(n_samples)
