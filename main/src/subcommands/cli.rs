@@ -11,7 +11,9 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
         .about("Simulate players to play against")
         .arg(ruleset_arg())
         .arg(ai_arg())
-        .arg(clap_arg("numgames", "4"))
+        .arg(clap_arg("numgames", "4")
+            .help("Number of games to play")
+        )
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
