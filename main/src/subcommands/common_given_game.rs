@@ -40,7 +40,11 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
             .help("Number of hands to simulate")
             .long_help("Number of unknown hands to simulate. Can either be a number or \"all\", causing the software to generate all possible combinations.")
         )
-        .arg(clap::Arg::new("verbose").long("verbose").short('v'))
+        .arg(clap::Arg::new("verbose")
+            .long("verbose")
+            .short('v')
+            .help("Show more output")
+        )
         .arg(clap::Arg::new("constrain_hands").long("constrain-hands").takes_value(true))
 }
 
