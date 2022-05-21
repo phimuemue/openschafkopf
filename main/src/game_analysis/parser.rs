@@ -45,7 +45,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
     let mapepistr_username = vec_to_arr(
         doc.find(Class("game-participants"))
             .exactly_one()
-            .map_err(|it| format_err!("error on single: {} elements", it.count()))? // TODO could it implement Debug?
+            .map_err(|it| format_err!("error on single: {:?} elements", it.count()))? // TODO could it implement Debug?
             .find(Attr("data-username", ()))
             .map(|node_username| unwrap!(node_username.attr("data-username")))
             .collect()

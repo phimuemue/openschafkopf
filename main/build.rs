@@ -6,8 +6,12 @@ use std::{env, fs::File, io::Write, path::Path, process::Command};
 
 fn main() {
     // adapted from https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
+    fn declare_input_file<P: AsRef<Path>>(path_in: P) -> P {
+        println!("cargo:rerun-if-changed={}", unwrap!(path_in.as_ref().to_str()));
+        path_in
+    }
     let execute_external = |path_in: &Path, cmd: &mut Command| {
-        println!("cargo:rerun-if-changed={}", unwrap!(path_in.to_str()));
+        declare_input_file(path_in);
         let output = unwrap!(cmd.output());
         assert!(output.status.success(), "{:?}: {:?}", cmd, output);
         output
@@ -28,22 +32,28 @@ fn main() {
                     .arg(&path_css_in)
             ).stdout)
     );
-    // TODO can we avoid inkscape depencency?
-    let path_svg_in = path_resources.join("cards.svg");
-    execute_external(
-        &path_svg_in,
-        Command::new("inkscape")
-            .arg(&path_svg_in)
-            .arg(format!("--export-filename={}", unwrap!(path_out_dir.join("cards.png").to_str())))
-    );
+    // SVG rendering adapted from https://github.com/RazrFalcon/resvg/blob/master/examples/minimal.rs
+    let svgtree = usvg::Tree::from_data(
+        &unwrap!(std::fs::read(declare_input_file(path_resources.join("cards.svg")))),
+        &usvg::Options::default().to_ref()
+    ).unwrap(/*TODO should implement Debug*/);
+    let screensize = svgtree.svg_node().size.to_screen_size();
+    let export_cards_png = |path_cards_png, n_factor: u32| {
+        let mut pixmap = unwrap!(tiny_skia::Pixmap::new(
+            screensize.width() * n_factor,
+            screensize.height() * n_factor,
+        ));
+        unwrap!(resvg::render(
+            &svgtree,
+            usvg::FitTo::Original,
+            tiny_skia::Transform::from_scale(n_factor.as_num::<f32>(), n_factor.as_num::<f32>()),
+            pixmap.as_mut()
+        ));
+        unwrap!(pixmap.save_png(path_cards_png));
+    };
+    export_cards_png(path_out_dir.join("cards.png"), 1);
     let path_svg_3dpi = path_out_dir.join("cards_3dpi.png");
-    execute_external(
-        &path_svg_in,
-        Command::new("inkscape")
-            .arg(&path_svg_in)
-            .arg(format!("--export-filename={}", unwrap!(path_svg_3dpi.to_str())))
-            .arg(format!("--export-dpi={}", 3*/*default DPI*/96))
-    );
+    export_cards_png(path_svg_3dpi.clone(), 3);
     let img = unwrap!(image::open(path_svg_3dpi));
     let (n_width, n_height) = img.dimensions();
     let str_efarbe = "EGHS";
