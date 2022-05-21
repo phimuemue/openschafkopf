@@ -36,6 +36,7 @@ pub trait TPlayer {
         doublings: &SDoublings,
         rules: &dyn TRules,
         hand: &SHand,
+        stichseq: &SStichSequence,
         vecstoss: &[SStoss],
         n_stock: isize,
         txb: mpsc::Sender<bool>,

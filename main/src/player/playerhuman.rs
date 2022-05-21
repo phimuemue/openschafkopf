@@ -160,6 +160,7 @@ impl TPlayer for SPlayerHuman {
         doublings: &SDoublings,
         rules: &dyn TRules,
         hand: &SHand,
+        _stichseq: &SStichSequence,
         vecstoss: &[SStoss],
         _n_stock: isize,
         txb: mpsc::Sender<bool>,

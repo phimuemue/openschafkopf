@@ -80,19 +80,19 @@ impl TPlayer for SPlayerComputer {
         doublings: &SDoublings,
         rules: &dyn TRules,
         hand: &SHand,
+        stichseq: &SStichSequence,
         vecstoss: &[SStoss],
         n_stock: isize,
         txb: mpsc::Sender<bool>,
     ) {
         let n_samples_per_stoss = 5; // TODO move to ai, make adjustable
-        let ekurzlang = EKurzLang::from_cards_per_player(hand.cards().len());
-        let mut vectplahandf_suspicion = forever_rand_hands(/*stichseq*/&SStichSequence::new(ekurzlang), hand.clone(), epi, rules)
+        let mut vectplahandf_suspicion = forever_rand_hands(stichseq, hand.clone(), epi, rules)
             .take(2*n_samples_per_stoss)
             .map(|ahand| {
                 let f_rank_rules = rules.playerindex().map_or(0f64, |epi_active| {
                     if epi!=epi_active {
                         self.ai.rank_rules(
-                            SFullHand::new(ahand[epi_active].cards(), ekurzlang),
+                            SFullHand::new(ahand[epi_active].cards(), stichseq.kurzlang()),
                             /*epi_rank*/epi_active,
                             rules,
                             stoss_and_doublings(vecstoss, doublings),
@@ -116,7 +116,7 @@ impl TPlayer for SPlayerComputer {
                     explore_snapshots(
                         &mut ahand,
                         rules,
-                        &mut SStichSequence::new(ekurzlang),
+                        &mut SStichSequence::new(stichseq.kurzlang()),
                         &mut branching_factor(|_stichseq| (1, 2)),
                         &SMinReachablePayout::new(
                             rules,

@@ -54,6 +54,7 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
         _doublings: &SDoublings,
         _rules: &dyn TRules,
         _hand: &SHand,
+        _stichseq: &SStichSequence,
         _vecstoss: &[SStoss],
         _n_stock: isize,
         txb: mpsc::Sender<bool>,

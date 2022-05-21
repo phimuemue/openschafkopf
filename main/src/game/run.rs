@@ -93,6 +93,7 @@ pub fn run_simple_game_loop(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_
                                         &game.doublings,
                                         game.rules.as_ref(),
                                         &game.ahand[**epi],
+                                        &game.stichseq,
                                         &game.vecstoss,
                                         game.n_stock,
                                         txb_stoss,
