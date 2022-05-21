@@ -11,7 +11,6 @@ This software allows to play and analyze the game [Schafkopf](https://en.wikiped
 
 Requirements:
 * [rust](https://www.rust-lang.org/en-US/install.html) stable
-* [inkscape](https://inkscape.org/) (tested with 1.0.2)
 * [less](http://lesscss.org/) (tested with 3.9.0)
 
 ```
