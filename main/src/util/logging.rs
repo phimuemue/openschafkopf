@@ -1,8 +1,6 @@
 use itertools::Itertools;
-
-use failure::{bail, format_err};
+use crate::util::*;
 pub use log::{debug, error, info, trace, warn};
-use openschafkopf_util::if_dbg_else;
 
 pub fn init_logging() -> Result<(), failure::Error> {
     fern::Dispatch::new()

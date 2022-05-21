@@ -22,7 +22,7 @@ use crate::primitives::*;
 use crate::util::*;
 
 fn main() -> Result<(), Error> {
-    openschafkopf_logging::init_logging()?; // TODO? split for certain subcommands (e.g. webext)
+    logging::init_logging()?; // TODO? split for certain subcommands (e.g. webext)
     macro_rules! subcommands{($(($([$($t:tt)*])? $mod:ident, $str_cmd:expr))*) => {
         let clapmatches = clap::Command::new("schafkopf")
             .arg_required_else_help(true);

@@ -10,10 +10,11 @@ pub mod assign;
 pub mod parser;
 pub mod interval;
 pub mod enumchains;
+pub mod logging;
 pub use self::{assign::*, box_clone::*, staticvalue::*, interval::*, enumchains::*, if_then::*};
 pub use derive_new::new;
 pub use failure::{bail, format_err, Error};
-pub use openschafkopf_logging::{error, info, warn};
+pub use logging::{error, info, warn};
 pub use openschafkopf_util::*;
 
 // TODORUST static_assert not available in rust
