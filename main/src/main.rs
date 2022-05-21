@@ -4,6 +4,7 @@
     clippy::upper_case_acronyms,
     clippy::type_complexity, // TODO could this be solved via type-complexity-threshold?
     clippy::new_without_default,
+    clippy::enum_variant_names,
 ))]
 
 #[macro_use]
