@@ -1,0 +1,1 @@
+./target/release/openschafkopf cli
