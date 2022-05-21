@@ -48,8 +48,7 @@ fn main() {
         pixmap
     };
     export_cards_png(path_out_dir.join("cards.png"), 1);
-    let path_svg_3dpi = path_out_dir.join("cards_3dpi.png");
-    let pixmap_cards_3dpi = export_cards_png(path_svg_3dpi.clone(), 3);
+    let pixmap_cards_3dpi = export_cards_png(path_out_dir.join("cards_3dpi.png"), 3);
     let (n_width, n_height) = (pixmap_cards_3dpi.width(), pixmap_cards_3dpi.height());
     let str_efarbe = "EGHS";
     let str_eschlag = "AZKOU987";
