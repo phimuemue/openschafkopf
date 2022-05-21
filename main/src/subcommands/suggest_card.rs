@@ -1,4 +1,4 @@
-use crate::ai::{*, suspicion::*};
+use crate::ai::{*, gametree::*};
 use crate::primitives::*;
 use crate::util::*;
 use itertools::*;

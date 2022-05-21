@@ -1,4 +1,4 @@
-use crate::ai::{handiterators::*, suspicion::*, *};
+use crate::ai::{handiterators::*, gametree::*, *};
 use crate::game::*;
 use crate::primitives::*;
 use crate::rules::{payoutdecider::*, ruleset::VStockOrT, rulessolo::*, *};
@@ -264,9 +264,9 @@ pub fn generate_analysis_html(
         str_rules=str_rules,
     )
     + "<table><tr>"
-    + &crate::ai::suspicion::player_table_ahand(epi_self, &ahand, game.rules.as_ref(), /*fn_border*/|_card| false)
+    + &crate::ai::gametree::player_table_ahand(epi_self, &ahand, game.rules.as_ref(), /*fn_border*/|_card| false)
     + "</tr></table><table><tr>"
-    + &crate::ai::suspicion::player_table_stichseq(epi_self, &game.stichseq)
+    + &crate::ai::gametree::player_table_stichseq(epi_self, &game.stichseq)
     + "</tr></table>"
     + "<ul>"
     + &format!("{}", slcanalysispercard.iter()
@@ -357,7 +357,7 @@ pub fn generate_analysis_html(
                 str_per_card += "<tr>";
                 str_per_card += "<td>";
                 for &card in outputline.veccard.iter() {
-                    str_per_card += &crate::ai::suspicion::output_card(card, /*b_border*/card==analysispercard.card_played);
+                    str_per_card += &crate::ai::gametree::output_card(card, /*b_border*/card==analysispercard.card_played);
                 }
                 str_per_card += "</td>";
                 for atplstrf in outputline.mapemmstrategyatplstrf.iter() {
@@ -384,7 +384,7 @@ pub fn generate_analysis_html(
             if !veccard_non_allowed.is_empty() {
                 str_per_card += "<td>";
                 for card in veccard_non_allowed {
-                    str_per_card += &crate::ai::suspicion::output_card(card, /*b_border*/false);
+                    str_per_card += &crate::ai::gametree::output_card(card, /*b_border*/false);
                 }
                 str_per_card += "</td>";
                 str_per_card += &format!("<td colspan=\"{}\">N.A.</td>",

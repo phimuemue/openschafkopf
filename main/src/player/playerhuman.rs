@@ -1,4 +1,4 @@
-use crate::ai::{*, suspicion::*};
+use crate::ai::{*, gametree::*};
 use crate::game::*;
 use crate::player::*;
 use crate::primitives::*;
@@ -96,7 +96,7 @@ impl TPlayer for SPlayerHuman {
                     Some(self.ai.suggest_card(
                         game,
                         visualizer_factory(
-                            std::path::Path::new("suspicion").to_path_buf(),
+                            std::path::Path::new("gametree").to_path_buf(),
                             game.rules.as_ref(),
                             epi,
                         ),

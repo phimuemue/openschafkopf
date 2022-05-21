@@ -1,10 +1,10 @@
 pub mod handiterators;
 pub mod rulespecific;
-pub mod suspicion;
+pub mod gametree;
 #[cfg(test)]
 pub mod test;
 
-use crate::ai::{handiterators::*, suspicion::*};
+use crate::ai::{handiterators::*, gametree::*};
 use crate::game::*;
 use crate::primitives::*;
 use crate::rules::*;

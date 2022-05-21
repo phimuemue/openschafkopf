@@ -1,4 +1,4 @@
-use crate::ai::{SDetermineBestCardResult, SPayoutStats, SPayoutStatsPerStrategy, suspicion::EMinMaxStrategy};
+use crate::ai::{SDetermineBestCardResult, SPayoutStats, SPayoutStatsPerStrategy, gametree::EMinMaxStrategy};
 use crate::primitives::*;
 use itertools::*;
 use crate::util::*;

@@ -1,6 +1,6 @@
 use crate::ai::{
     handiterators::forever_rand_hands,
-    suspicion::{
+    gametree::{
         EMinMaxStrategy, explore_snapshots, SMinReachablePayout, SNoVisualization,
     },
     *,
