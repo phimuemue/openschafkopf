@@ -1,18 +1,28 @@
 # OpenSchafkopf
 
-This is a work in progress, aiming to model the game Schafkopf in a robust and extensible manner. Moreover, it aims to provide an AI playing the game. As of now, it does *not* provide any fancy user interface, but instead relies on the command line.
+This software allows to play and analyze the game [Schafkopf](https://en.wikipedia.org/wiki/Schafkopf). It supports the following variants (see [rulesets](https://github.com/phimuemue/openschafkopf/tree/main/rulesets) for examples):
 
-## Getting started
+* Rules: Rufspiel, Solo/Wenz/Farbwenz/Geier/Farbgeier (including Tout/Sie), Bettel, Ramsch
+* Expensifiers: Schneider/Schwarz, Laufende, Stoss, Doppeln
+* Misc: Kurze/lange Karte, Stock, Steigern
 
-Build Requirements:
-* rust programming language (https://www.rust-lang.org/en-US/install.html)
-* inkscape (https://inkscape.org/)
-* less (http://lesscss.org/)
+
+## Building
+
+Requirements:
+* [rust](https://www.rust-lang.org/en-US/install.html) stable
+* [inkscape](https://inkscape.org/) (tested with 1.0.2)
+* [less](http://lesscss.org/) (tested with 3.9.0)
 
 ```
 git clone https://github.com/phimuemue/openschafkopf.git
 cd openschafkopf
 cargo build --release
+```
+
+## Getting started
+
+```
 ./target/release/openschafkopf -h
 
 schafkopf 
@@ -35,16 +45,3 @@ SUBCOMMANDS:
     webext          Backend of a web-extension suggesting a card for a given game state
     help            Print this message or the help of the given subcommand(s)
 ```
-
-## Supported variants
-
-* Kurze Karte/Lange Karte
-* Rufspiel
-* Solo/Wenz/Farbwenz/Geier/Farbgeier
-* Schneider/Schwarz/Laufende
-* Tout/Sie
-* Stoss/Doppeln
-* Ramsch
-* Bettel
-* Stock
-* Steigern
