@@ -1,0 +1,1 @@
+./target/release/openschafkopf suggest-card --rules "Rufspiel mit der Gras-Sau von 3" --cards-on-table "SO H7 GO EO  HO HZ HK EU  GU H9 SU G8  G9 GA GK E9" --hand "SK SZ G7 EA  HU SA HA EK  S8 S9 S7 EZ  E8 H8 GZ E7" --branching "equiv7" --verbose
