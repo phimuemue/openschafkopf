@@ -1,13 +1,18 @@
-use as_num::AsNum;
+//use as_num::AsNum;
 use byteorder::ByteOrder;
 use itertools::Itertools;
-use openschafkopf_logging::*;
-use openschafkopf_util::*;
+//use openschafkopf_logging::*;
+//use openschafkopf_util::*;
 use serde_json::json;
 use std::io::{Read, Write};
+use crate::util::*;
 
-fn main() -> Result<(), failure::Error> {
-    openschafkopf_logging::init_logging()?;
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
+    clap::Command::new(str_subcommand)
+        .about("Backend of a web-extension suggesting a card for a given game state")
+}
+
+pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
     use std::sync::{Arc, Mutex};
     let ocmd_openschafkopf: Arc<Mutex<Option<std::process::Child>>> = Arc::new(Mutex::new(None));
     let (sendstr, recvstr) = std::sync::mpsc::channel();
@@ -114,7 +119,7 @@ fn main() -> Result<(), failure::Error> {
                             .file_type()
                             .is_symlink()
                         );
-                        unwrap!(path_self.parent()).join("openschafkopf")
+                        path_self
                     })
                         .args(&[
                             "suggest-card",

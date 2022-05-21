@@ -41,12 +41,13 @@ serde_json = "1"
 serde_repr = "0"
 reqwest = "0"
 tokio = { version = "1", features = ["full"] } # TODO can we get rid of this?
+byteorder = "1"
 
 [dev-dependencies]
 serde_test = "1"
 
 [features]
-default = ["cli", "rank-rules", "suggest-card", "parse", "analyze", "websocket", "hand-stats", "dl"]
+default = ["cli", "rank-rules", "suggest-card", "parse", "analyze", "websocket", "hand-stats", "dl", "webext"]
 cli = []
 rank-rules = []
 suggest-card = []
@@ -55,3 +56,4 @@ analyze = []
 websocket = []
 hand-stats = []
 dl = []
+webext = ["suggest-card"]

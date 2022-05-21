@@ -5,6 +5,7 @@ pub mod hand_stats;
 pub mod parse;
 pub mod rank_rules;
 pub mod suggest_card;
+pub mod webext;
 pub mod websocket;
 mod handconstraint;
 mod common_given_game;
