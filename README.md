@@ -20,18 +20,20 @@ schafkopf
 USAGE:
     openschafkopf [SUBCOMMAND]
 
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+OPTIONS:
+    -h, --help    Print help information
 
 SUBCOMMANDS:
+    cli             Play in command line
+    websocket       Play in the browser
     analyze         Analyze played games and spot suboptimal decisions
-    cli             Simulate players to play against
-    hand-stats      Statistics about hands that could be dealt.
-    help            Prints this message or the help of the given subcommand(s)
-    rank-rules      Estimate strength of own hand
     suggest-card    Suggest a card to play given the game so far
-    websocket       
+    rank-rules      Estimate strength of own hand
+    hand-stats      Statistics about hands that could be dealt.
+    dl              Download played games from Sauspiel
+    parse           Parse a game into a simple format
+    webext          Backend of a web-extension suggesting a card for a given game state
+    help            Print this message or the help of the given subcommand(s)
 ```
 
 ## Supported variants
