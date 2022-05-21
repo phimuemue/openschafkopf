@@ -145,11 +145,11 @@ impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
         self.write_all(b"</ul>\n");
         self.write_all(b"</li>\n");
         self.write_all(player_table(self.epi, |epi| {
-            Some(format!("{}",
+            Some(
                 minmax.0.iter()
                     .map(|an_payout| an_payout[epi])
                     .join("/")
-            ))
+            )
         }).as_bytes());
     }
 }
