@@ -360,11 +360,14 @@ pub fn generate_analysis_html(
                     str_per_card += &crate::ai::suspicion::output_card(card, /*b_border*/card==analysispercard.card_played);
                 }
                 str_per_card += "</td>";
-                for (str_num, _f) in outputline.atplstrf.iter() {
-                    str_per_card += "<td>";
-                    // TODO colored output as in suggest_card
-                    str_per_card += str_num;
-                    str_per_card += "</td>";
+                for atplstrf in outputline.mapemmstrategyatplstrf.iter() {
+                    // TODO simplify to one item per emmstrategy
+                    for (str_num, _f) in atplstrf.iter() {
+                        str_per_card += "<td>";
+                        // TODO colored output as in suggest_card
+                        str_per_card += str_num;
+                        str_per_card += "</td>";
+                    }
                 }
                 str_per_card += "</tr>";
             }
@@ -386,10 +389,10 @@ pub fn generate_analysis_html(
                 str_per_card += "</td>";
                 str_per_card += &format!("<td colspan=\"{}\">N.A.</td>",
                     verify_eq!(
-                        determine_best_card_table::N_COLUMNS,
+                        determine_best_card_table::N_COLUMNS * EMinMaxStrategy::SIZE,
                         {
                             // TODO itertools: all_equal_item
-                            let mut itn_columns = vecoutputline.iter().map(|outputline| outputline.atplstrf.len());
+                            let mut itn_columns = vecoutputline.iter().map(|outputline| outputline.mapemmstrategyatplstrf.iter().flatten().count());
                             assert!(itn_columns.clone().all_equal());
                             unwrap!(itn_columns.next())
                         }

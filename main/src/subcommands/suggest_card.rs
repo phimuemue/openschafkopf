@@ -157,7 +157,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     },
                 )
             }.ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
-            let (vecoutputline, n_max_cards, aformatinfo) = table(
+            let (vecoutputline, n_max_cards, mapemmstrategyaformatinfo) = table(
                 &determinebestcardresult,
                 rules,
                 /*fn_human_readable_payout*/&|f_payout| {
@@ -173,31 +173,34 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 },
             );
             // TODO interface should probably output payout interval per card
-            for SOutputLine{veccard, atplstrf} in vecoutputline.iter() {
+            for SOutputLine{veccard, mapemmstrategyatplstrf} in vecoutputline.iter() {
                 print!("{itcard:<n_width$}: ",
                     itcard = veccard.iter().join(" "),
                     n_width = n_max_cards*3 - 1 // assume a card occpuies two characters
                 );
-                for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
-                    use termcolor::*;
-                    let mut stdout = StandardStream::stdout(if atty::is(atty::Stream::Stdout) {
-                        ColorChoice::Auto
-                    } else {
-                        ColorChoice::Never
-                    });
-                    #[allow(clippy::float_cmp)]
-                    if f_min!=f_max {
-                        let mut set_color = |color| {
-                            unwrap!(stdout.set_color(ColorSpec::new().set_fg(Some(color))));
-                        };
-                        if f==f_min {
-                            set_color(Color::Red);
-                        } else if f==f_max {
-                            set_color(Color::Green);
+                for (atplstrf, aformatinfo) in mapemmstrategyatplstrf.iter().zip_eq(mapemmstrategyaformatinfo.iter()) {
+                    for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
+                        use termcolor::*;
+                        let mut stdout = StandardStream::stdout(if atty::is(atty::Stream::Stdout) {
+                            ColorChoice::Auto
+                        } else {
+                            ColorChoice::Never
+                        });
+                        #[allow(clippy::float_cmp)]
+                        if f_min!=f_max {
+                            let mut set_color = |color| {
+                                unwrap!(stdout.set_color(ColorSpec::new().set_fg(Some(color))));
+                            };
+                            if f==f_min {
+                                set_color(Color::Red);
+                            } else if f==f_max {
+                                set_color(Color::Green);
+                            }
                         }
+                        print!("{:>width$}", str_num, width=n_width);
+                        unwrap!(stdout.reset());
                     }
-                    print!("{:>width$}", str_num, width=n_width);
-                    unwrap!(stdout.reset());
+                    print!("   ");
                 }
                 println!();
             }

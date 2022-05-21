@@ -4,13 +4,13 @@ use itertools::*;
 use crate::util::*;
 use crate::rules::TRules;
 
-pub const N_COLUMNS : usize = 16;
+pub const N_COLUMNS : usize = 4;
 
 // crude formatting: treat all numbers as f32, and convert structured input to a plain number table
 #[derive(PartialEq)]
 pub struct SOutputLine {
     pub veccard: Vec<SCard>,
-    pub atplstrf: [(String, f32); N_COLUMNS],
+    pub mapemmstrategyatplstrf: EnumMap<EMinMaxStrategy, [(String, f32); N_COLUMNS]>,
 }
 
 #[derive(Clone, /*TODO really needed for array construction?*/Copy)]
@@ -24,7 +24,7 @@ pub fn table(
     determinebestcardresult: &SDetermineBestCardResult<SPayoutStatsPerStrategy>,
     rules: &dyn TRules,
     fn_human_readable_payout: &dyn Fn(f32) -> f32,
-) -> (Vec<SOutputLine>, usize/*n_max_cards*/, [SFormatInfo; N_COLUMNS]) {
+) -> (Vec<SOutputLine>, usize/*n_max_cards*/, EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>) {
     let mut n_max_cards = 0;
     let mut veccardminmax = determinebestcardresult.cards_and_ts().collect::<Vec<_>>();
     veccardminmax.sort_unstable_by(|&(_card_lhs, minmax_lhs), &(_card_rhs, minmax_rhs)| {
@@ -32,15 +32,15 @@ pub fn table(
     });
     veccardminmax.reverse(); // descending
     let mut vecoutputline : Vec<SOutputLine> = Vec::new();
-    let mut aformatinfo = [
+    let mut mapemmstrategyaformatinfo = EMinMaxStrategy::map_from_fn(|_emmstrategy| [
         SFormatInfo {
             f_min: f32::MAX,
             f_max: f32::MIN,
             n_width: 0,
         };
         N_COLUMNS
-    ];
-    for (atplstrf, grptplcardatplstrf) in veccardminmax.into_iter()
+    ]);
+    for (mapemmstrategyatplstrf, grptplcardmapemmstrategyatplstrf) in veccardminmax.into_iter()
         .map(|(card, minmax)| {
             let column_counts = |paystats: &SPayoutStats| {(
                 format!("{} ", paystats.counts().iter().join("/")),
@@ -57,43 +57,33 @@ pub fn table(
             };
             (
                 card,
-                [
-                    column_min_or_max(minmax.0[EMinMaxStrategy::Min].min()),
-                    column_average(&minmax.0[EMinMaxStrategy::Min]),
-                    column_min_or_max(minmax.0[EMinMaxStrategy::Min].max()),
-                    column_counts(&minmax.0[EMinMaxStrategy::Min]),
-                    column_min_or_max(minmax.0[EMinMaxStrategy::SelfishMin].min()),
-                    column_average(&minmax.0[EMinMaxStrategy::SelfishMin]),
-                    column_min_or_max(minmax.0[EMinMaxStrategy::SelfishMin].max()),
-                    column_counts(&minmax.0[EMinMaxStrategy::SelfishMin]),
-                    column_min_or_max(minmax.0[EMinMaxStrategy::SelfishMax].min()),
-                    column_average(&minmax.0[EMinMaxStrategy::SelfishMax]),
-                    column_min_or_max(minmax.0[EMinMaxStrategy::SelfishMax].max()),
-                    column_counts(&minmax.0[EMinMaxStrategy::SelfishMax]),
-                    column_min_or_max(minmax.0[EMinMaxStrategy::Max].min()),
-                    column_average(&minmax.0[EMinMaxStrategy::Max]),
-                    column_min_or_max(minmax.0[EMinMaxStrategy::Max].max()),
-                    column_counts(&minmax.0[EMinMaxStrategy::Max]),
-                ],
+                EMinMaxStrategy::map_from_fn(|emmstrategy| [
+                    column_min_or_max(minmax.0[emmstrategy].min()),
+                    column_average(&minmax.0[emmstrategy]),
+                    column_min_or_max(minmax.0[emmstrategy].max()),
+                    column_counts(&minmax.0[emmstrategy]),
+                ]),
             )
         })
-        .group_by(|(_card, atplstrf)| atplstrf.clone())
+        .group_by(|(_card, mapemmstrategyatplstrf)| mapemmstrategyatplstrf.clone())
         .into_iter()
     {
-        for ((str_val, f_val), formatinfo) in atplstrf.iter().zip_eq(aformatinfo.iter_mut()) {
-            formatinfo.n_width = formatinfo.n_width.max(str_val.len());
-            assign_min_partial_ord(&mut formatinfo.f_min, *f_val);
-            assign_max_partial_ord(&mut formatinfo.f_max, *f_val);
+        for (atplstrf, aformatinfo) in mapemmstrategyatplstrf.iter().zip_eq(mapemmstrategyaformatinfo.iter_mut()) {
+            for ((str_val, f_val), formatinfo) in atplstrf.iter().zip_eq(aformatinfo.iter_mut()) {
+                formatinfo.n_width = formatinfo.n_width.max(str_val.len());
+                assign_min_partial_ord(&mut formatinfo.f_min, *f_val);
+                assign_max_partial_ord(&mut formatinfo.f_max, *f_val);
+            }
         }
-        let mut veccard : Vec<_> = grptplcardatplstrf.into_iter()
+        let mut veccard : Vec<_> = grptplcardmapemmstrategyatplstrf.into_iter()
             .map(|(card, _atplstrf)| card)
             .collect();
         rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
         assign_max(&mut n_max_cards, veccard.len());
         vecoutputline.push(SOutputLine{
             veccard,
-            atplstrf,
+            mapemmstrategyatplstrf,
         });
     }
-    (vecoutputline, n_max_cards, aformatinfo)
+    (vecoutputline, n_max_cards, mapemmstrategyaformatinfo)
 }
