@@ -357,15 +357,10 @@ impl STable {
                         GamePreparations(gamepreparations) => match gamepreparations.finish() {
                             Ok(VGamePreparationsFinish::DetermineRules(determinerules)) => Some(DetermineRules(determinerules)),
                             Ok(VGamePreparationsFinish::DirectGame(game)) => Some(Game(game)),
-                            Ok(VGamePreparationsFinish::Stock(gameresult)) => {
-                                let mapepiopeer = &mut self.players.mapepiopeer;
-                                gameresult.apply_payout(&mut self.n_stock, |epi, n_payout| {
-                                    if let Some(ref mut peer) = mapepiopeer[epi].opeer {
-                                        peer.n_money += n_payout;
-                                    }
-                                });
-                                next_game(self)
-                            },
+                            Ok(VGamePreparationsFinish::Stock(gameresult)) => Some(GameResult(SWebsocketGameResult{
+                                gameresult,
+                                mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false),
+                            })),
                             Err(gamepreparations) => Some(GamePreparations(gamepreparations)),
                         }
                         DetermineRules(determinerules) => simple_transition(determinerules, Game, DetermineRules),
