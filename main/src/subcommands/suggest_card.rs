@@ -172,6 +172,36 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     }
                 },
             );
+            if b_verbose { // TODO? only for second-level verbosity
+                println!("\nInterpreting a line of the following table (taking the first line as an example):");
+                let SOutputLine{veccard, mapemmstrategyatplstrf} = &vecoutputline[0];
+                println!("If you play {}, then:", veccard.iter().join(" or "));
+                for emmstrategy in EMinMaxStrategy::values() {
+                    let astr = mapemmstrategyatplstrf[emmstrategy].clone().map(|tplstrf| tplstrf.0);
+                    let n_columns = astr.len(); // TODO can we get rid of this
+                    let [str_payout_min, str_payout_avg, str_payout_max, str_stats] = astr;
+                    println!("* The {} {} columns show tell what happens if all other players play {}:",
+                        EMinMaxStrategy::map_from_raw([
+                            "first",
+                            "second",
+                            "third",
+                            "fourth"
+                        ])[emmstrategy],
+                        n_columns,
+                        EMinMaxStrategy::map_from_raw([
+                            "adversarially",
+                            "optimally for themselves, favouring you in case of doubt",
+                            "optimally for themselves, not favouring you in case of doubt",
+                            "optimally for you",
+                        ])[emmstrategy],
+                    );
+                    println!("  * In the worst case (over all possible card distributions), you can enforce a payout of {}", str_payout_min);
+                    println!("  * On average (over all possible card distributions), you can enforce a payout of {}", str_payout_avg);
+                    println!("  * In the best case (over all possible card distributions), you can enforce a payout of {}", str_payout_max);
+                    println!("  * {} shows the number of games lost/zero-payout/won", str_stats);
+                }
+                println!();
+            }
             // TODO interface should probably output payout interval per card
             for SOutputLine{veccard, mapemmstrategyatplstrf} in vecoutputline.iter() {
                 print!("{itcard:<n_width$}: ",
