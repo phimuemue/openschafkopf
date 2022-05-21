@@ -241,7 +241,7 @@ impl TGamePhase for SDetermineRules {
 
     fn finish_success(self) -> Self::Finish {
         assert!(self.vectplepirules_queued.is_empty());
-        assert_eq!(self.ruleset.ekurzlang, EKurzLang::from_cards_per_player(self.aveccard[EPlayerIndex::EPI0].len()));
+        assert_eq!(self.ruleset.ekurzlang, unwrap!(EKurzLang::checked_from_cards_per_player(self.aveccard[EPlayerIndex::EPI0].len())));
         SGame::new(
             self.aveccard,
             self.doublings,
@@ -557,7 +557,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
             vecstoss: Vec::new(),
             ostossparams,
             n_stock,
-            stichseq: SStichSequence::new(EKurzLang::from_cards_per_player(n_cards_per_player)),
+            stichseq: SStichSequence::new(unwrap!(EKurzLang::checked_from_cards_per_player(n_cards_per_player))),
             ruleset,
         }
     }
@@ -641,7 +641,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
                     }
             };
             assert!(EPlayerIndex::values().all(|epi| cards_per_player(epi)==cards_per_player(EPlayerIndex::EPI0)));
-            assert_eq!(EKurzLang::from_cards_per_player(cards_per_player(EPlayerIndex::EPI0)), self.stichseq.ekurzlang);
+            assert_eq!(unwrap!(EKurzLang::checked_from_cards_per_player(cards_per_player(EPlayerIndex::EPI0))), self.stichseq.ekurzlang);
         }
         self.stichseq.ekurzlang
     }

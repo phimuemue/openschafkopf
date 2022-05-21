@@ -90,7 +90,7 @@ impl SAi {
 
     pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &dyn TRules, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> f64 {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
-        let ekurzlang = EKurzLang::from_cards_per_player(hand_fixed.get().len());
+        let ekurzlang = unwrap!(EKurzLang::checked_from_cards_per_player(hand_fixed.get().len()));
         forever_rand_hands(&SStichSequence::new(ekurzlang), SHand::new_from_iter(hand_fixed.get().iter().copied()), epi_rank, rules)
             .take(self.n_rank_rules_samples)
             .par_bridge() // TODO can we derive a true parallel iterator?
