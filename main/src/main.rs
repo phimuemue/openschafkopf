@@ -26,10 +26,14 @@ fn main() -> Result<(), Error> {
     macro_rules! subcommands{($(($([$($t:tt)*])? $mod:ident, $str_cmd:expr))*) => {
         let clapmatches = clap::Command::new("schafkopf")
             .arg_required_else_help(true);
+            let mut i_subcommand = 0; // TODO(clap) support for subcommand grouping (see https://github.com/clap-rs/clap/issues/1553)
             $(
+                i_subcommand += 1;
                 $(#[$($t)*])?
                 let clapmatches = clapmatches
-                    .subcommand(subcommands::$mod::subcommand($str_cmd));
+                    .subcommand(subcommands::$mod::subcommand($str_cmd)
+                        .display_order(i_subcommand)
+                    );
             )*
             let clapmatches = clapmatches.get_matches();
         $(
@@ -40,14 +44,17 @@ fn main() -> Result<(), Error> {
         )*
     }}
     subcommands!(
+        // play
         ([cfg(feature="cli")] cli, "cli")
-        ([cfg(feature="rank-rules")] rank_rules, "rank-rules")
-        ([cfg(feature="suggest-card")] suggest_card, "suggest-card")
-        ([cfg(feature="parse")] parse, "parse")
-        ([cfg(feature="analyze")] analyze, "analyze")
         ([cfg(feature="websocket")] websocket, "websocket")
+        // analyze
+        ([cfg(feature="analyze")] analyze, "analyze")
+        ([cfg(feature="suggest-card")] suggest_card, "suggest-card")
+        ([cfg(feature="rank-rules")] rank_rules, "rank-rules")
         ([cfg(feature="hand-stats")] hand_stats, "hand-stats")
+        // misc
         ([cfg(feature="dl")] dl, "dl")
+        ([cfg(feature="parse")] parse, "parse")
         ([cfg(feature="webext")] webext, "webext")
     );
     Ok(())
