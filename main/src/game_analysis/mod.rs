@@ -43,10 +43,16 @@ pub fn make_stich_vector(vectplepiacard_stich: &[(EPlayerIndex, [SCard; 4])]) ->
 }
 
 #[derive(Clone, Debug)]
+pub enum EMistake {
+    Min,
+    SelfishMin,
+}
+
+#[derive(Clone, Debug)]
 pub struct SAnalysisCardAndPayout {
     pub veccard: Vec<SCard>,
     pub n_payout: isize,
-    pub eminmaxstrategy: EMinMaxStrategy,
+    pub emistake: EMistake,
 }
 
 #[derive(Clone)]
@@ -119,7 +125,11 @@ pub fn analyze_game(
                         /*fn_visualizer*/|_,_,_| SNoVisualization,
                     ));
                     let mut ocardandpayout = None;
-                    for eminmaxstrategy in [EMinMaxStrategy::Min, EMinMaxStrategy::SelfishMin].into_iter() {
+                    for (eminmaxstrategy, emistake) in [
+                        (EMinMaxStrategy::Min, EMistake::Min),
+                        (EMinMaxStrategy::SelfishMin, EMistake::SelfishMin),
+                    ].into_iter()
+                    {
                         assert!(ocardandpayout.is_none());
                         let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(
                             |minmax_lhs, minmax_rhs| minmax_lhs.0[eminmaxstrategy].min().cmp(&minmax_rhs.0[eminmaxstrategy].min())
@@ -131,7 +141,7 @@ pub fn analyze_game(
                             ocardandpayout = Some(SAnalysisCardAndPayout{
                                 veccard,
                                 n_payout: minmax.0[eminmaxstrategy].min(),
-                                eminmaxstrategy,
+                                emistake,
                             });
                             break;
                         } else {
@@ -191,8 +201,8 @@ pub fn analyze_game(
             &unwrap!(game.clone().finish()).an_payout,
             &vecanalysispercard,
         ),
-        n_findings_cheating: itanalysisimpr.clone().count(), // TODO distinguish eminmaxstrategy
-        n_findings_simulating: itanalysisimpr.clone() // TODO distinguish eminmaxstrategy
+        n_findings_cheating: itanalysisimpr.clone().count(), // TODO distinguish emistake
+        n_findings_simulating: itanalysisimpr.clone() // TODO distinguish emistake
             .filter(|analysisimpr| matches!(analysisimpr.improvementsimulating, VImprovementSimulating::Found(_)))
             .count(),
         duration: instant_begin.elapsed(),
@@ -285,10 +295,9 @@ pub fn generate_analysis_html(
                     .iter()
                     .map(SCard::to_string)
                     .join(", "),
-                str_gewinn = match analysisimpr.cardandpayout_cheating.eminmaxstrategy {
-                    EMinMaxStrategy::Min => "garantierter Mindestgewinn",
-                    EMinMaxStrategy::SelfishMin => "Mindestgewinn, wenn jeder Spieler optimal spielt",
-                    EMinMaxStrategy::SelfishMax|EMinMaxStrategy::Max => panic!("Unsupported EMinMaxStrategy.")
+                str_gewinn = match analysisimpr.cardandpayout_cheating.emistake {
+                    EMistake::Min => "garantierter Mindestgewinn",
+                    EMistake::SelfishMin => "Mindestgewinn, wenn jeder Spieler optimal spielt",
                 },
                 n_payout_cheating = analysisimpr.cardandpayout_cheating.n_payout,
                 n_payout_real = mapepin_payout[epi],
@@ -304,10 +313,9 @@ pub fn generate_analysis_html(
                         .iter()
                         .map(SCard::to_string)
                         .join(", "),
-                    str_gewinn = match cardandpayout.eminmaxstrategy {
-                        EMinMaxStrategy::Min => "garantierter Mindestgewinn",
-                        EMinMaxStrategy::SelfishMin => "Mindestgewinn, wenn jeder Spieler optimal spielt",
-                        EMinMaxStrategy::SelfishMax|EMinMaxStrategy::Max => panic!("Unsupported EMinMaxStrategy.")
+                    str_gewinn = match cardandpayout.emistake {
+                        EMistake::Min => "garantierter Mindestgewinn",
+                        EMistake::SelfishMin => "Mindestgewinn, wenn jeder Spieler optimal spielt",
                     },
                     n_payout = cardandpayout.n_payout,
                     n_payout_real = mapepin_payout[epi],
