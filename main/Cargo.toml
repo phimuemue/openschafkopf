@@ -7,7 +7,6 @@ license-file = "../LICENSE"
 
 [build-dependencies]
 openschafkopf_util = {path = "../util"}
-image = {version = "0", default-features = false, features = ["png"]}
 as_num = "0"
 resvg = "0"
 usvg = "0"

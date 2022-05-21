@@ -1,5 +1,4 @@
 use openschafkopf_util::*;
-use image::GenericImageView;
 use as_num::*;
 
 use std::{env, fs::File, io::Write, path::Path, process::Command};
@@ -46,12 +45,12 @@ fn main() {
             pixmap.as_mut()
         ));
         unwrap!(pixmap.save_png(path_cards_png));
+        pixmap
     };
     export_cards_png(path_out_dir.join("cards.png"), 1);
     let path_svg_3dpi = path_out_dir.join("cards_3dpi.png");
-    export_cards_png(path_svg_3dpi.clone(), 3);
-    let img = unwrap!(image::open(path_svg_3dpi));
-    let (n_width, n_height) = img.dimensions();
+    let pixmap_cards_3dpi = export_cards_png(path_svg_3dpi.clone(), 3);
+    let (n_width, n_height) = (pixmap_cards_3dpi.width(), pixmap_cards_3dpi.height());
     let str_efarbe = "EGHS";
     let str_eschlag = "AZKOU987";
     assert_eq!(n_width % str_eschlag.len().as_num::<u32>(), 0);
@@ -61,14 +60,13 @@ fn main() {
     for (i_efarbe, ch_efarbe) in str_efarbe.chars().enumerate() {
         for (i_eschlag, ch_eschlag) in str_eschlag.chars().enumerate() {
             unwrap!(
-                img.view(
-                    /*x*/n_width_card * i_eschlag.as_num::<u32>(),
-                    /*y*/n_height_card * i_efarbe.as_num::<u32>(),
+                unwrap!(pixmap_cards_3dpi.clone_rect(unwrap!(tiny_skia::IntRect::from_xywh(
+                    (n_width_card * i_eschlag.as_num::<u32>()).as_num::<i32>(),
+                    (n_height_card * i_efarbe.as_num::<u32>()).as_num::<i32>(),
                     n_width_card,
                     n_height_card,
-                )
-                    .to_image()
-                    .save({
+                ))))
+                    .save_png({
                         let path_img = path_resources // TODO allowed to write into this directory?
                             .join("site")
                             .join("img");
