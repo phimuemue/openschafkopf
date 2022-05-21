@@ -182,11 +182,11 @@ impl TPlayer for SPlayerHuman {
                         if i_b_stoss==i_b_stoss_chosen {"*"} else {" "},
                         if *b_stoss {"Give"} else {"No"},
                         { match vecstoss.len() {
-                            0 => "Kontra",
-                            1 => "Re",
-                            2 => "Sup",
-                            3 => "Hirsch",
-                            _ => panic!() // currently only quadruple stoss supported
+                            0 => "Kontra".to_string(),
+                            1 => "Re".to_string(),
+                            2 => "Sup".to_string(),
+                            3 => "Hirsch".to_string(),
+                            i_stoss => format!("Stoss #{}", i_stoss)
                         } },
                     ));
                 }
