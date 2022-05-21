@@ -59,12 +59,14 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             }
         },
     )?;
-    analyze_games(
+    let path_out = analyze_games(
         std::path::Path::new("./analyze"), // TODO make customizable
         /*fn_link*/|str_description: &str| str_description.to_string(),
         vecgamewithdesc,
         /*b_include_no_findings*/clapmatches.is_present("include-no-findings"),
         /*n_max_remaining_cards*/unwrap!(clapmatches.value_of("max-remaining-cards")).parse()?,
         /*b_simulate_all_hands*/clapmatches.is_present("simulate-all-hands"),
-    )
+    )?;
+    println!("Analysis written to {}.", path_out.display());
+    Ok(())
 }
