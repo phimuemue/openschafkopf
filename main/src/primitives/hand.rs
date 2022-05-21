@@ -1,6 +1,7 @@
 use crate::primitives::card::*;
 use arrayvec::ArrayVec;
 use std::fmt;
+#[cfg(debug_assertions)]
 use plain_enum::TPlainEnum;
 
 pub type SHandVector = ArrayVec<SCard, 8>;
