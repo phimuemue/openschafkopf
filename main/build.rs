@@ -10,27 +10,23 @@ fn main() {
         println!("cargo:rerun-if-changed={}", unwrap!(path_in.as_ref().to_str()));
         path_in
     }
-    let execute_external = |path_in: &Path, cmd: &mut Command| {
-        declare_input_file(path_in);
-        let output = unwrap!(cmd.output());
-        assert!(output.status.success(), "{:?}: {:?}", cmd, output);
-        output
-    };
     let path_resources = Path::new("tools");
     let str_env_var_out_dir = unwrap!(env::var("OUT_DIR"));
     let path_out_dir = Path::new(&str_env_var_out_dir); // https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-build-scripts
     unwrap!(std::fs::create_dir_all(&path_out_dir));
     // TODO can we avoid lessc depencency?
-    let path_css_in = path_resources.join("css.less");
     unwrap!(
         unwrap!(
             File::create(&path_out_dir.join("css.css"))
         )
-            .write_all(&execute_external(
-                &path_css_in,
-                Command::new("lessc")
-                    .arg(&path_css_in)
-            ).stdout)
+            .write_all(&{
+                let mut cmd_lessc = Command::new("lessc");
+                let cmd_lessc = cmd_lessc
+                    .arg(declare_input_file(path_resources.join("css.less")));
+                let output_lessc = unwrap!(cmd_lessc.output());
+                assert!(output_lessc.status.success(), "{:?}: {:?}", cmd_lessc, output_lessc);
+                output_lessc.stdout
+            })
     );
     // SVG rendering adapted from https://github.com/RazrFalcon/resvg/blob/master/examples/minimal.rs
     let svgtree = usvg::Tree::from_data(
