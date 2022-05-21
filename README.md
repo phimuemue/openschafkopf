@@ -22,6 +22,12 @@ cargo build --release
 
 ## Getting started
 
+### Examples
+
+The repository contains some [examples](https://github.com/phimuemue/openschafkopf/tree/main/examples) that show how the program can be used. They are meant to be run from the root folder.
+
+### More details
+
 ```
 ./target/release/openschafkopf -h
 
