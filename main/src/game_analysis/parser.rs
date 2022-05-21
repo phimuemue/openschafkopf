@@ -354,7 +354,7 @@ pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failur
                 .ok_or_else(|| format_err!("Could not parse cards: {}", str_cards))?;
             let stichseq = SStichSequence::new_from_cards(
                 if_then_some!(veccard.len()%EPlayerIndex::SIZE==0, veccard.len()/EPlayerIndex::SIZE)
-                    .and_then(EKurzLang::checked_from_cards_per_player)
+                    .and_then(EKurzLang::from_cards_per_player)
                     .ok_or_else(|| format_err!("Incorrect number of cards: {}", veccard.len()))?,
                 veccard.iter().copied(),
                 rules.as_ref(),
