@@ -28,6 +28,7 @@ impl SHand {
     }
 
     pub fn new_from_vec(veccard: SHandVector) -> SHand {
+        #[allow(unused_mut)] // TODO is there a nicer way?
         let mut hand = SHand {veccard};
         #[cfg(debug_assertions)]hand.finalize_and_assert_invariant();
         hand
