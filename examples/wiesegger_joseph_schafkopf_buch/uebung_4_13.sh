@@ -1,0 +1,1 @@
+./target/release/openschafkopf suggest-card --rules "herz-solo von 3" --cards-on-table "gz g7 g8 s8  gk ha g9 s9  s7 sa h8 hk  eu e8 su gu  hu e9 e7" --hand "eo go ho hz" --simulate-hands all --branching "9,9"
