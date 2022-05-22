@@ -31,7 +31,7 @@ pub fn parse_rule_description(
         (EFarbe::Eichel, &["eichel", "alt"] as &[&str]),
         (EFarbe::Gras, &["gras", "grün", "laub", "blatt", "blau"]),
         (EFarbe::Herz, &["herz", "rot"]),
-        (EFarbe::Schelln, &["schelln", "schelle", "pump", "hundsgfickte"]),
+        (EFarbe::Schelln, &["schell", "pump", "hundsgfickte"]),
     ].into_iter()
         .filter(|(_efarbe, slcstr_farbe)| str_rules_contains(slcstr_farbe))
         .exactly_one()
