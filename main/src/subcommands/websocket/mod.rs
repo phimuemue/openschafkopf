@@ -317,35 +317,6 @@ impl STable {
             }
             while self.ogamephase.as_ref().map_or(false, |gamephase| gamephase.which_player_can_do_something().is_none()) {
                 use VGamePhaseGeneric::*;
-                fn next_game(table: &mut STable) -> Option<VGamePhase> {
-                    /*           E2
-                     * E1                      E3
-                     *    E0 SN SN-1 ... S1 S0
-                     *
-                     * E0 E1 E2 E3 [S0 S1 S2 ... SN]
-                     * E1 E2 E3 S0 [S1 S2 ... SN E0]
-                     * E2 E3 S0 S1 [S2 ... SN E0 E1]
-                     */
-                    // Players: E0 E1 E2 E3 [S0 S1 S2 ... SN] (S0 is longest waiting inactive player)
-                    table.players.mapepiopeer.as_raw_mut().rotate_left(1);
-                    // Players: E1 E2 E3 E0 [S0 S1 S2 ... SN]
-                    if let Some(peer_epi3) = table.players.mapepiopeer[EPlayerIndex::EPI3].opeer.take() {
-                        table.players.vecpeer.push(peer_epi3);
-                    }
-                    // Players: E1 E2 E3 -- [S0 S1 S2 ... SN E0] (E1, E2, E3 may be None)
-                    // Fill up players one after another
-                    assert!(table.players.mapepiopeer[EPlayerIndex::EPI3].opeer.is_none());
-                    for epi in EPlayerIndex::values() {
-                        if table.players.mapepiopeer[epi].opeer.is_none() && !table.players.vecpeer.is_empty() {
-                            table.players.mapepiopeer[epi].opeer = Some(table.players.vecpeer.remove(0));
-                        }
-                    }
-                    // Players: E1 E2 E3 S0 [S1 S2 ... SN E0] (E1, E2, E3 may be None)
-                    if_then_some!(table.players.mapepiopeer.iter().all(|activepeer| activepeer.opeer.is_some()),
-                        VGamePhase::DealCards(SDealCards::new(table.ruleset.clone(), table.n_stock))
-                    )
-                    // TODO should we clear timeouts?
-                }
                 fn simple_transition<R: From<VGamePhase>, GamePhase: TGamePhase>(
                     phase: GamePhase,
                     fn_ok: impl FnOnce(GamePhase::Finish) -> VGamePhase,
@@ -382,7 +353,35 @@ impl STable {
                                         peer.n_money += n_payout;
                                     }
                                 });
-                                next_game(self)
+                                { // advance to next game
+                                    /*           E2
+                                     * E1                      E3
+                                     *    E0 SN SN-1 ... S1 S0
+                                     *
+                                     * E0 E1 E2 E3 [S0 S1 S2 ... SN]
+                                     * E1 E2 E3 S0 [S1 S2 ... SN E0]
+                                     * E2 E3 S0 S1 [S2 ... SN E0 E1]
+                                     */
+                                    // Players: E0 E1 E2 E3 [S0 S1 S2 ... SN] (S0 is longest waiting inactive player)
+                                    mapepiopeer.as_raw_mut().rotate_left(1);
+                                    // Players: E1 E2 E3 E0 [S0 S1 S2 ... SN]
+                                    if let Some(peer_epi3) = mapepiopeer[EPlayerIndex::EPI3].opeer.take() {
+                                        self.players.vecpeer.push(peer_epi3);
+                                    }
+                                    // Players: E1 E2 E3 -- [S0 S1 S2 ... SN E0] (E1, E2, E3 may be None)
+                                    // Fill up players one after another
+                                    assert!(mapepiopeer[EPlayerIndex::EPI3].opeer.is_none());
+                                    for epi in EPlayerIndex::values() {
+                                        if mapepiopeer[epi].opeer.is_none() && !self.players.vecpeer.is_empty() {
+                                            mapepiopeer[epi].opeer = Some(self.players.vecpeer.remove(0));
+                                        }
+                                    }
+                                    // Players: E1 E2 E3 S0 [S1 S2 ... SN E0] (E1, E2, E3 may be None)
+                                    if_then_some!(mapepiopeer.iter().all(|activepeer| activepeer.opeer.is_some()),
+                                        VGamePhase::DealCards(SDealCards::new(self.ruleset.clone(), self.n_stock))
+                                    )
+                                    // TODO should we clear timeouts?
+                                }
                             },
                             Err(gameresult) => Some(GameResult(gameresult)),
                         },
