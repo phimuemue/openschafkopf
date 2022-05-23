@@ -1,0 +1,1 @@
+./target/release/openschafkopf suggest-card --rules "Herz-Wenz von 0" --cards-on-table "eu h8 ho hk  gu h9 ha s8  h7 hu gz ga  so s7 s9 sa  su g8 g7 g9  hz e7 sk go  eo e9 ez" --hand "ea e8" --simulate-hands all --branching "9,9" --verbose

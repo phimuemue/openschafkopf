@@ -1,0 +1,8 @@
+echo "Testing that every other player has no more than 3 Trumpf"
+./target/release/openschafkopf hand-stats --rules "Herz-Wenz von 0" --hand "hz hk ho h8 h7 ga ea sa" --simulate-hands 1000000 --inspect "t(1)<4&t(2)<4&t(3)<4"
+echo "Testing that every other player has Eichel"
+./target/release/openschafkopf hand-stats --rules "Herz-Wenz von 0" --hand "hz hk ho h8 h7 ga ea sa" --simulate-hands 1000000 --inspect "e(1)&e(2)&e(3)"
+echo "Testing that every other player has Eichel, Gras, Schelln"
+./target/release/openschafkopf hand-stats --rules "Herz-Wenz von 0" --hand "hz hk ho h8 h7 ga ea sa" --simulate-hands 1000000 --inspect "e(1)&e(2)&e(3)&g(1)&g(2)&g(3)&s(1)&s(2)&s(3)"
+echo "Testing that every other player has Eichel, Gras, Schelln and no more than 3 trumpf"
+./target/release/openschafkopf hand-stats --rules "Herz-Wenz von 0" --hand "hz hk ho h8 h7 ga ea sa" --simulate-hands 1000000 --inspect "e(1)&e(2)&e(3)&g(1)&g(2)&g(3)&s(1)&s(2)&s(3)&t(1)<4&t(2)<4&t(3)<4"

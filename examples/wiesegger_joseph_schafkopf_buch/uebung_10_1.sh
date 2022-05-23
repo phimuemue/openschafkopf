@@ -1,0 +1,1 @@
+./target/release/openschafkopf suggest-card --rules "Eichel-Rufspiel von 0" --cards-on-table "eo eu hu ha  h9 hz gu ho  hk go so s8  ek e8 e7 ea  sa sz s9 e9" --hand "h8 h7 gz" --simulate-hands all --branching "9,9" --verbose
