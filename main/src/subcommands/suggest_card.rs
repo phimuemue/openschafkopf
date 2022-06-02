@@ -188,12 +188,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             "fourth"
                         ])[emmstrategy],
                         n_columns,
-                        EMinMaxStrategy::map_from_raw([
-                            "adversarially",
-                            "optimally for themselves, favouring you in case of doubt",
-                            "optimally for themselves, not favouring you in case of doubt",
-                            "optimally for you",
-                        ])[emmstrategy],
+                        match emmstrategy {
+                            EMinMaxStrategy::Min => "adversarially",
+                            EMinMaxStrategy::SelfishMin => "optimally for themselves, favouring you in case of doubt",
+                            EMinMaxStrategy::SelfishMax => "optimally for themselves, not favouring you in case of doubt",
+                            EMinMaxStrategy::Max => "optimally for you",
+                        },
                     );
                     println!("  * In the worst case (over all possible card distributions), you can enforce a payout of {}", str_payout_min);
                     println!("  * On average (over all possible card distributions), you can enforce a payout of {}", str_payout_avg);
