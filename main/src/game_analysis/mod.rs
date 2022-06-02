@@ -363,27 +363,86 @@ fn generate_analysis_html(
         |epi| {
             // TODO replace this by a line/area chart
             let vecpossiblepayout = &mapepivecpossiblepayout[epi];
-            Some(format!("<table>{}</table>",
-                format!("<tr>{}</tr>",
-                    vecpossiblepayout.iter()
-                        .map(|SPossiblePayout(_, (i_stich, i_card))|
-                            format!("<td>{}/{}</td>", i_stich+1, i_card+1)
-                        )
-                        .join("")
-                )
-                    + &EMinMaxStrategy::values().rev().map(|emmstrategy| {
-                        format!("<tr>{}</tr>",
-                            vecpossiblepayout.iter()
-                                .map(|possiblepayout|
-                                    format!("<td>{}</td>",
-                                        possiblepayout.0[emmstrategy]
-                                    )
-                                )
-                                .join("")
-                        )
+            let n_payout_min = vecpossiblepayout[0].0[EMinMaxStrategy::MinMin]; // TODO guard against empty?
+            let n_payout_span = vecpossiblepayout[0].0[EMinMaxStrategy::Max] - n_payout_min;
+            let n_cards_total = EPlayerIndex::SIZE*game.stichseq.kurzlang().cards_per_player();
+            let to_svg_points = |itpossiblepayout: Box<dyn Iterator<Item=&SPossiblePayout>>, emmstrategy, str_join| {
+                itpossiblepayout
+                    .map(|&SPossiblePayout(mapemmstrategyn_payout, (i_stich, i_card))| {
+                        let i_x = i_stich * EPlayerIndex::SIZE + i_card;
+                        // assert!(0 <= i_x); // trivially true
+                        assert!(i_x <= n_cards_total);
+                        let i_y = mapemmstrategyn_payout[emmstrategy];
+                        assert!(n_payout_min <= i_y);
+                        assert!(i_y <= n_payout_min + n_payout_span);
+                        format!("{i_x},{i_y}")
                     })
-                    .join("")
+                    .join(str_join)
+            };
+            let to_svg_path = |emmstrategy| {
+                to_svg_points(Box::new(vecpossiblepayout.iter()), emmstrategy, " L")
+            };
+            let mut n_y_padding = n_payout_span.as_num::<f32>() * 12. / 10.;
+            assign_max_partial_ord(&mut n_y_padding, 1.);
+            let n_y_min = n_payout_min.as_num::<f32>() - n_y_padding;
+            let n_y_span = n_payout_span.as_num::<f32>() + n_y_padding * 2.;
+            Some(format!(r#"
+	<svg preserveAspectRatio="none" width="400px" height="100px" stroke-width="2px" xmlns="http://www.w3.org/2000/svg">
+        <svg preserveAspectRatio="none" width="100%" height="100%">
+        <svg preserveAspectRatio="none" viewBox="0 -1 1 1">
+        <svg preserveAspectRatio="none" viewBox="0 {n_y_min} {n_cards_total} {n_y_span}" transform="scale(1 -1)">
+		<polygon fill="rgb(200,200,200)" points="
+            {str_polygon_fwd} {str_polygon_bwd}
+		"></polygon>
+		<path fill="none" stroke-width="1.5px" stroke="rgb(160,160,160)" vector-effect="non-scaling-stroke" d="
+			M {str_selfish_min}
+		"></path>
+		<path fill="none" stroke="green" stroke-dasharray="2 2" vector-effect="non-scaling-stroke" d="
+			M {str_max}
+		"></path>
+		<path fill="none" stroke="green" vector-effect="non-scaling-stroke" d="
+			M {str_selfish_max}
+		"></path>
+		<path fill="none" stroke="rgb(128,0,0)" vector-effect="non-scaling-stroke" d="
+			M {str_min}
+		"></path>
+		<path fill="none" stroke="rgb(128,0,0)" stroke-dasharray="2 2" vector-effect="non-scaling-stroke" d="
+			M {str_minmin}
+		"></path>
+        </svg>
+        </svg>
+        </svg>
+	</svg>
+            "#,
+                str_polygon_fwd = to_svg_points(Box::new(vecpossiblepayout.iter()), EMinMaxStrategy::Min, " "),
+                str_polygon_bwd = to_svg_points(Box::new(vecpossiblepayout.iter().rev()), EMinMaxStrategy::SelfishMax, " "),
+                str_max = to_svg_path(EMinMaxStrategy::Max),
+                str_selfish_max = to_svg_path(EMinMaxStrategy::SelfishMax),
+                str_selfish_min = to_svg_path(EMinMaxStrategy::SelfishMin),
+                str_min = to_svg_path(EMinMaxStrategy::Min),
+                str_minmin = to_svg_path(EMinMaxStrategy::MinMin),
             ))
+            // Some(format!("<table>{}</table>",
+            //     format!("<tr>{}</tr>",
+            //         vecpossiblepayout.iter()
+            //             .map(|SPossiblePayout(_, (i_stich, i_card))|
+            //                 format!("<td>{}/{}</td>", i_stich+1, i_card+1)
+            //             )
+            //             .join("")
+            //     )
+            //         + &EMinMaxStrategy::values().rev().map(|emmstrategy| {
+            //             format!("<tr>{}</tr>",
+            //                 vecpossiblepayout.iter()
+            //                     .map(|possiblepayout|
+            //                         format!("<td>{}</td>",
+            //                             possiblepayout.0[emmstrategy]
+            //                         )
+            //                     )
+            //                     .join("")
+            //             )
+            //         })
+            //         .join("")
+            // ))
         },
     )
     + "<h2>Details</h2>"
