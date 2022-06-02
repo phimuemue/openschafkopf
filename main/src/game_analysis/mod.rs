@@ -84,6 +84,11 @@ pub struct SGameAnalysis {
     pub duration: Duration,
 }
 
+struct SPossiblePayout(
+    EnumMap<EMinMaxStrategy, isize>,
+    (/*i_stich*/usize, /*i_card*/usize),
+);
+
 pub fn analyze_game(
     str_description: &str,
     str_link: &str,
@@ -102,6 +107,7 @@ pub fn analyze_game(
             "".to_owned()
         },
     );
+    let mut mapepivecpossiblepayout = EPlayerIndex::map_from_fn(|_epi| Vec::new());
     let game = unwrap!(SGame::new_finished(
         game_in.rules.clone(),
         game_in.doublings.clone(),
@@ -109,8 +115,32 @@ pub fn analyze_game(
         game_in.vecstoss.clone(),
         game_in.n_stock,
         SStichSequenceGameFinished::new(&game_in.stichseq),
-        /*fn_before_zugeben*/|game, _i_stich, epi, card_played| {
-            if game.stichseq.remaining_cards_per_hand()[epi] <= n_max_remaining_cards {
+        /*fn_before_zugeben*/|game, i_stich, epi_zugeben, card_played| {
+            if game.stichseq.remaining_cards_per_hand()[epi_zugeben] <= n_max_remaining_cards {
+                for epi in EPlayerIndex::values() {
+                    mapepivecpossiblepayout[epi].push(SPossiblePayout(
+                        explore_snapshots(
+                            &mut game.ahand.clone(),
+                            game.rules.as_ref(),
+                            &mut game.stichseq.clone(),
+                            &mut equivalent_cards_filter(
+                                /*n_until_remaining_cards*/7,
+                                epi,
+                                /*enumchainscard*/game.rules.equivalent_when_on_same_hand(),
+                            )(),
+                            &SMinReachablePayout::new(
+                                game.rules.as_ref(),
+                                epi,
+                                /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
+                                game.n_stock,
+                            ),
+                            &mut SNoVisualization,
+                        )
+                            .0
+                            .map(|mapepin_payout| mapepin_payout[epi]),
+                        (i_stich, game.stichseq.current_stich().size())
+                    ));
+                }
                 let determinebestcard = SDetermineBestCard::new_from_game(game);
                 macro_rules! look_for_mistakes{($itahand: expr$(,)?) => {{
                     let determinebestcardresult = unwrap!(determine_best_card(
@@ -118,7 +148,7 @@ pub fn analyze_game(
                         $itahand,
                         equivalent_cards_filter(
                             /*n_until_remaining_cards, determined heuristically*/7,
-                            epi,
+                            epi_zugeben,
                             game.rules.equivalent_when_on_same_hand(),
                         ),
                         &SMinReachablePayout::new_from_game(game),
@@ -135,7 +165,7 @@ pub fn analyze_game(
                             |minmax_lhs, minmax_rhs| minmax_lhs.0[eminmaxstrategy].min().cmp(&minmax_rhs.0[eminmaxstrategy].min())
                         );
                         if 
-                            an_payout[epi]<minmax.0[eminmaxstrategy].min()
+                            an_payout[epi_zugeben]<minmax.0[eminmaxstrategy].min()
                             && !veccard.contains(&card_played) // TODO can we improve this?
                         {
                             ocardandpayout = Some(SAnalysisCardAndPayout{
@@ -200,6 +230,7 @@ pub fn analyze_game(
             &str_rules,
             &unwrap!(game.clone().finish()).an_payout,
             &vecanalysispercard,
+            &mapepivecpossiblepayout,
         ),
         n_findings_cheating: itanalysisimpr.clone().count(), // TODO distinguish emistake
         n_findings_simulating: itanalysisimpr.clone() // TODO distinguish emistake
@@ -226,13 +257,14 @@ pub fn generate_html_auxiliary_files(path_out_dir: &std::path::Path) -> Result<(
     Ok(())
 }
 
-pub fn generate_analysis_html(
+fn generate_analysis_html(
     game: &crate::game::SGame,
     str_description: &str,
     str_link: &str,
     str_rules: &str,
     mapepin_payout: &EnumMap<EPlayerIndex, isize>,
     slcanalysispercard: &[SAnalysisPerCard],
+    mapepivecpossiblepayout: &EnumMap<EPlayerIndex, Vec<SPossiblePayout>>,
 ) -> String {
     use crate::game::*;
     assert!(game.which_player_can_do_something().is_none()); // TODO use SGameResult (see comment in SGameResult)
@@ -325,6 +357,35 @@ pub fn generate_analysis_html(
             str_analysisimpr
         }).format(""))
     + "</ul>"
+    + "<h2>Gewinnspanne pro Karte</h2>"
+    + &crate::ai::gametree::player_table(
+        epi_self,
+        |epi| {
+            // TODO replace this by a line/area chart
+            let vecpossiblepayout = &mapepivecpossiblepayout[epi];
+            Some(format!("<table>{}</table>",
+                format!("<tr>{}</tr>",
+                    vecpossiblepayout.iter()
+                        .map(|SPossiblePayout(_, (i_stich, i_card))|
+                            format!("<td>{}/{}</td>", i_stich+1, i_card+1)
+                        )
+                        .join("")
+                )
+                    + &EMinMaxStrategy::values().rev().map(|emmstrategy| {
+                        format!("<tr>{}</tr>",
+                            vecpossiblepayout.iter()
+                                .map(|possiblepayout|
+                                    format!("<td>{}</td>",
+                                        possiblepayout.0[emmstrategy]
+                                    )
+                                )
+                                .join("")
+                        )
+                    })
+                    .join("")
+            ))
+        },
+    )
     + "<h2>Details</h2>"
     + &format!("{}", slcanalysispercard.iter()
         .map(|analysispercard| {
