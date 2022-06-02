@@ -326,6 +326,7 @@ impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
 }
 
 plain_enum_mod!(modeminmaxstrategy, EMinMaxStrategy {
+    MinMin,
     Min,
     SelfishMin,
     SelfishMax,
@@ -368,8 +369,18 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         let itminmax = ittplcardoutput.map(|(_card, minmax)| minmax);
         unwrap!(if self.epi==epi_card {
             itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
-                // self.epi can always play as good as possible
-                for emmstrategy in EMinMaxStrategy::values() {
+                assign_min_by_key(
+                    &mut minmax_acc.0[EMinMaxStrategy::MinMin],
+                    minmax.0[EMinMaxStrategy::MinMin].explicit_clone(),
+                    |an_payout| an_payout[self.epi],
+                );
+                for emmstrategy in [
+                    // EMinMaxStrategy::MinMin done above
+                    EMinMaxStrategy::Min,
+                    EMinMaxStrategy::SelfishMin,
+                    EMinMaxStrategy::SelfishMax,
+                    EMinMaxStrategy::Max,
+                ] {
                     assign_max_by_key(
                         &mut minmax_acc.0[emmstrategy],
                         minmax.0[emmstrategy].explicit_clone(),
@@ -380,6 +391,11 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         } else {
             // other players may play inconveniently for epi_stich
             itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
+                assign_min_by_key(
+                    &mut minmax_acc.0[EMinMaxStrategy::MinMin],
+                    minmax.0[EMinMaxStrategy::MinMin].explicit_clone(),
+                    |an_payout| an_payout[self.epi],
+                );
                 assign_min_by_key(
                     &mut minmax_acc.0[EMinMaxStrategy::Min],
                     minmax.0[EMinMaxStrategy::Min].explicit_clone(),

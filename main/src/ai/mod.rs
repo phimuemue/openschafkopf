@@ -284,7 +284,8 @@ impl SPayoutStatsPerStrategy {
                 },
             }
         };
-        internal_cmp(EMinMaxStrategy::Min)
+        internal_cmp(EMinMaxStrategy::MinMin)
+            .then_with(|| internal_cmp(EMinMaxStrategy::Min))
             .then_with(|| internal_cmp(EMinMaxStrategy::SelfishMin))
             .then_with(|| internal_cmp(EMinMaxStrategy::SelfishMax))
             .then_with(|| internal_cmp(EMinMaxStrategy::Max))
@@ -524,6 +525,10 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         ));
         for card in [H7, H8, H9] {
             assert!(determinebestcard.veccard_allowed.contains(&card));
+            assert_eq!(
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.0[EMinMaxStrategy::MinMin].min()),
+                Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
+            );
             assert_eq!(
                 determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.0[EMinMaxStrategy::Min].min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))

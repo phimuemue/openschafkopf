@@ -185,10 +185,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             "first",
                             "second",
                             "third",
-                            "fourth"
+                            "fourth",
+                            "fifth",
                         ])[emmstrategy],
                         n_columns,
                         match emmstrategy {
+                            EMinMaxStrategy::MinMin => "adversarially and you play pessimal",
                             EMinMaxStrategy::Min => "adversarially",
                             EMinMaxStrategy::SelfishMin => "optimally for themselves, favouring you in case of doubt",
                             EMinMaxStrategy::SelfishMax => "optimally for themselves, not favouring you in case of doubt",
