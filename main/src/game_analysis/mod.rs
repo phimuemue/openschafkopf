@@ -379,48 +379,46 @@ fn generate_analysis_html(
                     })
                     .join(str_join)
             };
-            let to_svg_path = |emmstrategy| {
-                to_svg_points(Box::new(vecpossiblepayout.iter()), emmstrategy, " L")
+            let to_svg_path = |emmstrategy, f_stroke_width, str_color, str_dasharray| {
+                format!(
+                    r#"<path 
+                        fill="none"
+                        stroke-width="{f_stroke_width}px"
+                        stroke="{str_color}"
+                        vector-effect="non-scaling-stroke"
+                        stroke-dasharray="{str_dasharray}"
+                        d="M {str_d}"
+                    ></path>"#,
+                    str_d=to_svg_points(Box::new(vecpossiblepayout.iter()), emmstrategy, " L"),
+                )
             };
-            let mut n_y_padding = n_payout_span.as_num::<f32>() * 12. / 10.;
-            assign_max_partial_ord(&mut n_y_padding, 1.);
-            let n_y_min = n_payout_min.as_num::<f32>() - n_y_padding;
-            let n_y_span = n_payout_span.as_num::<f32>() + n_y_padding * 2.;
+            let mut f_y_padding = n_payout_span.as_num::<f32>() * 105. / 100.;
+            assign_max_partial_ord(&mut f_y_padding, 1.);
+            let f_y_min = n_payout_min.as_num::<f32>() - f_y_padding;
+            let f_y_span = n_payout_span.as_num::<f32>() + f_y_padding * 2.;
             Some(format!(r#"
-	<svg preserveAspectRatio="none" width="400px" height="100px" stroke-width="2px" xmlns="http://www.w3.org/2000/svg">
-        <svg preserveAspectRatio="none" width="100%" height="100%">
-        <svg preserveAspectRatio="none" viewBox="0 -1 1 1">
-        <svg preserveAspectRatio="none" viewBox="0 {n_y_min} {n_cards_total} {n_y_span}" transform="scale(1 -1)">
-		<polygon fill="rgb(200,200,200)" points="
-            {str_polygon_fwd} {str_polygon_bwd}
-		"></polygon>
-		<path fill="none" stroke-width="1.5px" stroke="rgb(160,160,160)" vector-effect="non-scaling-stroke" d="
-			M {str_selfish_min}
-		"></path>
-		<path fill="none" stroke="green" stroke-dasharray="2 2" vector-effect="non-scaling-stroke" d="
-			M {str_max}
-		"></path>
-		<path fill="none" stroke="green" vector-effect="non-scaling-stroke" d="
-			M {str_selfish_max}
-		"></path>
-		<path fill="none" stroke="rgb(128,0,0)" vector-effect="non-scaling-stroke" d="
-			M {str_min}
-		"></path>
-		<path fill="none" stroke="rgb(128,0,0)" stroke-dasharray="2 2" vector-effect="non-scaling-stroke" d="
-			M {str_minmin}
-		"></path>
-        </svg>
-        </svg>
-        </svg>
-	</svg>
+                <svg preserveAspectRatio="none" width="300px" height="80px" xmlns="http://www.w3.org/2000/svg">
+                    <svg preserveAspectRatio="none" width="100%" height="100%">
+                        <svg preserveAspectRatio="none" viewBox="0 -1 1 1">
+                            <svg preserveAspectRatio="none" viewBox="0 {f_y_min} {n_cards_total} {f_y_span}" transform="scale(1 -1)">
+                                <polygon fill="rgb(200,200,200)" points="{str_polygon_fwd} {str_polygon_bwd}"></polygon>
+                                {str_path_selfish_min}
+                                {str_path_max}
+                                {str_path_selfish_max}
+                                {str_path_min}
+                                {str_path_minmin}
+                            </svg>
+                        </svg>
+                    </svg>
+                </svg>
             "#,
                 str_polygon_fwd = to_svg_points(Box::new(vecpossiblepayout.iter()), EMinMaxStrategy::Min, " "),
                 str_polygon_bwd = to_svg_points(Box::new(vecpossiblepayout.iter().rev()), EMinMaxStrategy::SelfishMax, " "),
-                str_max = to_svg_path(EMinMaxStrategy::Max),
-                str_selfish_max = to_svg_path(EMinMaxStrategy::SelfishMax),
-                str_selfish_min = to_svg_path(EMinMaxStrategy::SelfishMin),
-                str_min = to_svg_path(EMinMaxStrategy::Min),
-                str_minmin = to_svg_path(EMinMaxStrategy::MinMin),
+                str_path_max = to_svg_path(EMinMaxStrategy::Max, 2., "green", "2 2"),
+                str_path_selfish_max = to_svg_path(EMinMaxStrategy::SelfishMax, 2., "green", ""),
+                str_path_selfish_min = to_svg_path(EMinMaxStrategy::SelfishMin, 1., "rgb(160,160,160)" , ""),
+                str_path_min = to_svg_path(EMinMaxStrategy::Min, 2., "rgb(128,0,0)", ""),
+                str_path_minmin = to_svg_path(EMinMaxStrategy::MinMin, 2., "rgb(128,0,0)", "2 2"),
             ))
             // Some(format!("<table>{}</table>",
             //     format!("<tr>{}</tr>",
