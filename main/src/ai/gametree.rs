@@ -89,7 +89,7 @@ pub fn player_table<T: fmt::Display>(epi_self: EPlayerIndex, fn_per_player: impl
     };
     format!(
         "<table class=\"player-table\">
-          <tr><td colspan=\"2\"><br>{}<br></td></tr>
+          <tr><td colspan=\"2\">{}</td></tr>
           <tr><td>{}</td><td>{}</td></tr>
           <tr><td colspan=\"2\">{}</td></tr>
         </table>\n",
