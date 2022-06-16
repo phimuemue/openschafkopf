@@ -53,16 +53,10 @@ impl SStichOracle {
                     }
                     while !veccard_allowed.is_empty() {
                         let card_allowed = veccard_allowed[0];
-                        if card_allowed==crate::primitives::card_values::H7 {
-                            dbg!(&veccard_allowed);
-                        }
                         let mut ocard_in_chain = Some(enumchainscard.prev_while(
                             card_allowed,
                             |card_in_chain| veccard_allowed.contains(&card_in_chain)
                         ));
-                        if card_allowed==crate::primitives::card_values::H7 {
-                            dbg!(&ocard_in_chain);
-                        }
                         let mut vecstich_tmp = Vec::new();
                         let mut veccard_chain = Vec::new();
                         while let Some(card_in_chain) = ocard_in_chain.take() {
@@ -136,14 +130,7 @@ impl SStichOracle {
                                     // min_by_key: "If several elements are equally minimum, the first element is returned" (https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.min_by_key)
                                     .min_by_key(|card| points_card(*card))
                             });
-                            if card_min_or_max==crate::primitives::card_values::H7 {
-                                dbg!(&veccard_chain);
-                                dbg!(&vecstich_tmp);
-                            }
                             vecstich_tmp.retain(|stich| stich[epi_card]==card_min_or_max);
-                            if card_min_or_max==crate::primitives::card_values::H7 {
-                                dbg!(&vecstich_tmp);
-                            }
                         }
                         assert!(!vecstich_tmp.is_empty());
                         vecstich.extend(vecstich_tmp);
