@@ -3,7 +3,7 @@ use arrayvec::{self, ArrayVec};
 use std::{fmt, ops::Index, slice, str::FromStr};
 use serde_repr::Serialize_repr;
 
-plain_enum_mod!(modepi, derive(Serialize_repr,), map_derive(), EPlayerIndex {
+plain_enum_mod!(modepi, derive(Serialize_repr, Hash,), map_derive(), EPlayerIndex {
     EPI0, EPI1, EPI2, EPI3,
 });
 define_static_value!(pub SStaticEPI0, EPlayerIndex, EPlayerIndex::EPI0);
@@ -26,19 +26,11 @@ impl FromStr for EPlayerIndex {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct SPlayersInRound<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>> {
     pub epi_first: PlayerIndex,
     vect: ArrayVec<T, {EPlayerIndex::SIZE}>,
 }
-
-impl<T: PartialEq, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> PartialEq for SPlayersInRound<T, PlayerIndex> {
-    fn eq(&self, playersinround_other: &Self) -> bool {
-        self.size()==playersinround_other.size()
-        && self.equal_up_to_size(playersinround_other, self.size())
-    }
-}
-impl<T: Eq, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> Eq for SPlayersInRound<T, PlayerIndex>{}
 
 pub struct SPlayersInRoundIterator<InternalIter> {
     iter: InternalIter,

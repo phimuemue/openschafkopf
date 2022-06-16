@@ -3,6 +3,7 @@ pub mod rulespecific;
 pub mod gametree;
 #[cfg(test)]
 pub mod test;
+mod stichoracle;
 
 use crate::ai::{handiterators::*, gametree::*};
 use crate::game::*;
