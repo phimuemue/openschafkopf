@@ -19,111 +19,51 @@ impl SStichOracle {
         stichseq: &mut SStichSequence,
         rules: &dyn TRules,
     ) -> Self {
-        let stich_current_check = stichseq.current_stich().clone(); // TODO? debug-only
-        let mut vecstich = Vec::new();
         fn for_each_allowed_card(
+            n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
             ahand: &EnumMap<EPlayerIndex, SHand>,
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
-            mut fn_internal: impl FnMut(&mut SStichSequence),
+            vecstich: &mut Vec<SStich>,
+            stich_current_check: &SStich,
         ) {
-            for card in rules.all_allowed_cards(
-                stichseq,
-                &ahand[unwrap!(stichseq.current_stich().current_playerindex())],
-            ) {
-                stichseq.zugeben_and_restore(
-                    card,
-                    rules,
-                    |stichseq| fn_internal(stichseq),
-                );
+            if n_depth==0 {
+                assert!(stichseq.current_stich().is_empty());
+                let stich = unwrap!(stichseq.completed_stichs().last()).clone();
+                assert!(stich.is_full());
+                assert!(stich.equal_up_to_size(&stich_current_check, stich_current_check.size()));
+                vecstich.push(stich);
+            } else {
+                for card in rules.all_allowed_cards(
+                    stichseq,
+                    &ahand[unwrap!(stichseq.current_stich().current_playerindex())],
+                ) {
+                    stichseq.zugeben_and_restore(card, rules, |stichseq|
+                        for_each_allowed_card(
+                            n_depth-1,
+                            ahand,
+                            stichseq,
+                            rules,
+                            vecstich,
+                            stich_current_check,
+                        )
+                    );
+                }
             }
         }
-        let mut add_to_vecstich = |stichseq: &SStichSequence| {
-            assert!(stichseq.current_stich().is_empty());
-            let stich = unwrap!(stichseq.completed_stichs().last()).clone();
-            assert!(stich.is_full());
-            assert!(stich.equal_up_to_size(&stich_current_check, stich_current_check.size()));
-            vecstich.push(stich);
-        };
-        match stichseq.current_stich().size() {
-            0 => {
-                for_each_allowed_card(
-                    ahand,
-                    stichseq,
-                    rules,
-                    |stichseq| {
-                        for_each_allowed_card(
-                            ahand,
-                            stichseq,
-                            rules,
-                            |stichseq| {
-                                for_each_allowed_card(
-                                    ahand,
-                                    stichseq,
-                                    rules,
-                                    |stichseq| {
-                                        for_each_allowed_card(
-                                            ahand,
-                                            stichseq,
-                                            rules,
-                                            |stichseq| add_to_vecstich(stichseq),
-                                        )
-                                    }
-                                )
-                            },
-                        )
-                    },
-                )
-            },
-            1 => {
-                for_each_allowed_card(
-                    ahand,
-                    stichseq,
-                    rules,
-                    |stichseq| {
-                        for_each_allowed_card(
-                            ahand,
-                            stichseq,
-                            rules,
-                            |stichseq| {
-                                for_each_allowed_card(
-                                    ahand,
-                                    stichseq,
-                                    rules,
-                                    |stichseq| add_to_vecstich(stichseq),
-                                )
-                            }
-                        )
-                    },
-                )
-            },
-            2 => {
-                for_each_allowed_card(
-                    ahand,
-                    stichseq,
-                    rules,
-                    |stichseq| {
-                        for_each_allowed_card(
-                            ahand,
-                            stichseq,
-                            rules,
-                            |stichseq| add_to_vecstich(stichseq),
-                        )
-                    }
-                )
-            },
-            3 => {
-                for_each_allowed_card(
-                    ahand,
-                    stichseq,
-                    rules,
-                    |stichseq| add_to_vecstich(stichseq),
-                )
-            },
-            n_size => {
-                panic!("Unexpected size of current sich: {}", n_size);
-            },
-        }
+        let n_stich_size = stichseq.current_stich().size();
+        //assert!(0<=n_stich_size); // trivially true
+        assert!(n_stich_size<=3);
+        let mut vecstich = Vec::new();
+        let stich_current_check = stichseq.current_stich().clone(); // TODO? debug-only
+        for_each_allowed_card(
+            4-n_stich_size,
+            ahand,
+            stichseq,
+            rules,
+            &mut vecstich,
+            &stich_current_check,
+        );
         SStichOracle{
             vecstich,
         }
