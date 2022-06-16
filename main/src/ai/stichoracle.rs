@@ -29,13 +29,11 @@ impl SStichOracle {
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
             vecstich: &mut Vec<SStich>,
-            stich_current_check: &SStich,
         ) {
             if n_depth==0 {
                 assert!(stichseq.current_stich().is_empty());
                 let stich = unwrap!(stichseq.completed_stichs().last()).clone();
                 assert!(stich.is_full());
-                assert!(stich.equal_up_to_size(&stich_current_check, stich_current_check.size()));
                 vecstich.push(stich);
             } else {
                 let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
@@ -77,7 +75,6 @@ impl SStichOracle {
                                         stichseq,
                                         rules,
                                         &mut vecstich_tmp,
-                                        stich_current_check,
                                     )
                                 });
                             }
@@ -119,7 +116,6 @@ impl SStichOracle {
                                 stichseq,
                                 rules,
                                 vecstich,
-                                stich_current_check,
                             )
                         });
                     }
@@ -137,8 +133,10 @@ impl SStichOracle {
             stichseq,
             rules,
             &mut vecstich,
-            &stich_current_check,
         );
+        assert!(vecstich.iter().all(|stich|
+            stich.equal_up_to_size(&stich_current_check, stich_current_check.size())
+        ));
         SStichOracle{
             vecstich,
         }
