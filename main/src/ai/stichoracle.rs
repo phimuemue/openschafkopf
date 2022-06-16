@@ -19,13 +19,13 @@ struct SStichOracle {
 
 impl SStichOracle {
     pub fn new(
-        ahand: &EnumMap<EPlayerIndex, SHand>,
+        ahand: &mut EnumMap<EPlayerIndex, SHand>,
         stichseq: &mut SStichSequence,
         rules: &dyn TRules,
     ) -> Self {
         fn for_each_allowed_card(
             n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
-            ahand: &EnumMap<EPlayerIndex, SHand>,
+            ahand: &mut EnumMap<EPlayerIndex, SHand>,
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
             vecstich: &mut Vec<SStich>,
@@ -67,15 +67,15 @@ impl SStichOracle {
                             veccard_allowed.remove(i_card);
                             if on_points.is_none() || Some(points_card(card_in_chain))!=on_points {
                                 stichseq.zugeben_and_restore(card_in_chain, rules, |stichseq| {
-                                    let mut ahand = ahand.clone(); // TODO can we get rid of this?
                                     ahand[epi_card].play_card(card_in_chain);
                                     for_each_allowed_card(
                                         n_depth-1,
-                                        &ahand,
+                                        ahand,
                                         stichseq,
                                         rules,
                                         &mut vecstich_tmp,
-                                    )
+                                    );
+                                    ahand[epi_card].add_card(card_in_chain);
                                 });
                             }
                             ocard_in_chain = enumchainscard
@@ -108,15 +108,15 @@ impl SStichOracle {
                 } else {
                     for card in veccard_allowed {
                         stichseq.zugeben_and_restore(card, rules, |stichseq| {
-                            let mut ahand = ahand.clone(); // TODO can we get rid of this?
                             ahand[epi_card].play_card(card);
                             for_each_allowed_card(
                                 n_depth-1,
-                                &ahand,
+                                ahand,
                                 stichseq,
                                 rules,
                                 vecstich,
-                            )
+                            );
+                            ahand[epi_card].add_card(card);
                         });
                     }
                 }
@@ -193,7 +193,7 @@ mod tests {
             let ahand = &EPlayerIndex::map_from_raw(aslccard_hand)
                 .map_into(|acard| SHand::new_from_iter(acard.iter().copied()));
             let stichoracle = SStichOracle::new(
-                ahand,
+                &mut ahand.clone(),
                 &mut stichseq,
                 &rules,
             );
