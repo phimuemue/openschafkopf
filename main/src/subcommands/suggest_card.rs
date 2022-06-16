@@ -98,6 +98,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     NoFilter,
                     Branching(usize, usize),
                     Equivalent(usize, SEnumChains<SCard>),
+                    Oracle,
                 }
                 use ERemainingCards::*;
                 use EBranching::*;
@@ -105,7 +106,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     forward,
                     match ((
                         if_then_some!(let Some(str_branching) = clapmatches.value_of("branching"), {
-                            if let Some(n_until_stichseq_len) = str_branching.strip_prefix("equiv")
+                            if str_branching=="oracle" {
+                                Oracle
+                            } else if let Some(n_until_stichseq_len) = str_branching.strip_prefix("equiv")
                                 .and_then(|str_n_until_remaining_cards| str_n_until_remaining_cards.parse().ok())
                             {
                                 Equivalent(n_until_stichseq_len, rules.equivalent_when_on_same_hand())
@@ -127,8 +130,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         }),
                         eremainingcards
                     )) {
-                        (Some(NoFilter), _)|(None,_1|_2|_3|_4) => (|| |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/)),
-                        (Some(Branching(n_lo, n_hi)), _) => (|| branching_factor(move |_stichseq| {
+                        (Some(NoFilter), _)|(None,_1|_2|_3|_4) => (|_, _| |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/)),
+                        (Some(Branching(n_lo, n_hi)), _) => (|_, _| branching_factor(move |_stichseq| {
                             let n_lo = n_lo.max(1);
                             (n_lo, (n_hi.max(n_lo+1)))
                         })),
@@ -139,7 +142,14 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 enumchainscard,
                             )
                         ),
-                        (None,_5|_6|_7|_8) => (|| branching_factor(|_stichseq| (1, 3))),
+                        (Some(Oracle), _) => ( |stichseq, ahand| {
+                            crate::ai::stichoracle::SFilterByOracle::new(
+                                rules,
+                                ahand.clone(),
+                                stichseq.clone(),
+                            )
+                        }),
+                        (None,_5|_6|_7|_8) => (|_, _| branching_factor(|_stichseq| (1, 3))),
                     },
                     match (clapmatches.value_of("prune")) {
                         Some("hint") => (SMinReachablePayoutLowerBoundViaHint),

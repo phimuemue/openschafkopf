@@ -550,8 +550,8 @@ pub fn equivalent_cards_filter(
     n_until_stichseq_len: usize,
     epi_fixed: EPlayerIndex,
     enumchainscard: SEnumChains<SCard>,
-) -> impl Fn()->SFilterEquivalentCards {
-    move || SFilterEquivalentCards {
+) -> impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->SFilterEquivalentCards {
+    move |_, _| SFilterEquivalentCards {
         enumchainscard: enumchainscard.clone(),
         epi_fixed,
         n_until_stichseq_len,

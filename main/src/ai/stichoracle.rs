@@ -3,7 +3,7 @@ use crate::{
     primitives::{
         card::SCard,
         eplayerindex::EPlayerIndex,
-        hand::SHand,
+        hand::{SHand, SHandVector},
         stich::SStich,
     },
     rules::{
@@ -14,7 +14,7 @@ use crate::{
     util::*,
 };
 
-struct SStichOracle {
+pub struct SStichOracle {
     vecstich: Vec<SStich>,
 }
 
@@ -139,6 +139,63 @@ impl SStichOracle {
         SStichOracle{
             vecstich,
         }
+    }
+}
+
+pub struct SFilterByOracle<'rules> {
+    rules: &'rules dyn TRules,
+    ahand: EnumMap<EPlayerIndex, SHand>,
+    stichseq: SStichSequence,
+    stichoracle: SStichOracle,
+}
+
+impl<'rules> SFilterByOracle<'rules> {
+    pub fn new(
+        rules: &'rules dyn TRules,
+        ahand: EnumMap<EPlayerIndex, SHand>,
+        stichseq: SStichSequence,
+    ) -> Self {
+        let (mut ahand_2, mut stichseq_2) = (ahand.clone(), stichseq.clone());
+        Self {
+            rules,
+            ahand,
+            stichseq,
+            stichoracle: SStichOracle::new(
+                &mut ahand_2,
+                &mut stichseq_2,
+                rules,
+            )
+        }
+    }
+}
+
+impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
+    type UnregisterStich = SStichSequence; // TODO avoid cloning SStichSequence
+    fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich {
+        let stichseq = self.stichseq.clone();
+        assert!(stich.is_full());
+        for (_epi, card) in stich.iter() {
+            self.stichseq.zugeben(*card, self.rules);
+        }
+        self.stichoracle = SStichOracle::new(
+            &mut self.ahand.clone(),
+            &mut self.stichseq.clone(),
+            self.rules,
+        );
+        stichseq
+    }
+    fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich) {
+        self.stichseq = unregisterstich;
+    }
+    fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
+        let stich_played = stichseq.current_stich(); // TODO current_playable_stich
+        let epi = unwrap!(stich_played.current_playerindex()); // TODO current_playable_stich/current_playable_playerindex
+        veccard.retain(|card|
+            self.stichoracle.vecstich.iter().any(|stich_oracle| {
+                stich_oracle.equal_up_to_size(&stich_played, stich_played.size())
+                && stich_oracle[epi]==*card
+            })
+        );
     }
 }
 
