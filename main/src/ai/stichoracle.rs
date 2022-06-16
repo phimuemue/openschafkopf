@@ -179,7 +179,6 @@ mod tests {
                 // Opening with Eichel
                 [EK, EA, EZ, E9], [EK, EA, E7, E9], [EK, EA, EZ, E8], [EK, EA, E7, E8],
                 // Opening with Gras
-                /* [GA, EA, GZ, GK], [GA, EA, G9, GK], [GA, EA, G8, GK], [GA, EA, GZ, G7], [GA, EA, G9, G7], [GA, EA, G8, G7], // disallowed to schmier EA */
                 [GA, GO, GZ, GK], [GA, HK, GZ, GK], [GA, H8, GZ, GK], [GA, H7, GZ, GK], [GA, SA, GZ, GK], [GA, SK, GZ, GK], [GA, S8, GZ, GK],
                 [GA, GO, G9, GK], [GA, HK, G9, GK], [GA, H8, G9, GK], [GA, H7, G9, GK], [GA, SA, G9, GK], [GA, SK, G9, GK], [GA, S8, G9, GK],
                 [GA, GO, G8, GK], [GA, HK, G8, GK], [GA, H8, G8, GK], [GA, H7, G8, GK], [GA, SA, G8, GK], [GA, SK, G8, GK], [GA, S8, G8, GK],
