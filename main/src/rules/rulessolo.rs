@@ -155,26 +155,24 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
                 SHand::new_from_iter(gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[epi]))
             );
             let playerparties = SPlayerParties13::new(rules.epi);
-            for stich in gamefinishedstiche.get().completed_stichs().iter() {
-                for (epi_card, card) in stich.iter() {
-                    let b_primary = playerparties.is_primary_party(epi_card);
-                    assert_eq!(
-                        Self::payout_to_points(
-                            /*epi_active*/rules.epi,
-                            &stichseq_check,
-                            &self.pointstowin,
-                            an_payout[epi_card].as_num::<f32>(),
-                        ).as_num::<isize>(),
-                        EPlayerIndex::values()
-                            .filter(|epi| playerparties.is_primary_party(*epi)==b_primary)
-                            .map(|epi|
-                                rulestatecache.changing.mapepipointstichcount[epi].n_point
-                            )
-                            .sum::<isize>(),
-                    );
-                    stichseq_check.zugeben_custom_winner_index(*card, |stich| rules.winner_index(stich)); // TODO I could not simply pass rules. Why?
-                    ahand_check[epi_card].play_card(*card);
-                }
+            for (epi_card, card) in gamefinishedstiche.get().completed_cards() {
+                let b_primary = playerparties.is_primary_party(epi_card);
+                assert_eq!(
+                    Self::payout_to_points(
+                        /*epi_active*/rules.epi,
+                        &stichseq_check,
+                        &self.pointstowin,
+                        an_payout[epi_card].as_num::<f32>(),
+                    ).as_num::<isize>(),
+                    EPlayerIndex::values()
+                        .filter(|epi| playerparties.is_primary_party(*epi)==b_primary)
+                        .map(|epi|
+                            rulestatecache.changing.mapepipointstichcount[epi].n_point
+                        )
+                        .sum::<isize>(),
+                );
+                stichseq_check.zugeben_custom_winner_index(*card, |stich| rules.winner_index(stich)); // TODO I could not simply pass rules. Why?
+                ahand_check[epi_card].play_card(*card);
             }
 
         }

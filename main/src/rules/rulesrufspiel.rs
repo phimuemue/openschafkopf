@@ -17,8 +17,7 @@ pub struct SRufspielPayout {
 fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider<SPlayerParties22>, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished) -> (EnumMap<EPlayerIndex, isize>, SPlayerParties22) {
     let epi_coplayer = debug_verify_eq!(
         rulestatecache.fixed.who_has_card(rules.rufsau()),
-        unwrap!(gamefinishedstiche.get().completed_stichs().iter()
-            .flat_map(|stich| stich.iter())
+        unwrap!(gamefinishedstiche.get().completed_cards()
             .find(|&(_, card)| *card==rules.rufsau())
             .map(|(epi, _)| epi))
     );
@@ -321,27 +320,25 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
                         SHand::new_from_iter(gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[epi]))
                     );
-                    for stich in gamefinishedstiche.get().completed_stichs().iter() {
-                        for (epi_card, card) in stich.iter() {
-                            let b_primary = playerparties.is_primary_party(epi_card);
-                            assert_eq!(
-                                Self::payout_to_points(
-                                    /*epi_active*/rules.epi,
-                                    rules.rufsau(),
-                                    &stichseq_check,
-                                    &ahand_check[epi_card],
-                                    an_payout[epi_card].as_num::<f32>(),
-                                ).as_num::<isize>(),
-                                EPlayerIndex::values()
-                                    .filter(|epi| playerparties.is_primary_party(*epi)==b_primary)
-                                    .map(|epi|
-                                        rulestatecache.changing.mapepipointstichcount[epi].n_point
-                                    )
-                                    .sum::<isize>(),
-                            );
-                            stichseq_check.zugeben_custom_winner_index(*card, |stich| rules.winner_index(stich)); // TODO I could not simply pass rules. Why?
-                            ahand_check[epi_card].play_card(*card);
-                        }
+                    for (epi_card, card) in gamefinishedstiche.get().completed_cards() {
+                        let b_primary = playerparties.is_primary_party(epi_card);
+                        assert_eq!(
+                            Self::payout_to_points(
+                                /*epi_active*/rules.epi,
+                                rules.rufsau(),
+                                &stichseq_check,
+                                &ahand_check[epi_card],
+                                an_payout[epi_card].as_num::<f32>(),
+                            ).as_num::<isize>(),
+                            EPlayerIndex::values()
+                                .filter(|epi| playerparties.is_primary_party(*epi)==b_primary)
+                                .map(|epi|
+                                    rulestatecache.changing.mapepipointstichcount[epi].n_point
+                                )
+                                .sum::<isize>(),
+                        );
+                        stichseq_check.zugeben_custom_winner_index(*card, |stich| rules.winner_index(stich)); // TODO I could not simply pass rules. Why?
+                        ahand_check[epi_card].play_card(*card);
                     }
 
                 }

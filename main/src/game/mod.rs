@@ -422,6 +422,10 @@ impl SStichSequence {
         self.visible_stichs().iter().flat_map(SStich::iter)
     }
 
+    pub fn completed_cards(&self) -> impl Iterator<Item=(EPlayerIndex, &SCard)> {
+        self.completed_stichs().iter().flat_map(SStich::iter)
+    }
+
     pub fn kurzlang(&self) -> EKurzLang {
         #[cfg(debug_assertions)]self.assert_invariant();
         self.ekurzlang

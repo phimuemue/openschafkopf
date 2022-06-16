@@ -493,7 +493,7 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
     }
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
         // TODO assert that we actually have the correct enumchains
-        // for (_epi, card) in stichseq.completed_stichs().iter().flat_map(SStich::iter) {
+        // for (_epi, card) in stichseq.completed_cards() {
         //     enumchainscard.remove_from_chain(*card);
         // }
         // assert_eq!(enumchainscard, self.enumchainscard);
