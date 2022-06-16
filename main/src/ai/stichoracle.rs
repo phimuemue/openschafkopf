@@ -92,10 +92,6 @@ impl SStichOracle {
                             .map(|stich| is_primary_party(rules.winner_index(stich)))
                             .all_equal_item()
                         {
-                            assert_eq!(
-                                epi_card,
-                                unwrap!(stichseq.current_stich().current_playerindex()),
-                            );
                             let card_min_or_max = unwrap!(if b_stich_winner_primary_party==is_primary_party(epi_card) {
                                 // only play maximum points
                                 veccard_chain.iter().copied().rev()
