@@ -12,7 +12,6 @@ use crate::{
     },
     util::*,
 };
-use itertools::Itertools;
 
 struct SStichOracle {
     vecstich: Vec<SStich>,
@@ -109,18 +108,16 @@ impl SStichOracle {
                             //     }
                             // }
                         }
-                        if let Some(b_stich_winner_primary_party)=vecstich_tmp
-                            .iter()
-                            .map(|stich|
-                                playerparties.is_primary_party(rules.winner_index(stich))
-                            )
+                        let is_primary_party = |epi| playerparties.is_primary_party(epi);
+                        if let Some(b_stich_winner_primary_party)=vecstich_tmp.iter()
+                            .map(|stich| is_primary_party(rules.winner_index(stich)))
                             .all_equal_item()
                         {
                             assert_eq!(
                                 epi_card,
                                 unwrap!(stichseq.current_stich().current_playerindex()),
                             );
-                            let card_min_or_max = unwrap!(if b_stich_winner_primary_party==playerparties.is_primary_party(epi_card) {
+                            let card_min_or_max = unwrap!(if b_stich_winner_primary_party==is_primary_party(epi_card) {
                                 // only play maximum points
                                 veccard_chain.iter().copied().rev()
                                     // max_by_key: "If several elements are equally maximum, the last element is returned" (https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.max_by_key)
