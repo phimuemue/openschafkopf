@@ -1,6 +1,7 @@
 use crate::{
     game::SStichSequence,
     primitives::{
+        card::SCard,
         eplayerindex::EPlayerIndex,
         hand::SHand,
         stich::SStich,
@@ -48,12 +49,14 @@ impl SStichOracle {
                     for (_epi, &card) in stichseq.completed_cards() {
                         enumchainscard.remove_from_chain(card);
                     }
+                    for card in <SCard as TPlainEnum>::values() {
+                        if !veccard_allowed.contains(&card) {
+                            enumchainscard.remove_and_split(card);
+                        }
+                    }
                     while !veccard_allowed.is_empty() {
                         let card_allowed = veccard_allowed[0];
-                        let mut ocard_in_chain = Some(enumchainscard.prev_while(
-                            card_allowed,
-                            |card_in_chain| veccard_allowed.contains(&card_in_chain)
-                        ));
+                        let mut ocard_in_chain = Some(enumchainscard.prev_while(card_allowed, |_| true)) ;
                         let mut vecstich_tmp = Vec::new();
                         let mut veccard_chain = Vec::new();
                         while let Some(card_in_chain) = ocard_in_chain.take() {
@@ -78,11 +81,7 @@ impl SStichOracle {
                                     ahand[epi_card].add_card(card_in_chain);
                                 });
                             }
-                            ocard_in_chain = enumchainscard
-                                .next(card_in_chain)
-                                .filter(|card_in_chain_next|
-                                    veccard_allowed.contains(&card_in_chain_next)
-                                );
+                            ocard_in_chain = enumchainscard.next(card_in_chain);
                         }
                         let is_primary_party = |epi| playerparties.is_primary_party(epi);
                         if let Some(b_stich_winner_primary_party)=vecstich_tmp.iter()

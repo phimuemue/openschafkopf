@@ -108,6 +108,31 @@ impl<E: TPlainEnum + TInternalEnumMapType<E, E> + Copy + std::cmp::Eq + std::fmt
         removed
     }
 
+    pub fn remove_and_split(&mut self, e: E)
+        where
+            <E as TInternalEnumMapType<E, E>>::InternalEnumMapType: PartialEq,
+    {
+        // TODO can the following use fewer branches?
+        match (self.prev(e), self.next(e)) {
+            (None, None) => {
+            },
+            (Some(e_prev_old), None) => {
+                self.mapee_next[e_prev_old] = e_prev_old;
+            },
+            (None, Some(e_next_old)) => {
+                self.mapee_prev[e_next_old] = e_next_old;
+            },
+            (Some(e_prev_old), Some(e_next_old)) => {
+                assert_ne!(e_prev_old, e_next_old);
+                self.mapee_next[e_prev_old] = e_prev_old;
+                self.mapee_prev[e_next_old] = e_next_old;
+            },
+        };
+        self.mapee_next[e] = e;
+        self.mapee_prev[e] = e;
+        self.assert_invariant();
+    }
+
     pub fn readd(&mut self, removed: SRemoved<E>) {
         let e = removed.e;
         assert_eq!(self.mapee_prev[e], e);
