@@ -225,6 +225,17 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         )
     }
 
+    fn only_minmax_points_when_on_same_hand(&self) -> Option<SEnumChains<SCard>> {
+        use crate::primitives::card_values::*;
+        // TODO can we infer/assert this somehow?
+        Some(SEnumChains::new_from_slices(&[
+            &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7] as &[SCard],
+            &[EA, EZ, EK, E9, E8, E7],
+            &[GA, GZ, GK, G9, G8, G7],
+            &[SA, SZ, SK, S9, S8, S7],
+        ]))
+    }
+
     fn all_allowed_cards_first_in_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         if // do we already know who had the rufsau?
             stichseq.completed_stichs().iter()
