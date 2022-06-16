@@ -47,7 +47,7 @@ impl SStichOracle {
                 if let Some((mut enumchainscard, playerparties))=rules.only_minmax_points_when_on_same_hand(
                     &crate::rules::SRuleStateCacheFixed::new(stichseq, ahand),
                 ) {
-                    for (_epi, &card) in stichseq.completed_stichs().iter().flat_map(SStich::iter) {
+                    for (_epi, &card) in stichseq.completed_cards() {
                         enumchainscard.remove_from_chain(card);
                     }
                     while !veccard_allowed.is_empty() {
@@ -81,32 +81,11 @@ impl SStichOracle {
                                     )
                                 });
                             }
-                            //let mut card_in_chain_mut = card_in_chain;
-                            if let Some(card_in_chain_next) = enumchainscard
+                            ocard_in_chain = enumchainscard
                                 .next(card_in_chain)
-                                .filter(|card_in_chain_next| veccard_allowed.contains(&card_in_chain_next))
-                            {
-                                ocard_in_chain = Some(card_in_chain_next);
-                                //card_in_chain_mut = card_in_chain_next;
-                            }
-                            // while points_card(card_in_chain_mut)==points_card(card_in_chain) {
-                            //     if let Some(card_in_chain_next) = enumchainscard
-                            //         .next(card_in_chain_mut)
-                            //         .filter(|card_in_chain_next| veccard_allowed.contains(&card_in_chain_next))
-                            //     {
-                            //         let i_card = unwrap!(
-                            //             veccard_allowed.iter().position(|&card| card==unwrap!(ocard_in_chain))
-                            //         );
-                            //         assert_eq!(unwrap!(ocard_in_chain), veccard_allowed[i_card]);
-                            //         veccard_allowed.remove(i_card);
-                            //         ocard_in_chain = Some(card_in_chain_next);
-                            //         card_in_chain_mut = card_in_chain_next;
-                            //     } else {
-                            //         verify!(&ocard_in_chain);
-                            //         ocard_in_chain = None;
-                            //         break;
-                            //     }
-                            // }
+                                .filter(|card_in_chain_next|
+                                    veccard_allowed.contains(&card_in_chain_next)
+                                );
                         }
                         let is_primary_party = |epi| playerparties.is_primary_party(epi);
                         if let Some(b_stich_winner_primary_party)=vecstich_tmp.iter()
