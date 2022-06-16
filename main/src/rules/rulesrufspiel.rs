@@ -225,15 +225,21 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         )
     }
 
-    fn only_minmax_points_when_on_same_hand(&self) -> Option<SEnumChains<SCard>> {
+    fn only_minmax_points_when_on_same_hand(&self, rulestatecache: &SRuleStateCacheFixed) -> Option<(SEnumChains<SCard>, SPlayerParties22)> {
         use crate::primitives::card_values::*;
+        //return None;
         // TODO can we infer/assert this somehow?
-        Some(SEnumChains::new_from_slices(&[
-            &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7] as &[SCard],
-            &[EA, EZ, EK, E9, E8, E7],
-            &[GA, GZ, GK, G9, G8, G7],
-            &[SA, SZ, SK, S9, S8, S7],
-        ]))
+        Some((
+            SEnumChains::new_from_slices(&[
+                &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7] as &[SCard],
+                &[EA, EZ, EK, E9, E8, E7],
+                &[GA, GZ, GK, G9, G8, G7],
+                &[SA, SZ, SK, S9, S8, S7],
+            ]),
+            SPlayerParties22{
+                aepi_pri: [self.epi, rulestatecache.who_has_card(self.rufsau())],
+            },
+        ))
     }
 
     fn all_allowed_cards_first_in_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {

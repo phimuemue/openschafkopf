@@ -89,7 +89,7 @@ pub struct SRuleStateCacheFixed {
     mapcardoepi: EnumMap<SCard, Option<EPlayerIndex>>, // TODO? Option<EPlayerIndex> is clean for EKurzLang. Does it incur runtime overhead?
 }
 impl SRuleStateCacheFixed {
-    fn new(stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Self {
+    pub fn new(stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Self {
         debug_assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
         let mut mapcardoepi = SCard::map_from_fn(|_| None);
         let mut register_card = |card, epi| {
@@ -292,7 +292,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
     fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 
     fn equivalent_when_on_same_hand(&self) -> SEnumChains<SCard>;
-    fn only_minmax_points_when_on_same_hand(&self) -> Option<SEnumChains<SCard>> {
+    fn only_minmax_points_when_on_same_hand(&self, _rulestatecache: &SRuleStateCacheFixed) -> Option<(SEnumChains<SCard>, rulesrufspiel::SPlayerParties22)> {
         None
     }
 
