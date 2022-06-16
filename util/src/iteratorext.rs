@@ -79,6 +79,18 @@ pub trait IteratorExt: itertools::Itertools {
             })
         })
     }
+
+    // TODO itertools
+    fn all_equal_item(&mut self) -> Option<Self::Item>
+    where
+        Self: Sized,
+        Self::Item: PartialEq,
+    {
+        match self.next() {
+            None => None,
+            Some(a) => if self.all(|x| a == x) { Some(a) } else { None }
+        }
+    }
 }
 
 impl<It> IteratorExt for It where It: Iterator {}

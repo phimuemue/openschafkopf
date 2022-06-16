@@ -459,12 +459,11 @@ fn generate_analysis_html(
                 str_per_card += &format!("<td colspan=\"{}\">N.A.</td>",
                     verify_eq!(
                         determine_best_card_table::N_COLUMNS * EMinMaxStrategy::SIZE,
-                        {
-                            // TODO itertools: all_equal_item
-                            let mut itn_columns = vecoutputline.iter().map(|outputline| outputline.mapemmstrategyatplstrf.iter().flatten().count());
-                            assert!(itn_columns.clone().all_equal());
-                            unwrap!(itn_columns.next())
-                        }
+                        unwrap!(vecoutputline.iter()
+                            .map(|outputline|
+                                outputline.mapemmstrategyatplstrf.iter().flatten().count()
+                            )
+                            .all_equal_item())
                     ),
                 );
             }
