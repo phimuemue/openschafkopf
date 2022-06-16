@@ -109,17 +109,18 @@ impl SStichOracle {
                             //     }
                             // }
                         }
-                        let mut itb_stich_winner_primary_party = vecstich_tmp
+                        if let Some(b_stich_winner_primary_party)=vecstich_tmp
                             .iter()
                             .map(|stich|
                                 playerparties.is_primary_party(rules.winner_index(stich))
-                            );
-                        if itb_stich_winner_primary_party.clone().all_equal() { // TODO all_equal_item
+                            )
+                            .all_equal_item()
+                        {
                             assert_eq!(
                                 epi_card,
                                 unwrap!(stichseq.current_stich().current_playerindex()),
                             );
-                            let card_min_or_max = unwrap!(if unwrap!(itb_stich_winner_primary_party.next())==playerparties.is_primary_party(epi_card) {
+                            let card_min_or_max = unwrap!(if b_stich_winner_primary_party==playerparties.is_primary_party(epi_card) {
                                 // only play maximum points
                                 veccard_chain.iter().copied().rev()
                                     // max_by_key: "If several elements are equally maximum, the last element is returned" (https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.max_by_key)
