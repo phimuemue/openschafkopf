@@ -245,8 +245,8 @@ pub struct SFilterByOracle<'rules> {
 impl<'rules> SFilterByOracle<'rules> {
     pub fn new(
         rules: &'rules dyn TRules,
-        ahand_in_game: EnumMap<EPlayerIndex, SHand>,
-        stichseq_in_game: SStichSequence,
+        ahand_in_game: &EnumMap<EPlayerIndex, SHand>,
+        stichseq_in_game: &SStichSequence,
     ) -> Option<Self> {
         let ahand = EPlayerIndex::map_from_fn(|epi| SHand::new_from_iter(
             ahand_in_game[epi].cards().iter().copied()

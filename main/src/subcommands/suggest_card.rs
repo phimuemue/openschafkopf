@@ -146,8 +146,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         (Some(Oracle), _) => ((crate::ai::stichoracle::SFilterByOracle), |stichseq, ahand| {
                             crate::ai::stichoracle::SFilterByOracle::new(
                                 rules,
-                                ahand.clone(),
-                                stichseq.clone(),
+                                ahand,
+                                stichseq,
                             )
                         }),
                         (None,_5|_6|_7|_8) => ((_), |_, _| branching_factor(|_stichseq| (1, 3))),
