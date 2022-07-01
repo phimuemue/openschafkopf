@@ -321,7 +321,7 @@ impl<'rules> SFilterByOracle<'rules> {
 impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
     type UnregisterStich = Option<(SStichTrie, Option<EnumMap<EPlayerIndex, SRemoved<SCard>>>)>;
     fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich {
-        if_then_some!(self.stichseq.completed_stichs().len() < 4, {
+        if_then_some!(self.stichseq.completed_stichs().len() < 6, {
             assert!(stich.is_full());
             for (epi, card) in stich.iter() {
                 self.stichseq.zugeben(*card, self.rules);
@@ -359,7 +359,7 @@ impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
         }
     }
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
-        if self.stichseq.completed_stichs().len() <= 3 {
+        if self.stichseq.completed_stichs().len() <= 5 {
             let mut stichtrie = &self.stichtrie;
             for (_epi, card) in stichseq./*TODO current_playable_stich*/current_stich().iter() {
                 stichtrie = &unwrap!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| card_stichtrie==card)).1;
