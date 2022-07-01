@@ -319,47 +319,53 @@ impl<'rules> SFilterByOracle<'rules> {
 }
 
 impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
-    type UnregisterStich = (SStichTrie, Option<EnumMap<EPlayerIndex, SRemoved<SCard>>>);
+    type UnregisterStich = Option<(SStichTrie, Option<EnumMap<EPlayerIndex, SRemoved<SCard>>>)>;
     fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich {
-        assert!(stich.is_full());
-        for (epi, card) in stich.iter() {
-            self.stichseq.zugeben(*card, self.rules);
-            self.ahand[epi].play_card(*card);
-        }
-        let oaremovedcard = self.otplenumchainscardplayerparties_completed_cards.as_mut().map(|(enumchains_2, _playerparties)| {
-            EPlayerIndex::map_from_fn(|epi| {
-                enumchains_2.remove_from_chain(stich[epi])
-            })
-        });
-        let stichtrie = SStichTrie::new_with(
-            &mut self.ahand,
-            &mut self.stichseq,
-            self.rules,
-            &self.otplenumchainscardplayerparties_completed_cards,
-        );
-        (std::mem::replace(&mut self.stichtrie, stichtrie), oaremovedcard)
-    }
-    fn unregister_stich(&mut self, (stichtrie, oaremovedcard): Self::UnregisterStich) {
-        let stich_last_completed = unwrap!(self.stichseq.completed_stichs().last());
-        for epi in EPlayerIndex::values() {
-            self.ahand[epi].add_card(stich_last_completed[epi]);
-        }
-        for _ in 0..EPlayerIndex::SIZE {
-            self.stichseq.undo_most_recent();
-        }
-        if let Some(aremovedcard) = oaremovedcard {
-            for removedcard in aremovedcard.into_raw().into_iter().rev() {
-                unwrap!(self.otplenumchainscardplayerparties_completed_cards.as_mut()).0.readd(removedcard);
+        if_then_some!(self.stichseq.completed_stichs().len() < 4, {
+            assert!(stich.is_full());
+            for (epi, card) in stich.iter() {
+                self.stichseq.zugeben(*card, self.rules);
+                self.ahand[epi].play_card(*card);
             }
+            let oaremovedcard = self.otplenumchainscardplayerparties_completed_cards.as_mut().map(|(enumchains_2, _playerparties)| {
+                EPlayerIndex::map_from_fn(|epi| {
+                    enumchains_2.remove_from_chain(stich[epi])
+                })
+            });
+            let stichtrie = SStichTrie::new_with(
+                &mut self.ahand,
+                &mut self.stichseq,
+                self.rules,
+                &self.otplenumchainscardplayerparties_completed_cards,
+            );
+            (std::mem::replace(&mut self.stichtrie, stichtrie), oaremovedcard)
+        })
+    }
+    fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich) {
+        if let Some((stichtrie, oaremovedcard)) = unregisterstich {
+            let stich_last_completed = unwrap!(self.stichseq.completed_stichs().last());
+            for epi in EPlayerIndex::values() {
+                self.ahand[epi].add_card(stich_last_completed[epi]);
+            }
+            for _ in 0..EPlayerIndex::SIZE {
+                self.stichseq.undo_most_recent();
+            }
+            if let Some(aremovedcard) = oaremovedcard {
+                for removedcard in aremovedcard.into_raw().into_iter().rev() {
+                    unwrap!(self.otplenumchainscardplayerparties_completed_cards.as_mut()).0.readd(removedcard);
+                }
+            }
+            self.stichtrie = stichtrie;
         }
-        self.stichtrie = stichtrie;
     }
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
-        let mut stichtrie = &self.stichtrie;
-        for (_epi, card) in stichseq./*TODO current_playable_stich*/current_stich().iter() {
-            stichtrie = &unwrap!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| card_stichtrie==card)).1;
+        if self.stichseq.completed_stichs().len() <= 3 {
+            let mut stichtrie = &self.stichtrie;
+            for (_epi, card) in stichseq./*TODO current_playable_stich*/current_stich().iter() {
+                stichtrie = &unwrap!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| card_stichtrie==card)).1;
+            }
+            *veccard = stichtrie.vectplcardtrie.iter().map(|(card, _stichtrie)| *card).collect();
         }
-        *veccard = stichtrie.vectplcardtrie.iter().map(|(card, _stichtrie)| *card).collect();
     }
 }
 
