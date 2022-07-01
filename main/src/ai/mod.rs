@@ -340,26 +340,24 @@ pub fn determine_best_card<
                         |stich| determinebestcard.rules.winner_index(stich),
                     ),
                 )
+            } else if let Some(mut filter) = ofilter.into() {
+                explore_snapshots(
+                    &mut ahand,
+                    determinebestcard.rules,
+                    &mut stichseq,
+                    &mut filter,
+                    foreachsnapshot,
+                    &mut visualizer,
+                )
             } else {
-                if let Some(mut filter) = ofilter.into() {
-                    explore_snapshots(
-                        &mut ahand,
-                        determinebestcard.rules,
-                        &mut stichseq,
-                        &mut filter,
-                        foreachsnapshot,
-                        &mut visualizer,
-                    )
-                } else {
-                    explore_snapshots(
-                        &mut ahand,
-                        determinebestcard.rules,
-                        &mut stichseq,
-                        &mut |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/),
-                        foreachsnapshot,
-                        &mut visualizer,
-                    )
-                }
+                explore_snapshots(
+                    &mut ahand,
+                    determinebestcard.rules,
+                    &mut stichseq,
+                    &mut |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/),
+                    foreachsnapshot,
+                    &mut visualizer,
+                )
             };
             let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
             let payoutstats = SPerMinMaxStrategy( // TODO should be SPayoutStatsPerStrategy
