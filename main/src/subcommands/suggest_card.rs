@@ -1,4 +1,4 @@
-use crate::ai::{*, gametree::*};
+use crate::ai::{*, gametree::*, stichoracle::SFilterByOracle};
 use crate::primitives::*;
 use crate::util::*;
 use itertools::*;
@@ -143,12 +143,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 enumchainscard,
                             )
                         ),
-                        (Some(Oracle), _) => ((crate::ai::stichoracle::SFilterByOracle), |stichseq, ahand| {
-                            crate::ai::stichoracle::SFilterByOracle::new(
-                                rules,
-                                ahand,
-                                stichseq,
-                            )
+                        (Some(Oracle), _) => ((SFilterByOracle), |stichseq, ahand| {
+                            SFilterByOracle::new(rules, ahand, stichseq)
                         }),
                         (None,_5|_6|_7|_8) => ((_), |_, _| branching_factor(|_stichseq| (1, 3))),
                     },
