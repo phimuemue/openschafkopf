@@ -65,7 +65,7 @@ impl SStichTrie {
                 assert!(stichseq.current_stich().is_empty());
                 let stich = unwrap!(stichseq.completed_stichs().last());
                 assert!(stich.is_full());
-                Some(playerparties.is_primary_party(rules.winner_index(&stich)))
+                Some(playerparties.is_primary_party(rules.winner_index(stich)))
             } else {
                 let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
                 let mut veccard_allowed = rules.all_allowed_cards(
@@ -108,7 +108,7 @@ impl SStichTrie {
                     );
                     let next_in_chain = |veccard: &SHandVector, card_chain| {
                         enumchainscard_completed_cards.next(card_chain)
-                            .filter(|card| veccard.contains(&card))
+                            .filter(|card| veccard.contains(card))
                     };
                     match ob_stich_winner_primary_party_representative {
                         None => {
@@ -208,7 +208,7 @@ impl SStichTrie {
             enumchainscard_completed_cards,
             &{
                 let mut enumchainscard_check = unwrap!(rules.only_minmax_points_when_on_same_hand(
-                    &SRuleStateCacheFixed::new(&stichseq, &ahand),
+                    &SRuleStateCacheFixed::new(stichseq, ahand),
                 )).0;
                 for (_epi, &card) in stichseq.completed_cards() {
                     enumchainscard_check.remove_from_chain(card);
@@ -222,8 +222,8 @@ impl SStichTrie {
             stichseq,
             rules,
             &mut stichtrie,
-            &enumchainscard_completed_cards,
-            &playerparties,
+            enumchainscard_completed_cards,
+            playerparties,
         );
         debug_assert!(stichtrie.traverse_trie(&mut stichseq.current_stich().clone()).iter().all(|stich|
             stich.equal_up_to_size(&stich_current_check, stich_current_check.size())
@@ -374,7 +374,7 @@ mod tests {
             let ahand = &EPlayerIndex::map_from_raw(aslccard_hand)
                 .map_into(|acard| SHand::new_from_iter(acard.iter().copied()));
             let (enumchainscard, playerparties) = unwrap!(rules.only_minmax_points_when_on_same_hand(
-                &SRuleStateCacheFixed::new(&stichseq, &ahand),
+                &SRuleStateCacheFixed::new(&stichseq, ahand),
             ));
             let stichtrie = SStichTrie::new_with(
                 &mut ahand.clone(),
