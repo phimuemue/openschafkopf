@@ -294,15 +294,19 @@ impl SPayoutStatsPerStrategy {
 }
 
 pub fn determine_best_card<
+    FilterAllowedCards: TFilterAllowedCards,
     ForEachSnapshot: TForEachSnapshot<Output=SMinMax> + Sync,
     SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
-    OFilterAllowedCards: Into<Option<impl TFilterAllowedCards>>,
+    OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
+    ItAHand: Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
+    FnMakeFilter: Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
+    FnVisualizer: Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
 >(
     determinebestcard: &SDetermineBestCard,
-    itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
-    fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
+    itahand: ItAHand,
+    fn_make_filter: FnMakeFilter,
     foreachsnapshot: &ForEachSnapshot,
-    fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
+    fn_visualizer: FnVisualizer,
 ) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>>
     where
         ForEachSnapshot::Output: std::fmt::Debug + Send,
