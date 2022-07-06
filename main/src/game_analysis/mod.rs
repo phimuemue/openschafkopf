@@ -9,6 +9,7 @@ use std::{
     io::Write,
     time::{Instant, Duration},
 };
+use std::fmt::Write as _;
 
 pub mod determine_best_card_table;
 pub mod parser;
@@ -335,7 +336,8 @@ fn generate_analysis_html(
                 n_payout_real = mapepin_payout[epi],
             );
             if let VImprovementSimulating::Found(ref cardandpayout) = analysisimpr.improvementsimulating {
-                str_analysisimpr += &format!(
+                unwrap!(write!(
+                    str_analysisimpr,
                     r###"
                         <ul><li>
                         Bei unbekannter Kartenverteilung: {str_card_suggested} {str_gewinn}: {n_payout} (statt {n_payout_real}).
@@ -351,7 +353,7 @@ fn generate_analysis_html(
                     },
                     n_payout = cardandpayout.n_payout,
                     n_payout_real = mapepin_payout[epi],
-                );
+                ));
             }
             str_analysisimpr += "</li>";
             str_analysisimpr
@@ -412,7 +414,9 @@ fn generate_analysis_html(
                         .join("  "),
                 ).replace('\"', "\\\""),
             );
-            str_per_card += &format!("<table><tr>{}{}</tr></table>",
+            unwrap!(write!(
+                str_per_card,
+                "<table><tr>{}{}</tr></table>",
                 player_table_stichseq(epi_self, stichseq),
                 player_table_ahand(
                     epi_self,
@@ -420,7 +424,7 @@ fn generate_analysis_html(
                     game.rules.as_ref(),
                     /*fn_border*/|card| card==analysispercard.card_played,
                 ),
-            );
+            ));
             str_per_card += "<table>";
             for outputline in vecoutputline.iter() {
                 str_per_card += "<tr>";
@@ -456,7 +460,9 @@ fn generate_analysis_html(
                     str_per_card += &crate::ai::gametree::output_card(card, /*b_border*/false);
                 }
                 str_per_card += "</td>";
-                str_per_card += &format!("<td colspan=\"{}\">N.A.</td>",
+                unwrap!(write!(
+                    str_per_card,
+                    "<td colspan=\"{}\">N.A.</td>",
                     verify_eq!(
                         determine_best_card_table::N_COLUMNS * EMinMaxStrategy::SIZE,
                         unwrap!(vecoutputline.iter()
@@ -465,7 +471,7 @@ fn generate_analysis_html(
                             )
                             .all_equal_item())
                     ),
-                );
+                ));
             }
             str_per_card += "</tr>";
             str_per_card += "</table>";
@@ -521,7 +527,8 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
             match gameresult.stockorgame {
                 VStockOrT::Stock(_) => {
                     if b_include_no_findings {
-                        str_index_html += &format!(
+                        unwrap!(write!(
+                            str_index_html,
                             r#"<tr>
                                 <td>
                                     Stock: {}/{}/{}/{}
@@ -531,7 +538,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                             gameresult.an_payout[EPlayerIndex::EPI1],
                             gameresult.an_payout[EPlayerIndex::EPI2],
                             gameresult.an_payout[EPlayerIndex::EPI3],
-                        );
+                        ));
                     }
                 },
                 VStockOrT::OrT(game) => {
@@ -555,7 +562,8 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                         n_games_findings += 1;
                     }
                     if b_include_no_findings || 0 < n_findings_cheating {
-                        str_index_html += &format!(
+                        unwrap!(write!(
+                            str_index_html,
                             r#"<tr>
                                 <td>
                                     <a href="{str_path}">{str_rules}</a>
@@ -582,12 +590,12 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                                     format!("{}s", n_secs)
                                 }
                             },
-                        );
+                        ));
                     }
                 },
             }
         } else {
-            str_index_html += &format!("<tr><td>Fehler ({})</td></tr>", gamewithdesc.str_description);
+            unwrap!(write!(str_index_html, "<tr><td>Fehler ({})</td></tr>", gamewithdesc.str_description));
         }
         n_games_done += 1;
         println!("Total: {n_games_total}. Done: {n_games_done}. Non-stock: {n_games_non_stock}. With findings: {n_games_findings}");
