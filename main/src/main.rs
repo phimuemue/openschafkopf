@@ -5,6 +5,7 @@
     clippy::type_complexity, // TODO could this be solved via type-complexity-threshold?
     clippy::new_without_default,
     clippy::enum_variant_names,
+    clippy::let_unit_value,
 ))]
 
 #[macro_use]
