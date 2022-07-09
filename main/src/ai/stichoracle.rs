@@ -7,11 +7,13 @@ use crate::{
         stich::SStich,
     },
     rules::{
+        rulesrufspiel::SPlayerParties22,
         card_points::points_card,
         TPlayerParties,
         TRules,
     },
     util::*,
+    ai::SRuleStateCacheFixed,
 };
 
 #[derive(Debug)]
@@ -20,10 +22,11 @@ pub struct SStichOracle {
 }
 
 impl SStichOracle {
-    pub fn new(
+    pub fn new_with(
         ahand: &mut EnumMap<EPlayerIndex, SHand>,
         stichseq: &mut SStichSequence,
         rules: &dyn TRules,
+        rulestatecache: &SRuleStateCacheFixed,
     ) -> Self {
         fn for_each_allowed_card(
             n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
@@ -31,6 +34,8 @@ impl SStichOracle {
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
             vecstich: &mut Vec<SStich>,
+            rulestatecache: &SRuleStateCacheFixed,
+            otplenumchainscardplayerparties: Option<(SEnumChains<SCard>, SPlayerParties22)>, // TODO reuse instead of taking by value each time
         ) {
             if n_depth==0 {
                 assert!(stichseq.current_stich().is_empty());
@@ -44,9 +49,7 @@ impl SStichOracle {
                     &ahand[epi_card],
                 );
                 assert!(!veccard_allowed.is_empty());
-                if let Some((mut enumchainscard, playerparties))=rules.only_minmax_points_when_on_same_hand(
-                    &crate::rules::SRuleStateCacheFixed::new(stichseq, ahand),
-                ) {
+                if let Some((mut enumchainscard, playerparties))=otplenumchainscardplayerparties.clone() {
                     for (_epi, &card) in stichseq.completed_cards() {
                         enumchainscard.remove_from_chain(card);
                     }
@@ -78,6 +81,8 @@ impl SStichOracle {
                                         stichseq,
                                         rules,
                                         &mut vecstich_tmp,
+                                        rulestatecache,
+                                        otplenumchainscardplayerparties.clone(),
                                     );
                                     ahand[epi_card].add_card(card_in_chain);
                                 });
@@ -115,6 +120,8 @@ impl SStichOracle {
                                 stichseq,
                                 rules,
                                 vecstich,
+                                rulestatecache,
+                                otplenumchainscardplayerparties.clone(),
                             );
                             ahand[epi_card].add_card(card);
                         });
@@ -133,6 +140,13 @@ impl SStichOracle {
             stichseq,
             rules,
             &mut vecstich,
+            rulestatecache,
+            rules.only_minmax_points_when_on_same_hand(
+                debug_verify_eq!(
+                    rulestatecache,
+                    &SRuleStateCacheFixed::new(stichseq, ahand)
+                ),
+            ),
         );
         assert!(vecstich.iter().all(|stich|
             stich.equal_up_to_size(&stich_current_check, stich_current_check.size())
@@ -141,6 +155,21 @@ impl SStichOracle {
             vecstich,
         }
     }
+
+
+    #[test]
+    pub fn new(
+        ahand: &mut EnumMap<EPlayerIndex, SHand>,
+        stichseq: &mut SStichSequence,
+        rules: &dyn TRules,
+    ) -> Self {
+        Self::new_with(
+            ahand,
+            stichseq,
+            rules,
+            &SRuleStateCacheFixed::new(stichseq, ahand),
+        )
+    }
 }
 
 pub struct SFilterByOracle<'rules> {
@@ -148,6 +177,7 @@ pub struct SFilterByOracle<'rules> {
     ahand: EnumMap<EPlayerIndex, SHand>,
     stichseq: SStichSequence,
     vecstichoracle: Vec<SStichOracle>,
+    rulestatecache: SRuleStateCacheFixed,
 }
 
 impl<'rules> SFilterByOracle<'rules> {
@@ -167,11 +197,13 @@ impl<'rules> SFilterByOracle<'rules> {
         ));
         let stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
+        let rulestatecache = SRuleStateCacheFixed::new(&stichseq, &ahand);
         Self {
             rules,
             ahand,
             stichseq,
             vecstichoracle: Vec::new(),
+            rulestatecache,
         }
     }
 }
@@ -186,10 +218,11 @@ impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
             self.stichseq.zugeben(*card, self.rules);
             self.ahand[epi].play_card(*card);
         }
-        self.vecstichoracle.push(SStichOracle::new(
+        self.vecstichoracle.push(SStichOracle::new_with(
             &mut self.ahand.clone(),
             &mut self.stichseq.clone(),
             self.rules,
+            &self.rulestatecache,
         ));
         (stichseq, ahand)
     }
