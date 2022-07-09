@@ -349,7 +349,7 @@ mod tests {
                 &mut stichseq,
                 &rules,
             );
-            let setstich_oracle = stichoracle.vecstich.iter().cloned().collect::<std::collections::HashSet<_>>();
+            let setstich_oracle = verify_eq!(stichoracle.vecstich, stichoracle.stichtrie.traverse_trie(&mut stichseq.current_stich().clone())).iter().cloned().collect::<std::collections::HashSet<_>>();
             let setstich_check = slcacard_stich
                 .iter()
                 .map(|acard| SStich::new_full(
