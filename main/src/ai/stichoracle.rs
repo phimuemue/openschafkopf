@@ -17,8 +17,14 @@ use crate::{
 };
 
 #[derive(Debug)]
+struct SStichTrie {
+    vectplcardtrie: Vec<(SCard, SStichTrie)>, // TODO? improve
+}
+
+#[derive(Debug)]
 pub struct SStichOracle {
     vecstich: Vec<SStich>,
+    stichtrie: SStichTrie,
 }
 
 impl SStichOracle {
@@ -34,6 +40,7 @@ impl SStichOracle {
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
             vecstich: &mut Vec<SStich>,
+            stichtrie: &mut SStichTrie,
             otplenumchainscardplayerparties: Option<(SEnumChains<SCard>, SPlayerParties22)>, // TODO reuse instead of taking by value each time
         ) {
             if n_depth==0 {
@@ -62,6 +69,7 @@ impl SStichOracle {
                         let mut ocard_in_chain = Some(enumchainscard.prev_while(card_allowed, |_| true)) ;
                         let mut vecstich_tmp = Vec::new();
                         let mut veccard_chain = Vec::new();
+                        let n_stichtrie_before = stichtrie.vectplcardtrie.len();
                         while let Some(card_in_chain) = ocard_in_chain.take() {
                             let on_points = veccard_chain.last().map(|card| points_card(*card));
                             veccard_chain.push(card_in_chain);
@@ -73,6 +81,12 @@ impl SStichOracle {
                             veccard_allowed.remove(i_card);
                             if on_points.is_none() || Some(points_card(card_in_chain))!=on_points {
                                 stichseq.zugeben_and_restore(card_in_chain, rules, |stichseq| {
+                                    stichtrie.vectplcardtrie.push((
+                                        card_in_chain,
+                                        SStichTrie {
+                                            vectplcardtrie: Vec::new(),
+                                        },
+                                    ));
                                     ahand[epi_card].play_card(card_in_chain);
                                     for_each_allowed_card(
                                         n_depth-1,
@@ -80,6 +94,7 @@ impl SStichOracle {
                                         stichseq,
                                         rules,
                                         &mut vecstich_tmp,
+                                        &mut unwrap!(stichtrie.vectplcardtrie.last_mut()).1,
                                         otplenumchainscardplayerparties.clone(),
                                     );
                                     ahand[epi_card].add_card(card_in_chain);
@@ -104,6 +119,15 @@ impl SStichOracle {
                                     .min_by_key(|card| points_card(*card))
                             });
                             vecstich_tmp.retain(|stich| stich[epi_card]==card_min_or_max);
+                            let mut i_stichtrie = n_stichtrie_before;
+                            while i_stichtrie < stichtrie.vectplcardtrie.len() {
+                                if stichtrie.vectplcardtrie[i_stichtrie].0==card_min_or_max {
+                                    // retain element
+                                    i_stichtrie += 1;
+                                } else {
+                                    stichtrie.vectplcardtrie.remove(i_stichtrie);
+                                }
+                            }
                         }
                         assert!(!vecstich_tmp.is_empty());
                         vecstich.extend(vecstich_tmp);
@@ -111,6 +135,12 @@ impl SStichOracle {
                 } else {
                     for card in veccard_allowed {
                         stichseq.zugeben_and_restore(card, rules, |stichseq| {
+                            stichtrie.vectplcardtrie.push((
+                                card,
+                                SStichTrie {
+                                    vectplcardtrie: Vec::new(),
+                                },
+                            ));
                             ahand[epi_card].play_card(card);
                             for_each_allowed_card(
                                 n_depth-1,
@@ -118,6 +148,7 @@ impl SStichOracle {
                                 stichseq,
                                 rules,
                                 vecstich,
+                                &mut unwrap!(stichtrie.vectplcardtrie.last_mut()).1,
                                 otplenumchainscardplayerparties.clone(),
                             );
                             ahand[epi_card].add_card(card);
@@ -131,12 +162,16 @@ impl SStichOracle {
         assert!(n_stich_size<=3);
         let mut vecstich = Vec::new();
         let stich_current_check = stichseq.current_stich().clone(); // TODO? debug-only
+        let mut stichtrie = SStichTrie {
+            vectplcardtrie: Vec::new(),
+        };
         for_each_allowed_card(
             4-n_stich_size,
             ahand,
             stichseq,
             rules,
             &mut vecstich,
+            &mut stichtrie,
             rules.only_minmax_points_when_on_same_hand(
                 debug_verify_eq!(
                     rulestatecache,
@@ -147,8 +182,26 @@ impl SStichOracle {
         assert!(vecstich.iter().all(|stich|
             stich.equal_up_to_size(&stich_current_check, stich_current_check.size())
         ));
+        fn traverse_trie(stichtrie: &SStichTrie, stich: &mut SStich) -> Vec<SStich> {
+            if verify_eq!(stich.is_full(), stichtrie.vectplcardtrie.is_empty()) {
+                vec![stich.clone()]
+            } else {
+                let mut vecstich = Vec::new();
+                for (card, stichtrie_child) in stichtrie.vectplcardtrie.iter() {
+                    stich.push(*card);
+                    vecstich.extend(traverse_trie(stichtrie_child, stich));
+                    stich.undo_most_recent();
+                }
+                vecstich
+            }
+        }
+        assert_eq!(
+            vecstich,
+            traverse_trie(&stichtrie, &mut SStich::new(unwrap!(stichseq.current_stich().current_playerindex())))
+        );
         SStichOracle{
             vecstich,
+            stichtrie,
         }
     }
 
