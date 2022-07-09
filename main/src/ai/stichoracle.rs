@@ -286,12 +286,22 @@ impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
         let stich_played = stichseq.current_stich(); // TODO current_playable_stich
         let epi = unwrap!(stich_played.current_playerindex()); // TODO current_playable_stich/current_playable_playerindex
-        veccard.retain(|card|
+        let mut stichtrie = &unwrap!(self.vecstichoracle.last()).stichtrie;
+        for (_epi, card) in stich_played.iter() {
+            stichtrie = &unwrap!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| card_stichtrie==card)).1;
+        }
+        let mut veccard_check = veccard.clone();
+        veccard_check.retain(|card|
             unwrap!(self.vecstichoracle.last()).vecstich.iter().any(|stich_oracle| {
                 stich_oracle.equal_up_to_size(&stich_played, stich_played.size())
                 && stich_oracle[epi]==*card
             })
         );
+        assert_eq!(veccard_check.len(), stichtrie.vectplcardtrie.len());
+        for card in veccard_check {
+            assert!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| *card_stichtrie==card).is_some());
+        }
+        *veccard = stichtrie.vectplcardtrie.iter().map(|(card, _stichtrie)| *card).collect();
     }
 }
 
