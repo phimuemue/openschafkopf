@@ -200,7 +200,7 @@ impl SStichOracle {
         ));
         assert_eq!(
             vecstich,
-            stichtrie.traverse_trie(&mut SStich::new(unwrap!(stichseq.current_stich().current_playerindex())))
+            stichtrie.traverse_trie(&mut stichseq.current_stich().clone())
         );
         SStichOracle{
             vecstich,
