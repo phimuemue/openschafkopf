@@ -209,7 +209,7 @@ impl SStichOracle {
     }
 
 
-    #[test]
+    #[cfg(test)]
     pub fn new(
         ahand: &mut EnumMap<EPlayerIndex, SHand>,
         stichseq: &mut SStichSequence,
