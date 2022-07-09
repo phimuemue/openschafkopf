@@ -39,7 +39,6 @@ impl SStichTrie {
 
 #[derive(Debug)]
 pub struct SStichOracle {
-    vecstich: Vec<SStich>,
     stichtrie: SStichTrie,
 }
 
@@ -55,7 +54,7 @@ impl SStichOracle {
             ahand: &mut EnumMap<EPlayerIndex, SHand>,
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
-            vecstich: &mut Vec<SStich>,
+            vecstich: &mut Vec<SStich>, // TODO eliminate this parameter
             stichtrie: &mut SStichTrie,
             otplenumchainscardplayerparties: Option<(SEnumChains<SCard>, SPlayerParties22)>, // TODO reuse instead of taking by value each time
         ) {
@@ -203,7 +202,6 @@ impl SStichOracle {
             stichtrie.traverse_trie(&mut stichseq.current_stich().clone())
         );
         SStichOracle{
-            vecstich,
             stichtrie,
         }
     }
@@ -284,22 +282,9 @@ impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
         unwrap!(self.vecstichoracle.pop());
     }
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
-        let stich_played = stichseq.current_stich(); // TODO current_playable_stich
-        let epi = unwrap!(stich_played.current_playerindex()); // TODO current_playable_stich/current_playable_playerindex
         let mut stichtrie = &unwrap!(self.vecstichoracle.last()).stichtrie;
-        for (_epi, card) in stich_played.iter() {
+        for (_epi, card) in stichseq./*TODO current_playable_stich*/current_stich().iter() {
             stichtrie = &unwrap!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| card_stichtrie==card)).1;
-        }
-        let mut veccard_check = veccard.clone();
-        veccard_check.retain(|card|
-            unwrap!(self.vecstichoracle.last()).vecstich.iter().any(|stich_oracle| {
-                stich_oracle.equal_up_to_size(&stich_played, stich_played.size())
-                && stich_oracle[epi]==*card
-            })
-        );
-        assert_eq!(veccard_check.len(), stichtrie.vectplcardtrie.len());
-        for card in veccard_check {
-            assert!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| *card_stichtrie==card).is_some());
         }
         *veccard = stichtrie.vectplcardtrie.iter().map(|(card, _stichtrie)| *card).collect();
     }
@@ -359,7 +344,7 @@ mod tests {
                 &mut stichseq,
                 &rules,
             );
-            let setstich_oracle = verify_eq!(stichoracle.vecstich, stichoracle.stichtrie.traverse_trie(&mut stichseq.current_stich().clone())).iter().cloned().collect::<std::collections::HashSet<_>>();
+            let setstich_oracle = stichoracle.stichtrie.traverse_trie(&mut stichseq.current_stich().clone()).iter().cloned().collect::<std::collections::HashSet<_>>();
             let setstich_check = slcacard_stich
                 .iter()
                 .map(|acard| SStich::new_full(
