@@ -21,6 +21,22 @@ struct SStichTrie {
     vectplcardtrie: Vec<(SCard, SStichTrie)>, // TODO? improve
 }
 
+impl SStichTrie {
+    fn traverse_trie(&self, stich: &mut SStich) -> Vec<SStich> {
+        if verify_eq!(stich.is_full(), self.vectplcardtrie.is_empty()) {
+            vec![stich.clone()]
+        } else {
+            let mut vecstich = Vec::new();
+            for (card, stichtrie_child) in self.vectplcardtrie.iter() {
+                stich.push(*card);
+                vecstich.extend(stichtrie_child.traverse_trie(stich));
+                stich.undo_most_recent();
+            }
+            vecstich
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct SStichOracle {
     vecstich: Vec<SStich>,
@@ -182,22 +198,9 @@ impl SStichOracle {
         assert!(vecstich.iter().all(|stich|
             stich.equal_up_to_size(&stich_current_check, stich_current_check.size())
         ));
-        fn traverse_trie(stichtrie: &SStichTrie, stich: &mut SStich) -> Vec<SStich> {
-            if verify_eq!(stich.is_full(), stichtrie.vectplcardtrie.is_empty()) {
-                vec![stich.clone()]
-            } else {
-                let mut vecstich = Vec::new();
-                for (card, stichtrie_child) in stichtrie.vectplcardtrie.iter() {
-                    stich.push(*card);
-                    vecstich.extend(traverse_trie(stichtrie_child, stich));
-                    stich.undo_most_recent();
-                }
-                vecstich
-            }
-        }
         assert_eq!(
             vecstich,
-            traverse_trie(&stichtrie, &mut SStich::new(unwrap!(stichseq.current_stich().current_playerindex())))
+            stichtrie.traverse_trie(&mut SStich::new(unwrap!(stichseq.current_stich().current_playerindex())))
         );
         SStichOracle{
             vecstich,
