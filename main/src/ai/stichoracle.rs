@@ -34,7 +34,6 @@ impl SStichOracle {
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
             vecstich: &mut Vec<SStich>,
-            rulestatecache: &SRuleStateCacheFixed,
             otplenumchainscardplayerparties: Option<(SEnumChains<SCard>, SPlayerParties22)>, // TODO reuse instead of taking by value each time
         ) {
             if n_depth==0 {
@@ -81,7 +80,6 @@ impl SStichOracle {
                                         stichseq,
                                         rules,
                                         &mut vecstich_tmp,
-                                        rulestatecache,
                                         otplenumchainscardplayerparties.clone(),
                                     );
                                     ahand[epi_card].add_card(card_in_chain);
@@ -120,7 +118,6 @@ impl SStichOracle {
                                 stichseq,
                                 rules,
                                 vecstich,
-                                rulestatecache,
                                 otplenumchainscardplayerparties.clone(),
                             );
                             ahand[epi_card].add_card(card);
@@ -140,7 +137,6 @@ impl SStichOracle {
             stichseq,
             rules,
             &mut vecstich,
-            rulestatecache,
             rules.only_minmax_points_when_on_same_hand(
                 debug_verify_eq!(
                     rulestatecache,
