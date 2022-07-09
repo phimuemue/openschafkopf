@@ -14,6 +14,7 @@ use crate::{
     util::*,
 };
 
+#[derive(Debug)]
 pub struct SStichOracle {
     vecstich: Vec<SStich>,
 }
@@ -146,52 +147,62 @@ pub struct SFilterByOracle<'rules> {
     rules: &'rules dyn TRules,
     ahand: EnumMap<EPlayerIndex, SHand>,
     stichseq: SStichSequence,
-    stichoracle: SStichOracle,
+    vecstichoracle: Vec<SStichOracle>,
 }
 
 impl<'rules> SFilterByOracle<'rules> {
     pub fn new(
         rules: &'rules dyn TRules,
-        ahand: EnumMap<EPlayerIndex, SHand>,
-        stichseq: SStichSequence,
+        ahand_in_game: EnumMap<EPlayerIndex, SHand>,
+        stichseq_in_game: SStichSequence,
     ) -> Self {
-        let (mut ahand_2, mut stichseq_2) = (ahand.clone(), stichseq.clone());
+        let ahand = EPlayerIndex::map_from_fn(|epi| SHand::new_from_iter(
+            ahand_in_game[epi].cards().iter().copied()
+                .chain(
+                    stichseq_in_game.visible_cards()
+                        .filter_map(|(epi_card, card)| if_then_some!(
+                            epi_card==epi, *card
+                        ))
+                )
+        ));
+        let stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
+        assert!(crate::ai::ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
         Self {
             rules,
             ahand,
             stichseq,
-            stichoracle: SStichOracle::new(
-                &mut ahand_2,
-                &mut stichseq_2,
-                rules,
-            )
+            vecstichoracle: Vec::new(),
         }
     }
 }
 
 impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
-    type UnregisterStich = SStichSequence; // TODO avoid cloning SStichSequence
+    type UnregisterStich = (SStichSequence, EnumMap<EPlayerIndex, SHand>); // TODO avoid cloning SStichSequence
     fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich {
         let stichseq = self.stichseq.clone();
+        let ahand = self.ahand.clone();
         assert!(stich.is_full());
-        for (_epi, card) in stich.iter() {
+        for (epi, card) in stich.iter() {
             self.stichseq.zugeben(*card, self.rules);
+            self.ahand[epi].play_card(*card);
         }
-        self.stichoracle = SStichOracle::new(
+        self.vecstichoracle.push(SStichOracle::new(
             &mut self.ahand.clone(),
             &mut self.stichseq.clone(),
             self.rules,
-        );
-        stichseq
+        ));
+        (stichseq, ahand)
     }
     fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich) {
-        self.stichseq = unregisterstich;
+        self.stichseq = unregisterstich.0;
+        self.ahand = unregisterstich.1;
+        unwrap!(self.vecstichoracle.pop());
     }
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
         let stich_played = stichseq.current_stich(); // TODO current_playable_stich
         let epi = unwrap!(stich_played.current_playerindex()); // TODO current_playable_stich/current_playable_playerindex
         veccard.retain(|card|
-            self.stichoracle.vecstich.iter().any(|stich_oracle| {
+            unwrap!(self.vecstichoracle.last()).vecstich.iter().any(|stich_oracle| {
                 stich_oracle.equal_up_to_size(&stich_played, stich_played.size())
                 && stich_oracle[epi]==*card
             })
