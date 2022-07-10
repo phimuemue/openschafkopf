@@ -54,7 +54,6 @@ impl SStichOracle {
             ahand: &mut EnumMap<EPlayerIndex, SHand>,
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
-            vecstich: &mut Vec<SStich>, // TODO eliminate this parameter
             stichtrie: &mut SStichTrie,
             otplenumchainscardplayerparties: /*Avoid Option*/Option<(SEnumChains<SCard>, SPlayerParties22)>, // TODO reuse instead of taking by value each time
         ) -> Option<bool/*b_stich_winner_primary_party*/> {
@@ -62,7 +61,6 @@ impl SStichOracle {
                 assert!(stichseq.current_stich().is_empty());
                 let stich = unwrap!(stichseq.completed_stichs().last());
                 assert!(stich.is_full());
-                vecstich.push(stich.clone());
                 otplenumchainscardplayerparties.map(|(_enumchainscard, playerparties)|
                     playerparties.is_primary_party(rules.winner_index(&stich))
                 )
@@ -92,7 +90,6 @@ impl SStichOracle {
                         let card_allowed = veccard_allowed[0];
                         let mut ocard_in_chain = Some(enumchainscard.prev_while(card_allowed, |_| true)) ;
                         let mut ob_stich_winner_primary_party_tmp = None;
-                        let mut vecstich_tmp = Vec::new();
                         let mut veccard_chain = Vec::new();
                         let n_stichtrie_before = stichtrie.vectplcardtrie.len();
                         while let Some(card_in_chain) = ocard_in_chain.take() {
@@ -118,7 +115,6 @@ impl SStichOracle {
                                         ahand,
                                         stichseq,
                                         rules,
-                                        &mut vecstich_tmp,
                                         &mut unwrap!(stichtrie.vectplcardtrie.last_mut()).1,
                                         otplenumchainscardplayerparties.clone(),
                                     );
@@ -145,13 +141,7 @@ impl SStichOracle {
                             ocard_in_chain = enumchainscard.next(card_in_chain);
                         }
                         let is_primary_party = |epi| playerparties.is_primary_party(epi);
-                        if let Some(b_stich_winner_primary_party)=verify_eq!(
-                            ob_stich_winner_primary_party_tmp,
-                            vecstich_tmp.iter()
-                                .map(|stich| is_primary_party(rules.winner_index(stich)))
-                                .all_equal_item()
-                        )
-                        {
+                        if let Some(b_stich_winner_primary_party)=ob_stich_winner_primary_party_tmp {
                             let card_min_or_max = unwrap!(if b_stich_winner_primary_party==is_primary_party(epi_card) {
                                 // only play maximum points
                                 veccard_chain.iter().copied().rev()
@@ -163,7 +153,6 @@ impl SStichOracle {
                                     // min_by_key: "If several elements are equally minimum, the first element is returned" (https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.min_by_key)
                                     .min_by_key(|card| points_card(*card))
                             });
-                            vecstich_tmp.retain(|stich| stich[epi_card]==card_min_or_max);
                             let mut i_stichtrie = n_stichtrie_before;
                             while i_stichtrie < stichtrie.vectplcardtrie.len() {
                                 if stichtrie.vectplcardtrie[i_stichtrie].0==card_min_or_max {
@@ -174,8 +163,6 @@ impl SStichOracle {
                                 }
                             }
                         }
-                        assert!(!vecstich_tmp.is_empty());
-                        vecstich.extend(vecstich_tmp);
                     }
                     match stichwinnerprimaryparty {
                         VStichWinnerPrimaryParty::NotYetAssigned => panic!(),
@@ -199,7 +186,6 @@ impl SStichOracle {
                                     ahand,
                                     stichseq,
                                     rules,
-                                    vecstich,
                                     &mut unwrap!(stichtrie.vectplcardtrie.last_mut()).1,
                                     otplenumchainscardplayerparties.clone(),
                                 ),
@@ -215,7 +201,6 @@ impl SStichOracle {
         let n_stich_size = stichseq.current_stich().size();
         //assert!(0<=n_stich_size); // trivially true
         assert!(n_stich_size<=3);
-        let mut vecstich = Vec::new();
         let stich_current_check = stichseq.current_stich().clone(); // TODO? debug-only
         let mut stichtrie = SStichTrie {
             vectplcardtrie: Vec::new(),
@@ -225,7 +210,6 @@ impl SStichOracle {
             ahand,
             stichseq,
             rules,
-            &mut vecstich,
             &mut stichtrie,
             rules.only_minmax_points_when_on_same_hand(
                 debug_verify_eq!(
@@ -234,13 +218,9 @@ impl SStichOracle {
                 ),
             ),
         );
-        assert!(vecstich.iter().all(|stich|
+        assert!(stichtrie.traverse_trie(&mut stichseq.current_stich().clone()).iter().all(|stich|
             stich.equal_up_to_size(&stich_current_check, stich_current_check.size())
         ));
-        assert_eq!(
-            vecstich,
-            stichtrie.traverse_trie(&mut stichseq.current_stich().clone())
-        );
         SStichOracle{
             stichtrie,
         }
