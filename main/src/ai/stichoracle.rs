@@ -15,10 +15,11 @@ use crate::{
     util::*,
     ai::SRuleStateCacheFixed,
 };
+use arrayvec::ArrayVec;
 
 #[derive(Debug)]
 struct SStichTrie {
-    vectplcardtrie: Vec<(SCard, SStichTrie)>, // TODO? improve
+    vectplcardtrie: Box<ArrayVec<(SCard, SStichTrie), 8>>, // TODO? improve
 }
 
 impl SStichTrie {
@@ -106,7 +107,7 @@ impl SStichOracle {
                                     stichtrie.vectplcardtrie.push((
                                         card_in_chain,
                                         SStichTrie {
-                                            vectplcardtrie: Vec::new(),
+                                            vectplcardtrie: Box::new(ArrayVec::new()),
                                         },
                                     ));
                                     ahand[epi_card].play_card(card_in_chain);
@@ -176,7 +177,7 @@ impl SStichOracle {
                             stichtrie.vectplcardtrie.push((
                                 card,
                                 SStichTrie {
-                                    vectplcardtrie: Vec::new(),
+                                    vectplcardtrie: Box::new(ArrayVec::new()),
                                 },
                             ));
                             ahand[epi_card].play_card(card);
@@ -203,7 +204,7 @@ impl SStichOracle {
         assert!(n_stich_size<=3);
         let stich_current_check = stichseq.current_stich().clone(); // TODO? debug-only
         let mut stichtrie = SStichTrie {
-            vectplcardtrie: Vec::new(),
+            vectplcardtrie: Box::new(ArrayVec::new()),
         };
         for_each_allowed_card(
             4-n_stich_size,
