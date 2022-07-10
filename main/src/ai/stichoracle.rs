@@ -121,19 +121,13 @@ impl SStichOracle {
                                     );
                                     use VStichWinnerPrimaryParty::*;
                                     match (&stichwinnerprimaryparty, &ob_stich_winner_primary_party_tmp) {
-                                        (NotYetAssigned, None) => {
-                                            stichwinnerprimaryparty = Different
-                                        }
-                                        (NotYetAssigned, Some(true)) => {
-                                            stichwinnerprimaryparty = Same(true)
+                                        (NotYetAssigned, Some(b_stich_winner_primary_party)) => {
+                                            stichwinnerprimaryparty = Same(*b_stich_winner_primary_party)
                                         },
-                                        (NotYetAssigned, Some(false)) => {
-                                            stichwinnerprimaryparty = Same(false)
+                                        (NotYetAssigned, None) | (Same(true), Some(false)) | (Same(false), Some(true)) | (Same(_), None) => {
+                                            stichwinnerprimaryparty = Different
                                         },
                                         (Same(true), Some(true)) | (Same(false), Some(false)) => {/*stay Same*/},
-                                        (Same(true), Some(false)) | (Same(false), Some(true)) | (Same(_), None) => {
-                                            stichwinnerprimaryparty = Different
-                                        },
                                         (Different, _) => {/*stay Different*/}
                                     }
                                     ahand[epi_card].add_card(card_in_chain);
