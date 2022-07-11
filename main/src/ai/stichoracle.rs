@@ -50,21 +50,59 @@ impl SStichOracle {
         rules: &dyn TRules,
         rulestatecache: &SRuleStateCacheFixed,
     ) -> Self {
+        fn for_each_allowed_card_no_oracle(
+            n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
+            ahand: &mut EnumMap<EPlayerIndex, SHand>,
+            stichseq: &mut SStichSequence,
+            rules: &dyn TRules,
+            stichtrie: &mut SStichTrie,
+        ) {
+            if n_depth==0 {
+                assert!(stichseq.current_stich().is_empty());
+                assert!(unwrap!(stichseq.completed_stichs().last()).is_full());
+            } else {
+                let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
+                let veccard_allowed = rules.all_allowed_cards(
+                    stichseq,
+                    &ahand[epi_card],
+                );
+                assert!(!veccard_allowed.is_empty());
+                {
+                    for card in veccard_allowed {
+                        stichseq.zugeben_and_restore(card, rules, |stichseq| {
+                            stichtrie.vectplcardtrie.push((
+                                card,
+                                SStichTrie {
+                                    vectplcardtrie: Box::new(ArrayVec::new()),
+                                },
+                            ));
+                            ahand[epi_card].play_card(card);
+                            for_each_allowed_card_no_oracle(
+                                n_depth-1,
+                                ahand,
+                                stichseq,
+                                rules,
+                                &mut unwrap!(stichtrie.vectplcardtrie.last_mut()).1,
+                            );
+                            ahand[epi_card].add_card(card);
+                        });
+                    }
+                }
+            }
+        }
         fn for_each_allowed_card(
             n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
             ahand: &mut EnumMap<EPlayerIndex, SHand>,
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
             stichtrie: &mut SStichTrie,
-            otplenumchainscardplayerparties: /*Avoid Option*/Option<(SEnumChains<SCard>, SPlayerParties22)>, // TODO reuse instead of taking by value each time
+            tplenumchainscardplayerparties: (SEnumChains<SCard>, SPlayerParties22), // TODO reuse instead of taking by value each time
         ) -> Option<bool/*b_stich_winner_primary_party*/> {
             if n_depth==0 {
                 assert!(stichseq.current_stich().is_empty());
                 let stich = unwrap!(stichseq.completed_stichs().last());
                 assert!(stich.is_full());
-                otplenumchainscardplayerparties.map(|(_enumchainscard, playerparties)|
-                    playerparties.is_primary_party(rules.winner_index(&stich))
-                )
+                Some(tplenumchainscardplayerparties.1.is_primary_party(rules.winner_index(&stich)))
             } else {
                 let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
                 let mut veccard_allowed = rules.all_allowed_cards(
@@ -72,7 +110,8 @@ impl SStichOracle {
                     &ahand[epi_card],
                 );
                 assert!(!veccard_allowed.is_empty());
-                if let Some((mut enumchainscard, playerparties))=otplenumchainscardplayerparties.clone() {
+                let (mut enumchainscard, playerparties)=tplenumchainscardplayerparties.clone();
+                {
                     for (_epi, &card) in stichseq.completed_cards() {
                         enumchainscard.remove_from_chain(card);
                     }
@@ -117,7 +156,7 @@ impl SStichOracle {
                                         stichseq,
                                         rules,
                                         &mut unwrap!(stichtrie.vectplcardtrie.last_mut()).1,
-                                        otplenumchainscardplayerparties.clone(),
+                                        tplenumchainscardplayerparties.clone(),
                                     );
                                     use VStichWinnerPrimaryParty::*;
                                     match (&stichwinnerprimaryparty, &ob_stich_winner_primary_party_tmp) {
@@ -164,32 +203,6 @@ impl SStichOracle {
                         VStichWinnerPrimaryParty::Same(b_stich_winner_primary_party) => Some(b_stich_winner_primary_party),
                         VStichWinnerPrimaryParty::Different => None,
                     }
-                } else {
-                    let ob_stich_winner_primary_party = None;
-                    for card in veccard_allowed {
-                        stichseq.zugeben_and_restore(card, rules, |stichseq| {
-                            stichtrie.vectplcardtrie.push((
-                                card,
-                                SStichTrie {
-                                    vectplcardtrie: Box::new(ArrayVec::new()),
-                                },
-                            ));
-                            ahand[epi_card].play_card(card);
-                            verify_eq!(
-                                for_each_allowed_card(
-                                    n_depth-1,
-                                    ahand,
-                                    stichseq,
-                                    rules,
-                                    &mut unwrap!(stichtrie.vectplcardtrie.last_mut()).1,
-                                    otplenumchainscardplayerparties.clone(),
-                                ),
-                                ob_stich_winner_primary_party
-                            );
-                            ahand[epi_card].add_card(card);
-                        });
-                    }
-                    ob_stich_winner_primary_party
                 }
             }
         }
@@ -200,19 +213,29 @@ impl SStichOracle {
         let mut stichtrie = SStichTrie {
             vectplcardtrie: Box::new(ArrayVec::new()),
         };
-        for_each_allowed_card(
-            4-n_stich_size,
-            ahand,
-            stichseq,
-            rules,
-            &mut stichtrie,
-            rules.only_minmax_points_when_on_same_hand(
-                debug_verify_eq!(
-                    rulestatecache,
-                    &SRuleStateCacheFixed::new(stichseq, ahand)
-                ),
+        if let Some(tplenumchainscardplayerparties) = rules.only_minmax_points_when_on_same_hand(
+            debug_verify_eq!(
+                rulestatecache,
+                &SRuleStateCacheFixed::new(stichseq, ahand)
             ),
-        );
+        ) {
+            for_each_allowed_card(
+                4-n_stich_size,
+                ahand,
+                stichseq,
+                rules,
+                &mut stichtrie,
+                tplenumchainscardplayerparties,
+            );
+        } else {
+            for_each_allowed_card_no_oracle(
+                4-n_stich_size,
+                ahand,
+                stichseq,
+                rules,
+                &mut stichtrie,
+            );
+        }
         debug_assert!(stichtrie.traverse_trie(&mut stichseq.current_stich().clone()).iter().all(|stich|
             stich.equal_up_to_size(&stich_current_check, stich_current_check.size())
         ));
