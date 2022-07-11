@@ -127,6 +127,9 @@ impl SStichOracle {
                     while !veccard_allowed.is_empty() {
                         let card_allowed = veccard_allowed[0];
                         let mut ocard_in_chain = Some(enumchainscard.prev_while(card_allowed, |_| true)) ;
+                        // TODO: ob_stich_winner_primary_party_tmp evaluates to the same value for each card contained in the same chain.
+                        //       => Exploit: Compute ob_stich_winner_primary_party_tmp for one card in chain
+                        //          and take over the result to all other cards from the chain.
                         let mut ob_stich_winner_primary_party_tmp = None;
                         let mut veccard_chain = Vec::new();
                         let n_stichtrie_before = stichtrie.vectplcardtrie.len();
