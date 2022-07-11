@@ -213,7 +213,7 @@ impl SStichOracle {
                 ),
             ),
         );
-        assert!(stichtrie.traverse_trie(&mut stichseq.current_stich().clone()).iter().all(|stich|
+        debug_assert!(stichtrie.traverse_trie(&mut stichseq.current_stich().clone()).iter().all(|stich|
             stich.equal_up_to_size(&stich_current_check, stich_current_check.size())
         ));
         SStichOracle{
