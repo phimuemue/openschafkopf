@@ -96,13 +96,14 @@ impl SStichOracle {
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
             stichtrie: &mut SStichTrie,
-            tplenumchainscardplayerparties: (SEnumChains<SCard>, SPlayerParties22), // TODO reuse instead of taking by value each time
+            enumchainscard_orig: SEnumChains<SCard>, // TODO reuse instead of taking by value each time
+            playerparties: &SPlayerParties22,
         ) -> Option<bool/*b_stich_winner_primary_party*/> {
             if n_depth==0 {
                 assert!(stichseq.current_stich().is_empty());
                 let stich = unwrap!(stichseq.completed_stichs().last());
                 assert!(stich.is_full());
-                Some(tplenumchainscardplayerparties.1.is_primary_party(rules.winner_index(&stich)))
+                Some(playerparties.is_primary_party(rules.winner_index(&stich)))
             } else {
                 let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
                 let mut veccard_allowed = rules.all_allowed_cards(
@@ -110,7 +111,7 @@ impl SStichOracle {
                     &ahand[epi_card],
                 );
                 assert!(!veccard_allowed.is_empty());
-                let (mut enumchainscard, playerparties)=tplenumchainscardplayerparties.clone();
+                let mut enumchainscard=enumchainscard_orig.clone();
                 {
                     for (_epi, &card) in stichseq.completed_cards() {
                         enumchainscard.remove_from_chain(card);
@@ -156,7 +157,8 @@ impl SStichOracle {
                                         stichseq,
                                         rules,
                                         &mut unwrap!(stichtrie.vectplcardtrie.last_mut()).1,
-                                        tplenumchainscardplayerparties.clone(),
+                                        enumchainscard_orig.clone(),
+                                        playerparties,
                                     );
                                     use VStichWinnerPrimaryParty::*;
                                     match (&stichwinnerprimaryparty, &ob_stich_winner_primary_party_tmp) {
@@ -213,7 +215,7 @@ impl SStichOracle {
         let mut stichtrie = SStichTrie {
             vectplcardtrie: Box::new(ArrayVec::new()),
         };
-        if let Some(tplenumchainscardplayerparties) = rules.only_minmax_points_when_on_same_hand(
+        if let Some((enumchainscard, playerparties)) = rules.only_minmax_points_when_on_same_hand(
             debug_verify_eq!(
                 rulestatecache,
                 &SRuleStateCacheFixed::new(stichseq, ahand)
@@ -225,7 +227,8 @@ impl SStichOracle {
                 stichseq,
                 rules,
                 &mut stichtrie,
-                tplenumchainscardplayerparties,
+                enumchainscard,
+                &playerparties,
             );
         } else {
             for_each_allowed_card_no_oracle(
