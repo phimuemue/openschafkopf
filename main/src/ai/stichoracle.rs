@@ -97,6 +97,7 @@ impl SStichOracle {
             rules: &dyn TRules,
             stichtrie: &mut SStichTrie,
             enumchainscard_orig: SEnumChains<SCard>, // TODO reuse instead of taking by value each time
+            enumchainscard_check: &SEnumChains<SCard>,
             playerparties: &SPlayerParties22,
         ) -> Option<bool/*b_stich_winner_primary_party*/> {
             if n_depth==0 {
@@ -116,6 +117,7 @@ impl SStichOracle {
                     for (_epi, &card) in stichseq.completed_cards() {
                         enumchainscard.remove_from_chain(card);
                     }
+                    assert_eq!(enumchainscard_check, &enumchainscard);
                     for card in <SCard as TPlainEnum>::values() {
                         if !veccard_allowed.contains(&card) {
                             enumchainscard.remove_and_split(card);
@@ -158,6 +160,7 @@ impl SStichOracle {
                                         rules,
                                         &mut unwrap!(stichtrie.vectplcardtrie.last_mut()).1,
                                         enumchainscard_orig.clone(),
+                                        enumchainscard_check,
                                         playerparties,
                                     );
                                     use VStichWinnerPrimaryParty::*;
@@ -221,6 +224,10 @@ impl SStichOracle {
                 &SRuleStateCacheFixed::new(stichseq, ahand)
             ),
         ) {
+            let mut enumchainscard_check = enumchainscard.clone();
+            for (_epi, &card) in stichseq.completed_cards() {
+                enumchainscard_check.remove_from_chain(card);
+            }
             for_each_allowed_card(
                 4-n_stich_size,
                 ahand,
@@ -228,6 +235,7 @@ impl SStichOracle {
                 rules,
                 &mut stichtrie,
                 enumchainscard,
+                &enumchainscard_check,
                 &playerparties,
             );
         } else {
