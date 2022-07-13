@@ -131,7 +131,6 @@ impl SStichOracle {
                 let mut stichwinnerprimaryparty = VStichWinnerPrimaryParty::NotYetAssigned;
                 while !veccard_allowed.is_empty() {
                     let card_representative = veccard_allowed[0];
-                    let mut ocard_in_chain = Some(enumchainscard.prev_while(card_representative, |_| true)) ;
                     let mut stichtrie_representative = SStichTrie::new();
                     // TODO: the call to for_each_allowed_card evaluates to the same value for each card contained in the same chain.
                     //       => Exploit: Call for one card in chain
@@ -152,6 +151,7 @@ impl SStichOracle {
                     });
                     let mut veccard_chain = Vec::new();
                     let n_stichtrie_before = stichtrie.vectplcardtrie.len();
+                    let mut ocard_in_chain = Some(enumchainscard.prev_while(card_representative, |_| true)) ;
                     while let Some(card_in_chain) = ocard_in_chain.take() {
                         let on_points = veccard_chain.last().map(|card| points_card(*card));
                         veccard_chain.push(card_in_chain);
