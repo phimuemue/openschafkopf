@@ -179,21 +179,21 @@ impl SStichOracle {
                                         ),
                                         ob_stich_winner_primary_party_representative
                                     );
-                                    use VStichWinnerPrimaryParty::*;
-                                    match (&stichwinnerprimaryparty, &ob_stich_winner_primary_party_representative) {
-                                        (NotYetAssigned, Some(b_stich_winner_primary_party)) => {
-                                            stichwinnerprimaryparty = Same(*b_stich_winner_primary_party)
-                                        },
-                                        (NotYetAssigned, None) | (Same(true), Some(false)) | (Same(false), Some(true)) | (Same(_), None) => {
-                                            stichwinnerprimaryparty = Different
-                                        },
-                                        (Same(true), Some(true)) | (Same(false), Some(false)) => {/*stay Same*/},
-                                        (Different, _) => {/*stay Different*/}
-                                    }
                                     ahand[epi_card].add_card(card_in_chain);
                                 });
                             }
                             ocard_in_chain = enumchainscard.next(card_in_chain);
+                        }
+                        use VStichWinnerPrimaryParty::*;
+                        match (&stichwinnerprimaryparty, &ob_stich_winner_primary_party_representative) {
+                            (NotYetAssigned, Some(b_stich_winner_primary_party)) => {
+                                stichwinnerprimaryparty = Same(*b_stich_winner_primary_party)
+                            },
+                            (NotYetAssigned, None) | (Same(true), Some(false)) | (Same(false), Some(true)) | (Same(_), None) => {
+                                stichwinnerprimaryparty = Different
+                            },
+                            (Same(true), Some(true)) | (Same(false), Some(false)) => {/*stay Same*/},
+                            (Different, _) => {/*stay Different*/}
                         }
                         let is_primary_party = |epi| playerparties.is_primary_party(epi);
                         if let Some(b_stich_winner_primary_party)=ob_stich_winner_primary_party_representative {
