@@ -23,6 +23,14 @@ struct SStichTrie {
 }
 
 impl SStichTrie {
+    fn new() -> Self {
+        Self {
+            vectplcardtrie: Box::new(ArrayVec::new()),
+        }
+    }
+}
+
+impl SStichTrie {
     fn traverse_trie(&self, stich: &mut SStich) -> Vec<SStich> {
         if verify_eq!(stich.is_full(), self.vectplcardtrie.is_empty()) {
             vec![stich.clone()]
@@ -72,9 +80,7 @@ impl SStichOracle {
                         stichseq.zugeben_and_restore(card, rules, |stichseq| {
                             stichtrie.vectplcardtrie.push((
                                 card,
-                                SStichTrie {
-                                    vectplcardtrie: Box::new(ArrayVec::new()),
-                                },
+                                SStichTrie::new(),
                             ));
                             ahand[epi_card].play_card(card);
                             for_each_allowed_card_no_oracle(
@@ -127,9 +133,7 @@ impl SStichOracle {
                     while !veccard_allowed.is_empty() {
                         let card_representative = veccard_allowed[0];
                         let mut ocard_in_chain = Some(enumchainscard.prev_while(card_representative, |_| true)) ;
-                        let mut stichtrie_representative = SStichTrie {
-                            vectplcardtrie: Box::new(ArrayVec::new()),
-                        };
+                        let mut stichtrie_representative = SStichTrie::new();
                         // TODO: the call to for_each_allowed_card evaluates to the same value for each card contained in the same chain.
                         //       => Exploit: Call for one card in chain
                         //          and take over the result to all other cards from the chain.
@@ -164,9 +168,7 @@ impl SStichOracle {
                                     stichtrie_representative.clone(),
                                 ));
                                 #[cfg(debug_assertions)] {
-                                    let mut stichtrie_check = SStichTrie {
-                                        vectplcardtrie: Box::new(ArrayVec::new()),
-                                    };
+                                    let mut stichtrie_check = SStichTrie::new();
                                     stichseq.zugeben_and_restore(card_in_chain, rules, |stichseq| {
                                         ahand[epi_card].play_card(card_in_chain);
                                         verify_eq!(
@@ -235,9 +237,7 @@ impl SStichOracle {
         //assert!(0<=n_stich_size); // trivially true
         assert!(n_stich_size<=3);
         let stich_current_check = stichseq.current_stich().clone(); // TODO? debug-only
-        let mut stichtrie = SStichTrie {
-            vectplcardtrie: Box::new(ArrayVec::new()),
-        };
+        let mut stichtrie = SStichTrie::new();
         if let Some((mut enumchainscard_completed_cards, playerparties)) = rules.only_minmax_points_when_on_same_hand(
             debug_verify_eq!(
                 rulestatecache,
