@@ -125,12 +125,28 @@ impl SStichOracle {
                     }
                     let mut stichwinnerprimaryparty = VStichWinnerPrimaryParty::NotYetAssigned;
                     while !veccard_allowed.is_empty() {
-                        let card_allowed = veccard_allowed[0];
-                        let mut ocard_in_chain = Some(enumchainscard.prev_while(card_allowed, |_| true)) ;
-                        // TODO: ob_stich_winner_primary_party_tmp evaluates to the same value for each card contained in the same chain.
-                        //       => Exploit: Compute ob_stich_winner_primary_party_tmp for one card in chain
+                        let card_representative = veccard_allowed[0];
+                        let mut ocard_in_chain = Some(enumchainscard.prev_while(card_representative, |_| true)) ;
+                        let mut stichtrie_representative = SStichTrie {
+                            vectplcardtrie: Box::new(ArrayVec::new()),
+                        };
+                        // TODO: the call to for_each_allowed_card evaluates to the same value for each card contained in the same chain.
+                        //       => Exploit: Call for one card in chain
                         //          and take over the result to all other cards from the chain.
-                        let mut ob_stich_winner_primary_party_tmp = None;
+                        let ob_stich_winner_primary_party_representative = stichseq.zugeben_and_restore(card_representative, rules, |stichseq| {
+                            ahand[epi_card].play_card(card_representative);
+                            let ob_stich_winner_primary_party_representative = for_each_allowed_card(
+                                n_depth-1,
+                                ahand,
+                                stichseq,
+                                rules,
+                                &mut stichtrie_representative,
+                                enumchainscard_completed_cards,
+                                playerparties,
+                            );
+                            ahand[epi_card].add_card(card_representative);
+                            ob_stich_winner_primary_party_representative
+                        });
                         let mut veccard_chain = Vec::new();
                         let n_stichtrie_before = stichtrie.vectplcardtrie.len();
                         while let Some(card_in_chain) = ocard_in_chain.take() {
@@ -151,17 +167,20 @@ impl SStichOracle {
                                         },
                                     ));
                                     ahand[epi_card].play_card(card_in_chain);
-                                    ob_stich_winner_primary_party_tmp = for_each_allowed_card(
-                                        n_depth-1,
-                                        ahand,
-                                        stichseq,
-                                        rules,
-                                        &mut unwrap!(stichtrie.vectplcardtrie.last_mut()).1,
-                                        enumchainscard_completed_cards,
-                                        playerparties,
+                                    verify_eq!(
+                                        for_each_allowed_card(
+                                            n_depth-1,
+                                            ahand,
+                                            stichseq,
+                                            rules,
+                                            &mut unwrap!(stichtrie.vectplcardtrie.last_mut()).1,
+                                            enumchainscard_completed_cards,
+                                            playerparties,
+                                        ),
+                                        ob_stich_winner_primary_party_representative
                                     );
                                     use VStichWinnerPrimaryParty::*;
-                                    match (&stichwinnerprimaryparty, &ob_stich_winner_primary_party_tmp) {
+                                    match (&stichwinnerprimaryparty, &ob_stich_winner_primary_party_representative) {
                                         (NotYetAssigned, Some(b_stich_winner_primary_party)) => {
                                             stichwinnerprimaryparty = Same(*b_stich_winner_primary_party)
                                         },
@@ -177,7 +196,7 @@ impl SStichOracle {
                             ocard_in_chain = enumchainscard.next(card_in_chain);
                         }
                         let is_primary_party = |epi| playerparties.is_primary_party(epi);
-                        if let Some(b_stich_winner_primary_party)=ob_stich_winner_primary_party_tmp {
+                        if let Some(b_stich_winner_primary_party)=ob_stich_winner_primary_party_representative {
                             let card_min_or_max = unwrap!(if b_stich_winner_primary_party==is_primary_party(epi_card) {
                                 // only play maximum points
                                 veccard_chain.iter().copied().rev()
