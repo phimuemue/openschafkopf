@@ -17,7 +17,7 @@ use crate::{
 };
 use arrayvec::ArrayVec;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct SStichTrie {
     vectplcardtrie: Box<ArrayVec<(SCard, SStichTrie), 8>>, // TODO? improve
 }
@@ -161,10 +161,11 @@ impl SStichOracle {
                             if on_points.is_none() || Some(points_card(card_in_chain))!=on_points {
                                 stichtrie.vectplcardtrie.push((
                                     card_in_chain,
-                                    SStichTrie {
-                                        vectplcardtrie: Box::new(ArrayVec::new()),
-                                    },
+                                    stichtrie_representative.clone(),
                                 ));
+                                let mut stichtrie_check = SStichTrie {
+                                    vectplcardtrie: Box::new(ArrayVec::new()),
+                                };
                                 stichseq.zugeben_and_restore(card_in_chain, rules, |stichseq| {
                                     ahand[epi_card].play_card(card_in_chain);
                                     verify_eq!(
@@ -173,7 +174,7 @@ impl SStichOracle {
                                             ahand,
                                             stichseq,
                                             rules,
-                                            &mut unwrap!(stichtrie.vectplcardtrie.last_mut()).1,
+                                            &mut stichtrie_check,
                                             enumchainscard_completed_cards,
                                             playerparties,
                                         ),
@@ -181,6 +182,7 @@ impl SStichOracle {
                                     );
                                     ahand[epi_card].add_card(card_in_chain);
                                 });
+                                // TODO assert_eq!(stichtrie_check, stichtrie_representative) to prove that we can omit the computation
                             }
                             ocard_in_chain = enumchainscard.next(card_in_chain);
                         }
