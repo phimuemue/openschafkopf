@@ -163,26 +163,28 @@ impl SStichOracle {
                                     card_in_chain,
                                     stichtrie_representative.clone(),
                                 ));
-                                let mut stichtrie_check = SStichTrie {
-                                    vectplcardtrie: Box::new(ArrayVec::new()),
-                                };
-                                stichseq.zugeben_and_restore(card_in_chain, rules, |stichseq| {
-                                    ahand[epi_card].play_card(card_in_chain);
-                                    verify_eq!(
-                                        for_each_allowed_card(
-                                            n_depth-1,
-                                            ahand,
-                                            stichseq,
-                                            rules,
-                                            &mut stichtrie_check,
-                                            enumchainscard_completed_cards,
-                                            playerparties,
-                                        ),
-                                        ob_stich_winner_primary_party_representative
-                                    );
-                                    ahand[epi_card].add_card(card_in_chain);
-                                });
-                                // TODO assert_eq!(stichtrie_check, stichtrie_representative) to prove that we can omit the computation
+                                #[cfg(debug_assertions)] {
+                                    let mut stichtrie_check = SStichTrie {
+                                        vectplcardtrie: Box::new(ArrayVec::new()),
+                                    };
+                                    stichseq.zugeben_and_restore(card_in_chain, rules, |stichseq| {
+                                        ahand[epi_card].play_card(card_in_chain);
+                                        verify_eq!(
+                                            for_each_allowed_card(
+                                                n_depth-1,
+                                                ahand,
+                                                stichseq,
+                                                rules,
+                                                &mut stichtrie_check,
+                                                enumchainscard_completed_cards,
+                                                playerparties,
+                                            ),
+                                            ob_stich_winner_primary_party_representative
+                                        );
+                                        ahand[epi_card].add_card(card_in_chain);
+                                    });
+                                    // TODO assert_eq!(stichtrie_check, stichtrie_representative) to prove that we can omit the computation
+                                }
                             }
                             ocard_in_chain = enumchainscard.next(card_in_chain);
                         }
