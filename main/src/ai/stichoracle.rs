@@ -130,25 +130,31 @@ impl SStichOracle {
                 }
                 let mut stichwinnerprimaryparty = VStichWinnerPrimaryParty::NotYetAssigned;
                 while !veccard_allowed.is_empty() {
+                    let mut zugeben_and_restore = |card, stichtrie: &mut SStichTrie| {
+                        stichseq.zugeben_and_restore(card, rules, |stichseq| {
+                            ahand[epi_card].play_card(card);
+                            let ob_stich_winner_primary_party_representative = for_each_allowed_card(
+                                n_depth-1,
+                                ahand,
+                                stichseq,
+                                rules,
+                                stichtrie,
+                                enumchainscard_completed_cards,
+                                playerparties,
+                            );
+                            ahand[epi_card].add_card(card);
+                            ob_stich_winner_primary_party_representative
+                        })
+                    };
                     let card_representative = veccard_allowed[0];
                     let mut stichtrie_representative = SStichTrie::new();
                     // TODO: the call to for_each_allowed_card evaluates to the same value for each card contained in the same chain.
                     //       => Exploit: Call for one card in chain
                     //          and take over the result to all other cards from the chain.
-                    let ob_stich_winner_primary_party_representative = stichseq.zugeben_and_restore(card_representative, rules, |stichseq| {
-                        ahand[epi_card].play_card(card_representative);
-                        let ob_stich_winner_primary_party_representative = for_each_allowed_card(
-                            n_depth-1,
-                            ahand,
-                            stichseq,
-                            rules,
-                            &mut stichtrie_representative,
-                            enumchainscard_completed_cards,
-                            playerparties,
-                        );
-                        ahand[epi_card].add_card(card_representative);
-                        ob_stich_winner_primary_party_representative
-                    });
+                    let ob_stich_winner_primary_party_representative = zugeben_and_restore(
+                        card_representative,
+                        &mut stichtrie_representative,
+                    );
                     let mut veccard_chain = Vec::new();
                     let n_stichtrie_before = stichtrie.vectplcardtrie.len();
                     let mut ocard_in_chain = Some(enumchainscard.prev_while(card_representative, |_| true)) ;
@@ -168,22 +174,10 @@ impl SStichOracle {
                             ));
                             #[cfg(debug_assertions)] {
                                 let mut stichtrie_check = SStichTrie::new();
-                                stichseq.zugeben_and_restore(card_in_chain, rules, |stichseq| {
-                                    ahand[epi_card].play_card(card_in_chain);
-                                    verify_eq!(
-                                        for_each_allowed_card(
-                                            n_depth-1,
-                                            ahand,
-                                            stichseq,
-                                            rules,
-                                            &mut stichtrie_check,
-                                            enumchainscard_completed_cards,
-                                            playerparties,
-                                        ),
-                                        ob_stich_winner_primary_party_representative
-                                    );
-                                    ahand[epi_card].add_card(card_in_chain);
-                                });
+                                verify_eq!(
+                                    zugeben_and_restore(card_in_chain, &mut stichtrie_check),
+                                    ob_stich_winner_primary_party_representative
+                                );
                                 // TODO assert_eq!(stichtrie_check, stichtrie_representative) to prove that we can omit the computation
                             }
                         }
