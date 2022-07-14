@@ -163,7 +163,7 @@ impl SStichOracle {
                             veccard_allowed.iter().position(|&card| card==card_in_chain)
                         );
                         assert_eq!(card_in_chain, veccard_allowed[i_card]);
-                        veccard_allowed.remove(i_card);
+                        veccard_allowed.swap_remove(i_card);
                         if on_points.is_none() || Some(points_card(card_in_chain))!=on_points {
                             stichtrie.vectplcardtrie.push((
                                 card_in_chain,
