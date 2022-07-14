@@ -338,10 +338,8 @@ impl<'rules> SFilterByOracle<'rules> {
 }
 
 impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
-    type UnregisterStich = (SStichSequence, EnumMap<EPlayerIndex, SHand>); // TODO avoid cloning SStichSequence
+    type UnregisterStich = (); // TODO avoid cloning SStichSequence
     fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich {
-        let stichseq = self.stichseq.clone();
-        let ahand = self.ahand.clone();
         assert!(stich.is_full());
         for (epi, card) in stich.iter() {
             self.stichseq.zugeben(*card, self.rules);
@@ -353,11 +351,15 @@ impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
             self.rules,
             &self.rulestatecache,
         ));
-        (stichseq, ahand)
     }
-    fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich) {
-        self.stichseq = unregisterstich.0;
-        self.ahand = unregisterstich.1;
+    fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {
+        let stich_last_completed = unwrap!(self.stichseq.completed_stichs().last());
+        for epi in EPlayerIndex::values() {
+            self.ahand[epi].add_card(stich_last_completed[epi]);
+        }
+        for _ in 0..EPlayerIndex::SIZE {
+            self.stichseq.undo_most_recent();
+        }
         unwrap!(self.vecstichoracle.pop());
     }
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
