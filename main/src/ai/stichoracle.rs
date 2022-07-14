@@ -28,9 +28,7 @@ impl SStichTrie {
             vectplcardtrie: Box::new(ArrayVec::new()),
         }
     }
-}
 
-impl SStichTrie {
     fn traverse_trie(&self, stich: &mut SStich) -> Vec<SStich> {
         if verify_eq!(stich.is_full(), self.vectplcardtrie.is_empty()) {
             vec![stich.clone()]
