@@ -103,6 +103,7 @@ impl SStichOracle {
             rules: &dyn TRules,
             stichtrie: &mut SStichTrie,
             enumchainscard_completed_cards: &SEnumChains<SCard>,
+            enumchainscard_completed_cards_2: &SEnumChains<SCard>,
             playerparties: &SPlayerParties22,
         ) -> Option<bool/*b_stich_winner_primary_party*/> {
             if n_depth==0 {
@@ -140,6 +141,7 @@ impl SStichOracle {
                                 rules,
                                 stichtrie,
                                 enumchainscard_completed_cards,
+                                enumchainscard_completed_cards_2,
                                 playerparties,
                             );
                             ahand[epi_card].add_card(card);
@@ -158,6 +160,13 @@ impl SStichOracle {
                     let mut veccard_chain = Vec::new();
                     let n_stichtrie_before = stichtrie.vectplcardtrie.len();
                     let mut ocard_in_chain = Some(enumchainscard.prev_while(card_representative, |_| true)) ;
+                    assert_eq!(
+                        ocard_in_chain,
+                        Some(enumchainscard_completed_cards_2.prev_while(
+                            card_representative,
+                            |card| veccard_allowed.contains(&card),
+                        )),
+                    );
                     while let Some(card_in_chain) = ocard_in_chain.take() {
                         let on_points = veccard_chain.last().map(|card| points_card(*card));
                         veccard_chain.push(card_in_chain);
@@ -181,7 +190,13 @@ impl SStichOracle {
                                 // TODO assert_eq!(stichtrie_check, stichtrie_representative) to prove that we can omit the computation
                             }
                         }
-                        ocard_in_chain = enumchainscard.next(card_in_chain);
+                        ocard_in_chain = verify_eq!(
+                            enumchainscard.next(card_in_chain),
+                            {
+                                let ocard_next = enumchainscard_completed_cards_2.next(card_in_chain);
+                                ocard_next.filter(|card_next| veccard_allowed.contains(card_next))
+                            }
+                        );
                     }
                     use VStichWinnerPrimaryParty::*;
                     match (&stichwinnerprimaryparty, &ob_stich_winner_primary_party_representative) {
@@ -245,6 +260,7 @@ impl SStichOracle {
                 stichseq,
                 rules,
                 &mut stichtrie,
+                &enumchainscard_completed_cards,
                 &enumchainscard_completed_cards,
                 &playerparties,
             );
