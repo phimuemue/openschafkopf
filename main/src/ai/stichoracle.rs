@@ -95,7 +95,7 @@ impl SStichTrie {
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
             stichtrie: &mut SStichTrie,
-            enumchainscard_completed_cards_2: &SEnumChains<SCard>,
+            enumchainscard_completed_cards: &SEnumChains<SCard>,
             playerparties: &SPlayerParties22,
         ) -> Option<bool/*b_stich_winner_primary_party*/> {
             if n_depth==0 {
@@ -130,7 +130,7 @@ impl SStichTrie {
                                 stichseq,
                                 rules,
                                 stichtrie,
-                                enumchainscard_completed_cards_2,
+                                enumchainscard_completed_cards,
                                 playerparties,
                             );
                             ahand[epi_card].add_card(card);
@@ -144,12 +144,12 @@ impl SStichTrie {
                         &mut stichtrie_representative,
                     );
                     let next_in_chain = |veccard: &SHandVector, card_chain| {
-                        enumchainscard_completed_cards_2.next(card_chain)
+                        enumchainscard_completed_cards.next(card_chain)
                             .filter(|card| veccard.contains(&card))
                     };
                     match ob_stich_winner_primary_party_representative {
                         None => {
-                            let mut card_chain = enumchainscard_completed_cards_2.prev_while(
+                            let mut card_chain = enumchainscard_completed_cards.prev_while(
                                 card_representative,
                                 |card| veccard_allowed.contains(&card),
                             );
@@ -176,7 +176,7 @@ impl SStichTrie {
                         },
                         Some(b_stich_winner_primary_party) => {
                             // TODO avoid backward-forward iteration
-                            let mut card_chain = enumchainscard_completed_cards_2.prev_while(
+                            let mut card_chain = enumchainscard_completed_cards.prev_while(
                                 card_representative,
                                 |card| veccard_allowed.contains(&card),
                             );
