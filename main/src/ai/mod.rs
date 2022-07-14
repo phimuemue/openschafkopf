@@ -296,11 +296,11 @@ impl SPayoutStatsPerStrategy {
 pub fn determine_best_card<
     ForEachSnapshot: TForEachSnapshot<Output=SMinMax> + Sync,
     SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
-    FilterAllowedCards: TFilterAllowedCards,
+    OFilterAllowedCards: Into<Option<impl TFilterAllowedCards>>,
 >(
     determinebestcard: &SDetermineBestCard,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
-    fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->FilterAllowedCards + std::marker::Sync,
+    fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
 ) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>>
@@ -324,7 +324,7 @@ pub fn determine_best_card<
             let mapcardooutput = Arc::clone(&mapcardooutput);
             let mut stichseq = determinebestcard.stichseq.clone();
             assert!(ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
-            let mut filter = fn_make_filter(&stichseq, &ahand); // do before ahand is modified
+            let ofilter = fn_make_filter(&stichseq, &ahand); // do before ahand is modified
             ahand[determinebestcard.epi_fixed].play_card(card);
             stichseq.zugeben(card, determinebestcard.rules);
             let output = if ahand.iter().all(|hand| hand.cards().is_empty()) {
@@ -337,14 +337,25 @@ pub fn determine_best_card<
                     ),
                 )
             } else {
-                explore_snapshots(
-                    &mut ahand,
-                    determinebestcard.rules,
-                    &mut stichseq,
-                    &mut filter,
-                    foreachsnapshot,
-                    &mut visualizer,
-                )
+                if let Some(mut filter) = ofilter.into() {
+                    explore_snapshots(
+                        &mut ahand,
+                        determinebestcard.rules,
+                        &mut stichseq,
+                        &mut filter,
+                        foreachsnapshot,
+                        &mut visualizer,
+                    )
+                } else {
+                    explore_snapshots(
+                        &mut ahand,
+                        determinebestcard.rules,
+                        &mut stichseq,
+                        &mut |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/),
+                        foreachsnapshot,
+                        &mut visualizer,
+                    )
+                }
             };
             let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
             let payoutstats = SPerMinMaxStrategy( // TODO should be SPayoutStatsPerStrategy
