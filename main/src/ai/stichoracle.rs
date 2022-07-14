@@ -127,7 +127,7 @@ impl SStichOracle {
                     let mut zugeben_and_restore = |card, stichtrie: &mut SStichTrie| {
                         stichseq.zugeben_and_restore(card, rules, |stichseq| {
                             ahand[epi_card].play_card(card);
-                            let ob_stich_winner_primary_party_representative = for_each_allowed_card(
+                            let ob_stich_winner_primary_party = for_each_allowed_card(
                                 n_depth-1,
                                 ahand,
                                 stichseq,
@@ -137,7 +137,7 @@ impl SStichOracle {
                                 playerparties,
                             );
                             ahand[epi_card].add_card(card);
-                            ob_stich_winner_primary_party_representative
+                            ob_stich_winner_primary_party
                         })
                     };
                     let card_representative = veccard_allowed[0];
