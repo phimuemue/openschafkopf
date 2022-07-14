@@ -44,14 +44,7 @@ impl SStichTrie {
             vecstich
         }
     }
-}
 
-#[derive(Debug)]
-pub struct SStichOracle {
-    stichtrie: SStichTrie,
-}
-
-impl SStichOracle {
     pub fn new_with(
         ahand: &mut EnumMap<EPlayerIndex, SHand>,
         stichseq: &mut SStichSequence,
@@ -278,24 +271,7 @@ impl SStichOracle {
         debug_assert!(stichtrie.traverse_trie(&mut stichseq.current_stich().clone()).iter().all(|stich|
             stich.equal_up_to_size(&stich_current_check, stich_current_check.size())
         ));
-        SStichOracle{
-            stichtrie,
-        }
-    }
-
-
-    #[cfg(test)]
-    pub fn new(
-        ahand: &mut EnumMap<EPlayerIndex, SHand>,
-        stichseq: &mut SStichSequence,
-        rules: &dyn TRules,
-    ) -> Self {
-        Self::new_with(
-            ahand,
-            stichseq,
-            rules,
-            &SRuleStateCacheFixed::new(stichseq, ahand),
-        )
+        stichtrie
     }
 }
 
@@ -303,7 +279,7 @@ pub struct SFilterByOracle<'rules> {
     rules: &'rules dyn TRules,
     ahand: EnumMap<EPlayerIndex, SHand>,
     stichseq: SStichSequence,
-    vecstichoracle: Vec<SStichOracle>,
+    vecstichtrie: Vec<SStichTrie>,
     rulestatecache: SRuleStateCacheFixed,
 }
 
@@ -329,7 +305,7 @@ impl<'rules> SFilterByOracle<'rules> {
             rules,
             ahand,
             stichseq,
-            vecstichoracle: Vec::new(),
+            vecstichtrie: Vec::new(),
             rulestatecache,
         }
     }
@@ -343,7 +319,7 @@ impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
             self.stichseq.zugeben(*card, self.rules);
             self.ahand[epi].play_card(*card);
         }
-        self.vecstichoracle.push(SStichOracle::new_with(
+        self.vecstichtrie.push(SStichTrie::new_with(
             &mut self.ahand.clone(),
             &mut self.stichseq.clone(),
             self.rules,
@@ -358,10 +334,10 @@ impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
         for _ in 0..EPlayerIndex::SIZE {
             self.stichseq.undo_most_recent();
         }
-        unwrap!(self.vecstichoracle.pop());
+        unwrap!(self.vecstichtrie.pop());
     }
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
-        let mut stichtrie = &unwrap!(self.vecstichoracle.last()).stichtrie;
+        let mut stichtrie = unwrap!(self.vecstichtrie.last());
         for (_epi, card) in stichseq./*TODO current_playable_stich*/current_stich().iter() {
             stichtrie = &unwrap!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| card_stichtrie==card)).1;
         }
@@ -390,8 +366,9 @@ mod tests {
                 rulesrufspiel::SRulesRufspiel,
             },
             util::*,
+            ai::SRuleStateCacheFixed,
         };
-        use super::SStichOracle;
+        use super::SStichTrie;
         use itertools::Itertools;
         let rules = SRulesRufspiel::new(
             EPlayerIndex::EPI0,
@@ -410,7 +387,7 @@ mod tests {
             slccard_stichseq: &[SCard],
             slcacard_stich: &[[SCard; EPlayerIndex::SIZE]],
         | {
-            let mut stichseq = SStichSequence::new_from_cards(
+            let stichseq = SStichSequence::new_from_cards(
                 EKurzLang::Lang,
                 slccard_stichseq.iter().copied(),
                 &rules,
@@ -418,12 +395,13 @@ mod tests {
             let epi_first = stichseq.current_stich().first_playerindex();
             let ahand = &EPlayerIndex::map_from_raw(aslccard_hand)
                 .map_into(|acard| SHand::new_from_iter(acard.iter().copied()));
-            let stichoracle = SStichOracle::new(
+            let stichtrie = SStichTrie::new_with(
                 &mut ahand.clone(),
-                &mut stichseq,
+                &mut stichseq.clone(),
                 &rules,
+                &SRuleStateCacheFixed::new(&stichseq, &ahand),
             );
-            let setstich_oracle = stichoracle.stichtrie.traverse_trie(&mut stichseq.current_stich().clone()).iter().cloned().collect::<std::collections::HashSet<_>>();
+            let setstich_oracle = stichtrie.traverse_trie(&mut stichseq.current_stich().clone()).iter().cloned().collect::<std::collections::HashSet<_>>();
             let setstich_check = slcacard_stich
                 .iter()
                 .map(|acard| SStich::new_full(
