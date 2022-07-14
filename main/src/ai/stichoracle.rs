@@ -41,6 +41,8 @@ impl SStichTrie {
                 vecstich.extend(stichtrie_child.traverse_trie(stich));
                 stich.undo_most_recent();
             }
+            use itertools::Itertools;
+            debug_assert!(vecstich.iter().all_unique());
             vecstich
         }
     }
@@ -116,6 +118,10 @@ impl SStichOracle {
                     stichseq,
                     &ahand[epi_card],
                 );
+                fn remove_from_allowed(veccard: &mut SHandVector, card_remove: SCard) {
+                    let i_card = unwrap!(veccard.iter().position(|card| card==&card_remove));
+                    veccard.swap_remove(i_card);
+                }
                 assert!(!veccard_allowed.is_empty());
                 enum VStichWinnerPrimaryParty {
                     NotYetAssigned,
@@ -142,78 +148,94 @@ impl SStichOracle {
                     };
                     let card_representative = veccard_allowed[0];
                     let mut stichtrie_representative = SStichTrie::new();
-                    // TODO: the call to for_each_allowed_card evaluates to the same value for each card contained in the same chain.
-                    //       => Exploit: Call for one card in chain
-                    //          and take over the result to all other cards from the chain.
                     let ob_stich_winner_primary_party_representative = zugeben_and_restore(
                         card_representative,
                         &mut stichtrie_representative,
                     );
-                    let mut veccard_chain = Vec::new();
-                    let n_stichtrie_before = stichtrie.vectplcardtrie.len();
-                    let mut ocard_in_chain = Some(enumchainscard_completed_cards_2.prev_while(
-                        card_representative,
-                        |card| veccard_allowed.contains(&card),
-                    ));
-                    while let Some(card_in_chain) = ocard_in_chain.take() {
-                        let on_points = veccard_chain.last().map(|card| points_card(*card));
-                        veccard_chain.push(card_in_chain);
-                        // TODO simplify
-                        let i_card = unwrap!(
-                            veccard_allowed.iter().position(|&card| card==card_in_chain)
-                        );
-                        assert_eq!(card_in_chain, veccard_allowed[i_card]);
-                        veccard_allowed.swap_remove(i_card);
-                        if on_points.is_none() || Some(points_card(card_in_chain))!=on_points {
+                    let next_in_chain = |veccard: &SHandVector, card_chain| {
+                        enumchainscard_completed_cards_2.next(card_chain)
+                            .filter(|card| veccard.contains(&card))
+                    };
+                    match ob_stich_winner_primary_party_representative {
+                        None => {
+                            let mut card_chain = enumchainscard_completed_cards_2.prev_while(
+                                card_representative,
+                                |card| veccard_allowed.contains(&card),
+                            );
+                            let i_stichtrie_representative = stichtrie.vectplcardtrie.len();
                             stichtrie.vectplcardtrie.push((
-                                card_in_chain,
-                                stichtrie_representative.clone(),
+                                card_chain,
+                                stichtrie_representative,
                             ));
-                            #[cfg(debug_assertions)] {
-                                let mut stichtrie_check = SStichTrie::new();
-                                verify_eq!(
-                                    zugeben_and_restore(card_in_chain, &mut stichtrie_check),
-                                    ob_stich_winner_primary_party_representative
-                                );
-                                // TODO assert_eq!(stichtrie_check, stichtrie_representative) to prove that we can omit the computation
+                            let mut ab_points = [false; 12]; // TODO? couple with points_card
+                            ab_points[points_card(card_chain).as_num::<usize>()]=true;
+                            remove_from_allowed(&mut veccard_allowed, card_chain);
+                            while let Some(card_chain_next) = next_in_chain(&veccard_allowed, card_chain) {
+                                if !ab_points[points_card(card_chain_next).as_num::<usize>()] {
+                                    ab_points[points_card(card_chain_next).as_num::<usize>()]=true;
+                                    stichtrie.vectplcardtrie.push((
+                                        card_chain_next,
+                                        stichtrie.vectplcardtrie[i_stichtrie_representative].1.clone(),
+                                    ));
+                                }
+                                remove_from_allowed(&mut veccard_allowed, card_chain_next);
+                                card_chain = card_chain_next;
                             }
-                        }
-                        ocard_in_chain = enumchainscard_completed_cards_2.next(card_in_chain)
-                            .filter(|card| veccard_allowed.contains(card));
-                    }
-                    use VStichWinnerPrimaryParty::*;
-                    match (&stichwinnerprimaryparty, &ob_stich_winner_primary_party_representative) {
-                        (NotYetAssigned, Some(b_stich_winner_primary_party)) => {
-                            stichwinnerprimaryparty = Same(*b_stich_winner_primary_party)
+                            stichwinnerprimaryparty = VStichWinnerPrimaryParty::Different;
                         },
-                        (NotYetAssigned, None) | (Same(true), Some(false)) | (Same(false), Some(true)) | (Same(_), None) => {
-                            stichwinnerprimaryparty = Different
-                        },
-                        (Same(true), Some(true)) | (Same(false), Some(false)) => {/*stay Same*/},
-                        (Different, _) => {/*stay Different*/}
-                    }
-                    let is_primary_party = |epi| playerparties.is_primary_party(epi);
-                    if let Some(b_stich_winner_primary_party)=ob_stich_winner_primary_party_representative {
-                        let card_min_or_max = unwrap!(if b_stich_winner_primary_party==is_primary_party(epi_card) {
-                            // only play maximum points
-                            veccard_chain.iter().copied().rev()
-                                // max_by_key: "If several elements are equally maximum, the last element is returned" (https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.max_by_key)
-                                .max_by_key(|card| points_card(*card))
-                        } else {
-                            // only play minimum points
-                            veccard_chain.iter().copied()
-                                // min_by_key: "If several elements are equally minimum, the first element is returned" (https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.min_by_key)
-                                .min_by_key(|card| points_card(*card))
-                        });
-                        let mut i_stichtrie = n_stichtrie_before;
-                        while i_stichtrie < stichtrie.vectplcardtrie.len() {
-                            if stichtrie.vectplcardtrie[i_stichtrie].0==card_min_or_max {
-                                // retain element
-                                i_stichtrie += 1;
+                        Some(b_stich_winner_primary_party) => {
+                            // TODO avoid backward-forward iteration
+                            let mut card_chain = enumchainscard_completed_cards_2.prev_while(
+                                card_representative,
+                                |card| veccard_allowed.contains(&card),
+                            );
+                            let is_primary_party = |epi| playerparties.is_primary_party(epi);
+                            let card_min_or_max = if b_stich_winner_primary_party==is_primary_party(epi_card) {
+                                // only play maximum points
+                                let mut card_max_points = card_chain;
+                                remove_from_allowed(&mut veccard_allowed, card_chain);
+                                while let Some(card_chain_next) = next_in_chain(&veccard_allowed, card_chain) {
+                                    card_chain = card_chain_next;
+                                    remove_from_allowed(&mut veccard_allowed, card_chain);
+                                    assign_max_by_key(
+                                        &mut card_max_points,
+                                        card_chain,
+                                        |card| points_card(*card),
+                                    );
+                                }
+                                card_max_points
                             } else {
-                                stichtrie.vectplcardtrie.remove(i_stichtrie);
+                                // only play minimum points
+                                let mut card_min_points = card_chain;
+                                remove_from_allowed(&mut veccard_allowed, card_chain);
+                                while let Some(card_chain_next) = next_in_chain(&veccard_allowed, card_chain) {
+                                    card_chain = card_chain_next;
+                                    remove_from_allowed(&mut veccard_allowed, card_chain);
+                                    assign_min_by_key(
+                                        &mut card_min_points,
+                                        card_chain,
+                                        |card| points_card(*card),
+                                    );
+                                }
+                                card_min_points
+                            };
+                            stichtrie.vectplcardtrie.push((
+                                card_min_or_max,
+                                stichtrie_representative,
+                            ));
+                            use VStichWinnerPrimaryParty::*;
+                            match &stichwinnerprimaryparty {
+                                NotYetAssigned => {
+                                    stichwinnerprimaryparty = Same(b_stich_winner_primary_party);
+                                },
+                                Same(b_stich_winner_primary_party_prev) => {
+                                    if b_stich_winner_primary_party!=*b_stich_winner_primary_party_prev {
+                                        stichwinnerprimaryparty = Different;
+                                    }
+                                },
+                                Different => {/*stay different*/}
                             }
-                        }
+                        },
                     }
                 }
                 match stichwinnerprimaryparty {
@@ -409,6 +431,7 @@ mod tests {
                     acard.clone(),
                 ))
                 .collect::<std::collections::HashSet<_>>();
+            assert_eq!(setstich_oracle.len(), setstich_check.len());
             let internal_assert = |setstich: &std::collections::HashSet<SStich>, stich, str_msg| {
                 assert!(
                     setstich.contains(stich),
