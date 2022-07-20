@@ -18,7 +18,7 @@ use crate::{
 use arrayvec::ArrayVec;
 
 #[derive(Debug, Clone)]
-struct SStichTrie {
+pub struct SStichTrie {
     vectplcardtrie: Box<ArrayVec<(SCard, SStichTrie), 8>>, // TODO? improve
 }
 
@@ -274,7 +274,7 @@ pub struct SFilterByOracle<'rules> {
     rules: &'rules dyn TRules,
     ahand: EnumMap<EPlayerIndex, SHand>,
     stichseq: SStichSequence,
-    vecstichtrie: Vec<SStichTrie>,
+    stichtrie: SStichTrie,
     otplenumchainscardplayerparties_completed_cards: Option<(SEnumChains<SCard>, crate::rules::rulesrufspiel::SPlayerParties22)>,
 }
 
@@ -303,21 +303,21 @@ impl<'rules> SFilterByOracle<'rules> {
             rules,
             ahand,
             stichseq,
-            vecstichtrie: Vec::new(),
+            stichtrie: SStichTrie::new(),
             otplenumchainscardplayerparties_completed_cards,
         }
     }
 }
 
 impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
-    type UnregisterStich = (); // TODO avoid cloning SStichSequence
+    type UnregisterStich = SStichTrie;
     fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich {
         assert!(stich.is_full());
         for (epi, card) in stich.iter() {
             self.stichseq.zugeben(*card, self.rules);
             self.ahand[epi].play_card(*card);
         }
-        self.vecstichtrie.push(SStichTrie::new_with(
+        let stichtrie = SStichTrie::new_with(
             &mut self.ahand.clone(),
             &mut self.stichseq.clone(),
             self.rules,
@@ -327,9 +327,10 @@ impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
                     &SRuleStateCacheFixed::new(&self.stichseq, &self.ahand)
                 )
             ),
-        ));
+        );
+        std::mem::replace(&mut self.stichtrie, stichtrie)
     }
-    fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {
+    fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich) {
         let stich_last_completed = unwrap!(self.stichseq.completed_stichs().last());
         for epi in EPlayerIndex::values() {
             self.ahand[epi].add_card(stich_last_completed[epi]);
@@ -337,10 +338,10 @@ impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
         for _ in 0..EPlayerIndex::SIZE {
             self.stichseq.undo_most_recent();
         }
-        unwrap!(self.vecstichtrie.pop());
+        self.stichtrie = unregisterstich;
     }
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
-        let mut stichtrie = unwrap!(self.vecstichtrie.last());
+        let mut stichtrie = &self.stichtrie;
         for (_epi, card) in stichseq./*TODO current_playable_stich*/current_stich().iter() {
             stichtrie = &unwrap!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| card_stichtrie==card)).1;
         }
