@@ -144,7 +144,7 @@ impl<RufspielPayout: TRufspielPayout> TRulesNoObj for SRulesRufspielGeneric<Rufs
     impl_rules_trumpf_noobj!(STrumpfDeciderRufspiel);
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct SPlayerParties22 {
     aepi_pri: [EPlayerIndex; 2],
 }

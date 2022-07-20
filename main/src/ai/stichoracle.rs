@@ -275,7 +275,7 @@ pub struct SFilterByOracle<'rules> {
     ahand: EnumMap<EPlayerIndex, SHand>,
     stichseq: SStichSequence,
     vecstichtrie: Vec<SStichTrie>,
-    rulestatecache: SRuleStateCacheFixed,
+    otplenumchainscardplayerparties_completed_cards: Option<(SEnumChains<SCard>, crate::rules::rulesrufspiel::SPlayerParties22)>,
 }
 
 impl<'rules> SFilterByOracle<'rules> {
@@ -295,13 +295,16 @@ impl<'rules> SFilterByOracle<'rules> {
         ));
         let stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
-        let rulestatecache = SRuleStateCacheFixed::new(&stichseq, &ahand);
+        
+        let otplenumchainscardplayerparties_completed_cards = rules.only_minmax_points_when_on_same_hand(
+                &SRuleStateCacheFixed::new(&stichseq, &ahand),
+        );
         Self {
             rules,
             ahand,
             stichseq,
             vecstichtrie: Vec::new(),
-            rulestatecache,
+            otplenumchainscardplayerparties_completed_cards,
         }
     }
 }
@@ -318,11 +321,11 @@ impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
             &mut self.ahand.clone(),
             &mut self.stichseq.clone(),
             self.rules,
-            self.rules.only_minmax_points_when_on_same_hand(
-                debug_verify_eq!(
-                    &self.rulestatecache,
+            debug_verify_eq!(
+                self.otplenumchainscardplayerparties_completed_cards.clone(),
+                self.rules.only_minmax_points_when_on_same_hand(
                     &SRuleStateCacheFixed::new(&self.stichseq, &self.ahand)
-                ),
+                )
             ),
         ));
     }
