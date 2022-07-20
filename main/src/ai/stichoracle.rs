@@ -49,7 +49,7 @@ impl SStichTrie {
         ahand: &mut EnumMap<EPlayerIndex, SHand>,
         stichseq: &mut SStichSequence,
         rules: &dyn TRules,
-        rulestatecache: &SRuleStateCacheFixed,
+        otplenumchainscardplayerparties_completed_cards: Option<(SEnumChains<SCard>, SPlayerParties22)>, // TODO avoid Option
     ) -> Self {
         fn for_each_allowed_card_no_oracle(
             n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
@@ -241,12 +241,7 @@ impl SStichTrie {
         assert!(n_stich_size<=3);
         let stich_current_check = stichseq.current_stich().clone(); // TODO? debug-only
         let mut stichtrie = SStichTrie::new();
-        if let Some((mut enumchainscard_completed_cards, playerparties)) = rules.only_minmax_points_when_on_same_hand(
-            debug_verify_eq!(
-                rulestatecache,
-                &SRuleStateCacheFixed::new(stichseq, ahand)
-            ),
-        ) {
+        if let Some((mut enumchainscard_completed_cards, playerparties)) = otplenumchainscardplayerparties_completed_cards {
             for (_epi, &card) in stichseq.completed_cards() {
                 enumchainscard_completed_cards.remove_from_chain(card);
             }
@@ -323,7 +318,12 @@ impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
             &mut self.ahand.clone(),
             &mut self.stichseq.clone(),
             self.rules,
-            &self.rulestatecache,
+            self.rules.only_minmax_points_when_on_same_hand(
+                debug_verify_eq!(
+                    &self.rulestatecache,
+                    &SRuleStateCacheFixed::new(&self.stichseq, &self.ahand)
+                ),
+            ),
         ));
     }
     fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {
@@ -364,6 +364,7 @@ mod tests {
             rules::{
                 payoutdecider::{SPayoutDeciderParams, SLaufendeParams},
                 rulesrufspiel::SRulesRufspiel,
+                TRules,
             },
             util::*,
             ai::SRuleStateCacheFixed,
@@ -399,7 +400,9 @@ mod tests {
                 &mut ahand.clone(),
                 &mut stichseq.clone(),
                 &rules,
-                &SRuleStateCacheFixed::new(&stichseq, &ahand),
+                rules.only_minmax_points_when_on_same_hand(
+                    &SRuleStateCacheFixed::new(&stichseq, &ahand),
+                ),
             );
             let setstich_oracle = stichtrie.traverse_trie(&mut stichseq.current_stich().clone()).iter().cloned().collect::<std::collections::HashSet<_>>();
             let setstich_check = slcacard_stich
