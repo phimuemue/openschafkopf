@@ -332,8 +332,8 @@ impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
             })
         });
         let stichtrie = SStichTrie::new_with(
-            &mut self.ahand.clone(),
-            &mut self.stichseq.clone(),
+            &mut self.ahand,
+            &mut self.stichseq,
             self.rules,
             &self.otplenumchainscardplayerparties_completed_cards,
         );
