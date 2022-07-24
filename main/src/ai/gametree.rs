@@ -508,15 +508,13 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
             self.enumchainscard.readd(removed);
         }
     }
-    fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
+    fn filter_allowed_cards(&self, _stichseq: &SStichSequence, veccard: &mut SHandVector) {
         // TODO assert that we actually have the correct enumchains
         // for (_epi, card) in stichseq.completed_cards() {
         //     enumchainscard.remove_from_chain(*card);
         // }
         // assert_eq!(enumchainscard, self.enumchainscard);
-        if stichseq.remaining_cards_per_hand()[self.epi_fixed] >= self.n_until_remaining_cards {
-            return; // hope that afterwards normal iteration is fast enough
-        }
+        // 
         // example: First stich was SO GU H8 E7
         // then, we have chains EO-GO-HO EU-HU-SU H9-H7, E9-E8, G9-G8-G7, S9-S8-S7
         // => If some cards from veccard form a contiguous sequence within enumchainscard, we only need to propagate one of the cards.
@@ -542,6 +540,9 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
             }
         }
         *veccard = unwrap!((&veccard_out as &[SCard]).try_into());
+    }
+    fn continue_with_filter(&self, stichseq: &SStichSequence) -> bool {
+        stichseq.completed_stichs().len()<=self.n_until_remaining_cards
     }
 }
 
