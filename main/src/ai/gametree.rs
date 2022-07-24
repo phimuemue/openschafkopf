@@ -165,6 +165,9 @@ pub trait TFilterAllowedCards {
     fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich;
     fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich);
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector);
+    fn continue_with_filter(&self, _stichseq: &SStichSequence) -> bool {
+        true
+    }
 }
 
 impl<F: Fn(&SStichSequence, &mut SHandVector)> TFilterAllowedCards for F {
@@ -174,6 +177,15 @@ impl<F: Fn(&SStichSequence, &mut SHandVector)> TFilterAllowedCards for F {
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
         self(stichseq, veccard)
     }
+}
+
+struct SNoFilter;
+
+impl TFilterAllowedCards for SNoFilter {
+    type UnregisterStich = ();
+    fn register_stich(&mut self, _stich: &SStich) -> Self::UnregisterStich {}
+    fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {}
+    fn filter_allowed_cards(&self, _stichseq: &SStichSequence, _veccard: &mut SHandVector) {}
 }
 
 pub fn explore_snapshots<ForEachSnapshot>(
@@ -272,28 +284,39 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                 veccard_allowed.into_iter().map(|card| {
                     ahand[epi_current].play_card(card);
                     let output = stichseq.zugeben_and_restore(card, rules, |stichseq| {
-                        macro_rules! next_step {() => {explore_snapshots_internal(
+                        macro_rules! next_step {($func_filter_allowed_cards:expr) => {explore_snapshots_internal(
                             ahand,
                             rules,
                             rulestatecache,
                             stichseq,
-                            func_filter_allowed_cards,
+                            $func_filter_allowed_cards,
                             foreachsnapshot,
                             snapshotvisualizer,
                         )}}
                         if stichseq.current_stich().is_empty() {
-                            let stich = unwrap!(stichseq.completed_stichs().last());
-                            let unregisterstich_filter = func_filter_allowed_cards.register_stich(stich);
-                            let unregisterstich_cache = rulestatecache.register_stich(
-                                stich,
-                                stichseq.current_stich().first_playerindex(),
-                            );
-                            let output = next_step!();
-                            rulestatecache.unregister_stich(unregisterstich_cache);
-                            func_filter_allowed_cards.unregister_stich(unregisterstich_filter);
-                            output
+                            if func_filter_allowed_cards.continue_with_filter(stichseq) {
+                                let stich = unwrap!(stichseq.completed_stichs().last());
+                                let unregisterstich_filter = func_filter_allowed_cards.register_stich(stich);
+                                let unregisterstich_cache = rulestatecache.register_stich(
+                                    stich,
+                                    stichseq.current_stich().first_playerindex(),
+                                );
+                                let output = next_step!(func_filter_allowed_cards);
+                                rulestatecache.unregister_stich(unregisterstich_cache);
+                                func_filter_allowed_cards.unregister_stich(unregisterstich_filter);
+                                output
+                            } else {
+                                let stich = unwrap!(stichseq.completed_stichs().last());
+                                let unregisterstich_cache = rulestatecache.register_stich(
+                                    stich,
+                                    stichseq.current_stich().first_playerindex(),
+                                );
+                                let output = next_step!(&mut SNoFilter);
+                                rulestatecache.unregister_stich(unregisterstich_cache);
+                                output
+                            }
                         } else {
-                            next_step!()
+                            next_step!(func_filter_allowed_cards)
                         }
                     });
                     ahand[epi_current].add_card(card);
