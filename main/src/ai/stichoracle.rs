@@ -377,9 +377,12 @@ mod tests {
             let epi_first = stichseq.current_stich().first_playerindex();
             let ahand = &EPlayerIndex::map_from_raw(aslccard_hand)
                 .map_into(|acard| SHand::new_from_iter(acard.iter().copied()));
-            let (enumchainscard, playerparties) = unwrap!(rules.only_minmax_points_when_on_same_hand(
+            let (mut enumchainscard, playerparties) = unwrap!(rules.only_minmax_points_when_on_same_hand(
                 &SRuleStateCacheFixed::new(&stichseq, ahand),
             ));
+            for (_epi, card) in stichseq.completed_cards() {
+                enumchainscard.remove_from_chain(*card);
+            }
             let stichtrie = SStichTrie::new_with(
                 &mut ahand.clone(),
                 &mut stichseq.clone(),
