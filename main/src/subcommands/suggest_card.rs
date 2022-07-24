@@ -141,9 +141,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         ),
                         (None,_5|_6|_7|_8) => (|| branching_factor(|_stichseq| (1, 3))),
                     },
-                    match ((clapmatches.value_of("prune"), eremainingcards)) {
-                        (Some("none"),_)|(_, _1|_2|_3) => (SMinReachablePayout),
-                        (Some("hint"),_)|(_, _4|_5|_6|_7|_8) => (SMinReachablePayoutLowerBoundViaHint),
+                    match (clapmatches.value_of("prune")) {
+                        Some("hint") => (SMinReachablePayoutLowerBoundViaHint),
+                        _ => (SMinReachablePayout),
                     },
                     match (clapmatches.value_of("visualize")) {
                         None => (|_,_,_| SNoVisualization),
