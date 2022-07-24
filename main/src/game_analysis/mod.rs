@@ -125,7 +125,7 @@ pub fn analyze_game(
                             game.rules.as_ref(),
                             &mut game.stichseq.clone(),
                             &mut equivalent_cards_filter(
-                                /*n_until_remaining_cards*/7,
+                                /*n_until_stichseq_len*/7,
                                 epi,
                                 /*enumchainscard*/game.rules.equivalent_when_on_same_hand(),
                             )(),
@@ -148,7 +148,7 @@ pub fn analyze_game(
                         &determinebestcard,
                         $itahand,
                         equivalent_cards_filter(
-                            /*n_until_remaining_cards, determined heuristically*/7,
+                            /*n_until_stichseq_len, determined heuristically*/7,
                             epi_zugeben,
                             game.rules.equivalent_when_on_same_hand(),
                         ),

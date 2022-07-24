@@ -481,7 +481,7 @@ impl TPruner for SPrunerViaHint {
 pub struct SFilterEquivalentCards {
     enumchainscard: SEnumChains<SCard>,
     epi_fixed: EPlayerIndex,
-    n_until_remaining_cards: usize,
+    n_until_stichseq_len: usize,
 }
 
 impl TFilterAllowedCards for SFilterEquivalentCards {
@@ -542,18 +542,18 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
         *veccard = unwrap!((&veccard_out as &[SCard]).try_into());
     }
     fn continue_with_filter(&self, stichseq: &SStichSequence) -> bool {
-        stichseq.completed_stichs().len()<=self.n_until_remaining_cards
+        stichseq.completed_stichs().len()<=self.n_until_stichseq_len
     }
 }
 
 pub fn equivalent_cards_filter(
-    n_until_remaining_cards: usize,
+    n_until_stichseq_len: usize,
     epi_fixed: EPlayerIndex,
     enumchainscard: SEnumChains<SCard>,
 ) -> impl Fn()->SFilterEquivalentCards {
     move || SFilterEquivalentCards {
         enumchainscard: enumchainscard.clone(),
         epi_fixed,
-        n_until_remaining_cards,
+        n_until_stichseq_len,
     }
 }

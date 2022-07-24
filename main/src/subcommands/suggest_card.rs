@@ -105,10 +105,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     forward,
                     match ((
                         if_then_some!(let Some(str_branching) = clapmatches.value_of("branching"), {
-                            if let Some(n_until_remaining_cards) = str_branching.strip_prefix("equiv")
+                            if let Some(n_until_stichseq_len) = str_branching.strip_prefix("equiv")
                                 .and_then(|str_n_until_remaining_cards| str_n_until_remaining_cards.parse().ok())
                             {
-                                Equivalent(n_until_remaining_cards, rules.equivalent_when_on_same_hand())
+                                Equivalent(n_until_stichseq_len, rules.equivalent_when_on_same_hand())
                             } else {
                                 let (str_lo, str_hi) = str_branching
                                     .split(',')
@@ -132,9 +132,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             let n_lo = n_lo.max(1);
                             (n_lo, (n_hi.max(n_lo+1)))
                         })),
-                        (Some(Equivalent(n_until_remaining_cards, enumchainscard)), _) => (
+                        (Some(Equivalent(n_until_stichseq_len, enumchainscard)), _) => (
                             equivalent_cards_filter(
-                                n_until_remaining_cards,
+                                n_until_stichseq_len,
                                 epi_fixed,
                                 enumchainscard,
                             )
