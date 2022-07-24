@@ -248,7 +248,7 @@ impl<'rules> SFilterByOracle<'rules> {
         ahand_in_game: &EnumMap<EPlayerIndex, SHand>,
         stichseq_in_game: &SStichSequence,
     ) -> Option<Self> {
-        let ahand = EPlayerIndex::map_from_fn(|epi| SHand::new_from_iter(
+        let mut ahand = EPlayerIndex::map_from_fn(|epi| SHand::new_from_iter(
             ahand_in_game[epi].cards().iter().copied()
                 .chain(
                     stichseq_in_game.visible_cards()
@@ -257,68 +257,72 @@ impl<'rules> SFilterByOracle<'rules> {
                         ))
                 )
         ));
-        let stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
+        let mut stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
         rules.only_minmax_points_when_on_same_hand(
             &SRuleStateCacheFixed::new(&stichseq, &ahand),
-        ).map(|(enumchainscard, playerparties)|
+        ).map(|(enumchainscard, playerparties)| {
+            let stichtrie = SStichTrie::new_with(
+                &mut ahand,
+                &mut stichseq,
+                rules,
+                &enumchainscard,
+                &playerparties,
+            );
             Self {
                 rules,
                 ahand,
                 stichseq,
-                stichtrie: SStichTrie::new(),
+                stichtrie,
                 enumchainscard_completed_cards: enumchainscard,
                 playerparties,
             }
-        )
+        })
     }
 }
 
 impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
-    type UnregisterStich = Option<(SStichTrie, EnumMap<EPlayerIndex, SRemoved<SCard>>)>;
+    type UnregisterStich = (SStichTrie, EnumMap<EPlayerIndex, SRemoved<SCard>>);
     fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich {
-        if_then_some!(self.stichseq.completed_stichs().len() < 6, {
-            assert!(stich.is_full());
-            for (epi, card) in stich.iter() {
-                self.stichseq.zugeben(*card, self.rules);
-                self.ahand[epi].play_card(*card);
-            }
-            let aremovedcard = EPlayerIndex::map_from_fn(|epi|
-                self.enumchainscard_completed_cards.remove_from_chain(stich[epi])
-            );
-            let stichtrie = SStichTrie::new_with(
-                &mut self.ahand,
-                &mut self.stichseq,
-                self.rules,
-                &self.enumchainscard_completed_cards,
-                &self.playerparties,
-            );
-            (std::mem::replace(&mut self.stichtrie, stichtrie), aremovedcard)
-        })
-    }
-    fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich) {
-        if let Some((stichtrie, aremovedcard)) = unregisterstich {
-            let stich_last_completed = unwrap!(self.stichseq.completed_stichs().last());
-            for epi in EPlayerIndex::values() {
-                self.ahand[epi].add_card(stich_last_completed[epi]);
-            }
-            for _ in 0..EPlayerIndex::SIZE {
-                self.stichseq.undo_most_recent();
-            }
-            for removedcard in aremovedcard.into_raw().into_iter().rev() {
-                self.enumchainscard_completed_cards.readd(removedcard);
-            }
-            self.stichtrie = stichtrie;
+        assert!(stich.is_full());
+        for (epi, card) in stich.iter() {
+            self.stichseq.zugeben(*card, self.rules);
+            self.ahand[epi].play_card(*card);
         }
+        let aremovedcard = EPlayerIndex::map_from_fn(|epi|
+            self.enumchainscard_completed_cards.remove_from_chain(stich[epi])
+        );
+        let stichtrie = SStichTrie::new_with(
+            &mut self.ahand,
+            &mut self.stichseq,
+            self.rules,
+            &self.enumchainscard_completed_cards,
+            &self.playerparties,
+        );
+        (std::mem::replace(&mut self.stichtrie, stichtrie), aremovedcard)
+    }
+    fn unregister_stich(&mut self, (stichtrie, aremovedcard): Self::UnregisterStich) {
+        let stich_last_completed = unwrap!(self.stichseq.completed_stichs().last());
+        for epi in EPlayerIndex::values() {
+            self.ahand[epi].add_card(stich_last_completed[epi]);
+        }
+        for _ in 0..EPlayerIndex::SIZE {
+            self.stichseq.undo_most_recent();
+        }
+        for removedcard in aremovedcard.into_raw().into_iter().rev() {
+            self.enumchainscard_completed_cards.readd(removedcard);
+        }
+        self.stichtrie = stichtrie;
     }
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
-        if self.stichseq.completed_stichs().len() <= 5 {
-            let mut stichtrie = &self.stichtrie;
-            for (_epi, card) in stichseq./*TODO current_playable_stich*/current_stich().iter() {
-                stichtrie = &unwrap!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| card_stichtrie==card)).1;
-            }
-            *veccard = stichtrie.vectplcardtrie.iter().map(|(card, _stichtrie)| *card).collect();
+        let mut stichtrie = &self.stichtrie;
+        for (_epi, card) in stichseq./*TODO current_playable_stich*/current_stich().iter() {
+            stichtrie = &unwrap!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| card_stichtrie==card)).1;
         }
+        *veccard = stichtrie.vectplcardtrie.iter().map(|(card, _stichtrie)| *card).collect();
+    }
+    fn continue_with_filter(&self, stichseq: &SStichSequence) -> bool {
+        stichseq.completed_stichs().len()<=5 // seems to be the best choice when starting after stich 1
     }
 }
 
