@@ -294,27 +294,21 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                             snapshotvisualizer,
                         )}}
                         if stichseq.current_stich().is_empty() {
-                            if func_filter_allowed_cards.continue_with_filter(stichseq) {
-                                let stich = unwrap!(stichseq.completed_stichs().last());
+                            let stich = unwrap!(stichseq.completed_stichs().last());
+                            let unregisterstich_cache = rulestatecache.register_stich(
+                                stich,
+                                stichseq.current_stich().first_playerindex(),
+                            );
+                            let output = if func_filter_allowed_cards.continue_with_filter(stichseq) {
                                 let unregisterstich_filter = func_filter_allowed_cards.register_stich(stich);
-                                let unregisterstich_cache = rulestatecache.register_stich(
-                                    stich,
-                                    stichseq.current_stich().first_playerindex(),
-                                );
                                 let output = next_step!(func_filter_allowed_cards);
-                                rulestatecache.unregister_stich(unregisterstich_cache);
                                 func_filter_allowed_cards.unregister_stich(unregisterstich_filter);
                                 output
                             } else {
-                                let stich = unwrap!(stichseq.completed_stichs().last());
-                                let unregisterstich_cache = rulestatecache.register_stich(
-                                    stich,
-                                    stichseq.current_stich().first_playerindex(),
-                                );
-                                let output = next_step!(&mut SNoFilter);
-                                rulestatecache.unregister_stich(unregisterstich_cache);
-                                output
-                            }
+                                next_step!(&mut SNoFilter)
+                            };
+                            rulestatecache.unregister_stich(unregisterstich_cache);
+                            output
                         } else {
                             next_step!(func_filter_allowed_cards)
                         }
