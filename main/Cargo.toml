@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["openschafkopf"]
 edition = "2021"
 license-file = "../LICENSE"
+description = "An open source toolkit for Schafkopf, a Bavarian card game."
 
 [build-dependencies]
 openschafkopf_util = {path = "../util"}
