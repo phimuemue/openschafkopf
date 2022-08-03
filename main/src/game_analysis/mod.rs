@@ -154,6 +154,7 @@ pub fn analyze_game(
                             game.rules.equivalent_when_on_same_hand(),
                         ),
                         &SMinReachablePayout::new_from_game(game),
+                        /*fn_snapshotcache*/|_,_| SSnapshotCacheNone, // TODO possibly use cache
                         /*fn_visualizer*/|_,_,_| SNoVisualization,
                     ));
                     let mut ocardandpayout = None;

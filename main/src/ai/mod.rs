@@ -141,6 +141,7 @@ impl SAi {
                         /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                         game.n_stock,
                     ),
+                    |_,_| SSnapshotCacheNone, // TODO possibly use cache
                     fn_visualizer,
                 )
             }}}
@@ -295,6 +296,7 @@ impl SPayoutStatsPerStrategy {
 
 pub fn determine_best_card<
     ForEachSnapshot: TForEachSnapshot<Output=SMinMax> + Sync,
+    SnapshotCache: TSnapshotCache<ForEachSnapshot::Output>,
     SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
     FilterAllowedCards: TFilterAllowedCards,
 >(
@@ -302,6 +304,7 @@ pub fn determine_best_card<
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
     fn_make_filter: impl Fn()->FilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
+    fn_snapshotcache: impl Fn(&SStichSequence, &SRuleStateCacheFixed) -> SnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
 ) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>>
     where
@@ -336,13 +339,17 @@ pub fn determine_best_card<
                     ),
                 )
             } else {
+                let mut snapshotcache = fn_snapshotcache(
+                    &stichseq,
+                    &SRuleStateCacheFixed::new(&stichseq, &ahand)
+                );
                 explore_snapshots(
                     &mut ahand,
                     determinebestcard.rules,
                     &mut stichseq,
                     &mut fn_make_filter(),
                     foreachsnapshot,
-                    &mut SSnapshotCacheNone, // TODO make customizable
+                    &mut snapshotcache,
                     &mut visualizer,
                 )
             };
@@ -523,6 +530,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             std::iter::once(ahand),
             /*fn_make_filter*/|| branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout::new_from_game(&game),
+            /*fn_snapshotcache*/|_,_| SSnapshotCacheNone, // TODO test cache
             /*fn_visualizer*/|_,_,_| SNoVisualization,
         ));
         for card in [H7, H8, H9] {
