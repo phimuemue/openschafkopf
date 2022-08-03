@@ -152,6 +152,7 @@ impl SAi {
                         /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                         game.n_stock,
                     ),
+                    |_,_| SSnapshotCacheNone, // TODO possibly use cache
                     fn_visualizer,
                     /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
                 )
@@ -317,6 +318,7 @@ impl SPayoutStatsPerStrategy {
 pub fn determine_best_card<
     FilterAllowedCards: TFilterAllowedCards,
     ForEachSnapshot: TForEachSnapshot<Output=SMinMax> + Sync,
+    SnapshotCache: TSnapshotCache<ForEachSnapshot::Output>,
     SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
 >(
@@ -324,6 +326,7 @@ pub fn determine_best_card<
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
+    fn_snapshotcache: impl Fn(&SStichSequence, &SRuleStateCacheFixed) -> SnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, SCard) + std::marker::Sync),
 ) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>>
@@ -360,13 +363,17 @@ pub fn determine_best_card<
                     ),
                 )
             } else {
+                let mut snapshotcache = fn_snapshotcache(
+                    &stichseq,
+                    &SRuleStateCacheFixed::new(&stichseq, &ahand)
+                );
                 explore_snapshots(
                     &mut ahand,
                     determinebestcard.rules,
                     &mut stichseq,
                     &fn_make_filter,
                     foreachsnapshot,
-                    &mut SSnapshotCacheNone, // TODO make customizable
+                    &mut snapshotcache,
                     &mut visualizer,
                 )
             };
@@ -549,6 +556,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             std::iter::once(ahand),
             /*fn_make_filter*/|_, _| branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout::new_from_game(&game),
+            /*fn_snapshotcache*/|_,_| SSnapshotCacheNone, // TODO test cache
             /*fn_visualizer*/|_,_,_| SNoVisualization,
             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
         ));
