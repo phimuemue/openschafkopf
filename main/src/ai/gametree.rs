@@ -205,6 +205,18 @@ impl<T> TSnapshotCache<T> for SSnapshotCacheNone {
     }
 }
 
+impl<T> TSnapshotCache<T> for Box<dyn TSnapshotCache<T>> {
+    fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<T> {
+        self.as_ref().get(stichseq, rulestatecache)
+    }
+    fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, t: &T) {
+        self.as_mut().put(stichseq, rulestatecache, t)
+    }
+    fn continue_with_cache(&self, stichseq: &SStichSequence) -> bool {
+        self.as_ref().continue_with_cache(stichseq)
+    }
+}
+
 pub fn explore_snapshots<
     ForEachSnapshot,
     FilterAllowedCards: TFilterAllowedCards,
