@@ -136,7 +136,7 @@ fn detect_expensive_all_possible_hands() {
                                 &mut game.stichseq.clone(),
                                 &SNoFilter::factory(),
                                 &SLeafCounter{},
-                                &mut SSnapshotCacheNone,
+                                &|_,_| SSnapshotCacheNone,
                                 &mut SNoVisualization,
                             ),
                             2000

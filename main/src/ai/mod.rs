@@ -108,7 +108,7 @@ impl SAi {
                         tpln_stoss_doubling,
                         n_stock,
                     ),
-                    &mut SSnapshotCacheNone, // TODO make customizable
+                    &|_,_| SSnapshotCacheNone, // TODO make customizable
                     &mut SNoVisualization{},
                 ).0.map(|mapepiminmax| {
                     SPayoutStats::new_1(mapepiminmax[epi_rank])
@@ -152,6 +152,7 @@ impl SAi {
                         /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                         game.n_stock,
                     ),
+                    |_,_| SSnapshotCacheNone, // TODO possibly use cache
                     fn_visualizer,
                     /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
                 )
@@ -316,6 +317,8 @@ pub fn determine_best_card<
     'determinebestcard,
     FilterAllowedCards: TFilterAllowedCards,
     ForEachSnapshot: TForEachSnapshot<Output=SMinMax> + Sync,
+    SnapshotCache: TSnapshotCache<ForEachSnapshot::Output>,
+    OSnapshotCache: Into<Option<SnapshotCache>>,
     SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
 >(
@@ -323,6 +326,7 @@ pub fn determine_best_card<
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'determinebestcard>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
+    fn_snapshotcache: impl Fn(&SStichSequence, &SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, SCard) + std::marker::Sync),
 ) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>>
@@ -365,7 +369,7 @@ pub fn determine_best_card<
                     &mut stichseq,
                     &fn_make_filter,
                     foreachsnapshot,
-                    &mut SSnapshotCacheNone, // TODO make customizable
+                    &fn_snapshotcache,
                     &mut visualizer,
                 )
             };
@@ -559,6 +563,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             Box::new(std::iter::once(ahand)) as Box<_>,
             /*fn_make_filter*/SBranchingFactor::factory(1, 2),
             &SMinReachablePayout::new_from_game(&game),
+            /*fn_snapshotcache*/|_,_| SSnapshotCacheNone, // TODO test cache
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
         ));

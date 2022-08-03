@@ -221,19 +221,21 @@ pub fn explore_snapshots<
     ForEachSnapshot,
     FilterAllowedCards: TFilterAllowedCards,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
+    SnapshotCache: TSnapshotCache<ForEachSnapshot::Output>,
+    OSnapshotCache: Into<Option<SnapshotCache>>,
 >(
     ahand: &mut EnumMap<EPlayerIndex, SHand>,
     rules: &dyn TRules,
     stichseq: &mut SStichSequence,
     fn_make_filter: &impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
-    snapshotcache: &mut impl TSnapshotCache<ForEachSnapshot::Output>,
+    fn_snapshotcache: &impl Fn(&SStichSequence, &SRuleStateCacheFixed) -> OSnapshotCache,
     snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
     where
         ForEachSnapshot: TForEachSnapshot,
 {
-    macro_rules! forward{($func_filter_allowed_cards:expr,) => {
+    macro_rules! forward{($func_filter_allowed_cards:expr, $snapshotcache:expr,) => {
         explore_snapshots_internal(
             ahand,
             rules,
@@ -245,7 +247,7 @@ pub fn explore_snapshots<
             stichseq,
             $func_filter_allowed_cards,
             foreachsnapshot,
-            snapshotcache,
+            $snapshotcache,
             snapshotvisualizer,
         )
     }}
@@ -253,6 +255,10 @@ pub fn explore_snapshots<
         match (fn_make_filter(stichseq, ahand).into()) {
             Some(mut func_filter_allowed_cards) => (&mut func_filter_allowed_cards),
             None => (/*func_filter_allowed_cards*/&mut SNoFilter),
+        },
+        match(fn_snapshotcache(&stichseq, &SRuleStateCacheFixed::new(&stichseq, &ahand)).into()) {
+            Some(mut snapshotcache) => (&mut snapshotcache),
+            None => (&mut SSnapshotCacheNone),
         },
     )
 }
