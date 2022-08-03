@@ -108,6 +108,7 @@ impl SAi {
                         tpln_stoss_doubling,
                         n_stock,
                     ),
+                    &mut SSnapshotCacheNone, // TODO make customizable
                     &mut SNoVisualization{},
                 ).0.map(|mapepiminmax| {
                     SPayoutStats::new_1(mapepiminmax[epi_rank])
@@ -365,6 +366,7 @@ pub fn determine_best_card<
                     &mut stichseq,
                     &fn_make_filter,
                     foreachsnapshot,
+                    &mut SSnapshotCacheNone, // TODO make customizable
                     &mut visualizer,
                 )
             };
