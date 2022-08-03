@@ -343,7 +343,8 @@ pub fn determine_best_card<
                     &stichseq,
                     &SRuleStateCacheFixed::new(&stichseq, &ahand)
                 );
-                explore_snapshots(
+                println!("Exploring {}", card);
+                let output = explore_snapshots(
                     &mut ahand,
                     determinebestcard.rules,
                     &mut stichseq,
@@ -351,7 +352,9 @@ pub fn determine_best_card<
                     foreachsnapshot,
                     &mut snapshotcache,
                     &mut visualizer,
-                )
+                );
+                println!("Exploring {} done", card);
+                output
             };
             let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
             let payoutstats = SPerMinMaxStrategy( // TODO should be SPayoutStatsPerStrategy

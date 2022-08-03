@@ -17,6 +17,7 @@ pub mod tests;
 
 use crate::ai::ahand_vecstich_card_count_is_compatible;
 use crate::ai::rulespecific::*;
+use crate::ai::gametree::{TSnapshotCache, SMinMax};
 use crate::game::SStichSequence;
 use crate::primitives::*;
 use crate::rules::card_points::points_stich;
@@ -114,11 +115,22 @@ impl SRuleStateCacheFixed {
         unwrap!(self.mapcardoepi[card])
     }
 }
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub struct SPointStichCount {
     pub n_stich: usize,
     pub n_point: isize,
 }
+
+impl std::ops::Add for SPointStichCount {
+    type Output = Self;
+    fn add(mut self, rhs: SPointStichCount) -> Self::Output {
+        self.n_stich += rhs.n_stich;
+        self.n_point += rhs.n_point;
+        self
+    }
+}
+
+
 #[derive(Eq, PartialEq, Debug)]
 pub struct SRuleStateCacheChanging {
     pub mapepipointstichcount: EnumMap<EPlayerIndex, SPointStichCount>,
@@ -348,6 +360,10 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
         Box<dyn TRules>,
         Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
     )> {
+        None
+    }
+
+    fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Option<Box<dyn TSnapshotCache<SMinMax>>> {
         None
     }
 }
