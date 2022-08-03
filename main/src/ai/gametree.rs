@@ -191,6 +191,9 @@ impl TFilterAllowedCards for SNoFilter {
 pub trait TSnapshotCache<T> { // TODO? could this be implemented via TForEachSnapshot
     fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<T>;
     fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, t: &T); // borrow to avoid unconditional copy - TODO good idea?
+    fn continue_with_cache(&self, _stichseq: &SStichSequence) -> bool {
+        true
+    }
 }
 pub struct SSnapshotCacheNone;
 impl<T> TSnapshotCache<T> for SSnapshotCacheNone {
@@ -320,13 +323,28 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                                     stich,
                                     stichseq.current_stich().first_playerindex(),
                                 );
-                                let output = if func_filter_allowed_cards.continue_with_filter(stichseq) {
-                                    let unregisterstich_filter = func_filter_allowed_cards.register_stich(stich);
-                                    let output = next_step!(func_filter_allowed_cards, snapshotcache);
-                                    func_filter_allowed_cards.unregister_stich(unregisterstich_filter);
-                                    output
-                                } else {
-                                    next_step!(&mut SNoFilter, snapshotcache)
+                                let output = /*TODO cartesian_match*/match (
+                                    func_filter_allowed_cards.continue_with_filter(stichseq),
+                                    snapshotcache.continue_with_cache(stichseq),
+                                ) {
+                                    (true, true) => {
+                                        let unregisterstich_filter = func_filter_allowed_cards.register_stich(stich);
+                                        let output = next_step!(func_filter_allowed_cards, snapshotcache);
+                                        func_filter_allowed_cards.unregister_stich(unregisterstich_filter);
+                                        output
+                                    },
+                                    (true, false) => {
+                                        let unregisterstich_filter = func_filter_allowed_cards.register_stich(stich);
+                                        let output = next_step!(func_filter_allowed_cards, &mut SSnapshotCacheNone);
+                                        func_filter_allowed_cards.unregister_stich(unregisterstich_filter);
+                                        output
+                                    },
+                                    (false, true) => {
+                                        next_step!(&mut SNoFilter, snapshotcache)
+                                    },
+                                    (false, false) => {
+                                        next_step!(&mut SNoFilter, &mut SSnapshotCacheNone)
+                                    },
                                 };
                                 rulestatecache.unregister_stich(unregisterstich_cache);
                                 output
