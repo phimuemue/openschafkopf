@@ -189,6 +189,34 @@ impl TFilterAllowedCards for SNoFilter {
     fn filter_allowed_cards(&self, _stichseq: &SStichSequence, _veccard: &mut SHandVector) {}
 }
 
+pub trait TSnapshotCache<T> { // TODO? could this be implemented via TForEachSnapshot
+    fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<T>;
+    fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, t: &T); // borrow to avoid unconditional copy - TODO good idea?
+    fn continue_with_cache(&self, _stichseq: &SStichSequence) -> bool {
+        true
+    }
+}
+pub struct SSnapshotCacheNone;
+impl<T> TSnapshotCache<T> for SSnapshotCacheNone {
+    fn get(&self, _stichseq: &SStichSequence, _rulestatecache: &SRuleStateCache) -> Option<T> {
+        None
+    }
+    fn put(&mut self, _stichseq: &SStichSequence, _rulestatecache: &SRuleStateCache, _t: &T) {
+    }
+}
+
+impl<T> TSnapshotCache<T> for Box<dyn TSnapshotCache<T>> {
+    fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<T> {
+        self.as_ref().get(stichseq, rulestatecache)
+    }
+    fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, t: &T) {
+        self.as_mut().put(stichseq, rulestatecache, t)
+    }
+    fn continue_with_cache(&self, stichseq: &SStichSequence) -> bool {
+        self.as_ref().continue_with_cache(stichseq)
+    }
+}
+
 pub fn explore_snapshots<
     ForEachSnapshot,
     FilterAllowedCards: TFilterAllowedCards,
@@ -199,6 +227,7 @@ pub fn explore_snapshots<
     stichseq: &mut SStichSequence,
     fn_make_filter: &impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
+    snapshotcache: &mut impl TSnapshotCache<ForEachSnapshot::Output>,
     snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
     where
@@ -216,6 +245,7 @@ pub fn explore_snapshots<
             stichseq,
             $func_filter_allowed_cards,
             foreachsnapshot,
+            snapshotcache,
             snapshotvisualizer,
         )
     }}
@@ -234,6 +264,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     stichseq: &mut SStichSequence,
     func_filter_allowed_cards: &mut impl TFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
+    snapshotcache: &mut impl TSnapshotCache<ForEachSnapshot::Output>,
     snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
     where
@@ -245,6 +276,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
         ahand[epi_current].cards().len() <= 1,
         ahand.iter().all(|hand| hand.cards().len() <= 1)
     ) {
+        // TODO? use snapshotcache here?
         macro_rules! for_each_allowed_card{
             (($i_offset_0: expr, $($i_offset: expr,)*), $stichseq: expr) => {{
                 let epi = epi_current.wrapping_add($i_offset_0);
@@ -294,13 +326,14 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                 veccard_allowed.into_iter().map(|card| {
                     ahand[epi_current].play_card(card);
                     let output = stichseq.zugeben_and_restore(card, rules, |stichseq| {
-                        macro_rules! next_step {($func_filter_allowed_cards:expr) => {explore_snapshots_internal(
+                        macro_rules! next_step {($func_filter_allowed_cards:expr, $snapshotcache:expr) => {explore_snapshots_internal(
                             ahand,
                             rules,
                             rulestatecache,
                             stichseq,
                             $func_filter_allowed_cards,
                             foreachsnapshot,
+                            $snapshotcache,
                             snapshotvisualizer,
                         )}}
                         if stichseq.current_stich().is_empty() {
@@ -309,18 +342,36 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                                 stich,
                                 stichseq.current_stich().first_playerindex(),
                             );
-                            let output = if func_filter_allowed_cards.continue_with_filter(stichseq) {
-                                let unregisterstich_filter = func_filter_allowed_cards.register_stich(stich);
-                                let output = next_step!(func_filter_allowed_cards);
-                                func_filter_allowed_cards.unregister_stich(unregisterstich_filter);
+                            let output = if let Some(output) = snapshotcache.get(stichseq, rulestatecache) {
                                 output
                             } else {
-                                next_step!(&mut SNoFilter)
+                                macro_rules! fwd{(($fn_before:expr, $fn_after:expr, $func_filter_allowed_cards:expr), ($snapshotcache:expr),) => {{
+                                    let input_to_after = $fn_before;
+                                    let output = next_step!($func_filter_allowed_cards, $snapshotcache);
+                                    $fn_after(input_to_after);
+                                    output
+                                }}}
+                                let output = cartesian_match!(fwd,
+                                    match (func_filter_allowed_cards.continue_with_filter(stichseq)) {
+                                        true => (
+                                            func_filter_allowed_cards.register_stich(stich),
+                                            |unregisterstich_filter| func_filter_allowed_cards.unregister_stich(unregisterstich_filter),
+                                            func_filter_allowed_cards
+                                        ),
+                                        false => ((), |()|(), &mut SNoFilter),
+                                    },
+                                    match (snapshotcache.continue_with_cache(stichseq)) {
+                                        true => (snapshotcache),
+                                        false => (&mut SSnapshotCacheNone),
+                                    },
+                                );
+                                snapshotcache.put(stichseq, rulestatecache, &output);
+                                output
                             };
                             rulestatecache.unregister_stich(unregisterstich_cache);
                             output
                         } else {
-                            next_step!(func_filter_allowed_cards)
+                            next_step!(func_filter_allowed_cards, snapshotcache)
                         }
                     });
                     ahand[epi_current].add_card(card);

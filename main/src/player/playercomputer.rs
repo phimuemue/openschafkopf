@@ -1,7 +1,7 @@
 use crate::ai::{
     handiterators::forever_rand_hands,
     gametree::{
-        EMinMaxStrategy, explore_snapshots, SMinReachablePayout, SNoVisualization,
+        EMinMaxStrategy, explore_snapshots, SMinReachablePayout, SNoVisualization, SSnapshotCacheNone,
     },
     *,
 };
@@ -124,6 +124,7 @@ impl TPlayer for SPlayerComputer {
                             /*tpln_stoss_doubling*/stoss_and_doublings(vecstoss, doublings),
                             n_stock,
                         ),
+                        &mut SSnapshotCacheNone, // TODO? use cache
                         &mut SNoVisualization,
                     ).0[EMinMaxStrategy::Min][epi]
                 })
