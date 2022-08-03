@@ -90,7 +90,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             /*tpln_stoss_doubling*/(0, 0), // TODO? make customizable
                             /*n_stock*/0, // TODO? make customizable
                         ),
-                        /*fn_snapshotcache*/|_,_| SSnapshotCacheNone, // TODO make customizable
+                        /*fn_snapshotcache*/|_stichseq, rulestatecache| rules.snapshot_cache(rulestatecache).unwrap(), // TODO make customizable
                         $fn_visualizer,
                         /*fn_inspect*/&|b_before, i_ahand, ahand, card| {
                             if b_verbose {
