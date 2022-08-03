@@ -518,15 +518,17 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
         // example: First stich was SO GU H8 E7
         // then, we have chains EO-GO-HO EU-HU-SU H9-H7, E9-E8, G9-G8-G7, S9-S8-S7
         // => If some cards from veccard form a contiguous sequence within enumchainscard, we only need to propagate one of the cards.
-        let mut veccard_out = Vec::new(); // TODO use SHandVector
+        let mut veccard_out = SHandVector::new();
+        let mut mapcardb_seen = SCard::map_from_raw([false; 32]); // TODO enumset
         for card_allowed in veccard.iter() {
             let card_first_in_chain = self.enumchainscard.prev_while(*card_allowed, |card|
                 veccard.contains(&card)
             );
-            veccard_out.push(card_first_in_chain);
+            if !mapcardb_seen[card_first_in_chain] {
+                mapcardb_seen[card_first_in_chain] = true;
+                veccard_out.push(card_first_in_chain);
+            }
         }
-        veccard_out.sort_unstable_by_key(|card| card.to_usize());
-        veccard_out.dedup();
         if veccard.len()!=veccard_out.len() {
             // println!("Found equivalent cards:\n stichseq: {}\n veccard_in : {:?}\n veccard_out: {:?}",
             //     stichseq,
@@ -539,7 +541,7 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
                 debug_assert_eq!(veccard as &[SCard], &veccard_out as &[SCard]);
             }
         }
-        *veccard = unwrap!((&veccard_out as &[SCard]).try_into());
+        *veccard = veccard_out;
     }
     fn continue_with_filter(&self, stichseq: &SStichSequence) -> bool {
         stichseq.completed_stichs().len()<=self.n_until_stichseq_len
