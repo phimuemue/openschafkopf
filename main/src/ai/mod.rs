@@ -106,6 +106,7 @@ impl SAi {
                         tpln_stoss_doubling,
                         n_stock,
                     ),
+                    &mut SSnapshotCacheNone, // TODO make customizable
                     &mut SNoVisualization{},
                 ).0[EMinMaxStrategy::Min][epi_rank]
             })
@@ -341,6 +342,7 @@ pub fn determine_best_card<
                     &mut stichseq,
                     &mut fn_make_filter(),
                     foreachsnapshot,
+                    &mut SSnapshotCacheNone, // TODO make customizable
                     &mut visualizer,
                 )
             };

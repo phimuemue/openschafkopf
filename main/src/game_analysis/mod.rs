@@ -135,6 +135,7 @@ pub fn analyze_game(
                                 /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                                 game.n_stock,
                             ),
+                            &mut SSnapshotCacheNone, // TODO possibly use cache
                             &mut SNoVisualization,
                         )
                             .0
