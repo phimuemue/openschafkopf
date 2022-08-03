@@ -189,15 +189,15 @@ impl TFilterAllowedCards for SNoFilter {
 }
 
 pub trait TSnapshotCache<T> { // TODO? could this be implemented via TForEachSnapshot
-    fn get(&self) -> Option<T>;
-    fn put(&mut self, t: &T); // borrow to avoid unconditional copy - TODO good idea?
+    fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<T>;
+    fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, t: &T); // borrow to avoid unconditional copy - TODO good idea?
 }
 pub struct SSnapshotCacheNone;
 impl<T> TSnapshotCache<T> for SSnapshotCacheNone {
-    fn get(&self) -> Option<T> {
+    fn get(&self, _stichseq: &SStichSequence, _rulestatecache: &SRuleStateCache) -> Option<T> {
         None
     }
-    fn put(&mut self, _t: &T) {
+    fn put(&mut self, _stichseq: &SStichSequence, _rulestatecache: &SRuleStateCache, _t: &T) {
     }
 }
 
@@ -292,7 +292,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             },
         }
     } else {
-        if let Some(output) = snapshotcache.get() {
+        if let Some(output) = snapshotcache.get(stichseq, rulestatecache) {
             output
         } else {
             let output = foreachsnapshot.pruned_output(stichseq, ahand, rulestatecache).unwrap_or_else(|| {
@@ -339,7 +339,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                     })
                 )
             });
-            snapshotcache.put(&output);
+            snapshotcache.put(stichseq, rulestatecache, &output);
             output
         }
     };
