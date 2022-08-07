@@ -404,14 +404,20 @@ impl SStichSequence {
         assert!(!self.current_stich().is_full());
         self.zugeben(card, rules);
         let r = func(self);
+        self.undo_most_recent();
+        debug_assert_eq!(n_len, self.vecstich.len());
+        #[cfg(debug_assertions)]self.assert_invariant();
+        r
+    }
+
+    pub fn undo_most_recent(&mut self) {
+        #[cfg(debug_assertions)]self.assert_invariant();
         if self.current_stich().is_empty() {
             unwrap!(self.vecstich.pop());
             assert!(self.current_stich_no_invariant().is_full());
         }
         unwrap!(self.vecstich.last_mut()).undo_most_recent();
-        debug_assert_eq!(n_len, self.vecstich.len());
         #[cfg(debug_assertions)]self.assert_invariant();
-        r
     }
 
     pub fn visible_stichs(&self) -> &[SStich] {
