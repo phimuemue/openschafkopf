@@ -124,14 +124,15 @@ fn make_handiterator<NextVecEPI: TNextVecEPI>(
     }
 }
 
-fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVecEPI + 'lifetime, FnInspect: FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime>(
-    stichseq: &'lifetime SStichSequence,
+fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVecEPI + 'lifetime, FnInspect: FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime, StichSequence: std::borrow::Borrow<SStichSequence>+'lifetime>(
+    stichseq: StichSequence,
     ahand_known: EnumMap<EPlayerIndex, SHand>,
     epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
     mut fn_inspect: FnInspect,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator::<NextVecEPI>(stichseq, ahand_known, epi_fixed).filter(move |ahand| {
+    make_handiterator::<NextVecEPI>(stichseq.borrow(), ahand_known, epi_fixed).filter(move |ahand| {
+        let stichseq = stichseq.borrow();
         let b_valid = {
             let stich_current = stichseq.current_stich();
             assert!(!stich_current.is_full());
@@ -205,7 +206,7 @@ pub fn internal_all_possible_hands<'lifetime>(
     rules: &'lifetime dyn TRules,
     fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SNextVecEPIPermutation, _>(
+    make_handiterator_compatible_with_game_so_far::<SNextVecEPIPermutation,_,_>(
         stichseq,
         tohand.to_ahand(epi_fixed),
         epi_fixed,
@@ -229,14 +230,14 @@ pub fn all_possible_hands<'lifetime>(
     )
 }
 
-pub fn internal_forever_rand_hands<'lifetime>(
-    stichseq: &'lifetime SStichSequence,
+pub fn internal_forever_rand_hands<'lifetime, StichSequence: std::borrow::Borrow<SStichSequence>+'lifetime>(
+    stichseq: StichSequence,
     tohand: impl TToAHand,
     epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
     fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SNextVecEPIShuffle, _>(
+    make_handiterator_compatible_with_game_so_far::<SNextVecEPIShuffle,_,_>(
         stichseq,
         tohand.to_ahand(epi_fixed),
         epi_fixed,
@@ -245,8 +246,8 @@ pub fn internal_forever_rand_hands<'lifetime>(
     )
 }
 
-pub fn forever_rand_hands<'lifetime>(
-    stichseq: &'lifetime SStichSequence,
+pub fn forever_rand_hands<'lifetime, StichSequence: std::borrow::Borrow<SStichSequence>+'lifetime>(
+    stichseq: StichSequence,
     tohand: impl TToAHand + 'lifetime,
     epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
