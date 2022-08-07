@@ -26,19 +26,11 @@ impl FromStr for EPlayerIndex {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SPlayersInRound<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>> {
     pub epi_first: PlayerIndex,
     vect: ArrayVec<T, {EPlayerIndex::SIZE}>,
 }
-
-impl<T: PartialEq, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> PartialEq for SPlayersInRound<T, PlayerIndex> {
-    fn eq(&self, playersinround_other: &Self) -> bool {
-        self.size()==playersinround_other.size()
-        && self.equal_up_to_size(playersinround_other, self.size())
-    }
-}
-impl<T: Eq, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> Eq for SPlayersInRound<T, PlayerIndex>{}
 
 pub struct SPlayersInRoundIterator<InternalIter> {
     iter: InternalIter,
