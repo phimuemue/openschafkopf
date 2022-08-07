@@ -89,7 +89,7 @@ pub struct SRuleStateCacheFixed {
     mapcardoepi: EnumMap<SCard, Option<EPlayerIndex>>, // TODO? Option<EPlayerIndex> is clean for EKurzLang. Does it incur runtime overhead?
 }
 impl SRuleStateCacheFixed {
-    fn new(stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Self {
+    pub fn new(stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Self {
         debug_assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
         let mut mapcardoepi = SCard::map_from_fn(|_| None);
         let mut register_card = |card, epi| {

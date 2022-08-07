@@ -143,7 +143,7 @@ impl<E: TPlainEnum + TInternalEnumMapType<E, E> + Copy + std::cmp::Eq + std::fmt
         if_then_some!(e_raw_prev!=e, e_raw_prev)
     }
 
-    pub fn prev_while(&self, e: E, fn_pred: impl Fn(E)->bool) -> E {
+    pub fn prev_while(&self, e: E, mut fn_pred: impl FnMut(E)->bool) -> E {
         self.assert_invariant();
         assert!(fn_pred(e));
         let mut e_out = e;
