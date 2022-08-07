@@ -26,10 +26,27 @@ impl FromStr for EPlayerIndex {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Hash)]
 pub struct SPlayersInRound<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>> {
     pub epi_first: PlayerIndex,
     vect: ArrayVec<T, {EPlayerIndex::SIZE}>,
+}
+
+impl<T: fmt::Debug, PlayerIndex: Copy+TStaticOrDynamicValue<EPlayerIndex>> fmt::Debug for SPlayersInRound<T, PlayerIndex> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for epi in EPlayerIndex::values() {
+            if epi==self.epi_first.value() {
+                write!(f, ">")?;
+            } else {
+                write!(f, " ")?;
+            }
+            match self.get(epi) {
+                None => {write!(f, "__")?;}
+                Some(t) => {write!(f, "{:?}", t)?;}
+            }
+        }
+        write!(f, "")
+    }
 }
 
 pub struct SPlayersInRoundIterator<InternalIter> {
