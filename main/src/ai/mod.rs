@@ -89,13 +89,13 @@ impl SAi {
         }
     }
 
-    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &dyn TRules, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> f64 {
+    pub fn internal_rank_rules<'rules>(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &'rules dyn TRules, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> impl ParallelIterator<Item=SMinMax> + 'rules {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
         let ekurzlang = unwrap!(EKurzLang::from_cards_per_player(hand_fixed.get().len()));
-        forever_rand_hands(&SStichSequence::new(ekurzlang), SHand::new_from_iter(hand_fixed.get().iter().copied()), epi_rank, rules)
+        forever_rand_hands(SStichSequence::new(ekurzlang), SHand::new_from_iter(hand_fixed.get().iter().copied()), epi_rank, rules)
             .take(self.n_rank_rules_samples)
             .par_bridge() // TODO can we derive a true parallel iterator?
-            .map(|mut ahand| {
+            .map(move |mut ahand| {
                 explore_snapshots(
                     &mut ahand,
                     rules,
@@ -108,8 +108,19 @@ impl SAi {
                         n_stock,
                     ),
                     &mut SNoVisualization{},
-                ).0[EMinMaxStrategy::Min][epi_rank]
+                )
             })
+    }
+
+    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &dyn TRules, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> f64 {
+        self.internal_rank_rules(
+            hand_fixed,
+            epi_rank,
+            rules,
+            tpln_stoss_doubling,
+            n_stock,
+        )
+            .map(|minmax| minmax.0[EMinMaxStrategy::Min][epi_rank])
             .sum::<isize>().as_num::<f64>() / (self.n_rank_rules_samples.as_num::<f64>())
     }
 
