@@ -151,15 +151,15 @@ impl SAi {
                 forward_to_determine_best_card,
                 match (eremainingcards) {
                     _1|_2|_3 => (
-                        || |_: &SStichSequence,_: &mut SHandVector| (/*no filtering*/),
+                        |_, _| |_: &SStichSequence,_: &mut SHandVector| (/*no filtering*/),
                         SMinReachablePayout,
                     ),
                     _4 => (
-                        || |_: &SStichSequence,_: &mut SHandVector| (/*no filtering*/),
+                        |_, _| |_: &SStichSequence,_: &mut SHandVector| (/*no filtering*/),
                         SMinReachablePayoutLowerBoundViaHint,
                     ),
                     _5|_6|_7|_8 => (
-                        || branching_factor(|_stichseq| {
+                        |_, _| branching_factor(|_stichseq| {
                             (1, self.n_suggest_card_branches+1)
                         }),
                         SMinReachablePayoutLowerBoundViaHint,
@@ -299,7 +299,7 @@ pub fn determine_best_card<
 >(
     determinebestcard: &SDetermineBestCard,
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
-    fn_make_filter: impl Fn()->FilterAllowedCards + std::marker::Sync,
+    fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->FilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
 ) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>>
@@ -323,6 +323,7 @@ pub fn determine_best_card<
             let mapcardooutput = Arc::clone(&mapcardooutput);
             let mut stichseq = determinebestcard.stichseq.clone();
             assert!(ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
+            let mut filter = fn_make_filter(&stichseq, &ahand); // do before ahand is modified
             ahand[determinebestcard.epi_fixed].play_card(card);
             stichseq.zugeben(card, determinebestcard.rules);
             let output = if ahand.iter().all(|hand| hand.cards().is_empty()) {
@@ -339,7 +340,7 @@ pub fn determine_best_card<
                     &mut ahand,
                     determinebestcard.rules,
                     &mut stichseq,
-                    &mut fn_make_filter(),
+                    &mut filter,
                     foreachsnapshot,
                     &mut visualizer,
                 )
@@ -519,7 +520,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         let determinebestcardresult = unwrap!(determine_best_card(
             &determinebestcard,
             std::iter::once(ahand),
-            /*fn_make_filter*/|| branching_factor(|_stichseq| (1, 2)),
+            /*fn_make_filter*/|_, _| branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout::new_from_game(&game),
             /*fn_visualizer*/|_,_,_| SNoVisualization,
         ));
