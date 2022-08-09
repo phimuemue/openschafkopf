@@ -57,15 +57,17 @@ impl SStichTrie {
             ahand: &mut EnumMap<EPlayerIndex, SHand>,
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
-            stichtrie: &mut SStichTrie,
             enumchainscard_completed_cards: &SEnumChains<SCard>,
             playerparties: &SPlayerParties22,
-        ) -> Option<bool/*b_stich_winner_primary_party*/> {
+        ) -> (SStichTrie, Option<bool/*b_stich_winner_primary_party*/>) {
             if n_depth==0 {
                 assert!(stichseq.current_stich().is_empty());
                 let stich = unwrap!(stichseq.completed_stichs().last());
                 assert!(stich.is_full());
-                Some(playerparties.is_primary_party(rules.winner_index(stich)))
+                (
+                    SStichTrie::new(),
+                    Some(playerparties.is_primary_party(rules.winner_index(stich))),
+                )
             } else {
                 let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
                 let mut veccard_allowed = rules.all_allowed_cards(
@@ -83,22 +85,21 @@ impl SStichTrie {
                     Different,
                 }
                 let mut stichwinnerprimaryparty = VStichWinnerPrimaryParty::NotYetAssigned;
+                let mut stichtrie = SStichTrie::new();
                 while !veccard_allowed.is_empty() {
                     let card_representative = veccard_allowed[0];
-                    let mut stichtrie_representative = SStichTrie::new();
-                    let ob_stich_winner_primary_party_representative = stichseq.zugeben_and_restore(card_representative, rules, |stichseq| {
+                    let (stichtrie_representative, ob_stich_winner_primary_party_representative) = stichseq.zugeben_and_restore(card_representative, rules, |stichseq| {
                         ahand[epi_card].play_card(card_representative);
-                        let ob_stich_winner_primary_party = for_each_allowed_card(
+                        let tplstichtrieob_stich_winner_primary_party = for_each_allowed_card(
                             n_depth-1,
                             ahand,
                             stichseq,
                             rules,
-                            &mut stichtrie_representative,
                             enumchainscard_completed_cards,
                             playerparties,
                         );
                         ahand[epi_card].add_card(card_representative);
-                        ob_stich_winner_primary_party
+                        tplstichtrieob_stich_winner_primary_party
                     });
                     let mut enumchainscard_actual = enumchainscard_completed_cards.clone(); // TODO avoid cloning.
                     let epi_preliminary_winner = rules.preliminary_winner_index(stichseq.current_stich());
@@ -193,18 +194,20 @@ impl SStichTrie {
                         },
                     }
                 }
-                match stichwinnerprimaryparty {
-                    VStichWinnerPrimaryParty::NotYetAssigned => panic!(),
-                    VStichWinnerPrimaryParty::Same(b_stich_winner_primary_party) => Some(b_stich_winner_primary_party),
-                    VStichWinnerPrimaryParty::Different => None,
-                }
+                (
+                    stichtrie,
+                    match stichwinnerprimaryparty {
+                        VStichWinnerPrimaryParty::NotYetAssigned => panic!(),
+                        VStichWinnerPrimaryParty::Same(b_stich_winner_primary_party) => Some(b_stich_winner_primary_party),
+                        VStichWinnerPrimaryParty::Different => None,
+                    },
+                )
             }
         }
         let n_stich_size = stichseq.current_stich().size();
         //assert!(0<=n_stich_size); // trivially true
         assert!(n_stich_size<=3);
         let stich_current_check = stichseq.current_stich().clone(); // TODO? debug-only
-        let mut stichtrie = SStichTrie::new();
         debug_assert_eq!(
             enumchainscard_completed_cards,
             &{
@@ -217,15 +220,14 @@ impl SStichTrie {
                 enumchainscard_check
             }
         );
-        for_each_allowed_card(
+        let stichtrie = for_each_allowed_card(
             4-n_stich_size,
             ahand,
             stichseq,
             rules,
-            &mut stichtrie,
             enumchainscard_completed_cards,
             playerparties,
-        );
+        ).0;
         debug_assert!(stichtrie.traverse_trie(&mut stichseq.current_stich().clone()).iter().all(|stich|
             stich.equal_up_to_size(&stich_current_check, stich_current_check.size())
         ));
