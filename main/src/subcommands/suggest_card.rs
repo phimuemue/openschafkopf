@@ -181,7 +181,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             );
             if b_verbose { // TODO? only for second-level verbosity
                 println!("\nInterpreting a line of the following table (taking the first line as an example):");
-                let SOutputLine{veccard, mapemmstrategyatplstrf} = &vecoutputline[0];
+                let SOutputLine{vect: veccard, mapemmstrategyatplstrf} = &vecoutputline[0];
                 println!("If you play {}, then:", veccard.iter().join(" or "));
                 for emmstrategy in EMinMaxStrategy::values() {
                     let astr = mapemmstrategyatplstrf[emmstrategy].clone().map(|tplstrf| tplstrf.0);
@@ -212,7 +212,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 println!();
             }
             // TODO interface should probably output payout interval per card
-            for SOutputLine{veccard, mapemmstrategyatplstrf} in vecoutputline.iter() {
+            for SOutputLine{vect: veccard, mapemmstrategyatplstrf} in vecoutputline.iter() {
                 print!("{itcard:<n_width$}: ",
                     itcard = veccard.iter().join(" "),
                     n_width = n_max_cards*3 - 1 // assume a card occpuies two characters

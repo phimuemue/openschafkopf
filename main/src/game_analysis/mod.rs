@@ -429,7 +429,7 @@ fn generate_analysis_html(
             for outputline in vecoutputline.iter() {
                 str_per_card += "<tr>";
                 str_per_card += "<td>";
-                for &card in outputline.veccard.iter() {
+                for &card in outputline.vect.iter() {
                     str_per_card += &crate::ai::gametree::output_card(card, /*b_border*/card==analysispercard.card_played);
                 }
                 str_per_card += "</td>";
