@@ -226,7 +226,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         )
     }
 
-    fn only_minmax_points_when_on_same_hand(&self, rulestatecache: &SRuleStateCacheFixed) -> Option<(SEnumChains<SCard>, SPlayerParties22)> {
+    fn only_minmax_points_when_on_same_hand(&self, rulestatecache: &SRuleStateCacheFixed) -> Option<(SEnumChains<SCard>, SPlayerPartiesTable)> {
         use crate::primitives::card_values::*;
         // TODO can we infer/assert this somehow?
         Some((
@@ -238,7 +238,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
             ]),
             SPlayerParties22{
                 aepi_pri: [self.epi, rulestatecache.who_has_card(self.rufsau())],
-            },
+            }.into(),
         ))
     }
 

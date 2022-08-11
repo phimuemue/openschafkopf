@@ -7,9 +7,8 @@ use crate::{
         stich::SStich,
     },
     rules::{
-        rulesrufspiel::SPlayerParties22,
+        SPlayerPartiesTable,
         card_points::points_card,
-        TPlayerParties,
         TRules,
     },
     util::*,
@@ -50,7 +49,7 @@ impl SStichTrie {
         stichseq: &mut SStichSequence,
         rules: &dyn TRules,
         enumchainscard_completed_cards: &SEnumChains<SCard>,
-        playerparties: &SPlayerParties22,
+        playerparties: &SPlayerPartiesTable,
     ) -> Self {
         fn for_each_allowed_card(
             n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
@@ -58,7 +57,7 @@ impl SStichTrie {
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
             enumchainscard_completed_cards: &SEnumChains<SCard>,
-            playerparties: &SPlayerParties22,
+            playerparties: &SPlayerPartiesTable,
         ) -> (SStichTrie, Option<bool/*b_stich_winner_primary_party*/>) {
             if n_depth==0 {
                 assert!(stichseq.current_stich().is_empty());
@@ -242,7 +241,7 @@ pub struct SFilterByOracle<'rules> {
     stichseq: SStichSequence,
     stichtrie: SStichTrie,
     enumchainscard_completed_cards: SEnumChains<SCard>,
-    playerparties: crate::rules::rulesrufspiel::SPlayerParties22,
+    playerparties: SPlayerPartiesTable,
 }
 
 impl<'rules> SFilterByOracle<'rules> {

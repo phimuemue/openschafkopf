@@ -84,6 +84,27 @@ pub trait TPlayerParties {
     fn multiplier(&self, epi: EPlayerIndex) -> isize;
 }
 
+#[derive(Debug)]
+pub struct SPlayerPartiesTable { // TODO? use this as canonical representation, and get rid of TPlayerParties and its implementors?
+    mapepib_primary: EnumMap<EPlayerIndex, bool>, // TODO? use enumset
+}
+
+impl SPlayerPartiesTable {
+    pub fn is_primary_party(&self, epi: EPlayerIndex) -> bool {
+        self.mapepib_primary[epi]
+    }
+}
+
+impl<PlayerParties: TPlayerParties> From<PlayerParties> for SPlayerPartiesTable {
+    fn from(playerparties: PlayerParties) -> Self {
+        Self {
+            mapepib_primary: EPlayerIndex::map_from_fn(|epi|
+                playerparties.is_primary_party(epi)
+            ),
+        }
+    }
+}
+
 #[derive(Eq, PartialEq, Debug)]
 pub struct SRuleStateCacheFixed {
     mapcardoepi: EnumMap<SCard, Option<EPlayerIndex>>, // TODO? Option<EPlayerIndex> is clean for EKurzLang. Does it incur runtime overhead?
@@ -292,7 +313,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
     fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 
     fn equivalent_when_on_same_hand(&self) -> SEnumChains<SCard>;
-    fn only_minmax_points_when_on_same_hand(&self, _rulestatecache: &SRuleStateCacheFixed) -> Option<(SEnumChains<SCard>, rulesrufspiel::SPlayerParties22)> {
+    fn only_minmax_points_when_on_same_hand(&self, _rulestatecache: &SRuleStateCacheFixed) -> Option<(SEnumChains<SCard>, SPlayerPartiesTable)> {
         None
     }
 
