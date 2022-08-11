@@ -391,7 +391,7 @@ fn generate_analysis_html(
     + "<h2>Details</h2>"
     + &format!("{}", slcanalysispercard.iter()
         .map(|analysispercard| {
-            let (vecoutputline, _n_max_cards, _aformatinfo) = table(
+            let (vecoutputline, _aformatinfo) = table(
                 &analysispercard.determinebestcardresult_cheating,
                 game.rules.as_ref(),
                 /*fn_human_readable_payout*/&|f_payout| f_payout,

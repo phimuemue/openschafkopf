@@ -88,23 +88,20 @@ pub fn table(
     determinebestcardresult: &SDetermineBestCardResult<SPayoutStatsPerStrategy>,
     rules: &dyn TRules,
     fn_human_readable_payout: &dyn Fn(f32) -> f32,
-) -> (Vec<SOutputLine<SCard>>, usize/*n_max_cards*/, EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>) {
-    let mut n_max_cards = 0;
+) -> (Vec<SOutputLine<SCard>>, EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>) {
     let (mut vecoutputline, mapemmstrategyaformatinfo) = internal_table(
         determinebestcardresult.cards_and_ts().collect(),
         fn_human_readable_payout,
     );
     for outputline in vecoutputline.iter_mut() {
         rules.sort_cards_first_trumpf_then_farbe(&mut outputline.vect);
-        assign_max(&mut n_max_cards, outputline.vect.len());
     }
-    (vecoutputline, n_max_cards, mapemmstrategyaformatinfo)
+    (vecoutputline, mapemmstrategyaformatinfo)
 }
 
 pub fn print_payoutstats(
     b_verbose: bool,
     slcoutputline: &[SOutputLine<SCard>],
-    n_max_cards: usize, // TODO eliminate this
     mapemmstrategyaformatinfo: &EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>,
 ) {
     if b_verbose { // TODO? only for second-level verbosity
@@ -140,11 +137,15 @@ pub fn print_payoutstats(
         println!();
     }
     // TODO interface should probably output payout interval per card
-    for SOutputLine{vect: veccard, mapemmstrategyatplstrf} in slcoutputline.iter() {
-        print!("{itcard:<n_width$}: ",
-            itcard = veccard.iter().join(" "),
-            n_width = n_max_cards*3 - 1 // assume a card occpuies two characters
-        );
+    let mut vecstr_id = Vec::new();
+    let mut n_width_id = 0;
+    for outputline in slcoutputline.iter() {
+        let str_id = format!("{}", outputline.vect.iter().join(" "));
+        assign_max(&mut n_width_id, str_id.len());
+        vecstr_id.push(str_id);
+    }
+    for (str_id, SOutputLine{vect:_, mapemmstrategyatplstrf}) in vecstr_id.iter().zip_eq(slcoutputline.iter()) {
+        print!("{str_id:<n_width_id$}: ");
         for (atplstrf, aformatinfo) in mapemmstrategyatplstrf.iter().zip_eq(mapemmstrategyaformatinfo.iter()) {
             for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
                 use termcolor::*;
