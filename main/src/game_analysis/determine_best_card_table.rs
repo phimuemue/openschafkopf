@@ -31,11 +31,16 @@ impl PartialEq for EGrouping {
     }
 }
 
+pub struct SPayoutStatsTable<T> {
+    pub vecoutputline: Vec<SOutputLine<T>>,
+    mapemmstrategyaformatinfo: EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>,
+}
+
 pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPayoutStatsPerStrategy>>(
     mut vectpayoutstatsperstrategy: Vec<(T, PayoutStatsPerStrategy)>,
     b_group: bool,
     fn_human_readable_payout: &dyn Fn(f32) -> f32,
-) -> (Vec<SOutputLine<T>>, EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>) {
+) -> SPayoutStatsTable<T> {
     vectpayoutstatsperstrategy.sort_unstable_by(|(_t_lhs, minmax_lhs), (_t_rhs, minmax_rhs)| {
         minmax_lhs.borrow().compare_canonical(minmax_rhs.borrow())
     });
@@ -101,30 +106,33 @@ pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPayoutStatsPerStrategy>
             mapemmstrategyatplstrf,
         });
     }
-    (vecoutputline, mapemmstrategyaformatinfo)
+    SPayoutStatsTable{
+        vecoutputline,
+        mapemmstrategyaformatinfo,
+    }
 }
 
 pub fn table(
     determinebestcardresult: &SDetermineBestCardResult<SPayoutStatsPerStrategy>,
     rules: &dyn TRules,
     fn_human_readable_payout: &dyn Fn(f32) -> f32,
-) -> (Vec<SOutputLine<SCard>>, EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>) {
-    let (mut vecoutputline, mapemmstrategyaformatinfo) = internal_table(
+) -> SPayoutStatsTable<SCard> {
+    let mut payoutstatstable = internal_table(
         determinebestcardresult.cards_and_ts().collect(),
         /*b_group*/true,
         fn_human_readable_payout,
     );
-    for outputline in vecoutputline.iter_mut() {
+    for outputline in payoutstatstable.vecoutputline.iter_mut() {
         rules.sort_cards_first_trumpf_then_farbe(&mut outputline.vect);
     }
-    (vecoutputline, mapemmstrategyaformatinfo)
+    payoutstatstable
 }
 
 pub fn print_payoutstats(
     b_verbose: bool,
-    slcoutputline: &[SOutputLine<impl std::fmt::Display>],
-    mapemmstrategyaformatinfo: &EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>,
+    payoutstatstable: &SPayoutStatsTable<impl std::fmt::Display>,
 ) {
+    let slcoutputline = &payoutstatstable.vecoutputline;
     if b_verbose { // TODO? only for second-level verbosity
         println!("\nInterpreting a line of the following table (taking the first line as an example):");
         let SOutputLine{vect, mapemmstrategyatplstrf} = &slcoutputline[0];
@@ -167,7 +175,7 @@ pub fn print_payoutstats(
     }
     for (str_id, SOutputLine{vect:_, mapemmstrategyatplstrf}) in vecstr_id.iter().zip_eq(slcoutputline.iter()) {
         print!("{str_id:<n_width_id$}: ");
-        for (atplstrf, aformatinfo) in mapemmstrategyatplstrf.iter().zip_eq(mapemmstrategyaformatinfo.iter()) {
+        for (atplstrf, aformatinfo) in mapemmstrategyatplstrf.iter().zip_eq(payoutstatstable.mapemmstrategyaformatinfo.iter()) {
             for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
                 use termcolor::*;
                 let mut stdout = StandardStream::stdout(if atty::is(atty::Stream::Stdout) {

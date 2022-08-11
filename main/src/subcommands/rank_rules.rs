@@ -30,7 +30,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let epi = clapmatches.value_of_t("position").unwrap_or(EPlayerIndex::EPI0);
     let ai = super::ai(clapmatches);
     println!("Hand: {}", SDisplayCardSlice(hand.get()));
-    let (vecoutputline, mapemmstrategyaformatinfo) = internal_table(
+    let payoutstatstable = internal_table(
         allowed_rules(&ruleset.avecrulegroup[epi], hand)
             .filter_map(|orules| orules.map(|rules| { // do not rank None
                 (
@@ -50,8 +50,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     );
     print_payoutstats(
         /*b_verbose*/false, // TODO make customizable
-        &vecoutputline,
-        &mapemmstrategyaformatinfo,
+        &payoutstatstable,
     );
     Ok(())
 }

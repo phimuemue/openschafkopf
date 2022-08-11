@@ -391,11 +391,11 @@ fn generate_analysis_html(
     + "<h2>Details</h2>"
     + &format!("{}", slcanalysispercard.iter()
         .map(|analysispercard| {
-            let (vecoutputline, _aformatinfo) = table(
+            let vecoutputline = table(
                 &analysispercard.determinebestcardresult_cheating,
                 game.rules.as_ref(),
                 /*fn_human_readable_payout*/&|f_payout| f_payout,
-            );
+            ).vecoutputline;
             // TODO simplify output (as it currently only shows results from one ahand)
             let stichseq = &analysispercard.stichseq;
             let ahand = &analysispercard.ahand;

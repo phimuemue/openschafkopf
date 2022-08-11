@@ -164,7 +164,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     },
                 )
             }.ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
-            let (vecoutputline, mapemmstrategyaformatinfo) = table(
+            let payoutstatstable = table(
                 &determinebestcardresult,
                 rules,
                 /*fn_human_readable_payout*/&|f_payout| {
@@ -181,8 +181,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             );
             print_payoutstats(
                 b_verbose,
-                &vecoutputline,
-                &mapemmstrategyaformatinfo,
+                &payoutstatstable,
             );
             Ok(())
         }
