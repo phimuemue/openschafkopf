@@ -2,7 +2,7 @@ use crate::primitives::*;
 use crate::rules::ruleset::*;
 use crate::util::*;
 use crate::ai::gametree::SPerMinMaxStrategy;
-use crate::game_analysis::determine_best_card_table::{internal_table, print_payoutstats};
+use crate::game_analysis::determine_best_card_table::{internal_table};
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     use super::clap_arg;
@@ -30,7 +30,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let epi = clapmatches.value_of_t("position").unwrap_or(EPlayerIndex::EPI0);
     let ai = super::ai(clapmatches);
     println!("Hand: {}", SDisplayCardSlice(hand.get()));
-    let payoutstatstable = internal_table(
+    internal_table(
         allowed_rules(&ruleset.avecrulegroup[epi], hand)
             .filter_map(|orules| orules.map(|rules| { // do not rank None
                 (
@@ -47,10 +47,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             .collect::<Vec<_>>(),
         /*b_group*/false,
         /*fn_human_readable_payout*/&|f_payout| f_payout,
-    );
-    print_payoutstats(
-        /*b_verbose*/false, // TODO make customizable
-        &payoutstatstable,
-    );
+    )
+        .print(
+            /*b_verbose*/false, // TODO make customizable
+        );
     Ok(())
 }

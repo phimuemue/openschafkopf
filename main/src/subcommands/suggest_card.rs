@@ -3,7 +3,7 @@ use crate::primitives::*;
 use crate::util::*;
 use itertools::*;
 use crate::game::SStichSequence;
-use crate::game_analysis::determine_best_card_table::{print_payoutstats, table};
+use crate::game_analysis::determine_best_card_table::{table};
 
 use super::common_given_game::*;
 
@@ -164,7 +164,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     },
                 )
             }.ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
-            let payoutstatstable = table(
+            table(
                 &determinebestcardresult,
                 rules,
                 /*fn_human_readable_payout*/&|f_payout| {
@@ -178,11 +178,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         f_payout
                     }
                 },
-            );
-            print_payoutstats(
-                b_verbose,
-                &payoutstatstable,
-            );
+            )
+                .print(
+                    b_verbose,
+                );
             Ok(())
         }
     }

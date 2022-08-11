@@ -128,77 +128,79 @@ pub fn table(
     payoutstatstable
 }
 
-pub fn print_payoutstats(
-    b_verbose: bool,
-    payoutstatstable: &SPayoutStatsTable<impl std::fmt::Display>,
-) {
-    let slcoutputline = &payoutstatstable.vecoutputline;
-    if b_verbose { // TODO? only for second-level verbosity
-        println!("\nInterpreting a line of the following table (taking the first line as an example):");
-        let SOutputLine{vect, mapemmstrategyatplstrf} = &slcoutputline[0];
-        println!("If you play {}, then:", vect.iter().join(" or "));
-        for emmstrategy in EMinMaxStrategy::values() {
-            let astr = mapemmstrategyatplstrf[emmstrategy].clone().map(|tplstrf| tplstrf.0);
-            let n_columns = astr.len(); // TODO can we get rid of this
-            let [str_payout_min, str_payout_avg, str_payout_max, str_stats] = astr;
-            println!("* The {} {} columns show tell what happens if all other players play {}:",
-                EMinMaxStrategy::map_from_raw([
-                    "first",
-                    "second",
-                    "third",
-                    "fourth",
-                    "fifth",
-                ])[emmstrategy],
-                n_columns,
-                match emmstrategy {
-                    EMinMaxStrategy::MinMin => "adversarially and you play pessimal",
-                    EMinMaxStrategy::Min => "adversarially",
-                    EMinMaxStrategy::SelfishMin => "optimally for themselves, favouring you in case of doubt",
-                    EMinMaxStrategy::SelfishMax => "optimally for themselves, not favouring you in case of doubt",
-                    EMinMaxStrategy::Max => "optimally for you",
-                },
-            );
-            println!("  * In the worst case (over all possible card distributions), you can enforce a payout of {}", str_payout_min);
-            println!("  * On average (over all possible card distributions), you can enforce a payout of {}", str_payout_avg);
-            println!("  * In the best case (over all possible card distributions), you can enforce a payout of {}", str_payout_max);
-            println!("  * {} shows the number of games lost/zero-payout/won", str_stats);
-        }
-        println!();
-    }
-    // TODO interface should probably output payout interval per card
-    let mut vecstr_id = Vec::new();
-    let mut n_width_id = 0;
-    for outputline in slcoutputline.iter() {
-        let str_id = format!("{}", outputline.vect.iter().join(" "));
-        assign_max(&mut n_width_id, str_id.len());
-        vecstr_id.push(str_id);
-    }
-    for (str_id, SOutputLine{vect:_, mapemmstrategyatplstrf}) in vecstr_id.iter().zip_eq(slcoutputline.iter()) {
-        print!("{str_id:<n_width_id$}: ");
-        for (atplstrf, aformatinfo) in mapemmstrategyatplstrf.iter().zip_eq(payoutstatstable.mapemmstrategyaformatinfo.iter()) {
-            for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
-                use termcolor::*;
-                let mut stdout = StandardStream::stdout(if atty::is(atty::Stream::Stdout) {
-                    ColorChoice::Auto
-                } else {
-                    ColorChoice::Never
-                });
-                #[allow(clippy::float_cmp)]
-                if f_min!=f_max {
-                    let mut set_color = |color| {
-                        unwrap!(stdout.set_color(ColorSpec::new().set_fg(Some(color))));
-                    };
-                    if f==f_min {
-                        set_color(Color::Red);
-                    } else if f==f_max {
-                        set_color(Color::Green);
-                    }
-                }
-                print!("{:>width$}", str_num, width=n_width);
-                unwrap!(stdout.reset());
+impl<T> SPayoutStatsTable<T> {
+    pub fn print(
+        &self,
+        b_verbose: bool,
+    ) where T: std::fmt::Display {
+        let slcoutputline = &self.vecoutputline;
+        if b_verbose { // TODO? only for second-level verbosity
+            println!("\nInterpreting a line of the following table (taking the first line as an example):");
+            let SOutputLine{vect, mapemmstrategyatplstrf} = &slcoutputline[0];
+            println!("If you play {}, then:", vect.iter().join(" or "));
+            for emmstrategy in EMinMaxStrategy::values() {
+                let astr = mapemmstrategyatplstrf[emmstrategy].clone().map(|tplstrf| tplstrf.0);
+                let n_columns = astr.len(); // TODO can we get rid of this
+                let [str_payout_min, str_payout_avg, str_payout_max, str_stats] = astr;
+                println!("* The {} {} columns show tell what happens if all other players play {}:",
+                    EMinMaxStrategy::map_from_raw([
+                        "first",
+                        "second",
+                        "third",
+                        "fourth",
+                        "fifth",
+                    ])[emmstrategy],
+                    n_columns,
+                    match emmstrategy {
+                        EMinMaxStrategy::MinMin => "adversarially and you play pessimal",
+                        EMinMaxStrategy::Min => "adversarially",
+                        EMinMaxStrategy::SelfishMin => "optimally for themselves, favouring you in case of doubt",
+                        EMinMaxStrategy::SelfishMax => "optimally for themselves, not favouring you in case of doubt",
+                        EMinMaxStrategy::Max => "optimally for you",
+                    },
+                );
+                println!("  * In the worst case (over all possible card distributions), you can enforce a payout of {}", str_payout_min);
+                println!("  * On average (over all possible card distributions), you can enforce a payout of {}", str_payout_avg);
+                println!("  * In the best case (over all possible card distributions), you can enforce a payout of {}", str_payout_max);
+                println!("  * {} shows the number of games lost/zero-payout/won", str_stats);
             }
-            print!("   ");
+            println!();
         }
-        println!();
+        // TODO interface should probably output payout interval per card
+        let mut vecstr_id = Vec::new();
+        let mut n_width_id = 0;
+        for outputline in slcoutputline.iter() {
+            let str_id = format!("{}", outputline.vect.iter().join(" "));
+            assign_max(&mut n_width_id, str_id.len());
+            vecstr_id.push(str_id);
+        }
+        for (str_id, SOutputLine{vect:_, mapemmstrategyatplstrf}) in vecstr_id.iter().zip_eq(slcoutputline.iter()) {
+            print!("{str_id:<n_width_id$}: ");
+            for (atplstrf, aformatinfo) in mapemmstrategyatplstrf.iter().zip_eq(self.mapemmstrategyaformatinfo.iter()) {
+                for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
+                    use termcolor::*;
+                    let mut stdout = StandardStream::stdout(if atty::is(atty::Stream::Stdout) {
+                        ColorChoice::Auto
+                    } else {
+                        ColorChoice::Never
+                    });
+                    #[allow(clippy::float_cmp)]
+                    if f_min!=f_max {
+                        let mut set_color = |color| {
+                            unwrap!(stdout.set_color(ColorSpec::new().set_fg(Some(color))));
+                        };
+                        if f==f_min {
+                            set_color(Color::Red);
+                        } else if f==f_max {
+                            set_color(Color::Green);
+                        }
+                    }
+                    print!("{:>width$}", str_num, width=n_width);
+                    unwrap!(stdout.reset());
+                }
+                print!("   ");
+            }
+            println!();
+        }
     }
 }
