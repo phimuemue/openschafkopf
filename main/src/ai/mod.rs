@@ -298,15 +298,12 @@ pub fn determine_best_card<
     ForEachSnapshot: TForEachSnapshot<Output=SMinMax> + Sync,
     SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
-    ItAHand: Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
-    FnMakeFilter: Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
-    FnVisualizer: Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
 >(
     determinebestcard: &SDetermineBestCard,
-    itahand: ItAHand,
-    fn_make_filter: FnMakeFilter,
+    itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
+    fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
-    fn_visualizer: FnVisualizer,
+    fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
 ) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>>
     where
         ForEachSnapshot::Output: std::fmt::Debug + Send,
