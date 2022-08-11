@@ -101,13 +101,13 @@ pub fn table(
 
 pub fn print_payoutstats(
     b_verbose: bool,
-    slcoutputline: &[SOutputLine<SCard>],
+    slcoutputline: &[SOutputLine<impl std::fmt::Display>],
     mapemmstrategyaformatinfo: &EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>,
 ) {
     if b_verbose { // TODO? only for second-level verbosity
         println!("\nInterpreting a line of the following table (taking the first line as an example):");
-        let SOutputLine{vect: veccard, mapemmstrategyatplstrf} = &slcoutputline[0];
-        println!("If you play {}, then:", veccard.iter().join(" or "));
+        let SOutputLine{vect, mapemmstrategyatplstrf} = &slcoutputline[0];
+        println!("If you play {}, then:", vect.iter().join(" or "));
         for emmstrategy in EMinMaxStrategy::values() {
             let astr = mapemmstrategyatplstrf[emmstrategy].clone().map(|tplstrf| tplstrf.0);
             let n_columns = astr.len(); // TODO can we get rid of this
