@@ -108,9 +108,19 @@ impl SAi {
                         n_stock,
                     ),
                     &mut SNoVisualization{},
-                ).0[EMinMaxStrategy::Min][epi_rank]
+                ).0.map(|mapepiminmax| {
+                    SPayoutStats::new_1(mapepiminmax[epi_rank])
+                })
             })
-            .sum::<isize>().as_num::<f64>() / (self.n_rank_rules_samples.as_num::<f64>())
+            .reduce(
+                /*identity*/|| EMinMaxStrategy::map_from_fn(|_|SPayoutStats::new_identity_for_accumulate()),
+                /*op*/mutate_return!(|mapemmstrategypayoutstats_lhs, mapemmstrategypayoutstats_rhs| {
+                    for emmstrategy in EMinMaxStrategy::values() {
+                        mapemmstrategypayoutstats_lhs[emmstrategy].accumulate(&mapemmstrategypayoutstats_rhs[emmstrategy]);
+                    }
+                }),
+            )
+            [EMinMaxStrategy::Min].avg().as_num::<f64>()
     }
 
     pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer<SMinMax>>(
@@ -223,6 +233,15 @@ impl SPayoutStats {
             maporderingn_histogram_cmp_vs_0: std::cmp::Ordering::map_from_fn(|ordering|
                 if ordering==n_payout.cmp(&0) {1} else {0}
             ),
+        }
+    }
+
+    fn new_identity_for_accumulate() -> Self {
+        Self {
+            n_min: isize::MAX,
+            n_max: isize::MIN,
+            n_sum: 0,
+            maporderingn_histogram_cmp_vs_0: std::cmp::Ordering::map_from_fn(|_| 0),
         }
     }
 
