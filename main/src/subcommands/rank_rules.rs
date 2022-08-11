@@ -1,6 +1,7 @@
 use crate::primitives::*;
 use crate::rules::ruleset::*;
 use crate::util::*;
+use crate::ai::gametree::EMinMaxStrategy;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     use super::clap_arg;
@@ -38,7 +39,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     rules.upcast(),
                     /*tpln_stoss_doubling*/(0, 0), // assume no stoss, no doublings in subcommand rank-rules
                     /*n_stock*/0, // assume no stock in subcommand rank-rules
-                ),
+                )[EMinMaxStrategy::Min].avg().as_num::<f64>(),
             )
         }))
         .collect::<Vec<_>>();

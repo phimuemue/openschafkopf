@@ -63,7 +63,7 @@ impl TPlayer for SPlayerComputer {
                         rules.upcast(),
                         tpln_stoss_doubling,
                         n_stock
-                    )
+                    )[EMinMaxStrategy::Min].avg().as_num::<f64>()
                 )
             ))
             .max_by(|&(_orules_lhs, f_payout_avg_lhs), &(_orules_rhs, f_payout_avg_rhs)| {
@@ -97,7 +97,7 @@ impl TPlayer for SPlayerComputer {
                             rules,
                             stoss_and_doublings(vecstoss, doublings),
                             n_stock,
-                        )
+                        )[EMinMaxStrategy::Min].avg().as_num::<f64>()
                     } else {
                         0f64
                     }

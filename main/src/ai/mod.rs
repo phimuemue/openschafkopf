@@ -89,7 +89,7 @@ impl SAi {
         }
     }
 
-    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &dyn TRules, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> f64 {
+    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &dyn TRules, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> EnumMap<EMinMaxStrategy, SPayoutStats> {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
         let ekurzlang = unwrap!(EKurzLang::from_cards_per_player(hand_fixed.get().len()));
         forever_rand_hands(&SStichSequence::new(ekurzlang), SHand::new_from_iter(hand_fixed.get().iter().copied()), epi_rank, rules)
@@ -120,7 +120,6 @@ impl SAi {
                     }
                 }),
             )
-            [EMinMaxStrategy::Min].avg().as_num::<f64>()
     }
 
     pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer<SMinMax>>(
