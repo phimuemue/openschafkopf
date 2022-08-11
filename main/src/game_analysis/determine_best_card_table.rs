@@ -3,6 +3,7 @@ use crate::primitives::*;
 use itertools::*;
 use crate::util::*;
 use crate::rules::TRules;
+use std::borrow::Borrow;
 
 pub const N_COLUMNS : usize = 4;
 
@@ -20,17 +21,14 @@ pub struct SFormatInfo {
     pub n_width: usize,
 }
 
-pub fn table(
-    determinebestcardresult: &SDetermineBestCardResult<SPayoutStatsPerStrategy>,
-    rules: &dyn TRules,
+pub fn internal_table<PayoutStatsPerStrategy: Borrow<SPayoutStatsPerStrategy>>(
+    mut veccardpayoutstatsperstrategy: Vec<(SCard, PayoutStatsPerStrategy)>,
     fn_human_readable_payout: &dyn Fn(f32) -> f32,
-) -> (Vec<SOutputLine>, usize/*n_max_cards*/, EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>) {
-    let mut n_max_cards = 0;
-    let mut veccardminmax = determinebestcardresult.cards_and_ts().collect::<Vec<_>>();
-    veccardminmax.sort_unstable_by(|&(_card_lhs, minmax_lhs), &(_card_rhs, minmax_rhs)| {
-        minmax_lhs.compare_canonical(minmax_rhs)
+) -> (Vec<SOutputLine>, EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>) {
+    veccardpayoutstatsperstrategy.sort_unstable_by(|(_card_lhs, minmax_lhs), (_card_rhs, minmax_rhs)| {
+        minmax_lhs.borrow().compare_canonical(minmax_rhs.borrow())
     });
-    veccardminmax.reverse(); // descending
+    veccardpayoutstatsperstrategy.reverse(); // descending
     let mut vecoutputline : Vec<SOutputLine> = Vec::new();
     let mut mapemmstrategyaformatinfo = EMinMaxStrategy::map_from_fn(|_emmstrategy| [
         SFormatInfo {
@@ -40,8 +38,9 @@ pub fn table(
         };
         N_COLUMNS
     ]);
-    for (mapemmstrategyatplstrf, grptplcardmapemmstrategyatplstrf) in veccardminmax.into_iter()
+    for (mapemmstrategyatplstrf, grptplcardmapemmstrategyatplstrf) in veccardpayoutstatsperstrategy.into_iter()
         .map(|(card, minmax)| {
+            let minmax = minmax.borrow();
             let column_counts = |paystats: &SPayoutStats| {(
                 format!("{} ", paystats.counts().iter().join("/")),
                 (paystats.counts()[std::cmp::Ordering::Equal]+paystats.counts()[std::cmp::Ordering::Greater])
@@ -75,15 +74,29 @@ pub fn table(
                 assign_max_partial_ord(&mut formatinfo.f_max, *f_val);
             }
         }
-        let mut veccard : Vec<_> = grptplcardmapemmstrategyatplstrf.into_iter()
-            .map(|(card, _atplstrf)| card)
-            .collect();
-        rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
-        assign_max(&mut n_max_cards, veccard.len());
         vecoutputline.push(SOutputLine{
-            veccard,
+            veccard: grptplcardmapemmstrategyatplstrf.into_iter()
+                .map(|(card, _atplstrf)| card)
+                .collect(),
             mapemmstrategyatplstrf,
         });
+    }
+    (vecoutputline, mapemmstrategyaformatinfo)
+}
+
+pub fn table(
+    determinebestcardresult: &SDetermineBestCardResult<SPayoutStatsPerStrategy>,
+    rules: &dyn TRules,
+    fn_human_readable_payout: &dyn Fn(f32) -> f32,
+) -> (Vec<SOutputLine>, usize/*n_max_cards*/, EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>) {
+    let mut n_max_cards = 0;
+    let (mut vecoutputline, mapemmstrategyaformatinfo) = internal_table(
+        determinebestcardresult.cards_and_ts().collect(),
+        fn_human_readable_payout,
+    );
+    for outputline in vecoutputline.iter_mut() {
+        rules.sort_cards_first_trumpf_then_farbe(&mut outputline.veccard);
+        assign_max(&mut n_max_cards, outputline.veccard.len());
     }
     (vecoutputline, n_max_cards, mapemmstrategyaformatinfo)
 }
