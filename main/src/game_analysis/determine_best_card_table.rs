@@ -21,8 +21,19 @@ pub struct SFormatInfo {
     pub n_width: usize,
 }
 
+enum EGrouping { Group, NoGroup }
+impl PartialEq for EGrouping {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (EGrouping::Group, EGrouping::Group) => true,
+            _ => false,
+        }
+    }
+}
+
 pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPayoutStatsPerStrategy>>(
     mut vectpayoutstatsperstrategy: Vec<(T, PayoutStatsPerStrategy)>,
+    b_group: bool,
     fn_human_readable_payout: &dyn Fn(f32) -> f32,
 ) -> (Vec<SOutputLine<T>>, EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>) {
     vectpayoutstatsperstrategy.sort_unstable_by(|(_t_lhs, minmax_lhs), (_t_rhs, minmax_rhs)| {
@@ -38,7 +49,7 @@ pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPayoutStatsPerStrategy>
         };
         N_COLUMNS
     ]);
-    for (mapemmstrategyatplstrf, grptpltmapemmstrategyatplstrf) in vectpayoutstatsperstrategy.into_iter()
+    for ((mapemmstrategyatplstrf, _grouping), grptpltmapemmstrategyatplstrf) in vectpayoutstatsperstrategy.into_iter()
         .map(|(t, minmax)| {
             let minmax = minmax.borrow();
             let column_counts = |paystats: &SPayoutStats| {(
@@ -64,7 +75,16 @@ pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPayoutStatsPerStrategy>
                 ]),
             )
         })
-        .group_by(|(_t, mapemmstrategyatplstrf)| mapemmstrategyatplstrf.clone())
+        .group_by(|(_t, mapemmstrategyatplstrf)| {
+            (
+                mapemmstrategyatplstrf.clone(),
+                if b_group {
+                    EGrouping::Group
+                } else {
+                    EGrouping::NoGroup
+                },
+            )
+        })
         .into_iter()
     {
         for (atplstrf, aformatinfo) in mapemmstrategyatplstrf.iter().zip_eq(mapemmstrategyaformatinfo.iter_mut()) {
@@ -91,6 +111,7 @@ pub fn table(
 ) -> (Vec<SOutputLine<SCard>>, EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>) {
     let (mut vecoutputline, mapemmstrategyaformatinfo) = internal_table(
         determinebestcardresult.cards_and_ts().collect(),
+        /*b_group*/true,
         fn_human_readable_payout,
     );
     for outputline in vecoutputline.iter_mut() {

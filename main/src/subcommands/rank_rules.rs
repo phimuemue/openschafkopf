@@ -45,6 +45,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 )
             }))
             .collect::<Vec<_>>(),
+        /*b_group*/false,
         /*fn_human_readable_payout*/&|f_payout| f_payout,
     );
     print_payoutstats(
