@@ -354,7 +354,7 @@ mod tests {
         };
         use super::SStichTrie;
         use itertools::Itertools;
-        let rules = SRulesRufspiel::new(
+        let rules_rufspiel_eichel_epi0 = SRulesRufspiel::new(
             EPlayerIndex::EPI0,
             EFarbe::Eichel,
             SPayoutDeciderParams::new(
@@ -366,15 +366,16 @@ mod tests {
                 ),
             ),
         );
-        let assert_stichoracle = |
+        fn assert_stichoracle(
+            rules: &dyn TRules,
             aslccard_hand: [&[SCard]; EPlayerIndex::SIZE],
             slccard_stichseq: &[SCard],
             slcacard_stich: &[[SCard; EPlayerIndex::SIZE]],
-        | {
+        ) {
             let stichseq = SStichSequence::new_from_cards(
                 EKurzLang::Lang,
                 slccard_stichseq.iter().copied(),
-                &rules,
+                rules,
             );
             let epi_first = stichseq.current_stich().first_playerindex();
             let ahand = &EPlayerIndex::map_from_raw(aslccard_hand)
@@ -388,7 +389,7 @@ mod tests {
             let stichtrie = SStichTrie::new_with(
                 &mut ahand.clone(),
                 &mut stichseq.clone(),
-                &rules,
+                rules,
                 &enumchainscard,
                 &playerparties,
             );
@@ -421,8 +422,9 @@ mod tests {
                 internal_assert(&setstich_oracle, stich_check, "setstich_oracle missing stich");
             }
             assert_eq!(setstich_oracle, setstich_check);
-        };
+        }
         assert_stichoracle(
+            &rules_rufspiel_eichel_epi0,
             [
                 &[HO,SO,GU,SU,EK,GA,S9,S7],
                 &[GO,HK,H8,H7,EA,SA,SK,S8],
@@ -497,6 +499,7 @@ mod tests {
             ]
         );
         assert_stichoracle(
+            &rules_rufspiel_eichel_epi0,
             [
                 &[SO,GU,SU,EK,GA,S9,S7],
                 &[GO,HK,H8,H7,EA,SA,SK,S8],
@@ -517,6 +520,7 @@ mod tests {
             ]
         );
         assert_stichoracle(
+            &rules_rufspiel_eichel_epi0,
             [
                 &[SO,GU,SU,EK,GA,S9,S7],
                 &[HK,H8,H7,EA,SA,SK,S8],
@@ -531,6 +535,7 @@ mod tests {
             ],
         );
         assert_stichoracle(
+            &rules_rufspiel_eichel_epi0,
             [
                 &[SO,GU,SU,EK,GA,S9,S7],
                 &[HK,H8,H7,EA,SA,SK,S8],
@@ -541,6 +546,7 @@ mod tests {
             &[[HO, GO, EU, EO], [HO, GO, EU, HZ], [HO, GO, EU, H9]],
         );
         assert_stichoracle(
+            &rules_rufspiel_eichel_epi0,
             [
                 &[EO,HO,SO,GU,EK,S9,S7],
                 &[HK,H8,H7,EA,SA,SK,S8],
