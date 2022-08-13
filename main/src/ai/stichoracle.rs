@@ -761,14 +761,14 @@ mod tests {
                 [EO, GA, GU, H7],
                 [EO, GA, GU, SZ],
                 [EO, GA, GU, S8],
-                [EO, GA, SU, EK],
-                [EO, GA, SU, E8],
+                [EO, GA, SU, EK], // TODO should not be needed (HU better than GA)
+                [EO, GA, SU, E8], // TODO should not be needed (HU better than GA)
                 // [EO, GA, SU, E7], // covered by [EO, GA, SU, E8],
-                [EO, GA, SU, HZ],
-                [EO, GA, SU, H9],
-                [EO, GA, SU, H7],
-                [EO, GA, SU, SZ],
-                [EO, GA, SU, S8],
+                [EO, GA, SU, HZ], // TODO should not be needed (HU better than GA)
+                [EO, GA, SU, H9], // TODO should not be needed (HU better than GA)
+                [EO, GA, SU, H7], // TODO should not be needed (HU better than GA)
+                [EO, GA, SU, SZ], // TODO should not be needed (HU better than GA)
+                [EO, GA, SU, S8], // TODO should not be needed (HU better than GA)
                 [EO, GA, G9, EK],
                 [EO, GA, G9, E8],
                 // [EO, GA, G9, E7], // covered by [EO, GA, G9, E8],
@@ -881,22 +881,22 @@ mod tests {
                 [GZ, GA, G9, SZ],
                 [GZ, GA, G9, S8],
                 // [GZ, GA, G8, __], // covered by [GZ, GA, G9, __],
-                [GZ, GK, GU, EK],
-                [GZ, GK, GU, E8],
+                [GZ, GK, GU, EK], // TODO should not be needed (GA is better than GK)
+                [GZ, GK, GU, E8], // TODO should not be needed (GA is better than GK)
                 // [GZ, GK, GU, E7], // covered by [GZ, GK, GU, E8],
-                [GZ, GK, GU, HZ],
-                [GZ, GK, GU, H9],
-                [GZ, GK, GU, H7],
-                [GZ, GK, GU, SZ],
-                [GZ, GK, GU, S8],
-                [GZ, GK, SU, EK],
-                [GZ, GK, SU, E8],
+                [GZ, GK, GU, HZ], // TODO should not be needed (GA is better than GK)
+                [GZ, GK, GU, H9], // TODO should not be needed (GA is better than GK)
+                [GZ, GK, GU, H7], // TODO should not be needed (GA is better than GK)
+                [GZ, GK, GU, SZ], // TODO should not be needed (GA is better than GK)
+                [GZ, GK, GU, S8], // TODO should not be needed (GA is better than GK)
+                [GZ, GK, SU, EK], // TODO should not be needed (GA is better than GK)
+                [GZ, GK, SU, E8], // TODO should not be needed (GA is better than GK)
                 // [GZ, GK, SU, E7], // covered by [GZ, GK, SU, E8],
-                [GZ, GK, SU, HZ],
-                [GZ, GK, SU, H9],
-                [GZ, GK, SU, H7],
-                [GZ, GK, SU, SZ],
-                [GZ, GK, SU, S8],
+                [GZ, GK, SU, HZ], // TODO should not be needed (GA is better than GK)
+                [GZ, GK, SU, H9], // TODO should not be needed (GA is better than GK)
+                [GZ, GK, SU, H7], // TODO should not be needed (GA is better than GK)
+                [GZ, GK, SU, SZ], // TODO should not be needed (GA is better than GK)
+                [GZ, GK, SU, S8], // TODO should not be needed (GA is better than GK)
                 [GZ, GK, G9, EK],
                 [GZ, GK, G9, E8],
                 // [GZ, GK, G9, E7], // covered by [GZ, GK, G9, E8],
