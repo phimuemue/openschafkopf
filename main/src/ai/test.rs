@@ -129,7 +129,7 @@ fn detect_expensive_all_possible_hands() {
                                 &mut ahand,
                                 game.rules.as_ref(),
                                 &mut game.stichseq.clone(),
-                                &mut |_: &SStichSequence, _: &mut SHandVector| {/*no filtering*/},
+                                &|_,_| |_: &SStichSequence, _: &mut SHandVector| {/*no filtering*/},
                                 &SLeafCounter{},
                                 &mut SNoVisualization,
                             ),

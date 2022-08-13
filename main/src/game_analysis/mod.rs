@@ -124,7 +124,7 @@ pub fn analyze_game(
                             &mut game.ahand.clone(),
                             game.rules.as_ref(),
                             &mut game.stichseq.clone(),
-                            &mut equivalent_cards_filter(
+                            &|_,_| equivalent_cards_filter(
                                 /*n_until_stichseq_len*/7,
                                 epi,
                                 /*enumchainscard*/game.rules.equivalent_when_on_same_hand(),
