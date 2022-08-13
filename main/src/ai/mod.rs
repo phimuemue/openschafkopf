@@ -100,7 +100,7 @@ impl SAi {
                     &mut ahand,
                     rules,
                     &mut SStichSequence::new(ekurzlang),
-                    &mut branching_factor(|_stichseq| (1, 2)),
+                    &|_,_| branching_factor(|_stichseq| (1, 2)),
                     &SMinReachablePayoutLowerBoundViaHint::new(
                         rules,
                         epi_rank,
@@ -346,7 +346,6 @@ pub fn determine_best_card<
             let mapcardooutput = Arc::clone(&mapcardooutput);
             let mut stichseq = determinebestcard.stichseq.clone();
             assert!(ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
-            let ofilter = fn_make_filter(&stichseq, &ahand); // do before ahand is modified
             ahand[determinebestcard.epi_fixed].play_card(card);
             stichseq.zugeben(card, determinebestcard.rules);
             let output = if ahand.iter().all(|hand| hand.cards().is_empty()) {
@@ -358,21 +357,12 @@ pub fn determine_best_card<
                         |stich| determinebestcard.rules.winner_index(stich),
                     ),
                 )
-            } else if let Some(mut filter) = ofilter.into() {
-                explore_snapshots(
-                    &mut ahand,
-                    determinebestcard.rules,
-                    &mut stichseq,
-                    &mut filter,
-                    foreachsnapshot,
-                    &mut visualizer,
-                )
             } else {
                 explore_snapshots(
                     &mut ahand,
                     determinebestcard.rules,
                     &mut stichseq,
-                    &mut |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/),
+                    &fn_make_filter,
                     foreachsnapshot,
                     &mut visualizer,
                 )

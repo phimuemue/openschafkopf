@@ -188,33 +188,53 @@ impl TFilterAllowedCards for SNoFilter {
     fn filter_allowed_cards(&self, _stichseq: &SStichSequence, _veccard: &mut SHandVector) {}
 }
 
-pub fn explore_snapshots<ForEachSnapshot>(
+pub fn explore_snapshots<
+    ForEachSnapshot,
+    FilterAllowedCards: TFilterAllowedCards,
+    OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
+>(
     ahand: &mut EnumMap<EPlayerIndex, SHand>,
     rules: &dyn TRules,
     stichseq: &mut SStichSequence,
-    func_filter_allowed_cards: &mut impl TFilterAllowedCards,
+    fn_make_filter: &impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
     snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
     where
         ForEachSnapshot: TForEachSnapshot,
 {
-    for stich in stichseq.completed_stichs() {
-        func_filter_allowed_cards.register_stich(stich);
-    }
-    explore_snapshots_internal(
-        ahand,
-        rules,
-        &mut SRuleStateCache::new(
-            stichseq,
+    if let Some(mut func_filter_allowed_cards) = fn_make_filter(stichseq, ahand).into() {
+        for stich in stichseq.completed_stichs() {
+            func_filter_allowed_cards.register_stich(stich);
+        }
+        explore_snapshots_internal(
             ahand,
-            |stich| rules.winner_index(stich),
-        ),
-        stichseq,
-        func_filter_allowed_cards,
-        foreachsnapshot,
-        snapshotvisualizer,
-    )
+            rules,
+            &mut SRuleStateCache::new(
+                stichseq,
+                ahand,
+                |stich| rules.winner_index(stich),
+            ),
+            stichseq,
+            &mut func_filter_allowed_cards,
+            foreachsnapshot,
+            snapshotvisualizer,
+        )
+    } else {
+        explore_snapshots_internal(
+            ahand,
+            rules,
+            &mut SRuleStateCache::new(
+                stichseq,
+                ahand,
+                |stich| rules.winner_index(stich),
+            ),
+            stichseq,
+            /*func_filter_allowed_cards*/&mut |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/),
+            foreachsnapshot,
+            snapshotvisualizer,
+        )
+    }
 }
 
 fn explore_snapshots_internal<ForEachSnapshot>(
