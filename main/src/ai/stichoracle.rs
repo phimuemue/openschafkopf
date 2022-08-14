@@ -689,6 +689,60 @@ mod tests {
                 // [S8, G8, SZ, S7],
             ],
         );
+        let rules_rufspiel_gras_epi3 = SRulesRufspiel::new(
+            EPlayerIndex::EPI3,
+            EFarbe::Gras,
+            SPayoutDeciderParams::new(
+                /*n_payout_base*/10,
+                /*n_payout_schneider_schwarz*/10,
+                SLaufendeParams::new(
+                    /*n_payout_per_lauf*/10,
+                    /*n_lauf_lbound*/3,
+                ),
+            ),
+        );
+        assert_stichoracle( // TODO this test, given as CLI args to suggest-card panics.
+            &rules_rufspiel_gras_epi3,
+            [
+                &[SU, H9, EA, GA, G7, SK, SZ],
+                &[HU, HA, HZ, HK, EK, GK, SA],
+                &[EU, EZ, E9, G8, S8, S9, S7],
+                &[HO, GU, H8, E8, E7, GZ, G9],
+            ],
+            &[SO, H7, GO, EO],
+            &[
+                [HO, SU, HU, EU],
+                // [HO, SU, HA, EU], // covered by [HO, SU, HU, EU]
+                // [HO, SU, HZ, EU], // covered by [HO, SU, HU, EU]
+                // [HO, SU, HK, EU], // covered by [HO, SU, HU, EU]
+                [HO, H9, HU, EU],
+                // [HO, H9, HA, EU], // covered by [HO, H9, HZ, EU]
+                // [HO, H9, HZ, EU], // covered by [HO, H9, EK, EU]
+                [HO, H9, HK, EU],
+                // [GU, SU, HU, EU], // covered by [GU, SU, HA, EU]
+                [GU, SU, HA, EU],
+                // [GU, SU, HZ, EU], // covered by [GU, SU, HA, EU]
+                // [GU, SU, HK, EU], // covered by [GU, SU, HZ, EU]
+                [GU, H9, HU, EU],
+                [GU, H9, HA, EU],
+                // [GU, H9, HZ, EU], // covered by [GU, H9, HA, EU]
+                // [GU, H9, HK, EU], // covered by [GU, H9, HA, EU]
+                [H8, SU, HU, EU], // TODO should not be needed (HA better than HU)
+                [H8, SU, HA, EU],
+                // [H8, SU, HZ, EU], // covered by [H8, SU, HA, EU]
+                // [H8, SU, HK, EU], // covered by [H8, SU, HZ, EU]
+                [H8, H9, HU, EU],
+                [H8, H9, HA, EU],
+                // [H8, H9, HZ, EU], // covered by [H8, H9, HA, EU]
+                // [H8, H9, HK, EU], // covered by [H8, H9, HA, EU]
+                // [E8, EA, EK, EZ], // covered by [E8, EA, EK, E9]
+                [E8, EA, EK, E9],
+                // [E7, EA, EK, EZ], // covered by [E7, EA, EK, E9]
+                // [E7, EA, EK, E9], // covered by [E8, EA, EK, E9]
+                [GZ, GA, GK, G8],
+                [G9, GA, GK, G8],
+            ],
+        );
         let rules_solo_gras_epi0 = sololike(
             EPlayerIndex::EPI0,
             EFarbe::Gras,
