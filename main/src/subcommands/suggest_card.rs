@@ -92,6 +92,16 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             /*n_stock*/0, // TODO? make customizable
                         ),
                         $fn_visualizer,
+                        /*fn_inspect*/&|b_before, i_ahand, ahand, card| {
+                            if b_verbose {
+                                println!(" {} {} ({}): {}",
+                                    if b_before {'>'} else {'<'},
+                                    i_ahand+1, // TODO use same hand counters as in common_given_game
+                                    card,
+                                    ahand.iter().join(" | "),
+                                );
+                            }
+                        },
                     )
                 }}}
                 enum EBranching {

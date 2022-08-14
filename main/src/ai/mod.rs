@@ -151,6 +151,7 @@ impl SAi {
                         game.n_stock,
                     ),
                     fn_visualizer,
+                    /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
                 )
             }}}
             let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(
@@ -322,6 +323,7 @@ pub fn determine_best_card<
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
+    fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, SCard) + std::marker::Sync),
 ) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>>
     where
         ForEachSnapshot::Output: std::fmt::Debug + Send,
@@ -338,6 +340,7 @@ pub fn determine_best_card<
                 .map(move |card| (i_ahand, ahand.clone(), *card))
         )
         .for_each(|(i_ahand, mut ahand, card)| {
+            fn_inspect(/*b_before*/true, i_ahand, &ahand, card);
             let mut visualizer = fn_visualizer(i_ahand, &ahand, card); // do before ahand is modified
             debug_assert!(ahand[determinebestcard.epi_fixed].cards().contains(&card));
             let mapcardooutput = Arc::clone(&mapcardooutput);
@@ -384,6 +387,8 @@ pub fn determine_best_card<
                 None => *ooutput = Some(payoutstats),
                 Some(ref mut output_return) => output_return.accumulate(&payoutstats),
             }
+            ahand[determinebestcard.epi_fixed].add_card(card);
+            fn_inspect(/*b_before*/false, i_ahand, &ahand, card);
         });
     let mapcardooutput = unwrap!(
         unwrap!(Arc::try_unwrap(mapcardooutput)) // "Returns the contained value, if the Arc has exactly one strong reference"   
@@ -552,6 +557,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             /*fn_make_filter*/|_, _| branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout::new_from_game(&game),
             /*fn_visualizer*/|_,_,_| SNoVisualization,
+            /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
         ));
         for card in [H7, H8, H9] {
             assert!(determinebestcard.veccard_allowed.contains(&card));

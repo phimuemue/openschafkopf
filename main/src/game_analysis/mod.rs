@@ -154,6 +154,7 @@ pub fn analyze_game(
                         ),
                         &SMinReachablePayout::new_from_game(game),
                         /*fn_visualizer*/|_,_,_| SNoVisualization,
+                        /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
                     ));
                     let mut ocardandpayout = None;
                     for (eminmaxstrategy, emistake) in [
