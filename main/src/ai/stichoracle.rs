@@ -230,43 +230,23 @@ impl SStichTrie {
             enumchainscard_completed_cards,
             playerparties,
         ).0;
+        let make_singleton_stichtrie = |i_epi_offset, stichtrie| {
+            let mut vectplcardtrie = Box::new(ArrayVec::new());
+            vectplcardtrie.push((
+                stich_current_check[stich_current_check.first_playerindex().wrapping_add(i_epi_offset)],
+                stichtrie
+            ));
+            SStichTrie {
+                vectplcardtrie
+            }
+        };
         let stichtrie = match n_stich_size {
             0 => make_stichtrie(),
-            1 => SStichTrie {
-                vectplcardtrie: Box::new(vec![(
-                    stich_current_check[stich_current_check.first_playerindex()],
-                    make_stichtrie()
-                )].into_iter().collect()),
-            },
-            2 => SStichTrie{
-                vectplcardtrie: Box::new(vec![(
-                    stich_current_check[stich_current_check.first_playerindex()],
-                    SStichTrie {
-                        vectplcardtrie: Box::new(vec![(
-                            stich_current_check[stich_current_check.first_playerindex().wrapping_add(1)],
-                            make_stichtrie()
-                        )].into_iter().collect()),
-                    },
-                )].into_iter().collect()),
-            },
+            1 => make_singleton_stichtrie(0, make_stichtrie()),
+            2 => make_singleton_stichtrie(0, make_singleton_stichtrie(1, make_stichtrie())),
             n_stich_size => {
                 assert_eq!(n_stich_size, 3);
-                SStichTrie {
-                    vectplcardtrie: Box::new(vec![(
-                        stich_current_check[stich_current_check.first_playerindex()],
-                        SStichTrie {
-                            vectplcardtrie: Box::new(vec![(
-                                stich_current_check[stich_current_check.first_playerindex().wrapping_add(1)],
-                                SStichTrie{
-                                    vectplcardtrie: Box::new(vec![(
-                                        stich_current_check[stich_current_check.first_playerindex().wrapping_add(2)],
-                                        make_stichtrie()
-                                    )].into_iter().collect()),
-                                },
-                            )].into_iter().collect()),
-                        },
-                    )].into_iter().collect()),
-                }
+                make_singleton_stichtrie(0, make_singleton_stichtrie(1, make_singleton_stichtrie(2, make_stichtrie())))
             },
         };
         debug_assert!(stichtrie.traverse_trie(stichseq.current_stich().first_playerindex()).iter().all(|stich|
