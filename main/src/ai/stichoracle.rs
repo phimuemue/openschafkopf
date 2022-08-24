@@ -28,20 +28,23 @@ impl SStichTrie {
         }
     }
 
-    fn traverse_trie(&self, stich: &mut SStich) -> Vec<SStich> {
-        if verify_eq!(stich.is_full(), self.vectplcardtrie.is_empty()) {
-            vec![stich.clone()]
-        } else {
-            let mut vecstich = Vec::new();
-            for (card, stichtrie_child) in self.vectplcardtrie.iter() {
-                stich.push(*card);
-                vecstich.extend(stichtrie_child.traverse_trie(stich));
-                stich.undo_most_recent();
+    fn traverse_trie(&self, epi_first: EPlayerIndex) -> Vec<SStich> {
+        fn internal_traverse_trie(stichtrie: &SStichTrie, stich: &mut SStich) -> Vec<SStich> {
+            if verify_eq!(stich.is_full(), stichtrie.vectplcardtrie.is_empty()) {
+                vec![stich.clone()]
+            } else {
+                let mut vecstich = Vec::new();
+                for (card, stichtrie_child) in stichtrie.vectplcardtrie.iter() {
+                    stich.push(*card);
+                    vecstich.extend(internal_traverse_trie(stichtrie_child, stich));
+                    stich.undo_most_recent();
+                }
+                use itertools::Itertools;
+                debug_assert!(vecstich.iter().all_unique());
+                vecstich
             }
-            use itertools::Itertools;
-            debug_assert!(vecstich.iter().all_unique());
-            vecstich
         }
+        internal_traverse_trie(self, &mut SStich::new(epi_first))
     }
 
     pub fn new_with(
@@ -203,10 +206,8 @@ impl SStichTrie {
                 )
             }
         }
-        let n_stich_size = stichseq.current_stich().size();
-        //assert!(0<=n_stich_size); // trivially true
-        assert!(n_stich_size<=3);
-        let stich_current_check = stichseq.current_stich().clone(); // TODO? debug-only
+        let stich_current = stichseq.current_stich().clone();
+        let n_stich_size = stich_current.size();
         debug_assert_eq!(
             enumchainscard_completed_cards,
             &{
@@ -219,7 +220,7 @@ impl SStichTrie {
                 enumchainscard_check
             }
         );
-        let stichtrie = for_each_allowed_card(
+        let mut make_stichtrie = || for_each_allowed_card(
             4-n_stich_size,
             ahand,
             stichseq,
@@ -227,8 +228,27 @@ impl SStichTrie {
             enumchainscard_completed_cards,
             playerparties,
         ).0;
-        debug_assert!(stichtrie.traverse_trie(&mut stichseq.current_stich().clone()).iter().all(|stich|
-            stich.equal_up_to_size(&stich_current_check, stich_current_check.size())
+        let make_singleton_stichtrie = |i_epi_offset, stichtrie| {
+            let mut vectplcardtrie = Box::new(ArrayVec::new());
+            vectplcardtrie.push((
+                stich_current[stich_current.first_playerindex().wrapping_add(i_epi_offset)],
+                stichtrie
+            ));
+            SStichTrie {
+                vectplcardtrie
+            }
+        };
+        let stichtrie = match n_stich_size {
+            0 => make_stichtrie(),
+            1 => make_singleton_stichtrie(0, make_stichtrie()),
+            2 => make_singleton_stichtrie(0, make_singleton_stichtrie(1, make_stichtrie())),
+            n_stich_size => {
+                assert_eq!(n_stich_size, 3);
+                make_singleton_stichtrie(0, make_singleton_stichtrie(1, make_singleton_stichtrie(2, make_stichtrie())))
+            },
+        };
+        debug_assert!(stichtrie.traverse_trie(stichseq.current_stich().first_playerindex()).iter().all(|stich|
+            stich.equal_up_to_size(&stich_current, stich_current.size())
         ));
         stichtrie
     }
@@ -250,7 +270,7 @@ impl<'rules> SFilterByOracle<'rules> {
         ahand_in_game: &EnumMap<EPlayerIndex, SHand>,
         stichseq_in_game: &SStichSequence,
     ) -> Option<Self> {
-        let mut ahand = EPlayerIndex::map_from_fn(|epi| SHand::new_from_iter(
+        let ahand = EPlayerIndex::map_from_fn(|epi| SHand::new_from_iter(
             ahand_in_game[epi].cards().iter().copied()
                 .chain(
                     stichseq_in_game.visible_cards()
@@ -259,29 +279,34 @@ impl<'rules> SFilterByOracle<'rules> {
                         ))
                 )
         ));
-        let mut stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
+        assert!(crate::ai::ahand_vecstich_card_count_is_compatible(stichseq_in_game, ahand_in_game));
+        let stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
         rules.only_minmax_points_when_on_same_hand(
-            &SRuleStateCacheFixed::new(&stichseq, &ahand),
+            &verify_eq!(
+                SRuleStateCacheFixed::new(stichseq_in_game, ahand_in_game),
+                SRuleStateCacheFixed::new(&stichseq, &ahand)
+            )
         ).map(|(enumchainscard, playerparties)| {
-            let stichtrie = SStichTrie::new_with(
-                &mut ahand,
-                &mut stichseq,
-                rules,
-                &enumchainscard,
-                &playerparties,
-            );
             let mut slf = Self {
                 rules,
                 ahand,
                 stichseq,
-                stichtrie,
+                stichtrie: SStichTrie::new(), // TODO this is a dummy value that should not be needed. Eliminate it.
                 enumchainscard_completed_cards: enumchainscard,
                 playerparties,
             };
             for stich in stichseq_in_game.completed_stichs() {
                 slf.register_stich(stich);
             }
+            let stichtrie = SStichTrie::new_with(
+                &mut ahand_in_game.clone(),
+                &mut stichseq_in_game.clone(),
+                rules,
+                &slf.enumchainscard_completed_cards,
+                &slf.playerparties,
+            );
+            slf.stichtrie = stichtrie;
             slf
         })
     }
@@ -415,7 +440,7 @@ mod tests {
                 &enumchainscard,
                 &playerparties,
             );
-            let setstich_oracle = stichtrie.traverse_trie(&mut stichseq.current_stich().clone()).iter().cloned().collect::<std::collections::HashSet<_>>();
+            let setstich_oracle = stichtrie.traverse_trie(stichseq.current_stich().first_playerindex()).iter().cloned().collect::<std::collections::HashSet<_>>();
             let setstich_check = slcacard_stich
                 .iter()
                 .map(|acard| SStich::new_full(
