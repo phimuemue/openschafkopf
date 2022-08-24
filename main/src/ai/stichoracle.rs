@@ -250,7 +250,7 @@ impl<'rules> SFilterByOracle<'rules> {
         ahand_in_game: &EnumMap<EPlayerIndex, SHand>,
         stichseq_in_game: &SStichSequence,
     ) -> Option<Self> {
-        let mut ahand = EPlayerIndex::map_from_fn(|epi| SHand::new_from_iter(
+        let ahand = EPlayerIndex::map_from_fn(|epi| SHand::new_from_iter(
             ahand_in_game[epi].cards().iter().copied()
                 .chain(
                     stichseq_in_game.visible_cards()
@@ -259,14 +259,18 @@ impl<'rules> SFilterByOracle<'rules> {
                         ))
                 )
         ));
-        let mut stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
+        assert!(crate::ai::ahand_vecstich_card_count_is_compatible(stichseq_in_game, ahand_in_game));
+        let stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
         rules.only_minmax_points_when_on_same_hand(
-            &SRuleStateCacheFixed::new(&stichseq, &ahand),
+            &verify_eq!(
+                SRuleStateCacheFixed::new(stichseq_in_game, ahand_in_game),
+                SRuleStateCacheFixed::new(&stichseq, &ahand)
+            )
         ).map(|(enumchainscard, playerparties)| {
             let stichtrie = SStichTrie::new_with(
-                &mut ahand,
-                &mut stichseq,
+                &mut ahand_in_game.clone(),
+                &mut stichseq_in_game.clone(),
                 rules,
                 &enumchainscard,
                 &playerparties,
