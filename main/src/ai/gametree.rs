@@ -204,9 +204,6 @@ pub fn explore_snapshots<
         ForEachSnapshot: TForEachSnapshot,
 {
     if let Some(mut func_filter_allowed_cards) = fn_make_filter(stichseq, ahand).into() {
-        for stich in stichseq.completed_stichs() {
-            func_filter_allowed_cards.register_stich(stich);
-        }
         explore_snapshots_internal(
             ahand,
             rules,
@@ -571,9 +568,15 @@ pub fn equivalent_cards_filter(
     epi_fixed: EPlayerIndex,
     enumchainscard: SEnumChains<SCard>,
 ) -> impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->SFilterEquivalentCards {
-    move |_, _| SFilterEquivalentCards {
-        enumchainscard: enumchainscard.clone(),
-        epi_fixed,
-        n_until_stichseq_len,
+    move |stichseq, _ahand| {
+        let mut filterequivalentcards = SFilterEquivalentCards {
+            enumchainscard: enumchainscard.clone(),
+            epi_fixed,
+            n_until_stichseq_len,
+        };
+        for stich in stichseq.completed_stichs() {
+            filterequivalentcards.register_stich(stich);
+        }
+        filterequivalentcards
     }
 }

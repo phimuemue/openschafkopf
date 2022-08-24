@@ -12,7 +12,7 @@ use crate::{
         TRules,
     },
     util::*,
-    ai::SRuleStateCacheFixed,
+    ai::{SRuleStateCacheFixed, TFilterAllowedCards},
 };
 use arrayvec::ArrayVec;
 
@@ -271,19 +271,23 @@ impl<'rules> SFilterByOracle<'rules> {
                 &enumchainscard,
                 &playerparties,
             );
-            Self {
+            let mut slf = Self {
                 rules,
                 ahand,
                 stichseq,
                 stichtrie,
                 enumchainscard_completed_cards: enumchainscard,
                 playerparties,
+            };
+            for stich in stichseq_in_game.completed_stichs() {
+                slf.register_stich(stich);
             }
+            slf
         })
     }
 }
 
-impl<'rules> super::TFilterAllowedCards for SFilterByOracle<'rules> {
+impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
     type UnregisterStich = (SStichTrie, EnumMap<EPlayerIndex, SRemoved<SCard>>);
     fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich {
         assert!(stich.is_full());
