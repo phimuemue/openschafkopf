@@ -7,11 +7,12 @@ use rand::prelude::*;
 use std::sync::mpsc;
 
 #[derive(new)]
-pub struct SPlayerRandom<FnCheckAskForCard> {
+pub struct SPlayerRandom<FnCheckAskForGame, FnCheckAskForCard> {
+    fn_check_ask_for_game: FnCheckAskForGame,
     fn_check_ask_for_card: FnCheckAskForCard,
 }
 
-impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard> {
+impl<FnCheckAskForGame: Fn(SFullHand, &[SRuleGroup], (usize, usize)/*tpln_stoss_doubling*/, isize/*n_stock*/), FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForGame, FnCheckAskForCard> {
     fn ask_for_doubling(
         &self,
         _veccard: &[SCard],
@@ -38,11 +39,12 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
         hand: SFullHand,
         _gameannouncements: &SGameAnnouncements,
         vecrulegroup: &'rules [SRuleGroup],
-        _tpln_stoss_doubling: (usize, usize),
-        _n_stock: isize,
+        tpln_stoss_doubling: (usize, usize),
+        n_stock: isize,
         _otplepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
     ) {
+        (self.fn_check_ask_for_game)(hand, vecrulegroup, tpln_stoss_doubling, n_stock);
         unwrap!(txorules.send(
             unwrap!(allowed_rules(vecrulegroup, hand).choose(&mut rand::thread_rng()))
         ));
