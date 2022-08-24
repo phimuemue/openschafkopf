@@ -347,35 +347,51 @@ impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
     }
 }
 
+#[cfg(test)]
 mod tests {
+    use crate::{
+        game::{SGame, SStichSequence},
+        player::{
+            TPlayer,
+            playerrandom::SPlayerRandom,
+        },
+        primitives::{
+            card::{
+                card_values::*,
+                EFarbe,
+                EKurzLang,
+                SCard,
+            },
+            eplayerindex::EPlayerIndex,
+            hand::SHand,
+            stich::SStich,
+        },
+        rules::{
+            payoutdecider::{SPayoutDeciderParams, SPayoutDeciderPointBased, SLaufendeParams},
+            rulesrufspiel::SRulesRufspiel,
+            rulessolo::{sololike, ESoloLike},
+            ruleset::{SRuleSet, SRuleGroup},
+            tests::TPayoutDeciderSoloLikeDefault,
+            TRules,
+            TRulesBoxClone,
+        },
+        util::*,
+        ai::{
+            gametree::EMinMaxStrategy,
+            determine_best_card,
+            SDetermineBestCard,
+            SMinReachablePayout,
+            SNoVisualization,
+            SRuleStateCacheFixed,
+        },
+        SFullHand,
+        SHandVector,
+    };
+    use super::{SStichTrie, SFilterByOracle};
+    use itertools::Itertools;
+
     #[test]
     fn test_stichoracle() {
-        use crate::{
-            game::SStichSequence,
-            primitives::{
-                card::{
-                    card_values::*,
-                    EFarbe,
-                    EKurzLang,
-                    SCard,
-                },
-                eplayerindex::EPlayerIndex,
-                hand::SHand,
-                stich::SStich,
-            },
-            rules::{
-                payoutdecider::{SPayoutDeciderParams, SPayoutDeciderPointBased, SLaufendeParams},
-                rulesrufspiel::SRulesRufspiel,
-                rulessolo::{sololike, ESoloLike},
-                tests::TPayoutDeciderSoloLikeDefault,
-                TRules,
-                TRulesBoxClone,
-            },
-            util::*,
-            ai::SRuleStateCacheFixed,
-        };
-        use super::SStichTrie;
-        use itertools::Itertools;
         let rules_rufspiel_eichel_epi0 = SRulesRufspiel::new(
             EPlayerIndex::EPI0,
             EFarbe::Eichel,
@@ -1128,6 +1144,62 @@ mod tests {
                 // [HK, HA, H8, H9], // covered by [HK, HA, H8, HZ]
                 // [HK, HA, H8, H7], // covered by [HK, HA, H8, HZ]
             ],
+        );
+    }
+
+    #[test]
+    fn test_filterbystichoracle() {
+        crate::game::run::run_simple_game_loop(
+            EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
+                /*fn_check_ask_for_game*/|_hand: SFullHand, _slcrulegroup: &[SRuleGroup], _tpln_stoss_doubling: (usize, usize), _n_stock:isize| {},
+                /*fn_check_ask_for_card*/|game: &SGame| {
+                    if game.kurzlang().cards_per_player() - 4 < game.completed_stichs().len() {
+                        //let epi = unwrap!(game.current_playable_stich().current_playerindex());
+                        macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr,) => {
+                            unwrap!(determine_best_card::<$ty_fn_make_filter,_,_,_>(
+                                &SDetermineBestCard::new_from_game(game),
+                                std::iter::once(game.ahand.clone()),
+                                $fn_make_filter,
+                                &SMinReachablePayout::new_from_game(game),
+                                |_,_,_| SNoVisualization,
+                                /*fn_inspect*/&|_,_,_,_| {},
+                            ))
+                                .cards_and_ts()
+                                .map(|(card, payoutstatsperstrategy)| (
+                                    card,
+                                    verify_eq!(
+                                        &payoutstatsperstrategy.0[EMinMaxStrategy::SelfishMin],
+                                        &payoutstatsperstrategy.0[EMinMaxStrategy::SelfishMax]
+                                    ).clone()
+                                ))
+                                .collect::<Vec<_>>()
+                        }}
+                        assert_eq!(
+                            fwd!(
+                                SFilterByOracle,
+                                /*fn_make_filter*/|stichseq, ahand| {
+                                    SFilterByOracle::new(game.rules.as_ref(), ahand, stichseq)
+                                },
+                            ),
+                            fwd!(
+                                _,
+                                /*fn_make_filter*/|_stichseq, _ahand| |_:&SStichSequence,_:&mut SHandVector| { /*no filtering*/ },
+                            ),
+                        );
+                    }
+                },
+            )) as Box<dyn TPlayer>),
+            /*n_games*/8,
+            unwrap!(SRuleSet::from_string(
+                r"
+                base-price=10
+                solo-price=50
+                lauf-min=3
+                [rufspiel]
+                [stoss]
+                max=4
+                ",
+            )),
         );
     }
 }
