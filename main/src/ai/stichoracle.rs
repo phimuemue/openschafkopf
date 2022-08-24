@@ -206,10 +206,8 @@ impl SStichTrie {
                 )
             }
         }
-        let n_stich_size = stichseq.current_stich().size();
-        //assert!(0<=n_stich_size); // trivially true
-        assert!(n_stich_size<=3);
-        let stich_current_check = stichseq.current_stich().clone(); // TODO? debug-only
+        let stich_current = stichseq.current_stich().clone();
+        let n_stich_size = stich_current.size();
         // debug_assert_eq!(
         //     enumchainscard_completed_cards,
         //     &{
@@ -233,7 +231,7 @@ impl SStichTrie {
         let make_singleton_stichtrie = |i_epi_offset, stichtrie| {
             let mut vectplcardtrie = Box::new(ArrayVec::new());
             vectplcardtrie.push((
-                stich_current_check[stich_current_check.first_playerindex().wrapping_add(i_epi_offset)],
+                stich_current[stich_current.first_playerindex().wrapping_add(i_epi_offset)],
                 stichtrie
             ));
             SStichTrie {
@@ -250,7 +248,7 @@ impl SStichTrie {
             },
         };
         debug_assert!(stichtrie.traverse_trie(stichseq.current_stich().first_playerindex()).iter().all(|stich|
-            stich.equal_up_to_size(&stich_current_check, stich_current_check.size())
+            stich.equal_up_to_size(&stich_current, stich_current.size())
         ));
         stichtrie
     }
