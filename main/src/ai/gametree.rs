@@ -162,7 +162,7 @@ impl<Output> TSnapshotVisualizer<Output> for SNoVisualization {
 
 pub trait TFilterAllowedCards {
     type UnregisterStich;
-    fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich;
+    fn register_stich(&mut self, stich: &SStich, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich;
     fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich);
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector);
     fn continue_with_filter(&self, _stichseq: &SStichSequence) -> bool {
@@ -172,7 +172,7 @@ pub trait TFilterAllowedCards {
 
 impl<F: Fn(&SStichSequence, &mut SHandVector)> TFilterAllowedCards for F {
     type UnregisterStich = ();
-    fn register_stich(&mut self, _stich: &SStich) -> Self::UnregisterStich {}
+    fn register_stich(&mut self, _stich: &SStich, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {}
     fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {}
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
         self(stichseq, veccard)
@@ -183,7 +183,7 @@ struct SNoFilter;
 
 impl TFilterAllowedCards for SNoFilter {
     type UnregisterStich = ();
-    fn register_stich(&mut self, _stich: &SStich) -> Self::UnregisterStich {}
+    fn register_stich(&mut self, _stich: &SStich, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {}
     fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {}
     fn filter_allowed_cards(&self, _stichseq: &SStichSequence, _veccard: &mut SHandVector) {}
 }
@@ -317,7 +317,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                                 stichseq.current_stich().first_playerindex(),
                             );
                             let output = if func_filter_allowed_cards.continue_with_filter(stichseq) {
-                                let unregisterstich_filter = func_filter_allowed_cards.register_stich(stich);
+                                let unregisterstich_filter = func_filter_allowed_cards.register_stich(stich, stichseq, ahand);
                                 let output = next_step!(func_filter_allowed_cards);
                                 func_filter_allowed_cards.unregister_stich(unregisterstich_filter);
                                 output
@@ -501,9 +501,8 @@ pub struct SFilterEquivalentCards {
     n_until_stichseq_len: usize,
 }
 
-impl TFilterAllowedCards for SFilterEquivalentCards {
-    type UnregisterStich = EnumMap<EPlayerIndex, SRemoved<SCard>>;
-    fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich {
+impl SFilterEquivalentCards {
+    fn internal_register_stich(&mut self, stich: &SStich) -> <Self as TFilterAllowedCards>::UnregisterStich {
         assert!(stich.is_full());
         #[cfg(debug_assertions)] let self_original = self.clone();
         // TODO Can we use EPlayerIndex::map_from_fn? (Unsure about evaluation order.)
@@ -519,6 +518,14 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
             assert_eq!(self_original, self_clone);
         }
         unregisterstich
+    }
+}
+
+impl TFilterAllowedCards for SFilterEquivalentCards {
+    type UnregisterStich = EnumMap<EPlayerIndex, SRemoved<SCard>>;
+    fn register_stich(&mut self, stich: &SStich, stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {
+        assert_eq!(stich, unwrap!(stichseq.completed_stichs().last()));
+        self.internal_register_stich(stich)
     }
     fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich) {
         for removed in unregisterstich.into_raw().into_iter().rev() {
@@ -575,7 +582,7 @@ pub fn equivalent_cards_filter(
             n_until_stichseq_len,
         };
         for stich in stichseq.completed_stichs() {
-            filterequivalentcards.register_stich(stich);
+            filterequivalentcards.internal_register_stich(stich);
         }
         filterequivalentcards
     }

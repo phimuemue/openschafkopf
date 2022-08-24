@@ -284,16 +284,15 @@ impl<'rules> SFilterByOracle<'rules> {
                 playerparties,
             };
             for stich in stichseq_in_game.completed_stichs() {
-                slf.register_stich(stich);
+                slf.internal_register_stich(stich);
             }
             slf
         })
     }
 }
 
-impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
-    type UnregisterStich = (SStichTrie, EnumMap<EPlayerIndex, SRemoved<SCard>>);
-    fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich {
+impl<'rules> SFilterByOracle<'rules> {
+    fn internal_register_stich(&mut self, stich: &SStich) -> <Self as TFilterAllowedCards>::UnregisterStich {
         assert!(stich.is_full());
         for (epi, card) in stich.iter() {
             self.stichseq.zugeben(*card, self.rules);
@@ -310,6 +309,18 @@ impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
             &self.playerparties,
         );
         (std::mem::replace(&mut self.stichtrie, stichtrie), aremovedcard)
+    }
+}
+
+impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
+    type UnregisterStich = (SStichTrie, EnumMap<EPlayerIndex, SRemoved<SCard>>);
+    fn register_stich(&mut self, stich: &SStich, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {
+        assert_eq!(stich, unwrap!(stichseq.completed_stichs().last()));
+        let unregisterstich = self.internal_register_stich(stich);
+        assert_eq!(&self.stichseq, stichseq);
+        assert!(crate::ai::ahand_vecstich_card_count_is_compatible(stichseq, ahand));
+        // assert!(&self.ahand, ahand); // TODO Eq for SHand
+        unregisterstich
     }
     fn unregister_stich(&mut self, (stichtrie, aremovedcard): Self::UnregisterStich) {
         let stich_last_completed = unwrap!(self.stichseq.completed_stichs().last());
