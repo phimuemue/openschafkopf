@@ -208,18 +208,18 @@ impl SStichTrie {
         }
         let stich_current = stichseq.current_stich().clone();
         let n_stich_size = stich_current.size();
-        // debug_assert_eq!(
-        //     enumchainscard_completed_cards,
-        //     &{
-        //         let mut enumchainscard_check = unwrap!(rules.only_minmax_points_when_on_same_hand(
-        //             &SRuleStateCacheFixed::new(stichseq, ahand),
-        //         )).0;
-        //         for (_epi, &card) in stichseq.completed_cards() {
-        //             enumchainscard_check.remove_from_chain(card);
-        //         }
-        //         enumchainscard_check
-        //     }
-        // );
+        debug_assert_eq!(
+            enumchainscard_completed_cards,
+            &{
+                let mut enumchainscard_check = unwrap!(rules.only_minmax_points_when_on_same_hand(
+                    &SRuleStateCacheFixed::new(stichseq, ahand),
+                )).0;
+                for (_epi, &card) in stichseq.completed_cards() {
+                    enumchainscard_check.remove_from_chain(card);
+                }
+                enumchainscard_check
+            }
+        );
         let mut make_stichtrie = || for_each_allowed_card(
             4-n_stich_size,
             ahand,
@@ -288,24 +288,24 @@ impl<'rules> SFilterByOracle<'rules> {
                 SRuleStateCacheFixed::new(&stichseq, &ahand)
             )
         ).map(|(enumchainscard, playerparties)| {
-            let stichtrie = SStichTrie::new_with(
-                &mut ahand_in_game.clone(),
-                &mut stichseq_in_game.clone(),
-                rules,
-                &enumchainscard,
-                &playerparties,
-            );
             let mut slf = Self {
                 rules,
                 ahand,
                 stichseq,
-                stichtrie: stichtrie.clone(),
+                stichtrie: SStichTrie::new(), // TODO this is a dummy value that should not be needed. Eliminate it.
                 enumchainscard_completed_cards: enumchainscard,
                 playerparties,
             };
             for stich in stichseq_in_game.completed_stichs() {
                 slf.internal_register_stich(stich);
             }
+            let stichtrie = SStichTrie::new_with(
+                &mut ahand_in_game.clone(),
+                &mut stichseq_in_game.clone(),
+                rules,
+                &slf.enumchainscard_completed_cards,
+                &slf.playerparties,
+            );
             slf.stichtrie = stichtrie;
             slf
         })
