@@ -395,6 +395,7 @@ mod tests {
             SRuleStateCacheFixed,
         },
         SHandVector,
+        SDisplayCardSlice,
     };
     use super::{SStichTrie, SFilterByOracle};
     use itertools::Itertools;
@@ -453,10 +454,10 @@ mod tests {
                 assert!(
                     setstich.contains(stich),
                     "\nHands:\n {}\n {}\n {}\n {}\nStichseq: {}\nStich{}\n{}\n",
-                    &ahand[EPlayerIndex::EPI0],
-                    &ahand[EPlayerIndex::EPI1],
-                    &ahand[EPlayerIndex::EPI2],
-                    &ahand[EPlayerIndex::EPI3],
+                    SDisplayCardSlice::new(ahand[EPlayerIndex::EPI0].cards().clone(), rules),
+                    SDisplayCardSlice::new(ahand[EPlayerIndex::EPI1].cards().clone(), rules),
+                    SDisplayCardSlice::new(ahand[EPlayerIndex::EPI2].cards().clone(), rules),
+                    SDisplayCardSlice::new(ahand[EPlayerIndex::EPI3].cards().clone(), rules),
                     stichseq.visible_stichs().iter().join(", "),
                     stich,
                     str_msg,

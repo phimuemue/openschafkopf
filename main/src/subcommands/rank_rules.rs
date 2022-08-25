@@ -29,7 +29,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let hand = SFullHand::new(hand.cards(), ruleset.ekurzlang);
     let epi = clapmatches.value_of_t("position").unwrap_or(EPlayerIndex::EPI0);
     let ai = super::ai(clapmatches);
-    println!("Hand: {}", SDisplayCardSlice(hand.get()));
+    println!("Hand: {}", SDisplayCardSlice::new(hand.get().to_vec(), /*cardsorter*/|_: &mut [SCard]|{}));
     internal_table(
         allowed_rules(&ruleset.avecrulegroup[epi], hand)
             .filter_map(|orules| orules.map(|rules| { // do not rank None

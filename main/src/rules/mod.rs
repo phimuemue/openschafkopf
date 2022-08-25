@@ -445,3 +445,24 @@ pub trait TActivelyPlayableRules : TRules + TActivelyPlayableRulesBoxClone {
     }
 }
 make_box_clone!(TActivelyPlayableRulesBoxClone, TActivelyPlayableRules);
+
+impl TCardSorter for &dyn TRules {
+    fn sort_cards(&self, slccard: &mut [SCard]) {
+        self.sort_cards_first_trumpf_then_farbe(slccard);
+    }
+}
+impl TCardSorter for Box<dyn TRules> {
+    fn sort_cards(&self, slccard: &mut [SCard]) {
+        self.as_ref().sort_cards(slccard)
+    }
+}
+impl TCardSorter for &dyn TActivelyPlayableRules {
+    fn sort_cards(&self, slccard: &mut [SCard]) {
+        self.sort_cards_first_trumpf_then_farbe(slccard);
+    }
+}
+impl TCardSorter for Box<dyn TActivelyPlayableRules> {
+    fn sort_cards(&self, slccard: &mut [SCard]) {
+        self.as_ref().sort_cards(slccard)
+    }
+}

@@ -220,7 +220,12 @@ pub fn with_common_args(
                             n_ahand_valid,
                             n_ahand_seen,
                             $n_ahand_total,
-                            ahand.iter().join(" | "),
+                            ahand.iter()
+                                .map(|hand| SDisplayCardSlice::new(
+                                    hand.cards().clone(),
+                                    rules,
+                                ))
+                                .join(" | "),
                         )
                     }
                     b_valid

@@ -1,6 +1,5 @@
 use crate::primitives::card::*;
 use arrayvec::ArrayVec;
-use std::fmt;
 #[cfg(debug_assertions)]
 use plain_enum::TPlainEnum;
 
@@ -63,12 +62,6 @@ impl SHand {
 
     pub fn cards(&self) -> &SHandVector {
         &self.veccard
-    }
-}
-
-impl fmt::Display for SHand {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        (SDisplayCardSlice(&self.veccard)).fmt(f)
     }
 }
 

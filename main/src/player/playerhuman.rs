@@ -23,8 +23,9 @@ fn choose_ruleset_or_rules<'t, T>(
         &skui::choose_alternative_from_list_key_bindings(),
         |_ot| {true},
         |ncwin, i_ot_chosen, _ot_suggest| {
+            let orules = fn_choose(i_ot_chosen);
             assert!(_ot_suggest.is_none());
-            skui::wprintln(ncwin, &format!("Your cards: {}. What do you want to play?", hand));
+            skui::wprintln(ncwin, &format!("Your cards: {}. What do you want to play?", SDisplayCardSlice::new(hand.cards().clone(), orules)));
             if let Some(ref tplepiprio) = *otplepiprio {
                 skui::wprintln(ncwin, &format!("{} offers {:?}", tplepiprio.0, tplepiprio.1)); // TODO improve output here
             }
@@ -36,7 +37,7 @@ fn choose_ruleset_or_rules<'t, T>(
                 ));
             }
             let mut veccard = hand.cards().clone();
-            if let Some(rules)=fn_choose(i_ot_chosen) {
+            if let Some(rules)=orules {
                 rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
             }
             skui::print_hand(&veccard, None);
