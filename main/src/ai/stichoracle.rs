@@ -453,7 +453,9 @@ mod tests {
             let internal_assert = |setstich: &std::collections::HashSet<SStich>, stich, str_msg| {
                 assert!(
                     setstich.contains(stich),
-                    "\nHands:\n {}\n {}\n {}\n {}\nStichseq: {}\nStich{}\n{}\n",
+                    "\nRules:{} von {}\nHands:\n {}\n {}\n {}\n {}\nStichseq: {}\nStich{}\n{}\n",
+                    rules.to_string(),
+                    unwrap!(rules.playerindex()),
                     SDisplayCardSlice::new(ahand[EPlayerIndex::EPI0].cards().clone(), rules),
                     SDisplayCardSlice::new(ahand[EPlayerIndex::EPI1].cards().clone(), rules),
                     SDisplayCardSlice::new(ahand[EPlayerIndex::EPI2].cards().clone(), rules),
