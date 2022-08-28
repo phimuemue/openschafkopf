@@ -204,7 +204,7 @@ pub fn explore_snapshots<
     where
         ForEachSnapshot: TForEachSnapshot,
 {
-    if let Some(mut func_filter_allowed_cards) = fn_make_filter(stichseq, ahand).into() {
+    macro_rules! forward{($func_filter_allowed_cards:expr,) => {
         explore_snapshots_internal(
             ahand,
             rules,
@@ -214,25 +214,17 @@ pub fn explore_snapshots<
                 |stich| rules.winner_index(stich),
             ),
             stichseq,
-            &mut func_filter_allowed_cards,
+            $func_filter_allowed_cards,
             foreachsnapshot,
             snapshotvisualizer,
         )
-    } else {
-        explore_snapshots_internal(
-            ahand,
-            rules,
-            &mut SRuleStateCache::new(
-                stichseq,
-                ahand,
-                |stich| rules.winner_index(stich),
-            ),
-            stichseq,
-            /*func_filter_allowed_cards*/&mut |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/),
-            foreachsnapshot,
-            snapshotvisualizer,
-        )
-    }
+    }}
+    cartesian_match!(forward,
+        match (fn_make_filter(stichseq, ahand).into()) {
+            Some(mut func_filter_allowed_cards) => (&mut func_filter_allowed_cards),
+            None => (/*func_filter_allowed_cards*/&mut |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/)),
+        },
+    )
 }
 
 fn explore_snapshots_internal<ForEachSnapshot>(
