@@ -475,22 +475,22 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
         )
     }
 
-    fn equivalent_when_on_same_hand(&self) -> SEnumChains {
+    fn equivalent_when_on_same_hand(&self) -> SCardsPartition {
         let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
         let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
             .flat_map(|veccard| PayoutDecider::equivalent_when_on_same_hand(&veccard))
             .collect::<Vec<_>>();
-        SEnumChains::new_from_slices(
+        SCardsPartition::new_from_slices(
             &vecveccard.iter()
                 .map(|veccard| veccard as &[SCard]).collect::<Vec<_>>(),
         )
     }
 
-    fn only_minmax_points_when_on_same_hand(&self, _rulestatecache: &SRuleStateCacheFixed) -> Option<(SEnumChains, SPlayerPartiesTable)> {
+    fn only_minmax_points_when_on_same_hand(&self, _rulestatecache: &SRuleStateCacheFixed) -> Option<(SCardsPartition, SPlayerPartiesTable)> {
         // TODO this is ok for normal Solo, point based Solo, Tout, Sie. But we can possibly improve this for e.g. Tout/Sie.
         let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
         Some((
-            SEnumChains::new_from_slices(
+            SCardsPartition::new_from_slices(
                 &mapefarbeveccard.into_raw().iter().chain(Some(veccard_trumpf).iter())
                     .map(|vec| -> &[_] { vec })
                     .collect::<Vec<_>>(),
@@ -618,7 +618,7 @@ fn test_equivalent_when_on_same_hand_rulessolo() {
                     /*i_prioindex*/VGameAnnouncementPrioritySoloLike::SoloSimple(0),
                 ).into(),
             ).equivalent_when_on_same_hand(),
-            SEnumChains::new_from_slices(&[
+            SCardsPartition::new_from_slices(&[
                 &[EO, GO, HO, SO] as &[SCard],
                 &[EU, GU, HU, SU],
                 &[H9, H8, H7],
@@ -635,7 +635,7 @@ fn test_equivalent_when_on_same_hand_rulessolo() {
                     /*i_prioindex*/0,
                 ).into(),
             ).equivalent_when_on_same_hand(),
-            SEnumChains::new_from_slices(&[
+            SCardsPartition::new_from_slices(&[
                 &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7] as &[SCard],
                 &[EA, EZ, EK, E9, E8, E7],
                 &[GA, GZ, GK, G9, G8, G7],
@@ -649,7 +649,7 @@ fn test_equivalent_when_on_same_hand_rulessolo() {
                     payoutparams.clone()
                 ).into(),
             ).equivalent_when_on_same_hand(),
-            SEnumChains::new_from_slices(&[
+            SCardsPartition::new_from_slices(&[
                 &[EO, GO, HO, SO, EU, GU, HU, SU,] as &[SCard],
                 &[HA, HZ, HK, H9, H8, H7],
                 &[EA, EZ, EK, E9, E8, E7],

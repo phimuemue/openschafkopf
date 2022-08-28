@@ -497,7 +497,7 @@ impl TPruner for SPrunerViaHint {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct SFilterEquivalentCards {
-    enumchainscard: SEnumChains,
+    enumchainscard: SCardsPartition,
     epi_fixed: EPlayerIndex,
     n_until_stichseq_len: usize,
 }
@@ -567,7 +567,7 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
 pub fn equivalent_cards_filter(
     n_until_stichseq_len: usize,
     epi_fixed: EPlayerIndex,
-    enumchainscard: SEnumChains,
+    enumchainscard: SCardsPartition,
 ) -> impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->SFilterEquivalentCards {
     move |stichseq, _ahand| {
         let mut filterequivalentcards = SFilterEquivalentCards {

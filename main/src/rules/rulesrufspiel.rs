@@ -205,10 +205,10 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         )
     }
 
-    fn equivalent_when_on_same_hand(&self) -> SEnumChains {
+    fn equivalent_when_on_same_hand(&self) -> SCardsPartition {
         use crate::primitives::card_values::*;
         debug_verify_eq!(
-            SEnumChains::new_from_slices(&[
+            SCardsPartition::new_from_slices(&[
                 &[EO, GO, HO, SO] as &[SCard],
                 &[EU, GU, HU, SU],
                 &[H9, H8, H7],
@@ -221,7 +221,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
                     .flat_map(|veccard| equivalent_when_on_same_hand_point_based(&veccard))
                     .collect::<Vec<_>>();
-                SEnumChains::new_from_slices(
+                SCardsPartition::new_from_slices(
                     &vecveccard.iter()
                         .map(|veccard| veccard as &[SCard]).collect::<Vec<_>>(),
                 )
@@ -229,11 +229,11 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         )
     }
 
-    fn only_minmax_points_when_on_same_hand(&self, rulestatecache: &SRuleStateCacheFixed) -> Option<(SEnumChains, SPlayerPartiesTable)> {
+    fn only_minmax_points_when_on_same_hand(&self, rulestatecache: &SRuleStateCacheFixed) -> Option<(SCardsPartition, SPlayerPartiesTable)> {
         use crate::primitives::card_values::*;
         // TODO can we infer/assert this somehow?
         Some((
-            SEnumChains::new_from_slices(&[
+            SCardsPartition::new_from_slices(&[
                 &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7] as &[SCard],
                 &[EA, EZ, EK, E9, E8, E7],
                 &[GA, GZ, GK, G9, G8, G7],

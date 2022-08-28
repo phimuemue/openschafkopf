@@ -194,10 +194,10 @@ impl TRules for SRulesRamsch {
         EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
     }
 
-    fn equivalent_when_on_same_hand(&self) -> SEnumChains {
+    fn equivalent_when_on_same_hand(&self) -> SCardsPartition {
         use crate::primitives::card_values::*;
         debug_verify_eq!(
-            SEnumChains::new_from_slices(&[
+            SCardsPartition::new_from_slices(&[
                 &[EO, GO, HO, SO] as &[SCard],
                 &[EU, GU, HU, SU],
                 &[H9, H8, H7],
@@ -210,7 +210,7 @@ impl TRules for SRulesRamsch {
                 let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
                     .flat_map(|veccard| payoutdecider::equivalent_when_on_same_hand_point_based(&veccard))
                     .collect::<Vec<_>>();
-                SEnumChains::new_from_slices(
+                SCardsPartition::new_from_slices(
                     &vecveccard.iter()
                         .map(|veccard| veccard as &[SCard]).collect::<Vec<_>>(),
                 )

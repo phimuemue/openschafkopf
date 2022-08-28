@@ -3,13 +3,13 @@ use itertools::Itertools;
 use crate::primitives::card::*;
 
 #[derive(Debug, Clone)]
-pub struct SEnumChains {
+pub struct SCardsPartition {
     mapcardcard_next: EnumMap<SCard, SCard>,
     mapcardcard_prev: EnumMap<SCard, SCard>,
 }
 
 // TODO plain_enum: support derive(PartialEq)
-impl PartialEq for SEnumChains {
+impl PartialEq for SCardsPartition {
     fn eq(&self, other: &Self) -> bool {
         self.mapcardcard_next.as_raw() == other.mapcardcard_next.as_raw()
             && self.mapcardcard_prev.as_raw() == other.mapcardcard_prev.as_raw()
@@ -23,7 +23,7 @@ pub struct SRemoved {
     card_prev_old: SCard,
 }
 
-impl SEnumChains {
+impl SCardsPartition {
     pub fn new() -> Self {
         let enumchains = Self {
             mapcardcard_next: SCard::map_from_fn(|card| card),
@@ -156,7 +156,7 @@ impl SEnumChains {
 #[test]
 fn test_enumchains() {
     use crate::primitives::card::card_values::*;
-    let mut enumchains = SEnumChains::new();
+    let mut enumchains = SCardsPartition::new();
     enumchains.chain(&[E7, E8, E9]);
     enumchains.chain(&[SA, SZ, SK]);
     enumchains.chain(&[EO, GO, HO, SO]);
