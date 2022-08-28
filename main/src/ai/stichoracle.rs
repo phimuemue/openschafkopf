@@ -384,7 +384,11 @@ mod tests {
             payoutdecider::{SPayoutDeciderParams, SPayoutDeciderPointBased, SLaufendeParams},
             rulesrufspiel::SRulesRufspiel,
             rulessolo::{sololike, ESoloLike},
-            ruleset::SRuleSet,
+            ruleset::{
+                SRuleSet,
+                allowed_rules,
+                VStockOrT,
+            },
             tests::TPayoutDeciderSoloLikeDefault,
             TRules,
             TRulesBoxClone,
@@ -1196,10 +1200,10 @@ mod tests {
 
     #[test]
     fn test_filterbystichoracle() {
-        crate::game::run::run_simple_game_loop( // TODO simplify all this, and explicitly iterate over supported rules
+        crate::game::run::internal_run_simple_game_loop( // TODO simplify all this, and explicitly iterate over supported rules
             EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
                 /*fn_check_ask_for_card*/|game: &SGame| {
-                    if game.kurzlang().cards_per_player() - 4 < game.completed_stichs().len() {
+                    if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
                         //let epi = unwrap!(game.current_playable_stich().current_playerindex());
                         macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr,) => {
                             unwrap!(determine_best_card::<$ty_fn_make_filter,_,_,_>(
@@ -1242,10 +1246,45 @@ mod tests {
                 solo-price=50
                 lauf-min=3
                 [rufspiel]
+                [solo]
+                [wenz]
+                [farbwenz]
+                [geier]
+                [farbgeier]
                 [stoss]
                 max=4
                 ",
             )),
+            /*fn_gamepreparations_to_stockorgame*/|gamepreparations, _aattable| {
+                let itstockorgame = EPlayerIndex::values()
+                    .flat_map(|epi| {
+                        allowed_rules(
+                            &gamepreparations.ruleset.avecrulegroup[epi],
+                            gamepreparations.fullhand(epi),
+                        )
+                    })
+                    .filter_map(|orules| {
+                        orules.map(|rules| {
+                            VStockOrT::OrT(
+                                SGame::new(
+                                    gamepreparations.aveccard.clone(),
+                                    gamepreparations.doublings.clone(),
+                                    gamepreparations.ruleset.ostossparams.clone(),
+                                    rules.upcast().box_clone(),
+                                    gamepreparations.n_stock,
+                                )
+                            )
+                        })
+                    })
+                    .collect::<Vec<_>>().into_iter(); // TODO how can we avoid this?
+                if_dbg_else!(
+                    {{
+                        use rand::seq::IteratorRandom;
+                        itstockorgame.choose_multiple(&mut rand::thread_rng(), 1).into_iter()
+                    }}
+                    {itstockorgame}
+                )
+            },
         );
     }
 }
