@@ -44,11 +44,11 @@ impl SCardsPartition {
 
     fn assert_invariant(&self) { #[cfg(debug_assertions)] {
         for card in <SCard as TPlainEnum>::values() {
-            if let Some(e_next) = self.next_no_invariant(card) {
-                assert!(self.mapcardcard_prev[e_next]==card, "{:?} -> {:?}", self, card);
+            if let Some(card_next) = self.next_no_invariant(card) {
+                assert!(self.mapcardcard_prev[card_next]==card, "{:?} -> {:?}", self, card);
             }
-            if let Some(e_prev) = self.prev_no_invariant(card) {
-                assert!(self.mapcardcard_next[e_prev]==card, "{:?} -> {:?}", self, card);
+            if let Some(card_prev) = self.prev_no_invariant(card) {
+                assert!(self.mapcardcard_next[card_prev]==card, "{:?} -> {:?}", self, card);
             }
         }
         // TODO
@@ -58,9 +58,9 @@ impl SCardsPartition {
         for card in slccard.iter() {
             assert_eq!(self.mapcardcard_next[*card], *card);
         }
-        for (e_lo, e_hi) in slccard.iter().tuple_windows() {
-            self.mapcardcard_next[*e_lo] = *e_hi;
-            self.mapcardcard_prev[*e_hi] = *e_lo;
+        for (card_lo, card_hi) in slccard.iter().tuple_windows() {
+            self.mapcardcard_next[*card_lo] = *card_hi;
+            self.mapcardcard_prev[*card_hi] = *card_lo;
         }
         self.assert_invariant();
     }
@@ -124,8 +124,8 @@ impl SCardsPartition {
     }
 
     pub fn next_no_invariant(&self, card: SCard) -> Option<SCard> {
-        let e_raw_next = self.mapcardcard_next[card];
-        if_then_some!(e_raw_next!=card, e_raw_next)
+        let card_raw_next = self.mapcardcard_next[card];
+        if_then_some!(card_raw_next!=card, card_raw_next)
     }
 
     pub fn prev(&self, card: SCard) -> Option<SCard> {
@@ -134,22 +134,22 @@ impl SCardsPartition {
     }
 
     pub fn prev_no_invariant(&self, card: SCard) -> Option<SCard> {
-        let e_raw_prev = self.mapcardcard_prev[card];
-        if_then_some!(e_raw_prev!=card, e_raw_prev)
+        let card_raw_prev = self.mapcardcard_prev[card];
+        if_then_some!(card_raw_prev!=card, card_raw_prev)
     }
 
     pub fn prev_while(&self, card: SCard, mut fn_pred: impl FnMut(SCard)->bool) -> SCard {
         self.assert_invariant();
         assert!(fn_pred(card));
-        let mut e_out = card;
-        while let Some(e_prev) = self.prev(e_out) {
-            if fn_pred(e_prev) {
-                e_out = e_prev;
+        let mut card_out = card;
+        while let Some(card_prev) = self.prev(card_out) {
+            if fn_pred(card_prev) {
+                card_out = card_prev;
             } else {
                 break;
             }
         }
-        e_out
+        card_out
     }
 }
 
@@ -160,23 +160,23 @@ fn test_cardspartition() {
     cardspartition.chain(&[E7, E8, E9]);
     cardspartition.chain(&[SA, SZ, SK]);
     cardspartition.chain(&[EO, GO, HO, SO]);
-    for (e, e_prev) in [
+    for (card, card_prev) in [
         (E8, E7), (E9, E8),
         (SZ, SA), (SK, SZ),
         (GO, EO), (HO, GO), (SO, HO),
     ].into_iter() {
-        assert_eq!(cardspartition.prev(e), Some(e_prev));
+        assert_eq!(cardspartition.prev(card), Some(card_prev));
     }
-    for (e, e_prev_while) in [
+    for (card, card_prev_while) in [
         (E8, E7), (E9, E7),
         (SZ, SA), (SK, SA),
         (GO, EO), (HO, EO), (SO, EO),
     ].into_iter() {
-        assert_eq!(cardspartition.prev_while(e, |_| true), e_prev_while);
+        assert_eq!(cardspartition.prev_while(card, |_| true), card_prev_while);
     }
-    for e in [GA, GZ, GK, G9].into_iter() {
-        assert_eq!(cardspartition.prev(e), None);
-        assert_eq!(cardspartition.prev_while(e, |_| true), e);
+    for card in [GA, GZ, GK, G9].into_iter() {
+        assert_eq!(cardspartition.prev(card), None);
+        assert_eq!(cardspartition.prev_while(card, |_| true), card);
     }
     let mut cardspartition_2 = cardspartition.clone();
     let removed_1 = cardspartition_2.remove_from_chain(GZ);
