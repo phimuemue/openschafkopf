@@ -291,13 +291,13 @@ impl<'rules> SFilterByOracle<'rules> {
                 SRuleStateCacheFixed::new(stichseq_in_game, ahand_in_game),
                 SRuleStateCacheFixed::new(&stichseq, &ahand)
             )
-        ).map(|(enumchainscard, playerparties)| {
+        ).map(|(cardspartition, playerparties)| {
             let mut slf = Self {
                 rules,
                 ahand,
                 stichseq,
                 stichtrie: SStichTrie::new(), // TODO this is a dummy value that should not be needed. Eliminate it.
-                enumchainscard_completed_cards: enumchainscard,
+                enumchainscard_completed_cards: cardspartition,
                 playerparties,
             };
             for stich in stichseq_in_game.completed_stichs() {
@@ -432,17 +432,17 @@ mod tests {
             let epi_first = stichseq.current_stich().first_playerindex();
             let ahand = &EPlayerIndex::map_from_raw(aslccard_hand)
                 .map_into(|acard| SHand::new_from_iter(acard.iter().copied()));
-            let (mut enumchainscard, playerparties) = unwrap!(rules.only_minmax_points_when_on_same_hand(
+            let (mut cardspartition, playerparties) = unwrap!(rules.only_minmax_points_when_on_same_hand(
                 &SRuleStateCacheFixed::new(&stichseq, ahand),
             ));
             for (_epi, card) in stichseq.completed_cards() {
-                enumchainscard.remove_from_chain(*card);
+                cardspartition.remove_from_chain(*card);
             }
             let stichtrie = SStichTrie::new_with(
                 &mut ahand.clone(),
                 &mut stichseq.clone(),
                 rules,
-                &enumchainscard,
+                &cardspartition,
                 &playerparties,
             );
             let setstich_oracle = stichtrie.traverse_trie(stichseq.current_stich().first_playerindex()).iter().cloned().collect::<std::collections::HashSet<_>>();

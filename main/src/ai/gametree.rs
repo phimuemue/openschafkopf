@@ -497,7 +497,7 @@ impl TPruner for SPrunerViaHint {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct SFilterEquivalentCards {
-    enumchainscard: SCardsPartition,
+    cardspartition: SCardsPartition,
     epi_fixed: EPlayerIndex,
     n_until_stichseq_len: usize,
 }
@@ -508,7 +508,7 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
         assert!(stich.is_full());
         #[cfg(debug_assertions)] let self_original = self.clone();
         // TODO Can we use EPlayerIndex::map_from_fn? (Unsure about evaluation order.)
-        let mut remove_from_chain = |epi| self.enumchainscard.remove_from_chain(stich[epi]);
+        let mut remove_from_chain = |epi| self.cardspartition.remove_from_chain(stich[epi]);
         let removed_0 = remove_from_chain(EPlayerIndex::EPI0);
         let removed_1 = remove_from_chain(EPlayerIndex::EPI1);
         let removed_2 = remove_from_chain(EPlayerIndex::EPI2);
@@ -523,22 +523,22 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
     }
     fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich) {
         for removed in unregisterstich.into_raw().into_iter().rev() {
-            self.enumchainscard.readd(removed);
+            self.cardspartition.readd(removed);
         }
     }
     fn filter_allowed_cards(&self, _stichseq: &SStichSequence, veccard: &mut SHandVector) {
         // TODO assert that we actually have the correct enumchains
         // for (_epi, card) in stichseq.completed_cards() {
-        //     enumchainscard.remove_from_chain(*card);
+        //     cardspartition.remove_from_chain(*card);
         // }
-        // assert_eq!(enumchainscard, self.enumchainscard);
+        // assert_eq!(cardspartition, self.cardspartition);
         // 
         // example: First stich was SO GU H8 E7
         // then, we have chains EO-GO-HO EU-HU-SU H9-H7, E9-E8, G9-G8-G7, S9-S8-S7
-        // => If some cards from veccard form a contiguous sequence within enumchainscard, we only need to propagate one of the cards.
+        // => If some cards from veccard form a contiguous sequence within cardspartition, we only need to propagate one of the cards.
         let mut veccard_out = Vec::new(); // TODO use SHandVector
         for card_allowed in veccard.iter() {
-            let card_first_in_chain = self.enumchainscard.prev_while(*card_allowed, |card|
+            let card_first_in_chain = self.cardspartition.prev_while(*card_allowed, |card|
                 veccard.contains(&card)
             );
             veccard_out.push(card_first_in_chain);
@@ -567,11 +567,11 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
 pub fn equivalent_cards_filter(
     n_until_stichseq_len: usize,
     epi_fixed: EPlayerIndex,
-    enumchainscard: SCardsPartition,
+    cardspartition: SCardsPartition,
 ) -> impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->SFilterEquivalentCards {
     move |stichseq, _ahand| {
         let mut filterequivalentcards = SFilterEquivalentCards {
-            enumchainscard: enumchainscard.clone(),
+            cardspartition: cardspartition.clone(),
             epi_fixed,
             n_until_stichseq_len,
         };

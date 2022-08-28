@@ -150,12 +150,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             let n_lo = n_lo.max(1);
                             (n_lo, (n_hi.max(n_lo+1)))
                         })),
-                        (Some(Equivalent(n_until_stichseq_len, enumchainscard)), _) => (
+                        (Some(Equivalent(n_until_stichseq_len, cardspartition)), _) => (
                             (_),
                             equivalent_cards_filter(
                                 n_until_stichseq_len,
                                 epi_fixed,
-                                enumchainscard,
+                                cardspartition,
                             )
                         ),
                         (Some(Oracle), _) => ((SFilterByOracle), |stichseq, ahand| {

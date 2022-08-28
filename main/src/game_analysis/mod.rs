@@ -127,7 +127,7 @@ pub fn analyze_game(
                             &|_,_| equivalent_cards_filter(
                                 /*n_until_stichseq_len*/7,
                                 epi,
-                                /*enumchainscard*/game.rules.equivalent_when_on_same_hand(),
+                                /*cardspartition*/game.rules.equivalent_when_on_same_hand(),
                             )(&game.stichseq, &game.ahand),
                             &SMinReachablePayout::new(
                                 game.rules.as_ref(),
