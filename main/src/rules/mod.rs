@@ -204,7 +204,7 @@ impl SRuleStateCache {
     }
 }
 
-#[derive(new)]
+#[derive(new, Debug)]
 pub struct SPlayerParties13 {
     epi: EPlayerIndex,
 }
