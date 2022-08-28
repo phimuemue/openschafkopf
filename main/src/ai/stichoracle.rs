@@ -545,7 +545,7 @@ mod tests {
                 [SU, GO, HA, EO],
                 [SU, GO, HA, H9],
                 [SU, GO, HA, HZ],
-                [SU, GO, HU, EO],
+                [SU, GO, HU, EO], // TODO should not be needed (HA better than HU)
                 [SU, GO, HU, H9],
                 [SU, GO, HU, HZ],
                 [SU, H8, EU, EO],
@@ -554,14 +554,14 @@ mod tests {
                 [SU, H8, HA, EO],
                 [SU, H8, HA, H9],
                 [SU, H8, HA, HZ],
-                [SU, H8, HU, EO],
+                [SU, H8, HU, EO], // TODO should not be needed (HA better than HU)
                 [SU, H8, HU, H9],
                 [SU, H8, HU, HZ],
                 [SU, HK, EU, EO],
                 [SU, HK, EU, HZ],
                 [SU, HK, HA, EO],
                 [SU, HK, HA, H9],
-                [SU, HK, HU, EO],
+                [SU, HK, HU, EO], // TODO should not be needed (HA better than HU)
                 [SU, HK, HU, HZ],
                 [EK, EA, EZ, E9],
                 [EK, EA, E7, E9],
@@ -607,13 +607,13 @@ mod tests {
                 [S9, SA, E7, SZ], 
                 [S9, SA, GZ, SZ], 
                 [S9, SA, G9, SZ], 
-                [S9, SK, EU, SZ],
-                [S9, SK, HU, SZ],
-                [S9, SK, HA, SZ],
-                [S9, SK, EZ, SZ],
-                [S9, SK, E7, SZ],
-                [S9, SK, GZ, SZ],
-                [S9, SK, G9, SZ],
+                [S9, SK, EU, SZ], // TODO should not be needed (S8 better than SK)
+                [S9, SK, HU, SZ], // TODO should not be needed (S8 better than SK)
+                [S9, SK, HA, SZ], // TODO should not be needed (S8 better than SK)
+                [S9, SK, EZ, SZ], // TODO should not be needed (S8 better than SK)
+                [S9, SK, E7, SZ], // TODO should not be needed (S8 better than SK)
+                [S9, SK, GZ, SZ], // TODO should not be needed (S8 better than SK)
+                [S9, SK, G9, SZ], // TODO should not be needed (S8 better than SK)
                 [S7, S8, EU, SZ],
                 [S7, S8, HU, SZ],
                 [S7, S8, HA, SZ],
