@@ -1,4 +1,7 @@
-use crate::ai::rulespecific::airufspiel::*;
+use crate::ai::{
+    rulespecific::airufspiel::*,
+    cardspartition::*,
+};
 use crate::primitives::*;
 use crate::rules::{payoutdecider::*, trumpfdecider::*, *};
 use crate::util::*;

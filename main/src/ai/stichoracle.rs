@@ -12,7 +12,11 @@ use crate::{
         TRules,
     },
     util::*,
-    ai::{SRuleStateCacheFixed, TFilterAllowedCards},
+    ai::{
+        SRuleStateCacheFixed,
+        TFilterAllowedCards,
+        cardspartition::*,
+    },
 };
 use arrayvec::ArrayVec;
 

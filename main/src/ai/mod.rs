@@ -4,6 +4,7 @@ pub mod gametree;
 #[cfg(test)]
 pub mod test;
 pub mod stichoracle;
+pub mod cardspartition;
 
 use crate::ai::{handiterators::*, gametree::*};
 use crate::game::*;

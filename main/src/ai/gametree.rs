@@ -5,6 +5,7 @@ use crate::util::*;
 use itertools::Itertools;
 use rand::{self, Rng};
 use std::{cmp::Ordering, fmt, fs, io::Write};
+use super::cardspartition::*;
 
 pub trait TForEachSnapshot {
     type Output;

@@ -1,4 +1,4 @@
-use crate::ai::{*, gametree::*, stichoracle::SFilterByOracle};
+use crate::ai::{*, gametree::*, stichoracle::SFilterByOracle, cardspartition::*};
 use crate::primitives::*;
 use crate::util::*;
 use itertools::*;
