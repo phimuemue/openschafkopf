@@ -5,7 +5,7 @@ use crate::ai::{
 use crate::primitives::*;
 use crate::rules::{payoutdecider::*, trumpfdecider::*, *};
 use crate::util::*;
-use std::{cmp::Ordering, fmt, ops::Add};
+use std::{cmp::Ordering, fmt};
 
 pub trait TRufspielPayout : Clone + Sync + fmt::Debug + Send + 'static {
     fn payout(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> EnumMap<EPlayerIndex, isize>;
@@ -398,114 +398,11 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
     }
 
     fn snapshot_cache(&self, rulestatecachefixed: &SRuleStateCacheFixed) -> Option<Box<dyn TSnapshotCache<SMinMax>>> {
-        /*#[derive(Clone, Hash, Eq, PartialEq, Debug, Ord, PartialOrd)]
-          struct SSnapshotEquivalenceClass {
-        // TODO all this could be represented as one u64, and save memory.
-        pointstichcount_primary: SPointStichCount,
-        pointstichcount_secondary: SPointStichCount,
-        epi_next_stich: EPlayerIndex,
-        setcard_played: u32, // TODO enumset
-        }*/
-        type SSnapshotEquivalenceClass = u64;
-        #[derive(Debug)]
-        struct SSnapshotCacheRufspiel {
-            //rules: &'rules SRulesRufspiel,
-            playerparties: SPlayerParties22,
-            mapsnapequivpayoutstats: std::collections::HashMap<SSnapshotEquivalenceClass, SMinMax>,
-        }
-        impl SSnapshotCacheRufspiel {
-            fn snap_equiv(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> SSnapshotEquivalenceClass {
-                debug_assert_eq!(stichseq.current_stich().size(), 0);
-                let point_stich_count = |b_primary| {
-                    EPlayerIndex::values()
-                        .filter(|epi| b_primary==self.playerparties.is_primary_party(*epi))
-                        .map(|epi| rulestatecache.changing.mapepipointstichcount[epi].clone()) // TODO clone needed?
-                        .fold(
-                            SPointStichCount{n_stich: 0, n_point: 0},
-                            SPointStichCount::add,
-                        )
-                };
-                //SSnapshotEquivalenceClass {
-                //    pointstichcount_primary: point_stich_count(true),
-                //    pointstichcount_secondary: point_stich_count(false),
-                //    epi_next_stich: stichseq.current_stich().first_playerindex(),
-                //    setcard_played: {
-                //        let mut setcard_played = 0;
-                //        for (_, &card) in stichseq.visible_stichs().iter().flat_map(SStich::iter) {
-                //            let mask = 1 << card.to_usize();
-                //            debug_assert_eq!((setcard_played & mask), 0);
-                //            setcard_played |= mask;
-                //        }
-                //        setcard_played
-                //    },
-                //}
-                let pointstichcount_primary = point_stich_count(true);
-                let pointstichcount_secondary = point_stich_count(false);
-                let epi_next_stich = stichseq.current_stich().first_playerindex();
-                let setcard_played = {
-                    let mut setcard_played = 0;
-                    for (_, &card) in stichseq.visible_stichs().iter().flat_map(SStich::iter) {
-                        let mask = 1 << card.to_usize();
-                        debug_assert_eq!((setcard_played & mask), 0);
-                        setcard_played |= mask;
-                    }
-                    setcard_played
-                };
-                // TODO? use bitfield crate
-                let mut snapequiv = 0;
-                let mut set_bits = |bits| {
-                    debug_assert_eq!(snapequiv & bits, 0); // none of the touched bits are set so far
-                    snapequiv |= bits;
-                };
-                set_bits(pointstichcount_primary.n_point.as_num::<u64>() << 0);
-                set_bits(pointstichcount_primary.n_stich.as_num::<u64>() << 7);
-                set_bits(pointstichcount_secondary.n_point.as_num::<u64>() << 11);
-                set_bits(pointstichcount_secondary.n_stich.as_num::<u64>() << 18);
-                set_bits(epi_next_stich.to_usize().as_num::<u64>() << 22);
-                set_bits(setcard_played << 24);
-                snapequiv
-            }
-        }
-        impl TSnapshotCache<SMinMax> for SSnapshotCacheRufspiel {
-            fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
-                //println!("SSnapshotCacheRufspiel {:?}", self.mapsnapequivpayoutstats);
-                debug_assert_eq!(stichseq.current_stich().size(), 0);
-                {
-                    if let Some(x) = self.mapsnapequivpayoutstats
-                        .get(
-                            &self.snap_equiv(stichseq, rulestatecache)
-                        )
-                        .map(|payoutstats| payoutstats.clone())
-                    {
-                        //println!("Found in cache. {}", stichseq);
-                        return Some(x);
-                    }
-                }
-                None
-            }
-            fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SMinMax) {
-                debug_assert_eq!(stichseq.current_stich().size(), 0);
-                {
-                    self.mapsnapequivpayoutstats
-                        .insert(
-                            self.snap_equiv(stichseq, rulestatecache),
-                            payoutstats.clone()
-                        );
-                    //println!("SSnapshotCacheRufspiel {:?}", self.mapsnapequivpayoutstats);
-                    debug_assert!(self.get(stichseq, rulestatecache).is_some());
-                }
-            }
-            fn continue_with_cache(&self, stichseq: &SStichSequence) -> bool {
-                stichseq.completed_stichs().len()<=5
-            }
-        }
-        let epi_coplayer = rulestatecachefixed.who_has_card(self.rufsau());
-        let playerparties = SPlayerParties22{aepi_pri: [self.epi, epi_coplayer]};
-        Some(Box::new(
-            SSnapshotCacheRufspiel{
-                playerparties,
-                mapsnapequivpayoutstats: Default::default(),
-            }
-        ))
+        super::snapshot_cache_point_based(SPlayerParties22{
+            aepi_pri: [
+                self.epi,
+                rulestatecachefixed.who_has_card(self.rufsau())
+            ],
+        })
     }
 }

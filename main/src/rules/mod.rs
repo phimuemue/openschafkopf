@@ -23,7 +23,11 @@ use crate::game::SStichSequence;
 use crate::primitives::*;
 use crate::rules::card_points::points_stich;
 use crate::util::*;
-use std::{cmp::Ordering, fmt};
+use std::{
+    ops::Add,
+    cmp::Ordering, fmt,
+    collections::HashMap,
+};
 use itertools::Itertools;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -143,7 +147,7 @@ pub struct SPointStichCount {
     pub n_point: isize,
 }
 
-impl std::ops::Add for SPointStichCount {
+impl Add for SPointStichCount {
     type Output = Self;
     fn add(mut self, rhs: SPointStichCount) -> Self::Output {
         self.n_stich += rhs.n_stich;
@@ -483,3 +487,83 @@ impl TCardSorter for Box<dyn TActivelyPlayableRules> {
         self.as_ref().sort_cards(slccard)
     }
 }
+
+fn snapshot_cache_point_based<PlayerParties: TPlayerParties+'static>(playerparties: PlayerParties) -> Option<Box<dyn TSnapshotCache<SMinMax>>> {
+    type SSnapshotEquivalenceClass = u64; // space-saving variant of this:
+    // struct SSnapshotEquivalenceClass { // packed into SSnapshotEquivalenceClass TODO? use bitfield crate
+    //     pointstichcount_primary: SPointStichCount,
+    //     pointstichcount_secondary: SPointStichCount,
+    //     epi_next_stich: EPlayerIndex,
+    //     setcard_played: EnumMap<SCard, bool>, // TODO enumset
+    // }
+    #[derive(Debug)]
+    struct SSnapshotCachePointBased<PlayerParties: TPlayerParties> {
+        playerparties: PlayerParties,
+        mapsnapequivpayoutstats: HashMap<SSnapshotEquivalenceClass, SMinMax>,
+    }
+    impl<PlayerParties: TPlayerParties> SSnapshotCachePointBased<PlayerParties> {
+        fn snap_equiv(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> SSnapshotEquivalenceClass {
+            debug_assert_eq!(stichseq.current_stich().size(), 0);
+            let mut snapequiv = 0;
+            macro_rules! set_bits(($bits:expr, $i_shift:expr) => {
+                let bits = $bits.as_num::<u64>() << $i_shift;
+                debug_assert_eq!(snapequiv & bits, 0); // none of the touched bits are set so far
+                snapequiv |= bits;
+            });
+            let point_stich_count = |b_primary| {
+                EPlayerIndex::values()
+                    .filter(|epi| b_primary==self.playerparties.is_primary_party(*epi))
+                    .map(|epi| rulestatecache.changing.mapepipointstichcount[epi].clone()) // TODO clone needed?
+                    .fold(
+                        SPointStichCount{n_stich: 0, n_point: 0},
+                        SPointStichCount::add,
+                    )
+            };
+            let pointstichcount_primary = point_stich_count(true);
+            set_bits!(pointstichcount_primary.n_point, 0);
+            set_bits!(pointstichcount_primary.n_stich, 7);
+            // let pointstichcount_secondary = point_stich_count(false); // implicitly clear
+            // set_bits!(pointstichcount_secondary.n_point, 11); // implicitly clear
+            // set_bits!(pointstichcount_secondary.n_stich, 18); // implicitly clear
+            set_bits!(/*epi_next_stich*/stichseq.current_stich().first_playerindex().to_usize(), 22);
+            let setcard_played = {
+                let mut setcard_played = 0;
+                for (_, &card) in stichseq.visible_stichs().iter().flat_map(SStich::iter) {
+                    let mask = 1 << card.to_usize();
+                    debug_assert_eq!((setcard_played & mask), 0);
+                    setcard_played |= mask;
+                }
+                setcard_played
+            };
+            set_bits!(setcard_played, 24);
+            snapequiv
+        }
+    }
+    impl<PlayerParties: TPlayerParties> TSnapshotCache<SMinMax> for SSnapshotCachePointBased<PlayerParties> {
+        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
+            debug_assert_eq!(stichseq.current_stich().size(), 0);
+            self.mapsnapequivpayoutstats
+                .get(&self.snap_equiv(stichseq, rulestatecache))
+                .map(|payoutstats| payoutstats.clone())
+        }
+        fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SMinMax) {
+            debug_assert_eq!(stichseq.current_stich().size(), 0);
+            self.mapsnapequivpayoutstats
+                .insert(
+                    self.snap_equiv(stichseq, rulestatecache),
+                    payoutstats.clone()
+                );
+            debug_assert!(self.get(stichseq, rulestatecache).is_some());
+        }
+        fn continue_with_cache(&self, stichseq: &SStichSequence) -> bool {
+            stichseq.completed_stichs().len()<=5
+        }
+    }
+    Some(Box::new(
+        SSnapshotCachePointBased{
+            playerparties,
+            mapsnapequivpayoutstats: Default::default(),
+        }
+    ))
+}
+
