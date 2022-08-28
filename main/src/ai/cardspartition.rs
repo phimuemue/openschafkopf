@@ -25,21 +25,21 @@ pub struct SRemoved {
 
 impl SCardsPartition {
     pub fn new() -> Self {
-        let enumchains = Self {
+        let cardspartition = Self {
             mapcardcard_next: SCard::map_from_fn(|card| card),
             mapcardcard_prev: SCard::map_from_fn(|card| card),
         };
-        enumchains.assert_invariant();
-        enumchains
+        cardspartition.assert_invariant();
+        cardspartition
     }
 
     pub fn new_from_slices(slcslccard: &[&[SCard]]) -> Self {
-        let mut enumchains = Self::new();
+        let mut cardspartition = Self::new();
         for slccard in slcslccard {
-            enumchains.chain(slccard);
+            cardspartition.chain(slccard);
         }
-        enumchains.assert_invariant();
-        enumchains
+        cardspartition.assert_invariant();
+        cardspartition
     }
 
     fn assert_invariant(&self) { #[cfg(debug_assertions)] {
@@ -66,7 +66,7 @@ impl SCardsPartition {
     }
 
     pub fn remove_from_chain(&mut self, card: SCard) -> SRemoved {
-        #[cfg(debug_assertions)] let enumchains_clone = self.clone();
+        #[cfg(debug_assertions)] let cardspartition_clone = self.clone();
         // TODO can the following use fewer branches?
         let removed = match (self.prev(card), self.next(card)) {
             (None, None) => {
@@ -92,11 +92,11 @@ impl SCardsPartition {
         self.assert_invariant();
         #[cfg(debug_assertions)] // TODO why is this needed?
         debug_assert_eq!(
-            enumchains_clone,
+            cardspartition_clone,
             {
-                let mut enumchains_readd = self.clone();
-                enumchains_readd.readd(removed.clone());
-                enumchains_readd
+                let mut cardspartition_readd = self.clone();
+                cardspartition_readd.readd(removed.clone());
+                cardspartition_readd
             },
             "{:?}\n{:?}", card, removed,
         );
@@ -154,38 +154,38 @@ impl SCardsPartition {
 }
 
 #[test]
-fn test_enumchains() {
+fn test_cardspartition() {
     use crate::primitives::card::card_values::*;
-    let mut enumchains = SCardsPartition::new();
-    enumchains.chain(&[E7, E8, E9]);
-    enumchains.chain(&[SA, SZ, SK]);
-    enumchains.chain(&[EO, GO, HO, SO]);
+    let mut cardspartition = SCardsPartition::new();
+    cardspartition.chain(&[E7, E8, E9]);
+    cardspartition.chain(&[SA, SZ, SK]);
+    cardspartition.chain(&[EO, GO, HO, SO]);
     for (e, e_prev) in [
         (E8, E7), (E9, E8),
         (SZ, SA), (SK, SZ),
         (GO, EO), (HO, GO), (SO, HO),
     ].into_iter() {
-        assert_eq!(enumchains.prev(e), Some(e_prev));
+        assert_eq!(cardspartition.prev(e), Some(e_prev));
     }
     for (e, e_prev_while) in [
         (E8, E7), (E9, E7),
         (SZ, SA), (SK, SA),
         (GO, EO), (HO, EO), (SO, EO),
     ].into_iter() {
-        assert_eq!(enumchains.prev_while(e, |_| true), e_prev_while);
+        assert_eq!(cardspartition.prev_while(e, |_| true), e_prev_while);
     }
     for e in [GA, GZ, GK, G9].into_iter() {
-        assert_eq!(enumchains.prev(e), None);
-        assert_eq!(enumchains.prev_while(e, |_| true), e);
+        assert_eq!(cardspartition.prev(e), None);
+        assert_eq!(cardspartition.prev_while(e, |_| true), e);
     }
-    let mut enumchains_2 = enumchains.clone();
-    let removed_1 = enumchains_2.remove_from_chain(GZ);
-    let removed_2 = enumchains_2.remove_from_chain(EO);
-    let removed_3 = enumchains_2.remove_from_chain(HO);
-    let removed_4 = enumchains_2.remove_from_chain(SK);
-    enumchains_2.readd(removed_4);
-    enumchains_2.readd(removed_3);
-    enumchains_2.readd(removed_2);
-    enumchains_2.readd(removed_1);
-    assert_eq!(&enumchains, &enumchains_2);
+    let mut cardspartition_2 = cardspartition.clone();
+    let removed_1 = cardspartition_2.remove_from_chain(GZ);
+    let removed_2 = cardspartition_2.remove_from_chain(EO);
+    let removed_3 = cardspartition_2.remove_from_chain(HO);
+    let removed_4 = cardspartition_2.remove_from_chain(SK);
+    cardspartition_2.readd(removed_4);
+    cardspartition_2.readd(removed_3);
+    cardspartition_2.readd(removed_2);
+    cardspartition_2.readd(removed_1);
+    assert_eq!(&cardspartition, &cardspartition_2);
 }

@@ -527,7 +527,7 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
         }
     }
     fn filter_allowed_cards(&self, _stichseq: &SStichSequence, veccard: &mut SHandVector) {
-        // TODO assert that we actually have the correct enumchains
+        // TODO assert that we actually have the correct cardspartition
         // for (_epi, card) in stichseq.completed_cards() {
         //     cardspartition.remove_from_chain(*card);
         // }
