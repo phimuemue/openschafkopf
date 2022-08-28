@@ -55,7 +55,7 @@ impl SStichTrie {
         ahand: &mut EnumMap<EPlayerIndex, SHand>,
         stichseq: &mut SStichSequence,
         rules: &dyn TRules,
-        enumchainscard_completed_cards: &SEnumChains<SCard>,
+        enumchainscard_completed_cards: &SEnumChains,
         playerparties: &SPlayerPartiesTable,
     ) -> Self {
         fn for_each_allowed_card(
@@ -63,7 +63,7 @@ impl SStichTrie {
             ahand: &mut EnumMap<EPlayerIndex, SHand>,
             stichseq: &mut SStichSequence,
             rules: &dyn TRules,
-            enumchainscard_completed_cards: &SEnumChains<SCard>,
+            enumchainscard_completed_cards: &SEnumChains,
             playerparties: &SPlayerPartiesTable,
         ) -> (SStichTrie, Option<bool/*b_stich_winner_primary_party*/>) {
             if n_depth==0 {
@@ -264,7 +264,7 @@ pub struct SFilterByOracle<'rules> {
     ahand: EnumMap<EPlayerIndex, SHand>,
     stichseq: SStichSequence,
     stichtrie: SStichTrie,
-    enumchainscard_completed_cards: SEnumChains<SCard>,
+    enumchainscard_completed_cards: SEnumChains,
     playerparties: SPlayerPartiesTable,
 }
 
@@ -317,7 +317,7 @@ impl<'rules> SFilterByOracle<'rules> {
 }
 
 impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
-    type UnregisterStich = (SStichTrie, EnumMap<EPlayerIndex, SRemoved<SCard>>);
+    type UnregisterStich = (SStichTrie, EnumMap<EPlayerIndex, SRemoved>);
     fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich {
         assert!(stich.is_full());
         for (epi, card) in stich.iter() {

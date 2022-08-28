@@ -171,7 +171,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
         ))
     }
 
-    fn equivalent_when_on_same_hand(&self) -> SEnumChains<SCard> {
+    fn equivalent_when_on_same_hand(&self) -> SEnumChains {
         use crate::primitives::card_values::*;
         debug_verify_eq!(
             SEnumChains::new_from_slices(&[

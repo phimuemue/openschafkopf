@@ -112,7 +112,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 enum EBranching {
                     NoFilter,
                     Branching(usize, usize),
-                    Equivalent(usize, SEnumChains<SCard>),
+                    Equivalent(usize, SEnumChains),
                     Oracle,
                 }
                 use ERemainingCards::*;

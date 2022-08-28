@@ -497,13 +497,13 @@ impl TPruner for SPrunerViaHint {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct SFilterEquivalentCards {
-    enumchainscard: SEnumChains<SCard>,
+    enumchainscard: SEnumChains,
     epi_fixed: EPlayerIndex,
     n_until_stichseq_len: usize,
 }
 
 impl TFilterAllowedCards for SFilterEquivalentCards {
-    type UnregisterStich = EnumMap<EPlayerIndex, SRemoved<SCard>>;
+    type UnregisterStich = EnumMap<EPlayerIndex, SRemoved>;
     fn register_stich(&mut self, stich: &SStich) -> Self::UnregisterStich {
         assert!(stich.is_full());
         #[cfg(debug_assertions)] let self_original = self.clone();
@@ -567,7 +567,7 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
 pub fn equivalent_cards_filter(
     n_until_stichseq_len: usize,
     epi_fixed: EPlayerIndex,
-    enumchainscard: SEnumChains<SCard>,
+    enumchainscard: SEnumChains,
 ) -> impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->SFilterEquivalentCards {
     move |stichseq, _ahand| {
         let mut filterequivalentcards = SFilterEquivalentCards {

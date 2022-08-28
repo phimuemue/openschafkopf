@@ -205,7 +205,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         )
     }
 
-    fn equivalent_when_on_same_hand(&self) -> SEnumChains<SCard> {
+    fn equivalent_when_on_same_hand(&self) -> SEnumChains {
         use crate::primitives::card_values::*;
         debug_verify_eq!(
             SEnumChains::new_from_slices(&[
@@ -229,7 +229,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         )
     }
 
-    fn only_minmax_points_when_on_same_hand(&self, rulestatecache: &SRuleStateCacheFixed) -> Option<(SEnumChains<SCard>, SPlayerPartiesTable)> {
+    fn only_minmax_points_when_on_same_hand(&self, rulestatecache: &SRuleStateCacheFixed) -> Option<(SEnumChains, SPlayerPartiesTable)> {
         use crate::primitives::card_values::*;
         // TODO can we infer/assert this somehow?
         Some((

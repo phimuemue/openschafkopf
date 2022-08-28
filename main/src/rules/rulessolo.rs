@@ -475,7 +475,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
         )
     }
 
-    fn equivalent_when_on_same_hand(&self) -> SEnumChains<SCard> {
+    fn equivalent_when_on_same_hand(&self) -> SEnumChains {
         let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
         let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
             .flat_map(|veccard| PayoutDecider::equivalent_when_on_same_hand(&veccard))
@@ -486,7 +486,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
         )
     }
 
-    fn only_minmax_points_when_on_same_hand(&self, _rulestatecache: &SRuleStateCacheFixed) -> Option<(SEnumChains<SCard>, SPlayerPartiesTable)> {
+    fn only_minmax_points_when_on_same_hand(&self, _rulestatecache: &SRuleStateCacheFixed) -> Option<(SEnumChains, SPlayerPartiesTable)> {
         // TODO this is ok for normal Solo, point based Solo, Tout, Sie. But we can possibly improve this for e.g. Tout/Sie.
         let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
         Some((

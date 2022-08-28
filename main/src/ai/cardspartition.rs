@@ -1,99 +1,94 @@
 use plain_enum::*;
 use itertools::Itertools;
+use crate::primitives::card::*;
 
 #[derive(Debug, Clone)]
-pub struct SEnumChains<E: TPlainEnum + TInternalEnumMapType<E, E>> {
-    mapee_next: EnumMap<E, E>,
-    mapee_prev: EnumMap<E, E>,
+pub struct SEnumChains {
+    mapcardcard_next: EnumMap<SCard, SCard>,
+    mapcardcard_prev: EnumMap<SCard, SCard>,
 }
 
 // TODO plain_enum: support derive(PartialEq)
-impl<E: TPlainEnum + TInternalEnumMapType<E, E>> PartialEq for SEnumChains<E>
-    where
-        <E as TInternalEnumMapType<E, E>>::InternalEnumMapType: PartialEq,
-{
+impl PartialEq for SEnumChains {
     fn eq(&self, other: &Self) -> bool {
-        self.mapee_next.as_raw() == other.mapee_next.as_raw()
-            && self.mapee_prev.as_raw() == other.mapee_prev.as_raw()
+        self.mapcardcard_next.as_raw() == other.mapcardcard_next.as_raw()
+            && self.mapcardcard_prev.as_raw() == other.mapcardcard_prev.as_raw()
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct SRemoved<E> {
-    e: E,
-    e_next_old: E,
-    e_prev_old: E,
+pub struct SRemoved {
+    card: SCard,
+    card_next_old: SCard,
+    card_prev_old: SCard,
 }
 
-impl<E: TPlainEnum + TInternalEnumMapType<E, E> + Copy + std::cmp::Eq + std::fmt::Debug> SEnumChains<E> {
+impl SEnumChains {
     pub fn new() -> Self {
         let enumchains = Self {
-            mapee_next: E::map_from_fn(|e| e),
-            mapee_prev: E::map_from_fn(|e| e),
+            mapcardcard_next: SCard::map_from_fn(|card| card),
+            mapcardcard_prev: SCard::map_from_fn(|card| card),
         };
         enumchains.assert_invariant();
         enumchains
     }
 
-    pub fn new_from_slices(slcslce: &[&[E]]) -> Self {
+    pub fn new_from_slices(slcslccard: &[&[SCard]]) -> Self {
         let mut enumchains = Self::new();
-        for slce in slcslce {
-            enumchains.chain(slce);
+        for slccard in slcslccard {
+            enumchains.chain(slccard);
         }
         enumchains.assert_invariant();
         enumchains
     }
 
     fn assert_invariant(&self) { #[cfg(debug_assertions)] {
-        for e in E::values() {
-            if let Some(e_next) = self.next_no_invariant(e) {
-                assert!(self.mapee_prev[e_next]==e, "{:?} -> {:?}", self, e);
+        for card in <SCard as TPlainEnum>::values() {
+            if let Some(e_next) = self.next_no_invariant(card) {
+                assert!(self.mapcardcard_prev[e_next]==card, "{:?} -> {:?}", self, card);
             }
-            if let Some(e_prev) = self.prev_no_invariant(e) {
-                assert!(self.mapee_next[e_prev]==e, "{:?} -> {:?}", self, e);
+            if let Some(e_prev) = self.prev_no_invariant(card) {
+                assert!(self.mapcardcard_next[e_prev]==card, "{:?} -> {:?}", self, card);
             }
         }
         // TODO
     }}
 
-    pub fn chain(&mut self, slce: &[E]) {
-        for e in slce.iter() {
-            assert_eq!(self.mapee_next[*e], *e);
+    pub fn chain(&mut self, slccard: &[SCard]) {
+        for card in slccard.iter() {
+            assert_eq!(self.mapcardcard_next[*card], *card);
         }
-        for (e_lo, e_hi) in slce.iter().tuple_windows() {
-            self.mapee_next[*e_lo] = *e_hi;
-            self.mapee_prev[*e_hi] = *e_lo;
+        for (e_lo, e_hi) in slccard.iter().tuple_windows() {
+            self.mapcardcard_next[*e_lo] = *e_hi;
+            self.mapcardcard_prev[*e_hi] = *e_lo;
         }
         self.assert_invariant();
     }
 
-    pub fn remove_from_chain(&mut self, e: E) -> SRemoved<E>
-        where
-            <E as TInternalEnumMapType<E, E>>::InternalEnumMapType: PartialEq,
-    {
+    pub fn remove_from_chain(&mut self, card: SCard) -> SRemoved {
         #[cfg(debug_assertions)] let enumchains_clone = self.clone();
         // TODO can the following use fewer branches?
-        let removed = match (self.prev(e), self.next(e)) {
+        let removed = match (self.prev(card), self.next(card)) {
             (None, None) => {
-                SRemoved{e, e_prev_old:e, e_next_old:e}
+                SRemoved{card, card_prev_old:card, card_next_old:card}
             },
-            (Some(e_prev_old), None) => {
-                self.mapee_next[e_prev_old] = e_prev_old;
-                SRemoved{e, e_prev_old, e_next_old:e}
+            (Some(card_prev_old), None) => {
+                self.mapcardcard_next[card_prev_old] = card_prev_old;
+                SRemoved{card, card_prev_old, card_next_old:card}
             },
-            (None, Some(e_next_old)) => {
-                self.mapee_prev[e_next_old] = e_next_old;
-                SRemoved{e, e_prev_old:e, e_next_old}
+            (None, Some(card_next_old)) => {
+                self.mapcardcard_prev[card_next_old] = card_next_old;
+                SRemoved{card, card_prev_old:card, card_next_old}
             },
-            (Some(e_prev_old), Some(e_next_old)) => {
-                assert_ne!(e_prev_old, e_next_old);
-                self.mapee_next[e_prev_old] = e_next_old;
-                self.mapee_prev[e_next_old] = e_prev_old;
-                SRemoved{e, e_prev_old, e_next_old}
+            (Some(card_prev_old), Some(card_next_old)) => {
+                assert_ne!(card_prev_old, card_next_old);
+                self.mapcardcard_next[card_prev_old] = card_next_old;
+                self.mapcardcard_prev[card_next_old] = card_prev_old;
+                SRemoved{card, card_prev_old, card_next_old}
             },
         };
-        self.mapee_next[e] = e;
-        self.mapee_prev[e] = e;
+        self.mapcardcard_next[card] = card;
+        self.mapcardcard_prev[card] = card;
         self.assert_invariant();
         #[cfg(debug_assertions)] // TODO why is this needed?
         debug_assert_eq!(
@@ -103,50 +98,50 @@ impl<E: TPlainEnum + TInternalEnumMapType<E, E> + Copy + std::cmp::Eq + std::fmt
                 enumchains_readd.readd(removed.clone());
                 enumchains_readd
             },
-            "{:?}\n{:?}", e, removed,
+            "{:?}\n{:?}", card, removed,
         );
         removed
     }
 
-    pub fn readd(&mut self, removed: SRemoved<E>) {
-        let e = removed.e;
-        assert_eq!(self.mapee_prev[e], e);
-        assert_eq!(self.mapee_next[e], e);
-        self.mapee_prev[e] = removed.e_prev_old;
-        self.mapee_next[e] = removed.e_next_old;
-        if e!=removed.e_next_old {
-            self.mapee_prev[removed.e_next_old] = e;
+    pub fn readd(&mut self, removed: SRemoved) {
+        let card = removed.card;
+        assert_eq!(self.mapcardcard_prev[card], card);
+        assert_eq!(self.mapcardcard_next[card], card);
+        self.mapcardcard_prev[card] = removed.card_prev_old;
+        self.mapcardcard_next[card] = removed.card_next_old;
+        if card!=removed.card_next_old {
+            self.mapcardcard_prev[removed.card_next_old] = card;
         }
-        if e!=removed.e_prev_old {
-            self.mapee_next[removed.e_prev_old] = e;
+        if card!=removed.card_prev_old {
+            self.mapcardcard_next[removed.card_prev_old] = card;
         }
         self.assert_invariant();
     }
 
-    pub fn next(&self, e: E) -> Option<E> {
+    pub fn next(&self, card: SCard) -> Option<SCard> {
         self.assert_invariant();
-        self.next_no_invariant(e)
+        self.next_no_invariant(card)
     }
 
-    pub fn next_no_invariant(&self, e: E) -> Option<E> {
-        let e_raw_next = self.mapee_next[e];
-        if_then_some!(e_raw_next!=e, e_raw_next)
+    pub fn next_no_invariant(&self, card: SCard) -> Option<SCard> {
+        let e_raw_next = self.mapcardcard_next[card];
+        if_then_some!(e_raw_next!=card, e_raw_next)
     }
 
-    pub fn prev(&self, e: E) -> Option<E> {
+    pub fn prev(&self, card: SCard) -> Option<SCard> {
         self.assert_invariant();
-        self.prev_no_invariant(e)
+        self.prev_no_invariant(card)
     }
 
-    pub fn prev_no_invariant(&self, e: E) -> Option<E> {
-        let e_raw_prev = self.mapee_prev[e];
-        if_then_some!(e_raw_prev!=e, e_raw_prev)
+    pub fn prev_no_invariant(&self, card: SCard) -> Option<SCard> {
+        let e_raw_prev = self.mapcardcard_prev[card];
+        if_then_some!(e_raw_prev!=card, e_raw_prev)
     }
 
-    pub fn prev_while(&self, e: E, mut fn_pred: impl FnMut(E)->bool) -> E {
+    pub fn prev_while(&self, card: SCard, mut fn_pred: impl FnMut(SCard)->bool) -> SCard {
         self.assert_invariant();
-        assert!(fn_pred(e));
-        let mut e_out = e;
+        assert!(fn_pred(card));
+        let mut e_out = card;
         while let Some(e_prev) = self.prev(e_out) {
             if fn_pred(e_prev) {
                 e_out = e_prev;
@@ -158,39 +153,36 @@ impl<E: TPlainEnum + TInternalEnumMapType<E, E> + Copy + std::cmp::Eq + std::fmt
     }
 }
 
-#[cfg(test)]
-plain_enum_mod!(modetestvalues, ETestValues { V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, });
-
 #[test]
 fn test_enumchains() {
-    use ETestValues::*;
+    use crate::primitives::card::card_values::*;
     let mut enumchains = SEnumChains::new();
-    enumchains.chain(&[V0, V1, V3]);
-    enumchains.chain(&[V2, V5, V10]);
-    enumchains.chain(&[V8, V7, V6, V12]);
+    enumchains.chain(&[E7, E8, E9]);
+    enumchains.chain(&[SA, SZ, SK]);
+    enumchains.chain(&[EO, GO, HO, SO]);
     for (e, e_prev) in [
-        (V1, V0), (V3, V1),
-        (V5, V2), (V10, V5),
-        (V7, V8), (V6, V7), (V12, V6),
+        (E8, E7), (E9, E8),
+        (SZ, SA), (SK, SZ),
+        (GO, EO), (HO, GO), (SO, HO),
     ].into_iter() {
         assert_eq!(enumchains.prev(e), Some(e_prev));
     }
     for (e, e_prev_while) in [
-        (V1, V0), (V3, V0),
-        (V5, V2), (V10, V2),
-        (V7, V8), (V6, V8), (V12, V8),
+        (E8, E7), (E9, E7),
+        (SZ, SA), (SK, SA),
+        (GO, EO), (HO, EO), (SO, EO),
     ].into_iter() {
         assert_eq!(enumchains.prev_while(e, |_| true), e_prev_while);
     }
-    for e in [V4, V9, V11, V13].into_iter() {
+    for e in [GA, GZ, GK, G9].into_iter() {
         assert_eq!(enumchains.prev(e), None);
         assert_eq!(enumchains.prev_while(e, |_| true), e);
     }
     let mut enumchains_2 = enumchains.clone();
-    let removed_1 = enumchains_2.remove_from_chain(V9);
-    let removed_2 = enumchains_2.remove_from_chain(V8);
-    let removed_3 = enumchains_2.remove_from_chain(V6);
-    let removed_4 = enumchains_2.remove_from_chain(V10);
+    let removed_1 = enumchains_2.remove_from_chain(GZ);
+    let removed_2 = enumchains_2.remove_from_chain(EO);
+    let removed_3 = enumchains_2.remove_from_chain(HO);
+    let removed_4 = enumchains_2.remove_from_chain(SK);
     enumchains_2.readd(removed_4);
     enumchains_2.readd(removed_3);
     enumchains_2.readd(removed_2);
