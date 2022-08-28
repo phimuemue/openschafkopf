@@ -2,10 +2,36 @@ use plain_enum::*;
 use itertools::Itertools;
 use crate::primitives::card::*;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct SCardsPartition {
     mapcardcard_next: EnumMap<SCard, SCard>,
     mapcardcard_prev: EnumMap<SCard, SCard>,
+}
+
+impl std::fmt::Debug for SCardsPartition {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        self.assert_invariant();
+        // TODO this is simple, but O(n^2)
+        let mut vecveccard = Vec::new();
+        for card in <SCard as TPlainEnum>::values() {
+            let mut veccard = Vec::new();
+            let mut card_iterate = card;
+            while let Some(card_prev) = self.prev(card_iterate) {
+                card_iterate = card_prev;
+            }
+            veccard.push(card_iterate);
+            while let Some(card_next) = self.next(card_iterate) {
+                card_iterate = card_next;
+                veccard.push(card_iterate);
+            }
+            vecveccard.push(veccard);
+        }
+        vecveccard.sort_by_key(|veccard| veccard.iter().map(|card| card.to_usize()).collect::<Vec<_>>());
+        vecveccard.dedup_by_key(|veccard| veccard.iter().map(|card| card.to_usize()).collect::<Vec<_>>());
+        f.debug_set()
+            .entries(vecveccard.into_iter().filter(|veccard| veccard.len()>1))
+            .finish()
+    }
 }
 
 // TODO plain_enum: support derive(PartialEq)
