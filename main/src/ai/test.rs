@@ -66,14 +66,14 @@ fn test_determine_best_card() {
     // (HO ensures at least that no other player can take away rufsau.)
     // TODO examine optimal solution to this case.
     #[cfg(not(debug_assertions))] {
-        assert_eq!(aisimulating.suggest_card(&game, /*opath_out_dir*/None), HO);
+        assert_eq!(aisimulating.suggest_card(&game, |_,_,_| SNoVisualization), HO);
     }
     play_stichs(&mut game, &[
         (EPlayerIndex::EPI0, [HO, E7, HU, GK]),
     ]);
     #[cfg(not(debug_assertions))] {
-        assert_eq!(aicheating.suggest_card(&game, /*opath_out_dir*/None), E8);
-        assert_eq!(aisimulating.suggest_card(&game, /*opath_out_dir*/None), E8);
+        assert_eq!(aicheating.suggest_card(&game, |_,_,_| SNoVisualization), E8);
+        assert_eq!(aisimulating.suggest_card(&game, |_,_,_| SNoVisualization), E8);
     }
     play_stichs(&mut game, &[
         (EPlayerIndex::EPI0, [SZ, EK, G7, SA]),
