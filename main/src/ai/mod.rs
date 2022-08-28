@@ -108,7 +108,7 @@ impl SAi {
                         tpln_stoss_doubling,
                         n_stock,
                     ),
-                    &mut SSnapshotCacheNone, // TODO make customizable
+                    &|_,_| SSnapshotCacheNone, // TODO make customizable
                     &mut SNoVisualization{},
                 ).0.map(|mapepiminmax| {
                     SPayoutStats::new_1(mapepiminmax[epi_rank])
@@ -319,6 +319,7 @@ pub fn determine_best_card<
     FilterAllowedCards: TFilterAllowedCards,
     ForEachSnapshot: TForEachSnapshot<Output=SMinMax> + Sync,
     SnapshotCache: TSnapshotCache<ForEachSnapshot::Output>,
+    OSnapshotCache: Into<Option<SnapshotCache>>,
     SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
 >(
@@ -326,7 +327,7 @@ pub fn determine_best_card<
     itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
-    fn_snapshotcache: impl Fn(&SStichSequence, &SRuleStateCacheFixed) -> SnapshotCache + std::marker::Sync,
+    fn_snapshotcache: impl Fn(&SStichSequence, &SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, SCard) + std::marker::Sync),
 ) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>>
@@ -363,17 +364,13 @@ pub fn determine_best_card<
                     ),
                 )
             } else {
-                let mut snapshotcache = fn_snapshotcache(
-                    &stichseq,
-                    &SRuleStateCacheFixed::new(&stichseq, &ahand)
-                );
                 explore_snapshots(
                     &mut ahand,
                     determinebestcard.rules,
                     &mut stichseq,
                     &fn_make_filter,
                     foreachsnapshot,
-                    &mut snapshotcache,
+                    &fn_snapshotcache,
                     &mut visualizer,
                 )
             };

@@ -1192,7 +1192,7 @@ mod tests {
                     if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
                         //let epi = unwrap!(game.current_playable_stich().current_playerindex());
                         macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr,) => {
-                            unwrap!(determine_best_card::<$ty_fn_make_filter,_,_,_,_>(
+                            unwrap!(determine_best_card::<$ty_fn_make_filter,_,_,_,_,_>(
                                 &SDetermineBestCard::new_from_game(game),
                                 std::iter::once(game.ahand.clone()),
                                 $fn_make_filter,
