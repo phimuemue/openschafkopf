@@ -71,10 +71,10 @@ impl SCardsPartition {
     fn assert_invariant(&self) { #[cfg(debug_assertions)] {
         for card in <SCard as TPlainEnum>::values() {
             if let Some(card_next) = self.next_no_invariant(card) {
-                assert!(self.mapcardcard_prev[card_next]==card, "{:?} -> {:?}", self, card);
+                assert_eq!(self.mapcardcard_prev[card_next], card);
             }
             if let Some(card_prev) = self.prev_no_invariant(card) {
-                assert!(self.mapcardcard_next[card_prev]==card, "{:?} -> {:?}", self, card);
+                assert_eq!(self.mapcardcard_next[card_prev], card);
             }
         }
         // TODO
