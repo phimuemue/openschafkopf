@@ -175,11 +175,7 @@ pub fn with_common_args(
             bail!("Failed to parse simulate_hands");
         }
     ).unwrap_or_else(|| {
-        use ERemainingCards::*;
-        match eremainingcards {
-            _1|_2|_3|_4 => All,
-            _5|_6|_7|_8 => Sample(50),
-        }
+        All
     });
     let hand_fixed = ahand_fixed[epi_fixed].clone();
     let determinebestcard =  SDetermineBestCard::new(
