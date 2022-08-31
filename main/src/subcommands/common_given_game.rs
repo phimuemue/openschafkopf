@@ -57,7 +57,6 @@ pub trait TWithCommonArgs {
     fn call<'rules>(
         self,
         itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
-        eremainingcards: ERemainingCards,
         determinebestcard: SDetermineBestCard,
         b_verbose: bool,
     ) -> Result<(), Error>;
@@ -164,7 +163,6 @@ pub fn with_common_args(
     });
     let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
     let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
-    let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(mapepin_cards_per_hand[epi_fixed] - 1));
     use VChooseItAhand::*;
     let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
         if "all"==str_itahand.to_lowercase() { // TODO replace this case by simply "0"?
@@ -227,7 +225,6 @@ pub fn with_common_args(
                     b_valid
                 }
             ))),
-            eremainingcards,
             determinebestcard,
             b_verbose,
         )
