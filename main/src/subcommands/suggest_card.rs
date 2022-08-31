@@ -47,7 +47,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         fn call<'rules>(
             self,
             itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
-            eremainingcards: ERemainingCards,
+            _eremainingcards: ERemainingCards,
             determinebestcard: SDetermineBestCard,
             b_verbose: bool,
         ) -> Result<(), Error> {
@@ -110,16 +110,15 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     )
                 }}}
                 enum EBranching {
-                    NoFilter,
+                    NoFilter, // TODO? replacable by None
                     Branching(usize, usize),
                     Equivalent(usize, SCardsPartition),
                     Oracle,
                 }
-                use ERemainingCards::*;
                 use EBranching::*;
                 cartesian_match!(
                     forward,
-                    match ((
+                    match (
                         if_then_some!(let Some(str_branching) = clapmatches.value_of("branching"), {
                             if str_branching=="oracle" {
                                 Oracle
@@ -142,15 +141,14 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     NoFilter
                                 }
                             }
-                        }),
-                        eremainingcards
-                    )) {
-                        (Some(NoFilter), _)|(None,_1|_2|_3|_4) => ((_), |_, _| |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/)),
-                        (Some(Branching(n_lo, n_hi)), _) => ((_), |_, _| branching_factor(move |_stichseq| {
+                        })
+                    ) {
+                        Some(NoFilter)|None => ((_), |_, _| |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/)),
+                        Some(Branching(n_lo, n_hi)) => ((_), |_, _| branching_factor(move |_stichseq| {
                             let n_lo = n_lo.max(1);
                             (n_lo, (n_hi.max(n_lo+1)))
                         })),
-                        (Some(Equivalent(n_until_stichseq_len, cardspartition)), _) => (
+                        Some(Equivalent(n_until_stichseq_len, cardspartition)) => (
                             (_),
                             equivalent_cards_filter(
                                 n_until_stichseq_len,
@@ -158,10 +156,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 cardspartition,
                             )
                         ),
-                        (Some(Oracle), _) => ((SFilterByOracle), |stichseq, ahand| {
+                        Some(Oracle) => ((SFilterByOracle), |stichseq, ahand| {
                             SFilterByOracle::new(rules, ahand, stichseq)
                         }),
-                        (None,_5|_6|_7|_8) => ((_), |_, _| branching_factor(|_stichseq| (1, 3))),
                     },
                     match (clapmatches.value_of("prune")) {
                         Some("hint") => (SMinReachablePayoutLowerBoundViaHint),
