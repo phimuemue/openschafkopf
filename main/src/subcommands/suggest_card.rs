@@ -109,7 +109,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     )
                 }}}
                 enum EBranching {
-                    NoFilter, // TODO? replacable by None
                     Branching(usize, usize),
                     Equivalent(usize, SCardsPartition),
                     Oracle,
@@ -120,29 +119,25 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     match (
                         if_then_some!(let Some(str_branching) = clapmatches.value_of("branching"), {
                             if str_branching=="oracle" {
-                                Oracle
+                                Some(Oracle)
                             } else if let Some(n_until_stichseq_len) = str_branching.strip_prefix("equiv")
                                 .and_then(|str_n_until_remaining_cards| str_n_until_remaining_cards.parse().ok())
                             {
-                                Equivalent(n_until_stichseq_len, rules.equivalent_when_on_same_hand())
+                                Some(Equivalent(n_until_stichseq_len, rules.equivalent_when_on_same_hand()))
                             } else {
                                 let (str_lo, str_hi) = str_branching
                                     .split(',')
                                     .collect_tuple()
                                     .ok_or_else(|| format_err!("Could not parse branching"))?;
                                 let (n_lo, n_hi) = (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?);
-                                if n_lo < determinebestcard.hand_fixed.cards().len() {
+                                if_then_some!(
+                                    n_lo < determinebestcard.hand_fixed.cards().len(),
                                     Branching(n_lo, n_hi)
-                                } else {
-                                    if b_verbose {
-                                        println!("Branching bounds are large enough to eliminate branching factor.");
-                                    }
-                                    NoFilter
-                                }
+                                )
                             }
-                        })
+                        }).flatten()
                     ) {
-                        Some(NoFilter)|None => ((_), |_, _| |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/)),
+                        None => ((_), |_, _| |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/)),
                         Some(Branching(n_lo, n_hi)) => ((_), |_, _| branching_factor(move |_stichseq| {
                             let n_lo = n_lo.max(1);
                             (n_lo, (n_hi.max(n_lo+1)))
