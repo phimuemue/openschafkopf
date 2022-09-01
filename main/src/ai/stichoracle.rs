@@ -152,34 +152,24 @@ impl SStichTrie {
                                 |card| veccard_allowed.contains(&card),
                             );
                             let is_primary_party = |epi| playerparties.is_primary_party(epi);
+                            macro_rules! card_min_or_max(($fn_assign_by:expr) => {{
+                                let mut card_min_or_max = card_chain;
+                                remove_from_allowed(&mut veccard_allowed, card_chain);
+                                while let Some(card_chain_next) = next_in_chain(&veccard_allowed, card_chain) {
+                                    card_chain = card_chain_next;
+                                    remove_from_allowed(&mut veccard_allowed, card_chain);
+                                    $fn_assign_by(
+                                        &mut card_min_or_max,
+                                        card_chain,
+                                        |card| points_card(*card),
+                                    );
+                                }
+                                card_min_or_max
+                            }});
                             let card_min_or_max = if b_stich_winner_primary_party==is_primary_party(epi_card) {
-                                // only play maximum points
-                                let mut card_max_points = card_chain;
-                                remove_from_allowed(&mut veccard_allowed, card_chain);
-                                while let Some(card_chain_next) = next_in_chain(&veccard_allowed, card_chain) {
-                                    card_chain = card_chain_next;
-                                    remove_from_allowed(&mut veccard_allowed, card_chain);
-                                    assign_max_by_key(
-                                        &mut card_max_points,
-                                        card_chain,
-                                        |card| points_card(*card),
-                                    );
-                                }
-                                card_max_points
+                                card_min_or_max!(assign_max_by_key)
                             } else {
-                                // only play minimum points
-                                let mut card_min_points = card_chain;
-                                remove_from_allowed(&mut veccard_allowed, card_chain);
-                                while let Some(card_chain_next) = next_in_chain(&veccard_allowed, card_chain) {
-                                    card_chain = card_chain_next;
-                                    remove_from_allowed(&mut veccard_allowed, card_chain);
-                                    assign_min_by_key(
-                                        &mut card_min_points,
-                                        card_chain,
-                                        |card| points_card(*card),
-                                    );
-                                }
-                                card_min_points
+                                card_min_or_max!(assign_min_by_key)
                             };
                             stichtrie.vectplcardtrie.push((
                                 card_min_or_max,
