@@ -530,9 +530,8 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
         // => If some cards from veccard form a contiguous sequence within cardspartition, we only need to propagate one of the cards.
         let mut veccard_out = Vec::new(); // TODO use SHandVector
         for card_allowed in veccard.iter() {
-            let card_first_in_chain = self.cardspartition.prev_while(*card_allowed, |card|
-                veccard.contains(&card)
-            );
+            let card_first_in_chain = self.cardspartition
+                .prev_while_contained(*card_allowed, veccard);
             veccard_out.push(card_first_in_chain);
         }
         veccard_out.sort_unstable_by_key(|card| card.to_usize());

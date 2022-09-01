@@ -120,10 +120,8 @@ impl SStichTrie {
                     };
                     match ob_stich_winner_primary_party_representative {
                         None => {
-                            let mut card_chain = cardspartition_actual.prev_while(
-                                card_representative,
-                                |card| veccard_allowed.contains(&card),
-                            );
+                            let mut card_chain = cardspartition_actual
+                                .prev_while_contained(card_representative, &veccard_allowed);
                             let i_stichtrie_representative = stichtrie.vectplcardtrie.len();
                             stichtrie.vectplcardtrie.push((
                                 card_chain,
@@ -147,10 +145,8 @@ impl SStichTrie {
                         },
                         Some(b_stich_winner_primary_party) => {
                             // TODO avoid backward-forward iteration
-                            let mut card_chain = cardspartition_actual.prev_while(
-                                card_representative,
-                                |card| veccard_allowed.contains(&card),
-                            );
+                            let mut card_chain = cardspartition_actual
+                                .prev_while_contained(card_representative, &veccard_allowed);
                             let is_primary_party = |epi| playerparties.is_primary_party(epi);
                             macro_rules! card_min_or_max(($fn_assign_by:expr) => {{
                                 let mut card_min_or_max = card_chain;

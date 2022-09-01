@@ -164,7 +164,7 @@ impl SCardsPartition {
         if_then_some!(card_raw_prev!=card, card_raw_prev)
     }
 
-    pub fn prev_while(&self, card: SCard, mut fn_pred: impl FnMut(SCard)->bool) -> SCard {
+    fn prev_while(&self, card: SCard, mut fn_pred: impl FnMut(SCard)->bool) -> SCard {
         self.assert_invariant();
         assert!(fn_pred(card));
         let mut card_out = card;
@@ -176,6 +176,10 @@ impl SCardsPartition {
             }
         }
         card_out
+    }
+
+    pub fn prev_while_contained(&self, card_begin: SCard, slccard: &[SCard]) -> SCard {
+        self.prev_while(card_begin, |card| slccard.contains(&card))
     }
 }
 
