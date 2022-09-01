@@ -166,13 +166,12 @@ impl SStichTrie {
                                 }
                                 card_min_or_max
                             }});
-                            let card_min_or_max = if b_stich_winner_primary_party==is_primary_party(epi_card) {
-                                card_min_or_max!(assign_max_by_key)
-                            } else {
-                                card_min_or_max!(assign_min_by_key)
-                            };
                             stichtrie.vectplcardtrie.push((
-                                card_min_or_max,
+                                if b_stich_winner_primary_party==is_primary_party(epi_card) {
+                                    card_min_or_max!(assign_max_by_key)
+                                } else {
+                                    card_min_or_max!(assign_min_by_key)
+                                },
                                 stichtrie_representative,
                             ));
                             use VStichWinnerPrimaryParty::*;
