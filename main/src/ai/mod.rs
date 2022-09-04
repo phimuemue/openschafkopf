@@ -163,11 +163,11 @@ impl SAi {
                 forward_to_determine_best_card,
                 match (eremainingcards) {
                     _1|_2|_3 => (
-                        |_, _| |_: &SStichSequence,_: &mut SHandVector| (/*no filtering*/),
+                        SNoFilter::factory(),
                         SMinReachablePayout,
                     ),
                     _4 => (
-                        |_, _| |_: &SStichSequence,_: &mut SHandVector| (/*no filtering*/),
+                        SNoFilter::factory(),
                         SMinReachablePayoutLowerBoundViaHint,
                     ),
                     _5|_6|_7|_8 => (

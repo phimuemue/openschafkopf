@@ -185,8 +185,12 @@ impl<F: Fn(&SStichSequence, &mut SHandVector)> TFilterAllowedCards for F {
     }
 }
 
-struct SNoFilter;
-
+pub struct SNoFilter;
+impl SNoFilter {
+    pub fn factory() -> impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->Self {
+        |_,_| SNoFilter
+    }
+}
 impl TFilterAllowedCards for SNoFilter {
     type UnregisterStich = ();
     fn register_stich(&mut self, _stich: &SStich) -> Self::UnregisterStich {}
@@ -227,7 +231,7 @@ pub fn explore_snapshots<
     cartesian_match!(forward,
         match (fn_make_filter(stichseq, ahand).into()) {
             Some(mut func_filter_allowed_cards) => (&mut func_filter_allowed_cards),
-            None => (/*func_filter_allowed_cards*/&mut |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/)),
+            None => (/*func_filter_allowed_cards*/&mut SNoFilter),
         },
     )
 }

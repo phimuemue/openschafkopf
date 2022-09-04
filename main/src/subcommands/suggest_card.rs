@@ -2,7 +2,6 @@ use crate::ai::{*, gametree::*, stichoracle::SFilterByOracle, cardspartition::*}
 use crate::primitives::*;
 use crate::util::*;
 use itertools::*;
-use crate::game::SStichSequence;
 use crate::game_analysis::determine_best_card_table::{table};
 
 use super::common_given_game::*;
@@ -137,7 +136,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             }
                         }).flatten()
                     ) {
-                        None => ((_), |_, _| |_: &SStichSequence, _: &mut SHandVector| (/*no filtering*/)),
+                        None => ((_), SNoFilter::factory()),
                         Some(Branching(n_lo, n_hi)) => ((_), |_, _| branching_factor(move |_stichseq| {
                             let n_lo = n_lo.max(1);
                             (n_lo, (n_hi.max(n_lo+1)))

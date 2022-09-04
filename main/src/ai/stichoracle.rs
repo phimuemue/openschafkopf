@@ -378,10 +378,10 @@ mod tests {
             determine_best_card,
             SDetermineBestCard,
             SMinReachablePayout,
+            SNoFilter,
             SNoVisualization,
             SRuleStateCacheFixed,
         },
-        SHandVector,
         SDisplayCardSlice,
     };
     use super::{SStichTrie, SFilterByOracle};
@@ -1212,7 +1212,7 @@ mod tests {
                             ),
                             fwd!(
                                 _,
-                                /*fn_make_filter*/|_stichseq, _ahand| |_:&SStichSequence,_:&mut SHandVector| { /*no filtering*/ },
+                                /*fn_make_filter*/SNoFilter::factory(),
                             ),
                         );
                     }
