@@ -441,7 +441,7 @@ mod tests {
                 assert!(
                     setstich.contains(stich),
                     "\nRules:{} von {}\nHands:\n {}\n {}\n {}\n {}\nStichseq: {}\nStich{}\n{}\n",
-                    rules.to_string(),
+                    rules,
                     unwrap!(rules.playerindex()),
                     SDisplayCardSlice::new(ahand[EPlayerIndex::EPI0].cards().clone(), rules),
                     SDisplayCardSlice::new(ahand[EPlayerIndex::EPI1].cards().clone(), rules),
