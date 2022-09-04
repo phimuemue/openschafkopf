@@ -143,7 +143,7 @@ impl SAi {
             ) => {{ // TODORUST generic closures
                 determine_best_card(
                     &determinebestcard,
-                    $itahand,
+                    Box::new($itahand) as Box<_>,
                     $func_filter_allowed_cards,
                     &$foreachsnapshot::new(
                         determinebestcard.rules,
@@ -312,13 +312,14 @@ impl SPayoutStatsPerStrategy {
 }
 
 pub fn determine_best_card<
+    'determinebestcard,
     FilterAllowedCards: TFilterAllowedCards,
     ForEachSnapshot: TForEachSnapshot<Output=SMinMax> + Sync,
     SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
 >(
-    determinebestcard: &SDetermineBestCard,
-    itahand: impl Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send,
+    determinebestcard: &'determinebestcard SDetermineBestCard,
+    itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'determinebestcard>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
@@ -553,7 +554,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         let determinebestcard = SDetermineBestCard::new_from_game(&game);
         let determinebestcardresult = unwrap!(determine_best_card(
             &determinebestcard,
-            std::iter::once(ahand),
+            Box::new(std::iter::once(ahand)) as Box<_>,
             /*fn_make_filter*/SBranchingFactor::factory(1, 2),
             &SMinReachablePayout::new_from_game(&game),
             /*fn_visualizer*/SNoVisualization::factory(),

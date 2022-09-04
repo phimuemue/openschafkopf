@@ -75,13 +75,15 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                     determine_best_card::<$($func_filter_allowed_cards_ty)*, _, _, _>( // TODO avoid explicit types
                         &determinebestcard,
-                        itahand
-                            .flat_map(|ahand| {
-                                itertools::repeat_n(
-                                    ahand,
-                                    n_repeat_hand,
-                                )
-                            }),
+                        Box::new(
+                            itahand
+                                .flat_map(|ahand| {
+                                    itertools::repeat_n(
+                                        ahand,
+                                        n_repeat_hand,
+                                    )
+                                })
+                        ) as Box<_>,
                         $func_filter_allowed_cards,
                         &$foreachsnapshot::new(
                             rules,
