@@ -101,7 +101,7 @@ impl SAi {
                     &mut ahand,
                     rules,
                     &mut SStichSequence::new(ekurzlang),
-                    &|_,_| branching_factor(1, 2),
+                    &SBranchingFactor::factory(1, 2),
                     &SMinReachablePayoutLowerBoundViaHint::new(
                         rules,
                         epi_rank,
@@ -171,7 +171,7 @@ impl SAi {
                         SMinReachablePayoutLowerBoundViaHint,
                     ),
                     _5|_6|_7|_8 => (
-                        |_, _| branching_factor(1, self.n_suggest_card_branches+1),
+                        SBranchingFactor::factory(1, self.n_suggest_card_branches+1),
                         SMinReachablePayoutLowerBoundViaHint,
                     ),
                 },
@@ -394,15 +394,27 @@ pub fn determine_best_card<
     })
 }
 
-pub fn branching_factor(n_lo: usize, n_hi: usize) -> impl Fn(&SStichSequence, &mut SHandVector) {
-    assert!(n_lo < n_hi);
-    move |_stichseq: &SStichSequence, veccard_allowed: &mut SHandVector| {
-        assert!(!veccard_allowed.is_empty());
+pub struct SBranchingFactor{
+    n_lo: usize,
+    n_hi: usize,
+}
+impl TFilterAllowedCards for SBranchingFactor {
+    type UnregisterStich = ();
+    fn register_stich(&mut self, _stich: &SStich) -> Self::UnregisterStich {}
+    fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {}
+    fn filter_allowed_cards(&self, _stichseq: &SStichSequence, veccard: &mut SHandVector) {
+        assert!(!veccard.is_empty());
         let mut rng = rand::thread_rng();
-        let n = rng.gen_range(n_lo..n_hi);
-        while n<veccard_allowed.len() {
-            veccard_allowed.swap_remove(rng.gen_range(0..veccard_allowed.len()));
+        let n = rng.gen_range(self.n_lo..self.n_hi);
+        while n<veccard.len() {
+            veccard.swap_remove(rng.gen_range(0..veccard.len()));
         }
+    }
+}
+impl SBranchingFactor {
+    pub fn factory(n_lo: usize, n_hi: usize) -> impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->Self {
+        assert!(n_lo < n_hi);
+        move |_,_| Self {n_lo, n_hi}
     }
 }
 
@@ -542,7 +554,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         let determinebestcardresult = unwrap!(determine_best_card(
             &determinebestcard,
             std::iter::once(ahand),
-            /*fn_make_filter*/|_, _| branching_factor(1, 2),
+            /*fn_make_filter*/SBranchingFactor::factory(1, 2),
             &SMinReachablePayout::new_from_game(&game),
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
