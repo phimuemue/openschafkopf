@@ -156,6 +156,11 @@ impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
 }
 
 pub struct SNoVisualization;
+impl SNoVisualization {
+    pub fn factory() -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard)->Self + std::marker::Sync {
+        |_,_,_| Self
+    }
+}
 impl<Output> TSnapshotVisualizer<Output> for SNoVisualization {
     fn begin_snapshot(&mut self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) {}
     fn end_snapshot(&mut self, _output: &Output) {}

@@ -1190,7 +1190,7 @@ mod tests {
                                 std::iter::once(game.ahand.clone()),
                                 $fn_make_filter,
                                 &SMinReachablePayout::new_from_game(game),
-                                |_,_,_| SNoVisualization,
+                                SNoVisualization::factory(),
                                 /*fn_inspect*/&|_,_,_,_| {},
                             ))
                                 .cards_and_ts()

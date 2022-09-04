@@ -159,7 +159,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         _ => (SMinReachablePayout),
                     },
                     match (clapmatches.value_of("visualize")) {
-                        None => (|_,_,_| SNoVisualization),
+                        None => (SNoVisualization::factory()),
                         Some(str_path) => {
                             visualizer_factory(
                                 std::path::Path::new(str_path).to_path_buf(),

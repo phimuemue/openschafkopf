@@ -60,20 +60,20 @@ fn test_determine_best_card() {
     );
     // If we cheat (i.e. we know each players' cards), it makes - intuitively, not mathematically
     // proven - sense not to play HO since it only weakens the own partner.
-    assert_ne!(aicheating.suggest_card(&game, |_,_,_| SNoVisualization), HO);
+    assert_ne!(aicheating.suggest_card(&game, SNoVisualization::factory()), HO);
     // If we do not cheat, tests indicated that playing HO is the best solution.
     // As far as I can tell, it is at least not necessarily wrong.
     // (HO ensures at least that no other player can take away rufsau.)
     // TODO examine optimal solution to this case.
     #[cfg(not(debug_assertions))] {
-        assert_eq!(aisimulating.suggest_card(&game, |_,_,_| SNoVisualization), HO);
+        assert_eq!(aisimulating.suggest_card(&game, SNoVisualization::factory()), HO);
     }
     play_stichs(&mut game, &[
         (EPlayerIndex::EPI0, [HO, E7, HU, GK]),
     ]);
     #[cfg(not(debug_assertions))] {
-        assert_eq!(aicheating.suggest_card(&game, |_,_,_| SNoVisualization), E8);
-        assert_eq!(aisimulating.suggest_card(&game, |_,_,_| SNoVisualization), E8);
+        assert_eq!(aicheating.suggest_card(&game, SNoVisualization::factory()), E8);
+        assert_eq!(aisimulating.suggest_card(&game, SNoVisualization::factory()), E8);
     }
     play_stichs(&mut game, &[
         (EPlayerIndex::EPI0, [SZ, EK, G7, SA]),

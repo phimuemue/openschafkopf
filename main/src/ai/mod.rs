@@ -547,7 +547,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             std::iter::once(ahand),
             /*fn_make_filter*/|_, _| branching_factor(|_stichseq| (1, 2)),
             &SMinReachablePayout::new_from_game(&game),
-            /*fn_visualizer*/|_,_,_| SNoVisualization,
+            /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
         ));
         for card in [H7, H8, H9] {
