@@ -101,7 +101,7 @@ impl SAi {
                     &mut ahand,
                     rules,
                     &mut SStichSequence::new(ekurzlang),
-                    &|_,_| branching_factor(|_stichseq| (1, 2)),
+                    &|_,_| branching_factor(1, 2),
                     &SMinReachablePayoutLowerBoundViaHint::new(
                         rules,
                         epi_rank,
@@ -171,9 +171,7 @@ impl SAi {
                         SMinReachablePayoutLowerBoundViaHint,
                     ),
                     _5|_6|_7|_8 => (
-                        |_, _| branching_factor(|_stichseq| {
-                            (1, self.n_suggest_card_branches+1)
-                        }),
+                        |_, _| branching_factor(1, self.n_suggest_card_branches+1),
                         SMinReachablePayoutLowerBoundViaHint,
                     ),
                 },
@@ -396,11 +394,10 @@ pub fn determine_best_card<
     })
 }
 
-pub fn branching_factor(fn_stichseq_to_intvl: impl Fn(&SStichSequence)->(usize, usize)) -> impl Fn(&SStichSequence, &mut SHandVector) {
-    move |stichseq: &SStichSequence, veccard_allowed: &mut SHandVector| {
+pub fn branching_factor(n_lo: usize, n_hi: usize) -> impl Fn(&SStichSequence, &mut SHandVector) {
+    assert!(n_lo < n_hi);
+    move |_stichseq: &SStichSequence, veccard_allowed: &mut SHandVector| {
         assert!(!veccard_allowed.is_empty());
-        let (n_lo, n_hi) = fn_stichseq_to_intvl(stichseq);
-        assert!(n_lo < n_hi);
         let mut rng = rand::thread_rng();
         let n = rng.gen_range(n_lo..n_hi);
         while n<veccard_allowed.len() {
@@ -545,7 +542,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         let determinebestcardresult = unwrap!(determine_best_card(
             &determinebestcard,
             std::iter::once(ahand),
-            /*fn_make_filter*/|_, _| branching_factor(|_stichseq| (1, 2)),
+            /*fn_make_filter*/|_, _| branching_factor(1, 2),
             &SMinReachablePayout::new_from_game(&game),
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},

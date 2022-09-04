@@ -137,10 +137,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         }).flatten()
                     ) {
                         None => ((_), SNoFilter::factory()),
-                        Some(Branching(n_lo, n_hi)) => ((_), |_, _| branching_factor(move |_stichseq| {
+                        Some(Branching(n_lo, n_hi)) => ((_), |_,_| {
                             let n_lo = n_lo.max(1);
-                            (n_lo, (n_hi.max(n_lo+1)))
-                        })),
+                            branching_factor(n_lo, n_hi.max(n_lo+1))
+                        }),
                         Some(Equivalent(n_until_stichseq_len, cardspartition)) => (
                             (_),
                             equivalent_cards_filter(
