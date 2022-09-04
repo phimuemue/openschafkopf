@@ -117,7 +117,7 @@ impl SStichTrie {
                         mut func: impl FnMut(SCard),
                     ) {
                         // TODO avoid backward-forward iteration
-                        let mut card_chain = cardspartition.prev_while_contained(card_representative, &veccard);
+                        let mut card_chain = cardspartition.prev_while_contained(card_representative, veccard);
                         veccard.must_find_swap_remove(&card_chain);
                         func(card_chain);
                         while let Some(card_chain_next) = cardspartition.next(card_chain)
