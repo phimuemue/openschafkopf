@@ -156,9 +156,9 @@ impl<T> SPayoutStatsTable<T> {
                         EMinMaxStrategy::Max => "optimally for you",
                     },
                 );
-                println!("  * In the worst case (over all possible card distributions), you can enforce a payout of {}", str_payout_min);
-                println!("  * On average (over all possible card distributions), you can enforce a payout of {}", str_payout_avg);
-                println!("  * In the best case (over all possible card distributions), you can enforce a payout of {}", str_payout_max);
+                println!("  * In the worst case (over all generated card distributions), you can enforce a payout of {}", str_payout_min);
+                println!("  * On average (over all generated card distributions), you can enforce a payout of {}", str_payout_avg);
+                println!("  * In the best case (over all generated card distributions), you can enforce a payout of {}", str_payout_max);
                 println!("  * {} shows the number of games lost/zero-payout/won", str_stats);
             }
             println!();
