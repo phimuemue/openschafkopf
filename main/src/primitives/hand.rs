@@ -2,6 +2,7 @@ use crate::primitives::card::*;
 use arrayvec::ArrayVec;
 #[cfg(debug_assertions)]
 use plain_enum::TPlainEnum;
+use crate::util::TVecExt;
 
 pub type SHandVector = ArrayVec<SCard, 8>;
 
@@ -45,13 +46,7 @@ impl SHand {
     }
     pub fn play_card(&mut self, card: SCard) {
         // TODO: assembly for this looks rather inefficient. Possibly replace by simpler 64-bit operations.
-        debug_assert!(self.contains(card));
-        for i_card in 0..self.veccard.len() {
-            if self.veccard[i_card]==card {
-                self.veccard.swap_remove(i_card);
-                break;
-            }
-        }
+        self.veccard.must_find_swap_remove(&card);
         #[cfg(debug_assertions)]self.finalize_and_assert_invariant();
     }
     pub fn add_card(&mut self, card: SCard) {

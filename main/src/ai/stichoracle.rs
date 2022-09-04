@@ -80,10 +80,6 @@ impl SStichTrie {
                     stichseq,
                     &ahand[epi_card],
                 );
-                fn remove_from_allowed(veccard: &mut SHandVector, card_remove: SCard) {
-                    let i_card = unwrap!(veccard.iter().position(|card| card==&card_remove));
-                    veccard.swap_remove(i_card);
-                }
                 assert!(!veccard_allowed.is_empty());
                 enum VStichWinnerPrimaryParty {
                     NotYetAssigned,
@@ -129,7 +125,7 @@ impl SStichTrie {
                             ));
                             let mut ab_points = [false; 12]; // TODO? couple with points_card
                             ab_points[points_card(card_chain).as_num::<usize>()]=true;
-                            remove_from_allowed(&mut veccard_allowed, card_chain);
+                            veccard_allowed.must_find_swap_remove(&card_chain);
                             while let Some(card_chain_next) = next_in_chain(&veccard_allowed, card_chain) {
                                 if !ab_points[points_card(card_chain_next).as_num::<usize>()] {
                                     ab_points[points_card(card_chain_next).as_num::<usize>()]=true;
@@ -138,7 +134,7 @@ impl SStichTrie {
                                         stichtrie.vectplcardtrie[i_stichtrie_representative].1.clone(),
                                     ));
                                 }
-                                remove_from_allowed(&mut veccard_allowed, card_chain_next);
+                                veccard_allowed.must_find_swap_remove(&card_chain_next);
                                 card_chain = card_chain_next;
                             }
                             stichwinnerprimaryparty = VStichWinnerPrimaryParty::Different;
@@ -150,10 +146,10 @@ impl SStichTrie {
                             let is_primary_party = |epi| playerparties.is_primary_party(epi);
                             macro_rules! card_min_or_max(($fn_assign_by:expr) => {{
                                 let mut card_min_or_max = card_chain;
-                                remove_from_allowed(&mut veccard_allowed, card_chain);
+                                veccard_allowed.must_find_swap_remove(&card_chain);
                                 while let Some(card_chain_next) = next_in_chain(&veccard_allowed, card_chain) {
                                     card_chain = card_chain_next;
-                                    remove_from_allowed(&mut veccard_allowed, card_chain);
+                                    veccard_allowed.must_find_swap_remove(&card_chain);
                                     $fn_assign_by(
                                         &mut card_min_or_max,
                                         card_chain,
