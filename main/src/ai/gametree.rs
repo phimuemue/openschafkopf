@@ -4,7 +4,7 @@ use crate::rules::*;
 use crate::util::*;
 use itertools::Itertools;
 use rand::{self, Rng};
-use std::{cmp::Ordering, fmt, fs, io::Write};
+use std::{cmp::Ordering, fmt, fs, io::{BufWriter, Write}};
 use super::cardspartition::*;
 
 pub trait TForEachSnapshot {
@@ -48,13 +48,13 @@ pub fn visualizer_factory<'rules>(path: std::path::PathBuf, rules: &'rules dyn T
 }
 
 pub struct SForEachSnapshotHTMLVisualizer<'rules> {
-    file_output: fs::File,
+    file_output: BufWriter<fs::File>,
     rules: &'rules dyn TRules,
     epi: EPlayerIndex,
 }
 impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
     fn new(file_output: fs::File, rules: &'rules dyn TRules, epi: EPlayerIndex) -> Self {
-        let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output, rules, epi};
+        let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output: BufWriter::with_capacity(16*1024*1024, file_output), rules, epi};
         foreachsnapshothtmlvisualizer.write_all(
             b"<link rel=\"stylesheet\" type=\"text/css\" href=\"../css.css\">
             <style>
