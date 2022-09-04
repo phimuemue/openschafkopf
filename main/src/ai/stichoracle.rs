@@ -143,7 +143,6 @@ impl SStichTrie {
                             // TODO avoid backward-forward iteration
                             let mut card_chain = cardspartition_actual
                                 .prev_while_contained(card_representative, &veccard_allowed);
-                            let is_primary_party = |epi| playerparties.is_primary_party(epi);
                             macro_rules! card_min_or_max(($fn_assign_by:expr) => {{
                                 let mut card_min_or_max = card_chain;
                                 veccard_allowed.must_find_swap_remove(&card_chain);
@@ -159,7 +158,7 @@ impl SStichTrie {
                                 card_min_or_max
                             }});
                             stichtrie.vectplcardtrie.push((
-                                if b_stich_winner_primary_party==is_primary_party(epi_card) {
+                                if b_stich_winner_primary_party==playerparties.is_primary_party(epi_card) {
                                     card_min_or_max!(assign_max_by_key)
                                 } else {
                                     card_min_or_max!(assign_min_by_key)
