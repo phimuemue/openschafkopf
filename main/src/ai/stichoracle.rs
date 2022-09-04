@@ -110,51 +110,50 @@ impl SStichTrie {
                             cardspartition_actual.remove_from_chain(*card);
                         }
                     }
-                    let next_in_chain = |veccard: &SHandVector, card_chain| {
-                        cardspartition_actual.next(card_chain)
+                    fn iterate_chain(
+                        cardspartition: &SCardsPartition,
+                        veccard: &mut SHandVector,
+                        card_representative: SCard,
+                        mut func: impl FnMut(SCard),
+                    ) {
+                        // TODO avoid backward-forward iteration
+                        let mut card_chain = cardspartition.prev_while_contained(card_representative, &veccard);
+                        veccard.must_find_swap_remove(&card_chain);
+                        func(card_chain);
+                        while let Some(card_chain_next) = cardspartition.next(card_chain)
                             .filter(|card| veccard.contains(card))
-                    };
+                        {
+                            card_chain = card_chain_next;
+                            veccard.must_find_swap_remove(&card_chain);
+                            func(card_chain);
+                        }
+                    }
                     match ob_stich_winner_primary_party_representative {
                         None => {
-                            let mut card_chain = cardspartition_actual
-                                .prev_while_contained(card_representative, &veccard_allowed);
-                            let i_stichtrie_representative = stichtrie.vectplcardtrie.len();
-                            stichtrie.vectplcardtrie.push((
-                                card_chain,
-                                stichtrie_representative,
-                            ));
                             let mut ab_points = [false; 12]; // TODO? couple with points_card
-                            ab_points[points_card(card_chain).as_num::<usize>()]=true;
-                            veccard_allowed.must_find_swap_remove(&card_chain);
-                            while let Some(card_chain_next) = next_in_chain(&veccard_allowed, card_chain) {
-                                card_chain = card_chain_next;
-                                veccard_allowed.must_find_swap_remove(&card_chain);
+                            iterate_chain(&cardspartition_actual, &mut veccard_allowed, card_representative, |card_chain| {
                                 if !ab_points[points_card(card_chain).as_num::<usize>()] {
                                     ab_points[points_card(card_chain).as_num::<usize>()]=true;
                                     stichtrie.vectplcardtrie.push((
                                         card_chain,
-                                        stichtrie.vectplcardtrie[i_stichtrie_representative].1.clone(),
+                                        stichtrie_representative.clone(),
                                     ));
                                 }
-                            }
+                            });
                             stichwinnerprimaryparty = VStichWinnerPrimaryParty::Different;
                         },
                         Some(b_stich_winner_primary_party) => {
-                            // TODO avoid backward-forward iteration
-                            let mut card_chain = cardspartition_actual
-                                .prev_while_contained(card_representative, &veccard_allowed);
                             macro_rules! card_min_or_max(($fn_assign_by:expr) => {{
+                                let card_chain = cardspartition_actual
+                                    .prev_while_contained(card_representative, &veccard_allowed);
                                 let mut card_min_or_max = card_chain;
-                                veccard_allowed.must_find_swap_remove(&card_chain);
-                                while let Some(card_chain_next) = next_in_chain(&veccard_allowed, card_chain) {
-                                    card_chain = card_chain_next;
-                                    veccard_allowed.must_find_swap_remove(&card_chain);
+                                iterate_chain(&cardspartition_actual, &mut veccard_allowed, card_representative, |card_chain| {
                                     $fn_assign_by(
                                         &mut card_min_or_max,
                                         card_chain,
                                         |card| points_card(*card),
                                     );
-                                }
+                                });
                                 card_min_or_max
                             }});
                             stichtrie.vectplcardtrie.push((
