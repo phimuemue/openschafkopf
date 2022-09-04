@@ -410,7 +410,7 @@ fn generate_analysis_html(
                         .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
                         .join("  "),
                     str_hand=EPlayerIndex::values()
-                        .map(|epi| SDisplayCardSlice::new(ahand[epi].cards().clone(), game.rules.as_ref()))
+                        .map(|epi| SDisplayCardSlice::new(ahand[epi].cards().clone(), &game.rules))
                         .join("  "),
                 ).replace('\"', "\\\""),
             );

@@ -104,7 +104,7 @@ fn detect_expensive_all_possible_hands() {
                             game.ahand.iter()
                                 .map(|hand| SDisplayCardSlice::new(
                                     hand.cards().clone(),
-                                    game.rules.as_ref(),
+                                    &game.rules,
                                 ))
                                 .join(" | "),
                             game.stichseq.visible_stichs().iter().join(", "),
