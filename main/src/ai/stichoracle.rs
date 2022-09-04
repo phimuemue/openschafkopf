@@ -19,6 +19,7 @@ use crate::{
     },
 };
 use arrayvec::ArrayVec;
+use itertools::Itertools;
 
 #[derive(Debug, Clone)]
 pub struct SStichTrie {
@@ -43,7 +44,6 @@ impl SStichTrie {
                     vecstich.extend(internal_traverse_trie(stichtrie_child, stich));
                     stich.undo_most_recent();
                 }
-                use itertools::Itertools;
                 debug_assert!(vecstich.iter().all_unique());
                 vecstich
             }
