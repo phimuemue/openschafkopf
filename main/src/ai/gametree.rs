@@ -176,15 +176,6 @@ pub trait TFilterAllowedCards {
     }
 }
 
-impl<F: Fn(&SStichSequence, &mut SHandVector)> TFilterAllowedCards for F {
-    type UnregisterStich = ();
-    fn register_stich(&mut self, _stich: &SStich) -> Self::UnregisterStich {}
-    fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {}
-    fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
-        self(stichseq, veccard)
-    }
-}
-
 pub struct SNoFilter;
 impl SNoFilter {
     pub fn factory() -> impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->Self {
