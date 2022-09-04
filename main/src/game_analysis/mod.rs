@@ -401,7 +401,6 @@ fn generate_analysis_html(
             let stichseq = &analysispercard.stichseq;
             let ahand = &analysispercard.ahand;
             let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
-            let hand_to_command_line = |hand: &SHand| hand.cards().iter().join(" ");
             let mut str_per_card = format!(r###"<h3>{} <button onclick='copyToClipboard("{}", this)'>&#128203</button></h3>"###,
                 stich_caption(stichseq),
                 format!("{str_exe} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand}\" --branching \"equiv7\"",
@@ -411,7 +410,7 @@ fn generate_analysis_html(
                         .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
                         .join("  "),
                     str_hand=EPlayerIndex::values()
-                        .map(|epi| hand_to_command_line(&ahand[epi]))
+                        .map(|epi| SDisplayCardSlice::new(ahand[epi].cards().clone(), game.rules.as_ref()))
                         .join("  "),
                 ).replace('\"', "\\\""),
             );
