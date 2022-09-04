@@ -127,15 +127,15 @@ impl SStichTrie {
                             ab_points[points_card(card_chain).as_num::<usize>()]=true;
                             veccard_allowed.must_find_swap_remove(&card_chain);
                             while let Some(card_chain_next) = next_in_chain(&veccard_allowed, card_chain) {
-                                if !ab_points[points_card(card_chain_next).as_num::<usize>()] {
-                                    ab_points[points_card(card_chain_next).as_num::<usize>()]=true;
+                                card_chain = card_chain_next;
+                                veccard_allowed.must_find_swap_remove(&card_chain);
+                                if !ab_points[points_card(card_chain).as_num::<usize>()] {
+                                    ab_points[points_card(card_chain).as_num::<usize>()]=true;
                                     stichtrie.vectplcardtrie.push((
-                                        card_chain_next,
+                                        card_chain,
                                         stichtrie.vectplcardtrie[i_stichtrie_representative].1.clone(),
                                     ));
                                 }
-                                veccard_allowed.must_find_swap_remove(&card_chain_next);
-                                card_chain = card_chain_next;
                             }
                             stichwinnerprimaryparty = VStichWinnerPrimaryParty::Different;
                         },
