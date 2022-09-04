@@ -806,7 +806,7 @@ mod tests {
                 // [E7, EA, EK, EZ], // covered by [E7, EA, EK, E9]
                 // [E7, EA, EK, E9], // covered by [E8, EA, EK, E9]
                 [GZ, GA, GK, G8],
-                [G9, GA, GK, G8],
+                [G9, GA, GK, G8], // TODO should not be needed (GZ better than G9)
             ],
         );
         let rules_solo_gras_epi0 = sololike(
