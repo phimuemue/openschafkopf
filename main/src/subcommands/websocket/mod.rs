@@ -638,6 +638,7 @@ enum VMessage {
 }
 
 // timer adapted from https://rust-lang.github.io/async-book/02_execution/03_wakeups.html
+// TODO should possibly be replaced standard facility
 struct STimerFuture {
     state: Arc<Mutex<STimerFutureState>>,
     table: Arc<Mutex<STable>>,
