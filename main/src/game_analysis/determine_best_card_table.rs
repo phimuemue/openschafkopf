@@ -24,10 +24,7 @@ pub struct SFormatInfo {
 enum EGrouping { Group, NoGroup }
 impl PartialEq for EGrouping {
     fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (EGrouping::Group, EGrouping::Group) => true,
-            _ => false,
-        }
+        matches!((self, other), (EGrouping::Group, EGrouping::Group))
     }
 }
 
