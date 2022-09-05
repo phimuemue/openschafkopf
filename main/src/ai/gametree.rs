@@ -197,6 +197,11 @@ pub trait TSnapshotCache<T> { // TODO? could this be implemented via TForEachSna
     }
 }
 pub struct SSnapshotCacheNone;
+impl SSnapshotCacheNone {
+    pub fn factory() -> impl Fn(&SStichSequence, &SRuleStateCacheFixed) -> Self {
+        |_,_| Self
+    }
+}
 impl<T> TSnapshotCache<T> for SSnapshotCacheNone {
     fn get(&self, _stichseq: &SStichSequence, _rulestatecache: &SRuleStateCache) -> Option<T> {
         None

@@ -135,7 +135,7 @@ pub fn analyze_game(
                                 /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                                 game.n_stock,
                             ),
-                            &|_,_| SSnapshotCacheNone, // TODO possibly use cache
+                            &SSnapshotCacheNone::factory(), // TODO possibly use cache
                             &mut SNoVisualization,
                         )
                             .0
@@ -154,7 +154,7 @@ pub fn analyze_game(
                             game.rules.equivalent_when_on_same_hand(),
                         ),
                         &SMinReachablePayout::new_from_game(game),
-                        /*fn_snapshotcache*/|_,_| SSnapshotCacheNone, // TODO possibly use cache
+                        /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO possibly use cache
                         /*fn_visualizer*/SNoVisualization::factory(),
                         /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
                     ));

@@ -124,7 +124,7 @@ impl TPlayer for SPlayerComputer {
                             /*tpln_stoss_doubling*/stoss_and_doublings(vecstoss, doublings),
                             n_stock,
                         ),
-                        &|_,_| SSnapshotCacheNone, // TODO? use cache
+                        &SSnapshotCacheNone::factory(), // TODO? use cache
                         &mut SNoVisualization,
                     ).0[EMinMaxStrategy::Min][epi]
                 })

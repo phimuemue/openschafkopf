@@ -171,7 +171,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             (RulesSnapshotCache),
                             (|_stichseq, rulestatecache| rules.snapshot_cache(rulestatecache))
                         ),
-                        false => ((_), (|_,_| SSnapshotCacheNone)),
+                        false => ((_), (SSnapshotCacheNone::factory())),
                     },
                     match (clapmatches.value_of("visualize")) {
                         None => (SNoVisualization::factory()),
