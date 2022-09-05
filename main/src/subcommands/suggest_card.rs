@@ -36,6 +36,11 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
             .help("Use points as criterion")
             .long_help("When applicable (e.g. for Solo, Rufspiel), investigate the points reached instead of the raw payout.")
         )
+        .arg(clap::Arg::new("snapshotcache")
+            .long("snapshotcache")
+            .help("Use snapshot cache")
+            .long_help("Use snapshot cache to possibly speed up game tree exploration.")
+        )
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
@@ -70,10 +75,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 determinebestcard.rules
             };
             let epi_fixed = determinebestcard.epi_fixed;
+            type RulesSnapshotCache = Box<dyn TSnapshotCache<SMinMax>>;
             let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), (($ty_snapshotcache:ty), $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
-                    determine_best_card::<$($func_filter_allowed_cards_ty)*, _, _, _, _>( // TODO avoid explicit types
+                    determine_best_card::<$($func_filter_allowed_cards_ty)*, _, $ty_snapshotcache, _, _, _>( // TODO avoid explicit types
                         &determinebestcard,
                         Box::new(
                             itahand
@@ -91,7 +97,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             /*tpln_stoss_doubling*/(0, 0), // TODO? make customizable
                             /*n_stock*/0, // TODO? make customizable
                         ),
-                        /*fn_snapshotcache*/|_,_| SSnapshotCacheNone, // TODO make customizable
+                        $fn_snapshotcache,
                         $fn_visualizer,
                         /*fn_inspect*/&|b_before, i_ahand, ahand, card| {
                             if b_verbose {
@@ -159,6 +165,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     match (clapmatches.value_of("prune")) {
                         Some("hint") => (SMinReachablePayoutLowerBoundViaHint),
                         _ => (SMinReachablePayout),
+                    },
+                    match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
+                        true => (
+                            (RulesSnapshotCache),
+                            (|_stichseq, rulestatecache| rules.snapshot_cache(rulestatecache))
+                        ),
+                        false => ((_), (|_,_| SSnapshotCacheNone)),
                     },
                     match (clapmatches.value_of("visualize")) {
                         None => (SNoVisualization::factory()),
