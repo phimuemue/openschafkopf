@@ -396,4 +396,13 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
             }) as Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
         ))
     }
+
+    fn snapshot_cache(&self, rulestatecachefixed: &SRuleStateCacheFixed) -> Option<Box<dyn TSnapshotCache<SMinMax>>> {
+        super::snapshot_cache_point_based(SPlayerParties22{
+            aepi_pri: [
+                self.epi,
+                rulestatecachefixed.who_has_card(self.rufsau())
+            ],
+        })
+    }
 }
