@@ -544,7 +544,7 @@ fn snapshot_cache_point_based<PlayerParties: TPlayerParties+'static>(playerparti
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             self.mapsnapequivpayoutstats
                 .get(&self.snap_equiv(stichseq, rulestatecache))
-                .map(|payoutstats| payoutstats.clone())
+                .cloned()
         }
         fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SMinMax) {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
