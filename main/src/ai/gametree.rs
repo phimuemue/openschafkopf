@@ -261,7 +261,7 @@ pub fn explore_snapshots<
             Some(mut func_filter_allowed_cards) => (&mut func_filter_allowed_cards),
             None => (/*func_filter_allowed_cards*/&mut SNoFilter),
         },
-        match(fn_snapshotcache(&stichseq, &SRuleStateCacheFixed::new(&stichseq, &ahand)).into()) {
+        match(fn_snapshotcache(stichseq, &SRuleStateCacheFixed::new(stichseq, ahand)).into()) {
             Some(mut snapshotcache) => (&mut snapshotcache),
             None => (&mut SSnapshotCacheNone),
         },
