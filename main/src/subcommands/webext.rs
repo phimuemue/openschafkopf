@@ -20,7 +20,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
         while let Ok(str_openschafkopf_out) = recvstr.recv() {
             let str_json_out = json!({ "strOpenschafkopfOut": str_openschafkopf_out }).to_string();
             info!("Trying to send \"{}\"", str_json_out);
-            unwrap!(std::io::stdout().write(
+            unwrap!(std::io::stdout().write_all(
                 &via_out_param(|abyte_buffer_msg_len: &mut [u8; 4]| {
                     byteorder::NativeEndian::write_u32(
                         abyte_buffer_msg_len,
@@ -29,7 +29,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                 })
                 .0
             ));
-            unwrap!(std::io::stdout().write(str_json_out.as_bytes()));
+            unwrap!(std::io::stdout().write_all(str_json_out.as_bytes()));
             unwrap!(std::io::stdout().flush());
         }
     });
