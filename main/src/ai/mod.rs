@@ -305,11 +305,11 @@ impl SPayoutStatsPerStrategy {
                 },
             }
         };
-        internal_cmp(EMinMaxStrategy::MinMin)
-            .then_with(|| internal_cmp(EMinMaxStrategy::Min))
+        internal_cmp(EMinMaxStrategy::Min)
             .then_with(|| internal_cmp(EMinMaxStrategy::SelfishMin))
             .then_with(|| internal_cmp(EMinMaxStrategy::SelfishMax))
             .then_with(|| internal_cmp(EMinMaxStrategy::Max))
+            .then_with(|| internal_cmp(EMinMaxStrategy::MinMin))
     }
 }
 
