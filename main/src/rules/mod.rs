@@ -18,6 +18,7 @@ pub mod tests;
 use crate::ai::ahand_vecstich_card_count_is_compatible;
 use crate::ai::rulespecific::*;
 use crate::ai::cardspartition::*;
+use crate::ai::gametree::{TSnapshotCache, SMinMax};
 use crate::game::SStichSequence;
 use crate::primitives::*;
 use crate::rules::card_points::points_stich;
@@ -373,6 +374,10 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
         Box<dyn TRules>,
         Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
     )> {
+        None
+    }
+
+    fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Option<Box<dyn TSnapshotCache<SMinMax>>> {
         None
     }
 }
