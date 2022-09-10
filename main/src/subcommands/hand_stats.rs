@@ -1,5 +1,3 @@
-use crate::ai::*;
-use crate::primitives::*;
 use crate::util::*;
 
 use super::common_given_game::*;
@@ -16,17 +14,9 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
-    struct SWithCommonArgs<'argmatches> {
-        clapmatches: &'argmatches clap::ArgMatches,
-    }
-    impl<'argmatches> TWithCommonArgs for SWithCommonArgs<'argmatches> {
-        fn call<'rules>(
-            self,
-            itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
-            determinebestcard: SDetermineBestCard,
-            _b_verbose: bool,
-        ) -> Result<(), Error> {
-            let clapmatches = self.clapmatches;
+    with_common_args(
+        clapmatches,
+        |itahand, determinebestcard, _b_verbose| {
             let vecconstraint = unwrap!(clapmatches.values_of("inspect"))
                 .map(|str_inspect| /*-> Result<_, Error>*/ {
                     str_inspect.parse::<VConstraint>()
@@ -69,6 +59,5 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             }
             Ok(())
         }
-    }
-    with_common_args(clapmatches, SWithCommonArgs{clapmatches})
+    )
 }

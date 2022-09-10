@@ -48,19 +48,17 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
         )
 }
 
-pub trait TWithCommonArgs {
-    fn call<'rules>(
-        self,
-        itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
-        determinebestcard: SDetermineBestCard,
-        b_verbose: bool,
-    ) -> Result<(), Error>;
-}
-
-pub fn with_common_args(
+pub fn with_common_args<FnWithArgs>(
     clapmatches: &clap::ArgMatches,
-    withcommanargs: impl TWithCommonArgs
-) -> Result<(), Error> {
+    fn_with_args: FnWithArgs,
+) -> Result<(), Error>
+    where
+        for<'rules> FnWithArgs: FnOnce(
+            Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
+            SDetermineBestCard,
+            bool/*b_verbose*/,
+        ) -> Result<(), Error>,
+{
     let b_verbose = clapmatches.is_present("verbose");
     let rules = unwrap!(super::get_rules(clapmatches))?;
     let rules = rules.as_ref();
@@ -184,7 +182,7 @@ pub fn with_common_args(
     macro_rules! forward{($n_ahand_total: expr, $itahand_factory: expr, $fn_take: expr) => {{ // TODORUST generic closures
         let mut n_ahand_seen = 0;
         let mut n_ahand_valid = 0;
-        withcommanargs.call(
+        fn_with_args(
             Box::new($fn_take($itahand_factory(
                 stichseq,
                 ahand_fixed,

@@ -44,17 +44,9 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
-    struct SWithCommonArgs<'argmatches> {
-        clapmatches: &'argmatches clap::ArgMatches,
-    }
-    impl<'argmatches> TWithCommonArgs for SWithCommonArgs<'argmatches> {
-        fn call<'rules>(
-            self,
-            itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
-            determinebestcard: SDetermineBestCard,
-            b_verbose: bool,
-        ) -> Result<(), Error> {
-            let clapmatches = self.clapmatches;
+    with_common_args(
+        clapmatches,
+        |itahand, determinebestcard, b_verbose| {
             let otplrulesfn_points_as_payout = if clapmatches.is_present("points") {
                 if let Some(tplrulesfn_points_as_payout) = determinebestcard.rules.points_as_payout() {
                     Some(tplrulesfn_points_as_payout)
@@ -205,6 +197,5 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 );
             Ok(())
         }
-    }
-    with_common_args(clapmatches, SWithCommonArgs{clapmatches})
+    )
 }
