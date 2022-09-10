@@ -46,6 +46,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     with_common_args(
         clapmatches,
+        |oresrules| unwrap!(oresrules).map(|rules| std::iter::once(rules)),
         |itahand, determinebestcard, b_verbose| {
             let otplrulesfn_points_as_payout = if clapmatches.is_present("points") {
                 if let Some(tplrulesfn_points_as_payout) = determinebestcard.rules.points_as_payout() {

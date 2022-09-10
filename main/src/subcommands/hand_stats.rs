@@ -16,6 +16,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     with_common_args(
         clapmatches,
+        |oresrules| unwrap!(oresrules).map(|rules| std::iter::once(rules)),
         |itahand, determinebestcard, _b_verbose| {
             let vecconstraint = unwrap!(clapmatches.values_of("inspect"))
                 .map(|str_inspect| /*-> Result<_, Error>*/ {
