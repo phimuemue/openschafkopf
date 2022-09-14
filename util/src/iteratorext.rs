@@ -46,41 +46,6 @@ pub trait IteratorExt: itertools::Itertools {
     }
 
     // TODO itertools
-    fn max_set_by_key<K: Ord>(mut self, mut fn_key: impl FnMut(&Self::Item) -> K) -> Vec<Self::Item>
-    where
-        Self: Sized,
-        K: Ord,
-    {
-        self.next().map_or(vec![], |item_0| {
-            self.fold(vec![item_0], |mut vecitem, item| {
-                match fn_key(&vecitem[0]).cmp(&fn_key(&item)) {
-                    std::cmp::Ordering::Less => vecitem = vec![item],
-                    std::cmp::Ordering::Equal => vecitem.push(item),
-                    std::cmp::Ordering::Greater => (),
-                }
-                vecitem
-            })
-        })
-    }
-
-    // TODO itertools
-    fn max_set_by(mut self, mut fn_cmp: impl FnMut(&Self::Item, &Self::Item) -> std::cmp::Ordering) -> Vec<Self::Item>
-    where
-        Self: Sized,
-    {
-        self.next().map_or(vec![], |item_0| {
-            self.fold(vec![item_0], |mut vecitem, item| {
-                match fn_cmp(&vecitem[0], &item) {
-                    std::cmp::Ordering::Less => vecitem = vec![item],
-                    std::cmp::Ordering::Equal => vecitem.push(item),
-                    std::cmp::Ordering::Greater => (),
-                }
-                vecitem
-            })
-        })
-    }
-
-    // TODO itertools
     fn all_equal_item(&mut self) -> Option<Self::Item>
     where
         Self: Sized,
