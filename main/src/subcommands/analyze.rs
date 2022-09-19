@@ -7,7 +7,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     clap::Command::new(str_subcommand)
         .about("Analyze played games and spot suboptimal decisions")
         .arg(input_files_arg("sauspiel-files"))
-        .arg(clap::Arg::new("include-no-findings")
+        .arg(clap::Arg::new("include-no-findings") // TODO replace this by interactive option in resulting HTML
             .long("include-no-findings")
         )
         .arg(clap::Arg::new("simulate-all-hands")

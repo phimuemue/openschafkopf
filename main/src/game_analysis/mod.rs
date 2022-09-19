@@ -366,7 +366,8 @@ fn generate_analysis_html(
     + &crate::ai::gametree::player_table(
         epi_self,
         |epi| {
-            // TODO replace this by a line/area chart
+            // TODO? replace this by a line/area chart
+            // TODO group unchanged columns
             let vecpossiblepayout = &mapepivecpossiblepayout[epi];
             Some(format!("<table>{}</table>",
                 format!("<tr>{}</tr>",
