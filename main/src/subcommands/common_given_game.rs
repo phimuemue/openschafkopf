@@ -12,15 +12,10 @@ enum VChooseItAhand {
 }
 
 pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::Command<'static> {
+    use super::shared_args::*;
     clap::Command::new(str_subcommand)
         .about(str_about)
-        .arg(clap::Arg::new("rules")
-            .long("rules")
-            .takes_value(true)
-            .required(true)
-            .help("Rules as plain text")
-            .long_help("Rules, given in plain text. The program tries to be lenient in the input format, so that all of the following should be accepted: \"gras wenz von 1\", \"farbwenz gras von 1\", \"BlauWenz von 1\". Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).")
-        )
+        .arg(rules_arg())
         .arg(clap::Arg::new("hand")
             .long("hand")
             .takes_value(true)
@@ -67,7 +62,7 @@ pub fn with_common_args(
     withcommanargs: impl TWithCommonArgs
 ) -> Result<(), Error> {
     let b_verbose = clapmatches.is_present("verbose");
-    let rules = crate::rules::parser::parse_rule_description_simple(unwrap!(clapmatches.value_of("rules")))?;
+    let rules = super::get_rules(clapmatches)?;
     let rules = rules.as_ref();
     let vecocard_hand = cardvector::parse_optional_cards::<Vec<_>>(unwrap!(clapmatches.value_of("hand")))
         .ok_or_else(||format_err!("Could not parse hand."))?;
