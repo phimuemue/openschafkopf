@@ -31,11 +31,11 @@ mod shared_args {
             .long_help("The TOML ruleset file describes the set of available rules, prices, what to do if no one wants to play, whether stoss and doubling is allowed.")
     }
 
-    pub fn rules_arg() -> clap::Arg<'static> {
+    pub fn rules_arg(b_required: bool) -> clap::Arg<'static> {
         clap::Arg::new("rules")
             .long("rules")
             .takes_value(true)
-            .required(true)
+            .required(b_required)
             .help("Rules as plain text")
             .long_help("Rules, given in plain text. The program tries to be lenient in the input format, so that all of the following should be accepted: \"gras wenz von 1\", \"farbwenz gras von 1\", \"BlauWenz von 1\". Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).")
     }
@@ -61,8 +61,10 @@ pub fn get_ruleset(clapmatches: &clap::ArgMatches) -> Result<SRuleSet, Error> {
     SRuleSet::from_file(std::path::Path::new(unwrap!(clapmatches.value_of("ruleset"))))
 }
 
-pub fn get_rules(clapmatches: &clap::ArgMatches) -> Result<Box<dyn crate::rules::TRules>, Error> {
-    crate::rules::parser::parse_rule_description_simple(unwrap!(clapmatches.value_of("rules")))
+pub fn get_rules(clapmatches: &clap::ArgMatches) -> Option<Result<Box<dyn crate::rules::TRules>, Error>> {
+    clapmatches.value_of("rules").map(|str_rules|
+        crate::rules::parser::parse_rule_description_simple(str_rules)
+    )
 }
 
 pub fn ai(subcommand_matches: &clap::ArgMatches) -> SAi {

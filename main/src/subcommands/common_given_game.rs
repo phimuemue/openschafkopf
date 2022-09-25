@@ -15,7 +15,7 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
     use super::shared_args::*;
     clap::Command::new(str_subcommand)
         .about(str_about)
-        .arg(rules_arg())
+        .arg(rules_arg(/*b_required*/true))
         .arg(clap::Arg::new("hand")
             .long("hand")
             .takes_value(true)
@@ -62,7 +62,7 @@ pub fn with_common_args(
     withcommanargs: impl TWithCommonArgs
 ) -> Result<(), Error> {
     let b_verbose = clapmatches.is_present("verbose");
-    let rules = super::get_rules(clapmatches)?;
+    let rules = unwrap!(super::get_rules(clapmatches))?;
     let rules = rules.as_ref();
     let vecocard_hand = cardvector::parse_optional_cards::<Vec<_>>(unwrap!(clapmatches.value_of("hand")))
         .ok_or_else(||format_err!("Could not parse hand."))?;
