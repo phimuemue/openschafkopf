@@ -357,7 +357,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                                 )
                                 .sum::<isize>(),
                         );
-                        stichseq_check.zugeben_custom_winner_index(*card, |stich| rules.winner_index(stich)); // TODO I could not simply pass rules. Why?
+                        stichseq_check.zugeben(*card, rules);
                         ahand_check[epi_card].play_card(*card);
                     }
 
