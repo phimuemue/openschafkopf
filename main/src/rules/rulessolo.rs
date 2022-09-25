@@ -15,10 +15,7 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
     fn payouthints<TrumpfDecider: TTrumpfDecider>(&self, rules: &SRulesSoloLike<TrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
     fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>>;
 
-    fn points_as_payout<
-        TrumpfDecider: TTrumpfDecider,
-        PayoutDecider: TPayoutDeciderSoloLike
-    >(&self, _rules: &SRulesSoloLike<TrumpfDecider, PayoutDecider>) -> Option<(
+    fn points_as_payout(&self, _rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Option<(
         Box<dyn TRules>,
         Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
     )> {
@@ -95,10 +92,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
         equivalent_when_on_same_hand_point_based(slccard_ordered)
     }
 
-    fn points_as_payout<
-        TrumpfDecider: TTrumpfDecider,
-        PayoutDecider: TPayoutDeciderSoloLike
-    >(&self, rules: &SRulesSoloLike<TrumpfDecider, PayoutDecider>) -> Option<(
+    fn points_as_payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Option<(
         Box<dyn TRules>,
         Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
     )> {
