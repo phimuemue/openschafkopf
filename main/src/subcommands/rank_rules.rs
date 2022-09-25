@@ -1,5 +1,9 @@
 use crate::primitives::*;
-use crate::rules::ruleset::*;
+use crate::rules::{
+    TRules,
+    TRulesBoxClone,
+    ruleset::*,
+};
 use crate::util::*;
 use crate::ai::gametree::SPerMinMaxStrategy;
 use crate::game_analysis::determine_best_card_table::{internal_table};
@@ -10,6 +14,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     clap::Command::new(str_subcommand)
         .about("Estimate strength of own hand")
         .arg(ruleset_arg())
+        .arg(rules_arg(/*b_required*/false)) // "overrides" ruleset // TODO? make ruleset optional
         .arg(ai_arg())
         .arg(clap_arg("hand", "")
             .help("The cards on someone's hand")
@@ -31,19 +36,29 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let ai = super::ai(clapmatches);
     println!("Hand: {}", SDisplayCardSlice::new(hand.get().to_vec(), /*cardsorter*/|_: &mut [SCard]|{}));
     internal_table(
-        allowed_rules(&ruleset.avecrulegroup[epi], hand)
-            .filter_map(|orules| orules.map(|rules| { // do not rank None
-                (
-                    rules,
-                    SPerMinMaxStrategy(ai.rank_rules(
-                        hand,
-                        epi,
-                        rules.upcast(),
-                        /*tpln_stoss_doubling*/(0, 0), // assume no stoss, no doublings in subcommand rank-rules
-                        /*n_stock*/0, // assume no stock in subcommand rank-rules
-                    ))
-                )
-            }))
+        if let Some(rules) = super::get_rules(clapmatches)
+            .transpose()?
+            .filter(|rules| rules.can_be_played(hand))
+        {
+            Box::new(std::iter::once(rules)) as Box<dyn Iterator<Item=Box<dyn TRules>>>
+        } else {
+            Box::new(
+                allowed_rules(&ruleset.avecrulegroup[epi], hand)
+                    .filter_map(|orules: _| {
+                        orules.map(|rules| TRulesBoxClone::box_clone(rules))
+                    })
+            ) as Box<dyn Iterator<Item=Box<dyn TRules>>>
+        }
+            .map(|rules| (
+                rules.clone(),
+                SPerMinMaxStrategy(ai.rank_rules(
+                    hand,
+                    epi,
+                    rules.as_ref(),
+                    /*tpln_stoss_doubling*/(0, 0), // assume no stoss, no doublings in subcommand rank-rules
+                    /*n_stock*/0, // assume no stock in subcommand rank-rules
+                ))
+            ))
             .collect::<Vec<_>>(),
         /*b_group*/false,
         /*fn_human_readable_payout*/&|f_payout| f_payout,
