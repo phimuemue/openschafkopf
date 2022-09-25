@@ -231,14 +231,23 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
 
     fn only_minmax_points_when_on_same_hand(&self, rulestatecache: &SRuleStateCacheFixed) -> Option<(SCardsPartition, SPlayerPartiesTable)> {
         use crate::primitives::card_values::*;
-        // TODO can we infer/assert this somehow?
         Some((
-            SCardsPartition::new_from_slices(&[
-                &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7] as &[SCard],
-                &[EA, EZ, EK, E9, E8, E7],
-                &[GA, GZ, GK, G9, G8, G7],
-                &[SA, SZ, SK, S9, S8, S7],
-            ]),
+            debug_verify_eq!(
+                SCardsPartition::new_from_slices(&[
+                    &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7] as &[SCard],
+                    &[EA, EZ, EK, E9, E8, E7],
+                    &[GA, GZ, GK, G9, G8, G7],
+                    &[SA, SZ, SK, S9, S8, S7],
+                ]),
+                {
+                    let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
+                    SCardsPartition::new_from_slices(
+                        &mapefarbeveccard.into_raw().iter().chain(Some(veccard_trumpf).iter())
+                            .map(|vec| -> &[_] { vec })
+                            .collect::<Vec<_>>(),
+                    )
+                }
+            ),
             SPlayerParties22{
                 aepi_pri: [self.epi, rulestatecache.who_has_card(self.rufsau())],
             }.into(),
