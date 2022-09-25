@@ -501,7 +501,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
     }
 
     fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Option<Box<dyn TSnapshotCache<SMinMax>>> {
-        super::snapshot_cache_point_based(SPlayerParties13::new(self.epi))
+        Some(super::snapshot_cache_point_based(SPlayerParties13::new(self.epi)))
     }
 }
 

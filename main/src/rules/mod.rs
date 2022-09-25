@@ -488,7 +488,7 @@ impl TCardSorter for Box<dyn TActivelyPlayableRules> {
     }
 }
 
-fn snapshot_cache_point_based<PlayerParties: TPlayerParties+'static>(playerparties: PlayerParties) -> Option<Box<dyn TSnapshotCache<SMinMax>>> {
+fn snapshot_cache_point_based<PlayerParties: TPlayerParties+'static>(playerparties: PlayerParties) -> Box<dyn TSnapshotCache<SMinMax>> {
     type SSnapshotEquivalenceClass = u64; // space-saving variant of this:
     // struct SSnapshotEquivalenceClass { // packed into SSnapshotEquivalenceClass TODO? use bitfield crate
     //     pointstichcount_primary: SPointStichCount,
@@ -559,11 +559,11 @@ fn snapshot_cache_point_based<PlayerParties: TPlayerParties+'static>(playerparti
             stichseq.completed_stichs().len()<=5
         }
     }
-    Some(Box::new(
+    Box::new(
         SSnapshotCachePointBased{
             playerparties,
             mapsnapequivpayoutstats: Default::default(),
         }
-    ))
+    )
 }
 
