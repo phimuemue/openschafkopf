@@ -78,20 +78,20 @@ pub fn with_common_args<FnWithArgs>(
     let (itrules, b_single) = (std::iter::once(unwrap!(super::get_rules(clapmatches))?), true);
     for rules in itrules {
         let rules = rules.as_ref();
-        let mapekurzlangostichseq = EKurzLang::map_from_fn(|ekurzlang| {
-            let mut stichseq = SStichSequence::new(ekurzlang);
-            for &card in veccard_as_played.iter() {
-                if !ekurzlang.supports_card(card) {
-                    return None; // TODO distinguish error
+        let (stichseq, ahand_fixed) = EKurzLang::values()
+            .map(|ekurzlang| {
+                let mut stichseq = SStichSequence::new(ekurzlang);
+                for &card in veccard_as_played.iter() {
+                    if !ekurzlang.supports_card(card) {
+                        return None; // TODO distinguish error
+                    }
+                    if stichseq.game_finished() {
+                        return None; // TODO distinguish error
+                    }
+                    stichseq.zugeben(card, rules);
                 }
-                if stichseq.game_finished() {
-                    return None; // TODO distinguish error
-                }
-                stichseq.zugeben(card, rules);
-            }
-            Some(stichseq)
-        });
-        let (stichseq, ahand_fixed) = mapekurzlangostichseq.into_raw().into_iter()
+                Some(stichseq)
+            })
             .filter_map(|ostichseq| ostichseq.and_then(|stichseq| {
                 let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
                 if_then_some!(
