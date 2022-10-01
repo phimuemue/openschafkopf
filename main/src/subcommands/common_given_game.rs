@@ -91,64 +91,56 @@ pub fn with_common_args<FnWithArgs>(
             }
             Some(stichseq)
         });
-        let (ekurzlang, ahand_fixed) = EKurzLang::values()
-            .filter_map(|ekurzlang| {
-                mapekurzlangostichseq[ekurzlang].as_ref().and_then(|stichseq| {
-                    let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
-                    if_then_some!(
-                        vecocard_hand.iter().all(Option::is_some)
-                            && stichseq.remaining_cards_per_hand()[epi_fixed]==vecocard_hand.len(),
-                        (
-                            ekurzlang,
+        let (stichseq, ahand_fixed) = mapekurzlangostichseq.into_raw().into_iter()
+            .filter_map(|ostichseq| ostichseq.and_then(|stichseq| {
+                let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
+                if_then_some!(
+                    vecocard_hand.iter().all(Option::is_some)
+                        && stichseq.remaining_cards_per_hand()[epi_fixed]==vecocard_hand.len(),
+                    SHand::new_from_iter(
+                        vecocard_hand.iter().map(|ocard| unwrap!(ocard))
+                    ).to_ahand(epi_fixed)
+                ).or_else(|| {
+                    let n_cards_total = stichseq.kurzlang().cards_per_player()*EPlayerIndex::SIZE;
+                    if stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total {
+                        let an_remaining = stichseq.remaining_cards_per_hand();
+                        let mut ai_card = an_remaining.explicit_clone();
+                        let mut n_remaining = 0;
+                        for epi in EPlayerIndex::values() {
+                            ai_card[epi] += n_remaining;
+                            n_remaining = ai_card[epi];
+                        }
+                        use EPlayerIndex::*;
+                        let make_hand = |i_lo, i_hi| {
                             SHand::new_from_iter(
-                                vecocard_hand.iter().map(|ocard| unwrap!(ocard))
-                            ).to_ahand(epi_fixed),
-                        )
-                    ).or_else(|| {
-                        let n_cards_total = ekurzlang.cards_per_player()*EPlayerIndex::SIZE;
-                        if stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total {
-                            let an_remaining = stichseq.remaining_cards_per_hand();
-                            let mut ai_card = an_remaining.explicit_clone();
-                            let mut n_remaining = 0;
-                            for epi in EPlayerIndex::values() {
-                                ai_card[epi] += n_remaining;
-                                n_remaining = ai_card[epi];
-                            }
-                            use EPlayerIndex::*;
-                            let make_hand = |i_lo, i_hi| {
-                                SHand::new_from_iter(
-                                    vecocard_hand[i_lo..i_hi].iter()
-                                        .copied()
-                                        .flatten()
-                                )
-                            };
-                            let ahand = EPlayerIndex::map_from_raw([
-                                make_hand(0, ai_card[EPI0]),
-                                make_hand(ai_card[EPI0], ai_card[EPI1]),
-                                make_hand(ai_card[EPI1], ai_card[EPI2]),
-                                make_hand(ai_card[EPI2], ai_card[EPI3]),
-                            ]);
-                            for epi in EPlayerIndex::values() {
-                                assert!(ahand[epi].cards().len() <= an_remaining[epi]);
-                            }
-                            if ahand[epi_fixed].cards().len()==an_remaining[epi_fixed] {
-                                Some((
-                                    ekurzlang,
-                                    ahand,
-                                ))
-                            } else {
-                                None
-                            }
+                                vecocard_hand[i_lo..i_hi].iter()
+                                    .copied()
+                                    .flatten()
+                            )
+                        };
+                        let ahand = EPlayerIndex::map_from_raw([
+                            make_hand(0, ai_card[EPI0]),
+                            make_hand(ai_card[EPI0], ai_card[EPI1]),
+                            make_hand(ai_card[EPI1], ai_card[EPI2]),
+                            make_hand(ai_card[EPI2], ai_card[EPI3]),
+                        ]);
+                        for epi in EPlayerIndex::values() {
+                            assert!(ahand[epi].cards().len() <= an_remaining[epi]);
+                        }
+                        if ahand[epi_fixed].cards().len()==an_remaining[epi_fixed] {
+                            Some(ahand)
                         } else {
                             None
                         }
-                    })
+                    } else {
+                        None
+                    }
                 })
-            })
+                .map(|ahand| (stichseq, ahand))
+            }))
             .exactly_one()
             .map_err(|err| format_err!("Could not determine ekurzlang: {}", err))?;
         // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
-        let stichseq = unwrap!(mapekurzlangostichseq[ekurzlang].as_ref());
         let oconstraint = if_then_some!(let Some(str_constrain_hands)=clapmatches.value_of("constrain_hands"), {
             let relation = str_constrain_hands.parse::<VConstraint>().map_err(|_|format_err!("Cannot parse hand constraints"))?;
             if b_verbose {
@@ -173,7 +165,7 @@ pub fn with_common_args<FnWithArgs>(
         let hand_fixed = ahand_fixed[epi_fixed].clone();
         let determinebestcard =  SDetermineBestCard::new(
             rules,
-            stichseq,
+            &stichseq,
             &hand_fixed,
         );
         assert_eq!(epi_fixed, determinebestcard.epi_fixed);
@@ -186,7 +178,7 @@ pub fn with_common_args<FnWithArgs>(
             let mut n_ahand_valid = 0;
             fn_with_args(
                 Box::new($fn_take($itahand_factory(
-                    stichseq,
+                    &stichseq,
                     ahand_fixed,
                     epi_fixed,
                     rules,
