@@ -2,6 +2,7 @@ use crate::ai::{*, handiterators::*};
 use crate::game::SStichSequence;
 use crate::primitives::*;
 use crate::util::*;
+use crate::rules::{ruleset::VStockOrT, TRules, TRulesBoxClone};
 use itertools::Itertools;
 
 pub use super::handconstraint::*;
@@ -15,7 +16,8 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
     use super::shared_args::*;
     clap::Command::new(str_subcommand)
         .about(str_about)
-        .arg(rules_arg(/*b_required*/true))
+        .arg(ruleset_arg())
+        .arg(rules_arg(/*b_required*/false)) // "overrides" ruleset // TODO? make ruleset optional
         .arg(clap::Arg::new("hand")
             .long("hand")
             .takes_value(true)
@@ -75,7 +77,37 @@ pub fn with_common_args<FnWithArgs>(
     if !veccard_duplicate.is_empty() {
         bail!("Cards are used more than once: {}", veccard_duplicate.iter().join(", "));
     }
-    let (itrules, b_single) = (std::iter::once(unwrap!(super::get_rules(clapmatches))?), true);
+    let (itrules, b_single) = match super::get_rules(clapmatches) {
+        None => {
+            let ruleset = super::get_ruleset(clapmatches)?;
+            (
+                Box::new(ruleset
+                    .avecrulegroup.into_raw().into_iter()
+                    .flat_map(|vecrulegroup|
+                        vecrulegroup.into_iter().flat_map(|rulegroup| {
+                            rulegroup.vecorules.into_iter()
+                                .filter_map(|orules|
+                                    orules.as_ref().map(|rules|
+                                        TRulesBoxClone::box_clone(rules.upcast())
+                                    )
+                                )
+                        })
+                    )
+                    .chain(match ruleset.stockorramsch {
+                        VStockOrT::Stock(_) => None,
+                        VStockOrT::OrT(rules) => Some(rules)
+                    })
+                ) as Box<dyn Iterator<Item=Box<dyn TRules>>>,
+                /*b_single*/false,
+            )
+        },
+        Some(Ok(rules)) => {
+            (Box::new(std::iter::once(rules)) as Box<dyn Iterator<Item=Box<dyn TRules>>>, /*b_single*/true)
+        },
+        Some(Err(err)) => {
+            bail!("Could not parse rules: {}", err);
+        },
+    };
     for rules in itrules {
         let rules = rules.as_ref();
         let (stichseq, ahand_fixed) = EKurzLang::values()
@@ -141,6 +173,28 @@ pub fn with_common_args<FnWithArgs>(
             .exactly_one()
             .map_err(|err| format_err!("Could not determine ekurzlang: {}", err))?;
         // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
+        if let Some(epi_active) = rules.playerindex() {
+            let veccard_hand_active = ahand_fixed[epi_active].cards().iter().copied()
+                .chain(stichseq
+                    .visible_cards()
+                    .filter_map(|(epi, card)| if_then_some!(epi==epi_active, *card))
+                )
+                .collect::<Vec<_>>();
+            if veccard_hand_active.len()==stichseq.kurzlang().cards_per_player() {
+                if !rules.can_be_played(SFullHand::new(&veccard_hand_active, stichseq.kurzlang())) {
+                    if b_single {
+                        bail!("Rules {} cannot be played given these cards.", rules);
+                    } else {
+                        if b_verbose {
+                            println!("Rules {} cannot be played given these cards.", rules);
+                        }
+                        continue;
+                    }
+                }
+            } else {
+                // let hand iterators try to generate valid hands.
+            }
+        }
         let oconstraint = if_then_some!(let Some(str_constrain_hands)=clapmatches.value_of("constrain_hands"), {
             let relation = str_constrain_hands.parse::<VConstraint>().map_err(|_|format_err!("Cannot parse hand constraints"))?;
             if b_verbose {
