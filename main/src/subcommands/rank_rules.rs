@@ -14,7 +14,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     clap::Command::new(str_subcommand)
         .about("Estimate strength of own hand")
         .arg(ruleset_arg())
-        .arg(rules_arg(/*b_required*/false)) // "overrides" ruleset // TODO? make ruleset optional
+        .arg(rules_arg()) // "overrides" ruleset // TODO? make ruleset optional
         .arg(ai_arg())
         .arg(clap_arg("hand", "")
             .help("The cards on someone's hand")

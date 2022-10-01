@@ -17,7 +17,7 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
     clap::Command::new(str_subcommand)
         .about(str_about)
         .arg(ruleset_arg())
-        .arg(rules_arg(/*b_required*/false)) // "overrides" ruleset // TODO? make ruleset optional
+        .arg(rules_arg()) // "overrides" ruleset // TODO? make ruleset optional
         .arg(clap::Arg::new("hand")
             .long("hand")
             .takes_value(true)
