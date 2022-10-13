@@ -60,8 +60,6 @@ pub fn with_common_args<FnWithArgs>(
         ) -> Result<(), Error>,
 {
     let b_verbose = clapmatches.is_present("verbose");
-    let rules = unwrap!(super::get_rules(clapmatches))?;
-    let rules = rules.as_ref();
     let vecocard_hand = cardvector::parse_optional_cards::<Vec<_>>(unwrap!(clapmatches.value_of("hand")))
         .ok_or_else(||format_err!("Could not parse hand."))?;
     let veccard_as_played = match clapmatches.value_of("cards_on_table") {
@@ -76,6 +74,8 @@ pub fn with_common_args<FnWithArgs>(
     if !veccard_duplicate.is_empty() {
         bail!("Cards are used more than once: {}", veccard_duplicate.iter().join(", "));
     }
+    let rules = unwrap!(super::get_rules(clapmatches))?;
+    let rules = rules.as_ref();
     let mapekurzlangostichseq = EKurzLang::map_from_fn(|ekurzlang| {
         let mut stichseq = SStichSequence::new(ekurzlang);
         for &card in veccard_as_played.iter() {
