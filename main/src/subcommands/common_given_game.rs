@@ -50,10 +50,10 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
 
 pub fn with_common_args<FnWithArgs>(
     clapmatches: &clap::ArgMatches,
-    fn_with_args: FnWithArgs,
+    mut fn_with_args: FnWithArgs,
 ) -> Result<(), Error>
     where
-        for<'rules> FnWithArgs: FnOnce(
+        for<'rules> FnWithArgs: FnMut(
             Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
             SDetermineBestCard,
             bool/*b_verbose*/,
