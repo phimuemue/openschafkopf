@@ -14,17 +14,20 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
+    let vecconstraint = unwrap!(clapmatches.values_of("inspect"))
+        .map(|str_inspect| /*-> Result<_, Error>*/ {
+            str_inspect.parse::<VConstraint>()
+                .map_err(|_| format_err!("Cannot parse inspection target."))
+        })
+        .collect::<Result<Vec<_>,_>>()?;
+    for constraint in vecconstraint.iter() {
+        println!("{:?}", constraint);
+    }
     with_common_args(
         clapmatches,
-        |itahand, determinebestcard, _b_verbose| {
-            let vecconstraint = unwrap!(clapmatches.values_of("inspect"))
-                .map(|str_inspect| /*-> Result<_, Error>*/ {
-                    str_inspect.parse::<VConstraint>()
-                        .map_err(|_| format_err!("Cannot parse inspection target."))
-                })
-                .collect::<Result<Vec<_>,_>>()?;
-            for constraint in vecconstraint.iter() {
-                println!("{:?}", constraint);
+        |itahand, determinebestcard, b_single, b_verbose| {
+            if b_verbose || !b_single {
+                println!("Rules: {}", determinebestcard.rules);
             }
             #[derive(PartialOrd, Ord, Hash, PartialEq, Eq)]
             enum VInspectValue {

@@ -56,6 +56,7 @@ pub fn with_common_args<FnWithArgs>(
         for<'rules> FnWithArgs: FnMut(
             Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
             SDetermineBestCard,
+            bool/*b_single*/,
             bool/*b_verbose*/,
         ) -> Result<(), Error>,
 {
@@ -74,7 +75,7 @@ pub fn with_common_args<FnWithArgs>(
     if !veccard_duplicate.is_empty() {
         bail!("Cards are used more than once: {}", veccard_duplicate.iter().join(", "));
     }
-    let itrules = std::iter::once(unwrap!(super::get_rules(clapmatches))?);
+    let (itrules, b_single) = (std::iter::once(unwrap!(super::get_rules(clapmatches))?), true);
     for rules in itrules {
         let rules = rules.as_ref();
         let mapekurzlangostichseq = EKurzLang::map_from_fn(|ekurzlang| {
@@ -220,6 +221,7 @@ pub fn with_common_args<FnWithArgs>(
                     }
                 ))),
                 determinebestcard,
+                b_single,
                 b_verbose,
             )?;
         }}}
