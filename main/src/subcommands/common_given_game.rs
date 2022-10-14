@@ -159,11 +159,10 @@ pub fn with_common_args<FnWithArgs>(
                         for epi in EPlayerIndex::values() {
                             assert!(ahand[epi].cards().len() <= an_remaining[epi]);
                         }
-                        if ahand[epi_fixed].cards().len()==an_remaining[epi_fixed] {
-                            Some(ahand)
-                        } else {
-                            None
-                        }
+                        if_then_some!(
+                            ahand[epi_fixed].cards().len()==an_remaining[epi_fixed],
+                            ahand
+                        )
                     } else {
                         None
                     }
