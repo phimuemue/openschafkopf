@@ -25,7 +25,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     }
     with_common_args(
         clapmatches,
-        |itahand, rules, _determinebestcard, b_single, b_verbose| {
+        |itahand, rules, _stichseq, _hand_fixed, b_single, b_verbose| {
             if b_verbose || !b_single {
                 println!("Rules: {}", rules);
             }

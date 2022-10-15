@@ -46,7 +46,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     with_common_args(
         clapmatches,
-        |itahand, rules, determinebestcard, b_single, b_verbose| {
+        |itahand, rules, stichseq, hand_fixed, b_single, b_verbose| {
             if b_verbose || !b_single {
                 println!("Rules: {}", rules);
             }
@@ -69,13 +69,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             } else {
                 rules
             };
-            let epi_fixed = unwrap!(determinebestcard.stichseq.current_stich().current_playerindex());
+            let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
             type RulesSnapshotCache = Box<dyn TSnapshotCache<SMinMax>>;
             let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
                 macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), (($ty_snapshotcache:ty), $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                     determine_best_card::<$($func_filter_allowed_cards_ty)*, _, $ty_snapshotcache, _, _, _>( // TODO avoid explicit types
-                        &determinebestcard,
+                        &SDetermineBestCard::new(stichseq, hand_fixed),
                         rules,
                         Box::new(
                             itahand
@@ -135,7 +135,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     .ok_or_else(|| format_err!("Could not parse branching"))?;
                                 let (n_lo, n_hi) = (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?);
                                 if_then_some!(
-                                    n_lo < determinebestcard.hand_fixed.cards().len(),
+                                    n_lo < hand_fixed.cards().len(),
                                     Branching(n_lo, n_hi)
                                 )
                             }
@@ -187,8 +187,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 /*fn_human_readable_payout*/&|f_payout| {
                     if let Some(fn_payout_to_points) = &ofn_payout_to_points {
                         fn_payout_to_points(
-                            determinebestcard.stichseq,
-                            determinebestcard.hand_fixed,
+                            stichseq,
+                            hand_fixed,
                             f_payout
                         )
                     } else {

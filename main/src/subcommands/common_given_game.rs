@@ -1,4 +1,4 @@
-use crate::ai::{*, handiterators::*};
+use crate::ai::handiterators::*;
 use crate::game::SStichSequence;
 use crate::primitives::*;
 use crate::util::*;
@@ -58,7 +58,8 @@ pub fn with_common_args<FnWithArgs>(
         for<'rules> FnWithArgs: FnMut(
             Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
             &'rules dyn TRules,
-            SDetermineBestCard,
+            &SStichSequence,
+            &SHand, // TODO? Good idea? Could this simply given by itahand?
             bool/*b_single*/,
             bool/*b_verbose*/,
         ) -> Result<(), Error>,
@@ -214,10 +215,6 @@ pub fn with_common_args<FnWithArgs>(
             All
         });
         let hand_fixed = ahand_fixed[epi_fixed].clone();
-        let determinebestcard =  SDetermineBestCard::new(
-            &stichseq,
-            &hand_fixed,
-        );
         for epi in EPlayerIndex::values() {
             assert!(ahand_fixed[epi].cards().len() <= mapepin_cards_per_hand[epi]);
         }
@@ -262,7 +259,8 @@ pub fn with_common_args<FnWithArgs>(
                     }
                 ))),
                 rules,
-                determinebestcard,
+                &stichseq,
+                &hand_fixed,
                 b_single,
                 b_verbose,
             )?;
