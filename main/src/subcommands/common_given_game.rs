@@ -111,7 +111,7 @@ pub fn with_common_args<FnWithArgs>(
     for rules in itrules {
         let rules = rules.as_ref();
         let (stichseq, ahand_fixed) = EKurzLang::values()
-            .map(|ekurzlang| {
+            .filter_map(|ekurzlang| {
                 let mut stichseq = SStichSequence::new(ekurzlang);
                 for &card in veccard_stichseq.iter() {
                     if !ekurzlang.supports_card(card) {
@@ -122,9 +122,6 @@ pub fn with_common_args<FnWithArgs>(
                     }
                     stichseq.zugeben(card, rules);
                 }
-                Some(stichseq)
-            })
-            .filter_map(|ostichseq| ostichseq.and_then(|stichseq| {
                 let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
                 if_then_some!(
                     vecocard_hand.iter().all(Option::is_some)
@@ -168,7 +165,7 @@ pub fn with_common_args<FnWithArgs>(
                     }
                 })
                 .map(|ahand| (stichseq, ahand))
-            }))
+            })
             .exactly_one()
             .map_err(|err| format_err!("Could not determine ekurzlang: {}", err))?;
         // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
