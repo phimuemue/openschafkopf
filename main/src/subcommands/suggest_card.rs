@@ -69,7 +69,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             } else {
                 rules
             };
-            let epi_fixed = determinebestcard.epi_fixed;
+            let epi_fixed = unwrap!(determinebestcard.stichseq.current_stich().current_playerindex());
             type RulesSnapshotCache = Box<dyn TSnapshotCache<SMinMax>>;
             let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
                 macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), (($ty_snapshotcache:ty), $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures

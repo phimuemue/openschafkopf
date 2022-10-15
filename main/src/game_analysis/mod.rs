@@ -187,10 +187,11 @@ pub fn analyze_game(
                     (determinebestcardresult.clone(), ocardandpayout)
                 }}}
                 let look_for_mistakes_simulating = || {
+                    let epi_fixed = unwrap!(game.stichseq.current_stich().current_playerindex());
                     look_for_mistakes!(all_possible_hands(
                         &game.stichseq,
-                        game.ahand[determinebestcard.epi_fixed].clone(),
-                        determinebestcard.epi_fixed,
+                        game.ahand[epi_fixed].clone(),
+                        epi_fixed,
                         game.rules.as_ref(),
                     )).1
                 };

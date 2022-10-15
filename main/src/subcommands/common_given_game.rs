@@ -218,7 +218,6 @@ pub fn with_common_args<FnWithArgs>(
             &stichseq,
             &hand_fixed,
         );
-        assert_eq!(epi_fixed, determinebestcard.epi_fixed);
         for epi in EPlayerIndex::values() {
             assert!(ahand_fixed[epi].cards().len() <= mapepin_cards_per_hand[epi]);
         }

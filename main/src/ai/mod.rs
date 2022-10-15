@@ -41,14 +41,12 @@ pub struct SAi {
 
 pub struct SDetermineBestCard<'game> {
     pub stichseq: &'game SStichSequence,
-    pub epi_fixed: EPlayerIndex,
     pub hand_fixed: &'game SHand,
 }
 impl<'game> SDetermineBestCard<'game> {
     pub fn new(stichseq: &'game SStichSequence, hand_fixed: &'game SHand) -> Self {
         Self{
             stichseq,
-            epi_fixed: unwrap!(stichseq.current_stich().current_playerindex()),
             hand_fixed,
         }
     }
@@ -121,7 +119,7 @@ impl SAi {
     ) -> SCard {
         let rules = game.rules.as_ref();
         let determinebestcard = SDetermineBestCard::new_from_game(game);
-        let epi_fixed = determinebestcard.epi_fixed;
+        let epi_fixed = unwrap!(determinebestcard.stichseq.current_stich().current_playerindex());
         if let Ok(card)=rules.all_allowed_cards(
             verify_eq!(&game.stichseq, determinebestcard.stichseq),
             determinebestcard.hand_fixed
@@ -327,12 +325,13 @@ pub fn determine_best_card<
         // aggregate n_payout per card in some way
         SCard::map_from_fn(|_card| None),
     ));
+    let epi_fixed = unwrap!(determinebestcard.stichseq.current_stich().current_playerindex());
     itahand
         .enumerate()
         .flat_map(|(i_ahand, ahand)| {
             rules.all_allowed_cards(
                 determinebestcard.stichseq,
-                &ahand[determinebestcard.epi_fixed],
+                &ahand[epi_fixed],
             )
                 .into_iter()
                 .map(move |card| (i_ahand, ahand.clone(), card))
@@ -341,11 +340,11 @@ pub fn determine_best_card<
         .for_each(|(i_ahand, mut ahand, card)| {
             fn_inspect(/*b_before*/true, i_ahand, &ahand, card);
             let mut visualizer = fn_visualizer(i_ahand, &ahand, card); // do before ahand is modified
-            debug_assert!(ahand[determinebestcard.epi_fixed].cards().contains(&card));
+            debug_assert!(ahand[epi_fixed].cards().contains(&card));
             let mapcardooutput = Arc::clone(&mapcardooutput);
             let mut stichseq = determinebestcard.stichseq.clone();
             assert!(ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
-            ahand[determinebestcard.epi_fixed].play_card(card);
+            ahand[epi_fixed].play_card(card);
             stichseq.zugeben(card, rules);
             let output = if ahand.iter().all(|hand| hand.cards().is_empty()) {
                 let gamefinishedstiche = SStichSequenceGameFinished::new(&stichseq);
@@ -370,14 +369,14 @@ pub fn determine_best_card<
             let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
             let payoutstats = SPerMinMaxStrategy( // TODO should be SPayoutStatsPerStrategy
                 EMinMaxStrategy::map_from_fn(|emmstrategy| {
-                    SPayoutStats::new_1(output.0[emmstrategy][determinebestcard.epi_fixed])
+                    SPayoutStats::new_1(output.0[emmstrategy][epi_fixed])
                 })
             );
             match ooutput {
                 None => *ooutput = Some(payoutstats),
                 Some(ref mut output_return) => output_return.accumulate(payoutstats),
             }
-            ahand[determinebestcard.epi_fixed].add_card(card);
+            ahand[epi_fixed].add_card(card);
             fn_inspect(/*b_before*/false, i_ahand, &ahand, card);
         });
     let mapcardooutput = unwrap!(
