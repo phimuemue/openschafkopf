@@ -65,10 +65,6 @@ impl<'game> SDetermineBestCard<'game> {
             /*hand_fixed*/&game.ahand[unwrap!(game.which_player_can_do_something()).0],
         )
     }
-
-    pub fn single_allowed_card(&self) -> Option<SCard> {
-        self.veccard_allowed.iter().exactly_one().ok().copied()
-    }
 }
 
 impl SAi {
@@ -131,8 +127,8 @@ impl SAi {
     ) -> SCard {
         let determinebestcard = SDetermineBestCard::new_from_game(game);
         let epi_fixed = determinebestcard.epi_fixed;
-        if let Some(card)=determinebestcard.single_allowed_card() {
-            card
+        if let Ok(card)=determinebestcard.veccard_allowed.iter().exactly_one() {
+            *card
         } else if let Some(card) = game.rules.rulespecific_ai()
             .and_then(|airulespecific| airulespecific.suggest_card(game))
         {
