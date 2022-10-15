@@ -46,16 +46,16 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     with_common_args(
         clapmatches,
-        |itahand, determinebestcard, b_single, b_verbose| {
+        |itahand, rules, determinebestcard, b_single, b_verbose| {
             if b_verbose || !b_single {
-                println!("Rules: {}", determinebestcard.rules);
+                println!("Rules: {}", rules);
             }
             let otplrulesfn_points_as_payout = if clapmatches.is_present("points") {
-                if let Some(tplrulesfn_points_as_payout) = determinebestcard.rules.points_as_payout() {
+                if let Some(tplrulesfn_points_as_payout) = rules.points_as_payout() {
                     Some(tplrulesfn_points_as_payout)
                 } else {
                     if b_verbose { // TODO? dispatch statically
-                        println!("Rules {} do not support point based variant.", determinebestcard.rules);
+                        println!("Rules {} do not support point based variant.", rules);
                     }
                     None
                 }
@@ -67,7 +67,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 ofn_payout_to_points = Some(fn_payout_to_points);
                 rules.as_ref()
             } else {
-                determinebestcard.rules
+                rules
             };
             let epi_fixed = determinebestcard.epi_fixed;
             type RulesSnapshotCache = Box<dyn TSnapshotCache<SMinMax>>;
@@ -76,6 +76,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                     determine_best_card::<$($func_filter_allowed_cards_ty)*, _, $ty_snapshotcache, _, _, _>( // TODO avoid explicit types
                         &determinebestcard,
+                        rules,
                         Box::new(
                             itahand
                                 .flat_map(|ahand| {

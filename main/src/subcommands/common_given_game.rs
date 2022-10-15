@@ -57,6 +57,7 @@ pub fn with_common_args<FnWithArgs>(
     where
         for<'rules> FnWithArgs: FnMut(
             Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
+            &'rules dyn TRules,
             SDetermineBestCard,
             bool/*b_single*/,
             bool/*b_verbose*/,
@@ -214,7 +215,6 @@ pub fn with_common_args<FnWithArgs>(
         });
         let hand_fixed = ahand_fixed[epi_fixed].clone();
         let determinebestcard =  SDetermineBestCard::new(
-            rules,
             &stichseq,
             &hand_fixed,
         );
@@ -262,6 +262,7 @@ pub fn with_common_args<FnWithArgs>(
                         b_valid
                     }
                 ))),
+                rules,
                 determinebestcard,
                 b_single,
                 b_verbose,

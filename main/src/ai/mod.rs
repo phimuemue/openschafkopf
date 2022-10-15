@@ -40,15 +40,13 @@ pub struct SAi {
 }
 
 pub struct SDetermineBestCard<'game> {
-    pub rules: &'game dyn TRules,
     pub stichseq: &'game SStichSequence,
     pub epi_fixed: EPlayerIndex,
     pub hand_fixed: &'game SHand,
 }
 impl<'game> SDetermineBestCard<'game> {
-    pub fn new(rules: &'game dyn TRules, stichseq: &'game SStichSequence, hand_fixed: &'game SHand) -> Self {
+    pub fn new(stichseq: &'game SStichSequence, hand_fixed: &'game SHand) -> Self {
         Self{
-            rules,
             stichseq,
             epi_fixed: unwrap!(stichseq.current_stich().current_playerindex()),
             hand_fixed,
@@ -57,7 +55,6 @@ impl<'game> SDetermineBestCard<'game> {
 
     pub fn new_from_game(game: &'game SGame) -> Self {
         Self::new(
-            game.rules.as_ref(),
             &game.stichseq,
             /*hand_fixed*/&game.ahand[unwrap!(game.which_player_can_do_something()).0],
         )
@@ -122,14 +119,15 @@ impl SAi {
         game: &SGame,
         fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
     ) -> SCard {
+        let rules = game.rules.as_ref();
         let determinebestcard = SDetermineBestCard::new_from_game(game);
         let epi_fixed = determinebestcard.epi_fixed;
-        if let Ok(card)=game.rules.all_allowed_cards(
+        if let Ok(card)=rules.all_allowed_cards(
             verify_eq!(&game.stichseq, determinebestcard.stichseq),
             determinebestcard.hand_fixed
         ).iter().exactly_one() {
             *card
-        } else if let Some(card) = game.rules.rulespecific_ai()
+        } else if let Some(card) = rules.rulespecific_ai()
             .and_then(|airulespecific| airulespecific.suggest_card(game))
         {
             card
@@ -140,10 +138,11 @@ impl SAi {
             ) => {{ // TODORUST generic closures
                 determine_best_card(
                     &determinebestcard,
+                    rules,
                     Box::new($itahand) as Box<_>,
                     $func_filter_allowed_cards,
                     &$foreachsnapshot::new(
-                        determinebestcard.rules,
+                        rules,
                         epi_fixed,
                         /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
                         game.n_stock,
@@ -178,10 +177,10 @@ impl SAi {
                         std::iter::once(game.ahand.clone())
                     },
                     (&VAIParams::Simulating{n_suggest_card_samples:_}, _1|_2|_3|_4) => {
-                        all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
+                        all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, rules)
                     },
                     (&VAIParams::Simulating{n_suggest_card_samples}, _5|_6|_7|_8) =>{ 
-                        forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, determinebestcard.rules)
+                        forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, rules)
                             .take(n_suggest_card_samples)
                     },
                 },
@@ -313,6 +312,7 @@ pub fn determine_best_card<
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
 >(
     determinebestcard: &'determinebestcard SDetermineBestCard,
+    rules: &dyn TRules,
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'determinebestcard>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
@@ -330,7 +330,7 @@ pub fn determine_best_card<
     itahand
         .enumerate()
         .flat_map(|(i_ahand, ahand)| {
-            determinebestcard.rules.all_allowed_cards(
+            rules.all_allowed_cards(
                 determinebestcard.stichseq,
                 &ahand[determinebestcard.epi_fixed],
             )
@@ -346,20 +346,20 @@ pub fn determine_best_card<
             let mut stichseq = determinebestcard.stichseq.clone();
             assert!(ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
             ahand[determinebestcard.epi_fixed].play_card(card);
-            stichseq.zugeben(card, determinebestcard.rules);
+            stichseq.zugeben(card, rules);
             let output = if ahand.iter().all(|hand| hand.cards().is_empty()) {
                 let gamefinishedstiche = SStichSequenceGameFinished::new(&stichseq);
                 foreachsnapshot.final_output(
                     gamefinishedstiche,
                     &SRuleStateCache::new_from_gamefinishedstiche(
                         gamefinishedstiche,
-                        |stich| determinebestcard.rules.winner_index(stich),
+                        |stich| rules.winner_index(stich),
                     ),
                 )
             } else {
                 explore_snapshots(
                     &mut ahand,
-                    determinebestcard.rules,
+                    rules,
                     &mut stichseq,
                     &fn_make_filter,
                     foreachsnapshot,
@@ -550,6 +550,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         let determinebestcard = SDetermineBestCard::new_from_game(&game);
         let determinebestcardresult = unwrap!(determine_best_card(
             &determinebestcard,
+            game.rules.as_ref(),
             Box::new(std::iter::once(ahand)) as Box<_>,
             /*fn_make_filter*/SBranchingFactor::factory(1, 2),
             &SMinReachablePayout::new_from_game(&game),

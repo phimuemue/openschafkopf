@@ -25,9 +25,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     }
     with_common_args(
         clapmatches,
-        |itahand, determinebestcard, b_single, b_verbose| {
+        |itahand, rules, _determinebestcard, b_single, b_verbose| {
             if b_verbose || !b_single {
-                println!("Rules: {}", determinebestcard.rules);
+                println!("Rules: {}", rules);
             }
             #[derive(PartialOrd, Ord, Hash, PartialEq, Eq)]
             enum VInspectValue {
@@ -40,7 +40,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     .entry(
                         vecconstraint.iter()
                             .map(|constraint| 
-                                constraint.internal_eval(&ahand, determinebestcard.rules, VInspectValue::Bool, VInspectValue::Usize),
+                                constraint.internal_eval(&ahand, rules, VInspectValue::Bool, VInspectValue::Usize),
                             )
                             .collect()
                     )
