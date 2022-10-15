@@ -46,7 +46,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     with_common_args(
         clapmatches,
-        |itahand, rules, stichseq, hand_fixed, b_single, b_verbose| {
+        |itahand, rules, stichseq, hand_fixed, epi_position, b_single, b_verbose| {
             if b_verbose || !b_single {
                 println!("Rules: {}", rules);
             }
@@ -70,6 +70,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 rules
             };
             let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
+            if epi_fixed!=epi_position {
+                bail!("suggest_card currently does not support arbitrary positions."); // TODO relax this restriction
+            }
             type RulesSnapshotCache = Box<dyn TSnapshotCache<SMinMax>>;
             let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
                 macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), (($ty_snapshotcache:ty), $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures

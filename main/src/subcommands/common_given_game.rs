@@ -18,6 +18,12 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
         .about(str_about)
         .arg(ruleset_arg())
         .arg(rules_arg()) // "overrides" ruleset // TODO? make ruleset optional
+        .arg(clap::Arg::new("position")
+            .long("position")
+            .help("Position of the player")
+            .long_help("Position of the player. Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly). If not given, this is assumed to be the one to play the next card.")
+            .takes_value(true)
+        )
         .arg(clap::Arg::new("hand")
             .long("hand")
             .takes_value(true)
@@ -60,6 +66,7 @@ pub fn with_common_args<FnWithArgs>(
             &'rules dyn TRules,
             &SStichSequence,
             &SHand, // TODO? Good idea? Could this simply given by itahand?
+            EPlayerIndex/*epi_position*/,
             bool/*b_single*/,
             bool/*b_verbose*/,
         ) -> Result<(), Error>,
@@ -112,7 +119,7 @@ pub fn with_common_args<FnWithArgs>(
     };
     for rules in itrules {
         let rules = rules.as_ref();
-        let (stichseq, ahand_fixed) = EKurzLang::values()
+        let (stichseq, ahand_with_holes, epi_position) = EKurzLang::values()
             .filter_map(|ekurzlang| {
                 let mut stichseq = SStichSequence::new(ekurzlang);
                 for &card in veccard_stichseq.iter() {
@@ -124,13 +131,14 @@ pub fn with_common_args<FnWithArgs>(
                     }
                     stichseq.zugeben(card, rules);
                 }
-                let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
+                let epi_position = clapmatches.value_of_t("position")
+                    .unwrap_or(unwrap!(stichseq.current_stich().current_playerindex()));
                 if_then_some!(
                     vecocard_hand.iter().all(Option::is_some)
-                        && stichseq.remaining_cards_per_hand()[epi_fixed]==vecocard_hand.len(),
+                        && stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
                     SHand::new_from_iter(
                         vecocard_hand.iter().map(|ocard| unwrap!(ocard))
-                    ).to_ahand(epi_fixed)
+                    ).to_ahand(epi_position)
                 ).or_else(|| {
                     let n_cards_total = stichseq.kurzlang().cards_per_player()*EPlayerIndex::SIZE;
                     if stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total {
@@ -159,20 +167,20 @@ pub fn with_common_args<FnWithArgs>(
                             assert!(ahand[epi].cards().len() <= an_remaining[epi]);
                         }
                         if_then_some!(
-                            ahand[epi_fixed].cards().len()==an_remaining[epi_fixed],
+                            ahand[epi_position].cards().len()==an_remaining[epi_position],
                             ahand
                         )
                     } else {
                         None
                     }
                 })
-                .map(|ahand| (stichseq, ahand))
+                .map(|ahand| (stichseq, ahand, epi_position))
             })
             .exactly_one()
             .map_err(|err| format_err!("Could not determine ekurzlang: {}", err))?;
         // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
         if let Some(epi_active) = rules.playerindex() {
-            let veccard_hand_active = ahand_fixed[epi_active].cards().iter().copied()
+            let veccard_hand_active = ahand_with_holes[epi_active].cards().iter().copied()
                 .chain(stichseq
                     .visible_cards()
                     .filter_map(|(epi, card)| if_then_some!(epi==epi_active, *card))
@@ -201,7 +209,6 @@ pub fn with_common_args<FnWithArgs>(
             relation
         });
         let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
-        let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
         use VChooseItAhand::*;
         let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
             if "all"==str_itahand.to_lowercase() { // TODO replace this case by simply "0"?
@@ -214,19 +221,19 @@ pub fn with_common_args<FnWithArgs>(
         ).unwrap_or_else(|| {
             All
         });
-        let hand_fixed = ahand_fixed[epi_fixed].clone();
+        let hand_fixed = ahand_with_holes[epi_position].clone();
         for epi in EPlayerIndex::values() {
-            assert!(ahand_fixed[epi].cards().len() <= mapepin_cards_per_hand[epi]);
+            assert!(ahand_with_holes[epi].cards().len() <= mapepin_cards_per_hand[epi]);
         }
-        assert_eq!(ahand_fixed[epi_fixed].cards().len(), mapepin_cards_per_hand[epi_fixed]);
+        assert_eq!(ahand_with_holes[epi_position].cards().len(), mapepin_cards_per_hand[epi_position]);
         macro_rules! forward{($n_ahand_total: expr, $itahand_factory: expr, $fn_take: expr) => {{ // TODORUST generic closures
             let mut n_ahand_seen = 0;
             let mut n_ahand_valid = 0;
             fn_with_args(
                 Box::new($fn_take($itahand_factory(
                     &stichseq,
-                    ahand_fixed,
-                    epi_fixed,
+                    ahand_with_holes,
+                    epi_position,
                     rules,
                     /*fn_inspect*/|b_valid_so_far, ahand| {
                         n_ahand_seen += 1;
@@ -261,6 +268,7 @@ pub fn with_common_args<FnWithArgs>(
                 rules,
                 &stichseq,
                 &hand_fixed,
+                epi_position,
                 b_single,
                 b_verbose,
             )?;
@@ -268,10 +276,10 @@ pub fn with_common_args<FnWithArgs>(
         match iteratehands {
             All => {
                 let mut n_cards_unknown = mapepin_cards_per_hand.iter().sum::<usize>()
-                    - ahand_fixed.iter().map(|hand| hand.cards().len()).sum::<usize>();
+                    - ahand_with_holes.iter().map(|hand| hand.cards().len()).sum::<usize>();
                 let n_ahand_total = EPlayerIndex::values()
                     .fold(1u64, |n_ahand_total, epi| {
-                        let n_cards_sampled = mapepin_cards_per_hand[epi]-ahand_fixed[epi].cards().len();
+                        let n_cards_sampled = mapepin_cards_per_hand[epi]-ahand_with_holes[epi].cards().len();
                         let n_binom = num_integer::binomial(
                             n_cards_unknown.as_num::<u64>(),
                             n_cards_sampled.as_num::<u64>(),

@@ -25,7 +25,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     }
     with_common_args(
         clapmatches,
-        |itahand, rules, _stichseq, _hand_fixed, b_single, b_verbose| {
+        |itahand, rules, _stichseq, _hand_fixed, _epi_position, b_single, b_verbose| {
             if b_verbose || !b_single {
                 println!("Rules: {}", rules);
             }
@@ -36,6 +36,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             }
             let mut mapvecinspectvaluen = std::collections::HashMap::<Vec<_>,_>::new();
             for ahand in itahand {
+                // assert_eq!(ahand[epi_position], hand_fixed);
                 *mapvecinspectvaluen
                     .entry(
                         vecconstraint.iter()
