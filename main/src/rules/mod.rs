@@ -527,7 +527,7 @@ fn snapshot_cache_point_based<PlayerParties: TPlayerParties+'static>(playerparti
             // set_bits!(pointstichcount_secondary.n_stich, 18); // implicitly clear
             set_bits!(/*epi_next_stich*/stichseq.current_stich().first_playerindex().to_usize(), 22);
             let setcard_played = {
-                let mut setcard_played = 0;
+                let mut setcard_played = 0u64;
                 for (_, &card) in stichseq.visible_stichs().iter().flat_map(SStich::iter) {
                     let mask = 1 << card.to_usize();
                     debug_assert_eq!((setcard_played & mask), 0);
