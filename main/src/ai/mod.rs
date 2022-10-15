@@ -43,18 +43,14 @@ pub struct SDetermineBestCard<'game> {
     pub stichseq: &'game SStichSequence,
     pub epi_fixed: EPlayerIndex,
     pub hand_fixed: &'game SHand,
-    pub veccard_allowed: SHandVector,
 }
 impl<'game> SDetermineBestCard<'game> {
     pub fn new(rules: &'game dyn TRules, stichseq: &'game SStichSequence, hand_fixed: &'game SHand) -> Self {
-        let veccard_allowed = rules.all_allowed_cards(stichseq, hand_fixed);
-        assert!(!veccard_allowed.is_empty());
         Self{
             rules,
             stichseq,
             epi_fixed: unwrap!(stichseq.current_stich().current_playerindex()),
             hand_fixed,
-            veccard_allowed
         }
     }
 
@@ -127,7 +123,10 @@ impl SAi {
     ) -> SCard {
         let determinebestcard = SDetermineBestCard::new_from_game(game);
         let epi_fixed = determinebestcard.epi_fixed;
-        if let Ok(card)=determinebestcard.veccard_allowed.iter().exactly_one() {
+        if let Ok(card)=game.rules.all_allowed_cards(
+            verify_eq!(&game.stichseq, determinebestcard.stichseq),
+            determinebestcard.hand_fixed
+        ).iter().exactly_one() {
             *card
         } else if let Some(card) = game.rules.rulespecific_ai()
             .and_then(|airulespecific| airulespecific.suggest_card(game))
@@ -192,17 +191,17 @@ impl SAi {
 
 #[derive(Clone, Debug)]
 pub struct SDetermineBestCardResult<T> {
-    veccard_allowed: SHandVector,
     mapcardt: EnumMap<SCard, Option<T>>,
 }
 
 impl<T> SDetermineBestCardResult<T> {
     pub fn cards_and_ts(&self) -> impl Iterator<Item=(SCard, &T)> where T: std::fmt::Debug {
-        self.veccard_allowed.iter()
-            .map(move |card| (*card, unwrap!(self.mapcardt[*card].as_ref())))
+        <SCard as TPlainEnum>::values()
+            .filter_map(|card| self.mapcardt[card].as_ref().map(|t| (card, t)))
     }
     pub fn cards_with_maximum_value(&self, mut fn_cmp: impl FnMut(&T, &T)->std::cmp::Ordering) -> (Vec<SCard>, &T) where T: std::fmt::Debug {
-        let veccard = self.veccard_allowed.iter().copied()
+        let veccard = <SCard as TPlainEnum>::values()
+            .filter(|card| self.mapcardt[*card].is_some())
             .max_set_by(|card_lhs, card_rhs| fn_cmp(
                 unwrap!(self.mapcardt[*card_lhs].as_ref()),
                 unwrap!(self.mapcardt[*card_rhs].as_ref()),
@@ -335,11 +334,15 @@ pub fn determine_best_card<
     ));
     itahand
         .enumerate()
+        .flat_map(|(i_ahand, ahand)| {
+            determinebestcard.rules.all_allowed_cards(
+                determinebestcard.stichseq,
+                &ahand[determinebestcard.epi_fixed],
+            )
+                .into_iter()
+                .map(move |card| (i_ahand, ahand.clone(), card))
+        })
         .par_bridge() // TODO can we derive a true parallel iterator?
-        .flat_map(|(i_ahand, ahand)|
-            determinebestcard.veccard_allowed.par_iter()
-                .map(move |card| (i_ahand, ahand.clone(), *card))
-        )
         .for_each(|(i_ahand, mut ahand, card)| {
             fn_inspect(/*b_before*/true, i_ahand, &ahand, card);
             let mut visualizer = fn_visualizer(i_ahand, &ahand, card); // do before ahand is modified
@@ -387,11 +390,7 @@ pub fn determine_best_card<
             .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
     );
     if_then_some!(mapcardooutput.iter().any(Option::is_some), {
-        assert!(<SCard as TPlainEnum>::values().all(|card| {
-            !determinebestcard.veccard_allowed.contains(&card) || mapcardooutput[card].is_some()
-        }));
         SDetermineBestCardResult{
-            veccard_allowed: determinebestcard.veccard_allowed.clone(),
             mapcardt: mapcardooutput,
         }
     })
@@ -564,7 +563,6 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
         ));
         for card in [H7, H8, H9] {
-            assert!(determinebestcard.veccard_allowed.contains(&card));
             assert_eq!(
                 determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.0[EMinMaxStrategy::MinMin].min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
