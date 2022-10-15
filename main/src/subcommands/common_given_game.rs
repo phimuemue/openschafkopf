@@ -65,12 +65,12 @@ pub fn with_common_args<FnWithArgs>(
     let b_verbose = clapmatches.is_present("verbose");
     let vecocard_hand = cardvector::parse_optional_cards::<Vec<_>>(unwrap!(clapmatches.value_of("hand")))
         .ok_or_else(||format_err!("Could not parse hand."))?;
-    let veccard_as_played = match clapmatches.value_of("cards_on_table") {
+    let veccard_stichseq = match clapmatches.value_of("cards_on_table") {
         None => Vec::new(),
         Some(str_cards_on_table) => cardvector::parse_cards(str_cards_on_table)
             .ok_or_else(||format_err!("Could not parse played cards"))?,
     };
-    let veccard_duplicate = veccard_as_played.iter()
+    let veccard_duplicate = veccard_stichseq.iter()
         .chain(vecocard_hand.iter().filter_map(|ocard| ocard.as_ref()))
         .duplicates()
         .collect::<Vec<_>>();
@@ -113,7 +113,7 @@ pub fn with_common_args<FnWithArgs>(
         let (stichseq, ahand_fixed) = EKurzLang::values()
             .map(|ekurzlang| {
                 let mut stichseq = SStichSequence::new(ekurzlang);
-                for &card in veccard_as_played.iter() {
+                for &card in veccard_stichseq.iter() {
                     if !ekurzlang.supports_card(card) {
                         return None; // TODO distinguish error
                     }
