@@ -4,6 +4,7 @@ pub fn assign_better<T>(dst: &mut T, src: T, fn_better: impl FnOnce(&T, &T) -> b
     }
 }
 
+#[allow(dead_code)]
 pub fn assign_min<T: Ord>(dst: &mut T, src: T) {
     assign_better(dst, src, |lhs, rhs| lhs < rhs)
 }

@@ -17,6 +17,7 @@ use rayon::prelude::*;
 use std::{
     self,
     sync::{Arc, Mutex},
+    collections::BTreeMap,
 };
 
 plain_enum_mod!(moderemainingcards, ERemainingCards {_1, _2, _3, _4, _5, _6, _7, _8,});
@@ -214,60 +215,54 @@ impl<T> SDetermineBestCardResult<T> {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct SPayoutStats {
-    n_min: isize,
-    n_sum: isize,
-    n_max: isize,
-    maporderingn_histogram_cmp_vs_0: EnumMap<std::cmp::Ordering, usize>,
+    mapnn_histogram: BTreeMap<isize/*n_payout*/, usize/*n_count*/>, // TODO is a manually sorted Vec<(isize, usize)> better?
 }
 
 impl SPayoutStats {
     fn new_1(n_payout: isize) -> Self {
         Self {
-            n_min: n_payout,
-            n_max: n_payout,
-            n_sum: n_payout,
-            maporderingn_histogram_cmp_vs_0: std::cmp::Ordering::map_from_fn(|ordering|
-                if ordering==n_payout.cmp(&0) {1} else {0}
-            ),
+            mapnn_histogram: Some((n_payout, 1)).into_iter().collect()
         }
     }
 
     fn new_identity_for_accumulate() -> Self {
         Self {
-            n_min: isize::MAX,
-            n_max: isize::MIN,
-            n_sum: 0,
-            maporderingn_histogram_cmp_vs_0: std::cmp::Ordering::map_from_fn(|_| 0),
+            mapnn_histogram: BTreeMap::new(),
         }
     }
 
     fn accumulate(&mut self, paystats: &Self) {
-        assign_min(&mut self.n_min, paystats.n_min);
-        assign_max(&mut self.n_max, paystats.n_max);
-        self.n_sum += paystats.n_sum;
-        for ordering in std::cmp::Ordering::values() {
-            self.maporderingn_histogram_cmp_vs_0[ordering] += paystats.maporderingn_histogram_cmp_vs_0[ordering];
+        for (n_payout_other, n_count_other) in paystats.mapnn_histogram.iter() {
+            *self.mapnn_histogram.entry(*n_payout_other).or_insert(0) += n_count_other;
         }
     }
 
     pub fn min(&self) -> isize {
-        self.n_min
+        *unwrap!(self.mapnn_histogram.keys().next())
     }
     pub fn max(&self) -> isize {
-        self.n_max
+        *unwrap!(self.mapnn_histogram.keys().last())
     }
     pub fn avg(&self) -> f32 {
-        self.n_sum.as_num::<f32>() / self.maporderingn_histogram_cmp_vs_0.iter().sum::<usize>().as_num::<f32>()
+        self.mapnn_histogram.iter()
+            .map(|(n_payout, n_count)| n_payout * n_count.as_num::<isize>())
+            .sum::<isize>()
+            .as_num::<f32>()
+            / self.mapnn_histogram.len().as_num::<f32>()
     }
-    pub fn counts(&self) -> &EnumMap<std::cmp::Ordering, usize> {
-        &self.maporderingn_histogram_cmp_vs_0
+    pub fn counts(&self) -> EnumMap<std::cmp::Ordering, usize> {
+        let mut mapordn_counts = std::cmp::Ordering::map_from_fn(|_ord| 0);
+        for (n_payout, n_count) in self.mapnn_histogram.iter() {
+            mapordn_counts[n_payout.cmp(&0)] += n_count;
+        }
+        mapordn_counts
     }
 }
 
 pub type SPayoutStatsPerStrategy = SPerMinMaxStrategy<SPayoutStats>;
 
 impl SPayoutStatsPerStrategy {
-    fn accumulate(&mut self, paystats: &Self) {
+    fn accumulate(&mut self, paystats: Self) {
         for emmstrategy in EMinMaxStrategy::values() {
             self.0[emmstrategy].accumulate(&paystats.0[emmstrategy]);
         }
@@ -279,12 +274,12 @@ impl SPayoutStatsPerStrategy {
         use std::cmp::Ordering::*;
         let internal_cmp = |emmstrategy| {
             // prioritize positive vs non-positive and zero vs negative payouts.
-            match (self.0[emmstrategy].n_min.cmp(&0), other.0[emmstrategy].n_min.cmp(&0)) {
-                (Greater, Greater) => match self.0[emmstrategy].n_min.cmp(&other.0[emmstrategy].n_min) {
+            match (self.0[emmstrategy].min().cmp(&0), other.0[emmstrategy].min().cmp(&0)) {
+                (Greater, Greater) => match self.0[emmstrategy].min().cmp(&other.0[emmstrategy].min()) {
                     Equal => match unwrap!(self.0[emmstrategy].avg().partial_cmp(&other.0[emmstrategy].avg())) {
                         Greater => Greater,
                         Less => Less,
-                        Equal => unwrap!(self.0[emmstrategy].n_max.partial_cmp(&other.0[emmstrategy].n_max)),
+                        Equal => unwrap!(self.0[emmstrategy].max().partial_cmp(&other.0[emmstrategy].max())),
                     },
                     Greater => Greater,
                     Less => Less,
@@ -296,7 +291,7 @@ impl SPayoutStatsPerStrategy {
                 (Less, Less)|(Equal, Equal) => match unwrap!(self.0[emmstrategy].avg().partial_cmp(&other.0[emmstrategy].avg())) {
                     Greater => Greater,
                     Less => Less,
-                    Equal => unwrap!(self.0[emmstrategy].n_max.partial_cmp(&other.0[emmstrategy].n_max)),
+                    Equal => unwrap!(self.0[emmstrategy].max().partial_cmp(&other.0[emmstrategy].max())),
                 },
             }
         };
@@ -380,7 +375,7 @@ pub fn determine_best_card<
             );
             match ooutput {
                 None => *ooutput = Some(payoutstats),
-                Some(ref mut output_return) => output_return.accumulate(&payoutstats),
+                Some(ref mut output_return) => output_return.accumulate(payoutstats),
             }
             ahand[determinebestcard.epi_fixed].add_card(card);
             fn_inspect(/*b_before*/false, i_ahand, &ahand, card);
