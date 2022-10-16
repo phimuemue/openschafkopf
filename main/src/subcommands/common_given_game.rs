@@ -67,7 +67,6 @@ pub fn with_common_args<FnWithArgs>(
             &SStichSequence,
             &SHand, // TODO? Good idea? Could this simply given by itahand?
             EPlayerIndex/*epi_position*/,
-            bool/*b_single*/,
             bool/*b_verbose*/,
         ) -> Result<(), Error>,
 {
@@ -229,6 +228,9 @@ pub fn with_common_args<FnWithArgs>(
         macro_rules! forward{($n_ahand_total: expr, $itahand_factory: expr, $fn_take: expr) => {{ // TODORUST generic closures
             let mut n_ahand_seen = 0;
             let mut n_ahand_valid = 0;
+            if b_verbose || !b_single {
+                println!("Rules: {}", rules);
+            }
             fn_with_args(
                 Box::new($fn_take($itahand_factory(
                     &stichseq,
@@ -264,7 +266,6 @@ pub fn with_common_args<FnWithArgs>(
                 &stichseq,
                 &hand_fixed,
                 epi_position,
-                b_single,
                 b_verbose,
             )?;
         }}}
