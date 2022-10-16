@@ -463,9 +463,7 @@ fn test_is_compatible_with_game_so_far() {
             )
                 .take(100)
             {
-                for epi in EPlayerIndex::values() {
-                    println!("{}: {}", epi, SDisplayCardSlice::new(ahand[epi].cards().clone(), &game.rules));
-                }
+                println!("{}", display_card_slices(&ahand, &game.rules, "\n"));
                 for &(epi, ref trumpforfarbe) in vectplepitrumpforfarbe_frei.iter() {
                     assert!(!ahand[epi].contains_pred(|card| *trumpforfarbe==game.rules.trumpforfarbe(*card)));
                 }

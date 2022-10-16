@@ -1,8 +1,11 @@
-use crate::primitives::card::*;
+use crate::primitives::{card::*, eplayerindex::*};
 use arrayvec::ArrayVec;
 #[cfg(debug_assertions)]
 use plain_enum::TPlainEnum;
-use crate::util::TVecExt;
+use crate::util::*;
+use std::fmt;
+use std::borrow::{Borrow, BorrowMut};
+use itertools::Itertools;
 
 pub type SHandVector = ArrayVec<SCard, 8>;
 
@@ -58,6 +61,44 @@ impl SHand {
     pub fn cards(&self) -> &SHandVector {
         &self.veccard
     }
+}
+
+pub trait TCardSorter {
+    fn sort_cards(&self, slccard: &mut [SCard]);
+}
+
+impl<F: Fn(&mut [SCard])> TCardSorter for F {
+    fn sort_cards(&self, slccard: &mut [SCard]) {
+        self(slccard)
+    }
+}
+
+impl<CardSorter: TCardSorter> TCardSorter for Option<CardSorter> {
+    fn sort_cards(&self, slccard: &mut [SCard]) {
+        if let Some(cardsorter) = self {
+            cardsorter.sort_cards(slccard);
+        }
+    }
+}
+
+pub struct SDisplayCardSlice<SlcCard>(SlcCard);
+impl<SlcCard: BorrowMut<[SCard]>> SDisplayCardSlice<SlcCard> {
+    pub fn new(mut slccard: SlcCard, cardsorter: &impl TCardSorter) -> Self {
+        cardsorter.sort_cards(slccard.borrow_mut());
+        Self(slccard)
+    }
+}
+
+impl<SlcCard: Borrow<[SCard]>> fmt::Display for SDisplayCardSlice<SlcCard> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0.borrow().iter().join(" "))
+    }
+}
+
+pub fn display_card_slices(ahand: &EnumMap<EPlayerIndex, SHand>, cardsorter: &impl TCardSorter, str_sep: &str) -> String {
+    ahand.iter()
+        .map(|hand| SDisplayCardSlice::new(hand.cards().clone(), cardsorter))
+        .join(str_sep)
 }
 
 #[test]

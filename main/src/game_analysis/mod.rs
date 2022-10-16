@@ -414,9 +414,7 @@ fn generate_analysis_html(
                     str_cards_on_table=stichseq.visible_stichs().iter()
                         .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
                         .join("  "),
-                    str_hand=EPlayerIndex::values()
-                        .map(|epi| SDisplayCardSlice::new(ahand[epi].cards().clone(), &game.rules))
-                        .join("  "),
+                    str_hand=display_card_slices(ahand, &game.rules, "  "),
                 ).replace('\"', "\\\""),
             );
             unwrap!(write!(

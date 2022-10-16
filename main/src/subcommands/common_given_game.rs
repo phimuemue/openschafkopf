@@ -254,12 +254,7 @@ pub fn with_common_args<FnWithArgs>(
                                 n_ahand_valid,
                                 n_ahand_seen,
                                 $n_ahand_total,
-                                ahand.iter()
-                                    .map(|hand| SDisplayCardSlice::new(
-                                        hand.cards().clone(),
-                                        rules,
-                                    ))
-                                    .join(" | "),
+                                display_card_slices(&ahand, &rules, " | "),
                             )
                         }
                         b_valid

@@ -34,7 +34,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let hand = SFullHand::new(hand.cards(), ruleset.ekurzlang);
     let epi = clapmatches.value_of_t("position").unwrap_or(EPlayerIndex::EPI0);
     let ai = super::ai(clapmatches);
-    println!("Hand: {}", SDisplayCardSlice::new(hand.get().to_vec(), /*cardsorter*/|_: &mut [SCard]|{}));
+    println!("Hand: {}", SDisplayCardSlice::new(hand.get().to_vec(), /*cardsorter*/&|_: &mut [SCard]|{}));
     internal_table(
         if let Some(rules) = super::get_rules(clapmatches)
             .transpose()?

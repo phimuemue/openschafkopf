@@ -188,7 +188,7 @@ impl SGamePreparations {
             bail!("Only actively playable rules can be announced");
         }
         if !orules.as_ref().map_or(true, |rules| rules.can_be_played(self.fullhand(epi))) {
-            bail!("Rules cannot be played. {}", SDisplayCardSlice::new(self.aveccard[epi].clone(), orules));
+            bail!("Rules cannot be played. {}", SDisplayCardSlice::new(self.aveccard[epi].clone(), &orules));
         }
         self.gameannouncements.push(orules);
         assert!(!self.gameannouncements.is_empty());
@@ -267,7 +267,7 @@ impl SDetermineRules {
             bail!("announced rules' priority must be at least as large as the latest announced priority");
         }
         if !rules.can_be_played(self.fullhand(epi)) {
-            bail!("Rules cannot be played. {}", SDisplayCardSlice::new(self.aveccard[epi].clone(), rules));
+            bail!("Rules cannot be played. {}", SDisplayCardSlice::new(self.aveccard[epi].clone(), &rules));
         }
         assert_ne!(epi, self.tplepirules_current_bid.0);
         assert!(!self.vectplepirules_queued.is_empty());

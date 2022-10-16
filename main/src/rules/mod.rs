@@ -472,7 +472,7 @@ impl TCardSorter for &dyn TRules {
         self.sort_cards_first_trumpf_then_farbe(slccard);
     }
 }
-impl TCardSorter for &Box<dyn TRules> {
+impl TCardSorter for Box<dyn TRules> {
     fn sort_cards(&self, slccard: &mut [SCard]) {
         self.as_ref().sort_cards(slccard)
     }

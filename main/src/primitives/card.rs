@@ -1,10 +1,8 @@
 use crate::util::*;
 use std::{
-    borrow::{Borrow, BorrowMut},
     fmt,
 };
 use serde::{Serializer};
-use itertools::Itertools;
 
 plain_enum_mod!(modefarbe, EFarbe {
     Eichel,
@@ -149,37 +147,6 @@ impl fmt::Display for SCard {
                 ESchlag::Ass => "A",
             }
         )
-    }
-}
-
-pub trait TCardSorter {
-    fn sort_cards(&self, slccard: &mut [SCard]);
-}
-impl<F: Fn(&mut [SCard])> TCardSorter for F {
-    fn sort_cards(&self, slccard: &mut [SCard]) {
-        self(slccard)
-    }
-}
-
-impl<CardSorter: TCardSorter> TCardSorter for Option<CardSorter> {
-    fn sort_cards(&self, slccard: &mut [SCard]) {
-        if let Some(cardsorter) = self {
-            cardsorter.sort_cards(slccard);
-        }
-    }
-}
-
-pub struct SDisplayCardSlice<SlcCard>(SlcCard);
-impl<SlcCard: BorrowMut<[SCard]>> SDisplayCardSlice<SlcCard> {
-    pub fn new(mut slccard: SlcCard, cardsorter: impl TCardSorter) -> Self {
-        cardsorter.sort_cards(slccard.borrow_mut());
-        Self(slccard)
-    }
-}
-
-impl<SlcCard: Borrow<[SCard]>> fmt::Display for SDisplayCardSlice<SlcCard> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0.borrow().iter().join(" "))
     }
 }
 

@@ -101,12 +101,7 @@ fn detect_expensive_all_possible_hands() {
                             "n: {}\nrules: {}\nahand: {}\nvecstich:{}",
                             n,
                             game.rules,
-                            game.ahand.iter()
-                                .map(|hand| SDisplayCardSlice::new(
-                                    hand.cards().clone(),
-                                    &game.rules,
-                                ))
-                                .join(" | "),
+                            display_card_slices(&game.ahand, &game.rules, " | "),
                             game.stichseq.visible_stichs().iter().join(", "),
                         );
                     };

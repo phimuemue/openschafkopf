@@ -104,12 +104,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     if b_before {'>'} else {'<'},
                                     i_ahand+1, // TODO use same hand counters as in common_given_game
                                     card,
-                                    ahand.iter()
-                                        .map(|hand| SDisplayCardSlice::new(
-                                            hand.cards().clone(),
-                                            rules,
-                                        ))
-                                        .join(" | "),
+                                    display_card_slices(&ahand, &rules, " | "),
                                 );
                             }
                         },

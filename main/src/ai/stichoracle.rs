@@ -383,7 +383,7 @@ mod tests {
             SRuleStateCacheFixed,
             SSnapshotCacheNone,
         },
-        SDisplayCardSlice,
+        display_card_slices,
     };
     use super::{SStichTrie, SFilterByOracle};
     use itertools::Itertools;
@@ -441,13 +441,10 @@ mod tests {
             let internal_assert = |setstich: &std::collections::HashSet<SStich>, stich, str_msg| {
                 assert!(
                     setstich.contains(stich),
-                    "\nRules:{} von {}\nHands:\n {}\n {}\n {}\n {}\nStichseq: {}\nStich{}\n{}\n",
+                    "\nRules:{} von {}\nHands:\n {}\nStichseq: {}\nStich{}\n{}\n",
                     rules,
                     unwrap!(rules.playerindex()),
-                    SDisplayCardSlice::new(ahand[EPlayerIndex::EPI0].cards().clone(), rules),
-                    SDisplayCardSlice::new(ahand[EPlayerIndex::EPI1].cards().clone(), rules),
-                    SDisplayCardSlice::new(ahand[EPlayerIndex::EPI2].cards().clone(), rules),
-                    SDisplayCardSlice::new(ahand[EPlayerIndex::EPI3].cards().clone(), rules),
+                    display_card_slices(&ahand, &rules, "\n "),
                     stichseq.visible_stichs().iter().join(", "),
                     stich,
                     str_msg,
