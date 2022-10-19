@@ -66,8 +66,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             } else {
                 rules
             };
-            let epi_fixed = unwrap!(stichseq.current_stich().current_playerindex());
-            if epi_fixed!=epi_position {
+            let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
+            if epi_current!=epi_position {
                 bail!("suggest_card currently does not support arbitrary positions."); // TODO relax this restriction
             }
             let hand_fixed = &ahand_fixed_with_holes[epi_position];
@@ -89,7 +89,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         $func_filter_allowed_cards,
                         &$foreachsnapshot::new(
                             rules,
-                            epi_fixed,
+                            epi_current,
                             /*tpln_stoss_doubling*/(0, 0), // TODO? make customizable
                             /*n_stock*/0, // TODO? make customizable
                         ),
