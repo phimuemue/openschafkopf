@@ -142,10 +142,10 @@ pub fn analyze_game(
                         (i_stich, game.stichseq.current_stich().size())
                     ));
                 }
-                let determinebestcard = SDetermineBestCard::new_from_game(game);
+                let stichseq = &game.stichseq;
                 macro_rules! look_for_mistakes{($itahand: expr$(,)?) => {{
                     let determinebestcardresult = unwrap!(determine_best_card(
-                        &determinebestcard,
+                        stichseq,
                         game.rules.as_ref(),
                         Box::new($itahand) as Box<_>,
                         equivalent_cards_filter(

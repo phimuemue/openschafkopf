@@ -376,7 +376,6 @@ mod tests {
         ai::{
             gametree::EMinMaxStrategy,
             determine_best_card,
-            SDetermineBestCard,
             SMinReachablePayout,
             SNoFilter,
             SNoVisualization,
@@ -1184,7 +1183,7 @@ mod tests {
                         //let epi = unwrap!(game.current_playable_stich().current_playerindex());
                         macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr,) => {
                             unwrap!(determine_best_card::<$ty_fn_make_filter,_,_,_,_,_>(
-                                &SDetermineBestCard::new_from_game(game),
+                                &game.stichseq,
                                 game.rules.as_ref(),
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                                 $fn_make_filter,
