@@ -70,7 +70,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             if epi_fixed!=epi_position {
                 bail!("suggest_card currently does not support arbitrary positions."); // TODO relax this restriction
             }
-            type RulesSnapshotCache = Box<dyn TSnapshotCache<SMinMax>>;
             let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
                 macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), (($ty_snapshotcache:ty), $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
@@ -158,7 +157,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     },
                     match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
                         true => (
-                            (RulesSnapshotCache),
+                            (Box<dyn TSnapshotCache<SMinMax>>),
                             (|_stichseq, rulestatecache| rules.snapshot_cache(rulestatecache))
                         ),
                         false => ((_), (SSnapshotCacheNone::factory())),
