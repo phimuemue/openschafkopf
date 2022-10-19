@@ -142,29 +142,18 @@ pub fn with_common_args<FnWithArgs>(
                     let n_cards_total = stichseq.kurzlang().cards_per_player()*EPlayerIndex::SIZE;
                     if stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total {
                         let an_remaining = stichseq.remaining_cards_per_hand();
-                        let mut ai_card = an_remaining.explicit_clone();
-                        let mut n_remaining = 0;
-                        for epi in EPlayerIndex::values() {
-                            ai_card[epi] += n_remaining;
-                            n_remaining = ai_card[epi];
-                        }
-                        use EPlayerIndex::*;
-                        let make_hand = |i_lo, i_hi| {
-                            SHand::new_from_iter(
-                                vecocard_hand[i_lo..i_hi].iter()
+                        let mut i_card_lo = 0;
+                        let ahand = EPlayerIndex::map_from_raw(an_remaining.as_raw().map(|n_remaining| {
+                            // Note: This function is called for each index in order (https://doc.rust-lang.org/std/primitive.array.html#method.map)
+                            let hand = SHand::new_from_iter(
+                                vecocard_hand[i_card_lo..i_card_lo+n_remaining].iter()
                                     .copied()
                                     .flatten()
-                            )
-                        };
-                        let ahand = EPlayerIndex::map_from_raw([
-                            make_hand(0, ai_card[EPI0]),
-                            make_hand(ai_card[EPI0], ai_card[EPI1]),
-                            make_hand(ai_card[EPI1], ai_card[EPI2]),
-                            make_hand(ai_card[EPI2], ai_card[EPI3]),
-                        ]);
-                        for epi in EPlayerIndex::values() {
-                            assert!(ahand[epi].cards().len() <= an_remaining[epi]);
-                        }
+                            );
+                            i_card_lo += n_remaining;
+                            assert!(hand.cards().len() <= n_remaining);
+                            hand
+                        }));
                         if_then_some!(
                             ahand[epi_position].cards().len()==an_remaining[epi_position],
                             ahand
