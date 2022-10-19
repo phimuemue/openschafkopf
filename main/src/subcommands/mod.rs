@@ -62,9 +62,7 @@ pub fn get_ruleset(clapmatches: &clap::ArgMatches) -> Result<SRuleSet, Error> {
 }
 
 pub fn get_rules(clapmatches: &clap::ArgMatches) -> Option<Result<Box<dyn crate::rules::TRules>, Error>> {
-    clapmatches.value_of("rules").map(|str_rules|
-        crate::rules::parser::parse_rule_description_simple(str_rules)
-    )
+    clapmatches.value_of("rules").map(crate::rules::parser::parse_rule_description_simple)
 }
 
 pub fn ai(subcommand_matches: &clap::ArgMatches) -> SAi {

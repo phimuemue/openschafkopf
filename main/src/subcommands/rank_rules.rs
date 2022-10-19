@@ -45,7 +45,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             Box::new(
                 allowed_rules(&ruleset.avecrulegroup[epi], hand)
                     .filter_map(|orules: _| {
-                        orules.map(|rules| TRulesBoxClone::box_clone(rules))
+                        orules.map(TRulesBoxClone::box_clone)
                     })
             ) as Box<dyn Iterator<Item=Box<dyn TRules>>>
         }
