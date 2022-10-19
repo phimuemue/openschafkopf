@@ -126,7 +126,6 @@ pub fn analyze_game(
                             &mut game.stichseq.clone(),
                             &|_,_| equivalent_cards_filter(
                                 /*n_until_stichseq_len*/7,
-                                epi,
                                 /*cardspartition*/game.rules.equivalent_when_on_same_hand(),
                             )(&game.stichseq, &game.ahand),
                             &SMinReachablePayout::new(
@@ -151,7 +150,6 @@ pub fn analyze_game(
                         Box::new($itahand) as Box<_>,
                         equivalent_cards_filter(
                             /*n_until_stichseq_len, determined heuristically*/7,
-                            epi_zugeben,
                             game.rules.equivalent_when_on_same_hand(),
                         ),
                         &SMinReachablePayout::new_from_game(game),

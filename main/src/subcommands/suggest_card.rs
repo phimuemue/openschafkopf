@@ -145,7 +145,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             (_),
                             equivalent_cards_filter(
                                 n_until_stichseq_len,
-                                epi_fixed,
                                 cardspartition,
                             )
                         ),
