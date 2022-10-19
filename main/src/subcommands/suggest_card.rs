@@ -169,7 +169,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             visualizer_factory(
                                 std::path::Path::new(str_path).to_path_buf(),
                                 rules,
-                                epi_fixed,
+                                epi_position,
                             )
                         },
                     },
