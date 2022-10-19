@@ -444,7 +444,7 @@ mod tests {
                     "\nRules:{} von {}\nHands:\n {}\nStichseq: {}\nStich{}\n{}\n",
                     rules,
                     unwrap!(rules.playerindex()),
-                    display_card_slices(&ahand, &rules, "\n "),
+                    display_card_slices(ahand, &rules, "\n "),
                     stichseq.visible_stichs().iter().join(", "),
                     stich,
                     str_msg,
