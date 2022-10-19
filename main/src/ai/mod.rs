@@ -95,7 +95,7 @@ impl SAi {
     pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer<SMinMax>>(
         &self,
         game: &SGame,
-        fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
+        fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<SCard>) -> SnapshotVisualizer + std::marker::Sync,
     ) -> SCard {
         let rules = game.rules.as_ref();
         let stichseq = &game.stichseq;
@@ -296,7 +296,7 @@ pub fn determine_best_card<
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
     fn_snapshotcache: impl Fn(&SStichSequence, &SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
-    fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SnapshotVisualizer + std::marker::Sync,
+    fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<SCard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, SCard) + std::marker::Sync),
 ) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>>
     where
@@ -320,7 +320,7 @@ pub fn determine_best_card<
         .par_bridge() // TODO can we derive a true parallel iterator?
         .for_each(|(i_ahand, mut ahand, card)| {
             fn_inspect(/*b_before*/true, i_ahand, &ahand, card);
-            let mut visualizer = fn_visualizer(i_ahand, &ahand, card); // do before ahand is modified
+            let mut visualizer = fn_visualizer(i_ahand, &ahand, Some(card)); // do before ahand is modified
             debug_assert!(ahand[epi_current].cards().contains(&card));
             let mapcardooutput = Arc::clone(&mapcardooutput);
             let mut stichseq = stichseq.clone();

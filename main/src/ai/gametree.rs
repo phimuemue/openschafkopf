@@ -24,18 +24,22 @@ pub trait TSnapshotVisualizer<Output> {
 }
 
 
-pub fn visualizer_factory<'rules>(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard) -> SForEachSnapshotHTMLVisualizer<'rules> {
+pub fn visualizer_factory<'rules>(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<SCard>) -> SForEachSnapshotHTMLVisualizer<'rules> {
     unwrap!(std::fs::create_dir_all(&path));
     unwrap!(crate::game_analysis::generate_html_auxiliary_files(&path));
-    move |i_ahand, ahand, card| {
+    move |i_ahand, ahand, ocard| {
         let path_abs = path.join(
             &std::path::Path::new(&format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S")))
-                .join(format!("{}_{}_{}.html",
+                .join(format!("{}_{}{}.html",
                     i_ahand,
                     ahand.iter()
                         .map(|hand| hand.cards().iter().join(""))
                         .join("_"),
-                    card
+                    if let Some(card)=ocard {
+                        format!("_{}", card)
+                    } else {
+                        "".to_owned()
+                    }
                 )),
         );
         unwrap!(std::fs::create_dir_all(unwrap!(path_abs.parent())));
@@ -157,7 +161,7 @@ impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
 
 pub struct SNoVisualization;
 impl SNoVisualization {
-    pub fn factory() -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, SCard)->Self + std::marker::Sync {
+    pub fn factory() -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<SCard>)->Self + std::marker::Sync {
         |_,_,_| Self
     }
 }

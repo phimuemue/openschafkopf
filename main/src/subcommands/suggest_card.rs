@@ -70,35 +70,106 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             let tpln_stoss_doubling = (0, 0); // TODO? make customizable
             let n_stock = 0; // TODO? make customizable
             let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
-            if epi_current!=epi_position {
-                let mapemmstrategypaystats = SPerMinMaxStrategy(itahand
-                    .par_bridge() // TODO can we derive a true parallel iterator?
-                    .map(|mut ahand| {
-                        explore_snapshots(
-                            &mut ahand,
-                            rules,
-                            &mut stichseq.clone(),
-                            &SBranchingFactor::factory(1, 2), // TODO make customizable
-                            &SMinReachablePayoutLowerBoundViaHint::new( // TODO make customizable
+            enum EBranching {
+                Branching(usize, usize),
+                Equivalent(usize, SCardsPartition),
+                Oracle,
+            }
+            use EBranching::*;
+            macro_rules! forward_with_args{($forward:ident) => {
+                cartesian_match!(
+                    forward,
+                    match (
+                        if_then_some!(let Some(str_branching) = clapmatches.value_of("branching"), {
+                            if str_branching=="oracle" {
+                                Oracle
+                            } else if let Some(n_until_stichseq_len) = str_branching.strip_prefix("equiv")
+                                .and_then(|str_n_until_remaining_cards| str_n_until_remaining_cards.parse().ok())
+                            {
+                                Equivalent(n_until_stichseq_len, rules.equivalent_when_on_same_hand())
+                            } else {
+                                let (str_lo, str_hi) = str_branching
+                                    .split(',')
+                                    .collect_tuple()
+                                    .ok_or_else(|| format_err!("Could not parse branching"))?;
+                                let (n_lo, n_hi) = (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?);
+                                Branching(n_lo, n_hi) // TODO we should avoid branching in case n_lo is greater than all hand's fixed cards
+                            }
+                        })
+                    ) {
+                        None => ((_), SNoFilter::factory()),
+                        Some(Branching(n_lo, n_hi)) => ((_), {
+                            let n_lo = n_lo.max(1);
+                            SBranchingFactor::factory(n_lo, n_hi.max(n_lo+1))
+                        }),
+                        Some(Equivalent(n_until_stichseq_len, cardspartition)) => (
+                            (_),
+                            equivalent_cards_filter(
+                                n_until_stichseq_len,
+                                cardspartition.clone(),
+                            )
+                        ),
+                        Some(Oracle) => ((SFilterByOracle), |stichseq, ahand| {
+                            SFilterByOracle::new(rules, ahand, stichseq)
+                        }),
+                    },
+                    match (clapmatches.value_of("prune")) {
+                        Some("hint") => (SMinReachablePayoutLowerBoundViaHint),
+                        _ => (SMinReachablePayout),
+                    },
+                    match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
+                        true => (
+                            (Box<dyn TSnapshotCache<SMinMax>>),
+                            (|_stichseq, rulestatecache| rules.snapshot_cache(rulestatecache))
+                        ),
+                        false => ((_), (SSnapshotCacheNone::factory())),
+                    },
+                    match (clapmatches.value_of("visualize")) {
+                        None => (SNoVisualization::factory()),
+                        Some(str_path) => {
+                            visualizer_factory(
+                                std::path::Path::new(str_path).to_path_buf(),
                                 rules,
                                 epi_position,
-                                tpln_stoss_doubling,
-                                n_stock,
-                            ),
-                            &SSnapshotCacheNone::factory(), // TODO make customizable
-                            &mut SNoVisualization{}, // TODO make customizable
-                        ).0.map(|mapepiminmax| {
-                            SPayoutStats::new_1(mapepiminmax[epi_position])
+                            )
+                        },
+                    },
+                )
+            }}
+            if epi_current!=epi_position {
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), (($ty_snapshotcache:ty), $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                    SPerMinMaxStrategy(itahand
+                        .enumerate()
+                        .par_bridge() // TODO can we derive a true parallel iterator?
+                        .map(|(i_ahand, mut ahand)| {
+                            let mut visualizer = $fn_visualizer(i_ahand, &ahand, /*ocard*/None);
+                            explore_snapshots::<_,$($func_filter_allowed_cards_ty)*,_,$ty_snapshotcache,_>(
+                                &mut ahand,
+                                rules,
+                                &mut stichseq.clone(),
+                                &$func_filter_allowed_cards,
+                                &$foreachsnapshot::new(
+                                    rules,
+                                    epi_position,
+                                    tpln_stoss_doubling,
+                                    n_stock,
+                                ),
+                                &$fn_snapshotcache,
+                                &mut visualizer,
+                            ).0.map(|mapepiminmax| {
+                                SPayoutStats::new_1(mapepiminmax[epi_position])
+                            })
                         })
-                    })
-                    .reduce(
-                        /*identity*/|| EMinMaxStrategy::map_from_fn(|_|SPayoutStats::new_identity_for_accumulate()),
-                        /*op*/mutate_return!(|mapemmstrategypayoutstats_lhs, mapemmstrategypayoutstats_rhs| {
-                            for emmstrategy in EMinMaxStrategy::values() {
-                                mapemmstrategypayoutstats_lhs[emmstrategy].accumulate(&mapemmstrategypayoutstats_rhs[emmstrategy]);
-                            }
-                        }),
-                    ));
+                        .reduce(
+                            /*identity*/|| EMinMaxStrategy::map_from_fn(|_|SPayoutStats::new_identity_for_accumulate()),
+                            /*op*/mutate_return!(|mapemmstrategypayoutstats_lhs, mapemmstrategypayoutstats_rhs| {
+                                for emmstrategy in EMinMaxStrategy::values() {
+                                    mapemmstrategypayoutstats_lhs[emmstrategy].accumulate(&mapemmstrategypayoutstats_rhs[emmstrategy]);
+                                }
+                            }),
+                        ))
+                }}}
+                let mapemmstrategypaystats = forward_with_args!(forward);
                 // TODO this prints a table for each iterated rules, but we want to only print one table
                 internal_table(
                     vec![(rules, mapemmstrategypaystats)],
@@ -143,73 +214,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             },
                         )
                     }}}
-                    enum EBranching {
-                        Branching(usize, usize),
-                        Equivalent(usize, SCardsPartition),
-                        Oracle,
-                    }
-                    use EBranching::*;
-                    cartesian_match!(
-                        forward,
-                        match (
-                            if_then_some!(let Some(str_branching) = clapmatches.value_of("branching"), {
-                                if str_branching=="oracle" {
-                                    Some(Oracle)
-                                } else if let Some(n_until_stichseq_len) = str_branching.strip_prefix("equiv")
-                                    .and_then(|str_n_until_remaining_cards| str_n_until_remaining_cards.parse().ok())
-                                {
-                                    Some(Equivalent(n_until_stichseq_len, rules.equivalent_when_on_same_hand()))
-                                } else {
-                                    let (str_lo, str_hi) = str_branching
-                                        .split(',')
-                                        .collect_tuple()
-                                        .ok_or_else(|| format_err!("Could not parse branching"))?;
-                                    let (n_lo, n_hi) = (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?);
-                                    if_then_some!(
-                                        n_lo < hand_fixed.cards().len(),
-                                        Branching(n_lo, n_hi)
-                                    )
-                                }
-                            }).flatten()
-                        ) {
-                            None => ((_), SNoFilter::factory()),
-                            Some(Branching(n_lo, n_hi)) => ((_), {
-                                let n_lo = n_lo.max(1);
-                                SBranchingFactor::factory(n_lo, n_hi.max(n_lo+1))
-                            }),
-                            Some(Equivalent(n_until_stichseq_len, cardspartition)) => (
-                                (_),
-                                equivalent_cards_filter(
-                                    n_until_stichseq_len,
-                                    cardspartition,
-                                )
-                            ),
-                            Some(Oracle) => ((SFilterByOracle), |stichseq, ahand| {
-                                SFilterByOracle::new(rules, ahand, stichseq)
-                            }),
-                        },
-                        match (clapmatches.value_of("prune")) {
-                            Some("hint") => (SMinReachablePayoutLowerBoundViaHint),
-                            _ => (SMinReachablePayout),
-                        },
-                        match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
-                            true => (
-                                (Box<dyn TSnapshotCache<SMinMax>>),
-                                (|_stichseq, rulestatecache| rules.snapshot_cache(rulestatecache))
-                            ),
-                            false => ((_), (SSnapshotCacheNone::factory())),
-                        },
-                        match (clapmatches.value_of("visualize")) {
-                            None => (SNoVisualization::factory()),
-                            Some(str_path) => {
-                                visualizer_factory(
-                                    std::path::Path::new(str_path).to_path_buf(),
-                                    rules,
-                                    epi_position,
-                                )
-                            },
-                        },
-                    )
+                    forward_with_args!(forward)
                 }.ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
                 table(
                     &determinebestcardresult,
