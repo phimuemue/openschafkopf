@@ -46,7 +46,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     with_common_args(
         clapmatches,
-        |itahand, rules, stichseq, hand_fixed, epi_position, b_verbose| {
+        |itahand, rules, stichseq, ahand_fixed_with_holes, epi_position, b_verbose| {
             let otplrulesfn_points_as_payout = if clapmatches.is_present("points") {
                 if let Some(tplrulesfn_points_as_payout) = rules.points_as_payout() {
                     Some(tplrulesfn_points_as_payout)
@@ -70,6 +70,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             if epi_fixed!=epi_position {
                 bail!("suggest_card currently does not support arbitrary positions."); // TODO relax this restriction
             }
+            let hand_fixed = &ahand_fixed_with_holes[epi_position];
             let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
                 macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), (($ty_snapshotcache:ty), $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;

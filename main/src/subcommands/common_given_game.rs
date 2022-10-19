@@ -65,7 +65,7 @@ pub fn with_common_args<FnWithArgs>(
             Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
             &'rules dyn TRules,
             &SStichSequence,
-            &SHand, // TODO? Good idea? Could this simply given by itahand?
+            &EnumMap<EPlayerIndex, SHand>, // TODO? Good idea? Could this simply given by itahand?
             EPlayerIndex/*epi_position*/,
             bool/*b_verbose*/,
         ) -> Result<(), Error>,
@@ -208,7 +208,6 @@ pub fn with_common_args<FnWithArgs>(
         ).unwrap_or_else(|| {
             All
         });
-        let hand_fixed = ahand_with_holes[epi_position].clone();
         for epi in EPlayerIndex::values() {
             assert!(ahand_with_holes[epi].cards().len() <= mapepin_cards_per_hand[epi]);
         }
@@ -222,7 +221,7 @@ pub fn with_common_args<FnWithArgs>(
             fn_with_args(
                 Box::new($fn_take($itahand_factory(
                     &stichseq,
-                    ahand_with_holes,
+                    ahand_with_holes.clone(),
                     epi_position,
                     rules,
                     /*fn_inspect*/|b_valid_so_far, ahand| {
@@ -252,7 +251,7 @@ pub fn with_common_args<FnWithArgs>(
                 ))),
                 rules,
                 &stichseq,
-                &hand_fixed,
+                &ahand_with_holes,
                 epi_position,
                 b_verbose,
             )?;

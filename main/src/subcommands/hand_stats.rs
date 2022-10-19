@@ -25,7 +25,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     }
     with_common_args(
         clapmatches,
-        |itahand, rules, _stichseq, _hand_fixed, _epi_position, _b_verbose| {
+        |itahand, rules, _stichseq, _ahand_fixed_with_holes, _epi_position, _b_verbose| {
             #[derive(PartialOrd, Ord, Hash, PartialEq, Eq)]
             enum VInspectValue {
                 Usize(usize),
