@@ -153,7 +153,7 @@ pub fn with_common_args<FnWithArgs>(
                             assert!(hand.cards().len() <= n_remaining);
                             hand
                         }));
-                        if_then_some!(
+                        if_then_some!( // TODO this is overly restrictive for hand-stats
                             ahand[epi_position].cards().len()==an_remaining[epi_position],
                             ahand
                         )
