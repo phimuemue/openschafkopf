@@ -131,7 +131,7 @@ pub fn with_common_args<FnWithArgs>(
                     stichseq.zugeben(card, rules);
                 }
                 let epi_position = clapmatches.value_of_t("position")
-                    .unwrap_or(unwrap!(stichseq.current_stich().current_playerindex()));
+                    .unwrap_or_else(|_|unwrap!(stichseq.current_stich().current_playerindex()));
                 if_then_some!(
                     vecocard_hand.iter().all(Option::is_some)
                         && stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
