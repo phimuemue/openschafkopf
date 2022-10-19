@@ -122,11 +122,10 @@ pub fn with_common_args<FnWithArgs>(
             .filter_map(|ekurzlang| {
                 let mut stichseq = SStichSequence::new(ekurzlang);
                 for &card in veccard_stichseq.iter() {
-                    if !ekurzlang.supports_card(card) {
-                        return None; // TODO distinguish error
-                    }
-                    if stichseq.game_finished() {
-                        return None; // TODO distinguish error
+                    if !ekurzlang.supports_card(card)
+                        || stichseq.game_finished()
+                    {
+                        return None; // TODO? distinguish error
                     }
                     stichseq.zugeben(card, rules);
                 }
