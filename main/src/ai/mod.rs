@@ -41,20 +41,17 @@ pub struct SAi {
 
 pub struct SDetermineBestCard<'game> {
     pub stichseq: &'game SStichSequence,
-    pub hand_fixed: &'game SHand,
 }
 impl<'game> SDetermineBestCard<'game> {
-    pub fn new(stichseq: &'game SStichSequence, hand_fixed: &'game SHand) -> Self {
+    pub fn new(stichseq: &'game SStichSequence) -> Self {
         Self{
             stichseq,
-            hand_fixed,
         }
     }
 
     pub fn new_from_game(game: &'game SGame) -> Self {
         Self::new(
             &game.stichseq,
-            /*hand_fixed*/&game.ahand[unwrap!(game.which_player_can_do_something()).0],
         )
     }
 }
@@ -120,9 +117,10 @@ impl SAi {
         let rules = game.rules.as_ref();
         let determinebestcard = SDetermineBestCard::new_from_game(game);
         let epi_fixed = unwrap!(determinebestcard.stichseq.current_stich().current_playerindex());
+        let hand_fixed = &game.ahand[epi_fixed];
         if let Ok(card)=rules.all_allowed_cards(
             verify_eq!(&game.stichseq, determinebestcard.stichseq),
-            determinebestcard.hand_fixed
+            hand_fixed
         ).iter().exactly_one() {
             *card
         } else if let Some(card) = rules.rulespecific_ai()
@@ -175,10 +173,10 @@ impl SAi {
                         std::iter::once(game.ahand.clone())
                     },
                     (&VAIParams::Simulating{n_suggest_card_samples:_}, _1|_2|_3|_4) => {
-                        all_possible_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, rules)
+                        all_possible_hands(determinebestcard.stichseq, hand_fixed.clone(), epi_fixed, rules)
                     },
                     (&VAIParams::Simulating{n_suggest_card_samples}, _5|_6|_7|_8) =>{ 
-                        forever_rand_hands(determinebestcard.stichseq, determinebestcard.hand_fixed.clone(), epi_fixed, rules)
+                        forever_rand_hands(determinebestcard.stichseq, hand_fixed.clone(), epi_fixed, rules)
                             .take(n_suggest_card_samples)
                     },
                 },
