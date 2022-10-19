@@ -197,19 +197,19 @@ pub struct SPayoutStats {
 }
 
 impl SPayoutStats {
-    fn new_1(n_payout: isize) -> Self {
+    pub fn new_1(n_payout: isize) -> Self {
         Self {
             mapnn_histogram: Some((n_payout, 1)).into_iter().collect()
         }
     }
 
-    fn new_identity_for_accumulate() -> Self {
+    pub fn new_identity_for_accumulate() -> Self {
         Self {
             mapnn_histogram: BTreeMap::new(),
         }
     }
 
-    fn accumulate(&mut self, paystats: &Self) {
+    pub fn accumulate(&mut self, paystats: &Self) {
         for (n_payout_other, n_count_other) in paystats.mapnn_histogram.iter() {
             *self.mapnn_histogram.entry(*n_payout_other).or_insert(0) += n_count_other;
         }
