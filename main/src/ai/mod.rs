@@ -226,7 +226,7 @@ impl SPayoutStats {
             .map(|(n_payout, n_count)| n_payout * n_count.as_num::<isize>())
             .sum::<isize>()
             .as_num::<f32>()
-            / self.mapnn_histogram.len().as_num::<f32>()
+            / self.mapnn_histogram.iter().map(|(_n_payout, n_count)| *n_count).sum::<usize>().as_num::<f32>()
     }
     pub fn counts(&self) -> EnumMap<std::cmp::Ordering, usize> {
         let mut mapordn_counts = std::cmp::Ordering::map_from_fn(|_ord| 0);
