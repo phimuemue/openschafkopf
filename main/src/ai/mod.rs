@@ -322,7 +322,6 @@ pub fn determine_best_card<
             fn_inspect(/*b_before*/true, i_ahand, &ahand, card);
             let mut visualizer = fn_visualizer(i_ahand, &ahand, Some(card)); // do before ahand is modified
             debug_assert!(ahand[epi_current].cards().contains(&card));
-            let mapcardooutput = Arc::clone(&mapcardooutput);
             let mut stichseq = stichseq.clone();
             assert!(ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
             ahand[epi_current].play_card(card);
@@ -347,12 +346,13 @@ pub fn determine_best_card<
                     &mut visualizer,
                 )
             };
-            let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
             let payoutstats = SPerMinMaxStrategy( // TODO should be SPayoutStatsPerStrategy
                 EMinMaxStrategy::map_from_fn(|emmstrategy| {
                     SPayoutStats::new_1(output.0[emmstrategy][epi_current])
                 })
             );
+            let mapcardooutput = Arc::clone(&mapcardooutput);
+            let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
             match ooutput {
                 None => *ooutput = Some(payoutstats),
                 Some(ref mut output_return) => output_return.accumulate(payoutstats),
