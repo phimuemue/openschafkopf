@@ -60,12 +60,21 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             } else {
                 None
             };
-            let mut ofn_payout_to_points = None;
-            let rules = if let Some((rules, fn_payout_to_points)) = &otplrulesfn_points_as_payout {
-                ofn_payout_to_points = Some(fn_payout_to_points);
+            let rules = if let Some((rules, _fn_payout_to_points)) = &otplrulesfn_points_as_payout {
                 rules.as_ref()
             } else {
                 rules
+            };
+            let fn_human_readable_payout = |f_payout| {
+                if let Some((_rules, fn_payout_to_points)) = &otplrulesfn_points_as_payout {
+                    fn_payout_to_points(
+                        stichseq,
+                        (epi_position, &ahand_fixed_with_holes[epi_position]),
+                        f_payout
+                    )
+                } else {
+                    f_payout
+                }
             };
             let tpln_stoss_doubling = (0, 0); // TODO? make customizable
             let n_stock = 0; // TODO? make customizable
@@ -136,7 +145,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     },
                 )
             }}
-            let hand_fixed = &ahand_fixed_with_holes[epi_position];
             if epi_current!=epi_position {
                 macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), (($ty_snapshotcache:ty), $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     SPerMinMaxStrategy(itahand
@@ -175,17 +183,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 internal_table(
                     vec![(rules, mapemmstrategypaystats)],
                     /*b_group*/false,
-                    /*fn_human_readable_payout*/&|f_payout| {
-                        if let Some(fn_payout_to_points) = &ofn_payout_to_points {
-                            fn_payout_to_points(
-                                stichseq,
-                                (epi_position, hand_fixed),
-                                f_payout
-                            )
-                        } else {
-                            f_payout
-                        }
-                    },
+                    &fn_human_readable_payout,
                 ).print(b_verbose);
             } else {
                 let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
@@ -229,17 +227,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 table(
                     &determinebestcardresult,
                     rules,
-                    /*fn_human_readable_payout*/&|f_payout| {
-                        if let Some(fn_payout_to_points) = &ofn_payout_to_points {
-                            fn_payout_to_points(
-                                stichseq,
-                                (verify_eq!(epi_position, epi_current), hand_fixed),
-                                f_payout
-                            )
-                        } else {
-                            f_payout
-                        }
-                    },
+                    &fn_human_readable_payout,
                 )
                     .print(
                         b_verbose,
