@@ -17,7 +17,7 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
 
     fn points_as_payout(&self, _rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Option<(
         Box<dyn TRules>,
-        Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
+        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32>,
     )> {
         None
     }
@@ -94,7 +94,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
 
     fn points_as_payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Option<(
         Box<dyn TRules>,
-        Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
+        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32>,
     )> {
         //assert_eq!(self, rules.payoutdecider); // TODO
         let pointstowin = self.pointstowin.clone();
@@ -108,25 +108,24 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
                 },
                 trumpfdecider: rules.trumpfdecider.clone(),
             }) as Box<dyn TRules>,
-            Box::new(move |stichseq: &SStichSequence, _hand: &SHand, f_payout: f32| {
+            Box::new(move |_stichseq: &SStichSequence, (epi_hand, _hand): (EPlayerIndex, &SHand), f_payout: f32| {
                 SPayoutDeciderPointsAsPayout::payout_to_points(
                     epi_active,
-                    stichseq,
+                    epi_hand,
                     &pointstowin,
                     f_payout,
                 )
-            }) as Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
+            }) as Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32>,
         )
     )}
 }
 
 impl SPayoutDeciderPointsAsPayout<VGameAnnouncementPrioritySoloLike> {
-    fn payout_to_points(epi_active: EPlayerIndex, stichseq: &SStichSequence, pointstowin: &impl TPointsToWin, f_payout: f32) -> f32 {
-        let epi = unwrap!(stichseq.current_stich().current_playerindex());
+    fn payout_to_points(epi_active: EPlayerIndex, epi_hand: EPlayerIndex, pointstowin: &impl TPointsToWin, f_payout: f32) -> f32 {
         normalized_points_to_points(
-            f_payout / SPlayerParties13::new(epi_active).multiplier(epi).as_num::<f32>(),
+            f_payout / SPlayerParties13::new(epi_active).multiplier(epi_hand).as_num::<f32>(),
             pointstowin,
-            /*b_primary*/ epi==epi_active,
+            /*b_primary*/ epi_hand==epi_active,
         )
     }
 }
@@ -154,7 +153,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
                 assert_eq!(
                     Self::payout_to_points(
                         /*epi_active*/rules.epi,
-                        &stichseq_check,
+                        /*epi_hand*/epi_card,
                         &self.pointstowin,
                         an_payout[epi_card].as_num::<f32>(),
                     ).as_num::<isize>(),
@@ -495,7 +494,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
 
     fn points_as_payout(&self) -> Option<(
         Box<dyn TRules>,
-        Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
+        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32>,
     )> {
         self.payoutdecider.points_as_payout(self)
     }

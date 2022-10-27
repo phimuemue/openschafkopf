@@ -317,20 +317,25 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
 
     fn points_as_payout(&self) -> Option<(
         Box<dyn TRules>,
-        Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
+        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32>,
     )> {
         #[derive(Debug, Clone)]
         struct SRufspielPayoutPointsAsPayout {
             payoutdecider: SPayoutDeciderPointsAsPayout<SPointsToWin61>,
         }
         impl SRufspielPayoutPointsAsPayout {
-            fn payout_to_points(epi_active: EPlayerIndex, card_rufsau: SCard, stichseq: &SStichSequence, hand: &SHand, f_payout: f32) -> f32 {
-                let epi = unwrap!(stichseq.current_stich().current_playerindex());
+            fn payout_to_points(
+                epi_active: EPlayerIndex,
+                card_rufsau: SCard,
+                stichseq: &SStichSequence,
+                (epi_hand, hand): (EPlayerIndex, &SHand),
+                f_payout: f32,
+            ) -> f32 {
                 normalized_points_to_points(
                     f_payout / playerparties22_multiplier().as_num::<f32>(),
                     &SPointsToWin61{},
-                    /*b_primary*/ epi==epi_active
-                        || stichseq.visible_stichs().iter().filter_map(|stich| stich.get(epi))
+                    /*b_primary*/ epi_hand==epi_active
+                        || stichseq.visible_stichs().iter().filter_map(|stich| stich.get(epi_hand))
                             .chain(hand.cards().iter())
                             .any(|&card| card==card_rufsau),
                 )
@@ -356,7 +361,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                                 /*epi_active*/rules.epi,
                                 rules.rufsau(),
                                 &stichseq_check,
-                                &ahand_check[epi_card],
+                                (epi_card, &ahand_check[epi_card]),
                                 an_payout[epi_card].as_num::<f32>(),
                             ).as_num::<isize>(),
                             EPlayerIndex::values()
@@ -394,15 +399,15 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 },
                 trumpfdecider: self.trumpfdecider.clone(),
             }) as Box<dyn TRules>,
-            Box::new(move |stichseq: &SStichSequence, hand: &SHand, f_payout: f32| {
+            Box::new(move |stichseq: &SStichSequence, (epi_hand, hand): (EPlayerIndex, &SHand), f_payout: f32| {
                 SRufspielPayoutPointsAsPayout::payout_to_points(
                     epi_active,
                     card_rufsau,
                     stichseq,
-                    hand,
+                    (epi_hand, hand),
                     f_payout,
                 )
-            }) as Box<dyn Fn(&SStichSequence, &SHand, f32)->f32>,
+            }) as Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32>,
         ))
     }
 

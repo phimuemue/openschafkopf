@@ -223,7 +223,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         if let Some(fn_payout_to_points) = &ofn_payout_to_points {
                             fn_payout_to_points(
                                 stichseq,
-                                hand_fixed,
+                                (verify_eq!(epi_position, epi_current), hand_fixed),
                                 f_payout
                             )
                         } else {
