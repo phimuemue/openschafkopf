@@ -136,6 +136,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     },
                 )
             }}
+            let hand_fixed = &ahand_fixed_with_holes[epi_position];
             if epi_current!=epi_position {
                 macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), (($ty_snapshotcache:ty), $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     SPerMinMaxStrategy(itahand
@@ -174,10 +175,19 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 internal_table(
                     vec![(rules, mapemmstrategypaystats)],
                     /*b_group*/false,
-                    /*fn_human_readable_payout*/&|f_payout| f_payout,
+                    /*fn_human_readable_payout*/&|f_payout| {
+                        if let Some(fn_payout_to_points) = &ofn_payout_to_points {
+                            fn_payout_to_points(
+                                stichseq,
+                                (epi_position, hand_fixed),
+                                f_payout
+                            )
+                        } else {
+                            f_payout
+                        }
+                    },
                 ).print(b_verbose);
             } else {
-                let hand_fixed = &ahand_fixed_with_holes[epi_position];
                 let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
                     macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), (($ty_snapshotcache:ty), $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                         let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
