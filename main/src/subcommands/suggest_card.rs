@@ -77,8 +77,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     f_payout
                 }
             };
-            let tpln_stoss_doubling = (0, 0); // TODO? make customizable
-            let n_stock = 0; // TODO? make customizable
+            let expensifiers = SExpensifiers::new( // TODO? make customizable
+                /*tpln_stoss_doubling*/(0, 0),
+                /*n_stock*/0,
+            );
             let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
             enum EBranching {
                 Branching(usize, usize),
@@ -161,7 +163,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 &$foreachsnapshot::new(
                                     rules,
                                     epi_position,
-                                    SExpensifiers::new(tpln_stoss_doubling, n_stock),
+                                    expensifiers.clone(),
                                 ),
                                 &$fn_snapshotcache,
                                 &mut visualizer,
@@ -205,7 +207,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             &$foreachsnapshot::new(
                                 rules,
                                 verify_eq!(epi_position, epi_current),
-                                SExpensifiers::new(tpln_stoss_doubling, n_stock),
+                                expensifiers.clone(),
                             ),
                             $fn_snapshotcache,
                             $fn_visualizer,
