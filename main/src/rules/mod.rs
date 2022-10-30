@@ -61,15 +61,11 @@ pub struct SExpensifiers {
 
 impl SExpensifiers {
     pub fn stoss_and_doublings(&self) -> (usize, usize) {
-        stoss_and_doublings(&self.vecstoss, &self.doublings)
+        (
+            self.vecstoss.len(),
+            self.doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),
+        )
     }
-}
-
-pub fn stoss_and_doublings(vecstoss: &[SStoss], doublings: &SDoublings) -> (usize, usize) {
-    (
-        vecstoss.len(),
-        doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),
-    )
 }
 
 fn all_allowed_cards_within_stich_distinguish_farbe_frei (
