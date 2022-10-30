@@ -73,8 +73,7 @@ impl SAi {
                     &SMinReachablePayoutLowerBoundViaHint::new(
                         rules,
                         epi_rank,
-                        tpln_stoss_doubling,
-                        n_stock,
+                        SExpensifiers::new(tpln_stoss_doubling, n_stock),
                     ),
                     &SSnapshotCacheNone::factory(), // TODO make customizable
                     &mut SNoVisualization{},
@@ -123,8 +122,7 @@ impl SAi {
                     &$foreachsnapshot::new(
                         rules,
                         epi_current,
-                        /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
-                        game.n_stock,
+                        SExpensifiers::new(/*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings), game.n_stock),
                     ),
                     SSnapshotCacheNone::factory(), // TODO possibly use cache
                     fn_visualizer,

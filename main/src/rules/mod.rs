@@ -52,7 +52,7 @@ pub struct SStoss {
     pub epi : EPlayerIndex,
 }
 
-#[derive(new)]
+#[derive(Clone, new)]
 pub struct SExpensifiers {
     tpln_stoss_doubling: (usize, usize),
     n_stock: isize,

@@ -121,8 +121,10 @@ impl TPlayer for SPlayerComputer {
                         &SMinReachablePayout::new(
                             rules,
                             epi,
-                            /*tpln_stoss_doubling*/stoss_and_doublings(vecstoss, doublings),
-                            n_stock,
+                            SExpensifiers::new(
+                                /*tpln_stoss_doubling*/stoss_and_doublings(vecstoss, doublings),
+                                n_stock,
+                            ),
                         ),
                         &SSnapshotCacheNone::factory(), // TODO? use cache
                         &mut SNoVisualization,

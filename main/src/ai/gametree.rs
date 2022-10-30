@@ -403,8 +403,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
 pub struct SMinReachablePayoutBase<'rules, Pruner> {
     rules: &'rules dyn TRules,
     epi: EPlayerIndex,
-    tpln_stoss_doubling: (usize, usize),
-    n_stock: isize,
+    expensifiers: SExpensifiers,
     phantom: std::marker::PhantomData<Pruner>,
 }
 impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
@@ -412,8 +411,10 @@ impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
         Self::new(
             game.rules.as_ref(),
             unwrap!(game.current_playable_stich().current_playerindex()),
-            /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
-            game.n_stock,
+            SExpensifiers::new(
+                /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
+                game.n_stock,
+            ),
         )
     }
 }
@@ -443,7 +444,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     fn final_output(&self, slcstich: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
         SMinMax::new_final(self.rules.payout(
             slcstich,
-            &SExpensifiers::new(self.tpln_stoss_doubling, self.n_stock),
+            &self.expensifiers,
             rulestatecache,
             /*b_test_points_as_payout*/if_dbg_else!({true}{()}),
         ))
@@ -543,7 +544,7 @@ impl TPruner for SPrunerNothing {
 pub struct SPrunerViaHint;
 impl TPruner for SPrunerViaHint {
     fn pruned_output(params: &SMinReachablePayoutBase<'_, Self>, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
-        let mapepion_payout = params.rules.payouthints(stichseq, ahand, &SExpensifiers::new(params.tpln_stoss_doubling, params.n_stock), rulestatecache)
+        let mapepion_payout = params.rules.payouthints(stichseq, ahand, &params.expensifiers, rulestatecache)
             .map(|intvlon_payout| intvlon_payout[ELoHi::Lo]);
         if_then_some!(
             mapepion_payout.iter().all(Option::is_some) && 0<unwrap!(mapepion_payout[params.epi]),
