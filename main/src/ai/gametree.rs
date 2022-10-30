@@ -1,4 +1,4 @@
-use crate::game::{stoss_and_doublings, SGame, SStichSequence};
+use crate::game::{SGame, SStichSequence};
 use crate::primitives::*;
 use crate::rules::*;
 use crate::util::*;
@@ -411,10 +411,7 @@ impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
         Self::new(
             game.rules.as_ref(),
             unwrap!(game.current_playable_stich().current_playerindex()),
-            SExpensifiers::new(
-                /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
-                game.n_stock,
-            ),
+            game.expensifiers(),
         )
     }
 }

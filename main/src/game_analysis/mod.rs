@@ -131,10 +131,7 @@ pub fn analyze_game(
                             &SMinReachablePayout::new(
                                 game.rules.as_ref(),
                                 epi,
-                                SExpensifiers::new(
-                                    /*tpln_stoss_doubling*/stoss_and_doublings(&game.vecstoss, &game.doublings),
-                                    game.n_stock,
-                                ),
+                                game.expensifiers(),
                             ),
                             &SSnapshotCacheNone::factory(), // TODO possibly use cache
                             &mut SNoVisualization,

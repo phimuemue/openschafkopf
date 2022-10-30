@@ -693,6 +693,13 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
     pub fn completed_stichs(&self) -> &[SStich] {
         self.stichseq.completed_stichs()
     }
+
+    pub fn expensifiers(&self) -> SExpensifiers {
+        SExpensifiers::new(
+            /*tpln_stoss_doubling*/stoss_and_doublings(&self.vecstoss, &self.doublings),
+            self.n_stock,
+        )
+    }
 }
 
 #[derive(Debug)]
