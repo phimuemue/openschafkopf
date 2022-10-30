@@ -408,7 +408,7 @@ mod tests {
             );
             let epi_first = stichseq.current_stich().first_playerindex();
             let ahand = &EPlayerIndex::map_from_raw(aslccard_hand)
-                .map_into(|acard| SHand::new_from_iter(acard));
+                .map_into(SHand::new_from_iter);
             let (mut cardspartition, playerparties) = unwrap!(rules.only_minmax_points_when_on_same_hand(
                 &SRuleStateCacheFixed::new(&stichseq, ahand),
             ));
