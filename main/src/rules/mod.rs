@@ -60,7 +60,7 @@ pub struct SExpensifiers {
 }
 
 impl SExpensifiers {
-    pub fn new_empty() -> Self {
+    pub fn new_no_stock_doublings_stoss() -> Self {
         Self::new(
             /*n_stock*/0,
             SDoublings::new_full(

@@ -56,7 +56,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     hand,
                     epi,
                     rules.as_ref(),
-                    &SExpensifiers::new_empty(), // assume no stock, doublings, stoss
+                    &SExpensifiers::new_no_stock_doublings_stoss(), // assume no stock, doublings, stoss
                 ))
             ))
             .collect::<Vec<_>>(),

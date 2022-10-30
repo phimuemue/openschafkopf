@@ -77,7 +77,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     f_payout
                 }
             };
-            let expensifiers = SExpensifiers::new_empty(); // TODO? make customizable
+            let expensifiers = SExpensifiers::new_no_stock_doublings_stoss(); // TODO? make customizable
             let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
             enum EBranching {
                 Branching(usize, usize),
