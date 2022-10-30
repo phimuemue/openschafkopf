@@ -292,7 +292,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                 &SRuleStateCache::new_from_gamefinishedstiche(gamefinishedstiche, |stich| self.winner_index(stich))
             ),
         );
-        // TODO assert tpln_stoss_doubling consistent with stoss_allowed etc
+        // TODO assert expensifiers consistent with stoss_allowed etc
         #[cfg(debug_assertions)] {
             let mut mapepiintvlon_payout = EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]));
             let mut stichseq_check = SStichSequence::new(gamefinishedstiche.get().kurzlang());
