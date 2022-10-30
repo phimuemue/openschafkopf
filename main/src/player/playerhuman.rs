@@ -91,7 +91,7 @@ impl TPlayer for SPlayerHuman {
                         skui::wprintln(ncwin, &format!("AI: {}", card));
                     }
                     skui::print_hand(&veccard, Some(i_card_chosen));
-                    skui::print_game_info(game.rules.as_ref(), &game.expensifiers.doublings, &game.expensifiers.vecstoss);
+                    skui::print_game_info(game.rules.as_ref(), &game.expensifiers);
                 },
                 || {
                     Some(self.ai.suggest_card(
@@ -170,7 +170,7 @@ impl TPlayer for SPlayerHuman {
             |_| true, // all alternatives allowed
             |ncwin, i_b_stoss_chosen, ob_stoss_suggest| {
                 assert!(ob_stoss_suggest.is_none());
-                skui::print_game_info(rules, &expensifiers.doublings, &expensifiers.vecstoss);
+                skui::print_game_info(rules, expensifiers);
                 {
                     let mut veccard = hand.cards().clone();
                     rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
