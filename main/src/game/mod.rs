@@ -452,6 +452,12 @@ impl SStichSequence {
                 }
         })
     }
+
+    pub fn cards_from_player<'slf>(&'slf self, hand: &'slf SHand, epi: EPlayerIndex) -> impl Iterator<Item=&'slf SCard> {
+        self.visible_cards()
+            .filter_map(move |(epi_card, card)| if_then_some!(epi==epi_card, card))
+            .chain(hand.cards().iter())
+    }
 }
 
 #[derive(Debug, Clone)]

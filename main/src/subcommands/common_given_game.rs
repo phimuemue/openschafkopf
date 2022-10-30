@@ -167,11 +167,8 @@ pub fn with_common_args<FnWithArgs>(
             .map_err(|err| format_err!("Could not determine ekurzlang: {}", err))?;
         // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
         if let Some(epi_active) = rules.playerindex() {
-            let veccard_hand_active = ahand_with_holes[epi_active].cards().iter().copied()
-                .chain(stichseq
-                    .visible_cards()
-                    .filter_map(|(epi, card)| if_then_some!(epi==epi_active, *card))
-                )
+            let veccard_hand_active = stichseq.cards_from_player(&ahand_with_holes[epi_active], epi_active)
+                .copied()
                 .collect::<Vec<_>>();
             if veccard_hand_active.len()==stichseq.kurzlang().cards_per_player() {
                 if !rules.can_be_played(SFullHand::new(&veccard_hand_active, stichseq.kurzlang())) {
