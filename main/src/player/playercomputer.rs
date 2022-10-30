@@ -75,12 +75,10 @@ impl TPlayer for SPlayerComputer {
     fn ask_for_stoss(
         &self,
         epi: EPlayerIndex,
-        doublings: &SDoublings,
         rules: &dyn TRules,
         hand: &SHand,
         stichseq: &SStichSequence,
-        vecstoss: &[SStoss],
-        n_stock: isize,
+        expensifiers: &SExpensifiers,
         txb: mpsc::Sender<bool>,
     ) {
         let n_samples_per_stoss = 5; // TODO move to ai, make adjustable
@@ -93,10 +91,7 @@ impl TPlayer for SPlayerComputer {
                             SFullHand::new(ahand[epi_active].cards(), stichseq.kurzlang()),
                             /*epi_rank*/epi_active,
                             rules,
-                            &SExpensifiers::new(
-                                stoss_and_doublings(vecstoss, doublings),
-                                n_stock,
-                            ),
+                            expensifiers,
                         )[EMinMaxStrategy::Min].avg().as_num::<f64>()
                     } else {
                         0f64
@@ -121,10 +116,7 @@ impl TPlayer for SPlayerComputer {
                         &SMinReachablePayout::new(
                             rules,
                             epi,
-                            SExpensifiers::new(
-                                /*tpln_stoss_doubling*/stoss_and_doublings(vecstoss, doublings),
-                                n_stock,
-                            ),
+                            expensifiers.clone(),
                         ),
                         &SSnapshotCacheNone::factory(), // TODO? use cache
                         &mut SNoVisualization,

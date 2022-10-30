@@ -4,6 +4,7 @@ use crate::rules::{
     TRulesBoxClone,
     ruleset::*,
     SExpensifiers,
+    SDoublings,
 };
 use crate::util::*;
 use crate::ai::gametree::SPerMinMaxStrategy;
@@ -57,8 +58,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     epi,
                     rules.as_ref(),
                     &SExpensifiers::new(
-                        /*tpln_stoss_doubling*/(0, 0), // assume no stoss, no doublings in subcommand rank-rules
-                        /*n_stock*/0, // assume no stock in subcommand rank-rules
+                        /*n_stock*/0, // assume no stock
+                        SDoublings::new_full(
+                            SStaticEPI0{},
+                            EPlayerIndex::map_from_fn(|_epi| false).into_raw(), // assume no doublings
+                        ),
+                        /*vecstoss*/vec!(), // assume no stoss
                     ),
                 ))
             ))

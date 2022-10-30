@@ -122,7 +122,7 @@ impl SAi {
                     &$foreachsnapshot::new(
                         rules,
                         epi_current,
-                        game.expensifiers(),
+                        game.expensifiers.clone(),
                     ),
                     SSnapshotCacheNone::factory(), // TODO possibly use cache
                     fn_visualizer,

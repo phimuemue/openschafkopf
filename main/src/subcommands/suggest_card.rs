@@ -4,7 +4,7 @@ use crate::util::*;
 use itertools::*;
 use crate::game_analysis::determine_best_card_table::{table, internal_table};
 use rayon::prelude::*;
-use crate::rules::SExpensifiers;
+use crate::rules::{SDoublings, SExpensifiers};
 
 use super::common_given_game::*;
 
@@ -78,8 +78,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 }
             };
             let expensifiers = SExpensifiers::new( // TODO? make customizable
-                /*tpln_stoss_doubling*/(0, 0),
                 /*n_stock*/0,
+                SDoublings::new_full(
+                    SStaticEPI0{},
+                    EPlayerIndex::map_from_fn(|_epi| false).into_raw(),
+                ),
+                /*vecstoss*/vec![],
             );
             let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
             enum EBranching {

@@ -156,7 +156,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
             rulestatecache,
             gamefinishedstiche,
             &SPlayerParties13::new(self.epi),
-        ).map(|n_payout| payout_including_stoss_doubling(*n_payout, expensifiers.tpln_stoss_doubling))
+        ).map(|n_payout| payout_including_stoss_doubling(*n_payout, expensifiers.stoss_and_doublings()))
     }
 
     fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
@@ -167,7 +167,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
             ahand,
             &SPlayerParties13::new(self.epi),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
-             on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, expensifiers.tpln_stoss_doubling)),
+             on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, expensifiers.stoss_and_doublings())),
         ))
     }
 

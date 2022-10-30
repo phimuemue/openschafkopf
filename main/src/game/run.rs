@@ -48,12 +48,10 @@ pub fn internal_run_simple_game_loop<ItStockOrGame: Iterator<Item=VStockOrT<SGam
                                     communicate_via_channel(|txb_stoss| {
                                         aattable[**epi].player.ask_for_stoss(
                                             **epi,
-                                            &game.doublings,
                                             game.rules.as_ref(),
                                             &game.ahand[**epi],
                                             &game.stichseq,
-                                            &game.vecstoss,
-                                            game.n_stock,
+                                            &game.expensifiers,
                                             txb_stoss,
                                         );
                                     })
@@ -105,8 +103,9 @@ pub fn run_simple_game_loop(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_
                             &gamepreparations.gameannouncements,
                             &gamepreparations.ruleset.avecrulegroup[epi],
                             &SExpensifiers::new(
-                                stoss_and_doublings(/*vecstoss*/&[], &gamepreparations.doublings),
                                 gamepreparations.n_stock,
+                                gamepreparations.doublings.clone(),
+                                /*vecstoss*/vec!(),
                             ),
                             None,
                             txorules
@@ -125,8 +124,9 @@ pub fn run_simple_game_loop(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_
                                 /*gameannouncements*/&SPlayersInRound::new(SStaticEPI0{}),
                                 &vecrulegroup_steigered,
                                 &SExpensifiers::new(
-                                    stoss_and_doublings(/*vecstoss*/&[], &determinerules.doublings),
                                     determinerules.n_stock,
+                                    determinerules.doublings.clone(),
+                                    /*vecstoss*/vec!(),
                                 ),
                                 Some(determinerules.currently_offered_prio()),
                                 txorules

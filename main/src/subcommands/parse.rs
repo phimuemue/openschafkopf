@@ -146,10 +146,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             if let Ok(ref gameresult@SGameResultGeneric{stockorgame: VStockOrT::OrT(ref game), ..}) = analyze_sauspiel_html(&str_input) {
                 let mut game_csv = SGame::new(
                     game.aveccard.clone(),
-                    game.doublings.clone(),
+                    game.expensifiers.doublings.clone(),
                     game.ostossparams.clone(),
                     game.rules.clone(),
-                    game.n_stock,
+                    game.expensifiers.n_stock,
                 );
                 assert_eq!(game.stichseq.visible_stichs(), game.stichseq.completed_stichs());
                 let path_gameresult = path_dst.join(super::gameresult_to_dir(gameresult));

@@ -32,12 +32,10 @@ pub trait TPlayer {
     fn ask_for_stoss(
         &self,
         epi: EPlayerIndex,
-        doublings: &SDoublings,
         rules: &dyn TRules,
         hand: &SHand,
         stichseq: &SStichSequence,
-        vecstoss: &[SStoss],
-        n_stock: isize,
+        expensifiers: &SExpensifiers,
         txb: mpsc::Sender<bool>,
     );
 

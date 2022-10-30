@@ -403,7 +403,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
 pub struct SMinReachablePayoutBase<'rules, Pruner> {
     rules: &'rules dyn TRules,
     epi: EPlayerIndex,
-    expensifiers: SExpensifiers,
+    expensifiers: SExpensifiers, // TODO could this borrow?
     phantom: std::marker::PhantomData<Pruner>,
 }
 impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
@@ -411,7 +411,7 @@ impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
         Self::new(
             game.rules.as_ref(),
             unwrap!(game.current_playable_stich().current_playerindex()),
-            game.expensifiers(),
+            game.expensifiers.clone(),
         )
     }
 }

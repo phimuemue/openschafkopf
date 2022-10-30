@@ -111,10 +111,8 @@ pub fn analyze_game(
     let mut mapepivecpossiblepayout = EPlayerIndex::map_from_fn(|_epi| Vec::new());
     let game = unwrap!(SGame::new_finished(
         game_in.rules.clone(),
-        game_in.doublings.clone(),
         game_in.ostossparams.clone(),
-        game_in.vecstoss.clone(),
-        game_in.n_stock,
+        game_in.expensifiers.clone(),
         SStichSequenceGameFinished::new(&game_in.stichseq),
         /*fn_before_zugeben*/|game, i_stich, epi_zugeben, card_played| {
             if game.stichseq.remaining_cards_per_hand()[epi_zugeben] <= n_max_remaining_cards {
@@ -131,7 +129,7 @@ pub fn analyze_game(
                             &SMinReachablePayout::new(
                                 game.rules.as_ref(),
                                 epi,
-                                game.expensifiers(),
+                                game.expensifiers.clone(),
                             ),
                             &SSnapshotCacheNone::factory(), // TODO possibly use cache
                             &mut SNoVisualization,

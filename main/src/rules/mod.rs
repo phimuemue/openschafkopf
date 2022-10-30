@@ -52,10 +52,24 @@ pub struct SStoss {
     pub epi : EPlayerIndex,
 }
 
-#[derive(Clone, new)]
+#[derive(Debug, Clone, new)]
 pub struct SExpensifiers {
-    pub tpln_stoss_doubling: (usize, usize),
     pub n_stock: isize,
+    pub doublings: SDoublings,
+    pub vecstoss: Vec<SStoss>,
+}
+
+impl SExpensifiers {
+    pub fn stoss_and_doublings(&self) -> (usize, usize) {
+        stoss_and_doublings(&self.vecstoss, &self.doublings)
+    }
+}
+
+pub fn stoss_and_doublings(vecstoss: &[SStoss], doublings: &SDoublings) -> (usize, usize) {
+    (
+        vecstoss.len(),
+        doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),
+    )
 }
 
 fn all_allowed_cards_within_stich_distinguish_farbe_frei (

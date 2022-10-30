@@ -50,12 +50,10 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
     fn ask_for_stoss(
         &self,
         _epi: EPlayerIndex,
-        _doublings: &SDoublings,
         _rules: &dyn TRules,
         _hand: &SHand,
         _stichseq: &SStichSequence,
-        _vecstoss: &[SStoss],
-        _n_stock: isize,
+        _expensifiers: &SExpensifiers,
         txb: mpsc::Sender<bool>,
     ) {
         unwrap!(txb.send(rand::random()));

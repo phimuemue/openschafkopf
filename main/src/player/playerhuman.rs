@@ -91,7 +91,7 @@ impl TPlayer for SPlayerHuman {
                         skui::wprintln(ncwin, &format!("AI: {}", card));
                     }
                     skui::print_hand(&veccard, Some(i_card_chosen));
-                    skui::print_game_info(game.rules.as_ref(), &game.doublings, &game.vecstoss);
+                    skui::print_game_info(game.rules.as_ref(), &game.expensifiers.doublings, &game.expensifiers.vecstoss);
                 },
                 || {
                     Some(self.ai.suggest_card(
@@ -157,12 +157,10 @@ impl TPlayer for SPlayerHuman {
     fn ask_for_stoss(
         &self,
         _epi: EPlayerIndex,
-        doublings: &SDoublings,
         rules: &dyn TRules,
         hand: &SHand,
         _stichseq: &SStichSequence,
-        vecstoss: &[SStoss],
-        _n_stock: isize,
+        expensifiers: &SExpensifiers,
         txb: mpsc::Sender<bool>,
     ) {
         let ab_stoss = [false, true];
@@ -172,7 +170,7 @@ impl TPlayer for SPlayerHuman {
             |_| true, // all alternatives allowed
             |ncwin, i_b_stoss_chosen, ob_stoss_suggest| {
                 assert!(ob_stoss_suggest.is_none());
-                skui::print_game_info(rules, doublings, vecstoss);
+                skui::print_game_info(rules, &expensifiers.doublings, &expensifiers.vecstoss);
                 {
                     let mut veccard = hand.cards().clone();
                     rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
@@ -182,7 +180,7 @@ impl TPlayer for SPlayerHuman {
                     skui::wprintln(ncwin, &format!("{} {} {}",
                         if i_b_stoss==i_b_stoss_chosen {"*"} else {" "},
                         if *b_stoss {"Give"} else {"No"},
-                        { match vecstoss.len() {
+                        { match expensifiers.vecstoss.len() {
                             0 => "Kontra".to_string(),
                             1 => "Re".to_string(),
                             2 => "Sup".to_string(),
