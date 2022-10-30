@@ -513,8 +513,10 @@ impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Rul
         SGameResultGeneric {
             an_payout : self.rules.payout(
                 gamefinishedstiche,
-                stoss_and_doublings(&self.vecstoss, &self.doublings),
-                self.n_stock,
+                &SExpensifiers::new(
+                    stoss_and_doublings(&self.vecstoss, &self.doublings),
+                    self.n_stock,
+                ),
                 &SRuleStateCache::new_from_gamefinishedstiche(
                     gamefinishedstiche,
                     |stich| self.rules.winner_index(stich),

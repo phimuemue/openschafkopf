@@ -66,7 +66,7 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         let mapepipointstichcount = &rulestatecache.changing.mapepipointstichcount;
         let points_for_player = |epi| mapepipointstichcount[epi].n_point;
         debug_assert_eq!(
@@ -186,10 +186,10 @@ impl TRules for SRulesRamsch {
                     payout_jungfrau_double_individually(count_jungfrau_occurences())
                 },
             }
-        }.map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+        }.map(|n_payout| payout_including_stoss_doubling(*n_payout, expensifiers.tpln_stoss_doubling))
     }
 
-    fn payouthints(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _tpln_stoss_doubling: (usize, usize), _n_stock: isize, _rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _expensifiers: &SExpensifiers, _rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         // TODO sensible payouthints
         EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
     }

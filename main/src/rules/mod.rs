@@ -52,6 +52,12 @@ pub struct SStoss {
     pub epi : EPlayerIndex,
 }
 
+#[derive(new)]
+pub struct SExpensifiers {
+    tpln_stoss_doubling: (usize, usize),
+    n_stock: isize,
+}
+
 fn all_allowed_cards_within_stich_distinguish_farbe_frei (
     rules: &(impl TRules + ?Sized),
     card_first_in_stich: SCard,
@@ -263,11 +269,10 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
 
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
 
-    fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache, if_dbg_else!({b_test_points_as_payout}{_}): SIfDebugBool) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache, if_dbg_else!({b_test_points_as_payout}{_}): SIfDebugBool) -> EnumMap<EPlayerIndex, isize> {
         let apayoutinfo = self.payout_no_invariant(
             gamefinishedstiche,
-            tpln_stoss_doubling,
-            n_stock,
+            expensifiers,
             debug_verify_eq!(
                 rulestatecache,
                 &SRuleStateCache::new_from_gamefinishedstiche(gamefinishedstiche, |stich| self.winner_index(stich))
@@ -287,8 +292,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                     let mapepiintvlon_payout_after = self.payouthints(
                         &stichseq_check,
                         &ahand_check,
-                        tpln_stoss_doubling,
-                        n_stock,
+                        expensifiers,
                         &SRuleStateCache::new(
                             &stichseq_check,
                             &ahand_check,
@@ -316,8 +320,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                 if let Some((rules, _fn_payout_to_points)) = self.points_as_payout() {
                     rules.payout(
                         gamefinishedstiche,
-                        tpln_stoss_doubling,
-                        n_stock,
+                        expensifiers,
                         rulestatecache,
                         /*b_test_points_as_payout*/false,
                     );
@@ -327,9 +330,9 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
         apayoutinfo
     }
 
-    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize>;
+    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize>;
 
-    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
+    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 
     fn equivalent_when_on_same_hand(&self) -> SCardsPartition;
     fn only_minmax_points_when_on_same_hand(&self, _rulestatecache: &SRuleStateCacheFixed) -> Option<(SCardsPartition, SPlayerPartiesTable)> {

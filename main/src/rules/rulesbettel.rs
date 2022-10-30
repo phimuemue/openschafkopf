@@ -150,16 +150,16 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
     impl_rules_trumpf!();
     impl_single_play!();
 
-    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         self.payoutdecider.payout(
             self,
             rulestatecache,
             gamefinishedstiche,
             &SPlayerParties13::new(self.epi),
-        ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+        ).map(|n_payout| payout_including_stoss_doubling(*n_payout, expensifiers.tpln_stoss_doubling))
     }
 
-    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         self.payoutdecider.payouthints(
             self,
             rulestatecache,
@@ -167,7 +167,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
             ahand,
             &SPlayerParties13::new(self.epi),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
-             on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
+             on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, expensifiers.tpln_stoss_doubling)),
         ))
     }
 

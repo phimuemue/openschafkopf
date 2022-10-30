@@ -11,8 +11,8 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
     fn priorityinfo(&self) -> String {
         "".to_string()
     }
-    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> EnumMap<EPlayerIndex, isize>;
-    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
+    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize>;
+    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
     fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>>;
 
     fn points_as_payout(&self, _rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Option<(
@@ -67,16 +67,16 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
         }
     }
 
-    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         TPayoutDecider::payout(self,
             rules,
             rulestatecache,
             gamefinishedstiche,
             &SPlayerParties13::new(rules.epi),
-        ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+        ).map(|n_payout| payout_including_stoss_doubling(*n_payout, expensifiers.tpln_stoss_doubling))
     }
 
-    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         TPayoutDecider::payouthints(self,
             rules,
             rulestatecache,
@@ -84,7 +84,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
             ahand,
             &SPlayerParties13::new(rules.epi),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
-             on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
+             on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, expensifiers.tpln_stoss_doubling)),
         ))
     }
 
@@ -135,7 +135,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
         VGameAnnouncementPriority::SoloLike(self.pointstowin.clone())
     }
 
-    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, _tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         let an_payout = TPayoutDecider::payout(self,
             rules,
             rulestatecache,
@@ -172,7 +172,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
         an_payout
     }
 
-    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, _tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         TPayoutDecider::payouthints(self,
             rules,
             rulestatecache,
@@ -249,16 +249,16 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
         VGameAnnouncementPriority::SoloTout(self.i_prio)
     }
 
-    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         TPayoutDecider::payout(self,
             rules,
             rulestatecache,
             gamefinishedstiche,
             &SPlayerParties13::new(rules.epi),
-        ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+        ).map(|n_payout| payout_including_stoss_doubling(*n_payout, expensifiers.tpln_stoss_doubling))
     }
 
-    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         TPayoutDecider::payouthints(self,
             rules,
             rulestatecache,
@@ -266,7 +266,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
             ahand,
             &SPlayerParties13::new(rules.epi),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
-             on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
+             on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, expensifiers.tpln_stoss_doubling)),
         ))
     }
 
@@ -376,16 +376,16 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
         VGameAnnouncementPriority::SoloSie
     }
 
-    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         TPayoutDecider::payout(self,
             rules,
             rulestatecache,
             gamefinishedstiche,
             &SPlayerParties13::new(rules.epi),
-        ).map(|n_payout| payout_including_stoss_doubling(*n_payout, tpln_stoss_doubling))
+        ).map(|n_payout| payout_including_stoss_doubling(*n_payout, expensifiers.tpln_stoss_doubling))
     }
 
-    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), _n_stock: isize) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         TPayoutDecider::payouthints(self,
             rules,
             rulestatecache,
@@ -393,7 +393,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
             ahand,
             &SPlayerParties13::new(rules.epi),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
-             on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, tpln_stoss_doubling)),
+             on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, expensifiers.tpln_stoss_doubling)),
         ))
     }
 
@@ -447,24 +447,22 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
     impl_rules_trumpf!();
     impl_single_play!();
 
-    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         self.payoutdecider.payout(
             self,
             rulestatecache,
             gamefinishedstiche,
-            tpln_stoss_doubling,
-            n_stock,
+            expensifiers,
         )
     }
 
-    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, tpln_stoss_doubling: (usize, usize), n_stock: isize, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         self.payoutdecider.payouthints(
             self,
             rulestatecache,
             stichseq,
             ahand,
-            tpln_stoss_doubling,
-            n_stock,
+            expensifiers,
         )
     }
 
