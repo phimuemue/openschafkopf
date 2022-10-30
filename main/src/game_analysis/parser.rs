@@ -362,14 +362,7 @@ pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failur
             SGame::new_finished(
                 rules,
                 /*ostossparams*/None,
-                SExpensifiers::new(
-                    /*n_stock*/0,
-                    SDoublings::new_full(
-                        SStaticEPI0{},
-                        EPlayerIndex::map_from_fn(|_epi| false).into_raw(),
-                    ),
-                    /*vecstoss*/vec![],
-                ),
+                SExpensifiers::new_empty(),
                 SStichSequenceGameFinished::new(&stichseq),
                 /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
             )

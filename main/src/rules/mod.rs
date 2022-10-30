@@ -60,6 +60,17 @@ pub struct SExpensifiers {
 }
 
 impl SExpensifiers {
+    pub fn new_empty() -> Self {
+        Self::new(
+            /*n_stock*/0,
+            SDoublings::new_full(
+                SStaticEPI0{},
+                EPlayerIndex::map_from_fn(|_epi| false).into_raw(),
+            ),
+            /*vecstoss*/vec![],
+        )
+    }
+
     pub fn stoss_doubling_factor(&self) -> isize {
         2isize.pow((
             self.vecstoss.len() +
