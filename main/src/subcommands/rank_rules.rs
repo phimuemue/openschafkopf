@@ -3,6 +3,7 @@ use crate::rules::{
     TRules,
     TRulesBoxClone,
     ruleset::*,
+    SExpensifiers,
 };
 use crate::util::*;
 use crate::ai::gametree::SPerMinMaxStrategy;
@@ -55,8 +56,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     hand,
                     epi,
                     rules.as_ref(),
-                    /*tpln_stoss_doubling*/(0, 0), // assume no stoss, no doublings in subcommand rank-rules
-                    /*n_stock*/0, // assume no stock in subcommand rank-rules
+                    &SExpensifiers::new(
+                        /*tpln_stoss_doubling*/(0, 0), // assume no stoss, no doublings in subcommand rank-rules
+                        /*n_stock*/0, // assume no stock in subcommand rank-rules
+                    ),
                 ))
             ))
             .collect::<Vec<_>>(),

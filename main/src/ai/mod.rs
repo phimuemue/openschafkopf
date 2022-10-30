@@ -58,7 +58,7 @@ impl SAi {
         }
     }
 
-    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &dyn TRules, tpln_stoss_doubling: (usize, usize), n_stock: isize) -> EnumMap<EMinMaxStrategy, SPayoutStats> {
+    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &dyn TRules, expensifiers: &SExpensifiers) -> EnumMap<EMinMaxStrategy, SPayoutStats> {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
         let ekurzlang = unwrap!(EKurzLang::from_cards_per_player(hand_fixed.get().len()));
         forever_rand_hands(&SStichSequence::new(ekurzlang), SHand::new_from_iter(hand_fixed.get()), epi_rank, rules)
@@ -73,7 +73,7 @@ impl SAi {
                     &SMinReachablePayoutLowerBoundViaHint::new(
                         rules,
                         epi_rank,
-                        SExpensifiers::new(tpln_stoss_doubling, n_stock),
+                        expensifiers.clone(), // TODO? can clone be avoided
                     ),
                     &SSnapshotCacheNone::factory(), // TODO make customizable
                     &mut SNoVisualization{},

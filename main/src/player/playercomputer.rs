@@ -60,8 +60,7 @@ impl TPlayer for SPlayerComputer {
                         hand,
                         /*epi_rank*/rules.active_playerindex(),
                         rules.upcast(),
-                        expensifiers.tpln_stoss_doubling,
-                        expensifiers.n_stock
+                        expensifiers,
                     )[EMinMaxStrategy::Min].avg().as_num::<f64>()
                 )
             ))
@@ -94,8 +93,10 @@ impl TPlayer for SPlayerComputer {
                             SFullHand::new(ahand[epi_active].cards(), stichseq.kurzlang()),
                             /*epi_rank*/epi_active,
                             rules,
-                            stoss_and_doublings(vecstoss, doublings),
-                            n_stock,
+                            &SExpensifiers::new(
+                                stoss_and_doublings(vecstoss, doublings),
+                                n_stock,
+                            ),
                         )[EMinMaxStrategy::Min].avg().as_num::<f64>()
                     } else {
                         0f64
