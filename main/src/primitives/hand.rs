@@ -36,8 +36,11 @@ impl SHand {
         #[cfg(debug_assertions)]hand.finalize_and_assert_invariant();
         hand
     }
-    pub fn new_from_iter(itcard: impl IntoIterator<Item=SCard>) -> SHand {
-        Self::new_from_vec(itcard.into_iter().collect())
+    pub fn new_from_iter<Card>(itcard: impl IntoIterator<Item=Card>) -> SHand
+        where
+            Card: Borrow<SCard>,
+    {
+        Self::new_from_vec(itcard.into_iter().map(|card| card.borrow().to_owned()).collect())
     }
     pub fn contains(&self, card_check: SCard) -> bool {
         self.contains_pred(|&card| card==card_check)

@@ -146,7 +146,6 @@ pub fn with_common_args<FnWithArgs>(
                             // Note: This function is called for each index in order (https://doc.rust-lang.org/std/primitive.array.html#method.map)
                             let hand = SHand::new_from_iter(
                                 vecocard_hand[i_card_lo..i_card_lo+n_remaining].iter()
-                                    .copied()
                                     .flatten()
                             );
                             i_card_lo += n_remaining;

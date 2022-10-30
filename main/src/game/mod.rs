@@ -558,7 +558,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         gameannouncements: GameAnnouncements,
         determinerules: DetermineRules,
     ) -> SGameGeneric<Ruleset, GameAnnouncements, DetermineRules> {
-        let ahand = aveccard.map(|veccard| SHand::new_from_iter(veccard.iter().copied()));
+        let ahand = aveccard.map(|veccard| SHand::new_from_iter(veccard));
         let n_cards_per_player = ahand[EPlayerIndex::EPI0].cards().len();
         assert!(ahand.iter().all(|hand| hand.cards().len()==n_cards_per_player));
         SGameGeneric {

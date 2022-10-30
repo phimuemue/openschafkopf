@@ -187,7 +187,7 @@ impl TToAHand for SHand {
             if epi == epi_pri {
                 self.clone()
             } else {
-                SHand::new_from_iter(None.into_iter())
+                SHand::new_from_iter(None::<SCard>)
             }
         })
     }
@@ -300,7 +300,7 @@ fn test_all_possible_hands() {
             assert_eq!(
                 make_handiterator::<SNextVecEPIPermutation>(
                     &stichseq,
-                    SHand::new_from_iter(veccard_hand.iter().copied()).to_ahand(epi_fixed),
+                    SHand::new_from_iter(veccard_hand).to_ahand(epi_fixed),
                 )
                 .inspect(|ahand| assert_eq!(
                     EnumMap::from_raw(an_size_hand),

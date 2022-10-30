@@ -128,7 +128,7 @@ impl TPlayer for SPlayerHuman {
             let vecoorules : Vec<Option<Option<&dyn TActivelyPlayableRules>>> = std::iter::once(None) // stands for "back"
                 .chain(
                     choose_ruleset_or_rules(
-                        &SHand::new_from_iter(hand.get().iter().copied()),
+                        &SHand::new_from_iter(hand.get()),
                         &vecrulegroup,
                         |rulegroup| rulegroup.str_name.clone(),
                         |i_rulegroup_chosen| vecrulegroup[i_rulegroup_chosen].vecorules[0].as_ref().map(|rules| rules.as_ref()),
@@ -139,7 +139,7 @@ impl TPlayer for SPlayerHuman {
                 )
                 .collect();
             if let Some(orules) = *choose_ruleset_or_rules(
-                &SHand::new_from_iter(hand.get().iter().copied()),
+                &SHand::new_from_iter(hand.get()),
                 &vecoorules,
                 |oorules| match *oorules {
                     None => "Back".to_string(),

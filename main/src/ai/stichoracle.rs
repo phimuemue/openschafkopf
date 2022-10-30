@@ -254,7 +254,7 @@ impl<'rules> SFilterByOracle<'rules> {
         stichseq_in_game: &SStichSequence,
     ) -> Option<Self> {
         let ahand = EPlayerIndex::map_from_fn(|epi| SHand::new_from_iter(
-            stichseq_in_game.cards_from_player(&ahand_in_game[epi], epi).copied()
+            stichseq_in_game.cards_from_player(&ahand_in_game[epi], epi)
         ));
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(stichseq_in_game, ahand_in_game));
         let stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
@@ -408,7 +408,7 @@ mod tests {
             );
             let epi_first = stichseq.current_stich().first_playerindex();
             let ahand = &EPlayerIndex::map_from_raw(aslccard_hand)
-                .map_into(|acard| SHand::new_from_iter(acard.iter().copied()));
+                .map_into(|acard| SHand::new_from_iter(acard));
             let (mut cardspartition, playerparties) = unwrap!(rules.only_minmax_points_when_on_same_hand(
                 &SRuleStateCacheFixed::new(&stichseq, ahand),
             ));
