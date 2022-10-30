@@ -60,11 +60,11 @@ pub struct SExpensifiers {
 }
 
 impl SExpensifiers {
-    pub fn stoss_and_doublings(&self) -> (usize, usize) {
-        (
-            self.vecstoss.len(),
-            self.doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count(),
-        )
+    pub fn stoss_doubling_factor(&self) -> isize {
+        2isize.pow((
+            self.vecstoss.len() +
+            self.doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count()
+        ).as_num::<u32>())
     }
 }
 
@@ -83,10 +83,6 @@ fn all_allowed_cards_within_stich_distinguish_farbe_frei (
     } else {
         fn_farbe_not_frei(veccard_same_farbe)
     }
-}
-
-pub fn payout_including_stoss_doubling(n_payout: isize, tpln_stoss_doubling: (usize, usize)) -> isize {
-    n_payout * 2isize.pow((tpln_stoss_doubling.0 + tpln_stoss_doubling.1).as_num::<u32>())
 }
 
 #[cfg(debug_assertions)]

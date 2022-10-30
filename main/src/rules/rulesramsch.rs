@@ -186,7 +186,7 @@ impl TRules for SRulesRamsch {
                     payout_jungfrau_double_individually(count_jungfrau_occurences())
                 },
             }
-        }.map(|n_payout| payout_including_stoss_doubling(*n_payout, expensifiers.stoss_and_doublings()))
+        }.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
 
     fn payouthints(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _expensifiers: &SExpensifiers, _rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {

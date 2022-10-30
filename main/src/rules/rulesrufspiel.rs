@@ -69,7 +69,7 @@ impl TRufspielPayout for SRufspielPayout {
         );
         assert_eq!(expensifiers.n_stock%2, 0);
         EPlayerIndex::map_from_fn(|epi|
-            payout_including_stoss_doubling(an_payout_no_stock[epi], expensifiers.stoss_and_doublings())
+            (an_payout_no_stock[epi] * expensifiers.stoss_doubling_factor())
                 + if playerparties.is_primary_party(epi) {
                     if 0<verify_eq!(an_payout_no_stock[epi], an_payout_no_stock[rules.epi]) {
                         expensifiers.n_stock/2
@@ -90,7 +90,7 @@ impl TRufspielPayout for SRufspielPayout {
             ahand,
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
             // TODO Stock
-            on_payout.map(|n_payout| payout_including_stoss_doubling(n_payout, expensifiers.stoss_and_doublings())),
+            on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),
         ))
     }
 }
