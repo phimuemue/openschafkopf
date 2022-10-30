@@ -24,8 +24,6 @@ pub trait TGamePhase : Sized {
     }
 }
 
-pub type SDoublings = SPlayersInRound<bool, SStaticEPI0>;
-
 #[derive(Debug)]
 pub struct SDealCards {
     aveccard : EnumMap<EPlayerIndex, /*not yet a "hand"*/SHandVector>,

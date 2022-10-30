@@ -45,6 +45,8 @@ impl VTrumpfOrFarbe {
     }
 }
 
+pub type SDoublings = SPlayersInRound<bool, SStaticEPI0>; // assume that doublings occur in order
+
 #[derive(Debug, Clone)]
 pub struct SStoss {
     pub epi : EPlayerIndex,
