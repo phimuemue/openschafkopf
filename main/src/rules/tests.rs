@@ -21,15 +21,17 @@ fn internal_test_rules(
     // TODO? check _ahand
     let mut game = SGame::new(
         aveccard,
-        SDoublings::new_full(
-            SStaticEPI0{},
-            EPlayerIndex::map_from_fn(|epi| 
-                vecn_doubling.contains(&epi.to_usize())
-            ).into_raw(),
+        SExpensifiersNoStoss::new_with_doublings(
+            n_stock,
+            SDoublings::new_full(
+                SStaticEPI0{},
+                EPlayerIndex::map_from_fn(|epi| 
+                    vecn_doubling.contains(&epi.to_usize())
+                ).into_raw(),
+            ),
         ),
         /*ostossparams*/Some(SStossParams::new(/*n_stoss_max*/4)),
         rules.box_clone(),
-        n_stock,
     );
     for i_epi in vecn_stoss.into_iter() {
         unwrap!(game.stoss(unwrap!(EPlayerIndex::checked_from_usize(i_epi))));

@@ -314,10 +314,9 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             .1;
         let mut game = SGameGeneric::new_with(
             aveccard,
-            doublings,
+            SExpensifiersNoStoss::new_with_doublings(/*n_stock: Sauspiel does not support Stock*/0, doublings),
             /*ostossparams*/Some(SStossParams::new(/*n_stoss_max*/4)), // TODO? is this correct
             rules,
-            /*n_stock*/0, // Sauspiel does not support stock
             ruleset,
             gameannouncements,
             vecvectplepistr_determinerules,

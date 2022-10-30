@@ -410,12 +410,11 @@ fn test_is_compatible_with_game_so_far() {
         use crate::rules::ruleset::*;
         let mut game = game::SGame::new(
             ahand,
-            SDoublings::new(SStaticEPI0{}),
+            SExpensifiersNoStoss::new(/*n_stock*/ 0),
             Some(SStossParams::new( // TODO implement tests for SStoss
                 /*n_stoss_max*/ 4,
             )),
             rules.box_clone(),
-            /*n_stock*/ 0,
         );
         let mut vectplepitrumpforfarbe_frei = Vec::new();
         for testaction in vectestaction {
@@ -498,7 +497,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             [HO,HU,E8,G8,S8,GA,GZ,GK],
             [SO,SU,E9,G9,S9,SA,SZ,SK],
         ]).map_into(|acard| acard.into()),
-        SDoublings::new(SStaticEPI0{}),
+        SExpensifiersNoStoss::new(/*n_stock*/0),
         Some(SStossParams::new(
             /*n_stoss_max*/ 4,
         )),
@@ -508,7 +507,6 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             ESoloLike::Solo,
             SPayoutDeciderPointBased::default_payoutdecider(n_payout_base, n_payout_schneider_schwarz, SLaufendeParams::new(10, 3)),
         ).as_ref()),
-        /*n_stock*/ 0,
     );
     for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]] {
         assert_eq!(EPlayerIndex::values().next(), Some(epi_active));

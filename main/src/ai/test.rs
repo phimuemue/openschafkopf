@@ -16,7 +16,7 @@ fn test_determine_best_card() {
             [GO, SO, GU, HU, HA, EA, EZ, G7],
             [H9, H8, H7, E9, GK, SA, SK, S9],
         ]).map_into(|acard| acard.into()),
-        SDoublings::new(SStaticEPI0{}),
+        game::SExpensifiersNoStoss::new(/*n_stock*/0),
         Some(SStossParams::new(
             /*n_stoss_max*/4,
         )),
@@ -28,7 +28,6 @@ fn test_determine_best_card() {
                 /*n_lauf_lbound*/3,
             ),
         ))),
-        /*n_stock*/0,
     );
     fn play_stichs(game: &mut SGame, slctplepistich: &[(EPlayerIndex, [SCard; 4])]) {
         for (epi_stich_first, acard_stich) in slctplepistich.iter() {

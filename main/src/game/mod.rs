@@ -24,12 +24,38 @@ pub trait TGamePhase : Sized {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct SExpensifiersNoStoss {
+    n_stock : isize,
+    doublings : SDoublings,
+}
+
+impl SExpensifiersNoStoss {
+    pub fn new(n_stock: isize) -> Self {
+        Self::new_with_doublings(n_stock, SDoublings::new(SStaticEPI0{}))
+    }
+
+    pub fn new_with_doublings(n_stock: isize, doublings: SDoublings) -> Self {
+        Self {
+            n_stock,
+            doublings,
+        }
+    }
+
+    fn into_with_stoss(self) -> SExpensifiers {
+        SExpensifiers::new(
+            self.n_stock,
+            self.doublings,
+            /*vecstoss*/vec!(),
+        )
+    }
+}
+
 #[derive(Debug)]
 pub struct SDealCards {
     aveccard : EnumMap<EPlayerIndex, /*not yet a "hand"*/SHandVector>,
-    doublings : SDoublings,
+    expensifiers: SExpensifiersNoStoss,
     ruleset : SRuleSet,
-    n_stock : isize,
 }
 
 impl TGamePhase for SDealCards {
@@ -38,18 +64,17 @@ impl TGamePhase for SDealCards {
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         self.ruleset.oedoublingscope.as_ref().and_then(|_edoublingscope|
-            self.doublings.current_playerindex()
+            self.expensifiers.doublings.current_playerindex()
         )
     }
 
     fn finish_success(self) -> Self::Finish {
-        assert_eq!(self.doublings.first_playerindex(), EPlayerIndex::EPI0);
+        assert_eq!(self.expensifiers.doublings.first_playerindex(), EPlayerIndex::EPI0);
         SGamePreparations {
             aveccard : self.aveccard,
-            doublings : self.doublings,
+            expensifiers: self.expensifiers,
             ruleset: self.ruleset,
             gameannouncements : SGameAnnouncements::new(SStaticEPI0{}),
-            n_stock: self.n_stock,
         }
     }
 }
@@ -65,9 +90,8 @@ impl SDealCards {
                     random_hand(ekurzlang.cards_per_player(), &mut veccard)
                 )
             },
-            doublings: SDoublings::new(SStaticEPI0{}),
+            expensifiers: SExpensifiersNoStoss::new(n_stock),
             ruleset,
-            n_stock,
         }
     }
 
@@ -81,8 +105,8 @@ impl SDealCards {
         if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
-        self.doublings.push(b_doubling);
-        assert!(!self.doublings.is_empty());
+        self.expensifiers.doublings.push(b_doubling);
+        assert!(!self.expensifiers.doublings.is_empty());
         Ok(())
     }
 }
@@ -93,10 +117,9 @@ pub type SGameAnnouncements = SGameAnnouncementsGeneric<Box<dyn TActivelyPlayabl
 #[derive(Debug)]
 pub struct SGamePreparations {
     pub aveccard : EnumMap<EPlayerIndex, SHandVector>,
-    pub doublings : SDoublings,
+    pub expensifiers: SExpensifiersNoStoss,
     pub ruleset : SRuleSet,
     pub gameannouncements : SGameAnnouncements,
-    pub n_stock : isize,
 }
 
 pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHandVector {
@@ -133,10 +156,9 @@ impl TGamePhase for SGamePreparations {
         if let Some(tplepirules_current_bid) = vectplepirules.pop() {
             VGamePreparationsFinish::DetermineRules(SDetermineRules::new(
                 self.aveccard,
-                self.doublings,
+                self.expensifiers,
                 self.ruleset,
                 vectplepirules,
-                self.n_stock,
                 tplepirules_current_bid,
             ))
         } else {
@@ -144,10 +166,9 @@ impl TGamePhase for SGamePreparations {
                 VStockOrT::OrT(ref rulesramsch) => {
                     VGamePreparationsFinish::DirectGame(SGame::new(
                         self.aveccard,
-                        self.doublings,
+                        self.expensifiers,
                         self.ruleset.ostossparams.clone(),
                         rulesramsch.clone(),
-                        self.n_stock,
                     ))
                 },
                 VStockOrT::Stock(n_stock) => {
@@ -155,7 +176,7 @@ impl TGamePhase for SGamePreparations {
                         None | Some(EDoublingScope::Games) => n_stock,
                         Some(EDoublingScope::GamesAndStock) => {
                             n_stock * 2isize.pow(
-                                self.doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count().as_num()
+                                self.expensifiers.doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count().as_num()
                             )
                         }
                     };
@@ -197,10 +218,9 @@ impl SGamePreparations {
 #[derive(new, Debug)]
 pub struct SDetermineRules {
     pub aveccard : EnumMap<EPlayerIndex, SHandVector>,
-    pub doublings : SDoublings,
+    pub expensifiers : SExpensifiersNoStoss,
     pub ruleset : SRuleSet,
     pub vectplepirules_queued : Vec<(EPlayerIndex, Box<dyn TActivelyPlayableRules>)>,
-    pub n_stock : isize,
     pub tplepirules_current_bid : (EPlayerIndex, Box<dyn TActivelyPlayableRules>),
 }
 
@@ -242,10 +262,9 @@ impl TGamePhase for SDetermineRules {
         assert_eq!(self.ruleset.ekurzlang, unwrap!(EKurzLang::from_cards_per_player(self.aveccard[EPlayerIndex::EPI0].len())));
         SGame::new(
             self.aveccard,
-            self.doublings,
+            self.expensifiers,
             self.ruleset.ostossparams.clone(),
             self.tplepirules_current_bid.1.upcast().box_clone(),
-            self.n_stock,
         )
     }
 }
@@ -526,17 +545,15 @@ impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Rul
 impl SGame {
     pub fn new(
         aveccard : EnumMap<EPlayerIndex, SHandVector>,
-        doublings : SDoublings,
+        expensifiers : SExpensifiersNoStoss,
         ostossparams : Option<SStossParams>,
         rules : Box<dyn TRules>,
-        n_stock : isize,
     ) -> SGame {
         SGame::new_with(
             aveccard,
-            doublings,
+            expensifiers,
             ostossparams,
             rules,
-            n_stock,
             /*ruleset*/(),
             /*gameannouncements*/(),
             /*determinerules*/(),
@@ -547,10 +564,9 @@ impl SGame {
 impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     pub fn new_with(
         aveccard : EnumMap<EPlayerIndex, SHandVector>,
-        doublings : SDoublings,
+        expensifiers : SExpensifiersNoStoss,
         ostossparams : Option<SStossParams>,
         rules : Box<dyn TRules>,
-        n_stock : isize,
         ruleset: Ruleset,
         gameannouncements: GameAnnouncements,
         determinerules: DetermineRules,
@@ -565,7 +581,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
             determinerules,
             rules,
             ostossparams,
-            expensifiers: SExpensifiers::new(n_stock, doublings, /*vecstoss*/vec!()),
+            expensifiers: SExpensifiers::new(expensifiers.n_stock, expensifiers.doublings, /*vecstoss*/vec!()),
             stichseq: SStichSequence::new(unwrap!(EKurzLang::from_cards_per_player(n_cards_per_player))),
             ruleset,
         }
@@ -585,8 +601,9 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
                 .map(|stich| stich[epi])
                 .collect()
         );
-        let mut game = SGame::new(aveccard, expensifiers.doublings, ostossparams, rules, expensifiers.n_stock);
-        for stoss in expensifiers.vecstoss.into_iter() {
+        let SExpensifiers{n_stock, doublings, vecstoss} = expensifiers;
+        let mut game = SGame::new(aveccard, SExpensifiersNoStoss::new_with_doublings(n_stock, doublings), ostossparams, rules);
+        for stoss in vecstoss.into_iter() {
             if game.stoss(stoss.epi).is_err() {
                 bail!("Error in stoss.")
             }

@@ -1240,10 +1240,9 @@ mod tests {
                             VStockOrT::OrT(
                                 SGame::new(
                                     gamepreparations.aveccard.clone(),
-                                    gamepreparations.doublings.clone(),
+                                    gamepreparations.expensifiers.clone(),
                                     gamepreparations.ruleset.ostossparams.clone(),
                                     rules.upcast().box_clone(),
-                                    gamepreparations.n_stock,
                                 )
                             )
                         })
