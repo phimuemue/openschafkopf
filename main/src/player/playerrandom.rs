@@ -38,8 +38,7 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
         hand: SFullHand,
         _gameannouncements: &SGameAnnouncements,
         vecrulegroup: &'rules [SRuleGroup],
-        _tpln_stoss_doubling: (usize, usize),
-        _n_stock: isize,
+        _expensifiers: &SExpensifiers,
         _otplepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
     ) {

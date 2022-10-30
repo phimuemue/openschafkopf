@@ -54,8 +54,8 @@ pub struct SStoss {
 
 #[derive(Clone, new)]
 pub struct SExpensifiers {
-    tpln_stoss_doubling: (usize, usize),
-    n_stock: isize,
+    pub tpln_stoss_doubling: (usize, usize),
+    pub n_stock: isize,
 }
 
 fn all_allowed_cards_within_stich_distinguish_farbe_frei (

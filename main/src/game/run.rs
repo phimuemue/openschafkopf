@@ -104,8 +104,10 @@ pub fn run_simple_game_loop(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_
                             gamepreparations.fullhand(epi),
                             &gamepreparations.gameannouncements,
                             &gamepreparations.ruleset.avecrulegroup[epi],
-                            stoss_and_doublings(/*vecstoss*/&[], &gamepreparations.doublings),
-                            gamepreparations.n_stock,
+                            &SExpensifiers::new(
+                                stoss_and_doublings(/*vecstoss*/&[], &gamepreparations.doublings),
+                                gamepreparations.n_stock,
+                            ),
                             None,
                             txorules
                         );
@@ -122,8 +124,10 @@ pub fn run_simple_game_loop(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_
                                 determinerules.fullhand(epi),
                                 /*gameannouncements*/&SPlayersInRound::new(SStaticEPI0{}),
                                 &vecrulegroup_steigered,
-                                stoss_and_doublings(/*vecstoss*/&[], &determinerules.doublings),
-                                determinerules.n_stock,
+                                &SExpensifiers::new(
+                                    stoss_and_doublings(/*vecstoss*/&[], &determinerules.doublings),
+                                    determinerules.n_stock,
+                                ),
                                 Some(determinerules.currently_offered_prio()),
                                 txorules
                             );

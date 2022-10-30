@@ -46,8 +46,7 @@ impl TPlayer for SPlayerComputer {
         hand: SFullHand,
         _gameannouncements : &SGameAnnouncements,
         vecrulegroup: &'rules [SRuleGroup],
-        tpln_stoss_doubling: (usize, usize),
-        n_stock: isize,
+        expensifiers: &SExpensifiers,
         _otplepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
         txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
     ) {
@@ -61,8 +60,8 @@ impl TPlayer for SPlayerComputer {
                         hand,
                         /*epi_rank*/rules.active_playerindex(),
                         rules.upcast(),
-                        tpln_stoss_doubling,
-                        n_stock
+                        expensifiers.tpln_stoss_doubling,
+                        expensifiers.n_stock
                     )[EMinMaxStrategy::Min].avg().as_num::<f64>()
                 )
             ))
