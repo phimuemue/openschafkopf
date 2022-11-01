@@ -172,7 +172,7 @@ impl<Output> TSnapshotVisualizer<Output> for SNoVisualization {
 
 pub trait TFilterAllowedCards {
     type UnregisterStich;
-    fn register_stich(&mut self, stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich;
+    fn register_stich(&mut self, stichseq: &mut SStichSequence, ahand: &mut EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich;
     fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich);
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector);
     fn continue_with_filter(&self, _stichseq: &SStichSequence) -> bool {
@@ -188,7 +188,7 @@ impl SNoFilter {
 }
 impl TFilterAllowedCards for SNoFilter {
     type UnregisterStich = ();
-    fn register_stich(&mut self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {}
+    fn register_stich(&mut self, _stichseq: &mut SStichSequence, _ahand: &mut EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {}
     fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {}
     fn filter_allowed_cards(&self, _stichseq: &SStichSequence, _veccard: &mut SHandVector) {}
 }
@@ -577,7 +577,7 @@ impl SFilterEquivalentCards {
 
 impl TFilterAllowedCards for SFilterEquivalentCards {
     type UnregisterStich = EnumMap<EPlayerIndex, SRemoved>;
-    fn register_stich(&mut self, stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {
+    fn register_stich(&mut self, stichseq: &mut SStichSequence, _ahand: &mut EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {
         debug_assert!(stichseq.current_stich().is_empty());
         self.internal_register_stich(unwrap!(stichseq.completed_stichs().last()))
     }
