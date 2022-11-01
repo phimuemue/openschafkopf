@@ -312,7 +312,9 @@ impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
     type UnregisterStich = (SStichTrie, EnumMap<EPlayerIndex, SRemoved>);
     fn register_stich(&mut self, stichseq: &SStichSequence) -> Self::UnregisterStich {
         debug_assert!(stichseq.current_stich().is_empty());
-        self.internal_register_stich(unwrap!(stichseq.completed_stichs().last()))
+        let unregisterstich = self.internal_register_stich(unwrap!(stichseq.completed_stichs().last()));
+        assert_eq!(&self.stichseq, stichseq);
+        unregisterstich
     }
     fn unregister_stich(&mut self, (stichtrie, aremovedcard): Self::UnregisterStich) {
         let stich_last_completed = unwrap!(self.stichseq.completed_stichs().last());
