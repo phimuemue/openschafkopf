@@ -274,7 +274,7 @@ impl<'rules> SFilterByOracle<'rules> {
                     stichseq.zugeben(*card, rules);
                     ahand[epi].play_card(*card);
                 }
-                slf.internal_register_stich(&mut stichseq, &mut ahand);
+                slf.register_stich(&mut stichseq, &mut ahand);
             }
             let stichtrie = SStichTrie::new_with(
                 &mut ahand_in_game.clone(),
@@ -287,8 +287,11 @@ impl<'rules> SFilterByOracle<'rules> {
             slf
         })
     }
+}
 
-    fn internal_register_stich(&mut self, stichseq: &mut SStichSequence, ahand: &mut EnumMap<EPlayerIndex, SHand>) -> <Self as TFilterAllowedCards>::UnregisterStich {
+impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
+    type UnregisterStich = (SStichTrie, EnumMap<EPlayerIndex, SRemoved>);
+    fn register_stich(&mut self, stichseq: &mut SStichSequence, ahand: &mut EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {
         assert!(stichseq.current_stich().is_empty());
         let stich = unwrap!(stichseq.completed_stichs().last());
         assert!(stich.is_full());
@@ -303,13 +306,6 @@ impl<'rules> SFilterByOracle<'rules> {
             &self.playerparties,
         );
         (std::mem::replace(&mut self.stichtrie, stichtrie), aremovedcard)
-    }
-}
-
-impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
-    type UnregisterStich = (SStichTrie, EnumMap<EPlayerIndex, SRemoved>);
-    fn register_stich(&mut self, stichseq: &mut SStichSequence, ahand: &mut EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {
-        self.internal_register_stich(stichseq, ahand)
     }
     fn unregister_stich(&mut self, (stichtrie, aremovedcard): Self::UnregisterStich) {
         for removedcard in aremovedcard.into_raw().into_iter().rev() {
