@@ -14,6 +14,22 @@ pub struct SHand {
     veccard: SHandVector,
 }
 
+#[cfg(debug_assertions)]
+impl std::cmp::PartialEq for SHand {
+    fn eq(&self, other: &SHand) -> bool {
+        let to_enumset = |hand: &SHand| {
+            let mut mapcardb = SCard::map_from_fn(|_| false); // TODO enumset
+            for card in hand.cards() {
+                assert!(!mapcardb[*card]); // TODO? introduce util::assign::change
+                mapcardb[*card] = true;
+            }
+            mapcardb
+        };
+        to_enumset(self)==to_enumset(other)
+    }
+}
+impl std::cmp::Eq for SHand {}
+
 impl SHand {
     #[cfg(debug_assertions)]
     fn finalize_and_assert_invariant(&mut self) {
