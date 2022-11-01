@@ -326,7 +326,7 @@ impl std::fmt::Display for SStichSequence {
     }
 }
 
-impl SStichSequence {
+impl SStichSequence { // TODO implement wrappers for SStichSequence that allow only zugeben_and_restore and no other manipulations and use them where applicable. My first try ran into some lifetime issues.
     #[cfg(debug_assertions)]
     fn assert_invariant(&self) {
         assert!(!self.vecstich.is_empty());
