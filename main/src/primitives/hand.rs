@@ -28,6 +28,7 @@ impl std::cmp::PartialEq for SHand {
         to_enumset(self)==to_enumset(other)
     }
 }
+#[cfg(debug_assertions)]
 impl std::cmp::Eq for SHand {}
 
 impl SHand {
