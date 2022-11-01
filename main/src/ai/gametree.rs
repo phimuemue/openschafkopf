@@ -172,7 +172,7 @@ impl<Output> TSnapshotVisualizer<Output> for SNoVisualization {
 
 pub trait TFilterAllowedCards {
     type UnregisterStich;
-    fn register_stich(&mut self, stich: &SStich, stichseq: &SStichSequence) -> Self::UnregisterStich;
+    fn register_stich(&mut self, stichseq: &SStichSequence) -> Self::UnregisterStich;
     fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich);
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector);
     fn continue_with_filter(&self, _stichseq: &SStichSequence) -> bool {
@@ -188,7 +188,7 @@ impl SNoFilter {
 }
 impl TFilterAllowedCards for SNoFilter {
     type UnregisterStich = ();
-    fn register_stich(&mut self, _stich: &SStich, _stichseq: &SStichSequence) -> Self::UnregisterStich {}
+    fn register_stich(&mut self, _stichseq: &SStichSequence) -> Self::UnregisterStich {}
     fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {}
     fn filter_allowed_cards(&self, _stichseq: &SStichSequence, _veccard: &mut SHandVector) {}
 }
@@ -352,9 +352,8 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                             snapshotvisualizer,
                         )}}
                         if stichseq.current_stich().is_empty() {
-                            let stich = unwrap!(stichseq.completed_stichs().last());
                             let unregisterstich_cache = rulestatecache.register_stich(
-                                stich,
+                                unwrap!(stichseq.completed_stichs().last()),
                                 stichseq.current_stich().first_playerindex(),
                             );
                             let output = if let Some(output) = snapshotcache.get(stichseq, rulestatecache) {
@@ -369,7 +368,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                                 let output = cartesian_match!(fwd,
                                     match (func_filter_allowed_cards.continue_with_filter(stichseq)) {
                                         true => (
-                                            func_filter_allowed_cards.register_stich(stich, stichseq),
+                                            func_filter_allowed_cards.register_stich(stichseq),
                                             |unregisterstich_filter| func_filter_allowed_cards.unregister_stich(unregisterstich_filter),
                                             func_filter_allowed_cards
                                         ),
@@ -578,8 +577,9 @@ impl SFilterEquivalentCards {
 
 impl TFilterAllowedCards for SFilterEquivalentCards {
     type UnregisterStich = EnumMap<EPlayerIndex, SRemoved>;
-    fn register_stich(&mut self, stich: &SStich, _stichseq: &SStichSequence) -> Self::UnregisterStich {
-        self.internal_register_stich(stich)
+    fn register_stich(&mut self, stichseq: &SStichSequence) -> Self::UnregisterStich {
+        debug_assert!(stichseq.current_stich().is_empty());
+        self.internal_register_stich(unwrap!(stichseq.completed_stichs().last()))
     }
     fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich) {
         for removed in unregisterstich.into_raw().into_iter().rev() {
