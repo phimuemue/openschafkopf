@@ -240,8 +240,6 @@ impl SStichTrie {
 #[derive(Debug)]
 pub struct SFilterByOracle<'rules> {
     rules: &'rules dyn TRules,
-    ahand: EnumMap<EPlayerIndex, SHand>,
-    stichseq: SStichSequence,
     stichtrie: SStichTrie,
     cardspartition_completed_cards: SCardsPartition,
     playerparties: SPlayerPartiesTable,
@@ -253,11 +251,11 @@ impl<'rules> SFilterByOracle<'rules> {
         ahand_in_game: &EnumMap<EPlayerIndex, SHand>,
         stichseq_in_game: &SStichSequence,
     ) -> Option<Self> {
-        let ahand = EPlayerIndex::map_from_fn(|epi| SHand::new_from_iter(
+        let mut ahand = EPlayerIndex::map_from_fn(|epi| SHand::new_from_iter(
             stichseq_in_game.cards_from_player(&ahand_in_game[epi], epi)
         ));
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(stichseq_in_game, ahand_in_game));
-        let stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
+        let mut stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
         rules.only_minmax_points_when_on_same_hand(
             &verify_eq!(
@@ -267,14 +265,16 @@ impl<'rules> SFilterByOracle<'rules> {
         ).map(|(cardspartition, playerparties)| {
             let mut slf = Self {
                 rules,
-                ahand,
-                stichseq,
                 stichtrie: SStichTrie::new(), // TODO this is a dummy value that should not be needed. Eliminate it.
                 cardspartition_completed_cards: cardspartition,
                 playerparties,
             };
             for stich in stichseq_in_game.completed_stichs() {
-                slf.internal_register_stich(stich);
+                for (epi, card) in stich.iter() {
+                    stichseq.zugeben(*card, rules);
+                    ahand[epi].play_card(*card);
+                }
+                slf.internal_register_stich(&mut stichseq, &mut ahand);
             }
             let stichtrie = SStichTrie::new_with(
                 &mut ahand_in_game.clone(),
@@ -288,18 +288,16 @@ impl<'rules> SFilterByOracle<'rules> {
         })
     }
 
-    fn internal_register_stich(&mut self, stich: &SStich) -> <Self as TFilterAllowedCards>::UnregisterStich {
+    fn internal_register_stich(&mut self, stichseq: &mut SStichSequence, ahand: &mut EnumMap<EPlayerIndex, SHand>) -> <Self as TFilterAllowedCards>::UnregisterStich {
+        assert!(stichseq.current_stich().is_empty());
+        let stich = unwrap!(stichseq.completed_stichs().last());
         assert!(stich.is_full());
-        for (epi, card) in stich.iter() {
-            self.stichseq.zugeben(*card, self.rules);
-            self.ahand[epi].play_card(*card);
-        }
         let aremovedcard = EPlayerIndex::map_from_fn(|epi|
             self.cardspartition_completed_cards.remove_from_chain(stich[epi])
         );
         let stichtrie = SStichTrie::new_with(
-            &mut self.ahand,
-            &mut self.stichseq,
+            ahand,
+            stichseq,
             self.rules,
             &self.cardspartition_completed_cards,
             &self.playerparties,
@@ -310,21 +308,10 @@ impl<'rules> SFilterByOracle<'rules> {
 
 impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
     type UnregisterStich = (SStichTrie, EnumMap<EPlayerIndex, SRemoved>);
-    fn register_stich(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {
-        debug_assert!(stichseq.current_stich().is_empty());
-        let unregisterstich = self.internal_register_stich(unwrap!(stichseq.completed_stichs().last()));
-        assert_eq!(&self.stichseq, stichseq);
-        assert_eq!(&self.ahand, ahand);
-        unregisterstich
+    fn register_stich(&mut self, stichseq: &mut SStichSequence, ahand: &mut EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {
+        self.internal_register_stich(stichseq, ahand)
     }
     fn unregister_stich(&mut self, (stichtrie, aremovedcard): Self::UnregisterStich) {
-        let stich_last_completed = unwrap!(self.stichseq.completed_stichs().last());
-        for epi in EPlayerIndex::values() {
-            self.ahand[epi].add_card(stich_last_completed[epi]);
-        }
-        for _ in 0..EPlayerIndex::SIZE {
-            self.stichseq.undo_most_recent();
-        }
         for removedcard in aremovedcard.into_raw().into_iter().rev() {
             self.cardspartition_completed_cards.readd(removedcard);
         }
