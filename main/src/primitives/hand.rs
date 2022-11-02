@@ -20,8 +20,7 @@ impl std::cmp::PartialEq for SHand {
         let to_enumset = |hand: &SHand| {
             let mut mapcardb = SCard::map_from_fn(|_| false); // TODO enumset
             for card in hand.cards() {
-                assert!(!mapcardb[*card]); // TODO? introduce util::assign::change
-                mapcardb[*card] = true;
+                verify!(assign_neq(&mut mapcardb[*card], true));
             }
             mapcardb
         };
@@ -41,8 +40,7 @@ impl SHand {
         { // invariants
             let mut setcardb = SCard::map_from_fn(|_card| false); // TODO enumset
             for card in self.veccard.iter() {
-                assert!(!setcardb[*card]); // TODO? introduce assign::assign_other with return value bool?
-                setcardb[*card] = true;
+                verify!(assign_neq(&mut setcardb[*card], true));
             }
         }
     }

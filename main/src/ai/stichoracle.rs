@@ -130,8 +130,7 @@ impl SStichTrie {
                         None => {
                             let mut ab_points = [false; 12]; // TODO? couple with points_card
                             iterate_chain(&cardspartition_actual, &mut veccard_allowed, card_representative, |card_chain| {
-                                if !ab_points[points_card(card_chain).as_num::<usize>()] {
-                                    ab_points[points_card(card_chain).as_num::<usize>()]=true;
+                                if assign_neq(&mut ab_points[points_card(card_chain).as_num::<usize>()], true) {
                                     stichtrie.vectplcardtrie.push((
                                         card_chain,
                                         stichtrie_representative.clone(),

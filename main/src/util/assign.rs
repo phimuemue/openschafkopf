@@ -1,32 +1,39 @@
-pub fn assign_better<T>(dst: &mut T, src: T, fn_better: impl FnOnce(&T, &T) -> bool) {
+pub fn assign_better<T>(dst: &mut T, src: T, fn_better: impl FnOnce(&T, &T) -> bool) -> /*TODO can/should we make return type generic (e.g. support unit or Option/Result return type)*/bool {
     if fn_better(&src, dst) {
         *dst = src;
+        true
+    } else {
+        false
     }
 }
 
 #[allow(dead_code)]
-pub fn assign_min<T: Ord>(dst: &mut T, src: T) {
+pub fn assign_min<T: Ord>(dst: &mut T, src: T) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs < rhs)
 }
 
-pub fn assign_max<T: Ord>(dst: &mut T, src: T) {
+pub fn assign_max<T: Ord>(dst: &mut T, src: T) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs > rhs)
 }
 
-pub fn assign_min_partial_ord<T: PartialOrd>(dst: &mut T, src: T) {
+pub fn assign_min_partial_ord<T: PartialOrd>(dst: &mut T, src: T) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs < rhs)
 }
 
-pub fn assign_max_partial_ord<T: PartialOrd>(dst: &mut T, src: T) {
+pub fn assign_max_partial_ord<T: PartialOrd>(dst: &mut T, src: T) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs > rhs)
 }
 
-pub fn assign_min_by_key<T, K: Ord>(dst: &mut T, src: T, mut fn_key: impl FnMut(&T) -> K) {
+pub fn assign_min_by_key<T, K: Ord>(dst: &mut T, src: T, mut fn_key: impl FnMut(&T) -> K) -> bool {
     assign_better(dst, src, |lhs, rhs| fn_key(lhs) < fn_key(rhs))
 }
 
-pub fn assign_max_by_key<T, K: Ord>(dst: &mut T, src: T, mut fn_key: impl FnMut(&T) -> K) {
+pub fn assign_max_by_key<T, K: Ord>(dst: &mut T, src: T, mut fn_key: impl FnMut(&T) -> K) -> bool {
     assign_better(dst, src, |lhs, rhs| fn_key(lhs) > fn_key(rhs))
+}
+
+pub fn assign_neq<T: Eq>(dst: &mut T, src: T) -> bool {
+    assign_better(dst, src, |lhs, rhs| lhs!=rhs)
 }
 
 #[test]
