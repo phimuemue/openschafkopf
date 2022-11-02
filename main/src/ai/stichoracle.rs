@@ -81,12 +81,12 @@ impl SStichTrie {
                     &ahand[epi_card],
                 );
                 assert!(!veccard_allowed.is_empty());
+                #[derive(Debug)]
                 enum VStichWinnerPrimaryParty {
-                    NotYetAssigned,
                     Same(bool),
                     Different,
                 }
-                let mut stichwinnerprimaryparty = VStichWinnerPrimaryParty::NotYetAssigned;
+                let mut ostichwinnerprimaryparty = None;
                 let mut stichtrie = SStichTrie::new();
                 while !veccard_allowed.is_empty() {
                     let card_representative = veccard_allowed[0];
@@ -135,7 +135,7 @@ impl SStichTrie {
                                     stichtrie.push(card_chain, stichtrie_representative.clone());
                                 }
                             });
-                            stichwinnerprimaryparty = VStichWinnerPrimaryParty::Different;
+                            ostichwinnerprimaryparty = Some(VStichWinnerPrimaryParty::Different);
                         },
                         Some(b_stich_winner_primary_party) => {
                             macro_rules! card_min_or_max(($fn_assign_by:expr) => {{
@@ -160,24 +160,23 @@ impl SStichTrie {
                                 stichtrie_representative,
                             );
                             use VStichWinnerPrimaryParty::*;
-                            match &stichwinnerprimaryparty {
-                                NotYetAssigned => {
-                                    stichwinnerprimaryparty = Same(b_stich_winner_primary_party);
+                            match &ostichwinnerprimaryparty {
+                                None => {
+                                    ostichwinnerprimaryparty = Some(Same(b_stich_winner_primary_party));
                                 },
-                                Same(b_stich_winner_primary_party_prev) => {
+                                Some(Same(b_stich_winner_primary_party_prev)) => {
                                     if b_stich_winner_primary_party!=*b_stich_winner_primary_party_prev {
-                                        stichwinnerprimaryparty = Different;
+                                        ostichwinnerprimaryparty = Some(Different);
                                     }
                                 },
-                                Different => {/*stay different*/}
+                                Some(Different) => {/*stay different*/}
                             }
                         },
                     }
                 }
                 (
                     stichtrie,
-                    match stichwinnerprimaryparty {
-                        VStichWinnerPrimaryParty::NotYetAssigned => panic!(),
+                    match unwrap!(ostichwinnerprimaryparty) {
                         VStichWinnerPrimaryParty::Same(b_stich_winner_primary_party) => Some(b_stich_winner_primary_party),
                         VStichWinnerPrimaryParty::Different => None,
                     },
