@@ -67,7 +67,7 @@ impl SStichTrie {
             rules: &dyn TRules,
             cardspartition_completed_cards: &SCardsPartition,
             playerparties: &SPlayerPartiesTable,
-        ) -> (SStichTrie, Option<bool/*b_stich_winner_primary_party*/>) {
+        ) -> (SStichTrie, Option<bool/*b_stich_winner_is_primary*/>) {
             if n_depth==0 {
                 assert!(stichseq.current_stich().is_empty());
                 (
@@ -81,12 +81,7 @@ impl SStichTrie {
                     &ahand[epi_card],
                 );
                 assert!(!veccard_allowed.is_empty());
-                #[derive(Debug)]
-                enum VStichWinnerPrimaryParty {
-                    Same(bool),
-                    Different,
-                }
-                let mut ostichwinnerprimaryparty = None;
+                let mut oresb_stich_winner_is_primary = None;
                 let mut stichtrie = SStichTrie::new();
                 while !veccard_allowed.is_empty() {
                     let card_representative = veccard_allowed[0];
@@ -135,9 +130,9 @@ impl SStichTrie {
                                     stichtrie.push(card_chain, stichtrie_representative.clone());
                                 }
                             });
-                            ostichwinnerprimaryparty = Some(VStichWinnerPrimaryParty::Different);
+                            oresb_stich_winner_is_primary = Some(Err(()));
                         },
-                        Some(b_stich_winner_primary_party) => {
+                        Some(b_stich_winner_is_primary) => {
                             macro_rules! card_min_or_max(($fn_assign_by:expr) => {{
                                 let card_chain = cardspartition_actual
                                     .prev_while_contained(card_representative, &veccard_allowed);
@@ -152,33 +147,32 @@ impl SStichTrie {
                                 card_min_or_max
                             }});
                             stichtrie.push(
-                                if b_stich_winner_primary_party==playerparties.is_primary_party(epi_card) {
+                                if b_stich_winner_is_primary==playerparties.is_primary_party(epi_card) {
                                     card_min_or_max!(assign_max_by_key)
                                 } else {
                                     card_min_or_max!(assign_min_by_key)
                                 },
                                 stichtrie_representative,
                             );
-                            use VStichWinnerPrimaryParty::*;
-                            match &ostichwinnerprimaryparty {
+                            match &oresb_stich_winner_is_primary {
                                 None => {
-                                    ostichwinnerprimaryparty = Some(Same(b_stich_winner_primary_party));
+                                    oresb_stich_winner_is_primary = Some(Ok(b_stich_winner_is_primary));
                                 },
-                                Some(Same(b_stich_winner_primary_party_prev)) => {
-                                    if b_stich_winner_primary_party!=*b_stich_winner_primary_party_prev {
-                                        ostichwinnerprimaryparty = Some(Different);
+                                Some(Ok(b_stich_winner_is_primary_prev)) => {
+                                    if b_stich_winner_is_primary!=*b_stich_winner_is_primary_prev {
+                                        oresb_stich_winner_is_primary = Some(Err(()));
                                     }
                                 },
-                                Some(Different) => {/*stay different*/}
+                                Some(Err(())) => {/*stay different*/}
                             }
                         },
                     }
                 }
                 (
                     stichtrie,
-                    match unwrap!(ostichwinnerprimaryparty) {
-                        VStichWinnerPrimaryParty::Same(b_stich_winner_primary_party) => Some(b_stich_winner_primary_party),
-                        VStichWinnerPrimaryParty::Different => None,
+                    match unwrap!(oresb_stich_winner_is_primary) {
+                        Ok(b_stich_winner_is_primary) => Some(b_stich_winner_is_primary),
+                        Err(()) => None,
                     },
                 )
             }
