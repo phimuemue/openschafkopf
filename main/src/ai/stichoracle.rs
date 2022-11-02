@@ -56,16 +56,14 @@ impl SStichTrie {
     }
 
     pub fn new_with(
-        ahand: &mut EnumMap<EPlayerIndex, SHand>,
-        stichseq: &mut SStichSequence,
+        (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
         rules: &dyn TRules,
         cardspartition_completed_cards: &SCardsPartition,
         playerparties: &SPlayerPartiesTable,
     ) -> Self {
         fn for_each_allowed_card(
             n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
-            ahand: &mut EnumMap<EPlayerIndex, SHand>,
-            stichseq: &mut SStichSequence,
+            (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
             rules: &dyn TRules,
             cardspartition_completed_cards: &SCardsPartition,
             playerparties: &SPlayerPartiesTable,
@@ -96,8 +94,7 @@ impl SStichTrie {
                         ahand[epi_card].play_card(card_representative);
                         let tplstichtrieob_stich_winner_primary_party = for_each_allowed_card(
                             n_depth-1,
-                            ahand,
-                            stichseq,
+                            (ahand, stichseq),
                             rules,
                             cardspartition_completed_cards,
                             playerparties,
@@ -203,8 +200,7 @@ impl SStichTrie {
         );
         let mut make_stichtrie = || for_each_allowed_card(
             4-n_stich_size,
-            ahand,
-            stichseq,
+            (ahand, stichseq),
             rules,
             cardspartition_completed_cards,
             playerparties,
@@ -273,8 +269,7 @@ impl<'rules> SFilterByOracle<'rules> {
                 slf.register_stich(&mut stichseq, &mut ahand);
             }
             let stichtrie = SStichTrie::new_with(
-                &mut ahand_in_game.clone(),
-                &mut stichseq_in_game.clone(),
+                (&mut ahand_in_game.clone(), &mut stichseq_in_game.clone()),
                 rules,
                 &slf.cardspartition_completed_cards,
                 &slf.playerparties,
@@ -293,8 +288,7 @@ impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
             self.cardspartition_completed_cards.remove_from_chain(unwrap!(stichseq.completed_stichs().last())[epi])
         );
         let stichtrie = SStichTrie::new_with(
-            ahand,
-            stichseq,
+            (ahand, stichseq),
             self.rules,
             &self.cardspartition_completed_cards,
             &self.playerparties,
@@ -401,8 +395,7 @@ mod tests {
                 cardspartition.remove_from_chain(*card);
             }
             let stichtrie = SStichTrie::new_with(
-                &mut ahand.clone(),
-                &mut stichseq.clone(),
+                (&mut ahand.clone(), &mut stichseq.clone()),
                 rules,
                 &cardspartition,
                 &playerparties,
