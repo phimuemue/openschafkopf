@@ -33,6 +33,10 @@ impl SStichTrie {
         }
     }
 
+    fn push(&mut self, card: SCard, trie_child: SStichTrie) {
+        self.vectplcardtrie.push((card, trie_child))
+    }
+
     fn traverse_trie(&self, epi_first: EPlayerIndex) -> Vec<SStich> {
         fn internal_traverse_trie(stichtrie: &SStichTrie, stich: &mut SStich) -> Vec<SStich> {
             if verify_eq!(stich.is_full(), stichtrie.vectplcardtrie.is_empty()) {
@@ -131,10 +135,7 @@ impl SStichTrie {
                             let mut ab_points = [false; 12]; // TODO? couple with points_card
                             iterate_chain(&cardspartition_actual, &mut veccard_allowed, card_representative, |card_chain| {
                                 if assign_neq(&mut ab_points[points_card(card_chain).as_num::<usize>()], true) {
-                                    stichtrie.vectplcardtrie.push((
-                                        card_chain,
-                                        stichtrie_representative.clone(),
-                                    ));
+                                    stichtrie.push(card_chain, stichtrie_representative.clone());
                                 }
                             });
                             stichwinnerprimaryparty = VStichWinnerPrimaryParty::Different;
@@ -153,14 +154,14 @@ impl SStichTrie {
                                 });
                                 card_min_or_max
                             }});
-                            stichtrie.vectplcardtrie.push((
+                            stichtrie.push(
                                 if b_stich_winner_primary_party==playerparties.is_primary_party(epi_card) {
                                     card_min_or_max!(assign_max_by_key)
                                 } else {
                                     card_min_or_max!(assign_min_by_key)
                                 },
                                 stichtrie_representative,
-                            ));
+                            );
                             use VStichWinnerPrimaryParty::*;
                             match &stichwinnerprimaryparty {
                                 NotYetAssigned => {
