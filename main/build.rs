@@ -12,7 +12,7 @@ fn main() {
     let path_resources = Path::new("tools");
     let str_env_var_out_dir = unwrap!(env::var("OUT_DIR"));
     let path_out_dir = Path::new(&str_env_var_out_dir); // https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-build-scripts
-    unwrap!(std::fs::create_dir_all(&path_out_dir));
+    unwrap!(std::fs::create_dir_all(path_out_dir));
     // TODO can we avoid lessc depencency?
     unwrap!(
         unwrap!(

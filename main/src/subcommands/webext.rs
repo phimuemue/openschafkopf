@@ -121,7 +121,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                         );
                         path_self
                     })
-                        .args(&[
+                        .args([
                             "suggest-card",
                             "--rules",
                             &format!("{} von {}",

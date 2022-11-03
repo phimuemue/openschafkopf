@@ -323,7 +323,7 @@ impl SRuleSet {
 
     pub fn from_file(path: &Path) -> Result<SRuleSet, Error> {
         // TODO? ruleset creation wizard
-        Self::from_string(&via_out_param_result(|str_toml| File::open(&path)?.read_to_string(str_toml))?.0)
+        Self::from_string(&via_out_param_result(|str_toml| File::open(path)?.read_to_string(str_toml))?.0)
     }
 }
 
