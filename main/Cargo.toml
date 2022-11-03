@@ -11,7 +11,7 @@ openschafkopf_util = {path = "../util"}
 as_num = "0"
 resvg = "0"
 usvg = "0"
-tiny-skia = "0.6" # TODO(?) fix incompatibility with resvg
+tiny-skia = "0.8" # TODO(?) fix incompatibility with resvg
 
 [dependencies]
 atty = "0"

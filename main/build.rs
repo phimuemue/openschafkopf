@@ -32,7 +32,7 @@ fn main() {
         &unwrap!(std::fs::read(declare_input_file(path_resources.join("cards.svg")))),
         &usvg::Options::default().to_ref()
     ).unwrap(/*TODO should implement Debug*/);
-    let screensize = svgtree.svg_node().size.to_screen_size();
+    let screensize = svgtree.size.to_screen_size();
     let export_cards_png = |path_cards_png, n_factor: u32| {
         let mut pixmap = unwrap!(tiny_skia::Pixmap::new(
             screensize.width() * n_factor,
