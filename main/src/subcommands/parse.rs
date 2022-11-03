@@ -183,7 +183,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     for (epi, &card_zugeben) in stich.iter() {
                         assert_eq!(epi, unwrap!(game_csv.which_player_can_do_something()).0);
                         let veccard_allowed = game_csv.rules.all_allowed_cards(&game_csv.stichseq, &game_csv.ahand[epi]);
-                        let bool_to_usize = |b| if b {1} else {0};
+                        let bool_to_usize = usize::from;
                         write_columns(
                             file,
                             oepi_active,
