@@ -139,9 +139,9 @@ fn single_constraint_parser_<I: Stream<Item=char>>() -> impl Parser<Input = I, O
             numval_parser(),
             optional((
                 choice!(
-                    char('<').map(|_chr| std::cmp::Ordering::Less),
-                    char('=').map(|_chr| std::cmp::Ordering::Equal),
-                    char('>').map(|_chr| std::cmp::Ordering::Greater)
+                    char('<').map(|_| std::cmp::Ordering::Less),
+                    string("==").map(|_| std::cmp::Ordering::Equal),
+                    char('>').map(|_| std::cmp::Ordering::Greater)
                 ),
                 numval_parser()
             ))
