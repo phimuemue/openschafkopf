@@ -202,6 +202,7 @@ fn test_card_ctor() {
 
 impl TPlainEnum for SCard {
     const SIZE : usize = EFarbe::SIZE*ESchlag::SIZE;
+    type EnumMapArray<T> = [T; SCard::SIZE];
     unsafe fn from_usize(n: usize) -> Self {
         debug_assert!(n < Self::SIZE);
         SCard{n_internalrepresentation: n.as_num::<u8>()}
@@ -209,10 +210,6 @@ impl TPlainEnum for SCard {
     fn to_usize(self) -> usize {
         self.n_internalrepresentation.as_num::<usize>()
     }
-}
-impl<V, W> TInternalEnumMapType<V, W> for SCard {
-    type InternalEnumMapType = [V; SCard::SIZE];
-    type MappedType = [W; SCard::SIZE];
 }
 
 pub mod card_values {
