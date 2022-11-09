@@ -599,16 +599,12 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         let SExpensifiers{n_stock, doublings, vecstoss} = expensifiers;
         let mut game = SGame::new(aveccard, SExpensifiersNoStoss::new_with_doublings(n_stock, doublings), ostossparams, rules);
         for stoss in vecstoss.into_iter() {
-            if game.stoss(stoss.epi).is_err() {
-                bail!("Error in stoss.")
-            }
+            game.stoss(stoss.epi)?;
         }
         for (i_stich, stich) in stichseq.get().completed_stichs().iter().enumerate() {
             for (epi, card) in stich.iter() {
                 fn_before_zugeben(&game, i_stich, epi, *card);
-                if game.zugeben(*card, epi).is_err() {
-                    bail!("Error in zugeben.")
-                }
+                game.zugeben(*card, epi)?;
             }
         }
         assert!(game.which_player_can_do_something().is_none());
