@@ -66,12 +66,12 @@ fn card_to_neural_network_input(ocard: Option<SCard>) -> usize {
     }
 }
 
-fn neural_network_input_to_card(n: usize) -> Result<Option<SCard>, Error> {
+fn neural_network_input_to_card(n: usize) -> Result<Option<SCard>, &'static str> {
     macro_rules! inner(($(($efarbe:ident, $eschlag:ident, $n:expr))*) => {
         match n {
             0 => Ok(None),
             $($n => Ok(Some(SCard::new(EFarbe::$efarbe, ESchlag::$eschlag))),)*
-            _/*TODORUST 33..=usize::MAX*/ => bail!("Unknown neural network input index"),
+            _/*TODORUST 33..=usize::MAX*/ => Err("Unknown neural network input index"),
         }
     });
     card_neural_network_mapping!(inner)

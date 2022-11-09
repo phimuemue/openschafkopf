@@ -101,13 +101,14 @@ impl SDealCards {
         &veccard[0..veccard.len()/2]
     }
 
-    pub fn announce_doubling(&mut self, epi: EPlayerIndex, b_doubling: bool) -> Result<(), Error> {
+    pub fn announce_doubling(&mut self, epi: EPlayerIndex, b_doubling: bool) -> Result<(), &'static str> {
         if Some(epi)!=self.which_player_can_do_something() {
-            bail!("Wrong player index");
+            Err("Wrong player index")
+        } else {
+            self.expensifiers.doublings.push(b_doubling);
+            assert!(!self.expensifiers.doublings.is_empty());
+            Ok(())
         }
-        self.expensifiers.doublings.push(b_doubling);
-        assert!(!self.expensifiers.doublings.is_empty());
-        Ok(())
     }
 }
 
