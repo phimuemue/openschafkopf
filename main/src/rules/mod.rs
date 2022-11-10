@@ -96,20 +96,6 @@ fn all_allowed_cards_within_stich_distinguish_farbe_frei (
     }
 }
 
-#[cfg(debug_assertions)]
-fn payouthint_contains(intvlon_payout_lhs: &SInterval<Option<isize>>, intvlon_payout_rhs: &SInterval<Option<isize>>) -> bool {
-    (match (&intvlon_payout_lhs[ELoHi::Lo], &intvlon_payout_rhs[ELoHi::Lo]) {
-        (None, _) => true,
-        (Some(_), None) => false,
-        (Some(n_payout_self), Some(n_payout_other)) => n_payout_self<=n_payout_other,
-    })
-    && match (&intvlon_payout_lhs[ELoHi::Hi], &intvlon_payout_rhs[ELoHi::Hi]) {
-        (None, _) => true,
-        (Some(_), None) => false,
-        (Some(n_payout_self), Some(n_payout_other)) => n_payout_self>=n_payout_other,
-    }
-}
-
 pub trait TPlayerParties {
     fn is_primary_party(&self, epi: EPlayerIndex) -> bool;
     fn multiplier(&self, epi: EPlayerIndex) -> isize;
@@ -297,6 +283,18 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
         );
         // TODO assert expensifiers consistent with stoss_allowed etc
         #[cfg(debug_assertions)] {
+            fn payouthint_contains(intvlon_payout_lhs: &SInterval<Option<isize>>, intvlon_payout_rhs: &SInterval<Option<isize>>) -> bool {
+                (match (&intvlon_payout_lhs[ELoHi::Lo], &intvlon_payout_rhs[ELoHi::Lo]) {
+                    (None, _) => true,
+                    (Some(_), None) => false,
+                    (Some(n_payout_self), Some(n_payout_other)) => n_payout_self<=n_payout_other,
+                })
+                && match (&intvlon_payout_lhs[ELoHi::Hi], &intvlon_payout_rhs[ELoHi::Hi]) {
+                    (None, _) => true,
+                    (Some(_), None) => false,
+                    (Some(n_payout_self), Some(n_payout_other)) => n_payout_self>=n_payout_other,
+                }
+            }
             let mut mapepiintvlon_payout = EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]));
             let mut stichseq_check = SStichSequence::new(stichseq.get().kurzlang());
             let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
