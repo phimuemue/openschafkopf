@@ -66,9 +66,8 @@ impl SAi {
             .par_bridge() // TODO can we derive a true parallel iterator?
             .map(|mut ahand| {
                 explore_snapshots(
-                    &mut ahand,
+                    (&mut ahand, &mut SStichSequence::new(ekurzlang)),
                     rules,
-                    &mut SStichSequence::new(ekurzlang),
                     &SBranchingFactor::factory(1, 2),
                     &SMinReachablePayoutLowerBoundViaHint::new(
                         rules,
@@ -335,9 +334,8 @@ pub fn determine_best_card<
                 )
             } else {
                 explore_snapshots(
-                    &mut ahand,
+                    (&mut ahand, &mut stichseq),
                     rules,
-                    &mut stichseq,
                     &fn_make_filter,
                     foreachsnapshot,
                     &fn_snapshotcache,

@@ -119,9 +119,8 @@ pub fn analyze_game(
                 for epi in EPlayerIndex::values() {
                     mapepivecpossiblepayout[epi].push(SPossiblePayout(
                         explore_snapshots(
-                            &mut game.ahand.clone(),
+                            (&mut game.ahand.clone(), &mut game.stichseq.clone()),
                             game.rules.as_ref(),
-                            &mut game.stichseq.clone(),
                             &|_,_| equivalent_cards_filter(
                                 /*n_until_stichseq_len*/7,
                                 /*cardspartition*/game.rules.equivalent_when_on_same_hand(),

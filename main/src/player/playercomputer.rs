@@ -109,9 +109,8 @@ impl TPlayer for SPlayerComputer {
             vectplahandf_suspicion.into_iter()
                 .map(|(mut ahand, _f_rank_rules)| {
                     explore_snapshots(
-                        &mut ahand,
+                        (&mut ahand, &mut SStichSequence::new(stichseq.kurzlang())),
                         rules,
-                        &mut SStichSequence::new(stichseq.kurzlang()),
                         &SBranchingFactor::factory(1, 2),
                         &SMinReachablePayout::new(
                             rules,

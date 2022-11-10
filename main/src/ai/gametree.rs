@@ -233,9 +233,8 @@ pub fn explore_snapshots<
     SnapshotCache: TSnapshotCache<ForEachSnapshot::Output>,
     OSnapshotCache: Into<Option<SnapshotCache>>,
 >(
-    ahand: &mut EnumMap<EPlayerIndex, SHand>,
+    (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
     rules: &dyn TRules,
-    stichseq: &mut SStichSequence,
     fn_make_filter: &impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
     fn_snapshotcache: &impl Fn(&SStichSequence, &SRuleStateCacheFixed) -> OSnapshotCache,
@@ -244,21 +243,21 @@ pub fn explore_snapshots<
     where
         ForEachSnapshot: TForEachSnapshot,
 {
-    macro_rules! forward{($func_filter_allowed_cards:expr, $snapshotcache:expr,) => {
-        explore_snapshots_internal(
-            ahand,
+    macro_rules! forward{($func_filter_allowed_cards:expr, $snapshotcache:expr,) => {{
+        let mut rulestatecache = SRuleStateCache::new(
+            (ahand, stichseq),
             rules,
-            &mut SRuleStateCache::new(
-                (ahand, stichseq),
-                rules,
-            ),
-            stichseq,
+        );
+        explore_snapshots_internal(
+            (ahand, stichseq),
+            rules,
+            &mut rulestatecache,
             $func_filter_allowed_cards,
             foreachsnapshot,
             $snapshotcache,
             snapshotvisualizer,
         )
-    }}
+    }}}
     cartesian_match!(forward,
         match (fn_make_filter(stichseq, ahand).into()) {
             Some(mut func_filter_allowed_cards) => (&mut func_filter_allowed_cards),
@@ -272,10 +271,9 @@ pub fn explore_snapshots<
 }
 
 fn explore_snapshots_internal<ForEachSnapshot>(
-    ahand: &mut EnumMap<EPlayerIndex, SHand>,
+    (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
     rules: &dyn TRules,
     rulestatecache: &mut SRuleStateCache,
-    stichseq: &mut SStichSequence,
     func_filter_allowed_cards: &mut impl TFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
     snapshotcache: &mut impl TSnapshotCache<ForEachSnapshot::Output>,
@@ -341,10 +339,9 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                     ahand[epi_current].play_card(card);
                     let output = stichseq.zugeben_and_restore(card, rules, |stichseq| {
                         macro_rules! next_step {($func_filter_allowed_cards:expr, $snapshotcache:expr) => {explore_snapshots_internal(
-                            ahand,
+                            (ahand, stichseq),
                             rules,
                             rulestatecache,
-                            stichseq,
                             $func_filter_allowed_cards,
                             foreachsnapshot,
                             $snapshotcache,

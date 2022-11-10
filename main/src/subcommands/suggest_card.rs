@@ -153,9 +153,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         .map(|(i_ahand, mut ahand)| {
                             let mut visualizer = $fn_visualizer(i_ahand, &ahand, /*ocard*/None);
                             explore_snapshots::<_,$($func_filter_allowed_cards_ty)*,_,$ty_snapshotcache,_>(
-                                &mut ahand,
+                                (&mut ahand, &mut stichseq.clone()),
                                 rules,
-                                &mut stichseq.clone(),
                                 &$func_filter_allowed_cards,
                                 &$foreachsnapshot::new(
                                     rules,

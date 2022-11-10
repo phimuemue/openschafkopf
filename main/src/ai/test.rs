@@ -125,9 +125,8 @@ fn detect_expensive_all_possible_hands() {
                         }
                         assert_bound(
                             explore_snapshots(
-                                &mut ahand,
+                                (&mut ahand, &mut game.stichseq.clone()),
                                 game.rules.as_ref(),
-                                &mut game.stichseq.clone(),
                                 &SNoFilter::factory(),
                                 &SLeafCounter{},
                                 &SSnapshotCacheNone::factory(),
