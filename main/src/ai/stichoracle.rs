@@ -1,11 +1,5 @@
 use crate::{
-    game::SStichSequence,
-    primitives::{
-        card::SCard,
-        eplayerindex::EPlayerIndex,
-        hand::{SHand, SHandVector},
-        stich::SStich,
-    },
+    primitives::*,
     rules::{
         SPlayerPartiesTable,
         card_points::points_card,
@@ -309,22 +303,12 @@ impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        game::{SGame, SStichSequence},
+        game::SGame,
         player::{
             TPlayer,
             playerrandom::SPlayerRandom,
         },
-        primitives::{
-            card::{
-                card_values::*,
-                EFarbe,
-                EKurzLang,
-                SCard,
-            },
-            eplayerindex::EPlayerIndex,
-            hand::SHand,
-            stich::SStich,
-        },
+        primitives::{*, card::card_values::*},
         rules::{
             payoutdecider::{SPayoutDeciderParams, SPayoutDeciderPointBased, SLaufendeParams},
             rulesrufspiel::SRulesRufspiel,

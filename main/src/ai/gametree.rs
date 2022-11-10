@@ -1,4 +1,4 @@
-use crate::game::{SGame, SStichSequence};
+use crate::game::SGame;
 use crate::primitives::*;
 use crate::rules::*;
 use crate::util::*;

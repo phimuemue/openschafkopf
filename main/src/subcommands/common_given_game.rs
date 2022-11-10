@@ -1,5 +1,4 @@
 use crate::ai::handiterators::*;
-use crate::game::SStichSequence;
 use crate::primitives::*;
 use crate::util::*;
 use crate::rules::{ruleset::VStockOrT, TRules, TRulesBoxClone};
