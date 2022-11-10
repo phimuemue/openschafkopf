@@ -121,19 +121,17 @@ fn payouthints_point_based(
 }
 
 impl<
+    Rules: TRulesNoObj,
     PointsToWin: TPointsToWin,
     PlayerParties: TPlayerParties,
-> TPayoutDecider<PlayerParties> for SPayoutDeciderPointBased<PointsToWin> {
-    fn payout<Rules>(
+> TPayoutDecider<Rules, PlayerParties> for SPayoutDeciderPointBased<PointsToWin> {
+    fn payout(
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
         playerparties: &PlayerParties,
-    ) -> EnumMap<EPlayerIndex, isize>
-        where 
-            Rules: TRulesNoObj,
-    {
+    ) -> EnumMap<EPlayerIndex, isize> {
         payout_point_based(
             &self.pointstowin,
             rules,
@@ -163,7 +161,7 @@ impl<
         )
     }
 
-    fn payouthints<Rules: TRulesNoObj>(
+    fn payouthints(
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
@@ -220,19 +218,17 @@ pub fn normalized_points_to_points(f_points_normalized: f32, pointstowin: &impl 
 }
 
 impl<
+    Rules: TRulesNoObj,
     PointsToWin: TPointsToWin,
     PlayerParties: TPlayerParties,
-> TPayoutDecider<PlayerParties> for SPayoutDeciderPointsAsPayout<PointsToWin> {
-    fn payout<Rules>(
+> TPayoutDecider<Rules, PlayerParties> for SPayoutDeciderPointsAsPayout<PointsToWin> {
+    fn payout(
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
         playerparties: &PlayerParties,
-    ) -> EnumMap<EPlayerIndex, isize>
-        where 
-            Rules: TRulesNoObj,
-    {
+    ) -> EnumMap<EPlayerIndex, isize> {
         payout_point_based(
             &self.pointstowin,
             rules,
@@ -245,7 +241,7 @@ impl<
         )
     }
 
-    fn payouthints<Rules: TRulesNoObj>(
+    fn payouthints(
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
@@ -304,22 +300,20 @@ pub fn internal_payout(n_payout_single_player: isize, playerparties: &impl TPlay
     })
 }
 
-pub trait TPayoutDecider<PlayerParties> : Sync + Send + 'static + Clone + fmt::Debug {
-    fn payout<Rules>(
+pub trait TPayoutDecider<Rules, PlayerParties> : Sync + Send + 'static + Clone + fmt::Debug {
+    fn payout(
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
         playerparties: &PlayerParties,
-    ) -> EnumMap<EPlayerIndex, isize>
-        where Rules: TRulesNoObj;
+    ) -> EnumMap<EPlayerIndex, isize>;
 
-    fn payouthints<Rules>(
+    fn payouthints(
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
         tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &PlayerParties,
-    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>
-        where Rules: TRulesNoObj;
+    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 }

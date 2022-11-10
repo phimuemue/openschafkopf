@@ -17,7 +17,7 @@ pub struct SRufspielPayout {
     payoutdecider: SPayoutDeciderPointBased<SPointsToWin61>,
 }
 
-fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider<SPlayerParties22>, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished) -> (EnumMap<EPlayerIndex, isize>, SPlayerParties22) {
+fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider<SRulesRufspielGeneric<RufspielPayout>, SPlayerParties22>, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished) -> (EnumMap<EPlayerIndex, isize>, SPlayerParties22) {
     let epi_coplayer = debug_verify_eq!(
         rulestatecache.fixed.who_has_card(rules.rufsau()),
         unwrap!(stichseq.get().completed_cards()
@@ -43,7 +43,7 @@ fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payo
     (an_payout_no_stock, playerparties)
 }
 
-fn rufspiel_payouthints_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider<SPlayerParties22>, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence)) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+fn rufspiel_payouthints_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider<SRulesRufspielGeneric<RufspielPayout>,SPlayerParties22>, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence)) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
     let epi_coplayer = debug_verify_eq!(
         rulestatecache.fixed.who_has_card(rules.rufsau()),
         stichseq.visible_cards()

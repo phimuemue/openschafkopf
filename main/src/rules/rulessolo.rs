@@ -191,16 +191,14 @@ pub struct SPayoutDeciderTout {
     i_prio: isize,
 }
 
-impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderTout {
-    fn payout<Rules>(
+impl<TrumpfDecider: TTrumpfDecider> TPayoutDecider<SRulesSoloLike<TrumpfDecider, Self>, SPlayerParties13> for SPayoutDeciderTout {
+    fn payout(
         &self,
-        rules: &Rules,
+        rules: &SRulesSoloLike<TrumpfDecider, Self>,
         rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, isize>
-        where Rules: TRulesNoObj,
-    {
+    ) -> EnumMap<EPlayerIndex, isize> {
         // TODORULES optionally count schneider/schwarz
         internal_payout(
             /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(rules.trumpfdecider(), rulestatecache, stichseq, playerparties13)) * 2,
@@ -213,15 +211,13 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderTout {
         )
     }
 
-    fn payouthints<Rules>(
+    fn payouthints(
         &self,
-        if_dbg_else!({rules}{_rules}): &Rules,
+        if_dbg_else!({rules}{_rules}): &SRulesSoloLike<TrumpfDecider, Self>,
         rulestatecache: &SRuleStateCache,
         (_ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>
-        where Rules: TRulesNoObj
-    {
+    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         if debug_verify_eq!(
             rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich < stichseq.completed_stichs().len(),
             !stichseq.completed_stichs_winner_index(rules)
@@ -309,16 +305,14 @@ fn cards_valid_for_sie<Rules: TRulesNoObj, ItCard: Iterator<Item=SCard>>(
     }
 }
 
-impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderSie {
-    fn payout<Rules>(
+impl<TrumpfDecider: TTrumpfDecider> TPayoutDecider<SRulesSoloLike<TrumpfDecider, Self>, SPlayerParties13> for SPayoutDeciderSie {
+    fn payout(
         &self,
-        rules: &Rules,
+        rules: &SRulesSoloLike<TrumpfDecider, Self>,
         _rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, isize>
-        where Rules: TRulesNoObj,
-    {
+    ) -> EnumMap<EPlayerIndex, isize> {
         // TODORULES optionally count schneider/schwarz
         internal_payout(
             /*n_payout_single_player*/ (self.payoutparams.n_payout_base
@@ -334,15 +328,13 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderSie {
         )
     }
 
-    fn payouthints<Rules>(
+    fn payouthints(
         &self,
-        rules: &Rules,
+        rules: &SRulesSoloLike<TrumpfDecider, Self>,
         _rulestatecache: &SRuleStateCache,
         (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>
-        where Rules: TRulesNoObj
-    {
+    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         let itcard = stichseq.visible_stichs().iter().filter_map(|stich| stich.get(playerparties13.primary_player())).copied()
             .chain(ahand[playerparties13.primary_player()].cards().iter().copied());
         if

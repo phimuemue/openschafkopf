@@ -47,16 +47,14 @@ struct SPayoutDeciderBettel {
     n_payout_base : isize,
 }
 
-impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderBettel {
-    fn payout<Rules>(
+impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TPayoutDecider<SRulesBettel<BettelAllAllowedCardsWithinStich>, SPlayerParties13> for SPayoutDeciderBettel {
+    fn payout(
         &self,
-        if_dbg_else!({rules}{_rules}): &Rules,
+        if_dbg_else!({rules}{_rules}): &SRulesBettel<BettelAllAllowedCardsWithinStich>,
         rulestatecache: &SRuleStateCache,
         if_dbg_else!({stichseq}{_stichseq}): SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, isize>
-        where Rules: TRules
-    {
+    ) -> EnumMap<EPlayerIndex, isize> {
         internal_payout(
             /*n_payout_single_player*/ self.n_payout_base,
             playerparties13,
@@ -68,15 +66,13 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderBettel {
         )
     }
 
-    fn payouthints<Rules>(
+    fn payouthints(
         &self,
-        if_dbg_else!({rules}{_rules}): &Rules,
+        if_dbg_else!({rules}{_rules}): &SRulesBettel<BettelAllAllowedCardsWithinStich>,
         rulestatecache: &SRuleStateCache,
         (_ahand, if_dbg_else!({stichseq}{_stichseq})): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>
-        where Rules: TRulesNoObj
-    {
+    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         if debug_verify_eq!(
             0 < rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich,
             !stichseq.completed_stichs_winner_index(rules)
