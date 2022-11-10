@@ -101,6 +101,26 @@ pub trait TPlayerParties {
     fn multiplier(&self, epi: EPlayerIndex) -> isize;
 }
 
+#[derive(new, Debug)]
+pub struct SPlayerParties13 {
+    epi: EPlayerIndex,
+}
+
+impl SPlayerParties13 {
+    pub fn primary_player(&self) -> EPlayerIndex {
+        self.epi
+    }
+}
+
+impl TPlayerParties for SPlayerParties13 {
+    fn is_primary_party(&self, epi: EPlayerIndex) -> bool {
+        self.epi==epi
+    }
+    fn multiplier(&self, epi: EPlayerIndex) -> isize {
+        if self.is_primary_party(epi) {3} else {1}
+    }
+}
+
 #[derive(Debug)]
 pub struct SPlayerPartiesTable { // TODO? use this as canonical representation, and get rid of TPlayerParties and its implementors?
     mapepib_primary: EnumMap<EPlayerIndex, bool>, // TODO? use enumset
@@ -228,26 +248,6 @@ impl SRuleStateCache {
     pub fn unregister_stich(&mut self, unregisterstich: SUnregisterStich) {
         self.changing.mapepipointstichcount[unregisterstich.epi_winner].n_point = unregisterstich.n_points_epi_winner_before;
         self.changing.mapepipointstichcount[unregisterstich.epi_winner].n_stich -= 1;
-    }
-}
-
-#[derive(new, Debug)]
-pub struct SPlayerParties13 {
-    epi: EPlayerIndex,
-}
-
-impl SPlayerParties13 {
-    pub fn primary_player(&self) -> EPlayerIndex {
-        self.epi
-    }
-}
-
-impl TPlayerParties for SPlayerParties13 {
-    fn is_primary_party(&self, epi: EPlayerIndex) -> bool {
-        self.epi==epi
-    }
-    fn multiplier(&self, epi: EPlayerIndex) -> isize {
-        if self.is_primary_party(epi) {3} else {1}
     }
 }
 
