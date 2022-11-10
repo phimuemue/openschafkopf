@@ -66,7 +66,7 @@ impl SStichTrie {
                 assert!(stichseq.current_stich().is_empty());
                 (
                     SStichTrie::new(),
-                    Some(playerparties.is_primary_party(rules.winner_index(unwrap!(stichseq.completed_stichs().last())))),
+                    Some(playerparties.is_primary_party(rules.winner_index(SFullStich::new(unwrap!(stichseq.completed_stichs().last()))))),
                 )
             } else {
                 let epi_card = unwrap!(stichseq.current_stich().current_playerindex());

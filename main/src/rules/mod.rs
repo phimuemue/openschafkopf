@@ -412,13 +412,13 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
 }
 
 impl<Rules: TRules + ?Sized> TWinnerIndex for Rules {
-    fn winner_index_no_invariant(&self, stich: &SStich) -> EPlayerIndex {
-        self.preliminary_winner_index(stich)
+    fn winner_index(&self, stich: SFullStich) -> EPlayerIndex {
+        self.preliminary_winner_index(stich.get())
     }
 }
 impl<'rules> TWinnerIndex for &'rules dyn TRules {
-    fn winner_index_no_invariant(&self, stich: &SStich) -> EPlayerIndex {
-        self.preliminary_winner_index(stich)
+    fn winner_index(&self, stich: SFullStich) -> EPlayerIndex {
+        self.preliminary_winner_index(stich.get())
     }
 }
 

@@ -4,6 +4,19 @@ use std::fmt;
 
 pub type SStich = SPlayersInRound<SCard, EPlayerIndex>;
 
+#[derive(Copy, Clone)]
+pub struct SFullStich<'stich>(&'stich SStich);
+
+impl<'stich> SFullStich<'stich> {
+    pub fn new(stich: &'stich SStich) -> Self {
+        debug_assert!(stich.is_full());
+        Self(stich)
+    }
+    pub fn get(&self) -> &SStich {
+        self.0
+    }
+}
+
 impl fmt::Display for SStich {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for epi in EPlayerIndex::values() {

@@ -178,7 +178,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     (&game_csv.ahand, &game_csv.stichseq),
                     game_csv.rules.as_ref(),
                 );
-                for stich in game.stichseq.visible_stichs() {
+                for stich in verify_eq!(game.stichseq.completed_stichs(), game.stichseq.visible_stichs()) {
                     for (epi, &card_zugeben) in stich.iter() {
                         assert_eq!(epi, unwrap!(game_csv.which_player_can_do_something()).0);
                         let veccard_allowed = game_csv.rules.all_allowed_cards(&game_csv.stichseq, &game_csv.ahand[epi]);
@@ -207,7 +207,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         );
                         unwrap!(game_csv.zugeben(card_zugeben, epi)); // validated by analyze_sauspiel_html
                     }
-                    rulestatecache.register_stich(stich, game_csv.rules.winner_index(stich));
+                    rulestatecache.register_stich(stich, game_csv.rules.winner_index(SFullStich::new(stich)));
                     debug_assert_eq!(
                         rulestatecache,
                         SRuleStateCache::new(

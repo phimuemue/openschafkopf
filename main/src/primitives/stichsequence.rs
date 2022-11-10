@@ -5,18 +5,14 @@ use super::*;
 use itertools::Itertools;
 
 pub trait TWinnerIndex {
-    fn winner_index(&self, stich: &SStich) -> EPlayerIndex {
-        assert!(stich.is_full());
-        self.winner_index_no_invariant(stich)
-    }
-    fn winner_index_no_invariant(&self, stich: &SStich) -> EPlayerIndex;
+    fn winner_index(&self, stich: SFullStich) -> EPlayerIndex;
 }
 
 #[cfg(test)]
 pub struct SWinnerIndexIrrelevant;
 #[cfg(test)]
 impl TWinnerIndex for SWinnerIndexIrrelevant {
-    fn winner_index_no_invariant(&self, _stich: &SStich) -> EPlayerIndex {
+    fn winner_index(&self, _stich: SFullStich) -> EPlayerIndex {
         EPlayerIndex::EPI0
     }
 }
@@ -118,7 +114,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
             .iter()
             .tuple_windows()
             .map(move |(stich_0, stich_1)| {
-                (stich_0, debug_verify_eq!(stich_1.first_playerindex(), winnerindex.winner_index(stich_0)))
+                (stich_0, debug_verify_eq!(stich_1.first_playerindex(), winnerindex.winner_index(SFullStich::new(stich_0))))
             })
     }
 
@@ -126,7 +122,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         #[cfg(debug_assertions)]self.assert_invariant();
         unwrap!(self.vecstich.last_mut()).push(card);
         if self.current_stich_no_invariant().is_full() {
-            self.vecstich.push(SStich::new(winnerindex.winner_index(self.current_stich_no_invariant())));
+            self.vecstich.push(SStich::new(winnerindex.winner_index(SFullStich::new(self.current_stich_no_invariant()))));
         }
         #[cfg(debug_assertions)]self.assert_invariant();
     }

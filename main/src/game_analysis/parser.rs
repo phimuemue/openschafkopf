@@ -306,7 +306,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                     /*fn_card_highlight*/|card, _ostr_highlight| card,
                 )?).map(|acard| {
                     let stich = SStich::new_full(epi_first, acard);
-                    let epi_winner = rules.winner_index(&stich);
+                    let epi_winner = rules.winner_index(SFullStich::new(&stich));
                     vecstich.push(stich);
                     (epi_winner, vecstich)
                 })
