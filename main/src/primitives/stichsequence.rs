@@ -64,9 +64,9 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         stichseq
     }
 
-    pub fn new_from_cards(ekurzlang: EKurzLang, itcard: impl Iterator<Item=SCard>, rules: &(impl TWinnerIndex + ?Sized)) -> Self {
+    pub fn new_from_cards(ekurzlang: EKurzLang, itcard: impl Iterator<Item=SCard>, winnerindex: &(impl TWinnerIndex + ?Sized)) -> Self {
         itcard.fold(Self::new(ekurzlang), mutate_return!(|stichseq, card| {
-            stichseq.zugeben(card, rules);
+            stichseq.zugeben(card, winnerindex);
         }))
     }
 
@@ -99,13 +99,13 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         self.current_stich_no_invariant()
     }
 
-    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, rules: &'lifetime(impl TWinnerIndex + ?Sized)) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
+    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, winnerindex: &'lifetime(impl TWinnerIndex + ?Sized)) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
         #[cfg(debug_assertions)]self.assert_invariant();
         self.vecstich[0..self.vecstich.len()]
             .iter()
             .tuple_windows()
             .map(move |(stich_0, stich_1)| {
-                (stich_0, debug_verify_eq!(stich_1.first_playerindex(), rules.winner_index(stich_0)))
+                (stich_0, debug_verify_eq!(stich_1.first_playerindex(), winnerindex.winner_index(stich_0)))
             })
     }
 
@@ -118,11 +118,11 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         #[cfg(debug_assertions)]self.assert_invariant();
     }
 
-    pub fn zugeben_and_restore<R>(&mut self, card: SCard, rules: &(impl TWinnerIndex + ?Sized), func: impl FnOnce(&mut Self)->R) -> R {
+    pub fn zugeben_and_restore<R>(&mut self, card: SCard, winnerindex: &(impl TWinnerIndex + ?Sized), func: impl FnOnce(&mut Self)->R) -> R {
         #[cfg(debug_assertions)]self.assert_invariant();
         let n_len = self.vecstich.len();
         assert!(!self.current_stich().is_full());
-        self.zugeben(card, rules);
+        self.zugeben(card, winnerindex);
         let r = func(self);
         #[cfg(debug_assertions)]self.assert_invariant();
         if self.current_stich().is_empty() {
