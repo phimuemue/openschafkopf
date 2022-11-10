@@ -275,14 +275,13 @@ fn cards_valid_for_sie<Rules: TRules, ItCard: Iterator<Item=SCard>>(
     }
 }
 
-impl SPayoutDeciderSie {
-    fn payout(
-        &self,
-        rules: &SRulesSoloLike<impl TTrumpfDecider, Self>,
-        _rulestatecache: &SRuleStateCache,
-        stichseq: SStichSequenceGameFinished,
-        playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, isize> {
+impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
+    fn priority(&self) -> VGameAnnouncementPriority {
+        VGameAnnouncementPriority::SoloSie
+    }
+
+    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, _rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
+        let playerparties13 = &SPlayerParties13::new(rules.epi);
         // TODORULES optionally count schneider/schwarz
         internal_payout(
             /*n_payout_single_player*/ (self.payoutparams.n_payout_base
@@ -295,25 +294,18 @@ impl SPayoutDeciderSie {
                 stichseq.get().completed_cards_by(playerparties13.primary_player()),
                 stichseq.get().kurzlang(),
             )
-        )
+        ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
 
-    fn payouthints(
-        &self,
-        rules: &SRulesSoloLike<impl TTrumpfDecider, Self>,
-        _rulestatecache: &SRuleStateCache,
-        (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
-        playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-        let epi_primary = playerparties13.primary_player();
+    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, _rulestatecache: &SRuleStateCache, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         if !cards_valid_for_sie(
             rules,
-            stichseq.cards_from_player(&ahand[epi_primary], epi_primary).copied(),
+            stichseq.cards_from_player(&ahand[rules.epi], rules.epi).copied(),
             stichseq.kurzlang(),
         ) {
             internal_payout(
                 /*n_payout_single_player*/ self.payoutparams.n_payout_base * 4,
-                playerparties13,
+                &SPlayerParties13::new(rules.epi),
                 /*b_primary_party_wins*/ false,
             )
                 .map(|n_payout| {
@@ -322,32 +314,9 @@ impl SPayoutDeciderSie {
         } else {
             EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
         }
-    }
-}
-
-impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
-    fn priority(&self) -> VGameAnnouncementPriority {
-        VGameAnnouncementPriority::SoloSie
-    }
-
-    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
-        self.payout(
-            rules,
-            rulestatecache,
-            stichseq,
-            &SPlayerParties13::new(rules.epi),
-        ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
-    }
-
-    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-        self.payouthints(
-            rules,
-            rulestatecache,
-            tplahandstichseq,
-            &SPlayerParties13::new(rules.epi),
-        ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
-             on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),
-        ))
+            .map(|intvlon_payout| intvlon_payout.map(|on_payout|
+                 on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),
+            ))
     }
 
     fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
