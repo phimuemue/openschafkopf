@@ -205,7 +205,7 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderTout {
     {
         // TODORULES optionally count schneider/schwarz
         internal_payout(
-            /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(rules, rulestatecache, stichseq, playerparties13)) * 2,
+            /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(rules.trumpfdecider(), rulestatecache, stichseq, playerparties13)) * 2,
             playerparties13,
             /*b_primary_party_wins*/ debug_verify_eq!(
                 rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==stichseq.get().kurzlang().cards_per_player(),
