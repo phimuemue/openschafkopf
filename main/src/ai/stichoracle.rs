@@ -253,7 +253,7 @@ impl<'rules> SFilterByOracle<'rules> {
                     stichseq.zugeben(*card, rules);
                     ahand[epi].play_card(*card);
                 }
-                slf.register_stich(&mut stichseq, &mut ahand);
+                slf.register_stich(&mut ahand, &mut stichseq);
             }
             let stichtrie = SStichTrie::new_with(
                 (&mut ahand_in_game.clone(), &mut stichseq_in_game.clone()),
@@ -269,7 +269,7 @@ impl<'rules> SFilterByOracle<'rules> {
 
 impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
     type UnregisterStich = (SStichTrie, EnumMap<EPlayerIndex, SRemoved>);
-    fn register_stich(&mut self, stichseq: &mut SStichSequence, ahand: &mut EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {
+    fn register_stich(&mut self, ahand: &mut EnumMap<EPlayerIndex, SHand>, stichseq: &mut SStichSequence) -> Self::UnregisterStich {
         assert!(stichseq.current_stich().is_empty());
         let aremovedcard = EPlayerIndex::map_from_fn(|epi|
             self.cardspartition_completed_cards.remove_from_chain(unwrap!(stichseq.completed_stichs().last())[epi])

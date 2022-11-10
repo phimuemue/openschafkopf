@@ -372,7 +372,7 @@ pub struct SBranchingFactor{
 }
 impl TFilterAllowedCards for SBranchingFactor {
     type UnregisterStich = ();
-    fn register_stich(&mut self, _stichseq: &mut SStichSequence, _ahand: &mut EnumMap<EPlayerIndex, SHand>) -> Self::UnregisterStich {}
+    fn register_stich(&mut self, _ahand: &mut EnumMap<EPlayerIndex, SHand>, _stichseq: &mut SStichSequence) -> Self::UnregisterStich {}
     fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {}
     fn filter_allowed_cards(&self, _stichseq: &SStichSequence, veccard: &mut SHandVector) {
         assert!(!veccard.is_empty());
