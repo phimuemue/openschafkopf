@@ -223,14 +223,11 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
                 /*b_primary_party_wins*/ false,
             )
                 .map(|n_payout| {
-                     SInterval::from_tuple(tpl_flip_if(0<verify_ne!(*n_payout, 0), (None, Some(*n_payout))))
+                     SInterval::from_tuple(tpl_flip_if(0<verify_ne!(*n_payout, 0), (None, Some(*n_payout * expensifiers.stoss_doubling_factor()))))
                 })
         } else {
             EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
         }
-            .map(|intvlon_payout| intvlon_payout.map(|on_payout|
-                on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),
-            ))
     }
 
     fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
@@ -309,14 +306,11 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
                 /*b_primary_party_wins*/ false,
             )
                 .map(|n_payout| {
-                     SInterval::from_tuple(tpl_flip_if(0<verify_ne!(*n_payout, 0), (None, Some(*n_payout))))
+                     SInterval::from_tuple(tpl_flip_if(0<verify_ne!(*n_payout, 0), (None, Some(*n_payout * expensifiers.stoss_doubling_factor()))))
                 })
         } else {
             EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
         }
-            .map(|intvlon_payout| intvlon_payout.map(|on_payout|
-                 on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),
-            ))
     }
 
     fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
