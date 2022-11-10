@@ -302,7 +302,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
             );
             for stich in stichseq.get().completed_stichs().iter() {
                 for (epi, card) in stich.iter() {
-                    stichseq_check.zugeben_custom_winner_index(*card, |stich| self.winner_index(stich)); // TODO I could not simply pass rules. Why?
+                    stichseq_check.zugeben(*card, self);
                     ahand_check[epi].play_card(*card);
                     let mapepiintvlon_payout_after = self.payouthints(
                         &stichseq_check,
