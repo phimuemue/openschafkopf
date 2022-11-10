@@ -8,8 +8,10 @@ use itertools::Itertools;
 use std::{
     io::Write,
     time::{Instant, Duration},
+    sync::{Arc, atomic::{AtomicUsize, Ordering}, Mutex},
 };
 use std::fmt::Write as _;
+use rayon::prelude::*;
 
 pub mod determine_best_card_table;
 pub mod parser;
@@ -497,11 +499,12 @@ pub struct SGameWithDesc {
     pub resgameresult: Result<SGameResult, failure::Error>,
 }
 
-pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String, vecgamewithdesc: Vec<SGameWithDesc>, b_include_no_findings: bool, n_max_remaining_cards: usize, b_simulate_all_hands: bool) -> Result<std::path::PathBuf, failure::Error> {
+pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String+Sync, vecgamewithdesc: Vec<SGameWithDesc>, b_include_no_findings: bool, n_max_remaining_cards: usize, b_simulate_all_hands: bool) -> Result<std::path::PathBuf, failure::Error> {
+    // TODO can all this be done with fewer locks and more elegant?
     create_dir_if_not_existent(path_analysis)?;
     generate_html_auxiliary_files(path_analysis)?;
     let str_date = format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S"));
-    let mut str_index_html = format!(
+    let str_index_html = Arc::new(Mutex::new(format!(
         r###"
         <!DOCTYPE html>
         <html lang="de" class="no-js">
@@ -513,19 +516,19 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                 <h1>Schafkopf-Analyse: {str_date}</h1>
                 "###,
         str_date = str_date,
-    );
-    str_index_html += "<table>";
+    )));
+    *unwrap!(str_index_html.lock()) += "<table>";
     let n_games_total = vecgamewithdesc.len();
-    let mut n_games_done = 0;
-    let mut n_games_non_stock = 0;
-    let mut n_games_findings = 0;
-    vecgamewithdesc.into_iter().try_for_each(|gamewithdesc| -> Result<_, failure::Error> {
+    let n_games_done = Arc::new(AtomicUsize::new(0));
+    let n_games_non_stock = Arc::new(AtomicUsize::new(0));
+    let n_games_findings = Arc::new(AtomicUsize::new(0));
+    vecgamewithdesc.into_par_iter().try_for_each(|gamewithdesc| -> Result<_, failure::Error> {
         if let Ok(gameresult) = gamewithdesc.resgameresult {
             match gameresult.stockorgame {
                 VStockOrT::Stock(_) => {
                     if b_include_no_findings {
                         unwrap!(write!(
-                            str_index_html,
+                            *unwrap!(str_index_html.lock()),
                             r#"<tr>
                                 <td>
                                     Stock: {}
@@ -536,7 +539,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                     }
                 },
                 VStockOrT::OrT(game) => {
-                    n_games_non_stock += 1;
+                    n_games_non_stock.fetch_add(1, Ordering::SeqCst);
                     let str_rules = format!("{}", game.rules);
                     let path_analysis_game = path_analysis.join(gamewithdesc.str_description.replace(['/', '.'], "_"));
                     create_dir_if_not_existent(&path_analysis_game)?;
@@ -553,11 +556,11 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                     let n_findings_cheating = gameanalysis.n_findings_cheating;
                     assert!(n_findings_simulating <= n_findings_cheating);
                     if 0<n_findings_cheating {
-                        n_games_findings += 1;
+                        n_games_findings.fetch_add(1, Ordering::SeqCst);
                     }
                     if b_include_no_findings || 0 < n_findings_cheating {
                         unwrap!(write!(
-                            str_index_html,
+                            *unwrap!(str_index_html.lock()),
                             r#"<tr>
                                 <td>
                                     <a href="{str_path}">{str_rules}</a>
@@ -589,12 +592,16 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                 },
             }
         } else {
-            unwrap!(write!(str_index_html, "<tr><td>Fehler ({})</td></tr>", gamewithdesc.str_description));
+            unwrap!(write!(*unwrap!(str_index_html.lock()), "<tr><td>Fehler ({})</td></tr>", gamewithdesc.str_description));
         }
-        n_games_done += 1;
+        n_games_done.fetch_add(1, Ordering::SeqCst);
+        let n_games_non_stock = n_games_non_stock.load(Ordering::SeqCst);
+        let n_games_done = n_games_done.load(Ordering::SeqCst);
+        let n_games_findings = n_games_findings.load(Ordering::SeqCst);
         println!("Total: {n_games_total}. Done: {n_games_done}. Non-stock: {n_games_non_stock}. With findings: {n_games_findings}");
         Ok(())
     })?;
+    let mut str_index_html = unwrap!(unwrap!(Arc::try_unwrap(str_index_html)).into_inner());
     str_index_html += "</table>";
     str_index_html += "</body></html>";
     write_html(path_analysis.join(format!("{}.html", str_date)), &str_index_html)
