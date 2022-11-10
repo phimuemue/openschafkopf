@@ -334,15 +334,12 @@ impl<TrumpfDecider: TTrumpfDecider> TPayoutDecider<SRulesSoloLike<TrumpfDecider,
         (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-        let itcard = stichseq.visible_stichs().iter().filter_map(|stich| stich.get(playerparties13.primary_player())).copied()
-            .chain(ahand[playerparties13.primary_player()].cards().iter().copied());
-        if
-            !cards_valid_for_sie(
-                rules,
-                itcard.clone(),
-                stichseq.kurzlang(),
-            )
-        {
+        let epi_primary = playerparties13.primary_player();
+        if !cards_valid_for_sie(
+            rules,
+            stichseq.cards_from_player(&ahand[epi_primary], epi_primary).copied(),
+            stichseq.kurzlang(),
+        ) {
             internal_payout(
                 /*n_payout_single_player*/ self.payoutparams.n_payout_base * 4,
                 playerparties13,
