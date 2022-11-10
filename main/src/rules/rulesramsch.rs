@@ -66,12 +66,12 @@ impl TRules for SRulesRamsch {
         None
     }
 
-    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         let mapepipointstichcount = &rulestatecache.changing.mapepipointstichcount;
         let points_for_player = |epi| mapepipointstichcount[epi].n_point;
         debug_assert_eq!(
             EPlayerIndex::map_from_fn(points_for_player),
-            gamefinishedstiche.get().completed_stichs_winner_index(self)
+            stichseq.get().completed_stichs_winner_index(self)
                 .fold(
                     EPlayerIndex::map_from_fn(|_epi| 0),
                     mutate_return!(|an_points_accu, (stich, epi_winner)| {
@@ -91,8 +91,8 @@ impl TRules for SRulesRamsch {
         if match self.durchmarsch {
             VDurchmarsch::All if 120==n_points_max =>
                 debug_verify_eq!(
-                    mapepipointstichcount[the_one_epi()].n_stich==gamefinishedstiche.get().kurzlang().cards_per_player(),
-                    gamefinishedstiche.get().completed_stichs_winner_index(self).all(|(_stich, epi_winner)| epi_winner==the_one_epi())
+                    mapepipointstichcount[the_one_epi()].n_stich==stichseq.get().kurzlang().cards_per_player(),
+                    stichseq.get().completed_stichs_winner_index(self).all(|(_stich, epi_winner)| epi_winner==the_one_epi())
                 ),
             VDurchmarsch::All | VDurchmarsch::None =>
                 false,
@@ -116,7 +116,7 @@ impl TRules for SRulesRamsch {
                     unwrap!(vecepi_most_points.iter().copied()
                         .map(|epi| {(
                             epi,
-                            gamefinishedstiche.get().completed_stichs().iter()
+                            stichseq.get().completed_stichs().iter()
                                 .map(|stich| stich[epi])
                                 .filter(|card| self.trumpforfarbe(*card).is_trumpf())
                                 .max_by(|card_fst, card_snd| {

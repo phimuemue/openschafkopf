@@ -9,7 +9,7 @@ use super::cardspartition::*;
 
 pub trait TForEachSnapshot {
     type Output;
-    fn final_output(&self, slcstich: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output;
+    fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output;
     fn pruned_output(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<Self::Output>;
     fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
         &self,
@@ -437,9 +437,9 @@ impl SMinMax {
 impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     type Output = SMinMax;
 
-    fn final_output(&self, slcstich: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
+    fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
         SMinMax::new_final(self.rules.payout(
-            slcstich,
+            stichseq,
             &self.expensifiers,
             rulestatecache,
             /*b_test_points_as_payout*/if_dbg_else!({true}{()}),

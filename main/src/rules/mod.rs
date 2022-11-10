@@ -219,9 +219,9 @@ impl SRuleStateCache {
         )
     }
 
-    pub fn new_from_gamefinishedstiche(gamefinishedstiche: SStichSequenceGameFinished, fn_winner_index: impl Fn(&SStich)->EPlayerIndex) -> SRuleStateCache {
+    pub fn new_from_gamefinishedstiche(stichseq: SStichSequenceGameFinished, fn_winner_index: impl Fn(&SStich)->EPlayerIndex) -> SRuleStateCache {
         Self::new(
-            gamefinishedstiche.get(),
+            stichseq.get(),
             &EPlayerIndex::map_from_fn(|_epi|
                 SHand::new_from_vec(SHandVector::new())
             ),
@@ -286,23 +286,23 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
 
     fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
 
-    fn payout(&self, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache, if_dbg_else!({b_test_points_as_payout}{_}): SIfDebugBool) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache, if_dbg_else!({b_test_points_as_payout}{_}): SIfDebugBool) -> EnumMap<EPlayerIndex, isize> {
         let apayoutinfo = self.payout_no_invariant(
-            gamefinishedstiche,
+            stichseq,
             expensifiers,
             debug_verify_eq!(
                 rulestatecache,
-                &SRuleStateCache::new_from_gamefinishedstiche(gamefinishedstiche, |stich| self.winner_index(stich))
+                &SRuleStateCache::new_from_gamefinishedstiche(stichseq, |stich| self.winner_index(stich))
             ),
         );
         // TODO assert expensifiers consistent with stoss_allowed etc
         #[cfg(debug_assertions)] {
             let mut mapepiintvlon_payout = EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]));
-            let mut stichseq_check = SStichSequence::new(gamefinishedstiche.get().kurzlang());
+            let mut stichseq_check = SStichSequence::new(stichseq.get().kurzlang());
             let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
-                SHand::new_from_iter(gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[epi]))
+                SHand::new_from_iter(stichseq.get().completed_stichs().iter().map(|stich| stich[epi]))
             );
-            for stich in gamefinishedstiche.get().completed_stichs().iter() {
+            for stich in stichseq.get().completed_stichs().iter() {
                 for (epi, card) in stich.iter() {
                     stichseq_check.zugeben_custom_winner_index(*card, |stich| self.winner_index(stich)); // TODO I could not simply pass rules. Why?
                     ahand_check[epi].play_card(*card);
@@ -336,7 +336,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
             if b_test_points_as_payout {
                 if let Some((rules, _fn_payout_to_points)) = self.points_as_payout() {
                     rules.payout(
-                        gamefinishedstiche,
+                        stichseq,
                         expensifiers,
                         rulestatecache,
                         /*b_test_points_as_payout*/false,
@@ -347,7 +347,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
         apayoutinfo
     }
 
-    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize>;
+    fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize>;
 
     fn payouthints(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 

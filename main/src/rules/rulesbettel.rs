@@ -52,7 +52,7 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderBettel {
         &self,
         if_dbg_else!({rules}{_rules}): &Rules,
         rulestatecache: &SRuleStateCache,
-        if_dbg_else!({gamefinishedstiche}{_gamefinishedstiche}): SStichSequenceGameFinished,
+        if_dbg_else!({stichseq}{_stichseq}): SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRules
@@ -62,7 +62,7 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderBettel {
             playerparties13,
             /*b_primary_party_wins*/debug_verify_eq!(
                 rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==0,
-                gamefinishedstiche.get().completed_stichs_winner_index(rules)
+                stichseq.get().completed_stichs_winner_index(rules)
                     .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
             )
         )
@@ -150,11 +150,11 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
     impl_rules_trumpf!();
     impl_single_play!();
 
-    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         self.payoutdecider.payout(
             self,
             rulestatecache,
-            gamefinishedstiche,
+            stichseq,
             &SPlayerParties13::new(self.epi),
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }

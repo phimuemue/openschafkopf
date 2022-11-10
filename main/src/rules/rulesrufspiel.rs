@@ -8,7 +8,7 @@ use crate::util::*;
 use std::{cmp::Ordering, fmt};
 
 pub trait TRufspielPayout : Clone + Sync + fmt::Debug + Send + 'static {
-    fn payout(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize>;
+    fn payout(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize>;
     fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 }
 
@@ -17,10 +17,10 @@ pub struct SRufspielPayout {
     payoutdecider: SPayoutDeciderPointBased<SPointsToWin61>,
 }
 
-fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider<SPlayerParties22>, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished) -> (EnumMap<EPlayerIndex, isize>, SPlayerParties22) {
+fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider<SPlayerParties22>, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished) -> (EnumMap<EPlayerIndex, isize>, SPlayerParties22) {
     let epi_coplayer = debug_verify_eq!(
         rulestatecache.fixed.who_has_card(rules.rufsau()),
-        unwrap!(gamefinishedstiche.get().completed_cards()
+        unwrap!(stichseq.get().completed_cards()
             .find(|&(_, card)| *card==rules.rufsau())
             .map(|(epi, _)| epi))
     );
@@ -29,7 +29,7 @@ fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payo
     let an_payout_no_stock = payoutdecider.payout(
         rules,
         rulestatecache,
-        gamefinishedstiche,
+        stichseq,
         &playerparties,
     );
     assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
@@ -60,12 +60,12 @@ fn rufspiel_payouthints_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>
 }
 
 impl TRufspielPayout for SRufspielPayout {
-    fn payout(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         let (an_payout_no_stock, playerparties) = rufspiel_payout_no_stock_stoss_doubling(
             &self.payoutdecider,
             rules,
             rulestatecache,
-            gamefinishedstiche,
+            stichseq,
         );
         assert_eq!(expensifiers.n_stock%2, 0);
         EPlayerIndex::map_from_fn(|epi|
@@ -184,11 +184,11 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         (epi==self.epi || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
     }
 
-    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         self.rufspielpayout.payout(
             self,
             rulestatecache,
-            gamefinishedstiche,
+            stichseq,
             expensifiers,
         )
     }
@@ -338,19 +338,19 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
             }
         }
         impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
-            fn payout(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
+            fn payout(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
                 let (an_payout, if_dbg_else!({playerparties}{_playerparties})) = rufspiel_payout_no_stock_stoss_doubling(
                     &self.payoutdecider,
                     rules,
                     rulestatecache,
-                    gamefinishedstiche,
+                    stichseq,
                 );
                 #[cfg(debug_assertions)] {
-                    let mut stichseq_check = SStichSequence::new(gamefinishedstiche.get().kurzlang());
+                    let mut stichseq_check = SStichSequence::new(stichseq.get().kurzlang());
                     let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
-                        SHand::new_from_iter(gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[epi]))
+                        SHand::new_from_iter(stichseq.get().completed_stichs().iter().map(|stich| stich[epi]))
                     );
-                    for (epi_card, card) in gamefinishedstiche.get().completed_cards() {
+                    for (epi_card, card) in stichseq.get().completed_cards() {
                         let b_primary = playerparties.is_primary_party(epi_card);
                         assert_eq!(
                             Self::payout_to_points(

@@ -11,7 +11,7 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
     fn priorityinfo(&self) -> String {
         "".to_string()
     }
-    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize>;
+    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize>;
     fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
     fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>>;
 
@@ -67,11 +67,11 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
         }
     }
 
-    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         TPayoutDecider::payout(self,
             rules,
             rulestatecache,
-            gamefinishedstiche,
+            stichseq,
             &SPlayerParties13::new(rules.epi),
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
@@ -135,20 +135,20 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
         VGameAnnouncementPriority::SoloLike(self.pointstowin.clone())
     }
 
-    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         let an_payout = TPayoutDecider::payout(self,
             rules,
             rulestatecache,
-            gamefinishedstiche,
+            stichseq,
             &SPlayerParties13::new(rules.epi),
         );
         #[cfg(debug_assertions)] {
-            let mut stichseq_check = SStichSequence::new(gamefinishedstiche.get().kurzlang());
+            let mut stichseq_check = SStichSequence::new(stichseq.get().kurzlang());
             let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
-                SHand::new_from_iter(gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[epi]))
+                SHand::new_from_iter(stichseq.get().completed_stichs().iter().map(|stich| stich[epi]))
             );
             let playerparties = SPlayerParties13::new(rules.epi);
-            for (epi_card, card) in gamefinishedstiche.get().completed_cards() {
+            for (epi_card, card) in stichseq.get().completed_cards() {
                 let b_primary = playerparties.is_primary_party(epi_card);
                 assert_eq!(
                     Self::payout_to_points(
@@ -198,18 +198,18 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderTout {
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
-        gamefinishedstiche: SStichSequenceGameFinished,
+        stichseq: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRulesNoObj,
     {
         // TODORULES optionally count schneider/schwarz
         internal_payout(
-            /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(rules, rulestatecache, gamefinishedstiche, playerparties13)) * 2,
+            /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(rules, rulestatecache, stichseq, playerparties13)) * 2,
             playerparties13,
             /*b_primary_party_wins*/ debug_verify_eq!(
-                rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==gamefinishedstiche.get().kurzlang().cards_per_player(),
-                gamefinishedstiche.get().completed_stichs_winner_index(rules)
+                rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==stichseq.get().kurzlang().cards_per_player(),
+                stichseq.get().completed_stichs_winner_index(rules)
                     .all(|(_stich, epi_winner)| playerparties13.is_primary_party(epi_winner))
             ),
         )
@@ -249,11 +249,11 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
         VGameAnnouncementPriority::SoloTout(self.i_prio)
     }
 
-    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         TPayoutDecider::payout(self,
             rules,
             rulestatecache,
-            gamefinishedstiche,
+            stichseq,
             &SPlayerParties13::new(rules.epi),
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
@@ -318,7 +318,7 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderSie {
         &self,
         rules: &Rules,
         _rulestatecache: &SRuleStateCache,
-        gamefinishedstiche: SStichSequenceGameFinished,
+        stichseq: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRulesNoObj,
@@ -327,13 +327,13 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderSie {
         internal_payout(
             /*n_payout_single_player*/ (self.payoutparams.n_payout_base
             + {
-                gamefinishedstiche.get().completed_stichs().len().as_num::<isize>()
+                stichseq.get().completed_stichs().len().as_num::<isize>()
             } * self.payoutparams.laufendeparams.n_payout_per_lauf) * 4,
             playerparties13,
             /*b_primary_party_wins*/cards_valid_for_sie(
                 rules,
-                gamefinishedstiche.get().completed_stichs().iter().map(|stich| stich[playerparties13.primary_player()]),
-                gamefinishedstiche.get().kurzlang(),
+                stichseq.get().completed_stichs().iter().map(|stich| stich[playerparties13.primary_player()]),
+                stichseq.get().kurzlang(),
             )
         )
     }
@@ -376,11 +376,11 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
         VGameAnnouncementPriority::SoloSie
     }
 
-    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         TPayoutDecider::payout(self,
             rules,
             rulestatecache,
-            gamefinishedstiche,
+            stichseq,
             &SPlayerParties13::new(rules.epi),
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
@@ -447,11 +447,11 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
     impl_rules_trumpf!();
     impl_single_play!();
 
-    fn payout_no_invariant(&self, gamefinishedstiche: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         self.payoutdecider.payout(
             self,
             rulestatecache,
-            gamefinishedstiche,
+            stichseq,
             expensifiers,
         )
     }

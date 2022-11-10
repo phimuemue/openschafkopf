@@ -522,13 +522,13 @@ impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Rul
 
     fn finish_success(self) -> Self::Finish {
         assert!(self.kurzlang().cards_per_player()==self.completed_stichs().len());
-        let gamefinishedstiche = SStichSequenceGameFinished::new(&self.stichseq);
+        let stichseq = SStichSequenceGameFinished::new(&self.stichseq);
         SGameResultGeneric {
             an_payout : self.rules.payout(
-                gamefinishedstiche,
+                stichseq,
                 &self.expensifiers,
                 &SRuleStateCache::new_from_gamefinishedstiche(
-                    gamefinishedstiche,
+                    stichseq,
                     |stich| self.rules.winner_index(stich),
                 ),
                 /*b_test_points_as_payout*/if_dbg_else!({true}{()}),

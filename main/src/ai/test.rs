@@ -109,7 +109,7 @@ fn detect_expensive_all_possible_hands() {
                         struct SLeafCounter;
                         impl TForEachSnapshot for SLeafCounter {
                             type Output = usize;
-                            fn final_output(&self, _slcstich: SStichSequenceGameFinished, _rulestatecache: &SRuleStateCache) -> Self::Output {
+                            fn final_output(&self, _stichseq: SStichSequenceGameFinished, _rulestatecache: &SRuleStateCache) -> Self::Output {
                                 1 // leaf
                             }
                             fn pruned_output(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _rulestatecache: &SRuleStateCache) -> Option<Self::Output> {

@@ -52,7 +52,7 @@ fn payout_point_based (
     pointstowin: &impl TPointsToWin,
     if_dbg_else!({rules}{_rules}): &impl TRulesNoObj,
     rulestatecache: &SRuleStateCache,
-    if_dbg_else!({gamefinishedstiche}{_gamefinishedstiche}): SStichSequenceGameFinished,
+    if_dbg_else!({stichseq}{_stichseq}): SStichSequenceGameFinished,
     playerparties: &impl TPlayerParties,
     fn_payout_one_player: impl FnOnce(isize, bool)->isize,
 ) -> EnumMap<EPlayerIndex, isize> {
@@ -61,7 +61,7 @@ fn payout_point_based (
             .filter(|epi| playerparties.is_primary_party(*epi))
             .map(|epi| rulestatecache.changing.mapepipointstichcount[epi].n_point)
             .sum::<isize>(),
-        gamefinishedstiche.get().completed_stichs_winner_index(rules)
+        stichseq.get().completed_stichs_winner_index(rules)
             .filter(|&(_stich, epi_winner)| playerparties.is_primary_party(epi_winner))
             .map(|(stich, _epi_winner)| card_points::points_stich(stich))
             .sum::<isize>()
@@ -129,7 +129,7 @@ impl<
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
-        gamefinishedstiche: SStichSequenceGameFinished,
+        stichseq: SStichSequenceGameFinished,
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
         where 
@@ -139,7 +139,7 @@ impl<
             &self.pointstowin,
             rules,
             rulestatecache,
-            gamefinishedstiche,
+            stichseq,
             playerparties,
             /*fn_payout_one_player*/|n_points_primary_party, b_primary_party_wins| {
                 self.payoutparams.n_payout_base
@@ -148,8 +148,8 @@ impl<
                         EPlayerIndex::values()
                             .filter(|epi| b_primary_party_wins==playerparties.is_primary_party(*epi))
                             .map(|epi|  rulestatecache.changing.mapepipointstichcount[epi].n_stich)
-                            .sum::<usize>()==gamefinishedstiche.get().kurzlang().cards_per_player(),
-                        gamefinishedstiche.get().completed_stichs_winner_index(rules)
+                            .sum::<usize>()==stichseq.get().kurzlang().cards_per_player(),
+                        stichseq.get().completed_stichs_winner_index(rules)
                             .all(|(_stich, epi_winner)| b_primary_party_wins==playerparties.is_primary_party(epi_winner))
                     ) {
                         2*self.payoutparams.n_payout_schneider_schwarz // schwarz
@@ -159,7 +159,7 @@ impl<
                         0 // "nothing", i.e. neither schneider nor schwarz
                     }
                 }
-                + self.payoutparams.laufendeparams.payout_laufende(rules, rulestatecache, gamefinishedstiche, playerparties)
+                + self.payoutparams.laufendeparams.payout_laufende(rules, rulestatecache, stichseq, playerparties)
             },
         )
     }
@@ -230,7 +230,7 @@ impl<
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
-        gamefinishedstiche: SStichSequenceGameFinished,
+        stichseq: SStichSequenceGameFinished,
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
         where 
@@ -240,7 +240,7 @@ impl<
             &self.pointstowin,
             rules,
             rulestatecache,
-            gamefinishedstiche,
+            stichseq,
             playerparties,
             /*fn_payout_one_player*/|n_points_primary_party, _b_primary_party_wins| {
                 primary_points_to_normalized_points(n_points_primary_party, &self.pointstowin).abs()
@@ -271,11 +271,11 @@ impl<
 }
 
 impl SLaufendeParams {
-    pub fn payout_laufende<PlayerParties: TPlayerParties>(&self, rules: &impl TRulesNoObj, rulestatecache: &SRuleStateCache, gamefinishedstiche: SStichSequenceGameFinished, playerparties: &PlayerParties) -> isize {
-        let ekurzlang = gamefinishedstiche.get().kurzlang();
+    pub fn payout_laufende<PlayerParties: TPlayerParties>(&self, rules: &impl TRulesNoObj, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, playerparties: &PlayerParties) -> isize {
+        let ekurzlang = stichseq.get().kurzlang();
         debug_assert_eq!(
             SRuleStateCacheFixed::new(
-                gamefinishedstiche.get(),
+                stichseq.get(),
                 /*ahand*/&EPlayerIndex::map_from_fn(|_epi| SHand::new_from_vec(SHandVector::new())),
             ),
             rulestatecache.fixed,
@@ -314,7 +314,7 @@ pub trait TPayoutDecider<PlayerParties> : Sync + Send + 'static + Clone + fmt::D
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
-        gamefinishedstiche: SStichSequenceGameFinished,
+        stichseq: SStichSequenceGameFinished,
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>
         where Rules: TRulesNoObj;

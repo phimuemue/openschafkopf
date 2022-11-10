@@ -325,11 +325,11 @@ pub fn determine_best_card<
             ahand[epi_current].play_card(card);
             stichseq.zugeben(card, rules);
             let output = if ahand.iter().all(|hand| hand.cards().is_empty()) {
-                let gamefinishedstiche = SStichSequenceGameFinished::new(&stichseq);
+                let stichseq_finished = SStichSequenceGameFinished::new(&stichseq);
                 foreachsnapshot.final_output(
-                    gamefinishedstiche,
+                    stichseq_finished,
                     &SRuleStateCache::new_from_gamefinishedstiche(
-                        gamefinishedstiche,
+                        stichseq_finished,
                         |stich| rules.winner_index(stich),
                     ),
                 )
