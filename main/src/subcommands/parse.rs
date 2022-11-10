@@ -175,8 +175,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         file
                     });
                 let mut rulestatecache = SRuleStateCache::new(
-                    &game_csv.stichseq,
-                    &game_csv.ahand,
+                    (&game_csv.ahand, &game_csv.stichseq),
                     game_csv.rules.as_ref(),
                 );
                 for stich in game.stichseq.visible_stichs() {
@@ -212,8 +211,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     debug_assert_eq!(
                         rulestatecache,
                         SRuleStateCache::new(
-                            &game_csv.stichseq,
-                            &game_csv.ahand,
+                            (&game_csv.ahand, &game_csv.stichseq),
                             game_csv.rules.as_ref(),
                         ),
                     );

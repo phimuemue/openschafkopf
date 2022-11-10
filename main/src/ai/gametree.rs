@@ -249,8 +249,7 @@ pub fn explore_snapshots<
             ahand,
             rules,
             &mut SRuleStateCache::new(
-                stichseq,
-                ahand,
+                (ahand, stichseq),
                 rules,
             ),
             stichseq,

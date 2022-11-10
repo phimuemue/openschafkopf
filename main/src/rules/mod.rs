@@ -204,8 +204,7 @@ pub struct SUnregisterStich {
 
 impl SRuleStateCache {
     pub fn new(
-        stichseq: &SStichSequence,
-        ahand: &EnumMap<EPlayerIndex, SHand>,
+        (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         winnerindex: &(impl TWinnerIndex + ?Sized),
     ) -> Self {
         assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
@@ -227,9 +226,11 @@ impl SRuleStateCache {
 
     pub fn new_from_gamefinishedstiche(stichseq: SStichSequenceGameFinished, winnerindex: &(impl TWinnerIndex + ?Sized)) -> SRuleStateCache {
         Self::new(
-            stichseq.get(),
-            &EPlayerIndex::map_from_fn(|_epi|
-                SHand::new_from_vec(SHandVector::new())
+            (
+                &EPlayerIndex::map_from_fn(|_epi|
+                    SHand::new_from_vec(SHandVector::new())
+                ),
+                stichseq.get(),
             ),
             winnerindex,
         )
@@ -309,8 +310,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                         &ahand_check,
                         expensifiers,
                         &SRuleStateCache::new(
-                            &stichseq_check,
-                            &ahand_check,
+                            (&ahand_check, &stichseq_check),
                             /*winnerindex*/self,
                         ),
                     );
