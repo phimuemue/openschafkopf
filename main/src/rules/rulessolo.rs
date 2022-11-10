@@ -528,7 +528,7 @@ pub fn sololike(
         sololike_internal,
         match (oefarbe) {
             None => (STrumpfDeciderNoTrumpf::<SCompareFarbcardsSimple>::default(), ""),
-            Some(efarbe) => (efarbe, efarbe.to_string()),
+            Some(efarbe) => (efarbe, format!("{}-", efarbe)),
         },
         match (esololike) {
             ESoloLike::Solo => (|trumpfdecider_farbe| STrumpfDeciderSolo::new(SStaticSchlagOber{}, STrumpfDeciderSchlag::new(SStaticSchlagUnter{}, trumpfdecider_farbe)), "Solo"),
