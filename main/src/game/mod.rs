@@ -424,9 +424,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
     ) -> Result<SGame, Error> {
         let aveccard = EPlayerIndex::map_from_fn(|epi|
             stichseq.get()
-                .completed_stichs()
-                .iter()
-                .map(|stich| stich[epi])
+                .completed_cards_by(epi)
                 .collect()
         );
         let SExpensifiers{n_stock, doublings, vecstoss} = expensifiers;

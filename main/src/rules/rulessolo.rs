@@ -144,7 +144,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
         #[cfg(debug_assertions)] {
             let mut stichseq_check = SStichSequence::new(stichseq.get().kurzlang());
             let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
-                SHand::new_from_iter(stichseq.get().completed_stichs().iter().map(|stich| stich[epi]))
+                SHand::new_from_iter(stichseq.get().completed_cards_by(epi))
             );
             let playerparties = SPlayerParties13::new(rules.epi);
             for (epi_card, card) in stichseq.get().completed_cards() {
@@ -321,7 +321,7 @@ impl<TrumpfDecider: TTrumpfDecider> TPayoutDecider<SRulesSoloLike<TrumpfDecider,
             playerparties13,
             /*b_primary_party_wins*/cards_valid_for_sie(
                 rules,
-                stichseq.get().completed_stichs().iter().map(|stich| stich[playerparties13.primary_player()]),
+                stichseq.get().completed_cards_by(playerparties13.primary_player()),
                 stichseq.get().kurzlang(),
             )
         )

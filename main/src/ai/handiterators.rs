@@ -136,10 +136,8 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
                 veccard.extend(stich_current.get(epi).copied().into_iter());
                 veccard.extend(
                     stichseq
-                        .completed_stichs()
-                        .iter()
-                        .rev()
-                        .map(|stich| stich[epi]),
+                        .completed_cards_by(epi)
+                        .rev(),
                 );
                 assert_eq!(veccard.len(), stichseq.kurzlang().cards_per_player());
                 SHand::new_from_vec(veccard)

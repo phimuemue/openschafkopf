@@ -346,7 +346,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 #[cfg(debug_assertions)] {
                     let mut stichseq_check = SStichSequence::new(stichseq.get().kurzlang());
                     let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
-                        SHand::new_from_iter(stichseq.get().completed_stichs().iter().map(|stich| stich[epi]))
+                        SHand::new_from_iter(stichseq.get().completed_cards_by(epi))
                     );
                     for (epi_card, card) in stichseq.get().completed_cards() {
                         let b_primary = playerparties.is_primary_party(epi_card);

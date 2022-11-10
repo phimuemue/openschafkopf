@@ -156,6 +156,10 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         self.completed_stichs().iter().flat_map(SStich::iter)
     }
 
+    pub fn completed_cards_by(&self, epi: EPlayerIndex) -> impl DoubleEndedIterator<Item=SCard> + '_ {
+        self.completed_stichs().iter().map(move |stich| stich[epi])
+    }
+
     pub fn kurzlang(&self) -> EKurzLang {
         #[cfg(debug_assertions)]self.assert_invariant();
         self.ekurzlang

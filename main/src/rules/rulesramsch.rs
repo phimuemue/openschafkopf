@@ -112,8 +112,7 @@ impl TRules for SRulesRamsch {
                     unwrap!(vecepi_most_points.iter().copied()
                         .map(|epi| {(
                             epi,
-                            stichseq.get().completed_stichs().iter()
-                                .map(|stich| stich[epi])
+                            stichseq.get().completed_cards_by(epi)
                                 .filter(|card| self.trumpforfarbe(*card).is_trumpf())
                                 .max_by(|card_fst, card_snd| {
                                     assert!(self.trumpforfarbe(*card_fst).is_trumpf());
