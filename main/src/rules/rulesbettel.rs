@@ -72,8 +72,7 @@ impl TPayoutDecider<SPlayerParties13> for SPayoutDeciderBettel {
         &self,
         if_dbg_else!({rules}{_rules}): &Rules,
         rulestatecache: &SRuleStateCache,
-        if_dbg_else!({stichseq}{_stichseq}): &SStichSequence,
-        _ahand: &EnumMap<EPlayerIndex, SHand>,
+        (_ahand, if_dbg_else!({stichseq}{_stichseq})): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>
         where Rules: TRulesNoObj
@@ -159,12 +158,11 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
 
-    fn payouthints(&self, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         self.payoutdecider.payouthints(
             self,
             rulestatecache,
-            stichseq,
-            ahand,
+            tplahandstichseq,
             &SPlayerParties13::new(self.epi),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
              on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),

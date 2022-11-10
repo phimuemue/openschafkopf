@@ -167,8 +167,7 @@ impl<
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
-        stichseq: &SStichSequence,
-        _ahand: &EnumMap<EPlayerIndex, SHand>,
+        (_ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         payouthints_point_based(
@@ -250,8 +249,7 @@ impl<
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
-        stichseq: &SStichSequence,
-        _ahand: &EnumMap<EPlayerIndex, SHand>,
+        (_ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         payouthints_point_based(
@@ -320,8 +318,7 @@ pub trait TPayoutDecider<PlayerParties> : Sync + Send + 'static + Clone + fmt::D
         &self,
         rules: &Rules,
         rulestatecache: &SRuleStateCache,
-        stichseq: &SStichSequence,
-        ahand: &EnumMap<EPlayerIndex, SHand>,
+        tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>
         where Rules: TRulesNoObj;
