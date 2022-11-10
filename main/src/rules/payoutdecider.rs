@@ -218,7 +218,7 @@ pub fn normalized_points_to_points(f_points_normalized: f32, pointstowin: &impl 
 }
 
 impl<
-    Rules: TRulesNoObj,
+    Rules: TRules,
     PointsToWin: TPointsToWin,
     PlayerParties: TPlayerParties,
 > TPayoutDecider<Rules, PlayerParties> for SPayoutDeciderPointsAsPayout<PointsToWin> {
