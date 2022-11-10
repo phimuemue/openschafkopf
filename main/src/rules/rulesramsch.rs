@@ -49,10 +49,6 @@ pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag<
     SStaticSchlagUnter,
     SStaticFarbeHerz>>;
 
-impl TRulesNoObj for SRulesRamsch {
-    impl_rules_trumpf_noobj!(STrumpfDeciderRamsch);
-}
-
 impl TRules for SRulesRamsch {
     impl_rules_trumpf!();
 
