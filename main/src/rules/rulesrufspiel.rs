@@ -9,7 +9,7 @@ use std::{cmp::Ordering, fmt};
 
 pub trait TRufspielPayout : Clone + Sync + fmt::Debug + Send + 'static {
     fn payout(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize>;
-    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
+    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 }
 
 #[derive(Debug, Clone)]
@@ -81,7 +81,7 @@ impl TRufspielPayout for SRufspielPayout {
                 },
         )
     }
-    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         rufspiel_payouthints_no_stock_stoss_doubling(
             &self.payoutdecider,
             rules,
@@ -193,12 +193,11 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         )
     }
 
-    fn payouthints(&self, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         self.rufspielpayout.payouthints(
             self,
             rulestatecache,
-            stichseq,
-            ahand,
+            tplahandstichseq,
             expensifiers,
         )
     }
@@ -374,7 +373,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 }
                 an_payout
             }
-            fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+            fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
                 rufspiel_payouthints_no_stock_stoss_doubling(
                     &self.payoutdecider,
                     rules,
