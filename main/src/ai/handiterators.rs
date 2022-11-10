@@ -77,8 +77,7 @@ fn test_unplayed_cards() {
         [SA, EU, SO, HA],
     ] {
         for card in acard_stich {
-            stichseq
-                .zugeben_custom_winner_index(card, |_stich| EPlayerIndex::EPI0 /*irrelevant*/);
+            stichseq.zugeben(card, &SWinnerIndexIrrelevant);
         }
     }
     let veccard_unplayed = unplayed_cards(
@@ -256,7 +255,6 @@ pub fn forever_rand_hands<'lifetime>(
 #[test]
 fn test_all_possible_hands() {
     use crate::card::card_values::*;
-    let epi_irrelevant = EPlayerIndex::EPI0;
     let mut stichseq = SStichSequence::new(EKurzLang::Lang);
     for acard_stich in [
         [G7, G8, GA, G9],
@@ -265,7 +263,7 @@ fn test_all_possible_hands() {
         [EO, GO, HZ, H8],
     ] {
         for card in acard_stich {
-            stichseq.zugeben_custom_winner_index(card, |_stich| epi_irrelevant);
+            stichseq.zugeben(card, &SWinnerIndexIrrelevant);
         }
     }
     // see combinatorics.ods for computation of n_hand_count
@@ -309,7 +307,7 @@ fn test_all_possible_hands() {
                 .count(),
                 n_hand_count
             );
-            stichseq.zugeben_custom_winner_index(card, |_stich| epi_irrelevant);
+            stichseq.zugeben(card, &SWinnerIndexIrrelevant);
         }
     }
 }

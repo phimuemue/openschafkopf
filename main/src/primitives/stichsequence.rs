@@ -12,6 +12,15 @@ pub trait TWinnerIndex {
     fn winner_index_no_invariant(&self, stich: &SStich) -> EPlayerIndex;
 }
 
+#[cfg(test)]
+pub struct SWinnerIndexIrrelevant;
+#[cfg(test)]
+impl TWinnerIndex for SWinnerIndexIrrelevant {
+    fn winner_index_no_invariant(&self, _stich: &SStich) -> EPlayerIndex {
+        EPlayerIndex::EPI0
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)] // TODO? custom impl Debug
 pub struct SStichSequence {
     vecstich: ArrayVec<SStich, /*TODO: can this be bound to EKurzLang somehow?*/9>,
@@ -90,15 +99,6 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         self.current_stich_no_invariant()
     }
 
-    pub fn zugeben_custom_winner_index(&mut self, card: SCard, fn_winner_index: impl FnOnce(&SStich)->EPlayerIndex) {
-        #[cfg(debug_assertions)]self.assert_invariant();
-        unwrap!(self.vecstich.last_mut()).push(card);
-        if self.current_stich_no_invariant().is_full() {
-            self.vecstich.push(SStich::new(fn_winner_index(self.current_stich_no_invariant())));
-        }
-        #[cfg(debug_assertions)]self.assert_invariant();
-    }
-
     pub fn completed_stichs_custom_winner_index(&self, if_dbg_else!({fn_winner_index}{_fn_winner_index}): impl Fn(&SStich)->EPlayerIndex) -> impl Iterator<Item=(&SStich, EPlayerIndex)> {
         #[cfg(debug_assertions)]self.assert_invariant();
         self.vecstich[0..self.vecstich.len()]
@@ -113,8 +113,13 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         self.completed_stichs_custom_winner_index(move |stich| rules.winner_index(stich))
     }
 
-    pub fn zugeben(&mut self, card: SCard, rules: &(impl TWinnerIndex + ?Sized)) {
-        self.zugeben_custom_winner_index(card, |stich| rules.winner_index(stich));
+    pub fn zugeben(&mut self, card: SCard, winnerindex: &(impl TWinnerIndex + ?Sized)) {
+        #[cfg(debug_assertions)]self.assert_invariant();
+        unwrap!(self.vecstich.last_mut()).push(card);
+        if self.current_stich_no_invariant().is_full() {
+            self.vecstich.push(SStich::new(winnerindex.winner_index(self.current_stich_no_invariant())));
+        }
+        #[cfg(debug_assertions)]self.assert_invariant();
     }
 
     pub fn zugeben_and_restore<R>(&mut self, card: SCard, rules: &(impl TWinnerIndex + ?Sized), func: impl FnOnce(&mut Self)->R) -> R {
