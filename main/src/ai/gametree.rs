@@ -139,7 +139,7 @@ impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
             str_item_id,
             "TODO", // slccard_allowed.len(),
         ).as_bytes());
-        assert!(crate::ai::ahand_vecstich_card_count_is_compatible(stichseq, ahand));
+        assert!(crate::ai::ahand_vecstich_card_count_is_compatible(ahand, stichseq));
         self.write_all(player_table_stichseq(self.epi, stichseq).as_bytes());
         self.write_all(player_table_ahand(self.epi, ahand, self.rules, /*fn_border*/|_card| false).as_bytes());
         self.write_all(b"</tr></table></label>\n");

@@ -233,9 +233,9 @@ impl<'rules> SFilterByOracle<'rules> {
         let mut ahand = EPlayerIndex::map_from_fn(|epi| SHand::new_from_iter(
             stichseq_in_game.cards_from_player(&ahand_in_game[epi], epi)
         ));
-        assert!(crate::ai::ahand_vecstich_card_count_is_compatible(stichseq_in_game, ahand_in_game));
+        assert!(crate::ai::ahand_vecstich_card_count_is_compatible(ahand_in_game, stichseq_in_game));
         let mut stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
-        assert!(crate::ai::ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
+        assert!(crate::ai::ahand_vecstich_card_count_is_compatible(&ahand, &stichseq));
         rules.only_minmax_points_when_on_same_hand(
             &verify_eq!(
                 SRuleStateCacheFixed::new(stichseq_in_game, ahand_in_game),

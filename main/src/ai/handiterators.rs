@@ -129,7 +129,7 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
         let b_valid = {
             let stich_current = stichseq.current_stich();
             assert!(!stich_current.is_full());
-            assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
+            assert!(ahand_vecstich_card_count_is_compatible(ahand, stichseq));
             // hands must not contain other cards preventing farbe/trumpf frei
             let mut ahand_simulate = EPlayerIndex::map_from_fn(|epi| {
                 let mut veccard = ahand[epi].cards().clone();

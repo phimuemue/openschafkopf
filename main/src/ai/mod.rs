@@ -22,7 +22,7 @@ use std::{
 
 plain_enum_mod!(moderemainingcards, ERemainingCards {_1, _2, _3, _4, _5, _6, _7, _8,});
 
-pub fn ahand_vecstich_card_count_is_compatible(stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> bool {
+pub fn ahand_vecstich_card_count_is_compatible(ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) -> bool {
     ahand.map(|hand| hand.cards().len()) == stichseq.remaining_cards_per_hand()
 }
 
@@ -320,7 +320,7 @@ pub fn determine_best_card<
             let mut visualizer = fn_visualizer(i_ahand, &ahand, Some(card)); // do before ahand is modified
             debug_assert!(ahand[epi_current].cards().contains(&card));
             let mut stichseq = stichseq.clone();
-            assert!(ahand_vecstich_card_count_is_compatible(&stichseq, &ahand));
+            assert!(ahand_vecstich_card_count_is_compatible(&ahand, &stichseq));
             ahand[epi_current].play_card(card);
             stichseq.zugeben(card, rules);
             let output = if ahand.iter().all(|hand| hand.cards().is_empty()) {

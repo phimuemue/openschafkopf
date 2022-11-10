@@ -147,7 +147,7 @@ pub struct SRuleStateCacheFixed {
 }
 impl SRuleStateCacheFixed {
     pub fn new(stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) -> Self {
-        debug_assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
+        debug_assert!(ahand_vecstich_card_count_is_compatible(ahand, stichseq));
         let mut mapcardoepi = SCard::map_from_fn(|_| None);
         let mut register_card = |card, epi| {
             assert!(mapcardoepi[card].is_none());
@@ -207,7 +207,7 @@ impl SRuleStateCache {
         (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         winnerindex: &(impl TWinnerIndex + ?Sized),
     ) -> Self {
-        assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
+        assert!(ahand_vecstich_card_count_is_compatible(ahand, stichseq));
         stichseq.completed_stichs_winner_index(winnerindex).fold(
             Self {
                 changing: SRuleStateCacheChanging {
