@@ -172,6 +172,7 @@ impl SRuleStateCacheFixed {
         unwrap!(self.mapcardoepi[card])
     }
 }
+
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub struct SPointStichCount {
     pub n_stich: usize,
@@ -187,11 +188,11 @@ impl Add for SPointStichCount {
     }
 }
 
-
 #[derive(Eq, PartialEq, Debug)]
 pub struct SRuleStateCacheChanging {
     pub mapepipointstichcount: EnumMap<EPlayerIndex, SPointStichCount>,
 }
+
 #[derive(Eq, PartialEq, Debug)]
 pub struct SRuleStateCache { // TODO should we have a cache type per rules? (Would possibly forbid having TRules trait objects.)
     pub fixed: SRuleStateCacheFixed,
