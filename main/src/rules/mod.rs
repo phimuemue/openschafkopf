@@ -206,10 +206,10 @@ impl SRuleStateCache {
     pub fn new(
         stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
-        fn_winner_index: impl Fn(&SStich)->EPlayerIndex,
+        winnerindex: &(impl TWinnerIndex + ?Sized),
     ) -> Self {
         assert!(ahand_vecstich_card_count_is_compatible(stichseq, ahand));
-        stichseq.completed_stichs_custom_winner_index(fn_winner_index).fold(
+        stichseq.completed_stichs_winner_index(winnerindex).fold(
             Self {
                 changing: SRuleStateCacheChanging {
                     mapepipointstichcount: EPlayerIndex::map_from_fn(|_epi| SPointStichCount {
@@ -225,13 +225,13 @@ impl SRuleStateCache {
         )
     }
 
-    pub fn new_from_gamefinishedstiche(stichseq: SStichSequenceGameFinished, fn_winner_index: impl Fn(&SStich)->EPlayerIndex) -> SRuleStateCache {
+    pub fn new_from_gamefinishedstiche(stichseq: SStichSequenceGameFinished, winnerindex: &(impl TWinnerIndex + ?Sized)) -> SRuleStateCache {
         Self::new(
             stichseq.get(),
             &EPlayerIndex::map_from_fn(|_epi|
                 SHand::new_from_vec(SHandVector::new())
             ),
-            fn_winner_index,
+            winnerindex,
         )
     }
 
@@ -278,7 +278,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
             expensifiers,
             debug_verify_eq!(
                 rulestatecache,
-                &SRuleStateCache::new_from_gamefinishedstiche(stichseq, |stich| self.winner_index(stich))
+                &SRuleStateCache::new_from_gamefinishedstiche(stichseq, /*winnerindex*/self)
             ),
         );
         // TODO assert expensifiers consistent with stoss_allowed etc
@@ -311,7 +311,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
                         &SRuleStateCache::new(
                             &stichseq_check,
                             &ahand_check,
-                            |stich| self.winner_index(stich),
+                            /*winnerindex*/self,
                         ),
                     );
                     assert!(

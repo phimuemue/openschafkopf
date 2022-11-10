@@ -177,7 +177,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 let mut rulestatecache = SRuleStateCache::new(
                     &game_csv.stichseq,
                     &game_csv.ahand,
-                    /*fn_winner_index*/|stich| game_csv.rules.winner_index(stich),
+                    game_csv.rules.as_ref(),
                 );
                 for stich in game.stichseq.visible_stichs() {
                     for (epi, &card_zugeben) in stich.iter() {
@@ -214,7 +214,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         SRuleStateCache::new(
                             &game_csv.stichseq,
                             &game_csv.ahand,
-                            /*fn_winner_index*/|stich| game_csv.rules.winner_index(stich),
+                            game_csv.rules.as_ref(),
                         ),
                     );
                 }

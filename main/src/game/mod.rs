@@ -361,7 +361,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Rul
                 &self.expensifiers,
                 &SRuleStateCache::new_from_gamefinishedstiche(
                     stichseq,
-                    |stich| self.rules.winner_index(stich),
+                    self.rules.as_ref(),
                 ),
                 /*b_test_points_as_payout*/if_dbg_else!({true}{()}),
             ),

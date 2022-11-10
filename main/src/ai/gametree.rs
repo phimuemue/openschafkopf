@@ -251,7 +251,7 @@ pub fn explore_snapshots<
             &mut SRuleStateCache::new(
                 stichseq,
                 ahand,
-                |stich| rules.winner_index(stich),
+                rules,
             ),
             stichseq,
             $func_filter_allowed_cards,

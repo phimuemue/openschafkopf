@@ -99,18 +99,14 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         self.current_stich_no_invariant()
     }
 
-    pub fn completed_stichs_custom_winner_index(&self, if_dbg_else!({fn_winner_index}{_fn_winner_index}): impl Fn(&SStich)->EPlayerIndex) -> impl Iterator<Item=(&SStich, EPlayerIndex)> {
+    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, rules: &'lifetime(impl TWinnerIndex + ?Sized)) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
         #[cfg(debug_assertions)]self.assert_invariant();
         self.vecstich[0..self.vecstich.len()]
             .iter()
             .tuple_windows()
             .map(move |(stich_0, stich_1)| {
-                (stich_0, debug_verify_eq!(stich_1.first_playerindex(), fn_winner_index(stich_0)))
+                (stich_0, debug_verify_eq!(stich_1.first_playerindex(), rules.winner_index(stich_0)))
             })
-    }
-
-    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, rules: &'lifetime(impl TWinnerIndex + ?Sized)) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
-        self.completed_stichs_custom_winner_index(move |stich| rules.winner_index(stich))
     }
 
     pub fn zugeben(&mut self, card: SCard, winnerindex: &(impl TWinnerIndex + ?Sized)) {
