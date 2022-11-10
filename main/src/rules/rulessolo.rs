@@ -272,28 +272,27 @@ pub struct SPayoutDeciderSie {
     payoutparams : SPayoutDeciderParams,
 }
 
-fn cards_valid_for_sie_internal<Rules: TRules, ItCard: Iterator<Item=SCard>, FnAllowUnter: Fn(EFarbe)->bool>(
-    rules: &Rules,
-    mut itcard: ItCard,
-    fn_allow_unter: FnAllowUnter,
-) -> bool {
-    itcard.all(|card| {
-        let b_card_valid = match card.schlag() {
-            ESchlag::Ober => true,
-            ESchlag::Unter => fn_allow_unter(card.farbe()),
-            ESchlag::S7 | ESchlag::S8 | ESchlag::S9 | ESchlag::Zehn | ESchlag::Koenig | ESchlag::Ass => false,
-        };
-        assert!(!b_card_valid || rules.trumpforfarbe(card).is_trumpf());
-        b_card_valid
-    })
-}
-
 // TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
 fn cards_valid_for_sie<Rules: TRules, ItCard: Iterator<Item=SCard>>(
     rules: &Rules,
     itcard: ItCard,
     ekurzlang: EKurzLang,
 ) -> bool {
+    fn cards_valid_for_sie_internal<Rules: TRules, ItCard: Iterator<Item=SCard>, FnAllowUnter: Fn(EFarbe)->bool>(
+        rules: &Rules,
+        mut itcard: ItCard,
+        fn_allow_unter: FnAllowUnter,
+    ) -> bool {
+        itcard.all(|card| {
+            let b_card_valid = match card.schlag() {
+                ESchlag::Ober => true,
+                ESchlag::Unter => fn_allow_unter(card.farbe()),
+                ESchlag::S7 | ESchlag::S8 | ESchlag::S9 | ESchlag::Zehn | ESchlag::Koenig | ESchlag::Ass => false,
+            };
+            assert!(!b_card_valid || rules.trumpforfarbe(card).is_trumpf());
+            b_card_valid
+        })
+    }
     match ekurzlang {
         EKurzLang::Lang => cards_valid_for_sie_internal(rules, itcard, /*fn_allow_unter*/|_| true),
         EKurzLang::Kurz => cards_valid_for_sie_internal(rules, itcard, /*fn_allow_unter*/|efarbe|
