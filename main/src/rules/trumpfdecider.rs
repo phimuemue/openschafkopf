@@ -164,13 +164,6 @@ macro_rules! impl_rules_trumpf {() => {
     }
 }}
 
-macro_rules! impl_rules_trumpf_noobj{($trumpfdecider: ty) => {
-    type TrumpfDecider = $trumpfdecider;
-    fn trumpfdecider(&self) -> &Self::TrumpfDecider {
-        &self.trumpfdecider
-    }
-}}
-
 #[test]
 fn test_equivalent_when_on_same_hand_trumpfdecider() {
     type TrumpfDecider = STrumpfDeciderSchlag<

@@ -142,8 +142,8 @@ impl<RufspielPayout: TRufspielPayout> TActivelyPlayableRules for SRulesRufspielG
     }
 }
 
-impl<RufspielPayout: TRufspielPayout> TRulesNoObj for SRulesRufspielGeneric<RufspielPayout> {
-    impl_rules_trumpf_noobj!(STrumpfDeciderRufspiel);
+impl<RufspielPayout: TRufspielPayout> TRulesWithTrumpfDecider for SRulesRufspielGeneric<RufspielPayout> {
+    impl_rules_with_trumpfdecider!(STrumpfDeciderRufspiel);
 }
 
 #[derive(Debug)]

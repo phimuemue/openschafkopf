@@ -1,12 +1,13 @@
 #[macro_use]
 pub mod trumpfdecider;
 #[macro_use]
+pub mod payoutdecider;
+#[macro_use]
 pub mod singleplay;
 pub mod rulesrufspiel;
 // TODORULES implement Hochzeit
 pub mod card_points;
 pub mod parser;
-pub mod payoutdecider;
 pub mod rulesbettel;
 pub mod ruleset;
 pub mod rulesramsch;
@@ -250,11 +251,6 @@ impl SRuleStateCache {
         self.changing.mapepipointstichcount[unregisterstich.epi_winner].n_point = unregisterstich.n_points_epi_winner_before;
         self.changing.mapepipointstichcount[unregisterstich.epi_winner].n_stich -= 1;
     }
-}
-
-pub trait TRulesNoObj : TRules {
-    type TrumpfDecider: trumpfdecider::TTrumpfDecider;
-    fn trumpfdecider(&self) -> &Self::TrumpfDecider;
 }
 
 pub type SIfDebugBool = if_dbg_else!({bool}{()}); // TODO can we get rid of this?

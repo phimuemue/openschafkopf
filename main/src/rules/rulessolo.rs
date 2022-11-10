@@ -425,8 +425,8 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TActi
     }
 }
 
-impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRulesNoObj for SRulesSoloLike<TrumpfDecider, PayoutDecider> {
-    impl_rules_trumpf_noobj!(TrumpfDecider);
+impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRulesWithTrumpfDecider for SRulesSoloLike<TrumpfDecider, PayoutDecider> {
+    impl_rules_with_trumpfdecider!(TrumpfDecider);
 }
 
 impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<TrumpfDecider, PayoutDecider> {
