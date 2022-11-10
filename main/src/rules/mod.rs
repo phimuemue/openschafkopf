@@ -64,7 +64,7 @@ impl SExpensifiers {
             /*n_stock*/0,
             SDoublings::new_full(
                 SStaticEPI0{},
-                EPlayerIndex::map_from_fn(|_epi| false).into_raw(),
+                [false; EPlayerIndex::SIZE],
             ),
             /*vecstoss*/vec![],
         )
