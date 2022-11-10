@@ -14,7 +14,7 @@ pub trait TWinnerIndex {
 
 #[derive(Debug, Clone, PartialEq, Eq)] // TODO? custom impl Debug
 pub struct SStichSequence {
-    vecstich: ArrayVec<SStich, 9>,
+    vecstich: ArrayVec<SStich, /*TODO: can this be bound to EKurzLang somehow?*/9>,
     ekurzlang: EKurzLang,
 }
 
