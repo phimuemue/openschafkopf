@@ -2,8 +2,15 @@ use crate::util::*;
 use arrayvec::ArrayVec;
 use std::fmt;
 use super::*;
-use crate::rules::TRules; // TODO eliminate this
 use itertools::Itertools;
+
+pub trait TWinnerIndex {
+    fn winner_index(&self, stich: &SStich) -> EPlayerIndex {
+        assert!(stich.is_full());
+        self.winner_index_no_invariant(stich)
+    }
+    fn winner_index_no_invariant(&self, stich: &SStich) -> EPlayerIndex;
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)] // TODO? custom impl Debug
 pub struct SStichSequence {
@@ -48,7 +55,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         stichseq
     }
 
-    pub fn new_from_cards(ekurzlang: EKurzLang, itcard: impl Iterator<Item=SCard>, rules: &dyn TRules) -> Self {
+    pub fn new_from_cards(ekurzlang: EKurzLang, itcard: impl Iterator<Item=SCard>, rules: &(impl TWinnerIndex + ?Sized)) -> Self {
         itcard.fold(Self::new(ekurzlang), mutate_return!(|stichseq, card| {
             stichseq.zugeben(card, rules);
         }))
@@ -102,15 +109,15 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
             })
     }
 
-    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, rules: &'lifetime impl TRules) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
+    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, rules: &'lifetime(impl TWinnerIndex + ?Sized)) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
         self.completed_stichs_custom_winner_index(move |stich| rules.winner_index(stich))
     }
 
-    pub fn zugeben(&mut self, card: SCard, rules: &dyn TRules) {
+    pub fn zugeben(&mut self, card: SCard, rules: &(impl TWinnerIndex + ?Sized)) {
         self.zugeben_custom_winner_index(card, |stich| rules.winner_index(stich));
     }
 
-    pub fn zugeben_and_restore<R>(&mut self, card: SCard, rules: &dyn TRules, func: impl FnOnce(&mut Self)->R) -> R {
+    pub fn zugeben_and_restore<R>(&mut self, card: SCard, rules: &(impl TWinnerIndex + ?Sized), func: impl FnOnce(&mut Self)->R) -> R {
         #[cfg(debug_assertions)]self.assert_invariant();
         let n_len = self.vecstich.len();
         assert!(!self.current_stich().is_full());

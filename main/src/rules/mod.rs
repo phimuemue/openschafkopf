@@ -386,11 +386,6 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
         self.all_allowed_cards(stichseq, hand).contains(&card)
     }
 
-    fn winner_index(&self, stich: &SStich) -> EPlayerIndex {
-        assert!(stich.is_full());
-        self.preliminary_winner_index(stich)
-    }
-
     fn preliminary_winner_index(&self, stich: &SStich) -> EPlayerIndex {
         let mut epi_best = stich.epi_first;
         for (epi, card) in stich.iter().skip(1) {
@@ -414,6 +409,17 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
 
     fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Option<Box<dyn TSnapshotCache<SMinMax>>> {
         None
+    }
+}
+
+impl<Rules: TRules + ?Sized> TWinnerIndex for Rules {
+    fn winner_index_no_invariant(&self, stich: &SStich) -> EPlayerIndex {
+        self.preliminary_winner_index(stich)
+    }
+}
+impl<'rules> TWinnerIndex for &'rules dyn TRules {
+    fn winner_index_no_invariant(&self, stich: &SStich) -> EPlayerIndex {
+        self.preliminary_winner_index(stich)
     }
 }
 
