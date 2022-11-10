@@ -215,7 +215,7 @@ fn test_constraint_parser() {
     test_simple_greater_0("7(0)", Schlag(S7, EPI0));
     test_simple_greater_0("7", Const(7));
     test_comparison("ea(1)>e(0)", Card(SCard::new(Eichel, Ass), EPI1), Greater, TrumpfOrFarbe(Farbe(Eichel), EPI0));
-    test_comparison("t(2)=t(3)", TrumpfOrFarbe(Trumpf, EPI2), Equal, TrumpfOrFarbe(Trumpf, EPI3));
+    test_comparison("t(2)==t(3)", TrumpfOrFarbe(Trumpf, EPI2), Equal, TrumpfOrFarbe(Trumpf, EPI3));
     test_comparison("e(0)>3", TrumpfOrFarbe(Farbe(Eichel), EPI0), Greater, Const(3));
     test_comparison("o(0)<3", Schlag(Ober, EPI0), Less, Const(3));
     test_comparison("8(0)<2", Schlag(S8, EPI0), Less, Const(2));
