@@ -475,18 +475,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
     }
 
     pub fn kurzlang(&self) -> EKurzLang {
-        #[cfg(debug_assertions)] {
-            let cards_per_player = |epi| {
-                self.ahand[epi].cards().len()
-                    + self.stichseq.completed_stichs().len()
-                    + match self.stichseq.current_stich().get(epi) {
-                        None => 0,
-                        Some(_card) => 1,
-                    }
-            };
-            assert!(EPlayerIndex::values().all(|epi| cards_per_player(epi)==cards_per_player(EPlayerIndex::EPI0)));
-            assert_eq!(unwrap!(EKurzLang::from_cards_per_player(cards_per_player(EPlayerIndex::EPI0))), self.stichseq.kurzlang());
-        }
+        debug_assert_eq!(self.stichseq.remaining_cards_per_hand(), self.ahand.map(|hand| hand.cards().len()));
         self.stichseq.kurzlang()
     }
 
