@@ -191,10 +191,10 @@ pub struct SPayoutDeciderTout {
     i_prio: isize,
 }
 
-impl<TrumpfDecider: TTrumpfDecider> TPayoutDecider<SRulesSoloLike<TrumpfDecider, Self>, SPlayerParties13> for SPayoutDeciderTout {
+impl SPayoutDeciderTout {
     fn payout(
         &self,
-        rules: &SRulesSoloLike<TrumpfDecider, Self>,
+        rules: &SRulesSoloLike<impl TTrumpfDecider, Self>,
         rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
@@ -213,7 +213,7 @@ impl<TrumpfDecider: TTrumpfDecider> TPayoutDecider<SRulesSoloLike<TrumpfDecider,
 
     fn payouthints(
         &self,
-        if_dbg_else!({rules}{_rules}): &SRulesSoloLike<TrumpfDecider, Self>,
+        if_dbg_else!({rules}{_rules}): &SRulesSoloLike<impl TTrumpfDecider, Self>,
         rulestatecache: &SRuleStateCache,
         (_ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties13: &SPlayerParties13,
@@ -243,7 +243,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
     }
 
     fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
-        TPayoutDecider::payout(self,
+        self.payout(
             rules,
             rulestatecache,
             stichseq,
@@ -252,7 +252,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
     }
 
     fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-        TPayoutDecider::payouthints(self,
+        self.payouthints(
             rules,
             rulestatecache,
             tplahandstichseq,
@@ -304,10 +304,10 @@ fn cards_valid_for_sie<Rules: TRules, ItCard: Iterator<Item=SCard>>(
     }
 }
 
-impl<TrumpfDecider: TTrumpfDecider> TPayoutDecider<SRulesSoloLike<TrumpfDecider, Self>, SPlayerParties13> for SPayoutDeciderSie {
+impl SPayoutDeciderSie {
     fn payout(
         &self,
-        rules: &SRulesSoloLike<TrumpfDecider, Self>,
+        rules: &SRulesSoloLike<impl TTrumpfDecider, Self>,
         _rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
@@ -329,7 +329,7 @@ impl<TrumpfDecider: TTrumpfDecider> TPayoutDecider<SRulesSoloLike<TrumpfDecider,
 
     fn payouthints(
         &self,
-        rules: &SRulesSoloLike<TrumpfDecider, Self>,
+        rules: &SRulesSoloLike<impl TTrumpfDecider, Self>,
         _rulestatecache: &SRuleStateCache,
         (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties13: &SPlayerParties13,
@@ -360,7 +360,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
     }
 
     fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
-        TPayoutDecider::payout(self,
+        self.payout(
             rules,
             rulestatecache,
             stichseq,
@@ -369,7 +369,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
     }
 
     fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-        TPayoutDecider::payouthints(self,
+        self.payouthints(
             rules,
             rulestatecache,
             tplahandstichseq,
