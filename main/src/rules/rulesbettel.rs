@@ -137,10 +137,6 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStic
 
 type STrumpfDeciderBettel = STrumpfDeciderNoTrumpf<SCompareFarbcardsBettel>;
 
-impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRulesNoObj for SRulesBettel<BettelAllAllowedCardsWithinStich> {
-    impl_rules_trumpf_noobj!(STrumpfDeciderBettel);
-}
-
 impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules for SRulesBettel<BettelAllAllowedCardsWithinStich> {
     impl_rules_trumpf!();
     impl_single_play!();
