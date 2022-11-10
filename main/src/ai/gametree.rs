@@ -552,11 +552,10 @@ pub struct SFilterEquivalentCards {
 }
 
 impl SFilterEquivalentCards {
-    fn internal_register_stich(&mut self, stich: &SStich) -> <Self as TFilterAllowedCards>::UnregisterStich {
-        assert!(stich.is_full());
+    fn internal_register_stich(&mut self, stich: SFullStich) -> <Self as TFilterAllowedCards>::UnregisterStich {
         #[cfg(debug_assertions)] let self_original = self.clone();
         // TODO Can we use EPlayerIndex::map_from_fn? (Unsure about evaluation order.)
-        let mut remove_from_chain = |epi| self.cardspartition.remove_from_chain(stich[epi]);
+        let mut remove_from_chain = |epi| self.cardspartition.remove_from_chain(stich.get()[epi]);
         let removed_0 = remove_from_chain(EPlayerIndex::EPI0);
         let removed_1 = remove_from_chain(EPlayerIndex::EPI1);
         let removed_2 = remove_from_chain(EPlayerIndex::EPI2);
@@ -575,7 +574,7 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
     type UnregisterStich = EnumMap<EPlayerIndex, SRemoved>;
     fn register_stich(&mut self, _ahand: &mut EnumMap<EPlayerIndex, SHand>, stichseq: &mut SStichSequence) -> Self::UnregisterStich {
         debug_assert!(stichseq.current_stich().is_empty());
-        self.internal_register_stich(unwrap!(stichseq.completed_stichs().last()))
+        self.internal_register_stich(SFullStich::new(unwrap!(stichseq.completed_stichs().last())))
     }
     fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich) {
         for removed in unregisterstich.into_raw().into_iter().rev() {
@@ -629,7 +628,7 @@ pub fn equivalent_cards_filter(
             n_until_stichseq_len,
         };
         for stich in stichseq.completed_stichs() {
-            filterequivalentcards.internal_register_stich(stich);
+            filterequivalentcards.internal_register_stich(SFullStich::new(stich));
         }
         filterequivalentcards
     }
