@@ -19,7 +19,7 @@ pub trait TForEachSnapshot {
 }
 
 pub trait TSnapshotVisualizer<Output> {
-    fn begin_snapshot(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>);
+    fn begin_snapshot(&mut self, ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence);
     fn end_snapshot(&mut self, output: &Output);
 }
 
@@ -129,7 +129,7 @@ pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, 
 }
 
 impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
-    fn begin_snapshot(&mut self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>) {
+    fn begin_snapshot(&mut self, ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) {
         let str_item_id = format!("{}{}",
             stichseq.count_played_cards(),
             rand::thread_rng().sample_iter(&rand::distributions::Alphanumeric).take(16).join(""), // we simply assume no collisions here TODO uuid
@@ -166,7 +166,7 @@ impl SNoVisualization {
     }
 }
 impl<Output> TSnapshotVisualizer<Output> for SNoVisualization {
-    fn begin_snapshot(&mut self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>) {}
+    fn begin_snapshot(&mut self, _ahand: &EnumMap<EPlayerIndex, SHand>, _stichseq: &SStichSequence) {}
     fn end_snapshot(&mut self, _output: &Output) {}
 }
 
@@ -282,7 +282,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     where
         ForEachSnapshot: TForEachSnapshot,
 {
-    snapshotvisualizer.begin_snapshot(stichseq, ahand);
+    snapshotvisualizer.begin_snapshot(ahand, stichseq);
     let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
     let output = if debug_verify_eq!(
         ahand[epi_current].cards().len() <= 1,
