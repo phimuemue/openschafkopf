@@ -177,7 +177,7 @@ impl SStichTrie {
             cardspartition_completed_cards,
             &{
                 let mut cardspartition_check = unwrap!(rules.only_minmax_points_when_on_same_hand(
-                    &SRuleStateCacheFixed::new(stichseq, ahand),
+                    &SRuleStateCacheFixed::new(ahand, stichseq),
                 )).0;
                 for (_epi, &card) in stichseq.completed_cards() {
                     cardspartition_check.remove_from_chain(card);
@@ -238,8 +238,8 @@ impl<'rules> SFilterByOracle<'rules> {
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(&ahand, &stichseq));
         rules.only_minmax_points_when_on_same_hand(
             &verify_eq!(
-                SRuleStateCacheFixed::new(stichseq_in_game, ahand_in_game),
-                SRuleStateCacheFixed::new(&stichseq, &ahand)
+                SRuleStateCacheFixed::new(ahand_in_game, stichseq_in_game),
+                SRuleStateCacheFixed::new(&ahand, &stichseq)
             )
         ).map(|(cardspartition, playerparties)| {
             let mut slf = Self {
@@ -366,7 +366,7 @@ mod tests {
             let ahand = &EPlayerIndex::map_from_raw(aslccard_hand)
                 .map_into(SHand::new_from_iter);
             let (mut cardspartition, playerparties) = unwrap!(rules.only_minmax_points_when_on_same_hand(
-                &SRuleStateCacheFixed::new(&stichseq, ahand),
+                &SRuleStateCacheFixed::new(ahand, &stichseq),
             ));
             for (_epi, card) in stichseq.completed_cards() {
                 cardspartition.remove_from_chain(*card);

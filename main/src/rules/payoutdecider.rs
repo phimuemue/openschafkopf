@@ -270,8 +270,8 @@ impl SLaufendeParams {
         let ekurzlang = stichseq.get().kurzlang();
         debug_assert_eq!(
             SRuleStateCacheFixed::new(
-                stichseq.get(),
                 /*ahand*/&EPlayerIndex::map_from_fn(|_epi| SHand::new_from_vec(SHandVector::new())),
+                stichseq.get(),
             ),
             rulestatecache.fixed,
         );
