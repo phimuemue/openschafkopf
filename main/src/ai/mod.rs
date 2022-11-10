@@ -370,8 +370,7 @@ pub fn determine_best_card<
 }
 
 pub struct SBranchingFactor{
-    n_lo: usize,
-    n_hi: usize,
+    intvln: SInterval<usize>,
 }
 impl TFilterAllowedCards for SBranchingFactor {
     type UnregisterStich = ();
@@ -380,7 +379,7 @@ impl TFilterAllowedCards for SBranchingFactor {
     fn filter_allowed_cards(&self, _stichseq: &SStichSequence, veccard: &mut SHandVector) {
         assert!(!veccard.is_empty());
         let mut rng = rand::thread_rng();
-        let n = rng.gen_range(self.n_lo..self.n_hi);
+        let n = rng.gen_range(self.intvln[ELoHi::Lo]..self.intvln[ELoHi::Hi]);
         while n<veccard.len() {
             veccard.swap_remove(rng.gen_range(0..veccard.len()));
         }
@@ -389,7 +388,7 @@ impl TFilterAllowedCards for SBranchingFactor {
 impl SBranchingFactor {
     pub fn factory(n_lo: usize, n_hi: usize) -> impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->Self {
         assert!(n_lo < n_hi);
-        move |_,_| Self {n_lo, n_hi}
+        move |_,_| Self {intvln: SInterval::from_raw([n_lo, n_hi])}
     }
 }
 
