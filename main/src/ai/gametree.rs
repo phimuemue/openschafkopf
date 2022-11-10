@@ -307,7 +307,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             }};
             ((), $stichseq: expr) => {{
                 let unregisterstich = rulestatecache.register_stich(
-                    unwrap!($stichseq.completed_stichs().last()),
+                    SFullStich::new(unwrap!($stichseq.completed_stichs().last())),
                     $stichseq.current_stich().first_playerindex(),
                 );
                 let output = foreachsnapshot.final_output(
@@ -349,7 +349,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                         )}}
                         if stichseq.current_stich().is_empty() {
                             let unregisterstich_cache = rulestatecache.register_stich(
-                                unwrap!(stichseq.completed_stichs().last()),
+                                SFullStich::new(unwrap!(stichseq.completed_stichs().last())),
                                 stichseq.current_stich().first_playerindex(),
                             );
                             let output = if let Some(output) = snapshotcache.get(stichseq, rulestatecache) {

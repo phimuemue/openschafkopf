@@ -219,7 +219,7 @@ impl SRuleStateCache {
                 fixed: SRuleStateCacheFixed::new(ahand, stichseq),
             },
             mutate_return!(|rulestatecache, (stich, epi_winner)| {
-                rulestatecache.register_stich(stich, epi_winner);
+                rulestatecache.register_stich(SFullStich::new(stich), epi_winner);
             }),
         )
     }
@@ -236,13 +236,13 @@ impl SRuleStateCache {
         )
     }
 
-    pub fn register_stich(&mut self, stich: &SStich, epi_winner: EPlayerIndex) -> SUnregisterStich {
+    pub fn register_stich(&mut self, stich: SFullStich, epi_winner: EPlayerIndex) -> SUnregisterStich {
         let unregisterstich = SUnregisterStich {
             epi_winner,
             n_points_epi_winner_before: self.changing.mapepipointstichcount[epi_winner].n_point,
         };
         self.changing.mapepipointstichcount[epi_winner].n_stich += 1;
-        self.changing.mapepipointstichcount[epi_winner].n_point += points_stich(stich);
+        self.changing.mapepipointstichcount[epi_winner].n_point += points_stich(stich.get());
         unregisterstich
     }
 
