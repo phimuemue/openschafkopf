@@ -50,7 +50,7 @@ pub struct SPayoutDeciderPointsAsPayout<PointsToWin> {
 
 fn payout_point_based (
     pointstowin: &impl TPointsToWin,
-    if_dbg_else!({rules}{_rules}): &impl TRulesNoObj,
+    if_dbg_else!({rules}{_rules}): &impl TRules,
     rulestatecache: &SRuleStateCache,
     if_dbg_else!({stichseq}{_stichseq}): SStichSequenceGameFinished,
     playerparties: &impl TPlayerParties,
@@ -76,7 +76,7 @@ fn payout_point_based (
 
 fn payouthints_point_based(
     pointstowin: &impl TPointsToWin,
-    if_dbg_else!({rules}{_rules}): &impl TRulesNoObj,
+    if_dbg_else!({rules}{_rules}): &impl TRules,
     rulestatecache: &SRuleStateCache,
     if_dbg_else!({stichseq}{_stichseq}): &SStichSequence,
     playerparties: &impl TPlayerParties,
