@@ -13,7 +13,7 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug + Send {
     fn equivalent_when_on_same_hand(&self, ) -> (EnumMap<EFarbe, Vec<SCard>>, /*veccard_trumpf*/Vec<SCard>) {
         let mut mapefarbeveccard = EFarbe::map_from_fn(|_efarbe| Vec::new());
         let mut veccard_trumpf = Vec::new();
-        for card in <SCard as TPlainEnum>::values() {
+        for card in <SCard as PlainEnum>::values() {
             match self.trumpforfarbe(card) {
                 VTrumpfOrFarbe::Trumpf => veccard_trumpf.push(card),
                 VTrumpfOrFarbe::Farbe(efarbe) => mapefarbeveccard[efarbe].push(card),

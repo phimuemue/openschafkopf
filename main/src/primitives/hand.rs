@@ -1,7 +1,7 @@
 use crate::primitives::{card::*, eplayerindex::*};
 use arrayvec::ArrayVec;
 #[cfg(debug_assertions)]
-use plain_enum::TPlainEnum;
+use plain_enum::PlainEnum;
 use crate::util::*;
 use std::fmt;
 use std::borrow::{Borrow, BorrowMut};

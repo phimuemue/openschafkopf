@@ -173,11 +173,11 @@ pub struct SDetermineBestCardResult<T> {
 
 impl<T> SDetermineBestCardResult<T> {
     pub fn cards_and_ts(&self) -> impl Iterator<Item=(SCard, &T)> where T: std::fmt::Debug {
-        <SCard as TPlainEnum>::values()
+        <SCard as PlainEnum>::values()
             .filter_map(|card| self.mapcardt[card].as_ref().map(|t| (card, t)))
     }
     pub fn cards_with_maximum_value(&self, mut fn_cmp: impl FnMut(&T, &T)->std::cmp::Ordering) -> (Vec<SCard>, &T) where T: std::fmt::Debug {
-        let veccard = <SCard as TPlainEnum>::values()
+        let veccard = <SCard as PlainEnum>::values()
             .filter(|card| self.mapcardt[*card].is_some())
             .max_set_by(|card_lhs, card_rhs| fn_cmp(
                 unwrap!(self.mapcardt[*card_lhs].as_ref()),

@@ -13,7 +13,7 @@ impl std::fmt::Debug for SCardsPartition {
         self.assert_invariant();
         // TODO this is simple, but O(n^2)
         let mut vecveccard = Vec::new();
-        for card in <SCard as TPlainEnum>::values() {
+        for card in <SCard as PlainEnum>::values() {
             let mut veccard = Vec::new();
             let mut card_iterate = card;
             while let Some(card_prev) = self.prev(card_iterate) {
@@ -69,7 +69,7 @@ impl SCardsPartition {
     }
 
     fn assert_invariant(&self) { #[cfg(debug_assertions)] {
-        for card in <SCard as TPlainEnum>::values() {
+        for card in <SCard as PlainEnum>::values() {
             if let Some(card_next) = self.next_no_invariant(card) {
                 assert_eq!(self.mapcardcard_prev[card_next], card);
             }

@@ -200,7 +200,7 @@ fn test_card_ctor() {
     }
 }
 
-impl TPlainEnum for SCard {
+impl PlainEnum for SCard {
     const SIZE : usize = EFarbe::SIZE*ESchlag::SIZE;
     type EnumMapArray<T> = [T; SCard::SIZE];
     unsafe fn from_usize(n: usize) -> Self {
