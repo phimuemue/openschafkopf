@@ -189,7 +189,7 @@ impl TRules for SRulesRamsch {
         }.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
 
-    fn payouthints(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _expensifiers: &SExpensifiers, _rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, (_ahand, _stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _expensifiers: &SExpensifiers, _rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         // TODO sensible payouthints
         EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
     }

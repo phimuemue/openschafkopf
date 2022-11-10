@@ -539,7 +539,7 @@ impl TPruner for SPrunerNothing {
 pub struct SPrunerViaHint;
 impl TPruner for SPrunerViaHint {
     fn pruned_output(params: &SMinReachablePayoutBase<'_, Self>, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
-        let mapepion_payout = params.rules.payouthints(stichseq, ahand, &params.expensifiers, rulestatecache)
+        let mapepion_payout = params.rules.payouthints((ahand, stichseq), &params.expensifiers, rulestatecache)
             .map(|intvlon_payout| intvlon_payout[ELoHi::Lo]);
         if_then_some!(
             mapepion_payout.iter().all(Option::is_some) && 0<unwrap!(mapepion_payout[params.epi]),
