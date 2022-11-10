@@ -1,6 +1,6 @@
 use crate::primitives::*;
 use crate::rules::{
-    payoutdecider::{internal_payout, TPayoutDecider}, trumpfdecider::*, *,
+    payoutdecider::internal_payout, trumpfdecider::*, *,
 };
 use crate::util::*;
 use std::marker::PhantomData;
@@ -47,10 +47,10 @@ struct SPayoutDeciderBettel {
     n_payout_base : isize,
 }
 
-impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TPayoutDecider<SRulesBettel<BettelAllAllowedCardsWithinStich>, SPlayerParties13> for SPayoutDeciderBettel {
+impl SPayoutDeciderBettel {
     fn payout(
         &self,
-        if_dbg_else!({rules}{_rules}): &SRulesBettel<BettelAllAllowedCardsWithinStich>,
+        if_dbg_else!({rules}{_rules}): &SRulesBettel<impl TBettelAllAllowedCardsWithinStich>,
         rulestatecache: &SRuleStateCache,
         if_dbg_else!({stichseq}{_stichseq}): SStichSequenceGameFinished,
         playerparties13: &SPlayerParties13,
@@ -68,7 +68,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TPayou
 
     fn payouthints(
         &self,
-        if_dbg_else!({rules}{_rules}): &SRulesBettel<BettelAllAllowedCardsWithinStich>,
+        if_dbg_else!({rules}{_rules}): &SRulesBettel<impl TBettelAllAllowedCardsWithinStich>,
         rulestatecache: &SRuleStateCache,
         (_ahand, if_dbg_else!({stichseq}{_stichseq})): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties13: &SPlayerParties13,
