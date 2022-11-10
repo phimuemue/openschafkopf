@@ -316,7 +316,7 @@ impl<TrumpfDecider: TTrumpfDecider> TPayoutDecider<SRulesSoloLike<TrumpfDecider,
         internal_payout(
             /*n_payout_single_player*/ (self.payoutparams.n_payout_base
             + {
-                stichseq.get().completed_stichs().len().as_num::<isize>()
+                stichseq.get().kurzlang().cards_per_player().as_num::<isize>()
             } * self.payoutparams.laufendeparams.n_payout_per_lauf) * 4,
             playerparties13,
             /*b_primary_party_wins*/cards_valid_for_sie(
