@@ -528,13 +528,10 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                             str_index_html,
                             r#"<tr>
                                 <td>
-                                    Stock: {}/{}/{}/{}
+                                    Stock: {}
                                 </td>
                             </tr>"#,
-                            gameresult.an_payout[EPlayerIndex::EPI0],
-                            gameresult.an_payout[EPlayerIndex::EPI1],
-                            gameresult.an_payout[EPlayerIndex::EPI2],
-                            gameresult.an_payout[EPlayerIndex::EPI3],
+                            gameresult.an_payout.iter().join("/"),
                         ));
                     }
                 },
