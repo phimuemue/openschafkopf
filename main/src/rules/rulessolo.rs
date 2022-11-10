@@ -191,14 +191,13 @@ pub struct SPayoutDeciderTout {
     i_prio: isize,
 }
 
-impl SPayoutDeciderTout {
-    fn payout(
-        &self,
-        rules: &SRulesSoloLike<impl TTrumpfDecider, Self>,
-        rulestatecache: &SRuleStateCache,
-        stichseq: SStichSequenceGameFinished,
-        playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, isize> {
+impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
+    fn priority(&self) -> VGameAnnouncementPriority {
+        VGameAnnouncementPriority::SoloTout(self.i_prio)
+    }
+
+    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
+        let playerparties13 = &SPlayerParties13::new(rules.epi);
         // TODORULES optionally count schneider/schwarz
         internal_payout(
             /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(rules.trumpfdecider(), rulestatecache, stichseq, playerparties13)) * 2,
@@ -208,16 +207,11 @@ impl SPayoutDeciderTout {
                 stichseq.get().completed_stichs_winner_index(rules)
                     .all(|(_stich, epi_winner)| playerparties13.is_primary_party(epi_winner))
             ),
-        )
+        ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
 
-    fn payouthints(
-        &self,
-        if_dbg_else!({rules}{_rules}): &SRulesSoloLike<impl TTrumpfDecider, Self>,
-        rulestatecache: &SRuleStateCache,
-        (_ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
-        playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, (_ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+        let playerparties13 = &SPlayerParties13::new(rules.epi);
         if debug_verify_eq!(
             rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich < stichseq.completed_stichs().len(),
             !stichseq.completed_stichs_winner_index(rules)
@@ -234,32 +228,9 @@ impl SPayoutDeciderTout {
         } else {
             EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
         }
-    }
-}
-
-impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
-    fn priority(&self) -> VGameAnnouncementPriority {
-        VGameAnnouncementPriority::SoloTout(self.i_prio)
-    }
-
-    fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
-        self.payout(
-            rules,
-            rulestatecache,
-            stichseq,
-            &SPlayerParties13::new(rules.epi),
-        ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
-    }
-
-    fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-        self.payouthints(
-            rules,
-            rulestatecache,
-            tplahandstichseq,
-            &SPlayerParties13::new(rules.epi),
-        ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
-             on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),
-        ))
+            .map(|intvlon_payout| intvlon_payout.map(|on_payout|
+                on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),
+            ))
     }
 
     fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
