@@ -519,7 +519,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
     let mut n_games_done = 0;
     let mut n_games_non_stock = 0;
     let mut n_games_findings = 0;
-    for gamewithdesc in vecgamewithdesc {
+    vecgamewithdesc.into_iter().try_for_each(|gamewithdesc| -> Result<_, failure::Error> {
         if let Ok(gameresult) = gamewithdesc.resgameresult {
             match gameresult.stockorgame {
                 VStockOrT::Stock(_) => {
@@ -593,7 +593,8 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
         }
         n_games_done += 1;
         println!("Total: {n_games_total}. Done: {n_games_done}. Non-stock: {n_games_non_stock}. With findings: {n_games_findings}");
-    }
+        Ok(())
+    })?;
     str_index_html += "</table>";
     str_index_html += "</body></html>";
     write_html(path_analysis.join(format!("{}.html", str_date)), &str_index_html)
