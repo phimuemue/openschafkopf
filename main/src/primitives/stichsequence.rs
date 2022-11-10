@@ -27,6 +27,19 @@ pub struct SStichSequence {
     ekurzlang: EKurzLang,
 }
 
+#[derive(Copy, Clone)]
+pub struct SStichSequenceGameFinished<'stichseq>(&'stichseq SStichSequence);
+
+impl SStichSequenceGameFinished<'_> {
+    pub fn new(stichseq: &SStichSequence) -> SStichSequenceGameFinished {
+        assert!(stichseq.game_finished());
+        SStichSequenceGameFinished(stichseq)
+    }
+    pub fn get(&self) -> &SStichSequence {
+        self.0
+    }
+}
+
 impl std::fmt::Display for SStichSequence {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for stich in self.completed_stichs() {

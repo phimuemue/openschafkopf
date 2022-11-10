@@ -14,6 +14,20 @@ pub struct SHand {
     veccard: SHandVector,
 }
 
+#[derive(Copy, Clone)]
+pub struct SFullHand<'hand>(&'hand [SCard]);
+
+impl<'hand> SFullHand<'hand> {
+    pub fn new(slccard: &[SCard], ekurzlang: EKurzLang) -> SFullHand {
+        assert_eq!(slccard.len(), ekurzlang.cards_per_player());
+        SFullHand(slccard)
+    }
+    pub fn get(self) -> &'hand [SCard] {
+        self.0
+    }
+}
+
+
 #[cfg(debug_assertions)]
 impl std::cmp::PartialEq for SHand {
     fn eq(&self, other: &SHand) -> bool {
