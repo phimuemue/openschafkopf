@@ -112,7 +112,7 @@ fn detect_expensive_all_possible_hands() {
                             fn final_output(&self, _stichseq: SStichSequenceGameFinished, _rulestatecache: &SRuleStateCache) -> Self::Output {
                                 1 // leaf
                             }
-                            fn pruned_output(&self, _stichseq: &SStichSequence, _ahand: &EnumMap<EPlayerIndex, SHand>, _rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
+                            fn pruned_output(&self, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
                                 None
                             }
                             fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
