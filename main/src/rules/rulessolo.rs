@@ -272,7 +272,7 @@ pub struct SPayoutDeciderSie {
     payoutparams : SPayoutDeciderParams,
 }
 
-fn cards_valid_for_sie_internal<Rules: TRulesNoObj, ItCard: Iterator<Item=SCard>, FnAllowUnter: Fn(EFarbe)->bool>(
+fn cards_valid_for_sie_internal<Rules: TRules, ItCard: Iterator<Item=SCard>, FnAllowUnter: Fn(EFarbe)->bool>(
     rules: &Rules,
     mut itcard: ItCard,
     fn_allow_unter: FnAllowUnter,
@@ -289,7 +289,7 @@ fn cards_valid_for_sie_internal<Rules: TRulesNoObj, ItCard: Iterator<Item=SCard>
 }
 
 // TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
-fn cards_valid_for_sie<Rules: TRulesNoObj, ItCard: Iterator<Item=SCard>>(
+fn cards_valid_for_sie<Rules: TRules, ItCard: Iterator<Item=SCard>>(
     rules: &Rules,
     itcard: ItCard,
     ekurzlang: EKurzLang,
