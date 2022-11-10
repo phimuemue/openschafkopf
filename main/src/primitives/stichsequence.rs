@@ -158,7 +158,6 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
             + self.current_stich().size()
     }
 
-
     pub fn remaining_cards_per_hand(&self) -> EnumMap<EPlayerIndex, usize> {
         EPlayerIndex::map_from_fn(|epi| {
             self.kurzlang().cards_per_player()
