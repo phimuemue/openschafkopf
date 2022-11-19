@@ -162,10 +162,10 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
     }
 
     fn equivalent_when_on_same_hand(&self) -> SCardsPartition {
-        use crate::primitives::SCard::*;
+        use crate::primitives::ECard::*;
         debug_verify_eq!(
             SCardsPartition::new_from_slices(&[
-                &[EA, EK, EO, EU, EZ, E9, E8, E7] as &[SCard],
+                &[EA, EK, EO, EU, EZ, E9, E8, E7] as &[ECard],
                 &[GA, GK, GO, GU, GZ, G9, G8, G7],
                 &[HA, HK, HO, HU, HZ, H9, H8, H7],
                 &[SA, SK, SO, SU, SZ, S9, S8, S7],
@@ -175,7 +175,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
                 assert!(veccard_trumpf.is_empty());
                 SCardsPartition::new_from_slices(
                     &mapefarbeveccard.iter()
-                        .map(|veccard| veccard as &[SCard]).collect::<Vec<_>>(),
+                        .map(|veccard| veccard as &[ECard]).collect::<Vec<_>>(),
                 )
             }
         )
@@ -189,9 +189,9 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
 #[derive(Clone, Debug, Default)]
 pub struct SCompareFarbcardsBettel;
 impl TCompareFarbcards for SCompareFarbcardsBettel {
-    fn compare_farbcards(card_fst: SCard, card_snd: SCard) -> Ordering {
+    fn compare_farbcards(card_fst: ECard, card_snd: ECard) -> Ordering {
         assert_eq!(card_fst.farbe(), card_snd.farbe());
-        let get_schlag_value = |card: SCard| { match card.schlag() {
+        let get_schlag_value = |card: ECard| { match card.schlag() {
             ESchlag::S7 => 0,
             ESchlag::S8 => 1,
             ESchlag::S9 => 2,

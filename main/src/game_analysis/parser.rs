@@ -174,7 +174,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         })?;
     fn get_cards<T>(
         node: &Node,
-        fn_card_highlight: impl Fn(SCard, Option<&str>)->T
+        fn_card_highlight: impl Fn(ECard, Option<&str>)->T
     ) -> Result<Vec<T>, failure::Error> {
         node
             .find(Class("card-image"))

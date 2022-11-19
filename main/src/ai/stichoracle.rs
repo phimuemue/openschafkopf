@@ -17,7 +17,7 @@ use itertools::Itertools;
 
 #[derive(Debug, Clone)]
 pub struct SStichTrie {
-    vectplcardtrie: Box<ArrayVec<(SCard, SStichTrie), 8>>, // TODO? improve
+    vectplcardtrie: Box<ArrayVec<(ECard, SStichTrie), 8>>, // TODO? improve
 }
 
 impl SStichTrie {
@@ -27,7 +27,7 @@ impl SStichTrie {
         }
     }
 
-    fn push(&mut self, card: SCard, trie_child: SStichTrie) {
+    fn push(&mut self, card: ECard, trie_child: SStichTrie) {
         self.vectplcardtrie.push((card, trie_child))
     }
 
@@ -101,8 +101,8 @@ impl SStichTrie {
                     fn iterate_chain(
                         cardspartition: &SCardsPartition,
                         veccard: &mut SHandVector,
-                        card_representative: SCard,
-                        mut func: impl FnMut(SCard),
+                        card_representative: ECard,
+                        mut func: impl FnMut(ECard),
                     ) {
                         // TODO avoid backward-forward iteration
                         let mut card_chain = cardspartition.prev_while_contained(card_representative, veccard);
@@ -308,7 +308,7 @@ mod tests {
             TPlayer,
             playerrandom::SPlayerRandom,
         },
-        primitives::{*, card::SCard::*},
+        primitives::{*, card::ECard::*},
         rules::{
             payoutdecider::{SPayoutDeciderParams, SPayoutDeciderPointBased, SLaufendeParams},
             rulesrufspiel::SRulesRufspiel,
@@ -353,9 +353,9 @@ mod tests {
         );
         fn assert_stichoracle(
             rules: &dyn TRules,
-            aslccard_hand: [&[SCard]; EPlayerIndex::SIZE],
-            slccard_stichseq: &[SCard],
-            slcacard_stich: &[[SCard; EPlayerIndex::SIZE]],
+            aslccard_hand: [&[ECard]; EPlayerIndex::SIZE],
+            slccard_stichseq: &[ECard],
+            slcacard_stich: &[[ECard; EPlayerIndex::SIZE]],
         ) {
             let stichseq = SStichSequence::new_from_cards(
                 EKurzLang::Lang,

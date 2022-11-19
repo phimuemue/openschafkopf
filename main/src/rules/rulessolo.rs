@@ -13,7 +13,7 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
     }
     fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize>;
     fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
-    fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>>;
+    fn equivalent_when_on_same_hand(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>>;
 
     fn points_as_payout(&self, _rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Option<(
         Box<dyn TRules>,
@@ -87,7 +87,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
         ))
     }
 
-    fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
+    fn equivalent_when_on_same_hand(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>> {
         equivalent_when_on_same_hand_point_based(slccard_ordered)
     }
 
@@ -180,7 +180,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
         )
     }
 
-    fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
+    fn equivalent_when_on_same_hand(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>> {
         equivalent_when_on_same_hand_point_based(slccard_ordered)
     }
 }
@@ -230,7 +230,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
         }
     }
 
-    fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
+    fn equivalent_when_on_same_hand(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>> {
         vec![slccard_ordered.to_vec()] // In Tout, neighboring cards are equivalent regardless of points_card.
     }
 }
@@ -241,12 +241,12 @@ pub struct SPayoutDeciderSie {
 }
 
 // TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
-fn cards_valid_for_sie<Rules: TRules, ItCard: Iterator<Item=SCard>>(
+fn cards_valid_for_sie<Rules: TRules, ItCard: Iterator<Item=ECard>>(
     rules: &Rules,
     itcard: ItCard,
     ekurzlang: EKurzLang,
 ) -> bool {
-    fn cards_valid_for_sie_internal<Rules: TRules, ItCard: Iterator<Item=SCard>, FnAllowUnter: Fn(EFarbe)->bool>(
+    fn cards_valid_for_sie_internal<Rules: TRules, ItCard: Iterator<Item=ECard>, FnAllowUnter: Fn(EFarbe)->bool>(
         rules: &Rules,
         mut itcard: ItCard,
         fn_allow_unter: FnAllowUnter,
@@ -313,8 +313,8 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
         }
     }
 
-    fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
-        use crate::card::SCard::*;
+    fn equivalent_when_on_same_hand(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>> {
+        use crate::card::ECard::*;
         assert!(matches!(slccard_ordered, // TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
             &[EO, GO, HO, SO, EU, GU, HU, SU]
             | &[HA, HZ, HK, H9, H8, H7]
@@ -388,7 +388,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
             .collect::<Vec<_>>();
         SCardsPartition::new_from_slices(
             &vecveccard.iter()
-                .map(|veccard| veccard as &[SCard]).collect::<Vec<_>>(),
+                .map(|veccard| veccard as &[ECard]).collect::<Vec<_>>(),
         )
     }
 
@@ -479,7 +479,7 @@ pub fn sololike(
 
 #[test]
 fn test_trumpfdecider() {
-    use crate::card::SCard::*;
+    use crate::card::ECard::*;
     assert_eq!(
         STrumpfDeciderSolo::<SStaticFarbeGras>::default()
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
@@ -499,7 +499,7 @@ fn test_trumpfdecider() {
 
 #[test]
 fn test_equivalent_when_on_same_hand_rulessolo() {
-    use crate::card::SCard::*;
+    use crate::card::ECard::*;
     for epi in EPlayerIndex::values() {
         let sololike_internal = |
             oefarbe: Option<EFarbe>,
@@ -529,7 +529,7 @@ fn test_equivalent_when_on_same_hand_rulessolo() {
                 ).into(),
             ).equivalent_when_on_same_hand(),
             SCardsPartition::new_from_slices(&[
-                &[EO, GO, HO, SO] as &[SCard],
+                &[EO, GO, HO, SO] as &[ECard],
                 &[EU, GU, HU, SU],
                 &[H9, H8, H7],
                 &[E9, E8, E7],
@@ -546,7 +546,7 @@ fn test_equivalent_when_on_same_hand_rulessolo() {
                 ).into(),
             ).equivalent_when_on_same_hand(),
             SCardsPartition::new_from_slices(&[
-                &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7] as &[SCard],
+                &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7] as &[ECard],
                 &[EA, EZ, EK, E9, E8, E7],
                 &[GA, GZ, GK, G9, G8, G7],
                 &[SA, SZ, SK, S9, S8, S7],
@@ -560,7 +560,7 @@ fn test_equivalent_when_on_same_hand_rulessolo() {
                 ).into(),
             ).equivalent_when_on_same_hand(),
             SCardsPartition::new_from_slices(&[
-                &[EO, GO, HO, SO, EU, GU, HU, SU,] as &[SCard],
+                &[EO, GO, HO, SO, EU, GU, HU, SU,] as &[ECard],
                 &[HA, HZ, HK, H9, H8, H7],
                 &[EA, EZ, EK, E9, E8, E7],
                 &[GA, GZ, GK, G9, G8, G7],

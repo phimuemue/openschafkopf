@@ -113,7 +113,7 @@ pub fn table(
     determinebestcardresult: &SDetermineBestCardResult<SPayoutStatsPerStrategy>,
     rules: &dyn TRules,
     fn_human_readable_payout: &dyn Fn(f32) -> f32,
-) -> SPayoutStatsTable<SCard> {
+) -> SPayoutStatsTable<ECard> {
     let mut payoutstatstable = internal_table(
         determinebestcardresult.cards_and_ts().collect(),
         /*b_group*/true,

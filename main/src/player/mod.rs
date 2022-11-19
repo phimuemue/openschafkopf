@@ -12,11 +12,11 @@ use std::sync::mpsc;
 pub trait TPlayer {
     fn ask_for_doubling(
         &self,
-        veccard: &[SCard],
+        veccard: &[ECard],
         txb_doubling: mpsc::Sender<bool>,
     );
 
-    fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>);
+    fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<ECard>);
     // TODO: players need information about who already wants to play
     fn ask_for_game<'rules>(
         &self,

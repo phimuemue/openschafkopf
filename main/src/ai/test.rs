@@ -8,7 +8,7 @@ use crate::util::*;
 #[test]
 fn test_determine_best_card() {
     // https://www.sauspiel.de/spiele/785105783
-    use crate::card::SCard::*;
+    use crate::card::ECard::*;
     let mut game = game::SGame::new(
         EPlayerIndex::map_from_raw([
             [EO, HO, EU, SU, HZ, E8, SZ, S7],
@@ -29,7 +29,7 @@ fn test_determine_best_card() {
             ),
         ))),
     );
-    fn play_stichs(game: &mut SGame, slctplepistich: &[(EPlayerIndex, [SCard; 4])]) {
+    fn play_stichs(game: &mut SGame, slctplepistich: &[(EPlayerIndex, [ECard; 4])]) {
         for (epi_stich_first, acard_stich) in slctplepistich.iter() {
             for (epi, card) in EPlayerIndex::values()
                 .map(|epi| epi.wrapping_add(epi_stich_first.to_usize()))
@@ -115,7 +115,7 @@ fn detect_expensive_all_possible_hands() {
                             fn pruned_output(&self, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
                                 None
                             }
-                            fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
+                            fn combine_outputs<ItTplCardOutput: Iterator<Item=(ECard, Self::Output)>>(
                                 &self,
                                 _epi_card: EPlayerIndex,
                                 ittplcardoutput: ItTplCardOutput,

@@ -93,8 +93,8 @@ impl SAi {
     pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer<SMinMax>>(
         &self,
         game: &SGame,
-        fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<SCard>) -> SnapshotVisualizer + std::marker::Sync,
-    ) -> SCard {
+        fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
+    ) -> ECard {
         let rules = game.rules.as_ref();
         let stichseq = &game.stichseq;
         let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
@@ -167,16 +167,16 @@ impl SAi {
 
 #[derive(Clone, Debug)]
 pub struct SDetermineBestCardResult<T> {
-    mapcardt: EnumMap<SCard, Option<T>>,
+    mapcardt: EnumMap<ECard, Option<T>>,
 }
 
 impl<T> SDetermineBestCardResult<T> {
-    pub fn cards_and_ts(&self) -> impl Iterator<Item=(SCard, &T)> where T: std::fmt::Debug {
-        <SCard as PlainEnum>::values()
+    pub fn cards_and_ts(&self) -> impl Iterator<Item=(ECard, &T)> where T: std::fmt::Debug {
+        <ECard as PlainEnum>::values()
             .filter_map(|card| self.mapcardt[card].as_ref().map(|t| (card, t)))
     }
-    pub fn cards_with_maximum_value(&self, mut fn_cmp: impl FnMut(&T, &T)->std::cmp::Ordering) -> (Vec<SCard>, &T) where T: std::fmt::Debug {
-        let veccard = <SCard as PlainEnum>::values()
+    pub fn cards_with_maximum_value(&self, mut fn_cmp: impl FnMut(&T, &T)->std::cmp::Ordering) -> (Vec<ECard>, &T) where T: std::fmt::Debug {
+        let veccard = <ECard as PlainEnum>::values()
             .filter(|card| self.mapcardt[*card].is_some())
             .max_set_by(|card_lhs, card_rhs| fn_cmp(
                 unwrap!(self.mapcardt[*card_lhs].as_ref()),
@@ -293,15 +293,15 @@ pub fn determine_best_card<
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
     fn_snapshotcache: impl Fn(&SStichSequence, &SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
-    fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<SCard>) -> SnapshotVisualizer + std::marker::Sync,
-    fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, SCard) + std::marker::Sync),
+    fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
+    fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, ECard) + std::marker::Sync),
 ) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>>
     where
         ForEachSnapshot::Output: std::fmt::Debug + Send,
 {
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
-        SCard::map_from_fn(|_card| None),
+        ECard::map_from_fn(|_card| None),
     ));
     let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
     itahand
@@ -394,14 +394,14 @@ impl SBranchingFactor {
 fn test_is_compatible_with_game_so_far() {
     use crate::rules::rulesrufspiel::*;
     use crate::rules::payoutdecider::*;
-    use crate::card::SCard::*;
+    use crate::card::ECard::*;
     use crate::game;
     enum VTestAction {
-        PlayStich([SCard; 4]),
+        PlayStich([ECard; 4]),
         AssertFrei(EPlayerIndex, VTrumpfOrFarbe),
         AssertNotFrei(EPlayerIndex, VTrumpfOrFarbe),
     }
-    let test_game = |aacard_hand: [[SCard; 8]; 4], rules: &dyn TRules, vectestaction: Vec<VTestAction>| {
+    let test_game = |aacard_hand: [[ECard; 8]; 4], rules: &dyn TRules, vectestaction: Vec<VTestAction>| {
         let ahand = EPlayerIndex::map_from_raw(aacard_hand)
             .map_into(|acard| acard.into());
         use crate::rules::ruleset::*;
@@ -480,7 +480,7 @@ fn test_is_compatible_with_game_so_far() {
 
 #[test]
 fn test_very_expensive_exploration() { // this kind of abuses the test mechanism to benchmark the performance
-    use crate::card::SCard::*;
+    use crate::card::ECard::*;
     use crate::game::*;
     use crate::rules::{ruleset::*, rulessolo::*, payoutdecider::*};
     use crate::game_analysis::TPayoutDeciderSoloLikeDefault;

@@ -141,7 +141,7 @@ impl SPlayers {
         &mut self,
         oslcstich: Option<&[SStich]>,
         orules: Option<&dyn TRules>,
-        f_cards: impl Fn(EPlayerIndex) -> Vec<SCard>,
+        f_cards: impl Fn(EPlayerIndex) -> Vec<ECard>,
         mut f_active: impl FnMut(EPlayerIndex, &mut Option<STimeoutCmd>)->VMessage,
         mut f_inactive: impl FnMut(&mut SPeer)->VMessage,
         oepi_timeout: Option<EPlayerIndex>,
@@ -153,7 +153,7 @@ impl SPlayers {
                 .map(|peer| peer.str_name.clone())
                 .unwrap_or_else(||"<BOT>".to_string())
         );
-        let communicate = |oepi: Option<EPlayerIndex>, veccard: Vec<SCard>, msg, peer: &mut SPeer| {
+        let communicate = |oepi: Option<EPlayerIndex>, veccard: Vec<ECard>, msg, peer: &mut SPeer| {
             let i_epi_relative = oepi.unwrap_or(EPlayerIndex::EPI0).to_usize();
             let playerindex_server_to_client = |epi: EPlayerIndex| {
                 epi.wrapping_add(EPlayerIndex::SIZE - i_epi_relative)
@@ -185,7 +185,7 @@ impl SPlayers {
                 oepi_timeout: Option<EPlayerIndex>,
             }
             let card_in_stich = |stich: &SStich, epi| {
-                stich.get(playerindex_client_to_server(epi)).map(SCard::to_string)
+                stich.get(playerindex_client_to_server(epi)).map(ECard::to_string)
             };
             unwrap!(peer.txmsg.unbounded_send(
                 unwrap!(serde_json::to_string(&SSiteState::new(

@@ -7,7 +7,7 @@ use combine::{char::*, *};
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum VNumVal {
     Const(usize),
-    Card(SCard, EPlayerIndex),
+    Card(ECard, EPlayerIndex),
     TrumpfOrFarbe(VTrumpfOrFarbe, EPlayerIndex),
     Schlag(ESchlag, EPlayerIndex),
 }
@@ -27,7 +27,7 @@ pub enum VConstraint {
 
 impl VNumVal {
     pub fn eval(&self, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules) -> usize {
-        fn count(hand: &SHand, fn_pred: impl Fn(&SCard)->bool) -> usize {
+        fn count(hand: &SHand, fn_pred: impl Fn(&ECard)->bool) -> usize {
             hand.cards().iter().copied().filter(fn_pred).count()
         }
         match self {
@@ -208,13 +208,13 @@ fn test_constraint_parser() {
         test_internal(&format!("!{}", str_in), Not(Box::new(relation.clone())));
         test_internal(&format!("!!{}", str_in), Not(Box::new(Not(Box::new(relation)))));
     }
-    test_simple_greater_0("ea(1)", Card(SCard::new(Eichel, Ass), EPI1));
+    test_simple_greater_0("ea(1)", Card(ECard::new(Eichel, Ass), EPI1));
     test_simple_greater_0("t(2)", TrumpfOrFarbe(Trumpf, EPI2));
     test_simple_greater_0("e(0)", TrumpfOrFarbe(Farbe(Eichel), EPI0));
     test_simple_greater_0("o(0)", Schlag(Ober, EPI0));
     test_simple_greater_0("7(0)", Schlag(S7, EPI0));
     test_simple_greater_0("7", Const(7));
-    test_comparison("ea(1)>e(0)", Card(SCard::new(Eichel, Ass), EPI1), Greater, TrumpfOrFarbe(Farbe(Eichel), EPI0));
+    test_comparison("ea(1)>e(0)", Card(ECard::new(Eichel, Ass), EPI1), Greater, TrumpfOrFarbe(Farbe(Eichel), EPI0));
     test_comparison("t(2)==t(3)", TrumpfOrFarbe(Trumpf, EPI2), Equal, TrumpfOrFarbe(Trumpf, EPI3));
     test_comparison("e(0)>3", TrumpfOrFarbe(Farbe(Eichel), EPI0), Greater, Const(3));
     test_comparison("o(0)<3", Schlag(Ober, EPI0), Less, Const(3));

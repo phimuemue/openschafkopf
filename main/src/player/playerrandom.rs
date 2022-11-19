@@ -14,13 +14,13 @@ pub struct SPlayerRandom<FnCheckAskForCard> {
 impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard> {
     fn ask_for_doubling(
         &self,
-        _veccard: &[SCard],
+        _veccard: &[ECard],
         txb_doubling: mpsc::Sender<bool>,
     ) {
         unwrap!(txb_doubling.send(rand::random()));
     }
 
-    fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
+    fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<ECard>) {
         (self.fn_check_ask_for_card)(game);
         unwrap!(txcard.send(
             unwrap!(

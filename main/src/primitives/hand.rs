@@ -7,7 +7,7 @@ use std::fmt;
 use std::borrow::{Borrow, BorrowMut};
 use itertools::Itertools;
 
-pub type SHandVector = ArrayVec<SCard, 8>;
+pub type SHandVector = ArrayVec<ECard, 8>;
 
 #[derive(Clone, Debug)]
 pub struct SHand {
@@ -15,14 +15,14 @@ pub struct SHand {
 }
 
 #[derive(Copy, Clone)]
-pub struct SFullHand<'hand>(&'hand [SCard]);
+pub struct SFullHand<'hand>(&'hand [ECard]);
 
 impl<'hand> SFullHand<'hand> {
-    pub fn new(slccard: &[SCard], ekurzlang: EKurzLang) -> SFullHand {
+    pub fn new(slccard: &[ECard], ekurzlang: EKurzLang) -> SFullHand {
         assert_eq!(slccard.len(), ekurzlang.cards_per_player());
         SFullHand(slccard)
     }
-    pub fn get(self) -> &'hand [SCard] {
+    pub fn get(self) -> &'hand [ECard] {
         self.0
     }
 }
@@ -32,7 +32,7 @@ impl<'hand> SFullHand<'hand> {
 impl std::cmp::PartialEq for SHand {
     fn eq(&self, other: &SHand) -> bool {
         let to_enumset = |hand: &SHand| {
-            let mut mapcardb = SCard::map_from_fn(|_| false); // TODO enumset
+            let mut mapcardb = ECard::map_from_fn(|_| false); // TODO enumset
             for card in hand.cards() {
                 verify!(assign_neq(&mut mapcardb[*card], true));
             }
@@ -52,7 +52,7 @@ impl SHand {
             self.veccard.shuffle(&mut rand::thread_rng());
         }
         { // invariants
-            let mut setcardb = SCard::map_from_fn(|_card| false); // TODO enumset
+            let mut setcardb = ECard::map_from_fn(|_card| false); // TODO enumset
             for card in self.veccard.iter() {
                 verify!(assign_neq(&mut setcardb[*card], true));
             }
@@ -67,24 +67,24 @@ impl SHand {
     }
     pub fn new_from_iter<Card>(itcard: impl IntoIterator<Item=Card>) -> SHand
         where
-            Card: TMoveOrClone<SCard>,
+            Card: TMoveOrClone<ECard>,
     {
         Self::new_from_vec(itcard.into_iter().map(TMoveOrClone::move_or_clone).collect())
     }
-    pub fn contains(&self, card_check: SCard) -> bool {
+    pub fn contains(&self, card_check: ECard) -> bool {
         self.contains_pred(|&card| card==card_check)
     }
-    pub fn contains_pred(&self, pred: impl Fn(&SCard)->bool) -> bool {
+    pub fn contains_pred(&self, pred: impl Fn(&ECard)->bool) -> bool {
         self.veccard
             .iter()
             .any(pred)
     }
-    pub fn play_card(&mut self, card: SCard) {
+    pub fn play_card(&mut self, card: ECard) {
         // TODO: assembly for this looks rather inefficient. Possibly replace by simpler 64-bit operations.
         self.veccard.must_find_swap_remove(&card);
         #[cfg(debug_assertions)]self.finalize_and_assert_invariant();
     }
-    pub fn add_card(&mut self, card: SCard) {
+    pub fn add_card(&mut self, card: ECard) {
         debug_assert!(!self.contains(card));
         self.veccard.push(card);
         #[cfg(debug_assertions)]self.finalize_and_assert_invariant();
@@ -96,17 +96,17 @@ impl SHand {
 }
 
 pub trait TCardSorter {
-    fn sort_cards(&self, slccard: &mut [SCard]);
+    fn sort_cards(&self, slccard: &mut [ECard]);
 }
 
-impl<F: Fn(&mut [SCard])> TCardSorter for F {
-    fn sort_cards(&self, slccard: &mut [SCard]) {
+impl<F: Fn(&mut [ECard])> TCardSorter for F {
+    fn sort_cards(&self, slccard: &mut [ECard]) {
         self(slccard)
     }
 }
 
 impl<CardSorter: TCardSorter> TCardSorter for Option<CardSorter> {
-    fn sort_cards(&self, slccard: &mut [SCard]) {
+    fn sort_cards(&self, slccard: &mut [ECard]) {
         if let Some(cardsorter) = self {
             cardsorter.sort_cards(slccard);
         }
@@ -114,14 +114,14 @@ impl<CardSorter: TCardSorter> TCardSorter for Option<CardSorter> {
 }
 
 pub struct SDisplayCardSlice<SlcCard>(SlcCard);
-impl<SlcCard: BorrowMut<[SCard]>> SDisplayCardSlice<SlcCard> {
+impl<SlcCard: BorrowMut<[ECard]>> SDisplayCardSlice<SlcCard> {
     pub fn new(mut slccard: SlcCard, cardsorter: &impl TCardSorter) -> Self {
         cardsorter.sort_cards(slccard.borrow_mut());
         Self(slccard)
     }
 }
 
-impl<SlcCard: Borrow<[SCard]>> fmt::Display for SDisplayCardSlice<SlcCard> {
+impl<SlcCard: Borrow<[ECard]>> fmt::Display for SDisplayCardSlice<SlcCard> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0.borrow().iter().join(" "))
     }
@@ -135,11 +135,11 @@ pub fn display_card_slices(ahand: &EnumMap<EPlayerIndex, SHand>, cardsorter: &im
 
 #[test]
 fn test_hand() {
-    use super::card::SCard::*;
+    use super::card::ECard::*;
     let hand = SHand::new_from_iter([EU, HK, S7]);
     let hand2 = {
         let mut hand2 = hand.clone();
-        hand2.play_card(SCard::new(EFarbe::Herz, ESchlag::Koenig));
+        hand2.play_card(ECard::new(EFarbe::Herz, ESchlag::Koenig));
         hand2
     };
     assert_eq!(hand.cards().len()-1, hand2.cards().len());

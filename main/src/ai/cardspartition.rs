@@ -4,8 +4,8 @@ use crate::primitives::card::*;
 
 #[derive(Clone)]
 pub struct SCardsPartition {
-    mapcardcard_next: EnumMap<SCard, SCard>,
-    mapcardcard_prev: EnumMap<SCard, SCard>,
+    mapcardcard_next: EnumMap<ECard, ECard>,
+    mapcardcard_prev: EnumMap<ECard, ECard>,
 }
 
 impl std::fmt::Debug for SCardsPartition {
@@ -13,7 +13,7 @@ impl std::fmt::Debug for SCardsPartition {
         self.assert_invariant();
         // TODO this is simple, but O(n^2)
         let mut vecveccard = Vec::new();
-        for card in <SCard as PlainEnum>::values() {
+        for card in <ECard as PlainEnum>::values() {
             let mut veccard = Vec::new();
             let mut card_iterate = card;
             while let Some(card_prev) = self.prev(card_iterate) {
@@ -44,22 +44,22 @@ impl PartialEq for SCardsPartition {
 
 #[derive(Debug, Clone)]
 pub struct SRemoved {
-    card: SCard,
-    card_next_old: SCard,
-    card_prev_old: SCard,
+    card: ECard,
+    card_next_old: ECard,
+    card_prev_old: ECard,
 }
 
 impl SCardsPartition {
     pub fn new() -> Self {
         let cardspartition = Self {
-            mapcardcard_next: SCard::map_from_fn(|card| card),
-            mapcardcard_prev: SCard::map_from_fn(|card| card),
+            mapcardcard_next: ECard::map_from_fn(|card| card),
+            mapcardcard_prev: ECard::map_from_fn(|card| card),
         };
         cardspartition.assert_invariant();
         cardspartition
     }
 
-    pub fn new_from_slices(slcslccard: &[&[SCard]]) -> Self {
+    pub fn new_from_slices(slcslccard: &[&[ECard]]) -> Self {
         let mut cardspartition = Self::new();
         for slccard in slcslccard {
             cardspartition.chain(slccard);
@@ -69,7 +69,7 @@ impl SCardsPartition {
     }
 
     fn assert_invariant(&self) { #[cfg(debug_assertions)] {
-        for card in <SCard as PlainEnum>::values() {
+        for card in <ECard as PlainEnum>::values() {
             if let Some(card_next) = self.next_no_invariant(card) {
                 assert_eq!(self.mapcardcard_prev[card_next], card);
             }
@@ -80,7 +80,7 @@ impl SCardsPartition {
         // TODO
     }}
 
-    pub fn chain(&mut self, slccard: &[SCard]) {
+    pub fn chain(&mut self, slccard: &[ECard]) {
         for card in slccard.iter() {
             assert_eq!(self.mapcardcard_next[*card], *card);
         }
@@ -91,7 +91,7 @@ impl SCardsPartition {
         self.assert_invariant();
     }
 
-    pub fn remove_from_chain(&mut self, card: SCard) -> SRemoved {
+    pub fn remove_from_chain(&mut self, card: ECard) -> SRemoved {
         #[cfg(debug_assertions)] let cardspartition_clone = self.clone();
         // TODO can the following use fewer branches?
         let removed = match (self.prev(card), self.next(card)) {
@@ -144,27 +144,27 @@ impl SCardsPartition {
         self.assert_invariant();
     }
 
-    pub fn next(&self, card: SCard) -> Option<SCard> {
+    pub fn next(&self, card: ECard) -> Option<ECard> {
         self.assert_invariant();
         self.next_no_invariant(card)
     }
 
-    pub fn next_no_invariant(&self, card: SCard) -> Option<SCard> {
+    pub fn next_no_invariant(&self, card: ECard) -> Option<ECard> {
         let card_raw_next = self.mapcardcard_next[card];
         if_then_some!(card_raw_next!=card, card_raw_next)
     }
 
-    pub fn prev(&self, card: SCard) -> Option<SCard> {
+    pub fn prev(&self, card: ECard) -> Option<ECard> {
         self.assert_invariant();
         self.prev_no_invariant(card)
     }
 
-    pub fn prev_no_invariant(&self, card: SCard) -> Option<SCard> {
+    pub fn prev_no_invariant(&self, card: ECard) -> Option<ECard> {
         let card_raw_prev = self.mapcardcard_prev[card];
         if_then_some!(card_raw_prev!=card, card_raw_prev)
     }
 
-    fn prev_while(&self, card: SCard, mut fn_pred: impl FnMut(SCard)->bool) -> SCard {
+    fn prev_while(&self, card: ECard, mut fn_pred: impl FnMut(ECard)->bool) -> ECard {
         self.assert_invariant();
         assert!(fn_pred(card));
         let mut card_out = card;
@@ -178,14 +178,14 @@ impl SCardsPartition {
         card_out
     }
 
-    pub fn prev_while_contained(&self, card_begin: SCard, slccard: &[SCard]) -> SCard {
+    pub fn prev_while_contained(&self, card_begin: ECard, slccard: &[ECard]) -> ECard {
         self.prev_while(card_begin, |card| slccard.contains(&card))
     }
 }
 
 #[test]
 fn test_cardspartition() {
-    use crate::primitives::card::SCard::*;
+    use crate::primitives::card::ECard::*;
     let mut cardspartition = SCardsPartition::new();
     cardspartition.chain(&[E7, E8, E9]);
     cardspartition.chain(&[SA, SZ, SK]);

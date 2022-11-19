@@ -19,7 +19,7 @@ pub struct SPlayerComputer {
 impl TPlayer for SPlayerComputer {
     fn ask_for_doubling(
         &self,
-        veccard: &[SCard],
+        veccard: &[ECard],
         txb_doubling: mpsc::Sender<bool>,
     ) {
         txb_doubling.send(
@@ -36,7 +36,7 @@ impl TPlayer for SPlayerComputer {
         ).ok(); // TODO more intelligent doubling strategy
     }
 
-    fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
+    fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<ECard>) {
         txcard.send(self.ai.suggest_card(game, /*fn_visualizer*/SNoVisualization::factory())).ok();
     }
 

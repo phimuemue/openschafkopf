@@ -127,11 +127,11 @@ impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
         }
     }
 
-    pub fn rufsau(&self) -> SCard {
-        SCard::new(self.efarbe, ESchlag::Ass)
+    pub fn rufsau(&self) -> ECard {
+        ECard::new(self.efarbe, ESchlag::Ass)
     }
 
-    fn is_ruffarbe(&self, card: SCard) -> bool {
+    fn is_ruffarbe(&self, card: ECard) -> bool {
         VTrumpfOrFarbe::Farbe(self.efarbe)==self.trumpforfarbe(card)
     }
 }
@@ -202,10 +202,10 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
     }
 
     fn equivalent_when_on_same_hand(&self) -> SCardsPartition {
-        use crate::primitives::SCard::*;
+        use crate::primitives::ECard::*;
         debug_verify_eq!(
             SCardsPartition::new_from_slices(&[
-                &[EO, GO, HO, SO] as &[SCard],
+                &[EO, GO, HO, SO] as &[ECard],
                 &[EU, GU, HU, SU],
                 &[H9, H8, H7],
                 &[E9, E8, E7],
@@ -219,18 +219,18 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     .collect::<Vec<_>>();
                 SCardsPartition::new_from_slices(
                     &vecveccard.iter()
-                        .map(|veccard| veccard as &[SCard]).collect::<Vec<_>>(),
+                        .map(|veccard| veccard as &[ECard]).collect::<Vec<_>>(),
                 )
             }
         )
     }
 
     fn only_minmax_points_when_on_same_hand(&self, rulestatecache: &SRuleStateCacheFixed) -> Option<(SCardsPartition, SPlayerPartiesTable)> {
-        use crate::primitives::SCard::*;
+        use crate::primitives::ECard::*;
         Some((
             debug_verify_eq!(
                 SCardsPartition::new_from_slices(&[
-                    &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7] as &[SCard],
+                    &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7] as &[ECard],
                     &[EA, EZ, EK, E9, E8, E7],
                     &[GA, GZ, GK, G9, G8, G7],
                     &[SA, SZ, SK, S9, S8, S7],
@@ -322,7 +322,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         impl SRufspielPayoutPointsAsPayout {
             fn payout_to_points(
                 epi_active: EPlayerIndex,
-                card_rufsau: SCard,
+                card_rufsau: ECard,
                 stichseq: &SStichSequence,
                 (epi_hand, hand): (EPlayerIndex, &SHand),
                 f_payout: f32,

@@ -37,7 +37,7 @@ impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderTout {
 }
 
 #[cfg(test)]
-pub fn make_stich_vector(vectplepiacard_stich: &[(EPlayerIndex, [SCard; 4])]) -> Vec<SStich> {
+pub fn make_stich_vector(vectplepiacard_stich: &[(EPlayerIndex, [ECard; 4])]) -> Vec<SStich> {
     vectplepiacard_stich.iter()
         .map(|&(epi, acard)| {
             SStich::new_full(epi, acard)
@@ -53,7 +53,7 @@ pub enum EMistake {
 
 #[derive(Clone, Debug)]
 pub struct SAnalysisCardAndPayout {
-    pub veccard: Vec<SCard>,
+    pub veccard: Vec<ECard>,
     pub n_payout: isize,
     pub emistake: EMistake,
 }
@@ -62,7 +62,7 @@ pub struct SAnalysisCardAndPayout {
 pub struct SAnalysisPerCard {
     stichseq: SStichSequence, // TODO this is space-inefficient
     ahand: EnumMap<EPlayerIndex, SHand>, // TODO this is space-inefficient
-    card_played: SCard,
+    card_played: ECard,
     determinebestcardresult_cheating: SDetermineBestCardResult<SPayoutStatsPerStrategy>,
     oanalysisimpr: Option<SAnalysisImprovement>,
 }
@@ -327,7 +327,7 @@ fn generate_analysis_html(
                 str_stich_caption=stich_caption(stichseq),
                 str_card_suggested_cheating = analysisimpr.cardandpayout_cheating.veccard
                     .iter()
-                    .map(SCard::to_string)
+                    .map(ECard::to_string)
                     .join(", "),
                 str_gewinn = match analysisimpr.cardandpayout_cheating.emistake {
                     EMistake::Min => "garantierter Mindestgewinn",
@@ -346,7 +346,7 @@ fn generate_analysis_html(
                     </li>"###,
                     str_card_suggested = cardandpayout.veccard
                         .iter()
-                        .map(SCard::to_string)
+                        .map(ECard::to_string)
                         .join(", "),
                     str_gewinn = match cardandpayout.emistake {
                         EMistake::Min => "garantierter Mindestgewinn",

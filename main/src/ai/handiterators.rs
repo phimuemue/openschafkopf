@@ -31,7 +31,7 @@ impl TNextVecEPI for SNextVecEPIPermutation {
 }
 
 pub struct SHandIterator<NextVecEPI> {
-    veccard_unknown: Vec<SCard>,
+    veccard_unknown: Vec<ECard>,
     vecepi: Vec<EPlayerIndex>,
     ahand_known: EnumMap<EPlayerIndex, SHand>,
     b_valid: bool,
@@ -55,8 +55,8 @@ impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
 pub fn unplayed_cards<'lifetime>(
     stichseq: &'lifetime SStichSequence,
     ahand_fixed: &'lifetime EnumMap<EPlayerIndex, SHand>,
-) -> impl Iterator<Item = SCard> + 'lifetime {
-    SCard::values(stichseq.kurzlang()).filter(move |card| {
+) -> impl Iterator<Item = ECard> + 'lifetime {
+    ECard::values(stichseq.kurzlang()).filter(move |card| {
         !ahand_fixed.iter().any(|hand| hand.contains(*card))
             && !stichseq
                 .visible_cards()
@@ -66,7 +66,7 @@ pub fn unplayed_cards<'lifetime>(
 
 #[test]
 fn test_unplayed_cards() {
-    use crate::card::SCard::*;
+    use crate::card::ECard::*;
     let mut stichseq = SStichSequence::new(EKurzLang::Lang);
     for acard_stich in [
         [G7, G8, GA, G9],
@@ -184,7 +184,7 @@ impl TToAHand for SHand {
             if epi == epi_pri {
                 self.clone()
             } else {
-                SHand::new_from_iter(None::<SCard>)
+                SHand::new_from_iter(None::<ECard>)
             }
         })
     }
@@ -252,7 +252,7 @@ pub fn forever_rand_hands<'lifetime>(
 
 #[test]
 fn test_all_possible_hands() {
-    use crate::card::SCard::*;
+    use crate::card::ECard::*;
     let mut stichseq = SStichSequence::new(EKurzLang::Lang);
     for acard_stich in [
         [G7, G8, GA, G9],

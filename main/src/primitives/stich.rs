@@ -2,7 +2,7 @@ use crate::primitives::*;
 use crate::util::*;
 use std::fmt;
 
-pub type SStich = SPlayersInRound<SCard, EPlayerIndex>;
+pub type SStich = SPlayersInRound<ECard, EPlayerIndex>;
 
 #[derive(Copy, Clone)]
 pub struct SFullStich<'stich>(&'stich SStich);
@@ -38,7 +38,7 @@ impl fmt::Display for SStich {
 fn test_stich() {
     // TODO? use quicktest or similar
     {
-        use crate::card::SCard::*;
+        use crate::card::ECard::*;
         let acard = [E7, E8, E9, EK];
         for epi_first in EPlayerIndex::values() {
             for n_size in 0..5 {
@@ -58,10 +58,10 @@ fn test_stich() {
     }
     {
         let mut stich = SStich::new(EPlayerIndex::EPI2);
-        stich.push(SCard::new(EFarbe::Eichel, ESchlag::Unter));
-        stich.push(SCard::new(EFarbe::Gras, ESchlag::S7));
-        assert!(stich[EPlayerIndex::EPI2]==SCard::new(EFarbe::Eichel, ESchlag::Unter));
-        assert!(stich[EPlayerIndex::EPI3]==SCard::new(EFarbe::Gras, ESchlag::S7));
+        stich.push(ECard::new(EFarbe::Eichel, ESchlag::Unter));
+        stich.push(ECard::new(EFarbe::Gras, ESchlag::S7));
+        assert!(stich[EPlayerIndex::EPI2]==ECard::new(EFarbe::Eichel, ESchlag::Unter));
+        assert!(stich[EPlayerIndex::EPI3]==ECard::new(EFarbe::Gras, ESchlag::S7));
         assert_eq!(stich.iter().count(), 2);
     }
 }

@@ -68,7 +68,7 @@ impl EKurzLang {
         }
     }
 
-    pub fn supports_card(self, card: SCard) -> bool {
+    pub fn supports_card(self, card: ECard) -> bool {
         match self {
             Self::Lang => true,
             Self::Kurz => card.schlag()!=ESchlag::S7 && card.schlag()!=ESchlag::S8,
@@ -77,14 +77,14 @@ impl EKurzLang {
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Hash)]
-pub enum SCard {
+pub enum ECard {
     EA, EZ, EK, EO, EU, E9, E8, E7,
     GA, GZ, GK, GO, GU, G9, G8, G7,
     HA, HZ, HK, HO, HU, H9, H8, H7,
     SA, SZ, SK, SO, SU, S9, S8, S7,
 }
 
-impl serde::Serialize for SCard {
+impl serde::Serialize for ECard {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: Serializer,
@@ -93,8 +93,8 @@ impl serde::Serialize for SCard {
     }
 }
 
-impl<'de> serde::Deserialize<'de> for SCard {
-    fn deserialize<D>(deserializer: D) -> Result<SCard, D::Error>
+impl<'de> serde::Deserialize<'de> for ECard {
+    fn deserialize<D>(deserializer: D) -> Result<ECard, D::Error>
         where
             D: serde::Deserializer<'de>,
     {
@@ -110,7 +110,7 @@ impl<'de> serde::Deserialize<'de> for SCard {
 fn test_serialization() {
     macro_rules! test_card(($($card:ident)*) => {
         $(
-            let card = SCard::$card;
+            let card = ECard::$card;
             serde_test::assert_tokens(&card, &[
                 serde_test::Token::Str(stringify!($card)),
             ]);
@@ -124,13 +124,13 @@ fn test_serialization() {
     );
 }
 
-impl fmt::Debug for SCard {
+impl fmt::Debug for ECard {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(self, f)
     }
 }
 
-impl fmt::Display for SCard {
+impl fmt::Display for ECard {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}{}", 
             match self.farbe() {
@@ -153,8 +153,8 @@ impl fmt::Display for SCard {
     }
 }
 
-impl SCard {
-    pub const fn new(efarbe : EFarbe, eschlag : ESchlag) -> SCard {
+impl ECard {
+    pub const fn new(efarbe : EFarbe, eschlag : ESchlag) -> ECard {
         unsafe {
             std::mem::transmute(efarbe as u8 * (ESchlag::SIZE as u8) + eschlag as u8)
         }
@@ -165,7 +165,7 @@ impl SCard {
     pub const fn schlag(self) -> ESchlag {
         unsafe{ std::mem::transmute(self as usize % ESchlag::SIZE) } // TODO(plain_enum) from_usize/to_usize const
     }
-    pub fn values(ekurzlang: EKurzLang) -> impl Iterator<Item=SCard> {
+    pub fn values(ekurzlang: EKurzLang) -> impl Iterator<Item=ECard> {
         use itertools::iproduct;
         iproduct!(
             EFarbe::values(),
@@ -178,7 +178,7 @@ impl SCard {
                 },
                 EKurzLang::Lang => (),
             }
-            Some(SCard::new(efarbe, eschlag))
+            Some(ECard::new(efarbe, eschlag))
         })
     }
 }
@@ -193,16 +193,16 @@ fn test_farbe_schlag_enumerators() {
 fn test_card_ctor() {
     macro_rules! explicit_test{($($efarbe:ident, $eschlag:ident, $card:ident)+) => {{
         $({
-            const CARD : SCard = SCard::new(EFarbe::$efarbe, ESchlag::$eschlag);
-            assert_eq!(CARD, SCard::$card);
+            const CARD : ECard = ECard::new(EFarbe::$efarbe, ESchlag::$eschlag);
+            assert_eq!(CARD, ECard::$card);
             const EFARBE : EFarbe = CARD.farbe();
             assert_eq!(EFARBE, EFarbe::$efarbe);
             const ESCHLAG : ESchlag = CARD.schlag();
             assert_eq!(ESCHLAG, ESchlag::$eschlag);
         })+
         $({
-            let card = SCard::new(EFarbe::$efarbe, ESchlag::$eschlag);
-            assert_eq!(card, SCard::$card);
+            let card = ECard::new(EFarbe::$efarbe, ESchlag::$eschlag);
+            assert_eq!(card, ECard::$card);
             assert_eq!(card.farbe(), EFarbe::$efarbe);
             assert_eq!(card.schlag(), ESchlag::$eschlag);
         })+
@@ -243,9 +243,9 @@ fn test_card_ctor() {
     )
 }
 
-impl PlainEnum for SCard {
+impl PlainEnum for ECard {
     const SIZE : usize = EFarbe::SIZE*ESchlag::SIZE;
-    type EnumMapArray<T> = [T; SCard::SIZE];
+    type EnumMapArray<T> = [T; ECard::SIZE];
     unsafe fn from_usize(n: usize) -> Self {
         debug_assert!(n < Self::SIZE);
         std::mem::transmute(n.as_num::<u8>())

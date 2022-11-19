@@ -49,7 +49,7 @@ fn choose_ruleset_or_rules<'t, T>(
 impl TPlayer for SPlayerHuman {
     fn ask_for_doubling(
         &self,
-        veccard: &[SCard],
+        veccard: &[ECard],
         txb_doubling: mpsc::Sender<bool>,
     ) {
         let ab_doubling = [false, true];
@@ -72,7 +72,7 @@ impl TPlayer for SPlayerHuman {
         )))
     }
 
-    fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<SCard>) {
+    fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<ECard>) {
         skui::print_stichseq(unwrap!(game.current_playable_stich().current_playerindex()), &game.stichseq);
         let epi = unwrap!(game.which_player_can_do_something()).0;
         let veccard = {

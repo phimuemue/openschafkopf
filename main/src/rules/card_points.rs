@@ -1,6 +1,6 @@
 use crate::primitives::*;
 
-pub fn points_card(card: SCard) -> isize {
+pub fn points_card(card: ECard) -> isize {
     // by default, we assume that we use the usual points
     match card.schlag() {
         ESchlag::S7 | ESchlag::S8 | ESchlag::S9 => 0,

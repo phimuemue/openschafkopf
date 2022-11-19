@@ -36,7 +36,7 @@ pub struct SPayoutDeciderPointBased<PointsToWin> {
 }
 
 // TODO this should probably be a method on the pointbased TPayoutDecider impementations
-pub fn equivalent_when_on_same_hand_point_based(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
+pub fn equivalent_when_on_same_hand_point_based(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>> {
     slccard_ordered.iter()
         .group_by(|card| card_points::points_card(**card)).into_iter()
         .map(|(_n_points, grpcard)| grpcard.copied().collect())
@@ -282,7 +282,7 @@ impl SLaufendeParams {
             ),
             rulestatecache.fixed,
         );
-        let laufende_relevant = |card: SCard| { // TODO should we make this part of SRuleStateCacheFixed?
+        let laufende_relevant = |card: ECard| { // TODO should we make this part of SRuleStateCacheFixed?
             playerparties.is_primary_party(rulestatecache.fixed.who_has_card(card))
         };
         let mut itcard_trumpf_descending = trumpfdecider.trumpfs_in_descending_order();

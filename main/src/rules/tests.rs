@@ -1,7 +1,7 @@
 use crate::game::*;
 use crate::rules::ruleset::SStossParams;
 use crate::game_analysis::*;
-use crate::primitives::{card::SCard::*, *};
+use crate::primitives::{card::ECard::*, *};
 use crate::rules::{
     payoutdecider::*, rulesbettel::*, rulesramsch::*, rulesrufspiel::*, rulessolo::*, *,
 };
@@ -49,12 +49,12 @@ fn internal_test_rules(
 pub trait TCardArrayKurzLang {
     fn to_hand_vector(&self) -> SHandVector; // TODO take self instead of &self
 }
-impl TCardArrayKurzLang for [SCard; 6] {
+impl TCardArrayKurzLang for [ECard; 6] {
     fn to_hand_vector(&self) -> SHandVector {
         self.iter().copied().collect()
     }
 }
-impl TCardArrayKurzLang for [SCard; 8] {
+impl TCardArrayKurzLang for [ECard; 8] {
     fn to_hand_vector(&self) -> SHandVector {
         self.iter().copied().collect()
     }
@@ -66,7 +66,7 @@ pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLang>(
     aacard_hand: [CardArrayKurzLang; 4],
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
-    vectplepiacard_stich: &[(EPlayerIndex, [SCard; 4])],
+    vectplepiacard_stich: &[(EPlayerIndex, [ECard; 4])],
     an_payout: [isize; 4],
 ) {
     internal_test_rules(
@@ -88,7 +88,7 @@ pub fn test_rules_manual(
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
     n_stock: isize,
-    vectplepiacard_stich: &[(EPlayerIndex, [SCard; 4])],
+    vectplepiacard_stich: &[(EPlayerIndex, [ECard; 4])],
     (an_payout, n_stock_payout): ([isize; 4], isize),
 ) {
     let vecstich = make_stich_vector(vectplepiacard_stich);

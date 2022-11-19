@@ -10,7 +10,7 @@ pub struct SAIRufspiel<'rules, RufspielPayout: TRufspielPayout> {
 }
 
 impl<RufspielPayout: TRufspielPayout> TRuleSpecificAI for SAIRufspiel<'_, RufspielPayout> {
-    fn suggest_card(&self, game: &SGame) -> Option<SCard> {
+    fn suggest_card(&self, game: &SGame) -> Option<ECard> {
         let epi = unwrap!(game.which_player_can_do_something()).0;
         let rules = self.rules;
         // suchen

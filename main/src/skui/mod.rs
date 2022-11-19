@@ -39,7 +39,7 @@ fn wprint(ncwin: ncurses::WINDOW, s: &str) {
     ncurses::wrefresh(ncwin);
 }
 
-fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: SCard) {
+fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: ECard) {
     let tplcolorcolor = { match card.farbe() {
         EFarbe::Eichel => (ncurses::COLOR_YELLOW, ncurses::COLOR_BLACK),
         EFarbe::Gras => (ncurses::COLOR_GREEN, ncurses::COLOR_BLACK),
@@ -266,7 +266,7 @@ pub fn ask_for_alternative<'vect, T>(
     })
 }
 
-pub fn print_hand(veccard: &[SCard], oi_card: Option<usize>) {
+pub fn print_hand(veccard: &[ECard], oi_card: Option<usize>) {
     do_in_window(&VSkUiWindow::Hand, |ncwin| {
         let is_oi_card = |i| { oi_card.map_or(false, |i_card| i==i_card) };
         for (i, card) in veccard.iter().enumerate() {

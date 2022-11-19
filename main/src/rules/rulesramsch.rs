@@ -190,10 +190,10 @@ impl TRules for SRulesRamsch {
     }
 
     fn equivalent_when_on_same_hand(&self) -> SCardsPartition {
-        use crate::primitives::SCard::*;
+        use crate::primitives::ECard::*;
         debug_verify_eq!(
             SCardsPartition::new_from_slices(&[
-                &[EO, GO, HO, SO] as &[SCard],
+                &[EO, GO, HO, SO] as &[ECard],
                 &[EU, GU, HU, SU],
                 &[H9, H8, H7],
                 &[E9, E8, E7],
@@ -207,7 +207,7 @@ impl TRules for SRulesRamsch {
                     .collect::<Vec<_>>();
                 SCardsPartition::new_from_slices(
                     &vecveccard.iter()
-                        .map(|veccard| veccard as &[SCard]).collect::<Vec<_>>(),
+                        .map(|veccard| veccard as &[ECard]).collect::<Vec<_>>(),
                 )
             }
         )

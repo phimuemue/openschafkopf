@@ -87,7 +87,7 @@ pub fn rules_to_gamephaseaction<'retval, 'rules : 'retval, 'hand : 'retval>(slcr
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum VGameAction {
     Stoss,
-    Zugeben(SCard),
+    Zugeben(ECard),
 }
 
 pub type VGamePhaseAction = VGamePhaseGeneric<

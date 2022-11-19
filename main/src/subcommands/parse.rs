@@ -53,7 +53,7 @@ macro_rules! card_neural_network_mapping(($macro:ident) => {
     )
 });
 
-fn card_to_neural_network_input(ocard: Option<SCard>) -> usize {
+fn card_to_neural_network_input(ocard: Option<ECard>) -> usize {
     if let Some(card) = ocard {
         macro_rules! inner(($(($efarbe:ident, $eschlag:ident, $n:expr))*) => {
             match (card.farbe(), card.schlag()) {
@@ -66,11 +66,11 @@ fn card_to_neural_network_input(ocard: Option<SCard>) -> usize {
     }
 }
 
-fn neural_network_input_to_card(n: usize) -> Result<Option<SCard>, &'static str> {
+fn neural_network_input_to_card(n: usize) -> Result<Option<ECard>, &'static str> {
     macro_rules! inner(($(($efarbe:ident, $eschlag:ident, $n:expr))*) => {
         match n {
             0 => Ok(None),
-            $($n => Ok(Some(SCard::new(EFarbe::$efarbe, ESchlag::$eschlag))),)*
+            $($n => Ok(Some(ECard::new(EFarbe::$efarbe, ESchlag::$eschlag))),)*
             _/*TODORUST 33..=usize::MAX*/ => Err("Unknown neural network input index"),
         }
     });
@@ -90,10 +90,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     >(
         wrtr: &mut impl std::io::Write,
         oepi_active: Option<PlayerIndexActive>,
-        fn_card_in_hand: impl Fn(usize, SCard) -> CardIndicatorVariable,
-        fn_card_allowed: impl Fn(usize, SCard) -> CardIndicatorVariable,
+        fn_card_in_hand: impl Fn(usize, ECard) -> CardIndicatorVariable,
+        fn_card_allowed: impl Fn(usize, ECard) -> CardIndicatorVariable,
         stichseq: &SStichSequence,
-        fn_card_stichseq: impl Fn(usize, Option<SCard>) -> CardStichSeq,
+        fn_card_stichseq: impl Fn(usize, Option<ECard>) -> CardStichSeq,
         fn_epi_stichseq: impl Fn(usize, Option<EPlayerIndex>) -> PlayerIndexStichSeq,
         fn_points_for_player: impl Fn(EPlayerIndex) -> PointsPerPlayer,
         fn_stichs_for_player: impl Fn(EPlayerIndex) -> StichsPerPlayer,
@@ -106,7 +106,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         fn write_indicator_vars<CardIndicatorVariable: std::fmt::Display>(
             wrtr: &mut impl std::io::Write,
             n_cards_total: usize,
-            fn_card_indicator_variable: impl Fn(usize, SCard)->CardIndicatorVariable,
+            fn_card_indicator_variable: impl Fn(usize, ECard)->CardIndicatorVariable,
         ) {
             for i_card_0_based in 0..n_cards_total {
                 let i_card = i_card_0_based + 1;

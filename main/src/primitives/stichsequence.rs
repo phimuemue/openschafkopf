@@ -73,7 +73,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         stichseq
     }
 
-    pub fn new_from_cards(ekurzlang: EKurzLang, itcard: impl Iterator<Item=SCard>, winnerindex: &(impl TWinnerIndex + ?Sized)) -> Self {
+    pub fn new_from_cards(ekurzlang: EKurzLang, itcard: impl Iterator<Item=ECard>, winnerindex: &(impl TWinnerIndex + ?Sized)) -> Self {
         itcard.fold(Self::new(ekurzlang), mutate_return!(|stichseq, card| {
             stichseq.zugeben(card, winnerindex);
         }))
@@ -118,7 +118,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
             })
     }
 
-    pub fn zugeben(&mut self, card: SCard, winnerindex: &(impl TWinnerIndex + ?Sized)) {
+    pub fn zugeben(&mut self, card: ECard, winnerindex: &(impl TWinnerIndex + ?Sized)) {
         #[cfg(debug_assertions)]self.assert_invariant();
         unwrap!(self.vecstich.last_mut()).push(card);
         if self.current_stich_no_invariant().is_full() {
@@ -127,7 +127,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         #[cfg(debug_assertions)]self.assert_invariant();
     }
 
-    pub fn zugeben_and_restore<R>(&mut self, card: SCard, winnerindex: &(impl TWinnerIndex + ?Sized), func: impl FnOnce(&mut Self)->R) -> R {
+    pub fn zugeben_and_restore<R>(&mut self, card: ECard, winnerindex: &(impl TWinnerIndex + ?Sized), func: impl FnOnce(&mut Self)->R) -> R {
         #[cfg(debug_assertions)]self.assert_invariant();
         let n_len = self.vecstich.len();
         assert!(!self.current_stich().is_full());
@@ -148,15 +148,15 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         &self.vecstich[0..self.vecstich.len().min(self.ekurzlang.cards_per_player())]
     }
     
-    pub fn visible_cards(&self) -> impl Iterator<Item=(EPlayerIndex, &SCard)> {
+    pub fn visible_cards(&self) -> impl Iterator<Item=(EPlayerIndex, &ECard)> {
         self.visible_stichs().iter().flat_map(SStich::iter)
     }
 
-    pub fn completed_cards(&self) -> impl Iterator<Item=(EPlayerIndex, &SCard)> {
+    pub fn completed_cards(&self) -> impl Iterator<Item=(EPlayerIndex, &ECard)> {
         self.completed_stichs().iter().flat_map(SStich::iter)
     }
 
-    pub fn completed_cards_by(&self, epi: EPlayerIndex) -> impl DoubleEndedIterator<Item=SCard> + '_ {
+    pub fn completed_cards_by(&self, epi: EPlayerIndex) -> impl DoubleEndedIterator<Item=ECard> + '_ {
         self.completed_stichs().iter().map(move |stich| stich[epi])
     }
 
@@ -182,7 +182,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         })
     }
 
-    pub fn cards_from_player<'slf>(&'slf self, hand: &'slf SHand, epi: EPlayerIndex) -> impl Iterator<Item=&'slf SCard> {
+    pub fn cards_from_player<'slf>(&'slf self, hand: &'slf SHand, epi: EPlayerIndex) -> impl Iterator<Item=&'slf ECard> {
         self.visible_cards()
             .filter_map(move |(epi_card, card)| if_then_some!(epi==epi_card, card))
             .chain(hand.cards().iter())

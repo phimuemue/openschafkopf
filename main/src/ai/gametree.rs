@@ -11,7 +11,7 @@ pub trait TForEachSnapshot {
     type Output;
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output;
     fn pruned_output(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<Self::Output>;
-    fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
+    fn combine_outputs<ItTplCardOutput: Iterator<Item=(ECard, Self::Output)>>(
         &self,
         epi_card: EPlayerIndex,
         ittplcardoutput: ItTplCardOutput,
@@ -24,7 +24,7 @@ pub trait TSnapshotVisualizer<Output> {
 }
 
 
-pub fn visualizer_factory<'rules>(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<SCard>) -> SForEachSnapshotHTMLVisualizer<'rules> {
+pub fn visualizer_factory<'rules>(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SForEachSnapshotHTMLVisualizer<'rules> {
     unwrap!(std::fs::create_dir_all(&path));
     unwrap!(crate::game_analysis::generate_html_auxiliary_files(&path));
     move |i_ahand, ahand, ocard| {
@@ -80,7 +80,7 @@ impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
     }
 }
 
-pub fn output_card(card: SCard, b_border: bool) -> String {
+pub fn output_card(card: ECard, b_border: bool) -> String {
     format!(r#"<div class="card-image {}{}"></div>"#,
         card,
         if b_border {" border"} else {""},
@@ -115,7 +115,7 @@ pub fn player_table_stichseq(epi_self: EPlayerIndex, stichseq: &SStichSequence) 
     }).format("\n"))
 }
 
-pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules, fn_border: impl Fn(SCard)->bool) -> String {
+pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules, fn_border: impl Fn(ECard)->bool) -> String {
     format!(
         "<td>{}</td>\n",
         player_table(epi_self, |epi| {
@@ -161,7 +161,7 @@ impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
 
 pub struct SNoVisualization;
 impl SNoVisualization {
-    pub fn factory() -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<SCard>)->Self + std::marker::Sync {
+    pub fn factory() -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>)->Self + std::marker::Sync {
         |_,_,_| Self
     }
 }
@@ -446,7 +446,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         Pruner::pruned_output(self, tplahandstichseq, rulestatecache)
     }
 
-    fn combine_outputs<ItTplCardOutput: Iterator<Item=(SCard, Self::Output)>>(
+    fn combine_outputs<ItTplCardOutput: Iterator<Item=(ECard, Self::Output)>>(
         &self,
         epi_card: EPlayerIndex,
         ittplcardoutput: ItTplCardOutput,
@@ -608,10 +608,10 @@ impl TFilterAllowedCards for SFilterEquivalentCards {
         } else {
             #[cfg(debug_assertions)] {
                 veccard.sort_unstable_by_key(|card| card.to_usize());
-                debug_assert_eq!(veccard as &[SCard], &veccard_out as &[SCard]);
+                debug_assert_eq!(veccard as &[ECard], &veccard_out as &[ECard]);
             }
         }
-        *veccard = unwrap!((&veccard_out as &[SCard]).try_into());
+        *veccard = unwrap!((&veccard_out as &[ECard]).try_into());
     }
     fn continue_with_filter(&self, stichseq: &SStichSequence) -> bool {
         stichseq.completed_stichs().len()<=self.n_until_stichseq_len

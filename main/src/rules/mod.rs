@@ -81,7 +81,7 @@ impl SExpensifiers {
 
 fn all_allowed_cards_within_stich_distinguish_farbe_frei (
     rules: &(impl TRules + ?Sized),
-    card_first_in_stich: SCard,
+    card_first_in_stich: ECard,
     hand: &SHand,
     fn_farbe_not_frei: impl Fn(SHandVector)->SHandVector,
 ) -> SHandVector {
@@ -144,12 +144,12 @@ impl<PlayerParties: TPlayerParties> From<PlayerParties> for SPlayerPartiesTable 
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct SRuleStateCacheFixed {
-    mapcardoepi: EnumMap<SCard, Option<EPlayerIndex>>, // TODO? Option<EPlayerIndex> is clean for EKurzLang. Does it incur runtime overhead?
+    mapcardoepi: EnumMap<ECard, Option<EPlayerIndex>>, // TODO? Option<EPlayerIndex> is clean for EKurzLang. Does it incur runtime overhead?
 }
 impl SRuleStateCacheFixed {
     pub fn new(ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) -> Self {
         debug_assert!(ahand_vecstich_card_count_is_compatible(ahand, stichseq));
-        let mut mapcardoepi = SCard::map_from_fn(|_| None);
+        let mut mapcardoepi = ECard::map_from_fn(|_| None);
         let mut register_card = |card, epi| {
             assert!(mapcardoepi[card].is_none());
             mapcardoepi[card] = Some(epi);
@@ -165,10 +165,10 @@ impl SRuleStateCacheFixed {
         assert!(EPlayerIndex::values().all(|epi| {
             mapcardoepi.iter().filter_map(|&oepi_card| oepi_card).filter(|epi_card| *epi_card==epi).count()==stichseq.kurzlang().cards_per_player()
         }));
-        assert!(SCard::values(stichseq.kurzlang()).all(|card| mapcardoepi[card].is_some()));
+        assert!(ECard::values(stichseq.kurzlang()).all(|card| mapcardoepi[card].is_some()));
         Self {mapcardoepi}
     }
-    fn who_has_card(&self, card: SCard) -> EPlayerIndex {
+    fn who_has_card(&self, card: ECard) -> EPlayerIndex {
         unwrap!(self.mapcardoepi[card])
     }
 }
@@ -257,9 +257,9 @@ pub type SIfDebugBool = if_dbg_else!({bool}{()}); // TODO can we get rid of this
 
 pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone + Send {
     // TTrumpfDecider
-    fn trumpforfarbe(&self, card: SCard) -> VTrumpfOrFarbe;
-    fn compare_cards(&self, card_fst: SCard, card_snd: SCard) -> Option<Ordering>;
-    fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [SCard]);
+    fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe;
+    fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering>;
+    fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [ECard]);
 
     fn playerindex(&self) -> Option<EPlayerIndex>;
 
@@ -377,7 +377,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
         )
     }
 
-    fn card_is_allowed(&self, stichseq: &SStichSequence, hand: &SHand, card: SCard) -> bool {
+    fn card_is_allowed(&self, stichseq: &SStichSequence, hand: &SHand, card: ECard) -> bool {
         self.all_allowed_cards(stichseq, hand).contains(&card)
     }
 
@@ -489,22 +489,22 @@ pub trait TActivelyPlayableRules : TRules + TActivelyPlayableRulesBoxClone {
 make_box_clone!(TActivelyPlayableRulesBoxClone, TActivelyPlayableRules);
 
 impl TCardSorter for &dyn TRules {
-    fn sort_cards(&self, slccard: &mut [SCard]) {
+    fn sort_cards(&self, slccard: &mut [ECard]) {
         self.sort_cards_first_trumpf_then_farbe(slccard);
     }
 }
 impl TCardSorter for Box<dyn TRules> {
-    fn sort_cards(&self, slccard: &mut [SCard]) {
+    fn sort_cards(&self, slccard: &mut [ECard]) {
         self.as_ref().sort_cards(slccard)
     }
 }
 impl TCardSorter for &dyn TActivelyPlayableRules {
-    fn sort_cards(&self, slccard: &mut [SCard]) {
+    fn sort_cards(&self, slccard: &mut [ECard]) {
         self.sort_cards_first_trumpf_then_farbe(slccard);
     }
 }
 impl TCardSorter for Box<dyn TActivelyPlayableRules> {
-    fn sort_cards(&self, slccard: &mut [SCard]) {
+    fn sort_cards(&self, slccard: &mut [ECard]) {
         self.as_ref().sort_cards(slccard)
     }
 }
@@ -515,7 +515,7 @@ fn snapshot_cache_point_based<PlayerParties: TPlayerParties+'static>(playerparti
     //     pointstichcount_primary: SPointStichCount,
     //     pointstichcount_secondary: SPointStichCount,
     //     epi_next_stich: EPlayerIndex,
-    //     setcard_played: EnumMap<SCard, bool>, // TODO enumset
+    //     setcard_played: EnumMap<ECard, bool>, // TODO enumset
     // }
     #[derive(Debug)]
     struct SSnapshotCachePointBased<PlayerParties: TPlayerParties> {

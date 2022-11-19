@@ -30,13 +30,13 @@ pub fn schlag_parser<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = 
 }
 
 // adapted from https://docs.rs/combine/3.6.7/combine/index.html#examples
-pub fn card_parser<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = SCard>
+pub fn card_parser<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = ECard>
     where I::Error: ParseError<I::Item, I::Range, I::Position>, // Necessary due to rust-lang/rust#24159
 {
-    (farbe_parser(), schlag_parser()).map(|(efarbe, eschlag)| SCard::new(efarbe, eschlag))
+    (farbe_parser(), schlag_parser()).map(|(efarbe, eschlag)| ECard::new(efarbe, eschlag))
 }
 
-pub fn parse_cards<C: std::iter::Extend<SCard>+Default>(str_cards: &str) -> Option<C> {
+pub fn parse_cards<C: std::iter::Extend<ECard>+Default>(str_cards: &str) -> Option<C> {
     crate::util::parser::parse_trimmed(
         str_cards,
         "cards",
@@ -44,7 +44,7 @@ pub fn parse_cards<C: std::iter::Extend<SCard>+Default>(str_cards: &str) -> Opti
     ).ok()
 }
 
-pub fn parse_optional_cards<C: std::iter::Extend<Option<SCard>>+Default>(str_cards: &str) -> Option<C> {
+pub fn parse_optional_cards<C: std::iter::Extend<Option<ECard>>+Default>(str_cards: &str) -> Option<C> {
     crate::util::parser::parse_trimmed(
         str_cards,
         "optional_cards",
@@ -61,7 +61,7 @@ pub fn parse_optional_cards<C: std::iter::Extend<Option<SCard>>+Default>(str_car
 #[test]
 fn test_cardvectorparser() {
     use crate::util::*;
-    use crate::primitives::SCard::*;
+    use crate::primitives::ECard::*;
     assert_eq!(
         verify!(parse_cards::<Vec<_>>("ek Gk hZ hu s7 gZ")).unwrap(),
         vec![EK, GK, HZ, HU, S7, GZ]

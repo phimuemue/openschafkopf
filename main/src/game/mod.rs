@@ -82,7 +82,7 @@ impl SDealCards {
         let ekurzlang = ruleset.ekurzlang;
         SDealCards {
             aveccard : {
-                let mut veccard = SCard::values(ekurzlang).collect::<Vec<_>>();
+                let mut veccard = ECard::values(ekurzlang).collect::<Vec<_>>();
                 assert_eq!(veccard.len(), EPlayerIndex::SIZE*ekurzlang.cards_per_player());
                 EPlayerIndex::map_from_fn(move |_epi|
                     random_hand(ekurzlang.cards_per_player(), &mut veccard)
@@ -93,7 +93,7 @@ impl SDealCards {
         }
     }
 
-    pub fn first_hand_for(&self, epi: EPlayerIndex) -> &[SCard] {
+    pub fn first_hand_for(&self, epi: EPlayerIndex) -> &[ECard] {
         let veccard = &self.aveccard[epi];
         assert_eq!(veccard.len(), self.ruleset.ekurzlang.cards_per_player());
         &veccard[0..veccard.len()/2]
@@ -121,7 +121,7 @@ pub struct SGamePreparations {
     pub gameannouncements : SGameAnnouncements,
 }
 
-pub fn random_hand(n_size: usize, veccard : &mut Vec<SCard>) -> SHandVector {
+pub fn random_hand(n_size: usize, veccard : &mut Vec<ECard>) -> SHandVector {
     assert!(veccard.len()>=n_size);
     let mut veccard_hand = SHandVector::new();
     for _i in 0..n_size {
@@ -420,7 +420,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         ostossparams : Option<SStossParams>,
         expensifiers: SExpensifiers,
         stichseq: SStichSequenceGameFinished, // TODO take value instead of wrapper
-        mut fn_before_zugeben: impl FnMut(&SGame, /*i_stich*/usize, EPlayerIndex, SCard),
+        mut fn_before_zugeben: impl FnMut(&SGame, /*i_stich*/usize, EPlayerIndex, ECard),
     ) -> Result<SGame, Error> {
         let aveccard = EPlayerIndex::map_from_fn(|epi|
             stichseq.get()
@@ -490,7 +490,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         }
     }
 
-    pub fn zugeben(&mut self, card: SCard, epi: EPlayerIndex) -> Result<(), Error> {
+    pub fn zugeben(&mut self, card: ECard, epi: EPlayerIndex) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something().map(|gameaction| gameaction.0) {
             bail!("Wrong player index");
         }
