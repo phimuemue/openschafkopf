@@ -308,7 +308,7 @@ mod tests {
             TPlayer,
             playerrandom::SPlayerRandom,
         },
-        primitives::{*, card::card_values::*},
+        primitives::{*, card::SCard::*},
         rules::{
             payoutdecider::{SPayoutDeciderParams, SPayoutDeciderPointBased, SLaufendeParams},
             rulesrufspiel::SRulesRufspiel,

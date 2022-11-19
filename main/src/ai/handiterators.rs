@@ -66,7 +66,7 @@ pub fn unplayed_cards<'lifetime>(
 
 #[test]
 fn test_unplayed_cards() {
-    use crate::card::card_values::*;
+    use crate::card::SCard::*;
     let mut stichseq = SStichSequence::new(EKurzLang::Lang);
     for acard_stich in [
         [G7, G8, GA, G9],
@@ -252,7 +252,7 @@ pub fn forever_rand_hands<'lifetime>(
 
 #[test]
 fn test_all_possible_hands() {
-    use crate::card::card_values::*;
+    use crate::card::SCard::*;
     let mut stichseq = SStichSequence::new(EKurzLang::Lang);
     for acard_stich in [
         [G7, G8, GA, G9],

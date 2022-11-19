@@ -1,7 +1,7 @@
 use crate::game::*;
 use crate::rules::ruleset::SStossParams;
 use crate::game_analysis::*;
-use crate::primitives::{card::card_values::*, *};
+use crate::primitives::{card::SCard::*, *};
 use crate::rules::{
     payoutdecider::*, rulesbettel::*, rulesramsch::*, rulesrufspiel::*, rulessolo::*, *,
 };

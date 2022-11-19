@@ -61,7 +61,7 @@ pub fn parse_optional_cards<C: std::iter::Extend<Option<SCard>>+Default>(str_car
 #[test]
 fn test_cardvectorparser() {
     use crate::util::*;
-    use crate::primitives::card_values::*;
+    use crate::primitives::SCard::*;
     assert_eq!(
         verify!(parse_cards::<Vec<_>>("ek Gk hZ hu s7 gZ")).unwrap(),
         vec![EK, GK, HZ, HU, S7, GZ]

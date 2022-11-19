@@ -202,7 +202,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
     }
 
     fn equivalent_when_on_same_hand(&self) -> SCardsPartition {
-        use crate::primitives::card_values::*;
+        use crate::primitives::SCard::*;
         debug_verify_eq!(
             SCardsPartition::new_from_slices(&[
                 &[EO, GO, HO, SO] as &[SCard],
@@ -226,7 +226,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
     }
 
     fn only_minmax_points_when_on_same_hand(&self, rulestatecache: &SRuleStateCacheFixed) -> Option<(SCardsPartition, SPlayerPartiesTable)> {
-        use crate::primitives::card_values::*;
+        use crate::primitives::SCard::*;
         Some((
             debug_verify_eq!(
                 SCardsPartition::new_from_slices(&[

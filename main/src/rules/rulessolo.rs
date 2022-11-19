@@ -314,7 +314,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
     }
 
     fn equivalent_when_on_same_hand(slccard_ordered: &[SCard]) -> Vec<Vec<SCard>> {
-        use crate::card::card_values::*;
+        use crate::card::SCard::*;
         assert!(matches!(slccard_ordered, // TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
             &[EO, GO, HO, SO, EU, GU, HU, SU]
             | &[HA, HZ, HK, H9, H8, H7]
@@ -479,7 +479,7 @@ pub fn sololike(
 
 #[test]
 fn test_trumpfdecider() {
-    use crate::card::card_values::*;
+    use crate::card::SCard::*;
     assert_eq!(
         STrumpfDeciderSolo::<SStaticFarbeGras>::default()
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
@@ -499,7 +499,7 @@ fn test_trumpfdecider() {
 
 #[test]
 fn test_equivalent_when_on_same_hand_rulessolo() {
-    use crate::card::card_values::*;
+    use crate::card::SCard::*;
     for epi in EPlayerIndex::values() {
         let sololike_internal = |
             oefarbe: Option<EFarbe>,

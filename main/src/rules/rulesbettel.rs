@@ -162,7 +162,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
     }
 
     fn equivalent_when_on_same_hand(&self) -> SCardsPartition {
-        use crate::primitives::card_values::*;
+        use crate::primitives::SCard::*;
         debug_verify_eq!(
             SCardsPartition::new_from_slices(&[
                 &[EA, EK, EO, EU, EZ, E9, E8, E7] as &[SCard],

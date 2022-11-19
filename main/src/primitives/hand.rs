@@ -135,7 +135,7 @@ pub fn display_card_slices(ahand: &EnumMap<EPlayerIndex, SHand>, cardsorter: &im
 
 #[test]
 fn test_hand() {
-    use super::card::card_values::*;
+    use super::card::SCard::*;
     let hand = SHand::new_from_iter([EU, HK, S7]);
     let hand2 = {
         let mut hand2 = hand.clone();

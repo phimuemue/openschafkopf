@@ -190,7 +190,7 @@ impl TRules for SRulesRamsch {
     }
 
     fn equivalent_when_on_same_hand(&self) -> SCardsPartition {
-        use crate::primitives::card_values::*;
+        use crate::primitives::SCard::*;
         debug_verify_eq!(
             SCardsPartition::new_from_slices(&[
                 &[EO, GO, HO, SO] as &[SCard],

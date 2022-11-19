@@ -185,7 +185,7 @@ impl SCardsPartition {
 
 #[test]
 fn test_cardspartition() {
-    use crate::primitives::card::card_values::*;
+    use crate::primitives::card::SCard::*;
     let mut cardspartition = SCardsPartition::new();
     cardspartition.chain(&[E7, E8, E9]);
     cardspartition.chain(&[SA, SZ, SK]);

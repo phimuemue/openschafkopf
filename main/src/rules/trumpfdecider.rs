@@ -173,7 +173,7 @@ fn test_equivalent_when_on_same_hand_trumpfdecider() {
     fn assert_eq_cards(slccard_lhs: &[SCard], slccard_rhs: &[SCard]) {
         assert_eq!(slccard_lhs, slccard_rhs);
     }
-    use crate::primitives::card_values::*;
+    use crate::primitives::SCard::*;
     assert_eq_cards(&veccard_trumpf, &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7]);
     assert_eq_cards(&mapefarbeveccard[EFarbe::Eichel], &[EA, EZ, EK, E9, E8, E7]);
     assert_eq_cards(&mapefarbeveccard[EFarbe::Gras], &[GA, GZ, GK, G9, G8, G7]);

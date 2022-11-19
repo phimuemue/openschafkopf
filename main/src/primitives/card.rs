@@ -110,7 +110,7 @@ impl<'de> serde::Deserialize<'de> for SCard {
 fn test_serialization() {
     macro_rules! test_card(($($card:ident)*) => {
         $(
-            let card = card_values::$card;
+            let card = SCard::$card;
             serde_test::assert_tokens(&card, &[
                 serde_test::Token::Str(stringify!($card)),
             ]);
@@ -250,21 +250,4 @@ impl PlainEnum for SCard {
     fn to_usize(self) -> usize {
         (self as u8).as_num::<usize>()
     }
-}
-
-pub mod card_values {
-    use crate::card::*;
-    macro_rules! impl_card_val_internal {(($($card:ident,)*), ($($eschlag:ident,)*), $efarbe:ident) => {
-        $(
-            #[allow(dead_code)]
-            pub const $card : SCard = card_new_const(EFarbe::$efarbe, ESchlag::$eschlag);
-        )*
-    }}
-    macro_rules! impl_card_val {(($($card:ident,)*), $efarbe:ident) => {
-        impl_card_val_internal!(($($card,)*), (S7, S8, S9, Zehn, Unter, Ober, Koenig, Ass,), $efarbe);
-    }}
-    impl_card_val!((E7, E8, E9, EZ, EU, EO, EK, EA,), Eichel);
-    impl_card_val!((G7, G8, G9, GZ, GU, GO, GK, GA,), Gras);
-    impl_card_val!((H7, H8, H9, HZ, HU, HO, HK, HA,), Herz);
-    impl_card_val!((S7, S8, S9, SZ, SU, SO, SK, SA,), Schelln);
 }

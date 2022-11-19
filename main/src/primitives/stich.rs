@@ -38,7 +38,7 @@ impl fmt::Display for SStich {
 fn test_stich() {
     // TODO? use quicktest or similar
     {
-        use crate::card::card_values::*;
+        use crate::card::SCard::*;
         let acard = [E7, E8, E9, EK];
         for epi_first in EPlayerIndex::values() {
             for n_size in 0..5 {
