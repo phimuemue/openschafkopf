@@ -51,7 +51,6 @@ fn main() -> Result<(), Error> {
         // analyze
         ([cfg(feature="analyze")] analyze, "analyze")
         ([cfg(feature="suggest-card")] suggest_card, "suggest-card")
-        ([cfg(feature="rank-rules")] rank_rules, "rank-rules")
         ([cfg(feature="hand-stats")] hand_stats, "hand-stats")
         // misc
         ([cfg(feature="dl")] dl, "dl")

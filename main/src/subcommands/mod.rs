@@ -3,7 +3,6 @@ pub mod cli;
 pub mod dl;
 pub mod hand_stats;
 pub mod parse;
-pub mod rank_rules;
 pub mod suggest_card;
 pub mod webext;
 pub mod websocket;
@@ -13,7 +12,6 @@ mod common_given_game;
 use crate::util::*;
 use crate::rules::ruleset::{SRuleSet, VStockOrT};
 use crate::ai::SAi;
-use crate::primitives::hand::SHand;
 use crate::primitives::card::EKurzLang;
 use crate::game::*;
 use std::io::Read;
@@ -79,10 +77,6 @@ pub fn ai(subcommand_matches: &clap::ArgMatches) -> SAi {
             SAi::new_cheating(/*n_rank_rules_samples*/50, /*n_suggest_card_branches*/2)
         }
     }
-}
-
-pub fn str_to_hand(str_hand: &str) -> Result<SHand, Error> {
-    Ok(SHand::new_from_vec(crate::primitives::cardvector::parse_cards(str_hand).ok_or_else(||format_err!("Could not parse hand."))?))
 }
 
 pub fn glob_files<'str_glob>(
