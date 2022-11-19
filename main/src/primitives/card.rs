@@ -77,8 +77,11 @@ impl EKurzLang {
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Hash)]
-pub struct SCard {
-    n_internalrepresentation : u8, // TODO is there a simple method for bit fields?
+pub enum SCard {
+    EA, EZ, EK, EO, EU, E9, E8, E7,
+    GA, GZ, GK, GO, GU, G9, G8, G7,
+    HA, HZ, HK, HO, HU, H9, H8, H7,
+    SA, SZ, SK, SO, SU, S9, S8, S7,
 }
 
 impl serde::Serialize for SCard {
@@ -151,20 +154,20 @@ impl fmt::Display for SCard {
 }
 
 const fn card_new_const(efarbe: EFarbe, eschlag: ESchlag) -> SCard { // TODO (plain_enum: to_usize should be const fn)
-    SCard{n_internalrepresentation : (efarbe as usize * ESchlag::SIZE + eschlag as usize) as u8}
+    unsafe {
+        std::mem::transmute(efarbe as u8 * (ESchlag::SIZE as u8) + eschlag as u8)
+    }
 }
 
 impl SCard {
     pub fn new(efarbe : EFarbe, eschlag : ESchlag) -> SCard {
-        let card = SCard{n_internalrepresentation : (efarbe.to_usize() * ESchlag::SIZE + eschlag.to_usize()).as_num()};
-        assert_eq!(card, card_new_const(efarbe, eschlag));
-        card
+        card_new_const(efarbe, eschlag)
     }
     pub fn farbe(self) -> EFarbe {
-        unsafe {EFarbe::from_usize(self.n_internalrepresentation.as_num::<usize>() / ESchlag::SIZE)}
+        unsafe{ EFarbe::from_usize(self.to_usize() / ESchlag::SIZE) }
     }
     pub fn schlag(self) -> ESchlag {
-        unsafe {ESchlag::from_usize(self.n_internalrepresentation.as_num::<usize>() % ESchlag::SIZE)}
+        unsafe{ ESchlag::from_usize(self.to_usize() % ESchlag::SIZE) }
     }
     pub fn values(ekurzlang: EKurzLang) -> impl Iterator<Item=SCard> {
         use itertools::iproduct;
@@ -205,10 +208,10 @@ impl PlainEnum for SCard {
     type EnumMapArray<T> = [T; SCard::SIZE];
     unsafe fn from_usize(n: usize) -> Self {
         debug_assert!(n < Self::SIZE);
-        SCard{n_internalrepresentation: n.as_num::<u8>()}
+        std::mem::transmute(n.as_num::<u8>())
     }
     fn to_usize(self) -> usize {
-        self.n_internalrepresentation.as_num::<usize>()
+        (self as u8).as_num::<usize>()
     }
 }
 
