@@ -195,12 +195,49 @@ fn test_farbe_schlag_enumerators() {
 
 #[test]
 fn test_card_ctor() {
-    for efarbe in EFarbe::values() {
-        for eschlag in ESchlag::values() {
-            assert_eq!(SCard::new(efarbe, eschlag).farbe(), efarbe);
-            assert_eq!(SCard::new(efarbe, eschlag).schlag(), eschlag);
-        }
-    }
+    macro_rules! explicit_test{($($efarbe:ident, $eschlag:ident, $card:ident)+) => {{
+        $(
+            let card = SCard::new(EFarbe::$efarbe, ESchlag::$eschlag);
+            assert_eq!(card, SCard::$card);
+            assert_eq!(card.farbe(), EFarbe::$efarbe);
+            assert_eq!(card.schlag(), ESchlag::$eschlag);
+        )+
+
+    }}}
+    explicit_test!(
+        Eichel, S7, E7
+        Eichel, S8, E8
+        Eichel, S9, E9
+        Eichel, Zehn, EZ
+        Eichel, Unter, EU
+        Eichel, Ober, EO
+        Eichel, Koenig, EK
+        Eichel, Ass, EA
+        Gras, S7, G7
+        Gras, S8, G8
+        Gras, S9, G9
+        Gras, Zehn, GZ
+        Gras, Unter, GU
+        Gras, Ober, GO
+        Gras, Koenig, GK
+        Gras, Ass, GA
+        Herz, S7, H7
+        Herz, S8, H8
+        Herz, S9, H9
+        Herz, Zehn, HZ
+        Herz, Unter, HU
+        Herz, Ober, HO
+        Herz, Koenig, HK
+        Herz, Ass, HA
+        Schelln, S7, S7
+        Schelln, S8, S8
+        Schelln, S9, S9
+        Schelln, Zehn, SZ
+        Schelln, Unter, SU
+        Schelln, Ober, SO
+        Schelln, Koenig, SK
+        Schelln, Ass, SA
+    )
 }
 
 impl PlainEnum for SCard {
