@@ -43,7 +43,6 @@ SUBCOMMANDS:
     websocket       Play in the browser
     analyze         Analyze played games and spot suboptimal decisions
     suggest-card    Suggest a card to play given the game so far
-    rank-rules      Estimate strength of own hand
     hand-stats      Statistics about hands that could be dealt.
     dl              Download played games from Sauspiel
     parse           Parse a game into a simple format
