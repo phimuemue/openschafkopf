@@ -67,9 +67,9 @@ impl SHand {
     }
     pub fn new_from_iter<Card>(itcard: impl IntoIterator<Item=Card>) -> SHand
         where
-            Card: Borrow<SCard>,
+            Card: TMoveOrClone<SCard>,
     {
-        Self::new_from_vec(itcard.into_iter().map(|card| card.borrow().to_owned()).collect())
+        Self::new_from_vec(itcard.into_iter().map(TMoveOrClone::move_or_clone).collect())
     }
     pub fn contains(&self, card_check: SCard) -> bool {
         self.contains_pred(|&card| card==card_check)
