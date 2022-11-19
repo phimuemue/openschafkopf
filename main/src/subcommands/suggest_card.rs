@@ -43,6 +43,10 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
             .help("Use snapshot cache")
             .long_help("Use snapshot cache to possibly speed up game tree exploration.")
         )
+        .arg(clap::Arg::new("no-details")
+            .long("no-details")
+            .help("Do not investigate cards separately")
+        )
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
@@ -145,7 +149,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     },
                 )
             }}
-            if epi_current!=epi_position {
+            if epi_current!=epi_position || clapmatches.is_present("no-details") {
                 macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), (($ty_snapshotcache:ty), $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     SPerMinMaxStrategy(itahand
                         .enumerate()
