@@ -153,15 +153,11 @@ impl fmt::Display for SCard {
     }
 }
 
-const fn card_new_const(efarbe: EFarbe, eschlag: ESchlag) -> SCard { // TODO (plain_enum: to_usize should be const fn)
-    unsafe {
-        std::mem::transmute(efarbe as u8 * (ESchlag::SIZE as u8) + eschlag as u8)
-    }
-}
-
 impl SCard {
     pub fn new(efarbe : EFarbe, eschlag : ESchlag) -> SCard {
-        card_new_const(efarbe, eschlag)
+        unsafe {
+            std::mem::transmute(efarbe as u8 * (ESchlag::SIZE as u8) + eschlag as u8)
+        }
     }
     pub fn farbe(self) -> EFarbe {
         unsafe{ EFarbe::from_usize(self.to_usize() / ESchlag::SIZE) }
