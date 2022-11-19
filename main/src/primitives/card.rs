@@ -154,16 +154,16 @@ impl fmt::Display for SCard {
 }
 
 impl SCard {
-    pub fn new(efarbe : EFarbe, eschlag : ESchlag) -> SCard {
+    pub const fn new(efarbe : EFarbe, eschlag : ESchlag) -> SCard {
         unsafe {
             std::mem::transmute(efarbe as u8 * (ESchlag::SIZE as u8) + eschlag as u8)
         }
     }
-    pub fn farbe(self) -> EFarbe {
-        unsafe{ EFarbe::from_usize(self.to_usize() / ESchlag::SIZE) }
+    pub const fn farbe(self) -> EFarbe {
+        unsafe{ std::mem::transmute(self as usize / ESchlag::SIZE) } // TODO(plain_enum) from_usize/to_usize const
     }
-    pub fn schlag(self) -> ESchlag {
-        unsafe{ ESchlag::from_usize(self.to_usize() % ESchlag::SIZE) }
+    pub const fn schlag(self) -> ESchlag {
+        unsafe{ std::mem::transmute(self as usize % ESchlag::SIZE) } // TODO(plain_enum) from_usize/to_usize const
     }
     pub fn values(ekurzlang: EKurzLang) -> impl Iterator<Item=SCard> {
         use itertools::iproduct;
@@ -192,13 +192,20 @@ fn test_farbe_schlag_enumerators() {
 #[test]
 fn test_card_ctor() {
     macro_rules! explicit_test{($($efarbe:ident, $eschlag:ident, $card:ident)+) => {{
-        $(
+        $({
+            const CARD : SCard = SCard::new(EFarbe::$efarbe, ESchlag::$eschlag);
+            assert_eq!(CARD, SCard::$card);
+            const EFARBE : EFarbe = CARD.farbe();
+            assert_eq!(EFARBE, EFarbe::$efarbe);
+            const ESCHLAG : ESchlag = CARD.schlag();
+            assert_eq!(ESCHLAG, ESchlag::$eschlag);
+        })+
+        $({
             let card = SCard::new(EFarbe::$efarbe, ESchlag::$eschlag);
             assert_eq!(card, SCard::$card);
             assert_eq!(card.farbe(), EFarbe::$efarbe);
             assert_eq!(card.schlag(), ESchlag::$eschlag);
-        )+
-
+        })+
     }}}
     explicit_test!(
         Eichel, S7, E7
