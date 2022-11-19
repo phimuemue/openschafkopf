@@ -52,9 +52,8 @@ log = "0"
 serde_test = "1"
 
 [features]
-default = ["cli", "rank-rules", "suggest-card", "parse", "analyze", "websocket", "hand-stats", "dl", "webext"]
+default = ["cli", "suggest-card", "parse", "analyze", "websocket", "hand-stats", "dl", "webext"]
 cli = []
-rank-rules = []
 suggest-card = []
 parse = []
 analyze = []
