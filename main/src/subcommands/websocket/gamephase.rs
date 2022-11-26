@@ -1,10 +1,12 @@
-use crate::util::*;
-use crate::primitives::*;
-use crate::game::*;
-use crate::rules::*;
-use crate::rules::ruleset::{SRuleGroup, allowed_rules};
-
+use crate::{
+    util::*,
+    primitives::*,
+    game::*,
+    rules::*,
+    rules::ruleset::{SRuleGroup, allowed_rules},
+};
 use serde::{Serialize, Deserialize};
+use std::mem::discriminant;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, GameResult> {
@@ -18,7 +20,6 @@ pub enum VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, Ga
 
 impl<DealCards, GamePreparations, DetermineRules, Game, GameResult> VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, GameResult> {
     pub fn matches_phase(&self, gamephase: &Self) -> bool {
-        use std::mem::discriminant;
         discriminant(self)==discriminant(gamephase)
     }
 }
