@@ -510,7 +510,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     // TODO store all information about finished game, even in case of stock
     pub an_payout : EnumMap<EPlayerIndex, isize>,
@@ -531,7 +531,7 @@ impl TGamePhase for SGameResult { // "absorbing state"
 }
 
 impl<Ruleset, GameAnnouncements, DetermineRules> SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules> {
-    pub fn apply_payout(self, n_stock: &mut isize, mut fn_payout_to_epi: impl FnMut(EPlayerIndex, isize)) { // TODO should n_stock be member of SGameResult?
+    pub fn apply_payout(self, n_stock: &mut isize, mut fn_payout_to_epi: impl FnMut(EPlayerIndex, isize)) { // TODO should n_stock be member of SGameResult? // TODO should apply_payout be forced upon construction?
         for epi in EPlayerIndex::values() {
             fn_payout_to_epi(epi, self.an_payout[epi]);
         }

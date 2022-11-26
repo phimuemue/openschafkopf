@@ -46,15 +46,12 @@ impl TGamePhase for SWebsocketGameResult {
         )
     }
     fn finish_success(self) -> Self::Finish {
-        SAccepted{
-            gameresult: self.gameresult,
-        }
+        SAccepted{}
     }
 }
 
 #[derive(Debug)]
 pub struct SAccepted {
-    pub gameresult: SGameResult,
 }
 
 impl TGamePhase for SAccepted {
@@ -192,9 +189,9 @@ impl VGamePhase {
             },
         };
         let mut b_ok_2 = b_ok;
-        if b_ok {
+        if verify_eq!(b_ok, b_ok_2) {
+            use VGamePhaseGeneric::*;
             while self.which_player_can_do_something().is_none() {
-                use VGamePhaseGeneric::*;
                 fn simple_transition<R: From<VGamePhase>, GamePhase: TGamePhase>(
                     phase: GamePhase,
                     fn_ok: impl FnOnce(GamePhase::Finish) -> VGamePhase,
@@ -225,6 +222,8 @@ impl VGamePhase {
                         ),
                         GameResult(gameresult) => match gameresult.finish() {
                             Ok(accepted) => {
+                                let oinfallible : Option</*mention type to get compiler error upon change*/Infallible> = accepted.which_player_can_do_something();
+                                assert!(oinfallible.is_none());
                                 Accepted(accepted)
                             },
                             Err(gameresult) => {
@@ -234,6 +233,9 @@ impl VGamePhase {
                         },
                         Accepted(accepted) => Accepted(accepted),
                     };
+                    if let Accepted(_accepted) = &self {
+                        break; // TODO can we get rid of this special case?
+                    }
                 }
             }
         }
