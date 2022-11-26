@@ -9,16 +9,20 @@ use serde::{Serialize, Deserialize};
 use std::mem::discriminant;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, GameResult> {
+pub enum Infallible {} // TODO use std::convert::Infallible
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, GameResult, Accepted> {
     DealCards(DealCards),
     GamePreparations(GamePreparations),
     DetermineRules(DetermineRules),
     Game(Game),
     GameResult(GameResult),
+    Accepted(Accepted),
 }
 
 
-impl<DealCards, GamePreparations, DetermineRules, Game, GameResult> VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, GameResult> {
+impl<DealCards, GamePreparations, DetermineRules, Game, GameResult, Accepted> VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, GameResult, Accepted> {
     pub fn matches_phase(&self, gamephase: &Self) -> bool {
         discriminant(self)==discriminant(gamephase)
     }
@@ -33,13 +37,31 @@ pub struct SWebsocketGameResult {
 
 impl TGamePhase for SWebsocketGameResult {
     type ActivePlayerInfo = EnumMap<EPlayerIndex, bool>;
-    type Finish = SWebsocketGameResult;
+    type Finish = SAccepted;
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         let oinfallible : /*mention type to get compiler error upon change*/Option<std::convert::Infallible> = self.gameresult.which_player_can_do_something(); // TODO simplify
         verify!(oinfallible.is_none());
         if_then_some!(self.mapepib_confirmed.iter().any(|b_confirmed| !b_confirmed),
             self.mapepib_confirmed.explicit_clone()
         )
+    }
+    fn finish_success(self) -> Self::Finish {
+        SAccepted{
+            gameresult: self.gameresult,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct SAccepted {
+    pub gameresult: SGameResult,
+}
+
+impl TGamePhase for SAccepted {
+    type ActivePlayerInfo = Infallible; // TODO good idea to use Infallible here?
+    type Finish = Self; // TODO? use SDealCards
+    fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
+        None
     }
     fn finish_success(self) -> Self::Finish {
         self
@@ -52,6 +74,7 @@ pub type VGamePhase = VGamePhaseGeneric<
     SDetermineRules,
     SGame,
     SWebsocketGameResult,
+    SAccepted,
 >;
 type VGamePhaseActivePlayerInfo<'a> = VGamePhaseGeneric<
     (&'a SDealCards, <SDealCards as TGamePhase>::ActivePlayerInfo),
@@ -59,6 +82,7 @@ type VGamePhaseActivePlayerInfo<'a> = VGamePhaseGeneric<
     (&'a SDetermineRules, <SDetermineRules as TGamePhase>::ActivePlayerInfo),
     (&'a SGame, <SGame as TGamePhase>::ActivePlayerInfo),
     (&'a SWebsocketGameResult, <SWebsocketGameResult as TGamePhase>::ActivePlayerInfo),
+    (&'a SAccepted, <SAccepted as TGamePhase>::ActivePlayerInfo),
 >;
 
 type SActivelyPlayableRulesIdentifier = String;
@@ -97,6 +121,7 @@ pub type VGamePhaseAction = VGamePhaseGeneric<
     /*DetermineRules*/Option<SActivelyPlayableRulesIdentifier>,
     /*Game*/VGameAction,
     /*GameResult*/(),
+    /*Accepted*/Infallible,
 >;
 
 impl VGamePhase {
@@ -112,6 +137,7 @@ impl VGamePhase {
             DetermineRules(determinerules) => internal(determinerules).map(DetermineRules),
             Game(game) => internal(game).map(Game),
             GameResult(gameresult) => internal(gameresult).map(GameResult),
+            Accepted(accepted) => internal(accepted).map(Accepted),
         }
     }
 
@@ -157,12 +183,61 @@ impl VGamePhase {
                 gameresult.mapepib_confirmed[epi] = true;
                 b_ok = true;
             },
+            (VGamePhase::Accepted(_), VGamePhaseAction::Accepted(_)) => {
+                b_ok = true;
+            },
             (_gamephase, _cmd) => {
                 // TODO assert!(!self.matches_phase(&gamephaseaction));
                 b_ok = false;
             },
         };
+        let mut b_ok_2 = b_ok;
         if b_ok {
+            while self.which_player_can_do_something().is_none() {
+                use VGamePhaseGeneric::*;
+                fn simple_transition<R: From<VGamePhase>, GamePhase: TGamePhase>(
+                    phase: GamePhase,
+                    fn_ok: impl FnOnce(GamePhase::Finish) -> VGamePhase,
+                    fn_err: impl FnOnce(GamePhase) -> VGamePhase,
+                ) -> R {
+                    phase.finish().map_or_else(fn_err, fn_ok).into()
+                }
+                {
+                    self = match self {
+                        DealCards(dealcards) => simple_transition(dealcards, GamePreparations, DealCards),
+                        GamePreparations(gamepreparations) => match gamepreparations.finish() {
+                            Ok(VGamePreparationsFinish::DetermineRules(determinerules)) => DetermineRules(determinerules),
+                            Ok(VGamePreparationsFinish::DirectGame(game)) => Game(game),
+                            Ok(VGamePreparationsFinish::Stock(gameresult)) => GameResult(SWebsocketGameResult{
+                                gameresult,
+                                mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false),
+                            }),
+                            Err(gamepreparations) => GamePreparations(gamepreparations),
+                        }
+                        DetermineRules(determinerules) => simple_transition(determinerules, Game, DetermineRules),
+                        Game(game) => simple_transition(
+                            game,
+                            |gameresult| GameResult(SWebsocketGameResult{
+                                gameresult,
+                                mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false),
+                            }),
+                            Game
+                        ),
+                        GameResult(gameresult) => match gameresult.finish() {
+                            Ok(accepted) => {
+                                Accepted(accepted)
+                            },
+                            Err(gameresult) => {
+                                b_ok_2 = false;
+                                GameResult(gameresult)
+                            },
+                        },
+                        Accepted(accepted) => Accepted(accepted),
+                    };
+                }
+            }
+        }
+        if b_ok_2 {
             Ok(self)
         } else {
             Err(self)
