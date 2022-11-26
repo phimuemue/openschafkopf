@@ -4,7 +4,6 @@ use std::{
     net::SocketAddr,
     sync::{Arc, Mutex},
     task::{Context, Poll, Waker},
-    fmt::Display,
     pin::Pin,
     thread::{sleep, spawn},
     time::Duration,
@@ -43,7 +42,6 @@ use gamephase::{
     VGameAction,
     VGamePhaseGeneric,
     SWebsocketGameResult,
-    find_rules_by_id,
     rules_to_gamephaseaction,
 };
 
@@ -265,12 +263,6 @@ impl STable {
         println!("on_incoming_message({:?}, {:?})", oepi, ogamephaseaction);
         if self.ogamephase.is_some() {
             if let Some(epi) = oepi {
-                fn handle_err<T, E: Display>(res: Result<T, E>) {
-                    match res {
-                        Ok(_) => {},
-                        Err(e) => println!("Error {}", e),
-                    };
-                }
                 if let Some(gamephaseaction) = ogamephaseaction {
                     match self.players.mapepiopeer[epi].otimeoutcmd.as_ref() {
                         None => (),
@@ -281,50 +273,16 @@ impl STable {
                             }
                         },
                     }
-                    if let Some(ref mut gamephase) = debug_verify!(self.ogamephase.as_mut()) {
-                        match (gamephase, gamephaseaction) {
-                            (VGamePhase::DealCards(ref mut dealcards), VGamePhaseAction::DealCards(b_doubling)) => {
-                                handle_err(dealcards.announce_doubling(epi, b_doubling));
-                            },
-                            (VGamePhase::GamePreparations(ref mut gamepreparations), VGamePhaseAction::GamePreparations(ref orulesid)) => {
-                                if let Ok(orules) = find_rules_by_id(
-                                    &gamepreparations.ruleset.avecrulegroup[epi],
-                                    gamepreparations.fullhand(epi),
-                                    orulesid
-                                ) {
-                                    handle_err(gamepreparations.announce_game(epi, orules));
-                                }
-                            },
-                            (VGamePhase::DetermineRules(ref mut determinerules), VGamePhaseAction::DetermineRules(ref orulesid)) => {
-                                if let Some((_epi_active, vecrulegroup)) = determinerules.which_player_can_do_something() {
-                                    if let Ok(orules) = find_rules_by_id(
-                                        &vecrulegroup,
-                                        determinerules.fullhand(epi),
-                                        orulesid
-                                    ) {
-                                        handle_err(if let Some(rules) = orules {
-                                            determinerules.announce_game(epi, rules)
-                                        } else {
-                                            determinerules.resign(epi)
-                                        });
-                                    }
-                                }
-                            },
-                            (VGamePhase::Game(ref mut game), VGamePhaseAction::Game(ref gameaction)) => {
-                                handle_err(match gameaction {
-                                    VGameAction::Stoss => game.stoss(epi),
-                                    VGameAction::Zugeben(card) => game.zugeben(*card, epi),
-                                });
-                            },
-                            (VGamePhase::GameResult(gameresult), VGamePhaseAction::GameResult(())) => {
-                                gameresult.mapepib_confirmed[epi] = true;
-                            },
-                            (_gamephase, _cmd) => {
-                            },
-                        };
+                    self.ogamephase = match unwrap!(self.ogamephase.take()).action(epi, gamephaseaction.clone()) {
+                        Ok(gamephase) => Some(gamephase),
+                        Err(gamephase) => {
+                            println!("Error:\n{:?}\n{:?}", gamephase, gamephaseaction);
+                            Some(gamephase)
+                        },
                     }
                 }
             }
+            // TODO the following while loop belongs to VGamePhase::action
             while self.ogamephase.as_ref().map_or(false, |gamephase| gamephase.which_player_can_do_something().is_none()) {
                 use VGamePhaseGeneric::*;
                 fn simple_transition<R: From<VGamePhase>, GamePhase: TGamePhase>(
