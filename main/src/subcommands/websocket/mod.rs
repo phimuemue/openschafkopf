@@ -3,27 +3,37 @@
 use std::{
     net::SocketAddr,
     sync::{Arc, Mutex},
+    task::{Context, Poll, Waker},
+    fmt::Display,
+    pin::Pin,
+    thread::{sleep, spawn},
+    time::Duration,
 };
-use crate::util::*;
-use crate::game::*;
-use crate::rules::{*, trumpfdecider::TTrumpfDecider};
-use crate::rules::ruleset::{SRuleSet, VStockOrT};
-
-use futures::prelude::*;
+use crate::{
+    util::*,
+    game::*,
+    rules::{*, trumpfdecider::TTrumpfDecider},
+    rules::ruleset::{SRuleSet, VStockOrT},
+    primitives::*,
+};
 use futures::{
+    prelude::*,
     channel::mpsc::{unbounded, UnboundedSender},
     future,
 };
 use serde::{Serialize, Deserialize};
-use std::task::{Context, Poll, Waker};
-
 use async_std::{
     net::{TcpListener, TcpStream},
     task,
 };
-use async_tungstenite::tungstenite::protocol::Message;
-use crate::primitives::*;
-use rand::prelude::*;
+use async_tungstenite::{
+    accept_async,
+    tungstenite::protocol::Message,
+};
+use rand::{
+    thread_rng,
+    prelude::*,
+};
 use itertools::Itertools;
 
 mod gamephase;
@@ -255,7 +265,7 @@ impl STable {
         println!("on_incoming_message({:?}, {:?})", oepi, ogamephaseaction);
         if self.ogamephase.is_some() {
             if let Some(epi) = oepi {
-                fn handle_err<T, E: std::fmt::Display>(res: Result<T, E>) {
+                fn handle_err<T, E: Display>(res: Result<T, E>) {
                     match res {
                         Ok(_) => {},
                         Err(e) => println!("Error {}", e),
@@ -565,7 +575,7 @@ impl STable {
                                                 *unwrap!(game.rules.all_allowed_cards(
                                                     &game.stichseq,
                                                     &game.ahand[epi_card],
-                                                ).choose(&mut rand::thread_rng()))
+                                                ).choose(&mut thread_rng()))
                                             )),
                                         )
                                     } else if let Some(strgamephaseaction) = ostrgamephaseaction {
@@ -600,7 +610,7 @@ impl STable {
                                             } else {
                                                 format!("Gewinn: {}", gameresult.gameresult.an_payout[epi])
                                             }),
-                                            std::iter::once(("Ok".into(), VGamePhaseAction::GameResult(()))),
+                                            Some(("Ok".into(), VGamePhaseAction::GameResult(()))).into_iter(),
                                             self_mutex.clone(),
                                             VGamePhaseAction::GameResult(()),
                                         )
@@ -653,7 +663,7 @@ struct STimerFutureState {
 
 impl Future for STimerFuture {
     type Output = ();
-    fn poll(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut state = unwrap!(self.state.lock());
         if state.b_completed {
             let table_mutex = self.table.clone();
@@ -676,8 +686,8 @@ impl STimerFuture {
             owaker: None,
         }));
         let thread_shared_state = state.clone();
-        std::thread::spawn(move || {
-            std::thread::sleep(std::time::Duration::new(n_secs, /*nanos*/0));
+        spawn(move || {
+            sleep(Duration::new(n_secs, /*nanos*/0));
             let mut state = unwrap!(thread_shared_state.lock());
             state.b_completed = true;
             if let Some(waker) = state.owaker.take() {
@@ -690,7 +700,7 @@ impl STimerFuture {
 
 async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sockaddr: SocketAddr) {
     println!("Incoming TCP connection from: {}", sockaddr);
-    let wsstream = match async_tungstenite::accept_async(tcpstream).await {
+    let wsstream = match accept_async(tcpstream).await {
         Ok(wsstream) => wsstream,
         Err(e) => {
             println!("Error in accepting tcpstream: {}", e);
