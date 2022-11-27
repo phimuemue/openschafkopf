@@ -200,46 +200,41 @@ impl VGamePhase {
         let mut b_ok_2 = b_ok;
         if verify_eq!(b_ok, b_ok_2) {
             use VGamePhaseGeneric::*;
-            while self.which_player_can_do_something().is_none() {
-                fn simple_transition<R: From<VGamePhase>, GamePhase: TGamePhase>(
-                    phase: GamePhase,
-                    fn_ok: impl FnOnce(GamePhase::Finish) -> VGamePhase,
-                    fn_err: impl FnOnce(GamePhase) -> VGamePhase,
-                ) -> R {
-                    phase.finish().map_or_else(fn_err, fn_ok).into()
-                }
-                {
-                    self = match self {
-                        DealCards(dealcards) => simple_transition(dealcards, GamePreparations, DealCards),
-                        GamePreparations(gamepreparations) => match gamepreparations.finish() {
-                            Ok(VGamePreparationsFinish::DetermineRules(determinerules)) => DetermineRules(determinerules),
-                            Ok(VGamePreparationsFinish::DirectGame(game)) => Game(game),
-                            Ok(VGamePreparationsFinish::Stock(gameresult)) => GameResult(SWebsocketGameResult::new(gameresult)),
-                            Err(gamepreparations) => GamePreparations(gamepreparations),
+            self = loop {
+                match self {
+                    DealCards(dealcards) => match dealcards.finish() {
+                        Ok(gamepreparations) => self = GamePreparations(gamepreparations),
+                        Err(dealcards) => break DealCards(dealcards)
+                    },
+                    GamePreparations(gamepreparations) => {
+                        match gamepreparations.finish() {
+                            Ok(VGamePreparationsFinish::DetermineRules(determinerules)) => self = DetermineRules(determinerules),
+                            Ok(VGamePreparationsFinish::DirectGame(game)) => self = Game(game),
+                            Ok(VGamePreparationsFinish::Stock(gameresult)) => self = GameResult(SWebsocketGameResult::new(gameresult)),
+                            Err(gamepreparations) => break GamePreparations(gamepreparations),
                         }
-                        DetermineRules(determinerules) => simple_transition(determinerules, Game, DetermineRules),
-                        Game(game) => simple_transition(
-                            game,
-                            |gameresult| GameResult(SWebsocketGameResult::new(gameresult)),
-                            Game
-                        ),
-                        GameResult(gameresult) => match gameresult.finish() {
-                            Ok(accepted) => {
-                                let oinfallible : Option</*mention type to get compiler error upon change*/Infallible> = accepted.which_player_can_do_something();
-                                assert!(oinfallible.is_none());
-                                Accepted(accepted)
-                            },
-                            Err(gameresult) => {
-                                b_ok_2 = false;
-                                GameResult(gameresult)
-                            },
-                        },
-                        Accepted(accepted) => Accepted(accepted),
-                    };
-                    if let Accepted(_accepted) = &self {
-                        break; // TODO can we get rid of this special case?
                     }
-                }
+                    DetermineRules(determinerules) => match determinerules.finish() {
+                        Ok(game) => self = Game(game),
+                        Err(determinerules) => break DetermineRules(determinerules),
+                    },
+                    Game(game) => match game.finish() {
+                        Ok(gameresult) => self = GameResult(SWebsocketGameResult::new(gameresult)),
+                        Err(game) => break Game(game),
+                    },
+                    GameResult(gameresult) => match gameresult.finish() {
+                        Ok(accepted) => {
+                            let oinfallible : Option</*mention type to get compiler error upon change*/Infallible> = accepted.which_player_can_do_something();
+                            assert!(oinfallible.is_none());
+                            self = Accepted(accepted);
+                        },
+                        Err(gameresult) => {
+                            b_ok_2 = false;
+                            break GameResult(gameresult)
+                        },
+                    },
+                    Accepted(accepted) => break Accepted(accepted),
+                };
             }
         }
         if b_ok_2 {
