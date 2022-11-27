@@ -35,6 +35,15 @@ pub struct SWebsocketGameResult {
     pub mapepib_confirmed: EnumMap<EPlayerIndex, bool>, // TODO? enumset
 }
 
+impl SWebsocketGameResult {
+    fn new(gameresult: SGameResult) -> Self {
+        Self {
+            gameresult,
+            mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false),
+        }
+    }
+}
+
 impl TGamePhase for SWebsocketGameResult {
     type ActivePlayerInfo = EnumMap<EPlayerIndex, bool>;
     type Finish = SAccepted;
@@ -205,19 +214,13 @@ impl VGamePhase {
                         GamePreparations(gamepreparations) => match gamepreparations.finish() {
                             Ok(VGamePreparationsFinish::DetermineRules(determinerules)) => DetermineRules(determinerules),
                             Ok(VGamePreparationsFinish::DirectGame(game)) => Game(game),
-                            Ok(VGamePreparationsFinish::Stock(gameresult)) => GameResult(SWebsocketGameResult{
-                                gameresult,
-                                mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false),
-                            }),
+                            Ok(VGamePreparationsFinish::Stock(gameresult)) => GameResult(SWebsocketGameResult::new(gameresult)),
                             Err(gamepreparations) => GamePreparations(gamepreparations),
                         }
                         DetermineRules(determinerules) => simple_transition(determinerules, Game, DetermineRules),
                         Game(game) => simple_transition(
                             game,
-                            |gameresult| GameResult(SWebsocketGameResult{
-                                gameresult,
-                                mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false),
-                            }),
+                            |gameresult| GameResult(SWebsocketGameResult::new(gameresult)),
                             Game
                         ),
                         GameResult(gameresult) => match gameresult.finish() {
