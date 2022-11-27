@@ -149,20 +149,19 @@ impl VGamePhase {
 
     #[allow(clippy::result_large_err)]
     pub fn action(mut self, epi: EPlayerIndex, gamephaseaction: VGamePhaseAction) -> Result<Self, /*Err contains original self*/Self> {
-        let b_ok;
-        match (&mut self, gamephaseaction) {
+        let b_change = match (&mut self, gamephaseaction) {
             (VGamePhase::DealCards(ref mut dealcards), VGamePhaseAction::DealCards(b_doubling)) => {
-                b_ok = dealcards.announce_doubling(epi, b_doubling).is_ok();
+                dealcards.announce_doubling(epi, b_doubling).is_ok()
             },
             (VGamePhase::GamePreparations(ref mut gamepreparations), VGamePhaseAction::GamePreparations(ref orulesid)) => {
-                b_ok = find_rules_by_id(
+                find_rules_by_id(
                     &gamepreparations.ruleset.avecrulegroup[epi],
                     gamepreparations.fullhand(epi),
                     orulesid
                 ).ok().and_then(|orules| gamepreparations.announce_game(epi, orules).ok()).is_some()
             },
             (VGamePhase::DetermineRules(ref mut determinerules), VGamePhaseAction::DetermineRules(ref orulesid)) => {
-                b_ok = determinerules.which_player_can_do_something()
+                determinerules.which_player_can_do_something()
                     .filter(|(epi_active, _vecrulegroup)| epi==*epi_active) // TODO needed?
                     .and_then(|(epi_active, vecrulegroup)| {
                         find_rules_by_id(
@@ -177,50 +176,46 @@ impl VGamePhase {
                             }.ok()
                         })
                     })
-                    .is_some();
+                    .is_some()
             },
             (VGamePhase::Game(ref mut game), VGamePhaseAction::Game(ref gameaction)) => {
-                b_ok = match gameaction {
+                match gameaction {
                     VGameAction::Stoss => game.stoss(epi),
                     VGameAction::Zugeben(card) => game.zugeben(*card, epi),
-                }.is_ok();
+                }.is_ok()
             },
             (VGamePhase::GameResult(ref mut gameresult), VGamePhaseAction::GameResult(())) => {
-                gameresult.mapepib_confirmed[epi] = true;
-                b_ok = true;
+                assign_neq(&mut gameresult.mapepib_confirmed[epi], true)
             },
             (VGamePhase::Accepted(_), VGamePhaseAction::Accepted(_)) => {
-                b_ok = true;
+                false
             },
             (_gamephase, _cmd) => {
                 // TODO assert!(!self.matches_phase(&gamephaseaction));
-                b_ok = false;
+                false
             },
         };
-        let mut b_ok_2 = b_ok;
-        if verify_eq!(b_ok, b_ok_2) {
+        if b_change {
             use VGamePhaseGeneric::*;
             self = loop {
                 match self {
                     DealCards(dealcards) => match dealcards.finish() {
                         Ok(gamepreparations) => self = GamePreparations(gamepreparations),
-                        Err(dealcards) => break DealCards(dealcards)
+                        Err(dealcards) => return Ok(DealCards(dealcards)),
                     },
-                    GamePreparations(gamepreparations) => {
-                        match gamepreparations.finish() {
-                            Ok(VGamePreparationsFinish::DetermineRules(determinerules)) => self = DetermineRules(determinerules),
-                            Ok(VGamePreparationsFinish::DirectGame(game)) => self = Game(game),
-                            Ok(VGamePreparationsFinish::Stock(gameresult)) => self = GameResult(SWebsocketGameResult::new(gameresult)),
-                            Err(gamepreparations) => break GamePreparations(gamepreparations),
-                        }
-                    }
+                    GamePreparations(gamepreparations) => match gamepreparations.finish() {
+                        Ok(VGamePreparationsFinish::DetermineRules(determinerules)) => self = DetermineRules(determinerules),
+                        Ok(VGamePreparationsFinish::DirectGame(game)) => self = Game(game),
+                        Ok(VGamePreparationsFinish::Stock(gameresult)) => self = GameResult(SWebsocketGameResult::new(gameresult)),
+                        Err(gamepreparations) => return Ok(GamePreparations(gamepreparations)),
+                    },
                     DetermineRules(determinerules) => match determinerules.finish() {
                         Ok(game) => self = Game(game),
-                        Err(determinerules) => break DetermineRules(determinerules),
+                        Err(determinerules) => return Ok(DetermineRules(determinerules)),
                     },
                     Game(game) => match game.finish() {
                         Ok(gameresult) => self = GameResult(SWebsocketGameResult::new(gameresult)),
-                        Err(game) => break Game(game),
+                        Err(game) => return Ok(Game(game)),
                     },
                     GameResult(gameresult) => match gameresult.finish() {
                         Ok(accepted) => {
@@ -228,16 +223,11 @@ impl VGamePhase {
                             assert!(oinfallible.is_none());
                             self = Accepted(accepted);
                         },
-                        Err(gameresult) => {
-                            b_ok_2 = false;
-                            break GameResult(gameresult)
-                        },
+                        Err(gameresult) => return Ok(GameResult(gameresult)),
                     },
                     Accepted(accepted) => break Accepted(accepted),
                 };
-            }
-        }
-        if b_ok_2 {
+            };
             Ok(self)
         } else {
             Err(self)
