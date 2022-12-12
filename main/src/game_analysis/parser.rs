@@ -45,7 +45,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
     let mapepistr_username = vec_to_arr(
         doc.find(Class("game-participants"))
             .exactly_one()
-            .map_err(|it| format_err!("error on single: {:?} elements", it.count()))? // TODO could it implement Debug?
+            .map_err(|it| format_err!("{:?}", it))?
             .find(Attr("data-username", ()))
             .map(|node_username| unwrap!(node_username.attr("data-username")))
             .collect()
@@ -58,10 +58,10 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
     // TODO ensure that "key_figure_table" looks exactly as we expect
     let scrape_from_key_figure_table = |str_key| -> Result<_, failure::Error> {
         doc.find(Name("th").and(|node: &Node| node.inner_html()==str_key))
-            .exactly_one().map_err(|it| format_err!("Error with {}: no single <th>{}</th>: {} elements", str_key, str_key, it.count()))? // TODO could it implement Debug?
+            .exactly_one().map_err(|it| format_err!("{:?}", it))?
             .parent().ok_or_else(|| format_err!("Error with {}: {} has no parent", str_key, str_key))?
             .find(Name("td"))
-            .exactly_one().map_err(|it| format_err!("Error with {}: no single <td> containing {}: {} elements", str_key, str_key, it.count())) // TODO could it implement Debug?
+            .exactly_one().map_err(|it| format_err!("{:?}", it))
     };
     let ruleset = if let Ok(node_tarif) = scrape_from_key_figure_table("Tarif") {
         let (n_tarif_extra, n_tarif_ruf, n_tarif_solo) = {
@@ -154,11 +154,11 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
     };
     let orules = doc.find(Class("title-supertext"))
         .exactly_one()
-        .map_err(|it| format_err!("title-supertext single failed {} elements", it.count()))? // TODO could it implement Debug?
+        .map_err(|it| format_err!("{:?}", it))?
         .parent().ok_or_else(|| format_err!("title-supertext has no parent"))?
         .find(Name("h1"))
         .exactly_one()
-        .map_err(|it| format_err!("h1 is not single: {} elements", it.count())) // TODO could it implement Debug?
+        .map_err(|it| format_err!("{:?}", it))
         .and_then(|node_rules| {
             if let Ok(rules) = crate::rules::parser::parse_rule_description(
                 &node_rules.text(),
@@ -233,12 +233,12 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
     };
     let mut itnode_gameannouncement = ((((doc.find(Name("h4").and(|node: &Node| node.inner_html()=="Spielermittlung"))
         .exactly_one()
-        .map_err(|it| format_err!("error on single: {} elements", it.count())))? // TODO could it implement Debug?
+        .map_err(|it| format_err!("{:?}", it)))?
         .parent().ok_or_else(|| format_err!("Spielermittlung has no parent")))?
         .parent().ok_or_else(|| format_err!("Spielermittlung parent has no parent")))?
         .find(Class("card-rows"))
         .exactly_one()
-        .map_err(|it| format_err!("error on single: {} elements", it.count())))? // TODO could it implement Debug?
+        .map_err(|it| format_err!("{:?}", it)))?
         .find(Class("card-row"));
     let gameannouncements = SGameAnnouncementsGeneric::new_full(
         SStaticEPI0{},
