@@ -14,8 +14,16 @@ pub fn parse_rule_description(
     use crate::rules::rulesbettel::*;
     use crate::rules::rulesramsch::*;
     use crate::rules::payoutdecider::*;
-    let vecstr_rule_parts = str_rules_with_player.split(" von ").collect::<Vec<_>>();
-    let ostr_epi_active = if_then_some!(2==vecstr_rule_parts.len(), vecstr_rule_parts[1]);
+    let (str_rules, ostr_epi_active) = {
+        if let Some((str_rules, str_epi_active)) = str_rules_with_player.split(" von ").collect_tuple() {
+            (str_rules, Some(str_epi_active))
+        } else if let Some((str_epi_active, str_rules)) = str_rules_with_player.split(" spielt ").collect_tuple() {
+            (str_rules, Some(str_epi_active))
+        } else {
+            (str_rules_with_player, None)
+        }
+    };
+    let str_rules = str_rules.to_lowercase();
     let get_epi_active = || -> Result<EPlayerIndex, Error> {
         ostr_epi_active
             .ok_or_else(|| format_err!("Cannot determine active player: {}", str_rules_with_player))
@@ -24,7 +32,6 @@ pub fn parse_rule_description(
     // Regarding laufende:
     // https://www.sauspiel.de/hilfe#71-beim-farbwenz-wurden-meine-laufende-nicht-berechnet
     // https://www.schafkopfschule.de/index.php/regeln.html?file=files/inhalte/dokumente/Spielen/Regeln/Schafkopfregeln-Aktuell-29.3.2007.pdf (Section 4.2 Spielabrechnung)
-    let str_rules = vecstr_rule_parts[0].to_lowercase();
     let str_rules_contains = |slcstr: &[&str]| slcstr.iter().any(|str| str_rules.contains(str));
     // determine oefarbe
     let oefarbe = match [
