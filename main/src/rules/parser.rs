@@ -75,7 +75,7 @@ pub fn parse_rule_description(
         }
     };
     match [
-        (&["rufspiel", "sauspiel"] as &[&str], {
+        (&["rufspiel", "sauspiel", "mit der"] as &[&str], {
             match oefarbe {
                 None => Err(format_err!("Rufspiel requires efarbe")),
                 Some(efarbe) => match efarbe {
