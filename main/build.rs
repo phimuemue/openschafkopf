@@ -16,7 +16,7 @@ fn main() {
     // TODO can we avoid lessc depencency?
     unwrap!(
         unwrap!(
-            File::create(&path_out_dir.join("css.css"))
+            File::create(path_out_dir.join("css.css"))
         )
             .write_all(&{
                 let mut cmd_lessc = Command::new("lessc");

@@ -116,7 +116,7 @@ pub fn gameresult_to_dir<Ruleset, GameAnnouncements, DetermineRules>(
                 .join(game.rules.to_string());
             if let Some(epi) = game.rules.playerindex() {
                 path_gameresult = path_gameresult
-                    .join(&format!("von {}", epi.to_usize()));
+                    .join(format!("von {}", epi.to_usize()));
             }
             path_gameresult
         },

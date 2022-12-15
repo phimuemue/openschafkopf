@@ -29,7 +29,7 @@ pub fn visualizer_factory<'rules>(path: std::path::PathBuf, rules: &'rules dyn T
     unwrap!(crate::game_analysis::generate_html_auxiliary_files(&path));
     move |i_ahand, ahand, ocard| {
         let path_abs = path.join(
-            &std::path::Path::new(&format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S")))
+            std::path::Path::new(&format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S")))
                 .join(format!("{}_{}{}.html",
                     i_ahand,
                     ahand.iter()
