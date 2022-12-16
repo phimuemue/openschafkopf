@@ -512,10 +512,10 @@ impl TCardSorter for Box<dyn TActivelyPlayableRules> {
 fn snapshot_cache_point_based<PlayerParties: TPlayerParties+'static>(playerparties: PlayerParties) -> Box<dyn TSnapshotCache<SMinMax>> {
     type SSnapshotEquivalenceClass = u64; // space-saving variant of this:
     // struct SSnapshotEquivalenceClass { // packed into SSnapshotEquivalenceClass TODO? use bitfield crate
-    //     pointstichcount_primary: SPointStichCount,
-    //     pointstichcount_secondary: SPointStichCount,
     //     epi_next_stich: EPlayerIndex,
     //     setcard_played: EnumMap<ECard, bool>, // TODO enumset
+    //     pointstichcount_primary: SPointStichCount,
+    //     // pointstichcount_secondary: SPointStichCount, // implicitly clear
     // }
     #[derive(Debug)]
     struct SSnapshotCachePointBased<PlayerParties: TPlayerParties> {
@@ -531,6 +531,17 @@ fn snapshot_cache_point_based<PlayerParties: TPlayerParties+'static>(playerparti
                 debug_assert_eq!(snapequiv & bits, 0); // none of the touched bits are set so far
                 snapequiv |= bits;
             });
+            set_bits!(/*epi_next_stich*/stichseq.current_stich().first_playerindex().to_usize(), 0);
+            let setcard_played = {
+                let mut setcard_played = 0u64;
+                for (_, &card) in stichseq.visible_cards() {
+                    let mask = 1 << card.to_usize();
+                    debug_assert_eq!((setcard_played & mask), 0);
+                    setcard_played |= mask;
+                }
+                setcard_played
+            };
+            set_bits!(setcard_played, 2);
             let point_stich_count = |b_primary| {
                 EPlayerIndex::values()
                     .filter(|epi| b_primary==self.playerparties.is_primary_party(*epi))
@@ -541,22 +552,11 @@ fn snapshot_cache_point_based<PlayerParties: TPlayerParties+'static>(playerparti
                     )
             };
             let pointstichcount_primary = point_stich_count(true);
-            set_bits!(pointstichcount_primary.n_point, 0);
-            set_bits!(pointstichcount_primary.n_stich, 7);
+            set_bits!(pointstichcount_primary.n_point, 34);
+            set_bits!(pointstichcount_primary.n_stich, 41);
             // let pointstichcount_secondary = point_stich_count(false); // implicitly clear
-            // set_bits!(pointstichcount_secondary.n_point, 11); // implicitly clear
-            // set_bits!(pointstichcount_secondary.n_stich, 18); // implicitly clear
-            set_bits!(/*epi_next_stich*/stichseq.current_stich().first_playerindex().to_usize(), 22);
-            let setcard_played = {
-                let mut setcard_played = 0u64;
-                for (_, &card) in stichseq.visible_cards() {
-                    let mask = 1 << card.to_usize();
-                    debug_assert_eq!((setcard_played & mask), 0);
-                    setcard_played |= mask;
-                }
-                setcard_played
-            };
-            set_bits!(setcard_played, 24);
+            // set_bits!(pointstichcount_secondary.n_point, 45); // implicitly clear
+            // set_bits!(pointstichcount_secondary.n_stich, 52); // implicitly clear
             snapequiv
         }
     }
