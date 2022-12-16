@@ -245,6 +245,7 @@ pub fn ask_for_alternative<'vect, T>(
             let mut ch = askforalternativekeybindings.key_prev;
             while ch!=askforalternativekeybindings.key_choose {
                 if ch==askforalternativekeybindings.key_prev {
+                    #[allow(clippy::implicit_saturating_sub)] // TODO? something like SInterval::clamp
                     if 0<i_alternative {
                         i_alternative -= 1
                     }
