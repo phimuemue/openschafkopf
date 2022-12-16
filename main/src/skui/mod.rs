@@ -273,7 +273,7 @@ pub fn print_hand(veccard: &[ECard], oi_card: Option<usize>) {
         for (i, card) in veccard.iter().enumerate() {
             let n_card_width = 10;
             ncurses::wmove(ncwin,
-                /*n_y*/ if is_oi_card(i) { 0i32 } else { 1i32 },
+                /*n_y; convert bool to isize*/ i32::from(!is_oi_card(i)),
                 /*n_x*/ (n_card_width * i).as_num()
             );
             wprint(ncwin, " +--");
