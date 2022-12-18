@@ -209,4 +209,31 @@ impl TRules for SRulesRamsch {
             }
         )
     }
+
+    fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Option<Box<dyn TSnapshotCache<SMinMax>>> {
+        Some(super::snapshot_cache(|rulestatecache| {
+            let mut payload_point_stich_count = 0;
+            let point_stich_count = |epi| {
+                let pointstichcount = &rulestatecache.changing.mapepipointstichcount[epi];
+                let (mut n_point, mut n_stich) = (pointstichcount.n_point, pointstichcount.n_stich);
+                if n_stich==8 {
+                    // "8" would occupy 4 bits => would be too much
+                    // => encode this as n_point==121 points, n_stich==0
+                    assert_eq!(120, n_point);
+                    n_point += 1;
+                    n_stich = 0;
+                }
+                (n_point, n_stich)
+            };
+            for (i_epi, epi) in EPlayerIndex::values()
+                .skip(1) // first EPI implicitly clear
+                .enumerate()
+            {
+                let (n_point, n_stich) = point_stich_count(epi);
+                set_bits!(payload_point_stich_count, n_point, i_epi*10);
+                set_bits!(payload_point_stich_count, n_stich, 7 + i_epi*10);
+            }
+            payload_point_stich_count
+        }))
+    }
 }
