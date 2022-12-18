@@ -210,8 +210,8 @@ impl TRules for SRulesRamsch {
         )
     }
 
-    fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Option<Box<dyn TSnapshotCache<SMinMax>>> {
-        Some(super::snapshot_cache(|rulestatecache| {
+    fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
+        super::snapshot_cache(|rulestatecache| {
             let mut payload_point_stich_count = 0;
             let point_stich_count = |epi| {
                 let pointstichcount = &rulestatecache.changing.mapepipointstichcount[epi];
@@ -234,6 +234,6 @@ impl TRules for SRulesRamsch {
                 set_bits!(payload_point_stich_count, n_stich, 7 + i_epi*10);
             }
             payload_point_stich_count
-        }))
+        })
     }
 }

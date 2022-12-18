@@ -412,8 +412,8 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
         self.payoutdecider.points_as_payout(self)
     }
 
-    fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Option<Box<dyn TSnapshotCache<SMinMax>>> {
-        Some(super::snapshot_cache_point_based(SPlayerParties13::new(self.epi)))
+    fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
+        super::snapshot_cache_point_based(SPlayerParties13::new(self.epi))
     }
 }
 

@@ -185,8 +185,8 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
         BettelAllAllowedCardsWithinStich::all_allowed_cards_within_stich(self, stichseq, hand)
     }
 
-    fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Option<Box<dyn TSnapshotCache<SMinMax>>> {
-        Some(super::snapshot_cache(|rulestatecache| {
+    fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
+        super::snapshot_cache(|rulestatecache| {
             let mut payload_stich_count = 0;
             for (i_epi, epi) in EPlayerIndex::values()
                 .skip(1) // first EPI implicitly clear
@@ -199,7 +199,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
                 );
             }
             payload_stich_count
-        }))
+        })
     }
 }
 
