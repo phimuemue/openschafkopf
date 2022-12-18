@@ -184,6 +184,23 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
     fn all_allowed_cards_within_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         BettelAllAllowedCardsWithinStich::all_allowed_cards_within_stich(self, stichseq, hand)
     }
+
+    fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Option<Box<dyn TSnapshotCache<SMinMax>>> {
+        Some(super::snapshot_cache(|rulestatecache| {
+            let mut payload_stich_count = 0;
+            for (i_epi, epi) in EPlayerIndex::values()
+                .skip(1) // first EPI implicitly clear
+                .enumerate()
+            {
+                set_bits!(
+                    payload_stich_count,
+                    rulestatecache.changing.mapepipointstichcount[epi].n_stich,
+                    i_epi*4
+                );
+            }
+            payload_stich_count
+        }))
+    }
 }
 
 #[derive(Clone, Debug, Default)]
