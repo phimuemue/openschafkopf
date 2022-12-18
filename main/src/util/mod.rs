@@ -17,6 +17,8 @@ pub use derive_new::new;
 pub use failure::{bail, format_err, Error};
 pub use logging::{error, info, warn};
 pub use openschafkopf_util::*;
+#[macro_use]
+pub mod bitfield;
 
 // TODORUST static_assert not available in rust
 macro_rules! static_assert{($assert_name:ident($($args:tt)*)) => {
