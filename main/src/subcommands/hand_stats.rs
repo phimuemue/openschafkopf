@@ -1,5 +1,5 @@
 use crate::util::*;
-
+use itertools::Itertools;
 use super::common_given_game::*;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
@@ -23,11 +23,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     with_common_args(
         clapmatches,
         |itahand, rules, _stichseq, _ahand_fixed_with_holes, _epi_position, b_verbose| {
-            if b_verbose {
-                for constraint in vecconstraint.iter() {
-                    println!("{}", constraint);
-                }
-            }
             #[derive(PartialOrd, Ord, Hash, PartialEq, Eq)]
             enum VInspectValue {
                 Usize(usize),
@@ -35,47 +30,55 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 Str(String), // For now, all "special" things are represented as strings. TODO? good idea?
                 Error,
             }
-            let mut mapvecinspectvaluen = std::collections::HashMap::<Vec<_>,_>::new();
+            let mut vecmapinspectvaluen = vecconstraint
+                .iter()
+                .map(|_constraint| std::collections::HashMap::new())
+                .collect::<Vec<_>>();
             for ahand in itahand {
                 // assert_eq!(ahand[epi_position], hand_fixed);
-                *mapvecinspectvaluen
-                    .entry(
-                        vecconstraint.iter()
-                            .map(|constraint| 
-                                constraint.internal_eval(
-                                    &ahand,
-                                    rules,
-                                    VInspectValue::Bool,
-                                    VInspectValue::Usize,
-                                    |odynamic| {
-                                        if let Some(dynamic)=odynamic {
-                                            VInspectValue::Str(dynamic.to_string())
-                                        } else {
-                                            VInspectValue::Error
-                                        }
-                                    },
-                                ),
-                            )
-                            .collect()
-                    )
-                    .or_insert(0) += 1;
-            }
-            let mut vectplvecinspectvaluen = mapvecinspectvaluen.into_iter().collect::<Vec<_>>();
-            vectplvecinspectvaluen.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
-            for (vecinspectvalue, n_count) in vectplvecinspectvaluen {
-                for inspectvalue in vecinspectvalue {
-                    print!(
-                        "{} ",
-                        match inspectvalue {
-                            VInspectValue::Usize(n_val) => format!("{}", n_val),
-                            VInspectValue::Bool(b_val) => format!("{}", b_val),
-                            VInspectValue::Str(str_val) => str_val,
-                            VInspectValue::Error => "<Error>".into(),
-                        }
-                    );
+                for (mapinspectvaluen, constraint) in vecmapinspectvaluen.iter_mut()
+                    .zip_eq(vecconstraint.iter())
+                {
+                    *mapinspectvaluen.entry(
+                        constraint.internal_eval(
+                            &ahand,
+                            rules,
+                            VInspectValue::Bool,
+                            VInspectValue::Usize,
+                            |odynamic| {
+                                if let Some(dynamic)=odynamic {
+                                    VInspectValue::Str(dynamic.to_string())
+                                } else {
+                                    VInspectValue::Error
+                                }
+                            },
+                        ),
+                    ).or_insert(0) += 1;
                 }
-                println!("{}", n_count);
             }
+            vecmapinspectvaluen
+                .into_iter()
+                .zip_eq(vecconstraint.iter())
+                .for_each(|(mapinspectvaluen, constraint)| {
+                    if b_verbose || 1<vecconstraint.len() {
+                        println!("{}", constraint);
+                    }
+                    let mut vectplinspectvaluen = mapinspectvaluen.into_iter().collect::<Vec<_>>();
+                    vectplinspectvaluen.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
+                    for (inspectvalue, n_count) in vectplinspectvaluen {
+                        print!(
+                            "{} ",
+                            match inspectvalue {
+                                VInspectValue::Usize(n_val) => format!("{}", n_val),
+                                VInspectValue::Bool(b_val) => format!("{}", b_val),
+                                VInspectValue::Str(str_val) => str_val,
+                                VInspectValue::Error => "<Error>".into(),
+                            }
+                        );
+                        println!("{}", n_count);
+                    }
+                        
+                });
             Ok(())
         }
     )
