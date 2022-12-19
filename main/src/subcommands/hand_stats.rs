@@ -23,59 +23,35 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     with_common_args(
         clapmatches,
         |itahand, rules, _stichseq, _ahand_fixed_with_holes, _epi_position, b_verbose| {
-            #[derive(PartialOrd, Ord, Hash, PartialEq, Eq)]
-            enum VInspectValue {
-                Usize(usize),
-                Bool(bool),
-                Str(String), // For now, all "special" things are represented as strings. TODO? good idea?
-                Error,
-            }
-            let mut vecmapinspectvaluen = vecconstraint
+            let mut vecmapostrn = vecconstraint
                 .iter()
                 .map(|_constraint| std::collections::HashMap::new())
                 .collect::<Vec<_>>();
             for ahand in itahand {
                 // assert_eq!(ahand[epi_position], hand_fixed);
-                for (mapinspectvaluen, constraint) in vecmapinspectvaluen.iter_mut()
+                for (mapostrn, constraint) in vecmapostrn.iter_mut()
                     .zip_eq(vecconstraint.iter())
                 {
-                    *mapinspectvaluen.entry(
+                    *mapostrn.entry(
                         constraint.internal_eval(
                             &ahand,
                             rules,
-                            VInspectValue::Bool,
-                            VInspectValue::Usize,
-                            |odynamic| {
-                                if let Some(dynamic)=odynamic {
-                                    VInspectValue::Str(dynamic.to_string())
-                                } else {
-                                    VInspectValue::Error
-                                }
-                            },
+                            |resdynamic| resdynamic.ok().map(|dynamic| dynamic.to_string()),
                         ),
                     ).or_insert(0) += 1;
                 }
             }
-            vecmapinspectvaluen
+            vecmapostrn
                 .into_iter()
                 .zip_eq(vecconstraint.iter())
-                .for_each(|(mapinspectvaluen, constraint)| {
+                .for_each(|(mapostrn, constraint)| {
                     if b_verbose || 1<vecconstraint.len() {
                         println!("{}", constraint);
                     }
-                    let mut vectplinspectvaluen = mapinspectvaluen.into_iter().collect::<Vec<_>>();
-                    vectplinspectvaluen.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
-                    for (inspectvalue, n_count) in vectplinspectvaluen {
-                        print!(
-                            "{} ",
-                            match inspectvalue {
-                                VInspectValue::Usize(n_val) => format!("{}", n_val),
-                                VInspectValue::Bool(b_val) => format!("{}", b_val),
-                                VInspectValue::Str(str_val) => str_val,
-                                VInspectValue::Error => "<Error>".into(),
-                            }
-                        );
-                        println!("{}", n_count);
+                    for (ostr, n_count) in mapostrn.into_iter()
+                        .sorted_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0))
+                    {
+                        println!("{} {}", ostr.unwrap_or_else(|| "<Error>".into()), n_count);
                     }
                         
                 });

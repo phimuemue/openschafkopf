@@ -50,36 +50,33 @@ impl SConstraint {
         &self,
         ahand: &EnumMap<EPlayerIndex, SHand>,
         rules: &dyn TRules,
-        fn_bool: impl Fn(bool)->R,
-        fn_usize: impl Fn(usize)->R,
-        fn_rhai: impl Fn(Option<rhai::Dynamic>)->R,
+        fn_eval: impl Fn(Result<rhai::Dynamic, Box<rhai::EvalAltResult>>)->R,
     ) -> R {
-        let resdynamic : Result<rhai::Dynamic,_> = self.engine.call_fn(
+        fn_eval(self.engine.call_fn(
             &mut rhai::Scope::new(),
             &self.ast,
             "inspect",
             (SContext{ahand: ahand.clone(), rules: rules.box_clone()},)
-        );
-        match resdynamic {
-            Ok(dynamic) => {
-                if let Ok(n) = dynamic.as_int() {
-                    fn_usize(n.as_num::<usize>())
-                } else if let Ok(b) = dynamic.as_bool() {
-                    fn_bool(b)
-                } else {
-                    fn_rhai(Some(dynamic))
-                }
-            },
-            Err(e) => {
-                println!("Error evaluating script ({:?}).", e);
-                fn_rhai(None)
-            }
-        }
+        ))
     }
     pub fn eval(&self, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules) -> bool {
-        self.internal_eval(ahand, rules, |b| b, |n| n!=0, |_odynamic| {
-            println!("Unknown result data type.");
-            false
+        self.internal_eval(ahand, rules, |resdynamic| {
+            match resdynamic {
+                Ok(dynamic) => {
+                    if let Ok(n) = dynamic.as_int() {
+                        0 != n
+                    } else if let Ok(b) = dynamic.as_bool() {
+                        b
+                    } else {
+                        eprintln!("Unknown result data type. Interpreted as false.");
+                        false
+                    }
+                },
+                Err(e) => {
+                    eprintln!("Error evaluating script ({:?}).", e);
+                    false
+                }
+            }
         })
     }
 }
