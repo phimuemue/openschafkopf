@@ -23,15 +23,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     with_common_args(
         clapmatches,
         |itahand, rules, _stichseq, _ahand_fixed_with_holes, _epi_position, b_verbose| {
-            let mut vecmapostrn = vecconstraint
+            let mut vectplmapostrnconstraint = vecconstraint
                 .iter()
-                .map(|_constraint| std::collections::HashMap::new())
+                .map(|constraint| (std::collections::HashMap::new(), constraint))
                 .collect::<Vec<_>>();
             for ahand in itahand {
                 // assert_eq!(ahand[epi_position], hand_fixed);
-                for (mapostrn, constraint) in vecmapostrn.iter_mut()
-                    .zip_eq(vecconstraint.iter())
-                {
+                for (mapostrn, constraint) in vectplmapostrnconstraint.iter_mut() {
                     *mapostrn.entry(
                         constraint.internal_eval(
                             &ahand,
@@ -41,20 +39,17 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     ).or_insert(0) += 1;
                 }
             }
-            vecmapostrn
-                .into_iter()
-                .zip_eq(vecconstraint.iter())
-                .for_each(|(mapostrn, constraint)| {
-                    if b_verbose || 1<vecconstraint.len() {
-                        println!("{}", constraint);
-                    }
-                    for (ostr, n_count) in mapostrn.into_iter()
-                        .sorted_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0))
-                    {
-                        println!("{} {}", ostr.unwrap_or_else(|| "<Error>".into()), n_count);
-                    }
-                        
-                });
+            for (mapostrn, constraint) in vectplmapostrnconstraint {
+                if b_verbose || 1<vecconstraint.len() {
+                    println!("{}", constraint);
+                }
+                for (ostr, n_count) in mapostrn.into_iter()
+                    .sorted_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0))
+                {
+                    println!("{} {}", ostr.unwrap_or_else(|| "<Error>".into()), n_count);
+                }
+                    
+            }
             Ok(())
         }
     )
