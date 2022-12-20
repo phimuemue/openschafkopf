@@ -35,14 +35,6 @@ impl SContext {
     fn count(&self, i_epi: SRhaiUsize, fn_pred: impl Fn(ECard)->bool) -> SRhaiUsize {
         self.internal_count(epi_from_rhai(i_epi), fn_pred)
     }
-
-    fn counts(&self, fn_pred: impl Fn(ECard)->bool) -> rhai::Array {
-        EPlayerIndex::map_from_fn(|epi| self.internal_count(epi, &fn_pred))
-            .into_raw()
-            .into_iter()
-            .map(rhai::Dynamic::from)
-            .collect()
-    }
 }
 
 impl SConstraint {
@@ -103,8 +95,12 @@ impl std::str::FromStr for SConstraint {
             engine.register_fn(str_name, move |ctx: SContext, i_epi: SRhaiUsize| {
                 ctx.count(i_epi, |card| fn_pred_clone(&ctx, card))
             });
-            engine.register_fn(str_name, move |ctx: SContext| {
-                ctx.counts(|card| fn_pred(&ctx, card))
+            engine.register_fn(str_name, move |ctx: SContext| -> rhai::Array {
+                EPlayerIndex::map_from_fn(|epi| ctx.internal_count(epi, |card| fn_pred(&ctx, card)))
+                    .into_raw()
+                    .into_iter()
+                    .map(rhai::Dynamic::from)
+                    .collect()
             });
         }
         for (str_trumpforfarbe, trumpforfarbe) in [
