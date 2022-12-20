@@ -124,13 +124,9 @@ impl std::str::FromStr for SConstraint {
                 card.schlag()==eschlag
             });
         }
-        for (str_card, card) in <ECard as PlainEnum>::values().map(|card| (card.to_string().to_lowercase(), card)) {
-            engine.register_fn(str_card, move |ctx: SContext, i_epi: SRhaiUsize| {
-                match ctx.count(i_epi, |card_hand| card_hand==card) {
-                    0 => false,
-                    1 => true,
-                    n => panic!("Unexpected card count: {n}"),
-                }
+        for card_for_fn in <ECard as PlainEnum>::values() {
+            register_count_fn(&mut engine, &card_for_fn.to_string().to_lowercase(), move |_ctx, card_hand| {
+                card_hand==card_for_fn
             });
         }
         engine
