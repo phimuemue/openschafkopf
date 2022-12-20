@@ -17,10 +17,6 @@ struct SContext {
     rules: Box<dyn TRules>,
 }
 
-fn epi_from_rhai(i: SRhaiUsize) -> EPlayerIndex {
-    unwrap!(EPlayerIndex::checked_from_usize(i.as_num::<usize>()))
-}
-
 impl SContext {
     fn internal_count(&self, epi: EPlayerIndex, fn_pred: impl Fn(ECard)->bool) -> SRhaiUsize {
         self.ahand[epi]
@@ -33,7 +29,7 @@ impl SContext {
     }
 
     fn count(&self, i_epi: SRhaiUsize, fn_pred: impl Fn(ECard)->bool) -> SRhaiUsize {
-        self.internal_count(epi_from_rhai(i_epi), fn_pred)
+        self.internal_count(unwrap!(EPlayerIndex::checked_from_usize(i_epi.as_num::<usize>())), fn_pred)
     }
 }
 
