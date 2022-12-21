@@ -128,6 +128,9 @@ impl std::str::FromStr for SConstraint {
             register_count_fn(&mut engine, &card_for_fn.to_string().to_lowercase(), move |_ctx, card_hand| {
                 card_hand==card_for_fn
             });
+            register_count_fn(&mut engine, &card_for_fn.to_string().to_uppercase(), move |_ctx, card_hand| {
+                card_hand==card_for_fn
+            });
         }
         engine
             .register_type::<EPlayerIndex>()
