@@ -27,6 +27,7 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
             .long("hand")
             .takes_value(true)
             .required(true)
+            .multiple_occurrences(true)
             .help("The cards on someone's hand")
             .long_help("The cards on the current player's hand (simply separated by spaces, such as \"eo go ho so eu gu hu su\" for a Sie), or the hands of all players. Specifying all player's hands works by first listing cards of player 0, then player 1, then player 2, then player 3 (Example: \"ea ez  ga gz  ha hz  sa sz\" means player 0 has Eichel-Ass and Eichel-Zehn, player 1 has Gras-Ass and Gras-Zehn, and so forth). You can use underscore to leave \"holes\" in other players' hands (Example: \"ea __  ga __  ha __  sa __\" means player 0 has Eichel-Ass and another unknown card, player 1 has Gras-Ass and unknown card, and so forth).")
         )
@@ -70,207 +71,217 @@ pub fn with_common_args<FnWithArgs>(
         ) -> Result<(), Error>,
 {
     let b_verbose = clapmatches.is_present("verbose");
-    let vecocard_hand = cardvector::parse_optional_cards::<Vec<_>>(unwrap!(clapmatches.value_of("hand")))
-        .ok_or_else(||format_err!("Could not parse hand."))?;
     let veccard_stichseq = match clapmatches.value_of("cards_on_table") {
         None => Vec::new(),
         Some(str_cards_on_table) => cardvector::parse_cards(str_cards_on_table)
             .ok_or_else(||format_err!("Could not parse played cards"))?,
     };
-    let veccard_duplicate = veccard_stichseq.iter()
-        .chain(vecocard_hand.iter().filter_map(|ocard| ocard.as_ref()))
-        .duplicates()
-        .collect::<Vec<_>>();
-    if !veccard_duplicate.is_empty() {
-        bail!("Cards are used more than once: {}", veccard_duplicate.iter().join(", "));
-    }
-    let (itrules, b_single) = match super::get_rules(clapmatches) {
-        None => {
-            let ruleset = super::get_ruleset(clapmatches)?;
-            (
-                Box::new(ruleset
-                    .avecrulegroup.into_raw().into_iter()
-                    .flat_map(|vecrulegroup|
-                        vecrulegroup.into_iter().flat_map(|rulegroup| {
-                            rulegroup.vecorules.into_iter()
-                                .filter_map(|orules|
-                                    orules.as_ref().map(|rules|
-                                        TRulesBoxClone::box_clone(rules.upcast())
+    let vectplvecocardstr_ahand = unwrap!(clapmatches.values_of("hand"))
+        .map(|str_ahand| 
+            cardvector::parse_optional_cards::<Vec<_>>(str_ahand)
+                .ok_or_else(||format_err!("Could not parse hand: {}", str_ahand))
+                .map(|vecocard| (vecocard, str_ahand))
+        )
+        .collect::<Result<Vec<_>, _>>()?;
+    for (vecocard_hand, str_ahand) in vectplvecocardstr_ahand.iter() {
+        let veccard_duplicate = veccard_stichseq.iter()
+            .chain(vecocard_hand.iter().filter_map(|ocard| ocard.as_ref()))
+            .duplicates()
+            .collect::<Vec<_>>();
+        if !veccard_duplicate.is_empty() {
+            bail!("Cards are used more than once: {}", veccard_duplicate.iter().join(", "));
+        }
+        let (itrules, b_single_rules) = match super::get_rules(clapmatches) {
+            None => {
+                let ruleset = super::get_ruleset(clapmatches)?;
+                (
+                    Box::new(ruleset
+                        .avecrulegroup.into_raw().into_iter()
+                        .flat_map(|vecrulegroup|
+                            vecrulegroup.into_iter().flat_map(|rulegroup| {
+                                rulegroup.vecorules.into_iter()
+                                    .filter_map(|orules|
+                                        orules.as_ref().map(|rules|
+                                            TRulesBoxClone::box_clone(rules.upcast())
+                                        )
                                     )
-                                )
-                        })
-                    )
-                    .chain(match ruleset.stockorramsch {
-                        VStockOrT::Stock(_) => None,
-                        VStockOrT::OrT(rules) => Some(rules)
-                    })
-                ) as Box<dyn Iterator<Item=Box<dyn TRules>>>,
-                /*b_single*/false,
-            )
-        },
-        Some(Ok(rules)) => {
-            (Box::new(std::iter::once(rules)) as Box<dyn Iterator<Item=Box<dyn TRules>>>, /*b_single*/true)
-        },
-        Some(Err(err)) => {
-            bail!("Could not parse rules: {}", err);
-        },
-    };
-    for rules in itrules {
-        let rules = rules.as_ref();
-        let (stichseq, ahand_with_holes, epi_position) = EKurzLang::values()
-            .filter_map(|ekurzlang| {
-                let mut stichseq = SStichSequence::new(ekurzlang);
-                for &card in veccard_stichseq.iter() {
-                    if !ekurzlang.supports_card(card)
-                        || stichseq.game_finished()
-                    {
-                        return None; // TODO? distinguish error
-                    }
-                    stichseq.zugeben(card, rules);
-                }
-                let epi_position = clapmatches.value_of_t("position")
-                    .unwrap_or_else(|_|unwrap!(stichseq.current_stich().current_playerindex()));
-                if_then_some!(
-                    vecocard_hand.iter().all(Option::is_some)
-                        && stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
-                    SHand::new_from_iter(
-                        vecocard_hand.iter().map(|ocard| unwrap!(ocard))
-                    ).to_ahand(epi_position)
-                ).or_else(|| {
-                    let n_cards_total = stichseq.kurzlang().cards_per_player()*EPlayerIndex::SIZE;
-                    if stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total {
-                        let an_remaining = stichseq.remaining_cards_per_hand();
-                        let mut i_card_lo = 0;
-                        let ahand = EPlayerIndex::map_from_raw(an_remaining.as_raw().map(|n_remaining| {
-                            // Note: This function is called for each index in order (https://doc.rust-lang.org/std/primitive.array.html#method.map)
-                            let hand = SHand::new_from_iter(
-                                vecocard_hand[i_card_lo..i_card_lo+n_remaining].iter()
-                                    .flatten()
-                            );
-                            i_card_lo += n_remaining;
-                            assert!(hand.cards().len() <= n_remaining);
-                            hand
-                        }));
-                        if_then_some!( // TODO this is overly restrictive for hand-stats
-                            ahand[epi_position].cards().len()==an_remaining[epi_position],
-                            ahand
+                            })
                         )
-                    } else {
-                        None
-                    }
-                })
-                .map(|ahand| (stichseq, ahand, epi_position))
-            })
-            .exactly_one()
-            .map_err(|err| format_err!("Could not determine ekurzlang: {}", err))?;
-        // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
-        if let Some(epi_active) = rules.playerindex() {
-            let veccard_hand_active = stichseq.cards_from_player(&ahand_with_holes[epi_active], epi_active)
-                .copied()
-                .collect::<Vec<_>>();
-            if veccard_hand_active.len()==stichseq.kurzlang().cards_per_player() {
-                if !rules.can_be_played(SFullHand::new(&veccard_hand_active, stichseq.kurzlang())) {
-                    if b_single {
-                        bail!("Rules {} cannot be played given these cards.", rules);
-                    } else {
-                        if b_verbose {
-                            println!("Rules {} cannot be played given these cards.", rules);
-                        }
-                        continue;
-                    }
-                }
-            } else {
-                // let hand iterators try to generate valid hands.
-            }
-        }
-        let oconstraint = if_then_some!(let Some(str_constrain_hands)=clapmatches.value_of("constrain_hands"), {
-            let relation = str_constrain_hands.parse::<SConstraint>().map_err(|_|format_err!("Cannot parse hand constraints"))?;
-            if b_verbose {
-                println!("Constraint parsed as: {}", relation);
-            }
-            relation
-        });
-        let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
-        use VChooseItAhand::*;
-        let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
-            if "all"==str_itahand.to_lowercase() { // TODO replace this case by simply "0"?
-                All
-            } else if let Ok(n_samples)=str_itahand.parse() {
-                Sample(n_samples)
-            } else {
-                bail!("Failed to parse simulate_hands");
-            }
-        ).unwrap_or_else(|| {
-            All
-        });
-        for epi in EPlayerIndex::values() {
-            assert!(ahand_with_holes[epi].cards().len() <= mapepin_cards_per_hand[epi]);
-        }
-        assert_eq!(ahand_with_holes[epi_position].cards().len(), mapepin_cards_per_hand[epi_position]);
-        macro_rules! forward{($n_ahand_total: expr, $itahand_factory: expr, $fn_take: expr) => {{ // TODORUST generic closures
-            let mut n_ahand_seen = 0;
-            let mut n_ahand_valid = 0;
-            if b_verbose || !b_single {
-                println!("Rules: {}", rules);
-            }
-            fn_with_args(
-                Box::new($fn_take($itahand_factory(
-                    &stichseq,
-                    ahand_with_holes.clone(),
-                    epi_position,
-                    rules,
-                    /*fn_inspect*/|b_valid_so_far, ahand| {
-                        n_ahand_seen += 1;
-                        let b_valid = b_valid_so_far
-                            && oconstraint.as_ref().map_or(true, |relation|
-                                relation.eval(ahand, rules)
-                            );
-                        if b_valid {
-                            n_ahand_valid += 1;
-                        }
-                        if b_verbose {
-                            println!("{} {}/{}/{} {}",
-                                if b_valid {
-                                    '>'
-                                } else {
-                                    '|'
-                                },
-                                n_ahand_valid,
-                                n_ahand_seen,
-                                $n_ahand_total,
-                                display_card_slices(&ahand, &rules, " | "),
-                            )
-                        }
-                        b_valid
-                    }
-                ))),
-                rules,
-                &stichseq,
-                &ahand_with_holes,
-                epi_position,
-                b_verbose,
-            )?;
-        }}}
-        match iteratehands {
-            All => {
-                let mut n_cards_unknown = mapepin_cards_per_hand.iter().sum::<usize>()
-                    - ahand_with_holes.iter().map(|hand| hand.cards().len()).sum::<usize>();
-                let n_ahand_total = EPlayerIndex::values()
-                    .fold(1u64, |n_ahand_total, epi| {
-                        let n_cards_sampled = mapepin_cards_per_hand[epi]-ahand_with_holes[epi].cards().len();
-                        let n_binom = num_integer::binomial(
-                            n_cards_unknown.as_num::<u64>(),
-                            n_cards_sampled.as_num::<u64>(),
-                        );
-                        n_cards_unknown -= n_cards_sampled;
-                        n_ahand_total*n_binom
-                    });
-                forward!(n_ahand_total, internal_all_possible_hands, |itahand| itahand)
+                        .chain(match ruleset.stockorramsch {
+                            VStockOrT::Stock(_) => None,
+                            VStockOrT::OrT(rules) => Some(rules)
+                        })
+                    ) as Box<dyn Iterator<Item=Box<dyn TRules>>>,
+                    /*b_single_rules*/false,
+                )
             },
-            Sample(n_samples) => {
-                forward!(n_samples, internal_forever_rand_hands, |itahand| Iterator::take(itahand, n_samples))
+            Some(Ok(rules)) => {
+                (Box::new(std::iter::once(rules)) as Box<dyn Iterator<Item=Box<dyn TRules>>>, /*b_single_rules*/true)
+            },
+            Some(Err(err)) => {
+                bail!("Could not parse rules: {}", err);
             },
         };
+        for rules in itrules {
+            let rules = rules.as_ref();
+            let (stichseq, ahand_with_holes, epi_position) = EKurzLang::values()
+                .filter_map(|ekurzlang| {
+                    let mut stichseq = SStichSequence::new(ekurzlang);
+                    for &card in veccard_stichseq.iter() {
+                        if !ekurzlang.supports_card(card)
+                            || stichseq.game_finished()
+                        {
+                            return None; // TODO? distinguish error
+                        }
+                        stichseq.zugeben(card, rules);
+                    }
+                    let epi_position = clapmatches.value_of_t("position")
+                        .unwrap_or_else(|_|unwrap!(stichseq.current_stich().current_playerindex()));
+                    if_then_some!(
+                        vecocard_hand.iter().all(Option::is_some)
+                            && stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
+                        SHand::new_from_iter(
+                            vecocard_hand.iter().map(|ocard| unwrap!(ocard))
+                        ).to_ahand(epi_position)
+                    ).or_else(|| {
+                        let n_cards_total = stichseq.kurzlang().cards_per_player()*EPlayerIndex::SIZE;
+                        if stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total {
+                            let an_remaining = stichseq.remaining_cards_per_hand();
+                            let mut i_card_lo = 0;
+                            let ahand = EPlayerIndex::map_from_raw(an_remaining.as_raw().map(|n_remaining| {
+                                // Note: This function is called for each index in order (https://doc.rust-lang.org/std/primitive.array.html#method.map)
+                                let hand = SHand::new_from_iter(
+                                    vecocard_hand[i_card_lo..i_card_lo+n_remaining].iter()
+                                        .flatten()
+                                );
+                                i_card_lo += n_remaining;
+                                assert!(hand.cards().len() <= n_remaining);
+                                hand
+                            }));
+                            if_then_some!( // TODO this is overly restrictive for hand-stats
+                                ahand[epi_position].cards().len()==an_remaining[epi_position],
+                                ahand
+                            )
+                        } else {
+                            None
+                        }
+                    })
+                    .map(|ahand| (stichseq, ahand, epi_position))
+                })
+                .exactly_one()
+                .map_err(|err| format_err!("Could not determine ekurzlang: {}", err))?;
+            // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
+            if let Some(epi_active) = rules.playerindex() {
+                let veccard_hand_active = stichseq.cards_from_player(&ahand_with_holes[epi_active], epi_active)
+                    .copied()
+                    .collect::<Vec<_>>();
+                if veccard_hand_active.len()==stichseq.kurzlang().cards_per_player() {
+                    if !rules.can_be_played(SFullHand::new(&veccard_hand_active, stichseq.kurzlang())) {
+                        if b_single_rules {
+                            bail!("Rules {} cannot be played given these cards.", rules);
+                        } else {
+                            if b_verbose {
+                                println!("Rules {} cannot be played given these cards.", rules);
+                            }
+                            continue;
+                        }
+                    }
+                } else {
+                    // let hand iterators try to generate valid hands.
+                }
+            }
+            let oconstraint = if_then_some!(let Some(str_constrain_hands)=clapmatches.value_of("constrain_hands"), {
+                let relation = str_constrain_hands.parse::<SConstraint>().map_err(|_|format_err!("Cannot parse hand constraints"))?;
+                if b_verbose {
+                    println!("Constraint parsed as: {}", relation);
+                }
+                relation
+            });
+            let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
+            use VChooseItAhand::*;
+            let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
+                if "all"==str_itahand.to_lowercase() { // TODO replace this case by simply "0"?
+                    All
+                } else if let Ok(n_samples)=str_itahand.parse() {
+                    Sample(n_samples)
+                } else {
+                    bail!("Failed to parse simulate_hands");
+                }
+            ).unwrap_or_else(|| {
+                All
+            });
+            for epi in EPlayerIndex::values() {
+                assert!(ahand_with_holes[epi].cards().len() <= mapepin_cards_per_hand[epi]);
+            }
+            assert_eq!(ahand_with_holes[epi_position].cards().len(), mapepin_cards_per_hand[epi_position]);
+            macro_rules! forward{($n_ahand_total: expr, $itahand_factory: expr, $fn_take: expr) => {{ // TODORUST generic closures
+                let mut n_ahand_seen = 0;
+                let mut n_ahand_valid = 0;
+                if b_verbose || !b_single_rules {
+                    println!("Rules: {}", rules);
+                }
+                if b_verbose || 1</*b_single_itahand*/vectplvecocardstr_ahand.len() {
+                    println!("Hand(s): {}", str_ahand);
+                }
+                fn_with_args(
+                    Box::new($fn_take($itahand_factory(
+                        &stichseq,
+                        ahand_with_holes.clone(),
+                        epi_position,
+                        rules,
+                        /*fn_inspect*/|b_valid_so_far, ahand| {
+                            n_ahand_seen += 1;
+                            let b_valid = b_valid_so_far
+                                && oconstraint.as_ref().map_or(true, |relation|
+                                    relation.eval(ahand, rules)
+                                );
+                            if b_valid {
+                                n_ahand_valid += 1;
+                            }
+                            if b_verbose {
+                                println!("{} {}/{}/{} {}",
+                                    if b_valid {
+                                        '>'
+                                    } else {
+                                        '|'
+                                    },
+                                    n_ahand_valid,
+                                    n_ahand_seen,
+                                    $n_ahand_total,
+                                    display_card_slices(&ahand, &rules, " | "),
+                                )
+                            }
+                            b_valid
+                        }
+                    ))),
+                    rules,
+                    &stichseq,
+                    &ahand_with_holes,
+                    epi_position,
+                    b_verbose,
+                )?;
+            }}}
+            match iteratehands {
+                All => {
+                    let mut n_cards_unknown = mapepin_cards_per_hand.iter().sum::<usize>()
+                        - ahand_with_holes.iter().map(|hand| hand.cards().len()).sum::<usize>();
+                    let n_ahand_total = EPlayerIndex::values()
+                        .fold(1u64, |n_ahand_total, epi| {
+                            let n_cards_sampled = mapepin_cards_per_hand[epi]-ahand_with_holes[epi].cards().len();
+                            let n_binom = num_integer::binomial(
+                                n_cards_unknown.as_num::<u64>(),
+                                n_cards_sampled.as_num::<u64>(),
+                            );
+                            n_cards_unknown -= n_cards_sampled;
+                            n_ahand_total*n_binom
+                        });
+                    forward!(n_ahand_total, internal_all_possible_hands, |itahand| itahand)
+                },
+                Sample(n_samples) => {
+                    forward!(n_samples, internal_forever_rand_hands, |itahand| Iterator::take(itahand, n_samples))
+                },
+            };
+        }
     }
     Ok(())
 }
