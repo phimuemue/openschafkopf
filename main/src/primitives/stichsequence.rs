@@ -108,7 +108,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         self.current_stich_no_invariant()
     }
 
-    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, winnerindex: &'lifetime(impl TWinnerIndex + ?Sized)) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
+    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, if_dbg_else!({winnerindex}{_}): &'lifetime(impl TWinnerIndex + ?Sized)) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
         #[cfg(debug_assertions)]self.assert_invariant();
         self.vecstich[0..self.vecstich.len()]
             .iter()
