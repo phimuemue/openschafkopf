@@ -7,6 +7,7 @@
     clippy::enum_variant_names,
     clippy::let_unit_value,
 ))]
+#![cfg_attr(all(not(debug_assertions), feature="cargo-clippy"), allow(clippy::let_and_return))]
 
 #[macro_use]
 mod util;
