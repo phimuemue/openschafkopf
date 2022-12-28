@@ -9,6 +9,6 @@ echo "7 Gegenspieler ist nicht Farbfrei - abweichend"
     --hand "eo go ho so         s7   ea ez ek" \
     --hand "eo go ho            s7   ea ez ek e9" \
     --hand "eo go               s7   ea ez ek e9 e8" \
-    --inspect "let an_eichel = ctx.eichel(); an_eichel.remove(ctx.sa().index_of(1)); an_eichel.extract(1).contains(0)" \
-    --inspect "[ctx.sa().index_of(1), ctx.eichel(), {let an_eichel = ctx.eichel(); an_eichel.remove(ctx.sa().index_of(1)); an_eichel.extract(1).contains(0)}]"
+    --inspect "let an_eichel = ctx.eichel(); an_eichel.remove(ctx.who_has_sa()); an_eichel.extract(1).contains(0)" \
+    --inspect "[ctx.who_has_sa(), ctx.eichel(), {let an_eichel = ctx.eichel(); an_eichel.remove(ctx.who_has_sa()); an_eichel.extract(1).contains(0)}]"
 
