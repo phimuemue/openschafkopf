@@ -10,6 +10,7 @@ pub struct SConstraint {
 }
 
 type SRhaiUsize = i64; // TODO good idea?
+type SRhaiEPlayerIndex = i64; // TODO good idea?
 
 #[derive(Clone)]
 struct SContext {
@@ -130,6 +131,11 @@ impl std::str::FromStr for SConstraint {
             });
             register_count_fn(&mut engine, &card_for_fn.to_string().to_uppercase(), move |_ctx, card_hand| {
                 card_hand==card_for_fn
+            });
+            engine.register_fn(format!("who_has_{}", card_for_fn.to_string().to_lowercase()), move |ctx: SContext| -> SRhaiEPlayerIndex {
+                unwrap!(EPlayerIndex::values().find(|&epi| ctx.ahand[epi].contains(card_for_fn)))
+                    .to_usize()
+                    .as_num::<SRhaiEPlayerIndex>()
             });
         }
         engine
