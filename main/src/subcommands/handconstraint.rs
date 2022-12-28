@@ -136,41 +136,7 @@ impl std::str::FromStr for SConstraint {
             .register_type::<EPlayerIndex>()
             .register_fn("to_string", EPlayerIndex::to_string)
         ;
-        engine.compile(format!("fn inspect(ctx) {{ {} }}", {
-            let mut str_in = str_in.to_string();
-            if !str_in.contains("ctx") {
-                let mut replace_old_style = |str_fn_old: &str, str_fn_new: &str| {
-                    let re = unwrap!(
-                        regex::RegexBuilder::new(&format!("\\b{}\\b", str_fn_old))
-                            .case_insensitive(true)
-                            .build()
-                    );
-                    str_in = re.replace_all(&str_in, format!("ctx.{}", str_fn_new)).to_string();
-                };
-                for str_card in <ECard as PlainEnum>::values().map(|card| card.to_string()) {
-                    replace_old_style(&str_card, &str_card);
-                }
-                for (str_fn_old, str_fn_new) in [
-                    ("e", "eichel"),
-                    ("g", "gras"),
-                    ("h", "herz"),
-                    ("s", "schelln"),
-                    ("t", "trumpf"),
-                    ("7", "sieben"),
-                    ("8", "acht"),
-                    ("9", "neun"),
-                    ("z", "zehn"),
-                    ("x", "zehn"),
-                    ("u", "unter"),
-                    ("o", "ober"),
-                    ("k", "koenig"),
-                    ("a", "ass"),
-                ] {
-                    replace_old_style(str_fn_old, str_fn_new);
-                }
-            }
-            str_in
-        }))
+        engine.compile(format!("fn inspect(ctx) {{ {} }}", str_in))
             .or_else(|_err|
                 str_in.parse()
                     .map_err(|err| format_err!("Cannot parse path: {:?}", err))
