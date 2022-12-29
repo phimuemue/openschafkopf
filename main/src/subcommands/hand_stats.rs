@@ -27,6 +27,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 .iter()
                 .map(|constraint| (std::collections::HashMap::new(), constraint))
                 .collect::<Vec<_>>();
+            let mut n_ahand_total = 0;
             for ahand in itahand {
                 // assert_eq!(ahand[epi_position], hand_fixed);
                 for (mapostrn, constraint) in vectplmapostrnconstraint.iter_mut() {
@@ -38,6 +39,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         ),
                     ).or_insert(0) += 1;
                 }
+                n_ahand_total += 1;
             }
             for (mapostrn, constraint) in vectplmapostrnconstraint {
                 if b_verbose || 1<vecconstraint.len() {
@@ -46,7 +48,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 for (ostr, n_count) in mapostrn.into_iter()
                     .sorted_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0))
                 {
-                    println!("{} {}", ostr.unwrap_or_else(|| "<Error>".into()), n_count);
+                    println!("{} {} ({:.2}%)", ostr.unwrap_or_else(|| "<Error>".into()), n_count, (n_count.as_num::<f64>()/n_ahand_total.as_num::<f64>())*100.);
                 }
                     
             }
