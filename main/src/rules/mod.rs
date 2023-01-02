@@ -529,6 +529,24 @@ fn snapshot_cache_point_based<PlayerParties: TPlayerParties+'static>(playerparti
     })
 }
 
+
+fn snap_equiv_base(stichseq: &SStichSequence) -> u64 {
+    debug_assert_eq!(stichseq.current_stich().size(), 0);
+    let mut snapequiv = 0;
+    let setcard_played = {
+        let mut setcard_played = 0u64;
+        for (_, &card) in stichseq.visible_cards() {
+            let mask = 1 << card.to_usize();
+            debug_assert_eq!((setcard_played & mask), 0);
+            setcard_played |= mask;
+        }
+        setcard_played
+    };
+    set_bits!(snapequiv, /*epi_next_stich*/stichseq.current_stich().first_playerindex().to_usize(), 0);
+    set_bits!(snapequiv, setcard_played, 2);
+    snapequiv
+}
+
 fn snapshot_cache(fn_payload: impl Fn(&SRuleStateCache)->u64 + 'static) -> Box<dyn TSnapshotCache<SMinMax>> {
     type SSnapshotEquivalenceClass = u64; // space-saving variant of this:
     // struct SSnapshotEquivalenceClass { // packed into SSnapshotEquivalenceClass TODO? use bitfield crate
@@ -543,19 +561,7 @@ fn snapshot_cache(fn_payload: impl Fn(&SRuleStateCache)->u64 + 'static) -> Box<d
     }
     impl<FnPayload: Fn(&SRuleStateCache)->u64> SSnapshotCachePointBased<FnPayload> {
         fn snap_equiv(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> SSnapshotEquivalenceClass {
-            debug_assert_eq!(stichseq.current_stich().size(), 0);
-            let mut snapequiv = 0;
-            let setcard_played = {
-                let mut setcard_played = 0u64;
-                for (_, &card) in stichseq.visible_cards() {
-                    let mask = 1 << card.to_usize();
-                    debug_assert_eq!((setcard_played & mask), 0);
-                    setcard_played |= mask;
-                }
-                setcard_played
-            };
-            set_bits!(snapequiv, /*epi_next_stich*/stichseq.current_stich().first_playerindex().to_usize(), 0);
-            set_bits!(snapequiv, setcard_played, 2);
+            let mut snapequiv = snap_equiv_base(stichseq);
             set_bits!(snapequiv, (self.fn_payload)(rulestatecache), 34);
             snapequiv
         }
