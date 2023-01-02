@@ -329,26 +329,37 @@ pub trait TPayoutDecider<Rules, PlayerParties> : Sync + Send + 'static + Clone +
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 }
 
-pub fn snapshot_cache_points_monotonic(playerparties: SPlayerParties13, pointstowin: impl TPointsToWin) -> Box<dyn TSnapshotCache<SMinMax>> {
+pub fn snapshot_cache_points_monotonic(playerparties: impl TPlayerParties + 'static, pointstowin: impl TPointsToWin) -> Box<dyn TSnapshotCache<SMinMax>> {
     type SSnapshotEquivalenceClass = u64; // space-saving variant of this:
     // struct SSnapshotEquivalenceClass { // packed into SSnapshotEquivalenceClass TODO? use bitfield crate
     //     epi_next_stich: EPlayerIndex,
     //     setcard_played: EnumMap<ECard, bool>, // TODO enumset
     // }
     #[derive(Debug)]
-    struct SSnapshotCachePointsMonotonic<PointsToWin> {
+    struct SSnapshotCachePointsMonotonic<PlayerParties, PointsToWin> {
         mapsnapequivpayoutstats: HashMap<SSnapshotEquivalenceClass, crate::ai::gametree::SPerMinMaxStrategy<isize>>,
-        playerparties: SPlayerParties13,
+        playerparties: PlayerParties,
         pointstowin: PointsToWin,
     }
-    impl<PointsToWin: TPointsToWin> TSnapshotCache<SMinMax> for SSnapshotCachePointsMonotonic<PointsToWin> {
+    impl<PlayerParties: TPlayerParties, PointsToWin: TPointsToWin> SSnapshotCachePointsMonotonic<PlayerParties, PointsToWin> {
+        fn primary_players(&self) -> impl Iterator<Item=EPlayerIndex> + '_ {
+            EPlayerIndex::values().filter(|&epi| self.playerparties.is_primary_party(epi))
+        }
+        fn primary_sum(&self, fn_val: impl Fn(EPlayerIndex)->isize) -> isize {
+            self.primary_players().map(fn_val).sum()
+        }
+        fn primary_points_so_far(&self, rulestatecache: &SRuleStateCacheChanging) -> isize {
+            self.primary_sum(|epi| rulestatecache.mapepipointstichcount[epi].n_point)
+        }
+    }
+    impl<PlayerParties: TPlayerParties, PointsToWin: TPointsToWin> TSnapshotCache<SMinMax> for SSnapshotCachePointsMonotonic<PlayerParties, PointsToWin> {
         fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             let mapemmstrategyn_payout_primary = self.mapsnapequivpayoutstats
                 .get(&super::snap_equiv_base(stichseq))?;
             Some(crate::ai::gametree::SPerMinMaxStrategy(crate::ai::gametree::EMinMaxStrategy::map_from_fn(|emmstrategy| {
                 let n_points_primary = mapemmstrategyn_payout_primary.0[emmstrategy]
-                    + rulestatecache.changing.mapepipointstichcount[self.playerparties.primary_player()].n_point;
+                    + self.primary_points_so_far(&rulestatecache.changing);
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
                 payoutdecider::internal_payout(
@@ -365,10 +376,13 @@ pub fn snapshot_cache_points_monotonic(playerparties: SPlayerParties13, pointsto
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             let mapemmstrategyn_payout_primary = payoutstats.0.map(|mapepin_payout| {
                 let n_points_primary = payoutdecider::normalized_points_to_points(
-                    (mapepin_payout[self.playerparties.primary_player()] / self.playerparties.multiplier(self.playerparties.primary_player())).as_num::<f32>(),
+                    (
+                        unwrap!(self.primary_players().map(|epi| mapepin_payout[epi]).all_equal_item())
+                        / /*n_multiplier_primary*/ unwrap!(self.primary_players().map(|epi| self.playerparties.multiplier(epi)).all_equal_item())
+                    ).as_num::<f32>(),
                     &self.pointstowin,
                     /*b_primary*/true,
-                ).as_num::<isize>() - rulestatecache.changing.mapepipointstichcount[self.playerparties.primary_player()].n_point;
+                ).as_num::<isize>() - self.primary_points_so_far(&rulestatecache.changing);
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
                 n_points_primary

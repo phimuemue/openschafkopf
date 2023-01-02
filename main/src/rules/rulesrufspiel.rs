@@ -10,6 +10,7 @@ use std::{cmp::Ordering, fmt};
 pub trait TRufspielPayout : Clone + Sync + fmt::Debug + Send + 'static {
     fn payout(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize>;
     fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
+    fn snapshot_cache(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>>;
 }
 
 #[derive(Debug, Clone)]
@@ -91,6 +92,15 @@ impl TRufspielPayout for SRufspielPayout {
             // TODO Stock
             on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),
         ))
+    }
+
+    fn snapshot_cache(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
+        super::snapshot_cache_point_based(SPlayerParties22{
+            aepi_pri: [
+                rules.epi,
+                rulestatecachefixed.who_has_card(rules.rufsau())
+            ],
+        })
     }
 }
 
@@ -380,6 +390,17 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     tplahandstichseq,
                 )
             }
+            fn snapshot_cache(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
+                payoutdecider::snapshot_cache_points_monotonic(
+                    SPlayerParties22{
+                        aepi_pri: [
+                            rules.epi,
+                            rulestatecachefixed.who_has_card(rules.rufsau())
+                        ],
+                    },
+                    SPointsToWin61,
+                )
+            }
         }
         let epi_active = self.epi;
         let card_rufsau = self.rufsau();
@@ -405,11 +426,6 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
     }
 
     fn snapshot_cache(&self, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
-        super::snapshot_cache_point_based(SPlayerParties22{
-            aepi_pri: [
-                self.epi,
-                rulestatecachefixed.who_has_card(self.rufsau())
-            ],
-        })
+        self.rufspielpayout.snapshot_cache(self, rulestatecachefixed)
     }
 }
