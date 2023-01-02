@@ -620,39 +620,50 @@ fn test_snapshotcache() {
     };
     crate::game::run::internal_run_simple_game_loop( // TODO simplify all this, and explicitly iterate over supported rules
         EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
-            /*fn_check_ask_for_card*/|game: &SGame| {
-                if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
-                    //let epi = unwrap!(game.current_playable_stich().current_playerindex());
-                    macro_rules! fwd{($ty_snapshotcache:ty, $fn_snapshotcache:expr,) => {
-                        unwrap!(determine_best_card::<_,_,$ty_snapshotcache,_,_,_>(
-                            &game.stichseq,
-                            game.rules.as_ref(),
-                            Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
-                            /*fn_make_filter*/SNoFilter::factory(),
-                            &SMinReachablePayout::new_from_game(game),
-                            $fn_snapshotcache,
-                            SNoVisualization::factory(),
-                            /*fn_inspect*/&|_,_,_,_| {},
-                        ))
-                            .cards_and_ts()
-                            .map(|(card, payoutstatsperstrategy)| (
-                                card,
-                                verify_eq!(
-                                    &payoutstatsperstrategy.0,
-                                    &payoutstatsperstrategy.0
-                                ).clone()
+            /*fn_check_ask_for_card*/|game_in: &SGame| {
+                let internal_test = |game: &SGame| {
+                    if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
+                        //let epi = unwrap!(game.current_playable_stich().current_playerindex());
+                        macro_rules! fwd{($ty_snapshotcache:ty, $fn_snapshotcache:expr,) => {
+                            unwrap!(determine_best_card::<_,_,$ty_snapshotcache,_,_,_>(
+                                &game.stichseq,
+                                game.rules.as_ref(),
+                                Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
+                                /*fn_make_filter*/SNoFilter::factory(),
+                                &SMinReachablePayout::new_from_game(game),
+                                $fn_snapshotcache,
+                                SNoVisualization::factory(),
+                                /*fn_inspect*/&|_,_,_,_| {},
                             ))
-                            .collect::<Vec<_>>()
-                    }}
-                    assert_eq!(
-                        fwd!(
-                            _, SSnapshotCacheNone::factory(),
-                        ),
-                        fwd!(
-                            Box<dyn TSnapshotCache<SMinMax>>,
-                            |_stichseq, rulestatecache| game.rules.snapshot_cache(rulestatecache),
-                        ),
-                    );
+                                .cards_and_ts()
+                                .map(|(card, payoutstatsperstrategy)| (
+                                    card,
+                                    verify_eq!(
+                                        &payoutstatsperstrategy.0,
+                                        &payoutstatsperstrategy.0
+                                    ).clone()
+                                ))
+                                .collect::<Vec<_>>()
+                        }}
+                        assert_eq!(
+                            fwd!(
+                                _, SSnapshotCacheNone::factory(),
+                            ),
+                            fwd!(
+                                Box<dyn TSnapshotCache<SMinMax>>,
+                                |_stichseq, rulestatecache| game.rules.snapshot_cache(rulestatecache),
+                            ),
+                        );
+                    }
+                };
+                internal_test(game_in);
+                if let Some((rules, _fn_payout_to_points))=game_in.rules.points_as_payout() {
+                    internal_test(&game_in.clone().map(
+                        /*fn_announcements*/|gameannouncements| gameannouncements,
+                        /*fn_determinerules*/|determinerules| determinerules,
+                        /*fn_ruleset*/|ruleset| ruleset,
+                        /*fn_rules*/|_rules| rules,
+                    ));
                 }
             },
         )) as Box<dyn TPlayer>),
