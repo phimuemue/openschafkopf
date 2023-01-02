@@ -588,3 +588,115 @@ fn snapshot_cache(fn_payload: impl Fn(&SRuleStateCache)->u64 + 'static) -> Box<d
     )
 }
 
+#[test]
+fn test_snapshotcache() {
+    use crate::{
+        game::SGame,
+        player::{
+            TPlayer,
+            playerrandom::SPlayerRandom,
+        },
+        rules::ruleset::{
+            SRuleSet,
+            allowed_rules,
+            VStockOrT,
+        },
+        util::*,
+        ai::{
+            gametree::{
+                SMinReachablePayout,
+                SNoFilter,
+                SNoVisualization,
+                SSnapshotCacheNone,
+            },
+            determine_best_card,
+        },
+    };
+    crate::game::run::internal_run_simple_game_loop( // TODO simplify all this, and explicitly iterate over supported rules
+        EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
+            /*fn_check_ask_for_card*/|game: &SGame| {
+                if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
+                    //let epi = unwrap!(game.current_playable_stich().current_playerindex());
+                    macro_rules! fwd{($ty_snapshotcache:ty, $fn_snapshotcache:expr,) => {
+                        unwrap!(determine_best_card::<_,_,$ty_snapshotcache,_,_,_>(
+                            &game.stichseq,
+                            game.rules.as_ref(),
+                            Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
+                            /*fn_make_filter*/SNoFilter::factory(),
+                            &SMinReachablePayout::new_from_game(game),
+                            $fn_snapshotcache,
+                            SNoVisualization::factory(),
+                            /*fn_inspect*/&|_,_,_,_| {},
+                        ))
+                            .cards_and_ts()
+                            .map(|(card, payoutstatsperstrategy)| (
+                                card,
+                                verify_eq!(
+                                    &payoutstatsperstrategy.0,
+                                    &payoutstatsperstrategy.0
+                                ).clone()
+                            ))
+                            .collect::<Vec<_>>()
+                    }}
+                    assert_eq!(
+                        fwd!(
+                            _, SSnapshotCacheNone::factory(),
+                        ),
+                        fwd!(
+                            Box<dyn TSnapshotCache<SMinMax>>,
+                            |_stichseq, rulestatecache| game.rules.snapshot_cache(rulestatecache),
+                        ),
+                    );
+                }
+            },
+        )) as Box<dyn TPlayer>),
+        /*n_games*/8,
+        unwrap!(SRuleSet::from_string(
+            r"
+            base-price=10
+            solo-price=50
+            lauf-min=3
+            [rufspiel]
+            [solo]
+            [wenz]
+            [farbwenz]
+            [geier]
+            [farbgeier]
+            [bettel]
+            [ramsch]
+            price=20
+            [stoss]
+            max=4
+            ",
+        )),
+        /*fn_gamepreparations_to_stockorgame*/|gamepreparations, _aattable| {
+            let itstockorgame = EPlayerIndex::values()
+                .flat_map(|epi| {
+                    allowed_rules(
+                        &gamepreparations.ruleset.avecrulegroup[epi],
+                        gamepreparations.fullhand(epi),
+                    )
+                })
+                .filter_map(|orules| {
+                    orules.map(|rules| {
+                        VStockOrT::OrT(
+                            SGame::new(
+                                gamepreparations.aveccard.clone(),
+                                gamepreparations.expensifiers.clone(),
+                                gamepreparations.ruleset.ostossparams.clone(),
+                                rules.upcast().box_clone(),
+                            )
+                        )
+                    })
+                })
+                .collect::<Vec<_>>().into_iter(); // TODO how can we avoid this?
+            if_dbg_else!(
+                {{
+                    use rand::seq::IteratorRandom;
+                    itstockorgame.choose_multiple(&mut rand::thread_rng(), 1).into_iter()
+                }}
+                {itstockorgame}
+            )
+        },
+    );
+}

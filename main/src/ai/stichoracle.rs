@@ -1137,7 +1137,7 @@ mod tests {
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                                 $fn_make_filter,
                                 &SMinReachablePayout::new_from_game(game),
-                                /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO test cache
+                                /*fn_snapshotcache*/SSnapshotCacheNone::factory(),
                                 SNoVisualization::factory(),
                                 /*fn_inspect*/&|_,_,_,_| {},
                             ))
