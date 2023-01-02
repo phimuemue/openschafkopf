@@ -442,7 +442,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         Ok(game)
     }
 
-    pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameGeneric<Ruleset2, GameAnnouncements2, DetermineRules2> {
+    pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2, fn_rules: impl FnOnce(Box<dyn TRules>)->Box<dyn TRules>) -> SGameGeneric<Ruleset2, GameAnnouncements2, DetermineRules2> {
         let SGameGeneric {
             aveccard,
             ahand,
@@ -459,7 +459,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
             ahand,
             gameannouncements: fn_announcements(gameannouncements),
             determinerules: fn_determinerules(determinerules),
-            rules,
+            rules: fn_rules(rules),
             ostossparams,
             expensifiers,
             stichseq,
@@ -553,7 +553,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameResultGeneric<Ruleset, Gam
             an_payout,
             stockorgame: match stockorgame {
                 VStockOrT::Stock(stock) => VStockOrT::Stock(stock),
-                VStockOrT::OrT(game) => VStockOrT::OrT(game.map(fn_announcements, fn_determinerules, fn_ruleset)),
+                VStockOrT::OrT(game) => VStockOrT::OrT(game.map(fn_announcements, fn_determinerules, fn_ruleset, /*fn_rules*/|rules| rules)),
             },
         }
     }
