@@ -328,3 +328,67 @@ pub trait TPayoutDecider<Rules, PlayerParties> : Sync + Send + 'static + Clone +
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 }
+
+pub fn snapshot_cache_points_monotonic(playerparties: SPlayerParties13, pointstowin: impl TPointsToWin) -> Box<dyn TSnapshotCache<SMinMax>> {
+    type SSnapshotEquivalenceClass = u64; // space-saving variant of this:
+    // struct SSnapshotEquivalenceClass { // packed into SSnapshotEquivalenceClass TODO? use bitfield crate
+    //     epi_next_stich: EPlayerIndex,
+    //     setcard_played: EnumMap<ECard, bool>, // TODO enumset
+    // }
+    #[derive(Debug)]
+    struct SSnapshotCachePointsMonotonic<PointsToWin> {
+        mapsnapequivpayoutstats: HashMap<SSnapshotEquivalenceClass, crate::ai::gametree::SPerMinMaxStrategy<isize>>,
+        playerparties: SPlayerParties13,
+        pointstowin: PointsToWin,
+    }
+    impl<PointsToWin: TPointsToWin> TSnapshotCache<SMinMax> for SSnapshotCachePointsMonotonic<PointsToWin> {
+        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
+            debug_assert_eq!(stichseq.current_stich().size(), 0);
+            let mapemmstrategyn_payout_primary = self.mapsnapequivpayoutstats
+                .get(&super::snap_equiv_base(stichseq))?;
+            Some(crate::ai::gametree::SPerMinMaxStrategy(crate::ai::gametree::EMinMaxStrategy::map_from_fn(|emmstrategy| {
+                let n_points_primary = mapemmstrategyn_payout_primary.0[emmstrategy]
+                    + rulestatecache.changing.mapepipointstichcount[self.playerparties.primary_player()].n_point;
+                debug_assert!(0<=n_points_primary);
+                debug_assert!(n_points_primary<=120);
+                payoutdecider::internal_payout(
+                    /*n_payout_single_player*/payoutdecider::primary_points_to_normalized_points(
+                        n_points_primary,
+                        &self.pointstowin,
+                    ).abs(),
+                    &self.playerparties,
+                    /*b_primary_party_wins*/n_points_primary>=self.pointstowin.points_to_win(),
+                )
+            })))
+        }
+        fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SMinMax) {
+            debug_assert_eq!(stichseq.current_stich().size(), 0);
+            let mapemmstrategyn_payout_primary = payoutstats.0.map(|mapepin_payout| {
+                let n_points_primary = payoutdecider::normalized_points_to_points(
+                    (mapepin_payout[self.playerparties.primary_player()] / self.playerparties.multiplier(self.playerparties.primary_player())).as_num::<f32>(),
+                    &self.pointstowin,
+                    /*b_primary*/true,
+                ).as_num::<isize>() - rulestatecache.changing.mapepipointstichcount[self.playerparties.primary_player()].n_point;
+                debug_assert!(0<=n_points_primary);
+                debug_assert!(n_points_primary<=120);
+                n_points_primary
+            });
+            self.mapsnapequivpayoutstats
+                .insert(
+                    super::snap_equiv_base(stichseq),
+                    crate::ai::gametree::SPerMinMaxStrategy(mapemmstrategyn_payout_primary),
+                );
+            debug_assert_eq!(self.get(stichseq, rulestatecache).as_ref(), Some(payoutstats));
+        }
+        fn continue_with_cache(&self, stichseq: &SStichSequence) -> bool {
+            stichseq.completed_stichs().len()<=5
+        }
+    }
+    Box::new(
+        SSnapshotCachePointsMonotonic{
+            mapsnapequivpayoutstats: Default::default(),
+            playerparties,
+            pointstowin,
+        }
+    )
+}

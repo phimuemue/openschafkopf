@@ -191,7 +191,10 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
     }
 
     fn snapshot_cache(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Box<dyn TSnapshotCache<SMinMax>> {
-        super::snapshot_cache_point_based(SPlayerParties13::new(rules.epi))
+        payoutdecider::snapshot_cache_points_monotonic(
+            SPlayerParties13::new(rules.epi),
+            self.pointstowin.clone(),
+        )
     }
 }
 
