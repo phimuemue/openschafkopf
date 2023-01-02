@@ -21,6 +21,8 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
     )> {
         None
     }
+
+    fn snapshot_cache(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Box<dyn TSnapshotCache<SMinMax>>;
 }
 
 impl TPointsToWin for VGameAnnouncementPrioritySoloLike {
@@ -117,6 +119,10 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
             }) as Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32>,
         )
     )}
+
+    fn snapshot_cache(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Box<dyn TSnapshotCache<SMinMax>> {
+        super::snapshot_cache_point_based(SPlayerParties13::new(rules.epi))
+    }
 }
 
 impl SPayoutDeciderPointsAsPayout<VGameAnnouncementPrioritySoloLike> {
@@ -183,6 +189,10 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
     fn equivalent_when_on_same_hand(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>> {
         equivalent_when_on_same_hand_point_based(slccard_ordered)
     }
+
+    fn snapshot_cache(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Box<dyn TSnapshotCache<SMinMax>> {
+        super::snapshot_cache_point_based(SPlayerParties13::new(rules.epi))
+    }
 }
 
 #[derive(Clone, Debug, new)]
@@ -232,6 +242,10 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
 
     fn equivalent_when_on_same_hand(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>> {
         vec![slccard_ordered.to_vec()] // In Tout, neighboring cards are equivalent regardless of points_card.
+    }
+
+    fn snapshot_cache(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Box<dyn TSnapshotCache<SMinMax>> {
+        super::snapshot_cache_point_based(SPlayerParties13::new(rules.epi))
     }
 }
 
@@ -324,6 +338,10 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
         ));
         vec![slccard_ordered.to_vec()] // In Sie, neighboring cards are equivalent regardless of points_card.
     }
+
+    fn snapshot_cache(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Box<dyn TSnapshotCache<SMinMax>> {
+        super::snapshot_cache_point_based(SPlayerParties13::new(rules.epi))
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -413,7 +431,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
     }
 
     fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
-        super::snapshot_cache_point_based(SPlayerParties13::new(self.epi))
+        self.payoutdecider.snapshot_cache(self)
     }
 }
 
