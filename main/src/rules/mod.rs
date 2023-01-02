@@ -573,7 +573,7 @@ fn snapshot_cache(fn_payload: impl Fn(&SRuleStateCache)->u64 + 'static) -> Box<d
                     self.snap_equiv(stichseq, rulestatecache),
                     payoutstats.clone()
                 );
-            debug_assert!(self.get(stichseq, rulestatecache).is_some());
+            debug_assert_eq!(self.get(stichseq, rulestatecache).as_ref(), Some(payoutstats));
         }
         fn continue_with_cache(&self, stichseq: &SStichSequence) -> bool {
             stichseq.completed_stichs().len()<=5
