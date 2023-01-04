@@ -341,17 +341,6 @@ pub fn snapshot_cache_points_monotonic(playerparties: impl TPlayerParties + 'sta
         playerparties: PlayerParties,
         pointstowin: PointsToWin,
     }
-    impl<PlayerParties: TPlayerParties, PointsToWin: TPointsToWin> SSnapshotCachePointsMonotonic<PlayerParties, PointsToWin> {
-        fn primary_players(&self) -> impl Iterator<Item=EPlayerIndex> + '_ {
-            EPlayerIndex::values().filter(|&epi| self.playerparties.is_primary_party(epi))
-        }
-        fn primary_sum(&self, fn_val: impl Fn(EPlayerIndex)->isize) -> isize {
-            self.primary_players().map(fn_val).sum()
-        }
-        fn primary_points_so_far(&self, rulestatecache: &SRuleStateCacheChanging) -> isize {
-            self.primary_sum(|epi| rulestatecache.mapepipointstichcount[epi].n_point)
-        }
-    }
     impl<PlayerParties: TPlayerParties, PointsToWin: TPointsToWin> TSnapshotCache<SMinMax> for SSnapshotCachePointsMonotonic<PlayerParties, PointsToWin> {
         fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
@@ -359,7 +348,7 @@ pub fn snapshot_cache_points_monotonic(playerparties: impl TPlayerParties + 'sta
                 .get(&super::snap_equiv_base(stichseq))?;
             Some(crate::ai::gametree::SPerMinMaxStrategy(crate::ai::gametree::EMinMaxStrategy::map_from_fn(|emmstrategy| {
                 let n_points_primary = mapemmstrategyn_payout_primary.0[emmstrategy]
-                    + self.primary_points_so_far(&rulestatecache.changing);
+                    + self.playerparties.primary_points_so_far(&rulestatecache.changing);
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
                 payoutdecider::internal_payout(
@@ -377,12 +366,12 @@ pub fn snapshot_cache_points_monotonic(playerparties: impl TPlayerParties + 'sta
             let mapemmstrategyn_payout_primary = payoutstats.0.map(|mapepin_payout| {
                 let n_points_primary = payoutdecider::normalized_points_to_points(
                     (
-                        unwrap!(self.primary_players().map(|epi| mapepin_payout[epi]).all_equal_item())
-                        / /*n_multiplier_primary*/ unwrap!(self.primary_players().map(|epi| self.playerparties.multiplier(epi)).all_equal_item())
+                        unwrap!(self.playerparties.primary_players().map(|epi| mapepin_payout[epi]).all_equal_item())
+                        / /*n_multiplier_primary*/ unwrap!(self.playerparties.primary_players().map(|epi| self.playerparties.multiplier(epi)).all_equal_item())
                     ).as_num::<f32>(),
                     &self.pointstowin,
                     /*b_primary*/true,
-                ).as_num::<isize>() - self.primary_points_so_far(&rulestatecache.changing);
+                ).as_num::<isize>() - self.playerparties.primary_points_so_far(&rulestatecache.changing);
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
                 n_points_primary

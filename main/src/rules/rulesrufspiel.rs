@@ -172,6 +172,10 @@ impl TPlayerParties for SPlayerParties22 {
     fn multiplier(&self, _epi: EPlayerIndex) -> isize {
         playerparties22_multiplier()
     }
+    type ItEpiPrimary = <[EPlayerIndex; 2] as IntoIterator>::IntoIter;
+    fn primary_players(&self) -> Self::ItEpiPrimary {
+        self.aepi_pri.into_iter()
+    }
 }
 
 impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielPayout> {

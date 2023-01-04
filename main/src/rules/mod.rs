@@ -99,6 +99,14 @@ fn all_allowed_cards_within_stich_distinguish_farbe_frei (
 pub trait TPlayerParties {
     fn is_primary_party(&self, epi: EPlayerIndex) -> bool;
     fn multiplier(&self, epi: EPlayerIndex) -> isize;
+    type ItEpiPrimary: Iterator<Item=EPlayerIndex>;
+    fn primary_players(&self) -> Self::ItEpiPrimary;
+    fn primary_sum(&self, fn_val: impl Fn(EPlayerIndex)->isize) -> isize {
+        self.primary_players().map(fn_val).sum()
+    }
+    fn primary_points_so_far(&self, rulestatecache: &SRuleStateCacheChanging) -> isize {
+        self.primary_sum(|epi| rulestatecache.mapepipointstichcount[epi].n_point)
+    }
 }
 
 #[derive(new, Debug)]
@@ -118,6 +126,10 @@ impl TPlayerParties for SPlayerParties13 {
     }
     fn multiplier(&self, epi: EPlayerIndex) -> isize {
         if self.is_primary_party(epi) {3} else {1}
+    }
+    type ItEpiPrimary = std::iter::Once<EPlayerIndex>;
+    fn primary_players(&self) -> Self::ItEpiPrimary {
+        std::iter::once(self.epi)
     }
 }
 
@@ -542,7 +554,7 @@ fn snap_equiv_base(stichseq: &SStichSequence) -> u64 {
         }
         setcard_played
     };
-    set_bits!(snapequiv, /*epi_next_stich*/stichseq.current_stich().first_playerindex().to_usize(), 0);
+    //set_bits!(snapequiv, /*epi_next_stich*/stichseq.current_stich().first_playerindex().to_usize(), 0);
     set_bits!(snapequiv, setcard_played, 2);
     snapequiv
 }
