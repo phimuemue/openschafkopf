@@ -419,9 +419,11 @@ plain_enum_mod!(modeminmaxstrategy, EMinMaxStrategy {
     Max,
 });
 
+// TODO(performance) offer possibility to constrain oneself to one value of EMinMaxStrategy (reduced run time by ~20%-25% in some tests)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SPerMinMaxStrategy<T>(pub EnumMap<EMinMaxStrategy, T>);
 
+// TODO(performance) storing a whole EnumMap for each EMinMaxStrategy is unnecessary, and slows down the program
 pub type SMinMax = SPerMinMaxStrategy<EnumMap<EPlayerIndex, isize>>;
 
 impl SMinMax {
