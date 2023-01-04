@@ -57,8 +57,7 @@ fn payout_point_based (
     fn_payout_one_player: impl FnOnce(isize, bool)->isize,
 ) -> EnumMap<EPlayerIndex, isize> {
     let n_points_primary_party = debug_verify_eq!(
-        EPlayerIndex::values()
-            .filter(|epi| playerparties.is_primary_party(*epi))
+        playerparties.primary_players()
             .map(|epi| rulestatecache.changing.mapepipointstichcount[epi].n_point)
             .sum::<isize>(),
         stichseq.get().completed_stichs_winner_index(rules)
