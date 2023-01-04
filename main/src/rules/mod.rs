@@ -636,8 +636,8 @@ fn test_snapshotcache() {
                 let internal_test = |game: &SGame| {
                     if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
                         //let epi = unwrap!(game.current_playable_stich().current_playerindex());
-                        macro_rules! fwd{($ty_snapshotcache:ty, $fn_snapshotcache:expr,) => {
-                            unwrap!(determine_best_card::<_,_,$ty_snapshotcache,_,_,_>(
+                        macro_rules! fwd{($fn_snapshotcache:expr) => {
+                            unwrap!(determine_best_card(
                                 &game.stichseq,
                                 game.rules.as_ref(),
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
@@ -658,13 +658,8 @@ fn test_snapshotcache() {
                                 .collect::<Vec<_>>()
                         }}
                         assert_eq!(
-                            fwd!(
-                                _, SSnapshotCacheNone::factory(),
-                            ),
-                            fwd!(
-                                Box<dyn TSnapshotCache<SMinMax>>,
-                                |rulestatecache| game.rules.snapshot_cache(rulestatecache),
-                            ),
+                            fwd!(SSnapshotCacheNone::factory()),
+                            fwd!(|rulestatecache| game.rules.snapshot_cache(rulestatecache)),
                         );
                     }
                 };

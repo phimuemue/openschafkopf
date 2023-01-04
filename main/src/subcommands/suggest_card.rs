@@ -132,10 +132,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     },
                     match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
                         true => (
-                            (Box<dyn TSnapshotCache<SMinMax>>),
                             (|rulestatecache| rules.snapshot_cache(rulestatecache))
                         ),
-                        false => ((_), (SSnapshotCacheNone::factory())),
+                        false => ((SSnapshotCacheNone::factory())),
                     },
                     match (clapmatches.value_of("visualize")) {
                         None => (SNoVisualization::factory()),
@@ -150,13 +149,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 )
             }}
             if epi_current!=epi_position || clapmatches.is_present("no-details") {
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), (($ty_snapshotcache:ty), $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     SPerMinMaxStrategy(itahand
                         .enumerate()
                         .par_bridge() // TODO can we derive a true parallel iterator?
                         .map(|(i_ahand, mut ahand)| {
                             let mut visualizer = $fn_visualizer(i_ahand, &ahand, /*ocard*/None);
-                            explore_snapshots::<_,$($func_filter_allowed_cards_ty)*,_,$ty_snapshotcache,_>(
+                            explore_snapshots::<_,$($func_filter_allowed_cards_ty)*,_,_,_>(
                                 (&mut ahand, &mut stichseq.clone()),
                                 rules,
                                 &$func_filter_allowed_cards,
@@ -189,9 +188,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 ).print(b_verbose);
             } else {
                 let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
-                    macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), (($ty_snapshotcache:ty), $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                    macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                         let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
-                        determine_best_card::<$($func_filter_allowed_cards_ty)*, _, $ty_snapshotcache, _, _, _>( // TODO avoid explicit types
+                        determine_best_card::<$($func_filter_allowed_cards_ty)*, _, _, _, _, _>( // TODO avoid explicit types
                             stichseq,
                             rules,
                             Box::new(
