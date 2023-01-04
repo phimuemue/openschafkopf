@@ -663,7 +663,7 @@ fn test_snapshotcache() {
                             ),
                             fwd!(
                                 Box<dyn TSnapshotCache<SMinMax>>,
-                                |_stichseq, rulestatecache| game.rules.snapshot_cache(rulestatecache),
+                                |rulestatecache| game.rules.snapshot_cache(rulestatecache),
                             ),
                         );
                     }

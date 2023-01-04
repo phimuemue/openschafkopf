@@ -133,7 +133,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
                         true => (
                             (Box<dyn TSnapshotCache<SMinMax>>),
-                            (|_stichseq, rulestatecache| rules.snapshot_cache(rulestatecache))
+                            (|rulestatecache| rules.snapshot_cache(rulestatecache))
                         ),
                         false => ((_), (SSnapshotCacheNone::factory())),
                     },

@@ -202,8 +202,8 @@ pub trait TSnapshotCache<T> { // TODO? could this be implemented via TForEachSna
 }
 pub struct SSnapshotCacheNone;
 impl SSnapshotCacheNone {
-    pub fn factory() -> impl Fn(&SStichSequence, &SRuleStateCacheFixed) -> Self {
-        |_,_| Self
+    pub fn factory() -> impl Fn(&SRuleStateCacheFixed) -> Self {
+        |_| Self
     }
 }
 impl<T> TSnapshotCache<T> for SSnapshotCacheNone {
@@ -237,7 +237,7 @@ pub fn explore_snapshots<
     rules: &dyn TRules,
     fn_make_filter: &impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
-    fn_snapshotcache: &impl Fn(&SStichSequence, &SRuleStateCacheFixed) -> OSnapshotCache,
+    fn_snapshotcache: &impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache,
     snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
     where
@@ -263,7 +263,7 @@ pub fn explore_snapshots<
             Some(mut func_filter_allowed_cards) => (&mut func_filter_allowed_cards),
             None => (/*func_filter_allowed_cards*/&mut SNoFilter),
         },
-        match(fn_snapshotcache(stichseq, &SRuleStateCacheFixed::new(ahand, stichseq)).into()) {
+        match(fn_snapshotcache(&SRuleStateCacheFixed::new(ahand, stichseq)).into()) {
             Some(mut snapshotcache) => (&mut snapshotcache),
             None => (&mut SSnapshotCacheNone),
         },
