@@ -569,7 +569,7 @@ fn snapshot_cache(fn_payload: impl Fn(&SRuleStateCache)->u64 + 'static) -> Box<d
     #[derive(Debug)]
     struct SSnapshotCachePointBased<FnPayload> {
         fn_payload: FnPayload,
-        mapsnapequivpayoutstats: HashMap<SSnapshotEquivalenceClass, SMinMax>,
+        mapsnapequivperminmaxmapepin_payout: HashMap<SSnapshotEquivalenceClass, SMinMax>,
     }
     impl<FnPayload: Fn(&SRuleStateCache)->u64> SSnapshotCachePointBased<FnPayload> {
         fn snap_equiv(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> SSnapshotEquivalenceClass {
@@ -581,13 +581,13 @@ fn snapshot_cache(fn_payload: impl Fn(&SRuleStateCache)->u64 + 'static) -> Box<d
     impl<FnPayload: Fn(&SRuleStateCache)->u64> TSnapshotCache<SMinMax> for SSnapshotCachePointBased<FnPayload> {
         fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
-            self.mapsnapequivpayoutstats
+            self.mapsnapequivperminmaxmapepin_payout
                 .get(&self.snap_equiv(stichseq, rulestatecache))
                 .cloned()
         }
         fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SMinMax) {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
-            self.mapsnapequivpayoutstats
+            self.mapsnapequivperminmaxmapepin_payout
                 .insert(
                     self.snap_equiv(stichseq, rulestatecache),
                     payoutstats.clone()
@@ -601,7 +601,7 @@ fn snapshot_cache(fn_payload: impl Fn(&SRuleStateCache)->u64 + 'static) -> Box<d
     Box::new(
         SSnapshotCachePointBased{
             fn_payload,
-            mapsnapequivpayoutstats: Default::default(),
+            mapsnapequivperminmaxmapepin_payout: Default::default(),
         }
     )
 }
