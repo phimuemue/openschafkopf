@@ -49,12 +49,11 @@ pub struct SPayoutDeciderPointsAsPayout<PointsToWin> {
 }
 
 fn payout_point_based (
-    pointstowin: &impl TPointsToWin,
     if_dbg_else!({rules}{_rules}): &impl TRules,
     rulestatecache: &SRuleStateCache,
     if_dbg_else!({stichseq}{_stichseq}): SStichSequenceGameFinished,
     playerparties: &impl TPlayerParties,
-    fn_payout_one_player: impl FnOnce(isize, bool)->isize,
+    fn_payout_primary_unmultiplied: impl FnOnce(/*n_points_primary_party*/isize)->isize,
 ) -> EnumMap<EPlayerIndex, isize> {
     let n_points_primary_party = debug_verify_eq!(
         playerparties.primary_players()
@@ -65,9 +64,8 @@ fn payout_point_based (
             .map(|(stich, _epi_winner)| card_points::points_stich(stich))
             .sum::<isize>()
     );
-    let b_primary_party_wins = n_points_primary_party >= pointstowin.points_to_win();
     internal_payout(
-        fn_payout_one_player(n_points_primary_party, b_primary_party_wins).neg_if(!b_primary_party_wins),
+        fn_payout_primary_unmultiplied(n_points_primary_party),
         playerparties,
     )
 }
@@ -141,13 +139,13 @@ impl<
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
         payout_point_based(
-            &self.pointstowin,
             rules,
             rulestatecache,
             stichseq,
             playerparties,
-            /*fn_payout_one_player*/|n_points_primary_party, b_primary_party_wins| {
-                self.payoutparams.n_payout_base
+            /*fn_payout_primary_unmultiplied*/|n_points_primary_party| {
+                let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
+                (self.payoutparams.n_payout_base
                 + { 
                     if debug_verify_eq!(
                         EPlayerIndex::values()
@@ -164,8 +162,8 @@ impl<
                         0 // "nothing", i.e. neither schneider nor schwarz
                     }
                 }
-                + self.payoutparams.laufendeparams.payout_laufende(rules.trumpfdecider(), rulestatecache, stichseq, playerparties)
-            },
+                + self.payoutparams.laufendeparams.payout_laufende(rules.trumpfdecider(), rulestatecache, stichseq, playerparties)).neg_if(!b_primary_party_wins)
+            }
         )
     }
 
@@ -238,14 +236,14 @@ impl<
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
         payout_point_based(
-            &self.pointstowin,
             rules,
             rulestatecache,
             stichseq,
             playerparties,
-            /*fn_payout_one_player*/|n_points_primary_party, _b_primary_party_wins| {
+            /*fn_payout_primary_unmultiplied*/|n_points_primary_party| {
                 primary_points_to_normalized_points(n_points_primary_party, &self.pointstowin).abs()
-            },
+                    .neg_if(n_points_primary_party < self.pointstowin.points_to_win())
+            }
         )
     }
 
