@@ -328,10 +328,7 @@ pub fn snapshot_cache_points_monotonic(playerparties: impl TPlayerParties + 'sta
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
                 payoutdecider::internal_payout(
-                    /*n_payout_primary_unmultiplied*/payoutdecider::primary_points_to_normalized_points(
-                        n_points_primary,
-                        &self.pointstowin,
-                    ).abs().neg_if(n_points_primary<self.pointstowin.points_to_win()),
+                    primary_points_to_normalized_points(n_points_primary, &self.pointstowin),
                     &self.playerparties,
                 )
             })))
