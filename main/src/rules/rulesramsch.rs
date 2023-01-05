@@ -96,9 +96,8 @@ impl TRules for SRulesRamsch {
         } {
             // TODO? Jungfrau meaningful?
             internal_payout(
-                self.n_price,
+                /*certain win => positive*/{assert!(self.n_price>0); self.n_price},
                 &SPlayerParties13::new(the_one_epi()),
-                /*b_primary_party_wins*/true,
             )
         } else {
             let epi_loser : EPlayerIndex = {
@@ -144,9 +143,8 @@ impl TRules for SRulesRamsch {
             };
             let payout_jungfrau_double_all = |n_jungfrau_exponent| {
                 internal_payout(
-                    self.n_price * 2isize.pow(n_jungfrau_exponent),
+                    /*certain loss*/-self.n_price * 2isize.pow(n_jungfrau_exponent),
                     &SPlayerParties13::new(epi_loser),
-                    /*b_primary_party_wins*/false,
                 )
             };
             let payout_jungfrau_double_individually = |n_jungfrau_exponent| {

@@ -1,6 +1,6 @@
 use crate::primitives::*;
 use crate::rules::{
-    payoutdecider::internal_payout, trumpfdecider::*, *,
+    payoutdecider::*, trumpfdecider::*, *,
 };
 use crate::util::*;
 use std::marker::PhantomData;
@@ -56,13 +56,12 @@ impl SPayoutDeciderBettel {
         playerparties13: &SPlayerParties13,
     ) -> EnumMap<EPlayerIndex, isize> {
         internal_payout(
-            /*n_payout_single_player*/ self.n_payout_base,
-            playerparties13,
-            /*b_primary_party_wins*/debug_verify_eq!(
+            /*n_payout_primary_unmultiplied*/ self.n_payout_base.neg_if(!/*b_primary_party_wins*/debug_verify_eq!(
                 rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==0,
                 stichseq.get().completed_stichs_winner_index(rules)
                     .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
-            )
+            )),
+            playerparties13,
         )
     }
 
@@ -79,9 +78,8 @@ impl SPayoutDeciderBettel {
                 .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
         ) {
             internal_payout(
-                /*n_payout_single_player*/ self.n_payout_base,
+                /*n_payout_primary_unmultiplied; loss is certain*/-self.n_payout_base,
                 playerparties13,
-                /*b_primary_party_wins*/ false,
             )
                 .map(|n_payout| SInterval::from_raw([Some(*n_payout), Some(*n_payout)]))
         } else {

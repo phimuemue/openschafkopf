@@ -213,13 +213,13 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
         let playerparties13 = &SPlayerParties13::new(rules.epi);
         // TODORULES optionally count schneider/schwarz
         internal_payout(
-            /*n_payout_single_player*/ (self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(rules.trumpfdecider(), rulestatecache, stichseq, playerparties13)) * 2,
+            /*n_payout_primary_unmultiplied*/((self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(rules.trumpfdecider(), rulestatecache, stichseq, playerparties13)) * 2)
+                .neg_if(!/*b_primary_party_wins*/debug_verify_eq!(
+                    rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==stichseq.get().kurzlang().cards_per_player(),
+                    stichseq.get().completed_stichs_winner_index(rules)
+                        .all(|(_stich, epi_winner)| playerparties13.is_primary_party(epi_winner))
+                )),
             playerparties13,
-            /*b_primary_party_wins*/ debug_verify_eq!(
-                rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==stichseq.get().kurzlang().cards_per_player(),
-                stichseq.get().completed_stichs_winner_index(rules)
-                    .all(|(_stich, epi_winner)| playerparties13.is_primary_party(epi_winner))
-            ),
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
 
@@ -231,9 +231,8 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
                 .all(|(_stich, epi_winner)| playerparties13.is_primary_party(epi_winner))
         ) {
             internal_payout(
-                /*n_payout_single_player*/ (self.payoutparams.n_payout_base) * 2, // TODO laufende
+                /*n_payout_primary_unmultiplied*/ -(self.payoutparams.n_payout_base) * 2, // TODO laufende
                 playerparties13,
-                /*b_primary_party_wins*/ false,
             )
                 .map(|n_payout| {
                      SInterval::from_tuple(tpl_flip_if(0<verify_ne!(*n_payout, 0), (None, Some(*n_payout * expensifiers.stoss_doubling_factor()))))
@@ -298,16 +297,16 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
         let playerparties13 = &SPlayerParties13::new(rules.epi);
         // TODORULES optionally count schneider/schwarz
         internal_payout(
-            /*n_payout_single_player*/ (self.payoutparams.n_payout_base
+            /*n_payout_primary_unmultiplied*/( (self.payoutparams.n_payout_base
             + {
                 stichseq.get().kurzlang().cards_per_player().as_num::<isize>()
-            } * self.payoutparams.laufendeparams.n_payout_per_lauf) * 4,
+            } * self.payoutparams.laufendeparams.n_payout_per_lauf) * 4)
+                .neg_if(!/*b_primary_party_wins*/cards_valid_for_sie(
+                    rules,
+                    stichseq.get().completed_cards_by(playerparties13.primary_player()),
+                    stichseq.get().kurzlang(),
+                )),
             playerparties13,
-            /*b_primary_party_wins*/cards_valid_for_sie(
-                rules,
-                stichseq.get().completed_cards_by(playerparties13.primary_player()),
-                stichseq.get().kurzlang(),
-            )
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
 
@@ -318,9 +317,8 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
             stichseq.kurzlang(),
         ) {
             internal_payout(
-                /*n_payout_single_player*/ self.payoutparams.n_payout_base * 4,
+                /*n_payout_primary_unmultiplied*/-self.payoutparams.n_payout_base * 4,
                 &SPlayerParties13::new(rules.epi),
-                /*b_primary_party_wins*/ false,
             )
                 .map(|n_payout| {
                      SInterval::from_tuple(tpl_flip_if(0<verify_ne!(*n_payout, 0), (None, Some(*n_payout * expensifiers.stoss_doubling_factor()))))

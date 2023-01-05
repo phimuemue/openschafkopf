@@ -67,9 +67,8 @@ fn payout_point_based (
     );
     let b_primary_party_wins = n_points_primary_party >= pointstowin.points_to_win();
     internal_payout(
-        fn_payout_one_player(n_points_primary_party, b_primary_party_wins),
+        fn_payout_one_player(n_points_primary_party, b_primary_party_wins).neg_if(!b_primary_party_wins),
         playerparties,
-        b_primary_party_wins,
     )
 }
 
@@ -91,11 +90,10 @@ fn payouthints_point_based(
                 mapbn_points[/*b_primary*/playerparties.is_primary_party(epi_winner)] += card_points::points_stich(stich);
             }))
     );
-    let internal_payouthints = |n_points_primary_party, b_premature_winner_is_primary_party| {
+    let internal_payouthints = |n_points_primary_party, b_premature_winner_is_primary_party: bool| {
         internal_payout(
-            fn_payout_one_player_if_premature_winner(n_points_primary_party),
+            fn_payout_one_player_if_premature_winner(n_points_primary_party).neg_if(!b_premature_winner_is_primary_party),
             playerparties,
-            b_premature_winner_is_primary_party,
         )
             .map(|n_payout| {
                  SInterval::from_tuple(tpl_flip_if(0<verify_ne!(*n_payout, 0), (None, Some(*n_payout))))
@@ -296,16 +294,9 @@ impl SLaufendeParams {
     }
 }
 
-pub fn internal_payout(n_payout_single_player: isize, playerparties: &impl TPlayerParties, b_primary_party_wins: bool) -> EnumMap<EPlayerIndex, isize> {
+pub fn internal_payout(n_payout_primary_unmultiplied: isize, playerparties: &impl TPlayerParties) -> EnumMap<EPlayerIndex, isize> {
     EPlayerIndex::map_from_fn(|epi| {
-        n_payout_single_player 
-        * {
-            if playerparties.is_primary_party(epi)==b_primary_party_wins {
-                1
-            } else {
-                -1
-            }
-        }
+        n_payout_primary_unmultiplied.neg_if(!playerparties.is_primary_party(epi))
         * playerparties.multiplier(epi)
     })
 }
@@ -351,12 +342,11 @@ pub fn snapshot_cache_points_monotonic(playerparties: impl TPlayerParties + 'sta
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
                 payoutdecider::internal_payout(
-                    /*n_payout_single_player*/payoutdecider::primary_points_to_normalized_points(
+                    /*n_payout_primary_unmultiplied*/payoutdecider::primary_points_to_normalized_points(
                         n_points_primary,
                         &self.pointstowin,
-                    ).abs(),
+                    ).abs().neg_if(n_points_primary<self.pointstowin.points_to_win()),
                     &self.playerparties,
-                    /*b_primary_party_wins*/n_points_primary>=self.pointstowin.points_to_win(),
                 )
             })))
         }
