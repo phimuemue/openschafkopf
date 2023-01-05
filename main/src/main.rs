@@ -6,6 +6,7 @@
     clippy::new_without_default,
     clippy::enum_variant_names,
     clippy::let_unit_value,
+    clippy::nonminimal_bool, // TODO? I got this lint, but could not see where the expression could be simplified.
 ))]
 #![cfg_attr(all(not(debug_assertions), feature="cargo-clippy"), allow(clippy::let_and_return))]
 
