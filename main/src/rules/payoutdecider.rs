@@ -241,8 +241,7 @@ impl<
             stichseq,
             playerparties,
             /*fn_payout_primary_unmultiplied*/|n_points_primary_party| {
-                primary_points_to_normalized_points(n_points_primary_party, &self.pointstowin).abs()
-                    .neg_if(n_points_primary_party < self.pointstowin.points_to_win())
+                primary_points_to_normalized_points(n_points_primary_party, &self.pointstowin)
             }
         )
     }
