@@ -539,9 +539,12 @@ pub struct SPrunerViaHint;
 impl TPruner for SPrunerViaHint {
     fn pruned_output(params: &SMinReachablePayoutBase<'_, Self>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
         let mapepion_payout = params.rules.payouthints(tplahandstichseq, &params.expensifiers, rulestatecache)
-            .map(|intvlon_payout| intvlon_payout[ELoHi::Lo]);
+            .map(|intvlon_payout| {
+                intvlon_payout[ELoHi::Lo].filter(|n_payout| 0<*n_payout)
+                    .or_else(|| intvlon_payout[ELoHi::Hi].filter(|n_payout| *n_payout<0))
+            });
         if_then_some!(
-            mapepion_payout.iter().all(Option::is_some) && 0<unwrap!(mapepion_payout[params.epi]),
+            mapepion_payout.iter().all(Option::is_some),
             SMinMax::new_final(mapepion_payout.map(|opayout| unwrap!(opayout)))
         )
     }
