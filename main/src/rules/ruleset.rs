@@ -95,7 +95,7 @@ impl SRuleSet {
             (Some(val_ramsch), None) => {
                 let durchmarsch = (match val_ramsch.get("durchmarsch") {
                     None => Ok(VDurchmarsch::None),
-                    Some(&toml::Value::String(ref str_durchmarsch)) if "all"==str_durchmarsch => {
+                    Some(toml::Value::String(str_durchmarsch)) if "all"==str_durchmarsch => {
                         Ok(VDurchmarsch::All)
                     },
                     Some(&toml::Value::Integer(n_durchmarsch)) if (61..=120).contains(&n_durchmarsch) => {
@@ -105,13 +105,13 @@ impl SRuleSet {
                 } as Result<_, Error>)?;
                 let ojungfrau = (match val_ramsch.get("jungfrau") {
                     None => Ok(None),
-                    Some(&toml::Value::String(ref str_jungfrau)) if str_jungfrau=="DoubleAll" => {
+                    Some(toml::Value::String(str_jungfrau)) if str_jungfrau=="DoubleAll" => {
                         Ok(Some(VJungfrau::DoubleAll))
                     },
-                    Some(&toml::Value::String(ref str_jungfrau)) if str_jungfrau=="DoubleIndividuallyOnce" => {
+                    Some(toml::Value::String(str_jungfrau)) if str_jungfrau=="DoubleIndividuallyOnce" => {
                         Ok(Some(VJungfrau::DoubleIndividuallyOnce))
                     },
-                    Some(&toml::Value::String(ref str_jungfrau)) if str_jungfrau=="DoubleIndividuallyMultiple" => {
+                    Some(toml::Value::String(str_jungfrau)) if str_jungfrau=="DoubleIndividuallyMultiple" => {
                         Ok(Some(VJungfrau::DoubleIndividuallyMultiple))
                     },
                     _ => {
