@@ -31,28 +31,6 @@ pub struct SRufspielPayout {
     payoutdecider: SPayoutDeciderPointBased<SPointsToWin61>,
 }
 
-fn rufspiel_payouthints_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence)) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-    payoutdecider.payouthints(
-        dbg_argument!(rules),
-        rulestatecache,
-        (ahand, stichseq),
-        &SPlayerParties22::new(
-            rules.epi,
-            /*epi_coplayer*/debug_verify_eq!(
-                rulestatecache.fixed.who_has_card(rules.rufsau()),
-                stichseq.visible_cards()
-                    .find(|&(_, card)| *card==rules.rufsau())
-                    .map(|(epi, _)| epi)
-                    .unwrap_or_else(|| {
-                        unwrap!(EPlayerIndex::values().find(|epi|
-                            ahand[*epi].cards().iter().any(|card| *card==rules.rufsau())
-                        ))
-                    })
-            )
-        ),
-    )
-}
-
 impl TRufspielPayout for SRufspielPayout {
     fn payout(&self, rules: &SRulesRufspielGeneric<Self>, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         let playerparties = rules.playerparties(&rulestatecache.fixed, dbg_argument!(stichseq));
@@ -86,11 +64,11 @@ impl TRufspielPayout for SRufspielPayout {
         )
     }
     fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-        rufspiel_payouthints_no_stock_stoss_doubling(
-            &self.payoutdecider,
-            rules,
+        self.payoutdecider.payouthints(
+            dbg_argument!(rules),
             rulestatecache,
-            tplahandstichseq
+            tplahandstichseq,
+            &rules.playerparties_during_game(&rulestatecache.fixed, tplahandstichseq),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
             // TODO Stock
             on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),
@@ -155,6 +133,23 @@ impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
                     .find(|&(_, card)| *card==self.rufsau())
                     .map(|(epi, _)| epi))
             ),
+        )
+    }
+
+    fn playerparties_during_game(&self, rulestatecache: &SRuleStateCacheFixed, if_dbg_else!({(ahand, stichseq)}{_}): dbg_parameter!((&EnumMap<EPlayerIndex, SHand>, &SStichSequence))) -> SPlayerParties22 {
+        SPlayerParties22::new(
+            self.epi,
+            /*epi_coplayer*/debug_verify_eq!(
+                rulestatecache.who_has_card(self.rufsau()),
+                stichseq.visible_cards()
+                    .find(|&(_, card)| *card==self.rufsau())
+                    .map(|(epi, _)| epi)
+                    .unwrap_or_else(|| {
+                        unwrap!(EPlayerIndex::values().find(|epi|
+                            ahand[*epi].cards().iter().any(|card| *card==self.rufsau())
+                        ))
+                    })
+            )
         )
     }
 }
@@ -404,11 +399,11 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 an_payout
             }
             fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-                rufspiel_payouthints_no_stock_stoss_doubling(
-                    &self.payoutdecider,
-                    rules,
+                self.payoutdecider.payouthints(
+                    dbg_argument!(rules),
                     rulestatecache,
                     tplahandstichseq,
+                    &rules.playerparties_during_game(&rulestatecache.fixed, tplahandstichseq),
                 )
             }
             fn snapshot_cache(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
