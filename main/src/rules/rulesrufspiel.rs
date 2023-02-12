@@ -1,16 +1,29 @@
-use crate::ai::{
-    rulespecific::airufspiel::*,
-    cardspartition::*,
-};
+use crate::ai::{cardspartition::*, rulespecific::airufspiel::*};
 use crate::primitives::*;
 use crate::rules::{payoutdecider::*, trumpfdecider::*, *};
 use crate::util::*;
 use std::{cmp::Ordering, fmt};
 
-pub trait TRufspielPayout : Clone + Sync + fmt::Debug + Send + 'static {
-    fn payout(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize>;
-    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecache: &SRuleStateCache, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
-    fn snapshot_cache(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>>;
+pub trait TRufspielPayout: Clone + Sync + fmt::Debug + Send + 'static {
+    fn payout(
+        &self,
+        rules: &SRulesRufspielGeneric<Self>,
+        rulestatecache: &SRuleStateCache,
+        stichseq: SStichSequenceGameFinished,
+        expensifiers: &SExpensifiers,
+    ) -> EnumMap<EPlayerIndex, isize>;
+    fn payouthints(
+        &self,
+        rules: &SRulesRufspielGeneric<Self>,
+        rulestatecache: &SRuleStateCache,
+        tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
+        expensifiers: &SExpensifiers,
+    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
+    fn snapshot_cache(
+        &self,
+        rules: &SRulesRufspielGeneric<Self>,
+        rulestatecachefixed: &SRuleStateCacheFixed,
+    ) -> Box<dyn TSnapshotCache<SMinMax>>;
 }
 
 #[derive(Debug, Clone)]
