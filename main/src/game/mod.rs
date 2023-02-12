@@ -363,7 +363,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Rul
                     stichseq,
                     self.rules.as_ref(),
                 ),
-                /*b_test_points_as_payout*/if_dbg_else!({true}{()}),
+                /*b_test_points_as_payout*/dbg_argument!(true),
             ),
             stockorgame: VStockOrT::OrT(self),
         }

@@ -13,13 +13,15 @@ pub mod logging;
 pub mod vecext;
 pub mod moveorclone;
 pub mod negext;
-pub use self::{assign::*, box_clone::*, staticvalue::*, interval::*, if_then::*, vecext::*, moveorclone::*, negext::*};
+pub use self::{assign::*, box_clone::*, staticvalue::*, interval::*, if_then::*, vecext::*, moveorclone::*, negext::*, dbg_argument::*};
 pub use derive_new::new;
 pub use failure::{bail, format_err, Error};
 pub use logging::{error, info, warn};
 pub use openschafkopf_util::*;
 #[macro_use]
 pub mod bitfield;
+#[macro_use]
+pub mod dbg_argument;
 
 // TODORUST this macro should not be necessary
 macro_rules! type_inference{($type:ty, $e:expr) => {

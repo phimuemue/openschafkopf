@@ -440,7 +440,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
             stichseq,
             &self.expensifiers,
             rulestatecache,
-            /*b_test_points_as_payout*/if_dbg_else!({true}{()}),
+            dbg_argument!(/*b_test_points_as_payout*/true),
         ))
     }
 
