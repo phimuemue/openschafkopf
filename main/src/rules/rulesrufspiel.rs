@@ -33,7 +33,7 @@ pub struct SRufspielPayout {
 
 impl TRufspielPayout for SRufspielPayout {
     fn payout(&self, rules: &SRulesRufspielGeneric<Self>, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
-        let playerparties = rules.playerparties(&rulestatecache.fixed, dbg_argument!(stichseq));
+        let playerparties = rules.playerparties(&rulestatecache.fixed);
         let an_payout_no_stock = self.payoutdecider.payout(
             dbg_argument!(rules),
             &rules.trumpfdecider,
@@ -68,7 +68,7 @@ impl TRufspielPayout for SRufspielPayout {
             dbg_argument!(rules),
             rulestatecache,
             tplahandstichseq,
-            &rules.playerparties_during_game(&rulestatecache.fixed, tplahandstichseq),
+            &rules.playerparties(&rulestatecache.fixed),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
             // TODO Stock
             on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),
@@ -76,10 +76,7 @@ impl TRufspielPayout for SRufspielPayout {
     }
 
     fn snapshot_cache(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
-        super::snapshot_cache_point_based(SPlayerParties22::new(
-            rules.epi,
-            rulestatecachefixed.who_has_card(rules.rufsau())
-        ))
+        super::snapshot_cache_point_based(rules.playerparties(rulestatecachefixed))
     }
 }
 
@@ -124,33 +121,8 @@ impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
         VTrumpfOrFarbe::Farbe(self.efarbe)==self.trumpforfarbe(card)
     }
 
-    fn playerparties(&self, rulestatecache: &SRuleStateCacheFixed, if_dbg_else!({stichseq}{_}): dbg_parameter!(SStichSequenceGameFinished)) -> SPlayerParties22 {
-        SPlayerParties22::new(
-            self.epi,
-            /*epi_coplayer*/debug_verify_eq!(
-                rulestatecache.who_has_card(self.rufsau()),
-                unwrap!(stichseq.get().completed_cards()
-                    .find(|&(_, card)| *card==self.rufsau())
-                    .map(|(epi, _)| epi))
-            ),
-        )
-    }
-
-    fn playerparties_during_game(&self, rulestatecache: &SRuleStateCacheFixed, if_dbg_else!({(ahand, stichseq)}{_}): dbg_parameter!((&EnumMap<EPlayerIndex, SHand>, &SStichSequence))) -> SPlayerParties22 {
-        SPlayerParties22::new(
-            self.epi,
-            /*epi_coplayer*/debug_verify_eq!(
-                rulestatecache.who_has_card(self.rufsau()),
-                stichseq.visible_cards()
-                    .find(|&(_, card)| *card==self.rufsau())
-                    .map(|(epi, _)| epi)
-                    .unwrap_or_else(|| {
-                        unwrap!(EPlayerIndex::values().find(|epi|
-                            ahand[*epi].cards().iter().any(|card| *card==self.rufsau())
-                        ))
-                    })
-            )
-        )
+    fn playerparties(&self, rulestatecache: &SRuleStateCacheFixed) -> SPlayerParties22 {
+        SPlayerParties22::new(self.epi, rulestatecache.who_has_card(self.rufsau()))
     }
 }
 
@@ -270,7 +242,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     )
                 }
             ),
-            SPlayerParties22::new(self.epi, rulestatecache.who_has_card(self.rufsau())).into(),
+            self.playerparties(rulestatecache).into(),
         ))
     }
 
@@ -361,7 +333,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         }
         impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
             fn payout(&self, rules: &SRulesRufspielGeneric<Self>, stichseq: SStichSequenceGameFinished, _expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
-                let playerparties = rules.playerparties(&rulestatecache.fixed, dbg_argument!(stichseq));
+                let playerparties = rules.playerparties(&rulestatecache.fixed);
                 let an_payout = self.payoutdecider.payout(
                     dbg_argument!(rules),
                     &rules.trumpfdecider,
@@ -403,15 +375,12 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     dbg_argument!(rules),
                     rulestatecache,
                     tplahandstichseq,
-                    &rules.playerparties_during_game(&rulestatecache.fixed, tplahandstichseq),
+                    &rules.playerparties(&rulestatecache.fixed),
                 )
             }
             fn snapshot_cache(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
                 payoutdecider::snapshot_cache_points_monotonic(
-                    SPlayerParties22::new(
-                        rules.epi,
-                        rulestatecachefixed.who_has_card(rules.rufsau())
-                    ),
+                    rules.playerparties(rulestatecachefixed),
                     SPointsToWin61,
                 )
             }
