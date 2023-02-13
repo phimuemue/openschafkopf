@@ -46,7 +46,7 @@ fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payo
         &playerparties,
     );
     assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
-    assert_eq!(an_payout_no_stock[rules.epi], an_payout_no_stock[epi_coplayer]);
+    assert!(playerparties.primary_players().map(|epi| an_payout_no_stock[epi]).all_equal_item().is_some());
     assert_eq!(
         an_payout_no_stock.iter()
             .filter(|&n_payout_no_stock| 0<*n_payout_no_stock)
