@@ -122,16 +122,14 @@ macro_rules! impl_rules_with_trumpfdecider{($trumpfdecider: ty) => {
 }}
 
 impl<
-    Rules: TRulesWithTrumpfDecider,
     PointsToWin: TPointsToWin,
-    PlayerParties: TPlayerParties,
-> TPayoutDecider<Rules, PlayerParties> for SPayoutDeciderPointBased<PointsToWin> {
+> TPayoutDecider for SPayoutDeciderPointBased<PointsToWin> {
     fn payout(
         &self,
-        rules: &Rules,
+        rules: &impl TRulesWithTrumpfDecider,
         rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
-        playerparties: &PlayerParties,
+        playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
         let n_points_primary_party = points_primary_party(dbg_argument!(rules), rulestatecache, dbg_argument!(stichseq), playerparties);
         let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
@@ -160,10 +158,10 @@ impl<
 
     fn payouthints(
         &self,
-        if_dbg_else!({rules}{_}): &Rules,
+        if_dbg_else!({rules}{_}): &impl TRules,
         rulestatecache: &SRuleStateCache,
         (_ahand, if_dbg_else!({stichseq}{_})): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
-        playerparties: &PlayerParties,
+        playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         payouthints_point_based(
             &self.pointstowin,
@@ -215,16 +213,14 @@ pub fn normalized_points_to_points(f_points_normalized: f32, pointstowin: &impl 
 }
 
 impl<
-    Rules: TRules,
     PointsToWin: TPointsToWin,
-    PlayerParties: TPlayerParties,
-> TPayoutDecider<Rules, PlayerParties> for SPayoutDeciderPointsAsPayout<PointsToWin> {
+> TPayoutDecider for SPayoutDeciderPointsAsPayout<PointsToWin> {
     fn payout(
         &self,
-        if_dbg_else!({rules}{_}): &Rules,
+        if_dbg_else!({rules}{_}): &impl TRulesWithTrumpfDecider,
         rulestatecache: &SRuleStateCache,
         if_dbg_else!({stichseq}{_}): SStichSequenceGameFinished,
-        playerparties: &PlayerParties,
+        playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
         internal_payout(
             primary_points_to_normalized_points(
@@ -237,10 +233,10 @@ impl<
 
     fn payouthints(
         &self,
-        if_dbg_else!({rules}{_}): &Rules,
+        if_dbg_else!({rules}{_}): &impl TRules,
         rulestatecache: &SRuleStateCache,
         (_ahand, if_dbg_else!({stichseq}{_})): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
-        playerparties: &PlayerParties,
+        playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         payouthints_point_based(
             &self.pointstowin,
@@ -287,21 +283,21 @@ pub fn internal_payout(n_payout_primary_unmultiplied: isize, playerparties: &imp
     })
 }
 
-pub trait TPayoutDecider<Rules, PlayerParties> : Sync + Send + 'static + Clone + fmt::Debug {
+pub trait TPayoutDecider : Sync + Send + 'static + Clone + fmt::Debug {
     fn payout(
         &self,
-        rules: &Rules,
+        rules: &impl TRulesWithTrumpfDecider,
         rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
-        playerparties: &PlayerParties,
+        playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>;
 
     fn payouthints(
         &self,
-        rules: &Rules,
+        rules: &impl TRules,
         rulestatecache: &SRuleStateCache,
         tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
-        playerparties: &PlayerParties,
+        playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 }
 
