@@ -31,22 +31,19 @@ pub struct SRufspielPayout {
     payoutdecider: SPayoutDeciderPointBased<SPointsToWin61>,
 }
 
-fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished) -> (EnumMap<EPlayerIndex, isize>, SPlayerParties22) {
-    let playerparties = SPlayerParties22::new(
-        rules.epi,
-        /*epi_coplayer*/debug_verify_eq!(
-            rulestatecache.fixed.who_has_card(rules.rufsau()),
-            unwrap!(stichseq.get().completed_cards()
-                .find(|&(_, card)| *card==rules.rufsau())
-                .map(|(epi, _)| epi))
-        ),
-    );
+fn partnerspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(
+    payoutdecider: &impl TPayoutDecider,
+    playerparties: &SPlayerParties22,
+    rules: &SRulesRufspielGeneric<RufspielPayout>,
+    rulestatecache: &SRuleStateCache,
+    stichseq: SStichSequenceGameFinished
+) -> EnumMap<EPlayerIndex, isize> {
     let an_payout_no_stock = payoutdecider.payout(
         dbg_argument!(rules),
         &rules.trumpfdecider,
         rulestatecache,
         stichseq,
-        &playerparties,
+        playerparties,
     );
     assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
     assert!(playerparties.primary_players().map(|epi| an_payout_no_stock[epi]).all_equal_item().is_some());
@@ -56,7 +53,7 @@ fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payo
             .count(),
         2
     );
-    (an_payout_no_stock, playerparties)
+    an_payout_no_stock
 }
 
 fn rufspiel_payouthints_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence)) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
@@ -83,8 +80,10 @@ fn rufspiel_payouthints_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>
 
 impl TRufspielPayout for SRufspielPayout {
     fn payout(&self, rules: &SRulesRufspielGeneric<Self>, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
-        let (an_payout_no_stock, playerparties) = rufspiel_payout_no_stock_stoss_doubling(
+        let playerparties = rules.playerparties(&rulestatecache.fixed, dbg_argument!(stichseq));
+        let an_payout_no_stock = partnerspiel_payout_no_stock_stoss_doubling(
             &self.payoutdecider,
+            &playerparties,
             rules,
             rulestatecache,
             stichseq,
@@ -162,6 +161,18 @@ impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
 
     fn is_ruffarbe(&self, card: ECard) -> bool {
         VTrumpfOrFarbe::Farbe(self.efarbe)==self.trumpforfarbe(card)
+    }
+
+    fn playerparties(&self, rulestatecache: &SRuleStateCacheFixed, if_dbg_else!({stichseq}{_}): dbg_parameter!(SStichSequenceGameFinished)) -> SPlayerParties22 {
+        SPlayerParties22::new(
+            self.epi,
+            /*epi_coplayer*/debug_verify_eq!(
+                rulestatecache.who_has_card(self.rufsau()),
+                unwrap!(stichseq.get().completed_cards()
+                    .find(|&(_, card)| *card==self.rufsau())
+                    .map(|(epi, _)| epi))
+            ),
+        )
     }
 }
 
@@ -372,8 +383,10 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         }
         impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
             fn payout(&self, rules: &SRulesRufspielGeneric<Self>, stichseq: SStichSequenceGameFinished, _expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
-                let (an_payout, if_dbg_else!({playerparties}{_playerparties})) = rufspiel_payout_no_stock_stoss_doubling(
+                let playerparties = rules.playerparties(&rulestatecache.fixed, dbg_argument!(stichseq));
+                let an_payout = partnerspiel_payout_no_stock_stoss_doubling(
                     &self.payoutdecider,
+                    &playerparties,
                     rules,
                     rulestatecache,
                     stichseq,
