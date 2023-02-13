@@ -43,7 +43,7 @@ fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payo
     );
     let an_payout_no_stock = payoutdecider.payout(
         dbg_argument!(rules),
-        rules.trumpfdecider(),
+        &rules.trumpfdecider,
         rulestatecache,
         stichseq,
         &playerparties,
@@ -169,10 +169,6 @@ impl<RufspielPayout: TRufspielPayout> TActivelyPlayableRules for SRulesRufspielG
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::RufspielLike
     }
-}
-
-impl<RufspielPayout: TRufspielPayout> TRulesWithTrumpfDecider for SRulesRufspielGeneric<RufspielPayout> {
-    impl_rules_with_trumpfdecider!(STrumpfDeciderRufspiel);
 }
 
 #[derive(Debug)]

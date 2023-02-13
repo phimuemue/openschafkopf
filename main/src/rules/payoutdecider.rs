@@ -110,17 +110,6 @@ fn payouthints_point_based(
     }
 }
 
-pub trait TRulesWithTrumpfDecider : TRules {
-    type TrumpfDecider: TTrumpfDecider;
-    fn trumpfdecider(&self) -> &Self::TrumpfDecider;
-}
-macro_rules! impl_rules_with_trumpfdecider{($trumpfdecider: ty) => {
-    type TrumpfDecider = $trumpfdecider;
-    fn trumpfdecider(&self) -> &Self::TrumpfDecider {
-        &self.trumpfdecider
-    }
-}}
-
 impl<
     PointsToWin: TPointsToWin,
 > TPayoutDecider for SPayoutDeciderPointBased<PointsToWin> {

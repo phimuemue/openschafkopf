@@ -72,7 +72,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
     fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         TPayoutDecider::payout(self,
             dbg_argument!(rules),
-            rules.trumpfdecider(),
+            &rules.trumpfdecider,
             rulestatecache,
             stichseq,
             &SPlayerParties13::new(rules.epi),
@@ -144,7 +144,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
     fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         let an_payout = TPayoutDecider::payout(self,
             dbg_argument!(rules),
-            rules.trumpfdecider(),
+            &rules.trumpfdecider,
             rulestatecache,
             stichseq,
             &SPlayerParties13::new(rules.epi),
@@ -215,7 +215,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
         let playerparties13 = &SPlayerParties13::new(rules.epi);
         // TODORULES optionally count schneider/schwarz
         internal_payout(
-            /*n_payout_primary_unmultiplied*/((self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(rules.trumpfdecider(), rulestatecache, stichseq, playerparties13)) * 2)
+            /*n_payout_primary_unmultiplied*/((self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(&rules.trumpfdecider, rulestatecache, stichseq, playerparties13)) * 2)
                 .neg_if(!/*b_primary_party_wins*/debug_verify_eq!(
                     rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==stichseq.get().kurzlang().cards_per_player(),
                     stichseq.get().completed_stichs_winner_index(rules)
@@ -374,10 +374,6 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TActi
                 str_name: self.str_name.clone(),
             }) as Box<dyn TActivelyPlayableRules>)
     }
-}
-
-impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRulesWithTrumpfDecider for SRulesSoloLike<TrumpfDecider, PayoutDecider> {
-    impl_rules_with_trumpfdecider!(TrumpfDecider);
 }
 
 impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<TrumpfDecider, PayoutDecider> {
