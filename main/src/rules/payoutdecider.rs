@@ -49,9 +49,9 @@ pub struct SPayoutDeciderPointsAsPayout<PointsToWin> {
 }
 
 fn points_primary_party (
-    if_dbg_else!({rules}{_rules}): &impl TRules,
+    if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
     rulestatecache: &SRuleStateCache,
-    if_dbg_else!({stichseq}{_stichseq}): SStichSequenceGameFinished,
+    if_dbg_else!({stichseq}{_}): dbg_parameter!(SStichSequenceGameFinished),
     playerparties: &impl TPlayerParties,
 ) -> isize {
     debug_verify_eq!(
@@ -67,9 +67,9 @@ fn points_primary_party (
 
 fn payouthints_point_based(
     pointstowin: &impl TPointsToWin,
-    if_dbg_else!({rules}{_rules}): &impl TRules,
+    if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
     rulestatecache: &SRuleStateCache,
-    if_dbg_else!({stichseq}{_stichseq}): &SStichSequence,
+    if_dbg_else!({stichseq}{_}): dbg_parameter!(&SStichSequence),
     playerparties: &impl TPlayerParties,
     fn_payout_one_player_if_premature_winner: impl FnOnce(isize)->isize,
 ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
@@ -133,7 +133,7 @@ impl<
         stichseq: SStichSequenceGameFinished,
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
-        let n_points_primary_party = points_primary_party(rules, rulestatecache, stichseq, playerparties);
+        let n_points_primary_party = points_primary_party(dbg_argument!(rules), rulestatecache, dbg_argument!(stichseq), playerparties);
         let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
         internal_payout(
             (self.payoutparams.n_payout_base
@@ -160,16 +160,16 @@ impl<
 
     fn payouthints(
         &self,
-        rules: &Rules,
+        if_dbg_else!({rules}{_}): &Rules,
         rulestatecache: &SRuleStateCache,
-        (_ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
+        (_ahand, if_dbg_else!({stichseq}{_})): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         payouthints_point_based(
             &self.pointstowin,
-            rules,
+            dbg_argument!(rules),
             rulestatecache,
-            stichseq,
+            dbg_argument!(stichseq),
             playerparties,
             /*fn_payout_one_player_if_premature_winner*/|_n_points_primary_party| {
                 self.payoutparams.n_payout_base
@@ -221,14 +221,14 @@ impl<
 > TPayoutDecider<Rules, PlayerParties> for SPayoutDeciderPointsAsPayout<PointsToWin> {
     fn payout(
         &self,
-        rules: &Rules,
+        if_dbg_else!({rules}{_}): &Rules,
         rulestatecache: &SRuleStateCache,
-        stichseq: SStichSequenceGameFinished,
+        if_dbg_else!({stichseq}{_}): SStichSequenceGameFinished,
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
         internal_payout(
             primary_points_to_normalized_points(
-                points_primary_party(rules, rulestatecache, stichseq, playerparties),
+                points_primary_party(dbg_argument!(rules), rulestatecache, dbg_argument!(stichseq), playerparties),
                 &self.pointstowin
             ),
             playerparties,
@@ -237,16 +237,16 @@ impl<
 
     fn payouthints(
         &self,
-        rules: &Rules,
+        if_dbg_else!({rules}{_}): &Rules,
         rulestatecache: &SRuleStateCache,
-        (_ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
+        (_ahand, if_dbg_else!({stichseq}{_})): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &PlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         payouthints_point_based(
             &self.pointstowin,
-            rules,
+            dbg_argument!(rules),
             rulestatecache,
-            stichseq,
+            dbg_argument!(stichseq),
             playerparties,
             /*fn_payout_one_player_if_premature_winner*/|n_points_primary_party| {
                 primary_points_to_normalized_points(n_points_primary_party, &self.pointstowin).abs()
