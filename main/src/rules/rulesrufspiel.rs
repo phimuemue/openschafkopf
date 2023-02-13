@@ -32,13 +32,15 @@ pub struct SRufspielPayout {
 }
 
 fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider<SRulesRufspielGeneric<RufspielPayout>, SPlayerParties22>, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished) -> (EnumMap<EPlayerIndex, isize>, SPlayerParties22) {
-    let epi_coplayer = debug_verify_eq!(
-        rulestatecache.fixed.who_has_card(rules.rufsau()),
-        unwrap!(stichseq.get().completed_cards()
-            .find(|&(_, card)| *card==rules.rufsau())
-            .map(|(epi, _)| epi))
+    let playerparties = SPlayerParties22::new(
+        rules.epi,
+        /*epi_coplayer*/debug_verify_eq!(
+            rulestatecache.fixed.who_has_card(rules.rufsau()),
+            unwrap!(stichseq.get().completed_cards()
+                .find(|&(_, card)| *card==rules.rufsau())
+                .map(|(epi, _)| epi))
+        ),
     );
-    let playerparties = SPlayerParties22::new(rules.epi, epi_coplayer);
     let an_payout_no_stock = payoutdecider.payout(
         rules,
         rulestatecache,
