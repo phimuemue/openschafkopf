@@ -126,7 +126,8 @@ impl<
 > TPayoutDecider for SPayoutDeciderPointBased<PointsToWin> {
     fn payout(
         &self,
-        rules: &impl TRulesWithTrumpfDecider,
+        if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
+        trumpfdecider: &impl TTrumpfDecider,
         rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
@@ -151,14 +152,14 @@ impl<
                     0 // "nothing", i.e. neither schneider nor schwarz
                 }
             }
-            + self.payoutparams.laufendeparams.payout_laufende(rules.trumpfdecider(), rulestatecache, stichseq, playerparties)).neg_if(!b_primary_party_wins),
+            + self.payoutparams.laufendeparams.payout_laufende(trumpfdecider, rulestatecache, stichseq, playerparties)).neg_if(!b_primary_party_wins),
             playerparties,
         )
     }
 
     fn payouthints(
         &self,
-        if_dbg_else!({rules}{_}): &impl TRules,
+        if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
         rulestatecache: &SRuleStateCache,
         (_ahand, if_dbg_else!({stichseq}{_})): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &impl TPlayerParties,
@@ -217,7 +218,8 @@ impl<
 > TPayoutDecider for SPayoutDeciderPointsAsPayout<PointsToWin> {
     fn payout(
         &self,
-        if_dbg_else!({rules}{_}): &impl TRulesWithTrumpfDecider,
+        if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
+        _trumpfdecider: &impl TTrumpfDecider,
         rulestatecache: &SRuleStateCache,
         if_dbg_else!({stichseq}{_}): SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
@@ -233,7 +235,7 @@ impl<
 
     fn payouthints(
         &self,
-        if_dbg_else!({rules}{_}): &impl TRules,
+        if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
         rulestatecache: &SRuleStateCache,
         (_ahand, if_dbg_else!({stichseq}{_})): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &impl TPlayerParties,
@@ -286,7 +288,8 @@ pub fn internal_payout(n_payout_primary_unmultiplied: isize, playerparties: &imp
 pub trait TPayoutDecider : Sync + Send + 'static + Clone + fmt::Debug {
     fn payout(
         &self,
-        rules: &impl TRulesWithTrumpfDecider,
+        if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
+        trumpfdecider: &impl TTrumpfDecider,
         rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
@@ -294,7 +297,7 @@ pub trait TPayoutDecider : Sync + Send + 'static + Clone + fmt::Debug {
 
     fn payouthints(
         &self,
-        rules: &impl TRules,
+        if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
         rulestatecache: &SRuleStateCache,
         tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &impl TPlayerParties,

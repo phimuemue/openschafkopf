@@ -42,7 +42,8 @@ fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payo
         ),
     );
     let an_payout_no_stock = payoutdecider.payout(
-        rules,
+        dbg_argument!(rules),
+        rules.trumpfdecider(),
         rulestatecache,
         stichseq,
         &playerparties,
@@ -60,7 +61,7 @@ fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payo
 
 fn rufspiel_payouthints_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence)) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
     payoutdecider.payouthints(
-        rules,
+        dbg_argument!(rules),
         rulestatecache,
         (ahand, stichseq),
         &SPlayerParties22::new(

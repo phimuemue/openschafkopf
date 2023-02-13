@@ -71,7 +71,8 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
 
     fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         TPayoutDecider::payout(self,
-            rules,
+            dbg_argument!(rules),
+            rules.trumpfdecider(),
             rulestatecache,
             stichseq,
             &SPlayerParties13::new(rules.epi),
@@ -80,7 +81,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
 
     fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         TPayoutDecider::payouthints(self,
-            rules,
+            dbg_argument!(rules),
             rulestatecache,
             tplahandstichseq,
             &SPlayerParties13::new(rules.epi),
@@ -142,7 +143,8 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
 
     fn payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         let an_payout = TPayoutDecider::payout(self,
-            rules,
+            dbg_argument!(rules),
+            rules.trumpfdecider(),
             rulestatecache,
             stichseq,
             &SPlayerParties13::new(rules.epi),
@@ -179,7 +181,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
 
     fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, rulestatecache: &SRuleStateCache, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         TPayoutDecider::payouthints(self,
-            rules,
+            dbg_argument!(rules),
             rulestatecache,
             tplahandstichseq,
             &SPlayerParties13::new(rules.epi),
