@@ -38,8 +38,7 @@ fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payo
             .find(|&(_, card)| *card==rules.rufsau())
             .map(|(epi, _)| epi))
     );
-    assert_ne!(rules.epi, epi_coplayer);
-    let playerparties = SPlayerParties22{aepi_pri: [rules.epi, epi_coplayer]};
+    let playerparties = SPlayerParties22::new(rules.epi, epi_coplayer);
     let an_payout_no_stock = payoutdecider.payout(
         rules,
         rulestatecache,
@@ -58,19 +57,25 @@ fn rufspiel_payout_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payo
 }
 
 fn rufspiel_payouthints_no_stock_stoss_doubling<RufspielPayout: TRufspielPayout>(payoutdecider: &impl TPayoutDecider<SRulesRufspielGeneric<RufspielPayout>,SPlayerParties22>, rules: &SRulesRufspielGeneric<RufspielPayout>, rulestatecache: &SRuleStateCache, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence)) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-    let epi_coplayer = debug_verify_eq!(
-        rulestatecache.fixed.who_has_card(rules.rufsau()),
-        stichseq.visible_cards()
-            .find(|&(_, card)| *card==rules.rufsau())
-            .map(|(epi, _)| epi)
-            .unwrap_or_else(|| {
-                unwrap!(EPlayerIndex::values().find(|epi|
-                    ahand[*epi].cards().iter().any(|card| *card==rules.rufsau())
-                ))
-            })
-    );
-    assert_ne!(rules.epi, epi_coplayer);
-    payoutdecider.payouthints(rules, rulestatecache, (ahand, stichseq), &SPlayerParties22{aepi_pri: [rules.epi, epi_coplayer]})
+    payoutdecider.payouthints(
+        rules,
+        rulestatecache,
+        (ahand, stichseq),
+        &SPlayerParties22::new(
+            rules.epi,
+            /*epi_coplayer*/debug_verify_eq!(
+                rulestatecache.fixed.who_has_card(rules.rufsau()),
+                stichseq.visible_cards()
+                    .find(|&(_, card)| *card==rules.rufsau())
+                    .map(|(epi, _)| epi)
+                    .unwrap_or_else(|| {
+                        unwrap!(EPlayerIndex::values().find(|epi|
+                            ahand[*epi].cards().iter().any(|card| *card==rules.rufsau())
+                        ))
+                    })
+            )
+        ),
+    )
 }
 
 impl TRufspielPayout for SRufspielPayout {
@@ -108,12 +113,10 @@ impl TRufspielPayout for SRufspielPayout {
     }
 
     fn snapshot_cache(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
-        super::snapshot_cache_point_based(SPlayerParties22{
-            aepi_pri: [
-                rules.epi,
-                rulestatecachefixed.who_has_card(rules.rufsau())
-            ],
-        })
+        super::snapshot_cache_point_based(SPlayerParties22::new(
+            rules.epi,
+            rulestatecachefixed.who_has_card(rules.rufsau())
+        ))
     }
 }
 
@@ -178,6 +181,14 @@ fn playerparties22_multiplier() -> isize {
     1
 }
 
+impl SPlayerParties22 {
+    fn new(epi_active: EPlayerIndex, epi_coplayer: EPlayerIndex) -> Self {
+        assert_ne!(epi_active, epi_coplayer);
+        Self {
+            aepi_pri: [epi_active, epi_coplayer],
+        }
+    }
+}
 impl TPlayerParties for SPlayerParties22 {
     fn is_primary_party(&self, epi: EPlayerIndex) -> bool {
         self.aepi_pri[0]==epi || self.aepi_pri[1]==epi
@@ -271,9 +282,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     )
                 }
             ),
-            SPlayerParties22{
-                aepi_pri: [self.epi, rulestatecache.who_has_card(self.rufsau())],
-            }.into(),
+            SPlayerParties22::new(self.epi, rulestatecache.who_has_card(self.rufsau())).into(),
         ))
     }
 
@@ -409,12 +418,10 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
             }
             fn snapshot_cache(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
                 payoutdecider::snapshot_cache_points_monotonic(
-                    SPlayerParties22{
-                        aepi_pri: [
-                            rules.epi,
-                            rulestatecachefixed.who_has_card(rules.rufsau())
-                        ],
-                    },
+                    SPlayerParties22::new(
+                        rules.epi,
+                        rulestatecachefixed.who_has_card(rules.rufsau())
+                    ),
                     SPointsToWin61,
                 )
             }
