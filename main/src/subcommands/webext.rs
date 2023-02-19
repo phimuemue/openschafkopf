@@ -60,7 +60,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                 _ => panic!("Unexpected value for n_bytes_read: {}", n_bytes_read),
             }
         };
-        let communicate_error = |str_error_msg| {
+        let communicate_error = |str_error_msg: &str| {
             warn!("Communicating error: {}", str_error_msg);
             unwrap!(sendstr.send(
                 json!({
@@ -74,11 +74,6 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
         };
         match serde_json::de::from_str::<serde_json::Value>(&str_json_in) {
             Ok(jsonval) => {
-                if let Some(mut cmd_openschafkopf) = unwrap!(ocmd_openschafkopf.lock()).take() {
-                    if let Ok(()) = cmd_openschafkopf.kill() {
-                        communicate_error("Process did not finish early enough.");
-                    }
-                }
                 macro_rules! json_get(($index: expr, $fn_extract: ident) => {
                     if let Some(val) = jsonval.get($index) {
                         if let Some(x) = val.$fn_extract() {
@@ -110,7 +105,6 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                         }
                     }
                 };
-                let ocmd_openschafkopf = ocmd_openschafkopf.clone();
                 let sendstr = sendstr.clone();
                 let mut cmd_openschafkopf = debug_verify!(
                     std::process::Command::new({
@@ -159,7 +153,16 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                         .spawn()
                 ).expect("Could not spawn process");
                 let stdout = unwrap!(cmd_openschafkopf.stdout.take());
-                *unwrap!(ocmd_openschafkopf.lock()) = Some(cmd_openschafkopf);
+                let ocmd_openschafkopf = ocmd_openschafkopf.clone();
+                {
+                    let mut ocmd_openschafkopf = unwrap!(ocmd_openschafkopf.lock());
+                    if let Some(mut cmd_openschafkopf) = ocmd_openschafkopf.take() {
+                        if let Ok(()) = cmd_openschafkopf.kill() {
+                            communicate_error("Process did not finish early enough.");
+                        }
+                    }
+                    *ocmd_openschafkopf = Some(cmd_openschafkopf);
+                }
                 std::thread::spawn(move || {
                     if let Ok((str_openschafkopf_out, _n_bytes)) =
                         via_out_param_result(|str_openschafkopf_out| {
@@ -167,7 +170,6 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                         })
                     {
                         unwrap!(sendstr.send(str_openschafkopf_out));
-                        unwrap!(ocmd_openschafkopf.lock()).take();
                     }
                 });
             }
