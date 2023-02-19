@@ -91,9 +91,13 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                 let str_hand = json_get!("strHand", as_str);
                 let str_selected_game_name = json_get!("selectedGameName", as_str);
                 let jsonarr_announcement = json_get!("announcements", as_array);
+                let n_epi_first = json_get!("firstPosition", as_u64).as_num::<usize>();
                 let n_epi_active = {
                     match jsonarr_announcement
                         .iter()
+                        .cycle()
+                        .skip(n_epi_first)
+                        .take(verify_eq!(4, jsonarr_announcement.len()))
                         .enumerate()
                         .filter(|&(_n_epi, jsonval_announcement)| jsonval_announcement.is_string())
                         .exactly_one()
