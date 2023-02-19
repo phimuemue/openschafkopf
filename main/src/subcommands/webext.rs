@@ -5,7 +5,11 @@ use itertools::Itertools;
 //use openschafkopf_util::*;
 use serde_json::json;
 use std::io::{Read, Write};
-use crate::util::*;
+use crate::{
+    primitives::cardvector::parse_cards,
+    rules::parser::parse_rule_description_simple,
+    util::*,
+};
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     clap::Command::new(str_subcommand)
@@ -94,6 +98,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                 });
                 let str_cards_as_played = json_get!("strCardsAsPlayed", as_str);
                 let str_hand = json_get!("strHand", as_str);
+                let n_hand_cards = unwrap!(parse_cards::<Vec<_>>(str_hand)).len();
                 let str_selected_game_name = json_get!("selectedGameName", as_str);
                 let jsonarr_announcement = json_get!("announcements", as_array);
                 let n_epi_first = json_get!("firstPosition", as_u64).as_num::<usize>();
@@ -115,6 +120,48 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                     }
                 };
                 let sendstr = sendstr.clone();
+                let str_rules = &format!("{} von {}",
+                    {
+                        macro_rules! extract_farbe(() => {
+                            match json_get!("selectedGameSuit", as_str) {
+                                "E" => "Eichel",
+                                "G" => "Gras",
+                                "H" => "Herz",
+                                "S" => "Schellen",
+                                str_selected_game_suit => {
+                                    communicate_error(&format!("Bad farbe: {}", str_selected_game_suit));
+                                    continue;
+                                }
+                            }
+                        });
+                        match str_selected_game_name {
+                            "Sauspiel" => format!("Sauspiel auf die {}", extract_farbe!()),
+                            "Solo"|"Farbwenz" => format!("{}-{}", extract_farbe!(), str_selected_game_name),
+                            "Wenz"|"Geier" => str_selected_game_name.to_owned(),
+                            _ => {
+                                communicate_error(&format!("Unknown game type: {}", str_selected_game_name));
+                                continue;
+                            },
+                        }
+                    },
+                    n_epi_active,
+                );
+                const N_AHAND_POOL : usize = 10000;
+                let str_simulate_hands = if n_hand_cards<=3 {
+                    "all".to_owned()
+                } else if let Some(f_occurence_probability)=
+                    unwrap!(parse_rule_description_simple(str_rules))
+                        .heuristic_active_occurence_probability()
+                {
+                    assert!(0. <= f_occurence_probability);
+                    assert!(f_occurence_probability <= 1.);
+                    format!("{}/{}",
+                        (N_AHAND_POOL.as_num::<f64>() * f_occurence_probability).ceil(),
+                        N_AHAND_POOL
+                    )
+                } else {
+                    format!("{}", N_AHAND_POOL)
+                };
                 let mut cmd_openschafkopf = debug_verify!(
                     std::process::Command::new({
                         let path_self = unwrap!(std::env::current_exe());
@@ -127,36 +174,13 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                         .args([
                             "suggest-card",
                             "--rules",
-                            &format!("{} von {}",
-                                {
-                                    macro_rules! extract_farbe(() => {
-                                        match json_get!("selectedGameSuit", as_str) {
-                                            "E" => "Eichel",
-                                            "G" => "Gras",
-                                            "H" => "Herz",
-                                            "S" => "Schellen",
-                                            str_selected_game_suit => {
-                                                communicate_error(&format!("Bad farbe: {}", str_selected_game_suit));
-                                                continue;
-                                            }
-                                        }
-                                    });
-                                    match str_selected_game_name {
-                                        "Sauspiel" => format!("Sauspiel auf die {}", extract_farbe!()),
-                                        "Solo"|"Farbwenz" => format!("{}-{}", extract_farbe!(), str_selected_game_name),
-                                        "Wenz"|"Geier" => str_selected_game_name.to_owned(),
-                                        _ => {
-                                            communicate_error(&format!("Unknown game type: {}", str_selected_game_name));
-                                            continue;
-                                        },
-                                    }
-                                },
-                                n_epi_active,
-                            ),
+                            str_rules,
                             "--hand",
                             str_hand,
                             "--cards-on-table",
                             str_cards_as_played,
+                            "--simulate-hands",
+                            &str_simulate_hands,
                         ])
                         .stdout(std::process::Stdio::piped())
                         .spawn()
