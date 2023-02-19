@@ -43,6 +43,11 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
             match n_bytes_read {
                 0 => {
                     info!("Received 0 bytes. Exiting.");
+                    if let Some(mut cmd_openschafkopf) = unwrap!(ocmd_openschafkopf.lock()).take() {
+                        if let Ok(()) = cmd_openschafkopf.kill() {
+                            info!("Could not kill openschafkopf upon exiting.");
+                        }
+                    }
                     return Ok(());
                 }
                 N_BYTES_FOR_MSG_LEN => {
