@@ -413,6 +413,16 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
     }
 
     fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>>;
+
+    fn heuristic_active_occurence_probability(&self) -> Option<f64> {
+        // This estimates the probability of the respective rules being played.
+        // It is non-trivial to get reliable estimates on this, so I did the following:
+        // Observe how often e.g. a Rufspiel has been played in 100000 games: ~36000.
+        // As there are 4 players, we have ~9000 Rufspiel per player.
+        // Thus, in 100000 games, ~9000 the cards were considered good enough for a rufspiel.
+        // => Assume 9%. (All of this is hand-waving and oversimplifying, but as a heuristic it might still be better than nothing.)
+        None
+    }
 }
 
 impl<Rules: TRules + ?Sized> TWinnerIndex for Rules {

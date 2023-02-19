@@ -411,4 +411,8 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
     fn snapshot_cache(&self, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
         self.rufspielpayout.snapshot_cache(self, rulestatecachefixed)
     }
+
+    fn heuristic_active_occurence_probability(&self) -> Option<f64> {
+        Some(0.09)
+    }
 }

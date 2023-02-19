@@ -109,6 +109,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
                     pointstowin: pointstowin.clone(),
                 },
                 trumpfdecider: rules.trumpfdecider.clone(),
+                of_heuristic_active_occurence_probability: rules.of_heuristic_active_occurence_probability,
             }) as Box<dyn TRules>,
             Box::new(move |_stichseq: &SStichSequence, (epi_hand, _hand): (EPlayerIndex, &SHand), f_payout: f32| {
                 SPayoutDeciderPointsAsPayout::payout_to_points(
@@ -353,6 +354,7 @@ pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider> {
     epi: EPlayerIndex,
     payoutdecider: PayoutDecider,
     trumpfdecider: TrumpfDecider,
+    of_heuristic_active_occurence_probability: Option<f64>,
 }
 
 impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> fmt::Display for SRulesSoloLike<TrumpfDecider, PayoutDecider> {
@@ -372,6 +374,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TActi
                 trumpfdecider: self.trumpfdecider.clone(),
                 epi: self.epi,
                 str_name: self.str_name.clone(),
+                of_heuristic_active_occurence_probability: None, // No data about occurence probabilities with increased priority.
             }) as Box<dyn TActivelyPlayableRules>)
     }
 }
@@ -432,6 +435,10 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
     fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
         self.payoutdecider.snapshot_cache(self)
     }
+
+    fn heuristic_active_occurence_probability(&self) -> Option<f64> {
+        self.of_heuristic_active_occurence_probability
+    }
 }
 
 plain_enum_mod!(modesololike, ESoloLike {
@@ -459,20 +466,22 @@ pub fn sololike(
     epi: EPlayerIndex,
     oefarbe: impl Into<Option<EFarbe>>,
     esololike: ESoloLike,
-    payoutdecider: impl Into<VPayoutDeciderSoloLike>,
+    payoutdecider_in: impl Into<VPayoutDeciderSoloLike>,
 ) -> Box<dyn TActivelyPlayableRules> {
-    let (oefarbe, payoutdecider) = (oefarbe.into(), payoutdecider.into());
-    assert!(!matches!(payoutdecider, VPayoutDeciderSoloLike::Sie(_)) || oefarbe.is_none()); // TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
+    let (oefarbe, payoutdecider_in) = (oefarbe.into(), payoutdecider_in.into());
+    assert!(!matches!(payoutdecider_in, VPayoutDeciderSoloLike::Sie(_)) || oefarbe.is_none()); // TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
     macro_rules! sololike_internal{(
         ($trumpfdecider_farbe: expr, $str_oefarbe: expr),
         ($trumpfdecider_core: expr, $str_esololike: expr),
         ($payoutdecider: expr, $str_payoutdecider: expr),
+        $of_heuristic_active_occurence_probability: expr,
     ) => {
         Box::new(SRulesSoloLike{
             payoutdecider: $payoutdecider,
             trumpfdecider: $trumpfdecider_core($trumpfdecider_farbe),
             epi,
             str_name: format!("{}{}{}", $str_oefarbe, $str_esololike, $str_payoutdecider),
+            of_heuristic_active_occurence_probability: $of_heuristic_active_occurence_probability,
         }) as Box<dyn TActivelyPlayableRules>
     }}
     cartesian_match!(
@@ -486,10 +495,52 @@ pub fn sololike(
             ESoloLike::Wenz => (|trumpfdecider_farbe| STrumpfDecider1Primary::new(ESchlag::Unter, trumpfdecider_farbe), "Wenz"),
             ESoloLike::Geier => (|trumpfdecider_farbe| STrumpfDecider1Primary::new(ESchlag::Ober, trumpfdecider_farbe), "Geier"),
         },
-        match (payoutdecider) {
+        match (payoutdecider_in) {
             VPayoutDeciderSoloLike::PointBased(payoutdecider) => (payoutdecider, ""),
             VPayoutDeciderSoloLike::Tout(payoutdecider) => (payoutdecider, "-Tout"),
             VPayoutDeciderSoloLike::Sie(payoutdecider) => (payoutdecider, "-Sie"),
+        },
+        match ((oefarbe, esololike, &payoutdecider_in)) {
+            (
+                Some(_efarbe),
+                ESoloLike::Solo,
+                &VPayoutDeciderSoloLike::PointBased(SPayoutDeciderPointBased{
+                    payoutparams: _,
+                    pointstowin: VGameAnnouncementPrioritySoloLike::SoloSimple(_),
+                }),
+            ) => (Some(0.02)),
+            (
+                None,
+                ESoloLike::Wenz|ESoloLike::Geier,
+                &VPayoutDeciderSoloLike::PointBased(SPayoutDeciderPointBased{
+                    payoutparams: _,
+                    pointstowin: VGameAnnouncementPrioritySoloLike::SoloSimple(_),
+                }),
+            ) => (Some(0.04)),
+            (
+                Some(_efarbe),
+                ESoloLike::Wenz|ESoloLike::Geier,
+                &VPayoutDeciderSoloLike::PointBased(SPayoutDeciderPointBased{
+                    payoutparams: _,
+                    pointstowin: VGameAnnouncementPrioritySoloLike::SoloSimple(_),
+                }),
+            ) => (Some(0.06)),
+            (
+                Some(_efarbe),
+                ESoloLike::Solo,
+                &VPayoutDeciderSoloLike::Tout(_),
+            ) => (Some(0.001)),
+            (
+                None,
+                ESoloLike::Wenz|ESoloLike::Geier,
+                &VPayoutDeciderSoloLike::Tout(_),
+            ) => (Some(0.002)),
+            (
+                Some(_efarbe),
+                ESoloLike::Wenz|ESoloLike::Geier,
+                &VPayoutDeciderSoloLike::Tout(_),
+            ) => (Some(0.003)),
+            _ => None,
         },
     )
 }
