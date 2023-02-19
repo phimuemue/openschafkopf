@@ -1,14 +1,18 @@
-use crate::ai::handiterators::*;
+use crate::ai::{
+    SAi,
+    handiterators::*,
+    gametree::EMinMaxStrategy,
+};
 use crate::primitives::*;
 use crate::util::*;
-use crate::rules::{ruleset::VStockOrT, TRules, TRulesBoxClone};
+use crate::rules::{ruleset::VStockOrT, SExpensifiers, TRules, TRulesBoxClone};
 use itertools::Itertools;
 
 pub use super::handconstraint::*;
 
 enum VChooseItAhand {
     All,
-    Sample(usize),
+    Sample(/*n_samples*/usize, /*on_pool*/Option<usize>),
 }
 
 pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::Command<'static> {
@@ -202,10 +206,18 @@ pub fn with_common_args<FnWithArgs>(
             let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
                 if "all"==str_itahand.to_lowercase() { // TODO replace this case by simply "0"?
                     All
-                } else if let Ok(n_samples)=str_itahand.parse() {
-                    Sample(n_samples)
                 } else {
-                    bail!("Failed to parse simulate_hands");
+                    match str_itahand
+                        .split("/")
+                        .map(|str_n| str_n.parse().ok())
+                        .collect::<Option<Vec<_>>>()
+                        .as_ref()
+                        .map(Vec::as_slice)
+                    {
+                        Some(&[n_samples]) => Sample(n_samples, /*on_pool*/None),
+                        Some(&[n_samples, n_pool]) => Sample(n_samples, Some(n_pool)),
+                        _ => bail!("Failed to parse simulate_hands"),
+                    }
                 }
             ).unwrap_or_else(|| {
                 All
@@ -261,8 +273,8 @@ pub fn with_common_args<FnWithArgs>(
                     b_verbose,
                 )?;
             }}}
-            match iteratehands {
-                All => {
+            match (iteratehands, rules.playerindex()) {
+                (All, _oepi_active) => {
                     let mut n_cards_unknown = mapepin_cards_per_hand.iter().sum::<usize>()
                         - ahand_with_holes.iter().map(|hand| hand.cards().len()).sum::<usize>();
                     let n_ahand_total = EPlayerIndex::values()
@@ -277,8 +289,44 @@ pub fn with_common_args<FnWithArgs>(
                         });
                     forward!(n_ahand_total, internal_all_possible_hands, |itahand| itahand)
                 },
-                Sample(n_samples) => {
+                (Sample(n_samples, None), _oepi_active) => {
                     forward!(n_samples, internal_forever_rand_hands, |itahand| Iterator::take(itahand, n_samples))
+                },
+                (Sample(n_samples, Some(_n_pool)), None) => {
+                    forward!(n_samples, internal_forever_rand_hands, |itahand| Iterator::take(itahand, n_samples))
+                },
+                (Sample(n_samples, Some(n_pool)), Some(epi_active)) => {
+                    forward!(
+                        n_samples,
+                        internal_forever_rand_hands,
+                        |itahand_pool| {
+                            let mut vectplahandpayout = Iterator::take(itahand_pool, n_pool)
+                                .map(|ahand: EnumMap<EPlayerIndex, SHand>| {
+                                    let payout = SAi::new_simulating(
+                                        /*n_rank_rules_samples*/100,
+                                        /*n_suggest_card_branches*/1,
+                                        /*n_suggest_card_samples*/0,
+                                    ).rank_rules(
+                                        SFullHand::new(
+                                            &stichseq.cards_from_player(
+                                                &ahand[epi_active],
+                                                epi_active,
+                                            ).copied().collect::<Vec<_>>(),
+                                            stichseq.kurzlang(),
+                                        ),
+                                        epi_active,
+                                        rules,
+                                        &SExpensifiers::new_no_stock_doublings_stoss(),
+                                    )[EMinMaxStrategy::SelfishMin].avg();
+                                    (ahand, payout)
+                                })
+                                .collect::<Vec<_>>();
+                            vectplahandpayout.sort_unstable_by(|tplahandpayout_lhs, tplahandpayout_rhs| unwrap!(tplahandpayout_rhs.1.partial_cmp(&tplahandpayout_lhs.1)));
+                            vectplahandpayout.into_iter()
+                                .take(n_samples)
+                                .map(|tplahandpayout| tplahandpayout.0)
+                        }
+                    )
                 },
             };
         }
