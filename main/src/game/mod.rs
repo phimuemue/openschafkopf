@@ -238,7 +238,7 @@ impl TGamePhase for SDetermineRules {
         => continue until self.vectplepirules_queued is empty
     */
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
-        self.vectplepirules_queued.last().as_ref().map(|&&(epi, ref _rules)| (
+        self.vectplepirules_queued.last().map(|&(epi, ref _rules)| (
             epi,
             self.ruleset.avecrulegroup[epi].iter()
                 .filter_map(|rulegroup| rulegroup.with_higher_prio_than(
