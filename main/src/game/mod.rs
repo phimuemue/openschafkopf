@@ -162,12 +162,12 @@ impl TGamePhase for SGamePreparations {
             ))
         } else {
             match self.ruleset.stockorramsch {
-                VStockOrT::OrT(ref rulesramsch) => {
+                VStockOrT::OrT(rulesramsch) => {
                     VGamePreparationsFinish::DirectGame(SGame::new(
                         self.aveccard,
                         self.expensifiers,
                         self.ruleset.ostossparams.clone(),
-                        rulesramsch.clone(),
+                        rulesramsch,
                     ))
                 },
                 VStockOrT::Stock(n_stock) => {
