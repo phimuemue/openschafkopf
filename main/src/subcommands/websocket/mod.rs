@@ -147,7 +147,7 @@ impl STable {
 impl SPlayers {
     fn for_each(
         &mut self,
-        oslcstich: Option<&[SStich]>,
+        slcstich: &[SStich], // may be empty
         orules: Option<&dyn TRules>,
         f_cards: impl Fn(EPlayerIndex) -> Vec<ECard>,
         mut f_active: impl FnMut(EPlayerIndex, &mut Option<STimeoutCmd>)->VMessage,
@@ -201,28 +201,26 @@ impl SPlayers {
                         .map(|card| (card.to_string(), VGamePhaseAction::Game(VGameAction::Zugeben(card))))
                         .collect::<Vec<_>>(),
                     msg,
-                    /*odisplayedstichs*/ oslcstich.and_then(|slcstich| {
-                        slcstich
-                            .split_last()
-                            .map(|(stich_current, slcstich_up_to_last)| {
-                                SDisplayedStichs{
-                                    stichcurrent: SDisplayedStichCurrent {
-                                        epi_first: playerindex_server_to_client(stich_current.first_playerindex()),
-                                        vecstr_card: stich_current
-                                            .iter()
-                                            .map(|(_epi, card)| card.to_string())
-                                            .collect(),
-                                    },
-                                    ostichprev: slcstich_up_to_last
-                                        .last()
-                                        .map(|stich_prev| SDisplayedStichPrev{
-                                            mapepistr_card: EPlayerIndex
-                                                ::map_from_fn(|epi| unwrap!(card_in_stich(stich_prev, epi)))
-                                                .into_raw()
-                                        })
-                                }
-                            })
-                    }),
+                    /*odisplayedstichs*/slcstich
+                        .split_last()
+                        .map(|(stich_current, slcstich_up_to_last)| {
+                            SDisplayedStichs{
+                                stichcurrent: SDisplayedStichCurrent {
+                                    epi_first: playerindex_server_to_client(stich_current.first_playerindex()),
+                                    vecstr_card: stich_current
+                                        .iter()
+                                        .map(|(_epi, card)| card.to_string())
+                                        .collect(),
+                                },
+                                ostichprev: slcstich_up_to_last
+                                    .last()
+                                    .map(|stich_prev| SDisplayedStichPrev{
+                                        mapepistr_card: EPlayerIndex
+                                            ::map_from_fn(|epi| unwrap!(card_in_stich(stich_prev, epi)))
+                                            .into_raw()
+                                    })
+                            }
+                        }),
                     EPlayerIndex::map_from_fn(|epi| 
                         format!("{} ({})",
                             mapepistr_name[playerindex_client_to_server(epi)],
@@ -353,7 +351,7 @@ impl STable {
                     match whichplayercandosomething {
                         DealCards((dealcards, epi_doubling)) => {
                             self.players.for_each(
-                                /*oslcstich*/None,
+                                /*slcstich*/&[],
                                 None,
                                 |epi| dealcards.first_hand_for(epi).into(),
                                 |epi, otimeoutcmd| {
@@ -380,7 +378,7 @@ impl STable {
                         },
                         GamePreparations((gamepreparations, epi_announce_game)) => {
                             self.players.for_each(
-                                /*oslcstich*/None,
+                                /*slcstich*/&[],
                                 None,
                                 |epi| gamepreparations.fullhand(epi).get().to_vec(),
                                 |epi, otimeoutcmd| {
@@ -446,7 +444,7 @@ impl STable {
                         },
                         DetermineRules((determinerules, (epi_determine, vecrulegroup))) => {
                             self.players.for_each(
-                                /*oslcstich*/None,
+                                /*slcstich*/&[],
                                 None,
                                 |epi| determinerules.fullhand(epi).get().to_vec(),
                                 |epi, otimeoutcmd| {
@@ -480,7 +478,7 @@ impl STable {
                         },
                         Game((game, (epi_card, vecepi_stoss))) => {
                             self.players.for_each(
-                                Some(game.stichseq.visible_stichs()),
+                                game.stichseq.visible_stichs(),
                                 Some(game.rules.as_ref()),
                                 |epi| game.ahand[epi].cards().to_vec(),
                                 |epi, otimeoutcmd| {
@@ -516,9 +514,11 @@ impl STable {
                         },
                         GameResult((gameresult, mapepib_confirmed)) => {
                             self.players.for_each(
-                                /*oslcstich*/if_then_some!(let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame,
+                                /*slcstich*/if let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame {
                                     game.stichseq.completed_stichs()
-                                ),
+                                } else {
+                                    &[]
+                                },
                                 if_then_some!(let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame,
                                     game.rules.as_ref()
                                 ),
@@ -553,7 +553,7 @@ impl STable {
             }
         } else {
             self.players.for_each(
-                /*oslcstich*/None,
+                /*slcstich*/&[],
                 None,
                 |_epi| Vec::new(),
                 |_oepi, _otimeoutcmd| VMessage::Info("Waiting for more players.".into()),
