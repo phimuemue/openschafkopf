@@ -151,7 +151,7 @@ impl SPlayers {
         orules: Option<&dyn TRules>,
         f_cards: impl Fn(EPlayerIndex) -> Vec<ECard>,
         mut f_active: impl FnMut(EPlayerIndex, &mut Option<STimeoutCmd>)->VMessage,
-        mut f_inactive: impl FnMut(&mut SPeer)->VMessage,
+        mut f_inactive: impl FnMut()->VMessage,
         oepi_timeout: Option<EPlayerIndex>,
     ) {
         let mapepistr_name = self.mapepiopeer.map(|activepeer| // TODO can we avoid temporary storage?
@@ -252,8 +252,7 @@ impl SPlayers {
             }
         }
         for peer in self.vecpeer.iter_mut() {
-            let msg = f_inactive(peer);
-            communicate(None, vec![], msg, peer);
+            communicate(None, vec![], /*msg*/f_inactive(), peer);
         }
     }
 }
@@ -375,7 +374,7 @@ impl STable {
                                         VMessage::Info(format!("Asking {:?} for doubling", epi_doubling))
                                     }
                                 },
-                                |_peer| VMessage::Info(format!("Asking {:?} for doubling", epi_doubling)),
+                                || VMessage::Info(format!("Asking {:?} for doubling", epi_doubling)),
                                 Some(epi_doubling),
                             );
                         },
@@ -441,7 +440,7 @@ impl STable {
                                         VMessage::Info(format!("Asking {:?} for game", epi_announce_game))
                                     }
                                 },
-                                |_peer| VMessage::Info(format!("Asking {:?} for game", epi_announce_game)),
+                                || VMessage::Info(format!("Asking {:?} for game", epi_announce_game)),
                                 Some(epi_announce_game),
                             );
                         },
@@ -475,7 +474,7 @@ impl STable {
                                         VMessage::Info(format!("Re-Asking {:?} for game", epi_determine))
                                     }
                                 },
-                                |_peer| VMessage::Info(format!("Re-Asking {:?} for game", epi_determine)),
+                                || VMessage::Info(format!("Re-Asking {:?} for game", epi_determine)),
                                 Some(epi_determine),
                             );
                         },
@@ -511,7 +510,7 @@ impl STable {
                                         VMessage::Info(format!("Asking {:?} for card", epi_card))
                                     }
                                 },
-                                |_peer| VMessage::Info(format!("Asking {:?} for card", epi_card)),
+                                || VMessage::Info(format!("Asking {:?} for card", epi_card)),
                                 Some(epi_card),
                             );
                         },
@@ -542,7 +541,7 @@ impl STable {
                                         VMessage::Info("Game finished".into())
                                     }
                                 },
-                                |_peer| VMessage::Info("Game finished".into()),
+                                || VMessage::Info("Game finished".into()),
                                 None,
                             );
                         },
@@ -558,7 +557,7 @@ impl STable {
                 None,
                 |_epi| Vec::new(),
                 |_oepi, _otimeoutcmd| VMessage::Info("Waiting for more players.".into()),
-                |_peer| VMessage::Info("Waiting for more players.".into()),
+                || VMessage::Info("Waiting for more players.".into()),
                 None,
             );
         }
