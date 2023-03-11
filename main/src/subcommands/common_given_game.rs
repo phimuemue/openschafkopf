@@ -208,7 +208,7 @@ pub fn with_common_args<FnWithArgs>(
                     All
                 } else {
                     match str_itahand
-                        .split("/")
+                        .split('/')
                         .map(|str_n| str_n.parse().ok())
                         .collect::<Option<Vec<_>>>()
                         .as_deref()
