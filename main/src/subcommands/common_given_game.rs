@@ -211,8 +211,7 @@ pub fn with_common_args<FnWithArgs>(
                         .split("/")
                         .map(|str_n| str_n.parse().ok())
                         .collect::<Option<Vec<_>>>()
-                        .as_ref()
-                        .map(Vec::as_slice)
+                        .as_deref()
                     {
                         Some(&[n_samples]) => Sample(n_samples, /*on_pool*/None),
                         Some(&[n_samples, n_pool]) => Sample(n_samples, Some(n_pool)),
