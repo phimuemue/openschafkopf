@@ -144,12 +144,30 @@ impl STable {
     }
 }
 
+struct SSendToPlayers<'game> {
+    slcstich: &'game [SStich],
+    orules: Option<&'game dyn TRules>,
+    mapepiveccard: EnumMap<EPlayerIndex, Vec<ECard>>,
+}
+
+impl<'game> SSendToPlayers<'game> {
+    fn new<Card: TMoveOrClone<ECard>, ItCard: IntoIterator<Item=Card>> (
+        slcstich: &'game [SStich],
+        orules: Option<&'game dyn TRules>,
+        fn_cards: impl Fn(EPlayerIndex)->ItCard,
+    ) -> Self {
+        Self {
+            slcstich,
+            orules,
+            mapepiveccard: EPlayerIndex::map_from_fn(|epi| fn_cards(epi).into_iter().map(TMoveOrClone::move_or_clone).collect()),
+        }
+    }
+}
+
 impl SPlayers {
     fn for_each(
         &mut self,
-        slcstich: &[SStich], // may be empty
-        orules: Option<&dyn TRules>,
-        f_cards: impl Fn(EPlayerIndex) -> Vec<ECard>,
+        sendtoplayers: &SSendToPlayers,
         mut f_active: impl FnMut(EPlayerIndex, &mut Option<STimeoutCmd>)->VMessage,
         mut f_inactive: impl FnMut()->VMessage,
         oepi_timeout: Option<EPlayerIndex>,
@@ -201,7 +219,7 @@ impl SPlayers {
                         .map(|card| (card.to_string(), VGamePhaseAction::Game(VGameAction::Zugeben(card))))
                         .collect::<Vec<_>>(),
                     msg,
-                    /*odisplayedstichs*/slcstich
+                    /*odisplayedstichs*/sendtoplayers.slcstich
                         .split_last()
                         .map(|(stich_current, slcstich_up_to_last)| {
                             SDisplayedStichs{
@@ -227,7 +245,7 @@ impl SPlayers {
                             playerindex_client_to_server(epi).to_usize(),
                         )
                     ).into_raw(),
-                    orules.map(|rules| (
+                    sendtoplayers.orules.map(|rules| (
                         playerindex_server_to_client(rules.playerindex().unwrap_or(EPlayerIndex::EPI3)), // geber designates rules if no active
                         format!("{}", rules),
                     )),
@@ -239,8 +257,8 @@ impl SPlayers {
             let activepeer = &mut self.mapepiopeer[epi];
             let msg = f_active(epi, &mut activepeer.otimeoutcmd);
             if let Some(ref mut peer) = activepeer.opeer.as_mut() {
-                let mut veccard = f_cards(epi);
-                if let Some(rules) = orules {
+                let mut veccard = sendtoplayers.mapepiveccard[epi].clone(); // TODO? avoid clone
+                if let Some(rules) = sendtoplayers.orules {
                     rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
                 } else {
                     rulesrufspiel::STrumpfDeciderRufspiel::default()
@@ -351,9 +369,11 @@ impl STable {
                     match whichplayercandosomething {
                         DealCards((dealcards, epi_doubling)) => {
                             self.players.for_each(
-                                /*slcstich*/&[],
-                                None,
-                                |epi| dealcards.first_hand_for(epi).into(),
+                                &SSendToPlayers::new(
+                                    /*slcstich*/&[],
+                                    /*orules*/None,
+                                    |epi| dealcards.first_hand_for(epi),
+                                ),
                                 |epi, otimeoutcmd| {
                                     if epi_doubling==epi {
                                         ask_with_timeout(
@@ -378,9 +398,11 @@ impl STable {
                         },
                         GamePreparations((gamepreparations, epi_announce_game)) => {
                             self.players.for_each(
-                                /*slcstich*/&[],
-                                None,
-                                |epi| gamepreparations.fullhand(epi).get().to_vec(),
+                                &SSendToPlayers::new(
+                                    /*slcstich*/&[],
+                                    /*orules*/None,
+                                    |epi| gamepreparations.fullhand(epi).get(),
+                                ),
                                 |epi, otimeoutcmd| {
                                     if epi_announce_game==epi {
                                         let itgamephaseaction_rules = rules_to_gamephaseaction(
@@ -444,9 +466,11 @@ impl STable {
                         },
                         DetermineRules((determinerules, (epi_determine, vecrulegroup))) => {
                             self.players.for_each(
-                                /*slcstich*/&[],
-                                None,
-                                |epi| determinerules.fullhand(epi).get().to_vec(),
+                                &SSendToPlayers::new(
+                                    /*slcstich*/&[],
+                                    /*orules*/None,
+                                    |epi| determinerules.fullhand(epi).get(),
+                                ),
                                 |epi, otimeoutcmd| {
                                     if epi_determine==epi {
                                         let itgamephaseaction_rules = rules_to_gamephaseaction(
@@ -478,9 +502,11 @@ impl STable {
                         },
                         Game((game, (epi_card, vecepi_stoss))) => {
                             self.players.for_each(
-                                game.stichseq.visible_stichs(),
-                                Some(game.rules.as_ref()),
-                                |epi| game.ahand[epi].cards().to_vec(),
+                                &SSendToPlayers::new(
+                                    game.stichseq.visible_stichs(),
+                                    Some(game.rules.as_ref()),
+                                    |epi| game.ahand[epi].cards(),
+                                ),
                                 |epi, otimeoutcmd| {
                                     let ostrgamephaseaction = if_then_some!(vecepi_stoss.contains(&epi),
                                         ("Stoss".into(), VGamePhaseAction::Game(VGameAction::Stoss))
@@ -514,15 +540,17 @@ impl STable {
                         },
                         GameResult((gameresult, mapepib_confirmed)) => {
                             self.players.for_each(
-                                /*slcstich*/if let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame {
-                                    game.stichseq.completed_stichs()
-                                } else {
-                                    &[]
-                                },
-                                if_then_some!(let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame,
-                                    game.rules.as_ref()
+                                &SSendToPlayers::new(
+                                    /*slcstich*/if let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame {
+                                        game.stichseq.completed_stichs()
+                                    } else {
+                                        &[]
+                                    },
+                                    if_then_some!(let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame,
+                                        game.rules.as_ref()
+                                    ),
+                                    /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
                                 ),
-                                |_epi| Vec::new(),
                                 |epi, otimeoutcmd| {
                                     if !mapepib_confirmed[epi] {
                                         ask_with_timeout(
@@ -553,9 +581,11 @@ impl STable {
             }
         } else {
             self.players.for_each(
-                /*slcstich*/&[],
-                None,
-                |_epi| Vec::new(),
+                &SSendToPlayers::new(
+                    /*slcstich*/&[],
+                    /*orules*/None,
+                    /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
+                ),
                 |_oepi, _otimeoutcmd| VMessage::Info("Waiting for more players.".into()),
                 || VMessage::Info("Waiting for more players.".into()),
                 None,
