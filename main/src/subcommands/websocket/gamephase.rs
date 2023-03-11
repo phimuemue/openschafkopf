@@ -160,6 +160,26 @@ pub struct SSendToPlayers<'game> {
     pub otimeoutaction: Option<STimeoutAction>, // TODO can we avoid Option here?
 }
 
+impl<'game> SSendToPlayers<'game> {
+    pub fn new<Card: TMoveOrClone<ECard>, ItCard: IntoIterator<Item=Card>> (
+        slcstich: &'game [SStich],
+        orules: Option<&'game dyn TRules>,
+        fn_cards: impl Fn(EPlayerIndex)->ItCard,
+        fn_msg_active: impl Fn(EPlayerIndex)->Option<VMessage>,
+        msg_inactive: VMessage,
+        otimeoutaction: impl Into<Option<STimeoutAction>>,
+    ) -> Self {
+        Self {
+            slcstich,
+            orules,
+            mapepiveccard: EPlayerIndex::map_from_fn(|epi| fn_cards(epi).into_iter().map(TMoveOrClone::move_or_clone).collect()),
+            mapepiomsg_active: EPlayerIndex::map_from_fn(fn_msg_active),
+            msg_inactive,
+            otimeoutaction: otimeoutaction.into(),
+        }
+    }
+}
+
 impl VGamePhase {
     fn internal_which_player_can_do_something(&self) -> Option<VGamePhaseActivePlayerInfo> {
         use VGamePhaseGeneric::*;
