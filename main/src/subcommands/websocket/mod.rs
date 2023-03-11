@@ -259,7 +259,7 @@ impl SPlayers {
                     veccard,
                     sendtoplayers.mapepiomsg_active[epi]
                         .as_ref()
-                        .unwrap_or_else(||&sendtoplayers.msg_inactive)
+                        .unwrap_or(&sendtoplayers.msg_inactive)
                         .clone(),
                     peer
                 );
