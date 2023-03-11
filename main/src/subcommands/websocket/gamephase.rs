@@ -3,10 +3,15 @@ use crate::{
     primitives::*,
     game::*,
     rules::*,
-    rules::ruleset::{SRuleGroup, allowed_rules},
+    rules::ruleset::{SRuleGroup, allowed_rules, VStockOrT},
 };
 use serde::{Serialize, Deserialize};
 use std::mem::discriminant;
+use rand::{
+    thread_rng,
+    prelude::*,
+};
+use itertools::Itertools;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Infallible {} // TODO use std::convert::Infallible
@@ -130,8 +135,33 @@ pub type VGamePhaseAction = VGamePhaseGeneric<
     /*Accepted*/Infallible,
 >;
 
+#[derive(Serialize, Clone, Debug)]
+pub enum VMessage {
+    Info(String),
+    Ask{
+        str_question: String,
+        vecstrgamephaseaction: Vec<(String, VGamePhaseAction)>,
+    },
+}
+
+#[derive(new, Debug)]
+pub struct STimeoutAction {
+    pub epi: EPlayerIndex,
+    pub gamephaseaction_timeout: VGamePhaseAction,
+}
+
+#[derive(Debug)]
+pub struct SSendToPlayers<'game> {
+    pub slcstich: &'game [SStich],
+    pub orules: Option<&'game dyn TRules>,
+    pub mapepiveccard: EnumMap<EPlayerIndex, Vec<ECard>>,
+    pub mapepiomsg_active: EnumMap<EPlayerIndex, Option<VMessage>>,
+    pub msg_inactive: VMessage,
+    pub otimeoutaction: Option<STimeoutAction>, // TODO can we avoid Option here?
+}
+
 impl VGamePhase {
-    pub fn which_player_can_do_something(&self) -> Option<VGamePhaseActivePlayerInfo> {
+    fn internal_which_player_can_do_something(&self) -> Option<VGamePhaseActivePlayerInfo> {
         use VGamePhaseGeneric::*;
         fn internal<GamePhase: TGamePhase>(gamephase: &GamePhase) -> Option<(&GamePhase, GamePhase::ActivePlayerInfo)> {
             gamephase.which_player_can_do_something()
@@ -145,6 +175,198 @@ impl VGamePhase {
             GameResult(gameresult) => internal(gameresult).map(GameResult),
             Accepted(accepted) => internal(accepted).map(Accepted),
         }
+    }
+
+    pub fn which_player_can_do_something(&self) -> Option<SSendToPlayers> {
+        self.internal_which_player_can_do_something().map(|whichplayercandosomething| {
+            use VGamePhaseGeneric::*;
+            match whichplayercandosomething {
+                DealCards((dealcards, epi_doubling)) => {
+                    SSendToPlayers::new(
+                        /*slcstich*/&[],
+                        /*orules*/None,
+                        |epi| dealcards.first_hand_for(epi),
+                        /*fn_msg_active*/ |epi| {
+                            if_then_some!(epi_doubling==epi,
+                                VMessage::Ask{
+                                    str_question: "Doppeln".into(),
+                                    vecstrgamephaseaction: [(true, "Doppeln"), (false, "Nicht doppeln")]
+                                        .into_iter()
+                                        .map(|(b_doubling, str_doubling)| 
+                                            (str_doubling.to_string(), VGamePhaseAction::DealCards(b_doubling))
+                                        )
+                                        .collect(),
+                                }
+                            )
+                        },
+                        /*msg_inactive*/VMessage::Info(format!("Asking {:?} for doubling", epi_doubling)),
+                        STimeoutAction::new(
+                            epi_doubling,
+                            VGamePhaseAction::DealCards(/*b_doubling*/false),
+                        ),
+                    )
+                },
+                GamePreparations((gamepreparations, epi_announce_game)) => {
+                    let itgamephaseaction_rules = rules_to_gamephaseaction(
+                        &gamepreparations.ruleset.avecrulegroup[epi_announce_game],
+                        gamepreparations.fullhand(epi_announce_game),
+                        VGamePhaseAction::GamePreparations,
+                    );
+                    let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1;
+                    let vecstrgamephaseaction = itgamephaseaction_rules.collect::<Vec<_>>();
+                    SSendToPlayers::new(
+                        /*slcstich*/&[],
+                        /*orules*/None,
+                        |epi| gamepreparations.fullhand(epi).get(),
+                        /*fn_msg_active*/ |epi| {
+                            if_then_some!(epi_announce_game==epi,
+                                VMessage::Ask{
+                                    str_question: format!("Du bist an {}. Stelle. {}",
+                                        epi_announce_game.to_usize() + 1, // EPlayerIndex is 0-based
+                                        {
+                                            // TODO inform about player names
+                                            let vectplepirules = gamepreparations.gameannouncements
+                                                .iter()
+                                                .filter_map(|(epi, orules)| orules.as_ref().map(|rules| (epi, rules)))
+                                                .collect::<Vec<_>>();
+                                            if epi==EPlayerIndex::EPI0 {
+                                                assert!(vectplepirules.is_empty());
+                                                "".to_string()
+                                            } else if vectplepirules.is_empty() {
+                                                "Bisher will niemand spielen. Spielst Du?".to_string()
+                                            } else {
+                                                match vectplepirules.iter().exactly_one() {
+                                                    Ok((epi_announced, _rules)) => {
+                                                        format!(
+                                                            "Vor Dir spielt an {}. Stelle. Spielst Du auch?",
+                                                            epi_announced.to_usize() + 1, // EPlayerIndex is 0-based
+                                                        )
+                                                    },
+                                                    Err(ittplepirules) => {
+                                                        format!(
+                                                            "Vor Dir spielen: An {}. Spielst Du auch?",
+                                                            ittplepirules
+                                                                .map(|(epi_announced, _rules)| {
+                                                                    format!(
+                                                                        "{}. Stelle",
+                                                                        epi_announced.to_usize() + 1, // EPlayerIndex is 0-based
+                                                                    )
+                                                                })
+                                                                .join(", ")
+                                                        )
+                                                    },
+                                                }
+                                            }
+                                        }
+                                    ),
+                                    vecstrgamephaseaction: vecstrgamephaseaction.clone(),
+                                }
+                            )
+                        },
+                        /*msg_inactive*/VMessage::Info(format!("Asking {:?} for game", epi_announce_game)),
+                        STimeoutAction::new(
+                            epi_announce_game,
+                            gamephaseaction_rules_default,
+                        ),
+                    )
+                },
+                DetermineRules((determinerules, (epi_determine, vecrulegroup))) => {
+                    let itgamephaseaction_rules = rules_to_gamephaseaction(
+                        &vecrulegroup,
+                        determinerules.fullhand(epi_determine),
+                        VGamePhaseAction::DetermineRules,
+                    );
+                    let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1;
+                    let vecstrgamephaseaction = itgamephaseaction_rules.collect::<Vec<_>>();
+                    SSendToPlayers::new(
+                        /*slcstich*/&[],
+                        /*orules*/None,
+                        |epi| determinerules.fullhand(epi).get(),
+                        /*fn_msg_active*/ |epi| {
+                            if_then_some!(epi_determine==epi,
+                                VMessage::Ask{
+                                    str_question: format!(
+                                        "Du bist an {}. Stelle. Von {}. Stelle wird {} geboten. Spielst Du etwas staerkeres?", // TODO umlaut-tactics?
+                                        epi.to_usize() + 1, // EPlayerIndex is 0-based
+                                        determinerules.tplepirules_current_bid.0.to_usize() + 1, // EPlayerIndex is 0-based
+                                        determinerules.tplepirules_current_bid.1,
+                                    ),
+                                    vecstrgamephaseaction: vecstrgamephaseaction.clone()
+                                }
+                            )
+                        },
+                        /*msg_inactive*/VMessage::Info(format!("Re-Asking {:?} for game", epi_determine)),
+                        STimeoutAction::new(
+                            epi_determine,
+                            gamephaseaction_rules_default,
+                        ),
+                    )
+                },
+                Game((game, (epi_card, vecepi_stoss))) => {
+                    SSendToPlayers::new(
+                        game.stichseq.visible_stichs(),
+                        Some(game.rules.as_ref()),
+                        |epi| game.ahand[epi].cards(),
+                        /*fn_msg_active*/ |epi| {
+                            if_then_some!(vecepi_stoss.contains(&epi),
+                                VMessage::Ask {
+                                    str_question: "".into(),
+                                    vecstrgamephaseaction: [("Stoss".into(), VGamePhaseAction::Game(VGameAction::Stoss))].to_vec(),
+                                }
+                            )
+                        },
+                        /*msg_inactive*/VMessage::Info(format!("Asking {:?} for card", epi_card)),
+                        STimeoutAction::new(
+                            epi_card,
+                            VGamePhaseAction::Game(VGameAction::Zugeben(
+                                *unwrap!(game.rules.all_allowed_cards(
+                                    &game.stichseq,
+                                    &game.ahand[epi_card],
+                                ).choose(&mut thread_rng()))
+                            )),
+                        ),
+                    )
+                },
+                GameResult((gameresult, mapepib_confirmed)) => {
+                    SSendToPlayers::new(
+                        /*slcstich*/if let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame {
+                            game.stichseq.completed_stichs()
+                        } else {
+                            &[]
+                        },
+                        if_then_some!(let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame,
+                            game.rules.as_ref()
+                        ),
+                        /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
+                        /*fn_msg_active*/ |epi| {
+                            if_then_some!(!mapepib_confirmed[epi],
+                                VMessage::Ask{
+                                    str_question: format!("Spiel beendet. {}", if gameresult.gameresult.an_payout[epi] < 0 {
+                                        format!("Verlust: {}", -gameresult.gameresult.an_payout[epi])
+                                    } else {
+                                        format!("Gewinn: {}", gameresult.gameresult.an_payout[epi])
+                                    }),
+                                    vecstrgamephaseaction: Some(("Ok".into(), VGamePhaseAction::GameResult(()))).into_iter().collect(),
+                                }
+                            )
+                        },
+                        /*msg_inactive*/VMessage::Info("Game finished".into()),
+                        EPlayerIndex::values()
+                            .find(|epi| !mapepib_confirmed[*epi])
+                            .map(|epi_confirm|
+                                STimeoutAction::new(
+                                    epi_confirm,
+                                    VGamePhaseAction::GameResult(()),
+                                )
+                            ),
+                    )
+                },
+                Accepted((_accepted, infallible)) => {
+                    let _infallible : /*mention type to get compiler error upon change*/Infallible = infallible;
+                    panic!() // TODO avoid
+                },
+            }
+        })
     }
 
     #[allow(clippy::result_large_err)]
