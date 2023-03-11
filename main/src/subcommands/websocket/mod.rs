@@ -148,6 +148,7 @@ struct SSendToPlayers<'game> {
     slcstich: &'game [SStich],
     orules: Option<&'game dyn TRules>,
     mapepiveccard: EnumMap<EPlayerIndex, Vec<ECard>>,
+    msg_inactive: VMessage,
 }
 
 impl<'game> SSendToPlayers<'game> {
@@ -155,11 +156,13 @@ impl<'game> SSendToPlayers<'game> {
         slcstich: &'game [SStich],
         orules: Option<&'game dyn TRules>,
         fn_cards: impl Fn(EPlayerIndex)->ItCard,
+        msg_inactive: VMessage,
     ) -> Self {
         Self {
             slcstich,
             orules,
             mapepiveccard: EPlayerIndex::map_from_fn(|epi| fn_cards(epi).into_iter().map(TMoveOrClone::move_or_clone).collect()),
+            msg_inactive,
         }
     }
 }
@@ -169,7 +172,6 @@ impl SPlayers {
         &mut self,
         sendtoplayers: &SSendToPlayers,
         mut f_active: impl FnMut(EPlayerIndex, &mut Option<STimeoutCmd>)->VMessage,
-        mut f_inactive: impl FnMut()->VMessage,
         oepi_timeout: Option<EPlayerIndex>,
     ) {
         let mapepistr_name = self.mapepiopeer.map(|activepeer| // TODO can we avoid temporary storage?
@@ -268,7 +270,7 @@ impl SPlayers {
             }
         }
         for peer in self.vecpeer.iter_mut() {
-            communicate(None, vec![], /*msg*/f_inactive(), peer);
+            communicate(None, vec![], /*msg*/sendtoplayers.msg_inactive.clone(/*TODO? needed?*/), peer);
         }
     }
 }
@@ -373,6 +375,7 @@ impl STable {
                                     /*slcstich*/&[],
                                     /*orules*/None,
                                     |epi| dealcards.first_hand_for(epi),
+                                    /*msg_inactive*/VMessage::Info(format!("Asking {:?} for doubling", epi_doubling)),
                                 ),
                                 |epi, otimeoutcmd| {
                                     if epi_doubling==epi {
@@ -392,7 +395,6 @@ impl STable {
                                         VMessage::Info(format!("Asking {:?} for doubling", epi_doubling))
                                     }
                                 },
-                                || VMessage::Info(format!("Asking {:?} for doubling", epi_doubling)),
                                 Some(epi_doubling),
                             );
                         },
@@ -402,6 +404,7 @@ impl STable {
                                     /*slcstich*/&[],
                                     /*orules*/None,
                                     |epi| gamepreparations.fullhand(epi).get(),
+                                    /*msg_inactive*/VMessage::Info(format!("Asking {:?} for game", epi_announce_game)),
                                 ),
                                 |epi, otimeoutcmd| {
                                     if epi_announce_game==epi {
@@ -460,7 +463,6 @@ impl STable {
                                         VMessage::Info(format!("Asking {:?} for game", epi_announce_game))
                                     }
                                 },
-                                || VMessage::Info(format!("Asking {:?} for game", epi_announce_game)),
                                 Some(epi_announce_game),
                             );
                         },
@@ -470,6 +472,7 @@ impl STable {
                                     /*slcstich*/&[],
                                     /*orules*/None,
                                     |epi| determinerules.fullhand(epi).get(),
+                                    /*msg_inactive*/VMessage::Info(format!("Re-Asking {:?} for game", epi_determine)),
                                 ),
                                 |epi, otimeoutcmd| {
                                     if epi_determine==epi {
@@ -496,7 +499,6 @@ impl STable {
                                         VMessage::Info(format!("Re-Asking {:?} for game", epi_determine))
                                     }
                                 },
-                                || VMessage::Info(format!("Re-Asking {:?} for game", epi_determine)),
                                 Some(epi_determine),
                             );
                         },
@@ -506,6 +508,7 @@ impl STable {
                                     game.stichseq.visible_stichs(),
                                     Some(game.rules.as_ref()),
                                     |epi| game.ahand[epi].cards(),
+                                    /*msg_inactive*/VMessage::Info(format!("Asking {:?} for card", epi_card)),
                                 ),
                                 |epi, otimeoutcmd| {
                                     let ostrgamephaseaction = if_then_some!(vecepi_stoss.contains(&epi),
@@ -534,7 +537,6 @@ impl STable {
                                         VMessage::Info(format!("Asking {:?} for card", epi_card))
                                     }
                                 },
-                                || VMessage::Info(format!("Asking {:?} for card", epi_card)),
                                 Some(epi_card),
                             );
                         },
@@ -550,6 +552,7 @@ impl STable {
                                         game.rules.as_ref()
                                     ),
                                     /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
+                                    /*msg_inactive*/VMessage::Info("Game finished".into()),
                                 ),
                                 |epi, otimeoutcmd| {
                                     if !mapepib_confirmed[epi] {
@@ -569,7 +572,6 @@ impl STable {
                                         VMessage::Info("Game finished".into())
                                     }
                                 },
-                                || VMessage::Info("Game finished".into()),
                                 None,
                             );
                         },
@@ -585,16 +587,16 @@ impl STable {
                     /*slcstich*/&[],
                     /*orules*/None,
                     /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
+                    /*msg_inactive*/VMessage::Info("Waiting for more players.".into()),
                 ),
                 |_oepi, _otimeoutcmd| VMessage::Info("Waiting for more players.".into()),
-                || VMessage::Info("Waiting for more players.".into()),
                 None,
             );
         }
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 enum VMessage {
     Info(String),
     Ask{
