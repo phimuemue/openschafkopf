@@ -183,7 +183,6 @@ impl SPlayers {
         table_mutex: Arc<Mutex<STable>>,
         sendtoplayers: &SSendToPlayers,
         mut f_active: impl FnMut(EPlayerIndex)->VMessage,
-        oepi_timeout: Option<EPlayerIndex>,
     ) {
         let mapepistr_name = self.mapepiopeer.map(|activepeer| // TODO can we avoid temporary storage?
             activepeer
@@ -262,7 +261,9 @@ impl SPlayers {
                         playerindex_server_to_client(rules.playerindex().unwrap_or(EPlayerIndex::EPI3)), // geber designates rules if no active
                         format!("{}", rules),
                     )),
-                    oepi_timeout.map(playerindex_server_to_client),
+                    sendtoplayers.otimeoutaction
+                        .as_ref()
+                        .map(|timeoutaction| playerindex_server_to_client(timeoutaction.epi)),
                 ))).into()
             ));
         };
@@ -399,7 +400,6 @@ impl STable {
                                         VMessage::Info(format!("Asking {:?} for doubling", epi_doubling))
                                     }
                                 },
-                                Some(epi_doubling),
                             );
                         },
                         GamePreparations((gamepreparations, epi_announce_game)) => {
@@ -469,7 +469,6 @@ impl STable {
                                         VMessage::Info(format!("Asking {:?} for game", epi_announce_game))
                                     }
                                 },
-                                Some(epi_announce_game),
                             );
                         },
                         DetermineRules((determinerules, (epi_determine, vecrulegroup))) => {
@@ -507,7 +506,6 @@ impl STable {
                                         VMessage::Info(format!("Re-Asking {:?} for game", epi_determine))
                                     }
                                 },
-                                Some(epi_determine),
                             );
                         },
                         Game((game, (epi_card, vecepi_stoss))) => {
@@ -546,7 +544,6 @@ impl STable {
                                         VMessage::Info(format!("Asking {:?} for card", epi_card))
                                     }
                                 },
-                                Some(epi_card),
                             );
                         },
                         GameResult((gameresult, mapepib_confirmed)) => {
@@ -586,7 +583,6 @@ impl STable {
                                         VMessage::Info("Game finished".into())
                                     }
                                 },
-                                None,
                             );
                         },
                         Accepted((_accepted, infallible)) => {
@@ -606,7 +602,6 @@ impl STable {
                     /*otimeoutaction*/None,
                 ),
                 |_oepi| VMessage::Info("Waiting for more players.".into()),
-                None,
             );
         }
     }
