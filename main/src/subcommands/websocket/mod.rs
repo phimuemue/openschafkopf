@@ -156,6 +156,7 @@ struct SSendToPlayers<'game> {
     orules: Option<&'game dyn TRules>,
     mapepiveccard: EnumMap<EPlayerIndex, Vec<ECard>>,
     msg_inactive: VMessage,
+    otimeoutaction: Option<STimeoutAction>, // TODO can we avoid Option here?
 }
 
 impl<'game> SSendToPlayers<'game> {
@@ -164,12 +165,14 @@ impl<'game> SSendToPlayers<'game> {
         orules: Option<&'game dyn TRules>,
         fn_cards: impl Fn(EPlayerIndex)->ItCard,
         msg_inactive: VMessage,
+        otimeoutaction: impl Into<Option<STimeoutAction>>,
     ) -> Self {
         Self {
             slcstich,
             orules,
             mapepiveccard: EPlayerIndex::map_from_fn(|epi| fn_cards(epi).into_iter().map(TMoveOrClone::move_or_clone).collect()),
             msg_inactive,
+            otimeoutaction: otimeoutaction.into(),
         }
     }
 }
@@ -177,8 +180,9 @@ impl<'game> SSendToPlayers<'game> {
 impl SPlayers {
     fn for_each(
         &mut self,
+        table_mutex: Arc<Mutex<STable>>,
         sendtoplayers: &SSendToPlayers,
-        mut f_active: impl FnMut(EPlayerIndex, &mut Option<STimeoutCmd>)->VMessage,
+        mut f_active: impl FnMut(EPlayerIndex)->VMessage,
         oepi_timeout: Option<EPlayerIndex>,
     ) {
         let mapepistr_name = self.mapepiopeer.map(|activepeer| // TODO can we avoid temporary storage?
@@ -264,7 +268,24 @@ impl SPlayers {
         };
         for epi in EPlayerIndex::values() {
             let activepeer = &mut self.mapepiopeer[epi];
-            let msg = f_active(epi, &mut activepeer.otimeoutcmd);
+            let msg = f_active(epi);
+            if let Some(timeoutaction) = &sendtoplayers.otimeoutaction {
+                if timeoutaction.epi==epi {
+                    let (timerfuture, aborthandle) = future::abortable(STimerFuture::new(
+                        /*n_secs*/2,
+                        table_mutex.clone(),
+                        verify_eq!(timeoutaction.epi, epi),
+                    ));
+                    assert!(activepeer.otimeoutcmd.as_ref().map_or(true, |timeoutcmd|
+                        timeoutcmd.gamephaseaction.matches_phase(&timeoutaction.gamephaseaction_timeout)
+                    )); // only one active timeout cmd
+                    activepeer.otimeoutcmd = Some(STimeoutCmd{
+                        gamephaseaction: timeoutaction.gamephaseaction_timeout.clone(/*TODO needed?*/),
+                        aborthandle,
+                    });
+                    task::spawn(timerfuture);
+                }
+            }
             if let Some(ref mut peer) = activepeer.opeer.as_mut() {
                 let mut veccard = sendtoplayers.mapepiveccard[epi].clone(); // TODO? avoid clone
                 if let Some(rules) = sendtoplayers.orules {
@@ -348,45 +369,23 @@ impl STable {
             }
             if let Some(ref gamephase) = self.ogamephase {
                 if let Some(whichplayercandosomething) = verify!(gamephase.which_player_can_do_something()) {
-                    fn register_timeout(
-                        timeoutaction: STimeoutAction,
-                        otimeoutcmd: &mut Option<STimeoutCmd>,
-                        table_mutex: Arc<Mutex<STable>>,
-                    ) {
-                        let (timerfuture, aborthandle) = future::abortable(STimerFuture::new(
-                            /*n_secs*/2,
-                            table_mutex,
-                            timeoutaction.epi,
-                        ));
-                        assert!(otimeoutcmd.as_ref().map_or(true, |timeoutcmd|
-                            timeoutcmd.gamephaseaction.matches_phase(&timeoutaction.gamephaseaction_timeout)
-                        )); // only one active timeout cmd
-                        *otimeoutcmd = Some(STimeoutCmd{
-                            gamephaseaction: timeoutaction.gamephaseaction_timeout,
-                            aborthandle,
-                        });
-                        task::spawn(timerfuture);
-                    }
                     use VGamePhaseGeneric::*;
                     match whichplayercandosomething {
                         DealCards((dealcards, epi_doubling)) => {
                             self.players.for_each(
+                                self_mutex,
                                 &SSendToPlayers::new(
                                     /*slcstich*/&[],
                                     /*orules*/None,
                                     |epi| dealcards.first_hand_for(epi),
                                     /*msg_inactive*/VMessage::Info(format!("Asking {:?} for doubling", epi_doubling)),
+                                    STimeoutAction::new(
+                                        epi_doubling,
+                                        VGamePhaseAction::DealCards(/*b_doubling*/false),
+                                    ),
                                 ),
-                                |epi, otimeoutcmd| {
+                                |epi| {
                                     if epi_doubling==epi {
-                                        register_timeout(
-                                            STimeoutAction::new(
-                                                epi_doubling,
-                                                VGamePhaseAction::DealCards(/*b_doubling*/false),
-                                            ),
-                                            otimeoutcmd,
-                                            self_mutex.clone(),
-                                        );
                                         VMessage::Ask{
                                             str_question: "Doppeln".into(),
                                             vecstrgamephaseaction: [(true, "Doppeln"), (false, "Nicht doppeln")]
@@ -404,29 +403,27 @@ impl STable {
                             );
                         },
                         GamePreparations((gamepreparations, epi_announce_game)) => {
+                            let itgamephaseaction_rules = rules_to_gamephaseaction(
+                                &gamepreparations.ruleset.avecrulegroup[epi_announce_game],
+                                gamepreparations.fullhand(epi_announce_game),
+                                VGamePhaseAction::GamePreparations,
+                            );
+                            let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1;
+                            let vecstrgamephaseaction = itgamephaseaction_rules.collect::<Vec<_>>();
                             self.players.for_each(
+                                self_mutex,
                                 &SSendToPlayers::new(
                                     /*slcstich*/&[],
                                     /*orules*/None,
                                     |epi| gamepreparations.fullhand(epi).get(),
                                     /*msg_inactive*/VMessage::Info(format!("Asking {:?} for game", epi_announce_game)),
+                                    STimeoutAction::new(
+                                        epi_announce_game,
+                                        gamephaseaction_rules_default,
+                                    ),
                                 ),
-                                |epi, otimeoutcmd| {
+                                |epi| {
                                     if epi_announce_game==epi {
-                                        let itgamephaseaction_rules = rules_to_gamephaseaction(
-                                            &gamepreparations.ruleset.avecrulegroup[epi_announce_game],
-                                            gamepreparations.fullhand(epi_announce_game),
-                                            VGamePhaseAction::GamePreparations,
-                                        );
-                                        let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1;
-                                        register_timeout(
-                                            STimeoutAction::new(
-                                                epi_announce_game,
-                                                gamephaseaction_rules_default,
-                                            ),
-                                            otimeoutcmd,
-                                            self_mutex.clone(),
-                                        );
                                         VMessage::Ask{
                                             str_question: format!("Du bist an {}. Stelle. {}",
                                                 epi_announce_game.to_usize() + 1, // EPlayerIndex is 0-based
@@ -466,7 +463,7 @@ impl STable {
                                                     }
                                                 }
                                             ),
-                                            vecstrgamephaseaction: itgamephaseaction_rules.collect(),
+                                            vecstrgamephaseaction: vecstrgamephaseaction.clone(),
                                         }
                                     } else {
                                         VMessage::Info(format!("Asking {:?} for game", epi_announce_game))
@@ -476,29 +473,27 @@ impl STable {
                             );
                         },
                         DetermineRules((determinerules, (epi_determine, vecrulegroup))) => {
+                            let itgamephaseaction_rules = rules_to_gamephaseaction(
+                                &vecrulegroup,
+                                determinerules.fullhand(epi_determine),
+                                VGamePhaseAction::DetermineRules,
+                            );
+                            let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1;
+                            let vecstrgamephaseaction = itgamephaseaction_rules.collect::<Vec<_>>();
                             self.players.for_each(
+                                self_mutex,
                                 &SSendToPlayers::new(
                                     /*slcstich*/&[],
                                     /*orules*/None,
                                     |epi| determinerules.fullhand(epi).get(),
                                     /*msg_inactive*/VMessage::Info(format!("Re-Asking {:?} for game", epi_determine)),
+                                    STimeoutAction::new(
+                                        epi_determine,
+                                        gamephaseaction_rules_default,
+                                    ),
                                 ),
-                                |epi, otimeoutcmd| {
+                                |epi| {
                                     if epi_determine==epi {
-                                        let itgamephaseaction_rules = rules_to_gamephaseaction(
-                                            &vecrulegroup,
-                                            determinerules.fullhand(epi_determine),
-                                            VGamePhaseAction::DetermineRules,
-                                        );
-                                        let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1;
-                                        register_timeout(
-                                            STimeoutAction::new(
-                                                epi_determine,
-                                                gamephaseaction_rules_default,
-                                            ),
-                                            otimeoutcmd,
-                                            self_mutex.clone(),
-                                        );
                                         VMessage::Ask{
                                             str_question: format!(
                                                 "Du bist an {}. Stelle. Von {}. Stelle wird {} geboten. Spielst Du etwas staerkeres?", // TODO umlaut-tactics?
@@ -506,7 +501,7 @@ impl STable {
                                                 determinerules.tplepirules_current_bid.0.to_usize() + 1, // EPlayerIndex is 0-based
                                                 determinerules.tplepirules_current_bid.1,
                                             ),
-                                            vecstrgamephaseaction: itgamephaseaction_rules.collect(),
+                                            vecstrgamephaseaction: vecstrgamephaseaction.clone()
                                         }
                                     } else {
                                         VMessage::Info(format!("Re-Asking {:?} for game", epi_determine))
@@ -517,30 +512,27 @@ impl STable {
                         },
                         Game((game, (epi_card, vecepi_stoss))) => {
                             self.players.for_each(
+                                self_mutex,
                                 &SSendToPlayers::new(
                                     game.stichseq.visible_stichs(),
                                     Some(game.rules.as_ref()),
                                     |epi| game.ahand[epi].cards(),
                                     /*msg_inactive*/VMessage::Info(format!("Asking {:?} for card", epi_card)),
+                                    STimeoutAction::new(
+                                        epi_card,
+                                        VGamePhaseAction::Game(VGameAction::Zugeben(
+                                            *unwrap!(game.rules.all_allowed_cards(
+                                                &game.stichseq,
+                                                &game.ahand[epi_card],
+                                            ).choose(&mut thread_rng()))
+                                        )),
+                                    ),
                                 ),
-                                |epi, otimeoutcmd| {
+                                |epi| {
                                     let ostrgamephaseaction = if_then_some!(vecepi_stoss.contains(&epi),
                                         ("Stoss".into(), VGamePhaseAction::Game(VGameAction::Stoss))
                                     );
                                     if epi_card==epi {
-                                        register_timeout(
-                                            STimeoutAction::new(
-                                                epi_card,
-                                                VGamePhaseAction::Game(VGameAction::Zugeben(
-                                                    *unwrap!(game.rules.all_allowed_cards(
-                                                        &game.stichseq,
-                                                        &game.ahand[epi_card],
-                                                    ).choose(&mut thread_rng()))
-                                                )),
-                                            ),
-                                            otimeoutcmd,
-                                            self_mutex.clone(),
-                                        );
                                         VMessage::Ask{
                                             str_question: "".into(),
                                             vecstrgamephaseaction: ostrgamephaseaction.into_iter().collect(),
@@ -559,6 +551,7 @@ impl STable {
                         },
                         GameResult((gameresult, mapepib_confirmed)) => {
                             self.players.for_each(
+                                self_mutex,
                                 &SSendToPlayers::new(
                                     /*slcstich*/if let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame {
                                         game.stichseq.completed_stichs()
@@ -570,17 +563,17 @@ impl STable {
                                     ),
                                     /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
                                     /*msg_inactive*/VMessage::Info("Game finished".into()),
-                                ),
-                                |epi, otimeoutcmd| {
-                                    if !mapepib_confirmed[epi] {
-                                        register_timeout(
+                                    EPlayerIndex::values()
+                                        .find(|epi| !mapepib_confirmed[*epi])
+                                        .map(|epi_confirm|
                                             STimeoutAction::new(
-                                                epi,
+                                                epi_confirm,
                                                 VGamePhaseAction::GameResult(()),
-                                            ),
-                                            otimeoutcmd,
-                                            self_mutex.clone(),
-                                        );
+                                            )
+                                        ),
+                                ),
+                                |epi| {
+                                    if !mapepib_confirmed[epi] {
                                         VMessage::Ask{
                                             str_question: format!("Spiel beendet. {}", if gameresult.gameresult.an_payout[epi] < 0 {
                                                 format!("Verlust: {}", -gameresult.gameresult.an_payout[epi])
@@ -604,13 +597,15 @@ impl STable {
             }
         } else {
             self.players.for_each(
+                self_mutex,
                 &SSendToPlayers::new(
                     /*slcstich*/&[],
                     /*orules*/None,
                     /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
                     /*msg_inactive*/VMessage::Info("Waiting for more players.".into()),
+                    /*otimeoutaction*/None,
                 ),
-                |_oepi, _otimeoutcmd| VMessage::Info("Waiting for more players.".into()),
+                |_oepi| VMessage::Info("Waiting for more players.".into()),
                 None,
             );
         }
