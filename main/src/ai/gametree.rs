@@ -180,6 +180,43 @@ pub trait TFilterAllowedCards {
     }
 }
 
+#[derive(new)]
+pub struct SFilterOnePerWinnerIndex<'rules> {
+    oepi_unfiltered: Option<EPlayerIndex>,
+    rules: &'rules dyn TRules,
+}
+
+impl<'rules> TFilterAllowedCards for SFilterOnePerWinnerIndex<'rules> {
+    type UnregisterStich = ();
+    fn register_stich(&mut self, _ahand: &mut EnumMap<EPlayerIndex, SHand>, _stichseq: &mut SStichSequence) -> Self::UnregisterStich {
+    }
+    fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {
+    }
+    fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
+        let stich = stichseq.current_stich();
+        if self.oepi_unfiltered!=verify!(stich.current_playerindex()) {
+            // TODO all this could be done more efficiently (sampling the mutual true/false iterator items separately, avoiding allocating Vec)
+            let mut mapepiveccard = EPlayerIndex::map_from_fn(|_epi| Vec::new());
+            let mut stich = stich.clone();
+            for &card in veccard.iter() {
+                stich.push(card);
+                mapepiveccard[self.rules.preliminary_winner_index(&stich)].push(card);
+                stich.undo_most_recent();
+            }
+            *veccard = mapepiveccard.into_raw().into_iter()
+                .filter_map(|veccard_epi| {
+                    if_then_some!(!veccard_epi.is_empty(),
+                        veccard_epi[rand::thread_rng().gen_range(0..veccard_epi.len())]
+                    )
+                })
+                .collect()
+        }
+    }
+    fn continue_with_filter(&self, _stichseq: &SStichSequence) -> bool {
+        true
+    }
+}
+
 pub struct SNoFilter;
 impl SNoFilter {
     pub fn factory() -> impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->Self {

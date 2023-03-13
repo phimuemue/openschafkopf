@@ -87,6 +87,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 Branching(usize, usize),
                 Equivalent(usize, SCardsPartition),
                 Oracle,
+                OnePerWinnerIndex(Option<EPlayerIndex>),
             }
             use EBranching::*;
             macro_rules! forward_with_args{($forward:ident) => {
@@ -96,6 +97,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         if_then_some!(let Some(str_branching) = clapmatches.value_of("branching"), {
                             if str_branching=="oracle" {
                                 Oracle
+                            } else if let Some(oepi_unfiltered) = str_branching.strip_prefix("oneperwinnerindex")
+                                .map(|str_oepi_unfiltered| str_oepi_unfiltered.parse().ok())
+                            {
+                                OnePerWinnerIndex(oepi_unfiltered)
                             } else if let Some(n_until_stichseq_len) = str_branching.strip_prefix("equiv")
                                 .and_then(|str_n_until_remaining_cards| str_n_until_remaining_cards.parse().ok())
                             {
@@ -124,6 +129,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         ),
                         Some(Oracle) => ((SFilterByOracle), |stichseq, ahand| {
                             SFilterByOracle::new(rules, ahand, stichseq)
+                        }),
+                        Some(OnePerWinnerIndex(oepi_unfiltered)) => ((_), |_stichseq, _ahand| {
+                            SFilterOnePerWinnerIndex::new(
+                                oepi_unfiltered,
+                                rules,
+                            )
                         }),
                     },
                     match (clapmatches.value_of("prune")) {
