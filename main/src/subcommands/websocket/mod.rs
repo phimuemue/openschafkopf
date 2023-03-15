@@ -185,7 +185,7 @@ impl SPlayers {
             let card_in_stich = |stich: &SStich, epi| {
                 stich.get(playerindex_client_to_server(epi)).map(ECard::to_string)
             };
-            unwrap!(peer.txmsg.unbounded_send(
+            if let Err(err) = peer.txmsg.unbounded_send(
                 unwrap!(serde_json::to_string(&SSiteState::new(
                     veccard.into_iter()
                         .map(|card| (card.to_string(), VGamePhaseAction::Game(VGameAction::Zugeben(card))))
@@ -225,7 +225,9 @@ impl SPlayers {
                         .as_ref()
                         .map(|timeoutaction| playerindex_server_to_client(timeoutaction.epi)),
                 ))).into()
-            ));
+            ) {
+                assert!(err.is_disconnected());
+            }
         };
         for epi in EPlayerIndex::values() {
             let activepeer = &mut self.mapepiopeer[epi];
