@@ -2153,7 +2153,7 @@ mod tests {
                 [HZ, SU, HA, G7],
                 [HZ, SU, HA, SK],
                 [HZ, SU, HA, S8],
-                [HZ, SU, HK, GU],
+                [HZ, SU, HK, GU], // TODO should not be needed (HA better than HK)
                 // [HZ, SU, HK, GK], // covered by [HZ, SU, H., GO]
                 // [HZ, SU, HK, GO], // covered by [.., .., .., G9]
                 [HZ, SU, HK, G9],
@@ -2174,7 +2174,7 @@ mod tests {
                 [HZ, EZ, HA, G7],
                 [HZ, EZ, HA, SK],
                 [HZ, EZ, HA, S8],
-                [HZ, EZ, HK, GU],
+                [HZ, EZ, HK, GU], // TODO should not be needed (HA better than HK)
                 // [HZ, EZ, HK, GK], // covered by [HZ, ... .., GO]
                 // [HZ, EZ, HK, GO], // covered by [.., .., .., G9]
                 [HZ, EZ, HK, G9],
@@ -2195,7 +2195,7 @@ mod tests {
                 [HZ, EK, HA, G7],
                 [HZ, EK, HA, SK],
                 [HZ, EK, HA, S8],
-                [HZ, EK, HK, GU],
+                [HZ, EK, HK, GU], // TODO should not be needed (HA better than HK)
                 // [HZ, EK, HK, GK], // covered by [.., .., .., GO]
                 // [HZ, EK, HK, GO], // covered by [.., .., .., G9]
                 [HZ, EK, HK, G9],
@@ -2216,7 +2216,7 @@ mod tests {
                 [HZ, EO, HA, G7],
                 [HZ, EO, HA, SK],
                 [HZ, EO, HA, S8],
-                [HZ, EO, HK, GU],
+                [HZ, EO, HK, GU], // TODO should not be needed (HA better than HK)
                 // [HZ, EO, HK, GK], // covered by [.., .., .., GO]
                 // [HZ, EO, HK, GO], // covered by [.., .., .., G9]
                 [HZ, EO, HK, G9],
@@ -2237,7 +2237,7 @@ mod tests {
                 [HZ, E8, HA, G7],
                 [HZ, E8, HA, SK],
                 [HZ, E8, HA, S8],
-                [HZ, E8, HK, GU],
+                [HZ, E8, HK, GU], // TODO should not be needed (HA better than HK)
                 // [HZ, E8, HK, GK], // covered by [.., .., .., GO]
                 // [HZ, E8, HK, GO], // covered by [.., .., .., G9]
                 [HZ, E8, HK, G9],
@@ -2279,7 +2279,7 @@ mod tests {
                 [HZ, SA, HA, G7],
                 [HZ, SA, HA, SK],
                 [HZ, SA, HA, S8],
-                [HZ, SA, HK, GU],
+                [HZ, SA, HK, GU], // TODO should not be needed (HA better than HK)
                 [HZ, SA, HK, GK],
                 // [HZ, SA, HK, GO], // covered by [HZ, SA, HK, GK]
                 // [HZ, SA, HK, G9], // covered by [HZ, SA, .., GK]
