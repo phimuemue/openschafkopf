@@ -1121,6 +1121,853 @@ mod tests {
                 // [HK, HA, H8, H7], // covered by [HK, HA, H8, HZ]
             ],
         );
+        let rules_farbwenz_eichel_epi3 = sololike(
+            EPlayerIndex::EPI3,
+            EFarbe::Eichel,
+            ESoloLike::Wenz,
+            SPayoutDeciderPointBased::default_payoutdecider(
+                /*n_payout_base*/50,
+                /*n_payout_schneider_schwarz*/10,
+                SLaufendeParams::new(10, 3),
+            ),
+        );
+        assert_stichoracle(
+            TRulesBoxClone::box_clone(rules_farbwenz_eichel_epi3.as_ref()).as_ref(),
+            [ // This seems to be an expensive card distribution.
+                &[GA, GZ, G8, HA, HK, H8, H7, SO],
+                &[GU, GK, GO, G9, G7, H9, SK, S8],
+                &[EU, HU, EA, E9, HZ, HO, SZ, S9],
+                &[SU, EZ, EK, EO, E8, E7, SA, S7],
+            ],
+            &[],
+            &[
+                [GA, GK, EU, SU],
+                // [GA, GK, EU, EZ], // covered by [.., .., .., EO]
+                // [GA, GK, EU, EK], // covered by [.., .., .., EO]
+                [GA, GK, EU, EO],
+                [GA, GK, EU, E8],
+                // [GA, GK, EU, E7], // covered by [.., .., .., E8]
+                [GA, GK, EU, SA],
+                [GA, GK, EU, S7],
+                [GA, GK, HU, SU],
+                // [GA, GK, HU, EZ], // covered by [.., .., .., EO]
+                // [GA, GK, HU, EK], // covered by [.., .., .., EO]
+                [GA, GK, HU, EO],
+                [GA, GK, HU, E8],
+                // [GA, GK, HU, E7], // covered by [.., .., .., E8]
+                [GA, GK, HU, SA],
+                [GA, GK, HU, S7],
+                [GA, GK, EA, SU],
+                // [GA, GK, EA, EZ], // covered by [.., .., .., EO]
+                // [GA, GK, EA, EK], // covered by [.., .., .., EO]
+                [GA, GK, EA, EO],
+                [GA, GK, EA, E8],
+                // [GA, GK, EA, E7], // covered by [.., .., .., E8]
+                [GA, GK, EA, SA],
+                [GA, GK, EA, S7],
+                [GA, GK, E9, SU],
+                [GA, GK, E9, EZ],
+                // [GA, GK, E9, EK], // covered by [.., .., .., EZ]
+                // [GA, GK, E9, EO], // covered by [.., .., .., EZ]
+                [GA, GK, E9, E8],
+                // [GA, GK, E9, E7], // covered by [.., .., .., E8]
+                [GA, GK, E9, SA],
+                [GA, GK, E9, S7],
+                [GA, GK, HZ, SU],
+                [GA, GK, HZ, EZ],
+                // [GA, GK, HZ, EK], // covered by [.., .., .., EZ]
+                // [GA, GK, HZ, EO], // covered by [.., .., .., EZ]
+                [GA, GK, HZ, E8],
+                // [GA, GK, HZ, E7], // covered by [.., .., .., E8]
+                [GA, GK, HZ, SA],
+                [GA, GK, HZ, S7],
+                [GA, GK, HO, SU],
+                [GA, GK, HO, EZ],
+                // [GA, GK, HO, EK], // covered by [.., .., .., EZ]
+                // [GA, GK, HO, EO], // covered by [.., .., .., EZ]
+                [GA, GK, HO, E8],
+                // [GA, GK, HO, E7], // covered by [.., .., .., E8]
+                [GA, GK, HO, SA],
+                [GA, GK, HO, S7],
+                [GA, GK, SZ, SU],
+                [GA, GK, SZ, EZ],
+                // [GA, GK, SZ, EK], // covered by [.., .., .., EZ]
+                // [GA, GK, SZ, EO], // covered by [.., .., .., EZ]
+                [GA, GK, SZ, E8],
+                // [GA, GK, SZ, E7], // covered by [.., .., .., E8]
+                [GA, GK, SZ, SA],
+                [GA, GK, SZ, S7],
+                [GA, GK, S9, SU],
+                [GA, GK, S9, EZ],
+                // [GA, GK, S9, EK], // covered by [.., .., .., EZ]
+                // [GA, GK, S9, EO], // covered by [.., .., .., EZ]
+                [GA, GK, S9, E8],
+                // [GA, GK, S9, E7], // covered by [.., .., .., E8]
+                [GA, GK, S9, SA],
+                [GA, GK, S9, S7],
+                [GA, GO, EU, SU],
+                // [GA, GO, EU, EZ], // covered by [.., .., .., EO]
+                // [GA, GO, EU, EK], // covered by [.., .., .., EO]
+                [GA, GO, EU, EO],
+                [GA, GO, EU, E8],
+                // [GA, GO, EU, E7], // covered by [.., .., .., E8]
+                [GA, GO, EU, SA],
+                [GA, GO, EU, S7],
+                [GA, GO, HU, SU],
+                // [GA, GO, HU, EZ], // covered by [.., .., .., EO]
+                // [GA, GO, HU, EK], // covered by [.., .., .., EO]
+                [GA, GO, HU, EO],
+                [GA, GO, HU, E8],
+                // [GA, GO, HU, E7], // covered by [.., .., .., E8]
+                [GA, GO, HU, SA],
+                [GA, GO, HU, S7],
+                [GA, GO, EA, SU],
+                // [GA, GO, EA, EZ], // covered by [.., .., .., EO]
+                // [GA, GO, EA, EK], // covered by [.., .., .., EO]
+                [GA, GO, EA, EO],
+                [GA, GO, EA, E8],
+                // [GA, GO, EA, E7], // covered by [.., .., .., E8]
+                [GA, GO, EA, SA],
+                [GA, GO, EA, S7],
+                [GA, GO, E9, SU],
+                [GA, GO, E9, EZ],
+                // [GA, GO, E9, EK], // covered by [.., .., .., EZ]
+                // [GA, GO, E9, EO], // covered by [.., .., .., EZ]
+                [GA, GO, E9, E8],
+                // [GA, GO, E9, E7], // covered by [.., .., .., E8]
+                [GA, GO, E9, SA],
+                [GA, GO, E9, S7],
+                [GA, GO, HZ, SU],
+                [GA, GO, HZ, EZ],
+                // [GA, GO, HZ, EK], // covered by [.., .., .., EZ]
+                // [GA, GO, HZ, EO], // covered by [.., .., .., EZ]
+                [GA, GO, HZ, E8],
+                // [GA, GO, HZ, E7], // covered by [.., .., .., E8]
+                [GA, GO, HZ, SA],
+                [GA, GO, HZ, S7],
+                [GA, GO, HO, SU],
+                [GA, GO, HO, EZ],
+                // [GA, GO, HO, EK], // covered by [.., .., .., EZ]
+                // [GA, GO, HO, EO], // covered by [.., .., .., EZ]
+                [GA, GO, HO, E8],
+                // [GA, GO, HO, E7], // covered by [.., .., .., E8]
+                [GA, GO, HO, SA],
+                [GA, GO, HO, S7],
+                [GA, GO, SZ, SU],
+                [GA, GO, SZ, EZ],
+                // [GA, GO, SZ, EK], // covered by [.., .., .., EZ]
+                // [GA, GO, SZ, EO], // covered by [.., .., .., EZ]
+                [GA, GO, SZ, E8],
+                // [GA, GO, SZ, E7], // covered by [.., .., .., E8]
+                [GA, GO, SZ, SA],
+                [GA, GO, SZ, S7],
+                [GA, GO, S9, SU],
+                [GA, GO, S9, EZ],
+                // [GA, GO, S9, EK], // covered by [.., .., .., EZ]
+                // [GA, GO, S9, EO], // covered by [.., .., .., EZ]
+                [GA, GO, S9, E8],
+                // [GA, GO, S9, E7], // covered by [.., .., .., E8]
+                [GA, GO, S9, SA],
+                [GA, GO, S9, S7],
+                [GA, G9, EU, SU],
+                // [GA, G9, EU, EZ], // covered by [.., .., .., EO]
+                // [GA, G9, EU, EK], // covered by [.., .., .., EO]
+                [GA, G9, EU, EO],
+                [GA, G9, EU, E8],
+                // [GA, G9, EU, E7], // covered by [.., .., .., E8]
+                [GA, G9, EU, SA],
+                [GA, G9, EU, S7],
+                [GA, G9, HU, SU],
+                // [GA, G9, HU, EZ], // covered by [.., .., .., EO]
+                // [GA, G9, HU, EK], // covered by [.., .., .., EO]
+                [GA, G9, HU, EO],
+                [GA, G9, HU, E8],
+                // [GA, G9, HU, E7], // covered by [.., .., .., E8]
+                [GA, G9, HU, SA],
+                [GA, G9, HU, S7],
+                [GA, G9, EA, SU],
+                // [GA, G9, EA, EZ], // covered by [.., .., .., EO]
+                // [GA, G9, EA, EK], // covered by [.., .., .., EO]
+                [GA, G9, EA, EO],
+                [GA, G9, EA, E8],
+                // [GA, G9, EA, E7], // covered by [.., .., .., E8]
+                [GA, G9, EA, SA],
+                [GA, G9, EA, S7],
+                [GA, G9, E9, SU],
+                [GA, G9, E9, EZ],
+                // [GA, G9, E9, EK], // covered by [.., .., .., EZ]
+                // [GA, G9, E9, EO], // covered by [.., .., .., EZ]
+                [GA, G9, E9, E8],
+                // [GA, G9, E9, E7], // covered by [.., .., .., E8]
+                [GA, G9, E9, SA],
+                [GA, G9, E9, S7],
+                [GA, G9, HZ, SU],
+                [GA, G9, HZ, EZ],
+                // [GA, G9, HZ, EK], // covered by [.., .., .., EZ]
+                // [GA, G9, HZ, EO], // covered by [.., .., .., EZ]
+                [GA, G9, HZ, E8],
+                // [GA, G9, HZ, E7], // covered by [.., .., .., E8]
+                [GA, G9, HZ, SA],
+                [GA, G9, HZ, S7],
+                [GA, G9, HO, SU],
+                [GA, G9, HO, EZ],
+                // [GA, G9, HO, EK], // covered by [.., .., .., EZ]
+                // [GA, G9, HO, EO], // covered by [.., .., .., EZ]
+                [GA, G9, HO, E8],
+                // [GA, G9, HO, E7], // covered by [.., .., .., E8]
+                [GA, G9, HO, SA],
+                [GA, G9, HO, S7],
+                [GA, G9, SZ, SU],
+                [GA, G9, SZ, EZ],
+                // [GA, G9, SZ, EK], // covered by [.., .., .., EZ]
+                // [GA, G9, SZ, EO], // covered by [.., .., .., EZ]
+                [GA, G9, SZ, E8],
+                // [GA, G9, SZ, E7], // covered by [.., .., .., E8]
+                [GA, G9, SZ, SA],
+                [GA, G9, SZ, S7],
+                [GA, G9, S9, SU],
+                [GA, G9, S9, EZ],
+                // [GA, G9, S9, EK], // covered by [.., .., .., EZ]
+                // [GA, G9, S9, EO], // covered by [.., .., .., EZ]
+                [GA, G9, S9, E8],
+                // [GA, G9, S9, E7], // covered by [.., .., .., E8]
+                [GA, G9, S9, SA],
+                [GA, G9, S9, S7],
+                [GA, G7, EU, SU],
+                // [GA, G7, EU, EZ], // covered by [.., .., .., EO]
+                // [GA, G7, EU, EK], // covered by [.., .., .., EO]
+                [GA, G7, EU, EO],
+                [GA, G7, EU, E8],
+                // [GA, G7, EU, E7], // covered by [.., .., .., E8]
+                [GA, G7, EU, SA],
+                [GA, G7, EU, S7],
+                [GA, G7, HU, SU],
+                // [GA, G7, HU, EZ], // covered by [.., .., .., EO]
+                // [GA, G7, HU, EK], // covered by [.., .., .., EO]
+                [GA, G7, HU, EO],
+                [GA, G7, HU, E8],
+                // [GA, G7, HU, E7], // covered by [.., .., .., E8]
+                [GA, G7, HU, SA],
+                [GA, G7, HU, S7],
+                [GA, G7, EA, SU],
+                // [GA, G7, EA, EZ], // covered by [.., .., .., EO]
+                // [GA, G7, EA, EK], // covered by [.., .., .., EO]
+                [GA, G7, EA, EO],
+                [GA, G7, EA, E8],
+                // [GA, G7, EA, E7], // covered by [.., .., .., E8]
+                [GA, G7, EA, SA],
+                [GA, G7, EA, S7],
+                [GA, G7, E9, SU],
+                [GA, G7, E9, EZ],
+                // [GA, G7, E9, EK], // covered by [.., .., .., EZ]
+                // [GA, G7, E9, EO], // covered by [.., .., .., EZ]
+                [GA, G7, E9, E8],
+                // [GA, G7, E9, E7], // covered by [.., .., .., E8]
+                [GA, G7, E9, SA],
+                [GA, G7, E9, S7],
+                [GA, G7, HZ, SU],
+                [GA, G7, HZ, EZ],
+                // [GA, G7, HZ, EK], // covered by [.., .., .., EZ]
+                // [GA, G7, HZ, EO], // covered by [.., .., .., EZ]
+                [GA, G7, HZ, E8],
+                // [GA, G7, HZ, E7], // covered by [.., .., .., E8]
+                [GA, G7, HZ, SA],
+                [GA, G7, HZ, S7],
+                [GA, G7, HO, SU],
+                [GA, G7, HO, EZ],
+                // [GA, G7, HO, EK], // covered by [.., .., .., EZ]
+                // [GA, G7, HO, EO], // covered by [.., .., .., EZ]
+                [GA, G7, HO, E8],
+                // [GA, G7, HO, E7], // covered by [.., .., .., E8]
+                [GA, G7, HO, SA],
+                [GA, G7, HO, S7],
+                [GA, G7, SZ, SU],
+                [GA, G7, SZ, EZ],
+                // [GA, G7, SZ, EK], // covered by [.., .., .., EZ]
+                // [GA, G7, SZ, EO], // covered by [.., .., .., EZ]
+                [GA, G7, SZ, E8],
+                // [GA, G7, SZ, E7], // covered by [.., .., .., E8]
+                [GA, G7, SZ, SA],
+                [GA, G7, SZ, S7],
+                [GA, G7, S9, SU],
+                [GA, G7, S9, EZ],
+                // [GA, G7, S9, EK], // covered by [.., .., .., EZ]
+                // [GA, G7, S9, EO], // covered by [.., .., .., EZ]
+                [GA, G7, S9, E8],
+                // [GA, G7, S9, E7], // covered by [.., .., .., E8]
+                [GA, G7, S9, SA],
+                [GA, G7, S9, S7],
+                [GZ, GK, EU, SU],
+                // [GZ, GK, EU, EZ], // covered by [.., .., .., EO]
+                // [GZ, GK, EU, EK], // covered by [.., .., .., EO]
+                [GZ, GK, EU, EO],
+                [GZ, GK, EU, E8],
+                // [GZ, GK, EU, E7], // covered by [.., .., .., E8]
+                [GZ, GK, EU, SA],
+                [GZ, GK, EU, S7],
+                [GZ, GK, HU, SU],
+                // [GZ, GK, HU, EZ], // covered by [.., .., .., EO]
+                // [GZ, GK, HU, EK], // covered by [.., .., .., EO]
+                [GZ, GK, HU, EO],
+                [GZ, GK, HU, E8],
+                // [GZ, GK, HU, E7], // covered by [.., .., .., E8]
+                [GZ, GK, HU, SA],
+                [GZ, GK, HU, S7],
+                [GZ, GK, EA, SU],
+                // [GZ, GK, EA, EZ], // covered by [.., .., .., EO]
+                // [GZ, GK, EA, EK], // covered by [.., .., .., EO]
+                [GZ, GK, EA, EO],
+                [GZ, GK, EA, E8],
+                // [GZ, GK, EA, E7], // covered by [.., .., .., E8]
+                [GZ, GK, EA, SA],
+                [GZ, GK, EA, S7],
+                [GZ, GK, E9, SU],
+                [GZ, GK, E9, EZ],
+                // [GZ, GK, E9, EK], // covered by [.., .., .., EZ]
+                // [GZ, GK, E9, EO], // covered by [.., .., .., EZ]
+                [GZ, GK, E9, E8],
+                // [GZ, GK, E9, E7], // covered by [.., .., .., E8]
+                [GZ, GK, E9, SA],
+                [GZ, GK, E9, S7],
+                [GZ, GK, HZ, SU],
+                [GZ, GK, HZ, EZ],
+                // [GZ, GK, HZ, EK], // covered by [.., .., .., EZ]
+                // [GZ, GK, HZ, EO], // covered by [.., .., .., EZ]
+                [GZ, GK, HZ, E8],
+                // [GZ, GK, HZ, E7], // covered by [.., .., .., E8]
+                [GZ, GK, HZ, SA],
+                [GZ, GK, HZ, S7],
+                [GZ, GK, HO, SU],
+                [GZ, GK, HO, EZ],
+                // [GZ, GK, HO, EK], // covered by [.., .., .., EZ]
+                // [GZ, GK, HO, EO], // covered by [.., .., .., EZ]
+                [GZ, GK, HO, E8],
+                // [GZ, GK, HO, E7], // covered by [.., .., .., E8]
+                [GZ, GK, HO, SA],
+                [GZ, GK, HO, S7],
+                [GZ, GK, SZ, SU],
+                [GZ, GK, SZ, EZ],
+                // [GZ, GK, SZ, EK], // covered by [.., .., .., EZ]
+                // [GZ, GK, SZ, EO], // covered by [.., .., .., EZ]
+                [GZ, GK, SZ, E8],
+                // [GZ, GK, SZ, E7], // covered by [.., .., .., E8]
+                [GZ, GK, SZ, SA],
+                [GZ, GK, SZ, S7],
+                [GZ, GK, S9, SU],
+                [GZ, GK, S9, EZ],
+                // [GZ, GK, S9, EK], // covered by [.., .., .., EZ]
+                // [GZ, GK, S9, EO], // covered by [.., .., .., EZ]
+                [GZ, GK, S9, E8],
+                // [GZ, GK, S9, E7], // covered by [.., .., .., E8]
+                [GZ, GK, S9, SA],
+                [GZ, GK, S9, S7],
+                [GZ, GO, EU, SU],
+                // [GZ, GO, EU, EZ], // covered by [.., .., .., EO]
+                // [GZ, GO, EU, EK], // covered by [.., .., .., EO]
+                [GZ, GO, EU, EO],
+                [GZ, GO, EU, E8],
+                // [GZ, GO, EU, E7], // covered by [.., .., .., E8]
+                [GZ, GO, EU, SA],
+                [GZ, GO, EU, S7],
+                [GZ, GO, HU, SU],
+                // [GZ, GO, HU, EZ], // covered by [.., .., .., EO]
+                // [GZ, GO, HU, EK], // covered by [.., .., .., EO]
+                [GZ, GO, HU, EO],
+                [GZ, GO, HU, E8],
+                // [GZ, GO, HU, E7], // covered by [.., .., .., E8]
+                [GZ, GO, HU, SA],
+                [GZ, GO, HU, S7],
+                [GZ, GO, EA, SU],
+                // [GZ, GO, EA, EZ], // covered by [.., .., .., EO]
+                // [GZ, GO, EA, EK], // covered by [.., .., .., EO]
+                [GZ, GO, EA, EO],
+                [GZ, GO, EA, E8],
+                // [GZ, GO, EA, E7], // covered by [.., .., .., E8]
+                [GZ, GO, EA, SA],
+                [GZ, GO, EA, S7],
+                [GZ, GO, E9, SU],
+                [GZ, GO, E9, EZ],
+                // [GZ, GO, E9, EK], // covered by [.., .., .., EZ]
+                // [GZ, GO, E9, EO], // covered by [.., .., .., EZ]
+                [GZ, GO, E9, E8],
+                // [GZ, GO, E9, E7], // covered by [.., .., .., E8]
+                [GZ, GO, E9, SA],
+                [GZ, GO, E9, S7],
+                [GZ, GO, HZ, SU],
+                [GZ, GO, HZ, EZ],
+                // [GZ, GO, HZ, EK], // covered by [.., .., .., EZ]
+                // [GZ, GO, HZ, EO], // covered by [.., .., .., EZ]
+                [GZ, GO, HZ, E8],
+                // [GZ, GO, HZ, E7], // covered by [.., .., .., E8]
+                [GZ, GO, HZ, SA],
+                [GZ, GO, HZ, S7],
+                [GZ, GO, HO, SU],
+                [GZ, GO, HO, EZ],
+                // [GZ, GO, HO, EK], // covered by [.., .., .., EZ]
+                // [GZ, GO, HO, EO], // covered by [.., .., .., EZ]
+                [GZ, GO, HO, E8],
+                // [GZ, GO, HO, E7], // covered by [.., .., .., E8]
+                [GZ, GO, HO, SA],
+                [GZ, GO, HO, S7],
+                [GZ, GO, SZ, SU],
+                [GZ, GO, SZ, EZ],
+                // [GZ, GO, SZ, EK], // covered by [.., .., .., EZ]
+                // [GZ, GO, SZ, EO], // covered by [.., .., .., EZ]
+                [GZ, GO, SZ, E8],
+                // [GZ, GO, SZ, E7], // covered by [.., .., .., E8]
+                [GZ, GO, SZ, SA],
+                [GZ, GO, SZ, S7],
+                [GZ, GO, S9, SU],
+                [GZ, GO, S9, EZ],
+                // [GZ, GO, S9, EK], // covered by [.., .., .., EZ]
+                // [GZ, GO, S9, EO], // covered by [.., .., .., EZ]
+                [GZ, GO, S9, E8],
+                // [GZ, GO, S9, E7], // covered by [.., .., .., E8]
+                [GZ, GO, S9, SA],
+                [GZ, GO, S9, S7],
+                [GZ, G9, EU, SU],
+                // [GZ, G9, EU, EZ], // covered by [.., .., .., EO]
+                // [GZ, G9, EU, EK], // covered by [.., .., .., EO]
+                [GZ, G9, EU, EO],
+                [GZ, G9, EU, E8],
+                // [GZ, G9, EU, E7], // covered by [.., .., .., E8]
+                [GZ, G9, EU, SA],
+                [GZ, G9, EU, S7],
+                [GZ, G9, HU, SU],
+                // [GZ, G9, HU, EZ], // covered by [.., .., .., EO]
+                // [GZ, G9, HU, EK], // covered by [.., .., .., EO]
+                [GZ, G9, HU, EO],
+                [GZ, G9, HU, E8],
+                // [GZ, G9, HU, E7], // covered by [.., .., .., E8]
+                [GZ, G9, HU, SA],
+                [GZ, G9, HU, S7],
+                [GZ, G9, EA, SU],
+                // [GZ, G9, EA, EZ], // covered by [.., .., .., EO]
+                // [GZ, G9, EA, EK], // covered by [.., .., .., EO]
+                [GZ, G9, EA, EO],
+                [GZ, G9, EA, E8],
+                // [GZ, G9, EA, E7], // covered by [.., .., .., E8]
+                [GZ, G9, EA, SA],
+                [GZ, G9, EA, S7],
+                [GZ, G9, E9, SU],
+                [GZ, G9, E9, EZ],
+                // [GZ, G9, E9, EK], // covered by [.., .., .., EZ]
+                // [GZ, G9, E9, EO], // covered by [.., .., .., EZ]
+                [GZ, G9, E9, E8],
+                // [GZ, G9, E9, E7], // covered by [.., .., .., E8]
+                [GZ, G9, E9, SA],
+                [GZ, G9, E9, S7],
+                [GZ, G9, HZ, SU],
+                [GZ, G9, HZ, EZ],
+                // [GZ, G9, HZ, EK], // covered by [.., .., .., EZ]
+                // [GZ, G9, HZ, EO], // covered by [.., .., .., EZ]
+                [GZ, G9, HZ, E8],
+                // [GZ, G9, HZ, E7], // covered by [.., .., .., E8]
+                [GZ, G9, HZ, SA],
+                [GZ, G9, HZ, S7],
+                [GZ, G9, HO, SU],
+                [GZ, G9, HO, EZ],
+                // [GZ, G9, HO, EK], // covered by [.., .., .., EZ]
+                // [GZ, G9, HO, EO], // covered by [.., .., .., EZ]
+                [GZ, G9, HO, E8],
+                // [GZ, G9, HO, E7], // covered by [.., .., .., E8]
+                [GZ, G9, HO, SA],
+                [GZ, G9, HO, S7],
+                [GZ, G9, SZ, SU],
+                [GZ, G9, SZ, EZ],
+                // [GZ, G9, SZ, EK], // covered by [.., .., .., EZ]
+                // [GZ, G9, SZ, EO], // covered by [.., .., .., EZ]
+                [GZ, G9, SZ, E8],
+                // [GZ, G9, SZ, E7], // covered by [.., .., .., E8]
+                [GZ, G9, SZ, SA],
+                [GZ, G9, SZ, S7],
+                [GZ, G9, S9, SU],
+                [GZ, G9, S9, EZ],
+                // [GZ, G9, S9, EK], // covered by [.., .., .., EZ]
+                // [GZ, G9, S9, EO], // covered by [.., .., .., EZ]
+                [GZ, G9, S9, E8],
+                // [GZ, G9, S9, E7], // covered by [.., .., .., E8]
+                [GZ, G9, S9, SA],
+                [GZ, G9, S9, S7],
+                [GZ, G7, EU, SU],
+                // [GZ, G7, EU, EZ], // covered by [.., .., .., EO]
+                // [GZ, G7, EU, EK], // covered by [.., .., .., EO]
+                [GZ, G7, EU, EO],
+                [GZ, G7, EU, E8],
+                // [GZ, G7, EU, E7], // covered by [.., .., .., E8]
+                [GZ, G7, EU, SA],
+                [GZ, G7, EU, S7],
+                [GZ, G7, HU, SU],
+                // [GZ, G7, HU, EZ], // covered by [.., .., .., EO]
+                // [GZ, G7, HU, EK], // covered by [.., .., .., EO]
+                [GZ, G7, HU, EO],
+                [GZ, G7, HU, E8],
+                // [GZ, G7, HU, E7], // covered by [.., .., .., E8]
+                [GZ, G7, HU, SA],
+                [GZ, G7, HU, S7],
+                [GZ, G7, EA, SU],
+                // [GZ, G7, EA, EZ], // covered by [.., .., .., EO]
+                // [GZ, G7, EA, EK], // covered by [.., .., .., EO]
+                [GZ, G7, EA, EO],
+                [GZ, G7, EA, E8],
+                // [GZ, G7, EA, E7], // covered by [.., .., .., E8]
+                [GZ, G7, EA, SA],
+                [GZ, G7, EA, S7],
+                [GZ, G7, E9, SU],
+                [GZ, G7, E9, EZ],
+                // [GZ, G7, E9, EK], // covered by [.., .., .., EZ]
+                // [GZ, G7, E9, EO], // covered by [.., .., .., EZ]
+                [GZ, G7, E9, E8],
+                // [GZ, G7, E9, E7], // covered by [.., .., .., E8]
+                [GZ, G7, E9, SA],
+                [GZ, G7, E9, S7],
+                [GZ, G7, HZ, SU],
+                [GZ, G7, HZ, EZ],
+                // [GZ, G7, HZ, EK], // covered by [.., .., .., EZ]
+                // [GZ, G7, HZ, EO], // covered by [.., .., .., EZ]
+                [GZ, G7, HZ, E8],
+                // [GZ, G7, HZ, E7], // covered by [.., .., .., E8]
+                [GZ, G7, HZ, SA],
+                [GZ, G7, HZ, S7],
+                [GZ, G7, HO, SU],
+                [GZ, G7, HO, EZ],
+                // [GZ, G7, HO, EK], // covered by [.., .., .., EZ]
+                // [GZ, G7, HO, EO], // covered by [.., .., .., EZ]
+                [GZ, G7, HO, E8],
+                // [GZ, G7, HO, E7], // covered by [.., .., .., E8]
+                [GZ, G7, HO, SA],
+                [GZ, G7, HO, S7],
+                [GZ, G7, SZ, SU],
+                [GZ, G7, SZ, EZ],
+                // [GZ, G7, SZ, EK], // covered by [.., .., .., EZ]
+                // [GZ, G7, SZ, EO], // covered by [.., .., .., EZ]
+                [GZ, G7, SZ, E8],
+                // [GZ, G7, SZ, E7], // covered by [.., .., .., E8]
+                [GZ, G7, SZ, SA],
+                [GZ, G7, SZ, S7],
+                [GZ, G7, S9, SU],
+                [GZ, G7, S9, EZ],
+                // [GZ, G7, S9, EK], // covered by [.., .., .., EZ]
+                // [GZ, G7, S9, EO], // covered by [.., .., .., EZ]
+                [GZ, G7, S9, E8],
+                // [GZ, G7, S9, E7], // covered by [.., .., .., E8]
+                [GZ, G7, S9, SA],
+                [GZ, G7, S9, S7],
+                [G8, GK, EU, SU],
+                // [G8, GK, EU, EZ], // covered by [.., .., .., EO]
+                // [G8, GK, EU, EK], // covered by [.., .., .., EO]
+                [G8, GK, EU, EO],
+                [G8, GK, EU, E8],
+                // [G8, GK, EU, E7], // covered by [.., .., .., E8]
+                [G8, GK, EU, SA],
+                [G8, GK, EU, S7],
+                [G8, GK, HU, SU],
+                // [G8, GK, HU, EZ], // covered by [.., .., .., EO]
+                // [G8, GK, HU, EK], // covered by [.., .., .., EO]
+                [G8, GK, HU, EO],
+                [G8, GK, HU, E8],
+                // [G8, GK, HU, E7], // covered by [.., .., .., E8]
+                [G8, GK, HU, SA],
+                [G8, GK, HU, S7],
+                [G8, GK, EA, SU],
+                // [G8, GK, EA, EZ], // covered by [.., .., .., EO]
+                // [G8, GK, EA, EK], // covered by [.., .., .., EO]
+                [G8, GK, EA, EO],
+                [G8, GK, EA, E8],
+                // [G8, GK, EA, E7], // covered by [.., .., .., E8]
+                [G8, GK, EA, SA],
+                [G8, GK, EA, S7],
+                [G8, GK, E9, SU],
+                [G8, GK, E9, EZ],
+                // [G8, GK, E9, EK], // covered by [.., .., .., EZ]
+                // [G8, GK, E9, EO], // covered by [.., .., .., EZ]
+                [G8, GK, E9, E8],
+                // [G8, GK, E9, E7], // covered by [.., .., .., E8]
+                [G8, GK, E9, SA],
+                [G8, GK, E9, S7],
+                [G8, GK, HZ, SU],
+                [G8, GK, HZ, EZ],
+                // [G8, GK, HZ, EK], // covered by [.., .., .., EZ]
+                // [G8, GK, HZ, EO], // covered by [.., .., .., EZ]
+                [G8, GK, HZ, E8],
+                // [G8, GK, HZ, E7], // covered by [.., .., .., E8]
+                [G8, GK, HZ, SA],
+                [G8, GK, HZ, S7],
+                [G8, GK, HO, SU],
+                [G8, GK, HO, EZ],
+                // [G8, GK, HO, EK], // covered by [.., .., .., EZ]
+                // [G8, GK, HO, EO], // covered by [.., .., .., EZ]
+                [G8, GK, HO, E8],
+                // [G8, GK, HO, E7], // covered by [.., .., .., E8]
+                [G8, GK, HO, SA],
+                [G8, GK, HO, S7],
+                [G8, GK, SZ, SU],
+                [G8, GK, SZ, EZ],
+                // [G8, GK, SZ, EK], // covered by [.., .., .., EZ]
+                // [G8, GK, SZ, EO], // covered by [.., .., .., EZ]
+                [G8, GK, SZ, E8],
+                // [G8, GK, SZ, E7], // covered by [.., .., .., E8]
+                [G8, GK, SZ, SA],
+                [G8, GK, SZ, S7],
+                [G8, GK, S9, SU],
+                [G8, GK, S9, EZ],
+                // [G8, GK, S9, EK], // covered by [.., .., .., EZ]
+                // [G8, GK, S9, EO], // covered by [.., .., .., EZ]
+                [G8, GK, S9, E8],
+                // [G8, GK, S9, E7], // covered by [.., .., .., E8]
+                [G8, GK, S9, SA],
+                [G8, GK, S9, S7],
+                [G8, GO, EU, SU],
+                // [G8, GO, EU, EZ], // covered by [.., .., .., EO]
+                // [G8, GO, EU, EK], // covered by [.., .., .., EO]
+                [G8, GO, EU, EO],
+                [G8, GO, EU, E8],
+                // [G8, GO, EU, E7], // covered by [.., .., .., E8]
+                [G8, GO, EU, SA],
+                [G8, GO, EU, S7],
+                [G8, GO, HU, SU],
+                // [G8, GO, HU, EZ], // covered by [.., .., .., EO]
+                // [G8, GO, HU, EK], // covered by [.., .., .., EO]
+                [G8, GO, HU, EO],
+                [G8, GO, HU, E8],
+                // [G8, GO, HU, E7], // covered by [.., .., .., E8]
+                [G8, GO, HU, SA],
+                [G8, GO, HU, S7],
+                [G8, GO, EA, SU],
+                // [G8, GO, EA, EZ], // covered by [.., .., .., EO]
+                // [G8, GO, EA, EK], // covered by [.., .., .., EO]
+                [G8, GO, EA, EO],
+                [G8, GO, EA, E8],
+                // [G8, GO, EA, E7], // covered by [.., .., .., E8]
+                [G8, GO, EA, SA],
+                [G8, GO, EA, S7],
+                [G8, GO, E9, SU],
+                [G8, GO, E9, EZ],
+                // [G8, GO, E9, EK], // covered by [.., .., .., EZ]
+                // [G8, GO, E9, EO], // covered by [.., .., .., EZ]
+                [G8, GO, E9, E8],
+                // [G8, GO, E9, E7], // covered by [.., .., .., E8]
+                [G8, GO, E9, SA],
+                [G8, GO, E9, S7],
+                [G8, GO, HZ, SU],
+                [G8, GO, HZ, EZ],
+                // [G8, GO, HZ, EK], // covered by [.., .., .., EZ]
+                // [G8, GO, HZ, EO], // covered by [.., .., .., EZ]
+                [G8, GO, HZ, E8],
+                // [G8, GO, HZ, E7], // covered by [.., .., .., E8]
+                [G8, GO, HZ, SA],
+                [G8, GO, HZ, S7],
+                [G8, GO, HO, SU],
+                [G8, GO, HO, EZ],
+                // [G8, GO, HO, EK], // covered by [.., .., .., EZ]
+                // [G8, GO, HO, EO], // covered by [.., .., .., EZ]
+                [G8, GO, HO, E8],
+                // [G8, GO, HO, E7], // covered by [.., .., .., E8]
+                [G8, GO, HO, SA],
+                [G8, GO, HO, S7],
+                [G8, GO, SZ, SU],
+                [G8, GO, SZ, EZ],
+                // [G8, GO, SZ, EK], // covered by [.., .., .., EZ]
+                // [G8, GO, SZ, EO], // covered by [.., .., .., EZ]
+                [G8, GO, SZ, E8],
+                // [G8, GO, SZ, E7], // covered by [.., .., .., E8]
+                [G8, GO, SZ, SA],
+                [G8, GO, SZ, S7],
+                [G8, GO, S9, SU],
+                [G8, GO, S9, EZ],
+                // [G8, GO, S9, EK], // covered by [.., .., .., EZ]
+                // [G8, GO, S9, EO], // covered by [.., .., .., EZ]
+                [G8, GO, S9, E8],
+                // [G8, GO, S9, E7], // covered by [.., .., .., E8]
+                [G8, GO, S9, SA],
+                [G8, GO, S9, S7],
+                [G8, G9, EU, SU],
+                // [G8, G9, EU, EZ], // covered by [.., .., .., EO]
+                // [G8, G9, EU, EK], // covered by [.., .., .., EO]
+                [G8, G9, EU, EO],
+                [G8, G9, EU, E8],
+                // [G8, G9, EU, E7], // covered by [.., .., .., E8]
+                [G8, G9, EU, SA],
+                [G8, G9, EU, S7],
+                [G8, G9, HU, SU],
+                // [G8, G9, HU, EZ], // covered by [.., .., .., EO]
+                // [G8, G9, HU, EK], // covered by [.., .., .., EO]
+                [G8, G9, HU, EO],
+                [G8, G9, HU, E8],
+                // [G8, G9, HU, E7], // covered by [.., .., .., E8]
+                [G8, G9, HU, SA],
+                [G8, G9, HU, S7],
+                [G8, G9, EA, SU],
+                // [G8, G9, EA, EZ], // covered by [.., .., .., EO]
+                // [G8, G9, EA, EK], // covered by [.., .., .., EO]
+                [G8, G9, EA, EO],
+                [G8, G9, EA, E8],
+                // [G8, G9, EA, E7], // covered by [.., .., .., E8]
+                [G8, G9, EA, SA],
+                [G8, G9, EA, S7],
+                [G8, G9, E9, SU],
+                [G8, G9, E9, EZ],
+                // [G8, G9, E9, EK], // covered by [.., .., .., EZ]
+                // [G8, G9, E9, EO], // covered by [.., .., .., EZ]
+                [G8, G9, E9, E8],
+                // [G8, G9, E9, E7], // covered by [.., .., .., E8]
+                [G8, G9, E9, SA],
+                [G8, G9, E9, S7],
+                [G8, G9, HZ, SU],
+                [G8, G9, HZ, EZ],
+                // [G8, G9, HZ, EK], // covered by [.., .., .., EZ]
+                // [G8, G9, HZ, EO], // covered by [.., .., .., EZ]
+                [G8, G9, HZ, E8],
+                // [G8, G9, HZ, E7], // covered by [.., .., .., E8]
+                [G8, G9, HZ, SA],
+                [G8, G9, HZ, S7],
+                [G8, G9, HO, SU],
+                [G8, G9, HO, EZ],
+                // [G8, G9, HO, EK], // covered by [.., .., .., EZ]
+                // [G8, G9, HO, EO], // covered by [.., .., .., EZ]
+                [G8, G9, HO, E8],
+                // [G8, G9, HO, E7], // covered by [.., .., .., E8]
+                [G8, G9, HO, SA],
+                [G8, G9, HO, S7],
+                [G8, G9, SZ, SU],
+                [G8, G9, SZ, EZ],
+                // [G8, G9, SZ, EK], // covered by [.., .., .., EZ]
+                // [G8, G9, SZ, EO], // covered by [.., .., .., EZ]
+                [G8, G9, SZ, E8],
+                // [G8, G9, SZ, E7], // covered by [.., .., .., E8]
+                [G8, G9, SZ, SA],
+                [G8, G9, SZ, S7],
+                [G8, G9, S9, SU],
+                [G8, G9, S9, EZ],
+                // [G8, G9, S9, EK], // covered by [.., .., .., EZ]
+                // [G8, G9, S9, EO], // covered by [.., .., .., EZ]
+                [G8, G9, S9, E8],
+                // [G8, G9, S9, E7], // covered by [.., .., .., E8]
+                [G8, G9, S9, SA],
+                [G8, G9, S9, S7],
+                [G8, G7, EU, SU],
+                // [G8, G7, EU, EZ], // covered by [.., .., .., EO]
+                // [G8, G7, EU, EK], // covered by [.., .., .., EO]
+                [G8, G7, EU, EO],
+                [G8, G7, EU, E8],
+                // [G8, G7, EU, E7], // covered by [.., .., .., E8]
+                [G8, G7, EU, SA],
+                [G8, G7, EU, S7],
+                [G8, G7, HU, SU],
+                // [G8, G7, HU, EZ], // covered by [.., .., .., EO]
+                // [G8, G7, HU, EK], // covered by [.., .., .., EO]
+                [G8, G7, HU, EO],
+                [G8, G7, HU, E8],
+                // [G8, G7, HU, E7], // covered by [.., .., .., E8]
+                [G8, G7, HU, SA],
+                [G8, G7, HU, S7],
+                [G8, G7, EA, SU],
+                // [G8, G7, EA, EZ], // covered by [.., .., .., EO]
+                // [G8, G7, EA, EK], // covered by [.., .., .., EO]
+                [G8, G7, EA, EO],
+                [G8, G7, EA, E8],
+                // [G8, G7, EA, E7], // covered by [.., .., .., E8]
+                [G8, G7, EA, SA],
+                [G8, G7, EA, S7],
+                [G8, G7, E9, SU],
+                [G8, G7, E9, EZ],
+                // [G8, G7, E9, EK], // covered by [.., .., .., EZ]
+                // [G8, G7, E9, EO], // covered by [.., .., .., EZ]
+                [G8, G7, E9, E8],
+                // [G8, G7, E9, E7], // covered by [.., .., .., E8]
+                [G8, G7, E9, SA],
+                [G8, G7, E9, S7],
+                [G8, G7, HZ, SU],
+                [G8, G7, HZ, EZ],
+                // [G8, G7, HZ, EK], // covered by [.., .., .., EZ]
+                // [G8, G7, HZ, EO], // covered by [.., .., .., EZ]
+                [G8, G7, HZ, E8],
+                // [G8, G7, HZ, E7], // covered by [.., .., .., E8]
+                [G8, G7, HZ, SA],
+                [G8, G7, HZ, S7],
+                [G8, G7, HO, SU],
+                [G8, G7, HO, EZ],
+                // [G8, G7, HO, EK], // covered by [.., .., .., EZ]
+                // [G8, G7, HO, EO], // covered by [.., .., .., EZ]
+                [G8, G7, HO, E8],
+                // [G8, G7, HO, E7], // covered by [.., .., .., E8]
+                [G8, G7, HO, SA],
+                [G8, G7, HO, S7],
+                [G8, G7, SZ, SU],
+                [G8, G7, SZ, EZ],
+                // [G8, G7, SZ, EK], // covered by [.., .., .., EZ]
+                // [G8, G7, SZ, EO], // covered by [.., .., .., EZ]
+                [G8, G7, SZ, E8],
+                // [G8, G7, SZ, E7], // covered by [.., .., .., E8]
+                [G8, G7, SZ, SA],
+                [G8, G7, SZ, S7],
+                [G8, G7, S9, SU],
+                [G8, G7, S9, EZ],
+                // [G8, G7, S9, EK], // covered by [.., .., .., EZ]
+                // [G8, G7, S9, EO], // covered by [.., .., .., EZ]
+                [G8, G7, S9, E8],
+                // [G8, G7, S9, E7], // covered by [.., .., .., E8]
+                [G8, G7, S9, SA],
+                [G8, G7, S9, S7],
+                [HA, H9, HZ, SU],
+                [HA, H9, HZ, EZ],
+                // [HA, H9, HZ, EK], // covered by [H., H., H., EZ]
+                // [HA, H9, HZ, EO], // covered by [H., H., H., EZ]
+                [HA, H9, HZ, E8],
+                // [HA, H9, HZ, E7], // covered by [.., .., .., E8]
+                [HA, H9, HZ, SA],
+                [HA, H9, HZ, S7],
+                [HA, H9, HO, SU],
+                [HA, H9, HO, EZ],
+                // [HA, H9, HO, EK], // covered by [H., H., H., EZ]
+                // [HA, H9, HO, EO], // covered by [H., H., H., EZ]
+                [HA, H9, HO, E8],
+                // [HA, H9, HO, E7], // covered by [.., .., .., E8]
+                [HA, H9, HO, SA],
+                [HA, H9, HO, S7],
+                [HK, H9, HZ, SU],
+                [HK, H9, HZ, EZ],
+                // [HK, H9, HZ, EK], // covered by [H., H., H., EZ]
+                // [HK, H9, HZ, EO], // covered by [H., H., H., EZ]
+                [HK, H9, HZ, E8],
+                // [HK, H9, HZ, E7], // covered by [.., .., .., E8]
+                [HK, H9, HZ, SA],
+                [HK, H9, HZ, S7],
+                [HK, H9, HO, SU],
+                [HK, H9, HO, EZ],
+                // [HK, H9, HO, EK], // covered by [H., H., H., EZ]
+                // [HK, H9, HO, EO], // covered by [H., H., H., EZ]
+                [HK, H9, HO, E8],
+                // [HK, H9, HO, E7], // covered by [.., .., .., E8]
+                [HK, H9, HO, SA],
+                [HK, H9, HO, S7],
+                [H8, H9, HZ, SU],
+                [H8, H9, HZ, EZ],
+                // [H8, H9, HZ, EK], // covered by [H., H., H., EZ]
+                // [H8, H9, HZ, EO], // covered by [H., H., H., EZ]
+                [H8, H9, HZ, E8],
+                // [H8, H9, HZ, E7], // covered by [.., .., .., E8]
+                [H8, H9, HZ, SA],
+                [H8, H9, HZ, S7],
+                [H8, H9, HO, SU],
+                [H8, H9, HO, EZ],
+                // [H8, H9, HO, EK], // covered by [H., H., H., EZ]
+                // [H8, H9, HO, EO], // covered by [H., H., H., EZ]
+                [H8, H9, HO, E8],
+                // [H8, H9, HO, E7], // covered by [.., .., .., E8]
+                [H8, H9, HO, SA],
+                [H8, H9, HO, S7],
+                // [H7, .., .., ..] // covered by [H8, .., .., ..]
+                [SO, SK, SZ, SA],
+                [SO, SK, SZ, S7],
+                [SO, SK, S9, SA],
+                [SO, SK, S9, S7],
+                [SO, S8, SZ, SA],
+                [SO, S8, SZ, S7],
+                [SO, S8, S9, SA],
+                [SO, S8, S9, S7],
+            ],
+        );
     }
 
     #[test]
