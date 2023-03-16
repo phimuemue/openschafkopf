@@ -1205,14 +1205,14 @@ mod tests {
                 // [GA, GK, S9, E7], // covered by [.., .., .., E8]
                 [GA, GK, S9, SA],
                 [GA, GK, S9, S7],
-                [GA, GO, EU, SU],
+                [GA, GO, EU, SU], // TODO should not be needed (GK better than GO)
                 // [GA, GO, EU, EZ], // covered by [.., .., .., EO]
                 // [GA, GO, EU, EK], // covered by [.., .., .., EO]
-                [GA, GO, EU, EO],
-                [GA, GO, EU, E8],
+                [GA, GO, EU, EO], // TODO should not be needed (GK better than GO)
+                [GA, GO, EU, E8], // TODO should not be needed (GK better than GO)
                 // [GA, GO, EU, E7], // covered by [.., .., .., E8]
-                [GA, GO, EU, SA],
-                [GA, GO, EU, S7],
+                [GA, GO, EU, SA], // TODO should not be needed (GK better than GO)
+                [GA, GO, EU, S7], // TODO should not be needed (GK better than GO)
                 [GA, GO, HU, SU],
                 // [GA, GO, HU, EZ], // covered by [.., .., .., EO]
                 // [GA, GO, HU, EK], // covered by [.., .., .., EO]
@@ -1269,14 +1269,14 @@ mod tests {
                 // [GA, GO, S9, E7], // covered by [.., .., .., E8]
                 [GA, GO, S9, SA],
                 [GA, GO, S9, S7],
-                [GA, G9, EU, SU],
+                [GA, G9, EU, SU], // TODO should not be needed (GK better than G9)
                 // [GA, G9, EU, EZ], // covered by [.., .., .., EO]
                 // [GA, G9, EU, EK], // covered by [.., .., .., EO]
-                [GA, G9, EU, EO],
-                [GA, G9, EU, E8],
+                [GA, G9, EU, EO], // TODO should not be needed (GK better than G9)
+                [GA, G9, EU, E8], // TODO should not be needed (GK better than G9)
                 // [GA, G9, EU, E7], // covered by [.., .., .., E8]
-                [GA, G9, EU, SA],
-                [GA, G9, EU, S7],
+                [GA, G9, EU, SA], // TODO should not be needed (GK better than G9)
+                [GA, G9, EU, S7], // TODO should not be needed (GK better than G9)
                 [GA, G9, HU, SU],
                 // [GA, G9, HU, EZ], // covered by [.., .., .., EO]
                 // [GA, G9, HU, EK], // covered by [.., .., .., EO]
@@ -1397,22 +1397,22 @@ mod tests {
                 // [GA, G7, S9, E7], // covered by [.., .., .., E8]
                 [GA, G7, S9, SA],
                 [GA, G7, S9, S7],
-                [GZ, GK, EU, SU],
+                [GZ, GK, EU, SU], // TODO should not be needed (GA better than GZ)
                 // [GZ, GK, EU, EZ], // covered by [.., .., .., EO]
                 // [GZ, GK, EU, EK], // covered by [.., .., .., EO]
-                [GZ, GK, EU, EO],
-                [GZ, GK, EU, E8],
+                [GZ, GK, EU, EO], // TODO should not be needed (GA better than GZ)
+                [GZ, GK, EU, E8], // TODO should not be needed (GA better than GZ)
                 // [GZ, GK, EU, E7], // covered by [.., .., .., E8]
-                [GZ, GK, EU, SA],
-                [GZ, GK, EU, S7],
-                [GZ, GK, HU, SU],
+                [GZ, GK, EU, SA], // TODO should not be needed (GA better than GZ)
+                [GZ, GK, EU, S7], // TODO should not be needed (GA better than GZ)
+                [GZ, GK, HU, SU], // TODO should not be needed (GA better than GZ)
                 // [GZ, GK, HU, EZ], // covered by [.., .., .., EO]
                 // [GZ, GK, HU, EK], // covered by [.., .., .., EO]
-                [GZ, GK, HU, EO],
-                [GZ, GK, HU, E8],
+                [GZ, GK, HU, EO], // TODO should not be needed (GA better than GZ)
+                [GZ, GK, HU, E8], // TODO should not be needed (GA better than GZ)
                 // [GZ, GK, HU, E7], // covered by [.., .., .., E8]
-                [GZ, GK, HU, SA],
-                [GZ, GK, HU, S7],
+                [GZ, GK, HU, SA], // TODO should not be needed (GA better than GZ)
+                [GZ, GK, HU, S7], // TODO should not be needed (GA better than GZ)
                 [GZ, GK, EA, SU],
                 // [GZ, GK, EA, EZ], // covered by [.., .., .., EO]
                 // [GZ, GK, EA, EK], // covered by [.., .., .., EO]
@@ -1461,22 +1461,22 @@ mod tests {
                 // [GZ, GK, S9, E7], // covered by [.., .., .., E8]
                 [GZ, GK, S9, SA],
                 [GZ, GK, S9, S7],
-                [GZ, GO, EU, SU],
+                [GZ, GO, EU, SU], // TODO should not be needed (GK better than GO)
                 // [GZ, GO, EU, EZ], // covered by [.., .., .., EO]
                 // [GZ, GO, EU, EK], // covered by [.., .., .., EO]
-                [GZ, GO, EU, EO],
-                [GZ, GO, EU, E8],
+                [GZ, GO, EU, EO], // TODO should not be needed (GK better than GO)
+                [GZ, GO, EU, E8], // TODO should not be needed (GK better than GO)
                 // [GZ, GO, EU, E7], // covered by [.., .., .., E8]
-                [GZ, GO, EU, SA],
-                [GZ, GO, EU, S7],
-                [GZ, GO, HU, SU],
+                [GZ, GO, EU, SA], // TODO should not be needed (GK better than GO)
+                [GZ, GO, EU, S7], // TODO should not be needed (GK better than GO)
+                [GZ, GO, HU, SU], // TODO should not be needed (GA better than GZ)
                 // [GZ, GO, HU, EZ], // covered by [.., .., .., EO]
                 // [GZ, GO, HU, EK], // covered by [.., .., .., EO]
-                [GZ, GO, HU, EO],
-                [GZ, GO, HU, E8],
+                [GZ, GO, HU, EO], // TODO should not be needed (GA better than GZ)
+                [GZ, GO, HU, E8], // TODO should not be needed (GA better than GZ)
                 // [GZ, GO, HU, E7], // covered by [.., .., .., E8]
-                [GZ, GO, HU, SA],
-                [GZ, GO, HU, S7],
+                [GZ, GO, HU, SA], // TODO should not be needed (GA better than GZ)
+                [GZ, GO, HU, S7], // TODO should not be needed (GA better than GZ)
                 [GZ, GO, EA, SU],
                 // [GZ, GO, EA, EZ], // covered by [.., .., .., EO]
                 // [GZ, GO, EA, EK], // covered by [.., .., .., EO]
@@ -1525,22 +1525,22 @@ mod tests {
                 // [GZ, GO, S9, E7], // covered by [.., .., .., E8]
                 [GZ, GO, S9, SA],
                 [GZ, GO, S9, S7],
-                [GZ, G9, EU, SU],
+                [GZ, G9, EU, SU], // TODO should not be needed (GK better than G9)
                 // [GZ, G9, EU, EZ], // covered by [.., .., .., EO]
                 // [GZ, G9, EU, EK], // covered by [.., .., .., EO]
-                [GZ, G9, EU, EO],
-                [GZ, G9, EU, E8],
+                [GZ, G9, EU, EO], // TODO should not be needed (GK better than G9)
+                [GZ, G9, EU, E8], // TODO should not be needed (GK better than G9)
                 // [GZ, G9, EU, E7], // covered by [.., .., .., E8]
-                [GZ, G9, EU, SA],
-                [GZ, G9, EU, S7],
-                [GZ, G9, HU, SU],
+                [GZ, G9, EU, SA], // TODO should not be needed (GK better than G9)
+                [GZ, G9, EU, S7], // TODO should not be needed (GK better than G9)
+                [GZ, G9, HU, SU], // TODO should not be needed (GA better than GZ)
                 // [GZ, G9, HU, EZ], // covered by [.., .., .., EO]
                 // [GZ, G9, HU, EK], // covered by [.., .., .., EO]
-                [GZ, G9, HU, EO],
-                [GZ, G9, HU, E8],
+                [GZ, G9, HU, EO], // TODO should not be needed (GA better than GZ)
+                [GZ, G9, HU, E8], // TODO should not be needed (GA better than GZ)
                 // [GZ, G9, HU, E7], // covered by [.., .., .., E8]
-                [GZ, G9, HU, SA],
-                [GZ, G9, HU, S7],
+                [GZ, G9, HU, SA], // TODO should not be needed (GA better than GZ)
+                [GZ, G9, HU, S7], // TODO should not be needed (GA better than GZ)
                 [GZ, G9, EA, SU],
                 // [GZ, G9, EA, EZ], // covered by [.., .., .., EO]
                 // [GZ, G9, EA, EK], // covered by [.., .., .., EO]
@@ -1589,22 +1589,22 @@ mod tests {
                 // [GZ, G9, S9, E7], // covered by [.., .., .., E8]
                 [GZ, G9, S9, SA],
                 [GZ, G9, S9, S7],
-                [GZ, G7, EU, SU],
+                [GZ, G7, EU, SU], // TODO should not be needed (GA better than GZ)
                 // [GZ, G7, EU, EZ], // covered by [.., .., .., EO]
                 // [GZ, G7, EU, EK], // covered by [.., .., .., EO]
-                [GZ, G7, EU, EO],
-                [GZ, G7, EU, E8],
+                [GZ, G7, EU, EO], // TODO should not be needed (GA better than GZ)
+                [GZ, G7, EU, E8], // TODO should not be needed (GA better than GZ)
                 // [GZ, G7, EU, E7], // covered by [.., .., .., E8]
-                [GZ, G7, EU, SA],
-                [GZ, G7, EU, S7],
-                [GZ, G7, HU, SU],
+                [GZ, G7, EU, SA], // TODO should not be needed (GA better than GZ)
+                [GZ, G7, EU, S7], // TODO should not be needed (GA better than GZ)
+                [GZ, G7, HU, SU], // TODO should not be needed (GA better than GZ)
                 // [GZ, G7, HU, EZ], // covered by [.., .., .., EO]
                 // [GZ, G7, HU, EK], // covered by [.., .., .., EO]
-                [GZ, G7, HU, EO],
-                [GZ, G7, HU, E8],
+                [GZ, G7, HU, EO], // TODO should not be needed (GA better than GZ)
+                [GZ, G7, HU, E8], // TODO should not be needed (GA better than GZ)
                 // [GZ, G7, HU, E7], // covered by [.., .., .., E8]
-                [GZ, G7, HU, SA],
-                [GZ, G7, HU, S7],
+                [GZ, G7, HU, SA], // TODO should not be needed (GA better than GZ)
+                [GZ, G7, HU, S7], // TODO should not be needed (GA better than GZ)
                 [GZ, G7, EA, SU],
                 // [GZ, G7, EA, EZ], // covered by [.., .., .., EO]
                 // [GZ, G7, EA, EK], // covered by [.., .., .., EO]
@@ -1717,14 +1717,14 @@ mod tests {
                 // [G8, GK, S9, E7], // covered by [.., .., .., E8]
                 [G8, GK, S9, SA],
                 [G8, GK, S9, S7],
-                [G8, GO, EU, SU],
+                [G8, GO, EU, SU], // TODO should not be needed (GK better than GO)
                 // [G8, GO, EU, EZ], // covered by [.., .., .., EO]
                 // [G8, GO, EU, EK], // covered by [.., .., .., EO]
-                [G8, GO, EU, EO],
-                [G8, GO, EU, E8],
+                [G8, GO, EU, EO], // TODO should not be needed (GK better than GO)
+                [G8, GO, EU, E8], // TODO should not be needed (GK better than GO)
                 // [G8, GO, EU, E7], // covered by [.., .., .., E8]
-                [G8, GO, EU, SA],
-                [G8, GO, EU, S7],
+                [G8, GO, EU, SA], // TODO should not be needed (GK better than GO)
+                [G8, GO, EU, S7], // TODO should not be needed (GK better than GO)
                 [G8, GO, HU, SU],
                 // [G8, GO, HU, EZ], // covered by [.., .., .., EO]
                 // [G8, GO, HU, EK], // covered by [.., .., .., EO]
@@ -1781,14 +1781,14 @@ mod tests {
                 // [G8, GO, S9, E7], // covered by [.., .., .., E8]
                 [G8, GO, S9, SA],
                 [G8, GO, S9, S7],
-                [G8, G9, EU, SU],
+                [G8, G9, EU, SU], // TODO should not be needed (GK better than G9)
                 // [G8, G9, EU, EZ], // covered by [.., .., .., EO]
                 // [G8, G9, EU, EK], // covered by [.., .., .., EO]
-                [G8, G9, EU, EO],
-                [G8, G9, EU, E8],
+                [G8, G9, EU, EO], // TODO should not be needed (GK better than G9)
+                [G8, G9, EU, E8], // TODO should not be needed (GK better than G9)
                 // [G8, G9, EU, E7], // covered by [.., .., .., E8]
-                [G8, G9, EU, SA],
-                [G8, G9, EU, S7],
+                [G8, G9, EU, SA], // TODO should not be needed (GK better than G9)
+                [G8, G9, EU, S7], // TODO should not be needed (GK better than G9)
                 [G8, G9, HU, SU],
                 // [G8, G9, HU, EZ], // covered by [.., .., .., EO]
                 // [G8, G9, HU, EK], // covered by [.., .., .., EO]
