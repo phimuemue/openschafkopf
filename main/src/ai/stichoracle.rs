@@ -1968,6 +1968,337 @@ mod tests {
                 [SO, S8, S9, S7],
             ],
         );
+        assert_stichoracle(
+            TRulesBoxClone::box_clone(rules_farbwenz_eichel_epi3.as_ref()).as_ref(),
+            [
+                &[GA, GZ, G8, HA, HK, H8, SO],
+                &[GU, GK, GO, G9, G7, SK, S8],
+                &[EU, HU, EA, E9, HZ, SZ, S9],
+                &[SU, EZ, EK, EO, E8, E7, SA],
+            ],
+            &[H7, H9, HO, S7],
+            &[
+                [EU, SU, GA, GU],
+                // [EU, SU, GZ, GU], // covered by [.., .., GA, GU]
+                [EU, SU, G8, GU],
+                [EU, SU, HA, GU],
+                [EU, SU, HK, GU],
+                // [EU, SU, H8, GU], // covered by [.., .., HK, ..]
+                [EU, SU, SO, GU],
+                // [EU, EZ, GA, GU], // covered by [.., EO, .., GU]
+                // [EU, EZ, GZ, GU], // covered by [.., .., GA, GU]
+                // [EU, EZ, G8, GU], // covered by [.., EO, .., GU]
+                // [EU, EZ, HA, GU], // covered by [.., EO, .., GU]
+                // [EU, EZ, HK, GU], // covered by [.., EO, .., GU]
+                // [EU, EZ, H8, GU], // covered by [.., EO, .., GU]
+                // [EU, EZ, SO, GU], // covered by [.., EO, .., GU]
+                // [EU, EK, GA, GU], // covered by [.., EO, .., GU]
+                // [EU, EK, GZ, GU], // covered by [.., .., GA, GU]
+                // [EU, EK, G8, GU], // covered by [.., EO, .., GU]
+                // [EU, EK, HA, GU], // covered by [.., EO, .., GU]
+                // [EU, EK, HK, GU], // covered by [.., EO, .., GU]
+                // [EU, EK, H8, GU], // covered by [.., EO, .., GU]
+                // [EU, EK, SO, GU], // covered by [.., EO, .., GU]
+                [EU, EO, GA, GU],
+                // [EU, EO, GZ, GU], // covered by [.., .., GA, GU]
+                [EU, EO, G8, GU],
+                [EU, EO, HA, GU],
+                [EU, EO, HK, GU],
+                // [EU, EO, H8, GU], // covered by [.., .., HK, ..]
+                [EU, EO, SO, GU],
+                [EU, E8, GA, GU],
+                // [EU, E8, GZ, GU], // covered by [.., .., GA, GU]
+                [EU, E8, G8, GU],
+                [EU, E8, HA, GU],
+                [EU, E8, HK, GU],
+                // [EU, E8, H8, GU], // covered by [.., .., HK, ..]
+                [EU, E8, SO, GU],
+                // [EU, E7, GA, GU], // covered by [.., E8, .., ..]
+                // [EU, E7, GZ, GU], // covered by [.., .., GA, GU]
+                // [EU, E7, G8, GU], // covered by [.., E8, .., ..]
+                // [EU, E7, HA, GU], // covered by [.., E8, .., ..]
+                // [EU, E7, HK, GU], // covered by [.., E8, .., ..]
+                // [EU, E7, H8, GU], // covered by [.., E8, .., ..]
+                // [EU, E7, SO, GU], // covered by [.., E8, .., ..]
+                [HU, SU, GA, GU],
+                // [HU, SU, GZ, GU], // covered by [.., .., GA, GU]
+                [HU, SU, G8, GU],
+                [HU, SU, HA, GU],
+                [HU, SU, HK, GU],
+                // [HU, SU, H8, GU], // covered by [.., .., HK, ..]
+                [HU, SU, SO, GU],
+                // [HU, EZ, GA, GU], // covered by [.U, EO, .., GU]
+                // [HU, EZ, GZ, GU], // covered by [.., .., GA, GU]
+                // [HU, EZ, G8, GU], // covered by [.U, EO, .., GU]
+                // [HU, EZ, HA, GU], // covered by [.U, EO, .., GU]
+                // [HU, EZ, HK, GU], // covered by [.U, EO, .., GU]
+                // [HU, EZ, H8, GU], // covered by [.., .., HK, ..]
+                // [HU, EZ, SO, GU], // covered by [.U, EO, .., GU]
+                // [HU, EK, GA, GU], // covered by [.U, EO, .., GU]
+                // [HU, EK, GZ, GU], // covered by [.., .., GA, GU]
+                // [HU, EK, G8, GU], // covered by [.U, EO, .., GU]
+                // [HU, EK, HA, GU], // covered by [.U, EO, .., GU]
+                // [HU, EK, HK, GU], // covered by [.U, EO, .., GU]
+                // [HU, EK, H8, GU], // covered by [.., .., HK, ..]
+                // [HU, EK, SO, GU], // covered by [.U, EO, .., GU]
+                [HU, EO, GA, GU],
+                // [HU, EO, GZ, GU], // covered by [.., .., GA, GU]
+                [HU, EO, G8, GU],
+                [HU, EO, HA, GU],
+                [HU, EO, HK, GU],
+                // [HU, EO, H8, GU], // covered by [.., .., HK, ..]
+                [HU, EO, SO, GU],
+                [HU, E8, GA, GU],
+                // [HU, E8, GZ, GU], // covered by [.., .., GA, GU]
+                [HU, E8, G8, GU],
+                [HU, E8, HA, GU],
+                [HU, E8, HK, GU],
+                // [HU, E8, H8, GU], // covered by [.., .., HK, ..]
+                [HU, E8, SO, GU],
+                // [HU, E7, GA, GU], // covered by [.., E8, .., ..]
+                // [HU, E7, GZ, GU], // covered by [.., .., GA, GU]
+                // [HU, E7, G8, GU], // covered by [.., E8, .., ..]
+                // [HU, E7, HA, GU], // covered by [.., E8, .., ..]
+                // [HU, E7, HK, GU], // covered by [.., E8, .., ..]
+                // [HU, E7, H8, GU], // covered by [.., E8, .., ..]
+                // [HU, E7, SO, GU], // covered by [.., E8, .., ..]
+                [EA, SU, GA, GU],
+                // [EA, SU, GZ, GU], // covered by [.., .., GA, GU]
+                [EA, SU, G8, GU],
+                [EA, SU, HA, GU],
+                [EA, SU, HK, GU],
+                // [EA, SU, H8, GU], // covered by [.., .., HK, GU]
+                [EA, SU, SO, GU],
+                // [EA, EZ, GA, GU], // covered by [.., EO, .., GU]
+                // [EA, EZ, GZ, GU], // covered by [.., .., GA, GU]
+                // [EA, EZ, G8, GU], // covered by [.., EO, .., GU]
+                // [EA, EZ, HA, GU], // covered by [.., EO, .., GU]
+                // [EA, EZ, HK, GU], // covered by [.., EO, .., GU]
+                // [EA, EZ, H8, GU], // covered by [.., EO, .., GU]
+                // [EA, EZ, SO, GU], // covered by [.., EO, .., GU]
+                // [EA, EK, GA, GU], // covered by [.., EO, .., GU]
+                // [EA, EK, GZ, GU], // covered by [.., .., GA, GU]
+                // [EA, EK, G8, GU], // covered by [.., EO, .., GU]
+                // [EA, EK, HA, GU], // covered by [.., EO, .., GU]
+                // [EA, EK, HK, GU], // covered by [.., EO, .., GU]
+                // [EA, EK, H8, GU], // covered by [.., EO, .., GU]
+                // [EA, EK, SO, GU], // covered by [.., EO, .., GU]
+                [EA, EO, GA, GU],
+                // [EA, EO, GZ, GU], // covered by [.., .., GA, GU]
+                [EA, EO, G8, GU],
+                [EA, EO, HA, GU],
+                [EA, EO, HK, GU],
+                // [EA, EO, H8, GU], // covered by [.., .., HK, ..]
+                [EA, EO, SO, GU],
+                [EA, E8, GA, GU],
+                // [EA, E8, GZ, GU], // covered by [.., .., GA, GU]
+                [EA, E8, G8, GU],
+                [EA, E8, HA, GU],
+                [EA, E8, HK, GU],
+                // [EA, E8, H8, GU], // covered by [.., .., HK, ..]
+                [EA, E8, SO, GU],
+                // [EA, E7, GA, GU], // covered by [.., E8, .., ..]
+                // [EA, E7, GZ, GU], // covered by [.., .., GA, GU]
+                // [EA, E7, G8, GU], // covered by [.., E8, .., ..]
+                // [EA, E7, HA, GU], // covered by [.., E8, .., ..]
+                // [EA, E7, HK, GU], // covered by [.., E8, .., ..]
+                // [EA, E7, H8, GU], // covered by [.., E8, .., ..]
+                // [EA, E7, SO, GU], // covered by [.., E8, .., ..]
+                [E9, SU, GA, GU],
+                // [E9, SU, GZ, GU], // covered by [.., .., GA, GU]
+                [E9, SU, G8, GU],
+                [E9, SU, HA, GU],
+                [E9, SU, HK, GU],
+                // [E9, SU, H8, GU], // covered by [E9, SU, HK, GU]
+                [E9, SU, SO, GU],
+                // [E9, EZ, GA, GU], // covered by [.., EO, .., GU]
+                // [E9, EZ, GZ, GU], // covered by [.., .., GA, GU]
+                // [E9, EZ, G8, GU], // covered by [.., EO, .., GU]
+                // [E9, EZ, HA, GU], // covered by [.., EO, .., GU]
+                // [E9, EZ, HK, GU], // covered by [.., EO, .., GU]
+                // [E9, EZ, H8, GU], // covered by [.., EO, .., GU]
+                // [E9, EZ, SO, GU], // covered by [.., EO, .., GU]
+                // [E9, EK, GA, GU], // covered by [.., EO, .., GU]
+                // [E9, EK, GZ, GU], // covered by [.., .., GA, GU]
+                // [E9, EK, G8, GU], // covered by [.., EO, .., GU]
+                // [E9, EK, HA, GU], // covered by [.., EO, .., GU]
+                // [E9, EK, HK, GU], // covered by [.., EO, .., GU]
+                // [E9, EK, H8, GU], // covered by [.., EO, .., GU]
+                // [E9, EK, SO, GU], // covered by [.., EO, .., GU]
+                [E9, EO, GA, GU],
+                // [E9, EO, GZ, GU], // covered by [.., .., GA, GU]
+                [E9, EO, G8, GU],
+                [E9, EO, HA, GU],
+                [E9, EO, HK, GU],
+                // [E9, EO, H8, GU], // covered by [E9, EO, HK, GU]
+                [E9, EO, SO, GU],
+                [E9, E8, GA, GU],
+                // [E9, E8, GZ, GU], // covered by [.., .., GA, GU]
+                [E9, E8, G8, GU],
+                [E9, E8, HA, GU],
+                [E9, E8, HK, GU],
+                // [E9, E8, H8, GU], // covered by [E9, E8, HK, GU]
+                [E9, E8, SO, GU],
+                // [E9, E7, GA, GU], // covered by [.., E8, .., ..]
+                // [E9, E7, GZ, GU], // covered by [.., .., GA, GU]
+                // [E9, E7, G8, GU], // covered by [.., E8, .., ..]
+                // [E9, E7, HA, GU], // covered by [.., E8, .., ..]
+                // [E9, E7, HK, GU], // covered by [.., E8, .., ..]
+                // [E9, E7, H8, GU], // covered by [.., E8, .., ..]
+                // [E9, E7, SO, GU], // covered by [.., E8, .., ..]
+                [HZ, SU, HA, GU],
+                // [HZ, SU, HA, GK], // covered by [HZ, SU, HA, GO]
+                // [HZ, SU, HA, GO], // covered by [.., .., .., G9]
+                [HZ, SU, HA, G9],
+                [HZ, SU, HA, G7],
+                [HZ, SU, HA, SK],
+                [HZ, SU, HA, S8],
+                [HZ, SU, HK, GU],
+                // [HZ, SU, HK, GK], // covered by [HZ, SU, H., GO]
+                // [HZ, SU, HK, GO], // covered by [.., .., .., G9]
+                [HZ, SU, HK, G9],
+                [HZ, SU, HK, G7],
+                [HZ, SU, HK, SK],
+                [HZ, SU, HK, S8],
+                [HZ, SU, H8, GU],
+                // [HZ, SU, H8, GK], // covered by [HZ, SU, H., GO]
+                // [HZ, SU, H8, GO], // covered by [.., .., .., G9]
+                [HZ, SU, H8, G9],
+                [HZ, SU, H8, G7],
+                [HZ, SU, H8, SK],
+                [HZ, SU, H8, S8],
+                [HZ, EZ, HA, GU],
+                // [HZ, EZ, HA, GK], // covered by [HZ, .., .., GO]
+                // [HZ, EZ, HA, GO], // covered by [.., .., .., G9]
+                [HZ, EZ, HA, G9],
+                [HZ, EZ, HA, G7],
+                [HZ, EZ, HA, SK],
+                [HZ, EZ, HA, S8],
+                [HZ, EZ, HK, GU],
+                // [HZ, EZ, HK, GK], // covered by [HZ, ... .., GO]
+                // [HZ, EZ, HK, GO], // covered by [.., .., .., G9]
+                [HZ, EZ, HK, G9],
+                [HZ, EZ, HK, G7],
+                [HZ, EZ, HK, SK],
+                [HZ, EZ, HK, S8],
+                [HZ, EZ, H8, GU],
+                // [HZ, EZ, H8, GK], // covered by [HZ, ... .., GO]
+                // [HZ, EZ, H8, GO], // covered by [.., .., .., G9]
+                [HZ, EZ, H8, G9],
+                [HZ, EZ, H8, G7],
+                [HZ, EZ, H8, SK],
+                [HZ, EZ, H8, S8],
+                [HZ, EK, HA, GU],
+                // [HZ, EK, HA, GK], // covered by [.., .., .., GO]
+                // [HZ, EK, HA, GO], // covered by [.., .., .., G9]
+                [HZ, EK, HA, G9],
+                [HZ, EK, HA, G7],
+                [HZ, EK, HA, SK],
+                [HZ, EK, HA, S8],
+                [HZ, EK, HK, GU],
+                // [HZ, EK, HK, GK], // covered by [.., .., .., GO]
+                // [HZ, EK, HK, GO], // covered by [.., .., .., G9]
+                [HZ, EK, HK, G9],
+                [HZ, EK, HK, G7],
+                [HZ, EK, HK, SK],
+                [HZ, EK, HK, S8],
+                [HZ, EK, H8, GU],
+                // [HZ, EK, H8, GK], // covered by [.., .., .., GO]
+                // [HZ, EK, H8, GO], // covered by [.., .., .., G9]
+                [HZ, EK, H8, G9],
+                [HZ, EK, H8, G7],
+                [HZ, EK, H8, SK],
+                [HZ, EK, H8, S8],
+                [HZ, EO, HA, GU],
+                // [HZ, EO, HA, GK], // covered by [.., .., .., GO]
+                // [HZ, EO, HA, GO], // covered by [.., .., .., G9]
+                [HZ, EO, HA, G9],
+                [HZ, EO, HA, G7],
+                [HZ, EO, HA, SK],
+                [HZ, EO, HA, S8],
+                [HZ, EO, HK, GU],
+                // [HZ, EO, HK, GK], // covered by [.., .., .., GO]
+                // [HZ, EO, HK, GO], // covered by [.., .., .., G9]
+                [HZ, EO, HK, G9],
+                [HZ, EO, HK, G7],
+                [HZ, EO, HK, SK],
+                [HZ, EO, HK, S8],
+                [HZ, EO, H8, GU],
+                // [HZ, EO, H8, GK], // covered by [.., .., .., GO]
+                // [HZ, EO, H8, GO], // covered by [.., .., .., G9]
+                [HZ, EO, H8, G9],
+                [HZ, EO, H8, G7],
+                [HZ, EO, H8, SK],
+                [HZ, EO, H8, S8],
+                [HZ, E8, HA, GU],
+                // [HZ, E8, HA, GK], // covered by [.., .., .., GO]
+                // [HZ, E8, HA, GO], // covered by [.., .., .., G9]
+                [HZ, E8, HA, G9],
+                [HZ, E8, HA, G7],
+                [HZ, E8, HA, SK],
+                [HZ, E8, HA, S8],
+                [HZ, E8, HK, GU],
+                // [HZ, E8, HK, GK], // covered by [.., .., .., GO]
+                // [HZ, E8, HK, GO], // covered by [.., .., .., G9]
+                [HZ, E8, HK, G9],
+                [HZ, E8, HK, G7],
+                [HZ, E8, HK, SK],
+                [HZ, E8, HK, S8],
+                [HZ, E8, H8, GU],
+                // [HZ, E8, H8, GK], // covered by [.., .., .., GO]
+                // [HZ, E8, H8, GO], // covered by [.., .., .., G9]
+                [HZ, E8, H8, G9],
+                [HZ, E8, H8, G7],
+                [HZ, E8, H8, SK],
+                [HZ, E8, H8, S8],
+                // [HZ, E7, HA, GU], // covered by [.., E8, .., ..]
+                // [HZ, E7, HA, GK], // covered by [.., E8, .., ..]
+                // [HZ, E7, HA, GO], // covered by [.., E8, .., ..]
+                // [HZ, E7, HA, G9], // covered by [.., E8, .., ..]
+                // [HZ, E7, HA, G7], // covered by [.., E8, .., ..]
+                // [HZ, E7, HA, SK], // covered by [.., E8, .., ..]
+                // [HZ, E7, HA, S8], // covered by [.., E8, .., ..]
+                // [HZ, E7, HK, GU], // covered by [.., E8, .., ..]
+                // [HZ, E7, HK, GK], // covered by [.., E8, .., ..]
+                // [HZ, E7, HK, GO], // covered by [.., E8, .., ..]
+                // [HZ, E7, HK, G9], // covered by [.., E8, .., ..]
+                // [HZ, E7, HK, G7], // covered by [.., E8, .., ..]
+                // [HZ, E7, HK, SK], // covered by [.., E8, .., ..]
+                // [HZ, E7, HK, S8], // covered by [.., E8, .., ..]
+                // [HZ, E7, H8, GU], // covered by [.., E8, .., ..]
+                // [HZ, E7, H8, GK], // covered by [.., E8, .., ..]
+                // [HZ, E7, H8, GO], // covered by [.., E8, .., ..]
+                // [HZ, E7, H8, G9], // covered by [.., E8, .., ..]
+                // [HZ, E7, H8, G7], // covered by [.., E8, .., ..]
+                // [HZ, E7, H8, SK], // covered by [.., E8, .., ..]
+                // [HZ, E7, H8, S8], // covered by [.., E8, .., ..]
+                [HZ, SA, HA, GU],
+                [HZ, SA, HA, GK],
+                // [HZ, SA, HA, GO], // covered by [HZ, SA, HA, GK]
+                // [HZ, SA, HA, G9], // covered by [HZ, SA, .., GK]
+                [HZ, SA, HA, G7],
+                [HZ, SA, HA, SK],
+                [HZ, SA, HA, S8],
+                [HZ, SA, HK, GU],
+                [HZ, SA, HK, GK],
+                // [HZ, SA, HK, GO], // covered by [HZ, SA, HK, GK]
+                // [HZ, SA, HK, G9], // covered by [HZ, SA, .., GK]
+                [HZ, SA, HK, G7],
+                [HZ, SA, HK, SK],
+                [HZ, SA, HK, S8],
+                // [HZ, SA, H8, GU], // covered by [.., .., HK, ..]
+                // [HZ, SA, H8, GK], // covered by [.., .., HK, ..]
+                // [HZ, SA, H8, GO], // covered by [.., .., HK, ..]
+                // [HZ, SA, H8, G9], // covered by [.., .., HK, ..]
+                // [HZ, SA, H8, G7], // covered by [.., .., HK, ..]
+                // [HZ, SA, H8, SK], // covered by [.., .., HK, ..]
+                // [HZ, SA, H8, S8], // covered by [.., .., HK, ..]
+                [SZ, SA, SO, SK],
+                [SZ, SA, SO, S8],
+                // [S9, SA, SO, SK], // covered by [S9, SA, SO, S8]
+                [S9, SA, SO, S8],
+            ],
+        );
     }
 
     #[test]
