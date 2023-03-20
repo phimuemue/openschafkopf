@@ -86,8 +86,17 @@ impl SStichTrie {
             (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
             rules: &dyn TRules,
             cardspartition_completed_cards: &SCardsPartition,
+            mapepin_trumpf_on_hand: &mut EnumMap<EPlayerIndex, usize>,
             playerparties: &SPlayerPartiesTable,
         ) -> (SStichTrie, Option<bool/*b_stich_winner_is_primary*/>) {
+            debug_assert_eq!(
+                mapepin_trumpf_on_hand,
+                &EPlayerIndex::map_from_fn(|epi| {
+                    ahand[epi].cards().iter().copied()
+                        .filter(|&card| rules.trumpforfarbe(card).is_trumpf())
+                        .count()
+                }),
+            );
             if n_depth==0 {
                 assert!(stichseq.current_stich().is_empty());
                 (
@@ -108,6 +117,10 @@ impl SStichTrie {
                 let mut stichtrie = SStichTrie::new();
                 while !veccard_allowed.is_empty() {
                     let card_representative = veccard_allowed[0];
+                    let trumpforfarbe_representative = rules.trumpforfarbe(card_representative);
+                    if trumpforfarbe_representative.is_trumpf() {
+                        mapepin_trumpf_on_hand[epi_card] -= 1;
+                    }
                     ahand[epi_card].play_card(card_representative);
                     let (stichtrie_representative, ob_stich_winner_primary_party_representative) = stichseq.zugeben_and_restore(card_representative, rules, |stichseq| {
                         for_each_allowed_card(
@@ -115,10 +128,14 @@ impl SStichTrie {
                             (ahand, stichseq),
                             rules,
                             cardspartition_completed_cards,
+                            mapepin_trumpf_on_hand,
                             playerparties,
                         )
                     });
                     ahand[epi_card].add_card(card_representative);
+                    if trumpforfarbe_representative.is_trumpf() {
+                        mapepin_trumpf_on_hand[epi_card] += 1;
+                    }
                     let mut cardspartition_actual = cardspartition_completed_cards.clone(); // TODO avoid cloning.
                     let epi_preliminary_winner = rules.preliminary_winner_index(stichseq.current_stich());
                     for (epi, card) in stichseq.current_stich().iter() {
@@ -155,14 +172,20 @@ impl SStichTrie {
                             oresb_stich_winner_is_primary = Some(Err(()));
                         },
                         Some(b_stich_winner_is_primary) => {
-                            let oefarbe_all_equally_high = match rules.trumpforfarbe(card_representative) {
+                            let oefarbe_all_equally_high = match verify_eq!(trumpforfarbe_representative, rules.trumpforfarbe(card_representative)) {
                                 VTrumpfOrFarbe::Trumpf => None,
                                 VTrumpfOrFarbe::Farbe(efarbe) => {
                                     if_then_some!(let Some(epi_all_trumpf)=EPlayerIndex::values()
-                                        .find(|&epi| ahand[epi].cards().iter()
-                                            .chain(stichseq.current_stich().get(epi))
-                                            .all(|&card| rules.trumpforfarbe(card).is_trumpf())
-                                        ),
+                                        .find(|&epi| {
+                                            debug_verify_eq!(
+                                                mapepin_trumpf_on_hand[epi]==ahand[epi].cards().len()
+                                                    && stichseq.current_stich().get(epi)
+                                                        .map_or(true, |&card| rules.trumpforfarbe(card).is_trumpf()),
+                                                ahand[epi].cards().iter()
+                                                    .chain(stichseq.current_stich().get(epi))
+                                                    .all(|&card| rules.trumpforfarbe(card).is_trumpf())
+                                            )
+                                        }),
                                         {
                                             assert_ne!(epi_all_trumpf, epi_card);
                                             efarbe // If here someone has only trumpf, all our efarbe-cards are equally high.
@@ -244,11 +267,17 @@ impl SStichTrie {
                 cardspartition_check
             }
         );
+        let mut mapepin_trumpf_on_hand = EPlayerIndex::map_from_fn(|epi| {
+            ahand[epi].cards().iter().copied()
+                .filter(|&card| rules.trumpforfarbe(card).is_trumpf())
+                .count()
+        });
         let mut make_stichtrie = || for_each_allowed_card(
             4-n_stich_size,
             (ahand, stichseq),
             rules,
             cardspartition_completed_cards,
+            &mut mapepin_trumpf_on_hand,
             playerparties,
         ).0;
         let make_singleton_stichtrie = |i_epi_offset, stichtrie| {
