@@ -127,9 +127,8 @@ impl SStichTrie {
                         },
                         Some(b_stich_winner_is_primary) => {
                             macro_rules! card_min_or_max(($fn_assign_by:expr) => {{
-                                let card_chain = cardspartition_actual
+                                let mut card_min_or_max = cardspartition_actual
                                     .prev_while_contained(card_representative, &veccard_allowed);
-                                let mut card_min_or_max = card_chain;
                                 iterate_chain(&cardspartition_actual, &mut veccard_allowed, card_representative, |card_chain| {
                                     $fn_assign_by(
                                         &mut card_min_or_max,
