@@ -81,6 +81,13 @@ impl SStichTrie {
         cardspartition_completed_cards: &SCardsPartition,
         playerparties: &SPlayerPartiesTable,
     ) -> Self {
+        fn count_trumpfs(ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules) -> EnumMap<EPlayerIndex, usize> {
+            EPlayerIndex::map_from_fn(|epi| {
+                ahand[epi].cards().iter().copied()
+                    .filter(|&card| rules.trumpforfarbe(card).is_trumpf())
+                    .count()
+            })
+        }
         fn for_each_allowed_card(
             n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
             (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
@@ -89,14 +96,7 @@ impl SStichTrie {
             mapepin_trumpf_on_hand: &mut EnumMap<EPlayerIndex, usize>,
             playerparties: &SPlayerPartiesTable,
         ) -> (SStichTrie, Option<bool/*b_stich_winner_is_primary*/>) {
-            debug_assert_eq!(
-                mapepin_trumpf_on_hand,
-                &EPlayerIndex::map_from_fn(|epi| {
-                    ahand[epi].cards().iter().copied()
-                        .filter(|&card| rules.trumpforfarbe(card).is_trumpf())
-                        .count()
-                }),
-            );
+            debug_assert_eq!(mapepin_trumpf_on_hand, &count_trumpfs(ahand, rules));
             if n_depth==0 {
                 assert!(stichseq.current_stich().is_empty());
                 (
@@ -267,11 +267,7 @@ impl SStichTrie {
                 cardspartition_check
             }
         );
-        let mut mapepin_trumpf_on_hand = EPlayerIndex::map_from_fn(|epi| {
-            ahand[epi].cards().iter().copied()
-                .filter(|&card| rules.trumpforfarbe(card).is_trumpf())
-                .count()
-        });
+        let mut mapepin_trumpf_on_hand = count_trumpfs(ahand, rules);
         let mut make_stichtrie = || for_each_allowed_card(
             4-n_stich_size,
             (ahand, stichseq),
