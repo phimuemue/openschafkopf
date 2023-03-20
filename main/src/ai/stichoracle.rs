@@ -79,18 +79,17 @@ impl SStichTrie {
                 let mut stichtrie = SStichTrie::new();
                 while !veccard_allowed.is_empty() {
                     let card_representative = veccard_allowed[0];
+                    ahand[epi_card].play_card(card_representative);
                     let (stichtrie_representative, ob_stich_winner_primary_party_representative) = stichseq.zugeben_and_restore(card_representative, rules, |stichseq| {
-                        ahand[epi_card].play_card(card_representative);
-                        let tplstichtrieob_stich_winner_primary_party = for_each_allowed_card(
+                        for_each_allowed_card(
                             n_depth-1,
                             (ahand, stichseq),
                             rules,
                             cardspartition_completed_cards,
                             playerparties,
-                        );
-                        ahand[epi_card].add_card(card_representative);
-                        tplstichtrieob_stich_winner_primary_party
+                        )
                     });
+                    ahand[epi_card].add_card(card_representative);
                     let mut cardspartition_actual = cardspartition_completed_cards.clone(); // TODO avoid cloning.
                     let epi_preliminary_winner = rules.preliminary_winner_index(stichseq.current_stich());
                     for (epi, card) in stichseq.current_stich().iter() {
