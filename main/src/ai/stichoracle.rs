@@ -4,6 +4,7 @@ use crate::{
         SPlayerPartiesTable,
         card_points::points_card,
         TRules,
+        VTrumpfOrFarbe,
     },
     util::*,
     ai::{
@@ -154,17 +155,49 @@ impl SStichTrie {
                             oresb_stich_winner_is_primary = Some(Err(()));
                         },
                         Some(b_stich_winner_is_primary) => {
+                            let oefarbe_all_equally_high = match rules.trumpforfarbe(card_representative) {
+                                VTrumpfOrFarbe::Trumpf => None,
+                                VTrumpfOrFarbe::Farbe(efarbe) => {
+                                    if_then_some!(let Some(epi_all_trumpf)=EPlayerIndex::values()
+                                        .find(|&epi| ahand[epi].cards().iter()
+                                            .chain(stichseq.current_stich().get(epi))
+                                            .all(|&card| rules.trumpforfarbe(card).is_trumpf())
+                                        ),
+                                        {
+                                            assert_ne!(epi_all_trumpf, epi_card);
+                                            efarbe // If here someone has only trumpf, all our efarbe-cards are equally high.
+                                        }
+                                    )
+                                },
+                            };
                             macro_rules! card_min_or_max(($fn_assign_by:expr) => {{
-                                let mut card_min_or_max = cardspartition_actual
-                                    .prev_while_contained(card_representative, &veccard_allowed);
-                                iterate_chain(&cardspartition_actual, &mut veccard_allowed, card_representative, |card_chain| {
-                                    $fn_assign_by(
-                                        &mut card_min_or_max,
-                                        card_chain,
-                                        |card| points_card(*card),
-                                    );
-                                });
-                                card_min_or_max
+                                if let Some(efarbe_all_equally_high)=oefarbe_all_equally_high {
+                                    let mut card_min_or_max = card_representative;
+                                    veccard_allowed.retain(|card_efarbe| {
+                                        if rules.trumpforfarbe(*card_efarbe)==VTrumpfOrFarbe::Farbe(efarbe_all_equally_high) {
+                                            $fn_assign_by(
+                                                &mut card_min_or_max,
+                                                *card_efarbe,
+                                                |card| points_card(*card),
+                                            );
+                                            false
+                                        } else {
+                                            true
+                                        }
+                                    });
+                                    card_min_or_max
+                                } else {
+                                    let mut card_min_or_max = cardspartition_actual
+                                        .prev_while_contained(card_representative, &veccard_allowed);
+                                    iterate_chain(&cardspartition_actual, &mut veccard_allowed, card_representative, |card_chain| {
+                                        $fn_assign_by(
+                                            &mut card_min_or_max,
+                                            card_chain,
+                                            |card| points_card(*card),
+                                        );
+                                    });
+                                    card_min_or_max
+                                }
                             }});
                             stichtrie.push(
                                 if b_stich_winner_is_primary==playerparties.is_primary_party(epi_card) {
