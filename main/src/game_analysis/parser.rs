@@ -1,8 +1,12 @@
 use crate::game_analysis::*;
-use crate::rules::ruleset::{SStossParams, VStockOrT};
+use crate::rules::{
+    ruleset::{SStossParams, VStockOrT},
+    parser::parse_rule_description,
+};
 use crate::primitives::cardvector::*;
 use crate::util::parser::*;
 use itertools::Itertools;
+use combine::{char::*, *};
 
 #[derive(Debug)]
 pub struct SSauspielAllowedRules {
@@ -31,17 +35,17 @@ pub struct SSauspielRuleset {
 #[derive(Debug)]
 pub struct SGameAnnouncementAnonymous;
 
+fn vec_to_arr<T: std::fmt::Debug>(vect: Vec<T>) -> Result<[T; EPlayerIndex::SIZE], failure::Error> {
+    let (card0, card1, card2, card3) = vect.into_iter()
+        .collect_tuple()
+        .ok_or_else(|| format_err!("Wrong number of elements"))?;
+    Ok([card0, card1, card2, card3])
+}
+
 pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error> {
     // TODO acknowledge timeouts
-    use combine::{char::*, *};
     use select::{document::Document, node::Node, predicate::*};
     let doc = Document::from(str_html);
-    fn vec_to_arr<T: std::fmt::Debug>(vect: Vec<T>) -> Result<[T; EPlayerIndex::SIZE], failure::Error> {
-        let (card0, card1, card2, card3) = vect.into_iter()
-            .collect_tuple()
-            .ok_or_else(|| format_err!("Wrong number of elements"))?;
-        Ok([card0, card1, card2, card3])
-    }
     let mapepistr_username = vec_to_arr(
         doc.find(Class("game-participants"))
             .exactly_one()
@@ -160,7 +164,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         .exactly_one()
         .map_err(|it| format_err!("{:?}", it))
         .and_then(|node_rules| {
-            if let Ok(rules) = crate::rules::parser::parse_rule_description(
+            if let Ok(rules) = parse_rule_description(
                 &node_rules.text(),
                 (ruleset.n_tarif_extra, ruleset.n_tarif_ruf, ruleset.n_tarif_solo),
                 /*fn_player_to_epi*/username_to_epi,
@@ -228,7 +232,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         )
     };
     let username_parser = |epi| {
-        combine::tokens2(|l,r|l==r, mapepistr_username[epi].chars()) // TODO? can we use combine::char::string?
+        tokens2(|l,r|l==r, mapepistr_username[epi].chars()) // TODO? can we use combine::char::string?
             .map(move |mut str_username| verify_eq!(epi, unwrap!(username_to_epi(&str_username.join("")))))
     };
     let mut itnode_gameannouncement = ((((doc.find(Name("h4").and(|node: &Node| node.inner_html()=="Spielermittlung"))
@@ -366,6 +370,84 @@ pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failur
                 /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
             )
         })
+}
+
+pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGame, failure::Error>>, failure::Error> {
+    let mut itstr_line = str_lines.lines();
+    itstr_line.next().ok_or_else(|| format_err!("First line should contain rules"))?;
+    itstr_line.next()
+        .filter(|str_gespielt_von| str_gespielt_von.starts_with("gespielt von")) // TODO be more precise?
+        .ok_or_else(|| format_err!("Expected 'gespielt von'."))?;
+    Ok(itstr_line
+        .group_by(|str_line| str_line.trim().is_empty())
+        .into_iter()
+        .filter(|(b_is_empty, _grpstr_line)| !b_is_empty)
+        .map(|(_b_is_empty, mut grpstr_line)| -> Result<_, _> {
+            grpstr_line.next()
+                .filter(|str_geber| str_geber.starts_with("Geber: ")) // TODO be more precise?
+                .ok_or_else(|| format_err!("Expected 'Geber: '"))?;
+            let mut vecstr_player_name = Vec::<String>::new();
+            for _epi in EPlayerIndex::values() {
+                vecstr_player_name.push(
+                    grpstr_line.next()
+                        .ok_or_else(|| format_err!("Expected description of player's hand"))
+                        .and_then(|str_player_hand| {
+                            parse_trimmed(
+                                str_player_hand,
+                                "<player> hat: <hand>",
+                                attempt(many1::<String,_>(alpha_num())) // TODO allow more characters for player names
+                                    .skip((
+                                        string(" hat: "),
+                                        sep_by::<Vec<_>,_,_>(card_parser(), char(' ')), // TODO determine ekurzlang?
+                                    ))
+                            )
+                        })?
+                        .to_string()
+                );
+            }
+            let ekurzlang = EKurzLang::Lang; // TODO does NetSchafkopf support EKurzLang::Kurz?
+            let mapepistr_player = EPlayerIndex::map_from_raw(unwrap!(vec_to_arr(vecstr_player_name)));
+            let player_to_epi = |str_player: &str| {
+                EPlayerIndex::values()
+                    .find(|epi| mapepistr_player[*epi]==str_player)
+                    .ok_or_else(|| format_err!("player {} not part of mapepistr_player {:?}", str_player, mapepistr_player))
+            };
+            let username_parser = |epi: EPlayerIndex| {
+                tokens2(|l,r|l==r, mapepistr_player[epi].chars()) // TODO? can we use combine::char::string?
+                    .map(move |mut str_player| verify_eq!(epi, unwrap!(player_to_epi(&str_player.join("")))))
+            };
+            let rules = parse_rule_description(
+                grpstr_line.next().ok_or_else(|| format_err!("Expected rules"))?,
+                (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO? make adjustable
+                /*fn_player_to_epi*/player_to_epi,
+            )?;
+            let mut stichseq = SStichSequence::new(ekurzlang);
+            for _i_stich in 0..ekurzlang.cards_per_player() {
+                let (_epi, veccard) = parse_trimmed(
+                    grpstr_line.next().ok_or_else(||format_err!("Expected stich"))?,
+                    "stich",
+                    choice::<[_; EPlayerIndex::SIZE]>(EPlayerIndex::map_from_fn(|epi|
+                        attempt((
+                            username_parser(epi).skip(string(" spielt aus: ")),
+                            sep_by::<Vec<_>,_,_>(card_parser(), char(' ')),
+                        ))
+                    ).into_raw()),
+                )?;
+                for card in veccard {
+                    stichseq.zugeben(card, rules.as_ref());
+                }
+            }
+            SGame::new_finished(
+                rules,
+                /*ostossparams*/None, // TODO support?
+                SExpensifiers::new_no_stock_doublings_stoss(), // TODO? support
+                SStichSequenceGameFinished::new(&stichseq),
+                /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
+            )
+        })
+        // TODO is the following needed?
+        .collect::<Vec<_>>()
+    )
 }
 
 #[test]

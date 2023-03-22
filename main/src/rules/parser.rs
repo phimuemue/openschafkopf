@@ -36,7 +36,7 @@ pub fn parse_rule_description(
     // determine oefarbe
     let oefarbe = match [
         (EFarbe::Eichel, &["eichel", "alt"] as &[&str]),
-        (EFarbe::Gras, &["gras", "grün", "laub", "blatt", "blau"]),
+        (EFarbe::Gras, &["gras", "grün", /*replacement character for u-umlaut*/"gr\u{FFFD}n", "laub", "blatt", "blau"]),
         (EFarbe::Herz, &["herz", "rot"]),
         (EFarbe::Schelln, &["schell", "pump", "hundsgfickte"]),
     ].into_iter()

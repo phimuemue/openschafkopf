@@ -87,9 +87,9 @@ pub fn glob_files<'str_glob>(
         for globresult in glob::glob(str_glob)? {
             match globresult {
                 Ok(path) => {
-                    let str_input = via_out_param_result(|str_html|
-                        std::fs::File::open(&path)?.read_to_string(str_html)
-                    )?.0;
+                    let str_input = String::from_utf8_lossy(&via_out_param_result(|vecu8|
+                        std::fs::File::open(&path)?.read_to_end(vecu8)
+                    )?.0).to_string();
                     fn_ok(path, str_input);
                 },
                 Err(e) => {

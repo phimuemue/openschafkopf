@@ -43,7 +43,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 )
             } else {
                 let mut b_found_plain = false;
-                for (i, resgame) in analyze_plain(&str_input).filter(|res| res.is_ok()).enumerate() {
+                for (i, resgame) in analyze_plain(&str_input)
+                    .chain(analyze_netschafkopf(&str_input).into_iter().flatten())
+                    .filter(|res| res.is_ok())
+                    .enumerate()
+                {
                     b_found_plain = true;
                     push_game(
                         format!("{}_{}", path.to_string_lossy(), i),
