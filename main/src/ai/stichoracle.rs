@@ -70,6 +70,9 @@ impl SStichTrie {
                 )
             } else {
                 let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
+                // TODO: If all remaining players (starting with epi_card) belong to the same playerparty, then, if this playerparty...
+                // * ... wins the trick, only the highest-points card from each partition's chain must be examined.
+                // * ... loses the trick, only the lowest-points card from each partition's chain must be examined.
                 let mut veccard_allowed = rules.all_allowed_cards(
                     stichseq,
                     &ahand[epi_card],
