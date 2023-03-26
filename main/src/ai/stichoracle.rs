@@ -21,6 +21,14 @@ pub struct SStichTrie {
     vectplcardtrie: Box<ArrayVec<(ECard, SStichTrie), 8>>, // TODO? improve
 }
 
+fn count_trumpfs(ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules) -> EnumMap<EPlayerIndex, usize> {
+    EPlayerIndex::map_from_fn(|epi| {
+        ahand[epi].cards().iter().copied()
+            .filter(|&card| rules.trumpforfarbe(card).is_trumpf())
+            .count()
+    })
+}
+
 impl SStichTrie {
     fn new() -> Self {
         let slf = Self {
@@ -81,13 +89,6 @@ impl SStichTrie {
         cardspartition_completed_cards: &SCardsPartition,
         playerparties: &SPlayerPartiesTable,
     ) -> Self {
-        fn count_trumpfs(ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules) -> EnumMap<EPlayerIndex, usize> {
-            EPlayerIndex::map_from_fn(|epi| {
-                ahand[epi].cards().iter().copied()
-                    .filter(|&card| rules.trumpforfarbe(card).is_trumpf())
-                    .count()
-            })
-        }
         fn for_each_allowed_card(
             n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
             (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
