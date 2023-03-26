@@ -308,6 +308,8 @@ pub struct SFilterByOracle<'rules> {
     stichtrie: SStichTrie,
     cardspartition_completed_cards: SCardsPartition,
     playerparties: SPlayerPartiesTable,
+    mapepin_trumpf: EnumMap<EPlayerIndex, usize>, // TODO move to SFilterIfOnePlayerHasAllRemainingTrumpf
+    b_one_player_has_only_and_all_trumpf: bool, // TODO move to SFilterIfOnePlayerHasAllRemainingTrumpf
 }
 
 impl<'rules> SFilterByOracle<'rules> {
@@ -333,6 +335,8 @@ impl<'rules> SFilterByOracle<'rules> {
                 stichtrie: SStichTrie::new(), // TODO this is a dummy value that should not be needed. Eliminate it.
                 cardspartition_completed_cards: cardspartition,
                 playerparties,
+                mapepin_trumpf: count_trumpfs(&ahand, rules),
+                b_one_player_has_only_and_all_trumpf: false
             };
             for stich in stichseq_in_game.completed_stichs() {
                 for (epi, card) in stich.iter() {
@@ -353,33 +357,77 @@ impl<'rules> SFilterByOracle<'rules> {
     }
 }
 
+pub enum VOracleUnregisterStich {
+    Trie(SStichTrie, EnumMap<EPlayerIndex, SRemoved>, EnumMap<EPlayerIndex, usize>),
+    Trumpf(EnumMap<EPlayerIndex, usize>),
+}
+
 impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
-    type UnregisterStich = (SStichTrie, EnumMap<EPlayerIndex, SRemoved>);
+    type UnregisterStich = Option<VOracleUnregisterStich>;
     fn register_stich(&mut self, ahand: &mut EnumMap<EPlayerIndex, SHand>, stichseq: &mut SStichSequence) -> Self::UnregisterStich {
         assert!(stichseq.current_stich().is_empty());
-        let aremovedcard = EPlayerIndex::map_from_fn(|epi|
-            self.cardspartition_completed_cards.remove_from_chain(unwrap!(stichseq.completed_stichs().last())[epi])
-        );
-        let stichtrie = SStichTrie::new_with(
-            (ahand, stichseq),
-            self.rules,
-            &self.cardspartition_completed_cards,
-            &self.playerparties,
-        );
-        (std::mem::replace(&mut self.stichtrie, stichtrie), aremovedcard)
-    }
-    fn unregister_stich(&mut self, (stichtrie, aremovedcard): Self::UnregisterStich) {
-        for removedcard in aremovedcard.into_raw().into_iter().rev() {
-            self.cardspartition_completed_cards.readd(removedcard);
+        if self.b_one_player_has_only_and_all_trumpf {
+            None
+        } else {
+            let stich_last_complete = unwrap!(stichseq.completed_stichs().last());
+            let mapepin_trumpf_old = self.mapepin_trumpf.explicit_clone();
+            for epi in EPlayerIndex::values() {
+                if self.rules.trumpforfarbe(*unwrap!(stich_last_complete.get(epi))).is_trumpf() {
+                    self.mapepin_trumpf[epi] -= 1;
+                }
+            }
+            if let Some(_epi_has_only_and_all_trumpf) = EPlayerIndex::values()
+                .filter(|&epi| 0<self.mapepin_trumpf[epi])
+                .exactly_one()
+                .ok()
+                .filter(|&epi| self.mapepin_trumpf[epi]==ahand[epi].cards().len())
+            {
+                self.b_one_player_has_only_and_all_trumpf = true;
+                Some(VOracleUnregisterStich::Trumpf(mapepin_trumpf_old))
+            } else {
+                let aremovedcard = EPlayerIndex::map_from_fn(|epi|
+                    self.cardspartition_completed_cards.remove_from_chain(stich_last_complete[epi])
+                );
+                let stichtrie = SStichTrie::new_with(
+                    (ahand, stichseq),
+                    self.rules,
+                    &self.cardspartition_completed_cards,
+                    &self.playerparties,
+                );
+                Some(VOracleUnregisterStich::Trie(
+                    std::mem::replace(&mut self.stichtrie, stichtrie),
+                    aremovedcard,
+                    mapepin_trumpf_old,
+                ))
+            }
         }
-        self.stichtrie = stichtrie;
+    }
+    fn unregister_stich(&mut self, ounregisterstich: Self::UnregisterStich) {
+        match ounregisterstich {
+            None => {},
+            Some(VOracleUnregisterStich::Trumpf(mapepin_trumpf)) => {
+                self.mapepin_trumpf = mapepin_trumpf;
+                self.b_one_player_has_only_and_all_trumpf = false;
+            },
+            Some(VOracleUnregisterStich::Trie(stichtrie, aremovedcard, mapepin_trumpf)) => {
+                for removedcard in aremovedcard.into_raw().into_iter().rev() {
+                    self.cardspartition_completed_cards.readd(removedcard);
+                }
+                self.stichtrie = stichtrie;
+                self.mapepin_trumpf = mapepin_trumpf;
+            }
+        }
     }
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
-        let mut stichtrie = &self.stichtrie;
-        for (_epi, card) in stichseq./*TODO current_playable_stich*/current_stich().iter() {
-            stichtrie = &unwrap!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| card_stichtrie==card)).1;
+        if self.b_one_player_has_only_and_all_trumpf {
+            veccard.truncate(1);
+        } else {
+            let mut stichtrie = &self.stichtrie;
+            for (_epi, card) in stichseq./*TODO current_playable_stich*/current_stich().iter() {
+                stichtrie = &unwrap!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| card_stichtrie==card)).1;
+            }
+            *veccard = stichtrie.vectplcardtrie.iter().map(|(card, _stichtrie)| *card).collect();
         }
-        *veccard = stichtrie.vectplcardtrie.iter().map(|(card, _stichtrie)| *card).collect();
     }
     fn continue_with_filter(&self, stichseq: &SStichSequence) -> bool {
         stichseq.completed_stichs().len()<=5 // seems to be the best choice when starting after stich 1
