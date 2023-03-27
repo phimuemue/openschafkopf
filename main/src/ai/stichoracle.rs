@@ -2300,6 +2300,94 @@ mod tests {
                 [S9, SA, SO, S8],
             ],
         );
+        assert_stichoracle(
+            TRulesBoxClone::box_clone(rules_farbwenz_eichel_epi3.as_ref()).as_ref(),
+            [
+                &[GA, GZ, G8, HA, HK, H8, SO],
+                &[GU, GK, GO, G9, G7, SK, S8],
+                &[EU, HU, EA, E9, HZ, SZ, S9],
+                &[SU, EZ, EK, EO, E8, SA, S7],
+            ],
+            &[H7, H9, HO, E7],
+            &[
+                [SU, GA, GU, EU],
+                // [SU, GA, GU, HU], // covered by [SU, .., GU, EA]
+                [SU, GA, GU, EA],
+                [SU, GA, GU, E9],
+                // [SU, GZ, GU, ..], // covered by [SU, GA, GU, ..]
+                [SU, G8, GU, EU],
+                // [SU, G8, GU, HU], // covered by [SU, .., GU, EA]
+                [SU, G8, GU, EA],
+                [SU, G8, GU, E9],
+                [SU, HA, GU, EU],
+                // [SU, HA, GU, HU], // covered by [SU, .., GU, EA]
+                [SU, HA, GU, EA],
+                [SU, HA, GU, E9],
+                [SU, HK, GU, EU],
+                // [SU, HK, GU, HU], // covered by [SU, HK, GU, EA]
+                [SU, HK, GU, EA],
+                [SU, HK, GU, E9],
+                // [SU, H8, GU, EU], // covered by [SU, HK, GU, ..]
+                [SU, SO, GU, EU],
+                // [SU, SO, GU, HU], // covered by [SU, .., GU, EA]
+                [SU, SO, GU, EA],
+                [SU, SO, GU, E9],
+                // [EZ, .., .., ..], // covered by [EO, .., .., ..]
+                // [EK, .., .., ..], // covered by [EO, .., .., ..]
+                [EO, GA, GU, EU],
+                [EO, GA, GU, HU],
+                [EO, GA, GU, EA],
+                [EO, GA, GU, E9],
+                // [EO, GZ, GU, ..], // covered by [E., GA, GU, ..]
+                [EO, G8, GU, EU],
+                [EO, G8, GU, HU],
+                [EO, G8, GU, EA],
+                [EO, G8, GU, E9],
+                [EO, HA, GU, EU],
+                [EO, HA, GU, HU],
+                [EO, HA, GU, EA],
+                [EO, HA, GU, E9],
+                [EO, HK, GU, EU],
+                [EO, HK, GU, HU],
+                [EO, HK, GU, EA],
+                [EO, HK, GU, E9],
+                // [EO, H8, GU, EU], // covered by [EO, HK, GU, ..]
+                [EO, SO, GU, EU],
+                [EO, SO, GU, HU],
+                [EO, SO, GU, EA],
+                [EO, SO, GU, E9],
+                [E8, GA, GU, EU],
+                [E8, GA, GU, HU],
+                [E8, GA, GU, EA],
+                [E8, GA, GU, E9],
+                // [E8, GZ, GU, ..], // covered by [E., GA, GU, ..]
+                [E8, G8, GU, EU],
+                [E8, G8, GU, HU],
+                [E8, G8, GU, EA],
+                [E8, G8, GU, E9],
+                [E8, HA, GU, EU],
+                [E8, HA, GU, HU],
+                [E8, HA, GU, EA],
+                [E8, HA, GU, E9],
+                [E8, HK, GU, EU],
+                [E8, HK, GU, HU],
+                [E8, HK, GU, EA],
+                [E8, HK, GU, E9],
+                // [E8, H8, GU, EU], // covered by [E8, HK, GU, ..]
+                [E8, SO, GU, EU],
+                [E8, SO, GU, HU],
+                [E8, SO, GU, EA],
+                [E8, SO, GU, E9],
+                // [SA, SO, SK, SZ], // covered by [SA, SO, SK, S9]
+                [SA, SO, SK, S9],
+                [SA, SO, S8, SZ],
+                [SA, SO, S8, S9],
+                [S7, SO, SK, SZ],
+                [S7, SO, SK, S9],
+                [S7, SO, S8, SZ],
+                [S7, SO, S8, S9],
+            ],
+        );
     }
 
     #[test]
