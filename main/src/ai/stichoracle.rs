@@ -54,6 +54,11 @@ impl SStichTrie {
                 .map(|tplcardtrie| tplcardtrie.1.depth_in_edges())
                 .all_equal()
         );
+        assert!(
+            self.vectplcardtrie.iter()
+                .map(|tplcardtrie| tplcardtrie.0)
+                .all_unique()
+        );
     }
 
     fn traverse_trie(&self, epi_first: EPlayerIndex) -> Vec<SStich> {
