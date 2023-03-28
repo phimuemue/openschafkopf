@@ -139,6 +139,15 @@ impl std::str::FromStr for SConstraint {
             });
         }
         engine
+            .register_fn("hand_to_string", |ctx: SContext, i_epi: SRhaiUsize| -> String {
+                format!("{}",
+                    SDisplayCardSlice::new(
+                        ctx.ahand[unwrap!(EPlayerIndex::checked_from_usize(i_epi.as_num::<usize>()))].cards().to_owned(),
+                        &ctx.rules,
+                    )
+                )
+            });
+        engine
             .register_type::<EPlayerIndex>()
             .register_fn("to_string", EPlayerIndex::to_string)
         ;
