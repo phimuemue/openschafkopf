@@ -22,13 +22,38 @@ pub struct SStichTrie {
 
 impl SStichTrie {
     fn new() -> Self {
-        Self {
+        let slf = Self {
             vectplcardtrie: Box::new(ArrayVec::new()),
-        }
+        };
+        #[cfg(debug_assertions)] slf.assert_invariant();
+        slf
     }
 
     fn push(&mut self, card: ECard, trie_child: SStichTrie) {
-        self.vectplcardtrie.push((card, trie_child))
+        debug_assert!(self.depth_in_edges()==0 || self.depth_in_edges()==trie_child.depth_in_edges()+1);
+        self.vectplcardtrie.push((card, trie_child));
+        #[cfg(debug_assertions)] self.assert_invariant();
+    }
+
+    fn depth_in_edges(&self) -> usize {
+        #[cfg(debug_assertions)] self.assert_invariant(); // checks that trie holds stichs of equal length
+        if self.vectplcardtrie.is_empty() {
+            0
+        } else {
+            1 + self
+                .vectplcardtrie[/*use first as representative; TODO? IterExt::first_as_representative*/0]
+                .1
+                .depth_in_edges()
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    fn assert_invariant(&self) {
+        assert!(
+            self.vectplcardtrie.iter()
+                .map(|tplcardtrie| tplcardtrie.1.depth_in_edges())
+                .all_equal()
+        );
     }
 
     fn traverse_trie(&self, epi_first: EPlayerIndex) -> Vec<SStich> {
@@ -210,6 +235,7 @@ impl SStichTrie {
                 make_singleton_stichtrie(0, make_singleton_stichtrie(1, make_singleton_stichtrie(2, make_stichtrie())))
             },
         };
+        #[cfg(debug_assertions)] stichtrie.assert_invariant();
         debug_assert!(stichtrie.traverse_trie(stichseq.current_stich().first_playerindex()).iter().all(|stich|
             stich.equal_up_to_size(&stich_current, stich_current.size())
         ));
