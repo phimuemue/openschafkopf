@@ -61,6 +61,21 @@ impl SStichTrie {
         );
     }
 
+    fn merge(&mut self, stichtrie_other: SStichTrie) {
+        assert_eq!(self.depth_in_edges(), stichtrie_other.depth_in_edges());
+        for (card, stichtrie_child_other) in stichtrie_other.vectplcardtrie.into_iter() {
+            if let Some((_card, stichtrie)) = self.vectplcardtrie.iter_mut()
+                .find(|tplcardtrie_child| tplcardtrie_child.0==card)
+            {
+                stichtrie.merge(stichtrie_child_other);
+            } else {
+                assert!(!self.vectplcardtrie.is_full());
+                self.vectplcardtrie.push((card, stichtrie_child_other));
+            }
+        }
+        #[cfg(debug_assertions)] self.assert_invariant();
+    }
+
     fn traverse_trie(&self, epi_first: EPlayerIndex) -> Vec<SStich> {
         fn internal_traverse_trie(stichtrie: &SStichTrie, stich: &mut SStich) -> Vec<SStich> {
             if verify_eq!(stich.is_full(), stichtrie.vectplcardtrie.is_empty()) {
@@ -243,6 +258,42 @@ impl SStichTrie {
             stich.equal_up_to_size(&stich_current, stich_current.size())
         ));
         stichtrie
+    }
+}
+
+#[test]
+fn test_stichtrie_merge() {
+    let make_stichtrie = |acard: [ECard; EPlayerIndex::SIZE]| {
+        let mut stichtrie = SStichTrie::new();
+        for card in acard.into_iter().rev() {
+            let stichtrie_child = std::mem::replace(&mut stichtrie, SStichTrie::new());
+            stichtrie.push(card, stichtrie_child);
+        }
+        stichtrie
+    };
+    use crate::primitives::card::ECard::*;
+    use std::collections::HashSet;
+    let acard_0 = [EO, GO, HO, SO];
+    let mut stichtrie = make_stichtrie(acard_0.explicit_clone());
+    let mut vecacard = vec!(acard_0);
+    for acard in [
+        [EO, GO, HO, EU],
+        [EO, GO, GU, SO],
+        [EO, HU, HO, SO],
+        [SU, GO, HO, SO],
+        [SU, HU, GU, EU],
+        [EO, HU, GU, EU],
+    ] {
+        stichtrie.merge(make_stichtrie(acard.explicit_clone()));
+        vecacard.push(acard);
+        assert_eq!(
+            stichtrie.traverse_trie(EPlayerIndex::EPI0)
+                .into_iter()
+                .collect::<HashSet<_>>(),
+            vecacard.iter().cloned()
+                .map(|acard| SStich::new_full(EPlayerIndex::EPI0, acard))
+                .collect::<HashSet<_>>(),
+        );
     }
 }
 
