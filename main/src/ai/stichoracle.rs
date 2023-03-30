@@ -29,6 +29,19 @@ impl SStichTrie {
         slf
     }
 
+    fn new_from_full_stich(stich: SFullStich) -> Self {
+        let mut stichtrie = SStichTrie::new();
+        for card in EPlayerIndex::map_from_fn(|epi| *unwrap!(stich.get().get(stich.get().first_playerindex().wrapping_add(epi.to_usize()))))
+            .into_raw()
+            .into_iter()
+            .rev()
+        {
+            let stichtrie_child = std::mem::replace(&mut stichtrie, SStichTrie::new());
+            stichtrie.push(card, stichtrie_child);
+        }
+        stichtrie
+    }
+
     fn push(&mut self, card: ECard, trie_child: SStichTrie) {
         debug_assert!(self.depth_in_edges()==0 || self.depth_in_edges()==trie_child.depth_in_edges()+1);
         self.vectplcardtrie.push((card, trie_child));
@@ -302,12 +315,7 @@ impl SStichTrie {
 #[test]
 fn test_stichtrie_merge() {
     let make_stichtrie = |acard: [ECard; EPlayerIndex::SIZE]| {
-        let mut stichtrie = SStichTrie::new();
-        for card in acard.into_iter().rev() {
-            let stichtrie_child = std::mem::replace(&mut stichtrie, SStichTrie::new());
-            stichtrie.push(card, stichtrie_child);
-        }
-        stichtrie
+        SStichTrie::new_from_full_stich(SFullStich::new(&SStich::new_full(EPlayerIndex::EPI0, acard)))
     };
     use crate::primitives::card::ECard::*;
     use std::collections::HashSet;
