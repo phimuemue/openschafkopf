@@ -94,6 +94,44 @@ impl SStichTrie {
         internal_traverse_trie(self, &mut SStich::new(epi_first))
     }
 
+    fn make_simple(
+        (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
+        rules: &dyn TRules,
+        fn_filter: &impl Fn((&EnumMap<EPlayerIndex, SHand>, &SStichSequence), SHandVector) -> SHandVector,
+    ) -> Vec<SStich> {
+        fn internal_make_simple(
+            n_depth: usize,
+            (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
+            rules: &dyn TRules,
+            fn_filter: &impl Fn((&EnumMap<EPlayerIndex, SHand>, &SStichSequence), SHandVector) -> SHandVector,
+        ) -> Vec<SStich> {
+            if n_depth==0 {
+                assert!(stichseq.current_stich().is_empty());
+                vec![unwrap!(stichseq.completed_stichs().last()).clone()]
+            } else {
+                let mut vecstich = Vec::new();
+                let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
+                for card in fn_filter((ahand, stichseq), rules.all_allowed_cards(stichseq, &ahand[epi_card])) {
+                    ahand[epi_card].play_card(card);
+                    vecstich.extend(stichseq.zugeben_and_restore(card, rules, |stichseq| internal_make_simple(
+                        n_depth - 1,
+                        (ahand, stichseq),
+                        rules,
+                        fn_filter,
+                    )));
+                    ahand[epi_card].add_card(card);
+                }
+                vecstich
+            }
+        }
+        internal_make_simple(
+            /*n_depth*/EPlayerIndex::SIZE - stichseq.current_stich().size(),
+            (ahand, stichseq),
+            rules,
+            fn_filter,
+        )
+    }
+
     pub fn new_with(
         (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
         rules: &dyn TRules,
@@ -295,6 +333,166 @@ fn test_stichtrie_merge() {
                 .collect::<HashSet<_>>(),
         );
     }
+}
+
+#[test]
+fn test_stichtrie_make_simple() {
+    #![allow(clippy::redundant_clone)]
+    use crate::{
+        primitives::card::ECard::*,
+        rules::{
+            payoutdecider::{SPayoutDeciderParams, SLaufendeParams},
+            rulesrufspiel::SRulesRufspiel,
+        },
+        util::*,
+    };
+    use std::collections::HashSet;
+    let rules_rufspiel_eichel_epi1 = SRulesRufspiel::new(
+        EPlayerIndex::EPI1,
+        EFarbe::Eichel,
+        SPayoutDeciderParams::new(
+            /*n_payout_base*/10,
+            /*n_payout_schneider_schwarz*/10,
+            SLaufendeParams::new(
+                /*n_payout_per_lauf*/10,
+                /*n_lauf_lbound*/3,
+            ),
+        ),
+    );
+    let ahand = EPlayerIndex::map_from_raw([
+        [EO, EU, HA],
+        [GO, GU, HZ],
+        [HO, HU, HK],
+        [SO, SU, H9],
+    ]).map_into(SHand::new_from_iter);
+    let stichseq = SStichSequence::new_from_cards(
+        EKurzLang::Lang,
+        [
+            EA, EZ, EK, E9,
+            E8, E7, G8, G7,
+            GA, GZ, GK, G9,
+            SZ, SA, SK, S9,
+            /*stich initiated by EPI1*/S7, S8, H7, H8,
+        ].into_iter(),
+        &rules_rufspiel_eichel_epi1,
+    );
+    assert_eq!(
+        SStichTrie::make_simple(
+            (&mut ahand.clone(), &mut stichseq.clone()),
+            &rules_rufspiel_eichel_epi1,
+            /*fn_filter*/&|_epi, veccard| veccard,
+        ).into_iter().collect::<HashSet<_>>(),
+        [
+            [EO, GO, HO, SO], [EO, GO, HO, SU], [EO, GO, HO, H9],
+            [EO, GO, HU, SO], [EO, GO, HU, SU], [EO, GO, HU, H9],
+            [EO, GO, HK, SO], [EO, GO, HK, SU], [EO, GO, HK, H9],
+            [EO, GU, HO, SO], [EO, GU, HO, SU], [EO, GU, HO, H9],
+            [EO, GU, HU, SO], [EO, GU, HU, SU], [EO, GU, HU, H9],
+            [EO, GU, HK, SO], [EO, GU, HK, SU], [EO, GU, HK, H9],
+            [EO, HZ, HO, SO], [EO, HZ, HO, SU], [EO, HZ, HO, H9],
+            [EO, HZ, HU, SO], [EO, HZ, HU, SU], [EO, HZ, HU, H9],
+            [EO, HZ, HK, SO], [EO, HZ, HK, SU], [EO, HZ, HK, H9],
+            [EU, GO, HO, SO], [EU, GO, HO, SU], [EU, GO, HO, H9],
+            [EU, GO, HU, SO], [EU, GO, HU, SU], [EU, GO, HU, H9],
+            [EU, GO, HK, SO], [EU, GO, HK, SU], [EU, GO, HK, H9],
+            [EU, GU, HO, SO], [EU, GU, HO, SU], [EU, GU, HO, H9],
+            [EU, GU, HU, SO], [EU, GU, HU, SU], [EU, GU, HU, H9],
+            [EU, GU, HK, SO], [EU, GU, HK, SU], [EU, GU, HK, H9],
+            [EU, HZ, HO, SO], [EU, HZ, HO, SU], [EU, HZ, HO, H9],
+            [EU, HZ, HU, SO], [EU, HZ, HU, SU], [EU, HZ, HU, H9],
+            [EU, HZ, HK, SO], [EU, HZ, HK, SU], [EU, HZ, HK, H9],
+            [HA, GO, HO, SO], [HA, GO, HO, SU], [HA, GO, HO, H9],
+            [HA, GO, HU, SO], [HA, GO, HU, SU], [HA, GO, HU, H9],
+            [HA, GO, HK, SO], [HA, GO, HK, SU], [HA, GO, HK, H9],
+            [HA, GU, HO, SO], [HA, GU, HO, SU], [HA, GU, HO, H9],
+            [HA, GU, HU, SO], [HA, GU, HU, SU], [HA, GU, HU, H9],
+            [HA, GU, HK, SO], [HA, GU, HK, SU], [HA, GU, HK, H9],
+            [HA, HZ, HO, SO], [HA, HZ, HO, SU], [HA, HZ, HO, H9],
+            [HA, HZ, HU, SO], [HA, HZ, HU, SU], [HA, HZ, HU, H9],
+            [HA, HZ, HK, SO], [HA, HZ, HK, SU], [HA, HZ, HK, H9],
+        ].into_iter()
+            .map(|acard| SStich::new_full(EPlayerIndex::EPI0, acard))
+            .collect::<HashSet<_>>(),
+    );
+    {
+        let mut ahand = ahand.clone();
+        let mut stichseq = stichseq.clone();
+        ahand[EPlayerIndex::EPI0].play_card(EO);
+        stichseq.zugeben(EO, &rules_rufspiel_eichel_epi1);
+        assert_eq!(
+            SStichTrie::make_simple(
+                (&mut ahand, &mut stichseq),
+                &rules_rufspiel_eichel_epi1,
+                /*fn_filter*/&|_epi, veccard| veccard,
+            ).into_iter().collect::<HashSet<_>>(),
+            [
+                [EO, GO, HO, SO], [EO, GO, HO, SU], [EO, GO, HO, H9],
+                [EO, GO, HU, SO], [EO, GO, HU, SU], [EO, GO, HU, H9],
+                [EO, GO, HK, SO], [EO, GO, HK, SU], [EO, GO, HK, H9],
+                [EO, GU, HO, SO], [EO, GU, HO, SU], [EO, GU, HO, H9],
+                [EO, GU, HU, SO], [EO, GU, HU, SU], [EO, GU, HU, H9],
+                [EO, GU, HK, SO], [EO, GU, HK, SU], [EO, GU, HK, H9],
+                [EO, HZ, HO, SO], [EO, HZ, HO, SU], [EO, HZ, HO, H9],
+                [EO, HZ, HU, SO], [EO, HZ, HU, SU], [EO, HZ, HU, H9],
+                [EO, HZ, HK, SO], [EO, HZ, HK, SU], [EO, HZ, HK, H9],
+            ].into_iter()
+                .map(|acard| SStich::new_full(EPlayerIndex::EPI0, acard))
+                .collect::<HashSet<_>>(),
+        );
+        ahand[EPlayerIndex::EPI1].play_card(GO);
+        stichseq.zugeben(GO, &rules_rufspiel_eichel_epi1);
+        assert_eq!(
+            SStichTrie::make_simple(
+                (&mut ahand, &mut stichseq),
+                &rules_rufspiel_eichel_epi1,
+                /*fn_filter*/&|_epi, veccard| veccard,
+            ).into_iter().collect::<HashSet<_>>(),
+            [
+                [EO, GO, HO, SO], [EO, GO, HO, SU], [EO, GO, HO, H9],
+                [EO, GO, HU, SO], [EO, GO, HU, SU], [EO, GO, HU, H9],
+                [EO, GO, HK, SO], [EO, GO, HK, SU], [EO, GO, HK, H9],
+            ].into_iter()
+                .map(|acard| SStich::new_full(EPlayerIndex::EPI0, acard))
+                .collect::<HashSet<_>>(),
+        );
+        ahand[EPlayerIndex::EPI2].play_card(HO);
+        stichseq.zugeben(HO, &rules_rufspiel_eichel_epi1);
+        assert_eq!(
+            SStichTrie::make_simple(
+                (&mut ahand, &mut stichseq),
+                &rules_rufspiel_eichel_epi1,
+                /*fn_filter*/&|_epi, veccard| veccard,
+            ).into_iter().collect::<HashSet<_>>(),
+            [
+                [EO, GO, HO, SO], [EO, GO, HO, SU], [EO, GO, HO, H9],
+            ].into_iter()
+                .map(|acard| SStich::new_full(EPlayerIndex::EPI0, acard))
+                .collect::<HashSet<_>>(),
+        );
+    }
+    assert_eq!(
+        SStichTrie::make_simple(
+            (&mut ahand.clone(), &mut stichseq.clone()),
+            &rules_rufspiel_eichel_epi1,
+            /*fn_filter*/&|(_ahand, stichseq), mut veccard| {
+                veccard.retain(|card| {
+                    let eschlag = card.schlag();
+                    match unwrap!(stichseq.current_stich().current_playerindex()) {
+                        EPlayerIndex::EPI0 => eschlag==ESchlag::Ober,
+                        EPlayerIndex::EPI1 => eschlag==ESchlag::Unter,
+                        EPlayerIndex::EPI2 => eschlag!=ESchlag::Unter && eschlag!=ESchlag::Ober,
+                        EPlayerIndex::EPI3 => true,
+                    }
+                });
+                veccard
+            },
+        ).into_iter().collect::<HashSet<_>>(),
+        [
+            [EO, GU, HK, SO], [EO, GU, HK, SU], [EO, GU, HK, H9],
+        ].into_iter()
+            .map(|acard| SStich::new_full(EPlayerIndex::EPI0, acard))
+            .collect::<HashSet<_>>(),
+    );
 }
 
 #[derive(Debug)]
