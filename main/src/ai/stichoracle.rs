@@ -20,6 +20,25 @@ pub struct SStichTrie {
     vectplcardtrie: Box<ArrayVec<(ECard, SStichTrie), {EKurzLang::max_cards_per_player()}>>, // TODO? improve
 }
 
+fn iterate_chain(
+    cardspartition: &SCardsPartition,
+    veccard: &mut SHandVector,
+    card_representative: ECard,
+    mut func: impl FnMut(ECard),
+) {
+    // TODO avoid backward-forward iteration
+    let mut card_chain = cardspartition.prev_while_contained(card_representative, veccard);
+    veccard.must_find_swap_remove(&card_chain);
+    func(card_chain);
+    while let Some(card_chain_next) = cardspartition.next(card_chain)
+        .filter(|card| veccard.contains(card))
+    {
+        card_chain = card_chain_next;
+        veccard.must_find_swap_remove(&card_chain);
+        func(card_chain);
+    }
+}
+
 impl SStichTrie {
     fn new() -> Self {
         let slf = Self {
@@ -201,24 +220,6 @@ impl SStichTrie {
                     for (epi, card) in stichseq.current_stich().iter() {
                         if epi!=epi_preliminary_winner {
                             cardspartition_actual.remove_from_chain(*card);
-                        }
-                    }
-                    fn iterate_chain(
-                        cardspartition: &SCardsPartition,
-                        veccard: &mut SHandVector,
-                        card_representative: ECard,
-                        mut func: impl FnMut(ECard),
-                    ) {
-                        // TODO avoid backward-forward iteration
-                        let mut card_chain = cardspartition.prev_while_contained(card_representative, veccard);
-                        veccard.must_find_swap_remove(&card_chain);
-                        func(card_chain);
-                        while let Some(card_chain_next) = cardspartition.next(card_chain)
-                            .filter(|card| veccard.contains(card))
-                        {
-                            card_chain = card_chain_next;
-                            veccard.must_find_swap_remove(&card_chain);
-                            func(card_chain);
                         }
                     }
                     match ob_stich_winner_primary_party_representative {
