@@ -898,11 +898,11 @@ mod tests {
             for (_epi, card) in stichseq.completed_cards() {
                 cardspartition.remove_from_chain(*card);
             }
-            let stichtrie = SStichTrie::new_with(
-                (&mut ahand.clone(), &mut stichseq.clone()),
-                rules,
-                &cardspartition,
-                &playerparties,
+            let stichtrie = SStichTrie::new_from_full_stichs(
+                SStichTrie::outer_make(
+                    (&mut ahand.clone(), &mut stichseq.clone()),
+                    (rules, &playerparties)
+                ),
             );
             let setstich_oracle = stichtrie.traverse_trie(stichseq.current_stich().first_playerindex()).iter().cloned().collect::<std::collections::HashSet<_>>();
             let setstich_check = slcacard_stich
@@ -1006,9 +1006,9 @@ mod tests {
                 [SU, GO, EU, H9],
                 [SU, GO, EU, HZ],
                 [SU, GO, HA, EO],
-                [SU, GO, HA, H9],
-                [SU, GO, HA, HZ],
-                [SU, GO, HU, EO], // TODO should not be needed (HA better than HU)
+                // [SU, GO, HA, H9], // covered by [SU, GO, HU, H9]
+                // [SU, GO, HA, HZ], // covered by [SU, GO, HU, HZ]
+                // [SU, GO, HU, EO], // covered by [SU, GO, HA, EO]
                 [SU, GO, HU, H9],
                 [SU, GO, HU, HZ],
                 [SU, H8, EU, EO],
@@ -1070,13 +1070,13 @@ mod tests {
                 [S9, SA, E7, SZ], 
                 [S9, SA, GZ, SZ], 
                 [S9, SA, G9, SZ], 
-                [S9, SK, EU, SZ], // TODO should not be needed (S8 better than SK)
-                [S9, SK, HU, SZ], // TODO should not be needed (S8 better than SK)
-                [S9, SK, HA, SZ], // TODO should not be needed (S8 better than SK)
-                [S9, SK, EZ, SZ], // TODO should not be needed (S8 better than SK)
-                [S9, SK, E7, SZ], // TODO should not be needed (S8 better than SK)
-                [S9, SK, GZ, SZ], // TODO should not be needed (S8 better than SK)
-                [S9, SK, G9, SZ], // TODO should not be needed (S8 better than SK)
+                // [S9, SK, EU, SZ], // covered by [S9, S8, EU, SZ]
+                // [S9, SK, HU, SZ], // covered by [S9, S8, HU, SZ]
+                // [S9, SK, HA, SZ], // covered by [S9, S8, HA, SZ]
+                // [S9, SK, EZ, SZ], // covered by [S9, S8, EZ, SZ]
+                // [S9, SK, E7, SZ], // covered by [S9, S8, E7, SZ]
+                // [S9, SK, GZ, SZ], // covered by [S9, S8, GZ, SZ]
+                // [S9, SK, G9, SZ], // covered by [S9, S8, G9, SZ]
                 [S7, S8, EU, SZ],
                 [S7, S8, HU, SZ],
                 [S7, S8, HA, SZ],
@@ -1269,7 +1269,7 @@ mod tests {
                 [GU, H9, HA, EU],
                 // [GU, H9, HZ, EU], // covered by [GU, H9, HA, EU]
                 // [GU, H9, HK, EU], // covered by [GU, H9, HA, EU]
-                [H8, SU, HU, EU], // TODO should not be needed (HA better than HU)
+                // [H8, SU, HU, EU], // covered by [H8, SU, HA, EU]
                 [H8, SU, HA, EU],
                 // [H8, SU, HZ, EU], // covered by [H8, SU, HA, EU]
                 // [H8, SU, HK, EU], // covered by [H8, SU, HZ, EU]
@@ -2617,13 +2617,13 @@ mod tests {
                 // [EA, EK, HK, GU], // covered by [.., EO, .., GU]
                 // [EA, EK, H8, GU], // covered by [.., EO, .., GU]
                 // [EA, EK, SO, GU], // covered by [.., EO, .., GU]
-                [EA, EO, GA, GU],
+                // [EA, EO, GA, GU], // covered by [EA, SU, GA, GU]
                 // [EA, EO, GZ, GU], // covered by [.., .., GA, GU]
-                [EA, EO, G8, GU],
-                [EA, EO, HA, GU],
-                [EA, EO, HK, GU],
+                // [EA, EO, G8, GU], // covered by [EA, SU, G8, GU]
+                // [EA, EO, HA, GU], // covered by [EA, SU, HA, GU]
+                // [EA, EO, HK, GU], // covered by [EA, SU, HK, GU]
                 // [EA, EO, H8, GU], // covered by [.., .., HK, ..]
-                [EA, EO, SO, GU],
+                // [EA, EO, SO, GU], // covered by [EA, SU, SO, GU]
                 [EA, E8, GA, GU],
                 // [EA, E8, GZ, GU], // covered by [.., .., GA, GU]
                 [EA, E8, G8, GU],
@@ -2659,13 +2659,13 @@ mod tests {
                 // [E9, EK, HK, GU], // covered by [.., EO, .., GU]
                 // [E9, EK, H8, GU], // covered by [.., EO, .., GU]
                 // [E9, EK, SO, GU], // covered by [.., EO, .., GU]
-                [E9, EO, GA, GU],
+                // [E9, EO, GA, GU], // covered by [E9, E8, GA, GU]
                 // [E9, EO, GZ, GU], // covered by [.., .., GA, GU]
-                [E9, EO, G8, GU],
-                [E9, EO, HA, GU],
-                [E9, EO, HK, GU],
+                // [E9, EO, G8, GU], // covered by [E9, E8, G8, GU]
+                // [E9, EO, HA, GU], // covered by [E9, E8, HA, GU]
+                // [E9, EO, HK, GU], // covered by [E9, E8, HK, GU]
                 // [E9, EO, H8, GU], // covered by [E9, EO, HK, GU]
-                [E9, EO, SO, GU],
+                // [E9, EO, SO, GU], // covered by [E9, E8, SO, GU]
                 [E9, E8, GA, GU],
                 // [E9, E8, GZ, GU], // covered by [.., .., GA, GU]
                 [E9, E8, G8, GU],
@@ -2683,18 +2683,18 @@ mod tests {
                 [HZ, SU, HA, GU],
                 // [HZ, SU, HA, GK], // covered by [HZ, SU, HA, GO]
                 // [HZ, SU, HA, GO], // covered by [.., .., .., G9]
-                [HZ, SU, HA, G9],
-                [HZ, SU, HA, G7],
-                [HZ, SU, HA, SK],
-                [HZ, SU, HA, S8],
-                [HZ, SU, HK, GU], // TODO should not be needed (HA better than HK)
+                // [HZ, SU, HA, G9], // covered by [HZ, SU, H8, G9]
+                // [HZ, SU, HA, G7], // covered by [HZ, SU, H8, G7]
+                // [HZ, SU, HA, SK], // covered by [HZ, SU, H8, SK]
+                // [HZ, SU, HA, S8], // covered by [HZ, SU, H8, S8]
+                // [HZ, SU, HK, GU], // covered by [HZ, SU, HA, GU]
                 // [HZ, SU, HK, GK], // covered by [HZ, SU, H., GO]
                 // [HZ, SU, HK, GO], // covered by [.., .., .., G9]
-                [HZ, SU, HK, G9],
-                [HZ, SU, HK, G7],
-                [HZ, SU, HK, SK],
-                [HZ, SU, HK, S8],
-                [HZ, SU, H8, GU],
+                // [HZ, SU, HK, G9], // covered by [HZ, SU, H8, G9]
+                // [HZ, SU, HK, G7], // covered by [HZ, SU, H8, G7]
+                // [HZ, SU, HK, SK], // covered by [HZ, SU, H8, SK]
+                // [HZ, SU, HK, S8], // covered by [HZ, SU, H8, S8]
+                // [HZ, SU, H8, GU], // covered by [HZ, SU, HA, GU]
                 // [HZ, SU, H8, GK], // covered by [HZ, SU, H., GO]
                 // [HZ, SU, H8, GO], // covered by [.., .., .., G9]
                 [HZ, SU, H8, G9],
@@ -2704,18 +2704,18 @@ mod tests {
                 [HZ, EZ, HA, GU],
                 // [HZ, EZ, HA, GK], // covered by [HZ, .., .., GO]
                 // [HZ, EZ, HA, GO], // covered by [.., .., .., G9]
-                [HZ, EZ, HA, G9],
-                [HZ, EZ, HA, G7],
-                [HZ, EZ, HA, SK],
-                [HZ, EZ, HA, S8],
-                [HZ, EZ, HK, GU], // TODO should not be needed (HA better than HK)
+                // [HZ, EZ, HA, G9], // covered by [HZ, EZ, H8, G9]
+                // [HZ, EZ, HA, G7], // covered by [HZ, EZ, H8, G7]
+                // [HZ, EZ, HA, SK], // covered by [HZ, EZ, H8, SK]
+                // [HZ, EZ, HA, S8], // covered by [HZ, EZ, G8, S8]
+                // [HZ, EZ, HK, GU], // covered by [EZ, EZ, HA, GU] (HA better than HK)
                 // [HZ, EZ, HK, GK], // covered by [HZ, ... .., GO]
                 // [HZ, EZ, HK, GO], // covered by [.., .., .., G9]
-                [HZ, EZ, HK, G9],
-                [HZ, EZ, HK, G7],
-                [HZ, EZ, HK, SK],
-                [HZ, EZ, HK, S8],
-                [HZ, EZ, H8, GU],
+                // [HZ, EZ, HK, G9], // covered by [HZ, EZ, H8, G9]
+                // [HZ, EZ, HK, G7], // covered by [HZ, EZ, H8, G7]
+                // [HZ, EZ, HK, SK], // covered by [HZ, EZ, H8, SK]
+                // [HZ, EZ, HK, S8], // covered by [HZ, EZ, H8, S8]
+                // [HZ, EZ, H8, GU], // covered by [HZ, EZ, HA, GU]
                 // [HZ, EZ, H8, GK], // covered by [HZ, ... .., GO]
                 // [HZ, EZ, H8, GO], // covered by [.., .., .., G9]
                 [HZ, EZ, H8, G9],
@@ -2725,18 +2725,18 @@ mod tests {
                 [HZ, EK, HA, GU],
                 // [HZ, EK, HA, GK], // covered by [.., .., .., GO]
                 // [HZ, EK, HA, GO], // covered by [.., .., .., G9]
-                [HZ, EK, HA, G9],
-                [HZ, EK, HA, G7],
-                [HZ, EK, HA, SK],
-                [HZ, EK, HA, S8],
-                [HZ, EK, HK, GU], // TODO should not be needed (HA better than HK)
+                // [HZ, EK, HA, G9], // covered by [HZ, EK, H8, G9]
+                // [HZ, EK, HA, G7], // covered by [HZ, EK, H8, G7]
+                // [HZ, EK, HA, SK], // covered by [HZ, EK, H8, SK]
+                // [HZ, EK, HA, S8], // covered by [HZ, EK, H8, S8]
+                // [HZ, EK, HK, GU], // covered by [HZ, EK, HA, GU]
                 // [HZ, EK, HK, GK], // covered by [.., .., .., GO]
                 // [HZ, EK, HK, GO], // covered by [.., .., .., G9]
-                [HZ, EK, HK, G9],
-                [HZ, EK, HK, G7],
-                [HZ, EK, HK, SK],
-                [HZ, EK, HK, S8],
-                [HZ, EK, H8, GU],
+                // [HZ, EK, HK, G9], // covered by [HZ, EK, H8, G9]
+                // [HZ, EK, HK, G7], // covered by [HZ, EK, H8, G7]
+                // [HZ, EK, HK, SK], // covered by [HZ, EK, H8, SK]
+                // [HZ, EK, HK, S8], // covered by [HZ, EK, H8, S8]
+                // [HZ, EK, H8, GU], // covered by [HZ, EK, HA, GU]
                 // [HZ, EK, H8, GK], // covered by [.., .., .., GO]
                 // [HZ, EK, H8, GO], // covered by [.., .., .., G9]
                 [HZ, EK, H8, G9],
@@ -2746,18 +2746,18 @@ mod tests {
                 [HZ, EO, HA, GU],
                 // [HZ, EO, HA, GK], // covered by [.., .., .., GO]
                 // [HZ, EO, HA, GO], // covered by [.., .., .., G9]
-                [HZ, EO, HA, G9],
-                [HZ, EO, HA, G7],
-                [HZ, EO, HA, SK],
-                [HZ, EO, HA, S8],
-                [HZ, EO, HK, GU], // TODO should not be needed (HA better than HK)
+                // [HZ, EO, HA, G9], // covered by [HZ, EO, H8, G9]
+                // [HZ, EO, HA, G7], // covered by [HZ, EO, H8, G7]
+                // [HZ, EO, HA, SK], // covered by [HZ, EO, H8, SK]
+                // [HZ, EO, HA, S8], // covered by [HZ, EO, H8, S8]
+                // [HZ, EO, HK, GU], // covered by [HZ, EO, HA, GU]
                 // [HZ, EO, HK, GK], // covered by [.., .., .., GO]
                 // [HZ, EO, HK, GO], // covered by [.., .., .., G9]
-                [HZ, EO, HK, G9],
-                [HZ, EO, HK, G7],
-                [HZ, EO, HK, SK],
-                [HZ, EO, HK, S8],
-                [HZ, EO, H8, GU],
+                // [HZ, EO, HK, G9], // covered by [HZ, EO, H8, G9]
+                // [HZ, EO, HK, G7], // covered by [HZ, EO, H8, G7]
+                // [HZ, EO, HK, SK], // covered by [HZ, EO, H8, SK]
+                // [HZ, EO, HK, S8], // covered by [HZ, EO, H8, S8]
+                // [HZ, EO, H8, GU], // covered by [HZ, EO, HA, GU]
                 // [HZ, EO, H8, GK], // covered by [.., .., .., GO]
                 // [HZ, EO, H8, GO], // covered by [.., .., .., G9]
                 [HZ, EO, H8, G9],
@@ -2767,18 +2767,18 @@ mod tests {
                 [HZ, E8, HA, GU],
                 // [HZ, E8, HA, GK], // covered by [.., .., .., GO]
                 // [HZ, E8, HA, GO], // covered by [.., .., .., G9]
-                [HZ, E8, HA, G9],
-                [HZ, E8, HA, G7],
-                [HZ, E8, HA, SK],
-                [HZ, E8, HA, S8],
-                [HZ, E8, HK, GU], // TODO should not be needed (HA better than HK)
+                // [HZ, E8, HA, G9], // covered by [HZ, E8, H8, G9]
+                // [HZ, E8, HA, G7], // covered by [HZ, E8, H8, G7]
+                // [HZ, E8, HA, SK], // covered by [HZ, E8, H8, SK]
+                // [HZ, E8, HA, S8], // covered by [HZ, E8, H8, S8]
+                // [HZ, E8, HK, GU], // covered by [HZ, E8, HA, GU]
                 // [HZ, E8, HK, GK], // covered by [.., .., .., GO]
                 // [HZ, E8, HK, GO], // covered by [.., .., .., G9]
-                [HZ, E8, HK, G9],
-                [HZ, E8, HK, G7],
-                [HZ, E8, HK, SK],
-                [HZ, E8, HK, S8],
-                [HZ, E8, H8, GU],
+                // [HZ, E8, HK, G9], // covered by [HZ, E8, H8, G9]
+                // [HZ, E8, HK, G7], // covered by [HZ, E8, H8, G7]
+                // [HZ, E8, HK, SK], // covered by [HZ, E8, H8, SK]
+                // [HZ, E8, HK, S8], // covered by [HZ, E8, H8, S8]
+                // [HZ, E8, H8, GU], // covered by [HZ, E8, HA, GU]
                 // [HZ, E8, H8, GK], // covered by [.., .., .., GO]
                 // [HZ, E8, H8, GO], // covered by [.., .., .., G9]
                 [HZ, E8, H8, G9],
