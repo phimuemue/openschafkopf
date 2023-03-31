@@ -409,12 +409,12 @@ impl SStichTrie {
         cardspartition_completed_cards: &SCardsPartition,
         playerparties: &SPlayerPartiesTable,
     ) -> Self {
-        return Self::new_from_full_stichs(
-            Self::outer_make(
-                (ahand, stichseq),
-                (rules, playerparties),
-            )
-        );
+        // return Self::new_from_full_stichs(
+        //     Self::outer_make(
+        //         (ahand, stichseq),
+        //         (rules, playerparties),
+        //     )
+        // );
         fn for_each_allowed_card(
             n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
             (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
