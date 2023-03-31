@@ -42,6 +42,15 @@ impl SStichTrie {
         stichtrie
     }
 
+    fn new_from_full_stichs<Stich: std::borrow::Borrow<SStich>>(itstich: impl IntoIterator<Item=Stich>) -> Self {
+        unwrap!(
+            itstich
+                .into_iter()
+                .map(|stich| SStichTrie::new_from_full_stich(SFullStich::new(stich.borrow())))
+                .reduce(mutate_return!(SStichTrie::merge))
+        )
+    }
+
     fn push(&mut self, card: ECard, trie_child: SStichTrie) {
         debug_assert!(self.depth_in_edges()==0 || self.depth_in_edges()==trie_child.depth_in_edges()+1);
         self.vectplcardtrie.push((card, trie_child));
