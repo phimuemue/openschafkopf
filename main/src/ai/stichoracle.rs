@@ -418,24 +418,27 @@ mod tests {
                 ))
                 .collect::<std::collections::HashSet<_>>();
             //assert_eq!(setstich_oracle.len(), setstich_check.len());
-            let internal_assert = |setstich: &std::collections::HashSet<SStich>, stich, str_msg| {
+            let assert_is_subset_of = |
+                setstich_subset: &std::collections::HashSet<SStich>,
+                setstich_superset: &std::collections::HashSet<SStich>,
+                str_msg,
+            | {
+                let vecstich_not_in_superset = setstich_subset.iter()
+                    .filter(|stich_subset| !setstich_superset.contains(stich_subset)) 
+                    .collect::<Vec<_>>();
                 assert!(
-                    setstich.contains(stich),
-                    "\nRules:{} von {}\nHands:\n {}\nStichseq: {}\nStich{}\n{}\n",
+                    vecstich_not_in_superset.is_empty(),
+                    "\nRules:{} von {}\nHands:\n {}\nStichseq: {}\nStichs:\n{:?}\n{}\n",
                     rules,
                     unwrap!(rules.playerindex()),
                     display_card_slices(ahand, &rules, "\n "),
                     stichseq.visible_stichs().iter().join(", "),
-                    stich,
+                    vecstich_not_in_superset,
                     str_msg,
                 );
             };
-            for stich_oracle in setstich_oracle.iter() {
-                internal_assert(&setstich_check, stich_oracle, "setstich_check missing stich");
-            }
-            for stich_check in setstich_check.iter() {
-                internal_assert(&setstich_oracle, stich_check, "setstich_oracle missing stich");
-            }
+            assert_is_subset_of(&setstich_check, &setstich_oracle, "oracle missing stichs");
+            assert_is_subset_of(&setstich_oracle, &setstich_check, "oracle contains unexpected stichs");
             assert_eq!(setstich_oracle, setstich_check);
         }
         assert_stichoracle(
