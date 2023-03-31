@@ -20,6 +20,11 @@ pub struct SStichTrie {
     vectplcardtrie: Box<ArrayVec<(ECard, SStichTrie), {EKurzLang::max_cards_per_player()}>>, // TODO? improve
 }
 
+#[cfg(test)]
+macro_rules! test_dbg{($e:expr) => {dbg!($e)}}
+#[cfg(not(test))]
+macro_rules! test_dbg{($e:expr) => {$e}}
+
 fn iterate_chain(
     cardspartition: &SCardsPartition,
     veccard: &mut SHandVector,
@@ -58,7 +63,7 @@ fn chains(cardspartition: &SCardsPartition, slccard: &[ECard]) -> Vec<Vec<ECard>
     }
     assert!(!vecveccard.is_empty());
     assert!(vecveccard.iter().all(|veccard| !veccard.is_empty()));
-    dbg!(slccard, &vecveccard);
+    test_dbg!((slccard, &vecveccard));
     vecveccard
 }
 
@@ -200,7 +205,7 @@ impl SStichTrie {
         (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
         (rules, playerparties): (&dyn TRules, &SPlayerPartiesTable),
     ) -> Vec<SStich> {
-        dbg!("outer_make", display_card_slices(&ahand, &rules, ", "), &stichseq);
+        test_dbg!(("outer_make", display_card_slices(&ahand, &rules, ", "), &stichseq));
         let vecstich_all = Self::make_simple(
             (ahand, stichseq),
             rules,
@@ -247,8 +252,8 @@ impl SStichTrie {
                             // => Thus, there is another person epi_other (different from both epi and epi_card)
                             //    who must winn the stich, meaning we can exclude epi's card from
                             //    the chain.
-                            dbg!(stichseq.current_stich());
-                            cardspartition.remove_from_chain(dbg!(card_surely_played));
+                            test_dbg!(stichseq.current_stich());
+                            cardspartition.remove_from_chain(test_dbg!(card_surely_played));
                         }
                     }
                 }
@@ -326,8 +331,8 @@ impl SStichTrie {
                     },
                 )
             };
-            let stichtrie_lo = dbg!(Self::new_from_full_stichs(make_lo_or_hi(ELoHi::Lo)));
-            let stichtrie_hi = dbg!(Self::new_from_full_stichs(make_lo_or_hi(ELoHi::Hi)));
+            let stichtrie_lo = test_dbg!(Self::new_from_full_stichs(make_lo_or_hi(ELoHi::Lo)));
+            let stichtrie_hi = test_dbg!(Self::new_from_full_stichs(make_lo_or_hi(ELoHi::Hi)));
             assert_eq!(
                 stichtrie_lo.traverse_trie(epi_stich_first).len(),
                 stichtrie_hi.traverse_trie(epi_stich_first).len(),
@@ -344,7 +349,7 @@ impl SStichTrie {
                 }
             }
             assert!(!vecstich.is_empty());
-            dbg!(vecstich)
+            test_dbg!(vecstich)
         } else {
             // Stich may go to either team, remaining players may belong to either team.
             // => For each chain, we must consider all different-point cards.
@@ -369,7 +374,7 @@ impl SStichTrie {
                     .map(|stich| playerparties.is_primary_party(rules.winner_index(SFullStich::new(stich))))
                     .all_equal_item()
                 {
-                    dbg!(vec![get_min_or_max_points(
+                    test_dbg!(vec![get_min_or_max_points(
                         if playerparties.is_primary_party(epi_card)==b_stich_winner_is_primary {
                             ELoHi::Hi
                         } else {
@@ -404,6 +409,12 @@ impl SStichTrie {
         cardspartition_completed_cards: &SCardsPartition,
         playerparties: &SPlayerPartiesTable,
     ) -> Self {
+        return Self::new_from_full_stichs(
+            Self::outer_make(
+                (ahand, stichseq),
+                (rules, playerparties),
+            )
+        );
         fn for_each_allowed_card(
             n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
             (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
