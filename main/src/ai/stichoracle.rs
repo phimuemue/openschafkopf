@@ -39,6 +39,29 @@ fn iterate_chain(
     }
 }
 
+fn chains(cardspartition: &SCardsPartition, slccard: &[ECard]) -> Vec<Vec<ECard>> {
+    let mut vecveccard = Vec::new();
+    let mut veccard_src = slccard.iter().copied().collect::<SHandVector>();
+    while !veccard_src.is_empty() {
+        let n_veccard_src_len_before = veccard_src.len();
+        let card_representative = veccard_src[0];
+        let mut veccard_chain = Vec::new();
+        iterate_chain(
+            cardspartition,
+            &mut veccard_src,
+            card_representative,
+            |card_chain| veccard_chain.push(card_chain),
+        );
+        assert!(!veccard_chain.is_empty());
+        vecveccard.push(veccard_chain);
+        assert!(veccard_src.len() < n_veccard_src_len_before);
+    }
+    assert!(!vecveccard.is_empty());
+    assert!(vecveccard.iter().all(|veccard| !veccard.is_empty()));
+    dbg!(slccard, &vecveccard);
+    vecveccard
+}
+
 impl SStichTrie {
     fn new() -> Self {
         let slf = Self {
@@ -171,6 +194,208 @@ impl SStichTrie {
             rules,
             fn_filter,
         )
+    }
+
+    fn outer_make(
+        (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
+        (rules, playerparties): (&dyn TRules, &SPlayerPartiesTable),
+    ) -> Vec<SStich> {
+        dbg!("outer_make", display_card_slices(&ahand, &rules, ", "), &stichseq);
+        let vecstich_all = Self::make_simple(
+            (ahand, stichseq),
+            rules,
+            /*fn_filter*/&|_tplahandstichseq, veccard| veccard, // no filtering
+        );
+        assert!(!vecstich_all.is_empty());
+        assert!(vecstich_all.iter().all(SStich::is_full));
+        fn compute_cardspartition(
+            (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
+            rules: &dyn TRules,
+        ) -> SCardsPartition { // TODO (a part of) cardspartition should be received as an input.
+            let vecstich_all = SStichTrie::make_simple(
+                (&mut ahand.clone(), &mut stichseq.clone()),
+                rules,
+                /*fn_filter*/&|_tplahandstichseq, veccard| veccard, // no filtering
+            );
+            let mut cardspartition = unwrap!(rules.only_minmax_points_when_on_same_hand(
+                &SRuleStateCacheFixed::new(ahand, stichseq),
+            )).0;
+            for (_epi, &card) in stichseq.completed_cards() {
+                cardspartition.remove_from_chain(card);
+            }
+            let mut mapepib_is_stich_winner = EPlayerIndex::map_from_fn(|_epi| false);
+            for stich in vecstich_all.iter() {
+                mapepib_is_stich_winner[rules.winner_index(SFullStich::new(stich))] = true;
+            }
+            for epi in EPlayerIndex::values()
+                .map(|epi| stichseq.current_stich().first_playerindex().wrapping_add(epi.to_usize()))
+            {
+                let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
+                if epi!=epi_card { // do not remove own cards from chains
+                    let ocard_surely_played = vecstich_all.iter()
+                        .map(|stich| *unwrap!(stich.get(epi)))
+                        .all_equal_item();
+                    if let Some(&card_visible) = stichseq.current_stich().get(epi) {
+                        assert_eq!(ocard_surely_played, Some(card_visible));
+                    }
+                    if let Some(card_surely_played) = ocard_surely_played {
+                        if !mapepib_is_stich_winner[epi] {
+                            // if epi never wins stich, there's *always* a higher card in the stich.
+                            // => If the only person having higher card than epi was epi_card and
+                            //    epi_card would hold the cards after epi's card again, then epi
+                            //    could also win the stich => contradiction.
+                            // => Thus, there is another person epi_other (different from both epi and epi_card)
+                            //    who must winn the stich, meaning we can exclude epi's card from
+                            //    the chain.
+                            dbg!(stichseq.current_stich());
+                            cardspartition.remove_from_chain(dbg!(card_surely_played));
+                        }
+                    }
+                }
+            }
+            cardspartition
+        }
+        fn get_min_or_max_points(elohi: ELoHi, veccard: Vec<ECard>) -> ECard {
+            // TODO assert that veccard is ordered from high to low cards.
+            let mut itcard = veccard.into_iter();
+            let mut card_min_or_max = unwrap!(itcard.next());
+            // do not use Iterator::max_by_key/min_by_key: They yield the last/first max/min, respectively. We always traverse a chain from high to low cards, and choose the highest max/min.
+            for card in itcard {
+                if match elohi {
+                    ELoHi::Lo => points_card(card)<points_card(card_min_or_max),
+                    ELoHi::Hi => points_card(card)>points_card(card_min_or_max),
+                } {
+                    card_min_or_max = card;
+                }
+            }
+            card_min_or_max
+        }
+        if let Some(b_stich_winner_is_primary) = vecstich_all.iter()
+            .map(|stich| playerparties.is_primary_party(rules.winner_index(SFullStich::new(stich))))
+            .all_equal_item()
+        {
+            // Stich will surely go to one team.
+            // => Players belonging to that team must play point-richest cards from each chain.
+            // => Players not belonging to that team must play point-poor cards from each chain.
+            Self::make_simple(
+                (ahand, stichseq),
+                rules,
+                /*fn_filter*/&|(ahand, stichseq), veccard| {
+                    let cardspartition = compute_cardspartition(
+                        (ahand, stichseq),
+                        rules,
+                    );
+                    chains(&cardspartition, &veccard)
+                        .into_iter()
+                        .map(|veccard_chain|
+                            get_min_or_max_points(
+                                if playerparties.is_primary_party(unwrap!(stichseq.current_stich().current_playerindex()))==b_stich_winner_is_primary {
+                                    ELoHi::Hi
+                                } else {
+                                    ELoHi::Lo
+                                },
+                                veccard_chain,
+                            )
+                        )
+                        .collect()
+                },
+            )
+        } else if let Some(b_remaining_players_primary) = EPlayerIndex::values()
+            .map(|epi| stichseq.current_stich().first_playerindex().wrapping_add(epi.to_usize()))
+            .skip(stichseq.current_stich().size())
+            .map(|epi| playerparties.is_primary_party(epi))
+            .all_equal_item()
+        {
+            // All remaining players (starting with epi_card) are in the same team.
+            // => We only need to consider the point-richest and point-poorest card from each equivalence chain.
+            let epi_stich_first = stichseq.current_stich().first_playerindex();
+            let make_lo_or_hi = |elohi| {
+                Self::make_simple(
+                    (&mut ahand.clone(), &mut stichseq.clone()),
+                    rules,
+                    /*fn_filter*/&|(ahand, stichseq), veccard| {
+                        let cardspartition = compute_cardspartition(
+                            (ahand, stichseq),
+                            rules,
+                        );
+                        assert_eq!(playerparties.is_primary_party(unwrap!(stichseq.current_stich().current_playerindex())), b_remaining_players_primary);
+                        chains(&cardspartition, &veccard)
+                            .into_iter()
+                            .map(|veccard_chain| get_min_or_max_points(elohi, veccard_chain))
+                            .collect()
+                    },
+                )
+            };
+            let stichtrie_lo = dbg!(Self::new_from_full_stichs(make_lo_or_hi(ELoHi::Lo)));
+            let stichtrie_hi = dbg!(Self::new_from_full_stichs(make_lo_or_hi(ELoHi::Hi)));
+            assert_eq!(
+                stichtrie_lo.traverse_trie(epi_stich_first).len(),
+                stichtrie_hi.traverse_trie(epi_stich_first).len(),
+            );
+            let mut vecstich = Vec::new();
+            for stich in stichtrie_lo.traverse_trie(epi_stich_first) {
+                if playerparties.is_primary_party(rules.winner_index(SFullStich::new(&stich)))!=b_remaining_players_primary {
+                    vecstich.push(stich);
+                }
+            }
+            for stich in stichtrie_hi.traverse_trie(epi_stich_first) {
+                if playerparties.is_primary_party(rules.winner_index(SFullStich::new(&stich)))==b_remaining_players_primary {
+                    vecstich.push(stich);
+                }
+            }
+            assert!(!vecstich.is_empty());
+            dbg!(vecstich)
+        } else {
+            // Stich may go to either team, remaining players may belong to either team.
+            // => For each chain, we must consider all different-point cards.
+            let mut vecstich = Vec::new();
+            let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
+            let cardspartition = compute_cardspartition((ahand, stichseq), rules);
+            for veccard_chain in chains(&cardspartition, &rules.all_allowed_cards(stichseq, &ahand[epi_card])) {
+                let vecstich_for_card_in_chain = {
+                    let card = veccard_chain[0];
+                    ahand[epi_card].play_card(card);
+                    let vecstich_for_card_in_chain = stichseq.zugeben_and_restore(card, rules, |stichseq|
+                        Self::make_simple(
+                            (ahand, stichseq),
+                            rules,
+                            /*fn_filter*/&|_epi, veccard| veccard, // no filtering
+                        )
+                    );
+                    ahand[epi_card].add_card(card);
+                    vecstich_for_card_in_chain
+                };
+                let veccard_chain_relevant = if let Some(b_stich_winner_is_primary) = vecstich_for_card_in_chain.iter()
+                    .map(|stich| playerparties.is_primary_party(rules.winner_index(SFullStich::new(stich))))
+                    .all_equal_item()
+                {
+                    dbg!(vec![get_min_or_max_points(
+                        if playerparties.is_primary_party(epi_card)==b_stich_winner_is_primary {
+                            ELoHi::Hi
+                        } else {
+                            ELoHi::Lo
+                        },
+                        veccard_chain,
+                    )])
+                } else {
+                    veccard_chain
+                };
+                let mut ab_points = [false; 12]; // TODO? couple with points_card
+                for card in veccard_chain_relevant {
+                    if assign_neq(&mut ab_points[points_card(card).as_num::<usize>()], true) {
+                        ahand[epi_card].play_card(card);
+                        vecstich.extend(stichseq.zugeben_and_restore(card, rules, |stichseq|
+                            Self::outer_make(
+                                (ahand, stichseq),
+                                (rules, playerparties),
+                            )
+                        ));
+                        ahand[epi_card].add_card(card);
+                    }
+                }
+            }
+            vecstich
+        }
     }
 
     pub fn new_with(
