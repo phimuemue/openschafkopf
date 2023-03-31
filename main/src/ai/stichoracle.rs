@@ -181,14 +181,12 @@ impl SStichTrie {
                 let mut vecstich = Vec::new();
                 let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
                 for card in fn_filter((ahand, stichseq), rules.all_allowed_cards(stichseq, &ahand[epi_card])) {
-                    ahand[epi_card].play_card(card);
-                    vecstich.extend(stichseq.zugeben_and_restore(card, rules, |stichseq| internal_make_simple(
+                    vecstich.extend(stichseq.zugeben_and_restore_with_hands(ahand, epi_card, card, rules, |ahand, stichseq| internal_make_simple(
                         n_depth - 1,
                         (ahand, stichseq),
                         rules,
                         fn_filter,
                     )));
-                    ahand[epi_card].add_card(card);
                 }
                 vecstich
             }
@@ -357,19 +355,13 @@ impl SStichTrie {
             let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
             let cardspartition = compute_cardspartition((ahand, stichseq), rules);
             for veccard_chain in chains(&cardspartition, &rules.all_allowed_cards(stichseq, &ahand[epi_card])) {
-                let vecstich_for_card_in_chain = {
-                    let card = veccard_chain[0];
-                    ahand[epi_card].play_card(card);
-                    let vecstich_for_card_in_chain = stichseq.zugeben_and_restore(card, rules, |stichseq|
-                        Self::make_simple(
-                            (ahand, stichseq),
-                            rules,
-                            /*fn_filter*/&|_epi, veccard| veccard, // no filtering
-                        )
-                    );
-                    ahand[epi_card].add_card(card);
-                    vecstich_for_card_in_chain
-                };
+                let vecstich_for_card_in_chain = stichseq.zugeben_and_restore_with_hands(ahand, epi_card, veccard_chain[0], rules, |ahand, stichseq|
+                    Self::make_simple(
+                        (ahand, stichseq),
+                        rules,
+                        /*fn_filter*/&|_epi, veccard| veccard, // no filtering
+                    )
+                );
                 if let Some(b_stich_winner_is_primary) = vecstich_for_card_in_chain.iter()
                     .map(|stich| playerparties.is_primary_party(rules.winner_index(SFullStich::new(stich))))
                     .all_equal_item()
@@ -385,14 +377,12 @@ impl SStichTrie {
                     let mut ab_points = [false; 12]; // TODO? couple with points_card
                     for card in veccard_chain_relevant {
                         if assign_neq(&mut ab_points[points_card(card).as_num::<usize>()], true) {
-                            ahand[epi_card].play_card(card);
-                            vecstich.extend(stichseq.zugeben_and_restore(card, rules, |stichseq|
+                            vecstich.extend(stichseq.zugeben_and_restore_with_hands(ahand, epi_card, card, rules, |ahand, stichseq|
                                 Self::outer_make(
                                     (ahand, stichseq),
                                     (rules, playerparties),
                                 )
                             ));
-                            ahand[epi_card].add_card(card);
                         }
                     }
                 } else if let Some(veccard_best_own_party) = {
@@ -453,14 +443,12 @@ impl SStichTrie {
                     let mut ab_points = [false; 12]; // TODO? couple with points_card
                     for card in veccard_chain {
                         if assign_neq(&mut ab_points[points_card(card).as_num::<usize>()], true) {
-                            ahand[epi_card].play_card(card);
-                            vecstich_2.extend(stichseq.zugeben_and_restore(card, rules, |stichseq|
+                            vecstich_2.extend(stichseq.zugeben_and_restore_with_hands(ahand, epi_card, card, rules, |ahand, stichseq|
                                 Self::outer_make(
                                     (ahand, stichseq),
                                     (rules, playerparties),
                                 )
                             ));
-                            ahand[epi_card].add_card(card);
                             if card!=card_richest {
                                 veccard_non_richest.push(card);
                             }
@@ -477,14 +465,12 @@ impl SStichTrie {
                     let mut ab_points = [false; 12]; // TODO? couple with points_card
                     for card in veccard_chain {
                         if assign_neq(&mut ab_points[points_card(card).as_num::<usize>()], true) {
-                            ahand[epi_card].play_card(card);
-                            vecstich.extend(stichseq.zugeben_and_restore(card, rules, |stichseq|
+                            vecstich.extend(stichseq.zugeben_and_restore_with_hands(ahand, epi_card, card, rules, |ahand, stichseq|
                                 Self::outer_make(
                                     (ahand, stichseq),
                                     (rules, playerparties),
                                 )
                             ));
-                            ahand[epi_card].add_card(card);
                         }
                     }
                 };
