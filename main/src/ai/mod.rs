@@ -226,6 +226,9 @@ impl SPayoutStats {
             ));
         n_payout_sum.as_num::<f32>() / n_count_sum.as_num::<f32>()
     }
+    pub fn histogram(&self) -> &BTreeMap<isize, usize> {
+        &self.mapnn_histogram
+    }
     pub fn counts(&self) -> EnumMap<std::cmp::Ordering, usize> {
         let mut mapordn_counts = std::cmp::Ordering::map_from_fn(|_ord| 0);
         for (n_payout, n_count) in self.mapnn_histogram.iter() {

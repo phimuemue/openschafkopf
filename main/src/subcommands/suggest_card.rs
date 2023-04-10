@@ -5,6 +5,8 @@ use itertools::*;
 use crate::game_analysis::determine_best_card_table::{table, internal_table};
 use rayon::prelude::*;
 use crate::rules::{SExpensifiers};
+use serde::Serialize;
+use std::collections::BTreeMap;
 
 use super::common_given_game::*;
 
@@ -47,9 +49,24 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
             .long("no-details")
             .help("Do not investigate cards separately")
         )
+        .arg(clap::Arg::new("json")
+            .long("json")
+            .help("Output result as json")
+        )
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
+    #[derive(new, Serialize)]
+    struct SJsonTableLine {
+        ostr_header: Option<String>,
+        amapnn_histogram: [BTreeMap<isize/*n_payout*/, usize/*n_count*/>; EMinMaxStrategy::SIZE],
+    }
+    #[derive(new, Serialize)]
+    struct SJson {
+        str_rules: String,
+        astr_hand: [String; EPlayerIndex::SIZE],
+        vectableline: Vec<SJsonTableLine>,
+    }
     with_common_args(
         clapmatches,
         |itahand, rules, stichseq, ahand_fixed_with_holes, epi_position, b_verbose| {
@@ -79,6 +96,32 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     )
                 } else {
                     f_payout
+                }
+            };
+            let json_histograms = |payoutstatsperstrategy: &SPayoutStatsPerStrategy| {
+                payoutstatsperstrategy.0.map(|payoutstats| 
+                    payoutstats.histogram().iter()
+                        .map(|(n_payout, n_count)| (
+                            fn_human_readable_payout(n_payout.as_num::<f32>()).as_num::<isize>(),
+                            *n_count
+                        ))
+                        .collect()
+                ).into_raw()
+            };
+            let print_json = |vectableline| {
+                if clapmatches.is_present("json") {
+                    println!("{}", unwrap!(serde_json::to_string(
+                        &SJson::new(
+                            /*str_rules*/rules.to_string(),
+                            /*str_hand*/ahand_fixed_with_holes.map(|hand|
+                                SDisplayCardSlice::new(hand.cards().clone(), &rules).to_string()
+                            ).into_raw(),
+                            vectableline,
+                        ),
+                    )));
+                    true
+                } else {
+                    false
                 }
             };
             let expensifiers = SExpensifiers::new_no_stock_doublings_stoss(); // TODO? make customizable
@@ -191,12 +234,19 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         ))
                 }}}
                 let mapemmstrategypaystats = forward_with_args!(forward);
-                // TODO this prints a table for each iterated rules, but we want to only print one table
-                internal_table(
-                    vec![(rules, mapemmstrategypaystats)],
-                    /*b_group*/false,
-                    &fn_human_readable_payout,
-                ).print(b_verbose);
+                // TODO this prints a table/json for each iterated rules, but we want to only print one table
+                if !print_json(
+                    /*vectableline*/vec![SJsonTableLine::new(
+                        /*ostr_header*/None, // already given by str_rules
+                        /*amapnn_histogram*/json_histograms(&mapemmstrategypaystats),
+                    )],
+                ) {
+                    internal_table(
+                        vec![(rules, mapemmstrategypaystats)],
+                        /*b_group*/false,
+                        &fn_human_readable_payout,
+                    ).print(b_verbose);
+                }
             } else {
                 let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
                     macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
@@ -235,14 +285,22 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     }}}
                     forward_with_args!(forward)
                 }.ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
-                table(
-                    &determinebestcardresult,
-                    rules,
-                    &fn_human_readable_payout,
-                )
-                    .print(
-                        b_verbose,
-                    );
+                if !print_json(
+                    /*vectableline*/determinebestcardresult.cards_and_ts()
+                        .map(|(card, payoutstatsperstrategy)|
+                            SJsonTableLine::new(
+                                /*ostr_header*/Some(card.to_string()),
+                                /*amapnn_histogram*/json_histograms(payoutstatsperstrategy),
+                            )
+                        )
+                        .collect(),
+                ) {
+                    table(
+                        &determinebestcardresult,
+                        rules,
+                        &fn_human_readable_payout,
+                    ).print(b_verbose);
+                }
             }
             Ok(())
         }
