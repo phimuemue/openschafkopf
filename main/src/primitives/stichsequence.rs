@@ -144,6 +144,17 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         r
     }
 
+    pub fn zugeben_and_restore_with_hands<R>(&mut self, ahand: &mut EnumMap<EPlayerIndex, SHand>, epi: EPlayerIndex, card: ECard, winnerindex: &(impl TWinnerIndex + ?Sized), func: impl FnOnce(&mut EnumMap<EPlayerIndex, SHand>, &mut Self)->R) -> R {
+        ahand[epi].play_card(card);
+        let r = self.zugeben_and_restore(
+            card,
+            winnerindex,
+            |stichseq| func(ahand, stichseq),
+        );
+        ahand[epi].add_card(card);
+        r
+    }
+
     pub fn visible_stichs(&self) -> &[SStich] {
         &self.vecstich[0..self.vecstich.len().min(self.ekurzlang.cards_per_player())]
     }

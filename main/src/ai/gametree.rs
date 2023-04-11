@@ -333,14 +333,11 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                     ahand[epi].cards(),
                     &rules.all_allowed_cards($stichseq, &ahand[epi])
                 )[0];
-                //ahand[epi].play_card(card); // not necessary
-                let output = $stichseq.zugeben_and_restore(
+                $stichseq.zugeben_and_restore/*zugeben_and_restore_with_hands not necessary; leave ahand untouched*/(
                     card,
                     rules,
                     |stichseq| {for_each_allowed_card!(($($i_offset,)*), stichseq)}
-                );
-                //ahand[epi].add_card(card); // not necessary
-                output
+                )
             }};
             ((), $stichseq: expr) => {{
                 let unregisterstich = rulestatecache.register_stich(
@@ -373,8 +370,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             foreachsnapshot.combine_outputs(
                 epi_current,
                 veccard_allowed.into_iter().map(|card| {
-                    ahand[epi_current].play_card(card);
-                    let output = stichseq.zugeben_and_restore(card, rules, |stichseq| {
+                    let output = stichseq.zugeben_and_restore_with_hands(ahand, epi_current, card, rules, |ahand, stichseq| {
                         macro_rules! next_step {($func_filter_allowed_cards:expr, $snapshotcache:expr) => {explore_snapshots_internal(
                             (ahand, stichseq),
                             rules,
@@ -421,7 +417,6 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                             next_step!(func_filter_allowed_cards, snapshotcache)
                         }
                     });
-                    ahand[epi_current].add_card(card);
                     (card, output)
                 })
             )
