@@ -30,13 +30,10 @@ fn test_determine_best_card() {
         ))),
     );
     fn play_stichs(game: &mut SGame, slctplepistich: &[(EPlayerIndex, [ECard; 4])]) {
-        for (epi_stich_first, acard_stich) in slctplepistich.iter() {
-            for (epi, card) in EPlayerIndex::values()
-                .map(|epi| epi.wrapping_add(epi_stich_first.to_usize()))
-                .zip_eq(acard_stich.iter())
-            {
-                unwrap!(game.zugeben(*card, epi));
-            }
+        for (epi, card) in slctplepistich.iter()
+            .flat_map(|&(epi_first, acard)| SStich::new_full(epi_first, acard))
+        {
+            unwrap!(game.zugeben(card, epi));
         }
     }
     play_stichs(&mut game, &[
