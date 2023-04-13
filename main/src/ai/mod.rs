@@ -299,10 +299,7 @@ pub fn determine_best_card<
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, ECard) + std::marker::Sync),
-) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>>
-    where
-        ForEachSnapshot::Output: std::fmt::Debug + Send,
-{
+) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>> {
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
         ECard::map_from_fn(|_card| None),
