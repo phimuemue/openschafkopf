@@ -7,6 +7,7 @@ pub mod stichoracle;
 pub mod cardspartition;
 
 use crate::ai::{handiterators::*, gametree::*};
+pub use gametree::SPerMinMaxStrategy;
 use crate::game::*;
 use crate::primitives::*;
 use crate::rules::*;
@@ -160,7 +161,7 @@ impl SAi {
                             .take(n_suggest_card_samples)
                     },
                 },
-            )).cards_with_maximum_value(/*TODO? good idea*/SPayoutStatsPerStrategy::compare_canonical).0.first())
+            )).cards_with_maximum_value(/*TODO? good idea*/SPerMinMaxStrategy::<SPayoutStats>::compare_canonical).0.first())
         }
     }
 }
@@ -238,9 +239,7 @@ impl SPayoutStats {
     }
 }
 
-pub type SPayoutStatsPerStrategy = SPerMinMaxStrategy<SPayoutStats>;
-
-impl SPayoutStatsPerStrategy {
+impl SPerMinMaxStrategy<SPayoutStats> {
     fn accumulate(&mut self, paystats: Self) {
         for emmstrategy in EMinMaxStrategy::values() {
             self.0[emmstrategy].accumulate(&paystats.0[emmstrategy]);
@@ -248,7 +247,7 @@ impl SPayoutStatsPerStrategy {
     }
 }
 
-impl SPayoutStatsPerStrategy {
+impl SPerMinMaxStrategy<SPayoutStats> {
     pub fn compare_canonical(&self, other: &Self) -> std::cmp::Ordering {
         use std::cmp::Ordering::*;
         let internal_cmp = |emmstrategy| {
@@ -299,7 +298,7 @@ pub fn determine_best_card<
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, ECard) + std::marker::Sync),
-) -> Option<SDetermineBestCardResult<SPayoutStatsPerStrategy>> {
+) -> Option<SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats>>> {
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
         ECard::map_from_fn(|_card| None),
@@ -343,7 +342,7 @@ pub fn determine_best_card<
                     &mut visualizer,
                 )
             };
-            let payoutstats = SPerMinMaxStrategy( // TODO should be SPayoutStatsPerStrategy
+            let payoutstats = SPerMinMaxStrategy(
                 EMinMaxStrategy::map_from_fn(|emmstrategy| {
                     SPayoutStats::new_1(output.0[emmstrategy][epi_current])
                 })

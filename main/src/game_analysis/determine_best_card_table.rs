@@ -1,4 +1,4 @@
-use crate::ai::{SDetermineBestCardResult, SPayoutStats, SPayoutStatsPerStrategy, gametree::EMinMaxStrategy};
+use crate::ai::{SDetermineBestCardResult, SPayoutStats, SPerMinMaxStrategy, gametree::EMinMaxStrategy};
 use crate::primitives::*;
 use itertools::*;
 use crate::util::*;
@@ -33,7 +33,7 @@ pub struct SPayoutStatsTable<T> {
     mapemmstrategyaformatinfo: EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>,
 }
 
-pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPayoutStatsPerStrategy>>(
+pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategy<SPayoutStats>>>(
     mut vectpayoutstatsperstrategy: Vec<(T, PayoutStatsPerStrategy)>,
     b_group: bool,
     fn_human_readable_payout: &dyn Fn(f32) -> f32,
@@ -110,7 +110,7 @@ pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPayoutStatsPerStrategy>
 }
 
 pub fn table(
-    determinebestcardresult: &SDetermineBestCardResult<SPayoutStatsPerStrategy>,
+    determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats>>,
     rules: &dyn TRules,
     fn_human_readable_payout: &dyn Fn(f32) -> f32,
 ) -> SPayoutStatsTable<ECard> {

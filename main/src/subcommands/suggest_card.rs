@@ -98,7 +98,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     f_payout
                 }
             };
-            let json_histograms = |payoutstatsperstrategy: &SPayoutStatsPerStrategy| {
+            let json_histograms = |payoutstatsperstrategy: &SPerMinMaxStrategy<SPayoutStats>| {
                 payoutstatsperstrategy.0.map(|payoutstats| 
                     payoutstats.histogram().iter()
                         .map(|(n_payout, n_count)| (
