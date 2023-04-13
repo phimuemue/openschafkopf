@@ -2439,6 +2439,7 @@ mod tests {
                                 /*fn_snapshotcache*/SSnapshotCacheNone::factory(),
                                 SNoVisualization::factory(),
                                 /*fn_inspect*/&|_,_,_,_| {},
+                                unwrap!(game.stichseq.current_stich().current_playerindex()),
                             ))
                                 .cards_and_ts()
                                 .map(|(card, payoutstatsperstrategy)| (

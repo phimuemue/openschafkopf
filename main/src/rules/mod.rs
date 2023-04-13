@@ -654,6 +654,7 @@ fn test_snapshotcache() {
                                 $fn_snapshotcache,
                                 SNoVisualization::factory(),
                                 /*fn_inspect*/&|_,_,_,_| {},
+                                unwrap!(game.stichseq.current_stich().current_playerindex()),
                             ))
                                 .cards_and_ts()
                                 .map(|(card, payoutstatsperstrategy)| (

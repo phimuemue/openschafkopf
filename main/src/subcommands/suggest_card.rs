@@ -281,6 +281,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     );
                                 }
                             },
+                            verify_eq!(epi_position, epi_current),
                         )
                     }}}
                     forward_with_args!(forward)
