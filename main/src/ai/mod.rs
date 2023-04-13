@@ -240,14 +240,6 @@ impl SPayoutStats {
 }
 
 impl SPerMinMaxStrategy<SPayoutStats> {
-    fn accumulate(&mut self, paystats: Self) {
-        for emmstrategy in EMinMaxStrategy::values() {
-            self.0[emmstrategy].accumulate(&paystats.0[emmstrategy]);
-        }
-    }
-}
-
-impl SPerMinMaxStrategy<SPayoutStats> {
     pub fn compare_canonical(&self, other: &Self) -> std::cmp::Ordering {
         use std::cmp::Ordering::*;
         let internal_cmp = |emmstrategy| {
@@ -351,7 +343,11 @@ pub fn determine_best_card<
             let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
             match ooutput {
                 None => *ooutput = Some(payoutstats),
-                Some(ref mut output_return) => output_return.accumulate(payoutstats),
+                Some(ref mut output_return) => {
+                    for emmstrategy in EMinMaxStrategy::values() {
+                        output_return.0[emmstrategy].accumulate(&payoutstats.0[emmstrategy]);
+                    }
+                },
             }
             ahand[epi_current].add_card(card);
             fn_inspect(/*b_before*/false, i_ahand, &ahand, card);
