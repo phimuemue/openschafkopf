@@ -125,7 +125,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 }
             };
             let expensifiers = SExpensifiers::new_no_stock_doublings_stoss(); // TODO? make customizable
-            let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
             enum EBranching {
                 Branching(usize, usize),
                 Equivalent(usize, SCardsPartition),
@@ -202,7 +201,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     },
                 )
             }}
-            if epi_current!=epi_position || clapmatches.is_present("no-details") {
+            if clapmatches.is_present("no-details") {
                 macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     SPerMinMaxStrategy(itahand
                         .enumerate()
@@ -266,7 +265,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             $func_filter_allowed_cards,
                             &$foreachsnapshot::new(
                                 rules,
-                                verify_eq!(epi_position, epi_current),
+                                epi_position,
                                 expensifiers.clone(),
                             ),
                             $fn_snapshotcache,
@@ -281,7 +280,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     );
                                 }
                             },
-                            verify_eq!(epi_position, epi_current),
+                            epi_position,
                         )
                     }}}
                     forward_with_args!(forward)
