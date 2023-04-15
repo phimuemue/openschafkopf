@@ -312,8 +312,8 @@ impl SStichTrie {
             // All remaining players (starting with epi_card) are in the same team.
             // => We only need to consider the point-richest and point-poorest card from each equivalence chain.
             let epi_stich_first = stichseq.current_stich().first_playerindex();
-            let make_lo_or_hi = |elohi| {
-                Self::make_simple(
+            let mapelohistichtrie = test_dbg!(ELoHi::map_from_fn(|elohi|
+                Self::new_from_full_stichs(Self::make_simple(
                     (&mut ahand.clone(), &mut stichseq.clone()),
                     rules,
                     /*fn_filter*/&|(ahand, stichseq), veccard| {
@@ -327,23 +327,22 @@ impl SStichTrie {
                             .map(|veccard_chain| get_min_or_max_points(elohi, veccard_chain))
                             .collect()
                     },
-                )
-            };
-            let stichtrie_lo = test_dbg!(Self::new_from_full_stichs(make_lo_or_hi(ELoHi::Lo)));
-            let stichtrie_hi = test_dbg!(Self::new_from_full_stichs(make_lo_or_hi(ELoHi::Hi)));
-            assert_eq!(
-                stichtrie_lo.traverse_trie(epi_stich_first).len(),
-                stichtrie_hi.traverse_trie(epi_stich_first).len(),
+                ))
+            ));
+            assert!(
+                mapelohistichtrie.iter()
+                    .map(|stichtrie| stichtrie.traverse_trie(epi_stich_first).len())
+                    .all_equal()
             );
             let mut vecstich = Vec::new();
-            for stich in stichtrie_lo.traverse_trie(epi_stich_first) {
-                if playerparties.is_primary_party(rules.winner_index(SFullStich::new(&stich)))!=b_remaining_players_primary {
-                    vecstich.push(stich);
-                }
-            }
-            for stich in stichtrie_hi.traverse_trie(epi_stich_first) {
-                if playerparties.is_primary_party(rules.winner_index(SFullStich::new(&stich)))==b_remaining_players_primary {
-                    vecstich.push(stich);
+            for (elohi, b_primary) in [
+                (ELoHi::Lo, !b_remaining_players_primary),
+                (ELoHi::Hi, b_remaining_players_primary),
+            ] {
+                for stich in mapelohistichtrie[elohi].traverse_trie(epi_stich_first) {
+                    if playerparties.is_primary_party(rules.winner_index(SFullStich::new(&stich)))==b_primary {
+                        vecstich.push(stich);
+                    }
                 }
             }
             assert!(!vecstich.is_empty());
