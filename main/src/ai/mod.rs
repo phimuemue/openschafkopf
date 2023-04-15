@@ -129,6 +129,7 @@ impl SAi {
                     fn_visualizer,
                     /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
                     epi_current,
+                    /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
                 )
             }}}
             let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(
@@ -285,6 +286,7 @@ pub fn determine_best_card<
     OSnapshotCache: Into<Option<SnapshotCache>>,
     SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
+    PayoutStatsPayload: Ord + Debug + Copy + Sync + Send,
 >(
     stichseq: &'stichseq SStichSequence,
     rules: &dyn TRules,
@@ -294,8 +296,9 @@ pub fn determine_best_card<
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, ECard) + std::marker::Sync),
-    epi_result: EPlayerIndex
-) -> Option<SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>> {
+    epi_result: EPlayerIndex,
+    fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
+) -> Option<SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<PayoutStatsPayload>>>> {
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
         ECard::map_from_fn(|_card| None),
@@ -341,7 +344,7 @@ pub fn determine_best_card<
             });
             let payoutstats = SPerMinMaxStrategy(
                 EMinMaxStrategy::map_from_fn(|emmstrategy| {
-                    SPayoutStats::new_1((output.0[emmstrategy][epi_result], /*TODO make customizable*/()))
+                    SPayoutStats::new_1(fn_payout(&stichseq, &ahand, output.0[emmstrategy][epi_result]))
                 })
             );
             let mapcardooutput = Arc::clone(&mapcardooutput);
@@ -529,6 +532,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
             unwrap!(stichseq.current_stich().current_playerindex()),
+            /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
         ));
         for card in [H7, H8, H9] {
             assert_eq!(

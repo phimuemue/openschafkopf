@@ -155,6 +155,7 @@ pub fn analyze_game(
                         /*fn_visualizer*/SNoVisualization::factory(),
                         /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
                         unwrap!(stichseq.current_stich().current_playerindex()),
+                        /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
                     ));
                     let mut ocardandpayout = None;
                     for (eminmaxstrategy, emistake) in [
