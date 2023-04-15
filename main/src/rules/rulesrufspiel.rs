@@ -323,6 +323,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 (epi_hand, hand): (EPlayerIndex, &SHand),
                 f_payout: f32,
             ) -> f32 {
+                assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
                 normalized_points_to_points(
                     f_payout / playerparties22_multiplier().as_num::<f32>(),
                     &SPointsToWin61{},
@@ -397,6 +398,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 trumpfdecider: self.trumpfdecider.clone(),
             }) as Box<dyn TRules>,
             Box::new(move |stichseq: &SStichSequence, (epi_hand, hand): (EPlayerIndex, &SHand), f_payout: f32| {
+                assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
                 SRufspielPayoutPointsAsPayout::payout_to_points(
                     epi_active,
                     card_rufsau,

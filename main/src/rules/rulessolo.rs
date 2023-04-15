@@ -111,7 +111,8 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
                 trumpfdecider: rules.trumpfdecider.clone(),
                 of_heuristic_active_occurence_probability: rules.of_heuristic_active_occurence_probability,
             }) as Box<dyn TRules>,
-            Box::new(move |_stichseq: &SStichSequence, (epi_hand, _hand): (EPlayerIndex, &SHand), f_payout: f32| {
+            Box::new(move |stichseq: &SStichSequence, (epi_hand, hand): (EPlayerIndex, &SHand), f_payout: f32| {
+                assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
                 SPayoutDeciderPointsAsPayout::payout_to_points(
                     epi_active,
                     epi_hand,
