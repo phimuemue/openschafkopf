@@ -17,7 +17,7 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
 
     fn points_as_payout(&self, _rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Option<(
         Box<dyn TRules>,
-        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32>,
+        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
         None
     }
@@ -96,7 +96,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
 
     fn points_as_payout(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Option<(
         Box<dyn TRules>,
-        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32>,
+        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
         //assert_eq!(self, rules.payoutdecider); // TODO
         let pointstowin = self.pointstowin.clone();
@@ -119,7 +119,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
                     &pointstowin,
                     f_payout,
                 )
-            }) as Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32>,
+            }) as Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
         )
     )}
 
@@ -428,7 +428,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
 
     fn points_as_payout(&self) -> Option<(
         Box<dyn TRules>,
-        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32>,
+        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
         self.payoutdecider.points_as_payout(self)
     }

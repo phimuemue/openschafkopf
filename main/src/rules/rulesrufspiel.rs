@@ -309,7 +309,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
 
     fn points_as_payout(&self) -> Option<(
         Box<dyn TRules>,
-        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32>,
+        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
         #[derive(Debug, Clone)]
         struct SRufspielPayoutPointsAsPayout {
@@ -406,7 +406,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     (epi_hand, hand),
                     f_payout,
                 )
-            }) as Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32>,
+            }) as Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
         ))
     }
 
