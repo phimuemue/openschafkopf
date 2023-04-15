@@ -264,12 +264,10 @@ impl SStichTrie {
             let mut card_min_or_max = unwrap!(itcard.next());
             // do not use Iterator::max_by_key/min_by_key: They yield the last/first max/min, respectively. We always traverse a chain from high to low cards, and choose the highest max/min.
             for card in itcard {
-                if match elohi {
-                    ELoHi::Lo => points_card(card)<points_card(card_min_or_max),
-                    ELoHi::Hi => points_card(card)>points_card(card_min_or_max),
-                } {
-                    card_min_or_max = card;
-                }
+                match elohi {
+                    ELoHi::Lo => assign_min_by_key(&mut card_min_or_max, card, |&card| points_card(card)),
+                    ELoHi::Hi => assign_max_by_key(&mut card_min_or_max, card, |&card| points_card(card)),
+                };
             }
             card_min_or_max
         }
