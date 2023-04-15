@@ -1,6 +1,5 @@
 use crate::game::*;
 use crate::rules::ruleset::SStossParams;
-use crate::game_analysis::*;
 use crate::primitives::{card::ECard::*, *};
 use crate::rules::{
     payoutdecider::*, rulesbettel::*, rulesramsch::*, rulesrufspiel::*, rulessolo::*, *,
@@ -58,6 +57,12 @@ impl TCardArrayKurzLang for [ECard; 8] {
     fn to_hand_vector(&self) -> SHandVector {
         self.iter().copied().collect()
     }
+}
+
+pub fn make_stich_vector(vectplepiacard_stich: &[(EPlayerIndex, [ECard; 4])]) -> Vec<SStich> {
+    vectplepiacard_stich.iter()
+        .map(|&(epi, acard)| SStich::new_full(epi, acard))
+        .collect()
 }
 
 pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLang>(

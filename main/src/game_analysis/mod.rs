@@ -36,15 +36,6 @@ impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderTout {
     }
 }
 
-#[cfg(test)]
-pub fn make_stich_vector(vectplepiacard_stich: &[(EPlayerIndex, [ECard; 4])]) -> Vec<SStich> {
-    vectplepiacard_stich.iter()
-        .map(|&(epi, acard)| {
-            SStich::new_full(epi, acard)
-        })
-        .collect()
-}
-
 #[derive(Clone, Debug)]
 pub enum EMistake {
     Min,
