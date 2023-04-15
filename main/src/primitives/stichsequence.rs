@@ -99,6 +99,10 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         self.completed_stichs_no_invariant()
     }
 
+    pub fn last_completed_stich(&self) -> Option<SFullStich<&SStich>> {
+        self.completed_stichs().last().map(SFullStich::new)
+    }
+
     fn current_stich_no_invariant(&self) -> &SStich {
         unwrap!(self.vecstich.last())
     }

@@ -8,7 +8,7 @@ use std::{
 
 pub type SStich = SPlayersInRound<ECard, EPlayerIndex>;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct SFullStich<Stich>(Stich);
 
 impl<Stich: Borrow<SStich>> SFullStich<Stich> {
