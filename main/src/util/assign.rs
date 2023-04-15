@@ -1,10 +1,7 @@
 pub fn assign_better<T>(dst: &mut T, src: T, fn_better: impl FnOnce(&T, &T) -> bool) -> /*TODO can/should we make return type generic (e.g. support unit or Option/Result return type)*/bool {
-    if fn_better(&src, dst) {
+    if_then_true!(fn_better(&src, dst), {
         *dst = src;
-        true
-    } else {
-        false
-    }
+    })
 }
 
 #[allow(dead_code)]

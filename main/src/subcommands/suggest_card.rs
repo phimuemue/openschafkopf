@@ -118,7 +118,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 ).into_raw()
             };
             let print_json = |vectableline| {
-                if clapmatches.is_present("json") {
+                if_then_true!(clapmatches.is_present("json"), {
                     println!("{}", unwrap!(serde_json::to_string(
                         &SJson::new(
                             /*str_rules*/rules.to_string(),
@@ -128,10 +128,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             vectableline,
                         ),
                     )));
-                    true
-                } else {
-                    false
-                }
+                })
             };
             let expensifiers = SExpensifiers::new_no_stock_doublings_stoss(); // TODO? make customizable
             enum EBranching {

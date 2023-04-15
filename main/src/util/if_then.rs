@@ -15,4 +15,15 @@ macro_rules! if_then_some {
     };
 }
 
+macro_rules! if_then_true {
+    ($cond: expr, $val: expr) => {
+        if $cond {
+            let () = $val; // $val's type must be ()
+            true
+        } else {
+            false
+        }
+    };
+}
+
 
