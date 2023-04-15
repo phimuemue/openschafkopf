@@ -26,6 +26,11 @@ impl<Stich: Borrow<SStich>> Index<EPlayerIndex> for SFullStich<Stich> {
         &self.get()[epi]
     }
 }
+impl<Stich: Borrow<SStich>> Borrow<SStich> for SFullStich<Stich> {
+    fn borrow(&self) -> &SStich {
+        self.get()
+    }
+}
 
 impl fmt::Display for SStich {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

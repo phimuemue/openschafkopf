@@ -232,7 +232,7 @@ impl SRuleStateCache {
                 fixed: SRuleStateCacheFixed::new(ahand, stichseq),
             },
             mutate_return!(|rulestatecache, (stich, epi_winner)| {
-                rulestatecache.register_stich(SFullStich::new(stich), epi_winner);
+                rulestatecache.register_stich(stich, epi_winner);
             }),
         )
     }

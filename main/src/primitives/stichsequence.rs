@@ -112,13 +112,14 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         self.current_stich_no_invariant()
     }
 
-    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, if_dbg_else!({winnerindex}{_}): &'lifetime(impl TWinnerIndex + ?Sized)) -> impl Iterator<Item=(&'lifetime SStich, EPlayerIndex)> + 'lifetime {
+    pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, if_dbg_else!({winnerindex}{_}): &'lifetime(impl TWinnerIndex + ?Sized)) -> impl Iterator<Item=(SFullStich<&'lifetime SStich>, EPlayerIndex)> + 'lifetime {
         #[cfg(debug_assertions)]self.assert_invariant();
         self.vecstich[0..self.vecstich.len()]
             .iter()
             .tuple_windows()
             .map(move |(stich_0, stich_1)| {
-                (stich_0, debug_verify_eq!(stich_1.first_playerindex(), winnerindex.winner_index(SFullStich::new(stich_0))))
+                let stich_0 = SFullStich::new(stich_0);
+                (stich_0, debug_verify_eq!(stich_1.first_playerindex(), winnerindex.winner_index(stich_0)))
             })
     }
 

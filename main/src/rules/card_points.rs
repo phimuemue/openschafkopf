@@ -1,4 +1,5 @@
 use crate::primitives::*;
+use std::borrow::Borrow;
 
 pub fn points_card(card: ECard) -> isize {
     // by default, we assume that we use the usual points
@@ -12,8 +13,8 @@ pub fn points_card(card: ECard) -> isize {
     }
 }
 
-pub fn points_stich(stich: &SStich) -> isize {
-    stich.iter()
+pub fn points_stich<Stich: Borrow<SStich>>(stich: Stich) -> isize {
+    stich.borrow().iter()
         .map(|(_, card)| points_card(*card))
         .sum()
 }
