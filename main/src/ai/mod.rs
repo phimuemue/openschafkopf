@@ -162,7 +162,7 @@ impl SAi {
                             .take(n_suggest_card_samples)
                     },
                 },
-            )).cards_with_maximum_value(/*TODO? good idea*/SPerMinMaxStrategy::<SPayoutStats>::compare_canonical).0.first())
+            )).cards_with_maximum_value(/*TODO? good idea*/SPerMinMaxStrategy::compare_canonical).0.first())
         }
     }
 }
