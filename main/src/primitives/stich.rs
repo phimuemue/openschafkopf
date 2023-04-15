@@ -1,19 +1,29 @@
 use crate::primitives::*;
 use crate::util::*;
-use std::fmt;
+use std::{
+    borrow::Borrow,
+    fmt,
+    ops::Index,
+};
 
 pub type SStich = SPlayersInRound<ECard, EPlayerIndex>;
 
 #[derive(Copy, Clone)]
 pub struct SFullStich<Stich>(Stich);
 
-impl<Stich: std::borrow::Borrow<SStich>> SFullStich<Stich> {
+impl<Stich: Borrow<SStich>> SFullStich<Stich> {
     pub fn new(stich: Stich) -> Self {
         debug_assert!(stich.borrow().is_full());
         Self(stich)
     }
     pub fn get(&self) -> &SStich {
         self.0.borrow()
+    }
+}
+impl<Stich: Borrow<SStich>> Index<EPlayerIndex> for SFullStich<Stich> {
+    type Output = ECard;
+    fn index(&self, epi : EPlayerIndex) -> &ECard {
+        &self.get()[epi]
     }
 }
 

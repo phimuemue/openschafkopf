@@ -13,7 +13,7 @@ fn internal_test_rules(
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
     n_stock: isize,
-    slcstich_test: &[SStich],
+    slcstich_test: &[SFullStich<SStich>],
     (an_payout, n_stock_payout): ([isize; 4], isize),
 ) {
     println!("Testing rules: {}", str_info);
@@ -35,7 +35,7 @@ fn internal_test_rules(
     for i_epi in vecn_stoss.into_iter() {
         unwrap!(game.stoss(unwrap!(EPlayerIndex::checked_from_usize(i_epi))));
     }
-    for (epi, card) in slcstich_test.iter().flat_map(SStich::iter) {
+    for (epi, card) in slcstich_test.iter().flat_map(|stich| stich.get().iter()) {
         unwrap!(game.zugeben(*card, epi));
     }
     let an_payout_check = unwrap!(game.finish()).an_payout;
@@ -57,9 +57,9 @@ impl TCardArrayKurzLang for [ECard; 8] {
     }
 }
 
-pub fn make_stich_vector(slctplepiacard_stich: &[(EPlayerIndex, [ECard; 4])]) -> Vec<SStich> {
+pub fn make_stich_vector(slctplepiacard_stich: &[(EPlayerIndex, [ECard; 4])]) -> Vec<SFullStich<SStich>> {
     slctplepiacard_stich.iter()
-        .map(|&(epi, acard)| SStich::new_full(epi, acard))
+        .map(|&(epi, acard)| SFullStich::new(SStich::new_full(epi, acard)))
         .collect()
 }
 
