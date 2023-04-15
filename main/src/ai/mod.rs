@@ -318,27 +318,27 @@ pub fn determine_best_card<
             debug_assert!(ahand[epi_current].cards().contains(&card));
             let mut stichseq = stichseq.clone();
             assert!(ahand_vecstich_card_count_is_compatible(&ahand, &stichseq));
-            ahand[epi_current].play_card(card);
-            stichseq.zugeben(card, rules);
-            let output = if ahand.iter().all(|hand| hand.cards().is_empty()) {
-                let stichseq_finished = SStichSequenceGameFinished::new(&stichseq);
-                foreachsnapshot.final_output(
-                    stichseq_finished,
-                    &SRuleStateCache::new_from_gamefinishedstiche(
+            let output = stichseq.zugeben_and_restore_with_hands(&mut ahand, epi_current, card, rules, |ahand, stichseq| {
+                if ahand.iter().all(|hand| hand.cards().is_empty()) {
+                    let stichseq_finished = SStichSequenceGameFinished::new(stichseq);
+                    foreachsnapshot.final_output(
                         stichseq_finished,
+                        &SRuleStateCache::new_from_gamefinishedstiche(
+                            stichseq_finished,
+                            rules,
+                        ),
+                    )
+                } else {
+                    explore_snapshots(
+                        (ahand, stichseq),
                         rules,
-                    ),
-                )
-            } else {
-                explore_snapshots(
-                    (&mut ahand, &mut stichseq),
-                    rules,
-                    &fn_make_filter,
-                    foreachsnapshot,
-                    &fn_snapshotcache,
-                    &mut visualizer,
-                )
-            };
+                        &fn_make_filter,
+                        foreachsnapshot,
+                        &fn_snapshotcache,
+                        &mut visualizer,
+                    )
+                }
+            });
             let payoutstats = SPerMinMaxStrategy(
                 EMinMaxStrategy::map_from_fn(|emmstrategy| {
                     SPayoutStats::new_1(output.0[emmstrategy][epi_result])
@@ -354,7 +354,6 @@ pub fn determine_best_card<
                     }
                 },
             }
-            ahand[epi_current].add_card(card);
             fn_inspect(/*b_before*/false, i_ahand, &ahand, card);
         });
     let mapcardooutput = unwrap!(
