@@ -245,12 +245,14 @@ impl SPerMinMaxStrategy<SPayoutStats> {
         use std::cmp::Ordering::*;
         let internal_cmp = |emmstrategy| {
             // prioritize positive vs non-positive and zero vs negative payouts.
-            match (self.0[emmstrategy].min().cmp(&0), other.0[emmstrategy].min().cmp(&0)) {
-                (Greater, Greater) => match self.0[emmstrategy].min().cmp(&other.0[emmstrategy].min()) {
-                    Equal => match unwrap!(self.0[emmstrategy].avg().partial_cmp(&other.0[emmstrategy].avg())) {
+            let lhs = &self.0[emmstrategy];
+            let rhs = &other.0[emmstrategy];
+            match (lhs.min().cmp(&0), rhs.min().cmp(&0)) {
+                (Greater, Greater) => match lhs.min().cmp(&rhs.min()) {
+                    Equal => match unwrap!(lhs.avg().partial_cmp(&rhs.avg())) {
                         Greater => Greater,
                         Less => Less,
-                        Equal => unwrap!(self.0[emmstrategy].max().partial_cmp(&other.0[emmstrategy].max())),
+                        Equal => unwrap!(lhs.max().partial_cmp(&rhs.max())),
                     },
                     Greater => Greater,
                     Less => Less,
@@ -259,10 +261,10 @@ impl SPerMinMaxStrategy<SPayoutStats> {
                 (_, Greater) => Less,
                 (Equal, Less) => Greater,
                 (Less, Equal) => Less,
-                (Less, Less)|(Equal, Equal) => match unwrap!(self.0[emmstrategy].avg().partial_cmp(&other.0[emmstrategy].avg())) {
+                (Less, Less)|(Equal, Equal) => match unwrap!(lhs.avg().partial_cmp(&rhs.avg())) {
                     Greater => Greater,
                     Less => Less,
-                    Equal => unwrap!(self.0[emmstrategy].max().partial_cmp(&other.0[emmstrategy].max())),
+                    Equal => unwrap!(lhs.max().partial_cmp(&rhs.max())),
                 },
             }
         };
