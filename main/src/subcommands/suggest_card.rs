@@ -98,10 +98,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     f_payout
                 }
             };
-            let json_histograms = |payoutstatsperstrategy: &SPerMinMaxStrategy<SPayoutStats>| {
+            let json_histograms = |payoutstatsperstrategy: &SPerMinMaxStrategy<SPayoutStats<()>>| {
                 payoutstatsperstrategy.0.map(|payoutstats| 
                     payoutstats.histogram().iter()
-                        .map(|(n_payout, n_count)| (
+                        .map(|((n_payout, ()), n_count)| (
                             fn_human_readable_payout(n_payout.as_num::<f32>()).as_num::<isize>(),
                             *n_count
                         ))
@@ -221,7 +221,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 &$fn_snapshotcache,
                                 &mut visualizer,
                             ).0.map(|mapepiminmax| {
-                                SPayoutStats::new_1(mapepiminmax[epi_position])
+                                SPayoutStats::new_1((mapepiminmax[epi_position], ()))
                             })
                         })
                         .reduce(

@@ -33,7 +33,7 @@ pub struct SPayoutStatsTable<T> {
     mapemmstrategyaformatinfo: EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>,
 }
 
-pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategy<SPayoutStats>>>(
+pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategy<SPayoutStats<()>>>>(
     mut vectpayoutstatsperstrategy: Vec<(T, PayoutStatsPerStrategy)>,
     b_group: bool,
     fn_human_readable_payout: &dyn Fn(f32) -> f32,
@@ -54,7 +54,7 @@ pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategy<SPayo
     for ((mapemmstrategyatplstrf, _grouping), grptpltmapemmstrategyatplstrf) in vectpayoutstatsperstrategy.into_iter()
         .map(|(t, minmax)| {
             let minmax = minmax.borrow();
-            let column_counts = |paystats: &SPayoutStats| {(
+            let column_counts = |paystats: &SPayoutStats<()>| {(
                 format!("{} ", paystats.counts().iter().join("/")),
                 (paystats.counts()[std::cmp::Ordering::Equal]+paystats.counts()[std::cmp::Ordering::Greater])
                     .as_num::<f32>(),
@@ -63,7 +63,7 @@ pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategy<SPayo
                 let f_human_readable_payout = fn_human_readable_payout(n.as_num::<f32>());
                 (format!("{} ", f_human_readable_payout), f_human_readable_payout)
             };
-            let column_average = |paystats: &SPayoutStats| {
+            let column_average = |paystats: &SPayoutStats<()>| {
                 let f_human_readable_payout = fn_human_readable_payout(paystats.avg());
                 (format!("{:.2} ", f_human_readable_payout), f_human_readable_payout)
             };
@@ -110,7 +110,7 @@ pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategy<SPayo
 }
 
 pub fn table(
-    determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats>>,
+    determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>,
     rules: &dyn TRules,
     fn_human_readable_payout: &dyn Fn(f32) -> f32,
 ) -> SPayoutStatsTable<ECard> {

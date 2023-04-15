@@ -63,7 +63,7 @@ pub struct SAnalysisPerCard {
     stichseq: SStichSequence, // TODO this is space-inefficient
     ahand: EnumMap<EPlayerIndex, SHand>, // TODO this is space-inefficient
     card_played: ECard,
-    determinebestcardresult_cheating: SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats>>,
+    determinebestcardresult_cheating: SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>,
     oanalysisimpr: Option<SAnalysisImprovement>,
 }
 
