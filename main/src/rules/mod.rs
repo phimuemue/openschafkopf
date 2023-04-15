@@ -394,7 +394,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
     fn preliminary_winner_index(&self, stich: &SStich) -> EPlayerIndex {
         let mut epi_best = stich.epi_first;
         for (epi, card) in stich.iter().skip(1) {
-            if let Some(Ordering::Less) = self.compare_cards(stich[epi_best], *card) {
+            if let Some(Ordering::Less) = self.compare_cards(*unwrap!(stich.get(epi_best)), *card) {
                 epi_best = epi;
             }
         }

@@ -224,7 +224,7 @@ impl SStichTrie {
         let make_singleton_stichtrie = |i_epi_offset, stichtrie| {
             let mut stichtrie_singleton = SStichTrie::new();
             stichtrie_singleton.push(
-                stich_current[stich_current.first_playerindex().wrapping_add(i_epi_offset)],
+                *unwrap!(stich_current.get(stich_current.first_playerindex().wrapping_add(i_epi_offset))),
                 stichtrie
             );
             stichtrie_singleton

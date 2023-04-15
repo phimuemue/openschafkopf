@@ -26,7 +26,7 @@ impl<Stich: Borrow<SStich>> SFullStich<Stich> {
 impl<Stich: Borrow<SStich>> Index<EPlayerIndex> for SFullStich<Stich> {
     type Output = ECard;
     fn index(&self, epi : EPlayerIndex) -> &ECard {
-        &self.get()[epi]
+        unwrap!(self.get().get(epi))
     }
 }
 impl<Stich: Borrow<SStich>> Borrow<SStich> for SFullStich<Stich> {
@@ -69,7 +69,7 @@ fn test_stich() {
                 assert_eq!(stich.size(), stich.iter().count());
                 for (epi, card) in stich.iter() {
                     assert_eq!(stich.get(epi), Some(card));
-                    assert_eq!(stich[epi], *card);
+                    assert_eq!(stich.get(epi), Some(card));
                 }
             }
         }
@@ -78,8 +78,8 @@ fn test_stich() {
         let mut stich = SStich::new(EPlayerIndex::EPI2);
         stich.push(ECard::new(EFarbe::Eichel, ESchlag::Unter));
         stich.push(ECard::new(EFarbe::Gras, ESchlag::S7));
-        assert!(stich[EPlayerIndex::EPI2]==ECard::new(EFarbe::Eichel, ESchlag::Unter));
-        assert!(stich[EPlayerIndex::EPI3]==ECard::new(EFarbe::Gras, ESchlag::S7));
+        assert!(stich.get(EPlayerIndex::EPI2)==Some(&ECard::new(EFarbe::Eichel, ESchlag::Unter)));
+        assert!(stich.get(EPlayerIndex::EPI3)==Some(&ECard::new(EFarbe::Gras, ESchlag::S7)));
         assert_eq!(stich.iter().count(), 2);
     }
 }

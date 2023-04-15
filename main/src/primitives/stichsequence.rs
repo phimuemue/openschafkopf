@@ -173,7 +173,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
     }
 
     pub fn completed_cards_by(&self, epi: EPlayerIndex) -> impl DoubleEndedIterator<Item=ECard> + '_ {
-        self.completed_stichs().iter().map(move |stich| stich[epi])
+        self.completed_stichs().iter().map(move |stich| SFullStich::new(stich)[epi])
     }
 
     pub fn kurzlang(&self) -> EKurzLang {

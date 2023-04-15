@@ -1,6 +1,6 @@
 use crate::util::*;
 use arrayvec::{self, ArrayVec};
-use std::{fmt, ops::Index, slice, str::FromStr};
+use std::{fmt, slice, str::FromStr};
 use serde_repr::Serialize_repr;
 
 plain_enum_mod!(modepi, derive(Serialize_repr, Hash,), map_derive(), EPlayerIndex {
@@ -61,14 +61,6 @@ impl<InternalIter: Iterator> Iterator for SPlayersInRoundIterator<InternalIter> 
             .map(|t| (EPlayerIndex::wrapped_from_usize(self.n_epi), t));
         self.n_epi += 1;
         item_next
-    }
-}
-
-impl<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> Index<EPlayerIndex> for SPlayersInRound<T, PlayerIndex> {
-    type Output = T;
-    fn index(&self, epi : EPlayerIndex) -> &T {
-        assert!(self.valid_index(epi));
-        &self.vect[self.position(epi)]
     }
 }
 
@@ -134,11 +126,8 @@ impl<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> SPlayersInRound<T
     fn position(&self, epi: EPlayerIndex) -> usize {
         epi.wrapped_difference_usize(self.epi_first.value())
     }
-    fn valid_index(&self, epi: EPlayerIndex) -> bool {
-        self.position(epi)<self.size()
-    }
     pub fn get(&self, epi: EPlayerIndex) -> Option<&T> {
-        if_then_some!(self.valid_index(epi), &self[epi])
+        self.vect.get(self.position(epi))
     }
 }
 
