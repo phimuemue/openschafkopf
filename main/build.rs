@@ -2,7 +2,7 @@ use openschafkopf_util::*;
 use as_num::*;
 
 use std::{env, fs::File, io::Write, path::Path, process::Command};
-use resvg::{tiny_skia, usvg};
+use resvg::{tiny_skia, usvg::{self, TreeParsing}};
 
 fn main() {
     // adapted from https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
@@ -41,7 +41,7 @@ fn main() {
         ));
         unwrap!(resvg::render(
             &svgtree,
-            usvg::FitTo::Original,
+            resvg::FitTo::Original,
             tiny_skia::Transform::from_scale(n_factor.as_num::<f32>(), n_factor.as_num::<f32>()),
             pixmap.as_mut()
         ));
