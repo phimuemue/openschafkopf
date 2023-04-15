@@ -17,6 +17,7 @@ use rand::prelude::*;
 use rayon::prelude::*;
 use std::{
     self,
+    fmt::Debug,
     sync::{Arc, Mutex},
     collections::BTreeMap,
 };
@@ -173,11 +174,11 @@ pub struct SDetermineBestCardResult<T> {
 }
 
 impl<T> SDetermineBestCardResult<T> {
-    pub fn cards_and_ts(&self) -> impl Iterator<Item=(ECard, &T)> where T: std::fmt::Debug {
+    pub fn cards_and_ts(&self) -> impl Iterator<Item=(ECard, &T)> where T: Debug {
         <ECard as PlainEnum>::values()
             .filter_map(|card| self.mapcardt[card].as_ref().map(|t| (card, t)))
     }
-    pub fn cards_with_maximum_value(&self, mut fn_cmp: impl FnMut(&T, &T)->std::cmp::Ordering) -> (Vec<ECard>, &T) where T: std::fmt::Debug {
+    pub fn cards_with_maximum_value(&self, mut fn_cmp: impl FnMut(&T, &T)->std::cmp::Ordering) -> (Vec<ECard>, &T) where T: Debug {
         let veccard = <ECard as PlainEnum>::values()
             .filter(|card| self.mapcardt[*card].is_some())
             .max_set_by(|card_lhs, card_rhs| fn_cmp(
