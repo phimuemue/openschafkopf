@@ -5,14 +5,14 @@ use super::*;
 use itertools::Itertools;
 
 pub trait TWinnerIndex {
-    fn winner_index(&self, stich: SFullStich) -> EPlayerIndex;
+    fn winner_index(&self, stich: SFullStich<&SStich>) -> EPlayerIndex;
 }
 
 #[cfg(test)]
 pub struct SWinnerIndexIrrelevant;
 #[cfg(test)]
 impl TWinnerIndex for SWinnerIndexIrrelevant {
-    fn winner_index(&self, _stich: SFullStich) -> EPlayerIndex {
+    fn winner_index(&self, _stich: SFullStich<&SStich>) -> EPlayerIndex {
         EPlayerIndex::EPI0
     }
 }

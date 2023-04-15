@@ -589,7 +589,7 @@ pub struct SFilterEquivalentCards {
 }
 
 impl SFilterEquivalentCards {
-    fn internal_register_stich(&mut self, stich: SFullStich) -> <Self as TFilterAllowedCards>::UnregisterStich {
+    fn internal_register_stich(&mut self, stich: SFullStich<&SStich>) -> <Self as TFilterAllowedCards>::UnregisterStich {
         #[cfg(debug_assertions)] let self_original = self.clone();
         // TODO Can we use EPlayerIndex::map_from_fn? (Unsure about evaluation order.)
         let mut remove_from_chain = |epi| self.cardspartition.remove_from_chain(stich.get()[epi]);

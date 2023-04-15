@@ -249,7 +249,7 @@ impl SRuleStateCache {
         )
     }
 
-    pub fn register_stich(&mut self, stich: SFullStich, epi_winner: EPlayerIndex) -> SUnregisterStich {
+    pub fn register_stich(&mut self, stich: SFullStich<&SStich>, epi_winner: EPlayerIndex) -> SUnregisterStich {
         let unregisterstich = SUnregisterStich {
             epi_winner,
             n_points_epi_winner_before: self.changing.mapepipointstichcount[epi_winner].n_point,
@@ -426,12 +426,12 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
 }
 
 impl<Rules: TRules + ?Sized> TWinnerIndex for Rules {
-    fn winner_index(&self, stich: SFullStich) -> EPlayerIndex {
+    fn winner_index(&self, stich: SFullStich<&SStich>) -> EPlayerIndex {
         self.preliminary_winner_index(stich.get())
     }
 }
 impl<'rules> TWinnerIndex for &'rules dyn TRules {
-    fn winner_index(&self, stich: SFullStich) -> EPlayerIndex {
+    fn winner_index(&self, stich: SFullStich<&SStich>) -> EPlayerIndex {
         self.preliminary_winner_index(stich.get())
     }
 }

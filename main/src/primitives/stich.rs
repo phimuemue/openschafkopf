@@ -5,15 +5,15 @@ use std::fmt;
 pub type SStich = SPlayersInRound<ECard, EPlayerIndex>;
 
 #[derive(Copy, Clone)]
-pub struct SFullStich<'stich>(&'stich SStich);
+pub struct SFullStich<Stich>(Stich);
 
-impl<'stich> SFullStich<'stich> {
-    pub fn new(stich: &'stich SStich) -> Self {
-        debug_assert!(stich.is_full());
+impl<Stich: std::borrow::Borrow<SStich>> SFullStich<Stich> {
+    pub fn new(stich: Stich) -> Self {
+        debug_assert!(stich.borrow().is_full());
         Self(stich)
     }
     pub fn get(&self) -> &SStich {
-        self.0
+        self.0.borrow()
     }
 }
 
