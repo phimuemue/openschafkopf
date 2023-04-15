@@ -76,11 +76,11 @@ impl SStichTrie {
         slf
     }
 
-    fn new_from_full_stich(stich: SFullStich) -> Self {
+    fn new_from_full_stich(stich: SFullStich<&SStich>) -> Self {
         let mut stichtrie = SStichTrie::new();
-        for card in EPlayerIndex::map_from_fn(|epi| *unwrap!(stich.get().get(stich.get().first_playerindex().wrapping_add(epi.to_usize()))))
-            .into_raw()
-            .into_iter()
+        for (_epi, &card) in stich.iter()
+            .collect::<Vec<_>>() // TODO avoid collect
+            .into_iter() // TODO avoid into_iter
             .rev()
         {
             let stichtrie_child = std::mem::replace(&mut stichtrie, SStichTrie::new());
