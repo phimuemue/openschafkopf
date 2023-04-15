@@ -179,7 +179,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     game_csv.rules.as_ref(),
                 );
                 for stich in verify_eq!(game.stichseq.completed_stichs(), game.stichseq.visible_stichs()).iter().map(SFullStich::new) {
-                    for (epi, &card_zugeben) in stich.get().iter() {
+                    for (epi, &card_zugeben) in stich.iter() {
                         assert_eq!(epi, unwrap!(game_csv.which_player_can_do_something()).0);
                         let veccard_allowed = game_csv.rules.all_allowed_cards(&game_csv.stichseq, &game_csv.ahand[epi]);
                         let bool_to_usize = usize::from;

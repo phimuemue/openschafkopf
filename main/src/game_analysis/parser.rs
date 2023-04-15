@@ -329,7 +329,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             let () = game.stoss(resepi?)?;
         }
         for stich in vecstich.into_iter() {
-            for (epi, card) in stich.get().iter() {
+            for (epi, card) in stich.iter() {
                 let () = game.zugeben(*card, epi)?;
             }
         }
