@@ -16,25 +16,22 @@ impl<Stich: Borrow<SStich>> SFullStich<Stich> {
         debug_assert!(stich.borrow().is_full());
         Self(stich)
     }
-    pub fn get(&self) -> &SStich {
-        self.0.borrow()
-    }
     pub fn as_ref(&self) -> SFullStich<&SStich> {
-        SFullStich::new(self.get())
+        SFullStich::new(self.borrow())
     }
     pub fn iter(&self) -> SPlayersInRoundIterator<std::slice::Iter<ECard>> {
-        self.get().iter()
+        self.0.borrow().iter()
     }
 }
 impl<Stich: Borrow<SStich>> Index<EPlayerIndex> for SFullStich<Stich> {
     type Output = ECard;
     fn index(&self, epi : EPlayerIndex) -> &ECard {
-        unwrap!(self.get().get(epi))
+        unwrap!(self.0.borrow().get(epi))
     }
 }
 impl<Stich: Borrow<SStich>> Borrow<SStich> for SFullStich<Stich> {
     fn borrow(&self) -> &SStich {
-        self.get()
+        self.0.borrow()
     }
 }
 

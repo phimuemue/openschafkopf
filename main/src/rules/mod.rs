@@ -24,6 +24,7 @@ use crate::primitives::*;
 use crate::rules::card_points::points_stich;
 use crate::util::*;
 use std::{
+    borrow::Borrow,
     ops::Add,
     cmp::Ordering, fmt,
     collections::HashMap,
@@ -255,7 +256,7 @@ impl SRuleStateCache {
             n_points_epi_winner_before: self.changing.mapepipointstichcount[epi_winner].n_point,
         };
         self.changing.mapepipointstichcount[epi_winner].n_stich += 1;
-        self.changing.mapepipointstichcount[epi_winner].n_point += points_stich(stich.get());
+        self.changing.mapepipointstichcount[epi_winner].n_point += points_stich(stich.borrow());
         unregisterstich
     }
 
@@ -427,12 +428,12 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
 
 impl<Rules: TRules + ?Sized> TWinnerIndex for Rules {
     fn winner_index(&self, stich: SFullStich<&SStich>) -> EPlayerIndex {
-        self.preliminary_winner_index(stich.get())
+        self.preliminary_winner_index(stich.borrow())
     }
 }
 impl<'rules> TWinnerIndex for &'rules dyn TRules {
     fn winner_index(&self, stich: SFullStich<&SStich>) -> EPlayerIndex {
-        self.preliminary_winner_index(stich.get())
+        self.preliminary_winner_index(stich.borrow())
     }
 }
 
