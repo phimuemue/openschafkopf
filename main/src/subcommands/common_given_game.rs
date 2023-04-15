@@ -25,6 +25,7 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
                 .long("rules")
                 .takes_value(true)
                 .required(false)
+                .multiple_occurrences(true)
                 .help("Rules as plain text")
                 .long_help("Rules, given in plain text. The program tries to be lenient in the input format, so that all of the following should be accepted: \"gras wenz von 1\", \"farbwenz gras von 1\", \"BlauWenz von 1\". Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).")
         )
@@ -102,36 +103,41 @@ pub fn with_common_args<FnWithArgs>(
         if !veccard_duplicate.is_empty() {
             bail!("Cards are used more than once: {}", veccard_duplicate.iter().join(", "));
         }
-        let (itrules, b_single_rules) = match clapmatches.value_of("rules")
-            .map(crate::rules::parser::parse_rule_description_simple)
+        let (itrules, b_single_rules) = match clapmatches.values_of("rules")
+            .map(|values| values.map(crate::rules::parser::parse_rule_description_simple))
+            .into_iter()
+            .flatten()
+            .collect::<Result<Vec<_>,_>>()
         {
-            None => {
-                let ruleset = super::get_ruleset(clapmatches)?;
-                (
-                    Box::new(ruleset
-                        .avecrulegroup.into_raw().into_iter()
-                        .flat_map(|vecrulegroup|
-                            vecrulegroup.into_iter().flat_map(|rulegroup| {
-                                rulegroup.vecorules.into_iter()
-                                    .filter_map(|orules|
-                                        orules.as_ref().map(|rules|
-                                            TRulesBoxClone::box_clone(rules.upcast())
+            Ok(vecrules) => {
+                if vecrules.is_empty() {
+                    let ruleset = super::get_ruleset(clapmatches)?;
+                    (
+                        Box::new(ruleset
+                            .avecrulegroup.into_raw().into_iter()
+                            .flat_map(|vecrulegroup|
+                                vecrulegroup.into_iter().flat_map(|rulegroup| {
+                                    rulegroup.vecorules.into_iter()
+                                        .filter_map(|orules|
+                                            orules.as_ref().map(|rules|
+                                                TRulesBoxClone::box_clone(rules.upcast())
+                                            )
                                         )
-                                    )
+                                })
+                            )
+                            .chain(match ruleset.stockorramsch {
+                                VStockOrT::Stock(_) => None,
+                                VStockOrT::OrT(rules) => Some(rules)
                             })
-                        )
-                        .chain(match ruleset.stockorramsch {
-                            VStockOrT::Stock(_) => None,
-                            VStockOrT::OrT(rules) => Some(rules)
-                        })
-                    ) as Box<dyn Iterator<Item=Box<dyn TRules>>>,
-                    /*b_single_rules*/false,
-                )
+                        ) as Box<dyn Iterator<Item=Box<dyn TRules>>>,
+                        /*b_single_rules*/false,
+                    )
+                } else {
+                    let b_single_rules = vecrules.len()==1;
+                    (Box::new(vecrules.into_iter()) as Box<dyn Iterator<Item=Box<dyn TRules>>>, b_single_rules)
+                }
             },
-            Some(Ok(rules)) => {
-                (Box::new(std::iter::once(rules)) as Box<dyn Iterator<Item=Box<dyn TRules>>>, /*b_single_rules*/true)
-            },
-            Some(Err(err)) => {
+            Err(err) => {
                 bail!("Could not parse rules: {}", err);
             },
         };
