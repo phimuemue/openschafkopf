@@ -142,17 +142,14 @@ pub fn with_common_args<FnWithArgs>(
                     let epi_position = clapmatches.value_of_t("position")
                         .unwrap_or_else(|_|unwrap!(stichseq.current_stich().current_playerindex()));
                     if_then_some!(
-                        vecocard_hand.iter().all(Option::is_some)
-                            && stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
-                        SHand::new_from_iter(
-                            vecocard_hand.iter().map(|ocard| unwrap!(ocard))
-                        ).to_ahand(epi_position)
+                        stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
+                        SHand::new_from_iter(vecocard_hand.iter().flatten())
+                            .to_ahand(epi_position)
                     ).or_else(|| {
                         let n_cards_total = stichseq.kurzlang().cards_per_player()*EPlayerIndex::SIZE;
-                        if stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total {
-                            let an_remaining = stichseq.remaining_cards_per_hand();
+                        if_then_some!(stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total, {
                             let mut i_card_lo = 0;
-                            let ahand = EPlayerIndex::map_from_raw(an_remaining.as_raw().map(|n_remaining| {
+                            EPlayerIndex::map_from_raw(stichseq.remaining_cards_per_hand().as_raw().map(|n_remaining| {
                                 // Note: This function is called for each index in order (https://doc.rust-lang.org/std/primitive.array.html#method.map)
                                 let hand = SHand::new_from_iter(
                                     vecocard_hand[i_card_lo..i_card_lo+n_remaining].iter()
@@ -161,14 +158,8 @@ pub fn with_common_args<FnWithArgs>(
                                 i_card_lo += n_remaining;
                                 assert!(hand.cards().len() <= n_remaining);
                                 hand
-                            }));
-                            if_then_some!( // TODO this is overly restrictive for hand-stats
-                                ahand[epi_position].cards().len()==an_remaining[epi_position],
-                                ahand
-                            )
-                        } else {
-                            None
-                        }
+                            }))
+                        })
                     })
                     .map(|ahand| (stichseq, ahand, epi_position))
                 })
@@ -224,7 +215,6 @@ pub fn with_common_args<FnWithArgs>(
             for epi in EPlayerIndex::values() {
                 assert!(ahand_with_holes[epi].cards().len() <= mapepin_cards_per_hand[epi]);
             }
-            assert_eq!(ahand_with_holes[epi_position].cards().len(), mapepin_cards_per_hand[epi_position]);
             macro_rules! forward{($n_ahand_total: expr, $itahand_factory: expr, $fn_take: expr) => {{ // TODORUST generic closures
                 let mut n_ahand_seen = 0;
                 let mut n_ahand_valid = 0;

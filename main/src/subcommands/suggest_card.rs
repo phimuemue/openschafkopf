@@ -86,12 +86,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             } else {
                 rules
             };
-            let fn_human_readable_payout = |n_payout: isize| {
+            let fn_human_readable_payout = |stichseq: SStichSequence, (epi_position, hand), n_payout: isize| -> (isize, std::cmp::Ordering) {
                 if let Some((_rules, fn_payout_to_points)) = &otplrulesfn_points_as_payout {
                     (
                         fn_payout_to_points(
-                            stichseq,
-                            (epi_position, &ahand_fixed_with_holes[epi_position]),
+                            &stichseq,
+                            (epi_position, &hand),
                             n_payout.as_num::<f32>(),
                         ).as_num::<isize>(),
                         n_payout.cmp(&0), // Human readable payout may not indicate loss or win: In Rufspiel, if epi_position has 60, it may mean win or loss, depending on whether epi_position is co-player.
@@ -134,7 +134,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 }
             };
             let expensifiers = SExpensifiers::new_no_stock_doublings_stoss(); // TODO? make customizable
-            let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
             enum EBranching {
                 Branching(usize, usize),
                 Equivalent(usize, SCardsPartition),
@@ -211,15 +210,15 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     },
                 )
             }}
-            if epi_current!=epi_position || clapmatches.is_present("no-details") {
+            if clapmatches.is_present("no-details") {
                 macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     SPerMinMaxStrategy(itahand
                         .enumerate()
                         .par_bridge() // TODO can we derive a true parallel iterator?
-                        .map(|(i_ahand, mut ahand)| {
+                        .map(|(i_ahand, ahand)| {
                             let mut visualizer = $fn_visualizer(i_ahand, &ahand, /*ocard*/None);
                             explore_snapshots::<_,$($func_filter_allowed_cards_ty)*,_,_,_>(
-                                (&mut ahand, &mut stichseq.clone()),
+                                (&mut ahand.clone(), &mut stichseq.clone()),
                                 rules,
                                 &$func_filter_allowed_cards,
                                 &$foreachsnapshot::new(
@@ -230,7 +229,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 &$fn_snapshotcache,
                                 &mut visualizer,
                             ).0.map(|mapepiminmax| {
-                                SPayoutStats::new_1(fn_human_readable_payout(mapepiminmax[epi_position]))
+                                SPayoutStats::new_1(fn_human_readable_payout(
+                                    stichseq.clone(),
+                                    (epi_position, ahand[epi_position].clone(/*TODO needed?*/)),
+                                    mapepiminmax[epi_position],
+                                ))
                             })
                         })
                         .reduce(
@@ -275,7 +278,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             $func_filter_allowed_cards,
                             &$foreachsnapshot::new(
                                 rules,
-                                verify_eq!(epi_position, epi_current),
+                                epi_position,
                                 expensifiers.clone(),
                             ),
                             $fn_snapshotcache,
@@ -290,8 +293,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     );
                                 }
                             },
-                            verify_eq!(epi_position, epi_current),
-                            /*fn_payout*/&|_stichseq, _ahand, n_payout| fn_human_readable_payout(
+                            epi_position,
+                            /*fn_payout*/&|stichseq, ahand, n_payout| fn_human_readable_payout(
+                                stichseq.clone(),
+                                (epi_position, ahand[epi_position].clone(/*TODO needed?*/)),
                                 n_payout,
                             ),
                         )
