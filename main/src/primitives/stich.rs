@@ -19,6 +19,9 @@ impl<Stich: Borrow<SStich>> SFullStich<Stich> {
     pub fn get(&self) -> &SStich {
         self.0.borrow()
     }
+    pub fn as_ref(&self) -> SFullStich<&SStich> {
+        SFullStich::new(self.get())
+    }
 }
 impl<Stich: Borrow<SStich>> Index<EPlayerIndex> for SFullStich<Stich> {
     type Output = ECard;

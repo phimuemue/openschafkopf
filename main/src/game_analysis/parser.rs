@@ -309,8 +309,8 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                         .parent().ok_or_else(|| format_err!("walking html failed"))?,
                     /*fn_card_highlight*/|card, _ostr_highlight| card,
                 )?).map(|acard| {
-                    let stich = SStich::new_full(epi_first, acard);
-                    let epi_winner = rules.winner_index(SFullStich::new(&stich));
+                    let stich = SFullStich::new(SStich::new_full(epi_first, acard));
+                    let epi_winner = rules.winner_index(stich.as_ref());
                     vecstich.push(stich);
                     (epi_winner, vecstich)
                 })
@@ -329,7 +329,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             let () = game.stoss(resepi?)?;
         }
         for stich in vecstich.into_iter() {
-            for (epi, card) in stich.iter() {
+            for (epi, card) in stich.get().iter() {
                 let () = game.zugeben(*card, epi)?;
             }
         }
