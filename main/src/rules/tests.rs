@@ -35,10 +35,8 @@ fn internal_test_rules(
     for i_epi in vecn_stoss.into_iter() {
         unwrap!(game.stoss(unwrap!(EPlayerIndex::checked_from_usize(i_epi))));
     }
-    for stich in slcstich_test.iter() {
-        for (epi, card) in stich.iter() {
-            unwrap!(game.zugeben(*card, epi));
-        }
+    for (epi, card) in slcstich_test.iter().flat_map(SStich::iter) {
+        unwrap!(game.zugeben(*card, epi));
     }
     let an_payout_check = unwrap!(game.finish()).an_payout;
     assert_eq!(EPlayerIndex::map_from_fn(|epi| an_payout_check[epi]), EPlayerIndex::map_from_raw(an_payout));
