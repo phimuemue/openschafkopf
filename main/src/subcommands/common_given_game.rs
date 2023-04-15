@@ -20,7 +20,14 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
     clap::Command::new(str_subcommand)
         .about(str_about)
         .arg(ruleset_arg())
-        .arg(rules_arg()) // "overrides" ruleset // TODO? make ruleset optional
+        .arg( // "overrides" ruleset // TODO? make ruleset optional
+            clap::Arg::new("rules")
+                .long("rules")
+                .takes_value(true)
+                .required(false)
+                .help("Rules as plain text")
+                .long_help("Rules, given in plain text. The program tries to be lenient in the input format, so that all of the following should be accepted: \"gras wenz von 1\", \"farbwenz gras von 1\", \"BlauWenz von 1\". Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).")
+        )
         .arg(clap::Arg::new("position")
             .long("position")
             .help("Position of the player")
@@ -95,7 +102,9 @@ pub fn with_common_args<FnWithArgs>(
         if !veccard_duplicate.is_empty() {
             bail!("Cards are used more than once: {}", veccard_duplicate.iter().join(", "));
         }
-        let (itrules, b_single_rules) = match super::get_rules(clapmatches) {
+        let (itrules, b_single_rules) = match clapmatches.value_of("rules")
+            .map(crate::rules::parser::parse_rule_description_simple)
+        {
             None => {
                 let ruleset = super::get_ruleset(clapmatches)?;
                 (
