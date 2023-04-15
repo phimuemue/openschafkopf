@@ -6,7 +6,6 @@ use crate::game_analysis::determine_best_card_table::{table, internal_table};
 use rayon::prelude::*;
 use crate::rules::{SExpensifiers};
 use serde::Serialize;
-use std::collections::BTreeMap;
 
 use super::common_given_game::*;
 
@@ -59,7 +58,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     #[derive(new, Serialize)]
     struct SJsonTableLine {
         ostr_header: Option<String>,
-        amapnn_histogram: [BTreeMap<isize/*n_payout*/, usize/*n_count*/>; EMinMaxStrategy::SIZE],
+        avecpayout_histogram: [Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>; EMinMaxStrategy::SIZE],
     }
     #[derive(new, Serialize)]
     struct SJson {
@@ -87,23 +86,33 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             } else {
                 rules
             };
-            let fn_human_readable_payout = |f_payout| {
+            let fn_human_readable_payout = |n_payout: isize| {
                 if let Some((_rules, fn_payout_to_points)) = &otplrulesfn_points_as_payout {
-                    fn_payout_to_points(
-                        stichseq,
-                        (epi_position, &ahand_fixed_with_holes[epi_position]),
-                        f_payout
+                    (
+                        fn_payout_to_points(
+                            stichseq,
+                            (epi_position, &ahand_fixed_with_holes[epi_position]),
+                            n_payout.as_num::<f32>(),
+                        ).as_num::<isize>(),
+                        n_payout.cmp(&0), // Human readable payout may not indicate loss or win: In Rufspiel, if epi_position has 60, it may mean win or loss, depending on whether epi_position is co-player.
                     )
                 } else {
-                    f_payout
+                    (n_payout, n_payout.cmp(&0))
                 }
             };
-            let json_histograms = |payoutstatsperstrategy: &SPerMinMaxStrategy<SPayoutStats<()>>| {
+            let json_histograms = move |payoutstatsperstrategy: &SPerMinMaxStrategy<SPayoutStats<std::cmp::Ordering>>| {
                 payoutstatsperstrategy.0.map(|payoutstats| 
                     payoutstats.histogram().iter()
-                        .map(|((n_payout, ()), n_count)| (
-                            fn_human_readable_payout(n_payout.as_num::<f32>()).as_num::<isize>(),
-                            *n_count
+                        .map(|((n_payout, ord_vs_0), n_count)| ( 
+                            (
+                                *n_payout,
+                                match ord_vs_0 {
+                                    std::cmp::Ordering::Less => '-',
+                                    std::cmp::Ordering::Equal => '\u{00b1}', // plus-minus 0
+                                    std::cmp::Ordering::Greater => '+',
+                                },
+                            ),
+                            *n_count,
                         ))
                         .collect()
                 ).into_raw()
@@ -221,7 +230,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 &$fn_snapshotcache,
                                 &mut visualizer,
                             ).0.map(|mapepiminmax| {
-                                SPayoutStats::new_1((mapepiminmax[epi_position], ()))
+                                SPayoutStats::new_1(fn_human_readable_payout(mapepiminmax[epi_position]))
                             })
                         })
                         .reduce(
@@ -238,13 +247,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 if !print_json(
                     /*vectableline*/vec![SJsonTableLine::new(
                         /*ostr_header*/None, // already given by str_rules
-                        /*amapnn_histogram*/json_histograms(&mapemmstrategypaystats),
+                        /*avecpayout_histogram*/json_histograms(&mapemmstrategypaystats),
                     )],
                 ) {
                     internal_table(
                         vec![(rules, mapemmstrategypaystats)],
                         /*b_group*/false,
-                        &fn_human_readable_payout,
+                        /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
                     ).print(b_verbose);
                 }
             } else {
@@ -282,7 +291,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 }
                             },
                             verify_eq!(epi_position, epi_current),
-                            /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()), // TODO SPayoutStats should store loss/win
+                            /*fn_payout*/&|_stichseq, _ahand, n_payout| fn_human_readable_payout(
+                                n_payout,
+                            ),
                         )
                     }}}
                     forward_with_args!(forward)
@@ -292,7 +303,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         .map(|(card, payoutstatsperstrategy)|
                             SJsonTableLine::new(
                                 /*ostr_header*/Some(card.to_string()),
-                                /*amapnn_histogram*/json_histograms(payoutstatsperstrategy),
+                                /*avecpayout_histogram*/json_histograms(payoutstatsperstrategy),
                             )
                         )
                         .collect(),
@@ -300,7 +311,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     table(
                         &determinebestcardresult,
                         rules,
-                        &fn_human_readable_payout,
+                        /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
                     ).print(b_verbose);
                 }
             }

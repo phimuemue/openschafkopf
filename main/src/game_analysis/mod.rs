@@ -400,7 +400,7 @@ fn generate_analysis_html(
             let vecoutputline = table(
                 &analysispercard.determinebestcardresult_cheating,
                 game.rules.as_ref(),
-                /*fn_human_readable_payout*/&|f_payout| f_payout,
+                /*fn_loss_or_win*/&|n_payout, ()| n_payout.cmp(&0),
             ).vecoutputline;
             // TODO simplify output (as it currently only shows results from one ahand)
             let stichseq = &analysispercard.stichseq;

@@ -233,10 +233,10 @@ impl<T: Ord + Copy + Debug> SPayoutStats<T> {
     pub fn histogram(&self) -> &BTreeMap<(isize, T), usize> {
         &self.mapnn_histogram
     }
-    pub fn counts(&self) -> EnumMap<std::cmp::Ordering, usize> {
+    pub fn counts(&self, fn_loss_or_win: impl Fn(isize, T)->std::cmp::Ordering) -> EnumMap<std::cmp::Ordering, usize> {
         let mut mapordn_counts = std::cmp::Ordering::map_from_fn(|_ord| 0);
-        for ((n_payout, _t), n_count) in self.mapnn_histogram.iter() {
-            mapordn_counts[n_payout.cmp(&0)] += n_count;
+        for ((n_payout, t), n_count) in self.mapnn_histogram.iter() {
+            mapordn_counts[fn_loss_or_win(*n_payout, *t)] += n_count;
         }
         mapordn_counts
     }

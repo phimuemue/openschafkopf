@@ -33,10 +33,10 @@ pub struct SPayoutStatsTable<T> {
     mapemmstrategyaformatinfo: EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>,
 }
 
-pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategy<SPayoutStats<()>>>>(
+pub fn internal_table<T, PayoutStatsPayload: Copy+Ord+std::fmt::Debug, PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategy<SPayoutStats<PayoutStatsPayload>>>>(
     mut vectpayoutstatsperstrategy: Vec<(T, PayoutStatsPerStrategy)>,
     b_group: bool,
-    fn_human_readable_payout: &dyn Fn(f32) -> f32,
+    fn_loss_or_win: &dyn Fn(isize, PayoutStatsPayload) -> std::cmp::Ordering,
 ) -> SPayoutStatsTable<T> {
     vectpayoutstatsperstrategy.sort_unstable_by(|(_t_lhs, minmax_lhs), (_t_rhs, minmax_rhs)| {
         minmax_lhs.borrow().compare_canonical(minmax_rhs.borrow())
@@ -54,18 +54,20 @@ pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategy<SPayo
     for ((mapemmstrategyatplstrf, _grouping), grptpltmapemmstrategyatplstrf) in vectpayoutstatsperstrategy.into_iter()
         .map(|(t, minmax)| {
             let minmax = minmax.borrow();
-            let column_counts = |paystats: &SPayoutStats<()>| {(
-                format!("{} ", paystats.counts().iter().join("/")),
-                (paystats.counts()[std::cmp::Ordering::Equal]+paystats.counts()[std::cmp::Ordering::Greater])
-                    .as_num::<f32>(),
-            )};
-            let column_min_or_max = |n: isize| {
-                let f_human_readable_payout = fn_human_readable_payout(n.as_num::<f32>());
-                (format!("{} ", f_human_readable_payout), f_human_readable_payout)
+            let column_counts = |paystats: &SPayoutStats<PayoutStatsPayload>| {
+                let mapordn_count = paystats.counts(fn_loss_or_win);
+                (
+                    format!("{} ", mapordn_count.iter().join("/")),
+                    (mapordn_count[std::cmp::Ordering::Equal]+mapordn_count[std::cmp::Ordering::Greater])
+                        .as_num::<f32>(),
+                )
             };
-            let column_average = |paystats: &SPayoutStats<()>| {
-                let f_human_readable_payout = fn_human_readable_payout(paystats.avg());
-                (format!("{:.2} ", f_human_readable_payout), f_human_readable_payout)
+            let column_min_or_max = |n: isize| {
+                (format!("{} ", n), n.as_num::<f32>())
+            };
+            let column_average = |paystats: &SPayoutStats<PayoutStatsPayload>| {
+                let f_avg = paystats.avg();
+                (format!("{:.2} ", f_avg), f_avg)
             };
             (
                 t,
@@ -109,15 +111,15 @@ pub fn internal_table<T, PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategy<SPayo
     }
 }
 
-pub fn table(
-    determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>,
+pub fn table<PayoutStatsPayload: Copy+Ord+std::fmt::Debug>(
+    determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<PayoutStatsPayload>>>,
     rules: &dyn TRules,
-    fn_human_readable_payout: &dyn Fn(f32) -> f32,
+    fn_loss_or_win: &dyn Fn(isize, PayoutStatsPayload) -> std::cmp::Ordering,
 ) -> SPayoutStatsTable<ECard> {
     let mut payoutstatstable = internal_table(
         determinebestcardresult.cards_and_ts().collect(),
         /*b_group*/true,
-        fn_human_readable_payout,
+        fn_loss_or_win,
     );
     for outputline in payoutstatstable.vecoutputline.iter_mut() {
         rules.sort_cards_first_trumpf_then_farbe(&mut outputline.vect);
