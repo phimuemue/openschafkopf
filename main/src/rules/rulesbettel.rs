@@ -168,14 +168,10 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
                 &[HA, HK, HO, HU, HZ, H9, H8, H7],
                 &[SA, SK, SO, SU, SZ, S9, S8, S7],
             ]),
-            {
-                let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
-                assert!(veccard_trumpf.is_empty());
-                SCardsPartition::new_from_slices(
-                    &mapefarbeveccard.iter()
-                        .map(|veccard| veccard as &[ECard]).collect::<Vec<_>>(),
-                )
-            }
+            SCardsPartition::new_from_slices(
+                &self.trumpfdecider.equivalent_when_on_same_hand().iter()
+                    .map(|veccard| veccard as &[ECard]).collect::<Vec<_>>(),
+            )
         )
     }
 

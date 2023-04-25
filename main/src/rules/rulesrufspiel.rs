@@ -211,8 +211,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 &[S9, S8, S7],
             ]),
             {
-                let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
-                let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
+                let vecveccard = self.trumpfdecider.equivalent_when_on_same_hand().into_raw().into_iter()
                     .flat_map(|veccard| equivalent_when_on_same_hand_point_based(&veccard))
                     .collect::<Vec<_>>();
                 SCardsPartition::new_from_slices(
@@ -234,9 +233,8 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     &[SA, SZ, SK, S9, S8, S7],
                 ]),
                 {
-                    let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
                     SCardsPartition::new_from_slices(
-                        &mapefarbeveccard.into_raw().iter().chain(Some(veccard_trumpf).iter())
+                        &self.trumpfdecider.equivalent_when_on_same_hand().into_raw().iter()
                             .map(|vec| -> &[_] { vec })
                             .collect::<Vec<_>>(),
                     )

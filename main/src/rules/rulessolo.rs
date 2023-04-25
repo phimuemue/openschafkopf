@@ -403,8 +403,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
     }
 
     fn equivalent_when_on_same_hand(&self) -> SCardsPartition {
-        let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
-        let vecveccard = mapefarbeveccard.into_raw().into_iter().chain(Some(veccard_trumpf).into_iter())
+        let vecveccard = self.trumpfdecider.equivalent_when_on_same_hand().into_raw().into_iter()
             .flat_map(|veccard| PayoutDecider::equivalent_when_on_same_hand(&veccard))
             .collect::<Vec<_>>();
         SCardsPartition::new_from_slices(
@@ -415,10 +414,9 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
 
     fn only_minmax_points_when_on_same_hand(&self, _rulestatecache: &SRuleStateCacheFixed) -> Option<(SCardsPartition, SPlayerPartiesTable)> {
         // TODO this is ok for normal Solo, point based Solo, Tout, Sie. But we can possibly improve this for e.g. Tout/Sie.
-        let (mapefarbeveccard, veccard_trumpf) = self.trumpfdecider.equivalent_when_on_same_hand();
         Some((
             SCardsPartition::new_from_slices(
-                &mapefarbeveccard.into_raw().iter().chain(Some(veccard_trumpf).iter())
+                &self.trumpfdecider.equivalent_when_on_same_hand().into_raw().iter()
                     .map(|vec| -> &[_] { vec })
                     .collect::<Vec<_>>(),
             ),

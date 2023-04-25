@@ -37,6 +37,25 @@ pub enum VTrumpfOrFarbe {
     Farbe (EFarbe),
 }
 
+impl PlainEnum for VTrumpfOrFarbe { // TODO(plain_enum) support enums with payload
+    const SIZE : usize = EFarbe::SIZE + 1;
+    type EnumMapArray<T> = [T; Self::SIZE];
+    unsafe fn from_usize(n: usize) -> Self {
+        debug_assert!(n < Self::SIZE);
+        if n==0 {
+            VTrumpfOrFarbe::Trumpf
+        } else {
+            VTrumpfOrFarbe::Farbe(EFarbe::from_usize(n-1))
+        }
+    }
+    fn to_usize(self) -> usize {
+        match self {
+            VTrumpfOrFarbe::Trumpf => 0,
+            VTrumpfOrFarbe::Farbe(efarbe) => 1 + efarbe.to_usize(),
+        }
+    }
+}
+
 impl VTrumpfOrFarbe {
     pub fn is_trumpf(&self) -> bool {
         match *self {

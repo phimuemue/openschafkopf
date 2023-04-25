@@ -10,24 +10,17 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug + Send {
     fn trumpfs_in_descending_order(&self, ) -> return_impl!(Self::ItCardTrumpf);
     fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering>;
 
-    fn equivalent_when_on_same_hand(&self, ) -> (EnumMap<EFarbe, Vec<ECard>>, /*veccard_trumpf*/Vec<ECard>) {
-        let mut mapefarbeveccard = EFarbe::map_from_fn(|_efarbe| Vec::new());
-        let mut veccard_trumpf = Vec::new();
+    fn equivalent_when_on_same_hand(&self, ) -> EnumMap<VTrumpfOrFarbe, Vec<ECard>> {
+        let mut maptrumpforfarbeveccard = VTrumpfOrFarbe::map_from_fn(|_trumpforfarbe| Vec::new());
         for card in <ECard as PlainEnum>::values() {
-            match self.trumpforfarbe(card) {
-                VTrumpfOrFarbe::Trumpf => veccard_trumpf.push(card),
-                VTrumpfOrFarbe::Farbe(efarbe) => mapefarbeveccard[efarbe].push(card),
-            }
+            maptrumpforfarbeveccard[self.trumpforfarbe(card)].push(card);
         }
-        for veccard in mapefarbeveccard.iter_mut() {
+        for veccard in maptrumpforfarbeveccard.iter_mut() {
             veccard.sort_unstable_by(|card_lhs, card_rhs|
                 unwrap!(self.compare_cards(*card_lhs, *card_rhs)).reverse()
             );
         }
-        veccard_trumpf.sort_unstable_by(|card_lhs, card_rhs|
-            unwrap!(self.compare_cards(*card_lhs, *card_rhs)).reverse()
-        );
-        (mapefarbeveccard, veccard_trumpf)
+        maptrumpforfarbeveccard
     }
 
     fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [ECard]) {
@@ -169,14 +162,14 @@ fn test_equivalent_when_on_same_hand_trumpfdecider() {
     type TrumpfDecider = STrumpfDeciderSchlag<
         SStaticSchlagOber, STrumpfDeciderSchlag<
         SStaticSchlagUnter, SStaticFarbeHerz>>;
-    let (mapefarbeveccard, veccard_trumpf) = TrumpfDecider::default().equivalent_when_on_same_hand();
+    let maptrumpforfarbeveccard = TrumpfDecider::default().equivalent_when_on_same_hand();
     fn assert_eq_cards(slccard_lhs: &[ECard], slccard_rhs: &[ECard]) {
         assert_eq!(slccard_lhs, slccard_rhs);
     }
     use crate::primitives::ECard::*;
-    assert_eq_cards(&veccard_trumpf, &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7]);
-    assert_eq_cards(&mapefarbeveccard[EFarbe::Eichel], &[EA, EZ, EK, E9, E8, E7]);
-    assert_eq_cards(&mapefarbeveccard[EFarbe::Gras], &[GA, GZ, GK, G9, G8, G7]);
-    assert_eq_cards(&mapefarbeveccard[EFarbe::Herz], &[]);
-    assert_eq_cards(&mapefarbeveccard[EFarbe::Schelln], &[SA, SZ, SK, S9, S8, S7]);
+    assert_eq_cards(&maptrumpforfarbeveccard[VTrumpfOrFarbe::Trumpf], &[EO, GO, HO, SO, EU, GU, HU, SU, HA, HZ, HK, H9, H8, H7]);
+    assert_eq_cards(&maptrumpforfarbeveccard[VTrumpfOrFarbe::Farbe(EFarbe::Eichel)], &[EA, EZ, EK, E9, E8, E7]);
+    assert_eq_cards(&maptrumpforfarbeveccard[VTrumpfOrFarbe::Farbe(EFarbe::Gras)], &[GA, GZ, GK, G9, G8, G7]);
+    assert_eq_cards(&maptrumpforfarbeveccard[VTrumpfOrFarbe::Farbe(EFarbe::Herz)], &[]);
+    assert_eq_cards(&maptrumpforfarbeveccard[VTrumpfOrFarbe::Farbe(EFarbe::Schelln)], &[SA, SZ, SK, S9, S8, S7]);
 }
