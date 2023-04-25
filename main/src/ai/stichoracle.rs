@@ -271,37 +271,7 @@ impl SStichTrie {
             }
             card_min_or_max
         }
-        if let Some(b_stich_winner_is_primary) = vecstich_all.iter()
-            .map(|stich| playerparties.is_primary_party(rules.winner_index(SFullStich::new(stich))))
-            .all_equal_item()
-        {
-            // Stich will surely go to one team.
-            // => Players belonging to that team must play point-richest cards from each chain.
-            // => Players not belonging to that team must play point-poor cards from each chain.
-            Self::make_simple(
-                (ahand, stichseq),
-                rules,
-                /*fn_filter*/&|(ahand, stichseq), veccard| {
-                    let cardspartition = compute_cardspartition(
-                        (ahand, stichseq),
-                        rules,
-                    );
-                    chains(&cardspartition, &veccard)
-                        .into_iter()
-                        .map(|veccard_chain|
-                            get_min_or_max_points(
-                                if playerparties.is_primary_party(unwrap!(stichseq.current_stich().current_playerindex()))==b_stich_winner_is_primary {
-                                    ELoHi::Hi
-                                } else {
-                                    ELoHi::Lo
-                                },
-                                veccard_chain,
-                            )
-                        )
-                        .collect()
-                },
-            )
-        } else if let Some(b_remaining_players_primary) = EPlayerIndex::values()
+        if let Some(b_remaining_players_primary) = EPlayerIndex::values()
             .map(|epi| stichseq.current_stich().first_playerindex().wrapping_add(epi.to_usize()))
             .skip(stichseq.current_stich().size())
             .map(|epi| playerparties.is_primary_party(epi))
@@ -345,6 +315,36 @@ impl SStichTrie {
             }
             assert!(!vecstich.is_empty());
             test_dbg!(vecstich)
+        } else if let Some(b_stich_winner_is_primary) = vecstich_all.iter()
+            .map(|stich| playerparties.is_primary_party(rules.winner_index(SFullStich::new(stich))))
+            .all_equal_item()
+        {
+            // Stich will surely go to one team.
+            // => Players belonging to that team must play point-richest cards from each chain.
+            // => Players not belonging to that team must play point-poor cards from each chain.
+            Self::make_simple(
+                (ahand, stichseq),
+                rules,
+                /*fn_filter*/&|(ahand, stichseq), veccard| {
+                    let cardspartition = compute_cardspartition(
+                        (ahand, stichseq),
+                        rules,
+                    );
+                    chains(&cardspartition, &veccard)
+                        .into_iter()
+                        .map(|veccard_chain|
+                            get_min_or_max_points(
+                                if playerparties.is_primary_party(unwrap!(stichseq.current_stich().current_playerindex()))==b_stich_winner_is_primary {
+                                    ELoHi::Hi
+                                } else {
+                                    ELoHi::Lo
+                                },
+                                veccard_chain,
+                            )
+                        )
+                        .collect()
+                },
+            )
         } else {
             // Stich may go to either team, remaining players may belong to either team.
             // => For each chain, we must consider all different-point cards.
