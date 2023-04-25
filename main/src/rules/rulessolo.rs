@@ -403,11 +403,11 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TRule
     }
 
     fn equivalent_when_on_same_hand(&self) -> SCardsPartition {
-        let vecveccard = self.trumpfdecider.equivalent_when_on_same_hand().into_raw().into_iter()
-            .flat_map(|veccard| PayoutDecider::equivalent_when_on_same_hand(&veccard))
-            .collect::<Vec<_>>();
         SCardsPartition::new_from_slices(
-            &vecveccard.iter()
+            &self.trumpfdecider.equivalent_when_on_same_hand().into_raw().into_iter()
+                .flat_map(|veccard| PayoutDecider::equivalent_when_on_same_hand(&veccard))
+                .collect::<Vec<_>>()
+                .iter()
                 .map(|veccard| veccard as &[ECard]).collect::<Vec<_>>(),
         )
     }
