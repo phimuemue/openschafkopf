@@ -63,11 +63,11 @@ fn test_cardvectorparser() {
     use crate::util::*;
     use crate::primitives::ECard::*;
     assert_eq!(
-        verify!(parse_cards::<Vec<_>>("ek Gk hZ hu s7 gZ")).unwrap(),
+        unwrap!(verify!(parse_cards::<Vec<_>>("ek Gk hZ hu s7 gZ"))),
         vec![EK, GK, HZ, HU, S7, GZ]
     );
     assert_eq!(
-        verify!(parse_optional_cards::<Vec<_>>("ek _  hZ __ ____  gZ")).unwrap(),
+        unwrap!(verify!(parse_optional_cards::<Vec<_>>("ek _  hZ __ ____  gZ"))),
         vec![Some(EK), None, Some(HZ), None, None, Some(GZ)]
     );
 }
