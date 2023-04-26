@@ -216,15 +216,19 @@ impl SStichTrie {
         (rules, playerparties): (&dyn TRules, &SPlayerPartiesTable),
         stichtrie_all: &SStichTrie,
     ) -> Vec<SStich> {
-        test_dbg!(("outer_make", display_card_slices(&ahand, &rules, ", "), &stichseq));
-        #[cfg(debug_assertions)] {
-            let vecstich_all = Self::make_simple(
+        #[cfg(debug_assertions)]
+        fn assert_stichtrie_is_same_as_unfiltered_make_simple(
+            (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
+            rules: &dyn TRules,
+            stichtrie: &SStichTrie,
+        ) {
+            let vecstich_all = SStichTrie::make_simple(
                 (ahand, stichseq),
                 rules,
                 /*fn_filter*/&|_tplahandstichseq, veccard| veccard, // no filtering
             );
             assert_eq!(
-                stichtrie_all.internal_traverse_trie(&mut stichseq.current_stich().clone())
+                stichtrie.internal_traverse_trie(&mut stichseq.current_stich().clone())
                     .into_iter()
                     .collect::<HashSet<_>>(),
                 vecstich_all.iter().cloned().collect::<HashSet<_>>(),
@@ -232,6 +236,12 @@ impl SStichTrie {
             assert!(!vecstich_all.is_empty());
             assert!(vecstich_all.iter().all(SStich::is_full));
         }
+        test_dbg!(("outer_make", display_card_slices(&ahand, &rules, ", "), &stichseq));
+        #[cfg(debug_assertions)] assert_stichtrie_is_same_as_unfiltered_make_simple(
+            (&mut ahand.clone(), &mut stichseq.clone()),
+            rules,
+            stichtrie_all,
+        );
         fn compute_cardspartition(
             (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
             rules: &dyn TRules,
