@@ -31,7 +31,7 @@ use std::{
 };
 use itertools::Itertools;
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub enum VTrumpfOrFarbe {
     Trumpf,
     Farbe (EFarbe),
@@ -213,7 +213,7 @@ impl SRuleStateCacheFixed {
         assert!(ECard::values(stichseq.kurzlang()).all(|card| mapcardoepi[card].is_some()));
         Self {mapcardoepi}
     }
-    fn who_has_card(&self, card: ECard) -> EPlayerIndex {
+    pub fn who_has_card(&self, card: ECard) -> EPlayerIndex {
         unwrap!(self.mapcardoepi[card])
     }
 }

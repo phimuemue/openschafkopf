@@ -2,8 +2,9 @@ use crate::{
     primitives::*,
     rules::{
         SPlayerPartiesTable,
-        card_points::points_card,
+        card_points::*,
         TRules,
+        VTrumpfOrFarbe,
     },
     util::*,
     ai::{
@@ -14,6 +15,8 @@ use crate::{
 };
 use arrayvec::ArrayVec;
 use itertools::Itertools;
+use std::collections::HashMap;
+use std::borrow::Borrow;
 
 #[derive(Debug, Clone)]
 pub struct SStichTrie {
@@ -277,44 +280,92 @@ impl SStichTrie {
             .map(|epi| playerparties.is_primary_party(epi))
             .all_equal_item()
         {
-            // All remaining players (starting with epi_card) are in the same team.
-            // => We only need to consider the point-richest and point-poorest card from each equivalence chain.
-            let epi_stich_first = stichseq.current_stich().first_playerindex();
-            let mapelohistichtrie = test_dbg!(ELoHi::map_from_fn(|elohi|
-                Self::new_from_full_stichs(Self::make_simple(
-                    (&mut ahand.clone(), &mut stichseq.clone()),
-                    rules,
-                    /*fn_filter*/&|(ahand, stichseq), veccard| {
-                        let cardspartition = compute_cardspartition(
-                            (ahand, stichseq),
-                            rules,
-                        );
-                        assert_eq!(playerparties.is_primary_party(unwrap!(stichseq.current_stich().current_playerindex())), b_remaining_players_primary);
-                        chains(&cardspartition, &veccard)
-                            .into_iter()
-                            .map(|veccard_chain| get_min_or_max_points(elohi, veccard_chain))
-                            .collect()
-                    },
-                ))
-            ));
-            assert!(
-                mapelohistichtrie.iter()
-                    .map(|stichtrie| stichtrie.traverse_trie(epi_stich_first).len())
-                    .all_equal()
-            );
-            let mut vecstich = Vec::new();
-            for (elohi, b_primary) in [
-                (ELoHi::Lo, !b_remaining_players_primary),
-                (ELoHi::Hi, b_remaining_players_primary),
-            ] {
-                for stich in mapelohistichtrie[elohi].traverse_trie(epi_stich_first) {
-                    if playerparties.is_primary_party(rules.winner_index(SFullStich::new(&stich)))==b_primary {
-                        vecstich.push(stich);
+            type STrumpfOrFarbeProfile = (EnumMap<EPlayerIndex, EnumMap<VTrumpfOrFarbe, Vec<usize>>>, EPlayerIndex/*epi_winner*/);
+            // In this case, players can cooperate.
+            // * For each possible current stich:
+            //   * for each trumpforfarbe:
+            //     * Enumerate the remaining trumpforfarbe from high to low, and store which player has
+            //       which indices on their hand after this stich is completed.
+            //   => This results in an STrumpfOrFarbeProfile for each possible current stich
+            // * Map each STrumpfOrFarbeProfile to a list of current sichs.
+            //   => This results in a Map<STrumpfOrFarbeProfile, Vec<SStich>>
+            let mut maptrumpforfarbeprofilevecstich = HashMap::<STrumpfOrFarbeProfile, Vec<SFullStich<SStich>>>::new();
+            for stich in vecstich_all {
+                let mut stichseq = stichseq.clone();
+                let mut ahand = ahand.clone();
+                for (epi, card) in SFullStich::new(stich).iter().skip(stichseq.current_stich().size()) {
+                    stichseq.zugeben(*card, rules);
+                    ahand[epi].play_card(*card);
+                }
+                assert!(crate::ai::ahand_vecstich_card_count_is_compatible(&ahand, &stichseq));
+                assert!(stichseq.current_stich().is_empty());
+                // TODO assert that working via VTrumpfOrFarbe is compatible with SCardsPartition
+                let mut maptrumpforfarbeveccard = VTrumpfOrFarbe::map_from_fn(|_| Vec::new());
+                for card in ECard::values(stichseq.kurzlang()) {
+                    maptrumpforfarbeveccard[rules.trumpforfarbe(card)].push(card);
+                }
+                for veccard in maptrumpforfarbeveccard.iter_mut() {
+                    veccard.sort_unstable_by(|card_lhs, card_rhs|
+                        unwrap!(rules.compare_cards(*card_rhs, *card_lhs)) // sort descending
+                    );
+                }
+                let mut trumpforfarbeprofile = (
+                    EPlayerIndex::map_from_fn(|_epi|
+                        VTrumpfOrFarbe::map_from_fn(|_trumpforfarbe| Vec::new())
+                    ),
+                    rules.winner_index(unwrap!(stichseq.last_completed_stich())),
+                );
+                let rulestatecache = SRuleStateCacheFixed::new(&ahand, &stichseq); // TODO avoid
+                for trumpforfarbe in VTrumpfOrFarbe::values() {
+                    for (i_card, epi) in maptrumpforfarbeveccard[trumpforfarbe.clone()]
+                        .iter()
+                        .filter_map(|&card| {
+                            let epi = rulestatecache.who_has_card(card);
+                            if_then_some!(ahand[epi].contains(card), epi)
+                        })
+                        .enumerate()
+                    {
+                        trumpforfarbeprofile.0[epi][trumpforfarbe.clone()].push(i_card);
                     }
                 }
+                maptrumpforfarbeprofilevecstich
+                    .entry(trumpforfarbeprofile)
+                    .or_default()
+                    .push(SFullStich::new(Borrow::<SStich>::borrow(&unwrap!(stichseq.last_completed_stich())).clone()));
             }
-            assert!(!vecstich.is_empty());
-            test_dbg!(vecstich)
+            // * Traverse the Map<STrumpfOrFarbeProfile, Vec<SStich>>, and only keep one element from the Vec<SStich>:
+            //   * If b_remaining_players_primary, then only keep the point-richest stich
+            //   * If !b_remaining_players_primary, then only keep the point-poorest stich
+            //   => Each STrumpfOrFarbeProfile contributes one stich.
+            let mut vecstich_out = Vec::new();
+            for (_trumpforfarbeprofile, mut vecstich) in maptrumpforfarbeprofilevecstich {
+                assert!(!vecstich.is_empty());
+                vecstich.sort_by(|stich_lhs, stich_rhs|
+                    itertools::zip_eq(stich_lhs.iter(), stich_rhs.iter())
+                        .map(|((epi_lhs, card_lhs), (epi_rhs, card_rhs))| {
+                            assert_eq!(epi_lhs, epi_rhs);
+                            unwrap!(rules.compare_cards(*card_rhs, *card_lhs)) // sort descending
+                        })
+                        .find(|&ord| ord!=std::cmp::Ordering::Equal)
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                );
+                let vecepi_winner = vecstich.iter().map(|stich| rules.winner_index(stich.as_ref())).collect::<Vec<_>>();
+                let epi_winner = unwrap!(vecepi_winner.into_iter().all_equal_item());
+                let mut ostich_out : Option<SStich> = None;
+                for stich in vecstich.into_iter().map(SFullStich::into_inner) {
+                    if let Some(stich_out) = ostich_out.as_mut() {
+                        if playerparties.is_primary_party(epi_winner)==b_remaining_players_primary {
+                            assign_max_by_key(stich_out, stich, |stich| points_stich(stich));
+                        } else {
+                            assign_min_by_key(stich_out, stich, |stich| points_stich(stich));
+                        };
+                    } else {
+                        ostich_out = Some(stich);
+                    }
+                }
+                vecstich_out.push(unwrap!(ostich_out));
+            }
+            vecstich_out
         } else if let Some(b_stich_winner_is_primary) = vecstich_all.iter()
             .map(|stich| playerparties.is_primary_party(rules.winner_index(SFullStich::new(stich))))
             .all_equal_item()
@@ -1071,14 +1122,14 @@ mod tests {
                 [GU, H8, HA, EO],
                 [GU, H8, HA, H9],
                 [GU, H8, HA, HZ],
-                [GU, H8, HU, EO],
+                // [GU, H8, HU, EO], // covered by [GU, H8, EU, EO]
                 [GU, H8, HU, H9],
                 [GU, H8, HU, HZ],
                 [GU, HK, EU, EO],
                 [GU, HK, EU, HZ],
                 [GU, HK, HA, EO],
                 [GU, HK, HA, H9],
-                [GU, HK, HU, EO],
+                // [GU, HK, HU, EO], // covered by [GU, HK, EU, EO]
                 [GU, HK, HU, H9],
                 // [GU, H7, __, __] // covered by [GU, H8, __, __]
                 // [SU, H7, __, __] // covered by [SU, H8, __, __]
@@ -1101,14 +1152,14 @@ mod tests {
                 [SU, H8, HA, EO],
                 [SU, H8, HA, H9],
                 [SU, H8, HA, HZ],
-                [SU, H8, HU, EO], // TODO should not be needed (HA better than HU)
+                // [SU, H8, HU, EO], // covered by [SU, H8, HA, EO]
                 [SU, H8, HU, H9],
                 [SU, H8, HU, HZ],
                 [SU, HK, EU, EO],
                 [SU, HK, EU, HZ],
                 [SU, HK, HA, EO],
                 [SU, HK, HA, H9],
-                [SU, HK, HU, EO], // TODO should not be needed (HA better than HU)
+                // [SU, HK, HU, EO], // covered by [SU, HK, HA, EO]
                 [SU, HK, HU, HZ],
                 [EK, EA, EZ, E9],
                 [EK, EA, E7, E9],
@@ -1423,14 +1474,14 @@ mod tests {
                 [EO, EU, G9, SZ],
                 [EO, EU, G9, S8],
                 // [EO, EU, G8, __], // covered by [EO, EU, G9, __]
-                [EO, HU, GU, EK],
-                [EO, HU, GU, E8],
+                // [EO, HU, GU, EK], // covered by [EO, EU, GU, ..]
+                // [EO, HU, GU, E8], // covered by [EO, EU, GU, ..]
                 // [EO, HU, GU, E7], // covered by [EO, HU, GU, E8]
-                [EO, HU, GU, HZ],
-                [EO, HU, GU, H9],
-                [EO, HU, GU, H7],
-                [EO, HU, GU, SZ],
-                [EO, HU, GU, S8],
+                // [EO, HU, GU, HZ], // covered by [EO, EU, GU, ..]
+                // [EO, HU, GU, H9], // covered by [EO, EU, GU, ..]
+                // [EO, HU, GU, H7], // covered by [EO, EU, GU, ..]
+                // [EO, HU, GU, SZ], // covered by [EO, EU, GU, ..]
+                // [EO, HU, GU, S8], // covered by [EO, EU, GU, ..]
                 // [EO, HU, SU, __], // covered by [EO, HU, GU, __]
                 [EO, HU, G9, EK],
                 [EO, HU, G9, E8],
@@ -1449,14 +1500,14 @@ mod tests {
                 [EO, GA, GU, H7],
                 [EO, GA, GU, SZ],
                 [EO, GA, GU, S8],
-                [EO, GA, SU, EK], // TODO should not be needed (HU better than GA)
-                [EO, GA, SU, E8], // TODO should not be needed (HU better than GA)
+                // [EO, GA, SU, EK], // covered by [EO, HU, .., ..]
+                // [EO, GA, SU, E8], // covered by [EO, HU, .., ..]
                 // [EO, GA, SU, E7], // covered by [EO, GA, SU, E8],
-                [EO, GA, SU, HZ], // TODO should not be needed (HU better than GA)
-                [EO, GA, SU, H9], // TODO should not be needed (HU better than GA)
-                [EO, GA, SU, H7], // TODO should not be needed (HU better than GA)
-                [EO, GA, SU, SZ], // TODO should not be needed (HU better than GA)
-                [EO, GA, SU, S8], // TODO should not be needed (HU better than GA)
+                // [EO, GA, SU, HZ], // covered by [EO, HU, .., ..]
+                // [EO, GA, SU, H9], // covered by [EO, HU, .., ..]
+                // [EO, GA, SU, H7], // covered by [EO, HU, .., ..]
+                // [EO, GA, SU, SZ], // covered by [EO, HU, .., ..]
+                // [EO, GA, SU, S8], // covered by [EO, HU, .., ..]
                 [EO, GA, G9, EK],
                 [EO, GA, G9, E8],
                 // [EO, GA, G9, E7], // covered by [EO, GA, G9, E8],
@@ -1519,22 +1570,22 @@ mod tests {
                 [GZ, SO, G9, S8],
                 // [GZ, SO, G8, __], // covered by [GZ, SO, G9, __],
                 // [GZ, EU, __, __], // covered by [GZ, SO, __, __]
-                [GZ, HU, GU, EK],
-                [GZ, HU, GU, E8],
+                // [GZ, HU, GU, EK], // covered by [GZ, GA, SU, ..]
+                // [GZ, HU, GU, E8], // covered by [GZ, GA, SU, ..]
                 // [GZ, HU, GU, E7], // covered by [GZ, HU, GU, E8],
-                [GZ, HU, GU, HZ],
-                [GZ, HU, GU, H9],
-                [GZ, HU, GU, H7],
-                [GZ, HU, GU, SZ],
-                [GZ, HU, GU, S8],
-                [GZ, HU, SU, EK],
-                [GZ, HU, SU, E8],
+                // [GZ, HU, GU, HZ], // covered by [GZ, GA, SU, ..]
+                // [GZ, HU, GU, H9], // covered by [GZ, GA, SU, ..]
+                // [GZ, HU, GU, H7], // covered by [GZ, GA, SU, ..]
+                // [GZ, HU, GU, SZ], // covered by [GZ, GA, SU, ..]
+                // [GZ, HU, GU, S8], // covered by [GZ, GA, SU, ..]
+                // [GZ, HU, SU, EK], // covered by [GZ, SO, GU, ..]
+                // [GZ, HU, SU, E8], // covered by [GZ, SO, GU, ..]
                 // [GZ, HU, SU, E7], // covered by [GZ, HU, SU, E8],
-                [GZ, HU, SU, HZ],
-                [GZ, HU, SU, H9],
-                [GZ, HU, SU, H7],
-                [GZ, HU, SU, SZ],
-                [GZ, HU, SU, S8],
+                // [GZ, HU, SU, HZ], // covered by [GZ, SO, GU, ..]
+                // [GZ, HU, SU, H9], // covered by [GZ, SO, GU, ..]
+                // [GZ, HU, SU, H7], // covered by [GZ, SO, GU, ..]
+                // [GZ, HU, SU, SZ], // covered by [GZ, SO, GU, ..]
+                // [GZ, HU, SU, S8], // covered by [GZ, SO, GU, ..]
                 [GZ, HU, G9, EK],
                 [GZ, HU, G9, E8],
                 // [GZ, HU, G9, E7], // covered by [GZ, HU, G9, E8],
@@ -1569,22 +1620,22 @@ mod tests {
                 [GZ, GA, G9, SZ],
                 [GZ, GA, G9, S8],
                 // [GZ, GA, G8, __], // covered by [GZ, GA, G9, __],
-                [GZ, GK, GU, EK], // TODO should not be needed (GA is better than GK)
-                [GZ, GK, GU, E8], // TODO should not be needed (GA is better than GK)
+                // [GZ, GK, GU, EK], // covered by [GZ, GA, .., ..]
+                // [GZ, GK, GU, E8], // covered by [GZ, GA, .., ..]
                 // [GZ, GK, GU, E7], // covered by [GZ, GK, GU, E8],
-                [GZ, GK, GU, HZ], // TODO should not be needed (GA is better than GK)
-                [GZ, GK, GU, H9], // TODO should not be needed (GA is better than GK)
-                [GZ, GK, GU, H7], // TODO should not be needed (GA is better than GK)
-                [GZ, GK, GU, SZ], // TODO should not be needed (GA is better than GK)
-                [GZ, GK, GU, S8], // TODO should not be needed (GA is better than GK)
-                [GZ, GK, SU, EK], // TODO should not be needed (GA is better than GK)
-                [GZ, GK, SU, E8], // TODO should not be needed (GA is better than GK)
+                // [GZ, GK, GU, HZ], // covered by [GZ, GA, .., ..]
+                // [GZ, GK, GU, H9], // covered by [GZ, GA, .., ..]
+                // [GZ, GK, GU, H7], // covered by [GZ, GA, .., ..]
+                // [GZ, GK, GU, SZ], // covered by [GZ, GA, .., ..]
+                // [GZ, GK, GU, S8], // covered by [GZ, GA, .., ..]
+                // [GZ, GK, SU, EK], // covered by [GZ, GA, .., ..]
+                // [GZ, GK, SU, E8], // covered by [GZ, GA, .., ..]
                 // [GZ, GK, SU, E7], // covered by [GZ, GK, SU, E8],
-                [GZ, GK, SU, HZ], // TODO should not be needed (GA is better than GK)
-                [GZ, GK, SU, H9], // TODO should not be needed (GA is better than GK)
-                [GZ, GK, SU, H7], // TODO should not be needed (GA is better than GK)
-                [GZ, GK, SU, SZ], // TODO should not be needed (GA is better than GK)
-                [GZ, GK, SU, S8], // TODO should not be needed (GA is better than GK)
+                // [GZ, GK, SU, HZ], // covered by [GZ, GA, .., ..]
+                // [GZ, GK, SU, H9], // covered by [GZ, GA, .., ..]
+                // [GZ, GK, SU, H7], // covered by [GZ, GA, .., ..]
+                // [GZ, GK, SU, SZ], // covered by [GZ, GA, .., ..]
+                // [GZ, GK, SU, S8], // covered by [GZ, GA, .., ..]
                 [GZ, GK, G9, EK],
                 [GZ, GK, G9, E8],
                 // [GZ, GK, G9, E7], // covered by [GZ, GK, G9, E8],
@@ -1620,22 +1671,22 @@ mod tests {
                 [G7, SO, G9, S8],
                 // [G7, SO, G8, __], // covered by [G7, SO, G9, __],
                 // [G7, EU, __, __], // covered by [G7, SO, __, __]
-                [G7, HU, GU, EK],
-                [G7, HU, GU, E8],
+                // [G7, HU, GU, EK], // covered by [G7, GA, SU, ..]
+                // [G7, HU, GU, E8], // covered by [G7, GA, SU, ..]
                 // [G7, HU, GU, E7], // covered by [G7, HU, GU, E8],
-                [G7, HU, GU, HZ],
-                [G7, HU, GU, H9],
-                [G7, HU, GU, H7],
-                [G7, HU, GU, SZ],
-                [G7, HU, GU, S8],
-                [G7, HU, SU, EK],
-                [G7, HU, SU, E8],
+                // [G7, HU, GU, HZ], // covered by [G7, GA, SU, ..]
+                // [G7, HU, GU, H9], // covered by [G7, GA, SU, ..]
+                // [G7, HU, GU, H7], // covered by [G7, GA, SU, ..]
+                // [G7, HU, GU, SZ], // covered by [G7, GA, SU, ..]
+                // [G7, HU, GU, S8], // covered by [G7, GA, SU, ..]
+                // [G7, HU, SU, EK], // covered by [G7, SO, GU, ..]
+                // [G7, HU, SU, E8], // covered by [G7, SO, GU, ..]
                 // [G7, HU, SU, E7], // covered by [G7, HU, SU, E8],
-                [G7, HU, SU, HZ],
-                [G7, HU, SU, H9],
-                [G7, HU, SU, H7],
-                [G7, HU, SU, SZ],
-                [G7, HU, SU, S8],
+                // [G7, HU, SU, HZ], // covered by [G7, SO, GU, ..]
+                // [G7, HU, SU, H9], // covered by [G7, SO, GU, ..]
+                // [G7, HU, SU, H7], // covered by [G7, SO, GU, ..]
+                // [G7, HU, SU, SZ], // covered by [G7, SO, GU, ..]
+                // [G7, HU, SU, S8], // covered by [G7, SO, GU, ..]
                 [G7, HU, G9, EK],
                 [G7, HU, G9, E8],
                 // [G7, HU, G9, E7], // covered by [G7, HU, G9, E8],
@@ -2897,7 +2948,7 @@ mod tests {
                 [HZ, SA, HA, G7],
                 [HZ, SA, HA, SK],
                 [HZ, SA, HA, S8],
-                [HZ, SA, HK, GU], // TODO should not be needed (HA better than HK)
+                // [HZ, SA, HK, GU], // covered by [HZ, SA, HA, GU]
                 [HZ, SA, HK, GK],
                 // [HZ, SA, HK, GO], // covered by [HZ, SA, HK, GK]
                 // [HZ, SA, HK, G9], // covered by [HZ, SA, .., GK]
@@ -2996,7 +3047,7 @@ mod tests {
                 [E8, SO, GU, EA],
                 [E8, SO, GU, E9],
                 // [SA, SO, SK, SZ], // covered by [SA, SO, SK, S9]
-                [SA, SO, SK, S9],
+                // [SA, SO, SK, S9], // covered by [SA, SO, S8, S9]
                 [SA, SO, S8, SZ],
                 [SA, SO, S8, S9],
                 [S7, SO, SK, SZ],

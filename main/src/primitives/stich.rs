@@ -22,6 +22,9 @@ impl<Stich: Borrow<SStich>> SFullStich<Stich> {
     pub fn iter(&self) -> SPlayersInRoundIterator<std::slice::Iter<ECard>> {
         self.0.borrow().iter()
     }
+    pub fn into_inner(self) -> Stich {
+        self.0
+    }
 }
 impl<Stich: Borrow<SStich>> Index<EPlayerIndex> for SFullStich<Stich> {
     type Output = ECard;

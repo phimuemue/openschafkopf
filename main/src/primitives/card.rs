@@ -4,7 +4,7 @@ use std::{
 };
 use serde::{Serializer};
 
-plain_enum_mod!(modefarbe, EFarbe {
+plain_enum_mod!(modefarbe, derive(Hash,), map_derive(), EFarbe {
     Eichel,
     Gras,
     Herz,
