@@ -237,7 +237,8 @@ impl SStichTrie {
             assert!(vecstich_all.iter().all(SStich::is_full));
         }
         test_dbg!(("outer_make", display_card_slices(&ahand, &rules, ", "), &stichseq));
-        #[cfg(debug_assertions)] assert_stichtrie_is_same_as_unfiltered_make_simple(
+        #[cfg(debug_assertions)]
+        assert_stichtrie_is_same_as_unfiltered_make_simple(
             (&mut ahand.clone(), &mut stichseq.clone()),
             rules,
             stichtrie_all,
@@ -564,12 +565,22 @@ impl SStichTrie {
         cardspartition_completed_cards: &SCardsPartition,
         playerparties: &SPlayerPartiesTable,
     ) -> Self {
-        // return Self::new_from_full_stichs(
-        //     Self::outer_make(
-        //         (ahand, stichseq),
-        //         (rules, playerparties),
-        //     )
-        // );
+        let stichtrie_all = SStichTrie::new_from_full_stichs(
+            SStichTrie::make_simple(
+                (&mut ahand.clone(), &mut stichseq.clone()),
+                rules,
+                /*fn_filter*/&|_tplahandstichseq, veccard| veccard, // no filtering
+            ),
+        );
+        let stichtrie_all = stichseq.current_stich().iter()
+            .fold(&stichtrie_all, |stichtrie, (_epi, &card)| stichtrie.get_child(card));
+        return Self::new_from_full_stichs(
+            Self::outer_make(
+                (ahand, stichseq),
+                (rules, playerparties),
+                stichtrie_all,
+            )
+        );
         fn for_each_allowed_card(
             n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
             (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
