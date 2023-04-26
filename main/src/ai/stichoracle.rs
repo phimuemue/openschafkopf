@@ -110,6 +110,10 @@ impl SStichTrie {
         #[cfg(debug_assertions)] self.assert_invariant();
     }
 
+    fn get_child(&self, card: ECard) -> &SStichTrie {
+        &unwrap!(self.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| *card_stichtrie==card)).1
+    }
+
     fn depth_in_edges(&self) -> usize {
         #[cfg(debug_assertions)] self.assert_invariant(); // checks that trie holds stichs of equal length
         if self.vectplcardtrie.is_empty() {
@@ -953,7 +957,7 @@ impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
     fn filter_allowed_cards(&self, stichseq: &SStichSequence, veccard: &mut SHandVector) {
         let mut stichtrie = &self.stichtrie;
         for (_epi, card) in stichseq./*TODO current_playable_stich*/current_stich().iter() {
-            stichtrie = &unwrap!(stichtrie.vectplcardtrie.iter().find(|(card_stichtrie, _stichtrie)| card_stichtrie==card)).1;
+            stichtrie = stichtrie.get_child(*card);
         }
         *veccard = stichtrie.vectplcardtrie.iter().map(|(card, _stichtrie)| *card).collect();
     }
