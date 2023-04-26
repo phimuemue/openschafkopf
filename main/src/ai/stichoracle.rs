@@ -151,22 +151,24 @@ impl SStichTrie {
         #[cfg(debug_assertions)] self.assert_invariant();
     }
 
-    fn traverse_trie(&self, epi_first: EPlayerIndex) -> Vec<SStich> {
-        fn internal_traverse_trie(stichtrie: &SStichTrie, stich: &mut SStich) -> Vec<SStich> {
-            if verify_eq!(stich.is_full(), stichtrie.vectplcardtrie.is_empty()) {
-                vec![stich.clone()]
-            } else {
-                let mut vecstich = Vec::new();
-                for (card, stichtrie_child) in stichtrie.vectplcardtrie.iter() {
-                    stich.push(*card);
-                    vecstich.extend(internal_traverse_trie(stichtrie_child, stich));
-                    stich.undo_most_recent();
-                }
-                debug_assert!(vecstich.iter().all_unique());
-                vecstich
+    fn internal_traverse_trie(&self, stich: &mut SStich) -> Vec<SStich> {
+        debug_assert_eq!(EPlayerIndex::SIZE-stich.size(), self.depth_in_edges());
+        if verify_eq!(stich.is_full(), self.vectplcardtrie.is_empty()) {
+            vec![stich.clone()]
+        } else {
+            let mut vecstich = Vec::new();
+            for (card, stichtrie_child) in self.vectplcardtrie.iter() {
+                stich.push(*card);
+                vecstich.extend(stichtrie_child.internal_traverse_trie(stich));
+                stich.undo_most_recent();
             }
+            debug_assert!(vecstich.iter().all_unique());
+            vecstich
         }
-        internal_traverse_trie(self, &mut SStich::new(epi_first))
+    }
+
+    fn traverse_trie(&self, epi_first: EPlayerIndex) -> Vec<SStich> {
+        self.internal_traverse_trie(&mut SStich::new(epi_first))
     }
 
     fn make_simple(
