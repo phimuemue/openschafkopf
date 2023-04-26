@@ -217,23 +217,21 @@ impl SStichTrie {
         stichtrie_all: &SStichTrie,
     ) -> Vec<SStich> {
         test_dbg!(("outer_make", display_card_slices(&ahand, &rules, ", "), &stichseq));
-        let vecstich_all = Self::make_simple(
-            (ahand, stichseq),
-            rules,
-            /*fn_filter*/&|_tplahandstichseq, veccard| veccard, // no filtering
-        );
-        debug_assert_eq!(
-            stichtrie_all.internal_traverse_trie(&mut stichseq.current_stich().clone())
-                .into_iter()
-                .collect::<HashSet<_>>(),
-            Self::make_simple(
+        #[cfg(debug_assertions)] {
+            let vecstich_all = Self::make_simple(
                 (ahand, stichseq),
                 rules,
                 /*fn_filter*/&|_tplahandstichseq, veccard| veccard, // no filtering
-            ).into_iter().collect::<HashSet<_>>(),
-        );
-        assert!(!vecstich_all.is_empty());
-        assert!(vecstich_all.iter().all(SStich::is_full));
+            );
+            assert_eq!(
+                stichtrie_all.internal_traverse_trie(&mut stichseq.current_stich().clone())
+                    .into_iter()
+                    .collect::<HashSet<_>>(),
+                vecstich_all.iter().cloned().collect::<HashSet<_>>(),
+            );
+            assert!(!vecstich_all.is_empty());
+            assert!(vecstich_all.iter().all(SStich::is_full));
+        }
         fn compute_cardspartition(
             (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
             rules: &dyn TRules,
@@ -310,7 +308,7 @@ impl SStichTrie {
             // * Map each STrumpfOrFarbeProfile to a list of current sichs.
             //   => This results in a Map<STrumpfOrFarbeProfile, Vec<SStich>>
             let mut maptrumpforfarbeprofilevecstich = HashMap::<STrumpfOrFarbeProfile, Vec<SFullStich<SStich>>>::new();
-            for stich in vecstich_all {
+            for stich in stichtrie_all.internal_traverse_trie(&mut stichseq.current_stich().clone()) {
                 let mut stichseq = stichseq.clone();
                 let mut ahand = ahand.clone();
                 for (epi, card) in SFullStich::new(stich).iter().skip(stichseq.current_stich().size()) {
@@ -386,7 +384,7 @@ impl SStichTrie {
                 vecstich_out.push(unwrap!(ostich_out));
             }
             vecstich_out
-        } else if let Some(b_stich_winner_is_primary) = vecstich_all.iter()
+        } else if let Some(b_stich_winner_is_primary) = stichtrie_all.internal_traverse_trie(&mut stichseq.current_stich().clone()).iter()
             .map(|stich| playerparties.is_primary_party(rules.winner_index(SFullStich::new(stich))))
             .all_equal_item()
         {
