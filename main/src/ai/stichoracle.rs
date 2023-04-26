@@ -15,7 +15,7 @@ use crate::{
 };
 use arrayvec::ArrayVec;
 use itertools::Itertools;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::borrow::Borrow;
 
 #[derive(Debug, Clone)]
@@ -214,12 +214,23 @@ impl SStichTrie {
     fn outer_make(
         (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
         (rules, playerparties): (&dyn TRules, &SPlayerPartiesTable),
+        stichtrie_all: &SStichTrie,
     ) -> Vec<SStich> {
         test_dbg!(("outer_make", display_card_slices(&ahand, &rules, ", "), &stichseq));
         let vecstich_all = Self::make_simple(
             (ahand, stichseq),
             rules,
             /*fn_filter*/&|_tplahandstichseq, veccard| veccard, // no filtering
+        );
+        debug_assert_eq!(
+            stichtrie_all.internal_traverse_trie(&mut stichseq.current_stich().clone())
+                .into_iter()
+                .collect::<HashSet<_>>(),
+            Self::make_simple(
+                (ahand, stichseq),
+                rules,
+                /*fn_filter*/&|_tplahandstichseq, veccard| veccard, // no filtering
+            ).into_iter().collect::<HashSet<_>>(),
         );
         assert!(!vecstich_all.is_empty());
         assert!(vecstich_all.iter().all(SStich::is_full));
@@ -438,6 +449,7 @@ impl SStichTrie {
                                 Self::outer_make(
                                     (ahand, stichseq),
                                     (rules, playerparties),
+                                    stichtrie_all.get_child(card),
                                 )
                             ));
                         }
@@ -474,7 +486,7 @@ impl SStichTrie {
                                         *unwrap!(stich.get(epi_winner))
                                     )
                                 })
-                                .collect::<std::collections::HashSet<_>>();
+                                .collect::<HashSet<_>>();
                             test_dbg!(if_then_some!(!veccard_better.is_empty(), veccard_better))
                         })
                         .collect::<Option<Vec<_>>>()
@@ -504,6 +516,7 @@ impl SStichTrie {
                                 Self::outer_make(
                                     (ahand, stichseq),
                                     (rules, playerparties),
+                                    stichtrie_all.get_child(card),
                                 )
                             ));
                             if card!=card_richest {
@@ -526,6 +539,7 @@ impl SStichTrie {
                                 Self::outer_make(
                                     (ahand, stichseq),
                                     (rules, playerparties),
+                                    stichtrie_all.get_child(card),
                                 )
                             ));
                         }
@@ -1042,10 +1056,19 @@ mod tests {
             for (_epi, card) in stichseq.completed_cards() {
                 cardspartition.remove_from_chain(*card);
             }
+            let stichtrie_all = SStichTrie::new_from_full_stichs(
+                SStichTrie::make_simple(
+                    (&mut ahand.clone(), &mut stichseq.clone()),
+                    rules,
+                    /*fn_filter*/&|_tplahandstichseq, veccard| veccard, // no filtering
+                ),
+            );
             let stichtrie = SStichTrie::new_from_full_stichs(
                 SStichTrie::outer_make(
                     (&mut ahand.clone(), &mut stichseq.clone()),
-                    (rules, &playerparties)
+                    (rules, &playerparties),
+                    stichseq.current_stich().iter()
+                        .fold(&stichtrie_all, |stichtrie, (_epi, &card)| stichtrie.get_child(card)),
                 ),
             );
             let setstich_oracle = stichtrie.traverse_trie(stichseq.current_stich().first_playerindex()).iter().cloned().collect::<std::collections::HashSet<_>>();
