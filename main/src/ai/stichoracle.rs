@@ -24,7 +24,10 @@ pub struct SStichTrie {
 }
 
 #[cfg(test)]
-macro_rules! test_dbg{($e:expr) => {dbg!($e)}}
+macro_rules! test_dbg{($e:expr) => {
+    //dbg!($e)
+    $e
+}}
 #[cfg(not(test))]
 macro_rules! test_dbg{($e:expr) => {$e}}
 
