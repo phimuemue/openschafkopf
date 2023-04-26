@@ -29,10 +29,10 @@ fn main() {
             })
     );
     // SVG rendering adapted from https://github.com/RazrFalcon/resvg/blob/master/examples/minimal.rs
-    let svgtree = usvg::Tree::from_data(
+    let svgtree = unwrap!(usvg::Tree::from_data(
         &unwrap!(std::fs::read(declare_input_file(path_resources.join("cards.svg")))),
         &usvg::Options::default(),
-    ).unwrap(/*TODO should implement Debug*/);
+    ));
     let screensize = svgtree.size.to_screen_size();
     let export_cards_png = |path_cards_png, n_factor: u32| {
         let mut pixmap = unwrap!(tiny_skia::Pixmap::new(
