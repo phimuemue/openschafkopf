@@ -1,34 +1,51 @@
+use std::fmt::Debug;
+
 pub trait TVerifiableByVerifyMacro {
-    fn is_verify_true(&self) -> bool;
+    type ErrDisplay<'err>: Debug
+        where Self: 'err; // TODORUST? https://github.com/rust-lang/rust/issues/87479
+    fn is_verify_true(&self) -> Result<(), Self::ErrDisplay<'_>>;
 }
 
 impl TVerifiableByVerifyMacro for bool {
-    fn is_verify_true(&self) -> bool {
-        *self
+    type ErrDisplay<'err> = bool;
+    fn is_verify_true(&self) -> Result<(), Self::ErrDisplay<'_>> {
+        if *self {
+            Ok(())
+        } else {
+            Err(*self)
+        }
     }
 }
 
 impl<T> TVerifiableByVerifyMacro for Option<T> {
-    fn is_verify_true(&self) -> bool {
-        self.is_some()
+    type ErrDisplay<'err> = &'static str where Self: 'err;
+    fn is_verify_true(&self) -> Result<(), Self::ErrDisplay<'_>> {
+        match self {
+            None => Err("None"),
+            Some(_) => Ok(()),
+        }
     }
 }
 
 impl<T: TVerifiableByVerifyMacro> TVerifiableByVerifyMacro for &T {
-    fn is_verify_true(&self) -> bool {
+    type ErrDisplay<'err> = T::ErrDisplay<'err> where Self: 'err;
+    fn is_verify_true(&self) -> Result<(), Self::ErrDisplay<'_>> {
         T::is_verify_true(self)
     }
 }
 
-impl<TOk, TErr> TVerifiableByVerifyMacro for Result<TOk, TErr> {
-    fn is_verify_true(&self) -> bool {
-        self.is_ok()
+impl<TOk, TErr: Debug> TVerifiableByVerifyMacro for Result<TOk, TErr> {
+    type ErrDisplay<'err> = &'err TErr where Self: 'err;
+    fn is_verify_true(&self) -> Result<(), Self::ErrDisplay<'_>> {
+        self.as_ref().map(|_| ())
     }
 }
 
 #[track_caller]
-pub fn verify_internal<E: TVerifiableByVerifyMacro + std::fmt::Debug>(e: E, str_e: &str) -> E {
-    assert!(e.is_verify_true(), "verify!({}): {:?}", str_e, e);
+pub fn verify_internal<E: TVerifiableByVerifyMacro>(e: E, str_e: &str) -> E {
+    if let Err(err) = e.is_verify_true() {
+        panic!("verify!({}): {:?}", str_e, err);
+    }
     e
 }
 
