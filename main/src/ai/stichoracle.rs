@@ -246,12 +246,15 @@ impl SStichTrie {
         fn compute_cardspartition(
             (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
             rules: &dyn TRules,
+            stichtrie: &SStichTrie,
         ) -> SCardsPartition { // TODO (a part of) cardspartition should be received as an input.
-            let vecstich_all = SStichTrie::make_simple(
+            #[cfg(debug_assertions)]
+            assert_stichtrie_is_same_as_unfiltered_make_simple(
                 (&mut ahand.clone(), &mut stichseq.clone()),
                 rules,
-                /*fn_filter*/&|_tplahandstichseq, veccard| veccard, // no filtering
+                stichtrie,
             );
+            let vecstich_all = stichtrie.internal_traverse_trie(&mut stichseq.current_stich().clone());
             let mut cardspartition = unwrap!(rules.only_minmax_points_when_on_same_hand(
                 &SRuleStateCacheFixed::new(ahand, stichseq),
             )).0;
@@ -402,6 +405,7 @@ impl SStichTrie {
             // Stich will surely go to one team.
             // => Players belonging to that team must play point-richest cards from each chain.
             // => Players not belonging to that team must play point-poor cards from each chain.
+            let n_cards_in_stich_played = stichseq.current_stich().size();
             Self::make_simple(
                 (ahand, stichseq),
                 rules,
@@ -409,6 +413,13 @@ impl SStichTrie {
                     let cardspartition = compute_cardspartition(
                         (ahand, stichseq),
                         rules,
+                        {
+                            let mut stichtrie = stichtrie_all;
+                            for (_epi, card) in stichseq.current_stich().iter().skip(n_cards_in_stich_played) {
+                                stichtrie = test_dbg!(stichtrie).get_child(test_dbg!(*card));
+                            }
+                            stichtrie
+                        },
                     );
                     chains(&cardspartition, &veccard)
                         .into_iter()
@@ -430,7 +441,18 @@ impl SStichTrie {
             // => For each chain, we must consider all different-point cards.
             let mut vecstich = Vec::new();
             let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
-            let cardspartition = compute_cardspartition((ahand, stichseq), rules);
+            let n_cards_in_stich_played = stichseq.current_stich().size();
+            let cardspartition = compute_cardspartition(
+                (ahand, stichseq),
+                rules,
+                {
+                    let mut stichtrie = stichtrie_all;
+                    for (_epi, card) in stichseq.current_stich().iter().skip(n_cards_in_stich_played) {
+                        stichtrie = test_dbg!(stichtrie).get_child(test_dbg!(*card));
+                    }
+                    stichtrie
+                },
+            );
             for veccard_chain in chains(&cardspartition, &rules.all_allowed_cards(stichseq, &ahand[epi_card])) {
                 let vecstich_for_card_in_chain = stichseq.zugeben_and_restore_with_hands(ahand, epi_card, veccard_chain[0], rules, |ahand, stichseq|
                     Self::make_simple(
