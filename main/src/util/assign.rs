@@ -1,35 +1,38 @@
-pub fn assign_better<T>(dst: &mut T, src: T, fn_better: impl FnOnce(&T, &T) -> bool) -> /*TODO can/should we make return type generic (e.g. support unit or Option/Result return type)*/bool {
-    if_then_true!(fn_better(&src, dst), {
-        *dst = src;
+use crate::util::moveorclone::TMoveOrClone;
+use std::borrow::Borrow;
+
+pub fn assign_better<T, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src, fn_better: impl FnOnce(&T, &T) -> bool) -> /*TODO can/should we make return type generic (e.g. support unit or Option/Result return type)*/bool {
+    if_then_true!(fn_better(src.borrow(), dst), {
+        *dst = src.move_or_clone();
     })
 }
 
 #[allow(dead_code)]
-pub fn assign_min<T: Ord>(dst: &mut T, src: T) -> bool {
+pub fn assign_min<T: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs < rhs)
 }
 
-pub fn assign_max<T: Ord>(dst: &mut T, src: T) -> bool {
+pub fn assign_max<T: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs > rhs)
 }
 
-pub fn assign_min_partial_ord<T: PartialOrd>(dst: &mut T, src: T) -> bool {
+pub fn assign_min_partial_ord<T: PartialOrd, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs < rhs)
 }
 
-pub fn assign_max_partial_ord<T: PartialOrd>(dst: &mut T, src: T) -> bool {
+pub fn assign_max_partial_ord<T: PartialOrd, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs > rhs)
 }
 
-pub fn assign_min_by_key<T, K: Ord>(dst: &mut T, src: T, mut fn_key: impl FnMut(&T) -> K) -> bool {
+pub fn assign_min_by_key<T, K: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src, mut fn_key: impl FnMut(&T) -> K) -> bool {
     assign_better(dst, src, |lhs, rhs| fn_key(lhs) < fn_key(rhs))
 }
 
-pub fn assign_max_by_key<T, K: Ord>(dst: &mut T, src: T, mut fn_key: impl FnMut(&T) -> K) -> bool {
+pub fn assign_max_by_key<T, K: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src, mut fn_key: impl FnMut(&T) -> K) -> bool {
     assign_better(dst, src, |lhs, rhs| fn_key(lhs) > fn_key(rhs))
 }
 
-pub fn assign_neq<T: Eq>(dst: &mut T, src: T) -> bool {
+pub fn assign_neq<T: Eq, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs!=rhs)
 }
 
