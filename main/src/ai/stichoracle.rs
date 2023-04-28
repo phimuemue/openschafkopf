@@ -155,24 +155,24 @@ impl SStichTrie {
         #[cfg(debug_assertions)] self.assert_invariant();
     }
 
-    fn internal_traverse_trie(&self, stich: &mut SStich) -> Vec<SStich> {
+    fn internal_traverse_trie(&self, stich: &mut SStich, fn_callback: &mut impl FnMut(SFullStich<&SStich>)) {
         debug_assert_eq!(EPlayerIndex::SIZE-stich.size(), self.depth_in_edges());
         if verify_eq!(stich.is_full(), self.vectplcardtrie.is_empty()) {
-            vec![stich.clone()]
+            fn_callback(SFullStich::new(stich))
         } else {
-            let mut vecstich = Vec::new();
             for (card, stichtrie_child) in self.vectplcardtrie.iter() {
                 stich.push(*card);
-                vecstich.extend(stichtrie_child.internal_traverse_trie(stich));
+                stichtrie_child.internal_traverse_trie(stich, fn_callback);
                 stich.undo_most_recent();
             }
-            debug_assert!(vecstich.iter().all_unique());
-            vecstich
         }
     }
 
     fn traverse_trie(&self, epi_first: EPlayerIndex) -> Vec<SStich> {
-        self.internal_traverse_trie(&mut SStich::new(epi_first))
+        let mut vecstich = Vec::new();
+        self.internal_traverse_trie(&mut SStich::new(epi_first), &mut |stich| vecstich.push(stich.into_inner().clone()));
+        debug_assert!(vecstich.iter().all_unique());
+        vecstich
     }
 
     fn make_simple(
@@ -228,9 +228,13 @@ impl SStichTrie {
                 /*fn_filter*/&|_tplahandstichseq, veccard| veccard, // no filtering
             );
             assert_eq!(
-                stichtrie.internal_traverse_trie(&mut stichseq.current_stich().clone())
-                    .into_iter()
-                    .collect::<HashSet<_>>(),
+                {
+                    let mut setstich = HashSet::new();
+                    stichtrie.internal_traverse_trie(&mut stichseq.current_stich().clone(), &mut |stich| {
+                        setstich.insert(stich.into_inner().clone());
+                    });
+                    setstich
+                },
                 vecstich_all.iter().cloned().collect::<HashSet<_>>(),
             );
             assert!(!vecstich_all.is_empty());
@@ -254,7 +258,13 @@ impl SStichTrie {
                 rules,
                 stichtrie,
             );
-            let vecstich_all = stichtrie.internal_traverse_trie(&mut stichseq.current_stich().clone());
+            let vecstich_all = {
+                let mut vecstich_all = Vec::new();
+                stichtrie.internal_traverse_trie(&mut stichseq.current_stich().clone(), &mut |stich| {
+                    vecstich_all.push(stich.into_inner().clone());
+                });
+                vecstich_all
+            };
             let mut cardspartition = unwrap!(rules.only_minmax_points_when_on_same_hand(
                 &SRuleStateCacheFixed::new(ahand, stichseq),
             )).0;
@@ -322,10 +332,10 @@ impl SStichTrie {
             // * Map each STrumpfOrFarbeProfile to a list of current sichs.
             //   => This results in a Map<STrumpfOrFarbeProfile, Vec<SStich>>
             let mut maptrumpforfarbeprofilevecstich = HashMap::<STrumpfOrFarbeProfile, Vec<SFullStich<SStich>>>::new();
-            for stich in stichtrie_all.internal_traverse_trie(&mut stichseq.current_stich().clone()) {
+            stichtrie_all.internal_traverse_trie(&mut stichseq.current_stich().clone(), &mut |stich| {
                 let mut stichseq = stichseq.clone();
                 let mut ahand = ahand.clone();
-                for (epi, card) in SFullStich::new(stich).iter().skip(stichseq.current_stich().size()) {
+                for (epi, card) in stich.iter().skip(stichseq.current_stich().size()) {
                     stichseq.zugeben(*card, rules);
                     ahand[epi].play_card(*card);
                 }
@@ -364,7 +374,7 @@ impl SStichTrie {
                     .entry(trumpforfarbeprofile)
                     .or_default()
                     .push(SFullStich::new(Borrow::<SStich>::borrow(&unwrap!(stichseq.last_completed_stich())).clone()));
-            }
+            });
             // * Traverse the Map<STrumpfOrFarbeProfile, Vec<SStich>>, and only keep one element from the Vec<SStich>:
             //   * If b_remaining_players_primary, then only keep the point-richest stich
             //   * If !b_remaining_players_primary, then only keep the point-poorest stich
@@ -398,10 +408,22 @@ impl SStichTrie {
                 vecstich_out.push(unwrap!(ostich_out));
             }
             vecstich_out
-        } else if let Some(b_stich_winner_is_primary) = stichtrie_all.internal_traverse_trie(&mut stichseq.current_stich().clone()).iter()
-            .map(|stich| playerparties.is_primary_party(rules.winner_index(SFullStich::new(stich))))
-            .all_equal_item()
-        {
+        } else if let Ok(b_stich_winner_is_primary) = {
+            let mut oresb_stich_winner_is_primary = None;
+            stichtrie_all.internal_traverse_trie(&mut stichseq.current_stich().clone(), &mut |stich| {
+                let b_stich_winner_is_primary = playerparties.is_primary_party(rules.winner_index(stich));
+                match oresb_stich_winner_is_primary {
+                    None => oresb_stich_winner_is_primary = Some(Ok(b_stich_winner_is_primary)),
+                    Some(Err(())) => {/*distinct winner indices found -- preserve result*/},
+                    Some(Ok(b_stich_winner_is_primary_up_to_now)) => {
+                        if b_stich_winner_is_primary_up_to_now!=b_stich_winner_is_primary {
+                            oresb_stich_winner_is_primary = Some(Err(()));
+                        }
+                    },
+                }
+            });
+            unwrap!(oresb_stich_winner_is_primary)
+        } {
             // Stich will surely go to one team.
             // => Players belonging to that team must play point-richest cards from each chain.
             // => Players not belonging to that team must play point-poor cards from each chain.
