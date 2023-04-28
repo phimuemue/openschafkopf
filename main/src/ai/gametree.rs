@@ -490,7 +490,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
             itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
                 assign_min_by_key(
                     &mut minmax_acc.0[EMinMaxStrategy::MinMin],
-                    minmax.0[EMinMaxStrategy::MinMin].explicit_clone(),
+                    minmax.0[EMinMaxStrategy::MinMin],
                     |an_payout| an_payout[self.epi],
                 );
                 for emmstrategy in [
@@ -502,7 +502,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                 ] {
                     assign_max_by_key(
                         &mut minmax_acc.0[emmstrategy],
-                        minmax.0[emmstrategy].explicit_clone(),
+                        minmax.0[emmstrategy],
                         |an_payout| an_payout[self.epi],
                     );
                 }
@@ -512,17 +512,17 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
             itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
                 assign_min_by_key(
                     &mut minmax_acc.0[EMinMaxStrategy::MinMin],
-                    minmax.0[EMinMaxStrategy::MinMin].explicit_clone(),
+                    minmax.0[EMinMaxStrategy::MinMin],
                     |an_payout| an_payout[self.epi],
                 );
                 assign_min_by_key(
                     &mut minmax_acc.0[EMinMaxStrategy::Min],
-                    minmax.0[EMinMaxStrategy::Min].explicit_clone(),
+                    minmax.0[EMinMaxStrategy::Min],
                     |an_payout| an_payout[self.epi],
                 );
                 assign_better(
                     &mut minmax_acc.0[EMinMaxStrategy::SelfishMin],
-                    minmax.0[EMinMaxStrategy::SelfishMin].explicit_clone(),
+                    minmax.0[EMinMaxStrategy::SelfishMin],
                     |an_payout_lhs, an_payout_rhs| {
                         match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
                             Ordering::Less => false,
@@ -533,7 +533,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                 );
                 assign_better(
                     &mut minmax_acc.0[EMinMaxStrategy::SelfishMax],
-                    minmax.0[EMinMaxStrategy::SelfishMax].explicit_clone(),
+                    minmax.0[EMinMaxStrategy::SelfishMax],
                     |an_payout_lhs, an_payout_rhs| {
                         match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
                             Ordering::Less => false,
@@ -544,7 +544,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                 );
                 assign_max_by_key(
                     &mut minmax_acc.0[EMinMaxStrategy::Max],
-                    minmax.0[EMinMaxStrategy::Max].explicit_clone(),
+                    minmax.0[EMinMaxStrategy::Max],
                     |an_payout| an_payout[self.epi],
                 );
 
