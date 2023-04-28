@@ -8,13 +8,16 @@ use std::{cmp::Ordering, fmt, fs, io::{BufWriter, Write}};
 use super::cardspartition::*;
 
 pub trait TForEachSnapshot {
+    type Parent;
     type Output;
+    fn next_parent(&self, epi: EPlayerIndex) -> Self::Parent;
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output;
     fn pruned_output(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<Self::Output>;
     fn combine_outputs<ItTplCardOutput: Iterator<Item=(ECard, Self::Output)>>(
         &self,
         epi_card: EPlayerIndex,
         ittplcardoutput: ItTplCardOutput,
+        oparent: Option<&Self::Parent>,
     ) -> Self::Output;
 }
 
@@ -291,6 +294,7 @@ pub fn explore_snapshots<
             &mut rulestatecache,
             $func_filter_allowed_cards,
             foreachsnapshot,
+            /*oparent*/None,
             $snapshotcache,
             snapshotvisualizer,
         )
@@ -313,6 +317,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     rulestatecache: &mut SRuleStateCache,
     func_filter_allowed_cards: &mut impl TFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
+    oparent: Option<&ForEachSnapshot::Parent>,
     snapshotcache: &mut impl TSnapshotCache<ForEachSnapshot::Output>,
     snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
@@ -377,6 +382,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                             rulestatecache,
                             $func_filter_allowed_cards,
                             foreachsnapshot,
+                            /*oparent*/Some(&foreachsnapshot.next_parent(epi_current)),
                             $snapshotcache,
                             snapshotvisualizer,
                         )}}
@@ -418,7 +424,8 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                         }
                     });
                     (card, output)
-                })
+                }),
+                oparent,
             )
         })
     };
@@ -466,6 +473,9 @@ impl SMinMax {
 
 impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     type Output = SMinMax;
+    type Parent = ();
+    fn next_parent(&self, _epi: EPlayerIndex) -> Self::Parent {
+    }
 
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
         SMinMax::new_final(self.rules.payout(
@@ -484,6 +494,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         &self,
         epi_card: EPlayerIndex,
         ittplcardoutput: ItTplCardOutput,
+        _oparent: Option<&Self::Parent>,
     ) -> Self::Output {
         let itminmax = ittplcardoutput.map(|(_card, minmax)| minmax);
         unwrap!(if self.epi==epi_card {
