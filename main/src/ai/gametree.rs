@@ -9,13 +9,14 @@ use super::cardspartition::*;
 
 pub trait TForEachSnapshot {
     type Output;
+    type InfoFromParent;
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output;
     fn pruned_output(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<Self::Output>;
     fn combine_outputs(
         &self,
         epi_card: EPlayerIndex,
         veccard: SHandVector, // TODO? &[ECard] better?
-        fn_card_to_output: impl FnMut(ECard)->Self::Output,
+        fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent)->Self::Output,
     ) -> Self::Output;
 }
 
@@ -371,7 +372,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             foreachsnapshot.combine_outputs(
                 epi_current,
                 veccard_allowed,
-                |card| {
+                |card, _infofromparent| {
                     stichseq.zugeben_and_restore_with_hands(ahand, epi_current, card, rules, |ahand, stichseq| {
                         macro_rules! next_step {($func_filter_allowed_cards:expr, $snapshotcache:expr) => {explore_snapshots_internal(
                             (ahand, stichseq),
@@ -467,6 +468,7 @@ impl SMinMax {
 
 impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     type Output = SMinMax;
+    type InfoFromParent = (); // TODO meaningful InfoFromParent
 
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
         SMinMax::new_final(self.rules.payout(
@@ -485,9 +487,9 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         &self,
         epi_card: EPlayerIndex,
         veccard: SHandVector, // TODO? &[ECard] better?
-        fn_card_to_output: impl FnMut(ECard)->Self::Output,
+        mut fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent)->Self::Output,
     ) -> Self::Output {
-        let itminmax = veccard.into_iter().map(fn_card_to_output);
+        let itminmax = veccard.into_iter().map(|card| fn_card_to_output(card, ()));
         unwrap!(if self.epi==epi_card {
             itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
                 assign_min_by_key(
