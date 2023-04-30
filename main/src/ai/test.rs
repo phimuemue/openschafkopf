@@ -117,12 +117,13 @@ fn detect_expensive_all_possible_hands() {
                             fn pruned_output(&self, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
                                 None
                             }
-                            fn combine_outputs<ItTplCardOutput: Iterator<Item=(ECard, Self::Output)>>(
+                            fn combine_outputs(
                                 &self,
                                 _epi_card: EPlayerIndex,
-                                ittplcardoutput: ItTplCardOutput,
+                                veccard: SHandVector, // TODO? &[ECard] better?
+                                fn_card_to_output: impl FnMut(ECard)->Self::Output,
                             ) -> Self::Output {
-                                ittplcardoutput.map(|tplcardoutput| tplcardoutput.1).sum()
+                                veccard.into_iter().map(fn_card_to_output).sum()
                             }
                         }
                         assert_bound(

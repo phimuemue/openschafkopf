@@ -11,10 +11,11 @@ pub trait TForEachSnapshot {
     type Output;
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output;
     fn pruned_output(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<Self::Output>;
-    fn combine_outputs<ItTplCardOutput: Iterator<Item=(ECard, Self::Output)>>(
+    fn combine_outputs(
         &self,
         epi_card: EPlayerIndex,
-        ittplcardoutput: ItTplCardOutput,
+        veccard: SHandVector, // TODO? &[ECard] better?
+        fn_card_to_output: impl FnMut(ECard)->Self::Output,
     ) -> Self::Output;
 }
 
@@ -369,8 +370,9 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             // TODO? use equivalent card optimization
             foreachsnapshot.combine_outputs(
                 epi_current,
-                veccard_allowed.into_iter().map(|card| {
-                    let output = stichseq.zugeben_and_restore_with_hands(ahand, epi_current, card, rules, |ahand, stichseq| {
+                veccard_allowed,
+                |card| {
+                    stichseq.zugeben_and_restore_with_hands(ahand, epi_current, card, rules, |ahand, stichseq| {
                         macro_rules! next_step {($func_filter_allowed_cards:expr, $snapshotcache:expr) => {explore_snapshots_internal(
                             (ahand, stichseq),
                             rules,
@@ -416,9 +418,8 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                         } else {
                             next_step!(func_filter_allowed_cards, snapshotcache)
                         }
-                    });
-                    (card, output)
-                })
+                    })
+                },
             )
         })
     };
@@ -480,12 +481,13 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         Pruner::pruned_output(self, tplahandstichseq, rulestatecache)
     }
 
-    fn combine_outputs<ItTplCardOutput: Iterator<Item=(ECard, Self::Output)>>(
+    fn combine_outputs(
         &self,
         epi_card: EPlayerIndex,
-        ittplcardoutput: ItTplCardOutput,
+        veccard: SHandVector, // TODO? &[ECard] better?
+        fn_card_to_output: impl FnMut(ECard)->Self::Output,
     ) -> Self::Output {
-        let itminmax = ittplcardoutput.map(|(_card, minmax)| minmax);
+        let itminmax = veccard.into_iter().map(fn_card_to_output);
         unwrap!(if self.epi==epi_card {
             itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
                 assign_min_by_key(
