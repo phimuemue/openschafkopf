@@ -121,6 +121,7 @@ fn detect_expensive_all_possible_hands() {
                             fn combine_outputs(
                                 &self,
                                 _epi_card: EPlayerIndex,
+                                _oinfofromparent: Option<Self::InfoFromParent>,
                                 veccard: SHandVector, // TODO? &[ECard] better?
                                 mut fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent)->Self::Output,
                             ) -> Self::Output {

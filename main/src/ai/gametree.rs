@@ -15,6 +15,7 @@ pub trait TForEachSnapshot {
     fn combine_outputs(
         &self,
         epi_card: EPlayerIndex,
+        oinfofromparent: Option<Self::InfoFromParent>,
         veccard: SHandVector, // TODO? &[ECard] better?
         fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent)->Self::Output,
     ) -> Self::Output;
@@ -293,6 +294,7 @@ pub fn explore_snapshots<
             &mut rulestatecache,
             $func_filter_allowed_cards,
             foreachsnapshot,
+            /*oinfofromparent*/None,
             $snapshotcache,
             snapshotvisualizer,
         )
@@ -315,6 +317,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     rulestatecache: &mut SRuleStateCache,
     func_filter_allowed_cards: &mut impl TFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
+    oinfofromparent: Option<ForEachSnapshot::InfoFromParent>,
     snapshotcache: &mut impl TSnapshotCache<ForEachSnapshot::Output>,
     snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
@@ -371,8 +374,9 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             // TODO? use equivalent card optimization
             foreachsnapshot.combine_outputs(
                 epi_current,
+                oinfofromparent,
                 veccard_allowed,
-                |card, _infofromparent| {
+                |card, infofromparent| {
                     stichseq.zugeben_and_restore_with_hands(ahand, epi_current, card, rules, |ahand, stichseq| {
                         macro_rules! next_step {($func_filter_allowed_cards:expr, $snapshotcache:expr) => {explore_snapshots_internal(
                             (ahand, stichseq),
@@ -380,6 +384,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                             rulestatecache,
                             $func_filter_allowed_cards,
                             foreachsnapshot,
+                            Some(infofromparent),
                             $snapshotcache,
                             snapshotvisualizer,
                         )}}
@@ -486,6 +491,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     fn combine_outputs(
         &self,
         epi_card: EPlayerIndex,
+        _oinfofromparent: Option<Self::InfoFromParent>,
         veccard: SHandVector, // TODO? &[ECard] better?
         mut fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent)->Self::Output,
     ) -> Self::Output {
