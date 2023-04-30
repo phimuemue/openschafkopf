@@ -491,7 +491,7 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     fn combine_outputs(
         &self,
         epi_card: EPlayerIndex,
-        _oinfofromparent: Option<Self::InfoFromParent>,
+        oinfofromparent: Option<Self::InfoFromParent>,
         veccard: SHandVector, // TODO? &[ECard] better?
         mut fn_card_to_output: impl FnMut(ECard, Option<Self::InfoFromParent>)->Self::Output,
     ) -> Self::Output {
@@ -518,6 +518,13 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                         |an_payout| an_payout[self.epi],
                     );
                 }
+                if let Some((elohi_parent, n_payout_epi_self_parent)) = oinfofromparent {
+                    if elohi_parent==ELoHi::Lo // contradicts this step's goal => Alpha-Beta-Pruning may be possible
+                        && minmax_acc.0[/*TODO parametrize by EMinMaxStrategy*/EMinMaxStrategy::Min][self.epi] >= n_payout_epi_self_parent // parent's *minimization* will surely *not* be affected by the following possibilities, as they only are *maximized* further
+                    {
+                        break;
+                    }
+                }
             }
         } else {
             // other players may play inconveniently for epi_stich
@@ -533,6 +540,13 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                     minmax.0[EMinMaxStrategy::Min],
                     |an_payout| an_payout[self.epi],
                 );
+                if let Some((elohi_parent, n_payout_epi_self_parent)) = oinfofromparent {
+                    if elohi_parent==ELoHi::Hi // contradicts this step's goal => Alpha-Beta-Pruning may be possible
+                        && minmax_acc.0[/*TODO parametrize by EMinMaxStrategy*/EMinMaxStrategy::Min][self.epi] <= n_payout_epi_self_parent // parent's *minimization* will surely *not* be affected by the following possibilities, as they only are *maximized* further
+                    {
+                        break;
+                    }
+                }
                 assign_better(
                     &mut minmax_acc.0[EMinMaxStrategy::SelfishMin],
                     minmax.0[EMinMaxStrategy::SelfishMin],
@@ -560,7 +574,6 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                     minmax.0[EMinMaxStrategy::Max],
                     |an_payout| an_payout[self.epi],
                 );
-
             }
         }
         minmax_acc
