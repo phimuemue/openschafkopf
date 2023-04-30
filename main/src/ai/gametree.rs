@@ -473,7 +473,7 @@ impl SMinMax {
 
 impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     type Output = SMinMax;
-    type InfoFromParent = (); // TODO meaningful InfoFromParent
+    type InfoFromParent = (ELoHi, isize/*payout for self.epi*/); // TODO parametrize by PlayerParties TODO allow omitting alpha-beta-pruning
 
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
         SMinMax::new_final(self.rules.payout(
@@ -495,10 +495,11 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         veccard: SHandVector, // TODO? &[ECard] better?
         mut fn_card_to_output: impl FnMut(ECard, Option<Self::InfoFromParent>)->Self::Output,
     ) -> Self::Output {
-        let mut itminmax = veccard.into_iter().map(|card| fn_card_to_output(card, None));
-        let mut minmax_acc = unwrap!(itminmax.next()); // first branch must always be investigated
+        let mut itcard = veccard.into_iter();
+        let mut minmax_acc = fn_card_to_output(unwrap!(itcard.next()), /*oinfofromparent*/None); // first branch must always be investigated
         if self.epi==epi_card {
-            for minmax in itminmax {
+            for card in itcard {
+                let minmax = fn_card_to_output(card, Some((/*This step maximizes.*/ELoHi::Hi, minmax_acc.0[EMinMaxStrategy::Min][self.epi])));
                 assign_min_by_key(
                     &mut minmax_acc.0[EMinMaxStrategy::MinMin],
                     minmax.0[EMinMaxStrategy::MinMin],
@@ -520,7 +521,8 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
             }
         } else {
             // other players may play inconveniently for epi_stich
-            for minmax in itminmax {
+            for card in itcard {
+                let minmax = fn_card_to_output(card, Some((/*This step minimizes*/ELoHi::Lo, minmax_acc.0[EMinMaxStrategy::Min][self.epi])));
                 assign_min_by_key(
                     &mut minmax_acc.0[EMinMaxStrategy::MinMin],
                     minmax.0[EMinMaxStrategy::MinMin],
