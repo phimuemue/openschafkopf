@@ -496,9 +496,9 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         mut fn_card_to_output: impl FnMut(ECard, Option<Self::InfoFromParent>)->Self::Output,
     ) -> Self::Output {
         let mut itminmax = veccard.into_iter().map(|card| fn_card_to_output(card, None));
-        let minmax_acc = unwrap!(itminmax.next()); // first branch must always be investigated
+        let mut minmax_acc = unwrap!(itminmax.next()); // first branch must always be investigated
         if self.epi==epi_card {
-            itminmax.fold(minmax_acc, mutate_return!(|minmax_acc, minmax| {
+            for minmax in itminmax {
                 assign_min_by_key(
                     &mut minmax_acc.0[EMinMaxStrategy::MinMin],
                     minmax.0[EMinMaxStrategy::MinMin],
@@ -517,10 +517,10 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                         |an_payout| an_payout[self.epi],
                     );
                 }
-            }))
+            }
         } else {
             // other players may play inconveniently for epi_stich
-            itminmax.fold(minmax_acc, mutate_return!(|minmax_acc, minmax| {
+            for minmax in itminmax {
                 assign_min_by_key(
                     &mut minmax_acc.0[EMinMaxStrategy::MinMin],
                     minmax.0[EMinMaxStrategy::MinMin],
@@ -559,8 +559,9 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                     |an_payout| an_payout[self.epi],
                 );
 
-            }))
+            }
         }
+        minmax_acc
     }
 }
 
