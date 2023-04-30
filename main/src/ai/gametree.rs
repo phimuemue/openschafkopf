@@ -17,7 +17,7 @@ pub trait TForEachSnapshot {
         epi_card: EPlayerIndex,
         oinfofromparent: Option<Self::InfoFromParent>,
         veccard: SHandVector, // TODO? &[ECard] better?
-        fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent)->Self::Output,
+        fn_card_to_output: impl FnMut(ECard, Option<Self::InfoFromParent>)->Self::Output,
     ) -> Self::Output;
 }
 
@@ -376,7 +376,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                 epi_current,
                 oinfofromparent,
                 veccard_allowed,
-                |card, infofromparent| {
+                |card, oinfofromparent| {
                     stichseq.zugeben_and_restore_with_hands(ahand, epi_current, card, rules, |ahand, stichseq| {
                         macro_rules! next_step {($func_filter_allowed_cards:expr, $snapshotcache:expr) => {explore_snapshots_internal(
                             (ahand, stichseq),
@@ -384,7 +384,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                             rulestatecache,
                             $func_filter_allowed_cards,
                             foreachsnapshot,
-                            Some(infofromparent),
+                            oinfofromparent,
                             $snapshotcache,
                             snapshotvisualizer,
                         )}}
@@ -493,9 +493,9 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         epi_card: EPlayerIndex,
         _oinfofromparent: Option<Self::InfoFromParent>,
         veccard: SHandVector, // TODO? &[ECard] better?
-        mut fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent)->Self::Output,
+        mut fn_card_to_output: impl FnMut(ECard, Option<Self::InfoFromParent>)->Self::Output,
     ) -> Self::Output {
-        let mut itminmax = veccard.into_iter().map(|card| fn_card_to_output(card, ()));
+        let mut itminmax = veccard.into_iter().map(|card| fn_card_to_output(card, None));
         let minmax_acc = unwrap!(itminmax.next()); // first branch must always be investigated
         if self.epi==epi_card {
             itminmax.fold(minmax_acc, mutate_return!(|minmax_acc, minmax| {

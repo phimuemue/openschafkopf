@@ -123,9 +123,9 @@ fn detect_expensive_all_possible_hands() {
                                 _epi_card: EPlayerIndex,
                                 _oinfofromparent: Option<Self::InfoFromParent>,
                                 veccard: SHandVector, // TODO? &[ECard] better?
-                                mut fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent)->Self::Output,
+                                mut fn_card_to_output: impl FnMut(ECard, Option<Self::InfoFromParent>)->Self::Output,
                             ) -> Self::Output {
-                                veccard.into_iter().map(|card| fn_card_to_output(card, ())).sum()
+                                veccard.into_iter().map(|card| fn_card_to_output(card, None)).sum()
                             }
                         }
                         assert_bound(
