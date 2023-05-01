@@ -433,14 +433,34 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     output
 }
 
-#[derive(Clone, new)]
-pub struct SMinReachablePayoutBase<'rules, Pruner> {
+#[derive(Clone)]
+pub struct SMinReachablePayoutBase<'rules, Pruner, AlphaBetaPruner> {
     rules: &'rules dyn TRules,
     epi: EPlayerIndex,
     expensifiers: SExpensifiers, // TODO could this borrow?
     phantom: std::marker::PhantomData<Pruner>,
+    alphabetapruner: AlphaBetaPruner,
 }
-impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
+impl<'rules, Pruner, AlphaBetaPruner> SMinReachablePayoutBase<'rules, Pruner, AlphaBetaPruner> {
+    pub fn internal_new(rules: &'rules dyn TRules, epi: EPlayerIndex, expensifiers: SExpensifiers, alphabetapruner: AlphaBetaPruner) -> Self {
+        Self {
+            rules,
+            epi,
+            expensifiers,
+            phantom: Default::default(),
+            alphabetapruner,
+        }
+    }
+}
+impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner, SAlphaBetaPrunerNone> {
+    pub fn new(rules: &'rules dyn TRules, epi: EPlayerIndex, expensifiers: SExpensifiers) -> Self {
+        Self::internal_new(
+            rules,
+            epi,
+            expensifiers,
+            SAlphaBetaPrunerNone,
+        )
+    }
     pub fn new_from_game(game: &'rules SGame) -> Self {
         Self::new(
             game.rules.as_ref(),
@@ -471,9 +491,46 @@ impl SMinMax {
     }
 }
 
-impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
+pub trait TAlphaBetaPruner {
+    type InfoFromParent;
+    fn info_from_parent(&self, tplelohiepi_self: (ELoHi, EPlayerIndex), minmax: &SMinMax) -> Self::InfoFromParent;
+    fn alpha_beta_prune(&self, oinfofromparent: &Option<Self::InfoFromParent>, tplelohiepi_self: (ELoHi, EPlayerIndex), minmax: &SMinMax) -> bool;
+}
+
+pub struct SAlphaBetaPrunerMin; // TODO also introduce SAlphaBetaPrunerSelfishMin
+impl TAlphaBetaPruner for SAlphaBetaPrunerMin {
+    type InfoFromParent = (ELoHi, isize/*payout for SMinReachablePayoutBase::epi*/);
+    fn info_from_parent(&self, (elohi_self, epi_self): (ELoHi, EPlayerIndex), minmax: &SMinMax) -> Self::InfoFromParent {
+        (elohi_self, minmax.0[EMinMaxStrategy::Min][epi_self])
+    }
+    fn alpha_beta_prune(&self, oinfofromparent: &Option<Self::InfoFromParent>, (elohi_self, epi_self): (ELoHi, EPlayerIndex), minmax: &SMinMax) -> bool {
+        if let Some((elohi_parent, n_payout_epi_self_parent)) = oinfofromparent {
+            if elohi_parent!=&elohi_self // contradicts this step's goal => Alpha-Beta-Pruning may be possible
+                && match elohi_self {
+                    ELoHi::Hi => minmax.0[EMinMaxStrategy::Min][epi_self] >= *n_payout_epi_self_parent, // parent's *minimization* will surely *not* be affected by the following possibilities, as they only are *maximized* further
+                    ELoHi::Lo => minmax.0[EMinMaxStrategy::Min][epi_self] <= *n_payout_epi_self_parent, // parent's *maximization* will surely *not* be affected by the following possibilities, as they only are *minimized* further
+                }
+            {
+                return true;
+            }
+        }
+        false
+    }
+}
+
+pub struct SAlphaBetaPrunerNone;
+impl TAlphaBetaPruner for SAlphaBetaPrunerNone {
+    type InfoFromParent = (); // TODO avoid Some(()) for this case
+    fn info_from_parent(&self, _tplelohiepi_self: (ELoHi, EPlayerIndex), _minmax: &SMinMax) -> Self::InfoFromParent {
+    }
+    fn alpha_beta_prune(&self, _oinfofromparent: &Option<Self::InfoFromParent>, _tplelohiepi_self: (ELoHi, EPlayerIndex), _minmax: &SMinMax) -> bool {
+        false
+    }
+}
+
+impl<Pruner: TPruner, AlphaBetaPruner: TAlphaBetaPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner, AlphaBetaPruner> {
     type Output = SMinMax;
-    type InfoFromParent = (ELoHi, isize/*payout for self.epi*/); // TODO parametrize by PlayerParties TODO allow omitting alpha-beta-pruning
+    type InfoFromParent = AlphaBetaPruner::InfoFromParent;
 
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
         SMinMax::new_final(self.rules.payout(
@@ -499,7 +556,8 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         let mut minmax_acc = fn_card_to_output(unwrap!(itcard.next()), /*oinfofromparent*/None); // first branch must always be investigated
         if self.epi==epi_card {
             for card in itcard {
-                let minmax = fn_card_to_output(card, Some((/*This step maximizes.*/ELoHi::Hi, minmax_acc.0[EMinMaxStrategy::Min][self.epi])));
+                let elohi_self = ELoHi::Hi; // this step maximizes for EMinMaxStrategy::Min
+                let minmax = fn_card_to_output(card, Some(self.alphabetapruner.info_from_parent((elohi_self, self.epi), &minmax_acc)));
                 assign_min_by_key(
                     &mut minmax_acc.0[EMinMaxStrategy::MinMin],
                     minmax.0[EMinMaxStrategy::MinMin],
@@ -518,18 +576,15 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                         |an_payout| an_payout[self.epi],
                     );
                 }
-                if let Some((elohi_parent, n_payout_epi_self_parent)) = oinfofromparent {
-                    if elohi_parent==ELoHi::Lo // contradicts this step's goal => Alpha-Beta-Pruning may be possible
-                        && minmax_acc.0[/*TODO parametrize by EMinMaxStrategy*/EMinMaxStrategy::Min][self.epi] >= n_payout_epi_self_parent // parent's *minimization* will surely *not* be affected by the following possibilities, as they only are *maximized* further
-                    {
-                        break;
-                    }
+                if self.alphabetapruner.alpha_beta_prune(&oinfofromparent, (elohi_self, self.epi), &minmax_acc) {
+                    break;
                 }
             }
         } else {
             // other players may play inconveniently for epi_stich
             for card in itcard {
-                let minmax = fn_card_to_output(card, Some((/*This step minimizes*/ELoHi::Lo, minmax_acc.0[EMinMaxStrategy::Min][self.epi])));
+                let elohi_self = ELoHi::Lo; // this step minimizes for EMinMaxStrategy::Min
+                let minmax = fn_card_to_output(card, Some(self.alphabetapruner.info_from_parent((elohi_self, self.epi), &minmax_acc)));
                 assign_min_by_key(
                     &mut minmax_acc.0[EMinMaxStrategy::MinMin],
                     minmax.0[EMinMaxStrategy::MinMin],
@@ -540,13 +595,6 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                     minmax.0[EMinMaxStrategy::Min],
                     |an_payout| an_payout[self.epi],
                 );
-                if let Some((elohi_parent, n_payout_epi_self_parent)) = oinfofromparent {
-                    if elohi_parent==ELoHi::Hi // contradicts this step's goal => Alpha-Beta-Pruning may be possible
-                        && minmax_acc.0[/*TODO parametrize by EMinMaxStrategy*/EMinMaxStrategy::Min][self.epi] <= n_payout_epi_self_parent // parent's *minimization* will surely *not* be affected by the following possibilities, as they only are *maximized* further
-                    {
-                        break;
-                    }
-                }
                 assign_better(
                     &mut minmax_acc.0[EMinMaxStrategy::SelfishMin],
                     minmax.0[EMinMaxStrategy::SelfishMin],
@@ -574,29 +622,32 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                     minmax.0[EMinMaxStrategy::Max],
                     |an_payout| an_payout[self.epi],
                 );
+                if self.alphabetapruner.alpha_beta_prune(&oinfofromparent, (elohi_self, self.epi), &minmax_acc) {
+                    break;
+                }
             }
         }
         minmax_acc
     }
 }
 
-pub type SMinReachablePayout<'rules> = SMinReachablePayoutBase<'rules, SPrunerNothing>;
-pub type SMinReachablePayoutLowerBoundViaHint<'rules> = SMinReachablePayoutBase<'rules, SPrunerViaHint>;
+pub type SMinReachablePayout<'rules> = SMinReachablePayoutBase<'rules, SPrunerNothing, SAlphaBetaPrunerNone>;
+pub type SMinReachablePayoutLowerBoundViaHint<'rules> = SMinReachablePayoutBase<'rules, SPrunerViaHint, SAlphaBetaPrunerNone>;
 
 pub trait TPruner : Sized {
-    fn pruned_output(params: &SMinReachablePayoutBase<'_, Self>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SMinMax>;
+    fn pruned_output<AlphaBetaPruner>(params: &SMinReachablePayoutBase<'_, Self, AlphaBetaPruner>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SMinMax>;
 }
 
 pub struct SPrunerNothing;
 impl TPruner for SPrunerNothing {
-    fn pruned_output(_params: &SMinReachablePayoutBase<'_, Self>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
+    fn pruned_output<AlphaBetaPruner>(_params: &SMinReachablePayoutBase<'_, Self, AlphaBetaPruner>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
         None
     }
 }
 
 pub struct SPrunerViaHint;
 impl TPruner for SPrunerViaHint {
-    fn pruned_output(params: &SMinReachablePayoutBase<'_, Self>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
+    fn pruned_output<AlphaBetaPruner>(params: &SMinReachablePayoutBase<'_, Self, AlphaBetaPruner>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
         let mapepion_payout = params.rules.payouthints(tplahandstichseq, &params.expensifiers, rulestatecache)
             .map(|intvlon_payout| {
                 intvlon_payout[ELoHi::Lo].filter(|n_payout| 0<*n_payout)

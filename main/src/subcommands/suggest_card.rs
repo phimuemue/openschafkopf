@@ -21,6 +21,10 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
             .help("Braching strategy for game tree search")
             .long_help("Branching strategy for game tree search. Supported values are either \"equiv<N>\" where <N> is a number or \"<Min>,<Max>\" where <Min> and <Max> are numbers. \"equiv6\" will eliminate equivalent cards in branching up to the 6th stich, after that it will do full exploration; similarily \"equiv3\" will do this up to the 3rd stich. \"2,5\" will limit the branching factor of each game tree's node to a random value between 2 and 5 (exclusively). If you specify a branching limit that is too higher than 8 (e.g. \"99,100\"), the software will not prune the game tree in any way and do a full exploration.")
         )
+        .arg(clap::Arg::new("alphabetaprune")
+            .long("alphabetaprune")
+            .help("Alpha-beta-pruning for the Min strategy")
+        )
         .arg(clap::Arg::new("prune")
             .long("prune")
             .takes_value(true)
@@ -187,6 +191,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         Some("hint") => (SPrunerViaHint),
                         _ => (SPrunerNothing),
                     },
+                    match (clapmatches.is_present("alphabetaprune")) {
+                        true => (SAlphaBetaPrunerMin),
+                        false => (SAlphaBetaPrunerNone),
+                    },
                     match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
                         true => (
                             (|rulestatecache| rules.snapshot_cache(rulestatecache))
@@ -206,7 +214,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 )
             }}
             if clapmatches.is_present("no-details") {
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner: ident), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner: ident), ($alphabetapruner: expr), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     SPerMinMaxStrategy(itahand
                         .enumerate()
                         .par_bridge() // TODO can we derive a true parallel iterator?
@@ -216,10 +224,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 (&mut ahand.clone(), &mut stichseq.clone()),
                                 rules,
                                 &$func_filter_allowed_cards,
-                                &SMinReachablePayoutBase::<$pruner>::new(
+                                &SMinReachablePayoutBase::<$pruner, _>::internal_new(
                                     rules,
                                     epi_position,
                                     expensifiers.clone(),
+                                    $alphabetapruner,
                                 ),
                                 &$fn_snapshotcache,
                                 &mut visualizer,
@@ -256,7 +265,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 }
             } else {
                 let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
-                    macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner: ident), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                    macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner: ident), ($alphabetapruner: expr), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                         let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                         determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_>( // TODO avoid explicit types
                             stichseq,
@@ -271,10 +280,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     })
                             ) as Box<_>,
                             $func_filter_allowed_cards,
-                            &SMinReachablePayoutBase::<$pruner>::new(
+                            &SMinReachablePayoutBase::<$pruner, _>::internal_new(
                                 rules,
                                 epi_position,
                                 expensifiers.clone(),
+                                $alphabetapruner,
                             ),
                             $fn_snapshotcache,
                             $fn_visualizer,
