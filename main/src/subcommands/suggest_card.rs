@@ -4,6 +4,7 @@ use crate::util::*;
 use itertools::*;
 use crate::game_analysis::determine_best_card_table::{table, internal_table};
 use rayon::prelude::*;
+use crate::rules::SPlayerPartiesTable;
 use serde::Serialize;
 
 use super::common_given_game::*;
@@ -23,7 +24,8 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
         )
         .arg(clap::Arg::new("alphabetaprune")
             .long("alphabetaprune")
-            .help("Alpha-beta-pruning for the Min strategy")
+            .takes_value(true)
+            .help("Alpha-beta-pruning.") // TODO improve
         )
         .arg(clap::Arg::new("prune")
             .long("prune")
@@ -191,9 +193,28 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         Some("hint") => (SPrunerViaHint),
                         _ => (SPrunerNothing),
                     },
-                    match (clapmatches.is_present("alphabetaprune")) {
-                        true => (SAlphaBetaPrunerMin),
-                        false => (SAlphaBetaPrunerNone),
+                    match (clapmatches.value_of("alphabetaprune")) {
+                        Some(str_alphabeta) => (SAlphaBetaPruner::new(
+                            match str_alphabeta {
+                                "min" => EAlphaBetaPruner::Min,
+                                str_alphabeta => EAlphaBetaPruner::SelfishMin(SPlayerPartiesTable::new(
+                                    match str_alphabeta {
+                                        "0" => &[EPlayerIndex::EPI0] as &[EPlayerIndex],
+                                        "1" => &[EPlayerIndex::EPI1],
+                                        "2" => &[EPlayerIndex::EPI2],
+                                        "3" => &[EPlayerIndex::EPI3],
+                                        "01" => &[EPlayerIndex::EPI0, EPlayerIndex::EPI1],
+                                        "02" => &[EPlayerIndex::EPI0, EPlayerIndex::EPI2],
+                                        "03" => &[EPlayerIndex::EPI0, EPlayerIndex::EPI3],
+                                        "12" => &[EPlayerIndex::EPI1, EPlayerIndex::EPI2],
+                                        "13" => &[EPlayerIndex::EPI1, EPlayerIndex::EPI3],
+                                        "23" => &[EPlayerIndex::EPI2, EPlayerIndex::EPI3],
+                                        _ => panic!(),
+                                    }
+                                )),
+                            }
+                        )),
+                        None => (SAlphaBetaPrunerNone),
                     },
                     match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
                         true => (

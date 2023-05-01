@@ -497,19 +497,41 @@ pub trait TAlphaBetaPruner {
     fn alpha_beta_prune(&self, oinfofromparent: &Option<Self::InfoFromParent>, epi_self: EPlayerIndex, epi_card: EPlayerIndex, minmax: &SMinMax) -> bool;
 }
 
-pub struct SAlphaBetaPrunerMin; // TODO also introduce SAlphaBetaPrunerSelfishMin
-impl TAlphaBetaPruner for SAlphaBetaPrunerMin {
+pub enum EAlphaBetaPruner {
+    Min,
+    SelfishMin(SPlayerPartiesTable),
+}
+
+#[derive(new)]
+pub struct SAlphaBetaPruner {
+    ealphabetapruner: EAlphaBetaPruner, // TODO? static dispatch once compile times are better?
+}
+impl SAlphaBetaPruner {
+    fn lohi_and_payout_self(&self, epi_self: EPlayerIndex, epi_card: EPlayerIndex, minmax: &SMinMax) -> (ELoHi, isize) {
+        match &self.ealphabetapruner {
+            EAlphaBetaPruner::Min => (
+                if epi_card==epi_self { ELoHi::Hi } else { ELoHi::Lo },
+                minmax.0[EMinMaxStrategy::Min][epi_self],
+            ),
+            EAlphaBetaPruner::SelfishMin(playerparties) => (
+                if playerparties.is_primary_party(epi_card)==playerparties.is_primary_party(epi_self) { ELoHi::Hi } else { ELoHi::Lo },
+                minmax.0[EMinMaxStrategy::SelfishMin][epi_self],
+            ),
+        }
+    }
+}
+impl TAlphaBetaPruner for SAlphaBetaPruner {
     type InfoFromParent = (ELoHi, isize/*payout for SMinReachablePayoutBase::epi*/);
     fn info_from_parent(&self, epi_self: EPlayerIndex, epi_card: EPlayerIndex, minmax: &SMinMax) -> Self::InfoFromParent {
-        (if epi_card==epi_self { ELoHi::Hi } else { ELoHi::Lo }, minmax.0[EMinMaxStrategy::Min][epi_self])
+        self.lohi_and_payout_self(epi_self, epi_card, minmax)
     }
     fn alpha_beta_prune(&self, oinfofromparent: &Option<Self::InfoFromParent>, epi_self: EPlayerIndex, epi_card: EPlayerIndex, minmax: &SMinMax) -> bool {
-        let elohi_self = if epi_card==epi_self { ELoHi::Hi } else { ELoHi::Lo };
+        let (elohi_self, n_payout_epi_self) = self.lohi_and_payout_self(epi_self, epi_card, minmax);
         if let Some((elohi_parent, n_payout_epi_self_parent)) = oinfofromparent {
             if elohi_parent!=&elohi_self // contradicts this step's goal => Alpha-Beta-Pruning may be possible
                 && match elohi_self {
-                    ELoHi::Hi => minmax.0[EMinMaxStrategy::Min][epi_self] >= *n_payout_epi_self_parent, // parent's *minimization* will surely *not* be affected by the following possibilities, as they only are *maximized* further
-                    ELoHi::Lo => minmax.0[EMinMaxStrategy::Min][epi_self] <= *n_payout_epi_self_parent, // parent's *maximization* will surely *not* be affected by the following possibilities, as they only are *minimized* further
+                    ELoHi::Hi => n_payout_epi_self >= *n_payout_epi_self_parent, // parent's *minimization* will surely *not* be affected by the following possibilities, as they only are *maximized* further
+                    ELoHi::Lo => n_payout_epi_self <= *n_payout_epi_self_parent, // parent's *maximization* will surely *not* be affected by the following possibilities, as they only are *minimized* further
                 }
             {
                 return true;

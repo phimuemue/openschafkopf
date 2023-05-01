@@ -172,6 +172,15 @@ pub struct SPlayerPartiesTable { // TODO? use this as canonical representation, 
 }
 
 impl SPlayerPartiesTable {
+    pub fn new(slcepi_primary: &[EPlayerIndex]) -> Self {
+        let mut mapepib_primary = EPlayerIndex::map_from_fn(|_epi| false);
+        for &epi in slcepi_primary {
+            mapepib_primary[epi] = true;
+        }
+        Self {
+            mapepib_primary
+        }
+    }
     pub fn is_primary_party(&self, epi: EPlayerIndex) -> bool {
         self.mapepib_primary[epi]
     }
