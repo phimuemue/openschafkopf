@@ -493,25 +493,18 @@ impl SMinMax {
 
 pub trait TAlphaBetaPruner {
     type InfoFromParent;
-    fn info_from_parent(&self, tplelohiepi_self: (ELoHi, EPlayerIndex), epi_card: EPlayerIndex, minmax: &SMinMax) -> Self::InfoFromParent;
-    fn alpha_beta_prune(&self, oinfofromparent: &Option<Self::InfoFromParent>, tplelohiepi_self: (ELoHi, EPlayerIndex), epi_card: EPlayerIndex, minmax: &SMinMax) -> bool;
+    fn info_from_parent(&self, epi_self: EPlayerIndex, epi_card: EPlayerIndex, minmax: &SMinMax) -> Self::InfoFromParent;
+    fn alpha_beta_prune(&self, oinfofromparent: &Option<Self::InfoFromParent>, epi_self: EPlayerIndex, epi_card: EPlayerIndex, minmax: &SMinMax) -> bool;
 }
 
 pub struct SAlphaBetaPrunerMin; // TODO also introduce SAlphaBetaPrunerSelfishMin
 impl TAlphaBetaPruner for SAlphaBetaPrunerMin {
     type InfoFromParent = (ELoHi, isize/*payout for SMinReachablePayoutBase::epi*/);
-    fn info_from_parent(&self, (elohi_self, epi_self): (ELoHi, EPlayerIndex), epi_card: EPlayerIndex, minmax: &SMinMax) -> Self::InfoFromParent {
-        assert_eq!(
-            if epi_card==epi_self { ELoHi::Hi } else { ELoHi::Lo },
-            elohi_self
-        );
-        (elohi_self, minmax.0[EMinMaxStrategy::Min][epi_self])
+    fn info_from_parent(&self, epi_self: EPlayerIndex, epi_card: EPlayerIndex, minmax: &SMinMax) -> Self::InfoFromParent {
+        (if epi_card==epi_self { ELoHi::Hi } else { ELoHi::Lo }, minmax.0[EMinMaxStrategy::Min][epi_self])
     }
-    fn alpha_beta_prune(&self, oinfofromparent: &Option<Self::InfoFromParent>, (elohi_self, epi_self): (ELoHi, EPlayerIndex), epi_card: EPlayerIndex, minmax: &SMinMax) -> bool {
-        assert_eq!(
-            if epi_card==epi_self { ELoHi::Hi } else { ELoHi::Lo },
-            elohi_self
-        );
+    fn alpha_beta_prune(&self, oinfofromparent: &Option<Self::InfoFromParent>, epi_self: EPlayerIndex, epi_card: EPlayerIndex, minmax: &SMinMax) -> bool {
+        let elohi_self = if epi_card==epi_self { ELoHi::Hi } else { ELoHi::Lo };
         if let Some((elohi_parent, n_payout_epi_self_parent)) = oinfofromparent {
             if elohi_parent!=&elohi_self // contradicts this step's goal => Alpha-Beta-Pruning may be possible
                 && match elohi_self {
@@ -529,9 +522,9 @@ impl TAlphaBetaPruner for SAlphaBetaPrunerMin {
 pub struct SAlphaBetaPrunerNone;
 impl TAlphaBetaPruner for SAlphaBetaPrunerNone {
     type InfoFromParent = (); // TODO avoid Some(()) for this case
-    fn info_from_parent(&self, _tplelohiepi_self: (ELoHi, EPlayerIndex), _epi_card: EPlayerIndex, _minmax: &SMinMax) -> Self::InfoFromParent {
+    fn info_from_parent(&self, _epi_self: EPlayerIndex, _epi_card: EPlayerIndex, _minmax: &SMinMax) -> Self::InfoFromParent {
     }
-    fn alpha_beta_prune(&self, _oinfofromparent: &Option<Self::InfoFromParent>, _tplelohiepi_self: (ELoHi, EPlayerIndex), _epi_card: EPlayerIndex, _minmax: &SMinMax) -> bool {
+    fn alpha_beta_prune(&self, _oinfofromparent: &Option<Self::InfoFromParent>, _epi_self: EPlayerIndex, _epi_card: EPlayerIndex, _minmax: &SMinMax) -> bool {
         false
     }
 }
@@ -564,8 +557,7 @@ impl<Pruner: TPruner, AlphaBetaPruner: TAlphaBetaPruner> TForEachSnapshot for SM
         let mut minmax_acc = fn_card_to_output(unwrap!(itcard.next()), /*oinfofromparent*/None); // first branch must always be investigated
         if self.epi==epi_card {
             for card in itcard {
-                let elohi_self = ELoHi::Hi; // this step maximizes for EMinMaxStrategy::Min
-                let minmax = fn_card_to_output(card, Some(self.alphabetapruner.info_from_parent((elohi_self, self.epi), epi_card, &minmax_acc)));
+                let minmax = fn_card_to_output(card, Some(self.alphabetapruner.info_from_parent(self.epi, epi_card, &minmax_acc)));
                 assign_min_by_key(
                     &mut minmax_acc.0[EMinMaxStrategy::MinMin],
                     minmax.0[EMinMaxStrategy::MinMin],
@@ -584,15 +576,14 @@ impl<Pruner: TPruner, AlphaBetaPruner: TAlphaBetaPruner> TForEachSnapshot for SM
                         |an_payout| an_payout[self.epi],
                     );
                 }
-                if self.alphabetapruner.alpha_beta_prune(&oinfofromparent, (elohi_self, self.epi), epi_card, &minmax_acc) {
+                if self.alphabetapruner.alpha_beta_prune(&oinfofromparent, self.epi, epi_card, &minmax_acc) {
                     break;
                 }
             }
         } else {
             // other players may play inconveniently for epi_stich
             for card in itcard {
-                let elohi_self = ELoHi::Lo; // this step minimizes for EMinMaxStrategy::Min
-                let minmax = fn_card_to_output(card, Some(self.alphabetapruner.info_from_parent((elohi_self, self.epi), epi_card, &minmax_acc)));
+                let minmax = fn_card_to_output(card, Some(self.alphabetapruner.info_from_parent(self.epi, epi_card, &minmax_acc)));
                 assign_min_by_key(
                     &mut minmax_acc.0[EMinMaxStrategy::MinMin],
                     minmax.0[EMinMaxStrategy::MinMin],
@@ -630,7 +621,7 @@ impl<Pruner: TPruner, AlphaBetaPruner: TAlphaBetaPruner> TForEachSnapshot for SM
                     minmax.0[EMinMaxStrategy::Max],
                     |an_payout| an_payout[self.epi],
                 );
-                if self.alphabetapruner.alpha_beta_prune(&oinfofromparent, (elohi_self, self.epi), epi_card, &minmax_acc) {
+                if self.alphabetapruner.alpha_beta_prune(&oinfofromparent, self.epi, epi_card, &minmax_acc) {
                     break;
                 }
             }
