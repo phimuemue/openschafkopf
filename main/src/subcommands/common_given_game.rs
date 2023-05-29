@@ -95,6 +95,7 @@ pub fn with_common_args<FnWithArgs>(
                 .map(|vecocard| (vecocard, str_ahand))
         )
         .collect::<Result<Vec<_>, _>>()?;
+    let expensifiers = SExpensifiers::new_no_stock_doublings_stoss(); // TODO make adjustable
     for (vecocard_hand, str_ahand) in vectplvecocardstr_ahand.iter() {
         let veccard_duplicate = veccard_stichseq.iter()
             .chain(vecocard_hand.iter().filter_map(|ocard| ocard.as_ref()))
@@ -245,7 +246,7 @@ pub fn with_common_args<FnWithArgs>(
                         ahand_with_holes.clone(),
                         epi_position,
                         rules,
-                        /*slcstoss*/&[], // TODO make adjustable
+                        &expensifiers.vecstoss,
                         /*fn_inspect*/|b_valid_so_far, ahand| {
                             n_ahand_seen += 1;
                             let b_valid = b_valid_so_far
@@ -321,7 +322,7 @@ pub fn with_common_args<FnWithArgs>(
                                         ),
                                         epi_active,
                                         rules,
-                                        &SExpensifiers::new_no_stock_doublings_stoss(),
+                                        &expensifiers,
                                     )[EMinMaxStrategy::SelfishMin].avg();
                                     (ahand, payout)
                                 })
