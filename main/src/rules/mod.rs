@@ -70,6 +70,7 @@ pub type SDoublings = SPlayersInRound<bool, SStaticEPI0>; // assume that doublin
 #[derive(Debug, Clone)]
 pub struct SStoss {
     pub epi : EPlayerIndex,
+    pub n_cards_played: usize,
 }
 
 #[derive(Debug, Clone, new)]

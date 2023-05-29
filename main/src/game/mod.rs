@@ -484,7 +484,10 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
                 if !gameaction.1.iter().any(|&epi| epi==epi_stoss) {
                     bail!(format!("Stoss not allowed for specified epi {:?}", gameaction.1));
                 }
-                self.expensifiers.vecstoss.push(SStoss{epi : epi_stoss});
+                self.expensifiers.vecstoss.push(SStoss{
+                    epi : epi_stoss,
+                    n_cards_played: self.stichseq.count_played_cards(),
+                });
                 Ok(())
             }
         }
