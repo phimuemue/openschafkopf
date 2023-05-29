@@ -22,7 +22,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         .collect::<Result<Vec<_>,_>>()?;
     with_common_args(
         clapmatches,
-        |itahand, rules, _stichseq, _ahand_fixed_with_holes, _epi_position, b_verbose| {
+        |itahand, rules, _stichseq, _ahand_fixed_with_holes, _epi_position, _expensifiers, b_verbose| {
             let mut vectplmapostrnconstraint = vecconstraint
                 .iter()
                 .map(|constraint| (std::collections::HashMap::new(), constraint))

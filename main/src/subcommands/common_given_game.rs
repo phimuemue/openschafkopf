@@ -5,7 +5,7 @@ use crate::ai::{
 };
 use crate::primitives::*;
 use crate::util::*;
-use crate::rules::{ruleset::VStockOrT, SExpensifiers, TRules, TRulesBoxClone};
+use crate::rules::{ruleset::VStockOrT, SDoublings, SExpensifiers, SStoss, TRules, TRulesBoxClone};
 use itertools::Itertools;
 
 pub use super::handconstraint::*;
@@ -49,6 +49,12 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
             .help("Cards played so far")
             .long_help("Cards played so far in the order they have been played. The software matches the cards to the respective player.")
         )
+        .arg(clap::Arg::new("stoss")
+            .long("stoss")
+            .takes_value(true)
+            .help("Stosses given")
+            .long_help("Stosses given so far. Enumerate the respective player indices one after another, separated by a space.")
+        )
         .arg(clap::Arg::new("simulate_hands")
             .long("simulate-hands")
             .takes_value(true)
@@ -79,6 +85,7 @@ pub fn with_common_args<FnWithArgs>(
             &SStichSequence,
             &EnumMap<EPlayerIndex, SHand>, // TODO? Good idea? Could this simply given by itahand?
             EPlayerIndex/*epi_position*/,
+            &SExpensifiers,
             bool/*b_verbose*/,
         ) -> Result<(), Error>,
 {
@@ -95,7 +102,36 @@ pub fn with_common_args<FnWithArgs>(
                 .map(|vecocard| (vecocard, str_ahand))
         )
         .collect::<Result<Vec<_>, _>>()?;
-    let expensifiers = SExpensifiers::new_no_stock_doublings_stoss(); // TODO make adjustable
+    let vecstoss = match clapmatches.value_of("stoss")
+        .map(|str_stoss| {
+            if str_stoss.trim().len()==0 {
+                Ok(Vec::new())
+            } else {
+                str_stoss
+                    .split(' ')
+                    .filter(|str_epi| str_epi.len()>0)
+                    .map(|str_epi| str_epi.parse::<EPlayerIndex>()
+                        .map(|epi| SStoss {
+                            epi,
+                            n_cards_played: 0, // TODO? make adjustable
+                        })
+                    )
+                    .collect::<Result<Vec<_>, _>>()
+            }
+        })
+    {
+        Some(Ok(vecstoss)) => vecstoss,
+        None => Vec::new(),
+        Some(Err(e)) => bail!("Could not parse stoss: {}", e),
+    };
+    let expensifiers = SExpensifiers::new(
+        /*n_stock*/0, // TODO? make adjustable
+        /*doublings*/SDoublings::new_full( // TODO? make adjustable
+            SStaticEPI0{},
+            [false; EPlayerIndex::SIZE],
+        ),
+        vecstoss,
+    );
     for (vecocard_hand, str_ahand) in vectplvecocardstr_ahand.iter() {
         let veccard_duplicate = veccard_stichseq.iter()
             .chain(vecocard_hand.iter().filter_map(|ocard| ocard.as_ref()))
@@ -276,6 +312,7 @@ pub fn with_common_args<FnWithArgs>(
                     &stichseq,
                     &ahand_with_holes,
                     epi_position,
+                    &expensifiers,
                     b_verbose,
                 )?;
             }}}

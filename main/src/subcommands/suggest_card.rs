@@ -4,7 +4,6 @@ use crate::util::*;
 use itertools::*;
 use crate::game_analysis::determine_best_card_table::{table, internal_table};
 use rayon::prelude::*;
-use crate::rules::{SExpensifiers};
 use serde::Serialize;
 
 use super::common_given_game::*;
@@ -68,7 +67,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     }
     with_common_args(
         clapmatches,
-        |itahand, rules, stichseq, ahand_fixed_with_holes, epi_position, b_verbose| {
+        |itahand, rules, stichseq, ahand_fixed_with_holes, epi_position, expensifiers, b_verbose| {
             let otplrulesfn_points_as_payout = if clapmatches.is_present("points") {
                 if let Some(tplrulesfn_points_as_payout) = rules.points_as_payout() {
                     Some(tplrulesfn_points_as_payout)
@@ -130,7 +129,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     )));
                 })
             };
-            let expensifiers = SExpensifiers::new_no_stock_doublings_stoss(); // TODO? make customizable
             enum EBranching {
                 Branching(usize, usize),
                 Equivalent(usize, SCardsPartition),
