@@ -175,10 +175,11 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         Some(self.epi)
     }
 
-    fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {
-        assert!(EKurzLang::from_cards_per_player(hand.cards().len()).is_some());
-        assert!(epi!=self.epi || !hand.contains(self.rufsau()));
-        (epi==self.epi || hand.contains(self.rufsau())) == (vecstoss.len()%2==1)
+    fn stoss_allowed(&self, stichseq: &SStichSequence, hand: &SHand, epi: EPlayerIndex, vecstoss: &[SStoss]) -> bool {
+        assert_eq!(stichseq.remaining_cards_per_hand()[epi], hand.cards().len());
+        let b_epi_is_coplayer = stichseq.cards_from_player(hand, epi).contains(&self.rufsau());
+        assert!(epi!=self.epi || !b_epi_is_coplayer);
+        (epi==self.epi || b_epi_is_coplayer) == (vecstoss.len()%2==1)
     }
 
     fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {

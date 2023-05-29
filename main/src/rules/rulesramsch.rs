@@ -52,9 +52,9 @@ pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag<
 impl TRules for SRulesRamsch {
     impl_rules_trumpf!();
 
-    fn stoss_allowed(&self, _epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool {
+    fn stoss_allowed(&self, stichseq: &SStichSequence, hand: &SHand, epi: EPlayerIndex, vecstoss: &[SStoss]) -> bool {
         assert!(vecstoss.is_empty());
-        assert!(EKurzLang::from_cards_per_player(hand.cards().len()).is_some());
+        assert_eq!(stichseq.remaining_cards_per_hand()[epi], hand.cards().len());
         false
     }
 

@@ -297,7 +297,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
         true // probably, only Rufspiel is prevented in some cases
     }
 
-    fn stoss_allowed(&self, epi: EPlayerIndex, vecstoss: &[SStoss], hand: &SHand) -> bool;
+    fn stoss_allowed(&self, stichseq: &SStichSequence, hand: &SHand, epi: EPlayerIndex, vecstoss: &[SStoss]) -> bool;
 
     fn payout(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache, if_dbg_else!({b_test_points_as_payout}{_}): dbg_parameter!(bool)) -> EnumMap<EPlayerIndex, isize> {
         let apayoutinfo = self.payout_no_invariant(
