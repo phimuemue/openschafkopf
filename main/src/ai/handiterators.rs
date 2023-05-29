@@ -3,6 +3,7 @@ use crate::primitives::*;
 use crate::util::*;
 use permutohedron::LexicalPermutation;
 use rand::prelude::*;
+use itertools::EitherOrBoth;
 
 pub trait TNextVecEPI {
     fn init(slcepi: &mut [EPlayerIndex]);
@@ -123,6 +124,7 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
     stichseq: &'lifetime SStichSequence,
     ahand_known: EnumMap<EPlayerIndex, SHand>,
     rules: &'lifetime dyn TRules,
+    slcstoss: &'lifetime [SStoss],
     mut fn_inspect: FnInspect,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     make_handiterator::<NextVecEPI>(stichseq, ahand_known).filter(move |ahand| {
@@ -148,8 +150,22 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
                     SExpensifiersNoStoss::new(/*n_stock*/0),
                     rules.box_clone(),
                 );
-                'loopstich: for (epi, &card) in stichseq.visible_cards() {
-                    if let Err(_) = game_simulate.zugeben(card, epi) {
+                'loopstich: for gameaction in itertools::merge_join_by(
+                    slcstoss,
+                    stichseq.visible_cards().enumerate(),
+                    |stoss, (i_card, _tplepicard)| {
+                        if stoss.n_cards_played <= *i_card { // prefer stoss in case of equality
+                            std::cmp::Ordering::Less
+                        } else {
+                            std::cmp::Ordering::Greater
+                        }
+                    },
+                ) {
+                    if let Err(_) = match gameaction {
+                        EitherOrBoth::Left(stoss) => game_simulate.stoss(stoss.epi),
+                        EitherOrBoth::Right((_i_card, (epi, &card))) => game_simulate.zugeben(card, epi),
+                        EitherOrBoth::Both(_, _) => panic!("Unexpected."), // TODOITERTOOLS? can we get rid of this?
+                    } {
                         b_valid_up_to_now = false;
                         break 'loopstich;
                     }
@@ -187,12 +203,14 @@ pub fn internal_all_possible_hands<'lifetime>(
     tohand: impl TToAHand + 'lifetime,
     epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
+    slcstoss: &'lifetime [SStoss],
     fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     make_handiterator_compatible_with_game_so_far::<SNextVecEPIPermutation, _>(
         stichseq,
         tohand.to_ahand(epi_fixed),
         rules,
+        slcstoss,
         fn_inspect,
     )
 }
@@ -202,12 +220,14 @@ pub fn all_possible_hands<'lifetime>(
     tohand: impl TToAHand + 'lifetime,
     epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
+    slcstoss: &'lifetime [SStoss],
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     internal_all_possible_hands(
         stichseq,
         tohand,
         epi_fixed,
         rules,
+        slcstoss,
         /*fn_inspect*/|_b_valid, _ahand| true,
     )
 }
@@ -217,12 +237,14 @@ pub fn internal_forever_rand_hands<'lifetime>(
     tohand: impl TToAHand,
     epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
+    slcstoss: &'lifetime [SStoss],
     fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     make_handiterator_compatible_with_game_so_far::<SNextVecEPIShuffle, _>(
         stichseq,
         tohand.to_ahand(epi_fixed),
         rules,
+        slcstoss,
         fn_inspect,
     )
 }
@@ -232,12 +254,14 @@ pub fn forever_rand_hands<'lifetime>(
     tohand: impl TToAHand + 'lifetime,
     epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
+    slcstoss: &'lifetime [SStoss],
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     internal_forever_rand_hands(
         stichseq,
         tohand,
         epi_fixed,
         rules,
+        slcstoss,
         /*fn_inspect*/|_b_valid, _ahand| true,
     )
 }

@@ -181,6 +181,7 @@ pub fn analyze_game(
                         game.ahand[epi_current].clone(),
                         epi_current,
                         game.rules.as_ref(),
+                        &game.expensifiers.vecstoss,
                     )).1
                 };
                 let (determinebestcardresult_cheating, ocardandpayout_cheating) = look_for_mistakes!(

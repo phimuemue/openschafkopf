@@ -245,6 +245,7 @@ pub fn with_common_args<FnWithArgs>(
                         ahand_with_holes.clone(),
                         epi_position,
                         rules,
+                        /*slcstoss*/&[], // TODO make adjustable
                         /*fn_inspect*/|b_valid_so_far, ahand| {
                             n_ahand_seen += 1;
                             let b_valid = b_valid_so_far

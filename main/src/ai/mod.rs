@@ -63,7 +63,13 @@ impl SAi {
     pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &dyn TRules, expensifiers: &SExpensifiers) -> EnumMap<EMinMaxStrategy, SPayoutStats<()>> {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
         let ekurzlang = unwrap!(EKurzLang::from_cards_per_player(hand_fixed.get().len()));
-        forever_rand_hands(&SStichSequence::new(ekurzlang), SHand::new_from_iter(hand_fixed.get()), epi_rank, rules)
+        forever_rand_hands(
+            &SStichSequence::new(ekurzlang),
+            SHand::new_from_iter(hand_fixed.get()),
+            epi_rank,
+            rules,
+            &expensifiers.vecstoss,
+        )
             .take(self.n_rank_rules_samples)
             .par_bridge() // TODO can we derive a true parallel iterator?
             .map(|mut ahand| {
@@ -136,6 +142,7 @@ impl SAi {
                 stichseq.remaining_cards_per_hand()[epi_current] - 1 // ERemainingCards starts with 1
             ));
             use ERemainingCards::*;
+            let vecstoss = &game.expensifiers.vecstoss;
             *unwrap!(unwrap!(cartesian_match!(
                 forward_to_determine_best_card,
                 match (eremainingcards) {
@@ -157,10 +164,10 @@ impl SAi {
                         std::iter::once(game.ahand.clone())
                     },
                     (&VAIParams::Simulating{n_suggest_card_samples:_}, _1|_2|_3|_4) => {
-                        all_possible_hands(stichseq, hand_fixed.clone(), epi_current, rules)
+                        all_possible_hands(stichseq, hand_fixed.clone(), epi_current, rules, vecstoss)
                     },
                     (&VAIParams::Simulating{n_suggest_card_samples}, _5|_6|_7|_8) =>{ 
-                        forever_rand_hands(stichseq, hand_fixed.clone(), epi_current, rules)
+                        forever_rand_hands(stichseq, hand_fixed.clone(), epi_current, rules, vecstoss)
                             .take(n_suggest_card_samples)
                     },
                 },
@@ -435,6 +442,7 @@ fn test_is_compatible_with_game_so_far() {
                 game.ahand[unwrap!(game.which_player_can_do_something()).0].clone(),
                 unwrap!(game.which_player_can_do_something()).0,
                 game.rules.as_ref(),
+                &game.expensifiers.vecstoss,
             )
                 .take(100)
             {
@@ -516,6 +524,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         game.ahand[epi_active].clone(),
         epi_active,
         game.rules.as_ref(),
+        &game.expensifiers.vecstoss,
     ) {
         assert!(!game.current_playable_stich().is_full());
         let stichseq = &game.stichseq;

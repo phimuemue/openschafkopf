@@ -93,7 +93,8 @@ fn detect_expensive_all_possible_hands() {
                         &game.stichseq,
                         game.ahand[epi_current].clone(),
                         epi_current,
-                        game.rules.as_ref()
+                        game.rules.as_ref(),
+                        &game.expensifiers.vecstoss,
                     )
                         .collect::<Vec<_>>();
                     let assert_bound = |n, n_detect| {
