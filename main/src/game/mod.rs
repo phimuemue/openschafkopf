@@ -337,7 +337,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Rul
                     {
                         EPlayerIndex::values()
                             .filter(|epi| {
-                                self.rules.stoss_allowed(*epi, &self.expensifiers.vecstoss, &self.ahand[*epi])
+                                self.rules.stoss_allowed(&self.stichseq, &self.ahand[*epi], *epi, &self.expensifiers.vecstoss)
                             })
                             .collect()
                     } else {
