@@ -131,25 +131,26 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
             assert!(!stich_current.is_full());
             assert!(ahand_vecstich_card_count_is_compatible(ahand, stichseq));
             // hands must not contain other cards preventing farbe/trumpf frei
-            let mut ahand_simulate = EPlayerIndex::map_from_fn(|epi| {
-                let hand = SHand::new_from_iter(stichseq.cards_from_player(&ahand[epi], epi));
-                assert_eq!(hand.cards().len(), stichseq.kurzlang().cards_per_player());
-                hand
+            let aveccard = EPlayerIndex::map_from_fn(|epi| {
+                let veccard : SHandVector = stichseq.cards_from_player(&ahand[epi], epi).copied().collect();
+                assert_eq!(veccard.len(), stichseq.kurzlang().cards_per_player());
+                veccard
             });
             rules.playerindex().map_or(true, |epi_active| {
                 rules.can_be_played(SFullHand::new(
-                    ahand_simulate[epi_active].cards(),
+                    &aveccard[epi_active],
                     stichseq.kurzlang(),
                 ))
             }) && {
                 let mut b_valid_up_to_now = true;
-                let mut stichseq_simulate = SStichSequence::new(stichseq.kurzlang());
-                'loopstich: for (epi, card) in stichseq.visible_cards() {
-                    if rules.card_is_allowed(&stichseq_simulate, &ahand_simulate[epi], *card) {
-                        assert!(ahand_simulate[epi].contains(*card));
-                        ahand_simulate[epi].play_card(*card);
-                        stichseq_simulate.zugeben(*card, rules);
-                    } else {
+                let mut game_simulate = SGame::new(
+                    /*aveccard*/aveccard,
+                    SExpensifiersNoStoss::new(/*n_stock*/0),
+                    /*ostossparams*/None,
+                    rules.box_clone(),
+                );
+                'loopstich: for (epi, &card) in stichseq.visible_cards() {
+                    if let Err(_) = game_simulate.zugeben(card, epi) {
                         b_valid_up_to_now = false;
                         break 'loopstich;
                     }
