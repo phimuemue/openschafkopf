@@ -1,6 +1,7 @@
 use crate::game_analysis::*;
 use crate::rules::{
-    ruleset::{SStossParams, VStockOrT},
+    SStossParams,
+    ruleset::VStockOrT,
     parser::parse_rule_description,
 };
 use crate::primitives::cardvector::*;
@@ -167,6 +168,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             if let Ok(rules) = parse_rule_description(
                 &node_rules.text(),
                 (ruleset.n_tarif_extra, ruleset.n_tarif_ruf, ruleset.n_tarif_solo),
+                SStossParams::new(/*n_stoss_max*/4), // TODO? is this correct
                 /*fn_player_to_epi*/username_to_epi,
             ) {
                 Ok(Some(rules))
@@ -319,7 +321,6 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         let mut game = SGameGeneric::new_with(
             aveccard,
             SExpensifiersNoStoss::new_with_doublings(/*n_stock: Sauspiel does not support Stock*/0, doublings),
-            /*ostossparams*/Some(SStossParams::new(/*n_stoss_max*/4)), // TODO? is this correct
             rules,
             ruleset,
             gameannouncements,
@@ -364,7 +365,6 @@ pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failur
             );
             SGame::new_finished(
                 rules,
-                /*ostossparams*/None,
                 SExpensifiers::new_no_stock_doublings_stoss(),
                 SStichSequenceGameFinished::new(&stichseq),
                 /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
@@ -419,6 +419,7 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGame, failure
             let rules = parse_rule_description(
                 grpstr_line.next().ok_or_else(|| format_err!("Expected rules"))?,
                 (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO? make adjustable
+                SStossParams::new(/*n_stoss_max*/4), // TODO? support
                 /*fn_player_to_epi*/player_to_epi,
             )?;
             let mut stichseq = SStichSequence::new(ekurzlang);
@@ -439,7 +440,6 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGame, failure
             }
             SGame::new_finished(
                 rules,
-                /*ostossparams*/None, // TODO support?
                 SExpensifiers::new_no_stock_doublings_stoss(), // TODO? support
                 SStichSequenceGameFinished::new(&stichseq),
                 /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},

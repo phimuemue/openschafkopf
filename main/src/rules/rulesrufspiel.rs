@@ -86,6 +86,7 @@ pub struct SRulesRufspielGeneric<RufspielPayout: TRufspielPayout> {
     efarbe : EFarbe,
     rufspielpayout: RufspielPayout,
     trumpfdecider: STrumpfDeciderRufspiel,
+    stossparams: SStossParams,
 }
 
 pub type SRulesRufspiel = SRulesRufspielGeneric<SRufspielPayout>;
@@ -102,7 +103,7 @@ pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag<
     SStaticFarbeHerz>>;
 
 impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
-    pub fn new(epi: EPlayerIndex, efarbe: EFarbe, payoutparams: SPayoutDeciderParams) -> SRulesRufspiel {
+    pub fn new(epi: EPlayerIndex, efarbe: EFarbe, payoutparams: SPayoutDeciderParams, stossparams: SStossParams) -> SRulesRufspiel {
         SRulesRufspiel {
             epi,
             efarbe: verify_ne!(efarbe, EFarbe::Herz),
@@ -110,6 +111,7 @@ impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
                 payoutdecider: SPayoutDeciderPointBased::new(payoutparams, SPointsToWin61{}),
             },
             trumpfdecider: STrumpfDeciderRufspiel::default(),
+            stossparams,
         }
     }
 
@@ -176,10 +178,12 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
     }
 
     fn stoss_allowed(&self, stichseq: &SStichSequence, hand: &SHand, epi: EPlayerIndex, vecstoss: &[SStoss]) -> bool {
-        assert_eq!(stichseq.remaining_cards_per_hand()[epi], hand.cards().len());
-        let b_epi_is_coplayer = stichseq.cards_from_player(hand, epi).contains(&self.rufsau());
-        assert!(epi!=self.epi || !b_epi_is_coplayer);
-        (epi==self.epi || b_epi_is_coplayer) == (vecstoss.len()%2==1)
+        self.stossparams.stoss_allowed(stichseq, vecstoss) && {
+            assert_eq!(stichseq.remaining_cards_per_hand()[epi], hand.cards().len());
+            let b_epi_is_coplayer = stichseq.cards_from_player(hand, epi).contains(&self.rufsau());
+            assert!(epi!=self.epi || !b_epi_is_coplayer);
+            (epi==self.epi || b_epi_is_coplayer) == (vecstoss.len()%2==1)
+        }
     }
 
     fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
@@ -391,6 +395,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     payoutdecider: SPayoutDeciderPointsAsPayout::new(SPointsToWin61{}),
                 },
                 trumpfdecider: self.trumpfdecider.clone(),
+                stossparams: self.stossparams.clone(),
             }) as Box<dyn TRules>,
             Box::new(move |stichseq: &SStichSequence, (epi_hand, hand): (EPlayerIndex, &SHand), f_payout: f32| {
                 assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());

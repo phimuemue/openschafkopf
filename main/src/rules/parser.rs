@@ -7,6 +7,7 @@ use itertools::Itertools;
 pub fn parse_rule_description(
     str_rules_with_player: &str,
     (n_tarif_extra, n_tarif_ruf, n_tarif_solo): (isize, isize, isize),
+    stossparams: SStossParams,
     fn_player_to_epi: impl Fn(&str)->Result<EPlayerIndex, Error>,
 ) -> Result<Box<dyn TRules>, Error> {
     use crate::rules::rulesrufspiel::*;
@@ -66,6 +67,7 @@ pub fn parse_rule_description(
                         /*n_lauf_lbound*/if let Some(_efarbe)=oefarbe {3} else {2},
                     ),
                 ),
+                stossparams.clone(),
             ).upcast_box())
         }}
         if str_rules_contains(&["tout"]) {
@@ -92,7 +94,8 @@ pub fn parse_rule_description(
                                         /*n_payout_single_player*/n_tarif_extra,
                                         /*n_lauf_lbound*/3,
                                     ),
-                                )
+                                ),
+                                stossparams.clone(),
                             )) as Box<dyn TRules>
                         })
                     }
@@ -108,6 +111,7 @@ pub fn parse_rule_description(
                     epi,
                     /*i_prio*/-999_999,
                     /*n_payout_base*/n_tarif_solo,
+                    stossparams.clone(),
                 )) as Box<dyn TRules>
             })
         }),
@@ -117,6 +121,7 @@ pub fn parse_rule_description(
                     epi,
                     /*i_prio*/-999_999,
                     /*n_payout_base*/n_tarif_solo,
+                    stossparams.clone(),
                 )) as Box<dyn TRules>
             })
         }),
@@ -147,6 +152,9 @@ pub fn parse_rule_description_simple(str_rules: &str) -> Result<Box<dyn TRules>,
     crate::rules::parser::parse_rule_description(
         str_rules,
         (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO? make customizable
+        SStossParams::new(
+            /*n_stoss_max*/4, // TODO? make customizable
+        ),
         /*fn_player_to_epi*/|str_epi| EPlayerIndex::checked_from_usize(str_epi.parse()?)
             .ok_or_else(|| format_err!("Cannot convert {} to EPlayerIndex.", str_epi)),
     )

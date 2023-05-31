@@ -146,7 +146,6 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
                 let mut game_simulate = SGame::new(
                     /*aveccard*/aveccard,
                     SExpensifiersNoStoss::new(/*n_stock*/0),
-                    /*ostossparams*/None,
                     rules.box_clone(),
                 );
                 'loopstich: for (epi, &card) in stichseq.visible_cards() {

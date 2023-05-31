@@ -67,6 +67,18 @@ impl VTrumpfOrFarbe {
 
 pub type SDoublings = SPlayersInRound<bool, SStaticEPI0>; // assume that doublings occur in order
 
+#[derive(Clone, new, Debug)]
+pub struct SStossParams {
+    pub n_stoss_max : usize,
+}
+
+impl SStossParams {
+    fn stoss_allowed(&self, stichseq: &SStichSequence, slcstoss: &[SStoss]) -> bool {
+        stichseq.no_card_played() // TODORULES Adjustable latest time of stoss
+            && slcstoss.len() < self.n_stoss_max
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct SStoss {
     pub epi : EPlayerIndex,
@@ -738,7 +750,6 @@ fn test_snapshotcache() {
                             SGame::new(
                                 gamepreparations.aveccard.clone(),
                                 gamepreparations.expensifiers.clone(),
-                                gamepreparations.ruleset.ostossparams.clone(),
                                 rules.upcast().box_clone(),
                             )
                         )

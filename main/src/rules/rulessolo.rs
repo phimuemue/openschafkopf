@@ -110,6 +110,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
                 },
                 trumpfdecider: rules.trumpfdecider.clone(),
                 of_heuristic_active_occurence_probability: rules.of_heuristic_active_occurence_probability,
+                stossparams: rules.stossparams.clone(),
             }) as Box<dyn TRules>,
             Box::new(move |stichseq: &SStichSequence, (epi_hand, hand): (EPlayerIndex, &SHand), f_payout: f32| {
                 assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
@@ -356,6 +357,7 @@ pub struct SRulesSoloLike<TrumpfDecider, PayoutDecider> {
     payoutdecider: PayoutDecider,
     trumpfdecider: TrumpfDecider,
     of_heuristic_active_occurence_probability: Option<f64>,
+    stossparams: SStossParams,
 }
 
 impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> fmt::Display for SRulesSoloLike<TrumpfDecider, PayoutDecider> {
@@ -376,6 +378,7 @@ impl<TrumpfDecider: TTrumpfDecider, PayoutDecider: TPayoutDeciderSoloLike> TActi
                 epi: self.epi,
                 str_name: self.str_name.clone(),
                 of_heuristic_active_occurence_probability: None, // No data about occurence probabilities with increased priority.
+                stossparams: self.stossparams.clone(),
             }) as Box<dyn TActivelyPlayableRules>)
     }
 }
@@ -466,6 +469,7 @@ pub fn sololike(
     oefarbe: impl Into<Option<EFarbe>>,
     esololike: ESoloLike,
     payoutdecider_in: impl Into<VPayoutDeciderSoloLike>,
+    stossparams: SStossParams,
 ) -> Box<dyn TActivelyPlayableRules> {
     let (oefarbe, payoutdecider_in) = (oefarbe.into(), payoutdecider_in.into());
     assert!(!matches!(payoutdecider_in, VPayoutDeciderSoloLike::Sie(_)) || oefarbe.is_none()); // TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
@@ -481,6 +485,7 @@ pub fn sololike(
             epi,
             str_name: format!("{}{}{}", $str_oefarbe, $str_esololike, $str_payoutdecider),
             of_heuristic_active_occurence_probability: $of_heuristic_active_occurence_probability,
+            stossparams,
         }) as Box<dyn TActivelyPlayableRules>
     }}
     cartesian_match!(
@@ -577,6 +582,7 @@ fn test_equivalent_when_on_same_hand_rulessolo() {
                 oefarbe,
                 ESoloLike::Solo,
                 payoutdecider,
+                SStossParams::new(/*n_stoss_max*/4),
             )
         };
         let payoutparams = SPayoutDeciderParams::new(

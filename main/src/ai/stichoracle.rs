@@ -348,6 +348,7 @@ mod tests {
                 allowed_rules,
                 VStockOrT,
             },
+            SStossParams,
             tests::TPayoutDeciderSoloLikeDefault,
             TRules,
             TRulesBoxClone,
@@ -369,6 +370,9 @@ mod tests {
 
     #[test]
     fn test_stichoracle() {
+        let stossparams = SStossParams::new(
+            /*n_stoss_max*/4,
+        );
         let rules_rufspiel_eichel_epi0 = SRulesRufspiel::new(
             EPlayerIndex::EPI0,
             EFarbe::Eichel,
@@ -380,6 +384,7 @@ mod tests {
                     /*n_lauf_lbound*/3,
                 ),
             ),
+            stossparams.clone(),
         );
         fn assert_stichoracle(
             rules: &dyn TRules,
@@ -744,6 +749,7 @@ mod tests {
                     /*n_lauf_lbound*/3,
                 ),
             ),
+            stossparams.clone(),
         );
         assert_stichoracle(
             &rules_rufspiel_gras_epi3,
@@ -796,6 +802,7 @@ mod tests {
                 /*n_payout_schneider_schwarz*/10,
                 SLaufendeParams::new(10, 3),
             ),
+            stossparams.clone(),
         );
         assert_stichoracle(
             TRulesBoxClone::box_clone(rules_solo_gras_epi0.as_ref()).as_ref(),
@@ -1163,6 +1170,7 @@ mod tests {
                 /*n_payout_schneider_schwarz*/10,
                 SLaufendeParams::new(10, 3),
             ),
+            stossparams.clone(),
         );
         assert_stichoracle(
             TRulesBoxClone::box_clone(rules_farbwenz_eichel_epi3.as_ref()).as_ref(),
@@ -2497,7 +2505,6 @@ mod tests {
                                 SGame::new(
                                     gamepreparations.aveccard.clone(),
                                     gamepreparations.expensifiers.clone(),
-                                    gamepreparations.ruleset.ostossparams.clone(),
                                     rules.upcast().box_clone(),
                                 )
                             )

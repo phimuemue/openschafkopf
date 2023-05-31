@@ -166,7 +166,6 @@ impl TGamePhase for SGamePreparations {
                     VGamePreparationsFinish::DirectGame(SGame::new(
                         self.aveccard,
                         self.expensifiers,
-                        self.ruleset.ostossparams.clone(),
                         rulesramsch,
                     ))
                 },
@@ -262,7 +261,6 @@ impl TGamePhase for SDetermineRules {
         SGame::new(
             self.aveccard,
             self.expensifiers,
-            self.ruleset.ostossparams.clone(),
             self.tplepirules_current_bid.1.upcast().box_clone(),
         )
     }
@@ -314,7 +312,6 @@ pub struct SGameGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     gameannouncements : GameAnnouncements,
     determinerules: DetermineRules,
     pub rules : Box<dyn TRules>,
-    pub ostossparams : Option<SStossParams>,
     pub expensifiers: SExpensifiers,
     pub stichseq: SStichSequence,
     ruleset: Ruleset,
@@ -331,21 +328,11 @@ impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Rul
         if self.stichseq.completed_stichs().len() < self.kurzlang().cards_per_player() {
             self.current_playable_stich().current_playerindex().map(|epi_current| (
                 epi_current,
-                if let Some(ref stossparams) = self.ostossparams {
-                    if self.stichseq.no_card_played() // TODORULES Adjustable latest time of stoss
-                        && self.expensifiers.vecstoss.len() < stossparams.n_stoss_max
-                    {
-                        EPlayerIndex::values()
-                            .filter(|epi| {
-                                self.rules.stoss_allowed(&self.stichseq, &self.ahand[*epi], *epi, &self.expensifiers.vecstoss)
-                            })
-                            .collect()
-                    } else {
-                        Vec::new()
-                    }
-                } else {
-                    Vec::new()
-                },
+                EPlayerIndex::values()
+                    .filter(|epi| {
+                        self.rules.stoss_allowed(&self.stichseq, &self.ahand[*epi], *epi, &self.expensifiers.vecstoss)
+                    })
+                    .collect(),
             ))
         } else {
             None
@@ -374,13 +361,11 @@ impl SGame {
     pub fn new(
         aveccard : EnumMap<EPlayerIndex, SHandVector>,
         expensifiers : SExpensifiersNoStoss,
-        ostossparams : Option<SStossParams>,
         rules : Box<dyn TRules>,
     ) -> SGame {
         SGame::new_with(
             aveccard,
             expensifiers,
-            ostossparams,
             rules,
             /*ruleset*/(),
             /*gameannouncements*/(),
@@ -393,7 +378,6 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
     pub fn new_with(
         aveccard : EnumMap<EPlayerIndex, SHandVector>,
         expensifiers : SExpensifiersNoStoss,
-        ostossparams : Option<SStossParams>,
         rules : Box<dyn TRules>,
         ruleset: Ruleset,
         gameannouncements: GameAnnouncements,
@@ -408,7 +392,6 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
             gameannouncements,
             determinerules,
             rules,
-            ostossparams,
             expensifiers: SExpensifiers::new(expensifiers.n_stock, expensifiers.doublings, /*vecstoss*/vec!()),
             stichseq: SStichSequence::new(unwrap!(EKurzLang::from_cards_per_player(n_cards_per_player))),
             ruleset,
@@ -417,7 +400,6 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
 
     pub fn new_finished(
         rules : Box<dyn TRules>,
-        ostossparams : Option<SStossParams>,
         expensifiers: SExpensifiers,
         stichseq: SStichSequenceGameFinished, // TODO take value instead of wrapper
         mut fn_before_zugeben: impl FnMut(&SGame, /*i_stich*/usize, EPlayerIndex, ECard),
@@ -428,7 +410,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
                 .collect()
         );
         let SExpensifiers{n_stock, doublings, vecstoss} = expensifiers;
-        let mut game = SGame::new(aveccard, SExpensifiersNoStoss::new_with_doublings(n_stock, doublings), ostossparams, rules);
+        let mut game = SGame::new(aveccard, SExpensifiersNoStoss::new_with_doublings(n_stock, doublings), rules);
         for stoss in vecstoss.into_iter() {
             game.stoss(stoss.epi)?;
         }
@@ -449,7 +431,6 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
             gameannouncements,
             determinerules,
             rules,
-            ostossparams,
             expensifiers,
             stichseq,
             ruleset,
@@ -460,7 +441,6 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
             gameannouncements: fn_announcements(gameannouncements),
             determinerules: fn_determinerules(determinerules),
             rules: fn_rules(rules),
-            ostossparams,
             expensifiers,
             stichseq,
             ruleset: fn_ruleset(ruleset),

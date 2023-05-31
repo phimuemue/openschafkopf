@@ -150,7 +150,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         game.expensifiers.n_stock,
                         game.expensifiers.doublings.clone(),
                     ),
-                    game.ostossparams.clone(),
                     game.rules.clone(),
                 );
                 assert_eq!(game.stichseq.visible_stichs(), game.stichseq.completed_stichs());

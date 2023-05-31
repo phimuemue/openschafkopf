@@ -405,15 +405,12 @@ fn test_is_compatible_with_game_so_far() {
         AssertNotFrei(EPlayerIndex, VTrumpfOrFarbe),
     }
     let test_game = |aacard_hand: [[ECard; 8]; 4], rules: &dyn TRules, vectestaction: Vec<VTestAction>| {
+        // TODO implement tests for SStoss
         let ahand = EPlayerIndex::map_from_raw(aacard_hand)
             .map_into(|acard| acard.into());
-        use crate::rules::ruleset::*;
         let mut game = game::SGame::new(
             ahand,
             SExpensifiersNoStoss::new(/*n_stock*/ 0),
-            Some(SStossParams::new( // TODO implement tests for SStoss
-                /*n_stoss_max*/ 4,
-            )),
             rules.box_clone(),
         );
         let mut vectplepitrumpforfarbe_frei = Vec::new();
@@ -453,7 +450,7 @@ fn test_is_compatible_with_game_so_far() {
     };
     test_game(
         [[H9, E7, GA, GZ, G9, E9, EK, EA], [HU, HA, SO, S8, GO, E8, SK, EZ], [H8, SU, G7, S7, GU, EO, GK, S9], [EU, H7, G8, SA, HO, SZ, HK, HZ]],
-        &SRulesRufspiel::new(EPlayerIndex::EPI3, EFarbe::Gras, SPayoutDeciderParams::new(/*n_payout_base*/ 20, /*n_payout_schneider_schwarz*/ 10, SLaufendeParams::new(10, 3))),
+        &SRulesRufspiel::new(EPlayerIndex::EPI3, EFarbe::Gras, SPayoutDeciderParams::new(/*n_payout_base*/ 20, /*n_payout_schneider_schwarz*/ 10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)),
         vec![
             VTestAction::AssertNotFrei(EPlayerIndex::EPI3, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
             VTestAction::PlayStich([H9, HU, H8, EU]),
@@ -470,7 +467,7 @@ fn test_is_compatible_with_game_so_far() {
     );
     test_game(
         [[S7, GZ, H7, HO, G7, SA, S8, S9], [E9, EK, GU, GO, GK, SU, SK, HU], [SO, EZ, EO, H9, HZ, H8, HA, EU], [SZ, GA, HK, G8, EA, E8, G9, E7]],
-        &SRulesRufspiel::new(EPlayerIndex::EPI3, EFarbe::Schelln, SPayoutDeciderParams::new(/*n_payout_base*/ 20, /*n_payout_schneider_schwarz*/ 10, SLaufendeParams::new(10, 3))),
+        &SRulesRufspiel::new(EPlayerIndex::EPI3, EFarbe::Schelln, SPayoutDeciderParams::new(/*n_payout_base*/ 20, /*n_payout_schneider_schwarz*/ 10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)),
         vec![
             VTestAction::AssertNotFrei(EPlayerIndex::EPI3, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
             VTestAction::PlayStich([S9, SK, HZ, SZ]),
@@ -485,7 +482,7 @@ fn test_is_compatible_with_game_so_far() {
 fn test_very_expensive_exploration() { // this kind of abuses the test mechanism to benchmark the performance
     use crate::card::ECard::*;
     use crate::game::*;
-    use crate::rules::{ruleset::*, rulessolo::*, payoutdecider::*};
+    use crate::rules::{rulessolo::*, payoutdecider::*};
     use crate::game_analysis::TPayoutDeciderSoloLikeDefault;
     let epi_active = EPlayerIndex::EPI0;
     let n_payout_base = 50;
@@ -498,14 +495,14 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             [SO,SU,E9,G9,S9,SA,SZ,SK],
         ]).map_into(|acard| acard.into()),
         SExpensifiersNoStoss::new(/*n_stock*/0),
-        Some(SStossParams::new(
-            /*n_stoss_max*/ 4,
-        )),
         TRulesBoxClone::box_clone(sololike(
             epi_active,
             EFarbe::Herz,
             ESoloLike::Solo,
             SPayoutDeciderPointBased::default_payoutdecider(n_payout_base, n_payout_schneider_schwarz, SLaufendeParams::new(10, 3)),
+            SStossParams::new(
+                /*n_stoss_max*/ 4,
+            ),
         ).as_ref()),
     );
     for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]] {

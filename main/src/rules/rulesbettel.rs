@@ -15,16 +15,18 @@ pub struct SRulesBettel<BettelAllAllowedCardsWithinStich> {
     i_prio : isize,
     payoutdecider : SPayoutDeciderBettel,
     trumpfdecider: STrumpfDeciderBettel,
+    stossparams: SStossParams,
     phantom : PhantomData<BettelAllAllowedCardsWithinStich>,
 }
 
 impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> SRulesBettel<BettelAllAllowedCardsWithinStich> {
-    pub fn new(epi: EPlayerIndex, i_prio: isize, n_payout_base: isize) -> SRulesBettel<BettelAllAllowedCardsWithinStich> {
+    pub fn new(epi: EPlayerIndex, i_prio: isize, n_payout_base: isize, stossparams: SStossParams) -> SRulesBettel<BettelAllAllowedCardsWithinStich> {
         SRulesBettel{
             epi,
             i_prio,
             payoutdecider: SPayoutDeciderBettel{n_payout_base},
             trumpfdecider: STrumpfDeciderBettel::default(),
+            stossparams,
             phantom: PhantomData,
         }
     }
@@ -226,6 +228,7 @@ fn test_equivalent_when_on_same_hand_rulesbettel() {
         },
         phantom: PhantomData,
         trumpfdecider: STrumpfDeciderBettel::default(),
+        stossparams: SStossParams::new(/*n_stoss_max*/4),
     }.equivalent_when_on_same_hand(); // does test internally
     SRulesBettel::<SBettelAllAllowedCardsWithinStichStichzwang>{
         epi: EPlayerIndex::EPI0,
@@ -235,5 +238,6 @@ fn test_equivalent_when_on_same_hand_rulesbettel() {
         },
         phantom: PhantomData,
         trumpfdecider: STrumpfDeciderBettel::default(),
+        stossparams: SStossParams::new(/*n_stoss_max*/4),
     }.equivalent_when_on_same_hand(); // does test internally
 }

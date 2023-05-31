@@ -48,17 +48,11 @@ pub enum EDoublingScope {
     GamesAndStock,
 }
 
-#[derive(Clone, new, Debug)]
-pub struct SStossParams {
-    pub n_stoss_max : usize,
-}
-
 #[derive(new, Debug, Clone)]
 pub struct SRuleSet {
     pub avecrulegroup : EnumMap<EPlayerIndex, Vec<SRuleGroup>>,
     pub stockorramsch : VStockOrT</*n_stock*/isize, Box<dyn TRules>>,
     pub oedoublingscope : Option<EDoublingScope>,
-    pub ostossparams : Option<SStossParams>,
     pub ekurzlang : EKurzLang,
 }
 
@@ -85,6 +79,25 @@ impl SRuleSet {
             info!("SRuleSet: Did not find {}. Falling back to {}.", str_not_found, str_fallback);
             read_int(&tomltbl, str_fallback)
         };
+        let stossparams = tomltbl.get("stoss") // TODO beautify construction of stossparams // TODO support stossparams on per rule
+            .map(|tomlval_stoss| {
+                let n_stoss_max_default = 4;
+                SStossParams::new(
+                    tomlval_stoss.get("max")
+                        .and_then(|tomlval| tomlval.as_integer())
+                        .map_or(n_stoss_max_default, |n_stoss_max| {
+                            if n_stoss_max<=0 {
+                                info!("SRuleSet: stoss.max less than 0. Defaulting to {}.", n_stoss_max_default);
+                                n_stoss_max_default
+                            } else {
+                                n_stoss_max.as_num::<usize>()
+                            }
+                        })
+                )
+            })
+            .unwrap_or_else(|| SStossParams::new(
+                /*n_stoss_max*/0,
+            ));
         // TODORULES "Der Alte muss"
         // TODORULES Kreuzspiel as alternative to Ramsch
         let stockorramsch = match (tomltbl.get("ramsch"), tomltbl.get("stock")) {
@@ -176,6 +189,7 @@ impl SRuleSet {
                             epi,
                             efarbe,
                             payoutparams.clone(),
+                            stossparams.clone(),
                         )) as Box<dyn TActivelyPlayableRules>))
                         .collect()
                 }
@@ -194,6 +208,7 @@ impl SRuleSet {
                                     oefarbe,
                                     $esololike,
                                     PayoutDecider::new(payoutparams.clone(), $i_prioindex),
+                                    stossparams.clone(),
                                 ))
                             })
                             .collect()
@@ -250,6 +265,7 @@ impl SRuleSet {
                     /*oefarbe*/None,
                     ESoloLike::Solo,
                     SPayoutDeciderSie::new(payoutparams),
+                    stossparams.clone(),
                 ))]
             )?;
             { // Bettel
@@ -259,20 +275,21 @@ impl SRuleSet {
                         .or_else(|_err| 
                             fallback(&format!("{}.price", str_rule_name_file), /*str_base_price_fallback*/"base-price")
                         )?;
-                    fn push_bettel<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich>(vecrulegroup: &mut Vec<SRuleGroup>, epi: EPlayerIndex, n_payout_base: isize) {
+                    fn push_bettel<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich>(vecrulegroup: &mut Vec<SRuleGroup>, epi: EPlayerIndex, n_payout_base: isize, stossparams: SStossParams) {
                         vecrulegroup.push(SRuleGroup{
                             str_name: "Bettel".to_string(),
                             vecorules: vec![Some(Box::new(SRulesBettel::<BettelAllAllowedCardsWithinStich>::new(
                                 epi,
                                 /*i_prio, large negative number to make less important than any sololike*/-999_999,
                                 n_payout_base.as_num::<isize>(),
+                                stossparams,
                             )) as Box<dyn TActivelyPlayableRules>)],
                         });
                     }
                     if Some(true) == tomlval_bettel.get("stichzwang").and_then(|tomlval| tomlval.as_bool()) {
-                        push_bettel::<SBettelAllAllowedCardsWithinStichStichzwang>(vecrulegroup, epi, n_payout_base.as_num::<isize>());
+                        push_bettel::<SBettelAllAllowedCardsWithinStichStichzwang>(vecrulegroup, epi, n_payout_base.as_num::<isize>(), stossparams.clone());
                     } else {
-                        push_bettel::<SBettelAllAllowedCardsWithinStichNormal>(vecrulegroup, epi, n_payout_base.as_num::<isize>());
+                        push_bettel::<SBettelAllAllowedCardsWithinStichNormal>(vecrulegroup, epi, n_payout_base.as_num::<isize>(), stossparams.clone());
                     }
                 }
             }
@@ -294,21 +311,6 @@ impl SRuleSet {
                     info!("SRuleSet: doubling.stock not specified; falling back to 'stock=yes'");
                     EDoublingScope::GamesAndStock
                 }
-            }),
-            tomltbl.get("stoss").map(|tomlval_stoss| {
-                let n_stoss_max_default = 4;
-                SStossParams::new(
-                    tomlval_stoss.get("max")
-                        .and_then(|tomlval| tomlval.as_integer())
-                        .map_or(n_stoss_max_default, |n_stoss_max| {
-                            if n_stoss_max<=0 {
-                                info!("SRuleSet: stoss.max less than 0. Defaulting to {}.", n_stoss_max_default);
-                                n_stoss_max_default
-                            } else {
-                                n_stoss_max.as_num::<usize>()
-                            }
-                        })
-                )
             }),
             match tomltbl.get("deck").and_then(|tomlval_kurzlang| tomlval_kurzlang.as_str()) {
                 Some("kurz") => EKurzLang::Kurz,

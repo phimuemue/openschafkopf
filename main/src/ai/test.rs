@@ -17,17 +17,21 @@ fn test_determine_best_card() {
             [H9, H8, H7, E9, GK, SA, SK, S9],
         ]).map_into(|acard| acard.into()),
         game::SExpensifiersNoStoss::new(/*n_stock*/0),
-        Some(SStossParams::new(
-            /*n_stoss_max*/4,
-        )),
-        <dyn TRules>::box_clone(&rulesrufspiel::SRulesRufspiel::new(EPlayerIndex::EPI0, EFarbe::Eichel, payoutdecider::SPayoutDeciderParams::new(
-            /*n_payout_base*/100,
-            /*n_payout_schneider_schwarz*/50,
-            payoutdecider::SLaufendeParams::new(
-                /*n_payout_per_lauf*/50,
-                /*n_lauf_lbound*/3,
+        <dyn TRules>::box_clone(&rulesrufspiel::SRulesRufspiel::new(
+            EPlayerIndex::EPI0,
+            EFarbe::Eichel,
+            payoutdecider::SPayoutDeciderParams::new(
+                /*n_payout_base*/100,
+                /*n_payout_schneider_schwarz*/50,
+                payoutdecider::SLaufendeParams::new(
+                    /*n_payout_per_lauf*/50,
+                    /*n_lauf_lbound*/3,
+                ),
             ),
-        ))),
+            SStossParams::new(
+                /*n_stoss_max*/4,
+            ),
+        )),
     );
     fn play_stichs(game: &mut SGame, slctplepistich: &[(EPlayerIndex, [ECard; 4])]) {
         for (epi, card) in slctplepistich.iter()

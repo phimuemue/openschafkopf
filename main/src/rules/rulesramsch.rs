@@ -53,6 +53,7 @@ impl TRules for SRulesRamsch {
     impl_rules_trumpf!();
 
     fn stoss_allowed(&self, stichseq: &SStichSequence, hand: &SHand, epi: EPlayerIndex, vecstoss: &[SStoss]) -> bool {
+        // TODO? Use SStossParams?
         assert!(vecstoss.is_empty());
         assert_eq!(stichseq.remaining_cards_per_hand()[epi], hand.cards().len());
         false

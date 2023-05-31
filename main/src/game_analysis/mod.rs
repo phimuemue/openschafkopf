@@ -104,7 +104,6 @@ pub fn analyze_game(
     let mut mapepivecpossiblepayout = EPlayerIndex::map_from_fn(|_epi| Vec::new());
     let game = unwrap!(SGame::new_finished(
         game_in.rules.clone(),
-        game_in.ostossparams.clone(),
         game_in.expensifiers.clone(),
         SStichSequenceGameFinished::new(&game_in.stichseq),
         /*fn_before_zugeben*/|game, i_stich, epi_zugeben, card_played| {
