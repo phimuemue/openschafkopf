@@ -144,16 +144,14 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
             }) && {
                 let mut b_valid_up_to_now = true;
                 let mut stichseq_simulate = SStichSequence::new(stichseq.kurzlang());
-                'loopstich: for stich in stichseq.visible_stichs() {
-                    for (epi, card) in stich.iter() {
-                        if rules.card_is_allowed(&stichseq_simulate, &ahand_simulate[epi], *card) {
-                            assert!(ahand_simulate[epi].contains(*card));
-                            ahand_simulate[epi].play_card(*card);
-                            stichseq_simulate.zugeben(*card, rules);
-                        } else {
-                            b_valid_up_to_now = false;
-                            break 'loopstich;
-                        }
+                'loopstich: for (epi, card) in stichseq.visible_cards() {
+                    if rules.card_is_allowed(&stichseq_simulate, &ahand_simulate[epi], *card) {
+                        assert!(ahand_simulate[epi].contains(*card));
+                        ahand_simulate[epi].play_card(*card);
+                        stichseq_simulate.zugeben(*card, rules);
+                    } else {
+                        b_valid_up_to_now = false;
+                        break 'loopstich;
                     }
                 }
                 b_valid_up_to_now
