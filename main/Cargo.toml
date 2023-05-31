@@ -9,7 +9,7 @@ description = "An open source toolkit for Schafkopf, a Bavarian card game."
 [build-dependencies]
 openschafkopf_util = {path = "../util"}
 as_num = "0"
-resvg = "0"
+resvg = "0.31"
 
 [dependencies]
 atty = "0"
