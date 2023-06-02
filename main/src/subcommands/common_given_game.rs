@@ -104,12 +104,12 @@ pub fn with_common_args<FnWithArgs>(
         .collect::<Result<Vec<_>, _>>()?;
     let vecstoss = match clapmatches.value_of("stoss")
         .map(|str_stoss| {
-            if str_stoss.trim().len()==0 {
+            if str_stoss.trim().is_empty() {
                 Ok(Vec::new())
             } else {
                 str_stoss
                     .split(' ')
-                    .filter(|str_epi| str_epi.len()>0)
+                    .filter(|str_epi| !str_epi.is_empty())
                     .map(|str_epi| str_epi.parse::<EPlayerIndex>()
                         .map(|epi| SStoss {
                             epi,
