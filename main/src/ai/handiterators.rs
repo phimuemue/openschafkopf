@@ -161,11 +161,11 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
                         }
                     },
                 ) {
-                    if let Err(_) = match gameaction {
+                    if match gameaction {
                         EitherOrBoth::Left(stoss) => game_simulate.stoss(stoss.epi),
                         EitherOrBoth::Right((_i_card, (epi, &card))) => game_simulate.zugeben(card, epi),
                         EitherOrBoth::Both(_, _) => panic!("Unexpected."), // TODOITERTOOLS? can we get rid of this?
-                    } {
+                    }.is_err() {
                         b_valid_up_to_now = false;
                         break 'loopstich;
                     }
