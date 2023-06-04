@@ -7,7 +7,7 @@ use std::fmt;
 use std::borrow::{Borrow, BorrowMut};
 use itertools::Itertools;
 
-pub type SHandVector = ArrayVec<ECard, 8>;
+pub type SHandVector = ArrayVec<ECard, {EKurzLang::max_cards_per_player()}>;
 
 #[derive(Clone, Debug)]
 pub struct SHand {

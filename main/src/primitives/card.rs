@@ -53,11 +53,15 @@ plain_enum_mod!(modekurzlang, EKurzLang {
 });
 
 impl EKurzLang {
-    pub fn cards_per_player(self) -> usize {
+    pub const fn cards_per_player(self) -> usize {
         match self {
             Self::Kurz => 6,
             Self::Lang => 8,
         }
+    }
+
+    pub const fn max_cards_per_player() -> usize {
+        8 // TODO could we compute this via EKurzLang::values().map(cards_per_player)?
     }
 
     pub fn from_cards_per_player(n_cards_per_player: usize) -> Option<EKurzLang> {

@@ -411,7 +411,7 @@ fn test_is_compatible_with_game_so_far() {
         AssertFrei(EPlayerIndex, VTrumpfOrFarbe),
         AssertNotFrei(EPlayerIndex, VTrumpfOrFarbe),
     }
-    let test_game = |aacard_hand: [[ECard; 8]; EPlayerIndex::SIZE], rules: &dyn TRules, vectestaction: Vec<VTestAction>| {
+    let test_game = |aacard_hand: [[ECard; EKurzLang::Lang.cards_per_player()]; EPlayerIndex::SIZE], rules: &dyn TRules, vectestaction: Vec<VTestAction>| {
         // TODO implement tests for SStoss
         let ahand = EPlayerIndex::map_from_raw(aacard_hand)
             .map_into(|acard| acard.into());

@@ -17,7 +17,7 @@ use itertools::Itertools;
 
 #[derive(Debug, Clone)]
 pub struct SStichTrie {
-    vectplcardtrie: Box<ArrayVec<(ECard, SStichTrie), 8>>, // TODO? improve
+    vectplcardtrie: Box<ArrayVec<(ECard, SStichTrie), {EKurzLang::max_cards_per_player()}>>, // TODO? improve
 }
 
 impl SStichTrie {

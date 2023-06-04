@@ -44,12 +44,12 @@ fn internal_test_rules(
 pub trait TCardArrayKurzLang {
     fn to_hand_vector(&self) -> SHandVector; // TODO take self instead of &self
 }
-impl TCardArrayKurzLang for [ECard; 6] {
+impl TCardArrayKurzLang for [ECard; EKurzLang::Kurz.cards_per_player()] {
     fn to_hand_vector(&self) -> SHandVector {
         self.iter().copied().collect()
     }
 }
-impl TCardArrayKurzLang for [ECard; 8] {
+impl TCardArrayKurzLang for [ECard; EKurzLang::Lang.cards_per_player()] {
     fn to_hand_vector(&self) -> SHandVector {
         self.iter().copied().collect()
     }

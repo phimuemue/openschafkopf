@@ -212,7 +212,9 @@ impl TRules for SRulesRamsch {
             let point_stich_count = |epi| {
                 let pointstichcount = &rulestatecache.changing.mapepipointstichcount[epi];
                 let (mut n_point, mut n_stich) = (pointstichcount.n_point, pointstichcount.n_stich);
-                if n_stich==8 {
+                let n_stich_max_supported = verify_eq!(EKurzLang::max_cards_per_player(), 8);
+                assert!(n_stich <= n_stich_max_supported);
+                if n_stich==n_stich_max_supported {
                     // "8" would occupy 4 bits => would be too much
                     // => encode this as n_point==121 points, n_stich==0
                     assert_eq!(120, n_point);
