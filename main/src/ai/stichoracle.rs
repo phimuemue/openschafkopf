@@ -793,16 +793,23 @@ mod tests {
                 [G9, GA, GK, G8], // TODO should not be needed (GZ better than G9)
             ],
         );
-        let rules_solo_gras_epi0 = sololike(
+        let sololike_internal = |epi, efarbe, esololike| {
+            sololike(
+                epi,
+                efarbe,
+                esololike,
+                SPayoutDeciderPointBased::default_payoutdecider(
+                    /*n_payout_base*/50,
+                    /*n_payout_schneider_schwarz*/10,
+                    SLaufendeParams::new(10, 3),
+                ),
+                stossparams.clone(),
+            )
+        };
+        let rules_solo_gras_epi0 = sololike_internal(
             EPlayerIndex::EPI0,
             EFarbe::Gras,
             ESoloLike::Solo,
-            SPayoutDeciderPointBased::default_payoutdecider(
-                /*n_payout_base*/50,
-                /*n_payout_schneider_schwarz*/10,
-                SLaufendeParams::new(10, 3),
-            ),
-            stossparams.clone(),
         );
         assert_stichoracle(
             TRulesBoxClone::box_clone(rules_solo_gras_epi0.as_ref()).as_ref(),
@@ -1161,16 +1168,10 @@ mod tests {
                 // [HK, HA, H8, H7], // covered by [HK, HA, H8, HZ]
             ],
         );
-        let rules_farbwenz_eichel_epi3 = sololike(
+        let rules_farbwenz_eichel_epi3 = sololike_internal(
             EPlayerIndex::EPI3,
             EFarbe::Eichel,
             ESoloLike::Wenz,
-            SPayoutDeciderPointBased::default_payoutdecider(
-                /*n_payout_base*/50,
-                /*n_payout_schneider_schwarz*/10,
-                SLaufendeParams::new(10, 3),
-            ),
-            stossparams.clone(),
         );
         assert_stichoracle(
             TRulesBoxClone::box_clone(rules_farbwenz_eichel_epi3.as_ref()).as_ref(),
