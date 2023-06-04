@@ -215,7 +215,7 @@ impl SStichTrie {
             }
         );
         let mut make_stichtrie = || for_each_allowed_card(
-            4-n_stich_size,
+            EPlayerIndex::SIZE-n_stich_size,
             (ahand, stichseq),
             rules,
             cardspartition_completed_cards,

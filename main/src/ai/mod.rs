@@ -407,11 +407,11 @@ fn test_is_compatible_with_game_so_far() {
     use crate::card::ECard::*;
     use crate::game;
     enum VTestAction {
-        PlayStich([ECard; 4]),
+        PlayStich([ECard; EPlayerIndex::SIZE]),
         AssertFrei(EPlayerIndex, VTrumpfOrFarbe),
         AssertNotFrei(EPlayerIndex, VTrumpfOrFarbe),
     }
-    let test_game = |aacard_hand: [[ECard; 8]; 4], rules: &dyn TRules, vectestaction: Vec<VTestAction>| {
+    let test_game = |aacard_hand: [[ECard; 8]; EPlayerIndex::SIZE], rules: &dyn TRules, vectestaction: Vec<VTestAction>| {
         // TODO implement tests for SStoss
         let ahand = EPlayerIndex::map_from_raw(aacard_hand)
             .map_into(|acard| acard.into());

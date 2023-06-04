@@ -358,7 +358,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             2 => for_each_allowed_card!((0, 1,), stichseq),
             3 => for_each_allowed_card!((0,), stichseq),
             n_stich_size => {
-                assert_eq!(n_stich_size, 4);
+                assert_eq!(n_stich_size, verify_eq!(EPlayerIndex::SIZE, 4));
                 for_each_allowed_card!((), stichseq)
             },
         }

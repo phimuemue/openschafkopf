@@ -33,7 +33,7 @@ fn test_determine_best_card() {
             ),
         )),
     );
-    fn play_stichs(game: &mut SGame, slctplepistich: &[(EPlayerIndex, [ECard; 4])]) {
+    fn play_stichs(game: &mut SGame, slctplepistich: &[(EPlayerIndex, [ECard; EPlayerIndex::SIZE])]) {
         for (epi, card) in slctplepistich.iter()
             .flat_map(|&(epi_first, acard)| SStich::new_full(epi_first, acard))
         {

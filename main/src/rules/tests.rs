@@ -13,7 +13,7 @@ fn internal_test_rules(
     vecn_stoss: Vec<usize>,
     n_stock: isize,
     slcstich_test: &[SFullStich<SStich>],
-    (an_payout, n_stock_payout): ([isize; 4], isize),
+    (an_payout, n_stock_payout): ([isize; EPlayerIndex::SIZE], isize),
 ) {
     println!("Testing rules: {}", str_info);
     // TODO? check _ahand
@@ -55,7 +55,7 @@ impl TCardArrayKurzLang for [ECard; 8] {
     }
 }
 
-pub fn make_stich_vector(slctplepiacard_stich: &[(EPlayerIndex, [ECard; 4])]) -> Vec<SFullStich<SStich>> {
+pub fn make_stich_vector(slctplepiacard_stich: &[(EPlayerIndex, [ECard; EPlayerIndex::SIZE])]) -> Vec<SFullStich<SStich>> {
     slctplepiacard_stich.iter()
         .map(|&(epi, acard)| SFullStich::new(SStich::new_full(epi, acard)))
         .collect()
@@ -64,11 +64,11 @@ pub fn make_stich_vector(slctplepiacard_stich: &[(EPlayerIndex, [ECard; 4])]) ->
 pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLang>(
     str_info: &str,
     rules: &dyn TRules,
-    aacard_hand: [CardArrayKurzLang; 4],
+    aacard_hand: [CardArrayKurzLang; EPlayerIndex::SIZE],
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
-    slctplepiacard_stich: &[(EPlayerIndex, [ECard; 4])],
-    an_payout: [isize; 4],
+    slctplepiacard_stich: &[(EPlayerIndex, [ECard; EPlayerIndex::SIZE])],
+    an_payout: [isize; EPlayerIndex::SIZE],
 ) {
     internal_test_rules(
         str_info,
@@ -89,8 +89,8 @@ pub fn test_rules_manual(
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
     n_stock: isize,
-    slctplepiacard_stich: &[(EPlayerIndex, [ECard; 4])],
-    (an_payout, n_stock_payout): ([isize; 4], isize),
+    slctplepiacard_stich: &[(EPlayerIndex, [ECard; EPlayerIndex::SIZE])],
+    (an_payout, n_stock_payout): ([isize; EPlayerIndex::SIZE], isize),
 ) {
     let vecstich = make_stich_vector(slctplepiacard_stich);
     internal_test_rules(

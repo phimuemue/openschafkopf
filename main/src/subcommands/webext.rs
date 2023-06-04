@@ -6,7 +6,10 @@ use itertools::Itertools;
 use serde_json::json;
 use std::io::{Read, Write};
 use crate::{
-    primitives::cardvector::parse_cards,
+    primitives::{
+        cardvector::parse_cards,
+        eplayerindex::EPlayerIndex,
+    },
     rules::parser::parse_rule_description_simple,
     util::*,
 };
@@ -107,7 +110,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                         .iter()
                         .cycle()
                         .skip(n_epi_first)
-                        .take(verify_eq!(4, jsonarr_announcement.len()))
+                        .take(verify_eq!(EPlayerIndex::SIZE, jsonarr_announcement.len()))
                         .enumerate()
                         .filter(|&(_n_epi, jsonval_announcement)| jsonval_announcement.is_string())
                         .exactly_one()

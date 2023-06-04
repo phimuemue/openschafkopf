@@ -22,7 +22,7 @@ pub fn internal_run_simple_game_loop<ItStockOrGame: Iterator<Item=VStockOrT<SGam
     n_games: usize,
     ruleset: SRuleSet,
     fn_gamepreparations_to_stockorgame: impl Fn(SGamePreparations, &EnumMap<EPlayerIndex, SAtTable>)->ItStockOrGame,
-) -> ([SAtTable; 4], isize) {
+) -> ([SAtTable; EPlayerIndex::SIZE], isize) {
     let mut aattable = aplayer.map_into(|player| SAtTable{player, n_money:0});
     let mut n_stock = 0;
     for _i_game in 0..n_games {
@@ -86,7 +86,7 @@ pub fn internal_run_simple_game_loop<ItStockOrGame: Iterator<Item=VStockOrT<SGam
     (aattable.into_raw(), n_stock)
 }
 
-pub fn run_simple_game_loop(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: SRuleSet) -> ([SAtTable; 4], isize) {
+pub fn run_simple_game_loop(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: SRuleSet) -> ([SAtTable; EPlayerIndex::SIZE], isize) {
     internal_run_simple_game_loop(
         aplayer,
         n_games,
