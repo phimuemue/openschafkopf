@@ -11,6 +11,7 @@ use crate::primitives::*;
 use crate::rules::{ruleset::*, *};
 use crate::util::*;
 use std::sync::mpsc;
+use itertools::Itertools;
 
 pub struct SPlayerComputer {
     pub ai : SAi,
@@ -29,9 +30,9 @@ impl TPlayer for SPlayerComputer {
                 })
                 .count() >= 3
             || EFarbe::values().any(|efarbe| {
-                4==veccard.iter()
+                veccard.iter()
                     .filter(|card| efarbe==card.farbe())
-                    .count()
+                    .all_equal()
             })
         ).ok(); // TODO more intelligent doubling strategy
     }
