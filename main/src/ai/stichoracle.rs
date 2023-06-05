@@ -265,7 +265,7 @@ impl SStichTrie {
             let mut vecstich_all = Vec::new(); // TODO avoid vecstich_all, derive everything from stichtrie
             stichtrie.internal_traverse_trie(&mut stichseq.current_stich().clone(), &mut |stich| {
                 mapepib_is_stich_winner[rules.winner_index(stich)] = true;
-                vecstich_all.push(stich.into_inner().clone());
+                vecstich_all.push(SFullStich::new(stich.into_inner().clone()));
             });
             let mut cardspartition = debug_verify_eq!(
                 cardspartition_completed_cards,
@@ -285,7 +285,7 @@ impl SStichTrie {
                 let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
                 if epi!=epi_card { // do not remove own cards from chains
                     let ocard_surely_played = vecstich_all.iter()
-                        .map(|stich| *unwrap!(stich.get(epi)))
+                        .map(|stich| stich[epi])
                         .all_equal_item();
                     if let Some(&card_visible) = stichseq.current_stich().get(epi) {
                         assert_eq!(ocard_surely_played, Some(card_visible));
