@@ -213,8 +213,10 @@ impl SStichTrie {
 
     fn outer_make(
         (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
+        rulestatecache: &SRuleStateCacheFixed,
         (rules, playerparties): (&dyn TRules, &SPlayerPartiesTable),
         stichtrie_all: &SStichTrie,
+        cardspartition_completed_cards: &SCardsPartition,
     ) -> Vec<SStich> {
         #[cfg(debug_assertions)]
         fn assert_stichtrie_is_same_as_unfiltered_make_simple(
@@ -251,7 +253,8 @@ impl SStichTrie {
             (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
             rules: &dyn TRules,
             stichtrie: &SStichTrie,
-        ) -> SCardsPartition { // TODO (a part of) cardspartition should be received as an input.
+            cardspartition_completed_cards: SCardsPartition, // TODO? can we work on cardspartition_completed_cards?
+        ) -> SCardsPartition {
             #[cfg(debug_assertions)]
             assert_stichtrie_is_same_as_unfiltered_make_simple(
                 (&mut ahand.clone(), &mut stichseq.clone()),
@@ -265,12 +268,18 @@ impl SStichTrie {
                 });
                 vecstich_all
             };
-            let mut cardspartition = unwrap!(rules.only_minmax_points_when_on_same_hand(
-                &SRuleStateCacheFixed::new(ahand, stichseq),
-            )).0;
-            for (_epi, &card) in stichseq.completed_cards() {
-                cardspartition.remove_from_chain(card);
-            }
+            let mut cardspartition = debug_verify_eq!(
+                cardspartition_completed_cards,
+                {
+                    let mut cardspartition = unwrap!(rules.only_minmax_points_when_on_same_hand(
+                        &SRuleStateCacheFixed::new(ahand, stichseq),
+                    )).0;
+                    for (_epi, &card) in stichseq.completed_cards() {
+                        cardspartition.remove_from_chain(card);
+                    }
+                    cardspartition
+                }
+            );
             let mut mapepib_is_stich_winner = EPlayerIndex::map_from_fn(|_epi| false);
             for stich in vecstich_all.iter() {
                 mapepib_is_stich_winner[rules.winner_index(SFullStich::new(stich))] = true;
@@ -357,7 +366,7 @@ impl SStichTrie {
                     ),
                     rules.winner_index(unwrap!(stichseq.last_completed_stich())),
                 );
-                let rulestatecache = SRuleStateCacheFixed::new(&ahand, &stichseq); // TODO avoid
+                debug_assert_eq!(rulestatecache, &SRuleStateCacheFixed::new(&ahand, &stichseq));
                 for trumpforfarbe in VTrumpfOrFarbe::values() {
                     for (i_card, epi) in maptrumpforfarbeveccard[trumpforfarbe.clone()]
                         .iter()
@@ -442,6 +451,7 @@ impl SStichTrie {
                             }
                             stichtrie
                         },
+                        cardspartition_completed_cards.clone(),
                     );
                     chains(&cardspartition, &veccard)
                         .into_iter()
@@ -474,6 +484,7 @@ impl SStichTrie {
                     }
                     stichtrie
                 },
+                cardspartition_completed_cards.clone(),
             );
             for veccard_chain in chains(&cardspartition, &rules.all_allowed_cards(stichseq, &ahand[epi_card])) {
                 let vecstich_for_card_in_chain = stichseq.zugeben_and_restore_with_hands(ahand, epi_card, veccard_chain[0], rules, |ahand, stichseq|
@@ -501,8 +512,10 @@ impl SStichTrie {
                             vecstich.extend(stichseq.zugeben_and_restore_with_hands(ahand, epi_card, card, rules, |ahand, stichseq|
                                 Self::outer_make(
                                     (ahand, stichseq),
+                                    rulestatecache,
                                     (rules, playerparties),
                                     stichtrie_all.get_child(card),
+                                    cardspartition_completed_cards,
                                 )
                             ));
                         }
@@ -568,8 +581,10 @@ impl SStichTrie {
                             vecstich_2.extend(stichseq.zugeben_and_restore_with_hands(ahand, epi_card, card, rules, |ahand, stichseq|
                                 Self::outer_make(
                                     (ahand, stichseq),
+                                    rulestatecache,
                                     (rules, playerparties),
                                     stichtrie_all.get_child(card),
+                                    cardspartition_completed_cards,
                                 )
                             ));
                             if card!=card_richest {
@@ -591,8 +606,10 @@ impl SStichTrie {
                             vecstich.extend(stichseq.zugeben_and_restore_with_hands(ahand, epi_card, card, rules, |ahand, stichseq|
                                 Self::outer_make(
                                     (ahand, stichseq),
+                                    rulestatecache,
                                     (rules, playerparties),
                                     stichtrie_all.get_child(card),
+                                    cardspartition_completed_cards,
                                 )
                             ));
                         }
@@ -605,6 +622,7 @@ impl SStichTrie {
 
     pub fn new_with(
         (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
+        rulestatecache: &SRuleStateCacheFixed,
         rules: &dyn TRules,
         cardspartition_completed_cards: &SCardsPartition,
         playerparties: &SPlayerPartiesTable,
@@ -621,8 +639,10 @@ impl SStichTrie {
         return Self::new_from_full_stichs(
             Self::outer_make(
                 (ahand, stichseq),
+                rulestatecache,
                 (rules, playerparties),
                 stichtrie_all,
+                cardspartition_completed_cards,
             )
         );
         fn for_each_allowed_card(
@@ -967,6 +987,7 @@ fn test_stichtrie_make_simple() {
 pub struct SFilterByOracle<'rules> {
     rules: &'rules dyn TRules,
     stichtrie: SStichTrie,
+    rulestatecache: SRuleStateCacheFixed,
     cardspartition_completed_cards: SCardsPartition,
     playerparties: SPlayerPartiesTable,
 }
@@ -983,15 +1004,17 @@ impl<'rules> SFilterByOracle<'rules> {
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(ahand_in_game, stichseq_in_game));
         let mut stichseq = SStichSequence::new(stichseq_in_game.kurzlang());
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(&ahand, &stichseq));
+        let rulestatecache = verify_eq!(
+            SRuleStateCacheFixed::new(ahand_in_game, stichseq_in_game),
+            SRuleStateCacheFixed::new(&ahand, &stichseq)
+        );
         rules.only_minmax_points_when_on_same_hand(
-            &verify_eq!(
-                SRuleStateCacheFixed::new(ahand_in_game, stichseq_in_game),
-                SRuleStateCacheFixed::new(&ahand, &stichseq)
-            )
+            &rulestatecache,
         ).map(|(cardspartition, playerparties)| {
             let mut slf = Self {
                 rules,
                 stichtrie: SStichTrie::new(), // TODO this is a dummy value that should not be needed. Eliminate it.
+                rulestatecache,
                 cardspartition_completed_cards: cardspartition,
                 playerparties,
             };
@@ -1004,6 +1027,7 @@ impl<'rules> SFilterByOracle<'rules> {
             }
             let stichtrie = SStichTrie::new_with(
                 (&mut ahand_in_game.clone(), &mut stichseq_in_game.clone()),
+                &slf.rulestatecache,
                 rules,
                 &slf.cardspartition_completed_cards,
                 &slf.playerparties,
@@ -1023,6 +1047,7 @@ impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
         );
         let stichtrie = SStichTrie::new_with(
             (ahand, stichseq),
+            &self.rulestatecache,
             self.rules,
             &self.cardspartition_completed_cards,
             &self.playerparties,
@@ -1117,8 +1142,9 @@ mod tests {
             let epi_first = stichseq.current_stich().first_playerindex();
             let ahand = &EPlayerIndex::map_from_raw(aslccard_hand)
                 .map_into(SHand::new_from_iter);
+            let rulestatecache = SRuleStateCacheFixed::new(ahand, &stichseq);
             let (mut cardspartition, playerparties) = unwrap!(rules.only_minmax_points_when_on_same_hand(
-                &SRuleStateCacheFixed::new(ahand, &stichseq),
+                &rulestatecache,
             ));
             for (_epi, card) in stichseq.completed_cards() {
                 cardspartition.remove_from_chain(*card);
@@ -1133,9 +1159,11 @@ mod tests {
             let stichtrie = SStichTrie::new_from_full_stichs(
                 SStichTrie::outer_make(
                     (&mut ahand.clone(), &mut stichseq.clone()),
+                    &rulestatecache,
                     (rules, &playerparties),
                     stichseq.current_stich().iter()
                         .fold(&stichtrie_all, |stichtrie, (_epi, &card)| stichtrie.get_child(card)),
+                    /*cardspartition_completed_cards*/&cardspartition,
                 ),
             );
             let setstich_oracle = stichtrie.traverse_trie(stichseq.current_stich().first_playerindex()).iter().cloned().collect::<std::collections::HashSet<_>>();
