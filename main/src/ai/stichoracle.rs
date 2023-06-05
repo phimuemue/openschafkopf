@@ -261,13 +261,12 @@ impl SStichTrie {
                 rules,
                 stichtrie,
             );
-            let vecstich_all = {
-                let mut vecstich_all = Vec::new();
-                stichtrie.internal_traverse_trie(&mut stichseq.current_stich().clone(), &mut |stich| {
-                    vecstich_all.push(stich.into_inner().clone());
-                });
-                vecstich_all
-            };
+            let mut mapepib_is_stich_winner = EPlayerIndex::map_from_fn(|_epi| false);
+            let mut vecstich_all = Vec::new(); // TODO avoid vecstich_all, derive everything from stichtrie
+            stichtrie.internal_traverse_trie(&mut stichseq.current_stich().clone(), &mut |stich| {
+                mapepib_is_stich_winner[rules.winner_index(stich)] = true;
+                vecstich_all.push(stich.into_inner().clone());
+            });
             let mut cardspartition = debug_verify_eq!(
                 cardspartition_completed_cards,
                 {
@@ -280,10 +279,6 @@ impl SStichTrie {
                     cardspartition
                 }
             );
-            let mut mapepib_is_stich_winner = EPlayerIndex::map_from_fn(|_epi| false);
-            for stich in vecstich_all.iter() {
-                mapepib_is_stich_winner[rules.winner_index(SFullStich::new(stich))] = true;
-            }
             for epi in EPlayerIndex::values()
                 .map(|epi| stichseq.current_stich().first_playerindex().wrapping_add(epi.to_usize()))
             {
