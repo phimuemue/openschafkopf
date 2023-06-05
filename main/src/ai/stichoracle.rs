@@ -807,6 +807,7 @@ fn test_stichtrie_make_simple() {
         rules::{
             payoutdecider::{SPayoutDeciderParams, SLaufendeParams},
             rulesrufspiel::SRulesRufspiel,
+            SStossParams,
         },
         util::*,
     };
@@ -821,6 +822,9 @@ fn test_stichtrie_make_simple() {
                 /*n_payout_per_lauf*/10,
                 /*n_lauf_lbound*/3,
             ),
+        ),
+        SStossParams::new(
+            /*n_stoss_max*/4,
         ),
     );
     let ahand = EPlayerIndex::map_from_raw([
