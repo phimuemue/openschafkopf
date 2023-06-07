@@ -262,10 +262,21 @@ impl SStichTrie {
                 stichtrie,
             );
             let mut mapepib_is_stich_winner = EPlayerIndex::map_from_fn(|_epi| false);
-            let mut vecstich_all = Vec::new(); // TODO avoid vecstich_all, derive everything from stichtrie
+            let mut mapepioocard_surely_played = EPlayerIndex::map_from_fn(|_epi| None/*Not yet seen*/);
             stichtrie.internal_traverse_trie(&mut stichseq.current_stich().clone(), &mut |stich| {
                 mapepib_is_stich_winner[rules.winner_index(stich)] = true;
-                vecstich_all.push(SFullStich::new(stich.into_inner().clone()));
+                for epi in EPlayerIndex::values() {
+                    match &mapepioocard_surely_played[epi] {
+                        None => mapepioocard_surely_played[epi] = Some(Some(stich[epi])),
+                        Some(None) => {/*already found differing cards for epi*/},
+                        Some(Some(card)) => {
+                            if *card!=stich[epi] {
+                                mapepioocard_surely_played[epi] = Some(None);
+                            }
+                        },
+                    }
+                    assert!(mapepioocard_surely_played[epi].is_some());
+                }
             });
             let mut cardspartition = debug_verify_eq!(
                 cardspartition_completed_cards,
@@ -284,9 +295,7 @@ impl SStichTrie {
             {
                 let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
                 if epi!=epi_card { // do not remove own cards from chains
-                    let ocard_surely_played = vecstich_all.iter()
-                        .map(|stich| stich[epi])
-                        .all_equal_item();
+                    let ocard_surely_played = unwrap!(mapepioocard_surely_played[epi]);
                     if let Some(&card_visible) = stichseq.current_stich().get(epi) {
                         assert_eq!(ocard_surely_played, Some(card_visible));
                     }
