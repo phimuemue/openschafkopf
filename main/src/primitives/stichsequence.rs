@@ -19,7 +19,7 @@ impl TWinnerIndex for SWinnerIndexIrrelevant {
 
 #[derive(Debug, Clone, PartialEq, Eq)] // TODO? custom impl Debug
 pub struct SStichSequence {
-    vecstich: ArrayVec<SStich, /*TODO: can this be bound to EKurzLang somehow?*/9>,
+    vecstich: ArrayVec<SStich, {EKurzLang::max_cards_per_player()+/*surrogate stich holds winner index for last real stich*/1}>,
     ekurzlang: EKurzLang,
 }
 
