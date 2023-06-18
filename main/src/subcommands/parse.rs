@@ -60,7 +60,7 @@ fn card_to_neural_network_input(ocard: Option<ECard>) -> usize {
                 $((EFarbe::$efarbe, ESchlag::$eschlag) => $n,)*
             }
         });
-        card_neural_network_mapping!(inner)
+        verify_ne!(card_neural_network_mapping!(inner), 0)
     } else {
         0
     }
