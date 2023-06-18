@@ -84,7 +84,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         PlayerIndexStichSeq: std::fmt::Display,
         CardIndicatorVariable: std::fmt::Display,
         CardStichSeq: std::fmt::Display,
-        CardZugeben: std::fmt::Display,
+        ResultColumn: std::fmt::Display,
         PointsPerPlayer: std::fmt::Display,
         StichsPerPlayer: std::fmt::Display,
     >(
@@ -97,7 +97,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         fn_epi_stichseq: impl Fn(usize, Option<EPlayerIndex>) -> PlayerIndexStichSeq,
         fn_points_for_player: impl Fn(EPlayerIndex) -> PointsPerPlayer,
         fn_stichs_for_player: impl Fn(EPlayerIndex) -> StichsPerPlayer,
-        card_zugeben: CardZugeben,
+        slcresultcolumn: &[ResultColumn],
     ) {
         if let Some(ref epi_active)=oepi_active {
             unwrap!(write!(wrtr, "{},", epi_active));
@@ -134,7 +134,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             unwrap!(write!(wrtr, "{},", fn_points_for_player(epi)));
             unwrap!(write!(wrtr, "{},", fn_stichs_for_player(epi)));
         }
-        unwrap!(write!(wrtr, "{}", card_zugeben));
+        for resultcolumn in slcresultcolumn {
+            unwrap!(write!(wrtr, "{}", resultcolumn));
+        }
         unwrap!(write!(wrtr, "\n"));
     }
     let path_dst = std::path::PathBuf::from(&format!("neural_network_input/{}",
@@ -169,7 +171,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             /*fn_epi_stichseq*/|i_card, _oepi| format!("epi_stichseq_{}", i_card),
                             /*fn_points_for_player*/|epi| format!("n_points_{}", epi),
                             /*fn_stichs_for_player*/|epi| format!("n_stichs_{}", epi),
-                            /*card_zugeben*/"card_zugeben",
+                            /*slcresultcolumn*/&["card_zugeben"],
                         );
                         file
                     });
@@ -200,7 +202,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             },
                             /*fn_points_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].n_point,
                             /*fn_stichs_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].n_stich,
-                            /*card_zugeben*/card_to_neural_network_input(Some(card_zugeben)),
+                            /*slcresultcolumn*/&[card_to_neural_network_input(Some(card_zugeben))],
                         );
                         unwrap!(game_csv.zugeben(card_zugeben, epi)); // validated by analyze_sauspiel_html
                     }
