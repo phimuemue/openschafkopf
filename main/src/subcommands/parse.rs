@@ -193,9 +193,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             },
                             /*fn_epi_stichseq*/|_i_card, oepi| {
                                 if let Some(epi) = oepi {
-                                    let i_epi_1_based = epi.to_usize() + 1;
-                                    assert!(0!=i_epi_1_based);
-                                    i_epi_1_based
+                                    verify_ne!(epi.to_usize() + 1, 0)
                                 } else {
                                     0
                                 }
