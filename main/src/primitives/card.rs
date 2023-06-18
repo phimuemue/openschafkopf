@@ -169,7 +169,7 @@ impl ECard {
     pub const fn schlag(self) -> ESchlag {
         unsafe{ std::mem::transmute(self as usize % ESchlag::SIZE) } // TODO(plain_enum) from_usize/to_usize const
     }
-    pub fn values(ekurzlang: EKurzLang) -> impl Iterator<Item=ECard> {
+    pub fn values(ekurzlang: EKurzLang) -> impl Iterator<Item=ECard>+Clone {
         use itertools::iproduct;
         iproduct!(
             EFarbe::values(),

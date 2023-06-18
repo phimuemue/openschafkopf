@@ -213,7 +213,7 @@ impl SRuleStateCacheFixed {
         assert!(ECard::values(stichseq.kurzlang()).all(|card| mapcardoepi[card].is_some()));
         Self {mapcardoepi}
     }
-    fn who_has_card(&self, card: ECard) -> EPlayerIndex {
+    pub fn who_has_card(&self, card: ECard) -> EPlayerIndex {
         unwrap!(self.mapcardoepi[card])
     }
 }

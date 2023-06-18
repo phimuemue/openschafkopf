@@ -97,12 +97,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         fn_epi_stichseq: impl Fn(usize, Option<EPlayerIndex>) -> PlayerIndexStichSeq,
         fn_points_for_player: impl Fn(EPlayerIndex) -> PointsPerPlayer,
         fn_stichs_for_player: impl Fn(EPlayerIndex) -> StichsPerPlayer,
-        slcresultcolumn: &[ResultColumn],
+        fn_result_column: impl Fn(EPlayerIndex, ECard)->ResultColumn,
     ) {
         if let Some(ref epi_active)=oepi_active {
             unwrap!(write!(wrtr, "{},", epi_active));
         }
-        let n_cards_total = stichseq.kurzlang().cards_per_player() * EPlayerIndex::SIZE;
+        let ekurzlang = stichseq.kurzlang();
+        let n_cards_total = ekurzlang.cards_per_player() * EPlayerIndex::SIZE;
         fn write_indicator_vars<CardIndicatorVariable: std::fmt::Display>(
             wrtr: &mut impl std::io::Write,
             n_cards_total: usize,
@@ -134,8 +135,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             unwrap!(write!(wrtr, "{},", fn_points_for_player(epi)));
             unwrap!(write!(wrtr, "{},", fn_stichs_for_player(epi)));
         }
-        for resultcolumn in slcresultcolumn {
-            unwrap!(write!(wrtr, "{}", resultcolumn));
+        for (epi, card) in itertools::iproduct!(EPlayerIndex::values(), ECard::values(ekurzlang)) {
+            if ekurzlang.supports_card(card) {
+                unwrap!(write!(wrtr, "{},", fn_result_column(epi, card)));
+            }
         }
         unwrap!(write!(wrtr, "\n"));
     }
@@ -171,7 +174,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             /*fn_epi_stichseq*/|i_card, _oepi| format!("epi_stichseq_{}", i_card),
                             /*fn_points_for_player*/|epi| format!("n_points_{}", epi),
                             /*fn_stichs_for_player*/|epi| format!("n_stichs_{}", epi),
-                            /*slcresultcolumn*/&["card_zugeben"],
+                            /*fn_result_column*/|epi, card| format!("{}_at_epi{}", card, epi.to_usize()),
                         );
                         file
                     });
@@ -202,7 +205,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             },
                             /*fn_points_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].n_point,
                             /*fn_stichs_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].n_stich,
-                            /*slcresultcolumn*/&[card_to_neural_network_input(Some(card_zugeben))],
+                            /*fn_result_column*/|epi, card| bool_to_usize(rulestatecache.fixed.who_has_card(card)==epi) ,
                         );
                         unwrap!(game_csv.zugeben(card_zugeben, epi)); // validated by analyze_sauspiel_html
                     }
