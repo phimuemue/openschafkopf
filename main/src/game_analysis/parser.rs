@@ -43,7 +43,7 @@ fn vec_to_arr<T: std::fmt::Debug>(vect: Vec<T>) -> Result<[T; EPlayerIndex::SIZE
     Ok([card0, card1, card2, card3])
 }
 
-pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>, /*StockInfo*/()>, failure::Error> {
+pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>, /*StockInfo*/EKurzLang>, failure::Error> {
     // TODO acknowledge timeouts
     use select::{document::Document, node::Node, predicate::*};
     let doc = Document::from(str_html);
@@ -339,7 +339,13 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         // TODO assert that there are actually no stichs in doc
         Ok(SGameResultGeneric {
             an_payout: EPlayerIndex::map_from_fn(|_epi| /*Sauspiel does not know stock*/0),
-            stockorgame: VStockOrT::Stock(()),
+            stockorgame: VStockOrT::Stock(/*ekurzlang*/{
+                aveccard.iter()
+                    .map(|veccard| EKurzLang::from_cards_per_player(veccard.len()))
+                    .all_equal_item()
+                    .ok_or(format_err!("Not all players have the same number of cards."))?
+                    .ok_or(format_err!("Could not determine ekurzlang"))?
+            }),
         })
     }
 }

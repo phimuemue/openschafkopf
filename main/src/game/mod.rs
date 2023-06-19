@@ -180,7 +180,7 @@ impl TGamePhase for SGamePreparations {
                     };
                     VGamePreparationsFinish::Stock(SGameResult{
                         an_payout: EPlayerIndex::map_from_fn(|_epi| -n_stock),
-                        stockorgame: VStockOrT::Stock(()),
+                        stockorgame: VStockOrT::Stock(self.ruleset.ekurzlang),
                     })
                 }
             }
@@ -322,7 +322,7 @@ pub type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
 
 impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     type ActivePlayerInfo = SGameAction;
-    type Finish = SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules, ()>;
+    type Finish = SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules, /*StockInfo*/EKurzLang>;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         if self.stichseq.completed_stichs().len() < self.kurzlang().cards_per_player() {
@@ -499,7 +499,7 @@ pub struct SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules, StockI
     pub an_payout : EnumMap<EPlayerIndex, isize>,
     pub stockorgame: VStockOrT<StockInfo, SGameGeneric<Ruleset, GameAnnouncements, DetermineRules>>,
 }
-pub type SGameResult = SGameResultGeneric<(), (), (), ()>;
+pub type SGameResult = SGameResultGeneric<(), (), (), /*StockInfo*/EKurzLang>;
 
 impl TGamePhase for SGameResult { // "absorbing state"
     type ActivePlayerInfo = std::convert::Infallible;
