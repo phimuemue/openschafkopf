@@ -98,22 +98,23 @@ impl SAi {
             )
     }
 
-    pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer<SMinMax>>(
+    fn suggest_card_internal<SnapshotVisualizer: TSnapshotVisualizer<SMinMax>>(
         &self,
-        game: &SGame,
+        rules: &dyn TRules,
+        stichseq: &SStichSequence,
+        ahand: &EnumMap<EPlayerIndex, SHand>,
+        expensifiers: &SExpensifiers,
         fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     ) -> ECard {
-        let rules = game.rules.as_ref();
-        let stichseq = &game.stichseq;
         let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
-        let hand_fixed = &game.ahand[epi_current];
+        let hand_fixed = &ahand[epi_current];
         if let Ok(card)=rules.all_allowed_cards(
-            verify_eq!(&game.stichseq, stichseq),
+            stichseq,
             hand_fixed
         ).iter().exactly_one() {
             *card
         } else if let Some(card) = rules.rulespecific_ai()
-            .and_then(|airulespecific| airulespecific.suggest_card(hand_fixed, &game.stichseq))
+            .and_then(|airulespecific| airulespecific.suggest_card(hand_fixed, stichseq))
         {
             card
         } else {
@@ -129,7 +130,7 @@ impl SAi {
                     &$foreachsnapshot::new(
                         rules,
                         epi_current,
-                        game.expensifiers.clone(),
+                        expensifiers.clone(),
                     ),
                     SSnapshotCacheNone::factory(), // TODO possibly use cache
                     fn_visualizer,
@@ -142,7 +143,7 @@ impl SAi {
                 stichseq.remaining_cards_per_hand()[epi_current] - 1 // ERemainingCards starts with 1
             ));
             use ERemainingCards::*;
-            let vecstoss = &game.expensifiers.vecstoss;
+            let vecstoss = &expensifiers.vecstoss;
             *unwrap!(unwrap!(cartesian_match!(
                 forward_to_determine_best_card,
                 match (eremainingcards) {
@@ -161,7 +162,7 @@ impl SAi {
                 },
                 match ((&self.aiparams, eremainingcards)) {
                     (&VAIParams::Cheating, _) => {
-                        std::iter::once(game.ahand.clone())
+                        std::iter::once(ahand.clone())
                     },
                     (&VAIParams::Simulating{n_suggest_card_samples:_}, _1|_2|_3|_4) => {
                         all_possible_hands(stichseq, hand_fixed.clone(), epi_current, rules, vecstoss)
@@ -173,6 +174,20 @@ impl SAi {
                 },
             )).cards_with_maximum_value(/*TODO? good idea*/SPerMinMaxStrategy::compare_canonical).0.first())
         }
+    }
+
+    pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer<SMinMax>, Ruleset, GameAnnouncements, DetermineRules>(
+        &self,
+        game: &SGameGeneric<Ruleset, GameAnnouncements, DetermineRules>,
+        fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
+    ) -> ECard {
+        self.suggest_card_internal(
+            game.rules.as_ref(),
+            &game.stichseq,
+            &game.ahand,
+            &game.expensifiers,
+            fn_visualizer,
+        )
     }
 }
 
