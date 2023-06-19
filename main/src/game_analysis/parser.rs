@@ -215,7 +215,12 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                     /*fn_card_highlight*/|card, ostr_highlight| (card, ostr_highlight.is_some()),
                 )?;
                 veccardb.sort_unstable_by_key(|&(_card, b_highlight)| !b_highlight);
-                vecveccard.push(veccardb.into_iter().map(|(card, _b_highlight)| card).collect());
+                vecveccard.push(SHandVector::try_from(
+                    veccardb.into_iter()
+                        .map(|(card, _b_highlight)| card)
+                        .collect::<Vec<_>>()
+                        .as_slice()
+                )?);
                 Ok(vecveccard)
         })?
     ).map(EPlayerIndex::map_from_raw)?;
