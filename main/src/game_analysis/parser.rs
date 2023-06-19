@@ -43,7 +43,7 @@ fn vec_to_arr<T: std::fmt::Debug>(vect: Vec<T>) -> Result<[T; EPlayerIndex::SIZE
     Ok([card0, card1, card2, card3])
 }
 
-pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error> {
+pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>, /*StockInfo*/()>, failure::Error> {
     // TODO acknowledge timeouts
     use select::{document::Document, node::Node, predicate::*};
     let doc = Document::from(str_html);

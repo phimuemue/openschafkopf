@@ -89,7 +89,7 @@ pub fn glob_files<'str_glob>(
 }
 
 pub fn gameresult_to_dir<Ruleset, GameAnnouncements, DetermineRules>(
-    gameresult: &SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules>,
+    gameresult: &SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules, ()>,
 ) -> std::path::PathBuf {
     let path_dst = std::path::PathBuf::new();
     match &gameresult.stockorgame {

@@ -322,7 +322,7 @@ pub type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
 
 impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     type ActivePlayerInfo = SGameAction;
-    type Finish = SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules>;
+    type Finish = SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules, ()>;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         if self.stichseq.completed_stichs().len() < self.kurzlang().cards_per_player() {
@@ -494,12 +494,12 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
 }
 
 #[derive(Debug, Clone)]
-pub struct SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules> {
+pub struct SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules, StockInfo> {
     // TODO store all information about finished game, even in case of stock
     pub an_payout : EnumMap<EPlayerIndex, isize>,
-    pub stockorgame: VStockOrT<(), SGameGeneric<Ruleset, GameAnnouncements, DetermineRules>>,
+    pub stockorgame: VStockOrT<StockInfo, SGameGeneric<Ruleset, GameAnnouncements, DetermineRules>>,
 }
-pub type SGameResult = SGameResultGeneric<(), (), ()>;
+pub type SGameResult = SGameResultGeneric<(), (), (), ()>;
 
 impl TGamePhase for SGameResult { // "absorbing state"
     type ActivePlayerInfo = std::convert::Infallible;
@@ -513,7 +513,7 @@ impl TGamePhase for SGameResult { // "absorbing state"
     }
 }
 
-impl<Ruleset, GameAnnouncements, DetermineRules> SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules> {
+impl<Ruleset, GameAnnouncements, DetermineRules, StockInfo> SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules, StockInfo> {
     pub fn apply_payout(self, n_stock: &mut isize, mut fn_payout_to_epi: impl FnMut(EPlayerIndex, isize)) { // TODO should n_stock be member of SGameResult? // TODO should apply_payout be forced upon construction?
         for epi in EPlayerIndex::values() {
             fn_payout_to_epi(epi, self.an_payout[epi]);
@@ -527,7 +527,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameResultGeneric<Ruleset, Gam
         assert!(0 <= *n_stock);
     }
 
-    pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameResultGeneric<Ruleset2, GameAnnouncements2, DetermineRules2> {
+    pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameResultGeneric<Ruleset2, GameAnnouncements2, DetermineRules2, StockInfo> {
         let SGameResultGeneric {
             an_payout,
             stockorgame,
