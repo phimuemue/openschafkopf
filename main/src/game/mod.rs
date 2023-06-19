@@ -448,8 +448,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
     }
 
     pub fn current_playable_stich(&self) -> &SStich {
-        assert!(self.stichseq.completed_stichs().len()<self.kurzlang().cards_per_player());
-        self.stichseq.current_stich()
+        self.stichseq.current_playable_stich()
     }
 
     pub fn kurzlang(&self) -> EKurzLang {
