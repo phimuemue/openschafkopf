@@ -91,22 +91,19 @@ pub fn glob_files<'str_glob>(
 pub fn gameresult_to_dir<Ruleset, GameAnnouncements, DetermineRules>(
     gameresult: &SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules, /*StockInfo*/EKurzLang>,
 ) -> std::path::PathBuf {
-    let path_dst = std::path::PathBuf::new();
-    let kurzlang_to_path_segment = |ekurzlang| {
-        match ekurzlang {
+    let path_to_kurzlang = |ekurzlang| {
+        std::path::Path::new(match ekurzlang {
             EKurzLang::Kurz => "kurz",
             EKurzLang::Lang => "lang",
-        }
+        })
     };
     match &gameresult.stockorgame {
         VStockOrT::Stock(ekurzlang) => {
-            path_dst
+            path_to_kurzlang(*ekurzlang)
                 .join("stock")
-                .join(kurzlang_to_path_segment(*ekurzlang))
         },
         VStockOrT::OrT(game) => {
-            let mut path_gameresult = path_dst
-                .join(kurzlang_to_path_segment(game.kurzlang()))
+            let mut path_gameresult = path_to_kurzlang(game.kurzlang())
                 .join(game.rules.to_string());
             if let Some(epi) = game.rules.playerindex() {
                 path_gameresult = path_gameresult
