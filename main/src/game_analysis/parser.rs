@@ -11,6 +11,7 @@ use combine::{char::*, *};
 
 #[derive(Debug)]
 pub struct SSauspielAllowedRules {
+    ekurzlang: EKurzLang,
     // Sauspiel, Solo, Wenz: implicitly allowed
     b_farbwenz: bool,
     b_geier: bool,
@@ -114,6 +115,11 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 Ok(vecveccard)
         })?
     ).map(EPlayerIndex::map_from_raw)?;
+    let ekurzlang = aveccard.iter()
+        .map(|veccard| EKurzLang::from_cards_per_player(veccard.len()))
+        .all_equal_item()
+        .ok_or(format_err!("Not all players have the same number of cards."))?
+        .ok_or(format_err!("Could not determine ekurzlang"))?;
     let ruleset = if let Ok(node_tarif) = scrape_from_key_figure_table("Tarif") {
         let (n_tarif_extra, n_tarif_ruf, n_tarif_solo) = {
             let str_tarif = node_tarif.inner_html();
@@ -163,6 +169,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 )
                 .try_fold(
                     SSauspielAllowedRules{
+                        ekurzlang,
                         b_farbwenz: false,
                         b_geier: false,
                         b_ramsch: false,
@@ -178,7 +185,11 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                             return Err(format_err!("alt {:?} differs from title {:?} in Sonderregeln", node.attr("alt"), node.attr("title")));
                         } else {
                             match node.attr("title") {
-                                Some("Kurze Karte") => {/* TODO assert/check consistency */},
+                                Some("Kurze Karte") => {
+                                    if verify_eq!(ruleset.ekurzlang, ekurzlang)!=EKurzLang::Kurz {
+                                        return Err(format_err!("Contradicting kurz/lang values."));
+                                    }
+                                },
                                 Some("Farbwenz") => ruleset.b_farbwenz = true,
                                 Some("Geier") => ruleset.b_geier = true,
                                 Some("Ramsch") => ruleset.b_ramsch = true,
@@ -323,6 +334,9 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 })
             })?
             .1;
+        if vecstich.len()!=ekurzlang.cards_per_player() {
+            return Err(format_err!("Contradicting kurz/lang values."));
+        }
         let mut game = SGameGeneric::new_with(
             aveccard,
             SExpensifiersNoStoss::new_with_doublings(/*n_stock: Sauspiel does not support Stock*/0, doublings),
@@ -344,13 +358,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         // TODO assert that there are actually no stichs in doc
         Ok(SGameResultGeneric {
             an_payout: EPlayerIndex::map_from_fn(|_epi| /*Sauspiel does not know stock*/0),
-            stockorgame: VStockOrT::Stock(/*ekurzlang*/{
-                aveccard.iter()
-                    .map(|veccard| EKurzLang::from_cards_per_player(veccard.len()))
-                    .all_equal_item()
-                    .ok_or(format_err!("Not all players have the same number of cards."))?
-                    .ok_or(format_err!("Could not determine ekurzlang"))?
-            }),
+            stockorgame: VStockOrT::Stock(ekurzlang),
         })
     }
 }
