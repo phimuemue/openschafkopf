@@ -68,6 +68,52 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             .find(Name("td"))
             .exactly_one().map_err(|it| format_err!("{:?}", it))
     };
+    fn get_cards<T>(
+        node: &Node,
+        fn_card_highlight: impl Fn(ECard, Option<&str>)->T
+    ) -> Result<Vec<T>, failure::Error> {
+        node
+            .find(Class("card-image"))
+            .map(|node_card| -> Result<T, _> {
+                let str_class = unwrap!(node_card.attr("class")); // "class" must be present
+                (
+                    string("card-image "),
+                    choice!(string("by"), string("fn")),
+                    string(" g"),
+                    digit(),
+                    space(),
+                )
+                .with((
+                    card_parser(),
+                    optional(string(" highlight")),
+                ))
+                .skip(eof())
+                    // end of parser
+                    .parse(str_class)
+                    .map_err(|err| format_err!("Card parsing: {:?} on {}", err, str_class))
+                    .map(|((card, ostr_highlight), _str)| fn_card_highlight(card, ostr_highlight))
+            })
+            .collect::<Result<Vec<_>,_>>()
+    }
+    let aveccard = vec_to_arr(
+        doc.find(|node: &Node| node.inner_html()=="Karten von:")
+            .try_fold(Vec::new(), |mut vecveccard, node| -> Result<_, failure::Error> {
+                let mut veccardb = get_cards(
+                    &node
+                        .parent().ok_or_else(|| format_err!(r#""Karten von:" has no parent"#))?
+                        .parent().ok_or_else(|| format_err!("walking html failed"))?,
+                    /*fn_card_highlight*/|card, ostr_highlight| (card, ostr_highlight.is_some()),
+                )?;
+                veccardb.sort_unstable_by_key(|&(_card, b_highlight)| !b_highlight);
+                vecveccard.push(SHandVector::try_from(
+                    veccardb.into_iter()
+                        .map(|(card, _b_highlight)| card)
+                        .collect::<Vec<_>>()
+                        .as_slice()
+                )?);
+                Ok(vecveccard)
+        })?
+    ).map(EPlayerIndex::map_from_raw)?;
     let ruleset = if let Ok(node_tarif) = scrape_from_key_figure_table("Tarif") {
         let (n_tarif_extra, n_tarif_ruf, n_tarif_solo) = {
             let str_tarif = node_tarif.inner_html();
@@ -178,52 +224,6 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 Err(format_err!("Could not parse rules"))
             }
         })?;
-    fn get_cards<T>(
-        node: &Node,
-        fn_card_highlight: impl Fn(ECard, Option<&str>)->T
-    ) -> Result<Vec<T>, failure::Error> {
-        node
-            .find(Class("card-image"))
-            .map(|node_card| -> Result<T, _> {
-                let str_class = unwrap!(node_card.attr("class")); // "class" must be present
-                (
-                    string("card-image "),
-                    choice!(string("by"), string("fn")),
-                    string(" g"),
-                    digit(),
-                    space(),
-                )
-                .with((
-                    card_parser(),
-                    optional(string(" highlight")),
-                ))
-                .skip(eof())
-                    // end of parser
-                    .parse(str_class)
-                    .map_err(|err| format_err!("Card parsing: {:?} on {}", err, str_class))
-                    .map(|((card, ostr_highlight), _str)| fn_card_highlight(card, ostr_highlight))
-            })
-            .collect::<Result<Vec<_>,_>>()
-    }
-    let aveccard = vec_to_arr(
-        doc.find(|node: &Node| node.inner_html()=="Karten von:")
-            .try_fold(Vec::new(), |mut vecveccard, node| -> Result<_, failure::Error> {
-                let mut veccardb = get_cards(
-                    &node
-                        .parent().ok_or_else(|| format_err!(r#""Karten von:" has no parent"#))?
-                        .parent().ok_or_else(|| format_err!("walking html failed"))?,
-                    /*fn_card_highlight*/|card, ostr_highlight| (card, ostr_highlight.is_some()),
-                )?;
-                veccardb.sort_unstable_by_key(|&(_card, b_highlight)| !b_highlight);
-                vecveccard.push(SHandVector::try_from(
-                    veccardb.into_iter()
-                        .map(|(card, _b_highlight)| card)
-                        .collect::<Vec<_>>()
-                        .as_slice()
-                )?);
-                Ok(vecveccard)
-        })?
-    ).map(EPlayerIndex::map_from_raw)?;
     let get_doublings_stoss = |str_key| -> Result<_, failure::Error> {
         Ok(scrape_from_key_figure_table(str_key)?
             .find(Name("a"))
