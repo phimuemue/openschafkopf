@@ -113,7 +113,7 @@ impl SAi {
         ).iter().exactly_one() {
             *card
         } else if let Some(card) = rules.rulespecific_ai()
-            .and_then(|airulespecific| airulespecific.suggest_card(game))
+            .and_then(|airulespecific| airulespecific.suggest_card(hand_fixed, &game.stichseq))
         {
             card
         } else {
