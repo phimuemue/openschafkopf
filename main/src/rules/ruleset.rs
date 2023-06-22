@@ -56,6 +56,16 @@ pub struct SRuleSet {
     pub ekurzlang : EKurzLang,
 }
 
+pub trait TRuleSet {
+    fn kurzlang(&self) -> EKurzLang;
+}
+
+impl TRuleSet for SRuleSet {
+    fn kurzlang(&self) -> EKurzLang {
+        self.ekurzlang
+    }
+}
+
 pub fn allowed_rules<'retval, 'hand : 'retval, 'rules : 'retval>(vecrulegroup: &'rules [SRuleGroup], hand: SFullHand<'hand>) -> impl Clone + Iterator<Item=Option<&'rules (dyn TActivelyPlayableRules + 'rules)>> + 'retval {
     vecrulegroup.iter()
         .flat_map(move |rulegroup| rulegroup.allowed_rules(hand))

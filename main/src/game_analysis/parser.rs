@@ -1,7 +1,7 @@
 use crate::game_analysis::*;
 use crate::rules::{
     SStossParams,
-    ruleset::VStockOrT,
+    ruleset::{TRuleSet, VStockOrT},
     parser::parse_rule_description,
 };
 use crate::primitives::cardvector::*;
@@ -24,13 +24,19 @@ pub enum VSauspielAllowedRules {
 }
 
 #[derive(Debug)]
-pub struct SSauspielRuleset {
+pub struct SSauspielRuleset { // TODO can we represent this as a plain SRuleSet?
     ekurzlang: EKurzLang,
     #[allow(dead_code)] // TODO
     allowedrules: VSauspielAllowedRules,
     n_tarif_extra: isize,
     n_tarif_ruf: isize,
     n_tarif_solo: isize,
+}
+
+impl TRuleSet for SSauspielRuleset {
+    fn kurzlang(&self) -> EKurzLang {
+        self.ekurzlang
+    }
 }
 
 #[derive(Debug)]
