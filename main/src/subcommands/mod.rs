@@ -10,7 +10,7 @@ mod handconstraint;
 mod common_given_game;
 
 use crate::util::*;
-use crate::rules::ruleset::{SRuleSet, VStockOrT};
+use crate::rules::ruleset::{SRuleSet, TRuleSet, VStockOrT};
 use crate::ai::SAi;
 use crate::primitives::card::EKurzLang;
 use crate::game::*;
@@ -88,8 +88,8 @@ pub fn glob_files<'str_glob>(
     Ok(())
 }
 
-pub fn gameresult_to_dir<Ruleset, GameAnnouncements, DetermineRules>(
-    gameresult: &SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules, /*StockInfo*/EKurzLang>,
+pub fn gameresult_to_dir<Ruleset: TRuleSet, GameAnnouncements, DetermineRules>(
+    gameresult: &SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules>,
 ) -> std::path::PathBuf {
     let path_to_kurzlang = |ekurzlang| {
         std::path::Path::new(match ekurzlang {
@@ -98,8 +98,8 @@ pub fn gameresult_to_dir<Ruleset, GameAnnouncements, DetermineRules>(
         })
     };
     match &gameresult.stockorgame {
-        VStockOrT::Stock(ekurzlang) => {
-            path_to_kurzlang(*ekurzlang)
+        VStockOrT::Stock(ruleset) => {
+            path_to_kurzlang(ruleset.kurzlang())
                 .join("stock")
         },
         VStockOrT::OrT(game) => {

@@ -650,7 +650,7 @@ fn snapshot_cache(fn_payload: impl Fn(&SRuleStateCache)->u64 + 'static) -> Box<d
 #[test]
 fn test_snapshotcache() {
     use crate::{
-        game::SGame,
+        game::SGameGeneric,
         player::{
             TPlayer,
             playerrandom::SPlayerRandom,
@@ -673,8 +673,8 @@ fn test_snapshotcache() {
     };
     crate::game::run::internal_run_simple_game_loop( // TODO simplify all this, and explicitly iterate over supported rules
         EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
-            /*fn_check_ask_for_card*/|game_in: &SGame| {
-                let internal_test = |game: &SGame| {
+            /*fn_check_ask_for_card*/|game_in: &SGameGeneric<SRuleSet, (), ()>| {
+                let internal_test = |game: &SGameGeneric<SRuleSet, (), ()>| {
                     if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
                         //let epi = unwrap!(game.current_playable_stich().current_playerindex());
                         macro_rules! fwd{($fn_snapshotcache:expr) => {
@@ -746,11 +746,15 @@ fn test_snapshotcache() {
                 })
                 .filter_map(|orules| {
                     orules.map(|rules| {
+                        let gamepreparations = gamepreparations.clone();
                         VStockOrT::OrT(
-                            SGame::new(
+                            SGameGeneric::new_with(
                                 gamepreparations.aveccard.clone(),
                                 gamepreparations.expensifiers.clone(),
                                 rules.upcast().box_clone(),
+                                gamepreparations.ruleset,
+                                /*gameannouncements*/(),
+                                /*determinerules*/(),
                             )
                         )
                     })

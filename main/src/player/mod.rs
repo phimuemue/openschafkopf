@@ -16,7 +16,7 @@ pub trait TPlayer {
         txb_doubling: mpsc::Sender<bool>,
     );
 
-    fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<ECard>);
+    fn ask_for_card(&self, game: &SGameGeneric<SRuleSet, (), ()>, txcard: mpsc::Sender<ECard>);
     // TODO: players need information about who already wants to play
     fn ask_for_game<'rules>(
         &self,

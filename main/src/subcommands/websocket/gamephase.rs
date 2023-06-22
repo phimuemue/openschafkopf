@@ -3,7 +3,7 @@ use crate::{
     primitives::*,
     game::*,
     rules::*,
-    rules::ruleset::{SRuleGroup, allowed_rules, VStockOrT},
+    rules::ruleset::{SRuleSet, SRuleGroup, allowed_rules, VStockOrT},
 };
 use serde::{Serialize, Deserialize};
 use std::mem::discriminant;
@@ -36,12 +36,12 @@ impl<DealCards, GamePreparations, DetermineRules, Game, GameResult, Accepted> VG
 #[derive(Debug)]
 pub struct SWebsocketGameResult {
     // TODO? should the members be private?
-    pub gameresult: SGameResult,
+    pub gameresult: SGameResult<SRuleSet>,
     pub mapepib_confirmed: EnumMap<EPlayerIndex, bool>, // TODO? enumset
 }
 
 impl SWebsocketGameResult {
-    fn new(gameresult: SGameResult) -> Self {
+    fn new(gameresult: SGameResult<SRuleSet>) -> Self {
         Self {
             gameresult,
             mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false),
@@ -83,7 +83,7 @@ pub type VGamePhase = VGamePhaseGeneric<
     SDealCards,
     SGamePreparations,
     SDetermineRules,
-    SGame,
+    SGameGeneric<SRuleSet, (), ()>,
     SWebsocketGameResult,
     SAccepted,
 >;
@@ -91,7 +91,7 @@ type VGamePhaseActivePlayerInfo<'a> = VGamePhaseGeneric<
     (&'a SDealCards, <SDealCards as TGamePhase>::ActivePlayerInfo),
     (&'a SGamePreparations, <SGamePreparations as TGamePhase>::ActivePlayerInfo),
     (&'a SDetermineRules, <SDetermineRules as TGamePhase>::ActivePlayerInfo),
-    (&'a SGame, <SGame as TGamePhase>::ActivePlayerInfo),
+    (&'a SGameGeneric<SRuleSet, (), ()>, <SGameGeneric<SRuleSet, (), ()> as TGamePhase>::ActivePlayerInfo),
     (&'a SWebsocketGameResult, <SWebsocketGameResult as TGamePhase>::ActivePlayerInfo),
     (&'a SAccepted, <SAccepted as TGamePhase>::ActivePlayerInfo),
 >;

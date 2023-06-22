@@ -491,7 +491,7 @@ fn write_html(path: std::path::PathBuf, str_html: &str) -> Result<std::path::Pat
 pub struct SGameWithDesc {
     pub str_description: String,
     pub str_link: String,
-    pub resgameresult: Result<SGameResult, failure::Error>,
+    pub resgameresult: Result<SGameResult</*Ruleset*/()>, failure::Error>,
 }
 
 pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String+Sync, vecgamewithdesc: Vec<SGameWithDesc>, b_include_no_findings: bool, n_max_remaining_cards: usize, b_simulate_all_hands: bool) -> Result<std::path::PathBuf, failure::Error> {

@@ -1,4 +1,4 @@
-use crate::game::SGame;
+use crate::game::SGameGeneric;
 use crate::primitives::*;
 use crate::rules::*;
 use crate::util::*;
@@ -434,7 +434,7 @@ pub struct SMinReachablePayoutBase<'rules, Pruner> {
     phantom: std::marker::PhantomData<Pruner>,
 }
 impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
-    pub fn new_from_game(game: &'rules SGame) -> Self {
+    pub fn new_from_game<Ruleset>(game: &'rules SGameGeneric<Ruleset, (), ()>) -> Self {
         Self::new(
             game.rules.as_ref(),
             unwrap!(game.current_playable_stich().current_playerindex()),

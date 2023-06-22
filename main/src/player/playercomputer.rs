@@ -37,7 +37,7 @@ impl TPlayer for SPlayerComputer {
         ).ok(); // TODO more intelligent doubling strategy
     }
 
-    fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<ECard>) {
+    fn ask_for_card(&self, game: &SGameGeneric<SRuleSet, (), ()>, txcard: mpsc::Sender<ECard>) {
         txcard.send(self.ai.suggest_card(game, /*fn_visualizer*/SNoVisualization::factory())).ok();
     }
 

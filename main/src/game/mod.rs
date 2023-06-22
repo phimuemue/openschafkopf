@@ -113,7 +113,7 @@ impl SDealCards {
 pub type SGameAnnouncementsGeneric<GameAnnouncement> = SPlayersInRound<Option<GameAnnouncement>, SStaticEPI0>;
 pub type SGameAnnouncements = SGameAnnouncementsGeneric<Box<dyn TActivelyPlayableRules>>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SGamePreparations {
     pub aveccard : EnumMap<EPlayerIndex, SHandVector>,
     pub expensifiers: SExpensifiersNoStoss,
@@ -136,8 +136,8 @@ pub fn random_hand(n_size: usize, veccard : &mut Vec<ECard>) -> SHandVector {
 #[derive(Debug)]
 pub enum VGamePreparationsFinish {
     DetermineRules(SDetermineRules),
-    DirectGame(SGame),
-    Stock(SGameResult),
+    DirectGame(SGameGeneric<SRuleSet, (), ()>),
+    Stock(SGameResult<SRuleSet>),
 }
 
 impl TGamePhase for SGamePreparations {
@@ -161,26 +161,29 @@ impl TGamePhase for SGamePreparations {
                 tplepirules_current_bid,
             ))
         } else {
-            match self.ruleset.stockorramsch {
+            match &self.ruleset.stockorramsch {
                 VStockOrT::OrT(rulesramsch) => {
-                    VGamePreparationsFinish::DirectGame(SGame::new(
+                    VGamePreparationsFinish::DirectGame(SGameGeneric::new_with(
                         self.aveccard,
                         self.expensifiers,
-                        rulesramsch,
+                        rulesramsch.clone(),
+                        self.ruleset,
+                        /*gameannouncements*/(),
+                        /*determinerules*/(),
                     ))
                 },
                 VStockOrT::Stock(n_stock) => {
                     let n_stock = match self.ruleset.oedoublingscope {
-                        None | Some(EDoublingScope::Games) => n_stock,
+                        None | Some(EDoublingScope::Games) => *n_stock,
                         Some(EDoublingScope::GamesAndStock) => {
-                            n_stock * 2isize.pow(
+                            *n_stock * 2isize.pow(
                                 self.expensifiers.doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count().as_num()
                             )
                         }
                     };
                     VGamePreparationsFinish::Stock(SGameResult{
                         an_payout: EPlayerIndex::map_from_fn(|_epi| -n_stock),
-                        stockorgame: VStockOrT::Stock(self.ruleset.ekurzlang),
+                        stockorgame: VStockOrT::Stock(self.ruleset),
                     })
                 }
             }
@@ -224,7 +227,7 @@ pub struct SDetermineRules {
 
 impl TGamePhase for SDetermineRules {
     type ActivePlayerInfo = (EPlayerIndex, Vec<SRuleGroup>);
-    type Finish = SGame;
+    type Finish = SGameGeneric<SRuleSet, (), ()>;
 
     /*
         Example:
@@ -258,10 +261,13 @@ impl TGamePhase for SDetermineRules {
     fn finish_success(self) -> Self::Finish {
         assert!(self.vectplepirules_queued.is_empty());
         assert_eq!(self.ruleset.ekurzlang, unwrap!(EKurzLang::from_cards_per_player(self.aveccard[EPlayerIndex::EPI0].len())));
-        SGame::new(
+        SGameGeneric::new_with(
             self.aveccard,
             self.expensifiers,
             self.tplepirules_current_bid.1.upcast().box_clone(),
+            self.ruleset,
+            /*gameannouncements*/(),
+            /*determinerules*/(),
         )
     }
 }
@@ -322,7 +328,7 @@ pub type SGameAction = (EPlayerIndex, Vec<EPlayerIndex>);
 
 impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     type ActivePlayerInfo = SGameAction;
-    type Finish = SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules, /*StockInfo*/EKurzLang>;
+    type Finish = SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules>;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         if self.stichseq.completed_stichs().len() < self.kurzlang().cards_per_player() {
@@ -493,16 +499,16 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
 }
 
 #[derive(Debug, Clone)]
-pub struct SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules, StockInfo> {
+pub struct SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     // TODO store all information about finished game, even in case of stock
     pub an_payout : EnumMap<EPlayerIndex, isize>,
-    pub stockorgame: VStockOrT<StockInfo, SGameGeneric<Ruleset, GameAnnouncements, DetermineRules>>,
+    pub stockorgame: VStockOrT<Ruleset, SGameGeneric<Ruleset, GameAnnouncements, DetermineRules>>,
 }
-pub type SGameResult = SGameResultGeneric<(), (), (), /*StockInfo*/EKurzLang>;
+pub type SGameResult<Ruleset> = SGameResultGeneric<Ruleset, (), ()>;
 
-impl TGamePhase for SGameResult { // "absorbing state"
+impl<Ruleset> TGamePhase for SGameResult<Ruleset> { // "absorbing state"
     type ActivePlayerInfo = std::convert::Infallible;
-    type Finish = SGameResult;
+    type Finish = Self;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         None
@@ -512,7 +518,7 @@ impl TGamePhase for SGameResult { // "absorbing state"
     }
 }
 
-impl<Ruleset, GameAnnouncements, DetermineRules, StockInfo> SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules, StockInfo> {
+impl<Ruleset, GameAnnouncements, DetermineRules> SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     pub fn apply_payout(self, n_stock: &mut isize, mut fn_payout_to_epi: impl FnMut(EPlayerIndex, isize)) { // TODO should n_stock be member of SGameResult? // TODO should apply_payout be forced upon construction?
         for epi in EPlayerIndex::values() {
             fn_payout_to_epi(epi, self.an_payout[epi]);
@@ -526,7 +532,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules, StockInfo> SGameResultGeneric<R
         assert!(0 <= *n_stock);
     }
 
-    pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameResultGeneric<Ruleset2, GameAnnouncements2, DetermineRules2, StockInfo> {
+    pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2) -> SGameResultGeneric<Ruleset2, GameAnnouncements2, DetermineRules2> {
         let SGameResultGeneric {
             an_payout,
             stockorgame,
@@ -534,7 +540,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules, StockInfo> SGameResultGeneric<R
         SGameResultGeneric {
             an_payout,
             stockorgame: match stockorgame {
-                VStockOrT::Stock(stock) => VStockOrT::Stock(stock),
+                VStockOrT::Stock(ruleset) => VStockOrT::Stock(fn_ruleset(ruleset)),
                 VStockOrT::OrT(game) => VStockOrT::OrT(game.map(fn_announcements, fn_determinerules, fn_ruleset, /*fn_rules*/|rules| rules)),
             },
         }

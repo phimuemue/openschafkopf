@@ -333,7 +333,7 @@ impl<'rules> TFilterAllowedCards for SFilterByOracle<'rules> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        game::SGame,
+        game::SGameGeneric,
         player::{
             TPlayer,
             playerrandom::SPlayerRandom,
@@ -2435,7 +2435,7 @@ mod tests {
     fn test_filterbystichoracle() {
         crate::game::run::internal_run_simple_game_loop( // TODO simplify all this, and explicitly iterate over supported rules
             EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
-                /*fn_check_ask_for_card*/|game: &SGame| {
+                /*fn_check_ask_for_card*/|game: &SGameGeneric<SRuleSet, (), ()>| {
                     if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
                         //let epi = unwrap!(game.current_playable_stich().current_playerindex());
                         macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr,) => {
@@ -2502,11 +2502,15 @@ mod tests {
                     })
                     .filter_map(|orules| {
                         orules.map(|rules| {
+                            let gamepreparations = gamepreparations.clone();
                             VStockOrT::OrT(
-                                SGame::new(
+                                SGameGeneric::new_with(
                                     gamepreparations.aveccard.clone(),
                                     gamepreparations.expensifiers.clone(),
                                     rules.upcast().box_clone(),
+                                    gamepreparations.ruleset,
+                                    /*gameannouncements*/(),
+                                    /*determinerules*/(),
                                 )
                             )
                         })

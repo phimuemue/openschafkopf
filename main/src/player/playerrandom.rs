@@ -11,7 +11,7 @@ pub struct SPlayerRandom<FnCheckAskForCard> {
     fn_check_ask_for_card: FnCheckAskForCard,
 }
 
-impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard> {
+impl<FnCheckAskForCard: Fn(&SGameGeneric<SRuleSet, (), ()>)> TPlayer for SPlayerRandom<FnCheckAskForCard> {
     fn ask_for_doubling(
         &self,
         _veccard: &[ECard],
@@ -20,7 +20,7 @@ impl<FnCheckAskForCard: Fn(&SGame)> TPlayer for SPlayerRandom<FnCheckAskForCard>
         unwrap!(txb_doubling.send(rand::random()));
     }
 
-    fn ask_for_card(&self, game: &SGame, txcard: mpsc::Sender<ECard>) {
+    fn ask_for_card(&self, game: &SGameGeneric<SRuleSet, (), ()>, txcard: mpsc::Sender<ECard>) {
         (self.fn_check_ask_for_card)(game);
         unwrap!(txcard.send(
             unwrap!(

@@ -17,7 +17,7 @@ fn communicate_via_channel<T: std::fmt::Debug>(f: impl FnOnce(mpsc::Sender<T>)) 
     unwrap!(rxt.recv())
 }
 
-pub fn internal_run_simple_game_loop<ItStockOrGame: Iterator<Item=VStockOrT<SGameResult, SGame>>>(
+pub fn internal_run_simple_game_loop<ItStockOrGame: Iterator<Item=VStockOrT<SGameResult<SRuleSet>, SGameGeneric<SRuleSet, (), ()>>>>(
     aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
     n_games: usize,
     ruleset: SRuleSet,
