@@ -11,7 +11,6 @@ use combine::{char::*, *};
 
 #[derive(Debug)]
 pub struct SSauspielAllowedRules {
-    ekurzlang: EKurzLang,
     // Sauspiel, Solo, Wenz: implicitly allowed
     b_farbwenz: bool,
     b_geier: bool,
@@ -26,12 +25,12 @@ pub enum VSauspielAllowedRules {
 
 #[derive(Debug)]
 pub struct SSauspielRuleset {
+    ekurzlang: EKurzLang,
     #[allow(dead_code)] // TODO
     allowedrules: VSauspielAllowedRules,
     n_tarif_extra: isize,
     n_tarif_ruf: isize,
     n_tarif_solo: isize,
-    // TODO store ekurzlang explicitly?
 }
 
 #[derive(Debug)]
@@ -159,6 +158,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 ? // unpack parsed result
         };
         SSauspielRuleset{
+            ekurzlang,
             n_tarif_extra,
             n_tarif_ruf,
             n_tarif_solo,
@@ -169,7 +169,6 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 )
                 .try_fold(
                     SSauspielAllowedRules{
-                        ekurzlang,
                         b_farbwenz: false,
                         b_geier: false,
                         b_ramsch: false,
@@ -186,7 +185,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                         } else {
                             match node.attr("title") {
                                 Some("Kurze Karte") => {
-                                    if verify_eq!(ruleset.ekurzlang, ekurzlang)!=EKurzLang::Kurz {
+                                    if ekurzlang!=EKurzLang::Kurz {
                                         return Err(format_err!("Contradicting kurz/lang values."));
                                     }
                                 },
@@ -205,6 +204,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         }
     } else if let Ok(node_turnier) = scrape_from_key_figure_table("Turnier") {
         SSauspielRuleset{
+            ekurzlang,
             // TODO tarif is tricky, as it might also be paid.
             n_tarif_extra: 1,
             n_tarif_ruf: 1,
