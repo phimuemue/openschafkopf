@@ -3,7 +3,7 @@ use crate::primitives::*;
 use crate::util::*;
 use permutohedron::LexicalPermutation;
 use rand::prelude::*;
-use itertools::EitherOrBoth;
+use itertools::Either;
 
 pub trait TNextVecEPI {
     fn init(slcepi: &mut [EPlayerIndex]);
@@ -154,17 +154,12 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
                     slcstoss,
                     stichseq.visible_cards().enumerate(),
                     |stoss, (i_card, _tplepicard)| {
-                        if stoss.n_cards_played <= *i_card { // prefer stoss in case of equality
-                            std::cmp::Ordering::Less
-                        } else {
-                            std::cmp::Ordering::Greater
-                        }
+                        stoss.n_cards_played <= *i_card // prefer stoss in case of equality
                     },
                 ) {
                     if match gameaction {
-                        EitherOrBoth::Left(stoss) => game_simulate.stoss(stoss.epi),
-                        EitherOrBoth::Right((_i_card, (epi, &card))) => game_simulate.zugeben(card, epi),
-                        EitherOrBoth::Both(_, _) => panic!("Unexpected."), // TODOITERTOOLS? can we get rid of this?
+                        Either::Left(stoss) => game_simulate.stoss(stoss.epi),
+                        Either::Right((_i_card, (epi, &card))) => game_simulate.zugeben(card, epi),
                     }.is_err() {
                         b_valid_up_to_now = false;
                         break 'loopstich;
