@@ -149,7 +149,7 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
                     rules.box_clone(),
                 ).play_cards_and_stoss(
                     slcstoss,
-                    &stichseq,
+                    stichseq.visible_cards(),
                     /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
                 ).is_ok()
         };

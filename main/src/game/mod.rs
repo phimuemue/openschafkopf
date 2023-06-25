@@ -418,32 +418,32 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         );
         let SExpensifiers{n_stock, doublings, vecstoss} = expensifiers;
         let game = SGame::new(aveccard, SExpensifiersNoStoss::new_with_doublings(n_stock, doublings), rules)
-            .play_cards_and_stoss(&vecstoss, stichseq.get(), fn_before_zugeben)?;
+            .play_cards_and_stoss(&vecstoss, stichseq.get().visible_cards(), fn_before_zugeben)?;
         assert!(game.which_player_can_do_something().is_none());
         Ok(game)
     }
 
-    pub fn play_cards_and_stoss(
+    pub fn play_cards_and_stoss<'card, Stoss: std::borrow::Borrow<SStoss>+std::fmt::Debug>(
         mut self,
-        slcstoss: &[SStoss],
-        stichseq: &SStichSequence, // TODO take value instead of wrapper?
+        itstoss: impl IntoIterator<Item=Stoss>,
+        ittplepicard: impl Iterator<Item=(EPlayerIndex, &'card ECard)>,
         mut fn_before_zugeben: impl FnMut(&Self, /*i_stich*/usize, EPlayerIndex, ECard),
     ) -> Result<Self, Error> {
         for gameaction in itertools::merge_join_by(
-            slcstoss,
-            stichseq.visible_cards().enumerate(),
+            itstoss,
+            ittplepicard.enumerate(),
             |stoss, (i_card, _tplepicard)| {
-                stoss.n_cards_played <= *i_card // prefer stoss in case of equality
+                stoss.borrow().n_cards_played <= *i_card // prefer stoss in case of equality
             },
         ) {
             if match gameaction {
-                Either::Left(stoss) => self.stoss(stoss.epi),
+                Either::Left(stoss) => self.stoss(stoss.borrow().epi),
                 Either::Right((i_card, (epi, &card))) => {
                     fn_before_zugeben(&self, /*i_stich*/i_card/EPlayerIndex::SIZE, epi, card);
                     self.zugeben(card, epi)
                 },
             }.is_err() {
-                return Err(format_err!("Invalid game action: {:?}", gameaction));
+                return Err(format_err!("Invalid game action."));
             }
         }
         Ok(self)

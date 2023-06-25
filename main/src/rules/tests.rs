@@ -10,14 +10,14 @@ fn internal_test_rules(
     rules: &dyn TRules,
     aveccard: EnumMap<EPlayerIndex, SHandVector>,
     vecn_doubling: Vec<usize>,
-    vecn_stoss: Vec<usize>,
+    veci_epi_stoss: Vec<usize>,
     n_stock: isize,
     slcstich_test: &[SFullStich<SStich>],
     (an_payout, n_stock_payout): ([isize; EPlayerIndex::SIZE], isize),
 ) {
     println!("Testing rules: {}", str_info);
     // TODO? check _ahand
-    let mut game = SGame::new(
+    let an_payout_check = unwrap!(unwrap!(SGame::new(
         aveccard,
         SExpensifiersNoStoss::new_with_doublings(
             n_stock,
@@ -29,14 +29,14 @@ fn internal_test_rules(
             ),
         ),
         rules.box_clone(),
-    );
-    for i_epi in vecn_stoss.into_iter() {
-        unwrap!(game.stoss(unwrap!(EPlayerIndex::checked_from_usize(i_epi))));
-    }
-    for (epi, card) in slcstich_test.iter().flat_map(|stich| stich.iter()) {
-        unwrap!(game.zugeben(*card, epi));
-    }
-    let an_payout_check = unwrap!(game.finish()).an_payout;
+    ).play_cards_and_stoss(
+        veci_epi_stoss.into_iter().map(|i_epi| SStoss {
+            epi: unwrap!(EPlayerIndex::checked_from_usize(i_epi)),
+            n_cards_played: 0, // TODO test others
+        }),
+        slcstich_test.iter().flat_map(|stich| stich.iter()),
+        /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
+    )).finish()).an_payout;
     assert_eq!(EPlayerIndex::map_from_fn(|epi| an_payout_check[epi]), EPlayerIndex::map_from_raw(an_payout));
     assert_eq!(-an_payout.iter().sum::<isize>(), n_stock_payout);
 }
