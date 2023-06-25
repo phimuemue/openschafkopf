@@ -102,10 +102,16 @@ pub fn analyze_game(
         },
     );
     let mut mapepivecpossiblepayout = EPlayerIndex::map_from_fn(|_epi| Vec::new());
-    let game = unwrap!(SGame::new_finished(
-        game_in.rules.clone(),
-        game_in.expensifiers.clone(),
-        SStichSequenceGameFinished::new(&game_in.stichseq),
+    let game = unwrap!(SGame::new(
+        game_in.aveccard.clone(),
+        SExpensifiersNoStoss::new_with_doublings(
+            game_in.expensifiers.n_stock,
+            game_in.expensifiers.doublings.clone(),
+        ),
+        game_in.rules.clone()
+    ).play_cards_and_stoss(
+        &game_in.expensifiers.vecstoss,
+        game_in.stichseq.visible_cards(),
         /*fn_before_zugeben*/|game, i_stich, epi_zugeben, card_played| {
             if game.stichseq.remaining_cards_per_hand()[epi_zugeben] <= n_max_remaining_cards {
                 for epi in EPlayerIndex::values() {
@@ -213,7 +219,7 @@ pub fn analyze_game(
                         }
                 })
             }
-        },
+        }
     ));
     let itanalysisimpr = vecanalysispercard.iter()
         .filter_map(|analysispercard| analysispercard.oanalysisimpr.as_ref());

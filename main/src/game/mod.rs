@@ -409,7 +409,6 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         rules : Box<dyn TRules>,
         expensifiers: SExpensifiers,
         stichseq: SStichSequenceGameFinished,
-        fn_before_zugeben: impl FnMut(&SGame, /*i_stich*/usize, EPlayerIndex, ECard),
     ) -> Result<SGame, Error> {
         let aveccard = EPlayerIndex::map_from_fn(|epi|
             stichseq.get()
@@ -418,7 +417,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         );
         let SExpensifiers{n_stock, doublings, vecstoss} = expensifiers;
         let game = SGame::new(aveccard, SExpensifiersNoStoss::new_with_doublings(n_stock, doublings), rules)
-            .play_cards_and_stoss(&vecstoss, stichseq.get().visible_cards(), fn_before_zugeben)?;
+            .play_cards_and_stoss(&vecstoss, stichseq.get().visible_cards(), |_,_,_,_| {})?;
         assert!(game.which_player_can_do_something().is_none());
         Ok(game)
     }

@@ -392,7 +392,6 @@ pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failur
                 rules,
                 SExpensifiers::new_no_stock_doublings_stoss(),
                 SStichSequenceGameFinished::new(&stichseq),
-                /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
             )
         })
 }
@@ -467,7 +466,6 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGame, failure
                 rules,
                 SExpensifiers::new_no_stock_doublings_stoss(), // TODO? support
                 SStichSequenceGameFinished::new(&stichseq),
-                /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
             )
         })
         // TODO is the following needed?
