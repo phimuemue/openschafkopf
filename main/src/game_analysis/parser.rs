@@ -122,8 +122,8 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
     ).map(EPlayerIndex::map_from_raw)?;
     let ekurzlang = aveccard.iter()
         .map(|veccard| EKurzLang::from_cards_per_player(veccard.len()))
-        .all_equal_item()
-        .ok_or(format_err!("Not all players have the same number of cards."))?
+        .all_equal_value()
+        .map_err(|e| format_err!("Not all players have the same number of cards: {:?}", e))?
         .ok_or(format_err!("Could not determine ekurzlang"))?;
     let ruleset = if let Ok(node_tarif) = scrape_from_key_figure_table("Tarif") {
         let (n_tarif_extra, n_tarif_ruf, n_tarif_solo) = {

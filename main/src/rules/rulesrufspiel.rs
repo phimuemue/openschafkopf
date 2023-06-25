@@ -42,7 +42,7 @@ impl TRufspielPayout for SRufspielPayout {
             &playerparties,
         );
         assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
-        assert!(playerparties.primary_players().map(|epi| an_payout_no_stock[epi]).all_equal_item().is_some());
+        assert!(playerparties.primary_players().map(|epi| an_payout_no_stock[epi]).all_equal_value().is_ok());
         assert_eq!(
             an_payout_no_stock.iter()
                 .filter(|&n_payout_no_stock| 0<*n_payout_no_stock)

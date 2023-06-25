@@ -463,7 +463,7 @@ fn generate_analysis_html(
                             .map(|outputline|
                                 outputline.mapemmstrategyatplstrf.iter().flatten().count()
                             )
-                            .all_equal_item())
+                            .all_equal_value())
                     ),
                 ));
             }

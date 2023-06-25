@@ -326,8 +326,8 @@ pub fn snapshot_cache_points_monotonic(playerparties: impl TPlayerParties + 'sta
             let perminmaxn_payout = payoutstats.0.map(|mapepin_payout| {
                 let n_points_primary = payoutdecider::normalized_points_to_points(
                     (
-                        unwrap!(self.playerparties.primary_players().map(|epi| mapepin_payout[epi]).all_equal_item())
-                        / /*n_multiplier_primary*/ unwrap!(self.playerparties.primary_players().map(|epi| self.playerparties.multiplier(epi)).all_equal_item())
+                        unwrap!(self.playerparties.primary_players().map(|epi| mapepin_payout[epi]).all_equal_value())
+                        / /*n_multiplier_primary*/ unwrap!(self.playerparties.primary_players().map(|epi| self.playerparties.multiplier(epi)).all_equal_value())
                     ).as_num::<f32>(),
                     &self.pointstowin,
                     /*b_primary*/true,

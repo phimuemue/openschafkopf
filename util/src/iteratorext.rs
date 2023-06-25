@@ -44,18 +44,6 @@ pub trait IteratorExt: itertools::Itertools {
     {
         self.is_sorted_by_unstable_name_collision(|a, b| f(a).partial_cmp(&f(b)))
     }
-
-    // TODO itertools
-    fn all_equal_item(&mut self) -> Option<Self::Item>
-    where
-        Self: Sized,
-        Self::Item: PartialEq,
-    {
-        match self.next() {
-            None => None,
-            Some(a) => if self.all(|x| a == x) { Some(a) } else { None }
-        }
-    }
 }
 
 impl<It> IteratorExt for It where It: Iterator {}
