@@ -3,6 +3,7 @@ use crate::rules::{ruleset::*, *};
 use crate::util::*;
 use rand::{self, Rng};
 use std::mem;
+use itertools::Either;
 
 pub mod run;
 
@@ -407,8 +408,8 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
     pub fn new_finished(
         rules : Box<dyn TRules>,
         expensifiers: SExpensifiers,
-        stichseq: SStichSequenceGameFinished, // TODO take value instead of wrapper
-        mut fn_before_zugeben: impl FnMut(&SGame, /*i_stich*/usize, EPlayerIndex, ECard),
+        stichseq: SStichSequenceGameFinished,
+        fn_before_zugeben: impl FnMut(&SGame, /*i_stich*/usize, EPlayerIndex, ECard),
     ) -> Result<SGame, Error> {
         let aveccard = EPlayerIndex::map_from_fn(|epi|
             stichseq.get()
@@ -416,18 +417,36 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
                 .collect()
         );
         let SExpensifiers{n_stock, doublings, vecstoss} = expensifiers;
-        let mut game = SGame::new(aveccard, SExpensifiersNoStoss::new_with_doublings(n_stock, doublings), rules);
-        for stoss in vecstoss.into_iter() {
-            game.stoss(stoss.epi)?;
-        }
-        for (i_stich, stich) in stichseq.get().completed_stichs().iter().enumerate() {
-            for (epi, card) in stich.iter() {
-                fn_before_zugeben(&game, i_stich, epi, *card);
-                game.zugeben(*card, epi)?;
-            }
-        }
+        let game = SGame::new(aveccard, SExpensifiersNoStoss::new_with_doublings(n_stock, doublings), rules)
+            .play_cards_and_stoss(&vecstoss, stichseq.get(), fn_before_zugeben)?;
         assert!(game.which_player_can_do_something().is_none());
         Ok(game)
+    }
+
+    pub fn play_cards_and_stoss(
+        mut self,
+        slcstoss: &[SStoss],
+        stichseq: &SStichSequence, // TODO take value instead of wrapper?
+        mut fn_before_zugeben: impl FnMut(&Self, /*i_stich*/usize, EPlayerIndex, ECard),
+    ) -> Result<Self, Error> {
+        for gameaction in itertools::merge_join_by(
+            slcstoss,
+            stichseq.visible_cards().enumerate(),
+            |stoss, (i_card, _tplepicard)| {
+                stoss.n_cards_played <= *i_card // prefer stoss in case of equality
+            },
+        ) {
+            if match gameaction {
+                Either::Left(stoss) => self.stoss(stoss.epi),
+                Either::Right((i_card, (epi, &card))) => {
+                    fn_before_zugeben(&self, /*i_stich*/i_card/EPlayerIndex::SIZE, epi, card);
+                    self.zugeben(card, epi)
+                },
+            }.is_err() {
+                return Err(format_err!("Invalid game action: {:?}", gameaction));
+            }
+        }
+        Ok(self)
     }
 
     pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2, fn_rules: impl FnOnce(Box<dyn TRules>)->Box<dyn TRules>) -> SGameGeneric<Ruleset2, GameAnnouncements2, DetermineRules2> {

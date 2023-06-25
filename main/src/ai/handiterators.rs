@@ -3,7 +3,6 @@ use crate::primitives::*;
 use crate::util::*;
 use permutohedron::LexicalPermutation;
 use rand::prelude::*;
-use itertools::Either;
 
 pub trait TNextVecEPI {
     fn init(slcepi: &mut [EPlayerIndex]);
@@ -143,30 +142,16 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
                     &aveccard[epi_active],
                     stichseq.kurzlang(),
                 ))
-            }) && {
-                let mut b_valid_up_to_now = true;
-                let mut game_simulate = SGame::new(
+            }) 
+                && SGame::new(
                     /*aveccard*/aveccard,
                     SExpensifiersNoStoss::new(/*n_stock*/0),
                     rules.box_clone(),
-                );
-                'loopstich: for gameaction in itertools::merge_join_by(
+                ).play_cards_and_stoss(
                     slcstoss,
-                    stichseq.visible_cards().enumerate(),
-                    |stoss, (i_card, _tplepicard)| {
-                        stoss.n_cards_played <= *i_card // prefer stoss in case of equality
-                    },
-                ) {
-                    if match gameaction {
-                        Either::Left(stoss) => game_simulate.stoss(stoss.epi),
-                        Either::Right((_i_card, (epi, &card))) => game_simulate.zugeben(card, epi),
-                    }.is_err() {
-                        b_valid_up_to_now = false;
-                        break 'loopstich;
-                    }
-                }
-                b_valid_up_to_now
-            }
+                    &stichseq,
+                    /*fn_before_zugeben*/|_game, _i_stich, _epi, _card| {},
+                ).is_ok()
         };
         fn_inspect(b_valid, ahand) && b_valid
     })
