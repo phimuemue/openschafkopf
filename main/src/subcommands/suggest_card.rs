@@ -140,26 +140,30 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 cartesian_match!(
                     forward,
                     match (
-                        if_then_some!(let Some(str_branching) = clapmatches.value_of("branching"), {
-                            if str_branching=="oracle" {
-                                Oracle
+                        if let Some(str_branching) = clapmatches.value_of("branching") {
+                            if str_branching=="" {
+                                None
+                            } else if str_branching=="oracle" {
+                                Some(Oracle)
                             } else if let Some(oepi_unfiltered) = str_branching.strip_prefix("oneperwinnerindex")
                                 .map(|str_oepi_unfiltered| str_oepi_unfiltered.parse().ok())
                             {
-                                OnePerWinnerIndex(oepi_unfiltered)
+                                Some(OnePerWinnerIndex(oepi_unfiltered))
                             } else if let Some(n_until_stichseq_len) = str_branching.strip_prefix("equiv")
                                 .and_then(|str_n_until_remaining_cards| str_n_until_remaining_cards.parse().ok())
                             {
-                                Equivalent(n_until_stichseq_len, rules.equivalent_when_on_same_hand())
+                                Some(Equivalent(n_until_stichseq_len, rules.equivalent_when_on_same_hand()))
                             } else {
                                 let (str_lo, str_hi) = str_branching
                                     .split(',')
                                     .collect_tuple()
                                     .ok_or_else(|| format_err!("Could not parse branching"))?;
                                 let (n_lo, n_hi) = (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?);
-                                Branching(n_lo, n_hi) // TODO we should avoid branching in case n_lo is greater than all hand's fixed cards
+                                Some(Branching(n_lo, n_hi)) // TODO we should avoid branching in case n_lo is greater than all hand's fixed cards
                             }
-                        })
+                        } else {
+                            None
+                        }
                     ) {
                         None => ((_), SNoFilter::factory()),
                         Some(Branching(n_lo, n_hi)) => ((_), {
