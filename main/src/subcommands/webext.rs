@@ -152,7 +152,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                     },
                     n_epi_active,
                 );
-                const N_AHAND_POOL : usize = 10000;
+                const N_AHAND_POOL : usize = 1000;
                 let str_simulate_hands = if n_hand_cards<=3 {
                     "all".to_owned()
                 } else if let Some(f_occurence_probability)=
@@ -167,6 +167,16 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                     )
                 } else {
                     format!("{}", N_AHAND_POOL)
+                };
+                let str_branching = if n_hand_cards<=4 {
+                    ""
+                } else {
+                    "1,3"
+                };
+                let str_repeat_hands = if n_hand_cards<=3 {
+                    "1"
+                } else {
+                    "10"
                 };
                 let mut cmd_openschafkopf = debug_verify!(
                     std::process::Command::new({
@@ -187,6 +197,10 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                             str_cards_as_played,
                             "--simulate-hands",
                             &str_simulate_hands,
+                            "--branching",
+                            str_branching,
+                            "--repeat-hands",
+                            str_repeat_hands,
                         ])
                         .stdout(std::process::Stdio::piped())
                         .spawn()
