@@ -1,6 +1,7 @@
 use crate::game_analysis::{*, parser::*};
 use crate::game::*;
 use crate::util::*;
+use crate::rules::ruleset::VStockOrT;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     use super::shared_args::*;
@@ -44,7 +45,14 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             } else {
                 let mut b_found_plain = false;
                 for (i, resgame) in analyze_plain(&str_input)
-                    .chain(analyze_netschafkopf(&str_input).into_iter().flatten())
+                    .chain(analyze_netschafkopf(&str_input).into_iter().flatten()
+                        .map(|resgameresult| resgameresult.and_then(|gameresult| {
+                            match gameresult.stockorgame {
+                                VStockOrT::Stock(()) => Err(format_err!("Nothing to analyze.")),
+                                VStockOrT::OrT(game) => Ok(game),
+                            }
+                        }))
+                    )
                     .filter(|res| res.is_ok())
                     .enumerate()
                 {

@@ -396,7 +396,7 @@ pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failur
         })
 }
 
-pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGame, failure::Error>>, failure::Error> {
+pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*Ruleset*/()>, failure::Error>>, failure::Error> {
     let mut itstr_line = str_lines.lines();
     itstr_line.next().ok_or_else(|| format_err!("First line should contain rules"))?;
     itstr_line.next()
@@ -406,10 +406,14 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGame, failure
         .group_by(|str_line| str_line.trim().is_empty())
         .into_iter()
         .filter(|(b_is_empty, _grpstr_line)| !b_is_empty)
-        .map(|(_b_is_empty, mut grpstr_line)| -> Result<_, _> {
+        .map(|(_b_is_empty, grpstr_line)| -> Result<_, _> {
+            let mut grpstr_line = grpstr_line.peekable();
             grpstr_line.next()
                 .filter(|str_geber| str_geber.starts_with("Geber: ")) // TODO be more precise?
                 .ok_or_else(|| format_err!("Expected 'Geber: '"))?;
+            if Some(&"Spielart: Schieber")==dbg!(grpstr_line.peek()) {
+                grpstr_line.next();
+            }
             let mut vecstr_player_name = Vec::<String>::new();
             for _epi in EPlayerIndex::values() {
                 vecstr_player_name.push(
@@ -422,7 +426,10 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGame, failure
                                 attempt(many1::<String,_>(alpha_num())) // TODO allow more characters for player names
                                     .skip((
                                         string(" hat: "),
-                                        sep_by::<Vec<_>,_,_>(card_parser(), char(' ')), // TODO determine ekurzlang?
+                                        sep_by::<Vec<_>,_,_>(
+                                            choice!(card_parser().map(|_|()), string("DU").map(|_|())), // TODO be more precise
+                                            char(' ')
+                                        ), // TODO determine ekurzlang?
                                     ))
                             )
                         })?
@@ -440,37 +447,59 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGame, failure
                 tokens2(|l,r|l==r, mapepistr_player[epi].chars()) // TODO? can we use combine::char::string?
                     .map(move |mut str_player| verify_eq!(epi, unwrap!(player_to_epi(&str_player.join("")))))
             };
-            let rules = parse_rule_description(
-                grpstr_line.next().ok_or_else(|| format_err!("Expected rules"))?,
-                (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO? make adjustable
-                SStossParams::new(/*n_stoss_max*/4), // TODO? support
-                /*fn_player_to_epi*/player_to_epi,
-            )?;
-            let mut stichseq = SStichSequence::new(ekurzlang);
-            for _i_stich in 0..ekurzlang.cards_per_player() {
-                let (_epi, veccard) = parse_trimmed(
-                    grpstr_line.next().ok_or_else(||format_err!("Expected stich"))?,
-                    "stich",
-                    choice::<[_; EPlayerIndex::SIZE]>(EPlayerIndex::map_from_fn(|epi|
-                        attempt((
-                            username_parser(epi).skip(string(" spielt aus: ")),
-                            sep_by::<Vec<_>,_,_>(card_parser(), char(' ')),
-                        ))
-                    ).into_raw()),
+            if Some(&"Es wurde zusammengeworfen.")==grpstr_line.peek() {
+                Ok(SGameResultGeneric {
+                    an_payout: EPlayerIndex::map_from_fn(|_epi| 0), // TODO could there be stock?
+                    stockorgame: VStockOrT::Stock(()),
+                })
+            } else {
+                let rules = parse_rule_description(
+                    grpstr_line.next().ok_or_else(|| format_err!("Expected rules"))?,
+                    (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO? make adjustable
+                    SStossParams::new(/*n_stoss_max*/4), // TODO? support
+                    /*fn_player_to_epi*/player_to_epi,
                 )?;
-                for card in veccard {
-                    stichseq.zugeben(card, rules.as_ref());
+                let mut stichseq = SStichSequence::new(ekurzlang);
+                for _i_stich in 0..ekurzlang.cards_per_player() {
+                    let (_epi, veccard) = parse_trimmed(
+                        grpstr_line.next().ok_or_else(||format_err!("Expected stich"))?,
+                        "stich",
+                        choice::<[_; EPlayerIndex::SIZE]>(EPlayerIndex::map_from_fn(|epi|
+                            attempt((
+                                username_parser(epi).skip(string(" spielt aus: ")),
+                                sep_by::<Vec<_>,_,_>(card_parser(), char(' ')),
+                            ))
+                        ).into_raw()),
+                    )?;
+                    for card in veccard {
+                        stichseq.zugeben(card, rules.as_ref());
+                    }
                 }
+                SGame::new_finished(
+                    rules,
+                    SExpensifiers::new_no_stock_doublings_stoss(), // TODO? support
+                    SStichSequenceGameFinished::new(&stichseq),
+                )
+                    .and_then(|game| game.finish()
+                        .map_err(|err| format_err!("Could not finish game: {:?}", err))
+                    )
             }
-            SGame::new_finished(
-                rules,
-                SExpensifiers::new_no_stock_doublings_stoss(), // TODO? support
-                SStichSequenceGameFinished::new(&stichseq),
-            )
         })
         // TODO is the following needed?
         .collect::<Vec<_>>()
     )
+}
+
+#[test]
+fn test_parse_netschafkopf() {
+    fn test_internal(slcu8_netschafkopf: &[u8]) {
+        for resgame in unwrap!(analyze_netschafkopf(&String::from_utf8_lossy(slcu8_netschafkopf))) {
+            unwrap!(resgame);
+        }
+    }
+    test_internal(include_bytes!("Schafkopfprotokoll_vom_14.12.22.txt"));
+    test_internal(include_bytes!("Schafkopfprotokoll_vom_16.05.20.txt"));
+    test_internal(include_bytes!("Schafkopfprotokoll_vom_20.03.23.txt"));
 }
 
 #[test]
