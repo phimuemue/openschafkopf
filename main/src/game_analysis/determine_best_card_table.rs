@@ -39,7 +39,7 @@ pub fn internal_table<T, PayoutStatsPayload: Copy+Ord+std::fmt::Debug, PayoutSta
     fn_loss_or_win: &dyn Fn(isize, PayoutStatsPayload) -> std::cmp::Ordering,
 ) -> SPayoutStatsTable<T> {
     vectpayoutstatsperstrategy.sort_unstable_by(|(_t_lhs, minmax_lhs), (_t_rhs, minmax_rhs)| {
-        minmax_lhs.borrow().compare_canonical(minmax_rhs.borrow())
+        minmax_lhs.borrow().compare_canonical(minmax_rhs.borrow(), fn_loss_or_win)
     });
     vectpayoutstatsperstrategy.reverse(); // descending
     let mut vecoutputline : Vec<SOutputLine<_>> = Vec::new();

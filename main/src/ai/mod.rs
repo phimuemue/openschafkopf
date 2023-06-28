@@ -172,7 +172,13 @@ impl SAi {
                             .take(n_suggest_card_samples)
                     },
                 },
-            )).cards_with_maximum_value(/*TODO? good idea*/SPerMinMaxStrategy::compare_canonical).0.first())
+            )).cards_with_maximum_value(|lhs, rhs| {
+                SPerMinMaxStrategy::compare_canonical( // TODO good idea?
+                    lhs,
+                    rhs,
+                    |n_payout, ()| n_payout.cmp(&0), // TODO is this even correct?
+                )
+            }).0.first())
         }
     }
 
@@ -265,38 +271,43 @@ impl<T: Ord + Copy + Debug> SPayoutStats<T> {
 }
 
 impl<T: Ord + Copy + Debug> SPerMinMaxStrategy<SPayoutStats<T>> {
-    pub fn compare_canonical(&self, other: &Self) -> std::cmp::Ordering {
+    pub fn compare_canonical(&self, other: &Self, fn_loss_or_win: impl Fn(isize, T)->std::cmp::Ordering) -> std::cmp::Ordering {
         use std::cmp::Ordering::*;
-        let internal_cmp = |emmstrategy| {
+        let cmp_avg = |emmstrategy| {
             // prioritize positive vs non-positive and zero vs negative payouts.
             let lhs = &self.0[emmstrategy];
             let rhs = &other.0[emmstrategy];
-            match (lhs.min().cmp(&0), rhs.min().cmp(&0)) {
-                (Greater, Greater) => match lhs.min().cmp(&rhs.min()) {
-                    Equal => match unwrap!(lhs.avg().partial_cmp(&rhs.avg())) {
-                        Greater => Greater,
-                        Less => Less,
-                        Equal => unwrap!(lhs.max().partial_cmp(&rhs.max())),
-                    },
-                    Greater => Greater,
-                    Less => Less,
-                },
-                (Greater, _) => Greater,
-                (_, Greater) => Less,
-                (Equal, Less) => Greater,
-                (Less, Equal) => Less,
-                (Less, Less)|(Equal, Equal) => match unwrap!(lhs.avg().partial_cmp(&rhs.avg())) {
-                    Greater => Greater,
-                    Less => Less,
-                    Equal => unwrap!(lhs.max().partial_cmp(&rhs.max())),
-                },
+            match unwrap!(lhs.avg().partial_cmp(&rhs.avg())) {
+                Greater => Greater,
+                Less => Less,
+                Equal => lhs.max().cmp(&rhs.max()),
             }
         };
-        internal_cmp(EMinMaxStrategy::Min)
-            .then_with(|| internal_cmp(EMinMaxStrategy::SelfishMin))
-            .then_with(|| internal_cmp(EMinMaxStrategy::SelfishMax))
-            .then_with(|| internal_cmp(EMinMaxStrategy::Max))
-            .then_with(|| internal_cmp(EMinMaxStrategy::MinMin))
+        let strategy_enforces_win = |emmstrategy_win, emmstrategy_tie_breaker| {
+            match (
+                self.0[emmstrategy_win].counts(&fn_loss_or_win)[Less],
+                other.0[emmstrategy_win].counts(&fn_loss_or_win)[Less],
+            ) {
+                (0, 0) => {
+                    unwrap!(f32::partial_cmp(
+                        &self.0[emmstrategy_tie_breaker].avg(),
+                        &other.0[emmstrategy_tie_breaker].avg(),
+                    ))
+                },
+                (0, _) => Greater,
+                (_, 0) => Less,
+                (_, _) => Equal, // TODO good idea? Should we include some avg here?
+            }
+        };
+        Equal
+            .then_with(|| strategy_enforces_win(EMinMaxStrategy::Min, EMinMaxStrategy::SelfishMin))
+            .then_with(|| strategy_enforces_win(EMinMaxStrategy::SelfishMin, EMinMaxStrategy::SelfishMin))
+            .then_with(|| strategy_enforces_win(EMinMaxStrategy::SelfishMax, EMinMaxStrategy::SelfishMax))
+            .then_with(|| cmp_avg(EMinMaxStrategy::Min))
+            .then_with(|| cmp_avg(EMinMaxStrategy::SelfishMin))
+            .then_with(|| cmp_avg(EMinMaxStrategy::SelfishMax))
+            .then_with(|| cmp_avg(EMinMaxStrategy::Max))
+            .then_with(|| cmp_avg(EMinMaxStrategy::MinMin))
     }
 }
 
