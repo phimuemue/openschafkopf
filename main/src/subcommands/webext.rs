@@ -72,7 +72,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                 _ => panic!("Unexpected value for n_bytes_read: {}", n_bytes_read),
             }
         };
-        let communicate_error = |str_error_msg: &str| {
+        fn internal_communicate_error(sendstr: &std::sync::mpsc::Sender<String>, str_error_msg: &str, str_json_in: &str) {
             warn!("Communicating error: {}", str_error_msg);
             unwrap!(sendstr.send(
                 json!({
@@ -83,6 +83,9 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                 })
                 .to_string() /*TODO? better to avoid digression via json value?*/
             ));
+        }
+        let communicate_error = |str_error_msg: &str| {
+            internal_communicate_error(&sendstr, str_error_msg, &str_json_in)
         };
         match serde_json::de::from_str::<serde_json::Value>(&str_json_in) {
             Ok(jsonval) => {
@@ -200,12 +203,12 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                     *ocmd_openschafkopf = Some(cmd_openschafkopf);
                 }
                 std::thread::spawn(move || {
-                    if let Ok((str_openschafkopf_out, _n_bytes)) =
-                        via_out_param_result(|str_openschafkopf_out| {
-                            std::io::BufReader::new(stdout).read_to_string(str_openschafkopf_out)
-                        })
-                    {
-                        unwrap!(sendstr.send(str_openschafkopf_out));
+                    if let Ok(str_openschafkopf_out) = std::io::read_to_string(stdout) {
+                        if str_openschafkopf_out.trim().is_empty() {
+                            internal_communicate_error(&sendstr, "openschafkopf returned empty string", "N/A");
+                        } else {
+                            unwrap!(sendstr.send(str_openschafkopf_out));
+                        }
                     }
                 });
             }
