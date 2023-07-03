@@ -4,13 +4,13 @@ use crate::util::*;
 use permutohedron::LexicalPermutation;
 use rand::prelude::*;
 
-pub trait TNextVecEPI {
+pub trait THandIteratorCore {
     fn init(slcepi: &mut [EPlayerIndex]);
     fn next(slcepi: &mut [EPlayerIndex]) -> bool;
 }
 
-pub struct SNextVecEPIShuffle;
-impl TNextVecEPI for SNextVecEPIShuffle {
+pub struct SHandIteratorCoreShuffle;
+impl THandIteratorCore for SHandIteratorCoreShuffle {
     fn init(slcepi: &mut [EPlayerIndex]) {
         slcepi.shuffle(&mut rand::thread_rng());
     }
@@ -20,8 +20,8 @@ impl TNextVecEPI for SNextVecEPIShuffle {
     }
 }
 
-pub struct SNextVecEPIPermutation;
-impl TNextVecEPI for SNextVecEPIPermutation {
+pub struct SHandIteratorCorePermutation;
+impl THandIteratorCore for SHandIteratorCorePermutation {
     fn init(_slcepi: &mut [EPlayerIndex]) {
         // noop
     }
@@ -30,15 +30,15 @@ impl TNextVecEPI for SNextVecEPIPermutation {
     }
 }
 
-pub struct SHandIterator<NextVecEPI> {
+pub struct SHandIterator<HandIteratorCore> {
     veccard_unknown: Vec<ECard>,
     vecepi: Vec<EPlayerIndex>,
     ahand_known: EnumMap<EPlayerIndex, SHand>,
     b_valid: bool,
-    phantom: std::marker::PhantomData<NextVecEPI>,
+    phantom: std::marker::PhantomData<HandIteratorCore>,
 }
 
-impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
+impl<HandIteratorCore: THandIteratorCore> Iterator for SHandIterator<HandIteratorCore> {
     type Item = EnumMap<EPlayerIndex, SHand>;
     fn next(&mut self) -> Option<Self::Item> {
         if_then_some!(self.b_valid, {
@@ -46,7 +46,7 @@ impl<NextVecEPI: TNextVecEPI> Iterator for SHandIterator<NextVecEPI> {
             for (i, epi) in self.vecepi.iter().copied().enumerate() {
                 ahand[epi].add_card(self.veccard_unknown[i]);
             }
-            self.b_valid = NextVecEPI::next(self.vecepi.as_mut_slice());
+            self.b_valid = HandIteratorCore::next(self.vecepi.as_mut_slice());
             ahand
         })
     }
@@ -95,10 +95,10 @@ fn test_unplayed_cards() {
         .all(|card| veccard_unplayed.contains(card)));
 }
 
-fn make_handiterator<NextVecEPI: TNextVecEPI>(
+fn make_handiterator<HandIteratorCore: THandIteratorCore>(
     stichseq: &SStichSequence,
     ahand_known: EnumMap<EPlayerIndex, SHand>,
-) -> SHandIterator<NextVecEPI> {
+) -> SHandIterator<HandIteratorCore> {
     let veccard_unknown = unplayed_cards(stichseq, &ahand_known).collect::<Vec<_>>();
     let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
     let mut vecepi = Vec::new();
@@ -109,7 +109,7 @@ fn make_handiterator<NextVecEPI: TNextVecEPI>(
     }
     assert_eq!(veccard_unknown.len(), vecepi.len());
     assert!(vecepi.iter().is_sorted_unstable_name_collision());
-    NextVecEPI::init(&mut vecepi);
+    HandIteratorCore::init(&mut vecepi);
     SHandIterator {
         veccard_unknown,
         vecepi,
@@ -119,14 +119,14 @@ fn make_handiterator<NextVecEPI: TNextVecEPI>(
     }
 }
 
-fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVecEPI + 'lifetime, FnInspect: FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime>(
+fn make_handiterator_compatible_with_game_so_far<'lifetime, HandIteratorCore: THandIteratorCore + 'lifetime, FnInspect: FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime>(
     stichseq: &'lifetime SStichSequence,
     ahand_known: EnumMap<EPlayerIndex, SHand>,
     rules: &'lifetime dyn TRules,
     slcstoss: &'lifetime [SStoss],
     mut fn_inspect: FnInspect,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator::<NextVecEPI>(stichseq, ahand_known).filter(move |ahand| {
+    make_handiterator::<HandIteratorCore>(stichseq, ahand_known).filter(move |ahand| {
         let b_valid = {
             let stich_current = stichseq.current_stich();
             assert!(!stich_current.is_full());
@@ -186,7 +186,7 @@ pub fn internal_all_possible_hands<'lifetime>(
     slcstoss: &'lifetime [SStoss],
     fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SNextVecEPIPermutation, _>(
+    make_handiterator_compatible_with_game_so_far::<SHandIteratorCorePermutation, _>(
         stichseq,
         tohand.to_ahand(epi_fixed),
         rules,
@@ -220,7 +220,7 @@ pub fn internal_forever_rand_hands<'lifetime>(
     slcstoss: &'lifetime [SStoss],
     fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SNextVecEPIShuffle, _>(
+    make_handiterator_compatible_with_game_so_far::<SHandIteratorCoreShuffle, _>(
         stichseq,
         tohand.to_ahand(epi_fixed),
         rules,
@@ -290,7 +290,7 @@ fn test_all_possible_hands() {
     ] {
         for (card, veccard_hand, n_hand_count, an_size_hand) in atplcardslccardnan {
             assert_eq!(
-                make_handiterator::<SNextVecEPIPermutation>(
+                make_handiterator::<SHandIteratorCorePermutation>(
                     &stichseq,
                     SHand::new_from_iter(veccard_hand).to_ahand(epi_fixed),
                 )
