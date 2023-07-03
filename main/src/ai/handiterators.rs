@@ -5,35 +5,60 @@ use permutohedron::LexicalPermutation;
 use rand::prelude::*;
 
 pub trait THandIteratorCore {
-    fn new(slcepi: &mut [EPlayerIndex]) -> Self;
-    fn next(&mut self, slcepi: &mut [EPlayerIndex]) -> bool;
+    fn new(mapepin_count_unplayed_unknown: EnumMap<EPlayerIndex, usize>, veccard_unplayed_unknown: Vec<ECard>) -> Self;
+    fn next(&mut self, fn_add_card_to_hand: impl FnMut(EPlayerIndex, ECard)) -> bool;
 }
 
-pub struct SHandIteratorCoreShuffle;
+pub struct SHandIteratorCoreShuffle {
+    mapepin_count_unplayed_unknown: EnumMap<EPlayerIndex, usize>,
+    veccard_unplayed_unknown: Vec<ECard>,
+}
 impl THandIteratorCore for SHandIteratorCoreShuffle {
-    fn new(slcepi: &mut [EPlayerIndex]) -> Self {
-        slcepi.shuffle(&mut rand::thread_rng());
-        Self {}
+    fn new(mapepin_count_unplayed_unknown: EnumMap<EPlayerIndex, usize>, veccard_unplayed_unknown: Vec<ECard>) -> Self {
+        Self {
+            mapepin_count_unplayed_unknown,
+            veccard_unplayed_unknown,
+        }
     }
-    fn next(&mut self, slcepi: &mut [EPlayerIndex]) -> bool {
-        Self::new(slcepi);
+    fn next(&mut self, mut fn_add_card_to_hand: impl FnMut(EPlayerIndex, ECard)) -> bool {
+        self.veccard_unplayed_unknown.shuffle(&mut rand::thread_rng());
+        let mut i = 0;
+        for epi in EPlayerIndex::values() {
+            for _ in 0..self.mapepin_count_unplayed_unknown[epi] {
+                fn_add_card_to_hand(epi, self.veccard_unplayed_unknown[i]);
+                i += 1;
+            }
+        }
         true
     }
 }
 
-pub struct SHandIteratorCorePermutation;
+pub struct SHandIteratorCorePermutation {
+    vecepi: Vec<EPlayerIndex>,
+    veccard_unplayed_unknown: Vec<ECard>,
+}
 impl THandIteratorCore for SHandIteratorCorePermutation {
-    fn new(_slcepi: &mut [EPlayerIndex]) -> Self {
-        Self {}
+    fn new(mapepin_count_unplayed_unknown: EnumMap<EPlayerIndex, usize>, veccard_unplayed_unknown: Vec<ECard>) -> Self {
+        let mut vecepi = Vec::new();
+        for epi in EPlayerIndex::values() {
+            vecepi.extend(std::iter::repeat(epi).take(mapepin_count_unplayed_unknown[epi]));
+        }
+        assert_eq!(veccard_unplayed_unknown.len(), vecepi.len());
+        assert!(vecepi.iter().is_sorted_unstable_name_collision());
+        Self {
+            vecepi,
+            veccard_unplayed_unknown,
+        }
     }
-    fn next(&mut self, slcepi: &mut [EPlayerIndex]) -> bool {
-        slcepi.next_permutation()
+    fn next(&mut self, mut fn_add_card_to_hand: impl FnMut(EPlayerIndex, ECard)) -> bool {
+        for (epi, card) in itertools::zip_eq(&self.vecepi, &self.veccard_unplayed_unknown) {
+            fn_add_card_to_hand(*epi, *card);
+        }
+        self.vecepi.next_permutation()
     }
 }
 
 pub struct SHandIterator<HandIteratorCore> {
-    veccard_unknown: Vec<ECard>,
-    vecepi: Vec<EPlayerIndex>,
     ahand_known: EnumMap<EPlayerIndex, SHand>,
     b_valid: bool,
     handitercore: HandIteratorCore,
@@ -44,10 +69,9 @@ impl<HandIteratorCore: THandIteratorCore> Iterator for SHandIterator<HandIterato
     fn next(&mut self) -> Option<Self::Item> {
         if_then_some!(self.b_valid, {
             let mut ahand = self.ahand_known.clone();
-            for (i, epi) in self.vecepi.iter().copied().enumerate() {
-                ahand[epi].add_card(self.veccard_unknown[i]);
-            }
-            self.b_valid = self.handitercore.next(self.vecepi.as_mut_slice());
+            self.b_valid = self.handitercore.next(
+                /*fn_add_card_to_hand*/|epi, card| ahand[epi].add_card(card),
+            );
             ahand
         })
     }
@@ -100,23 +124,20 @@ fn make_handiterator<HandIteratorCore: THandIteratorCore>(
     stichseq: &SStichSequence,
     ahand_known: EnumMap<EPlayerIndex, SHand>,
 ) -> SHandIterator<HandIteratorCore> {
-    let veccard_unknown = unplayed_cards(stichseq, &ahand_known).collect::<Vec<_>>();
-    let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
-    let mut vecepi = Vec::new();
+    let veccard_unplayed_unknown = unplayed_cards(stichseq, &ahand_known).collect::<Vec<_>>();
+    let mut mapepin_count_unplayed_unknown = stichseq.remaining_cards_per_hand();
     for epi in EPlayerIndex::values() {
-        assert!(ahand_known[epi].cards().len() <= mapepin_cards_per_hand[epi]);
-        let n_unknown_per_hand = mapepin_cards_per_hand[epi] - ahand_known[epi].cards().len();
-        vecepi.extend(std::iter::repeat(epi).take(n_unknown_per_hand));
+        assert!(ahand_known[epi].cards().len() <= mapepin_count_unplayed_unknown[epi]);
+        mapepin_count_unplayed_unknown[epi] -= ahand_known[epi].cards().len();
     }
-    assert_eq!(veccard_unknown.len(), vecepi.len());
-    assert!(vecepi.iter().is_sorted_unstable_name_collision());
-    let handitercore = HandIteratorCore::new(&mut vecepi);
+    assert_eq!(
+        veccard_unplayed_unknown.len(),
+        mapepin_count_unplayed_unknown.iter().sum::<usize>(),
+    );
     SHandIterator {
-        veccard_unknown,
-        vecepi,
         ahand_known,
         b_valid: true, // in the beginning, there should be a valid assignment of cards to players
-        handitercore,
+        handitercore: HandIteratorCore::new(mapepin_count_unplayed_unknown, veccard_unplayed_unknown),
     }
 }
 
