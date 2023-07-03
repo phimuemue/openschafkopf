@@ -5,27 +5,28 @@ use permutohedron::LexicalPermutation;
 use rand::prelude::*;
 
 pub trait THandIteratorCore {
-    fn init(slcepi: &mut [EPlayerIndex]);
-    fn next(slcepi: &mut [EPlayerIndex]) -> bool;
+    fn new(slcepi: &mut [EPlayerIndex]) -> Self;
+    fn next(&mut self, slcepi: &mut [EPlayerIndex]) -> bool;
 }
 
 pub struct SHandIteratorCoreShuffle;
 impl THandIteratorCore for SHandIteratorCoreShuffle {
-    fn init(slcepi: &mut [EPlayerIndex]) {
+    fn new(slcepi: &mut [EPlayerIndex]) -> Self {
         slcepi.shuffle(&mut rand::thread_rng());
+        Self {}
     }
-    fn next(slcepi: &mut [EPlayerIndex]) -> bool {
-        Self::init(slcepi);
+    fn next(&mut self, slcepi: &mut [EPlayerIndex]) -> bool {
+        Self::new(slcepi);
         true
     }
 }
 
 pub struct SHandIteratorCorePermutation;
 impl THandIteratorCore for SHandIteratorCorePermutation {
-    fn init(_slcepi: &mut [EPlayerIndex]) {
-        // noop
+    fn new(_slcepi: &mut [EPlayerIndex]) -> Self {
+        Self {}
     }
-    fn next(slcepi: &mut [EPlayerIndex]) -> bool {
+    fn next(&mut self, slcepi: &mut [EPlayerIndex]) -> bool {
         slcepi.next_permutation()
     }
 }
@@ -35,7 +36,7 @@ pub struct SHandIterator<HandIteratorCore> {
     vecepi: Vec<EPlayerIndex>,
     ahand_known: EnumMap<EPlayerIndex, SHand>,
     b_valid: bool,
-    phantom: std::marker::PhantomData<HandIteratorCore>,
+    handitercore: HandIteratorCore,
 }
 
 impl<HandIteratorCore: THandIteratorCore> Iterator for SHandIterator<HandIteratorCore> {
@@ -46,7 +47,7 @@ impl<HandIteratorCore: THandIteratorCore> Iterator for SHandIterator<HandIterato
             for (i, epi) in self.vecepi.iter().copied().enumerate() {
                 ahand[epi].add_card(self.veccard_unknown[i]);
             }
-            self.b_valid = HandIteratorCore::next(self.vecepi.as_mut_slice());
+            self.b_valid = self.handitercore.next(self.vecepi.as_mut_slice());
             ahand
         })
     }
@@ -109,13 +110,13 @@ fn make_handiterator<HandIteratorCore: THandIteratorCore>(
     }
     assert_eq!(veccard_unknown.len(), vecepi.len());
     assert!(vecepi.iter().is_sorted_unstable_name_collision());
-    HandIteratorCore::init(&mut vecepi);
+    let handitercore = HandIteratorCore::new(&mut vecepi);
     SHandIterator {
         veccard_unknown,
         vecepi,
         ahand_known,
         b_valid: true, // in the beginning, there should be a valid assignment of cards to players
-        phantom: std::marker::PhantomData,
+        handitercore,
     }
 }
 
