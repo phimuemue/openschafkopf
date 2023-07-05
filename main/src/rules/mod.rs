@@ -70,6 +70,7 @@ pub type SDoublings = SPlayersInRound<bool, SStaticEPI0>; // assume that doublin
 #[derive(Clone, new, Debug)]
 pub struct SStossParams {
     pub n_stoss_max : usize,
+    // TODORULES stoss uebernimmt
 }
 
 impl SStossParams {
