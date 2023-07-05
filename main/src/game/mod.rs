@@ -417,7 +417,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         );
         let SExpensifiers{n_stock, doublings, vecstoss} = expensifiers;
         let game = SGame::new(aveccard, SExpensifiersNoStoss::new_with_doublings(n_stock, doublings), rules)
-            .play_cards_and_stoss(&vecstoss, stichseq.get().visible_cards(), |_,_,_,_| {})?;
+            .play_cards_and_stoss(vecstoss, stichseq.get().visible_cards(), |_,_,_,_| {})?;
         assert!(game.which_player_can_do_something().is_none());
         Ok(game)
     }
