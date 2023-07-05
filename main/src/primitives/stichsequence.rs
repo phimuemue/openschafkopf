@@ -178,7 +178,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         self.completed_stichs().iter().flat_map(SStich::iter)
     }
 
-    pub fn completed_cards_by(&self, epi: EPlayerIndex) -> impl DoubleEndedIterator<Item=ECard> + '_ {
+    pub fn completed_cards_by(&self, epi: EPlayerIndex) -> impl DoubleEndedIterator<Item=ECard> + Clone + '_ {
         self.completed_stichs().iter().map(move |stich| SFullStich::new(stich)[epi])
     }
 
@@ -204,9 +204,16 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         })
     }
 
-    pub fn cards_from_player<'slf>(&'slf self, hand: &'slf SHand, epi: EPlayerIndex) -> impl Iterator<Item=&'slf ECard> {
-        self.visible_cards()
-            .filter_map(move |(epi_card, card)| if_then_some!(epi==epi_card, card))
-            .chain(hand.cards().iter())
+    pub fn cards_from_player<'slf>(&'slf self, hand: &'slf SHand, epi: EPlayerIndex) -> impl Iterator<Item=ECard> + 'slf {
+        let itcard_played = self.completed_cards_by(epi)
+            .chain(self.current_stich().get(epi).copied());
+        debug_assert!(itertools::equal(
+            itcard_played.clone(),
+            self.visible_cards()
+                .filter_map(move |(epi_card, card)| if_then_some!(epi==epi_card, card))
+                .copied()
+        ));
+        itcard_played
+            .chain(hand.cards().iter().copied())
     }
 }

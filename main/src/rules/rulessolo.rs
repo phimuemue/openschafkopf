@@ -318,7 +318,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
     fn payouthints(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>, _rulestatecache: &SRuleStateCache, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         if !cards_valid_for_sie(
             rules,
-            stichseq.cards_from_player(&ahand[rules.epi], rules.epi).copied(),
+            stichseq.cards_from_player(&ahand[rules.epi], rules.epi),
             stichseq.kurzlang(),
         ) {
             internal_payout(

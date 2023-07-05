@@ -220,7 +220,6 @@ pub fn with_common_args<FnWithArgs>(
             // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
             if let Some(epi_active) = rules.playerindex() {
                 let veccard_hand_active = stichseq.cards_from_player(&ahand_with_holes[epi_active], epi_active)
-                    .copied()
                     .collect::<Vec<_>>();
                 if veccard_hand_active.len()==stichseq.kurzlang().cards_per_player() {
                     if !rules.can_be_played(SFullHand::new(&veccard_hand_active, stichseq.kurzlang())) {
@@ -354,7 +353,7 @@ pub fn with_common_args<FnWithArgs>(
                                             &stichseq.cards_from_player(
                                                 &ahand[epi_active],
                                                 epi_active,
-                                            ).copied().collect::<Vec<_>>(),
+                                            ).collect::<Vec<_>>(),
                                             stichseq.kurzlang(),
                                         ),
                                         epi_active,

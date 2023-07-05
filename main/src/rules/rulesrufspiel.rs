@@ -327,7 +327,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     f_payout / playerparties22_multiplier().as_num::<f32>(),
                     &SPointsToWin61{},
                     /*b_primary*/ epi_hand==epi_active
-                        || stichseq.cards_from_player(hand, epi_hand).any(|&card| card==card_rufsau),
+                        || stichseq.cards_from_player(hand, epi_hand).any(|card| card==card_rufsau),
                 )
             }
         }

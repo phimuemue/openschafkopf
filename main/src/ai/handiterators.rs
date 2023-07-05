@@ -133,7 +133,7 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, NextVecEPI: TNextVec
             assert!(ahand_vecstich_card_count_is_compatible(ahand, stichseq));
             // hands must not contain other cards preventing farbe/trumpf frei
             let aveccard = EPlayerIndex::map_from_fn(|epi| {
-                let veccard : SHandVector = stichseq.cards_from_player(&ahand[epi], epi).copied().collect();
+                let veccard : SHandVector = stichseq.cards_from_player(&ahand[epi], epi).collect();
                 assert_eq!(veccard.len(), stichseq.kurzlang().cards_per_player());
                 veccard
             });
