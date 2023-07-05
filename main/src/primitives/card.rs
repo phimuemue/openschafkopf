@@ -247,7 +247,7 @@ fn test_card_ctor() {
     )
 }
 
-impl PlainEnum for ECard {
+unsafe impl PlainEnum for ECard {
     const SIZE : usize = EFarbe::SIZE*ESchlag::SIZE;
     type EnumMapArray<T> = [T; ECard::SIZE];
     unsafe fn from_usize(n: usize) -> Self {

@@ -37,7 +37,7 @@ pub enum VTrumpfOrFarbe {
     Farbe (EFarbe),
 }
 
-impl PlainEnum for VTrumpfOrFarbe { // TODO(plain_enum) support enums with payload
+unsafe impl PlainEnum for VTrumpfOrFarbe { // TODO(plain_enum) support enums with payload
     const SIZE : usize = EFarbe::SIZE + 1;
     type EnumMapArray<T> = [T; Self::SIZE];
     unsafe fn from_usize(n: usize) -> Self {
