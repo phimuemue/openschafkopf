@@ -150,8 +150,6 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, HandIteratorCore: TH
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     make_handiterator::<HandIteratorCore>(stichseq, ahand_known).filter(move |ahand| {
         let b_valid = {
-            let stich_current = stichseq.current_stich();
-            assert!(!stich_current.is_full());
             assert!(ahand_vecstich_card_count_is_compatible(ahand, stichseq));
             // hands must not contain other cards preventing farbe/trumpf frei
             let aveccard = EPlayerIndex::map_from_fn(|epi| {
