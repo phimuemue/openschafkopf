@@ -13,6 +13,7 @@ pub use super::handconstraint::*;
 enum VChooseItAhand {
     All,
     Sample(/*n_samples*/usize, /*on_pool*/Option<usize>),
+    CardHist,
 }
 
 pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::Command<'static> {
@@ -248,6 +249,8 @@ pub fn with_common_args<FnWithArgs>(
             let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
                 if "all"==str_itahand.to_lowercase() { // TODO replace this case by simply "0"?
                     All
+                } else if "cardhist"==str_itahand.to_lowercase() {
+                    CardHist
                 } else {
                     match str_itahand
                         .split('/')
@@ -316,6 +319,14 @@ pub fn with_common_args<FnWithArgs>(
                 )?;
             }}}
             match (iteratehands, rules.playerindex()) {
+                (CardHist, _oepi_active) => {
+                    let n_samples = 100;
+                    forward!(
+                        n_samples,
+                        forever_hands_according_to_distribution,
+                        |itahand| Iterator::take(itahand, n_samples)
+                    )
+                },
                 (All, _oepi_active) => {
                     let mut n_cards_unknown = mapepin_cards_per_hand.iter().sum::<usize>()
                         - ahand_with_holes.iter().map(|hand| hand.cards().len()).sum::<usize>();
