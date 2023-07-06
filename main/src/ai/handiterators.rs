@@ -5,7 +5,7 @@ use permutohedron::LexicalPermutation;
 use rand::prelude::*;
 
 pub trait THandIteratorCore {
-    fn new(mapepin_count_unplayed_unknown: EnumMap<EPlayerIndex, usize>, veccard_unplayed_unknown: Vec<ECard>) -> Self;
+    fn new(stichseq: &SStichSequence, ahand_known: &EnumMap<EPlayerIndex, SHand>, mapepin_count_unplayed_unknown: EnumMap<EPlayerIndex, usize>, veccard_unplayed_unknown: Vec<ECard>) -> Self;
     fn next(&mut self, fn_add_card_to_hand: impl FnMut(EPlayerIndex, ECard)) -> bool;
 }
 
@@ -14,7 +14,7 @@ pub struct SHandIteratorCoreShuffle {
     veccard_unplayed_unknown: Vec<ECard>,
 }
 impl THandIteratorCore for SHandIteratorCoreShuffle {
-    fn new(mapepin_count_unplayed_unknown: EnumMap<EPlayerIndex, usize>, veccard_unplayed_unknown: Vec<ECard>) -> Self {
+    fn new(_stichseq: &SStichSequence, _ahand_known: &EnumMap<EPlayerIndex, SHand>, mapepin_count_unplayed_unknown: EnumMap<EPlayerIndex, usize>, veccard_unplayed_unknown: Vec<ECard>) -> Self {
         Self {
             mapepin_count_unplayed_unknown,
             veccard_unplayed_unknown,
@@ -38,7 +38,7 @@ pub struct SHandIteratorCorePermutation {
     veccard_unplayed_unknown: Vec<ECard>,
 }
 impl THandIteratorCore for SHandIteratorCorePermutation {
-    fn new(mapepin_count_unplayed_unknown: EnumMap<EPlayerIndex, usize>, veccard_unplayed_unknown: Vec<ECard>) -> Self {
+    fn new(_stichseq: &SStichSequence, _ahand_known: &EnumMap<EPlayerIndex, SHand>, mapepin_count_unplayed_unknown: EnumMap<EPlayerIndex, usize>, veccard_unplayed_unknown: Vec<ECard>) -> Self {
         let mut vecepi = Vec::new();
         for epi in EPlayerIndex::values() {
             vecepi.extend(std::iter::repeat(epi).take(mapepin_count_unplayed_unknown[epi]));
@@ -134,10 +134,16 @@ fn make_handiterator<HandIteratorCore: THandIteratorCore>(
         veccard_unplayed_unknown.len(),
         mapepin_count_unplayed_unknown.iter().sum::<usize>(),
     );
+    let handitercore = HandIteratorCore::new(
+        stichseq,
+        &ahand_known,
+        mapepin_count_unplayed_unknown,
+        veccard_unplayed_unknown,
+    );
     SHandIterator {
         ahand_known,
         b_valid: true, // in the beginning, there should be a valid assignment of cards to players
-        handitercore: HandIteratorCore::new(mapepin_count_unplayed_unknown, veccard_unplayed_unknown),
+        handitercore,
     }
 }
 
