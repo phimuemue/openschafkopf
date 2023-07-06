@@ -141,12 +141,12 @@ fn make_handiterator<HandIteratorCore: THandIteratorCore>(
     }
 }
 
-fn make_handiterator_compatible_with_game_so_far<'lifetime, HandIteratorCore: THandIteratorCore + 'lifetime, FnInspect: FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime>(
+fn make_handiterator_compatible_with_game_so_far<'lifetime, HandIteratorCore: THandIteratorCore + 'lifetime>(
     stichseq: &'lifetime SStichSequence,
     ahand_known: EnumMap<EPlayerIndex, SHand>,
     rules: &'lifetime dyn TRules,
     slcstoss: &'lifetime [SStoss],
-    mut fn_inspect: FnInspect,
+    mut fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     make_handiterator::<HandIteratorCore>(stichseq, ahand_known).filter(move |ahand| {
         let b_valid = {
@@ -206,7 +206,7 @@ pub fn internal_all_possible_hands<'lifetime>(
     slcstoss: &'lifetime [SStoss],
     fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SHandIteratorCorePermutation, _>(
+    make_handiterator_compatible_with_game_so_far::<SHandIteratorCorePermutation>(
         stichseq,
         tohand.to_ahand(epi_fixed),
         rules,
@@ -240,7 +240,7 @@ pub fn internal_forever_rand_hands<'lifetime>(
     slcstoss: &'lifetime [SStoss],
     fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
-    make_handiterator_compatible_with_game_so_far::<SHandIteratorCoreShuffle, _>(
+    make_handiterator_compatible_with_game_so_far::<SHandIteratorCoreShuffle>(
         stichseq,
         tohand.to_ahand(epi_fixed),
         rules,
