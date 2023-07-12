@@ -38,7 +38,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 b_found = b_found || resgameresult.is_ok();
                 vecgamewithdesc.push(SGameWithDesc{
                     str_description,
-                    str_link: format!("file://{}", str_path),
                     resgameresult,
                 });
             };

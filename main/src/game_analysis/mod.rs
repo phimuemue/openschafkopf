@@ -496,7 +496,6 @@ fn write_html(path: std::path::PathBuf, str_html: &str) -> Result<std::path::Pat
 
 pub struct SGameWithDesc {
     pub str_description: String,
-    pub str_link: String,
     pub resgameresult: Result<SGameResult</*Ruleset*/()>, failure::Error>,
 }
 
