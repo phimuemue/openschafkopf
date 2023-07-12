@@ -145,9 +145,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let path_dst = std::path::PathBuf::from(&format!("neural_network_input/{}",
         chrono::Local::now().format("%Y%m%d%H%M%S"),
     ));
-    super::glob_files(
-        unwrap!(clapmatches.values_of("file")),
-        |path, str_input| {
+    super::glob_files_or_read_stdin(
+        clapmatches.values_of("file").into_iter().flatten(),
+        |opath, str_input| {
             if let Ok(ref gameresult@SGameResultGeneric{stockorgame: VStockOrT::OrT(ref game), ..}) = analyze_sauspiel_html(&str_input) {
                 let mut game_csv = SGame::new(
                     game.aveccard.clone(),
@@ -219,7 +219,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     );
                 }
             } else {
-                eprintln!("Nothing found in {:?}: Trying to continue.", path);
+                eprintln!("Nothing found in {:?}: Trying to continue.", opath);
             }
         },
     )?;

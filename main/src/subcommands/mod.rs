@@ -38,7 +38,6 @@ mod shared_args {
 
     pub fn input_files_arg(str_name: &'static str) -> clap::Arg<'static> { // TODO? unify str_name
         clap::Arg::new(str_name)
-            .required(true)
             .takes_value(true)
             .multiple_occurrences(true)
             .help("Paths to files containing played games")
@@ -66,24 +65,32 @@ pub fn ai(subcommand_matches: &clap::ArgMatches) -> SAi {
     }
 }
 
-pub fn glob_files<'str_glob>(
+pub fn glob_files_or_read_stdin<'str_glob>(
     itstr_glob: impl Iterator<Item=&'str_glob str>,
-    mut fn_ok: impl FnMut(std::path::PathBuf, String),
+    mut fn_ok: impl FnMut(Option<std::path::PathBuf>, String),
 ) -> Result<(), Error> {
+    let mut b_from_file = false;
     for str_glob in itstr_glob {
+        b_from_file = true;
         for globresult in glob::glob(str_glob)? {
             match globresult {
                 Ok(path) => {
                     let str_input = String::from_utf8_lossy(&via_out_param_result(|vecu8|
                         std::fs::File::open(&path)?.read_to_end(vecu8)
                     )?.0).to_string();
-                    fn_ok(path, str_input);
+                    fn_ok(Some(path), str_input);
                 },
                 Err(e) => {
                     eprintln!("Error: {:?}. Trying to continue.", e);
                 },
             }
         }
+    }
+    if !b_from_file {
+        fn_ok(
+            /*opath*/None,
+            std::io::read_to_string(std::io::stdin())?,
+        );
     }
     Ok(())
 }

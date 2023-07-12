@@ -2,6 +2,7 @@ use crate::game_analysis::{*, parser::*};
 use crate::game::*;
 use crate::util::*;
 use crate::rules::ruleset::VStockOrT;
+use std::borrow::Cow;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     use super::shared_args::*;
@@ -24,22 +25,26 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let mut vecgamewithdesc = Vec::new();
-    super::glob_files(
-        unwrap!(clapmatches.values_of("sauspiel-files")),
-        |path, str_input| {
-            println!("Opened {:?}", path);
+    super::glob_files_or_read_stdin(
+        clapmatches.values_of("sauspiel-files").into_iter().flatten(),
+        |opath, str_input| {
+            let str_path = match &opath {
+                Some(path) => path.to_string_lossy(),
+                None => Cow::Borrowed("stdin"), // hope that path is not "stdin"
+            };
+            println!("Opened {}", str_path);
             let mut b_found = false;
-            let mut push_game = |str_description, resgameresult: Result<_, _>| {
+            let mut push_game = |str_description: String, resgameresult: Result<_, _>| {
                 b_found = b_found || resgameresult.is_ok();
                 vecgamewithdesc.push(SGameWithDesc{
                     str_description,
-                    str_link: format!("file://{}", path.to_string_lossy()),
+                    str_link: format!("file://{}", str_path),
                     resgameresult,
                 });
             };
             if let resgameresult@Ok(_) = analyze_sauspiel_html(&str_input) {
                 push_game(
-                    path.to_string_lossy().into_owned(),
+                    str_path.clone().into_owned(),
                     resgameresult.map(|game| game.map(|_|(), |_|(), |_|()))
                 )
             } else {
@@ -58,16 +63,16 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 {
                     b_found_plain = true;
                     push_game(
-                        format!("{}_{}", path.to_string_lossy(), i),
+                        format!("{}_{}", str_path, i),
                         resgame.and_then(|game| game.finish().map_err(|_game| format_err!("Could not game.finish")))
                     )
                 }
                 if !b_found_plain {
-                    push_game(path.to_string_lossy().into_owned(), Err(format_err!("Nothing found in {:?}: Trying to continue.", path)));
+                    push_game(str_path.clone().into_owned(), Err(format_err!("Nothing found in {}: Trying to continue.", str_path)));
                 }
             }
             if !b_found {
-                eprintln!("Nothing found in {:?}: Trying to continue.", path);
+                eprintln!("Nothing found in {}: Trying to continue.", str_path);
             }
         },
     )?;
