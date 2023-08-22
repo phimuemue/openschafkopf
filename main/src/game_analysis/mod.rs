@@ -398,7 +398,7 @@ fn generate_analysis_html(
                 &analysispercard.determinebestcardresult_cheating,
                 game.rules.as_ref(),
                 /*fn_loss_or_win*/&|n_payout, ()| n_payout.cmp(&0),
-            ).vecoutputline;
+            ).into_output_lines();
             // TODO simplify output (as it currently only shows results from one ahand)
             let stichseq = &analysispercard.stichseq;
             let ahand = &analysispercard.ahand;

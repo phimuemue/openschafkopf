@@ -2,11 +2,93 @@ use crate::ai::{*, gametree::*, stichoracle::SFilterByOracle, cardspartition::*}
 use crate::primitives::*;
 use crate::util::*;
 use itertools::*;
-use crate::game_analysis::determine_best_card_table::{table, internal_table};
+use crate::game_analysis::determine_best_card_table::{
+    table,
+    internal_table,
+    SFormatInfo,
+    SOutputLine,
+    SPayoutStatsTable,
+};
 use rayon::prelude::*;
 use serde::Serialize;
 
 use super::common_given_game::*;
+
+// TODO? can we make this a fn of SPayoutStatsTable?
+fn print_payoutstatstable<T: std::fmt::Display>(
+    payoutstatstable: &SPayoutStatsTable<T>,
+    b_verbose: bool
+) {
+    let slcoutputline = &payoutstatstable.output_lines();
+    if b_verbose { // TODO? only for second-level verbosity
+        println!("\nInterpreting a line of the following table (taking the first line as an example):");
+        let SOutputLine{vect, mapemmstrategyatplstrf} = &slcoutputline[0];
+        println!("If you play {}, then:", vect.iter().join(" or "));
+        for emmstrategy in EMinMaxStrategy::values() {
+            let astr = mapemmstrategyatplstrf[emmstrategy].clone().map(|tplstrf| tplstrf.0);
+            let n_columns = astr.len(); // TODO can we get rid of this
+            let [str_payout_min, str_payout_avg, str_payout_max, str_stats] = astr;
+            println!("* The {} {} columns show tell what happens if all other players play {}:",
+                EMinMaxStrategy::map_from_raw([
+                    "first",
+                    "second",
+                    "third",
+                    "fourth",
+                    "fifth",
+                ])[emmstrategy],
+                n_columns,
+                match emmstrategy {
+                    EMinMaxStrategy::MinMin => "adversarially and you play pessimal",
+                    EMinMaxStrategy::Min => "adversarially",
+                    EMinMaxStrategy::SelfishMin => "optimally for themselves, favouring you in case of doubt",
+                    EMinMaxStrategy::SelfishMax => "optimally for themselves, not favouring you in case of doubt",
+                    EMinMaxStrategy::Max => "optimally for you",
+                },
+            );
+            println!("  * In the worst case (over all generated card distributions), you can enforce a payout of {}", str_payout_min);
+            println!("  * On average (over all generated card distributions), you can enforce a payout of {}", str_payout_avg);
+            println!("  * In the best case (over all generated card distributions), you can enforce a payout of {}", str_payout_max);
+            println!("  * {} shows the number of games lost/zero-payout/won", str_stats);
+        }
+        println!();
+    }
+    // TODO interface should probably output payout interval per card
+    let mut vecstr_id = Vec::new();
+    let mut n_width_id = 0;
+    for outputline in slcoutputline.iter() {
+        let str_id = outputline.vect.iter().join(" ");
+        assign_max(&mut n_width_id, str_id.len());
+        vecstr_id.push(str_id);
+    }
+    for (str_id, SOutputLine{vect:_, mapemmstrategyatplstrf}) in vecstr_id.iter().zip_eq(slcoutputline.iter()) {
+        print!("{str_id:<n_width_id$}: ");
+        for (atplstrf, aformatinfo) in mapemmstrategyatplstrf.iter().zip_eq(payoutstatstable.format_infos().iter()) {
+            for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
+                use termcolor::*;
+                let mut stdout = StandardStream::stdout(if atty::is(atty::Stream::Stdout) {
+                    ColorChoice::Auto
+                } else {
+                    ColorChoice::Never
+                });
+                #[allow(clippy::float_cmp)]
+                if f_min!=f_max {
+                    let mut set_color = |color| {
+                        unwrap!(stdout.set_color(ColorSpec::new().set_fg(Some(color))));
+                    };
+                    if f==f_min {
+                        set_color(Color::Red);
+                    } else if f==f_max {
+                        set_color(Color::Green);
+                    }
+                }
+                print!("{:>width$}", str_num, width=n_width);
+                unwrap!(stdout.reset());
+            }
+            print!("   ");
+        }
+        println!();
+    }
+}
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     subcommand_given_game(str_subcommand, "Suggest a card to play given the game so far")
@@ -252,11 +334,14 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         /*avecpayout_histogram*/json_histograms(&mapemmstrategypaystats),
                     )],
                 ) {
-                    internal_table(
-                        vec![(rules, mapemmstrategypaystats)],
-                        /*b_group*/false,
-                        /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
-                    ).print(b_verbose);
+                    print_payoutstatstable(
+                        &internal_table(
+                            vec![(rules, mapemmstrategypaystats)],
+                            /*b_group*/false,
+                            /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
+                        ),
+                        b_verbose,
+                    );
                 }
             } else {
                 let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
@@ -312,11 +397,14 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         )
                         .collect(),
                 ) {
-                    table(
-                        &determinebestcardresult,
-                        rules,
-                        /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
-                    ).print(b_verbose);
+                    print_payoutstatstable(
+                        &table(
+                            &determinebestcardresult,
+                            rules,
+                            /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
+                        ),
+                        b_verbose,
+                    )
                 }
             }
             Ok(())
