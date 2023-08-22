@@ -3,7 +3,6 @@ use crate::player::*;
 use crate::rules::{
     TActivelyPlayableRulesBoxClone, // TODO improve trait-object behaviour
 };
-use crate::skui;
 use std::sync::mpsc;
 
 pub struct SAtTable {
@@ -22,6 +21,7 @@ pub fn internal_run_simple_game_loop<ItStockOrGame: Iterator<Item=VStockOrT<SGam
     n_games: usize,
     ruleset: SRuleSet,
     fn_gamepreparations_to_stockorgame: impl Fn(SGamePreparations, &EnumMap<EPlayerIndex, SAtTable>)->ItStockOrGame,
+    fn_print_account_balance: impl Fn(&EnumMap<EPlayerIndex, isize>, isize),
 ) -> ([SAtTable; EPlayerIndex::SIZE], isize) {
     let mut aattable = aplayer.map_into(|player| SAtTable{player, n_money:0});
     let mut n_stock = 0;
@@ -79,14 +79,19 @@ pub fn internal_run_simple_game_loop<ItStockOrGame: Iterator<Item=VStockOrT<SGam
                 aattable[epi].n_money += n_payout;
             });
             assert_eq!(n_stock + aattable.iter().map(|attable| attable.n_money).sum::<isize>(), 0);
-            skui::print_account_balance(&aattable.map(|attable| attable.n_money), n_stock);
+            fn_print_account_balance(&aattable.map(|attable| attable.n_money), n_stock);
         }
         aattable.as_raw_mut().rotate_left(1);
     }
     (aattable.into_raw(), n_stock)
 }
 
-pub fn run_simple_game_loop(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_games: usize, ruleset: SRuleSet) -> ([SAtTable; EPlayerIndex::SIZE], isize) {
+pub fn run_simple_game_loop(
+    aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>,
+    n_games: usize,
+    ruleset: SRuleSet,
+    fn_print_account_balance: impl Fn(&EnumMap<EPlayerIndex, isize>, isize),
+) -> ([SAtTable; EPlayerIndex::SIZE], isize) {
     internal_run_simple_game_loop(
         aplayer,
         n_games,
@@ -139,6 +144,7 @@ pub fn run_simple_game_loop(aplayer: EnumMap<EPlayerIndex, Box<dyn TPlayer>>, n_
                 }
             })
         },
+        fn_print_account_balance,
     )
 }
 

@@ -153,7 +153,8 @@ fn detect_expensive_all_possible_hands() {
             [stoss]
             max=3
             ",
-        ))
+        )),
+        /*fn_print_account_balance*/|_,_| {/* no output */},
     );
 }
 

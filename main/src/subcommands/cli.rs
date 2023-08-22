@@ -28,6 +28,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         }),
         /*n_games*/unwrap!(clapmatches.value_of("numgames")).parse::<usize>().unwrap_or(4),
         super::get_ruleset(clapmatches)?,
+        /*fn_print_account_balance*/skui::print_account_balance,
     );
     aattable.sort_unstable_by_key(|attable| attable.n_money);
     println!("Results:");
@@ -145,6 +146,7 @@ fn test_game_loop() {
             }),
             /*n_games*/4,
             ruleset,
+            /*fn_print_account_balance*/|_,_| {/* no output */},
         );
     }
 }

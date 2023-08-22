@@ -2524,6 +2524,7 @@ mod tests {
                     {itstockorgame}
                 )
             },
+            /*fn_print_account_balance*/|_,_| {/* no output */},
         );
     }
 }
