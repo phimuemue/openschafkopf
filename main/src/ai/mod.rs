@@ -430,7 +430,7 @@ impl SBranchingFactor {
 fn test_is_compatible_with_game_so_far() {
     use crate::rules::rulesrufspiel::*;
     use crate::rules::payoutdecider::*;
-    use crate::card::ECard::*;
+    use crate::primitives::card::ECard::*;
     use crate::game;
     enum VTestAction {
         PlayStich([ECard; EPlayerIndex::SIZE]),
@@ -514,7 +514,7 @@ fn test_is_compatible_with_game_so_far() {
 
 #[test]
 fn test_very_expensive_exploration() { // this kind of abuses the test mechanism to benchmark the performance
-    use crate::card::ECard::*;
+    use crate::primitives::card::ECard::*;
     use crate::game::*;
     use crate::rules::{rulessolo::*, payoutdecider::*};
     use crate::game_analysis::TPayoutDeciderSoloLikeDefault;

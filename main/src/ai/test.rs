@@ -8,7 +8,7 @@ use crate::util::*;
 #[test]
 fn test_determine_best_card() {
     // https://www.sauspiel.de/spiele/785105783
-    use crate::card::ECard::*;
+    use crate::primitives::card::ECard::*;
     let mut game = game::SGame::new(
         EPlayerIndex::map_from_raw([
             [EO, HO, EU, SU, HZ, E8, SZ, S7],
