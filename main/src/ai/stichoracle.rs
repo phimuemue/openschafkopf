@@ -338,7 +338,7 @@ mod tests {
             TPlayer,
             playerrandom::SPlayerRandom,
         },
-        primitives::{*, card::ECard::*},
+        primitives::{*, card::ECard::*, hand::display_card_slices},
         rules::{
             payoutdecider::{SPayoutDeciderParams, SPayoutDeciderPointBased, SLaufendeParams},
             rulesrufspiel::SRulesRufspiel,
@@ -363,7 +363,6 @@ mod tests {
             SRuleStateCacheFixed,
             SSnapshotCacheNone,
         },
-        display_card_slices,
     };
     use super::{SStichTrie, SFilterByOracle};
     use itertools::Itertools;

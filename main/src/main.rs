@@ -21,7 +21,6 @@ mod rules;
 mod skui;
 mod subcommands;
 
-use crate::primitives::*;
 use crate::util::*;
 
 fn main() -> Result<(), Error> {
