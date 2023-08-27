@@ -20,3 +20,6 @@ pub use assign::*;
 #[macro_use]
 pub mod cartesian_match;
 pub use cartesian_match::*;
+#[macro_use]
+pub mod static_assert;
+pub use static_assert::*;
