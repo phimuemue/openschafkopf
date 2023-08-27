@@ -17,3 +17,6 @@ pub mod moveorclone;
 pub use moveorclone::*;
 pub mod assign;
 pub use assign::*;
+#[macro_use]
+pub mod cartesian_match;
+pub use cartesian_match::*;
