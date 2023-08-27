@@ -3,9 +3,10 @@ use crate::game::*;
 use crate::player::*;
 use crate::primitives::*;
 use crate::rules::{ruleset::*, *};
-use crate::skui;
 use crate::util::*;
 use std::sync::mpsc;
+
+use super::skui;
 
 pub struct SPlayerHuman {
     pub ai : SAi,

@@ -1,5 +1,4 @@
 pub mod playercomputer;
-pub mod playerhuman;
 #[cfg(test)]
 pub mod playerrandom;
 

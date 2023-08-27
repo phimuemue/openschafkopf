@@ -18,7 +18,6 @@ mod game_analysis;
 mod player;
 mod primitives;
 mod rules;
-mod skui;
 mod subcommands;
 
 use crate::util::*;

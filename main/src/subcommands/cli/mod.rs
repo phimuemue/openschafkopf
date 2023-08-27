@@ -1,7 +1,9 @@
+mod skui;
+mod playerhuman;
+
 use crate::game::run::run_simple_game_loop;
-use crate::player::{*, playercomputer::*, playerhuman::*};
+use crate::player::{*, playercomputer::*};
 use crate::primitives::*;
-use crate::skui;
 use crate::util::*;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
@@ -21,7 +23,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let (mut aattable, n_stock) = run_simple_game_loop(
         /*aplayer*/EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {
             if EPlayerIndex::EPI1==epi {
-                Box::new(SPlayerHuman{ai : super::ai(clapmatches)})
+                Box::new(playerhuman::SPlayerHuman{ai : super::ai(clapmatches)})
             } else {
                 Box::new(SPlayerComputer{ai: super::ai(clapmatches)})
             }
