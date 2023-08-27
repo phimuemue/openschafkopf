@@ -1,6 +1,8 @@
-use crate::util::moveorclone::TMoveOrClone;
 use std::borrow::Borrow;
-use openschafkopf_util::if_then_true;
+use crate::{
+    if_then_true,
+    moveorclone::TMoveOrClone,
+};
 
 pub fn assign_better<T, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src, fn_better: impl FnOnce(&T, &T) -> bool) -> /*TODO can/should we make return type generic (e.g. support unit or Option/Result return type)*/bool {
     if_then_true!(fn_better(src.borrow(), dst), {

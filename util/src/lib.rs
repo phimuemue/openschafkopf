@@ -13,3 +13,7 @@ pub mod mutate_return;
 pub use mutate_return::*;
 #[macro_use]
 pub mod if_then;
+pub mod moveorclone;
+pub use moveorclone::*;
+pub mod assign;
+pub use assign::*;
