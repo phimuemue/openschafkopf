@@ -1,6 +1,7 @@
 use plain_enum::*;
 use itertools::Itertools;
 use crate::primitives::card::*;
+use openschafkopf_util::if_then_some;
 
 #[derive(Clone)]
 pub struct SCardsPartition {

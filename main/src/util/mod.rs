@@ -4,8 +4,6 @@ pub use plain_enum::*;
 pub mod box_clone;
 #[macro_use]
 pub mod staticvalue;
-#[macro_use]
-pub mod if_then;
 pub mod assign;
 pub mod parser;
 pub mod interval;

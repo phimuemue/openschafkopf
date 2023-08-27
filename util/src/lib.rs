@@ -11,3 +11,5 @@ pub use self::via_out_param::*;
 #[macro_use]
 pub mod mutate_return;
 pub use mutate_return::*;
+#[macro_use]
+pub mod if_then;

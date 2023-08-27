@@ -1,3 +1,4 @@
+#[macro_export]
 macro_rules! if_then_some {
     ($cond: expr, $val: expr) => {
         if $cond {
@@ -15,6 +16,7 @@ macro_rules! if_then_some {
     };
 }
 
+#[macro_export]
 macro_rules! if_then_true {
     ($cond: expr, $val: expr) => {
         if $cond {
