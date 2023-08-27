@@ -286,7 +286,7 @@ pub fn with_common_args<FnWithArgs>(
                             n_ahand_seen += 1;
                             let b_valid = b_valid_so_far
                                 && oconstraint.as_ref().map_or(true, |relation|
-                                    relation.eval(ahand, rules)
+                                    relation.eval(ahand, rules.box_clone())
                                 );
                             if b_valid {
                                 n_ahand_valid += 1;

@@ -38,17 +38,17 @@ impl SConstraint {
     pub fn internal_eval<R>(
         &self,
         ahand: &EnumMap<EPlayerIndex, SHand>,
-        rules: &dyn TRules,
+        rules: Box<dyn TRules>,
         fn_eval: impl Fn(Result<rhai::Dynamic, Box<rhai::EvalAltResult>>)->R,
     ) -> R {
         fn_eval(self.engine.call_fn(
             &mut rhai::Scope::new(),
             &self.ast,
             "inspect",
-            (SContext{ahand: ahand.clone(), rules: rules.box_clone()},)
+            (SContext{ahand: ahand.clone(), rules},),
         ))
     }
-    pub fn eval(&self, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules) -> bool {
+    pub fn eval(&self, ahand: &EnumMap<EPlayerIndex, SHand>, rules: Box<dyn TRules>) -> bool {
         self.internal_eval(ahand, rules, |resdynamic| {
             match resdynamic {
                 Ok(dynamic) => {
