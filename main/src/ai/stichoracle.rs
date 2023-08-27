@@ -416,7 +416,7 @@ mod tests {
                 .iter()
                 .map(|acard| SStich::new_full(
                     epi_first,
-                    acard.explicit_clone(),
+                    acard.clone(),
                 ))
                 .collect::<std::collections::HashSet<_>>();
             //assert_eq!(setstich_oracle.len(), setstich_check.len());

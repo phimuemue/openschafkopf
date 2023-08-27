@@ -460,7 +460,7 @@ pub type SMinMax = SPerMinMaxStrategy<EnumMap<EPlayerIndex, isize>>;
 
 impl SMinMax {
     fn new_final(an_payout: EnumMap<EPlayerIndex, isize>) -> Self {
-        Self(EMinMaxStrategy::map_from_fn(|_| an_payout.explicit_clone()))
+        Self(EMinMaxStrategy::map_from_fn(|_| an_payout.clone()))
     }
 }
 

@@ -56,7 +56,7 @@ impl TGamePhase for SWebsocketGameResult {
         let oinfallible : /*mention type to get compiler error upon change*/Option<std::convert::Infallible> = self.gameresult.which_player_can_do_something(); // TODO simplify
         verify!(oinfallible.is_none());
         if_then_some!(self.mapepib_confirmed.iter().any(|b_confirmed| !b_confirmed),
-            self.mapepib_confirmed.explicit_clone()
+            self.mapepib_confirmed.clone()
         )
     }
     fn finish_success(self) -> Self::Finish {
