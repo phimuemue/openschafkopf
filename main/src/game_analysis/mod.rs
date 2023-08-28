@@ -1,7 +1,7 @@
 use crate::ai::{handiterators::*, gametree::*, *};
 use crate::game::*;
 use crate::primitives::*;
-use crate::rules::{payoutdecider::*, ruleset::VStockOrT, rulessolo::*, *};
+use crate::rules::{ruleset::VStockOrT, *};
 use crate::util::*;
 use crate::game_analysis::determine_best_card_table::table;
 use itertools::Itertools;
@@ -15,26 +15,6 @@ use rayon::prelude::*;
 
 pub mod determine_best_card_table;
 pub mod parser;
-
-pub trait TPayoutDeciderSoloLikeDefault : TPayoutDeciderSoloLike {
-    fn default_payoutdecider(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self;
-}
-impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
-    fn default_payoutdecider(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self {
-        Self::new(
-            SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
-            VGameAnnouncementPrioritySoloLike::SoloSimple(0),
-        )
-    }
-}
-impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderTout {
-    fn default_payoutdecider(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self {
-        Self::new(
-            SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
-            0,
-        )
-    }
-}
 
 #[derive(Clone, Debug)]
 pub enum EMistake {

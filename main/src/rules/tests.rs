@@ -121,26 +121,6 @@ fn rulesrufspiel_new_test(epi: EPlayerIndex, efarbe: EFarbe, n_payout_base: isiz
     )
 }
 
-pub trait TPayoutDeciderSoloLikeDefault : TPayoutDeciderSoloLike {
-    fn default_payoutdecider(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self;
-}
-impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
-    fn default_payoutdecider(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self {
-        Self::new(
-            SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
-            VGameAnnouncementPrioritySoloLike::SoloSimple(0),
-        )
-    }
-}
-impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderTout {
-    fn default_payoutdecider(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self {
-        Self::new(
-            SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
-            0,
-        )
-    }
-}
-
 #[test]
 fn test_rulesrufspiel_weglaufen() {
     use EPlayerIndex::*;

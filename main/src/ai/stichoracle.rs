@@ -342,14 +342,13 @@ mod tests {
         rules::{
             payoutdecider::{SPayoutDeciderParams, SPayoutDeciderPointBased, SLaufendeParams},
             rulesrufspiel::SRulesRufspiel,
-            rulessolo::{sololike, ESoloLike},
+            rulessolo::{sololike, ESoloLike, TPayoutDeciderSoloLikeDefault},
             ruleset::{
                 SRuleSet,
                 allowed_rules,
                 VStockOrT,
             },
             SStossParams,
-            tests::TPayoutDeciderSoloLikeDefault,
             TRules,
             TRulesBoxClone,
         },

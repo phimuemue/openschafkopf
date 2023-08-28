@@ -25,6 +25,27 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
     fn snapshot_cache(&self, rules: &SRulesSoloLike<impl TTrumpfDecider, Self>) -> Box<dyn TSnapshotCache<SMinMax>>;
 }
 
+pub trait TPayoutDeciderSoloLikeDefault : TPayoutDeciderSoloLike {
+    fn default_payoutdecider(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self;
+}
+impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike> {
+    fn default_payoutdecider(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self {
+        Self::new(
+            SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
+            VGameAnnouncementPrioritySoloLike::SoloSimple(0),
+        )
+    }
+}
+impl TPayoutDeciderSoloLikeDefault for SPayoutDeciderTout {
+    fn default_payoutdecider(n_payout_base: isize, n_payout_schneider_schwarz: isize, laufendeparams: SLaufendeParams) -> Self {
+        Self::new(
+            SPayoutDeciderParams::new(n_payout_base, n_payout_schneider_schwarz, laufendeparams),
+            0,
+        )
+    }
+}
+
+
 impl TPointsToWin for VGameAnnouncementPrioritySoloLike {
     fn points_to_win(&self) -> isize {
         match self {

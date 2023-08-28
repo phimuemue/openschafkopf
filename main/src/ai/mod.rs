@@ -516,8 +516,10 @@ fn test_is_compatible_with_game_so_far() {
 fn test_very_expensive_exploration() { // this kind of abuses the test mechanism to benchmark the performance
     use crate::primitives::card::ECard::*;
     use crate::game::*;
-    use crate::rules::{rulessolo::*, payoutdecider::*};
-    use crate::game_analysis::TPayoutDeciderSoloLikeDefault;
+    use crate::rules::{
+        rulessolo::*,
+        payoutdecider::*,
+    };
     let epi_active = EPlayerIndex::EPI0;
     let n_payout_base = 50;
     let n_payout_schneider_schwarz = 10;
