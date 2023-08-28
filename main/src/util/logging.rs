@@ -1,8 +1,24 @@
 use itertools::Itertools;
-use crate::util::*;
+use crate::util::if_dbg_else;
 pub use log::{debug, error, info, trace, warn};
 
-pub fn init_logging() -> Result<(), failure::Error> {
+#[derive(Debug)]
+pub enum VInitLoggingError {
+    HomeDir,
+    FileName,
+    CurrentExe,
+    SetExtension,
+    FernLogFile,
+    FernSetLoggerError,
+}
+impl std::fmt::Display for VInitLoggingError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "{:?}", self)
+    }
+}
+impl std::error::Error for VInitLoggingError {}
+
+pub fn init_logging() -> Result<(), VInitLoggingError> {
     fern::Dispatch::new()
         .format(|formatcallback, fmtarguments_msg, logrecord| {
             formatcallback.finish(format_args!(
@@ -16,19 +32,19 @@ pub fn init_logging() -> Result<(), failure::Error> {
         })
         .level(if_dbg_else!({log::LevelFilter::Trace}{log::LevelFilter::Info}))
         .chain(fern::log_file({
-            let mut path_log = std::env::current_exe()?;
+            let mut path_log = std::env::current_exe().map_err(|_| VInitLoggingError::CurrentExe)?;
             if !path_log.set_extension("log") {
-                bail!("set_extension error");
+                return Err(VInitLoggingError::SetExtension);
             }
             dirs::home_dir()
-                .ok_or_else(|| format_err!("home_dir error"))?
+                .ok_or(VInitLoggingError::HomeDir)?
                 .join(
                     path_log
                         .file_name()
-                        .ok_or_else(|| format_err!("file_name error"))?,
+                        .ok_or(VInitLoggingError::FileName)?,
                 )
-        })?)
-        .apply()?;
+        }).map_err(|_| VInitLoggingError::FernLogFile)?)
+        .apply().map_err(|_| VInitLoggingError::FernSetLoggerError)?;
     let fn_panic_handler_original = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panicinfo| {
         error!("panic: {}", panicinfo);
