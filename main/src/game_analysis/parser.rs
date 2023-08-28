@@ -5,7 +5,6 @@ use crate::rules::{
     parser::parse_rule_description,
 };
 use crate::primitives::cardvector::*;
-use crate::util::parser::*;
 use itertools::Itertools;
 use combine::{char::*, *};
 

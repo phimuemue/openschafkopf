@@ -4,7 +4,6 @@ pub use plain_enum::*;
 pub mod box_clone;
 #[macro_use]
 pub mod staticvalue;
-pub mod parser;
 pub mod interval;
 pub mod vecext;
 pub mod negext;
