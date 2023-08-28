@@ -42,9 +42,6 @@ serde_repr = "0"
 reqwest = "0"
 tokio = { version = "1", features = ["full"] } # TODO can we get rid of this?
 byteorder = "1"
-fern = "0"
-dirs = "2"
-log = "0"
 rhai = {version="1", features = ["sync"]}
 regex = "1"
 

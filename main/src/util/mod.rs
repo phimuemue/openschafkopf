@@ -6,13 +6,11 @@ pub mod box_clone;
 pub mod staticvalue;
 pub mod parser;
 pub mod interval;
-pub mod logging;
 pub mod vecext;
 pub mod negext;
 pub use self::{box_clone::*, staticvalue::*, interval::*, if_then::*, vecext::*, negext::*, dbg_argument::*};
 pub use derive_new::new;
 pub use failure::{bail, format_err, Error};
-pub use logging::{error, info, warn};
 pub use openschafkopf_util::*;
 #[macro_use]
 pub mod bitfield;
