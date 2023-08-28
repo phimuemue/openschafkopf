@@ -39,7 +39,6 @@ pub fn card_parser<I: Stream<Item=char>>() -> impl Parser<Input = I, Output = EC
 pub fn parse_cards<C: std::iter::Extend<ECard>+Default>(str_cards: &str) -> Option<C> {
     crate::util::parser::parse_trimmed(
         str_cards,
-        "cards",
         sep_by::<C,_,_>(card_parser(), spaces()),
     ).ok()
 }
@@ -47,7 +46,6 @@ pub fn parse_cards<C: std::iter::Extend<ECard>+Default>(str_cards: &str) -> Opti
 pub fn parse_optional_cards<C: std::iter::Extend<Option<ECard>>+Default>(str_cards: &str) -> Option<C> {
     crate::util::parser::parse_trimmed(
         str_cards,
-        "optional_cards",
         sep_by::<C,_,_>(
             choice((
                 skip_many1(char('_')).map(|_| None),

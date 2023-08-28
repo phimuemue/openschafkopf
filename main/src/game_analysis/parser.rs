@@ -146,7 +146,6 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             });
             parse_trimmed(
                 &str_tarif,
-                "tarif",
                 choice!(
                     parser_tarif!(string("P "), parser_digits),
                     parser_tarif!(
@@ -160,7 +159,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                     )
                 )
             )
-                ? // unpack result of combine::parse call
+                .map_err(|err| format_err!("Failed to parse tarif: {:?}", err))? // unpack result of combine::parse call
                 ? // unpack parsed result
         };
         SSauspielRuleset{
@@ -275,7 +274,6 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 .map(|(epi, node_gameannouncement)| -> Result<_, _> {
                     parse_trimmed(
                         node_gameannouncement.inner_html().trim(), // trim to avoid newlines // TODO move newlines into parser
-                        "gameannouncement 1",
                         (
                             username_parser(epi),
                             newline(),
@@ -287,7 +285,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                                 (string("dad gern."))
                                     .map(|_| Some(SGameAnnouncementAnonymous))
                             ))
-                    )
+                    ).map_err(|err| format_err!("Failed to parse game announcement 1: {:1}", err))
                 })
                 .collect::<Result<Vec<_>, _>>()?
         )?
@@ -296,7 +294,6 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         .map(|node_gameannouncement| {
             parse_trimmed(
                 node_gameannouncement.inner_html().trim(), // TODO move newlines to parser
-                "gameannouncement 2",
                 choice(EPlayerIndex::map_from_fn(
                     |epi| attempt((
                         username_parser(epi),
@@ -322,7 +319,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                             .skip(optional(string(" (timeout)"))),
                     ))
                 ).into_raw()),
-            )
+            ).map_err(|err| format_err!("Failed to parse game announcement 2: {:?}", err))
         })
         .collect::<Result<Vec<(EPlayerIndex, &'static str)>, _>>()?;
     if let Some(rules) = orules {
@@ -422,7 +419,6 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*
                         .and_then(|str_player_hand| {
                             parse_trimmed(
                                 str_player_hand,
-                                "<player> hat: <hand>",
                                 attempt(many1::<String,_>(alpha_num())) // TODO allow more characters for player names
                                     .skip((
                                         string(" hat: "),
@@ -431,7 +427,7 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*
                                             char(' ')
                                         ), // TODO determine ekurzlang?
                                     ))
-                            )
+                            ).map_err(|err| format_err!("Failed to parse <player> hat <hand>: {:?}", err))
                         })?
                         .to_string()
                 );
@@ -463,14 +459,13 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*
                 for _i_stich in 0..ekurzlang.cards_per_player() {
                     let (_epi, veccard) = parse_trimmed(
                         grpstr_line.next().ok_or_else(||format_err!("Expected stich"))?,
-                        "stich",
                         choice::<[_; EPlayerIndex::SIZE]>(EPlayerIndex::map_from_fn(|epi|
                             attempt((
                                 username_parser(epi).skip(string(" spielt aus: ")),
                                 sep_by::<Vec<_>,_,_>(card_parser(), char(' ')),
                             ))
                         ).into_raw()),
-                    )?;
+                    ).map_err(|err| format_err!("Failed to parse stich {:?}", err))?;
                     for card in veccard {
                         stichseq.zugeben(card, rules.as_ref());
                     }

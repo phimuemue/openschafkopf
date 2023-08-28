@@ -104,7 +104,6 @@ impl<'de> serde::Deserialize<'de> for ECard {
     {
         crate::util::parser::parse_trimmed(
             &String::deserialize(deserializer)?,
-            "card",
             crate::primitives::cardvector::card_parser(),
         ).map_err(serde::de::Error::custom)
     }
