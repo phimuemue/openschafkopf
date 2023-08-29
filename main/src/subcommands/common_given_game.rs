@@ -1,12 +1,25 @@
-use crate::ai::{
-    SAi,
-    handiterators::*,
-    gametree::EMinMaxStrategy,
+use openschafkopf_lib::{
+    ai::{
+        SAi,
+        handiterators::*,
+        gametree::EMinMaxStrategy,
+    },
+    primitives::*,
+    rules::{
+        ruleset::VStockOrT,
+        SDoublings,
+        SExpensifiers,
+        SStoss,
+        TRules,
+        TRulesBoxClone,
+        parser::parse_rule_description_simple,
+    },
 };
-use crate::primitives::*;
-use crate::util::*;
-use crate::rules::{ruleset::VStockOrT, SDoublings, SExpensifiers, SStoss, TRules, TRulesBoxClone};
+use openschafkopf_util::*;
 use itertools::Itertools;
+use failure::*;
+use plain_enum::{EnumMap, PlainEnum};
+use as_num::*;
 
 pub use super::handconstraint::*;
 
@@ -141,7 +154,7 @@ pub fn with_common_args<FnWithArgs>(
             bail!("Cards are used more than once: {}", veccard_duplicate.iter().join(", "));
         }
         let (itrules, b_single_rules) = match clapmatches.values_of("rules")
-            .map(|values| values.map(crate::rules::parser::parse_rule_description_simple))
+            .map(|values| values.map(parse_rule_description_simple))
             .into_iter()
             .flatten()
             .collect::<Result<Vec<_>,_>>()

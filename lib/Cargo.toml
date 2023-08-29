@@ -1,0 +1,37 @@
+[package]
+name = "openschafkopf_lib"
+version = "0.1.0"
+authors = ["openschafkopf"]
+edition = "2021"
+license-file = "../LICENSE"
+description = "An open source toolkit for Schafkopf, a Bavarian card game."
+
+[build-dependencies]
+openschafkopf_util = {path = "../util"}
+as_num = "0"
+resvg = "0.31"
+
+[dependencies]
+combine = "3"
+rand = "0"
+itertools = "0"
+plain_enum = "0"
+permutohedron = "0"
+arrayvec = "0"
+rayon = "1"
+toml = "0"
+as_num = "0"
+num-integer = "0"
+failure = "0" # TODO remove this dependency
+derive-new = "0"
+chrono = "0"
+# TODO can we have a cfg feature "sauspiel" that does not use the corresponding crates?
+select = "0"
+glob = "0"
+openschafkopf_util = {path = "../util"}
+serde = {version = "1", features = ["derive"]}
+serde_json = "1"
+serde_repr = "0"
+
+[dev-dependencies]
+serde_test = "1"

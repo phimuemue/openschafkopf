@@ -1,13 +1,17 @@
-use crate::game_analysis::parser::analyze_sauspiel_html;
-use crate::game::*;
-use crate::rules::{
-    SRuleStateCache,
-    ruleset::{VStockOrT},
+use openschafkopf_lib::{
+    game_analysis::parser::analyze_sauspiel_html,
+    game::*,
+    rules::{
+        SRuleStateCache,
+        ruleset::{VStockOrT},
+    },
+    primitives::*,
 };
-use crate::util::*;
+use openschafkopf_util::*;
 use itertools::Itertools;
-use crate::primitives::*;
 use std::io::Write;
+use failure::*;
+use plain_enum::PlainEnum;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     use super::shared_args::*;

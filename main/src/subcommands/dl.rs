@@ -1,7 +1,7 @@
 use futures::prelude::*;
-
-use crate::util::*;
-use crate::game_analysis::parser::analyze_sauspiel_html;
+use openschafkopf_util::*;
+use openschafkopf_lib::game_analysis::parser::analyze_sauspiel_html;
+use failure::*;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     clap::Command::new(str_subcommand)

@@ -1,8 +1,11 @@
-use crate::game_analysis::{*, parser::*};
-use crate::game::*;
-use crate::util::*;
-use crate::rules::ruleset::VStockOrT;
+use openschafkopf_lib::{
+    game_analysis::{*, parser::*},
+    game::*,
+    rules::ruleset::VStockOrT,
+};
+use openschafkopf_util::*;
 use std::borrow::Cow;
+use failure::*;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     use super::shared_args::*;

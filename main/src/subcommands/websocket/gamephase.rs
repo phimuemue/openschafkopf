@@ -1,10 +1,10 @@
-use crate::{
-    util::*,
+use openschafkopf_lib::{
     primitives::*,
     game::*,
     rules::*,
     rules::ruleset::{SRuleSet, SRuleGroup, allowed_rules, VStockOrT},
 };
+use openschafkopf_util::*;
 use serde::{Serialize, Deserialize};
 use std::mem::discriminant;
 use rand::{
@@ -12,6 +12,8 @@ use rand::{
     prelude::*,
 };
 use itertools::Itertools;
+use derive_new::new;
+use plain_enum::{EnumMap, PlainEnum};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Infallible {} // TODO use std::convert::Infallible

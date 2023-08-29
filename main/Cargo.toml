@@ -6,11 +6,6 @@ edition = "2021"
 license-file = "../LICENSE"
 description = "An open source toolkit for Schafkopf, a Bavarian card game."
 
-[build-dependencies]
-openschafkopf_util = {path = "../util"}
-as_num = "0"
-resvg = "0.31"
-
 [dependencies]
 atty = "0"
 termcolor = "1"
@@ -33,6 +28,7 @@ chrono = "0"
 select = "0"
 glob = "0"
 openschafkopf_util = {path = "../util"}
+openschafkopf_lib = {path = "../lib"}
 futures = "0.3"
 async-std = "1"
 async-tungstenite = "0"

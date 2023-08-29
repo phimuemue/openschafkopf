@@ -1,9 +1,11 @@
-use crate::ai::{*, gametree::*};
-use crate::game::*;
-use crate::player::*;
-use crate::primitives::*;
-use crate::rules::{ruleset::*, *};
-use crate::util::*;
+use openschafkopf_lib::{
+    ai::{*, gametree::*},
+    game::*,
+    player::*,
+    primitives::*,
+    rules::{ruleset::*, *},
+};
+use openschafkopf_util::*;
 use std::sync::mpsc;
 
 use super::skui;

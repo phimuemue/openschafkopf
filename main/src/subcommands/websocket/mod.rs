@@ -8,13 +8,14 @@ use std::{
     thread::{sleep, spawn},
     time::Duration,
 };
-use crate::{
-    util::*,
+use openschafkopf_lib::{
     game::*,
     rules::{*, trumpfdecider::TTrumpfDecider},
     rules::ruleset::{SRuleSet},
     primitives::*,
 };
+use openschafkopf_util::*;
+use derive_new::new;
 use futures::{
     prelude::*,
     channel::mpsc::{unbounded, UnboundedSender},
@@ -29,6 +30,8 @@ use async_tungstenite::{
     accept_async,
     tungstenite::protocol::Message,
 };
+use plain_enum::{EnumMap, PlainEnum};
+use failure::*;
 
 mod gamephase;
 use gamephase::{

@@ -1,10 +1,14 @@
 mod skui;
 mod playerhuman;
+use failure::*;
 
-use crate::game::run::run_simple_game_loop;
-use crate::player::{*, playercomputer::*};
-use crate::primitives::*;
-use crate::util::*;
+use openschafkopf_lib::{
+    game::run::run_simple_game_loop,
+    player::{*, playercomputer::*},
+    primitives::*,
+};
+use openschafkopf_util::*;
+use plain_enum::PlainEnum;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     use super::clap_arg;

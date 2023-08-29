@@ -9,12 +9,16 @@ pub mod websocket;
 mod handconstraint;
 mod common_given_game;
 
-use crate::util::*;
-use crate::rules::ruleset::{SRuleSet, TRuleSet, VStockOrT};
-use crate::ai::SAi;
-use crate::primitives::card::EKurzLang;
-use crate::game::*;
+use openschafkopf_util::*;
+use openschafkopf_lib::{
+    rules::ruleset::{SRuleSet, TRuleSet, VStockOrT},
+    ai::SAi,
+    primitives::card::EKurzLang,
+    game::*,
+};
 use std::io::Read;
+use failure::*;
+use plain_enum::PlainEnum;
 
 fn clap_arg(str_long: &'static str, str_default: &'static str) -> clap::Arg<'static> {
     clap::Arg::new(str_long)

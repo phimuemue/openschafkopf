@@ -1,18 +1,23 @@
-use crate::ai::{*, gametree::*, stichoracle::SFilterByOracle, cardspartition::*};
-use crate::primitives::*;
-use crate::util::*;
-use itertools::*;
-use crate::game_analysis::determine_best_card_table::{
-    table,
-    internal_table,
-    SFormatInfo,
-    SOutputLine,
-    SPayoutStatsTable,
+use openschafkopf_lib::{
+    ai::{*, gametree::*, stichoracle::SFilterByOracle, cardspartition::*},
+    primitives::*,
+    game_analysis::determine_best_card_table::{
+        table,
+        internal_table,
+        SFormatInfo,
+        SOutputLine,
+        SPayoutStatsTable,
+    },
 };
+use openschafkopf_util::*;
+use itertools::*;
 use rayon::prelude::*;
 use serde::Serialize;
-
+use failure::*;
+use derive_new::new;
+use plain_enum::PlainEnum;
 use super::common_given_game::*;
+use as_num::*;
 
 // TODO? can we make this a fn of SPayoutStatsTable?
 fn print_payoutstatstable<T: std::fmt::Display>(

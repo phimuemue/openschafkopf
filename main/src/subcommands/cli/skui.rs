@@ -1,8 +1,12 @@
-use crate::game::*;
-use crate::primitives::*;
-use crate::rules::*;
-use crate::util::*;
+use openschafkopf_lib::{
+    game::*,
+    primitives::*,
+    rules::*,
+};
+use openschafkopf_util::*;
 use itertools::Itertools;
+use plain_enum::{plain_enum_mod, EnumMap, PlainEnum};
+use as_num::*;
 
 // TODO do we update output too often?
 
@@ -61,7 +65,11 @@ plain_enum_mod!(moderelativeplayerposition, ERelativePlayerPosition {
     Right,
 });
 
-impl EPlayerIndex {
+trait TEplayerIndexExt { // TODO? move to lib?
+    fn to_relativeplayerposition(self, epi_myself: EPlayerIndex) -> ERelativePlayerPosition;
+}
+
+impl TEplayerIndexExt for EPlayerIndex {
     fn to_relativeplayerposition(self, epi_myself: EPlayerIndex) -> ERelativePlayerPosition {
         static_assert!(assert_eq(EPlayerIndex::SIZE, ERelativePlayerPosition::SIZE));
         match self.wrapped_difference(epi_myself).0 {

@@ -5,14 +5,16 @@ use itertools::Itertools;
 //use openschafkopf_util::*;
 use serde_json::json;
 use std::io::{Read, Write};
-use crate::{
+use openschafkopf_lib::{
     primitives::{
         cardvector::parse_cards,
         eplayerindex::EPlayerIndex,
     },
     rules::parser::parse_rule_description_simple,
-    util::*,
 };
+use openschafkopf_util::*;
+use plain_enum::PlainEnum;
+use as_num::*;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     clap::Command::new(str_subcommand)

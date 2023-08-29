@@ -1,6 +1,8 @@
-use crate::util::*;
+use openschafkopf_util::*;
 use itertools::Itertools;
 use super::common_given_game::*;
+use failure::*;
+use as_num::*;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     subcommand_given_game(str_subcommand, "Statistics about hands that could be dealt.")

@@ -11,17 +11,10 @@
 ))]
 #![cfg_attr(all(not(debug_assertions), feature="cargo-clippy"), allow(clippy::let_and_return))]
 
-#[macro_use]
-mod util;
-mod ai;
-mod game;
-mod game_analysis;
-mod player;
-mod primitives;
-mod rules;
 mod subcommands;
 
-use crate::util::*;
+use openschafkopf_util::*;
+use failure::*;
 
 fn main() -> Result<(), Error> {
     logging::init_logging("openschafkopf")?; // TODO? split for certain subcommands (e.g. webext)

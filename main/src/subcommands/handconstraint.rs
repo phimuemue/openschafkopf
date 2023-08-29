@@ -1,6 +1,11 @@
-use crate::primitives::*;
-use crate::util::*;
-use crate::rules::*;
+use openschafkopf_lib::{
+    primitives::*,
+    rules::*,
+};
+use openschafkopf_util::*;
+use failure::*;
+use plain_enum::{PlainEnum, EnumMap};
+use as_num::*;
 
 #[derive(Debug)]
 pub struct SConstraint {
