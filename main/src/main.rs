@@ -1,14 +1,7 @@
 #![cfg_attr(feature = "cargo-clippy", allow(
     clippy::blocks_in_if_conditions,
-    clippy::just_underscores_and_digits,
-    clippy::upper_case_acronyms,
-    clippy::new_without_default,
-    clippy::enum_variant_names,
-    clippy::let_unit_value,
-    clippy::nonminimal_bool, // TODO? I got this lint, but could not see where the expression could be simplified.
     clippy::clone_on_copy, // TODORUST I think that some types that implement Copy should not implement it (in particular: large arrays)
 ))]
-#![cfg_attr(all(not(debug_assertions), feature="cargo-clippy"), allow(clippy::let_and_return))]
 
 mod subcommands;
 
