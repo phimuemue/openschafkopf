@@ -2,7 +2,6 @@
     clippy::blocks_in_if_conditions,
     clippy::just_underscores_and_digits,
     clippy::upper_case_acronyms,
-    clippy::type_complexity, // TODO could this be solved via type-complexity-threshold?
     clippy::new_without_default,
     clippy::enum_variant_names,
     clippy::let_unit_value,
