@@ -16,11 +16,6 @@ pub mod bitfield;
 #[macro_use]
 pub mod dbg_argument;
 
-// TODORUST this macro should not be necessary
-macro_rules! type_inference{($type:ty, $e:expr) => {
-    $e as $type
-}}
-
 // TODORUST return impl
 macro_rules! return_impl {
     ($t:ty) => {

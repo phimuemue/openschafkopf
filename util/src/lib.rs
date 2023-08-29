@@ -27,3 +27,6 @@ pub mod logging;
 pub use logging::{error, info, warn};
 pub mod parser;
 pub use parser::*;
+#[macro_use]
+pub mod type_inference;
+pub use type_inference::*;
