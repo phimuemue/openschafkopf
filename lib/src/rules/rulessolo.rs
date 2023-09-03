@@ -476,7 +476,7 @@ type_dispatch_enum!(pub enum VPayoutDeciderSoloLike {
     Sie(SPayoutDeciderSie),
 });
 
-pub type STrumpfDeciderSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<STrumpfDeciderSchlag<TrumpfFarbDecider>>;
+pub type STrumpfDeciderSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<TrumpfFarbDecider>;
 pub type STrumpfDecider1Primary<TrumpfFarbDecider> = STrumpfDeciderSchlag<TrumpfFarbDecider>;
 
 pub fn sololike(
@@ -513,9 +513,9 @@ pub fn sololike(
             Some(efarbe) => (efarbe, format!("{}-", efarbe)),
         },
         match (esololike) {
-            ESoloLike::Solo => (|trumpfdecider_farbe| STrumpfDeciderSolo::new(ESchlag::Ober, STrumpfDeciderSchlag::new(ESchlag::Unter, trumpfdecider_farbe)), "Solo"),
-            ESoloLike::Wenz => (|trumpfdecider_farbe| STrumpfDecider1Primary::new(ESchlag::Unter, trumpfdecider_farbe), "Wenz"),
-            ESoloLike::Geier => (|trumpfdecider_farbe| STrumpfDecider1Primary::new(ESchlag::Ober, trumpfdecider_farbe), "Geier"),
+            ESoloLike::Solo => (|trumpfdecider_farbe| STrumpfDeciderSolo::new(&[ESchlag::Ober, ESchlag::Unter], trumpfdecider_farbe), "Solo"),
+            ESoloLike::Wenz => (|trumpfdecider_farbe| STrumpfDecider1Primary::new(&[ESchlag::Unter], trumpfdecider_farbe), "Wenz"),
+            ESoloLike::Geier => (|trumpfdecider_farbe| STrumpfDecider1Primary::new(&[ESchlag::Ober], trumpfdecider_farbe), "Geier"),
         },
         match (payoutdecider_in) {
             VPayoutDeciderSoloLike::PointBased(payoutdecider) => (payoutdecider, ""),
@@ -571,17 +571,17 @@ pub fn sololike(
 fn test_trumpfdecider() {
     use crate::primitives::card::ECard::*;
     assert_eq!(
-        STrumpfDeciderSolo::new(ESchlag::Ober, STrumpfDeciderSchlag::new(ESchlag::Unter, SStaticFarbeGras{}))
+        STrumpfDeciderSolo::new(&[ESchlag::Ober, ESchlag::Unter], SStaticFarbeGras{})
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EO, GO, HO, SO, EU, GU, HU, SU, GA, GZ, GK, G9, G8, G7],
     );
     assert_eq!(
-        STrumpfDecider1Primary::new(ESchlag::Unter, EFarbe::Gras)
+        STrumpfDecider1Primary::new(&[ESchlag::Unter], EFarbe::Gras)
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU, GA, GZ, GK, GO, G9, G8, G7],
     );
     assert_eq!(
-        STrumpfDecider1Primary::new(ESchlag::Unter, STrumpfDeciderNoTrumpf::<SCompareFarbcardsSimple>::default())
+        STrumpfDecider1Primary::new(&[ESchlag::Unter], STrumpfDeciderNoTrumpf::<SCompareFarbcardsSimple>::default())
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU],
     );

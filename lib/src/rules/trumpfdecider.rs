@@ -80,13 +80,13 @@ impl<CompareFarbcards: TCompareFarbcards> TTrumpfDecider for STrumpfDeciderNoTru
 
 #[derive(Clone, Debug, new)]
 pub struct STrumpfDeciderSchlag<DeciderSec> {
-    schlag: ESchlag,
+    slcschlag: &'static [ESchlag],
     trumpfdecider_sec: DeciderSec,
 }
 
 impl<DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<DeciderSec> {
     fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
-        if self.schlag.value() == card.schlag() {
+        if self.slcschlag.contains(&card.schlag()) {
             VTrumpfOrFarbe::Trumpf
         } else {
             self.trumpfdecider_sec.trumpforfarbe(card)
@@ -94,27 +94,37 @@ impl<DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<Decider
     }
     type ItCardTrumpf = Box<dyn Iterator<Item=ECard>>; // TODO concrete type
     fn trumpfs_in_descending_order(&self, ) -> return_impl!(Self::ItCardTrumpf) {
-        let eschlag = self.schlag.value();
+        let slcschlag = self.slcschlag;
         Box::new(
-            EFarbe::values()
-                .map(move |efarbe| ECard::new(efarbe, eschlag))
+            slcschlag.iter().copied()
+                .flat_map(move |eschlag|
+                    EFarbe::values()
+                        .map(move |efarbe| ECard::new(efarbe, eschlag))
+                )
                 .chain(
                     self.trumpfdecider_sec.trumpfs_in_descending_order()
-                        .filter(move |card| eschlag!=card.schlag())
+                        .filter(move |card| !slcschlag.contains(&card.schlag()))
                 )
         )
     }
     fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering> {
-        match (self.schlag.value()==card_fst.schlag(), self.schlag.value()==card_snd.schlag()) {
-            (true, true) => {
-                static_assert!(assert(EFarbe::Eichel < EFarbe::Gras, "Farb-Sorting can't be used here"));
-                static_assert!(assert(EFarbe::Gras < EFarbe::Herz, "Farb-Sorting can't be used here"));
-                static_assert!(assert(EFarbe::Herz < EFarbe::Schelln, "Farb-Sorting can't be used here"));
-                Some(card_snd.farbe().cmp(&card_fst.farbe()))
-            },
-            (true, false) => Some(Ordering::Greater),
-            (false, true) => Some(Ordering::Less),
-            (false, false) => self.trumpfdecider_sec.compare_cards(card_fst, card_snd),
+        let find_schlag = |schlag_card| self.slcschlag.iter().position(|&schlag_trumpf| schlag_trumpf==schlag_card);
+        match (find_schlag(card_fst.schlag()), find_schlag(card_snd.schlag())) {
+            (Some(i_fst), Some(i_snd)) => Some({
+                match i_fst.cmp(&i_snd) {
+                    Ordering::Less => Ordering::Greater,
+                    Ordering::Greater => Ordering::Less,
+                    Ordering::Equal => {
+                        static_assert!(assert(EFarbe::Eichel < EFarbe::Gras, "Farb-Sorting can't be used here"));
+                        static_assert!(assert(EFarbe::Gras < EFarbe::Herz, "Farb-Sorting can't be used here"));
+                        static_assert!(assert(EFarbe::Herz < EFarbe::Schelln, "Farb-Sorting can't be used here"));
+                        card_snd.farbe().cmp(&card_fst.farbe())
+                    },
+                }
+            }),
+            (Some(_i_fst), None) => Some(Ordering::Greater),
+            (None, Some(_i_snd)) => Some(Ordering::Less),
+            (None, None) => self.trumpfdecider_sec.compare_cards(card_fst, card_snd),
         }
     }
 }
@@ -159,7 +169,7 @@ macro_rules! impl_rules_trumpf {() => {
 
 #[test]
 fn test_equivalent_when_on_same_hand_trumpfdecider() {
-    let maptrumpforfarbeveccard = STrumpfDeciderSchlag::new(ESchlag::Ober, STrumpfDeciderSchlag::new(ESchlag::Unter, SStaticFarbeHerz{})).equivalent_when_on_same_hand();
+    let maptrumpforfarbeveccard = STrumpfDeciderSchlag::new(&[ESchlag::Ober, ESchlag::Unter], SStaticFarbeHerz{}).equivalent_when_on_same_hand();
     fn assert_eq_cards(slccard_lhs: &[ECard], slccard_rhs: &[ECard]) {
         assert_eq!(slccard_lhs, slccard_rhs);
     }
