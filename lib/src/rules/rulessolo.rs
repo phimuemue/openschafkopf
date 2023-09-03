@@ -476,8 +476,8 @@ type_dispatch_enum!(pub enum VPayoutDeciderSoloLike {
     Sie(SPayoutDeciderSie),
 });
 
-pub type STrumpfDeciderSolo = STrumpfDeciderSchlag<Option<EFarbe>>;
-pub type STrumpfDecider1Primary = STrumpfDeciderSchlag<Option<EFarbe>>;
+pub type STrumpfDeciderSolo = STrumpfDeciderSchlag;
+pub type STrumpfDecider1Primary = STrumpfDeciderSchlag;
 
 pub fn sololike(
     epi: EPlayerIndex,

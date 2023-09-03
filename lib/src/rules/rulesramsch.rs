@@ -44,7 +44,7 @@ impl fmt::Display for SRulesRamsch {
     }
 }
 
-pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag<Option<EFarbe>>;
+pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag;
 
 impl TRules for SRulesRamsch {
     impl_rules_trumpf!();
