@@ -256,7 +256,7 @@ impl SPlayers {
                 if let Some(rules) = sendtoplayers.orules {
                     rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
                 } else {
-                    STrumpfDeciderSchlag::new(&[ESchlag::Ober, ESchlag::Unter], SStaticFarbeHerz{})
+                    STrumpfDeciderSchlag::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz))
                         .sort_cards_first_trumpf_then_farbe(&mut veccard)
                 }
                 communicate(
