@@ -134,7 +134,10 @@ impl TTrumpfDecider for STrumpfDeciderSchlag {
                     (true, true) => Some(SCompareFarbcardsSimple::compare_farbcards(card_fst, card_snd)),
                     (true, false) => Some(Ordering::Greater),
                     (false, true) => Some(Ordering::Less),
-                    (false, false) => STrumpfDeciderNoTrumpf::<SCompareFarbcardsSimple>{phantom: PhantomData}.compare_cards(card_fst, card_snd),
+                    (false, false) => if_then_some!(
+                        card_fst.farbe()==card_snd.farbe(),
+                        SCompareFarbcardsSimple::compare_farbcards(card_fst, card_snd)
+                    ),
                 }
             }
         }
