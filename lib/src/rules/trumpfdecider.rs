@@ -129,9 +129,9 @@ impl<DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<Decider
     }
 }
 
-impl<Farbe: TStaticOrDynamicValue<EFarbe> + Send + fmt::Debug + Copy + Sync + 'static> TTrumpfDecider for Farbe {
+impl TTrumpfDecider for Option<EFarbe> {
     fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
-        if (*self).value() == card.farbe() {
+        if self == &Some(card.farbe()) {
             VTrumpfOrFarbe::Trumpf
         } else {
             VTrumpfOrFarbe::Farbe(card.farbe())
@@ -139,14 +139,15 @@ impl<Farbe: TStaticOrDynamicValue<EFarbe> + Send + fmt::Debug + Copy + Sync + 's
     }
     type ItCardTrumpf = Box<dyn Iterator<Item=ECard>>; // TODO concrete type
     fn trumpfs_in_descending_order(&self, ) -> return_impl!(Self::ItCardTrumpf) {
-        let efarbe = (*self).value();
         Box::new(
-            ESchlag::values()
-                .map(move |eschlag| ECard::new(efarbe, eschlag))
+            self.clone().into_iter().flat_map(|efarbe|
+                ESchlag::values()
+                    .map(move |eschlag| ECard::new(efarbe, eschlag))
+            )
         )
     }
     fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering> {
-        match ((*self).value()==card_fst.farbe(), (*self).value()==card_snd.farbe()) {
+        match (self==&Some(card_fst.farbe()), self==&Some(card_snd.farbe())) {
             (true, true) => Some(SCompareFarbcardsSimple::compare_farbcards(card_fst, card_snd)),
             (true, false) => Some(Ordering::Greater),
             (false, true) => Some(Ordering::Less),
@@ -169,7 +170,7 @@ macro_rules! impl_rules_trumpf {() => {
 
 #[test]
 fn test_equivalent_when_on_same_hand_trumpfdecider() {
-    let maptrumpforfarbeveccard = STrumpfDeciderSchlag::new(&[ESchlag::Ober, ESchlag::Unter], SStaticFarbeHerz{}).equivalent_when_on_same_hand();
+    let maptrumpforfarbeveccard = STrumpfDeciderSchlag::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz)).equivalent_when_on_same_hand();
     fn assert_eq_cards(slccard_lhs: &[ECard], slccard_rhs: &[ECard]) {
         assert_eq!(slccard_lhs, slccard_rhs);
     }

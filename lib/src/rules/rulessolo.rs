@@ -476,8 +476,8 @@ type_dispatch_enum!(pub enum VPayoutDeciderSoloLike {
     Sie(SPayoutDeciderSie),
 });
 
-pub type STrumpfDeciderSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<TrumpfFarbDecider>;
-pub type STrumpfDecider1Primary<TrumpfFarbDecider> = STrumpfDeciderSchlag<TrumpfFarbDecider>;
+pub type STrumpfDeciderSolo = STrumpfDeciderSchlag<Option<EFarbe>>;
+pub type STrumpfDecider1Primary = STrumpfDeciderSchlag<Option<EFarbe>>;
 
 pub fn sololike(
     epi: EPlayerIndex,
@@ -509,8 +509,8 @@ pub fn sololike(
     cartesian_match!(
         sololike_internal,
         match (oefarbe) {
-            None => (STrumpfDeciderNoTrumpf::<SCompareFarbcardsSimple>::default(), ""),
-            Some(efarbe) => (efarbe, format!("{}-", efarbe)),
+            None => (None, ""),
+            Some(efarbe) => (Some(efarbe), format!("{}-", efarbe)),
         },
         match (esololike) {
             ESoloLike::Solo => (|trumpfdecider_farbe| STrumpfDeciderSolo::new(&[ESchlag::Ober, ESchlag::Unter], trumpfdecider_farbe), "Solo"),
@@ -571,17 +571,17 @@ pub fn sololike(
 fn test_trumpfdecider() {
     use crate::primitives::card::ECard::*;
     assert_eq!(
-        STrumpfDeciderSolo::new(&[ESchlag::Ober, ESchlag::Unter], SStaticFarbeGras{})
+        STrumpfDeciderSolo::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Gras))
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EO, GO, HO, SO, EU, GU, HU, SU, GA, GZ, GK, G9, G8, G7],
     );
     assert_eq!(
-        STrumpfDecider1Primary::new(&[ESchlag::Unter], EFarbe::Gras)
+        STrumpfDecider1Primary::new(&[ESchlag::Unter], Some(EFarbe::Gras))
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU, GA, GZ, GK, GO, G9, G8, G7],
     );
     assert_eq!(
-        STrumpfDecider1Primary::new(&[ESchlag::Unter], STrumpfDeciderNoTrumpf::<SCompareFarbcardsSimple>::default())
+        STrumpfDecider1Primary::new(&[ESchlag::Unter], None)
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU],
     );
