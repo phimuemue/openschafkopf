@@ -168,14 +168,17 @@ impl SRuleSet {
                     let n_lauf_lbound = read_int(tomlval_game, "lauf-min").or_else(|_err| fallback(&format!("{}.lauf-min", $str_rule_name_file), "lauf-min"))?;
                     Ok(vecrulegroup.push(SRuleGroup{
                         str_name: $str_group_name.to_string(),
-                        vecorules: ($fn_rules(SPayoutDeciderParams::new(
-                            n_payout_base.as_num(),
-                            /*n_payout_schneider_schwarz*/n_payout_extra.as_num(),
-                            SLaufendeParams::new(
-                                /*n_payout_per_lauf*/n_payout_extra.as_num(),
-                                n_lauf_lbound.as_num(),
-                            ),
-                        ))),
+                        vecorules: {
+                            #[allow(clippy::redundant_closure_call)]
+                            $fn_rules(SPayoutDeciderParams::new(
+                                n_payout_base.as_num(),
+                                /*n_payout_schneider_schwarz*/n_payout_extra.as_num(),
+                                SLaufendeParams::new(
+                                    /*n_payout_per_lauf*/n_payout_extra.as_num(),
+                                    n_lauf_lbound.as_num(),
+                                ),
+                            ))
+                        },
                     })) as Result<_, Error>
                 } else {
                     Ok(())

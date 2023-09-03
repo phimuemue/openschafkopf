@@ -502,7 +502,10 @@ pub fn sololike(
     ) => {
         Box::new(SRulesSoloLike{
             payoutdecider: $payoutdecider,
-            trumpfdecider: $trumpfdecider_core($trumpfdecider_farbe),
+            trumpfdecider: {
+                #[allow(clippy::redundant_closure_call)]
+                $trumpfdecider_core($trumpfdecider_farbe)
+            },
             epi,
             str_name: format!("{}{}{}", $str_oefarbe, $str_esololike, $str_payoutdecider),
             of_heuristic_active_occurence_probability: $of_heuristic_active_occurence_probability,

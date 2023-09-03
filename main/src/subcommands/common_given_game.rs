@@ -289,37 +289,40 @@ pub fn with_common_args<FnWithArgs>(
                     println!("Hand(s): {}", str_ahand);
                 }
                 fn_with_args(
-                    Box::new($fn_take($itahand_factory(
-                        &stichseq,
-                        ahand_with_holes.clone(),
-                        epi_position,
-                        rules,
-                        &expensifiers.vecstoss,
-                        /*fn_inspect*/|b_valid_so_far, ahand| {
-                            n_ahand_seen += 1;
-                            let b_valid = b_valid_so_far
-                                && oconstraint.as_ref().map_or(true, |relation|
-                                    relation.eval(ahand, rules.box_clone())
-                                );
-                            if b_valid {
-                                n_ahand_valid += 1;
+                    Box::new(
+                        #[allow(clippy::redundant_closure_call)]
+                        $fn_take($itahand_factory(
+                            &stichseq,
+                            ahand_with_holes.clone(),
+                            epi_position,
+                            rules,
+                            &expensifiers.vecstoss,
+                            /*fn_inspect*/|b_valid_so_far, ahand| {
+                                n_ahand_seen += 1;
+                                let b_valid = b_valid_so_far
+                                    && oconstraint.as_ref().map_or(true, |relation|
+                                        relation.eval(ahand, rules.box_clone())
+                                    );
+                                if b_valid {
+                                    n_ahand_valid += 1;
+                                }
+                                if b_verbose {
+                                    println!("{} {}/{}/{} {}",
+                                        if b_valid {
+                                            '>'
+                                        } else {
+                                            '|'
+                                        },
+                                        n_ahand_valid,
+                                        n_ahand_seen,
+                                        $n_ahand_total,
+                                        display_card_slices(&ahand, &rules, " | "),
+                                    )
+                                }
+                                b_valid
                             }
-                            if b_verbose {
-                                println!("{} {}/{}/{} {}",
-                                    if b_valid {
-                                        '>'
-                                    } else {
-                                        '|'
-                                    },
-                                    n_ahand_valid,
-                                    n_ahand_seen,
-                                    $n_ahand_total,
-                                    display_card_slices(&ahand, &rules, " | "),
-                                )
-                            }
-                            b_valid
-                        }
-                    ))),
+                        ))
+                    ),
                     rules,
                     &stichseq,
                     &ahand_with_holes,

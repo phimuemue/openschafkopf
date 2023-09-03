@@ -391,6 +391,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                                 macro_rules! fwd{(($fn_before:expr, $fn_after:expr, $func_filter_allowed_cards:expr), ($snapshotcache:expr),) => {{
                                     let input_to_after = $fn_before;
                                     let output = next_step!($func_filter_allowed_cards, $snapshotcache);
+                                    #[allow(clippy::redundant_closure_call)]
                                     $fn_after(input_to_after);
                                     output
                                 }}}
