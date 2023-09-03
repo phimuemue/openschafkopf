@@ -32,7 +32,7 @@ impl SRulesRamsch {
         Self {
             n_price,
             durchmarsch,
-            trumpfdecider: STrumpfDeciderRamsch::new(ESchlag::Ober, STrumpfDeciderSchlag::new(ESchlag::Unter, Default::default())),
+            trumpfdecider: STrumpfDeciderRamsch::new(&[ESchlag::Ober, ESchlag::Unter], Default::default()),
             ojungfrau,
         }
     }
@@ -44,7 +44,7 @@ impl fmt::Display for SRulesRamsch {
     }
 }
 
-pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag<STrumpfDeciderSchlag<SStaticFarbeHerz>>;
+pub type STrumpfDeciderRamsch = STrumpfDeciderSchlag<SStaticFarbeHerz>;
 
 impl TRules for SRulesRamsch {
     impl_rules_trumpf!();
