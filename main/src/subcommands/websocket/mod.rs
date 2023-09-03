@@ -10,7 +10,7 @@ use std::{
 };
 use openschafkopf_lib::{
     game::*,
-    rules::{*, trumpfdecider::TTrumpfDecider},
+    rules::trumpfdecider::{STrumpfDeciderSchlag, TTrumpfDecider},
     rules::ruleset::{SRuleSet},
     primitives::*,
 };
@@ -256,7 +256,7 @@ impl SPlayers {
                 if let Some(rules) = sendtoplayers.orules {
                     rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
                 } else {
-                    rulesrufspiel::STrumpfDeciderRufspiel::default()
+                    STrumpfDeciderSchlag::new(ESchlag::Ober, STrumpfDeciderSchlag::new(ESchlag::Unter, SStaticFarbeHerz{}))
                         .sort_cards_first_trumpf_then_farbe(&mut veccard)
                 }
                 communicate(

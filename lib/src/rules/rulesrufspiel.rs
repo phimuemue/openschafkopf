@@ -97,10 +97,7 @@ impl<RufspielPayout: TRufspielPayout> fmt::Display for SRulesRufspielGeneric<Ruf
     }
 }
 
-pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag<
-    SStaticSchlagOber, STrumpfDeciderSchlag<
-    SStaticSchlagUnter, 
-    SStaticFarbeHerz>>;
+pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag<STrumpfDeciderSchlag<SStaticFarbeHerz>>;
 
 impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
     pub fn new(epi: EPlayerIndex, efarbe: EFarbe, payoutparams: SPayoutDeciderParams, stossparams: SStossParams) -> SRulesRufspiel {
@@ -110,7 +107,7 @@ impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
             rufspielpayout: SRufspielPayout {
                 payoutdecider: SPayoutDeciderPointBased::new(payoutparams, SPointsToWin61{}),
             },
-            trumpfdecider: STrumpfDeciderRufspiel::default(),
+            trumpfdecider: STrumpfDeciderRufspiel::new(ESchlag::Ober, STrumpfDeciderSchlag::new(ESchlag::Unter, Default::default())),
             stossparams,
         }
     }

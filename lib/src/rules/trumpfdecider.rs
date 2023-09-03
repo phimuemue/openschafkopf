@@ -78,13 +78,13 @@ impl<CompareFarbcards: TCompareFarbcards> TTrumpfDecider for STrumpfDeciderNoTru
     }
 }
 
-#[derive(Clone, Debug, Default, new)]
-pub struct STrumpfDeciderSchlag<Schlag, DeciderSec> {
-    schlag: Schlag,
+#[derive(Clone, Debug, new)]
+pub struct STrumpfDeciderSchlag<DeciderSec> {
+    schlag: ESchlag,
     trumpfdecider_sec: DeciderSec,
 }
 
-impl<Schlag: TStaticOrDynamicValue<ESchlag>+Send+fmt::Debug+Copy+Sync+'static, DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<Schlag, DeciderSec> {
+impl<DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<DeciderSec> {
     fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
         if self.schlag.value() == card.schlag() {
             VTrumpfOrFarbe::Trumpf
@@ -159,10 +159,7 @@ macro_rules! impl_rules_trumpf {() => {
 
 #[test]
 fn test_equivalent_when_on_same_hand_trumpfdecider() {
-    type TrumpfDecider = STrumpfDeciderSchlag<
-        SStaticSchlagOber, STrumpfDeciderSchlag<
-        SStaticSchlagUnter, SStaticFarbeHerz>>;
-    let maptrumpforfarbeveccard = TrumpfDecider::default().equivalent_when_on_same_hand();
+    let maptrumpforfarbeveccard = STrumpfDeciderSchlag::new(ESchlag::Ober, STrumpfDeciderSchlag::new(ESchlag::Unter, SStaticFarbeHerz{})).equivalent_when_on_same_hand();
     fn assert_eq_cards(slccard_lhs: &[ECard], slccard_rhs: &[ECard]) {
         assert_eq!(slccard_lhs, slccard_rhs);
     }
