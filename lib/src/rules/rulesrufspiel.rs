@@ -97,7 +97,7 @@ impl<RufspielPayout: TRufspielPayout> fmt::Display for SRulesRufspielGeneric<Ruf
     }
 }
 
-pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag<Option<EFarbe>>;
+pub type STrumpfDeciderRufspiel = STrumpfDeciderSchlag;
 
 impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
     pub fn new(epi: EPlayerIndex, efarbe: EFarbe, payoutparams: SPayoutDeciderParams, stossparams: SStossParams) -> SRulesRufspiel {

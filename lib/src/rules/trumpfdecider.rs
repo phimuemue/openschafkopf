@@ -79,17 +79,17 @@ impl<CompareFarbcards: TCompareFarbcards> TTrumpfDecider for STrumpfDeciderNoTru
 }
 
 #[derive(Clone, Debug, new)]
-pub struct STrumpfDeciderSchlag<DeciderSec> {
+pub struct STrumpfDeciderSchlag {
     slcschlag: &'static [ESchlag],
-    trumpfdecider_sec: DeciderSec,
+    oefarbe: Option<EFarbe>,
 }
 
-impl<DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<DeciderSec> {
+impl TTrumpfDecider for STrumpfDeciderSchlag {
     fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
         if self.slcschlag.contains(&card.schlag()) {
             VTrumpfOrFarbe::Trumpf
         } else {
-            self.trumpfdecider_sec.trumpforfarbe(card)
+            self.oefarbe.trumpforfarbe(card)
         }
     }
     type ItCardTrumpf = Box<dyn Iterator<Item=ECard>>; // TODO concrete type
@@ -102,7 +102,7 @@ impl<DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<Decider
                         .map(move |efarbe| ECard::new(efarbe, eschlag))
                 )
                 .chain(
-                    self.trumpfdecider_sec.trumpfs_in_descending_order()
+                    self.oefarbe.trumpfs_in_descending_order()
                         .filter(move |card| !slcschlag.contains(&card.schlag()))
                 )
         )
@@ -124,7 +124,7 @@ impl<DeciderSec: TTrumpfDecider> TTrumpfDecider for STrumpfDeciderSchlag<Decider
             }),
             (Some(_i_fst), None) => Some(Ordering::Greater),
             (None, Some(_i_snd)) => Some(Ordering::Less),
-            (None, None) => self.trumpfdecider_sec.compare_cards(card_fst, card_snd),
+            (None, None) => self.oefarbe.compare_cards(card_fst, card_snd),
         }
     }
 }
