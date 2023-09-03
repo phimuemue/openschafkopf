@@ -476,14 +476,8 @@ type_dispatch_enum!(pub enum VPayoutDeciderSoloLike {
     Sie(SPayoutDeciderSie),
 });
 
-pub type STrumpfDeciderSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<
-    SStaticSchlagOber,
-    STrumpfDeciderSchlag<
-        SStaticSchlagUnter,
-        TrumpfFarbDecider
-    >
->;
-pub type STrumpfDecider1Primary<TrumpfFarbDecider> = STrumpfDeciderSchlag<ESchlag, TrumpfFarbDecider>;
+pub type STrumpfDeciderSolo<TrumpfFarbDecider> = STrumpfDeciderSchlag<STrumpfDeciderSchlag<TrumpfFarbDecider>>;
+pub type STrumpfDecider1Primary<TrumpfFarbDecider> = STrumpfDeciderSchlag<TrumpfFarbDecider>;
 
 pub fn sololike(
     epi: EPlayerIndex,
@@ -519,7 +513,7 @@ pub fn sololike(
             Some(efarbe) => (efarbe, format!("{}-", efarbe)),
         },
         match (esololike) {
-            ESoloLike::Solo => (|trumpfdecider_farbe| STrumpfDeciderSolo::new(SStaticSchlagOber{}, STrumpfDeciderSchlag::new(SStaticSchlagUnter{}, trumpfdecider_farbe)), "Solo"),
+            ESoloLike::Solo => (|trumpfdecider_farbe| STrumpfDeciderSolo::new(ESchlag::Ober, STrumpfDeciderSchlag::new(ESchlag::Unter, trumpfdecider_farbe)), "Solo"),
             ESoloLike::Wenz => (|trumpfdecider_farbe| STrumpfDecider1Primary::new(ESchlag::Unter, trumpfdecider_farbe), "Wenz"),
             ESoloLike::Geier => (|trumpfdecider_farbe| STrumpfDecider1Primary::new(ESchlag::Ober, trumpfdecider_farbe), "Geier"),
         },
@@ -577,7 +571,7 @@ pub fn sololike(
 fn test_trumpfdecider() {
     use crate::primitives::card::ECard::*;
     assert_eq!(
-        STrumpfDeciderSolo::<SStaticFarbeGras>::default()
+        STrumpfDeciderSolo::new(ESchlag::Ober, STrumpfDeciderSchlag::new(ESchlag::Unter, SStaticFarbeGras{}))
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EO, GO, HO, SO, EU, GU, HU, SU, GA, GZ, GK, G9, G8, G7],
     );
