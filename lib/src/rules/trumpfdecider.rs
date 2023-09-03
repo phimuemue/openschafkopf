@@ -79,36 +79,41 @@ impl<CompareFarbcards: TCompareFarbcards> TTrumpfDecider for STrumpfDeciderNoTru
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct STrumpfDeciderSchlag {
+#[derive(Clone, Debug, new)]
+pub struct STrumpfDeciderInternal {
     slcschlag: &'static [ESchlag],
     oefarbe: Option<EFarbe>,
+}
+
+#[derive(Clone, Debug)]
+pub struct STrumpfDeciderSchlag {
+    trumpfdecider: STrumpfDeciderInternal,
     veccard_trumpf_in_descending_order: ArrayVec<ECard, {ECard::SIZE}>,
 }
 
 impl STrumpfDeciderSchlag {
     pub fn new(slcschlag: &'static [ESchlag], oefarbe: Option<EFarbe>) -> Self {
-        let veccard_trumpf_in_descending_order = itertools::chain(
-            slcschlag.iter().copied()
-                .flat_map(move |eschlag|
-                    EFarbe::values()
-                        .map(move |efarbe| ECard::new(efarbe, eschlag))
+        let trumpfdecider = STrumpfDeciderInternal::new(slcschlag, oefarbe);
+        let mut veccard_trumpf_in_descending_order : ArrayVec::<ECard, {ECard::SIZE}> = <ECard as PlainEnum>::values()
+            .filter(|&card| trumpfdecider.trumpforfarbe(card).is_trumpf())
+            .collect();
+        veccard_trumpf_in_descending_order.sort_unstable_by(|&card_lhs, &card_rhs| {
+            verify_ne!(
+                verify_eq!(
+                    unwrap!(trumpfdecider.compare_cards(card_lhs, card_rhs)),
+                    unwrap!(trumpfdecider.compare_cards(card_rhs, card_lhs)).reverse()
                 ),
-            oefarbe.clone().into_iter().flat_map(|efarbe|
-                ESchlag::values()
-                    .map(move |eschlag| ECard::new(efarbe, eschlag))
-            )
-                .filter(move |card| !slcschlag.contains(&card.schlag()))
-        ).collect();
+                Ordering::Equal
+            ).reverse()
+        });
         Self {
-            slcschlag,
-            oefarbe,
+            trumpfdecider,
             veccard_trumpf_in_descending_order,
         }
     }
 }
 
-impl TTrumpfDecider for STrumpfDeciderSchlag {
+impl STrumpfDeciderInternal {
     fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
         if self.slcschlag.contains(&card.schlag()) {
             VTrumpfOrFarbe::Trumpf
@@ -117,10 +122,6 @@ impl TTrumpfDecider for STrumpfDeciderSchlag {
         } else {
             VTrumpfOrFarbe::Farbe(card.farbe())
         }
-    }
-    type ItCardTrumpf<'slf> = Box<dyn Iterator<Item=ECard>+'slf>; // TODO concrete type
-    fn trumpfs_in_descending_order(&self, ) -> return_impl!(Self::ItCardTrumpf<'_>) {
-        Box::new(self.veccard_trumpf_in_descending_order.iter().copied())
     }
     fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering> {
         let find_schlag = |schlag_card| self.slcschlag.iter().position(|&schlag_trumpf| schlag_trumpf==schlag_card);
@@ -151,6 +152,19 @@ impl TTrumpfDecider for STrumpfDeciderSchlag {
                 }
             }
         }
+    }
+}
+
+impl TTrumpfDecider for STrumpfDeciderSchlag {
+    fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
+        self.trumpfdecider.trumpforfarbe(card)
+    }
+    type ItCardTrumpf<'slf> = Box<dyn Iterator<Item=ECard>+'slf>; // TODO concrete type
+    fn trumpfs_in_descending_order(&self, ) -> return_impl!(Self::ItCardTrumpf<'_>) {
+        Box::new(self.veccard_trumpf_in_descending_order.iter().copied())
+    }
+    fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering> {
+        self.trumpfdecider.compare_cards(card_fst, card_snd)
     }
 }
 
