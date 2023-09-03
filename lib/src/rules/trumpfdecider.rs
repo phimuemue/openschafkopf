@@ -88,8 +88,10 @@ impl TTrumpfDecider for STrumpfDeciderSchlag {
     fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
         if self.slcschlag.contains(&card.schlag()) {
             VTrumpfOrFarbe::Trumpf
+        } else if self.oefarbe == Some(card.farbe()) {
+            VTrumpfOrFarbe::Trumpf
         } else {
-            self.oefarbe.trumpforfarbe(card)
+            VTrumpfOrFarbe::Farbe(card.farbe())
         }
     }
     type ItCardTrumpf = Box<dyn Iterator<Item=ECard>>; // TODO concrete type
@@ -102,7 +104,10 @@ impl TTrumpfDecider for STrumpfDeciderSchlag {
                         .map(move |efarbe| ECard::new(efarbe, eschlag))
                 )
                 .chain(
-                    self.oefarbe.trumpfs_in_descending_order()
+                    self.oefarbe.clone().into_iter().flat_map(|efarbe|
+                        ESchlag::values()
+                            .map(move |eschlag| ECard::new(efarbe, eschlag))
+                    )
                         .filter(move |card| !slcschlag.contains(&card.schlag()))
                 )
         )
@@ -124,34 +129,14 @@ impl TTrumpfDecider for STrumpfDeciderSchlag {
             }),
             (Some(_i_fst), None) => Some(Ordering::Greater),
             (None, Some(_i_snd)) => Some(Ordering::Less),
-            (None, None) => self.oefarbe.compare_cards(card_fst, card_snd),
-        }
-    }
-}
-
-impl TTrumpfDecider for Option<EFarbe> {
-    fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
-        if self == &Some(card.farbe()) {
-            VTrumpfOrFarbe::Trumpf
-        } else {
-            VTrumpfOrFarbe::Farbe(card.farbe())
-        }
-    }
-    type ItCardTrumpf = Box<dyn Iterator<Item=ECard>>; // TODO concrete type
-    fn trumpfs_in_descending_order(&self, ) -> return_impl!(Self::ItCardTrumpf) {
-        Box::new(
-            self.clone().into_iter().flat_map(|efarbe|
-                ESchlag::values()
-                    .map(move |eschlag| ECard::new(efarbe, eschlag))
-            )
-        )
-    }
-    fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering> {
-        match (self==&Some(card_fst.farbe()), self==&Some(card_snd.farbe())) {
-            (true, true) => Some(SCompareFarbcardsSimple::compare_farbcards(card_fst, card_snd)),
-            (true, false) => Some(Ordering::Greater),
-            (false, true) => Some(Ordering::Less),
-            (false, false) => STrumpfDeciderNoTrumpf::<SCompareFarbcardsSimple>{phantom: PhantomData}.compare_cards(card_fst, card_snd),
+            (None, None) => {
+                match (self.oefarbe==Some(card_fst.farbe()), self.oefarbe==Some(card_snd.farbe())) {
+                    (true, true) => Some(SCompareFarbcardsSimple::compare_farbcards(card_fst, card_snd)),
+                    (true, false) => Some(Ordering::Greater),
+                    (false, true) => Some(Ordering::Less),
+                    (false, false) => STrumpfDeciderNoTrumpf::<SCompareFarbcardsSimple>{phantom: PhantomData}.compare_cards(card_fst, card_snd),
+                }
+            }
         }
     }
 }
