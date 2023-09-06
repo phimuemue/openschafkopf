@@ -1,5 +1,5 @@
 use crate::primitives::*;
-use crate::rules::{trumpfdecider::TTrumpfDecider, *};
+use crate::rules::{trumpfdecider::{STrumpfDeciderSchlag, TTrumpfDecider}, *};
 use crate::util::*;
 
 #[derive(Clone, new, Debug)]
@@ -116,7 +116,7 @@ impl<
     fn payout(
         &self,
         if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
-        trumpfdecider: &impl TTrumpfDecider,
+        trumpfdecider: &STrumpfDeciderSchlag,
         rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
@@ -208,7 +208,7 @@ impl<
     fn payout(
         &self,
         if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
-        _trumpfdecider: &impl TTrumpfDecider,
+        _trumpfdecider: &STrumpfDeciderSchlag,
         rulestatecache: &SRuleStateCache,
         if_dbg_else!({stichseq}{_}): SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
@@ -243,7 +243,7 @@ impl<
 }
 
 impl SLaufendeParams {
-    pub fn payout_laufende<PlayerParties: TPlayerParties>(&self, trumpfdecider: &impl TTrumpfDecider, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, playerparties: &PlayerParties) -> isize {
+    pub fn payout_laufende<PlayerParties: TPlayerParties>(&self, trumpfdecider: &STrumpfDeciderSchlag, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, playerparties: &PlayerParties) -> isize {
         let ekurzlang = stichseq.get().kurzlang();
         debug_assert_eq!(
             SRuleStateCacheFixed::new(
@@ -278,7 +278,7 @@ pub trait TPayoutDecider : Sync + Send + 'static + Clone + fmt::Debug {
     fn payout(
         &self,
         if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
-        trumpfdecider: &impl TTrumpfDecider,
+        trumpfdecider: &STrumpfDeciderSchlag,
         rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
