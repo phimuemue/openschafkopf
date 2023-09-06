@@ -220,24 +220,16 @@ impl TCompareFarbcards for SCompareFarbcardsBettel {
 
 #[test]
 fn test_equivalent_when_on_same_hand_rulesbettel() {
-    SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>{
-        epi: EPlayerIndex::EPI0,
-        i_prio: 0,
-        payoutdecider: SPayoutDeciderBettel{
-            n_payout_base: 10,
-        },
-        phantom: PhantomData,
-        trumpfdecider: STrumpfDeciderBettel::default(),
-        stossparams: SStossParams::new(/*n_stoss_max*/4),
-    }.equivalent_when_on_same_hand(); // does test internally
-    SRulesBettel::<SBettelAllAllowedCardsWithinStichStichzwang>{
-        epi: EPlayerIndex::EPI0,
-        i_prio: 0,
-        payoutdecider: SPayoutDeciderBettel{
-            n_payout_base: 10,
-        },
-        phantom: PhantomData,
-        trumpfdecider: STrumpfDeciderBettel::default(),
-        stossparams: SStossParams::new(/*n_stoss_max*/4),
-    }.equivalent_when_on_same_hand(); // does test internally
+    SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>::new(
+        EPlayerIndex::EPI0,
+        /*i_prio*/0,
+        /*n_payout_base*/10,
+        SStossParams::new(/*n_stoss_max*/4),
+    ).equivalent_when_on_same_hand(); // does test internally
+    SRulesBettel::<SBettelAllAllowedCardsWithinStichStichzwang>::new(
+        EPlayerIndex::EPI0,
+        /*i_prio*/0,
+        /*n_payout_base*/10,
+        SStossParams::new(/*n_stoss_max*/4),
+    ).equivalent_when_on_same_hand(); // does test internally
 }
