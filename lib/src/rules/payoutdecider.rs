@@ -1,5 +1,5 @@
 use crate::primitives::*;
-use crate::rules::{trumpfdecider::{STrumpfDeciderSchlag, TTrumpfDecider}, *};
+use crate::rules::{trumpfdecider::STrumpfDeciderSchlag, *};
 use crate::util::*;
 
 #[derive(Clone, new, Debug)]
