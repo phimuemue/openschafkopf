@@ -45,23 +45,6 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug + Send {
 pub trait TCompareFarbcards : Sync + 'static + Clone + fmt::Debug + Send {
     fn compare_farbcards(card_fst: ECard, card_snd: ECard) -> Ordering;
 }
-#[derive(Clone, Debug, Default)]
-pub struct SCompareFarbcardsSimple;
-impl TCompareFarbcards for SCompareFarbcardsSimple {
-    fn compare_farbcards(card_fst: ECard, card_snd: ECard) -> Ordering {
-        let get_schlag_value = |card: ECard| { match card.schlag() {
-            ESchlag::S7 => 0,
-            ESchlag::S8 => 1,
-            ESchlag::S9 => 2,
-            ESchlag::Unter => 3,
-            ESchlag::Ober => 4,
-            ESchlag::Koenig => 5,
-            ESchlag::Zehn => 6,
-            ESchlag::Ass => 7,
-        } };
-        get_schlag_value(card_fst).cmp(&get_schlag_value(card_snd))
-    }
-}
 
 #[derive(Clone, Debug, Default)]
 pub struct STrumpfDeciderNoTrumpf<CompareFarbcards> {
