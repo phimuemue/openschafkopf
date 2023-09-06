@@ -16,13 +16,6 @@ pub mod bitfield;
 #[macro_use]
 pub mod dbg_argument;
 
-// TODORUST return impl
-macro_rules! return_impl {
-    ($t:ty) => {
-        $t
-    };
-}
-
 // TODORUST Objects should be upcastable to supertraits: https://github.com/rust-lang/rust/issues/5665
 macro_rules! make_upcastable {
     ($upcasttrait:ident, $trait:ident) => {
