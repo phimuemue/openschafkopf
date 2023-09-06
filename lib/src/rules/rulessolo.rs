@@ -476,9 +476,6 @@ type_dispatch_enum!(pub enum VPayoutDeciderSoloLike {
     Sie(SPayoutDeciderSie),
 });
 
-pub type STrumpfDeciderSolo = STrumpfDeciderSchlag;
-pub type STrumpfDecider1Primary = STrumpfDeciderSchlag;
-
 pub fn sololike(
     epi: EPlayerIndex,
     oefarbe: impl Into<Option<EFarbe>>,
@@ -513,9 +510,9 @@ pub fn sololike(
             Some(efarbe) => (Some(efarbe), format!("{}-", efarbe)),
         },
         match (esololike) {
-            ESoloLike::Solo => (|trumpfdecider_farbe| STrumpfDeciderSolo::new(&[ESchlag::Ober, ESchlag::Unter], trumpfdecider_farbe), "Solo"),
-            ESoloLike::Wenz => (|trumpfdecider_farbe| STrumpfDecider1Primary::new(&[ESchlag::Unter], trumpfdecider_farbe), "Wenz"),
-            ESoloLike::Geier => (|trumpfdecider_farbe| STrumpfDecider1Primary::new(&[ESchlag::Ober], trumpfdecider_farbe), "Geier"),
+            ESoloLike::Solo => (|trumpfdecider_farbe| STrumpfDeciderSchlag::new(&[ESchlag::Ober, ESchlag::Unter], trumpfdecider_farbe), "Solo"),
+            ESoloLike::Wenz => (|trumpfdecider_farbe| STrumpfDeciderSchlag::new(&[ESchlag::Unter], trumpfdecider_farbe), "Wenz"),
+            ESoloLike::Geier => (|trumpfdecider_farbe| STrumpfDeciderSchlag::new(&[ESchlag::Ober], trumpfdecider_farbe), "Geier"),
         },
         match (payoutdecider_in) {
             VPayoutDeciderSoloLike::PointBased(payoutdecider) => (payoutdecider, ""),
@@ -571,17 +568,17 @@ pub fn sololike(
 fn test_trumpfdecider() {
     use crate::primitives::card::ECard::*;
     assert_eq!(
-        STrumpfDeciderSolo::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Gras))
+        STrumpfDeciderSchlag::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Gras))
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EO, GO, HO, SO, EU, GU, HU, SU, GA, GZ, GK, G9, G8, G7],
     );
     assert_eq!(
-        STrumpfDecider1Primary::new(&[ESchlag::Unter], Some(EFarbe::Gras))
+        STrumpfDeciderSchlag::new(&[ESchlag::Unter], Some(EFarbe::Gras))
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU, GA, GZ, GK, GO, G9, G8, G7],
     );
     assert_eq!(
-        STrumpfDecider1Primary::new(&[ESchlag::Unter], None)
+        STrumpfDeciderSchlag::new(&[ESchlag::Unter], None)
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU],
     );
