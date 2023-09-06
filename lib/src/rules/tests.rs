@@ -1991,6 +1991,24 @@ fn test_rulesbettel() {
         ],
         ([10, 10, -30, 10], 0),
     );
+    test_rules_manual(
+        "2 looses Bettel",
+        &SRulesBettel::<SBettelAllAllowedCardsWithinStichStichzwang>::new(EPlayerIndex::EPI2, /*i_prio*/0, /*n_payout_base*/10, SStossParams::new(/*n_stoss_max*/4)),
+        vec![],
+        vec![],
+        /*n_stock*/40,
+        &[
+            (EPI0, [EO,EZ,EK,E9]),
+            (EPI2, [HO,H9,HA,HZ]),
+            (EPI0, [H8,H7,HU,SO]),
+            (EPI2, [G8,G9,GA,GO]),
+            (EPI0, [EA,EU,GK,SU]),
+            (EPI0, [SA,SZ,SK,S9]),
+            (EPI0, [E8,E7,HK,S7]),
+            (EPI0, [GZ,GU,S8,G7]),
+        ],
+        ([10, 10, -30, 10], 0),
+    );
 }
 
 #[test]
