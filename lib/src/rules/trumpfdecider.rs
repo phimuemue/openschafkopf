@@ -1,7 +1,11 @@
 use crate::primitives::*;
 use crate::rules::*;
 use crate::util::*;
-use std::{cmp::Ordering, marker::PhantomData};
+use std::{
+    cmp::Ordering,
+    marker::PhantomData,
+    num::NonZeroUsize,
+};
 use arrayvec::ArrayVec;
 
 pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug + Send {
@@ -79,10 +83,29 @@ impl<CompareFarbcards: TCompareFarbcards> TTrumpfDecider for STrumpfDeciderNoTru
     }
 }
 
-#[derive(Clone, Debug, new)]
-pub struct STrumpfDeciderInternal {
+#[derive(Clone, Debug)]
+struct STrumpfDeciderInternal {
     slcschlag: &'static [ESchlag],
     oefarbe: Option<EFarbe>,
+    mapschlagoi_higher_is_stronger: EnumMap<ESchlag, Option<NonZeroUsize>>,
+}
+
+impl STrumpfDeciderInternal {
+    fn new_with_custom_ace_to_7_ordering(slcschlag_trumpf: &'static [ESchlag], oefarbe: impl Into<Option<EFarbe>>, itschlag_no_trumpf: impl IntoIterator<Item=ESchlag>) -> Self {
+        let mut mapschlagoi_higher_is_stronger = ESchlag::map_from_fn(|_eschlag| None);
+        for (i_schlag_no_trumpf, schlag_no_trumpf) in itschlag_no_trumpf.into_iter().enumerate() {
+            assert!(mapschlagoi_higher_is_stronger[schlag_no_trumpf].is_none());
+            mapschlagoi_higher_is_stronger[schlag_no_trumpf] = verify!(NonZeroUsize::new(ESchlag::SIZE - i_schlag_no_trumpf));
+        }
+        for schlag in ESchlag::values() {
+            assert_eq!(mapschlagoi_higher_is_stronger[schlag].is_some(), !slcschlag_trumpf.contains(&schlag));
+        }
+        Self{
+            slcschlag: slcschlag_trumpf,
+            oefarbe: oefarbe.into(),
+            mapschlagoi_higher_is_stronger,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -92,8 +115,8 @@ pub struct STrumpfDeciderSchlag {
 }
 
 impl STrumpfDeciderSchlag {
-    pub fn new(slcschlag: &'static [ESchlag], oefarbe: Option<EFarbe>) -> Self {
-        let trumpfdecider = STrumpfDeciderInternal::new(slcschlag, oefarbe);
+    fn new_with_custom_ace_to_7_ordering(slcschlag_trumpf: &'static [ESchlag], oefarbe: impl Into<Option<EFarbe>>, itschlag_no_trumpf: impl IntoIterator<Item=ESchlag>) -> Self {
+        let trumpfdecider = STrumpfDeciderInternal::new_with_custom_ace_to_7_ordering(slcschlag_trumpf, oefarbe, itschlag_no_trumpf);
         let mut veccard_trumpf_in_descending_order : ArrayVec::<ECard, {ECard::SIZE}> = <ECard as PlainEnum>::values()
             .filter(|&card| trumpfdecider.trumpforfarbe(card).is_trumpf())
             .collect();
@@ -110,6 +133,15 @@ impl STrumpfDeciderSchlag {
             trumpfdecider,
             veccard_trumpf_in_descending_order,
         }
+    }
+    pub fn new(slcschlag_trumpf: &'static [ESchlag], oefarbe: Option<EFarbe>) -> Self {
+        Self::new_with_custom_ace_to_7_ordering(
+            slcschlag_trumpf,
+            oefarbe,
+            [ESchlag::Ass, ESchlag::Zehn, ESchlag::Koenig, ESchlag::Ober, ESchlag::Unter, ESchlag::S9, ESchlag::S8, ESchlag::S7]
+                .into_iter()
+                .filter(|schlag| !slcschlag_trumpf.contains(schlag)),
+        )
     }
 }
 
@@ -141,14 +173,16 @@ impl STrumpfDeciderInternal {
             (Some(_i_fst), None) => Some(Ordering::Greater),
             (None, Some(_i_snd)) => Some(Ordering::Less),
             (None, None) => {
+                let compare_schlag = || {
+                    assert_eq!(card_fst.farbe(), card_snd.farbe());
+                    let get_index = |card: ECard| self.mapschlagoi_higher_is_stronger[card.schlag()];
+                    get_index(card_fst).cmp(&get_index(card_snd))
+                };
                 match (self.oefarbe==Some(card_fst.farbe()), self.oefarbe==Some(card_snd.farbe())) {
-                    (true, true) => Some(SCompareFarbcardsSimple::compare_farbcards(card_fst, card_snd)),
+                    (true, true) => Some(compare_schlag()),
                     (true, false) => Some(Ordering::Greater),
                     (false, true) => Some(Ordering::Less),
-                    (false, false) => if_then_some!(
-                        card_fst.farbe()==card_snd.farbe(),
-                        SCompareFarbcardsSimple::compare_farbcards(card_fst, card_snd)
-                    ),
+                    (false, false) => if_then_some!(card_fst.farbe()==card_snd.farbe(), compare_schlag()),
                 }
             }
         }
