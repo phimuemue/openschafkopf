@@ -3,7 +3,6 @@ use crate::rules::*;
 use crate::util::*;
 use std::{
     cmp::Ordering,
-    marker::PhantomData,
     num::NonZeroUsize,
 };
 use arrayvec::ArrayVec;
@@ -39,30 +38,6 @@ pub trait TTrumpfDecider : Sync + 'static + Clone + fmt::Debug + Send {
                 },
             }
         });
-    }
-}
-
-pub trait TCompareFarbcards : Sync + 'static + Clone + fmt::Debug + Send {
-    fn compare_farbcards(card_fst: ECard, card_snd: ECard) -> Ordering;
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct STrumpfDeciderNoTrumpf<CompareFarbcards> {
-    phantom: PhantomData<CompareFarbcards>
-}
-impl<CompareFarbcards: TCompareFarbcards> TTrumpfDecider for STrumpfDeciderNoTrumpf<CompareFarbcards> {
-    fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
-        VTrumpfOrFarbe::Farbe(card.farbe())
-    }
-    type ItCardTrumpf<'slf> = std::iter::Empty<ECard>;
-    fn trumpfs_in_descending_order(&self, ) -> return_impl!(Self::ItCardTrumpf<'_>) {
-        std::iter::empty()
-    }
-    fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering> {
-        if_then_some!(
-            card_fst.farbe()==card_snd.farbe(),
-            CompareFarbcards::compare_farbcards(card_fst, card_snd)
-        )
     }
 }
 
