@@ -85,7 +85,7 @@ pub struct SRulesRufspielGeneric<RufspielPayout: TRufspielPayout> {
     epi : EPlayerIndex,
     efarbe : EFarbe,
     rufspielpayout: RufspielPayout,
-    trumpfdecider: STrumpfDeciderSchlag,
+    trumpfdecider: STrumpfDecider,
     stossparams: SStossParams,
 }
 
@@ -105,7 +105,7 @@ impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
             rufspielpayout: SRufspielPayout {
                 payoutdecider: SPayoutDeciderPointBased::new(payoutparams, SPointsToWin61{}),
             },
-            trumpfdecider: STrumpfDeciderSchlag::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz)),
+            trumpfdecider: STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz)),
             stossparams,
         }
     }

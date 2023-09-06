@@ -33,12 +33,12 @@ impl STrumpfDeciderInternal {
 }
 
 #[derive(Clone, Debug)]
-pub struct STrumpfDeciderSchlag {
+pub struct STrumpfDecider {
     trumpfdecider: STrumpfDeciderInternal,
     veccard_trumpf_in_descending_order: ArrayVec<ECard, {ECard::SIZE}>,
 }
 
-impl STrumpfDeciderSchlag {
+impl STrumpfDecider {
     pub fn new_with_custom_ace_to_7_ordering(slcschlag_trumpf: &'static [ESchlag], oefarbe: impl Into<Option<EFarbe>>, itschlag_no_trumpf: impl IntoIterator<Item=ESchlag>) -> Self {
         let trumpfdecider = STrumpfDeciderInternal::new_with_custom_ace_to_7_ordering(slcschlag_trumpf, oefarbe, itschlag_no_trumpf);
         let mut veccard_trumpf_in_descending_order : ArrayVec::<ECard, {ECard::SIZE}> = <ECard as PlainEnum>::values()
@@ -137,7 +137,7 @@ impl STrumpfDeciderInternal {
     }
 }
 
-impl STrumpfDeciderSchlag {
+impl STrumpfDecider {
     pub fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
         self.trumpfdecider.trumpforfarbe(card)
     }
@@ -163,7 +163,7 @@ macro_rules! impl_rules_trumpf {() => {
 
 #[test]
 fn test_equivalent_when_on_same_hand_trumpfdecider() {
-    let maptrumpforfarbeveccard = STrumpfDeciderSchlag::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz)).equivalent_when_on_same_hand();
+    let maptrumpforfarbeveccard = STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz)).equivalent_when_on_same_hand();
     fn assert_eq_cards(slccard_lhs: &[ECard], slccard_rhs: &[ECard]) {
         assert_eq!(slccard_lhs, slccard_rhs);
     }

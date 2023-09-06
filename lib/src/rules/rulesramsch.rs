@@ -23,7 +23,7 @@ pub enum VJungfrau {
 pub struct SRulesRamsch {
     n_price : isize,
     durchmarsch : VDurchmarsch,
-    trumpfdecider: STrumpfDeciderSchlag,
+    trumpfdecider: STrumpfDecider,
     ojungfrau: Option<VJungfrau>,
 }
 
@@ -32,7 +32,7 @@ impl SRulesRamsch {
         Self {
             n_price,
             durchmarsch,
-            trumpfdecider: STrumpfDeciderSchlag::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz)),
+            trumpfdecider: STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz)),
             ojungfrau,
         }
     }

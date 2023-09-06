@@ -282,7 +282,7 @@ pub struct SPayoutDeciderSie {
     payoutparams : SPayoutDeciderParams,
 }
 
-// TODO SPayoutDeciderSie should be able to work with any STrumpfDeciderSchlag
+// TODO SPayoutDeciderSie should be able to work with any STrumpfDecider
 fn cards_valid_for_sie<Rules: TRules, ItCard: Iterator<Item=ECard>>(
     rules: &Rules,
     itcard: ItCard,
@@ -356,7 +356,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
 
     fn equivalent_when_on_same_hand(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>> {
         use crate::primitives::card::ECard::*;
-        assert!(matches!(slccard_ordered, // TODO SPayoutDeciderSie should be able to work with any STrumpfDeciderSchlag
+        assert!(matches!(slccard_ordered, // TODO SPayoutDeciderSie should be able to work with any STrumpfDecider
             &[EO, GO, HO, SO, EU, GU, HU, SU]
             | &[HA, HZ, HK, H9, H8, H7]
             | &[EA, EZ, EK, E9, E8, E7]
@@ -376,7 +376,7 @@ pub struct SRulesSoloLike<PayoutDecider> {
     pub str_name: String,
     epi: EPlayerIndex,
     payoutdecider: PayoutDecider,
-    trumpfdecider: STrumpfDeciderSchlag,
+    trumpfdecider: STrumpfDecider,
     of_heuristic_active_occurence_probability: Option<f64>,
     stossparams: SStossParams,
 }
@@ -484,7 +484,7 @@ pub fn sololike(
     stossparams: SStossParams,
 ) -> Box<dyn TActivelyPlayableRules> {
     let (oefarbe, payoutdecider_in) = (oefarbe.into(), payoutdecider_in.into());
-    assert!(!matches!(payoutdecider_in, VPayoutDeciderSoloLike::Sie(_)) || oefarbe.is_none()); // TODO SPayoutDeciderSie should be able to work with any STrumpfDeciderSchlag
+    assert!(!matches!(payoutdecider_in, VPayoutDeciderSoloLike::Sie(_)) || oefarbe.is_none()); // TODO SPayoutDeciderSie should be able to work with any STrumpfDecider
     macro_rules! sololike_internal{(
         ($trumpfdecider_farbe: expr, $str_oefarbe: expr),
         ($trumpfdecider_core: expr, $str_esololike: expr),
@@ -510,9 +510,9 @@ pub fn sololike(
             Some(efarbe) => (Some(efarbe), format!("{}-", efarbe)),
         },
         match (esololike) {
-            ESoloLike::Solo => (|trumpfdecider_farbe| STrumpfDeciderSchlag::new(&[ESchlag::Ober, ESchlag::Unter], trumpfdecider_farbe), "Solo"),
-            ESoloLike::Wenz => (|trumpfdecider_farbe| STrumpfDeciderSchlag::new(&[ESchlag::Unter], trumpfdecider_farbe), "Wenz"),
-            ESoloLike::Geier => (|trumpfdecider_farbe| STrumpfDeciderSchlag::new(&[ESchlag::Ober], trumpfdecider_farbe), "Geier"),
+            ESoloLike::Solo => (|trumpfdecider_farbe| STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], trumpfdecider_farbe), "Solo"),
+            ESoloLike::Wenz => (|trumpfdecider_farbe| STrumpfDecider::new(&[ESchlag::Unter], trumpfdecider_farbe), "Wenz"),
+            ESoloLike::Geier => (|trumpfdecider_farbe| STrumpfDecider::new(&[ESchlag::Ober], trumpfdecider_farbe), "Geier"),
         },
         match (payoutdecider_in) {
             VPayoutDeciderSoloLike::PointBased(payoutdecider) => (payoutdecider, ""),
@@ -568,17 +568,17 @@ pub fn sololike(
 fn test_trumpfdecider() {
     use crate::primitives::card::ECard::*;
     assert_eq!(
-        STrumpfDeciderSchlag::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Gras))
+        STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Gras))
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EO, GO, HO, SO, EU, GU, HU, SU, GA, GZ, GK, G9, G8, G7],
     );
     assert_eq!(
-        STrumpfDeciderSchlag::new(&[ESchlag::Unter], Some(EFarbe::Gras))
+        STrumpfDecider::new(&[ESchlag::Unter], Some(EFarbe::Gras))
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU, GA, GZ, GK, GO, G9, G8, G7],
     );
     assert_eq!(
-        STrumpfDeciderSchlag::new(&[ESchlag::Unter], None)
+        STrumpfDecider::new(&[ESchlag::Unter], None)
             .trumpfs_in_descending_order().collect::<Vec<_>>(),
         vec![EU, GU, HU, SU],
     );

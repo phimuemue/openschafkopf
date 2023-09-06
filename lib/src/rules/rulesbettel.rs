@@ -14,7 +14,7 @@ pub struct SRulesBettel<BettelAllAllowedCardsWithinStich> {
     epi : EPlayerIndex,
     i_prio : isize,
     payoutdecider : SPayoutDeciderBettel,
-    trumpfdecider: STrumpfDeciderSchlag,
+    trumpfdecider: STrumpfDecider,
     stossparams: SStossParams,
     phantom : PhantomData<BettelAllAllowedCardsWithinStich>,
 }
@@ -25,7 +25,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> SRules
             epi,
             i_prio,
             payoutdecider: SPayoutDeciderBettel{n_payout_base},
-            trumpfdecider: STrumpfDeciderSchlag::new_with_custom_ace_to_7_ordering(
+            trumpfdecider: STrumpfDecider::new_with_custom_ace_to_7_ordering(
                 /*slcschlag_trumpf*/&[],
                 /*oefarbe*/None,
                 /*itschlag_no_trumpf*/[
