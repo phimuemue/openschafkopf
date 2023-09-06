@@ -282,7 +282,7 @@ pub struct SPayoutDeciderSie {
     payoutparams : SPayoutDeciderParams,
 }
 
-// TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
+// TODO SPayoutDeciderSie should be able to work with any STrumpfDeciderSchlag
 fn cards_valid_for_sie<Rules: TRules, ItCard: Iterator<Item=ECard>>(
     rules: &Rules,
     itcard: ItCard,
@@ -356,7 +356,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
 
     fn equivalent_when_on_same_hand(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>> {
         use crate::primitives::card::ECard::*;
-        assert!(matches!(slccard_ordered, // TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
+        assert!(matches!(slccard_ordered, // TODO SPayoutDeciderSie should be able to work with any STrumpfDeciderSchlag
             &[EO, GO, HO, SO, EU, GU, HU, SU]
             | &[HA, HZ, HK, H9, H8, H7]
             | &[EA, EZ, EK, E9, E8, E7]
@@ -484,7 +484,7 @@ pub fn sololike(
     stossparams: SStossParams,
 ) -> Box<dyn TActivelyPlayableRules> {
     let (oefarbe, payoutdecider_in) = (oefarbe.into(), payoutdecider_in.into());
-    assert!(!matches!(payoutdecider_in, VPayoutDeciderSoloLike::Sie(_)) || oefarbe.is_none()); // TODO SPayoutDeciderSie should be able to work with any TTrumpfDecider
+    assert!(!matches!(payoutdecider_in, VPayoutDeciderSoloLike::Sie(_)) || oefarbe.is_none()); // TODO SPayoutDeciderSie should be able to work with any STrumpfDeciderSchlag
     macro_rules! sololike_internal{(
         ($trumpfdecider_farbe: expr, $str_oefarbe: expr),
         ($trumpfdecider_core: expr, $str_esololike: expr),

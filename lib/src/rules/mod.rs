@@ -300,7 +300,7 @@ impl SRuleStateCache {
 }
 
 pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone + Send {
-    // TTrumpfDecider
+    // STrumpfDeciderSchlag
     fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe;
     fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering>;
     fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [ECard]);
