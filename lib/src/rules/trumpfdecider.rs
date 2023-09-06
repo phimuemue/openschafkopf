@@ -98,7 +98,7 @@ pub struct STrumpfDeciderSchlag {
 }
 
 impl STrumpfDeciderSchlag {
-    fn new_with_custom_ace_to_7_ordering(slcschlag_trumpf: &'static [ESchlag], oefarbe: impl Into<Option<EFarbe>>, itschlag_no_trumpf: impl IntoIterator<Item=ESchlag>) -> Self {
+    pub fn new_with_custom_ace_to_7_ordering(slcschlag_trumpf: &'static [ESchlag], oefarbe: impl Into<Option<EFarbe>>, itschlag_no_trumpf: impl IntoIterator<Item=ESchlag>) -> Self {
         let trumpfdecider = STrumpfDeciderInternal::new_with_custom_ace_to_7_ordering(slcschlag_trumpf, oefarbe, itschlag_no_trumpf);
         let mut veccard_trumpf_in_descending_order : ArrayVec::<ECard, {ECard::SIZE}> = <ECard as PlainEnum>::values()
             .filter(|&card| trumpfdecider.trumpforfarbe(card).is_trumpf())

@@ -14,7 +14,7 @@ pub struct SRulesBettel<BettelAllAllowedCardsWithinStich> {
     epi : EPlayerIndex,
     i_prio : isize,
     payoutdecider : SPayoutDeciderBettel,
-    trumpfdecider: STrumpfDeciderBettel,
+    trumpfdecider: STrumpfDeciderSchlag,
     stossparams: SStossParams,
     phantom : PhantomData<BettelAllAllowedCardsWithinStich>,
 }
@@ -25,7 +25,20 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> SRules
             epi,
             i_prio,
             payoutdecider: SPayoutDeciderBettel{n_payout_base},
-            trumpfdecider: STrumpfDeciderBettel::default(),
+            trumpfdecider: STrumpfDeciderSchlag::new_with_custom_ace_to_7_ordering(
+                /*slcschlag_trumpf*/&[],
+                /*oefarbe*/None,
+                /*itschlag_no_trumpf*/[
+                    ESchlag::Ass,
+                    ESchlag::Koenig,
+                    ESchlag::Ober,
+                    ESchlag::Unter,
+                    ESchlag::Zehn,
+                    ESchlag::S9,
+                    ESchlag::S8,
+                    ESchlag::S7,
+                ],
+            ),
             stossparams,
             phantom: PhantomData,
         }
@@ -134,8 +147,6 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStic
         )
     }
 }
-
-type STrumpfDeciderBettel = STrumpfDeciderNoTrumpf<SCompareFarbcardsBettel>;
 
 impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules for SRulesBettel<BettelAllAllowedCardsWithinStich> {
     impl_rules_trumpf!();
