@@ -486,7 +486,6 @@ pub fn sololike(
     let (oefarbe, payoutdecider_in) = (oefarbe.into(), payoutdecider_in.into());
     assert!(!matches!(payoutdecider_in, VPayoutDeciderSoloLike::Sie(_)) || oefarbe.is_none()); // TODO SPayoutDeciderSie should be able to work with any STrumpfDecider
     macro_rules! sololike_internal{(
-        ($trumpfdecider_farbe: expr, $str_oefarbe: expr),
         ($trumpfdecider_core: expr, $str_esololike: expr),
         ($payoutdecider: expr, $str_payoutdecider: expr),
         $of_heuristic_active_occurence_probability: expr,
@@ -495,20 +494,23 @@ pub fn sololike(
             payoutdecider: $payoutdecider,
             trumpfdecider: {
                 #[allow(clippy::redundant_closure_call)]
-                $trumpfdecider_core($trumpfdecider_farbe)
+                $trumpfdecider_core(oefarbe)
             },
             epi,
-            str_name: format!("{}{}{}", $str_oefarbe, $str_esololike, $str_payoutdecider),
+            str_name: format!("{}{}{}",
+                match oefarbe {
+                    None => "".to_string(),
+                    Some(efarbe) => format!("{}-", efarbe),
+                },
+                $str_esololike,
+                $str_payoutdecider
+            ),
             of_heuristic_active_occurence_probability: $of_heuristic_active_occurence_probability,
             stossparams,
         }) as Box<dyn TActivelyPlayableRules>
     }}
     cartesian_match!(
         sololike_internal,
-        match (oefarbe) {
-            None => (None, ""),
-            Some(efarbe) => (Some(efarbe), format!("{}-", efarbe)),
-        },
         match (esololike) {
             ESoloLike::Solo => (|trumpfdecider_farbe| STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], trumpfdecider_farbe), "Solo"),
             ESoloLike::Wenz => (|trumpfdecider_farbe| STrumpfDecider::new(&[ESchlag::Unter], trumpfdecider_farbe), "Wenz"),
