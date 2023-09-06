@@ -131,7 +131,7 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStic
             /*fn_farbe_not_frei*/|veccard_same_farbe| {
                 let veccard_allowed_higher_than_current_best = veccard_same_farbe.iter().copied()
                     .filter(|card| 
-                        match SCompareFarbcardsBettel::compare_farbcards(card_highest, *card) {
+                        match unwrap!(rulesbettel.trumpfdecider.compare_cards(card_highest, *card)) {
                             Ordering::Less => true,
                             Ordering::Equal => panic!("Unexpected comparison result in Bettel"),
                             Ordering::Greater => false,
@@ -207,25 +207,6 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
             }
             payload_stich_count
         })
-    }
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct SCompareFarbcardsBettel;
-impl TCompareFarbcards for SCompareFarbcardsBettel {
-    fn compare_farbcards(card_fst: ECard, card_snd: ECard) -> Ordering {
-        assert_eq!(card_fst.farbe(), card_snd.farbe());
-        let get_schlag_value = |card: ECard| { match card.schlag() {
-            ESchlag::S7 => 0,
-            ESchlag::S8 => 1,
-            ESchlag::S9 => 2,
-            ESchlag::Zehn => 3,
-            ESchlag::Unter => 4,
-            ESchlag::Ober => 5,
-            ESchlag::Koenig => 6,
-            ESchlag::Ass => 7,
-        } };
-        get_schlag_value(card_fst).cmp(&get_schlag_value(card_snd))
     }
 }
 
