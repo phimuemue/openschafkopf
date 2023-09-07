@@ -204,7 +204,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         })
     }
 
-    pub fn cards_from_player<'slf>(&'slf self, hand: &'slf SHand, epi: EPlayerIndex) -> impl Iterator<Item=ECard> + 'slf {
+    pub fn cards_from_player<'slf>(&'slf self, hand: &'slf SHand, epi: EPlayerIndex) -> impl Iterator<Item=ECard> + 'slf + Clone {
         let itcard_played = self.completed_cards_by(epi)
             .chain(self.current_stich().get(epi).copied());
         debug_assert!(itertools::equal(

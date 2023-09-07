@@ -282,36 +282,18 @@ pub struct SPayoutDeciderSie {
     payoutparams : SPayoutDeciderParams,
 }
 
-// TODO SPayoutDeciderSie should be able to work with any STrumpfDecider
-fn cards_valid_for_sie<Rules: TRules, ItCard: Iterator<Item=ECard>>(
-    rules: &Rules,
-    itcard: ItCard,
+fn cards_valid_for_sie<ItCard: Clone+Iterator<Item=ECard>>(
+    rules: &SRulesSoloLike<SPayoutDeciderSie>,
+    mut itcard: ItCard,
     ekurzlang: EKurzLang,
 ) -> bool {
-    fn cards_valid_for_sie_internal<Rules: TRules, ItCard: Iterator<Item=ECard>, FnAllowUnter: Fn(EFarbe)->bool>(
-        rules: &Rules,
-        mut itcard: ItCard,
-        fn_allow_unter: FnAllowUnter,
-    ) -> bool {
-        itcard.all(|card| {
-            let b_card_valid = match card.schlag() {
-                ESchlag::Ober => true,
-                ESchlag::Unter => fn_allow_unter(card.farbe()),
-                ESchlag::S7 | ESchlag::S8 | ESchlag::S9 | ESchlag::Zehn | ESchlag::Koenig | ESchlag::Ass => false,
-            };
-            assert!(!b_card_valid || rules.trumpforfarbe(card).is_trumpf());
-            b_card_valid
-        })
-    }
-    match ekurzlang {
-        EKurzLang::Lang => cards_valid_for_sie_internal(rules, itcard, /*fn_allow_unter*/|_| true),
-        EKurzLang::Kurz => cards_valid_for_sie_internal(rules, itcard, /*fn_allow_unter*/|efarbe|
-            match efarbe {
-                EFarbe::Eichel | EFarbe::Gras => true,
-                EFarbe::Herz | EFarbe::Schelln => false,
-            }
-        ),
-    }
+    let n_cards_per_player = ekurzlang.cards_per_player();
+    assert_eq!(itcard.clone().count(), n_cards_per_player);
+    let veccard_trumpf_relevant = rules.trumpfdecider
+        .trumpfs_in_descending_order()
+        .take(n_cards_per_player)
+        .collect::<SHandVector>();
+    itcard.all(|card| veccard_trumpf_relevant.contains(&card))
 }
 
 impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
@@ -355,14 +337,6 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
     }
 
     fn equivalent_when_on_same_hand(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>> {
-        use crate::primitives::card::ECard::*;
-        assert!(matches!(slccard_ordered, // TODO SPayoutDeciderSie should be able to work with any STrumpfDecider
-            &[EO, GO, HO, SO, EU, GU, HU, SU]
-            | &[HA, HZ, HK, H9, H8, H7]
-            | &[EA, EZ, EK, E9, E8, E7]
-            | &[GA, GZ, GK, G9, G8, G7]
-            | &[SA, SZ, SK, S9, S8, S7]
-        ));
         vec![slccard_ordered.to_vec()] // In Sie, neighboring cards are equivalent regardless of points_card.
     }
 
@@ -484,7 +458,6 @@ pub fn sololike(
     stossparams: SStossParams,
 ) -> Box<dyn TActivelyPlayableRules> {
     let (oefarbe, payoutdecider_in) = (oefarbe.into(), payoutdecider_in.into());
-    assert!(!matches!(payoutdecider_in, VPayoutDeciderSoloLike::Sie(_)) || oefarbe.is_none()); // TODO SPayoutDeciderSie should be able to work with any STrumpfDecider
     macro_rules! sololike_internal{(
         ($payoutdecider: expr, $str_payoutdecider: expr),
         $of_heuristic_active_occurence_probability: expr,
