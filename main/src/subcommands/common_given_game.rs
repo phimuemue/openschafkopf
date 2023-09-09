@@ -103,7 +103,7 @@ pub fn with_common_args<FnWithArgs>(
         ) -> Result<(), Error>,
 {
     let b_verbose = clapmatches.is_present("verbose");
-    let veccard_stichseq = match clapmatches.value_of("cards_on_table") {
+    let veccard_stichseq = match clapmatches.value_of("cards_on_table") { // TODO allow multiple stichseq (in particular something like "ea | ez ek e9  sa sz | sk s9" so that the user can query intermittent game states).
         None => Vec::new(),
         Some(str_cards_on_table) => cardvector::parse_cards(str_cards_on_table)
             .ok_or_else(||format_err!("Could not parse played cards"))?,
@@ -207,7 +207,7 @@ pub fn with_common_args<FnWithArgs>(
                     let epi_position = clapmatches.value_of_t("position")
                         .unwrap_or_else(|_|unwrap!(stichseq.current_stich().current_playerindex()));
                     if_then_some!(
-                        stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
+                        stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(), // TODO Allow to specify more than only currently held cards if compatible with stichseq
                         SHand::new_from_iter(vecocard_hand.iter().flatten())
                             .to_ahand(epi_position)
                     ).or_else(|| {
