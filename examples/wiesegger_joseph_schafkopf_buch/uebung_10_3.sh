@@ -21,3 +21,12 @@ do
         --points --snapshotcache
 done
 echo "The above shows that we should not play Gras-Ass but some other card."
+
+echo "Can also be confirmed more comfortably:"
+./target/release/openschafkopf suggest-card \
+    --rules "Eichel-Wenz von 2" \
+    --cards-on-table "ha hk ea h8  gu ez eu e7  sk s7 ek sa  su g7 e8 hu" \
+    --hand "eo e9 gz g9" \
+    --points \
+    --position 2
+        
