@@ -1365,7 +1365,6 @@ dependencies = [
  "as_num",
  "async-std",
  "async-tungstenite",
- "atty",
  "byteorder",
  "chrono",
  "clap",

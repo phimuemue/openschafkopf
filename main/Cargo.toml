@@ -7,7 +7,6 @@ license-file = "../LICENSE"
 description = "An open source toolkit for Schafkopf, a Bavarian card game."
 
 [dependencies]
-atty = "0"
 termcolor = "1"
 combine = "3"
 rand = "0"

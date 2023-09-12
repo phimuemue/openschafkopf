@@ -18,6 +18,7 @@ use derive_new::new;
 use plain_enum::PlainEnum;
 use super::common_given_game::*;
 use as_num::*;
+use std::io::IsTerminal;
 
 // TODO? can we make this a fn of SPayoutStatsTable?
 fn print_payoutstatstable<T: std::fmt::Display>(
@@ -70,7 +71,7 @@ fn print_payoutstatstable<T: std::fmt::Display>(
         for (atplstrf, aformatinfo) in mapemmstrategyatplstrf.iter().zip_eq(payoutstatstable.format_infos().iter()) {
             for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
                 use termcolor::*;
-                let mut stdout = StandardStream::stdout(if atty::is(atty::Stream::Stdout) {
+                let mut stdout = StandardStream::stdout(if std::io::stdout().is_terminal() {
                     ColorChoice::Auto
                 } else {
                     ColorChoice::Never
