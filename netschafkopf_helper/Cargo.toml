@@ -1,0 +1,19 @@
+[package]
+name = "netschafkopf_helper"
+version = "0.1.0"
+authors = ["phimuemue"]
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+dirs = "5.0.1"
+itertools = "0.11.0"
+libc = "0.2.147"
+log = "0.4.19"
+retour = "0.3.1"
+simple-logging = "2.0.2"
+winapi = { version = "0.3.9", features = ["consoleapi", "libloaderapi", "minwindef", "memoryapi", "winuser"] }
+
