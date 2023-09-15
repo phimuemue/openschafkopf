@@ -16,4 +16,4 @@ log = "0.4.19"
 retour = "0.3.1"
 simple-logging = "2.0.2"
 winapi = { version = "0.3.9", features = ["consoleapi", "libloaderapi", "minwindef", "memoryapi", "winuser"] }
-
+openschafkopf_util = {path = "../util"}
