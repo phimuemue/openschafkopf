@@ -1102,30 +1102,32 @@ fn initialize() {
     info!("pid: {}", std::process::id());
     info!("process_path: {}", unwrap!(std::env::current_exe()).display());
 
-    unsafe{netschk_strcpy_s::redirect()};
-    if false { // Redirecting this function is very, very slow
-        unsafe{netschk_increment_playerindex::redirect()};
+    unsafe{
+        netschk_strcpy_s::redirect();
+        if false { // Redirecting this function is very, very slow
+            netschk_increment_playerindex::redirect();
+        }
+        netschk_process_window_message::redirect();
+        netschk_maybe_vorschlag::redirect();
+        netschk_maybe_vorschlag_suggest_card_1::redirect();
+        netschk_maybe_vorschlag_suggest_card_2::redirect();
+        netschk_maybe_vorschlag_suggest_card_3::redirect();
+        netschk_maybe_vorschlag_suggest_card_4::redirect();
+        netschk_maybe_vorschlag_should_stoss::redirect();
+        netschk_maybe_vorschlag_spielabfrage_1::redirect();
+        netschk_maybe_vorschlag_spielabfrage_2::redirect();
+        netschk_maybe_vorschlag_unknown_1::redirect();
+        netschk_maybe_vorschlag_unknown_2::redirect();
+        netschk_maybe_vorschlag_unknown_4::redirect();
+        netschk_maybe_vorschlag_unknown_5::redirect();
+        netschk_dialogproc_spielabfrage::redirect();
+        netschk_dialogproc_contra_geben::redirect();
+        netschk_dialogproc_analyse_weiter_1::redirect();
+        netschk_dialogproc_analyse_weiter_2_maybe_ja_nein_1::redirect();
+        netschk_wndproc_status_bar::redirect();
+        set_window_text_a::redirect();
+        post_message_a::redirect();
     }
-    unsafe{netschk_process_window_message::redirect()};
-    unsafe{netschk_maybe_vorschlag::redirect()};
-    unsafe{netschk_maybe_vorschlag_suggest_card_1::redirect()};
-    unsafe{netschk_maybe_vorschlag_suggest_card_2::redirect()};
-    unsafe{netschk_maybe_vorschlag_suggest_card_3::redirect()};
-    unsafe{netschk_maybe_vorschlag_suggest_card_4::redirect()};
-    unsafe{netschk_maybe_vorschlag_should_stoss::redirect()};
-    unsafe{netschk_maybe_vorschlag_spielabfrage_1::redirect()};
-    unsafe{netschk_maybe_vorschlag_spielabfrage_2::redirect()};
-    unsafe{netschk_maybe_vorschlag_unknown_1::redirect()};
-    unsafe{netschk_maybe_vorschlag_unknown_2::redirect()};
-    unsafe{netschk_maybe_vorschlag_unknown_4::redirect()};
-    unsafe{netschk_maybe_vorschlag_unknown_5::redirect()};
-    unsafe{netschk_dialogproc_spielabfrage::redirect()};
-    unsafe{netschk_dialogproc_contra_geben::redirect()};
-    unsafe{netschk_dialogproc_analyse_weiter_1::redirect()};
-    unsafe{netschk_dialogproc_analyse_weiter_2_maybe_ja_nein_1::redirect()};
-    unsafe{netschk_wndproc_status_bar::redirect()};
-    unsafe{set_window_text_a::redirect()};
-    unsafe{post_message_a::redirect()};
 
     let fn_panic_handler_original = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panicinfo| {
