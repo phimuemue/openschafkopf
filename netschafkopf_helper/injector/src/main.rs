@@ -41,7 +41,7 @@ fn main() {
     }
     Process::from_pid(cmd_netschafkopf.id())
         .unwrap()
-        .inject("../target/i686-pc-windows-gnu/debug/netschafkopf_helper.dll")
+        .inject("target/i686-pc-windows-gnu/debug/netschafkopf_helper.dll")
         .unwrap();
     println!("Injected DLL.");
     let exit_status = cmd_netschafkopf.wait().unwrap();
