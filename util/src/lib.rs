@@ -30,3 +30,5 @@ pub use parser::*;
 #[macro_use]
 pub mod type_inference;
 pub use type_inference::*;
+pub mod unpack_and_apply;
+pub use unpack_and_apply::*;
