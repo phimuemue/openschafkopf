@@ -41,6 +41,28 @@ impl<TOk, TErr: Debug> TVerifiableByVerifyMacro for Result<TOk, TErr> {
     }
 }
 
+impl<T> TVerifiableByVerifyMacro for *const T {
+    type ErrDisplay<'err> = &'static str where Self: 'err;
+    fn is_verify_true(&self) -> Result<(), Self::ErrDisplay<'_>> {
+        if std::ptr::null()==self {
+            Err("null")
+        } else {
+            Ok(())
+        }
+    }
+}
+
+impl<T> TVerifiableByVerifyMacro for *mut T {
+    type ErrDisplay<'err> = &'static str where Self: 'err;
+    fn is_verify_true(&self) -> Result<(), Self::ErrDisplay<'_>> {
+        if std::ptr::null_mut()==*self {
+            Err("null")
+        } else {
+            Ok(())
+        }
+    }
+}
+
 #[track_caller]
 pub fn verify_internal<E: TVerifiableByVerifyMacro>(e: E, str_e: &str) -> E {
     if let Err(err) = e.is_verify_true() {
