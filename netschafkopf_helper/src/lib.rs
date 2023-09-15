@@ -99,7 +99,7 @@ fn bytes_are_card(slcbyte: &[u8]) -> bool {
     assert_eq!(3, slcbyte.len()); // TODO can we make this check at compile time
     byte_is_farbe(slcbyte[0])
         && byte_is_schlag(slcbyte[1])
-        && {assert!(slcbyte[2]==0); true} // TODO use verify
+        && verify!(slcbyte[2]==0)
 }
 
 #[allow(dead_code)]
@@ -341,29 +341,35 @@ make_redirect_function!(
                     match str_status.borrow() {
                         "Du ? Kartenwahl" => {
                             // "Vorschlag machen"
-                            let n_postemssage = PostMessageA(
-                                hwnd,
-                                WM_COMMAND,
-                                105548,
-                                0,
+                            verify_ne!(
+                                PostMessageA(
+                                    hwnd,
+                                    WM_COMMAND,
+                                    105548,
+                                    0,
+                                ),
+                                0
                             );
-                            assert!(0!=n_postemssage);
-                            let n_postemssage = PostMessageA(
-                                hwnd,
-                                WM_KEYDOWN,
-                                VK_UP as WPARAM,
-                                0,
+                            verify_ne!(
+                                PostMessageA(
+                                    hwnd,
+                                    WM_KEYDOWN,
+                                    VK_UP as WPARAM,
+                                    0,
+                                ),
+                                0
                             );
-                            assert!(0!=n_postemssage);
                         },
                         "Stich best\u{FFFD}tigen" => {
-                            let n_postemssage = PostMessageA(
-                                hwnd,
-                                WM_KEYDOWN,
-                                VK_UP as WPARAM,
-                                0,
+                            verify_ne!(
+                                PostMessageA(
+                                    hwnd,
+                                    WM_KEYDOWN,
+                                    VK_UP as WPARAM,
+                                    0,
+                                ),
+                                0
                             );
-                            assert!(0!=n_postemssage);
                         },
                         "Warten"
                             | ""
@@ -651,11 +657,10 @@ make_redirect_function!(
 );
 
 fn highlight_button(hwnd_dialog: HWND, n_id_dlg_item: c_int) -> HWND {
-    let hwnd_button = unsafe{GetDlgItem(
+    let hwnd_button = verify!(unsafe{GetDlgItem(
         hwnd_dialog,
         n_id_dlg_item,
-    )};
-    assert!(hwnd_button!=std::ptr::null_mut());
+    )});
     let mut vecch : Vec<CHAR> = vec![0; 100];
     let n_copied = unsafe{SendMessageA(
         hwnd_button,
@@ -667,13 +672,15 @@ fn highlight_button(hwnd_dialog: HWND, n_id_dlg_item: c_int) -> HWND {
     vecch.insert(0, '>' as CHAR);
     vecch.insert(0, '>' as CHAR);
     vecch.insert(0, ' ' as CHAR);
-    let b_success = unsafe{SendMessageA(
-        hwnd_button,
-        WM_SETTEXT,
-        /*wparam*/0, // unused as per documentation
-        /*lparam*/vecch.as_mut_ptr() as LPARAM,
-    )};
-    assert!(b_success!=(FALSE as isize));
+    verify_ne!(
+        unsafe{SendMessageA(
+            hwnd_button,
+            WM_SETTEXT,
+            /*wparam*/0, // unused as per documentation
+            /*lparam*/vecch.as_mut_ptr() as LPARAM,
+        )},
+        FALSE as isize
+    );
     hwnd_button
 }
 
@@ -695,22 +702,26 @@ fn click_button(
     } else {
         match esendorpost {
             ESendOrPost::Send => {
-                let n_sendmessage = unsafe{SendMessageA(
-                    hwnd_dialog,
-                    WM_COMMAND,
-                    std::mem::transmute(n_id_dlg_item),
-                    hwnd_button as LPARAM,
-                )};
-                assert_eq!(n_sendmessage, 0);
+                verify_eq!(
+                    unsafe{SendMessageA(
+                        hwnd_dialog,
+                        WM_COMMAND,
+                        std::mem::transmute(n_id_dlg_item),
+                        hwnd_button as LPARAM,
+                    )},
+                    0
+                );
             },
             ESendOrPost::Post => {
-                let b_postmessage = unsafe{PostMessageA(
-                    hwnd_dialog,
-                    WM_COMMAND,
-                    std::mem::transmute(n_id_dlg_item),
-                    hwnd_button as LPARAM,
-                )};
-                assert_eq!(b_postmessage, TRUE);
+                verify_eq!(
+                    unsafe{PostMessageA(
+                        hwnd_dialog,
+                        WM_COMMAND,
+                        std::mem::transmute(n_id_dlg_item),
+                        hwnd_button as LPARAM,
+                    )},
+                    TRUE
+                );
             },
         }
         Ok(()) // TODO? if_then_ok?
@@ -853,23 +864,27 @@ make_redirect_function!(
                     let select_item = |n_id_list: u16, str_item: &[u8]| {
                         let str_item = str_item.iter().copied().chain(std::iter::once(0)).collect::<Vec<_>>();
                         let hwnd_list = GetDlgItem(hwnd_spielabfrage, n_id_list as _); // TODO verify
-                        let n_sendmessage = SendMessageA(
-                            hwnd_list,
-                            LB_SELECTSTRING,
-                            std::mem::transmute(-1), // search entire list
-                            std::mem::transmute(str_item.as_ptr()),
+                        verify_ne!(
+                            SendMessageA(
+                                hwnd_list,
+                                LB_SELECTSTRING,
+                                std::mem::transmute(-1), // search entire list
+                                std::mem::transmute(str_item.as_ptr()),
+                            ),
+                            LB_ERR
                         );
-                        assert!(n_sendmessage!=LB_ERR);
-                        let n_sendmessage = SendMessageA(
-                            hwnd_spielabfrage,
-                            WM_COMMAND,
-                            std::mem::transmute(make_dword(
-                                n_id_list,
-                                LBN_SELCHANGE,
-                            )),
-                            std::mem::transmute(hwnd_list),
+                        verify_ne!(
+                            SendMessageA(
+                                hwnd_spielabfrage,
+                                WM_COMMAND,
+                                std::mem::transmute(make_dword(
+                                    n_id_list,
+                                    LBN_SELCHANGE,
+                                )),
+                                std::mem::transmute(hwnd_list),
+                            ),
+                            LB_ERR
                         );
-                        assert!(n_sendmessage!=LB_ERR);
                     };
                     select_item(/*rule kind list*/1287, str_rules_kind);
                     if let Some(str_farbe) = ostr_farbe {
