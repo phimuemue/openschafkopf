@@ -1,5 +1,7 @@
 #![cfg(windows)]
 
+use openschafkopf_util::*;
+
 // from https://docs.rs/winsafe/latest/src/winsafe/kernel/funcs.rs.html#1442-1444, https://docs.rs/winsafe/latest/winsafe/fn.MAKEDWORD.html
 pub const fn make_dword(lo: u16, hi: u16) -> u32 {
 	((lo as u32 & 0xffff) | ((hi as u32 & 0xffff) << 16)) as _
@@ -185,7 +187,7 @@ macro_rules! make_redirect_function(
             pub unsafe fn call_original(
                 $($paramname: $paramtype,)*
             ) -> $rettype {
-                OHOOK.as_ref().unwrap().call($($paramname,)*)
+                unwrap!(OHOOK.as_ref()).call($($paramname,)*)
             }
 
             pub unsafe extern $($extern)* fn redirected($($paramname: $paramtype,)*)->$rettype {
@@ -196,8 +198,8 @@ macro_rules! make_redirect_function(
                 log_in_out(&format!("{}::redirect", stringify!($mod_fn_redirect)), (), || {
                     let pfn_original: unsafe extern $($extern)* fn($($paramtype,)*)->$rettype =
                         std::mem::transmute($pfn_original);
-                    OHOOK = Some(GenericDetour::new(pfn_original, redirected).unwrap());
-                    OHOOK.as_ref().unwrap().enable().unwrap();
+                    OHOOK = Some(unwrap!(GenericDetour::new(pfn_original, redirected)));
+                    unwrap!(unwrap!(OHOOK.as_ref()).enable());
                 })
             }
         }
@@ -604,7 +606,7 @@ fn get_module_symbol_address(module: &str, symbol: &str) -> FARPROC {
         .chain(std::iter::once(0))
         .collect::<Vec<u16>>();
     info!("module {:?}", module);
-    let symbol = CString::new(symbol).unwrap();
+    let symbol = unwrap!(CString::new(symbol));
     info!("symbol {:?}", symbol);
     unsafe {
         let handle = GetModuleHandleW(module.as_ptr() as _);
@@ -909,7 +911,7 @@ make_redirect_function!(
             |hwnd, n_msg, wparam, lparam| {
                 let retval = call_original(hwnd, n_msg, wparam, lparam);
                 if n_msg==WM_SHOWWINDOW {
-                    click_button(
+                    unwrap!(click_button(
                         hwnd,
                         /*n_id_dlg_item*/if TRUE==netschk_maybe_vorschlag_should_stoss::redirected(N_INDEX_GAST) {
                             /*Ja*/1082
@@ -918,7 +920,7 @@ make_redirect_function!(
                         },
                         /*b_allow_invisible*/true, // WM_SHOWWINDOW called very early
                         ESendOrPost::Send,
-                    ).unwrap();
+                    ));
                 }
                 retval
             },
@@ -956,12 +958,12 @@ make_redirect_function!(
             |hwnd, n_msg, wparam, lparam| {
                 let retval = call_original(hwnd, n_msg, wparam, lparam);
                 if n_msg==WM_SHOWWINDOW {
-                    click_button(
+                    unwrap!(click_button(
                         hwnd,
                         /*weiter*/1083,
                         /*b_allow_invisible*/true, // WM_SHOWWINDOW called very early
                         ESendOrPost::Send,
-                    ).unwrap();
+                    ));
                 }
                 retval
             },
@@ -1075,15 +1077,15 @@ fn log_game() {
 }
 
 fn initialize() {
-    let path_user_data = dirs::data_dir().unwrap();
-    fs::create_dir_all(&path_user_data).unwrap();
-    simple_logging::log_to_file(
+    let path_user_data = unwrap!(dirs::data_dir());
+    unwrap!(fs::create_dir_all(&path_user_data));
+    unwrap!(simple_logging::log_to_file(
         path_user_data.join("netschafkopf_helper.log"),
         log::LevelFilter::Info,
-    ).unwrap();
+    ));
     info!("initialize <- (after logging setup)");
     info!("pid: {}", std::process::id());
-    info!("process_path: {}", std::env::current_exe().unwrap().display());
+    info!("process_path: {}", unwrap!(std::env::current_exe()).display());
 
     unsafe{netschk_strcpy_s::redirect()};
     if false { // Redirecting this function is very, very slow
