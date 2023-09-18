@@ -440,15 +440,14 @@ make_redirect_function!(
 make_redirect_function!(
     netschk_maybe_vorschlag,
     /*pfn_original*/0x004356d0,
-    ("C") (pchar_unknown: *mut c_char, n_unknown: size_t,)->(),
+    ("C") (pchar_answer: *mut c_char, n_bytes: size_t,)->(),
     {
-        log_in_out("maybe_vorschlag", (pchar_unknown, n_unknown), |pchar_unknown, n_unknown| {
+        log_in_out("maybe_vorschlag", (pchar_answer, n_bytes), |pchar_answer, n_bytes| {
             log_game();
-            let retval = call_original(pchar_unknown, n_unknown);
-            let str_unknown = String::from_utf8_lossy(
-                unsafe{scan_until_0(pchar_unknown as *const u8, n_unknown)}
-            );
-            info!("maybe_vorschlag: {}", str_unknown);
+            let retval = call_original(pchar_answer, n_bytes);
+            info!("maybe_vorschlag: {}", String::from_utf8_lossy(
+                unsafe{scan_until_0(pchar_answer as *const u8, n_bytes)}
+            ));
             retval
         })
     },
