@@ -1,6 +1,7 @@
 #![cfg(windows)]
 
 use openschafkopf_util::*;
+use openschafkopf_lib::primitives::{EFarbe, ESchlag, ECard};
 
 // from https://docs.rs/winsafe/latest/src/winsafe/kernel/funcs.rs.html#1442-1444, https://docs.rs/winsafe/latest/winsafe/fn.MAKEDWORD.html
 pub const fn make_dword(lo: u16, hi: u16) -> u32 {
@@ -89,17 +90,40 @@ extern "system" fn DllMain(
     TRUE
 }
 
-fn byte_is_farbe(byte: u8) -> bool {
-    "EGHS".bytes().find(|c| c==&byte).is_some()
+fn byte_is_farbe(byte: u8) -> Option<EFarbe> {
+    match byte {
+        b'E' => Some(EFarbe::Eichel),
+        b'G' => Some(EFarbe::Gras),
+        b'H' => Some(EFarbe::Herz),
+        b'S' => Some(EFarbe::Schelln),
+        _ => None,
+    }
 }
-fn byte_is_schlag(byte: u8) -> bool {
-    "789ZUOKA".bytes().find(|c| c==&byte).is_some()
+fn byte_is_schlag(byte: u8) -> Option<ESchlag> {
+    match byte {
+        b'7' => Some(ESchlag::S7),
+        b'8' => Some(ESchlag::S8),
+        b'9' => Some(ESchlag::S9),
+        b'Z' => Some(ESchlag::Zehn),
+        b'U' => Some(ESchlag::Unter),
+        b'O' => Some(ESchlag::Ober),
+        b'K' => Some(ESchlag::Koenig),
+        b'A' => Some(ESchlag::Ass),
+        _ => None,
+    }
 }
-fn bytes_are_card(slcbyte: &[u8]) -> bool {
+fn bytes_are_card(slcbyte: &[u8]) -> Option<ECard> {
     assert_eq!(3, slcbyte.len()); // TODO can we make this check at compile time
-    byte_is_farbe(slcbyte[0])
-        && byte_is_schlag(slcbyte[1])
-        && verify!(slcbyte[2]==0)
+    if_then_some!(
+        let (Some(efarbe), Some(eschlag))=(
+            byte_is_farbe(slcbyte[0]),
+            byte_is_schlag(slcbyte[1]),
+        ),
+        {
+            assert_eq!(slcbyte[2], 0);
+            ECard::new(efarbe, eschlag)
+        }
+    )
 }
 
 #[allow(dead_code)]
@@ -220,10 +244,15 @@ make_redirect_function!(
             src,
         );
         let ach_card : &[u8; 3] = std::mem::transmute(src);
-        if n_bytes_requested==3 && bytes_are_card(&ach_card[0..3]) {
-            info!("Moving card {}{}: {:?} => {:?}",
-                char::from(ach_card[0]),
-                char::from(ach_card[1]),
+        if let Some(card) = {
+            if n_bytes_requested==3 {
+                bytes_are_card(&ach_card[0..3])
+            } else {
+                None
+            }
+        } {
+            info!("Moving card {}: {:?} => {:?}",
+                card,
                 src,
                 dst,
             );
@@ -952,30 +981,18 @@ make_redirect_function!(
     },
 );
 
+const N_BYTES_PER_NETSCHAFKOPF_CARD: usize = 3;
 
-#[repr(C)]
-struct SNetSchafkopfCard {
-    byte_farbe: u8,
-    byte_schlag: u8,
-    byte_maybe_back_of_card_but_mostly_zero: u8,
-}
-impl std::fmt::Display for SNetSchafkopfCard {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "{}{}", char::from(self.byte_farbe), char::from(self.byte_schlag))
-    }
-}
-const N_BYTES_PER_NETSCHAFKOPF_CARD : usize = std::mem::size_of::<SNetSchafkopfCard>();
-
-unsafe fn interpret_as_cards<'lft>(pbyte: *const u8, n_cards_max: usize) -> &'lft [SNetSchafkopfCard] {
+unsafe fn interpret_as_cards(pbyte: *const u8, n_cards_max: usize) -> Vec<ECard> {
     let slcbyte = std::slice::from_raw_parts(pbyte, n_cards_max * N_BYTES_PER_NETSCHAFKOPF_CARD);
-    let mut n_cards = 0;
-    while n_cards < n_cards_max && {
-        let i_byte = n_cards * N_BYTES_PER_NETSCHAFKOPF_CARD;
+    let mut veccard = Vec::new();
+    while veccard.len() < n_cards_max && {
+        let i_byte = veccard.len() * N_BYTES_PER_NETSCHAFKOPF_CARD;
         bytes_are_card(&slcbyte[i_byte..i_byte+N_BYTES_PER_NETSCHAFKOPF_CARD])
-    } {
-        n_cards += 1;
-    }
-    std::slice::from_raw_parts(std::mem::transmute(pbyte), n_cards)
+            .map(|card| veccard.push(card))
+            .is_some()
+    } {}
+    veccard
 }
 
 static mut G_B_LOG_GAME : bool = true;
