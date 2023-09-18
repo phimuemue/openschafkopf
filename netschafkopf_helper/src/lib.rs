@@ -113,15 +113,14 @@ fn log_in_out_cond<
     Args: Clone+Debug,
     ShouldLog: Debug,
     R: Debug,
-    FnCond: UnpackAndApplyFn</*TODO could borrow?*/Args, Option<ShouldLog>>,
     F: UnpackAndApplyFn<Args, R>,
 >(
     str_f: &str,
     args: Args,
-    fn_cond: FnCond,
+    fn_cond: impl FnOnce(&Args)->Option<ShouldLog>,
     f: F
 ) -> R {
-    if let Some(shouldlog) = fn_cond.apply(args.clone()) {
+    if let Some(shouldlog) = fn_cond(&args) {
         let args_clone = args.clone();
         info!("{} {:?} [{:?}] <-", str_f, args_clone, shouldlog);
         let retval = f.apply(args);
@@ -140,7 +139,7 @@ fn log_in_out<
     args: Args,
     f: F,
 ) -> R {
-    log_in_out_cond(str_f, args, make_const_unpack_and_apply(Some(())), f)
+    log_in_out_cond(str_f, args, |_| Some(()), f)
 }
 
 macro_rules! make_redirect_function(
@@ -258,7 +257,7 @@ make_redirect_function!(
         log_in_out_cond(
             "process_window_message",
             (hwnd, u_msg, wparam, lparam),
-            |_hwnd, u_msg, _wparam, _lparam| match u_msg {
+            |&(_hwnd, u_msg, _wparam, _lparam)| match u_msg {
                 WM_KEYDOWN => {
                     if wparam==std::mem::transmute(VK_LEFT) || wparam==std::mem::transmute(VK_RIGHT) {
                         Some(format!(
@@ -701,7 +700,7 @@ make_redirect_function!(
         log_in_out_cond(
             "dialogproc_spielabfrage",
             (hwnd, n_msg, wparam, lparam),
-            |_hwnd, n_msg, _wparam, _lparam| {
+            |&(_hwnd, n_msg, _wparam, _lparam)| {
                 if n_msg==WM_COMMAND {
                     Some("WM_COMMAND".to_owned())
                 } else if n_msg==WM_INITDIALOG {
@@ -874,7 +873,7 @@ make_redirect_function!(
         log_in_out_cond(
             "dialogproc_contra_geben",
             (hwnd, n_msg, wparam, lparam),
-            |_hwnd, n_msg, _wparam, _lparam| {
+            |&(_hwnd, n_msg, _wparam, _lparam)| {
                 if n_msg==WM_COMMAND {
                     Some("WM_COMMAND".to_owned())
                 } else if n_msg==WM_INITDIALOG {
