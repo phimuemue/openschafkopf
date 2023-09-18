@@ -23,9 +23,14 @@ fn main() {
                 let mut cmd_lessc = Command::new("lessc");
                 let cmd_lessc = cmd_lessc
                     .arg(declare_input_file(path_resources.join("css.less")));
-                let output_lessc = unwrap!(cmd_lessc.output());
-                assert!(output_lessc.status.success(), "{:?}: {:?}", cmd_lessc, output_lessc);
-                output_lessc.stdout
+                match env::var("CARGO_CFG_TARGET_OS").as_ref().map(|x| &**x) {
+                    Ok("windows") => b"TODO css on windows".to_vec(), // TODO
+                    _ => {
+                        let output_lessc = unwrap!(cmd_lessc.output());
+                        assert!(output_lessc.status.success(), "{:?}: {:?}", cmd_lessc, output_lessc);
+                        output_lessc.stdout
+                    },
+                }
             })
     );
     // SVG rendering adapted from https://github.com/RazrFalcon/resvg/blob/master/examples/minimal.rs
