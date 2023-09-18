@@ -18,3 +18,4 @@ simple-logging = "2.0.2"
 winapi = { version = "0.3.9", features = ["consoleapi", "libloaderapi", "minwindef", "memoryapi", "winuser"] }
 openschafkopf_util = {path = "../util"}
 openschafkopf_lib = {path = "../lib"}
+plain_enum = "0"

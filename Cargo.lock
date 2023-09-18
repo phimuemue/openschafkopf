@@ -1367,6 +1367,7 @@ dependencies = [
  "log",
  "openschafkopf_lib",
  "openschafkopf_util",
+ "plain_enum",
  "retour",
  "simple-logging",
  "winapi",

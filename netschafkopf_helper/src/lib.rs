@@ -1,7 +1,14 @@
 #![cfg(windows)]
 
 use openschafkopf_util::*;
-use openschafkopf_lib::primitives::{EFarbe, ESchlag, ECard};
+use openschafkopf_lib::{
+    primitives::{EPlayerIndex, EFarbe, ESchlag, ECard},
+    rules::{
+        SStossParams,
+        parser::parse_rule_description,
+    },
+};
+use plain_enum::PlainEnum;
 
 // from https://docs.rs/winsafe/latest/src/winsafe/kernel/funcs.rs.html#1442-1444, https://docs.rs/winsafe/latest/winsafe/fn.MAKEDWORD.html
 pub const fn make_dword(lo: u16, hi: u16) -> u32 {
@@ -1035,9 +1042,8 @@ fn log_game() {
                 .join(" "),
         );
     }
-    info!("Geber: {}",
-        unsafe{*std::mem::transmute::<_, *const isize>(0x004ca578)}
-    );
+    let i_netschafkopf_geber = unsafe{*std::mem::transmute::<_, *const usize>(0x004ca578)};
+    info!("Geber: {}", i_netschafkopf_geber);
     info!("# komplette Stiche: {}",
         unsafe{*std::mem::transmute::<_, *const isize>(0x004b5988)}
     );
@@ -1047,14 +1053,38 @@ fn log_game() {
     info!("g_iEPIPresumablyNextCard: {}",
         unsafe{*std::mem::transmute::<_, *const isize>(0x004b596c)}
     );
-    info!("Rules: {} von {}",
-        String::from_utf8_lossy(
-            unsafe{scan_until_0(0x004ad0cc as *const u8, 260)}
-        ),
-        String::from_utf8_lossy(
-            unsafe{scan_until_0(0x004ad1d0 as *const u8, 260)}
-        ),
+    let str_rules_pri = String::from_utf8_lossy(
+        unsafe{scan_until_0(0x004ad0cc as *const u8, 260)}
     );
+    let str_active_player = String::from_utf8_lossy(
+        unsafe{scan_until_0(0x004ad1d0 as *const u8, 260)}
+    );
+    info!("Rules: {} von {}", str_rules_pri, str_active_player);
+    let to_openschafkopf_playerindex = |i_netschafkopf_player: usize| {
+        assert!(1 <= i_netschafkopf_geber);
+        assert!(i_netschafkopf_geber <= 4);
+        assert!(1 <= i_netschafkopf_player);
+        assert!(i_netschafkopf_player <= 4);
+        unwrap!(EPlayerIndex::checked_from_usize(
+            (i_netschafkopf_player + 4 - i_netschafkopf_geber) % 4
+        ))
+    };
+    if "Normal"!=str_rules_pri {
+        let rules = unwrap!(parse_rule_description(
+            &format!("{} von {}", str_rules_pri, str_active_player),
+            (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO extract from NetSchafkopf
+            SStossParams::new(/*n_stoss_max*/4), // TODO extract from NetSchafkopf
+            /*fn_player_to_epi*/|str_player| Ok(to_openschafkopf_playerindex(match str_player {
+                // TODO extract from NetSchafkopf
+                "PcLinks" => 1,
+                "PcOben" => 2,
+                "PcRechts" => 3,
+                "Du selbst" => 4,
+                _ => panic!("Unknown value for str_player: {}", str_player),
+            }))
+        ));
+        info!("{}", rules);
+    }
     info!("log_game ->");
 }
 
