@@ -1016,12 +1016,10 @@ fn log_game() {
             /*n_cards_max*/N_CARDS_STACK-1
         ).iter().join(" ")},
     );
-    for (str_player, n_ptr_hand) in [
-        ("links", 0x4b5e67),
-        ("oben", 0x4b5e8b),
-        ("rechts", 0x4b5eaf),
-        ("gast", 0x4b5ed3),
-    ] {
+    let astr_player = ["links", "oben", "rechts", "gast"];
+    let apbyte_hand = [0x4b5e67, 0x4b5e8b, 0x4b5eaf, 0x4b5ed3];
+    let apbyte_played = [0x4c60de, 0x4c60f9, 0x4c6114, 0x4c612f];
+    for (str_player, n_ptr_hand) in astr_player.iter().zip_eq(apbyte_hand.iter()) {
         info!("Hand von {}: {}",
             str_player,
             unsafe {interpret_as_cards(std::mem::transmute(n_ptr_hand), /*n_cards_max*/8)}
@@ -1029,12 +1027,7 @@ fn log_game() {
                 .join(" "),
         );
     }
-    for (str_player, n_ptr_played) in [
-        ("links", 0x4c60de),
-        ("oben", 0x4c60f9),
-        ("rechts", 0x4c6114),
-        ("gast", 0x4c612f),
-    ] {
+    for (str_player, n_ptr_played) in astr_player.iter().zip_eq(apbyte_played.iter()) {
         info!("Gespielte Karten von {}: {}",
             str_player,
             unsafe {interpret_as_cards(std::mem::transmute(n_ptr_played), /*n_cards_max*/8)}
