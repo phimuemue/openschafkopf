@@ -1047,6 +1047,14 @@ fn log_game() {
     info!("g_iEPIPresumablyNextCard: {}",
         unsafe{*std::mem::transmute::<_, *const isize>(0x004b596c)}
     );
+    info!("Rules: {} von {}",
+        String::from_utf8_lossy(
+            unsafe{scan_until_0(0x004ad0cc as *const u8, 260)}
+        ),
+        String::from_utf8_lossy(
+            unsafe{scan_until_0(0x004ad1d0 as *const u8, 260)}
+        ),
+    );
     info!("log_game ->");
 }
 
