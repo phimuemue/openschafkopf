@@ -144,12 +144,15 @@ fn log_in_out<
 
 macro_rules! make_redirect_function(
     (
-        $mod_fn_redirect:ident,
+        $fn_name:ident,
         $pfn_original:expr,
         ($($extern:tt)*) ($($paramname:ident : $paramtype:ty,)*)->$rettype:ty,
         $fn_new:expr,
     ) => {
-        mod $mod_fn_redirect {
+        pub unsafe extern $($extern)* fn $fn_name($($paramname: $paramtype,)*)->$rettype {
+            $fn_name::redirected($($paramname,)*)
+        }
+        mod $fn_name {
             use super::*;
             use retour::GenericDetour;
 
@@ -169,7 +172,7 @@ macro_rules! make_redirect_function(
             }
 
             pub unsafe fn redirect() {
-                log_in_out(&format!("{}::redirect", stringify!($mod_fn_redirect)), (), || {
+                log_in_out(&format!("{}::redirect", stringify!($fn_name)), (), || {
                     let pfn_original: unsafe extern $($extern)* fn($($paramtype,)*)->$rettype =
                         std::mem::transmute($pfn_original);
                     OHOOK = Some(unwrap!(GenericDetour::new(pfn_original, redirected)));
@@ -391,7 +394,7 @@ make_redirect_function!(
                             match log_in_out(
                                 "[manual] netschk_maybe_vorschlag_spielabfrage_1(N_INDEX_GAST)",
                                 (),
-                                || netschk_maybe_vorschlag_spielabfrage_1::redirected(N_INDEX_GAST),
+                                || netschk_maybe_vorschlag_spielabfrage_1(N_INDEX_GAST),
                             ) {
                                 0 => {
                                     "Weiter";
@@ -744,7 +747,7 @@ make_redirect_function!(
                     let hwnd_spielabfrage = *(0x004bd4dc as *mut HWND);
                     assert_eq!(hwnd, hwnd_spielabfrage);
                     let mut vecch_orig : Vec<CHAR> = vec![0; 1000];
-                    netschk_maybe_vorschlag::redirected(vecch_orig.as_mut_ptr(), vecch_orig.len());
+                    netschk_maybe_vorschlag(vecch_orig.as_mut_ptr(), vecch_orig.len());
                     let vecch = vecch_orig.into_iter()
                         .map(|c| c as u8)
                         .filter(|&c| c!=0)
@@ -889,7 +892,7 @@ make_redirect_function!(
                 if n_msg==WM_SHOWWINDOW {
                     unwrap!(click_button(
                         hwnd,
-                        /*n_id_dlg_item*/if TRUE==netschk_maybe_vorschlag_should_stoss::redirected(N_INDEX_GAST) {
+                        /*n_id_dlg_item*/if TRUE==netschk_maybe_vorschlag_should_stoss(N_INDEX_GAST) {
                             /*Ja*/1082
                         } else {
                             /*Nein*/1081
