@@ -991,6 +991,7 @@ make_redirect_function!(
 const N_BYTES_PER_NETSCHAFKOPF_CARD: usize = 3;
 
 unsafe fn interpret_as_cards(pbyte: *const u8, n_cards_max: usize) -> Vec<ECard> {
+    log_bytes(pbyte, n_cards_max*N_BYTES_PER_NETSCHAFKOPF_CARD);
     let slcbyte = std::slice::from_raw_parts(pbyte, n_cards_max * N_BYTES_PER_NETSCHAFKOPF_CARD);
     let mut veccard = Vec::new();
     while veccard.len() < n_cards_max && {
@@ -1026,7 +1027,7 @@ fn log_game() {
     let astr_player = ["links", "oben", "rechts", "gast"];
     let apbyte_hand = [0x4b5e67, 0x4b5e8b, 0x4b5eaf, 0x4b5ed3];
     let apbyte_played = [0x4c60de, 0x4c60f9, 0x4c6114, 0x4c612f];
-    for (str_player, n_ptr_hand) in astr_player.iter().zip_eq(apbyte_hand.iter()) {
+    for (str_player, n_ptr_hand) in astr_player.iter().zip_eq(apbyte_hand.iter().copied()) {
         info!("Hand von {}: {}",
             str_player,
             unsafe {interpret_as_cards(std::mem::transmute(n_ptr_hand), /*n_cards_max*/8)}
@@ -1034,7 +1035,7 @@ fn log_game() {
                 .join(" "),
         );
     }
-    for (str_player, n_ptr_played) in astr_player.iter().zip_eq(apbyte_played.iter()) {
+    for (str_player, n_ptr_played) in astr_player.iter().zip_eq(apbyte_played.iter().copied()) {
         info!("Gespielte Karten von {}: {}",
             str_player,
             unsafe {interpret_as_cards(std::mem::transmute(n_ptr_played), /*n_cards_max*/8)}
