@@ -140,7 +140,7 @@ fn log_in_out<
     args: Args,
     f: F,
 ) -> R {
-    log_in_out_cond(str_f, args, make_const_unpack_and_apply(Some("")), f)
+    log_in_out_cond(str_f, args, make_const_unpack_and_apply(Some(())), f)
 }
 
 macro_rules! make_redirect_function(
@@ -909,12 +909,9 @@ make_redirect_function!(
     /*pfn_original*/0x00412050,
     ("system") (hwnd: HWND, n_msg: UINT, wparam: WPARAM, lparam: LPARAM,) -> INT_PTR,
     {
-        log_in_out_cond(
+        log_in_out(
             "dialogproc_analyse_weiter_1",
             (hwnd, n_msg, wparam, lparam),
-            |_hwnd, _n_msg, _wparam, _lparam| {
-                Some(())
-            },
             |hwnd, n_msg, wparam, lparam| {
                 call_original(hwnd, n_msg, wparam, lparam)
             },
@@ -926,12 +923,9 @@ make_redirect_function!(
     /*pfn_original*/0x00412050,
     ("system") (hwnd: HWND, n_msg: UINT, wparam: WPARAM, lparam: LPARAM,) -> INT_PTR,
     {
-        log_in_out_cond(
+        log_in_out(
             "dialogproc_analyse_weiter_2_maybe_ja_nein",
             (hwnd, n_msg, wparam, lparam),
-            |_hwnd, _n_msg, _wparam, _lparam| {
-                Some(())
-            },
             |hwnd, n_msg, wparam, lparam| {
                 let retval = call_original(hwnd, n_msg, wparam, lparam);
                 if n_msg==WM_SHOWWINDOW {
@@ -952,12 +946,9 @@ make_redirect_function!(
     /*pfn_original*/0x0045f940,
     ("system") (hwnd: HWND, n_msg: UINT, wparam: WPARAM, lparam: LPARAM,) -> INT_PTR,
     {
-        log_in_out_cond(
+        log_in_out(
             "wndproc_status_bar",
             (hwnd, n_msg, wparam, lparam),
-            |_hwnd, _n_msg, _wparam, _lparam| {
-                Some(())
-            },
             |hwnd, n_msg, wparam, lparam| {
                 call_original(hwnd, n_msg, wparam, lparam)
             },
