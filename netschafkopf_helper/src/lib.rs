@@ -200,6 +200,18 @@ thread_local!(
     static PHWND_MAIN : *const HWND = unsafe{std::mem::transmute(0x004b6538)};
 );
 
+unsafe fn scan_until_0<'slc>(pch: *const u8, on_max_bytes: impl Into<Option<usize>>) -> &'slc [u8] {
+    // TODO can we somehow restrict unsafe's scope within this function?
+    let mut pch_current = pch;
+    let mut n_bytes_before_0 = 0;
+    let n_max_bytes = on_max_bytes.into().unwrap_or(usize::MAX);
+    while *pch_current!=0 && n_bytes_before_0 <= n_max_bytes {
+        pch_current = pch_current.add(1);
+        n_bytes_before_0 += 1;
+    }
+    std::slice::from_raw_parts(pch as *const u8, n_bytes_before_0)
+}
+
 make_redirect_function!(
     netschk_strcpy_s,
     /*pfn_original*/0x00473757,
@@ -219,14 +231,8 @@ make_redirect_function!(
                 dst,
             );
         } else {
-            let mut pch = src;
-            let mut n_bytes_before_0 = 0;
-            while *pch!=0 && n_bytes_before_0 <= n_bytes_requested {
-                pch = pch.add(1);
-                n_bytes_before_0 += 1;
-            }
             let str_src = String::from_utf8_lossy(
-                unsafe{std::slice::from_raw_parts(src as *const u8, n_bytes_before_0)},
+                unsafe{scan_until_0(src as *const u8, n_bytes_requested)}
             );
             info!("strcpy_s: {:?} => {:?}: {}",
                 dst,
@@ -303,14 +309,8 @@ make_redirect_function!(
                 if let Ok(_oknownduaktion_expected) = resoknownduaktion_expected {
                     let retval = call_original(hwnd, u_msg, wparam, lparam);
                     let src = unsafe{std::mem::transmute::<_,*const c_char>(0x004c8438)};
-                    let mut pch = src;
-                    let mut n_bytes_before_0 = 0;
-                    while *pch!=0 {
-                        pch = pch.add(1);
-                        n_bytes_before_0 += 1;
-                    }
                     let str_status = String::from_utf8_lossy(
-                        unsafe{std::slice::from_raw_parts(src as *const u8, n_bytes_before_0)},
+                        unsafe{scan_until_0(src as *const u8, None)}
                     );
                     info!("str_status: {}", str_status);
                     match str_status.borrow() {
@@ -445,14 +445,8 @@ make_redirect_function!(
         log_in_out("maybe_vorschlag", (pchar_unknown, n_unknown), |pchar_unknown, n_unknown| {
             log_game();
             let retval = call_original(pchar_unknown, n_unknown);
-            let mut pch = pchar_unknown;
-            let mut n_bytes_before_0 = 0;
-            while *pch!=0 && n_bytes_before_0 <= n_unknown {
-                pch = pch.add(1);
-                n_bytes_before_0 += 1;
-            }
             let str_unknown = String::from_utf8_lossy(
-                unsafe{std::slice::from_raw_parts(pchar_unknown as *const u8, n_bytes_before_0)},
+                unsafe{scan_until_0(pchar_unknown as *const u8, n_unknown)}
             );
             info!("maybe_vorschlag: {}", str_unknown);
             retval
@@ -604,14 +598,8 @@ make_redirect_function!(
     {
         log_in_out("SetWindowTextA", (hwnd, lpcstr,), |hwnd, lpcstr: LPCSTR| {
             //info!("SetWindowText {:?}", OsString::new(lpcstr));
-            let mut pch = lpcstr;
-            let mut i = 0;
-            while *pch!=0 {
-                pch = pch.add(1);
-                i += 1;
-            }
             info!("SetWindowTextA: {:?}", CString::new(
-                std::slice::from_raw_parts(lpcstr, i)
+                scan_until_0(lpcstr as *const u8, None)
                     .iter()
                     .map(|&c| c as u8)
                     .collect::<Vec<_>>()
