@@ -1365,6 +1365,7 @@ dependencies = [
  "itertools",
  "libc",
  "log",
+ "openschafkopf_lib",
  "openschafkopf_util",
  "retour",
  "simple-logging",
