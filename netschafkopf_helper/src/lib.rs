@@ -197,11 +197,6 @@ enum EKnownDuAktion {
     // StichBestaetigen,
 }
 
-use std::thread_local;
-thread_local!(
-    static PHWND_MAIN : *const HWND = unsafe{std::mem::transmute(0x004b6538)};
-);
-
 unsafe fn scan_until_0<'slc>(pch: *const u8, on_max_bytes: impl Into<Option<usize>>) -> &'slc [u8] {
     // TODO can we somehow restrict unsafe's scope within this function?
     let mut pch_current = pch;
@@ -297,7 +292,6 @@ make_redirect_function!(
                 _ => None,
             },
             |hwnd, u_msg, wparam, lparam| {
-                PHWND_MAIN.with(|&phwnd_main| assert_eq!(hwnd, unsafe{*phwnd_main}));
                 let resoknownduaktion_expected = dbg!(match (u_msg, wparam, lparam) {
                     (NETSCHK_MSG_AKTIONSABFRAGE, _, _/*no check for N_INDEX_GAST - Kartenabfrage also happens in other circumstances*/) => {
                         Ok(None) // expectation, but no specific one
