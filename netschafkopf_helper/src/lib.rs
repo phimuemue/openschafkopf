@@ -1103,6 +1103,8 @@ fn log_game() {
         });
         info!("{}", display_card_slices(&ahand, &rules, " | "));
     }
+    let n_stichs_remaining = unsafe{*std::mem::transmute::<_, *const usize>(0x004963b8)};
+    info!("n_stichs_remaining: {}", n_stichs_remaining);
     info!("log_game ->");
 }
 
