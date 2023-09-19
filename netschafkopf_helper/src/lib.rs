@@ -2,7 +2,7 @@
 
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    primitives::{EPlayerIndex, EFarbe, ESchlag, ECard},
+    primitives::{EKurzLang, EPlayerIndex, EFarbe, ESchlag, ECard, SStichSequence},
     rules::{
         SStossParams,
         parser::parse_rule_description,
@@ -1025,32 +1025,30 @@ fn log_game() {
         ).iter().join(" ")},
     );
     let astr_player = ["links", "oben", "rechts", "gast"];
-    let apbyte_hand = [0x4b5e67, 0x4b5e8b, 0x4b5eaf, 0x4b5ed3];
-    let apbyte_played = [0x4c60de, 0x4c60f9, 0x4c6114, 0x4c612f];
-    for (str_player, n_ptr_hand) in astr_player.iter().zip_eq(apbyte_hand.iter().copied()) {
+    let aveccard_hand = [0x4b5e67, 0x4b5e8b, 0x4b5eaf, 0x4b5ed3].map(|pbyte_hand: usize|
+        unsafe {interpret_as_cards(std::mem::transmute(pbyte_hand), /*n_cards_max*/8)}
+    );
+    let aveccard_played = [0x4c60de, 0x4c60f9, 0x4c6114, 0x4c612f].map(|pbyte_played: usize|
+        unsafe {interpret_as_cards(std::mem::transmute(pbyte_played), /*n_cards_max*/8)}
+    );
+    for (str_player, veccard_hand) in astr_player.iter().zip_eq(aveccard_hand.iter()) {
         info!("Hand von {}: {}",
             str_player,
-            unsafe {interpret_as_cards(std::mem::transmute(n_ptr_hand), /*n_cards_max*/8)}
-                .iter()
-                .join(" "),
+            veccard_hand.iter().join(" "),
         );
     }
-    for (str_player, n_ptr_played) in astr_player.iter().zip_eq(apbyte_played.iter().copied()) {
+    for (str_player, veccard_played) in astr_player.iter().zip_eq(aveccard_played.iter()) {
         info!("Gespielte Karten von {}: {}",
             str_player,
-            unsafe {interpret_as_cards(std::mem::transmute(n_ptr_played), /*n_cards_max*/8)}
-                .iter()
-                .join(" "),
+            veccard_played.iter().join(" "),
         );
     }
     let i_netschafkopf_geber = unsafe{*std::mem::transmute::<_, *const usize>(0x004ca578)};
     info!("Geber: {}", i_netschafkopf_geber);
-    info!("# komplette Stiche: {}",
-        unsafe{*std::mem::transmute::<_, *const isize>(0x004b5988)}
-    );
-    info!("# played cards in current stich: {}",
-        unsafe{*std::mem::transmute::<_, *const isize>(0x004963e4)}
-    );
+    let n_stichs_completed = unsafe{*std::mem::transmute::<_, *const usize>(0x004b5988)};
+    info!("# komplette Stiche: {}", n_stichs_completed);
+    let n_current_stich_size = unsafe{*std::mem::transmute::<_, *const usize>(0x004963e4)};
+    info!("# played cards in current stich: {}", n_current_stich_size);
     info!("g_iEPIPresumablyNextCard: {}",
         unsafe{*std::mem::transmute::<_, *const isize>(0x004b596c)}
     );
@@ -1070,6 +1068,9 @@ fn log_game() {
             (i_netschafkopf_player + 4 - i_netschafkopf_geber) % 4
         ))
     };
+    let epi_to_netschafkopf_playerindex = |epi: EPlayerIndex| {
+        (i_netschafkopf_geber + epi.to_usize())%4+1
+    };
     if "Normal"!=str_rules_pri {
         let rules = unwrap!(parse_rule_description(
             &format!("{} von {}", str_rules_pri, str_active_player),
@@ -1085,6 +1086,17 @@ fn log_game() {
             }))
         ));
         info!("{}", rules);
+        let ekurzlang = EKurzLang::Lang; // TODO extract from NetSchafkopf
+        let mut stichseq = SStichSequence::new(ekurzlang);
+        for _i_card in 0..n_stichs_completed*EPlayerIndex::SIZE + n_current_stich_size {
+            stichseq.zugeben(
+                aveccard_played
+                    [epi_to_netschafkopf_playerindex(unwrap!(stichseq.current_stich().current_playerindex()))-1]
+                    [stichseq.completed_stichs().len()],
+                rules.as_ref(),
+            );
+        }
+        info!("{:?}", stichseq);
     }
     info!("log_game ->");
 }
