@@ -2,7 +2,7 @@
 
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    primitives::{EKurzLang, EPlayerIndex, EFarbe, ESchlag, ECard, SStichSequence},
+    primitives::{EKurzLang, EPlayerIndex, EFarbe, ESchlag, ECard, SStichSequence, SHand, display_card_slices},
     rules::{
         SStossParams,
         parser::parse_rule_description,
@@ -1097,6 +1097,11 @@ fn log_game() {
             );
         }
         info!("{:?}", stichseq);
+        let an_cards_hand = stichseq.remaining_cards_per_hand();
+        let ahand = EPlayerIndex::map_from_fn(|epi| {
+            SHand::new_from_iter(&aveccard_hand[epi_to_netschafkopf_playerindex(epi)-1][0..an_cards_hand[epi]])
+        });
+        info!("{}", display_card_slices(&ahand, &rules, " | "));
     }
     info!("log_game ->");
 }
