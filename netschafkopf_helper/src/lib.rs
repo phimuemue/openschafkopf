@@ -470,6 +470,29 @@ make_redirect_function!(
 );
 
 make_redirect_function!(
+    netschk_fill_regel_to_registry_bytes,
+    /*pfn_original*/0x0042aa00,
+    ("C") (pbyte_out: *mut u8,)->(),
+    {
+        log_in_out("fill_regel_to_registry_bytes", (pbyte_out,), |pbyte_out| {
+            let retval = call_original(pbyte_out);
+            log_bytes(pbyte_out, 129);
+            retval
+        })
+    },
+);
+make_redirect_function!(
+    netschk_read_regel_to_registry_bytes,
+    /*pfn_original*/0x0042ab60,
+    ("C") (pbyte: *const u8,)->(),
+    {
+        log_in_out("read_regel_to_registry_bytes", (pbyte,), |pbyte| {
+            log_bytes(pbyte, 129);
+            call_original(pbyte)
+        })
+    },
+);
+make_redirect_function!(
     netschk_maybe_vorschlag,
     /*pfn_original*/0x004356d0,
     ("C") (pchar_answer: *mut c_char, n_bytes: size_t,)->(),
@@ -1105,6 +1128,8 @@ fn log_game() {
     }
     let n_stichs_remaining = unsafe{*std::mem::transmute::<_, *const usize>(0x004963b8)};
     info!("n_stichs_remaining: {}", n_stichs_remaining);
+    let n_presumably_total_games = unsafe{*std::mem::transmute::<_, *const usize>(0x004c60ac)};
+    info!("n_presumably_total_games: {}", n_presumably_total_games);
     info!("log_game ->");
 }
 
@@ -1125,6 +1150,8 @@ fn initialize() {
             netschk_increment_playerindex::redirect();
         }
         netschk_process_window_message::redirect();
+        netschk_fill_regel_to_registry_bytes::redirect();
+        netschk_read_regel_to_registry_bytes::redirect();
         netschk_maybe_vorschlag::redirect();
         netschk_maybe_vorschlag_suggest_card_1::redirect();
         netschk_maybe_vorschlag_suggest_card_2::redirect();
