@@ -488,7 +488,9 @@ make_redirect_function!(
     {
         log_in_out("read_regel_to_registry_bytes", (pbyte,), |pbyte| {
             log_bytes(pbyte, 129);
-            call_original(pbyte)
+            let retval = call_original(pbyte);
+            unsafe{*PN_TOTAL_GAMES = 10000};
+            retval
         })
     },
 );
@@ -1128,10 +1130,12 @@ fn log_game() {
     }
     let n_stichs_remaining = unsafe{*std::mem::transmute::<_, *const usize>(0x004963b8)};
     info!("n_stichs_remaining: {}", n_stichs_remaining);
-    let n_presumably_total_games = unsafe{*std::mem::transmute::<_, *const usize>(0x004c60ac)};
+    let n_presumably_total_games = unsafe{*PN_TOTAL_GAMES};
     info!("n_presumably_total_games: {}", n_presumably_total_games);
     info!("log_game ->");
 }
+
+const PN_TOTAL_GAMES : *mut usize = 0x004c60ac as *mut usize;
 
 fn initialize() {
     let path_user_data = unwrap!(dirs::data_dir());
