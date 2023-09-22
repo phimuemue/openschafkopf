@@ -2,8 +2,10 @@
 
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    primitives::{EKurzLang, EPlayerIndex, EFarbe, ESchlag, ECard, SStichSequence, SHand, display_card_slices},
+    game::{SGame, SExpensifiersNoStoss},
+    primitives::{EKurzLang, EPlayerIndex, EFarbe, ESchlag, ECard, SStichSequence, SHand, display_card_slices, SStaticEPI0},
     rules::{
+        SDoublings,
         SStossParams,
         parser::parse_rule_description,
     },
@@ -1024,111 +1026,121 @@ unsafe fn interpret_as_cards(pbyte: *const u8, n_cards_max: usize) -> Vec<ECard>
     veccard
 }
 
-static mut G_B_LOG_GAME : bool = true;
+static mut B_LOG_GAME : bool = true;
 
-fn log_game() {
-    if !unsafe{G_B_LOG_GAME} {
-        return;
-    }
-    info!("log_game <-");
-    let pbyte_card_stack = 0x004bd500 as *const u8;
-    const N_CARDS_STACK : usize = 33;
-    info!("Card stack including 0: {}",
-        unsafe{interpret_as_cards(
-            pbyte_card_stack,
-            /*n_cards_max*/N_CARDS_STACK
-        ).iter().join(" ")},
-    );
-    info!("Card stack excluding 0: {}",
-        unsafe{interpret_as_cards(
-            pbyte_card_stack.add(N_BYTES_PER_NETSCHAFKOPF_CARD),
-            /*n_cards_max*/N_CARDS_STACK-1
-        ).iter().join(" ")},
-    );
-    let astr_player = ["links", "oben", "rechts", "gast"];
-    let aveccard_hand = [0x4b5e67, 0x4b5e8b, 0x4b5eaf, 0x4b5ed3].map(|pbyte_hand: usize|
-        unsafe {interpret_as_cards(std::mem::transmute(pbyte_hand), /*n_cards_max*/8)}
-    );
-    let aveccard_played = [0x4c60de, 0x4c60f9, 0x4c6114, 0x4c612f].map(|pbyte_played: usize|
-        unsafe {interpret_as_cards(std::mem::transmute(pbyte_played), /*n_cards_max*/8)}
-    );
-    for (str_player, veccard_hand) in astr_player.iter().zip_eq(aveccard_hand.iter()) {
-        info!("Hand von {}: {}",
-            str_player,
-            veccard_hand.iter().join(" "),
+fn log_game() -> Option<SGame> {
+    log_in_out_cond("log_game", (), |_| if_then_some!(unsafe{B_LOG_GAME},()), || {
+        let pbyte_card_stack = 0x004bd500 as *const u8;
+        const N_CARDS_STACK : usize = 33;
+        info!("Card stack including 0: {}",
+            unsafe{interpret_as_cards(
+                pbyte_card_stack,
+                /*n_cards_max*/N_CARDS_STACK
+            ).iter().join(" ")},
         );
-    }
-    for (str_player, veccard_played) in astr_player.iter().zip_eq(aveccard_played.iter()) {
-        info!("Gespielte Karten von {}: {}",
-            str_player,
-            veccard_played.iter().join(" "),
+        info!("Card stack excluding 0: {}",
+            unsafe{interpret_as_cards(
+                pbyte_card_stack.add(N_BYTES_PER_NETSCHAFKOPF_CARD),
+                /*n_cards_max*/N_CARDS_STACK-1
+            ).iter().join(" ")},
         );
-    }
-    let i_netschafkopf_geber = unsafe{*std::mem::transmute::<_, *const usize>(0x004ca578)};
-    info!("Geber: {}", i_netschafkopf_geber);
-    let n_stichs_completed = unsafe{*std::mem::transmute::<_, *const usize>(0x004b5988)};
-    info!("# komplette Stiche: {}", n_stichs_completed);
-    let n_current_stich_size = unsafe{*std::mem::transmute::<_, *const usize>(0x004963e4)};
-    info!("# played cards in current stich: {}", n_current_stich_size);
-    info!("g_iEPIPresumablyNextCard: {}",
-        unsafe{*std::mem::transmute::<_, *const isize>(0x004b596c)}
-    );
-    let str_rules_pri = String::from_utf8_lossy(
-        unsafe{scan_until_0(0x004ad0cc as *const u8, 260)}
-    );
-    let str_active_player = String::from_utf8_lossy(
-        unsafe{scan_until_0(0x004ad1d0 as *const u8, 260)}
-    );
-    info!("Rules: {} von {}", str_rules_pri, str_active_player);
-    let to_openschafkopf_playerindex = |i_netschafkopf_player: usize| {
-        assert!(1 <= i_netschafkopf_geber);
-        assert!(i_netschafkopf_geber <= 4);
-        assert!(1 <= i_netschafkopf_player);
-        assert!(i_netschafkopf_player <= 4);
-        unwrap!(EPlayerIndex::checked_from_usize(
-            (i_netschafkopf_player + 4 - i_netschafkopf_geber) % 4
-        ))
-    };
-    let epi_to_netschafkopf_playerindex = |epi: EPlayerIndex| {
-        (i_netschafkopf_geber + epi.to_usize())%4+1
-    };
-    if "Normal"!=str_rules_pri {
-        let rules = unwrap!(parse_rule_description(
-            &format!("{} von {}", str_rules_pri, str_active_player),
-            (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO extract from NetSchafkopf
-            SStossParams::new(/*n_stoss_max*/4), // TODO extract from NetSchafkopf
-            /*fn_player_to_epi*/|str_player| Ok(to_openschafkopf_playerindex(match str_player {
-                // TODO extract from NetSchafkopf
-                "PcLinks" => 1,
-                "PcOben" => 2,
-                "PcRechts" => 3,
-                "Du selbst" => 4,
-                _ => panic!("Unknown value for str_player: {}", str_player),
-            }))
-        ));
-        info!("{}", rules);
-        let ekurzlang = EKurzLang::Lang; // TODO extract from NetSchafkopf
-        let mut stichseq = SStichSequence::new(ekurzlang);
-        for _i_card in 0..n_stichs_completed*EPlayerIndex::SIZE + n_current_stich_size {
-            stichseq.zugeben(
-                aveccard_played
-                    [epi_to_netschafkopf_playerindex(unwrap!(stichseq.current_stich().current_playerindex()))-1]
-                    [stichseq.completed_stichs().len()],
-                rules.as_ref(),
+        let astr_player = ["links", "oben", "rechts", "gast"];
+        let aveccard_hand = [0x4b5e67, 0x4b5e8b, 0x4b5eaf, 0x4b5ed3].map(|pbyte_hand: usize|
+            unsafe {interpret_as_cards(std::mem::transmute(pbyte_hand), /*n_cards_max*/8)}
+        );
+        let aveccard_played = [0x4c60de, 0x4c60f9, 0x4c6114, 0x4c612f].map(|pbyte_played: usize|
+            unsafe {interpret_as_cards(std::mem::transmute(pbyte_played), /*n_cards_max*/8)}
+        );
+        for (str_player, veccard_hand) in astr_player.iter().zip_eq(aveccard_hand.iter()) {
+            info!("Hand von {}: {}",
+                str_player,
+                veccard_hand.iter().join(" "),
             );
         }
-        info!("{:?}", stichseq);
-        let an_cards_hand = stichseq.remaining_cards_per_hand();
-        let ahand = EPlayerIndex::map_from_fn(|epi| {
-            SHand::new_from_iter(&aveccard_hand[epi_to_netschafkopf_playerindex(epi)-1][0..an_cards_hand[epi]])
-        });
-        info!("{}", display_card_slices(&ahand, &rules, " | "));
-    }
-    let n_stichs_remaining = unsafe{*std::mem::transmute::<_, *const usize>(0x004963b8)};
-    info!("n_stichs_remaining: {}", n_stichs_remaining);
-    let n_presumably_total_games = unsafe{*PN_TOTAL_GAMES};
-    info!("n_presumably_total_games: {}", n_presumably_total_games);
-    info!("log_game ->");
+        for (str_player, veccard_played) in astr_player.iter().zip_eq(aveccard_played.iter()) {
+            info!("Gespielte Karten von {}: {}",
+                str_player,
+                veccard_played.iter().join(" "),
+            );
+        }
+        let i_netschafkopf_geber = unsafe{*std::mem::transmute::<_, *const usize>(0x004ca578)};
+        info!("Geber: {}", i_netschafkopf_geber);
+        let n_stichs_completed = unsafe{*std::mem::transmute::<_, *const usize>(0x004b5988)};
+        info!("# komplette Stiche: {}", n_stichs_completed);
+        let n_current_stich_size = unsafe{*std::mem::transmute::<_, *const usize>(0x004963e4)};
+        info!("# played cards in current stich: {}", n_current_stich_size);
+        info!("g_iEPIPresumablyNextCard: {}",
+            unsafe{*std::mem::transmute::<_, *const isize>(0x004b596c)}
+        );
+        let str_rules_pri = String::from_utf8_lossy(
+            unsafe{scan_until_0(0x004ad0cc as *const u8, 260)}
+        );
+        let str_active_player = String::from_utf8_lossy(
+            unsafe{scan_until_0(0x004ad1d0 as *const u8, 260)}
+        );
+        info!("Rules: {} von {}", str_rules_pri, str_active_player);
+        let to_openschafkopf_playerindex = |i_netschafkopf_player: usize| {
+            assert!(1 <= i_netschafkopf_geber);
+            assert!(i_netschafkopf_geber <= 4);
+            assert!(1 <= i_netschafkopf_player);
+            assert!(i_netschafkopf_player <= 4);
+            unwrap!(EPlayerIndex::checked_from_usize(
+                (i_netschafkopf_player + 4 - i_netschafkopf_geber) % 4
+            ))
+        };
+        let epi_to_netschafkopf_playerindex = |epi: EPlayerIndex| {
+            (i_netschafkopf_geber + epi.to_usize())%4+1
+        };
+        let n_stichs_remaining = unsafe{*std::mem::transmute::<_, *const usize>(0x004963b8)};
+        info!("n_stichs_remaining: {}", n_stichs_remaining);
+        let n_presumably_total_games = unsafe{*PN_TOTAL_GAMES};
+        info!("n_presumably_total_games: {}", n_presumably_total_games);
+        if_then_some!("Normal"!=str_rules_pri, {
+            let rules = unwrap!(parse_rule_description(
+                &format!("{} von {}", str_rules_pri, str_active_player),
+                (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO extract from NetSchafkopf
+                SStossParams::new(/*n_stoss_max*/4), // TODO extract from NetSchafkopf
+                /*fn_player_to_epi*/|str_player| Ok(to_openschafkopf_playerindex(match str_player {
+                    // TODO extract from NetSchafkopf
+                    "PcLinks" => 1,
+                    "PcOben" => 2,
+                    "PcRechts" => 3,
+                    "Du selbst" => 4,
+                    _ => panic!("Unknown value for str_player: {}", str_player),
+                }))
+            ));
+            info!("{}", rules);
+            let ekurzlang = EKurzLang::Lang; // TODO extract from NetSchafkopf
+            let mut stichseq = SStichSequence::new(ekurzlang);
+            for _i_card in 0..n_stichs_completed*EPlayerIndex::SIZE + n_current_stich_size {
+                stichseq.zugeben(
+                    aveccard_played
+                        [epi_to_netschafkopf_playerindex(unwrap!(stichseq.current_stich().current_playerindex()))-1]
+                        [stichseq.completed_stichs().len()],
+                    rules.as_ref(),
+                );
+            }
+            info!("{:?}", stichseq);
+            let an_cards_hand = stichseq.remaining_cards_per_hand();
+            let ahand = EPlayerIndex::map_from_fn(|epi| {
+                SHand::new_from_iter(&aveccard_hand[epi_to_netschafkopf_playerindex(epi)-1][0..an_cards_hand[epi]])
+            });
+            info!("{}", display_card_slices(&ahand, &rules, " | "));
+            SGame::new_with(
+                /*aveccard*/EPlayerIndex::map_from_fn(|epi|
+                    stichseq.cards_from_player(&ahand[epi], epi).collect()
+                ),
+                SExpensifiersNoStoss::new_with_doublings(
+                    /*n_stock*/0, // TODO extract from NetSchafkopf
+                    /*doublings*/SDoublings::new(SStaticEPI0{}), // TODO extract from NetSchafkopf
+                ),
+                rules,
+                /*ruleset*/(), // TODO extract from NetSchafkopf
+                /*gameannouncements*/(), // TODO extract from NetSchafkopf
+                /*determinerules*/(), // TODO extract from NetSchafkopf
+            )
+        })
+    })
 }
 
 const PN_TOTAL_GAMES : *mut usize = 0x004c60ac as *mut usize;
