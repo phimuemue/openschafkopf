@@ -268,8 +268,8 @@ make_redirect_function!(
                 unsafe{scan_until_0(src as *const u8, n_bytes_requested)}
             );
             info!("strcpy_s: {:?} => {:?}: {}",
-                dst,
                 src,
+                dst,
                 str_src,
             );
         }
