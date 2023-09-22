@@ -475,9 +475,7 @@ make_redirect_function!(
     ("C") (pbyte_out: *mut u8,)->(),
     {
         log_in_out("fill_regel_to_registry_bytes", (pbyte_out,), |pbyte_out| {
-            let retval = call_original(pbyte_out);
-            log_bytes(pbyte_out, 129);
-            retval
+            call_original(pbyte_out)
         })
     },
 );
@@ -487,7 +485,6 @@ make_redirect_function!(
     ("C") (pbyte: *const u8,)->(),
     {
         log_in_out("read_regel_to_registry_bytes", (pbyte,), |pbyte| {
-            log_bytes(pbyte, 129);
             let retval = call_original(pbyte);
             unsafe{*PN_TOTAL_GAMES = 10000};
             retval
@@ -1016,7 +1013,6 @@ make_redirect_function!(
 const N_BYTES_PER_NETSCHAFKOPF_CARD: usize = 3;
 
 unsafe fn interpret_as_cards(pbyte: *const u8, n_cards_max: usize) -> Vec<ECard> {
-    log_bytes(pbyte, n_cards_max*N_BYTES_PER_NETSCHAFKOPF_CARD);
     let slcbyte = std::slice::from_raw_parts(pbyte, n_cards_max * N_BYTES_PER_NETSCHAFKOPF_CARD);
     let mut veccard = Vec::new();
     while veccard.len() < n_cards_max && {
