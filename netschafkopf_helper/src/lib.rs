@@ -1085,11 +1085,15 @@ fn log_game() -> Option<SGame> {
             assert!(1 <= i_netschafkopf_player);
             assert!(i_netschafkopf_player <= 4);
             unwrap!(EPlayerIndex::checked_from_usize(
-                (i_netschafkopf_player + 4 - i_netschafkopf_geber) % 4
+                (i_netschafkopf_player + 8 - (i_netschafkopf_geber+1)) % 4
             ))
         };
         let epi_to_netschafkopf_playerindex = |epi: EPlayerIndex| {
-            (i_netschafkopf_geber + epi.to_usize())%4+1
+            let mut i_netschafkopf = (i_netschafkopf_geber + 1 + epi.to_usize())%4;
+            if i_netschafkopf==0 {
+                i_netschafkopf = 4;
+            }
+            i_netschafkopf
         };
         let n_stichs_remaining = unsafe{*std::mem::transmute::<_, *const usize>(0x004963b8)};
         info!("n_stichs_remaining: {}", n_stichs_remaining);
