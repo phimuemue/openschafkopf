@@ -1,6 +1,7 @@
 use std::process::{Command, Stdio};
 use std::thread::sleep;
 use std::time::Duration;
+use std::fs::metadata;
 use winapi::{
     um::winuser::{FindWindowA, IsWindow},
 };
@@ -39,11 +40,23 @@ fn main() {
         println!("Window not yet found. Retrying...");
         sleep(Duration::from_secs(1)); // Sleep briefly before the next check
     }
+    let str_dll = [
+        "target/i686-pc-windows-gnu/debug/netschafkopf_helper.dll",
+        "target/i686-pc-windows-gnu/release/netschafkopf_helper.dll",
+    ].iter()
+        .filter_map(|str_dll| metadata(str_dll)
+            .and_then(|meta| meta.modified().map(|systime| (str_dll, systime)))
+            .ok()
+        )
+        .max_by_key(|&(_str_dll, systime_modified)| systime_modified)
+        .unwrap()
+        .0;
+    println!("Injecting {str_dll}...");
     Process::from_pid(cmd_netschafkopf.id())
         .unwrap()
-        .inject("target/i686-pc-windows-gnu/debug/netschafkopf_helper.dll")
+        .inject(str_dll)
         .unwrap();
-    println!("Injected DLL.");
+    println!("Injected {str_dll}.");
     let exit_status = cmd_netschafkopf.wait().unwrap();
     println!("External executable exited with {:?}", exit_status);
 }
