@@ -1,8 +1,8 @@
 use std::process::{Command, Stdio};
 use std::thread::sleep;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use winapi::{
-    um::winuser::{FindWindowA, IsWindowVisible, IsWindow},
+    um::winuser::{FindWindowA, IsWindow},
 };
 use injrs::{
     process_windows::Process,
