@@ -2,15 +2,21 @@
 
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    game::{SGame, SExpensifiersNoStoss},
-    primitives::{EKurzLang, EPlayerIndex, EFarbe, ESchlag, ECard, SStichSequence, SHand, display_card_slices, SStaticEPI0},
+    ai::{
+        determine_best_card,
+        gametree::{EMinMaxStrategy, SNoFilter, SMinReachablePayout, SSnapshotCacheNone, SNoVisualization},
+        handiterators::all_possible_hands,
+    },
+    game::{SGame, SExpensifiersNoStoss, TGamePhase},
+    primitives::{EKurzLang, EPlayerIndex, EFarbe, ESchlag, ECard, SStichSequence, SHand, SDisplayCardSlice, display_card_slices, SStaticEPI0},
     rules::{
         SDoublings,
+        SStoss,
         SStossParams,
         parser::parse_rule_description,
     },
 };
-use plain_enum::PlainEnum;
+use plain_enum::{EnumMap, PlainEnum};
 
 // from https://docs.rs/winsafe/latest/src/winsafe/kernel/funcs.rs.html#1442-1444, https://docs.rs/winsafe/latest/winsafe/fn.MAKEDWORD.html
 pub const fn make_dword(lo: u16, hi: u16) -> u32 {
@@ -73,9 +79,13 @@ use winapi::{
 };
 use std::{
     borrow::Borrow,
-    fs,
+    fs::{
+        self,
+        File,
+    },
     ffi::{CString, c_char, c_int},
     fmt::Debug,
+    io::Write,
 };
 use log::{info, error};
 use itertools::Itertools;
@@ -460,6 +470,10 @@ make_redirect_function!(
                                     "Bettel";
                                     internal_click_button(/*n_id_dlg_item: Button "Ja"*/1082)
                                 },
+                                9 => {
+                                    "Wenz or Farbwenz Tout";
+                                    internal_click_button(/*n_id_dlg_item: Button "Ja"*/1082)
+                                },
                                 _ => panic!(),
                             }
                         }
@@ -508,15 +522,105 @@ make_redirect_function!(
         })
     },
 );
+fn internal_suggest(fn_call_original: &dyn Fn()->isize, b_improve_netschafkopf: bool) -> isize {
+    let i_suggestion_netschk_1_based = fn_call_original();
+    let (aveccard_netschafkopf, game) = unwrap!(log_game());
+    let (epi_active, _vecepi_stoss) = unwrap!(game.which_player_can_do_something());
+    if game.stichseq.remaining_cards_per_hand()[epi_active]<=if_dbg_else!({2}{3}) {
+        let determinebestcardresult = unwrap!(determine_best_card(
+            &game.stichseq,
+            game.rules.as_ref(),
+            Box::new(all_possible_hands(
+                &game.stichseq,
+                game.ahand[epi_active].clone(),
+                epi_active,
+                game.rules.as_ref(),
+                &game.expensifiers.vecstoss,
+            )),
+            /*fn_make_filter*/SNoFilter::factory(),
+            /*foreachsnapshot*/&SMinReachablePayout::new(
+                game.rules.as_ref(),
+                epi_active,
+                game.expensifiers.clone(),
+            ),
+            SSnapshotCacheNone::factory(),
+            SNoVisualization::factory(),
+            /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
+            /*epi_result*/epi_active,
+            /*fn_payout*/&|_stichseq, _ahand, n_payout: isize| (n_payout, n_payout.cmp(&0)),
+        ));
+        let card_suggestion_netschk = aveccard_netschafkopf[epi_active][(i_suggestion_netschk_1_based-1) as usize /*TODO as_num*/];
+        assert!(
+            determinebestcardresult.cards_and_ts()
+                .find(|&(card, _)| card==card_suggestion_netschk)
+                .is_some()
+        );
+        let veccard_suggestion_openschafkopf = determinebestcardresult.cards_and_ts()
+            .filter_map(|(card, payoutstatsperstrategy)| {
+                let n_payout_relevant = payoutstatsperstrategy.0[EMinMaxStrategy::Min].min();
+                if_then_some!(n_payout_relevant > 0, (card, n_payout_relevant))
+            })
+            .max_set_by_key(|&(_card, n_payout_relevant)| n_payout_relevant)
+            .into_iter()
+            .map(|(card, _n_payout_relevant)| card)
+            .collect::<Vec<_>>();
+        if !veccard_suggestion_openschafkopf.is_empty() {
+            if !veccard_suggestion_openschafkopf.contains(&card_suggestion_netschk){
+                // TODO log this for further inspection
+                let str_file_osk_replay = format!("{}_{}.sh",
+                    game.stichseq.visible_cards().map(|(_epi, card)|card).join(""),
+                    game.ahand[epi_active].cards().iter().join(""),
+                );
+                info!("Writing replay to {}", str_file_osk_replay);
+                {
+                    let str_rules = format!("{}{}",
+                        game.rules,
+                        if let Some(epi) = game.rules.playerindex() {
+                            format!(" von {}", epi)
+                        } else {
+                            "".to_owned()
+                        },
+                    );
+                    let mut file_osk_replay = unwrap!(File::create(str_file_osk_replay));
+                    unwrap!(writeln!(&mut file_osk_replay, "echo '{}'", str_rules));
+                    unwrap!(writeln!(&mut file_osk_replay, "echo 'Stichs so far:'"));
+                    for stich in game.stichseq.visible_stichs() {
+                        unwrap!(writeln!(&mut file_osk_replay, "echo '{}'", &stich));
+                    }
+                    unwrap!(writeln!(&mut file_osk_replay, "echo 'Hand: {}'", SDisplayCardSlice::new(game.ahand[epi_active].cards().clone(), &game.rules)));
+                    unwrap!(writeln!(&mut file_osk_replay, "echo 'NetSchafkopf suggests {}'", card_suggestion_netschk));
+                    unwrap!(writeln!(&mut file_osk_replay, "./target/release/openschafkopf suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand}\" --branching \"equiv7\" --points",
+                        // TODO error handling
+                        str_cards_on_table=game.stichseq.visible_stichs().iter()
+                            .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
+                            .join("  "),
+                        str_hand=SDisplayCardSlice::new(game.ahand[epi_active].cards().clone(), &game.rules),
+                    ));
+                }
+                if b_improve_netschafkopf {
+                    return verify_ne!(
+                        (unwrap!(
+                            aveccard_netschafkopf[epi_active]
+                                .iter()
+                                .position(|&card| card==veccard_suggestion_openschafkopf[0])
+                        ) + 1) as isize, // TODO as_num
+                        i_suggestion_netschk_1_based
+                    );
+                }
+            }
+        }
+    }
+    i_suggestion_netschk_1_based
+}
 make_redirect_function!(
     netschk_maybe_vorschlag_suggest_card_1,
     /*pfn_original*/0x00433f90,
     ("C") ()->isize,
     {
-        log_in_out("maybe_vorschlag_suggest_card_1", (), || {
-            log_game();
-            call_original()
-        })
+        log_in_out("maybe_vorschlag_suggest_card_1", (), || internal_suggest(
+            &|| call_original(),
+            /*b_improve_netschafkopf*/true, // TODO only for N_INDEX_GAST?
+        ))
     },
 );
 make_redirect_function!(
@@ -524,10 +628,10 @@ make_redirect_function!(
     /*pfn_original*/0x0042fef0,
     ("C") ()->isize,
     {
-        log_in_out("maybe_vorschlag_suggest_card_2", (), || {
-            log_game();
-            call_original()
-        })
+        log_in_out("maybe_vorschlag_suggest_card_2", (), || internal_suggest(
+            &|| call_original(),
+            /*b_improve_netschafkopf*/true, // TODO only for N_INDEX_GAST?
+        ))
     },
 );
 make_redirect_function!(
@@ -1028,7 +1132,7 @@ unsafe fn interpret_as_cards(pbyte: *const u8, n_cards_max: usize) -> Vec<ECard>
 
 static mut B_LOG_GAME : bool = true;
 
-fn log_game() -> Option<SGame> {
+fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame)> {
     log_in_out_cond("log_game", (), |_| if_then_some!(unsafe{B_LOG_GAME},()), || {
         let pbyte_card_stack = 0x004bd500 as *const u8;
         const N_CARDS_STACK : usize = 33;
@@ -1126,22 +1230,37 @@ fn log_game() -> Option<SGame> {
             }
             info!("{:?}", stichseq);
             let an_cards_hand = stichseq.remaining_cards_per_hand();
-            let ahand = EPlayerIndex::map_from_fn(|epi| {
-                SHand::new_from_iter(&aveccard_hand[epi_to_netschafkopf_playerindex(epi)-1][0..an_cards_hand[epi]])
+            let aveccard_netschafkopf = EPlayerIndex::map_from_fn(|epi| {
+                aveccard_hand[epi_to_netschafkopf_playerindex(epi)-1][0..an_cards_hand[epi]]
+                    .iter()
+                    .copied()
+                    .collect::<Vec<_>>()
             });
+            let ahand = aveccard_netschafkopf.map(|veccard| SHand::new_from_iter(veccard));
             info!("{}", display_card_slices(&ahand, &rules, " | "));
-            SGame::new_with(
-                /*aveccard*/EPlayerIndex::map_from_fn(|epi|
-                    stichseq.cards_from_player(&ahand[epi], epi).collect()
+            // TODO extract stoss from NetSchafkopf
+            (
+                aveccard_netschafkopf,
+                unwrap!(
+                    SGame::new_with(
+                        /*aveccard*/EPlayerIndex::map_from_fn(|epi| // TODO extract from NetSchafkopf - should be the cards in order they were dealt
+                            stichseq.cards_from_player(&ahand[epi], epi).collect()
+                        ),
+                        SExpensifiersNoStoss::new_with_doublings(
+                            /*n_stock*/0, // TODO extract from NetSchafkopf
+                            /*doublings*/SDoublings::new(SStaticEPI0{}), // TODO extract from NetSchafkopf
+                        ),
+                        rules,
+                        /*ruleset*/(), // TODO extract from NetSchafkopf
+                        /*gameannouncements*/(), // TODO extract from NetSchafkopf
+                        /*determinerules*/(), // TODO extract from NetSchafkopf
+                    )
+                    .play_cards_and_stoss(
+                        /*itstoss*/std::iter::empty::<SStoss>(), // TODO extract from NetSchafkopf
+                        /*ittplepicard*/stichseq.visible_cards(),
+                        /*fn_before_zugeben*/|_,_,_,_|(),
+                    )
                 ),
-                SExpensifiersNoStoss::new_with_doublings(
-                    /*n_stock*/0, // TODO extract from NetSchafkopf
-                    /*doublings*/SDoublings::new(SStaticEPI0{}), // TODO extract from NetSchafkopf
-                ),
-                rules,
-                /*ruleset*/(), // TODO extract from NetSchafkopf
-                /*gameannouncements*/(), // TODO extract from NetSchafkopf
-                /*determinerules*/(), // TODO extract from NetSchafkopf
             )
         })
     })
