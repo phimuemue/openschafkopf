@@ -1361,6 +1361,7 @@ dependencies = [
 name = "netschafkopf_helper"
 version = "0.1.0"
 dependencies = [
+ "as_num",
  "dirs 5.0.1",
  "itertools",
  "libc",

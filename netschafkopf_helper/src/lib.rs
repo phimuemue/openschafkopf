@@ -17,6 +17,7 @@ use openschafkopf_lib::{
     },
 };
 use plain_enum::{EnumMap, PlainEnum};
+use as_num::AsNum;
 
 // from https://docs.rs/winsafe/latest/src/winsafe/kernel/funcs.rs.html#1442-1444, https://docs.rs/winsafe/latest/winsafe/fn.MAKEDWORD.html
 pub const fn make_dword(lo: u16, hi: u16) -> u32 {
@@ -543,7 +544,7 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize, b_improve_netschafkopf: 
             /*epi_result*/epi_active,
             /*fn_payout*/&|_stichseq, _ahand, n_payout: isize| (n_payout, n_payout.cmp(&0)),
         ));
-        let card_suggestion_netschk = aveccard_netschafkopf[epi_active][(i_suggestion_netschk_1_based-1) as usize /*TODO as_num*/];
+        let card_suggestion_netschk = aveccard_netschafkopf[epi_active][(i_suggestion_netschk_1_based-1).as_num::<usize>()];
         assert!(
             determinebestcardresult.cards_and_ts()
                 .find(|&(card, _)| card==card_suggestion_netschk)
@@ -597,7 +598,7 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize, b_improve_netschafkopf: 
                             aveccard_netschafkopf[epi_active]
                                 .iter()
                                 .position(|&card| card==veccard_suggestion_openschafkopf[0])
-                        ) + 1) as isize, // TODO as_num
+                        ) + 1).as_num::<isize>(),
                         i_suggestion_netschk_1_based
                     );
                 }
