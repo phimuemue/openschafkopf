@@ -839,7 +839,7 @@ fn click_button(
                 );
             },
         }
-        Ok(()) // TODO? if_then_ok?
+        Ok(())
     }
 }
 
