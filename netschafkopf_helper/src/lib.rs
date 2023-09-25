@@ -561,7 +561,6 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize, b_improve_netschafkopf: 
             .collect::<Vec<_>>();
         if !veccard_suggestion_openschafkopf.is_empty() {
             if !veccard_suggestion_openschafkopf.contains(&card_suggestion_netschk){
-                // TODO log this for further inspection
                 let str_file_osk_replay = format!("{}_{}.sh",
                     game.stichseq.visible_cards().map(|(_epi, card)|card).join(""),
                     game.ahand[epi_active].cards().iter().join(""),
