@@ -892,76 +892,42 @@ make_redirect_function!(
                         .filter(|&c| c!=0)
                         .collect::<Vec<_>>();
                     let (str_rules_kind, ostr_farbe) : (&'static [u8], Option<&'static [u8]>) =
-                    if vecch==b"Weiter" {
-                        (b"Weiter", None)
-                    } else if vecch==b"Mit der Eichel-Ass" {
-                        (b"Rufspiel", Some(b"Mit der Eichel-Ass"))
-                    } else if vecch==b"Mit der Gr\xFCn-Ass" {
-                        (b"Rufspiel", Some(b"Mit der Gr\xFCn-Ass"))
-                    } else if vecch==b"Mit der Schellen-Ass" {
-                        (b"Rufspiel", Some(b"Mit der Schellen-Ass"))
-                    } else if vecch==b"Eichel-Solo" {
-                        (b"Solo", Some(b"Eichel"))
-                    } else if vecch==b"Gr\xFCn-Solo" {
-                        (b"Solo", Some(b"Gr\xFCn"))
-                    } else if vecch==b"Herz-Solo" {
-                        (b"Solo", Some(b"Herz"))
-                    } else if vecch==b"Schellen-Solo" {
-                        (b"Solo", Some(b"Schellen"))
-                    } else if vecch==b"Wenz" {
-                        (b"Wenz", None)
-                    } else if vecch==b"Eichel-Wenz" {
-                        (b"Farbwenz", Some(b"Eichel"))
-                    } else if vecch==b"Gr\xFCn-Wenz" {
-                        (b"Farbwenz", Some(b"Gr\xFCn"))
-                    } else if vecch==b"Herz-Wenz" {
-                        (b"Farbwenz", Some(b"Herz"))
-                    } else if vecch==b"Schellen-Wenz" {
-                        (b"Farbwenz", Some(b"Schellen"))
-                    } else if vecch==b"Geier" {
-                        (b"Geier", None)
-                    } else if vecch==b"Eichel-Geier" {
-                        (b"Farbgeier", Some(b"Eichel"))
-                    } else if vecch==b"Gr\xFCn-Geier" {
-                        (b"Farbgeier", Some(b"Gr\xFCn"))
-                    } else if vecch==b"Herz-Geier" {
-                        (b"Farbgeier", Some(b"Herz"))
-                    } else if vecch==b"Schellen-Geier" {
-                        (b"Farbgeier", Some(b"Schellen"))
-                    } else if vecch==b"Eichel-Solo Tout" {
-                        (b"Solo Tout", Some(b"Eichel"))
-                    } else if vecch==b"Gr\xFCn-Solo Tout" {
-                        (b"Solo Tout", Some(b"Gr\xFCn"))
-                    } else if vecch==b"Herz-Solo Tout" {
-                        (b"Solo Tout", Some(b"Herz"))
-                    } else if vecch==b"Schellen-Solo Tout" {
-                        (b"Solo Tout", Some(b"Schellen"))
-                    } else if vecch==b"Wenz Tout" {
-                        (b"Wenz Tout", Some(b"Farblos"))
-                    } else if vecch==b"Eichel-Wenz Tout" {
-                        (b"Wenz Tout", Some(b"Eichel"))
-                    } else if vecch==b"Gr\xFCn-Wenz Tout" {
-                        (b"Wenz Tout", Some(b"Gr\xFCn"))
-                    } else if vecch==b"Herz-Wenz Tout" {
-                        (b"Wenz Tout", Some(b"Herz"))
-                    } else if vecch==b"Schellen-Wenz Tout" {
-                        (b"Wenz Tout", Some(b"Schellen"))
-                    } else if vecch==b"Geier Tout" {
-                        (b"Geier Tout", Some(b"Farblos"))
-                    } else if vecch==b"Eichel-Geier Tout" {
-                        (b"Geier Tout", Some(b"Eichel"))
-                    } else if vecch==b"Gr\xFCn-Geier Tout" {
-                        (b"Geier Tout", Some(b"Gr\xFCn"))
-                    } else if vecch==b"Herz-Geier Tout" {
-                        (b"Geier Tout", Some(b"Herz"))
-                    } else if vecch==b"Schellen-Geier Tout" {
-                        (b"Geier Tout", Some(b"Schellen"))
-                    } else if vecch==b"Sie" {
-                        (b"Solo Tout", Some(b"Sie"))
-                    } else if vecch==b"Bettel" {
-                        (b"Bettel", None)
-                    } else {
-                        panic!("Unknown Vorschlag: {:?}", vecch)
+                    match vecch.as_slice() {
+                        b"Weiter" => (b"Weiter", None),
+                        b"Mit der Eichel-Ass" => (b"Rufspiel", Some(b"Mit der Eichel-Ass")),
+                        b"Mit der Gr\xFCn-Ass" => (b"Rufspiel", Some(b"Mit der Gr\xFCn-Ass")),
+                        b"Mit der Schellen-Ass" => (b"Rufspiel", Some(b"Mit der Schellen-Ass")),
+                        b"Eichel-Solo" => (b"Solo", Some(b"Eichel")),
+                        b"Gr\xFCn-Solo" => (b"Solo", Some(b"Gr\xFCn")),
+                        b"Herz-Solo" => (b"Solo", Some(b"Herz")),
+                        b"Schellen-Solo" => (b"Solo", Some(b"Schellen")),
+                        b"Wenz" => (b"Wenz", None),
+                        b"Eichel-Wenz" => (b"Farbwenz", Some(b"Eichel")),
+                        b"Gr\xFCn-Wenz" => (b"Farbwenz", Some(b"Gr\xFCn")),
+                        b"Herz-Wenz" => (b"Farbwenz", Some(b"Herz")),
+                        b"Schellen-Wenz" => (b"Farbwenz", Some(b"Schellen")),
+                        b"Geier" => (b"Geier", None),
+                        b"Eichel-Geier" => (b"Farbgeier", Some(b"Eichel")),
+                        b"Gr\xFCn-Geier" => (b"Farbgeier", Some(b"Gr\xFCn")),
+                        b"Herz-Geier" => (b"Farbgeier", Some(b"Herz")),
+                        b"Schellen-Geier" => (b"Farbgeier", Some(b"Schellen")),
+                        b"Eichel-Solo Tout" => (b"Solo Tout", Some(b"Eichel")),
+                        b"Gr\xFCn-Solo Tout" => (b"Solo Tout", Some(b"Gr\xFCn")),
+                        b"Herz-Solo Tout" => (b"Solo Tout", Some(b"Herz")),
+                        b"Schellen-Solo Tout" => (b"Solo Tout", Some(b"Schellen")),
+                        b"Wenz Tout" => (b"Wenz Tout", Some(b"Farblos")),
+                        b"Eichel-Wenz Tout" => (b"Wenz Tout", Some(b"Eichel")),
+                        b"Gr\xFCn-Wenz Tout" => (b"Wenz Tout", Some(b"Gr\xFCn")),
+                        b"Herz-Wenz Tout" => (b"Wenz Tout", Some(b"Herz")),
+                        b"Schellen-Wenz Tout" => (b"Wenz Tout", Some(b"Schellen")),
+                        b"Geier Tout" => (b"Geier Tout", Some(b"Farblos")),
+                        b"Eichel-Geier Tout" => (b"Geier Tout", Some(b"Eichel")),
+                        b"Gr\xFCn-Geier Tout" => (b"Geier Tout", Some(b"Gr\xFCn")),
+                        b"Herz-Geier Tout" => (b"Geier Tout", Some(b"Herz")),
+                        b"Schellen-Geier Tout" => (b"Geier Tout", Some(b"Schellen")),
+                        b"Sie" => (b"Solo Tout", Some(b"Sie")),
+                        b"Bettel" => (b"Bettel", None),
+                        _ => panic!("Unknown Vorschlag: {:?}", vecch)
                     };
                     // TODO interpret vecch (or go one level deeper) and select
                     let select_item = |n_id_list: u16, str_item: &[u8]| {
