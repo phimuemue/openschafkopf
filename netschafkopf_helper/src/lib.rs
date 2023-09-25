@@ -78,7 +78,7 @@ use winapi::{
     },
 };
 use std::{
-    borrow::Borrow,
+    borrow::{Borrow, Cow},
     fs::{
         self,
         File,
@@ -1182,7 +1182,17 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame)> {
         let str_active_player = String::from_utf8_lossy(
             unsafe{scan_until_0(0x004ad1d0 as *const u8, 260)}
         );
-        info!("Rules: {} von {}", str_rules_pri, str_active_player);
+        let (str_rules_pri, ostr_active_player) = if str_rules_pri=="Jungfrau" || str_rules_pri=="hat Stich" {
+            (Cow::Borrowed("Ramsch"), None)
+        } else {
+            (str_rules_pri, Some(str_active_player))
+        };
+        let str_rules = format!("{}{}", str_rules_pri, if let Some(str_active_player)=ostr_active_player {
+            format!(" von {}", str_active_player)
+        } else {
+            "".to_string()
+        });
+        info!("Rules: {str_rules}");
         let to_openschafkopf_playerindex = |i_netschafkopf_player: usize| {
             assert!(1 <= i_netschafkopf_geber);
             assert!(i_netschafkopf_geber <= 4);
@@ -1205,7 +1215,7 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame)> {
         info!("n_presumably_total_games: {}", n_presumably_total_games);
         if_then_some!("Normal"!=str_rules_pri, {
             let rules = unwrap!(parse_rule_description(
-                &format!("{} von {}", str_rules_pri, str_active_player),
+                &str_rules,
                 (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO extract from NetSchafkopf
                 SStossParams::new(/*n_stoss_max*/4), // TODO extract from NetSchafkopf
                 /*fn_player_to_epi*/|str_player| Ok(to_openschafkopf_playerindex(match str_player {
