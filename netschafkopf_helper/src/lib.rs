@@ -193,7 +193,7 @@ macro_rules! make_redirect_function(
         $fn_new:expr,
     ) => {
         pub unsafe extern $($extern)* fn $fn_name($($paramname: $paramtype,)*)->$rettype {
-            $fn_name::redirected($($paramname,)*)
+            $fn_name::redirected_should_only_be_called_from_wrapper($($paramname,)*)
         }
         mod $fn_name {
             use super::*;
@@ -210,7 +210,7 @@ macro_rules! make_redirect_function(
                 unwrap!(OHOOK.as_ref()).call($($paramname,)*)
             }
 
-            pub unsafe extern $($extern)* fn redirected($($paramname: $paramtype,)*)->$rettype {
+            pub extern $($extern)* fn redirected_should_only_be_called_from_wrapper($($paramname: $paramtype,)*)->$rettype {
                 $fn_new
             }
 
@@ -218,7 +218,7 @@ macro_rules! make_redirect_function(
                 log_in_out(&format!("{}::redirect", stringify!($fn_name)), (), || {
                     let pfn_original: unsafe extern $($extern)* fn($($paramtype,)*)->$rettype =
                         std::mem::transmute($pfn_original);
-                    OHOOK = Some(unwrap!(GenericDetour::new(pfn_original, redirected)));
+                    OHOOK = Some(unwrap!(GenericDetour::new(pfn_original, redirected_should_only_be_called_from_wrapper)));
                     unwrap!(unwrap!(OHOOK.as_ref()).enable());
                 })
             }
@@ -230,7 +230,7 @@ make_redirect_function!(
     /*pfn_original*/0x00463a20,
     ("C") (i_epi: isize,)->isize,
     {
-        log_in_out("increment_playerindex", (i_epi,), |i_epi| call_original(i_epi))
+        log_in_out("increment_playerindex", (i_epi,), |i_epi| unsafe{call_original(i_epi)})
     },
 );
 
@@ -257,12 +257,12 @@ make_redirect_function!(
     /*pfn_original*/0x00473757,
     ("C") (dst: *mut c_char, n_bytes_requested: rsize_t, src: *const c_char,)->errno_t,
     {
-        let res = netschk_strcpy_s::call_original(
+        let res = unsafe{call_original(
             dst,
             n_bytes_requested,
             src,
-        );
-        let ach_card : &[u8; 3] = std::mem::transmute(src);
+        )};
+        let ach_card : &[u8; 3] = unsafe{std::mem::transmute(src)};
         if let Some(card) = {
             if n_bytes_requested==3 {
                 bytes_are_card(&ach_card[0..3])
@@ -305,14 +305,14 @@ make_redirect_function!(
             (hwnd, u_msg, wparam, lparam),
             |&(_hwnd, u_msg, _wparam, _lparam)| match u_msg {
                 WM_KEYDOWN => {
-                    if wparam==std::mem::transmute(VK_LEFT) || wparam==std::mem::transmute(VK_RIGHT) {
+                    if wparam==unsafe{std::mem::transmute(VK_LEFT)} || wparam==unsafe{std::mem::transmute(VK_RIGHT)} {
                         Some(format!(
                             "WM_KEYDOWN, VK_LEFT/VK_RIGHT: {:?}",
                             unsafe{std::slice::from_raw_parts(std::mem::transmute::<_, *const u8>(0x004ca2b0), 4)},
                         ))
                     } else if
-                        0!=(GetKeyState(VK_CONTROL)&std::mem::transmute::<_,SHORT>(0x8000u16))
-                        && wparam==std::mem::transmute(0x4F) // "O key" https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+                        0!=(unsafe{GetKeyState(VK_CONTROL)}&unsafe{std::mem::transmute::<_,SHORT>(0x8000u16)})
+                        && wparam==unsafe{std::mem::transmute(0x4F)} // "O key" https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
                     {
                         Some(format!("WM_KEYDOWN, Ctrl+O"))
                     } else {
@@ -351,7 +351,7 @@ make_redirect_function!(
                 });
                 info!("{:?}", resoknownduaktion_expected);
                 if let Ok(_oknownduaktion_expected) = resoknownduaktion_expected {
-                    let retval = call_original(hwnd, u_msg, wparam, lparam);
+                    let retval = unsafe{call_original(hwnd, u_msg, wparam, lparam)};
                     let src = unsafe{std::mem::transmute::<_,*const c_char>(0x004c8438)};
                     let str_status = String::from_utf8_lossy(
                         unsafe{scan_until_0(src as *const u8, None)}
@@ -361,32 +361,32 @@ make_redirect_function!(
                         "Du ? Kartenwahl" => {
                             // "Vorschlag machen"
                             verify_ne!(
-                                PostMessageA(
+                                unsafe{PostMessageA(
                                     hwnd,
                                     WM_COMMAND,
                                     105548,
                                     0,
-                                ),
+                                )},
                                 0
                             );
                             verify_ne!(
-                                PostMessageA(
+                                unsafe{PostMessageA(
                                     hwnd,
                                     WM_KEYDOWN,
                                     VK_UP as WPARAM,
                                     0,
-                                ),
+                                )},
                                 0
                             );
                         },
                         "Stich best\u{FFFD}tigen" => {
                             verify_ne!(
-                                PostMessageA(
+                                unsafe{PostMessageA(
                                     hwnd,
                                     WM_KEYDOWN,
                                     VK_UP as WPARAM,
                                     0,
-                                ),
+                                )},
                                 0
                             );
                         },
@@ -415,13 +415,13 @@ make_redirect_function!(
                     }
                     return retval
                 } else {
-                    let retval = netschk_process_window_message::call_original(hwnd, u_msg, wparam, lparam);
+                    let retval = unsafe{call_original(hwnd, u_msg, wparam, lparam)};
                     if 
                         (u_msg==NETSCHK_MSG_SPIELABFRAGE_1 && lparam==N_INDEX_GAST)
                         || (u_msg==NETSCHK_MSG_SPIELABFRAGE_2 && lparam==N_INDEX_GAST)
                     {
-                        let hwnd_spielabfrage = *(0x004bd4dc as *mut HWND);
-                        if 0!=IsWindow(hwnd_spielabfrage) {
+                        let hwnd_spielabfrage = unsafe{*(0x004bd4dc as *mut HWND)};
+                        if 0!=unsafe{IsWindow(hwnd_spielabfrage)} {
                             let internal_click_button = |n_id_dlg_item| {
                                 if let Err(str_error) = click_button(
                                     hwnd_spielabfrage,
@@ -436,7 +436,7 @@ make_redirect_function!(
                             match log_in_out(
                                 "[manual] netschk_maybe_vorschlag_spielabfrage_1(N_INDEX_GAST)",
                                 (),
-                                || netschk_maybe_vorschlag_spielabfrage_1(N_INDEX_GAST),
+                                || unsafe{netschk_maybe_vorschlag_spielabfrage_1(N_INDEX_GAST)},
                             ) {
                                 0 => {
                                     "Weiter";
@@ -491,7 +491,7 @@ make_redirect_function!(
     ("C") (pbyte_out: *mut u8,)->(),
     {
         log_in_out("fill_regel_to_registry_bytes", (pbyte_out,), |pbyte_out| {
-            call_original(pbyte_out)
+            unsafe{call_original(pbyte_out)}
         })
     },
 );
@@ -501,7 +501,7 @@ make_redirect_function!(
     ("C") (pbyte: *const u8,)->(),
     {
         log_in_out("read_regel_to_registry_bytes", (pbyte,), |pbyte| {
-            let retval = call_original(pbyte);
+            let retval = unsafe{call_original(pbyte)};
             unsafe{*PN_TOTAL_GAMES = 10000};
             retval
         })
@@ -514,7 +514,7 @@ make_redirect_function!(
     {
         log_in_out("maybe_vorschlag", (pchar_answer, n_bytes), |pchar_answer, n_bytes| {
             log_game();
-            let retval = call_original(pchar_answer, n_bytes);
+            let retval = unsafe{call_original(pchar_answer, n_bytes)};
             info!("maybe_vorschlag: {}", String::from_utf8_lossy(
                 unsafe{scan_until_0(pchar_answer as *const u8, n_bytes)}
             ));
@@ -618,7 +618,7 @@ make_redirect_function!(
     ("C") ()->isize,
     {
         log_in_out("maybe_vorschlag_suggest_card_1", (), || internal_suggest(
-            &|| call_original(),
+            &|| unsafe{call_original()},
             /*b_improve_netschafkopf*/true, // TODO only for N_INDEX_GAST?
         ))
     },
@@ -629,7 +629,7 @@ make_redirect_function!(
     ("C") ()->isize,
     {
         log_in_out("maybe_vorschlag_suggest_card_2", (), || internal_suggest(
-            &|| call_original(),
+            &|| unsafe{call_original()},
             /*b_improve_netschafkopf*/true, // TODO only for N_INDEX_GAST?
         ))
     },
@@ -641,7 +641,7 @@ make_redirect_function!(
     {
         log_in_out("maybe_vorschlag_suggest_card_3", (n_unknown,), |n_unknown| {
             log_game();
-            call_original(n_unknown)
+            unsafe{call_original(n_unknown)}
         })
     },
 );
@@ -652,7 +652,7 @@ make_redirect_function!(
     {
         log_in_out("maybe_vorschlag_suggest_card_4", (n_unknown,), |n_unknown| {
             log_game();
-            call_original(n_unknown)
+            unsafe{call_original(n_unknown)}
         })
     },
 );
@@ -663,7 +663,7 @@ make_redirect_function!(
     {
         log_in_out("maybe_vorschlag_should_stoss", (n_unknown,), |n_unknown| {
             log_game();
-            call_original(n_unknown)
+            unsafe{call_original(n_unknown)}
         })
     },
 );
@@ -674,7 +674,7 @@ make_redirect_function!(
     {
         log_in_out("maybe_vorschlag_unknown_1", (n_unknown,), |n_unknown| {
             log_game();
-            call_original(n_unknown)
+            unsafe{call_original(n_unknown)}
         })
     },
 );
@@ -685,7 +685,7 @@ make_redirect_function!(
     {
         log_in_out("maybe_vorschlag_unknown_2", (n_unknown,), |n_unknown| {
             log_game();
-            call_original(n_unknown)
+            unsafe{call_original(n_unknown)}
         })
     },
 );
@@ -696,7 +696,7 @@ make_redirect_function!(
     {
         log_in_out("maybe_vorschlag_spielabfrage_2", (n_unknown,), |n_unknown| {
             log_game();
-            call_original(n_unknown)
+            unsafe{call_original(n_unknown)}
         })
     },
 );
@@ -707,7 +707,7 @@ make_redirect_function!(
     {
         log_in_out("maybe_vorschlag_unknown_4", (n_unknown,), |n_unknown| {
             log_game();
-            call_original(n_unknown)
+            unsafe{call_original(n_unknown)}
         })
     },
 );
@@ -718,7 +718,7 @@ make_redirect_function!(
     {
         log_in_out("maybe_vorschlag_unknown_5", (n_unknown,), |n_unknown| {
             log_game();
-            call_original(n_unknown)
+            unsafe{call_original(n_unknown)}
         })
     },
 );
@@ -729,7 +729,7 @@ make_redirect_function!(
     {
         log_in_out("maybe_vorschlag_spielabfrage_1", (n_unknown,), |n_unknown| {
             log_game();
-            call_original(n_unknown)
+            unsafe{call_original(n_unknown)}
         })
     },
 );
@@ -758,12 +758,12 @@ make_redirect_function!(
         log_in_out("SetWindowTextA", (hwnd, lpcstr,), |hwnd, lpcstr: LPCSTR| {
             //info!("SetWindowText {:?}", OsString::new(lpcstr));
             info!("SetWindowTextA: {:?}", CString::new(
-                scan_until_0(lpcstr as *const u8, None)
+                unsafe{scan_until_0(lpcstr as *const u8, None)}
                     .iter()
                     .map(|&c| c as u8)
                     .collect::<Vec<_>>()
             ));
-            call_original(hwnd, lpcstr)
+            unsafe{call_original(hwnd, lpcstr)}
         })
     },
 );
@@ -773,7 +773,7 @@ make_redirect_function!(
     ("system") (hwnd: HWND, n_msg: UINT, wparam: WPARAM, lparam: LPARAM,)->BOOL,
     {
         log_in_out("PostMessageA", (hwnd, n_msg, wparam, lparam), |hwnd, n_msg, wparam, lparam| {
-            call_original(hwnd, n_msg, wparam, lparam)
+            unsafe{call_original(hwnd, n_msg, wparam, lparam)}
         })
     },
 );
@@ -896,16 +896,16 @@ make_redirect_function!(
                 }
             },
             |hwnd, n_msg, wparam, lparam| {
-                let res = call_original(hwnd, n_msg, wparam, lparam);
+                let res = unsafe{call_original(hwnd, n_msg, wparam, lparam)};
                 if 
                     n_msg==NETSCHK_MSG_SPIEL_BEKOMMEN
                     || n_msg==NETSCHK_MSG_SPIEL_BEKOMMEN_NACH_PRIO
                     || n_msg==NETSCHK_MSG_MAG_AUCH
                 {
-                    let hwnd_spielabfrage = *(0x004bd4dc as *mut HWND);
+                    let hwnd_spielabfrage = unsafe{*(0x004bd4dc as *mut HWND)};
                     assert_eq!(hwnd, hwnd_spielabfrage);
                     let mut vecch_orig : Vec<CHAR> = vec![0; 1000];
-                    netschk_maybe_vorschlag(vecch_orig.as_mut_ptr(), vecch_orig.len());
+                    unsafe{netschk_maybe_vorschlag(vecch_orig.as_mut_ptr(), vecch_orig.len())};
                     let vecch = vecch_orig.into_iter()
                         .map(|c| c as u8)
                         .filter(|&c| c!=0)
@@ -985,18 +985,18 @@ make_redirect_function!(
                     // TODO interpret vecch (or go one level deeper) and select
                     let select_item = |n_id_list: u16, str_item: &[u8]| {
                         let str_item = str_item.iter().copied().chain(std::iter::once(0)).collect::<Vec<_>>();
-                        let hwnd_list = GetDlgItem(hwnd_spielabfrage, n_id_list as _); // TODO verify
+                        let hwnd_list = unsafe{GetDlgItem(hwnd_spielabfrage, n_id_list as _)}; // TODO verify
                         verify_ne!(
-                            SendMessageA(
+                            unsafe{SendMessageA(
                                 hwnd_list,
                                 LB_SELECTSTRING,
                                 std::mem::transmute(-1), // search entire list
                                 std::mem::transmute(str_item.as_ptr()),
-                            ),
+                            )},
                             LB_ERR
                         );
                         verify_ne!(
-                            SendMessageA(
+                            unsafe{SendMessageA(
                                 hwnd_spielabfrage,
                                 WM_COMMAND,
                                 std::mem::transmute(make_dword(
@@ -1004,7 +1004,7 @@ make_redirect_function!(
                                     LBN_SELCHANGE,
                                 )),
                                 std::mem::transmute(hwnd_list),
-                            ),
+                            )},
                             LB_ERR
                         );
                     };
@@ -1046,11 +1046,11 @@ make_redirect_function!(
                 }
             },
             |hwnd, n_msg, wparam, lparam| {
-                let retval = call_original(hwnd, n_msg, wparam, lparam);
+                let retval = unsafe{call_original(hwnd, n_msg, wparam, lparam)};
                 if n_msg==WM_SHOWWINDOW {
                     unwrap!(click_button(
                         hwnd,
-                        /*n_id_dlg_item*/if TRUE==netschk_maybe_vorschlag_should_stoss(N_INDEX_GAST) {
+                        /*n_id_dlg_item*/if TRUE==unsafe{netschk_maybe_vorschlag_should_stoss(N_INDEX_GAST)} {
                             /*Ja*/1082
                         } else {
                             /*Nein*/1081
@@ -1073,7 +1073,7 @@ make_redirect_function!(
             "dialogproc_analyse_weiter_1",
             (hwnd, n_msg, wparam, lparam),
             |hwnd, n_msg, wparam, lparam| {
-                call_original(hwnd, n_msg, wparam, lparam)
+                unsafe{call_original(hwnd, n_msg, wparam, lparam)}
             },
         )
     },
@@ -1087,7 +1087,7 @@ make_redirect_function!(
             "dialogproc_analyse_weiter_2_maybe_ja_nein",
             (hwnd, n_msg, wparam, lparam),
             |hwnd, n_msg, wparam, lparam| {
-                let retval = call_original(hwnd, n_msg, wparam, lparam);
+                let retval = unsafe{call_original(hwnd, n_msg, wparam, lparam)};
                 if n_msg==WM_SHOWWINDOW {
                     unwrap!(click_button(
                         hwnd,
@@ -1110,7 +1110,7 @@ make_redirect_function!(
             "wndproc_status_bar",
             (hwnd, n_msg, wparam, lparam),
             |hwnd, n_msg, wparam, lparam| {
-                call_original(hwnd, n_msg, wparam, lparam)
+                unsafe{call_original(hwnd, n_msg, wparam, lparam)}
             },
         )
     },
