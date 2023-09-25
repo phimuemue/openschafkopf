@@ -152,6 +152,14 @@ unsafe fn log_bytes(pbyte: *const u8, n_bytes: usize) {
     }
 }
 
+macro_rules! stringify_matches{($expr:expr, ($($context:expr,)*), $($pat:pat)*) => {{
+    let str_context = format!("{:?}", ($($context,)*)); // TODO should we make this lazy?
+    match $expr {
+        $($pat => Some(format!("{}; {}", stringify!($pat), str_context)),)*
+        _ => None,
+    }
+}}}
+
 fn log_in_out_cond<
     Args: Clone+Debug,
     ShouldLog: Debug,
@@ -314,25 +322,16 @@ make_redirect_function!(
                         None
                     }
                 },
-                WM_COMMAND => {
-                    Some(format!("WM_COMMAND: {}, {}", wparam, lparam))
-                },
-                NETSCHK_MSG_SPIELABFRAGE_1 => {
-                    Some(format!("NETSCHK_MSG NETSCHK_MSG_SPIELABFRAGE_1, {}, {}", wparam, lparam))
-                },
-                NETSCHK_MSG_SPIELABFRAGE_2 => {
-                    Some(format!("NETSCHK_MSG NETSCHK_MSG_SPIELABFRAGE_2, {}, {}", wparam, lparam))
-                },
-                NETSCHK_MSG_AKTIONSABFRAGE => {
-                    Some(format!("NETSCHK_MSG NETSCHK_MSG_AKTIONSABFRAGE, {}, {}", wparam, lparam))
-                },
-                NETSCHK_MSG_KARTEGESPIELT => {
-                    Some(format!("NETSCHK_MSG NETSCHK_MSG_KARTEGESPIELT, {}, {}", wparam, lparam))
-                },
                 netschk_msg@WM_USER..=0xffff => {
                     Some(format!("NETSCHK_MSG {:#x}, {}, {}", netschk_msg, wparam, lparam))
                 },
-                _ => None,
+                u_msg => stringify_matches!(u_msg, (wparam, lparam,),
+                    WM_COMMAND
+                    NETSCHK_MSG_SPIELABFRAGE_1
+                    NETSCHK_MSG_SPIELABFRAGE_2
+                    NETSCHK_MSG_AKTIONSABFRAGE
+                    NETSCHK_MSG_KARTEGESPIELT
+                ),
             },
             |hwnd, u_msg, wparam, lparam| {
                 let resoknownduaktion_expected = dbg!(match (u_msg, wparam, lparam) {
@@ -854,40 +853,29 @@ make_redirect_function!(
         log_in_out_cond(
             "dialogproc_spielabfrage",
             (hwnd, n_msg, wparam, lparam),
-            |&(_hwnd, n_msg, _wparam, _lparam)| {
-                if n_msg==WM_COMMAND {
-                    Some("WM_COMMAND".to_owned())
-                } else if n_msg==WM_INITDIALOG {
-                    Some("WM_INITDIALOG".to_owned())
-                } else if n_msg==NETSCHK_MSG_MAG_AUCH {
-                    Some("NETSCHK_MSG_MAG_AUCH".to_owned())
-                } else if n_msg==NETSCHK_MSG_SPIEL_BEKOMMEN {
-                    Some("NETSCHK_MSG_SPIEL_BEKOMMEN".to_owned())
-                } else if n_msg==NETSCHK_MSG_SPIEL_BEKOMMEN_NACH_PRIO {
-                    Some("NETSCHK_MSG_SPIEL_BEKOMMEN_NACH_PRIO".to_owned())
-                } else if matches!(n_msg,
-                    0x473
-                    | 0x477
-                    | 0x479
-                    | 0x47a
-                    | 0x47c
-                    | 0x47d
-                    | 0x47e
-                    | 0x47f
-                    | 0x480
-                    | 0x481
-                    | 0x482
-                    | 0x483
-                    | 0x484
-                    | 0x485
-                    | 0x486
-                    | 0x487
-                ) {
-                    Some(format!("{:#x}", n_msg))
-                } else {
-                    None // TODO if_then_some
-                }
-            },
+            |&(_hwnd, n_msg, _wparam, _lparam)| stringify_matches!(n_msg, (),
+                WM_COMMAND
+                WM_INITDIALOG
+                NETSCHK_MSG_MAG_AUCH
+                NETSCHK_MSG_SPIEL_BEKOMMEN
+                NETSCHK_MSG_SPIEL_BEKOMMEN_NACH_PRIO
+                0x473
+                0x477
+                0x479
+                0x47a
+                0x47c
+                0x47d
+                0x47e
+                0x47f
+                0x480
+                0x481
+                0x482
+                0x483
+                0x484
+                0x485
+                0x486
+                0x487
+            ),
             |hwnd, n_msg, wparam, lparam| {
                 let res = unsafe{call_original(hwnd, n_msg, wparam, lparam)};
                 if 
@@ -1027,17 +1015,11 @@ make_redirect_function!(
         log_in_out_cond(
             "dialogproc_contra_geben",
             (hwnd, n_msg, wparam, lparam),
-            |&(_hwnd, n_msg, _wparam, _lparam)| {
-                if n_msg==WM_COMMAND {
-                    Some("WM_COMMAND".to_owned())
-                } else if n_msg==WM_INITDIALOG {
-                    Some("WM_INITDIALOG".to_owned())
-                } else if n_msg==WM_SHOWWINDOW {
-                    Some("WM_SHOWWINDOW".to_owned())
-                } else {
-                    None
-                }
-            },
+            |&(_hwnd, n_msg, _wparam, _lparam)| stringify_matches!(n_msg, (),
+                WM_COMMAND
+                WM_INITDIALOG
+                WM_SHOWWINDOW
+            ),
             |hwnd, n_msg, wparam, lparam| {
                 let retval = unsafe{call_original(hwnd, n_msg, wparam, lparam)};
                 if n_msg==WM_SHOWWINDOW {
