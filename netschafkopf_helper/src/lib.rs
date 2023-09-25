@@ -131,8 +131,7 @@ fn byte_is_schlag(byte: u8) -> Option<ESchlag> {
         _ => None,
     }
 }
-fn bytes_are_card(slcbyte: &[u8]) -> Option<ECard> {
-    assert_eq!(3, slcbyte.len()); // TODO can we make this check at compile time
+fn bytes_are_card(slcbyte: &[u8; 3]) -> Option<ECard> {
     if_then_some!(
         let (Some(efarbe), Some(eschlag))=(
             byte_is_farbe(slcbyte[0]),
@@ -263,7 +262,7 @@ make_redirect_function!(
             src,
         )};
         if let Some(card) = if_then_some!(n_bytes_requested==3, ()).and_then(|()|
-            bytes_are_card(unsafe{std::slice::from_raw_parts(src as *const u8, 3)})
+            bytes_are_card(unwrap!(unsafe{std::slice::from_raw_parts(src as *const u8, 3)}.try_into()))
         ) {
             info!("Moving card {}: {:?} => {:?}",
                 card,
@@ -1118,7 +1117,7 @@ unsafe fn interpret_as_cards(pbyte: *const u8, n_cards_max: usize) -> Vec<ECard>
     let mut veccard = Vec::new();
     while veccard.len() < n_cards_max && {
         let i_byte = veccard.len() * N_BYTES_PER_NETSCHAFKOPF_CARD;
-        bytes_are_card(&slcbyte[i_byte..i_byte+N_BYTES_PER_NETSCHAFKOPF_CARD])
+        bytes_are_card(unwrap!(slcbyte[i_byte..i_byte+N_BYTES_PER_NETSCHAFKOPF_CARD].try_into()))
             .map(|card| veccard.push(card))
             .is_some()
     } {}
