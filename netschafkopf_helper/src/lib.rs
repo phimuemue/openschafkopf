@@ -131,7 +131,7 @@ fn byte_is_schlag(byte: u8) -> Option<ESchlag> {
         _ => None,
     }
 }
-fn bytes_are_card(slcbyte: &[u8; 3]) -> Option<ECard> {
+fn bytes_are_card(slcbyte: &[u8; N_BYTES_PER_NETSCHAFKOPF_CARD]) -> Option<ECard> {
     if_then_some!(
         let (Some(efarbe), Some(eschlag))=(
             byte_is_farbe(slcbyte[0]),
@@ -261,8 +261,8 @@ make_redirect_function!(
             n_bytes_requested,
             src,
         )};
-        if let Some(card) = if_then_some!(n_bytes_requested==3, ()).and_then(|()|
-            bytes_are_card(unwrap!(unsafe{std::slice::from_raw_parts(src as *const u8, 3)}.try_into()))
+        if let Some(card) = if_then_some!(n_bytes_requested==N_BYTES_PER_NETSCHAFKOPF_CARD, ()).and_then(|()|
+            bytes_are_card(unwrap!(unsafe{std::slice::from_raw_parts(src as *const u8, N_BYTES_PER_NETSCHAFKOPF_CARD)}.try_into()))
         ) {
             info!("Moving card {}: {:?} => {:?}",
                 card,
