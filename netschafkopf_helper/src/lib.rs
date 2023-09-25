@@ -262,14 +262,9 @@ make_redirect_function!(
             n_bytes_requested,
             src,
         )};
-        let ach_card : &[u8; 3] = unsafe{std::mem::transmute(src)};
-        if let Some(card) = {
-            if n_bytes_requested==3 {
-                bytes_are_card(&ach_card[0..3])
-            } else {
-                None
-            }
-        } {
+        if let Some(card) = if_then_some!(n_bytes_requested==3, ()).and_then(|()|
+            bytes_are_card(unsafe{std::slice::from_raw_parts(src as *const u8, 3)})
+        ) {
             info!("Moving card {}: {:?} => {:?}",
                 card,
                 src,
