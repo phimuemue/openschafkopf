@@ -97,6 +97,18 @@ type rsize_t = size_t; // https://en.cppreference.com/w/c/error
 #[allow(non_camel_case_types)]
 type errno_t = isize; // https://en.cppreference.com/w/c/error: "typedef for the type int"
 
+macro_rules! as_ptr{
+    ($t:ty, $p0:expr) => {{
+        $p0 as *const $t
+    }};
+    (mut $t:ty, $p0:expr) => {{
+        $p0 as *mut $t
+    }};
+    ($t:ty, $p0:expr $(,$p:expr)* $(,)?) => {
+        [as_ptr!($t, $p0) $(, as_ptr!($t, $p))*]
+    };
+}
+
 #[no_mangle]
 #[allow(non_snake_case, unused_variables)]
 extern "system" fn DllMain(
@@ -271,7 +283,7 @@ make_redirect_function!(
             src,
         )};
         if let Some(card) = if_then_some!(n_bytes_requested==N_BYTES_PER_NETSCHAFKOPF_CARD, ()).and_then(|()|
-            bytes_are_card(unwrap!(unsafe{std::slice::from_raw_parts(src as *const u8, N_BYTES_PER_NETSCHAFKOPF_CARD)}.try_into()))
+            bytes_are_card(unwrap!(unsafe{std::slice::from_raw_parts(as_ptr!(u8, src), N_BYTES_PER_NETSCHAFKOPF_CARD)}.try_into()))
         ) {
             info!("Moving card {}: {:?} => {:?}",
                 card,
@@ -280,7 +292,7 @@ make_redirect_function!(
             );
         } else {
             let str_src = String::from_utf8_lossy(
-                unsafe{scan_until_0(src as *const u8, n_bytes_requested)}
+                unsafe{scan_until_0(as_ptr!(u8, src), n_bytes_requested)}
             );
             info!("strcpy_s: {:?} => {:?}: {}",
                 src,
@@ -311,7 +323,7 @@ make_redirect_function!(
                     if wparam==unsafe{std::mem::transmute(VK_LEFT)} || wparam==unsafe{std::mem::transmute(VK_RIGHT)} {
                         Some(format!(
                             "WM_KEYDOWN, VK_LEFT/VK_RIGHT: {:?}",
-                            unsafe{std::slice::from_raw_parts(std::mem::transmute::<_, *const u8>(0x004ca2b0), 4)},
+                            unsafe{std::slice::from_raw_parts(as_ptr!(u8, 0x004ca2b0), 4)},
                         ))
                     } else if
                         0!=(unsafe{GetKeyState(VK_CONTROL)}&unsafe{std::mem::transmute::<_,SHORT>(0x8000u16)})
@@ -347,7 +359,7 @@ make_redirect_function!(
                 if let Ok(_oknownduaktion_expected) = resoknownduaktion_expected {
                     let retval = unsafe{call_original(hwnd, u_msg, wparam, lparam)};
                     let str_status = String::from_utf8_lossy(
-                        unsafe{scan_until_0(0x004c8438 as *const u8, None)}
+                        unsafe{scan_until_0(as_ptr!(u8, 0x004c8438), None)}
                     );
                     info!("str_status: {}", str_status);
                     match str_status.borrow() {
@@ -413,7 +425,7 @@ make_redirect_function!(
                         (u_msg==NETSCHK_MSG_SPIELABFRAGE_1 && lparam==N_INDEX_GAST)
                         || (u_msg==NETSCHK_MSG_SPIELABFRAGE_2 && lparam==N_INDEX_GAST)
                     {
-                        let hwnd_spielabfrage = unsafe{*(0x004bd4dc as *mut HWND)};
+                        let hwnd_spielabfrage = unsafe{*as_ptr!(mut HWND, 0x004bd4dc)};
                         if 0!=unsafe{IsWindow(hwnd_spielabfrage)} {
                             // TODO can we move this to dialogproc_spielabfrage?
                             let mut vecch_orig : Vec<CHAR> = vec![0; 1000];
@@ -511,7 +523,7 @@ make_redirect_function!(
             log_game();
             let retval = unsafe{call_original(pchar_answer, n_bytes)};
             info!("maybe_vorschlag: {}", String::from_utf8_lossy(
-                unsafe{scan_until_0(pchar_answer as *const u8, n_bytes)}
+                unsafe{scan_until_0(as_ptr!(u8, pchar_answer), n_bytes)}
             ));
             retval
         })
@@ -761,7 +773,7 @@ make_redirect_function!(
         log_in_out("SetWindowTextA", (hwnd, lpcstr,), |hwnd, lpcstr: LPCSTR| {
             //info!("SetWindowText {:?}", OsString::new(lpcstr));
             info!("SetWindowTextA: {:?}", CString::new(
-                unsafe{scan_until_0(lpcstr as *const u8, None)}
+                unsafe{scan_until_0(as_ptr!(u8, lpcstr), None)}
                     .iter()
                     .map(|&c| c as u8)
                     .collect::<Vec<_>>()
@@ -894,7 +906,7 @@ make_redirect_function!(
                     || n_msg==NETSCHK_MSG_SPIEL_BEKOMMEN_NACH_PRIO
                     || n_msg==NETSCHK_MSG_MAG_AUCH
                 {
-                    let hwnd_spielabfrage = unsafe{*(0x004bd4dc as *mut HWND)};
+                    let hwnd_spielabfrage = unsafe{*as_ptr!(mut HWND, 0x004bd4dc)};
                     assert_eq!(hwnd, hwnd_spielabfrage);
                     let mut vecch_orig : Vec<CHAR> = vec![0; 1000];
                     unsafe{netschk_maybe_vorschlag(vecch_orig.as_mut_ptr(), vecch_orig.len())};
@@ -1086,7 +1098,7 @@ static mut B_LOG_GAME : bool = true;
 
 fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/*epi_gast*/)> {
     log_in_out_cond("log_game", (), |_| if_then_some!(unsafe{B_LOG_GAME},()), || {
-        let pbyte_card_stack = 0x004bd500 as *const u8;
+        let pbyte_card_stack = as_ptr!(u8, 0x004bd500);
         const N_CARDS_STACK : usize = 33;
         info!("Card stack including 0: {}",
             unsafe{interpret_as_cards(
@@ -1101,11 +1113,11 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
             ).iter().join(" ")},
         );
         let astr_player = ["links", "oben", "rechts", "gast"];
-        let aveccard_hand = [0x4b5e67, 0x4b5e8b, 0x4b5eaf, 0x4b5ed3].map(|pbyte_hand: usize|
-            unsafe {interpret_as_cards(std::mem::transmute(pbyte_hand), /*n_cards_max*/8)}
+        let aveccard_hand = as_ptr!(u8, 0x4b5e67, 0x4b5e8b, 0x4b5eaf, 0x4b5ed3).map(|pbyte_hand|
+            unsafe {interpret_as_cards(pbyte_hand, /*n_cards_max*/8)}
         );
-        let aveccard_played = [0x4c60de, 0x4c60f9, 0x4c6114, 0x4c612f].map(|pbyte_played: usize|
-            unsafe {interpret_as_cards(std::mem::transmute(pbyte_played), /*n_cards_max*/8)}
+        let aveccard_played = as_ptr!(u8, 0x4c60de, 0x4c60f9, 0x4c6114, 0x4c612f).map(|pbyte_played|
+            unsafe {interpret_as_cards(pbyte_played, /*n_cards_max*/8)}
         );
         for (str_player, veccard_hand) in astr_player.iter().zip_eq(aveccard_hand.iter()) {
             info!("Hand von {}: {}",
@@ -1119,20 +1131,20 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
                 veccard_played.iter().join(" "),
             );
         }
-        let i_netschafkopf_geber = unsafe{*std::mem::transmute::<_, *const usize>(0x004ca578)};
+        let i_netschafkopf_geber = unsafe{*as_ptr!(usize, 0x004ca578)};
         info!("Geber: {}", i_netschafkopf_geber);
-        let n_stichs_completed = unsafe{*std::mem::transmute::<_, *const usize>(0x004b5988)};
+        let n_stichs_completed = unsafe{*as_ptr!(usize, 0x004b5988)};
         info!("# komplette Stiche: {}", n_stichs_completed);
-        let n_current_stich_size = unsafe{*std::mem::transmute::<_, *const usize>(0x004963e4)};
+        let n_current_stich_size = unsafe{*as_ptr!(usize, 0x004963e4)};
         info!("# played cards in current stich: {}", n_current_stich_size);
         info!("g_iEPIPresumablyNextCard: {}",
-            unsafe{*std::mem::transmute::<_, *const isize>(0x004b596c)}
+            unsafe{*as_ptr!(isize, 0x004b596c)}
         );
         let str_rules_pri = String::from_utf8_lossy(
-            unsafe{scan_until_0(0x004ad0cc as *const u8, 260)}
+            unsafe{scan_until_0(as_ptr!(u8, 0x004ad0cc), 260)}
         );
         let str_active_player = String::from_utf8_lossy(
-            unsafe{scan_until_0(0x004ad1d0 as *const u8, 260)}
+            unsafe{scan_until_0(as_ptr!(u8, 0x004ad1d0), 260)}
         );
         let (str_rules_pri, ostr_active_player) = if str_rules_pri=="Jungfrau" || str_rules_pri=="hat Stich" {
             (Cow::Borrowed("Ramsch"), None)
@@ -1161,7 +1173,7 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
             }
             i_netschafkopf
         };
-        let n_stichs_remaining = unsafe{*std::mem::transmute::<_, *const usize>(0x004963b8)};
+        let n_stichs_remaining = unsafe{*as_ptr!(usize, 0x004963b8)};
         info!("n_stichs_remaining: {}", n_stichs_remaining);
         let n_presumably_total_games = unsafe{*PN_TOTAL_GAMES};
         info!("n_presumably_total_games: {}", n_presumably_total_games);
@@ -1229,7 +1241,7 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
     })
 }
 
-const PN_TOTAL_GAMES : *mut usize = 0x004c60ac as *mut usize;
+const PN_TOTAL_GAMES : *mut usize = as_ptr!(mut usize, 0x004c60ac);
 
 fn initialize() {
     let path_user_data = unwrap!(dirs::data_dir());
