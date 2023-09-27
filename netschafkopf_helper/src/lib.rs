@@ -674,7 +674,7 @@ make_redirect_function!(
 make_redirect_function!(
     netschk_maybe_vorschlag_should_stoss,
     /*pfn_original*/0x0041a220,
-    ("C") (n_unknown: isize,)->BOOL,
+    ("C") (n_unknown: isize,)->bool,
     {
         log_in_out("maybe_vorschlag_should_stoss", (n_unknown,), |n_unknown| {
             log_game();
@@ -1014,7 +1014,7 @@ make_redirect_function!(
                 if n_msg==WM_SHOWWINDOW {
                     unwrap!(click_button(
                         hwnd,
-                        /*n_id_dlg_item*/if TRUE==unsafe{netschk_maybe_vorschlag_should_stoss(N_INDEX_GAST)} {
+                        /*n_id_dlg_item*/if unsafe{netschk_maybe_vorschlag_should_stoss(N_INDEX_GAST)} {
                             /*Ja*/1082
                         } else {
                             /*Nein*/1081
