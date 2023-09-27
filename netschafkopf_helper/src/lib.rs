@@ -518,9 +518,18 @@ make_redirect_function!(
         })
     },
 );
-fn internal_suggest(fn_call_original: &dyn Fn()->isize, b_improve_netschafkopf: bool) -> isize {
+
+#[allow(dead_code)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+enum EImproveNetSchafkopf {
+    All,
+    OnlyGast,
+}
+static EIMPROVENETSCHK : EImproveNetSchafkopf = EImproveNetSchafkopf::OnlyGast;
+
+fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
     let i_suggestion_netschk_1_based = fn_call_original();
-    let (aveccard_netschafkopf, game) = unwrap!(log_game());
+    let (aveccard_netschafkopf, game, epi_gast) = unwrap!(log_game());
     let (epi_active, _vecepi_stoss) = unwrap!(game.which_player_can_do_something());
     if game.stichseq.remaining_cards_per_hand()[epi_active]<=if_dbg_else!({2}{3}) {
         let determinebestcardresult = unwrap!(determine_best_card(
@@ -591,7 +600,10 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize, b_improve_netschafkopf: 
                         str_hand=SDisplayCardSlice::new(game.ahand[epi_active].cards().clone(), &game.rules),
                     ));
                 }
-                if b_improve_netschafkopf {
+                if match EIMPROVENETSCHK {
+                    EImproveNetSchafkopf::All => true,
+                    EImproveNetSchafkopf::OnlyGast => epi_gast==epi_active,
+                } {
                     return verify_ne!(
                         (unwrap!(
                             aveccard_netschafkopf[epi_active]
@@ -613,7 +625,6 @@ make_redirect_function!(
     {
         log_in_out("maybe_vorschlag_suggest_card_1", (), || internal_suggest(
             &|| unsafe{call_original()},
-            /*b_improve_netschafkopf*/true, // TODO only for N_INDEX_GAST?
         ))
     },
 );
@@ -624,7 +635,6 @@ make_redirect_function!(
     {
         log_in_out("maybe_vorschlag_suggest_card_2", (), || internal_suggest(
             &|| unsafe{call_original()},
-            /*b_improve_netschafkopf*/true, // TODO only for N_INDEX_GAST?
         ))
     },
 );
@@ -1075,7 +1085,7 @@ unsafe fn interpret_as_cards(pbyte: *const u8, n_cards_max: usize) -> Vec<ECard>
 
 static mut B_LOG_GAME : bool = true;
 
-fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame)> {
+fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/*epi_gast*/)> {
     log_in_out_cond("log_game", (), |_| if_then_some!(unsafe{B_LOG_GAME},()), || {
         let pbyte_card_stack = 0x004bd500 as *const u8;
         const N_CARDS_STACK : usize = 33;
@@ -1214,6 +1224,7 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame)> {
                         /*fn_before_zugeben*/|_,_,_,_|(),
                     )
                 ),
+                to_openschafkopf_playerindex(N_INDEX_GAST.as_num::<usize>()),
             )
         })
     })
