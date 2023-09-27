@@ -1,5 +1,3 @@
-#![cfg(windows)]
-
 use openschafkopf_util::*;
 use openschafkopf_lib::{
     ai::{
@@ -24,6 +22,7 @@ pub const fn make_dword(lo: u16, hi: u16) -> u32 {
 	((lo as u32 & 0xffff) | ((hi as u32 & 0xffff) << 16)) as _
 }
 
+#[cfg(windows)]
 use winapi::{
     shared::{
         basetsd::INT_PTR,
@@ -84,10 +83,12 @@ use std::{
         self,
         File,
     },
-    ffi::{CString, c_char, c_int},
+    ffi::{c_char},
     fmt::Debug,
     io::Write,
 };
+#[cfg(windows)]
+use std::ffi::{CString, c_int};
 use log::{info, error};
 use itertools::Itertools;
 use libc::size_t;
@@ -109,6 +110,7 @@ macro_rules! as_ptr{
     };
 }
 
+#[cfg(windows)]
 #[no_mangle]
 #[allow(non_snake_case, unused_variables)]
 extern "system" fn DllMain(
@@ -120,6 +122,11 @@ extern "system" fn DllMain(
         initialize();
     }
     TRUE
+}
+#[cfg(not(windows))]
+#[no_mangle]
+extern "system" fn dummy_dll_main_to_avoid_dead_code_warnings() {
+    initialize();
 }
 
 fn byte_is_farbe(byte: u8) -> Option<EFarbe> {
@@ -164,6 +171,7 @@ unsafe fn log_bytes(pbyte: *const u8, n_bytes: usize) {
     }
 }
 
+#[cfg(windows)]
 macro_rules! stringify_matches{($expr:expr, ($($context:expr,)*), $($pat:pat)*) => {{
     let str_context = format!("{:?}", ($($context,)*)); // TODO should we make this lazy?
     match $expr {
@@ -237,7 +245,7 @@ macro_rules! make_redirect_function(
             pub unsafe fn redirect() {
                 log_in_out(&format!("{}::redirect", stringify!($fn_name)), (), || {
                     let pfn_original: unsafe extern $($extern)* fn($($paramtype,)*)->$rettype =
-                        std::mem::transmute($pfn_original);
+                        std::mem::transmute($pfn_original as usize);
                     OHOOK = Some(unwrap!(GenericDetour::new(pfn_original, redirected_should_only_be_called_from_wrapper)));
                     unwrap!(unwrap!(OHOOK.as_ref()).enable());
                 })
@@ -254,6 +262,7 @@ make_redirect_function!(
     },
 );
 
+#[cfg(windows)]
 #[derive(Debug, PartialEq, Eq, Clone)]
 enum EKnownDuAktion {
     Kartenwahl,
@@ -306,6 +315,7 @@ make_redirect_function!(
 
 const N_INDEX_GAST : isize = 4;
 
+#[cfg(windows)]
 make_redirect_function!(
     netschk_process_window_message,
     /*pfn_original*/0x0043f3a0,
@@ -744,6 +754,8 @@ make_redirect_function!(
         })
     },
 );
+
+#[cfg(windows)]
 fn get_module_symbol_address(module: &str, symbol: &str) -> FARPROC {
     // taken from https://github.com/Hpmason/retour-rs/blob/master/examples/messageboxw_detour.rs
     let module = module
@@ -761,6 +773,8 @@ fn get_module_symbol_address(module: &str, symbol: &str) -> FARPROC {
         procaddress
     }
 }
+
+#[cfg(windows)]
 make_redirect_function!(
     set_window_text_a,
     /*pfn_original*/get_module_symbol_address("user32.dll", "SetWindowTextA"),
@@ -778,6 +792,8 @@ make_redirect_function!(
         })
     },
 );
+
+#[cfg(windows)]
 make_redirect_function!(
     post_message_a,
     /*pfn_original*/get_module_symbol_address("user32.dll", "PostMessageA"),
@@ -789,6 +805,7 @@ make_redirect_function!(
     },
 );
 
+#[cfg(windows)]
 fn highlight_button(hwnd_dialog: HWND, n_id_dlg_item: c_int) -> HWND {
     let hwnd_button = verify!(unsafe{GetDlgItem(
         hwnd_dialog,
@@ -821,6 +838,7 @@ fn highlight_button(hwnd_dialog: HWND, n_id_dlg_item: c_int) -> HWND {
 #[derive(Clone, Copy, Debug)]
 enum ESendOrPost {Send, Post} // TODO even needed?
 
+#[cfg(windows)]
 fn click_button(
     hwnd_dialog: HWND,
     n_id_dlg_item: c_int,
@@ -861,6 +879,7 @@ fn click_button(
     }
 }
 
+#[cfg(windows)]
 make_redirect_function!(
     netschk_dialogproc_spielabfrage,
     /*pfn_original*/0x0040ecc0,
@@ -992,6 +1011,8 @@ make_redirect_function!(
         )
     },
 );
+
+#[cfg(windows)]
 make_redirect_function!(
     netschk_dialogproc_contra_geben,
     /*pfn_original*/0x00413d20,
@@ -1024,6 +1045,8 @@ make_redirect_function!(
         )
     },
 );
+
+#[cfg(windows)]
 make_redirect_function!(
     netschk_dialogproc_analyse_weiter_1,
     /*pfn_original*/0x00412050,
@@ -1038,6 +1061,8 @@ make_redirect_function!(
         )
     },
 );
+
+#[cfg(windows)]
 make_redirect_function!(
     netschk_dialogproc_analyse_weiter_2_maybe_ja_nein_1,
     /*pfn_original*/0x00412050,
@@ -1061,6 +1086,8 @@ make_redirect_function!(
         )
     },
 );
+
+#[cfg(windows)]
 make_redirect_function!(
     netschk_wndproc_status_bar,
     /*pfn_original*/0x0045f940,
@@ -1255,7 +1282,16 @@ fn initialize() {
         if false { // Redirecting this function is very, very slow
             netschk_increment_playerindex::redirect();
         }
-        netschk_process_window_message::redirect();
+        #[cfg(windows)] {
+            netschk_process_window_message::redirect();
+            netschk_dialogproc_spielabfrage::redirect();
+            netschk_dialogproc_contra_geben::redirect();
+            netschk_dialogproc_analyse_weiter_1::redirect();
+            netschk_dialogproc_analyse_weiter_2_maybe_ja_nein_1::redirect();
+            netschk_wndproc_status_bar::redirect();
+            set_window_text_a::redirect();
+            post_message_a::redirect();
+        }
         netschk_fill_regel_to_registry_bytes::redirect();
         netschk_read_regel_to_registry_bytes::redirect();
         netschk_maybe_vorschlag::redirect();
@@ -1270,13 +1306,6 @@ fn initialize() {
         netschk_maybe_vorschlag_unknown_2::redirect();
         netschk_maybe_vorschlag_unknown_4::redirect();
         netschk_maybe_vorschlag_unknown_5::redirect();
-        netschk_dialogproc_spielabfrage::redirect();
-        netschk_dialogproc_contra_geben::redirect();
-        netschk_dialogproc_analyse_weiter_1::redirect();
-        netschk_dialogproc_analyse_weiter_2_maybe_ja_nein_1::redirect();
-        netschk_wndproc_status_bar::redirect();
-        set_window_text_a::redirect();
-        post_message_a::redirect();
     }
 
     let fn_panic_handler_original = std::panic::take_hook();
