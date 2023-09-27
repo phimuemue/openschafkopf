@@ -416,59 +416,61 @@ make_redirect_function!(
                     {
                         let hwnd_spielabfrage = unsafe{*(0x004bd4dc as *mut HWND)};
                         if 0!=unsafe{IsWindow(hwnd_spielabfrage)} {
-                            let internal_click_button = |n_id_dlg_item| {
-                                if let Err(str_error) = click_button(
-                                    hwnd_spielabfrage,
-                                    n_id_dlg_item,
-                                    /*b_allow_invisible*/false,
-                                    ESendOrPost::Send,
-                                ) {
-                                    info!("click_button failed: {}", str_error);
-                                }
-                            };
                             // TODO can we move this to dialogproc_spielabfrage?
-                            match log_in_out(
-                                "[manual] netschk_maybe_vorschlag_spielabfrage_1(N_INDEX_GAST)",
-                                (),
-                                || unsafe{netschk_maybe_vorschlag_spielabfrage_1(N_INDEX_GAST)},
+                            let mut vecch_orig : Vec<CHAR> = vec![0; 1000];
+                            unsafe{netschk_maybe_vorschlag(vecch_orig.as_mut_ptr(), vecch_orig.len())};
+                            let vecch = vecch_orig.into_iter()
+                                .map(|c| c as u8)
+                                .filter(|&c| c!=0)
+                                .collect::<Vec<_>>();
+                            if let Err(str_error) = click_button(
+                                hwnd_spielabfrage,
+                                /*n_id_dlg_item*/match vecch.as_slice() {
+                                    b"Weiter" => /*"Nein"*/1081,
+                                    | b"Rufspiel"
+                                    | b"Mit der Eichel-Ass"
+                                    | b"Mit der Gr\xFCn-Ass"
+                                    | b"Mit der Schellen-Ass"
+                                    | b"Solo"
+                                    | b"Eichel-Solo"
+                                    | b"Gr\xFCn-Solo"
+                                    | b"Herz-Solo"
+                                    | b"Schellen-Solo"
+                                    | b"Wenz"
+                                    | b"Farbwenz"
+                                    | b"Eichel-Wenz"
+                                    | b"Gr\xFCn-Wenz"
+                                    | b"Herz-Wenz"
+                                    | b"Schellen-Wenz"
+                                    | b"Geier"
+                                    | b"Farbgeier"
+                                    | b"Eichel-Geier"
+                                    | b"Gr\xFCn-Geier"
+                                    | b"Herz-Geier"
+                                    | b"Schellen-Geier"
+                                    | b"Solo Tout"
+                                    | b"Eichel-Solo Tout"
+                                    | b"Gr\xFCn-Solo Tout"
+                                    | b"Herz-Solo Tout"
+                                    | b"Schellen-Solo Tout"
+                                    | b"Wenz Tout"
+                                    | b"Eichel-Wenz Tout"
+                                    | b"Gr\xFCn-Wenz Tout"
+                                    | b"Herz-Wenz Tout"
+                                    | b"Schellen-Wenz Tout"
+                                    | b"Geier Tout"
+                                    | b"Eichel-Geier Tout"
+                                    | b"Gr\xFCn-Geier Tout"
+                                    | b"Herz-Geier Tout"
+                                    | b"Schellen-Geier Tout"
+                                    | b"Sie"
+                                    | b"Bettel" => /*"Ja"*/1082,
+                                    _ => panic!("Unknown Vorschlag: {:?}", vecch)
+                                },
+                                /*b_allow_invisible*/false,
+                                ESendOrPost::Send,
                             ) {
-                                0 => {
-                                    "Weiter";
-                                    internal_click_button(/*n_id_dlg_item: Button "Nein"*/1081)
-                                },
-                                1 => {
-                                    "Rufspiel";
-                                    internal_click_button(/*n_id_dlg_item: Button "Ja"*/1082)
-                                },
-                                2 => {
-                                    "Farbgeier";
-                                    internal_click_button(/*n_id_dlg_item: Button "Ja"*/1082)
-                                },
-                                3 => {
-                                    "Geier";
-                                    internal_click_button(/*n_id_dlg_item: Button "Ja"*/1082)
-                                },
-                                4 => {
-                                    "Farbwenz";
-                                    internal_click_button(/*n_id_dlg_item: Button "Ja"*/1082)
-                                },
-                                5 => {
-                                    "Wenz";
-                                    internal_click_button(/*n_id_dlg_item: Button "Ja"*/1082)
-                                },
-                                6 => {
-                                    "Solo";
-                                    internal_click_button(/*n_id_dlg_item: Button "Ja"*/1082)
-                                },
-                                7 => {
-                                    "Bettel";
-                                    internal_click_button(/*n_id_dlg_item: Button "Ja"*/1082)
-                                },
-                                9 => {
-                                    "Wenz or Farbwenz Tout";
-                                    internal_click_button(/*n_id_dlg_item: Button "Ja"*/1082)
-                                },
-                                _ => panic!(),
+                                info!("click_button failed: {}", str_error);
                             }
                         }
                     }
