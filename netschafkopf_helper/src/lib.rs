@@ -257,7 +257,7 @@ unsafe fn scan_until_0<'slc>(pch: *const u8, on_max_bytes: impl Into<Option<usiz
         pch_current = pch_current.add(1);
         n_bytes_before_0 += 1;
     }
-    std::slice::from_raw_parts(pch as *const u8, n_bytes_before_0)
+    std::slice::from_raw_parts(pch, n_bytes_before_0)
 }
 
 make_redirect_function!(
@@ -346,9 +346,8 @@ make_redirect_function!(
                 info!("{:?}", resoknownduaktion_expected);
                 if let Ok(_oknownduaktion_expected) = resoknownduaktion_expected {
                     let retval = unsafe{call_original(hwnd, u_msg, wparam, lparam)};
-                    let src = unsafe{std::mem::transmute::<_,*const c_char>(0x004c8438)};
                     let str_status = String::from_utf8_lossy(
-                        unsafe{scan_until_0(src as *const u8, None)}
+                        unsafe{scan_until_0(0x004c8438 as *const u8, None)}
                     );
                     info!("str_status: {}", str_status);
                     match str_status.borrow() {
