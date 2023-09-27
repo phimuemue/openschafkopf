@@ -4,8 +4,10 @@ use openschafkopf_util::*;
 use openschafkopf_lib::{
     ai::{
         determine_best_card,
-        gametree::{EMinMaxStrategy, SNoFilter, SMinReachablePayout, SSnapshotCacheNone, SNoVisualization},
-        handiterators::all_possible_hands,
+        gametree::{EMinMaxStrategy, SNoFilter, SMinReachablePayout, SSnapshotCacheNone, SNoVisualization, equivalent_cards_filter},
+        handiterators::{all_possible_hands, forever_rand_hands},
+        stichoracle::SFilterByOracle,
+        SBranchingFactor,
     },
     game::{SGame, SExpensifiersNoStoss, TGamePhase},
     primitives::{EKurzLang, EPlayerIndex, EFarbe, ESchlag, ECard, SStichSequence, SHand, SDisplayCardSlice, display_card_slices, SStaticEPI0},
@@ -531,8 +533,9 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
     let i_suggestion_netschk_1_based = fn_call_original();
     let (aveccard_netschafkopf, game, epi_gast) = unwrap!(log_game());
     let (epi_active, _vecepi_stoss) = unwrap!(game.which_player_can_do_something());
-    if game.stichseq.remaining_cards_per_hand()[epi_active]<=if_dbg_else!({2}{3}) {
-        let determinebestcardresult = unwrap!(determine_best_card(
+    let n_remaining_cards = game.stichseq.remaining_cards_per_hand()[epi_active];
+    if let Some(determinebestcardresult) = if n_remaining_cards<=if_dbg_else!({2}{3}) {
+        verify!(determine_best_card(
             &game.stichseq,
             game.rules.as_ref(),
             Box::new(all_possible_hands(
@@ -553,7 +556,68 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
             /*epi_result*/epi_active,
             /*fn_payout*/&|_stichseq, _ahand, n_payout: isize| (n_payout, n_payout.cmp(&0)),
-        ));
+        ))
+    } else if n_remaining_cards<=if_dbg_else!({3}{4}) {
+        let game = game.clone().map(
+            |gameannouncements| gameannouncements,
+            |determinerules| determinerules,
+            |ruleset| ruleset,
+            |rules| rules.points_as_payout().map(|(rules, _)| rules).unwrap_or(rules.box_clone()),
+        );
+        verify!(determine_best_card(
+            &game.stichseq,
+            game.rules.as_ref(),
+            Box::new(forever_rand_hands(
+                &game.stichseq,
+                game.ahand[epi_active].clone(),
+                epi_active,
+                game.rules.as_ref(),
+                &game.expensifiers.vecstoss,
+            ).take(100)),
+            /*fn_make_filter*/equivalent_cards_filter(6, game.rules.equivalent_when_on_same_hand()),
+            /*foreachsnapshot*/&SMinReachablePayout::new(
+                game.rules.as_ref(),
+                epi_active,
+                game.expensifiers.clone(),
+            ),
+            |rulestatecache| game.rules.snapshot_cache(rulestatecache),
+            SNoVisualization::factory(),
+            /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
+            /*epi_result*/epi_active,
+            /*fn_payout*/&|_stichseq, _ahand, n_payout: isize| (n_payout, n_payout.cmp(&0)),
+        ))
+    } else if n_remaining_cards<=if_dbg_else!({5}{6}) {
+        let game = game.clone().map(
+            |gameannouncements| gameannouncements,
+            |determinerules| determinerules,
+            |ruleset| ruleset,
+            |rules| rules.points_as_payout().map(|(rules, _)| rules).unwrap_or(rules.box_clone()),
+        );
+        verify!(determine_best_card(
+            &game.stichseq,
+            game.rules.as_ref(),
+            Box::new(forever_rand_hands(
+                &game.stichseq,
+                game.ahand[epi_active].clone(),
+                epi_active,
+                game.rules.as_ref(),
+                &game.expensifiers.vecstoss,
+            ).take(100)),
+            /*fn_make_filter*/SBranchingFactor::factory(1,3),
+            /*foreachsnapshot*/&SMinReachablePayout::new(
+                game.rules.as_ref(),
+                epi_active,
+                game.expensifiers.clone(),
+            ),
+            |rulestatecache| game.rules.snapshot_cache(rulestatecache),
+            SNoVisualization::factory(),
+            /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
+            /*epi_result*/epi_active,
+            /*fn_payout*/&|_stichseq, _ahand, n_payout: isize| (n_payout, n_payout.cmp(&0)),
+        ))
+    } else {
+        None
+    } {
         let card_suggestion_netschk = aveccard_netschafkopf[epi_active][(i_suggestion_netschk_1_based-1).as_num::<usize>()];
         assert!(
             determinebestcardresult.cards_and_ts()
@@ -561,15 +625,15 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
                 .is_some()
         );
         let veccard_suggestion_openschafkopf = determinebestcardresult.cards_and_ts()
-            .filter_map(|(card, payoutstatsperstrategy)| {
-                let n_payout_relevant = payoutstatsperstrategy.0[EMinMaxStrategy::Min].min();
-                if_then_some!(n_payout_relevant > 0, (card, n_payout_relevant))
+            .map(|(card, payoutstatsperstrategy)| {
+                let n_payout_relevant = payoutstatsperstrategy.0[EMinMaxStrategy::SelfishMin].min();
+                (card, n_payout_relevant)
             })
             .max_set_by_key(|&(_card, n_payout_relevant)| n_payout_relevant)
             .into_iter()
             .map(|(card, _n_payout_relevant)| card)
             .collect::<Vec<_>>();
-        if !veccard_suggestion_openschafkopf.is_empty() {
+        if verify!(!veccard_suggestion_openschafkopf.is_empty()) {
             if !veccard_suggestion_openschafkopf.contains(&card_suggestion_netschk){
                 let str_file_osk_replay = format!("{}_{}.sh",
                     game.stichseq.visible_cards().map(|(_epi, card)|card).join(""),
