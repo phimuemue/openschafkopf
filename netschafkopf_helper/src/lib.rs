@@ -79,7 +79,7 @@ use winapi::{
     },
 };
 use std::{
-    borrow::{Borrow, Cow},
+    borrow::Cow,
     fs::{
         self,
         File,
@@ -358,12 +358,8 @@ make_redirect_function!(
                 info!("{:?}", resoknownduaktion_expected);
                 if let Ok(_oknownduaktion_expected) = resoknownduaktion_expected {
                     let retval = unsafe{call_original(hwnd, u_msg, wparam, lparam)};
-                    let str_status = String::from_utf8_lossy(
-                        unsafe{scan_until_0(as_ptr!(u8, 0x004c8438), None)}
-                    );
-                    info!("str_status: {}", str_status);
-                    match str_status.borrow() {
-                        "Du ? Kartenwahl" => {
+                    match unsafe{scan_until_0(as_ptr!(u8, 0x004c8438), None)} {
+                        b"Du ? Kartenwahl" => {
                             // "Vorschlag machen"
                             verify_ne!(
                                 unsafe{PostMessageA(
@@ -384,7 +380,7 @@ make_redirect_function!(
                                 0
                             );
                         },
-                        "Stich best\u{FFFD}tigen" => {
+                        b"Stich best\xE4tigen" => {
                             verify_ne!(
                                 unsafe{PostMessageA(
                                     hwnd,
@@ -395,27 +391,27 @@ make_redirect_function!(
                                 0
                             );
                         },
-                        "Warten"
-                            | ""
-                            | "Der Computer mischt"
-                            | "Du ? Spielen"
-                            | "PcLinks ? Spielen"
-                            | "PcOben ? Spielen"
-                            | "PcRechts ? Spielen"
-                            | "Du ? Spielwahl"
-                            | "PcLinks ? Spielwahl"
-                            | "PcOben ? Spielwahl"
-                            | "PcRechts ? Spielwahl"
-                            | "PcLinks ? Kartenwahl"
-                            | "PcOben ? Kartenwahl"
-                            | "PcRechts ? Kartenwahl"
-                            | "Du ? Sto\u{FFFD}en"
-                            | "PcLinks ? Sto\u{FFFD}en"
-                            | "PcOben ? Sto\u{FFFD}en"
-                            | "PcRechts ? Sto\u{FFFD}en"
+                        b"Warten"
+                            | b""
+                            | b"Der Computer mischt"
+                            | b"Du ? Spielen"
+                            | b"PcLinks ? Spielen"
+                            | b"PcOben ? Spielen"
+                            | b"PcRechts ? Spielen"
+                            | b"Du ? Spielwahl"
+                            | b"PcLinks ? Spielwahl"
+                            | b"PcOben ? Spielwahl"
+                            | b"PcRechts ? Spielwahl"
+                            | b"PcLinks ? Kartenwahl"
+                            | b"PcOben ? Kartenwahl"
+                            | b"PcRechts ? Kartenwahl"
+                            | b"Du ? Sto\xDFen"
+                            | b"PcLinks ? Sto\xDFen"
+                            | b"PcOben ? Sto\xDFen"
+                            | b"PcRechts ? Sto\xDFen"
                         => {},
-                        str_unknown_msg => {
-                            info!("Unknown status: {}", str_unknown_msg);
+                        str_status => {
+                            info!("Unknown status: {:?}", str_status);
                         },
                     }
                     return retval
