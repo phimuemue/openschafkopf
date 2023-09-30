@@ -518,7 +518,6 @@ make_redirect_function!(
     {
         log_in_out("read_regel_to_registry_bytes", (pbyte,), |pbyte| {
             verify_is_unit!(unsafe{call_original(pbyte)});
-            unsafe{*PN_TOTAL_GAMES = 10000};
             let abyte_regeldaten_new = unwrap!(unsafe{std::slice::from_raw_parts(pbyte, N_BYTES_REGELDATEN)}.try_into());
             if let Some(abyte_regeldaten_old) = unsafe{&OABYTE_REGELDATEN} {
                 for (i, byte_old, byte_new) in itertools::zip_eq(
@@ -554,97 +553,107 @@ make_redirect_function!(
 );
 
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-enum EImproveNetSchafkopf {
-    All,
+#[derive(Debug, Copy, Clone)]
+enum EImprovementScope {
     OnlyGast,
+    All,
 }
-static EIMPROVENETSCHK : EImproveNetSchafkopf = EImproveNetSchafkopf::OnlyGast;
+
+#[allow(dead_code)]
+#[derive(Debug, Copy, Clone)]
+enum VLogAndImprove {
+    LogOnly,
+    Improve(EImprovementScope),
+}
+static OLOGANDIMPROVE : Option<VLogAndImprove> = None;
 
 fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
     let i_suggestion_netschk_1_based = fn_call_original();
-    let (aveccard_netschafkopf, game, epi_gast) = unwrap!(log_game());
-    let (epi_active, _vecepi_stoss) = unwrap!(game.which_player_can_do_something());
-    if game.stichseq.remaining_cards_per_hand()[epi_active]<=if_dbg_else!({2}{3}) {
-        let determinebestcardresult = unwrap!(determine_best_card(
-            &game.stichseq,
-            game.rules.as_ref(),
-            Box::new(all_possible_hands(
+    if let Some(logandimprove) = &OLOGANDIMPROVE {
+        let (aveccard_netschafkopf, game, epi_gast) = unwrap!(log_game());
+        let (epi_active, _vecepi_stoss) = unwrap!(game.which_player_can_do_something());
+        if game.stichseq.remaining_cards_per_hand()[epi_active]<=if_dbg_else!({2}{3}) {
+            let determinebestcardresult = unwrap!(determine_best_card(
                 &game.stichseq,
-                game.ahand[epi_active].clone(),
-                epi_active,
                 game.rules.as_ref(),
-                &game.expensifiers.vecstoss,
-            )),
-            /*fn_make_filter*/SNoFilter::factory(),
-            /*foreachsnapshot*/&SMinReachablePayout::new(
-                game.rules.as_ref(),
-                epi_active,
-                game.expensifiers.clone(),
-            ),
-            SSnapshotCacheNone::factory(),
-            SNoVisualization::factory(),
-            /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
-            /*epi_result*/epi_active,
-            /*fn_payout*/&|_stichseq, _ahand, n_payout: isize| (n_payout, n_payout.cmp(&0)),
-        ));
-        let card_suggestion_netschk = aveccard_netschafkopf[epi_active][(i_suggestion_netschk_1_based-1).as_num::<usize>()];
-        assert!(
-            determinebestcardresult.cards_and_ts()
-                .any(|(card, _)| card==card_suggestion_netschk)
-        );
-        let veccard_suggestion_openschafkopf = determinebestcardresult.cards_and_ts()
-            .filter_map(|(card, payoutstatsperstrategy)| {
-                let n_payout_relevant = payoutstatsperstrategy.0[EMinMaxStrategy::Min].min();
-                if_then_some!(n_payout_relevant > 0, (card, n_payout_relevant))
-            })
-            .max_set_by_key(|&(_card, n_payout_relevant)| n_payout_relevant)
-            .into_iter()
-            .map(|(card, _n_payout_relevant)| card)
-            .collect::<Vec<_>>();
-        if !veccard_suggestion_openschafkopf.is_empty() {
-            if !veccard_suggestion_openschafkopf.contains(&card_suggestion_netschk){
-                let str_file_osk_replay = format!("{}_{}.sh",
-                    game.stichseq.visible_cards().map(|(_epi, card)|card).join(""),
-                    game.ahand[epi_active].cards().iter().join(""),
-                );
-                info!("Writing replay to {}", str_file_osk_replay);
-                {
-                    let str_rules = format!("{}{}",
-                        game.rules,
-                        if let Some(epi) = game.rules.playerindex() {
-                            format!(" von {}", epi)
-                        } else {
-                            "".to_owned()
-                        },
+                Box::new(all_possible_hands(
+                    &game.stichseq,
+                    game.ahand[epi_active].clone(),
+                    epi_active,
+                    game.rules.as_ref(),
+                    &game.expensifiers.vecstoss,
+                )),
+                /*fn_make_filter*/SNoFilter::factory(),
+                /*foreachsnapshot*/&SMinReachablePayout::new(
+                    game.rules.as_ref(),
+                    epi_active,
+                    game.expensifiers.clone(),
+                ),
+                SSnapshotCacheNone::factory(),
+                SNoVisualization::factory(),
+                /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
+                /*epi_result*/epi_active,
+                /*fn_payout*/&|_stichseq, _ahand, n_payout: isize| (n_payout, n_payout.cmp(&0)),
+            ));
+            let card_suggestion_netschk = aveccard_netschafkopf[epi_active][(i_suggestion_netschk_1_based-1).as_num::<usize>()];
+            assert!(
+                determinebestcardresult.cards_and_ts()
+                    .any(|(card, _)| card==card_suggestion_netschk)
+            );
+            let veccard_suggestion_openschafkopf = determinebestcardresult.cards_and_ts()
+                .filter_map(|(card, payoutstatsperstrategy)| {
+                    let n_payout_relevant = payoutstatsperstrategy.0[EMinMaxStrategy::Min].min();
+                    if_then_some!(n_payout_relevant > 0, (card, n_payout_relevant))
+                })
+                .max_set_by_key(|&(_card, n_payout_relevant)| n_payout_relevant)
+                .into_iter()
+                .map(|(card, _n_payout_relevant)| card)
+                .collect::<Vec<_>>();
+            if !veccard_suggestion_openschafkopf.is_empty() {
+                if !veccard_suggestion_openschafkopf.contains(&card_suggestion_netschk){
+                    let str_file_osk_replay = format!("{}_{}.sh",
+                        game.stichseq.visible_cards().map(|(_epi, card)|card).join(""),
+                        game.ahand[epi_active].cards().iter().join(""),
                     );
-                    let mut file_osk_replay = unwrap!(File::create(str_file_osk_replay));
-                    unwrap!(writeln!(&mut file_osk_replay, "echo '{}'", str_rules));
-                    unwrap!(writeln!(&mut file_osk_replay, "echo 'Stichs so far:'"));
-                    for stich in game.stichseq.visible_stichs() {
-                        unwrap!(writeln!(&mut file_osk_replay, "echo '{}'", &stich));
+                    info!("Writing replay to {}", str_file_osk_replay);
+                    {
+                        let str_rules = format!("{}{}",
+                            game.rules,
+                            if let Some(epi) = game.rules.playerindex() {
+                                format!(" von {}", epi)
+                            } else {
+                                "".to_owned()
+                            },
+                        );
+                        let mut file_osk_replay = unwrap!(File::create(str_file_osk_replay));
+                        unwrap!(writeln!(&mut file_osk_replay, "echo '{}'", str_rules));
+                        unwrap!(writeln!(&mut file_osk_replay, "echo 'Stichs so far:'"));
+                        for stich in game.stichseq.visible_stichs() {
+                            unwrap!(writeln!(&mut file_osk_replay, "echo '{}'", &stich));
+                        }
+                        unwrap!(writeln!(&mut file_osk_replay, "echo 'Hand: {}'", SDisplayCardSlice::new(game.ahand[epi_active].cards().clone(), &game.rules)));
+                        unwrap!(writeln!(&mut file_osk_replay, "echo 'NetSchafkopf suggests {}'", card_suggestion_netschk));
+                        unwrap!(writeln!(&mut file_osk_replay, "./target/release/openschafkopf suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand}\" --branching \"equiv7\" --points",
+                            str_cards_on_table=game.stichseq.visible_stichs().iter()
+                                .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
+                                .join("  "),
+                            str_hand=SDisplayCardSlice::new(game.ahand[epi_active].cards().clone(), &game.rules),
+                        ));
                     }
-                    unwrap!(writeln!(&mut file_osk_replay, "echo 'Hand: {}'", SDisplayCardSlice::new(game.ahand[epi_active].cards().clone(), &game.rules)));
-                    unwrap!(writeln!(&mut file_osk_replay, "echo 'NetSchafkopf suggests {}'", card_suggestion_netschk));
-                    unwrap!(writeln!(&mut file_osk_replay, "./target/release/openschafkopf suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand}\" --branching \"equiv7\" --points",
-                        str_cards_on_table=game.stichseq.visible_stichs().iter()
-                            .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
-                            .join("  "),
-                        str_hand=SDisplayCardSlice::new(game.ahand[epi_active].cards().clone(), &game.rules),
-                    ));
-                }
-                if match EIMPROVENETSCHK {
-                    EImproveNetSchafkopf::All => true,
-                    EImproveNetSchafkopf::OnlyGast => epi_gast==epi_active,
-                } {
-                    return verify_ne!(
-                        (unwrap!(
-                            aveccard_netschafkopf[epi_active]
-                                .iter()
-                                .position(|&card| card==veccard_suggestion_openschafkopf[0])
-                        ) + 1).as_num::<isize>(),
-                        i_suggestion_netschk_1_based
-                    );
+                    if match logandimprove {
+                        VLogAndImprove::LogOnly => false,
+                        VLogAndImprove::Improve(EImprovementScope::All) => true,
+                        VLogAndImprove::Improve(EImprovementScope::OnlyGast) => epi_gast==epi_active,
+                    } {
+                        return verify_ne!(
+                            (unwrap!(
+                                aveccard_netschafkopf[epi_active]
+                                    .iter()
+                                    .position(|&card| card==veccard_suggestion_openschafkopf[0])
+                            ) + 1).as_num::<isize>(),
+                            i_suggestion_netschk_1_based
+                        );
+                    }
                 }
             }
         }
