@@ -348,11 +348,11 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             vecvectplepistr_determinerules,
         );
         for resepi in get_doublings_stoss("Kontra und Retour")? {
-            let () = game.stoss(resepi?)?;
+            verify_is_unit!(game.stoss(resepi?)?);
         }
         for stich in vecstich.into_iter() {
             for (epi, card) in stich.iter() {
-                let () = game.zugeben(*card, epi)?;
+                verify_is_unit!(game.zugeben(*card, epi)?);
             }
         }
         game.finish().map_err(|_game| format_err!("Could not game.finish"))

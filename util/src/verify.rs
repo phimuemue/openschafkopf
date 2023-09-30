@@ -120,3 +120,6 @@ macro_rules! debug_verify_ne {($e: expr, $e_chk: expr) => {
 fn test_verify() {
     verify!(Some(4));
 }
+
+#[macro_export]
+macro_rules! verify_is_unit{($e:expr) => {let () = $e;}}

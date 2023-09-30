@@ -517,7 +517,7 @@ make_redirect_function!(
     ("C") (pbyte: *const u8,)->(),
     {
         log_in_out("read_regel_to_registry_bytes", (pbyte,), |pbyte| {
-            let retval = unsafe{call_original(pbyte)};
+            verify_is_unit!(unsafe{call_original(pbyte)});
             unsafe{*PN_TOTAL_GAMES = 10000};
             let abyte_regeldaten_new = unwrap!(unsafe{std::slice::from_raw_parts(pbyte, N_BYTES_REGELDATEN)}.try_into());
             if let Some(abyte_regeldaten_old) = unsafe{&OABYTE_REGELDATEN} {
@@ -535,7 +535,6 @@ make_redirect_function!(
                 }
             }
             unsafe {OABYTE_REGELDATEN = Some(abyte_regeldaten_new)};
-            retval
         })
     },
 );
@@ -546,11 +545,10 @@ make_redirect_function!(
     {
         log_in_out("maybe_vorschlag", (pchar_answer, n_bytes), |pchar_answer, n_bytes| {
             log_game();
-            let retval = unsafe{call_original(pchar_answer, n_bytes)};
+            verify_is_unit!(unsafe{call_original(pchar_answer, n_bytes)});
             info!("maybe_vorschlag: {}", String::from_utf8_lossy(
                 unsafe{scan_until_0(as_ptr!(u8, pchar_answer), n_bytes)}
             ));
-            retval
         })
     },
 );
