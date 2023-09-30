@@ -591,8 +591,7 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
         let card_suggestion_netschk = aveccard_netschafkopf[epi_active][(i_suggestion_netschk_1_based-1).as_num::<usize>()];
         assert!(
             determinebestcardresult.cards_and_ts()
-                .find(|&(card, _)| card==card_suggestion_netschk)
-                .is_some()
+                .any(|(card, _)| card==card_suggestion_netschk)
         );
         let veccard_suggestion_openschafkopf = determinebestcardresult.cards_and_ts()
             .filter_map(|(card, payoutstatsperstrategy)| {
