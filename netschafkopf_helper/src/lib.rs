@@ -220,6 +220,7 @@ macro_rules! make_redirect_function(
         ($($extern:tt)*) ($($paramname:ident : $paramtype:ty,)*)->$rettype:ty,
         $fn_new:expr,
     ) => {
+        #[allow(clippy::missing_safety_doc)]
         pub unsafe extern $($extern)* fn $fn_name($($paramname: $paramtype,)*)->$rettype {
             $fn_name::redirected_should_only_be_called_from_wrapper($($paramname,)*)
         }
