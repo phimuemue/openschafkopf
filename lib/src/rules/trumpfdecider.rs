@@ -95,9 +95,7 @@ impl STrumpfDecider {
 
 impl STrumpfDeciderInternal {
     fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
-        if self.slcschlag.contains(&card.schlag()) {
-            VTrumpfOrFarbe::Trumpf
-        } else if self.oefarbe == Some(card.farbe()) {
+        if self.slcschlag.contains(&card.schlag()) || self.oefarbe==Some(card.farbe()) {
             VTrumpfOrFarbe::Trumpf
         } else {
             VTrumpfOrFarbe::Farbe(card.farbe())
