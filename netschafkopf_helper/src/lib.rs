@@ -1245,9 +1245,7 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
             let an_cards_hand = stichseq.remaining_cards_per_hand();
             let aveccard_netschafkopf = EPlayerIndex::map_from_fn(|epi| {
                 aveccard_hand[epi_to_netschafkopf_playerindex(epi)-1][0..an_cards_hand[epi]]
-                    .iter()
-                    .copied()
-                    .collect::<Vec<_>>()
+                    .to_vec()
             });
             let ahand = aveccard_netschafkopf.map(|veccard| SHand::new_from_iter(veccard));
             info!("{}", display_card_slices(&ahand, &rules, " | "));
