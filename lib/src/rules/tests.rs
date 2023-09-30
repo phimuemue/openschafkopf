@@ -2012,6 +2012,52 @@ fn test_rulesbettel() {
 }
 
 #[test]
+fn test_laufende() {
+    let rulesrufspiel = rulesrufspiel_new_test(
+        EPlayerIndex::EPI2,
+        EFarbe::Eichel,
+        /*n_payout_base*/10,
+        /*n_payout_schneider_schwarz*/0,
+        SLaufendeParams::new(10, 3),
+    );
+    use EPlayerIndex::EPI0;
+    test_rules_manual(
+        "Rufspiel lange Karte",
+        &rulesrufspiel,
+        vec![],
+        vec![],
+        /*n_stock*/0,
+        &[
+            (EPI0, [EO, EU, GA, GZ]),
+            (EPI0, [GO, GU, GK, G9]),
+            (EPI0, [HO, HU, SA, SZ]),
+            (EPI0, [SO, SU, SK, S9]),
+            (EPI0, [HA, HZ, EK, E9]),
+            (EPI0, [HK, H9, EZ, S8]),
+            (EPI0, [H8, E7, E8, G7]),
+            (EPI0, [H7, G8, S7, EA]),
+        ],
+        ([150, 150, -150, -150], 0),
+    );
+    test_rules_manual(
+        "Rufspiel kurze Karte",
+        &rulesrufspiel,
+        vec![],
+        vec![],
+        /*n_stock*/0,
+        &[
+            (EPI0, [EO, EU, GA, GZ]),
+            (EPI0, [GO, GU, GK, G9]),
+            (EPI0, [HO, HU, SA, SZ]),
+            (EPI0, [SO, SU, SK, S9]),
+            (EPI0, [HA, HZ, EK, E9]),
+            (EPI0, [HK, H9, EZ, EA]),
+        ],
+        ([130, 130, -130, -130], 0),
+    );
+}
+
+#[test]
 fn test_stock() {
     use EPlayerIndex::*;
     let rulesrufspiel = rulesrufspiel_new_test(
