@@ -508,6 +508,8 @@ make_redirect_function!(
         })
     },
 );
+const N_BYTES_REGELDATEN : usize = 0x81;
+static mut OABYTE_REGELDATEN: Option<[u8; N_BYTES_REGELDATEN]> = None;
 make_redirect_function!(
     netschk_read_regel_to_registry_bytes,
     /*pfn_original*/0x0042ab60,
@@ -516,6 +518,22 @@ make_redirect_function!(
         log_in_out("read_regel_to_registry_bytes", (pbyte,), |pbyte| {
             let retval = unsafe{call_original(pbyte)};
             unsafe{*PN_TOTAL_GAMES = 10000};
+            let abyte_regeldaten_new = unwrap!(unsafe{std::slice::from_raw_parts(pbyte, N_BYTES_REGELDATEN)}.try_into());
+            if let Some(abyte_regeldaten_old) = unsafe{&OABYTE_REGELDATEN} {
+                for (i, byte_old, byte_new) in itertools::zip_eq(
+                    abyte_regeldaten_old,
+                    &abyte_regeldaten_new,
+                )
+                    .enumerate()
+                    .skip(0x41)
+                    .filter_map(|(i, (byte_old, byte_new))|
+                        if_then_some!(byte_old!=byte_new, (i, byte_old, byte_new))
+                    )
+                {
+                    info!("Difference at {:#x}/{}: {} => {}", i, i, byte_old, byte_new);
+                }
+            }
+            unsafe {OABYTE_REGELDATEN = Some(abyte_regeldaten_new)};
             retval
         })
     },
