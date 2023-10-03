@@ -3,7 +3,7 @@ use openschafkopf_lib::{
     ai::{
         determine_best_card,
         gametree::{EMinMaxStrategy, SNoFilter, SMinReachablePayout, SSnapshotCacheNone, SNoVisualization},
-        handiterators::all_possible_hands,
+        handiterators::{all_possible_hands, TToAHand},
     },
     game::{SGame, SExpensifiersNoStoss, TGamePhase},
     primitives::{EKurzLang, EPlayerIndex, EFarbe, ESchlag, ECard, SStichSequence, SHand, SDisplayCardSlice, display_card_slices, SStaticEPI0},
@@ -567,18 +567,24 @@ enum VLogAndImprove {
 }
 static OLOGANDIMPROVE : Option<VLogAndImprove> = None;
 
+static B_CHEAT: bool = true;
+
 fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
     let i_suggestion_netschk_1_based = fn_call_original();
     if let Some(logandimprove) = &OLOGANDIMPROVE {
         let (aveccard_netschafkopf, game, epi_gast) = unwrap!(log_game());
         let (epi_active, _vecepi_stoss) = unwrap!(game.which_player_can_do_something());
-        if game.stichseq.remaining_cards_per_hand()[epi_active]<=if_dbg_else!({2}{3}) {
+        if game.stichseq.remaining_cards_per_hand()[epi_active]<=if_dbg_else!({2}{5}) {
             let determinebestcardresult = unwrap!(determine_best_card(
                 &game.stichseq,
                 game.rules.as_ref(),
                 Box::new(all_possible_hands(
                     &game.stichseq,
-                    (game.ahand[epi_active].clone(), epi_active),
+                    if B_CHEAT {
+                        game.ahand.clone()
+                    } else {
+                        (game.ahand[epi_active].clone(), epi_active).to_ahand()
+                    },
                     game.rules.as_ref(),
                     &game.expensifiers.vecstoss,
                 )),
