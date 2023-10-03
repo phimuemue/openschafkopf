@@ -208,8 +208,8 @@ pub fn with_common_args<FnWithArgs>(
                         .unwrap_or_else(|_|unwrap!(stichseq.current_stich().current_playerindex()));
                     if_then_some!(
                         stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(), // TODO Allow to specify more than only currently held cards if compatible with stichseq
-                        SHand::new_from_iter(vecocard_hand.iter().flatten())
-                            .to_ahand(epi_position)
+                        (SHand::new_from_iter(vecocard_hand.iter().flatten()), epi_position)
+                            .to_ahand()
                     ).or_else(|| {
                         let n_cards_total = stichseq.kurzlang().cards_per_player()*EPlayerIndex::SIZE;
                         if_then_some!(stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total, {
@@ -294,7 +294,6 @@ pub fn with_common_args<FnWithArgs>(
                         $fn_take($itahand_factory(
                             &stichseq,
                             ahand_with_holes.clone(),
-                            epi_position,
                             rules,
                             &expensifiers.vecstoss,
                             /*fn_inspect*/|b_valid_so_far, ahand| {

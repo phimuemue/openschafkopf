@@ -65,8 +65,7 @@ impl SAi {
         let ekurzlang = unwrap!(EKurzLang::from_cards_per_player(hand_fixed.get().len()));
         forever_rand_hands(
             &SStichSequence::new(ekurzlang),
-            SHand::new_from_iter(hand_fixed.get()),
-            epi_rank,
+            (SHand::new_from_iter(hand_fixed.get()), epi_rank),
             rules,
             &expensifiers.vecstoss,
         )
@@ -165,10 +164,10 @@ impl SAi {
                         std::iter::once(ahand.clone())
                     },
                     (&VAIParams::Simulating{n_suggest_card_samples:_}, _1|_2|_3|_4) => {
-                        all_possible_hands(stichseq, hand_fixed.clone(), epi_current, rules, vecstoss)
+                        all_possible_hands(stichseq, (hand_fixed.clone(), epi_current), rules, vecstoss)
                     },
                     (&VAIParams::Simulating{n_suggest_card_samples}, _5|_6|_7|_8) =>{ 
-                        forever_rand_hands(stichseq, hand_fixed.clone(), epi_current, rules, vecstoss)
+                        forever_rand_hands(stichseq, (hand_fixed.clone(), epi_current), rules, vecstoss)
                             .take(n_suggest_card_samples)
                     },
                 },
@@ -465,8 +464,10 @@ fn test_is_compatible_with_game_so_far() {
             }
             for ahand in forever_rand_hands(
                 &game.stichseq,
-                game.ahand[unwrap!(game.which_player_can_do_something()).0].clone(),
-                unwrap!(game.which_player_can_do_something()).0,
+                (
+                    game.ahand[unwrap!(game.which_player_can_do_something()).0].clone(),
+                    unwrap!(game.which_player_can_do_something()).0,
+                ),
                 game.rules.as_ref(),
                 &game.expensifiers.vecstoss,
             )
@@ -549,8 +550,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
     }
     for ahand in all_possible_hands(
         &game.stichseq,
-        game.ahand[epi_active].clone(),
-        epi_active,
+        (game.ahand[epi_active].clone(), epi_active),
         game.rules.as_ref(),
         &game.expensifiers.vecstoss,
     ) {

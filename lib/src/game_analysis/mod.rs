@@ -164,8 +164,7 @@ pub fn analyze_game(
                     let epi_current = unwrap!(game.stichseq.current_stich().current_playerindex());
                     look_for_mistakes!(all_possible_hands(
                         &game.stichseq,
-                        game.ahand[epi_current].clone(),
-                        epi_current,
+                        (game.ahand[epi_current].clone(), epi_current),
                         game.rules.as_ref(),
                         &game.expensifiers.vecstoss,
                     )).1

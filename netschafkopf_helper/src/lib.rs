@@ -578,8 +578,7 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
                 game.rules.as_ref(),
                 Box::new(all_possible_hands(
                     &game.stichseq,
-                    game.ahand[epi_active].clone(),
-                    epi_active,
+                    (game.ahand[epi_active].clone(), epi_active),
                     game.rules.as_ref(),
                     &game.expensifiers.vecstoss,
                 )),

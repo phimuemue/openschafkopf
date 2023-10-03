@@ -91,8 +91,7 @@ fn detect_expensive_all_possible_hands() {
                     let epi_current = unwrap!(game.current_playable_stich().current_playerindex());
                     let vecahand = all_possible_hands(
                         &game.stichseq,
-                        game.ahand[epi_current].clone(),
-                        epi_current,
+                        (game.ahand[epi_current].clone(), epi_current),
                         game.rules.as_ref(),
                         &game.expensifiers.vecstoss,
                     )

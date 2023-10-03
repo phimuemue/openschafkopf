@@ -83,7 +83,7 @@ impl TPlayer for SPlayerComputer {
         txb: mpsc::Sender<bool>,
     ) {
         let n_samples_per_stoss = 5; // TODO move to ai, make adjustable
-        let mut vectplahandf_suspicion = forever_rand_hands(stichseq, hand.clone(), epi, rules, &expensifiers.vecstoss)
+        let mut vectplahandf_suspicion = forever_rand_hands(stichseq, (hand.clone(), epi), rules, &expensifiers.vecstoss)
             .take(2*n_samples_per_stoss)
             .map(|ahand| {
                 let f_rank_rules = rules.playerindex().map_or(0f64, |epi_active| {

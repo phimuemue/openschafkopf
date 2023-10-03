@@ -107,7 +107,7 @@ fn test_unplayed_cards() {
     }
     let veccard_unplayed = unplayed_cards(
         &stichseq,
-        &SHand::new_from_iter([GK, SK]).to_ahand(EPlayerIndex::EPI0),
+        &(SHand::new_from_iter([GK, SK]), EPlayerIndex::EPI0).to_ahand(),
     )
     .collect::<Vec<_>>();
     let veccard_unplayed_check = [GZ, E7, SZ, H9, EZ, GU];
@@ -178,19 +178,20 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, HandIteratorCore: TH
 }
 
 pub trait TToAHand {
-    fn to_ahand(self, epi_pri: EPlayerIndex) -> EnumMap<EPlayerIndex, SHand>;
+    fn to_ahand(self) -> EnumMap<EPlayerIndex, SHand>;
 }
 
 impl TToAHand for EnumMap<EPlayerIndex, SHand> {
-    fn to_ahand(self, _epi_pri: EPlayerIndex) -> EnumMap<EPlayerIndex, SHand> {
+    fn to_ahand(self) -> EnumMap<EPlayerIndex, SHand> {
         self
     }
 }
-impl TToAHand for SHand {
-    fn to_ahand(self, epi_pri: EPlayerIndex) -> EnumMap<EPlayerIndex, SHand> {
+impl TToAHand for (SHand, EPlayerIndex) {
+    fn to_ahand(self) -> EnumMap<EPlayerIndex, SHand> {
+        let (hand, epi_pri) = self;
         EPlayerIndex::map_from_fn(|epi| {
             if epi == epi_pri {
-                self.clone()
+                hand.clone()
             } else {
                 SHand::new_from_iter(None::<ECard>)
             }
@@ -201,14 +202,13 @@ impl TToAHand for SHand {
 pub fn internal_all_possible_hands<'lifetime>(
     stichseq: &'lifetime SStichSequence,
     tohand: impl TToAHand + 'lifetime,
-    epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
     slcstoss: &'lifetime [SStoss],
     fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     make_handiterator_compatible_with_game_so_far::<SHandIteratorCorePermutation>(
         stichseq,
-        tohand.to_ahand(epi_fixed),
+        tohand.to_ahand(),
         rules,
         slcstoss,
         fn_inspect,
@@ -218,14 +218,12 @@ pub fn internal_all_possible_hands<'lifetime>(
 pub fn all_possible_hands<'lifetime>(
     stichseq: &'lifetime SStichSequence,
     tohand: impl TToAHand + 'lifetime,
-    epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
     slcstoss: &'lifetime [SStoss],
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     internal_all_possible_hands(
         stichseq,
         tohand,
-        epi_fixed,
         rules,
         slcstoss,
         /*fn_inspect*/|_b_valid, _ahand| true,
@@ -235,14 +233,13 @@ pub fn all_possible_hands<'lifetime>(
 pub fn internal_forever_rand_hands<'lifetime>(
     stichseq: &'lifetime SStichSequence,
     tohand: impl TToAHand,
-    epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
     slcstoss: &'lifetime [SStoss],
     fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     make_handiterator_compatible_with_game_so_far::<SHandIteratorCoreShuffle>(
         stichseq,
-        tohand.to_ahand(epi_fixed),
+        tohand.to_ahand(),
         rules,
         slcstoss,
         fn_inspect,
@@ -252,14 +249,12 @@ pub fn internal_forever_rand_hands<'lifetime>(
 pub fn forever_rand_hands<'lifetime>(
     stichseq: &'lifetime SStichSequence,
     tohand: impl TToAHand + 'lifetime,
-    epi_fixed: EPlayerIndex,
     rules: &'lifetime dyn TRules,
     slcstoss: &'lifetime [SStoss],
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     internal_forever_rand_hands(
         stichseq,
         tohand,
-        epi_fixed,
         rules,
         slcstoss,
         /*fn_inspect*/|_b_valid, _ahand| true,
@@ -312,7 +307,7 @@ fn test_all_possible_hands() {
             assert_eq!(
                 make_handiterator::<SHandIteratorCorePermutation>(
                     &stichseq,
-                    SHand::new_from_iter(veccard_hand).to_ahand(epi_fixed),
+                    (SHand::new_from_iter(veccard_hand), epi_fixed).to_ahand(),
                 )
                 .inspect(|ahand| assert_eq!(
                     EnumMap::from_raw(an_size_hand),
