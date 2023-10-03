@@ -1,0 +1,1961 @@
+netschafkopf_helper
+gespielt von Gast am 04.10.23 mit Version 8.00, Update 07.09.20.
+ 
+Geber: PcLinks
+      PcOben hat: GO S8 H9 S9 HO EO G7 H8
+    PcRechts hat: SK SU H7 SO EA HU E8 GZ
+        Gast hat: SZ EU E7 GA HA EK EZ G8
+     PcLinks hat: E9 GU HZ G9 SA GK HK S7
+PcOben spielt Mit der Grün-Ass
+      PcOben spielt aus: EO H7 HA HK
+      PcOben spielt aus: GO SU EU GU
+      PcOben spielt aus: HO HU SZ HZ
+      PcOben spielt aus: H9 SO G8 SA
+    PcRechts spielt aus: EA E7 E9 H8
+      PcOben spielt aus: G7 GZ GA G9
+        Gast spielt aus: EZ S7 S9 E8
+        Gast spielt aus: EK GK S8 SK
+PcOben gewinnt das Rufspiel: Mit der Grün-Ass mit dir. Die Gegner 
+haben 14 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit 3 Laufenden 
+6 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+    1        6           -6           +6           -6           +6        0
+ 
+Geber: PcOben
+    PcRechts hat: EU S9 HZ HU HA GK GU HO
+        Gast hat: G8 SK S8 E9 HK EO GO H8
+     PcLinks hat: SU E8 H9 EA H7 S7 GZ G7
+      PcOben hat: G9 EK EZ E7 SZ GA SA SO
+PcRechts spielt Herz-Wenz
+    PcRechts spielt aus: HU HK H7 SO
+    PcRechts spielt aus: GU H8 H9 E7
+    PcRechts spielt aus: EU S8 SU G9
+    PcRechts spielt aus: S9 SK S7 SA
+      PcOben spielt aus: EZ HO E9 E8
+    PcRechts spielt aus: GK GO GZ GA
+      PcOben spielt aus: EK HZ EO EA
+    PcRechts spielt aus: HA G8 G7 SZ
+PcRechts gewinnt den Herz-Wenz. Die Gegner haben 43 Augen
+Das Einzelspiel kostet 5 Punkte. Mit 3 Laufenden 8 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+    2        8          -14           -2          +18           -2        0
+ 
+Geber: PcRechts
+        Gast hat: SO EZ E9 EO HO HK E8 HA
+     PcLinks hat: H8 S7 EA E7 S9 GA EK GZ
+      PcOben hat: HU SA G8 GU SZ HZ SK GK
+    PcRechts hat: GO S8 G7 EU H9 H7 SU G9
+Gast spielt Eichel-Geier
+        Gast spielt aus: EO E7 SK EU
+        Gast spielt aus: HO EA SA GO
+    PcRechts spielt aus: SU E8 S7 SZ
+        Gast spielt aus: EZ EK HZ S8
+        Gast spielt aus: HA H8 HU H7
+        Gast spielt aus: HK S9 G8 H9
+        Gast spielt aus: E9 GZ GU G7
+        Gast spielt aus: SO GA GK G9
+Du gewinnst den Eichel-Geier. Die Gegner haben 28 Augen
+Das Einzelspiel kostet 5 Punkte. Mit Schneider 6 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+    3        6          -20           -8          +12          +16        0
+ 
+Geber: Gast
+     PcLinks hat: G9 E7 GZ G7 EZ GA EU E8
+      PcOben hat: SK HO SZ EK SO H7 HK HU
+    PcRechts hat: GO SU S9 S7 GU H8 G8 HZ
+        Gast hat: SA E9 EO GK H9 EA S8 HA
+PcOben spielt Mit der Eichel-Ass
+     PcLinks spielt aus: EZ EK HZ EA
+    PcRechts spielt aus: S7 SA EU SK
+     PcLinks spielt aus: GA HK G8 GK
+      PcOben spielt aus: HO GO EO G7
+        Gast spielt aus: H9 E7 HU GU
+    PcRechts spielt aus: S9 S8 E8 SZ
+      PcOben spielt aus: SO H8 HA G9
+      PcOben spielt aus: H7 SU E9 GZ
+PcOben verliert das Rufspiel: Mit der Eichel-Ass mit dir. Die 
+Gegner haben 68 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+    4        2          -18          -10          +14          +14        0
+ 
+Geber: PcLinks
+      PcOben hat: E8 G8 HA E7 GA SO EU SK
+    PcRechts hat: H9 GZ SU EZ S9 S7 EO SA
+        Gast hat: GU HO GK S8 H7 E9 HZ G7
+     PcLinks hat: EA H8 GO EK SZ HK G9 HU
+PcLinks spielt Mit der Schellen-Ass
+      PcOben spielt aus: SK SA S8 SZ
+    PcRechts spielt aus: EO H7 HK EU
+    PcRechts spielt aus: SU GU GO SO
+     PcLinks spielt aus: EA E7 EZ E9
+     PcLinks spielt aus: EK E8 H9 HZ
+        Gast spielt aus: G7 G9 GA GZ
+      PcOben spielt aus: G8 S7 GK H8
+     PcLinks spielt aus: HU HA S9 HO
+PcLinks gewinnt das Rufspiel: Mit der Schellen-Ass mit PcRechts. 
+Die Gegner haben 51 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+    5        2          -16          -12          +16          +12        0
+ 
+Geber: PcOben
+    PcRechts hat: G7 HU GZ EK SU G8 HA HK
+        Gast hat: SA H7 SO SK H8 EZ GU E7
+     PcLinks hat: GO S9 HO EO GA S7 SZ EA
+      PcOben hat: G9 HZ EU E8 GK H9 S8 E9
+PcLinks spielt Schellen-Geier
+    PcRechts spielt aus: HA H7 HO H9
+     PcLinks spielt aus: GO S8 SU SK
+     PcLinks spielt aus: EO E8 HU SO
+     PcLinks spielt aus: S7 HZ GZ SA
+        Gast spielt aus: H8 SZ G9 HK
+     PcLinks spielt aus: EA E9 EK E7
+     PcLinks spielt aus: GA GK G7 GU
+     PcLinks spielt aus: S9 EU G8 EZ
+PcLinks gewinnt den Schellen-Geier. Die Gegner haben 31 Augen
+Das Einzelspiel kostet 5 Punkte. Mit 3 Laufenden 8 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+    6        8           +8          -20           +8           +4        0
+ 
+Geber: PcRechts
+        Gast hat: H7 E7 H9 G8 HU HO HA GO
+     PcLinks hat: EA SO E9 S9 EO GU HK HZ
+      PcOben hat: GA S7 GK G7 G9 E8 S8 EU
+    PcRechts hat: EK H8 SA EZ SZ GZ SK SU
+Gast spielt Mit der Eichel-Ass
+        Gast spielt aus: GO HZ EU H8
+        Gast spielt aus: H7 EO E8 SU
+     PcLinks spielt aus: GU S7 SK HA
+     PcLinks spielt aus: EA S8 EK E7
+     PcLinks spielt aus: S9 G7 SA H9
+        Gast spielt aus: G8 HK G9 GZ
+     PcLinks spielt aus: E9 GK EZ HU
+        Gast spielt aus: HO SO GA SZ
+Du gewinnst das Rufspiel: Mit der Eichel-Ass mit PcLinks. Die 
+Gegner haben 0 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit Schwarz 
+4 Punkte. Mit 4 Laufenden 8 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+    7        8          +16          -28           +0          +12        0
+ 
+Geber: Gast
+     PcLinks hat: SZ HU SK GK SO S9 H9 GA
+      PcOben hat: S8 G8 E8 EU G7 E9 EZ G9
+    PcRechts hat: S7 GU E7 HK EA HO SU H7
+        Gast hat: GZ EK HZ GO H8 SA EO HA
+PcRechts spielt Mit der Schellen-Ass
+     PcLinks spielt aus: SZ S8 S7 SA
+        Gast spielt aus: GO H9 EU HK
+        Gast spielt aus: EO HU G7 H7
+        Gast spielt aus: H8 SO G8 HO
+    PcRechts spielt aus: GU HA S9 G9
+    PcRechts spielt aus: EA EK SK E8
+    PcRechts spielt aus: E7 HZ GK E9
+        Gast spielt aus: GZ GA EZ SU
+PcRechts gewinnt das Rufspiel: Mit der Schellen-Ass mit dir. 
+Die Gegner haben 0 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit Schwarz 
+4 Punkte. Mit 3 Laufenden 7 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+    8        7           +9          -35           +7          +19        0
+ 
+Geber: PcLinks
+      PcOben hat: G9 HZ GA EO G8 S9 EU H7
+    PcRechts hat: HK SO H8 S7 S8 SU HA HU
+        Gast hat: EZ E9 E7 E8 GO SK HO SZ
+     PcLinks hat: GK SA G7 GZ GU H9 EK EA
+PcOben spielt Mit der Schellen-Ass
+      PcOben spielt aus: EO H8 HO H9
+      PcOben spielt aus: H7 HU GO GU
+        Gast spielt aus: SK SA S9 S7
+     PcLinks spielt aus: EA G9 HA EZ
+    PcRechts spielt aus: S8 SZ GZ HZ
+      PcOben spielt aus: GA HK E9 G7
+    PcRechts spielt aus: SO E7 EK EU
+    PcRechts spielt aus: SU E8 GK G8
+PcOben verliert das Rufspiel: Mit der Schellen-Ass mit PcLinks. 
+Die Gegner haben 69 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+    9        2           +7          -37           +9          +21        0
+ 
+Geber: PcOben
+    PcRechts hat: HA EZ S7 HK S8 GZ G9 H8
+        Gast hat: G7 SA GA E9 GO H9 SZ SO
+     PcLinks hat: EU EK GK SU HO G8 E8 GU
+      PcOben hat: HZ E7 S9 H7 EA HU SK EO
+PcOben spielt Mit der Schellen-Ass
+    PcRechts spielt aus: S7 SA SU S9
+     PcLinks spielt aus: G8 HU G9 GA
+      PcOben spielt aus: EO H8 H9 GU
+      PcOben spielt aus: EA EZ E9 E8
+      PcOben spielt aus: E7 S8 GO EK
+        Gast spielt aus: G7 GK H7 GZ
+      PcOben spielt aus: SK HK SZ EU
+     PcLinks spielt aus: HO HZ HA SO
+PcOben verliert das Rufspiel: Mit der Schellen-Ass mit dir. Die 
+Gegner haben 60 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   10        2           +9          -39          +11          +19        0
+ 
+Geber: PcRechts
+        Gast hat: H8 EK EU H9 HO EZ SO H7
+     PcLinks hat: EA GK SU G9 EO G7 HZ E8
+      PcOben hat: S9 HU GU GA G8 GZ SZ HA
+    PcRechts hat: HK E7 E9 S8 GO SA SK S7
+Gast spielt Mit der Eichel-Ass
+        Gast spielt aus: EU SU HU GO
+    PcRechts spielt aus: E7 EZ EA HA
+      PcOben spielt aus: GA SA H7 GK
+        Gast spielt aus: H8 EO GU HK
+     PcLinks spielt aus: HZ G8 E9 H9
+     PcLinks spielt aus: G7 GZ S7 SO
+        Gast spielt aus: EK E8 S9 S8
+        Gast spielt aus: HO G9 SZ SK
+Du gewinnst das Rufspiel: Mit der Eichel-Ass mit PcLinks. Die 
+Gegner haben 41 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   11        2          +11          -41           +9          +21        0
+ 
+Geber: Gast
+     PcLinks hat: H7 HA EO EK E9 HK G7 GA
+      PcOben hat: SZ H8 HO S8 GK GU SA SK
+    PcRechts hat: E8 GO E7 EA HU G8 S9 H9
+        Gast hat: G9 EZ GZ EU HZ SU SO S7
+PcLinks spielt Mit der Eichel-Ass
+     PcLinks spielt aus: EO H8 H9 SU
+     PcLinks spielt aus: H7 GU GO EU
+    PcRechts spielt aus: HU SO HK HO
+      PcOben spielt aus: SA S9 S7 HA
+     PcLinks spielt aus: GA GK G8 G9
+     PcLinks spielt aus: G7 S8 E7 GZ
+        Gast spielt aus: EZ EK SK EA
+    PcRechts spielt aus: E8 HZ E9 SZ
+PcLinks gewinnt das Rufspiel: Mit der Eichel-Ass mit PcRechts. 
+Die Gegner haben 42 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   12        2          +13          -43          +11          +19        0
+ 
+Geber: PcLinks
+      PcOben hat: EK H7 EO HA EA SK H8 HO
+    PcRechts hat: HZ SZ HK GZ S9 E8 HU S7
+        Gast hat: GA G9 GU SU EU E7 E9 GO
+     PcLinks hat: EZ GK S8 G8 H9 SO G7 SA
+PcOben spielt Mit der Schellen-Ass
+      PcOben spielt aus: EO HK SU H9
+      PcOben spielt aus: H7 HU GU SO
+     PcLinks spielt aus: SA SK S7 EU
+        Gast spielt aus: GA G7 HA GZ
+      PcOben spielt aus: H8 HZ GO S8
+        Gast spielt aus: E7 EZ EA E8
+      PcOben spielt aus: EK S9 E9 G8
+      PcOben spielt aus: HO SZ G9 GK
+PcOben gewinnt das Rufspiel: Mit der Schellen-Ass mit PcLinks. 
+Die Gegner haben 30 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   13        2          +15          -41           +9          +17        0
+ 
+Geber: PcOben
+    PcRechts hat: SU G8 H9 SZ SA E7 SO E9
+        Gast hat: HK GO G7 EO HA EU H7 EA
+     PcLinks hat: HU SK S9 GK GZ GU G9 E8
+      PcOben hat: HZ EK S7 EZ H8 GA HO S8
+Gast spielt Mit der Grün-Ass
+    PcRechts spielt aus: G8 G7 G9 GA
+      PcOben spielt aus: HO H9 HA HU
+      PcOben spielt aus: H8 SU EO GU
+        Gast spielt aus: GO E8 HZ SO
+        Gast spielt aus: EA S9 EZ E7
+        Gast spielt aus: EU SK EK E9
+        Gast spielt aus: HK GK S8 SZ
+        Gast spielt aus: H7 GZ S7 SA
+Du gewinnst das Rufspiel: Mit der Grün-Ass mit PcOben. Die Gegner 
+haben 0 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit Schwarz 
+4 Punkte. Mit 3 Laufenden 7 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   14        7           +8          -34           +2          +24        0
+ 
+Geber: PcRechts
+        Gast hat: HZ SO HO H9 EU HA HU SA
+     PcLinks hat: GU E8 GK HK G8 GO GA EK
+      PcOben hat: S7 SZ SK E7 H7 G9 S8 SU
+    PcRechts hat: S9 EA H8 EO E9 EZ G7 GZ
+Gast spielt Herz-Wenz
+        Gast spielt aus: EU HK H7 H8
+        Gast spielt aus: HU GU SU EA
+     PcLinks spielt aus: GA G9 GZ HO
+        Gast spielt aus: SA G8 S7 S9
+        Gast spielt aus: SO EK SZ EZ
+      PcOben spielt aus: E7 EO H9 E8
+        Gast spielt aus: HZ GK S8 G7
+        Gast spielt aus: HA GO SK E9
+Du gewinnst den Herz-Wenz. Die Gegner haben 44 Augen
+Das Einzelspiel kostet 5 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   15        5           +3          -39           -3          +39        0
+ 
+Geber: Gast
+     PcLinks hat: HU G7 GO S8 SK EZ G9 E8
+      PcOben hat: G8 EK GK GA GZ EU E7 EO
+    PcRechts hat: HO S9 SZ HZ SA HA H9 S7
+        Gast hat: HK H7 EA SU E9 SO H8 GU
+Es wurde Ramsch gespielt.
+     PcLinks spielt aus: G9 G8 SA EA
+     PcLinks spielt aus: G7 GK SZ E9
+      PcOben spielt aus: EK S9 SO EZ
+        Gast spielt aus: H7 HU EU HA
+      PcOben spielt aus: EO HO GU GO
+      PcOben spielt aus: E7 S7 SU E8
+        Gast spielt aus: H8 SK GA H9
+    PcRechts spielt aus: HZ HK S8 GZ
+PcOben verliert den Ramsch. PcOben hat 40 Augen
+Der Ramsch kostet 1 Punkt.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   16        1           +4          -42           -2          +40        0
+ 
+Geber: PcLinks
+      PcOben hat: EO HK EK S7 G8 H9 GA HZ
+    PcRechts hat: GZ EZ HO HU GU EU SU GO
+        Gast hat: E7 H8 S9 E9 G9 SZ SA SK
+     PcLinks hat: GK EA H7 G7 SO HA S8 E8
+PcRechts spielt Grün-Wenz
+      PcOben spielt aus: HZ HO H8 HA
+     PcLinks spielt aus: H7 H9 SU E7
+    PcRechts spielt aus: HU G9 G7 G8
+    PcRechts spielt aus: GU E9 GK GA
+    PcRechts spielt aus: EZ SA EA EK
+     PcLinks spielt aus: E8 EO GZ S9
+    PcRechts spielt aus: GO SK S8 S7
+    PcRechts spielt aus: EU SZ SO HK
+PcRechts verliert den Grün-Wenz. Die Gegner haben 60 Augen
+Das Einzelspiel kostet 5 Punkte. Mit 4 Laufenden 9 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   17        9          +13          -33          -29          +49        0
+ 
+Geber: PcOben
+    PcRechts hat: HA HK GO SU HZ S8 E7 HU
+        Gast hat: G8 SA EZ EK G9 GU H9 E9
+     PcLinks hat: G7 GK SK E8 H7 GZ SO S7
+      PcOben hat: HO H8 EU SZ GA EO S9 EA
+PcRechts spielt Mit der Eichel-Ass
+    PcRechts spielt aus: HK GU SO HO
+      PcOben spielt aus: EO HA H9 H7
+      PcOben spielt aus: EU HZ EZ E8
+      PcOben spielt aus: EA E7 E9 S7
+      PcOben spielt aus: GA S8 G8 G7
+      PcOben spielt aus: S9 GO SA SK
+    PcRechts spielt aus: SU G9 GK H8
+    PcRechts spielt aus: HU EK GZ SZ
+PcRechts gewinnt das Rufspiel: Mit der Eichel-Ass mit PcOben. 
+Die Gegner haben 0 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit Schwarz 
+4 Punkte. Mit 3 Laufenden 7 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   18        7           +6          -26          -22          +42        0
+ 
+Geber: PcRechts
+        Gast hat: HU SA S7 H9 E7 GO SU HO
+     PcLinks hat: EA G7 G8 HZ EO GU GK G9
+      PcOben hat: SZ HA S9 EK S8 H8 E8 H7
+    PcRechts hat: E9 EZ GZ EU GA HK SO SK
+Gast spielt Mit der Eichel-Ass
+        Gast spielt aus: GO HZ H7 HK
+        Gast spielt aus: H9 EO H8 EU
+     PcLinks spielt aus: GU HA SO HO
+        Gast spielt aus: SA GK S8 SK
+        Gast spielt aus: E7 EA E8 E9
+     PcLinks spielt aus: G9 S9 GA SU
+        Gast spielt aus: S7 G7 SZ EZ
+      PcOben spielt aus: EK GZ HU G8
+Du gewinnst das Rufspiel: Mit der Eichel-Ass mit PcLinks. Die 
+Gegner haben 20 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit 3 Laufenden 
+6 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   19        6          +12          -32          -28          +48        0
+ 
+Geber: Gast
+     PcLinks hat: SK G9 S9 H7 HU S8 SO GO
+      PcOben hat: H8 EZ EO HZ HO HK SA EA
+    PcRechts hat: E7 S7 G7 SZ GZ EU EK GU
+        Gast hat: GA G8 GK E8 H9 SU E9 HA
+Es wurde Ramsch gespielt.
+     PcLinks spielt aus: G9 EA GZ GK
+    PcRechts spielt aus: G7 G8 SK SA
+        Gast spielt aus: H9 H7 H8 EU
+    PcRechts spielt aus: GU SU HU HZ
+    PcRechts spielt aus: EK E9 S9 EZ
+      PcOben spielt aus: HK SZ HA GO
+     PcLinks spielt aus: SO EO E7 GA
+      PcOben spielt aus: HO S7 E8 S8
+PcRechts verliert den Ramsch. PcRechts hat 43 Augen
+Der Ramsch kostet 1 Punkt.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   20        1          +13          -31          -31          +49        0
+ 
+Geber: PcLinks
+      PcOben hat: E7 SU GU EK S8 H8 EZ SK
+    PcRechts hat: H9 EU HU HZ EO S9 SO E8
+        Gast hat: E9 SZ HK G9 GZ H7 GK EA
+     PcLinks hat: HO GO S7 HA GA G7 SA G8
+PcRechts spielt Mit der Eichel-Ass
+      PcOben spielt aus: EZ E8 EA HA
+     PcLinks spielt aus: SA SK S9 SZ
+     PcLinks spielt aus: GA EK HZ GZ
+    PcRechts spielt aus: EO HK HO H8
+    PcRechts spielt aus: H9 H7 GO SU
+     PcLinks spielt aus: G8 E7 HU GK
+    PcRechts spielt aus: SO E9 G7 GU
+    PcRechts spielt aus: EU G9 S7 S8
+PcRechts verliert das Rufspiel: Mit der Eichel-Ass mit dir. Die 
+Gegner haben 62 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   21        2          +15          -29          -33          +47        0
+ 
+Geber: PcOben
+    PcRechts hat: EA SA S8 S9 GZ H9 SK GA
+        Gast hat: SZ SU E7 H7 G8 EO GK S7
+     PcLinks hat: E9 GU GO HA HO HK E8 HZ
+      PcOben hat: EK G7 EU H8 G9 EZ SO HU
+PcLinks spielt Mit der Eichel-Ass
+    PcRechts spielt aus: H9 EO HK H8
+        Gast spielt aus: E7 E9 EK EA
+    PcRechts spielt aus: GA G8 E8 G7
+    PcRechts spielt aus: SA S7 HA HU
+      PcOben spielt aus: G9 GZ GK HZ
+     PcLinks spielt aus: GO EU SK H7
+     PcLinks spielt aus: HO SO S9 SU
+     PcLinks spielt aus: GU EZ S8 SZ
+PcLinks gewinnt das Rufspiel: Mit der Eichel-Ass mit PcRechts. 
+Die Gegner haben 31 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   22        2          +17          -31          -31          +45        0
+ 
+Geber: PcRechts
+        Gast hat: SU S8 G7 H8 SA E7 GZ H9
+     PcLinks hat: S9 E8 HA E9 EO GO S7 HU
+      PcOben hat: SO EZ EK HK SZ GU GK G8
+    PcRechts hat: H7 EU GA G9 HO HZ EA SK
+PcRechts spielt Mit der Schellen-Ass
+        Gast spielt aus: SU HU GU EU
+    PcRechts spielt aus: H7 H8 HA HK
+     PcLinks spielt aus: S7 SZ SK SA
+        Gast spielt aus: H9 EO SO HO
+     PcLinks spielt aus: GO EZ HZ E7
+     PcLinks spielt aus: S9 GK G9 S8
+     PcLinks spielt aus: E8 EK EA GZ
+    PcRechts spielt aus: GA G7 E9 G8
+PcRechts gewinnt das Rufspiel: Mit der Schellen-Ass mit dir. 
+Die Gegner haben 51 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   23        2          +15          -33          -29          +47        0
+ 
+Geber: Gast
+     PcLinks hat: EK HU SO G7 E8 S8 HO SU
+      PcOben hat: SK S9 G9 GZ E7 S7 HA G8
+    PcRechts hat: HK H7 EA GA GK SZ EU GO
+        Gast hat: SA H8 EZ E9 EO HZ H9 GU
+PcRechts spielt Mit der Schellen-Ass
+     PcLinks spielt aus: S8 S7 SZ SA
+        Gast spielt aus: E9 EK E7 EA
+    PcRechts spielt aus: GA EZ G7 G8
+    PcRechts spielt aus: GO HZ SU HA
+    PcRechts spielt aus: GK EO E8 G9
+        Gast spielt aus: GU HO GZ H7
+     PcLinks spielt aus: SO SK HK H8
+     PcLinks spielt aus: HU S9 EU H9
+PcRechts gewinnt das Rufspiel: Mit der Schellen-Ass mit dir. 
+Die Gegner haben 26 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   24        3          +12          -36          -26          +50        0
+ 
+Geber: PcLinks
+      PcOben hat: HK EK S9 GZ H9 EA G9 GO
+    PcRechts hat: EZ E8 G7 HZ SZ E7 SO HU
+        Gast hat: EU EO S8 SU GK GA GU SA
+     PcLinks hat: E9 HO G8 H8 H7 HA S7 SK
+Gast spielt Wenz
+      PcOben spielt aus: EA EZ EO E9
+      PcOben spielt aus: GZ G7 GA G8
+        Gast spielt aus: GU S7 S9 HU
+        Gast spielt aus: S8 SK HK SZ
+    PcRechts spielt aus: E7 SU H7 EK
+        Gast spielt aus: SA H8 H9 SO
+        Gast spielt aus: GK HO G9 E8
+        Gast spielt aus: EU HA GO HZ
+Du gewinnst den Wenz. Die Gegner haben 42 Augen
+Das Einzelspiel kostet 5 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   25        5           +7          -41          -31          +65        0
+ 
+Geber: PcOben
+    PcRechts hat: EU H7 SZ EK GU S8 HU S7
+        Gast hat: GO S9 EZ G8 E7 H8 HK HZ
+     PcLinks hat: SK SO GA EA GZ G9 EO E8
+      PcOben hat: H9 SA HA SU E9 GK G7 HO
+PcRechts spielt Schellen-Wenz
+    PcRechts spielt aus: HU S9 SO SU
+    PcRechts spielt aus: GU G8 SK SA
+    PcRechts spielt aus: H7 HZ GA HA
+      PcOben spielt aus: GK S7 GO G9
+    PcRechts spielt aus: EK EZ EA E9
+     PcLinks spielt aus: GZ G7 SZ E7
+    PcRechts spielt aus: S8 H8 EO H9
+    PcRechts spielt aus: EU HK E8 HO
+PcRechts gewinnt den Schellen-Wenz. Die Gegner haben 57 Augen
+Das Einzelspiel kostet 5 Punkte. Mit 3 Laufenden 8 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   26        8           -1          -49           -7          +57        0
+ 
+Geber: PcRechts
+        Gast hat: E8 E7 EK HU EO SA HA GZ
+     PcLinks hat: G9 GA G7 SK GU SO H7 GK
+      PcOben hat: GO S7 EZ G8 H8 SU SZ S9
+    PcRechts hat: HO EU EA E9 HZ H9 S8 HK
+PcRechts spielt Mit der Schellen-Ass
+        Gast spielt aus: EO H7 H8 HZ
+        Gast spielt aus: HU GU SU EU
+    PcRechts spielt aus: H9 HA SO GO
+      PcOben spielt aus: SZ S8 SA SK
+        Gast spielt aus: E7 G7 EZ EA
+    PcRechts spielt aus: E9 E8 GK G8
+    PcRechts spielt aus: HO GZ G9 S7
+    PcRechts spielt aus: HK EK GA S9
+PcRechts gewinnt das Rufspiel: Mit der Schellen-Ass mit dir. 
+Die Gegner haben 17 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   27        3           -4          -52           -4          +60        0
+ 
+Geber: Gast
+     PcLinks hat: HZ HO EU GU SO H7 E9 G9
+      PcOben hat: G7 S8 E8 EO EK G8 H8 S7
+    PcRechts hat: HU GZ EA GO H9 SA S9 EZ
+        Gast hat: GA HK SZ SK E7 SU HA GK
+PcLinks spielt Mit der Eichel-Ass
+     PcLinks spielt aus: EU EO H9 HA
+      PcOben spielt aus: E8 EA E7 E9
+    PcRechts spielt aus: GO HK HZ H8
+    PcRechts spielt aus: HU SU H7 S7
+    PcRechts spielt aus: SA SK G9 S8
+    PcRechts spielt aus: EZ GK GU EK
+     PcLinks spielt aus: HO G7 GZ SZ
+     PcLinks spielt aus: SO G8 S9 GA
+PcLinks gewinnt das Rufspiel: Mit der Eichel-Ass mit PcRechts. 
+Die Gegner haben 16 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   28        3           -1          -55           -1          +57        0
+ 
+Geber: PcLinks
+      PcOben hat: EU EK H8 HA E7 E9 GO EO
+    PcRechts hat: HK G7 H9 EA SK SA G9 GK
+        Gast hat: GZ S8 S9 G8 SO SU H7 E8
+     PcLinks hat: HZ EZ HU S7 GU HO GA SZ
+PcOben spielt Eichel-Geier
+      PcOben spielt aus: GO EA E8 HO
+      PcOben spielt aus: EO H9 SO EZ
+      PcOben spielt aus: HA HK H7 HU
+      PcOben spielt aus: H8 GK GZ HZ
+     PcLinks spielt aus: GA E7 G7 G8
+      PcOben spielt aus: E9 SK S8 GU
+      PcOben spielt aus: EU G9 S9 S7
+      PcOben spielt aus: EK SA SU SZ
+PcOben gewinnt den Eichel-Geier. Die Gegner haben 24 Augen
+Das Einzelspiel kostet 5 Punkte. Mit Schneider 6 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   29        6           -7          -37           -7          +51        0
+ 
+Geber: PcOben
+    PcRechts hat: H9 GU HU HZ GZ EZ GO EU
+        Gast hat: HO G8 S8 HA H8 E8 SK H7
+     PcLinks hat: E7 S7 SZ EO EK SU GK SA
+      PcOben hat: GA HK EA SO S9 E9 G7 G9
+PcRechts spielt Mit der Eichel-Ass
+    PcRechts spielt aus: GO H7 EO HK
+     PcLinks spielt aus: E7 EA EZ E8
+      PcOben spielt aus: SO H9 HO SU
+        Gast spielt aus: S8 SA S9 HZ
+    PcRechts spielt aus: HU HA GK GA
+    PcRechts spielt aus: EU H8 S7 G9
+    PcRechts spielt aus: GZ G8 EK G7
+    PcRechts spielt aus: GU SK SZ E9
+PcRechts gewinnt das Rufspiel: Mit der Eichel-Ass mit PcOben. 
+Die Gegner haben 18 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   30        3          -10          -34           -4          +48        0
+ 
+Geber: PcRechts
+        Gast hat: H7 GU EU E8 G9 HO S9 E7
+     PcLinks hat: H8 SZ GO EZ EA EK EO HK
+      PcOben hat: SO GA G7 GZ G8 S8 HU E9
+    PcRechts hat: SA SU H9 HA S7 SK GK HZ
+PcLinks spielt Mit der Schellen-Ass
+        Gast spielt aus: S9 SZ S8 SA
+    PcRechts spielt aus: SU EU EO HU
+     PcLinks spielt aus: GO SO HA H7
+     PcLinks spielt aus: H8 E9 H9 GU
+        Gast spielt aus: HO HK GA HZ
+        Gast spielt aus: G9 EK GZ GK
+      PcOben spielt aus: G8 S7 E7 EZ
+      PcOben spielt aus: G7 SK E8 EA
+PcLinks verliert das Rufspiel: Mit der Schellen-Ass mit PcRechts. 
+Die Gegner haben 73 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   31        2          -12          -32           -6          +50        0
+ 
+Geber: Gast
+     PcLinks hat: EK SK S9 HO E8 G9 S7 GU
+      PcOben hat: H8 SA HA GZ GA SU SZ EZ
+    PcRechts hat: EO S8 HU G8 G7 GO EA HZ
+        Gast hat: GK H9 E9 SO HK EU H7 E7
+PcRechts spielt Mit der Schellen-Ass
+     PcLinks spielt aus: SK SA S8 HK
+        Gast spielt aus: E7 E8 EZ EA
+    PcRechts spielt aus: GO H7 GU HA
+    PcRechts spielt aus: EO H9 HO H8
+    PcRechts spielt aus: HU SO EK SU
+        Gast spielt aus: EU S9 SZ HZ
+        Gast spielt aus: E9 S7 GZ G7
+        Gast spielt aus: GK G9 GA G8
+PcRechts verliert das Rufspiel: Mit der Schellen-Ass mit PcOben. 
+Die Gegner haben 62 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   32        2          -10          -34           -8          +52        0
+ 
+Geber: PcLinks
+      PcOben hat: H7 EO GU GK GA H8 SA EK
+    PcRechts hat: E7 GZ H9 SU HO S9 EA HA
+        Gast hat: G8 HZ G9 SZ SO HK GO EU
+     PcLinks hat: E8 SK EZ G7 S8 HU S7 E9
+PcOben spielt Mit der Eichel-Ass
+      PcOben spielt aus: EO HA HK HU
+      PcOben spielt aus: H7 HO GO EZ
+        Gast spielt aus: G8 G7 GA GZ
+      PcOben spielt aus: SA S9 SZ S7
+      PcOben spielt aus: GK SU G9 S8
+    PcRechts spielt aus: H9 SO SK H8
+        Gast spielt aus: EU E9 GU E7
+        Gast spielt aus: HZ E8 EK EA
+PcOben gewinnt das Rufspiel: Mit der Eichel-Ass mit PcRechts. 
+Die Gegner haben 52 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   33        2          -12          -32           -6          +50        0
+ 
+Geber: PcOben
+    PcRechts hat: GA G9 G7 HA HO SZ H8 E7
+        Gast hat: EZ GK EA HU E8 E9 SA GU
+     PcLinks hat: SU SO GZ G8 HK EU EO GO
+      PcOben hat: EK HZ H7 S9 H9 S8 S7 SK
+PcLinks spielt Grün-Solo
+    PcRechts spielt aus: HA EA HK HZ
+    PcRechts spielt aus: H8 GU SO H7
+     PcLinks spielt aus: GO H9 G7 GK
+     PcLinks spielt aus: EO EK G9 HU
+     PcLinks spielt aus: EU SK HO SA
+    PcRechts spielt aus: SZ EZ GZ S7
+     PcLinks spielt aus: SU S8 GA E8
+     PcLinks spielt aus: G8 S9 E7 E9
+PcLinks gewinnt das Grün-Solo. Die Gegner haben 56 Augen
+Das Einzelspiel kostet 5 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   34        5           +3          -37          -11          +45        0
+ 
+Geber: PcRechts
+        Gast hat: S7 GZ G7 SO G8 EZ HU E7
+     PcLinks hat: E9 SU SK EK SA HA S9 H8
+      PcOben hat: GA GK EO SZ HZ HO EU H7
+    PcRechts hat: GU GO S8 EA HK H9 G9 E8
+PcOben spielt Mit der Schellen-Ass
+        Gast spielt aus: S7 SA SZ S8
+     PcLinks spielt aus: SU H7 GU HU
+    PcRechts spielt aus: EA EZ E9 HZ
+      PcOben spielt aus: EO H9 SO HA
+      PcOben spielt aus: EU GO GZ H8
+    PcRechts spielt aus: E8 E7 EK GA
+     PcLinks spielt aus: SK GK HK G7
+    PcRechts spielt aus: G9 G8 S9 HO
+PcOben gewinnt das Rufspiel: Mit der Schellen-Ass mit PcLinks. 
+Die Gegner haben 33 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   35        2           +5          -35          -13          +43        0
+ 
+Geber: Gast
+     PcLinks hat: S9 E8 EO SO E7 E9 SK G7
+      PcOben hat: SA GO HA SZ HK GK GZ SU
+    PcRechts hat: G9 H7 S8 EZ HZ EU S7 H9
+        Gast hat: EK GU HU H8 HO EA GA G8
+Es wurde Ramsch gespielt.
+     PcLinks spielt aus: E7 SA EZ EK
+    PcRechts spielt aus: G9 G8 G7 GK
+      PcOben spielt aus: GZ S8 GA SK
+        Gast spielt aus: H8 SO SU EU
+     PcLinks spielt aus: S9 SZ S7 EA
+      PcOben spielt aus: HK H9 HO EO
+     PcLinks spielt aus: E8 GO H7 GU
+      PcOben spielt aus: HA HZ HU E9
+Du verlierst den Ramsch. Du hast 48 Augen
+Der Ramsch kostet 1 Punkt.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   36        1           +6          -34          -12          +40        0
+ 
+Geber: PcLinks
+      PcOben hat: HA GK G7 E7 E9 SA HU EK
+    PcRechts hat: H9 SZ EO HO EZ EU GO SU
+        Gast hat: H8 SO E8 G8 EA GZ S8 G9
+     PcLinks hat: H7 S9 GU HK S7 HZ GA SK
+PcRechts spielt Mit der Eichel-Ass
+      PcOben spielt aus: EK EZ EA HZ
+     PcLinks spielt aus: GA GK H9 GZ
+    PcRechts spielt aus: EO H8 H7 HU
+    PcRechts spielt aus: GO SO HK HA
+    PcRechts spielt aus: HO S8 GU G7
+    PcRechts spielt aus: SZ E8 SK SA
+      PcOben spielt aus: E9 SU G8 S7
+    PcRechts spielt aus: EU G9 S9 E7
+PcRechts verliert das Rufspiel: Mit der Eichel-Ass mit dir. Die 
+Gegner haben 60 Augen
+Das Rufspiel kostet 2 Punkte. Mit 5 Laufenden 7 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   37        7          +13          -27          -19          +33        0
+ 
+Geber: PcOben
+    PcRechts hat: EK EO S7 GU SA GZ E7 EA
+        Gast hat: HA H7 GA SU EZ EU HO SK
+     PcLinks hat: E8 H8 G8 SO GK G9 HZ HK
+      PcOben hat: G7 SZ GO HU H9 S8 S9 E9
+Gast spielt Mit der Eichel-Ass
+    PcRechts spielt aus: EO HA H8 H9
+    PcRechts spielt aus: GU H7 SO HU
+     PcLinks spielt aus: E8 E9 EA EZ
+    PcRechts spielt aus: SA SK HZ SZ
+     PcLinks spielt aus: G8 G7 GZ GA
+        Gast spielt aus: SU HK GO S7
+      PcOben spielt aus: S9 E7 EU G9
+        Gast spielt aus: HO GK S8 EK
+Du gewinnst das Rufspiel: Mit der Eichel-Ass mit PcRechts. Die 
+Gegner haben 51 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   38        2          +11          -29          -17          +35        0
+ 
+Geber: PcRechts
+        Gast hat: SA SK E9 GZ HA E7 HO HZ
+     PcLinks hat: S8 G7 EK SO G9 EZ H9 SZ
+      PcOben hat: H8 S9 EO G8 GA GO EU HU
+    PcRechts hat: GK GU EA E8 HK SU H7 S7
+PcOben spielt Mit der Schellen-Ass
+        Gast spielt aus: HO H9 H8 H7
+        Gast spielt aus: HZ SO EO HK
+      PcOben spielt aus: GO SU HA G7
+      PcOben spielt aus: EU GU GZ G9
+      PcOben spielt aus: GA GK SK EK
+      PcOben spielt aus: G8 S7 E9 S8
+      PcOben spielt aus: S9 E8 SA SZ
+        Gast spielt aus: E7 EZ HU EA
+PcOben gewinnt das Rufspiel: Mit der Schellen-Ass mit dir. Die 
+Gegner haben 0 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit Schwarz 
+4 Punkte. Mit 3 Laufenden 7 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   39        7           +4          -22          -24          +42        0
+ 
+Geber: Gast
+     PcLinks hat: G7 SA H8 GO S9 E8 HK SZ
+      PcOben hat: HO EU SK HU EZ EO SU H9
+    PcRechts hat: SO HZ E7 H7 S8 S7 GA G9
+        Gast hat: HA EK E9 EA GK GZ G8 GU
+PcOben spielt Mit der Eichel-Ass
+     PcLinks spielt aus: E8 EZ E7 EA
+        Gast spielt aus: GU GO EO H7
+      PcOben spielt aus: HO HZ HA H8
+      PcOben spielt aus: EU SO G8 HK
+    PcRechts spielt aus: GA GK G7 SU
+      PcOben spielt aus: SK S7 E9 SA
+     PcLinks spielt aus: SZ H9 S8 EK
+      PcOben spielt aus: HU G9 GZ S9
+PcOben gewinnt das Rufspiel: Mit der Eichel-Ass mit dir. Die 
+Gegner haben 24 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   40        3           +1          -19          -27          +45        0
+ 
+Geber: PcLinks
+      PcOben hat: G7 G9 SK GZ E8 EA HU H7
+    PcRechts hat: GU HA S8 G8 GK HO H8 E9
+        Gast hat: SZ EZ GA SA SU H9 HK SO
+     PcLinks hat: S9 E7 EU GO EO HZ S7 EK
+Es wurde Ramsch gespielt.
+      PcOben spielt aus: SK S8 SZ S9
+        Gast spielt aus: H9 EU HU GU
+     PcLinks spielt aus: S7 EA E9 SA
+        Gast spielt aus: HK EO H7 HO
+     PcLinks spielt aus: EK E8 GK EZ
+        Gast spielt aus: SU HZ GZ HA
+        Gast spielt aus: SO GO G9 H8
+     PcLinks spielt aus: E7 G7 G8 GA
+Du verlierst den Ramsch. Du hast 87 Augen. PcOben ist Jungfrau. 
+PcRechts ist Jungfrau
+Der Ramsch kostet 1 Punkt. Mit 2 mal Jungfrau 4 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   41        4           +5          -15          -23          +33        0
+ 
+Geber: PcOben
+    PcRechts hat: E7 HA GA SA EU HU E9 GK
+        Gast hat: GU SZ EA EK G8 S8 S7 GZ
+     PcLinks hat: G7 H7 SU H8 HO S9 E8 GO
+      PcOben hat: SK HZ SO EO G9 HK H9 EZ
+Es wurde Ramsch gespielt.
+    PcRechts spielt aus: E9 EK E8 EZ
+      PcOben spielt aus: SK SA SZ S9
+    PcRechts spielt aus: E7 EA G7 G9
+        Gast spielt aus: GU SU HZ HU
+        Gast spielt aus: S7 HO EO EU
+      PcOben spielt aus: H9 HA GZ H8
+    PcRechts spielt aus: GK G8 GO SO
+     PcLinks spielt aus: H7 HK GA S8
+PcRechts verliert den Ramsch. PcRechts hat 46 Augen
+Der Ramsch kostet 1 Punkt.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   42        1           +6          -14          -26          +34        0
+ 
+Geber: PcRechts
+        Gast hat: G8 H8 EA SK SZ E8 HU S8
+     PcLinks hat: GZ H9 HA HZ EU EK SA S9
+      PcOben hat: GO S7 E9 GU H7 E7 EO GA
+    PcRechts hat: G7 EZ HK GK HO SO G9 SU
+PcOben spielt Mit der Schellen-Ass
+        Gast spielt aus: SZ SA S7 HK
+    PcRechts spielt aus: G7 G8 GZ GA
+      PcOben spielt aus: GO SU H8 HA
+      PcOben spielt aus: EO SO HU HZ
+      PcOben spielt aus: H7 HO E8 H9
+    PcRechts spielt aus: GK S8 EU E9
+     PcLinks spielt aus: EK E7 EZ EA
+        Gast spielt aus: SK S9 GU G9
+PcOben gewinnt das Rufspiel: Mit der Schellen-Ass mit PcLinks. 
+Die Gegner haben 53 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   43        2           +8          -12          -28          +32        0
+ 
+Geber: Gast
+     PcLinks hat: GK EO G8 EZ E7 EK G9 GO
+      PcOben hat: GZ G7 HU E9 SK GU HZ EA
+    PcRechts hat: SU HK HA SZ HO S7 S8 H8
+        Gast hat: E8 H7 GA SA SO H9 EU S9
+PcRechts spielt Mit der Schellen-Ass
+     PcLinks spielt aus: E7 EA SU E8
+    PcRechts spielt aus: HO H7 EO HZ
+     PcLinks spielt aus: G8 G7 HA GA
+    PcRechts spielt aus: S7 SA GO SK
+     PcLinks spielt aus: EZ E9 HK S9
+    PcRechts spielt aus: SZ SO G9 GZ
+        Gast spielt aus: EU EK HU H8
+        Gast spielt aus: H9 GK GU S8
+PcRechts gewinnt das Rufspiel: Mit der Schellen-Ass mit dir. 
+Die Gegner haben 40 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   44        2           +6          -14          -26          +34        0
+ 
+Geber: PcLinks
+      PcOben hat: EZ GK S9 SU GO S8 GU E8
+    PcRechts hat: H9 SA H7 E9 EO GA EK S7
+        Gast hat: SK H8 GZ HK SZ G8 HU G7
+     PcLinks hat: EU E7 HA SO HO EA G9 HZ
+PcLinks spielt Mit der Grün-Ass
+      PcOben spielt aus: GK GA G7 G9
+    PcRechts spielt aus: EO H8 HA SU
+    PcRechts spielt aus: H9 HU EU GU
+     PcLinks spielt aus: SO GO H7 HK
+      PcOben spielt aus: S8 SA SK E7
+    PcRechts spielt aus: EK G8 EA E8
+     PcLinks spielt aus: HO S9 E9 GZ
+     PcLinks spielt aus: HZ EZ S7 SZ
+PcLinks gewinnt das Rufspiel: Mit der Grün-Ass mit PcRechts. 
+Die Gegner haben 10 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   45        3           +9          -17          -23          +31        0
+ 
+Geber: PcOben
+    PcRechts hat: HK GO EK G9 H9 G7 SK HO
+        Gast hat: EA GZ S9 SZ EO GU GA SU
+     PcLinks hat: EZ H8 E9 S7 HU E8 HZ EU
+      PcOben hat: SA SO E7 G8 HA GK H7 S8
+Es wurde Ramsch gespielt.
+    PcRechts spielt aus: EK EA EZ E7
+        Gast spielt aus: SU HZ HA HK
+        Gast spielt aus: GU HU H7 H9
+        Gast spielt aus: EO EU SO GO
+        Gast spielt aus: S9 S7 SA SK
+      PcOben spielt aus: S8 G9 SZ E9
+        Gast spielt aus: GZ E8 GK G7
+        Gast spielt aus: GA H8 G8 HO
+Du verlierst den Ramsch. Du hast 91 Augen. PcLinks ist Jungfrau
+Der Ramsch kostet 1 Punkt. Mit 1 mal Jungfrau 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   46        2          +11          -15          -21          +25        0
+ 
+Geber: PcRechts
+        Gast hat: SU H9 HK SK GK G9 SO HU
+     PcLinks hat: S7 S9 GU E9 GO EA E8 SA
+      PcOben hat: HO EK G7 SZ EO EZ H7 GZ
+    PcRechts hat: G8 HZ EU S8 H8 E7 HA GA
+Es wurde Ramsch gespielt.
+        Gast spielt aus: SK S9 SZ S8
+      PcOben spielt aus: H7 H8 H9 GO
+     PcLinks spielt aus: GU EO EU SO
+      PcOben spielt aus: HO HA HU EA
+      PcOben spielt aus: G7 GA GK E9
+    PcRechts spielt aus: HZ HK SA EZ
+    PcRechts spielt aus: E7 G9 E8 EK
+      PcOben spielt aus: GZ G8 SU S7
+PcOben verliert den Ramsch. PcOben hat 55 Augen
+Der Ramsch kostet 1 Punkt.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   47        1          +12          -18          -20          +26        0
+ 
+Geber: Gast
+     PcLinks hat: HU GK HA H7 H9 HZ HK E7
+      PcOben hat: GO H8 S7 EK SO GA G9 GU
+    PcRechts hat: G8 S9 SU EA SA HO G7 EO
+        Gast hat: S8 EZ E8 GZ E9 EU SZ SK
+PcLinks spielt Mit der Grün-Ass
+     PcLinks spielt aus: H7 GO EO EU
+    PcRechts spielt aus: G7 GZ GK GA
+      PcOben spielt aus: GU HO SZ H9
+    PcRechts spielt aus: EA EZ E7 EK
+    PcRechts spielt aus: SA SK HA S7
+     PcLinks spielt aus: HK SO SU S8
+      PcOben spielt aus: G9 G8 E8 HZ
+     PcLinks spielt aus: HU H8 S9 E9
+PcLinks gewinnt das Rufspiel: Mit der Grün-Ass mit PcOben. Die 
+Gegner haben 48 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   48        2          +14          -16          -22          +24        0
+ 
+Geber: PcLinks
+      PcOben hat: HZ GA E8 EO HA G9 HU HO
+    PcRechts hat: S8 GK GU H7 SZ SA EU S9
+        Gast hat: H9 GZ SK G8 E7 SU E9 S7
+     PcLinks hat: H8 EK G7 EZ HK GO EA SO
+PcOben spielt Mit der Eichel-Ass
+      PcOben spielt aus: EO H7 H9 HK
+      PcOben spielt aus: HU GU SU SO
+     PcLinks spielt aus: GO HA EU S7
+     PcLinks spielt aus: H8 HZ GK SK
+      PcOben spielt aus: GA S8 G8 G7
+      PcOben spielt aus: E8 S9 E7 EA
+     PcLinks spielt aus: EZ G9 SZ E9
+     PcLinks spielt aus: EK HO SA GZ
+PcOben gewinnt das Rufspiel: Mit der Eichel-Ass mit PcLinks. 
+Die Gegner haben 0 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit Schwarz 
+4 Punkte. Mit 4 Laufenden 8 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   49        8          +22           -8          -30          +16        0
+ 
+Geber: PcOben
+    PcRechts hat: G7 HU SK S9 S7 S8 EZ H9
+        Gast hat: E9 EO GA HO SU G9 HK H7
+     PcLinks hat: GK GZ SZ HZ GU E7 HA GO
+      PcOben hat: EA EK SO EU H8 E8 SA G8
+Gast spielt Mit der Eichel-Ass
+    PcRechts spielt aus: EZ E9 E7 EA
+      PcOben spielt aus: SO H9 H7 GU
+      PcOben spielt aus: EU HU HK GO
+     PcLinks spielt aus: GK G8 G7 GA
+        Gast spielt aus: EO HZ H8 S7
+        Gast spielt aus: HO HA SA S8
+        Gast spielt aus: G9 GZ E8 SK
+     PcLinks spielt aus: SZ EK S9 SU
+Du gewinnst das Rufspiel: Mit der Eichel-Ass mit PcOben. Die 
+Gegner haben 25 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   50        3          +19           -5          -33          +19        0
+ 
+Geber: PcRechts
+        Gast hat: E8 G7 G9 GK H9 S7 HU EZ
+     PcLinks hat: G8 GU S9 SA GO S8 H8 HO
+      PcOben hat: GZ SK H7 E7 EU GA HK EO
+    PcRechts hat: HZ SU SZ SO EA EK HA E9
+PcOben spielt Mit der Schellen-Ass
+        Gast spielt aus: S7 SA SK SZ
+     PcLinks spielt aus: GO HK SU H9
+     PcLinks spielt aus: HO H7 HZ HU
+     PcLinks spielt aus: GU EO HA G7
+      PcOben spielt aus: GA SO GK G8
+    PcRechts spielt aus: EA EZ H8 E7
+     PcLinks spielt aus: S9 GZ E9 E8
+     PcLinks spielt aus: S8 EU EK G9
+PcOben gewinnt das Rufspiel: Mit der Schellen-Ass mit PcLinks. 
+Die Gegner haben 18 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit 3 Laufenden 
+6 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   51        6          +25           +1          -39          +13        0
+ 
+Geber: Gast
+     PcLinks hat: SU S8 EZ EK SA GO H9 HZ
+      PcOben hat: GZ GK G8 EA HA E7 G9 E9
+    PcRechts hat: SK E8 SZ S7 EO S9 EU HU
+        Gast hat: H7 H8 SO G7 GU GA HO HK
+Es wurde Ramsch gespielt.
+     PcLinks spielt aus: H9 HA HU HK
+    PcRechts spielt aus: E8 GA EK E7
+     PcLinks spielt aus: SU EA EU GU
+    PcRechts spielt aus: EO HO GO GZ
+    PcRechts spielt aus: S9 G7 S8 GK
+    PcRechts spielt aus: S7 SO SA E9
+        Gast spielt aus: H7 HZ G9 SZ
+     PcLinks spielt aus: EZ G8 SK H8
+PcRechts verliert den Ramsch. PcRechts hat 57 Augen. PcOben ist Jungfrau
+Der Ramsch kostet 1 Punkt. Mit 1 mal Jungfrau 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   52        2          +27           +3          -45          +15        0
+ 
+Geber: PcLinks
+      PcOben hat: HU E7 E9 SA SU S7 GK H9
+    PcRechts hat: S8 E8 GZ HZ EZ H8 HA S9
+        Gast hat: EA H7 SO HO SZ EU GU G8
+     PcLinks hat: EK GO G7 GA G9 SK EO HK
+Gast spielt Mit der Schellen-Ass
+      PcOben spielt aus: HU H8 H7 GO
+     PcLinks spielt aus: SK SA S8 SZ
+      PcOben spielt aus: SU HZ GU EO
+     PcLinks spielt aus: GA GK GZ G8
+     PcLinks spielt aus: G9 H9 HA EU
+        Gast spielt aus: HO HK E9 S9
+        Gast spielt aus: EA EK E7 E8
+        Gast spielt aus: SO G7 S7 EZ
+Du gewinnst das Rufspiel: Mit der Schellen-Ass mit PcOben. Die 
+Gegner haben 47 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   53        2          +25           +5          -47          +17        0
+ 
+Geber: PcOben
+    PcRechts hat: GO SK SO HA GU G7 EZ H8
+        Gast hat: S8 G8 EK E8 HU GZ HZ GA
+     PcLinks hat: G9 HO SZ GK H7 E9 H9 SU
+      PcOben hat: S7 E7 EA S9 HK EO SA EU
+Es wurde Ramsch gespielt.
+    PcRechts spielt aus: SK S8 SZ S9
+     PcLinks spielt aus: E9 EA EZ EK
+      PcOben spielt aus: E7 G7 E8 GK
+        Gast spielt aus: G8 G9 SA GO
+    PcRechts spielt aus: H8 HU SU HK
+        Gast spielt aus: HZ H9 EU GU
+      PcOben spielt aus: EO SO GA HO
+      PcOben spielt aus: S7 HA GZ H7
+PcOben verliert den Ramsch. PcOben hat 59 Augen
+Der Ramsch kostet 1 Punkt.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   54        1          +26           +2          -46          +18        0
+ 
+Geber: PcRechts
+        Gast hat: HA SK S7 HO EK EO EZ HU
+     PcLinks hat: SU EU GA H8 H7 S9 H9 G9
+      PcOben hat: E9 GK G8 SZ E7 GU GO SO
+    PcRechts hat: G7 HZ SA E8 GZ S8 EA HK
+Es wurde Ramsch gespielt.
+        Gast spielt aus: SK S9 SZ S8
+      PcOben spielt aus: E9 E8 EK GA
+        Gast spielt aus: S7 G9 GK SA
+    PcRechts spielt aus: G7 EO H7 G8
+        Gast spielt aus: HU SU GU HZ
+      PcOben spielt aus: E7 EA EZ EU
+     PcLinks spielt aus: H8 SO HK HA
+      PcOben spielt aus: GO GZ HO H9
+PcOben verliert den Ramsch. PcOben hat 64 Augen
+Der Ramsch kostet 1 Punkt.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   55        1          +27           -1          -45          +19        0
+ 
+Geber: Gast
+     PcLinks hat: HU EO GK GA HZ SZ G9 S9
+      PcOben hat: HA E9 H9 G8 SA S7 EK E8
+    PcRechts hat: SU GU EA GZ SK SO GO S8
+        Gast hat: HO E7 EZ G7 H8 EU H7 HK
+Gast spielt Mit der Grün-Ass
+     PcLinks spielt aus: EO H9 SU HK
+     PcLinks spielt aus: HU HA GO H7
+    PcRechts spielt aus: GZ G7 GA G8
+     PcLinks spielt aus: HZ S7 SO HO
+        Gast spielt aus: EU SZ E8 GU
+        Gast spielt aus: E7 S9 EK EA
+    PcRechts spielt aus: S8 H8 GK SA
+        Gast spielt aus: EZ G9 E9 SK
+Du gewinnst das Rufspiel: Mit der Grün-Ass mit PcLinks. Die Gegner 
+haben 31 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   56        2          +29           -3          -47          +21        0
+ 
+Geber: PcLinks
+      PcOben hat: H9 S7 SU EO SZ HU GZ HO
+    PcRechts hat: SA S9 E7 G8 GA E9 HZ G7
+        Gast hat: HA SK HK H8 EA GK H7 E8
+     PcLinks hat: GU EZ S8 EK GO EU SO G9
+PcOben spielt Mit der Grün-Ass
+      PcOben spielt aus: EO HZ H7 GU
+      PcOben spielt aus: H9 E7 HA EU
+     PcLinks spielt aus: G9 GZ GA GK
+    PcRechts spielt aus: SA SK S8 SZ
+    PcRechts spielt aus: G7 HK EK S7
+        Gast spielt aus: EA EZ SU E9
+      PcOben spielt aus: HU G8 H8 SO
+     PcLinks spielt aus: GO HO S9 E8
+PcOben gewinnt das Rufspiel: Mit der Grün-Ass mit PcRechts. Die 
+Gegner haben 32 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   57        2          +27           -1          -45          +19        0
+ 
+Geber: PcOben
+    PcRechts hat: G8 E7 S8 GZ S7 EZ HO GK
+        Gast hat: G7 H9 HU EK GO SO GU E8
+     PcLinks hat: EA H8 EO GA EU SA SK S9
+      PcOben hat: HK SU E9 H7 HA G9 HZ SZ
+Gast spielt Mit der Grün-Ass
+    PcRechts spielt aus: GZ G7 GA G9
+     PcLinks spielt aus: EO H7 HO H9
+     PcLinks spielt aus: EU HA S7 HU
+     PcLinks spielt aus: H8 SU S8 GU
+        Gast spielt aus: GO SK HK G8
+        Gast spielt aus: SO SA HZ GK
+        Gast spielt aus: E8 EA E9 E7
+     PcLinks spielt aus: S9 SZ EZ EK
+Du gewinnst das Rufspiel: Mit der Grün-Ass mit PcLinks. Die Gegner 
+haben 24 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   58        3          +30           -4          -48          +22        0
+ 
+Geber: PcRechts
+        Gast hat: EO S8 HK SZ GK G9 SO HO
+     PcLinks hat: G8 GO S7 H8 G7 SK EK HA
+      PcOben hat: E7 E9 HZ GZ H9 S9 HU EZ
+    PcRechts hat: SU EA GA SA H7 GU EU E8
+PcRechts spielt Wenz
+        Gast spielt aus: EO EK E7 EA
+    PcRechts spielt aus: GU G9 S7 HU
+    PcRechts spielt aus: H7 HK HA HZ
+     PcLinks spielt aus: SK S9 SA S8
+    PcRechts spielt aus: GA GK G7 GZ
+    PcRechts spielt aus: E8 SZ GO EZ
+      PcOben spielt aus: E9 SU HO G8
+    PcRechts spielt aus: EU SO H8 H9
+PcRechts gewinnt den Wenz. Die Gegner haben 48 Augen
+Das Einzelspiel kostet 5 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   59        5          +25           -9          -33          +17        0
+ 
+Geber: Gast
+     PcLinks hat: S8 GU HZ EA H7 EK S7 HA
+      PcOben hat: S9 EU HU SK GK GA H8 HK
+    PcRechts hat: G9 G7 EO SZ SO E8 E7 G8
+        Gast hat: EZ HO H9 E9 SU GZ GO SA
+Gast spielt Mit der Grün-Ass
+     PcLinks spielt aus: EA HK E7 E9
+      PcOben spielt aus: EU EO H9 HA
+    PcRechts spielt aus: G9 GZ HZ GA
+     PcLinks spielt aus: EK HU E8 EZ
+      PcOben spielt aus: H8 SO GO H7
+        Gast spielt aus: HO GU SK G7
+        Gast spielt aus: SA S7 S9 SZ
+        Gast spielt aus: SU S8 GK G8
+Du gewinnst das Rufspiel: Mit der Grün-Ass mit PcOben. Die Gegner 
+haben 47 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   60        2          +23           -7          -35          +19        0
+ 
+Geber: PcLinks
+      PcOben hat: EK EZ G9 GO E8 S7 HU S9
+    PcRechts hat: SA H7 SU GA SK HK HO EU
+        Gast hat: E7 G8 H8 GZ G7 HZ EO SO
+     PcLinks hat: HA H9 SZ GU S8 GK EA E9
+Es wurde Ramsch gespielt.
+      PcOben spielt aus: G9 GA GZ GK
+    PcRechts spielt aus: H7 H8 H9 GO
+      PcOben spielt aus: HU SU HZ HA
+      PcOben spielt aus: S9 SK G8 S8
+    PcRechts spielt aus: HK SO GU EZ
+        Gast spielt aus: EO EA EK HO
+        Gast spielt aus: E7 E9 E8 SA
+     PcLinks spielt aus: SZ S7 EU G7
+PcRechts verliert den Ramsch. PcRechts hat 41 Augen
+Der Ramsch kostet 1 Punkt.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   61        1          +24           -6          -38          +20        0
+ 
+Geber: PcOben
+    PcRechts hat: SZ H9 GU EU EK GA G8 E7
+        Gast hat: EO H7 E9 HU SO G9 GZ SU
+     PcLinks hat: HA HZ GO HO EA HK E8 S9
+      PcOben hat: SK G7 SA GK S7 EZ H8 S8
+PcLinks spielt Herz-Geier
+    PcRechts spielt aus: GA GZ HO G7
+     PcLinks spielt aus: HK H8 H9 SO
+        Gast spielt aus: SU S9 SA SZ
+      PcOben spielt aus: EZ E7 E9 EA
+     PcLinks spielt aus: GO SK EK EO
+        Gast spielt aus: G9 HZ GK G8
+     PcLinks spielt aus: E8 S7 EU HU
+        Gast spielt aus: H7 HA S8 GU
+PcLinks gewinnt den Herz-Geier. Die Gegner haben 48 Augen
+Das Einzelspiel kostet 5 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   62        5          +39          -11          -43          +15        0
+ 
+Geber: PcRechts
+        Gast hat: S9 HA SK HU EZ G9 H7 H8
+     PcLinks hat: SA E9 EK E7 EO HZ H9 S8
+      PcOben hat: GK E8 GO SZ SO GU G8 EA
+    PcRechts hat: GA S7 EU G7 HK HO SU GZ
+PcRechts spielt Mit der Schellen-Ass
+        Gast spielt aus: S9 SA SZ S7
+     PcLinks spielt aus: EO GU HK H7
+     PcLinks spielt aus: H9 SO HO H8
+    PcRechts spielt aus: GA G9 EK G8
+    PcRechts spielt aus: GZ HA S8 GK
+        Gast spielt aus: SK E7 GO G7
+      PcOben spielt aus: EA SU EZ E9
+    PcRechts spielt aus: EU HU HZ E8
+PcRechts gewinnt das Rufspiel: Mit der Schellen-Ass mit PcLinks. 
+Die Gegner haben 32 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   63        2          +41          -13          -41          +13        0
+ 
+Geber: Gast
+     PcLinks hat: HZ S7 GZ GU E7 HA HO S9
+      PcOben hat: EK EA EU H9 E8 GA HU SK
+    PcRechts hat: G8 GK HK SU G7 GO SA E9
+        Gast hat: G9 H8 EZ EO H7 S8 SZ SO
+Es wurde Ramsch gespielt.
+     PcLinks spielt aus: E7 EK E9 EZ
+        Gast spielt aus: G9 GZ GA GK
+      PcOben spielt aus: SK SA SZ S9
+    PcRechts spielt aus: HK H8 GU HU
+     PcLinks spielt aus: S7 EA G8 S8
+        Gast spielt aus: H7 HO EU SU
+     PcLinks spielt aus: HZ H9 GO SO
+    PcRechts spielt aus: G7 EO HA E8
+PcRechts verliert den Ramsch. PcRechts hat 41 Augen
+Der Ramsch kostet 1 Punkt.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   64        1          +42          -12          -44          +14        0
+ 
+Geber: PcLinks
+      PcOben hat: E7 S7 G9 SZ GK GZ HZ HU
+    PcRechts hat: GU E9 S8 GA HK EA EU SO
+        Gast hat: HA S9 G7 SK G8 H8 GO HO
+     PcLinks hat: H9 H7 E8 EO SU SA EZ EK
+PcLinks spielt Mit der Eichel-Ass
+      PcOben spielt aus: E7 EA HA E8
+        Gast spielt aus: G7 SU G9 GA
+     PcLinks spielt aus: EO HU HK H8
+     PcLinks spielt aus: SA S7 S8 S9
+     PcLinks spielt aus: EZ GK E9 HO
+        Gast spielt aus: G8 H9 GZ GU
+    PcRechts spielt aus: EU GO H7 HZ
+        Gast spielt aus: SK EK SZ SO
+PcLinks gewinnt das Rufspiel: Mit der Eichel-Ass mit PcRechts. 
+Die Gegner haben 54 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   65        2          +44          -14          -42          +12        0
+ 
+Geber: PcOben
+    PcRechts hat: H9 EK SO H7 S7 GO G8 S9
+        Gast hat: HA SA H8 E8 HK SZ HO HZ
+     PcLinks hat: EA S8 EZ E9 E7 EO GU G7
+      PcOben hat: SK GA GZ SU GK G9 HU EU
+PcOben spielt Wenz
+    PcRechts spielt aus: EK E8 EZ SU
+      PcOben spielt aus: EU S7 H8 GU
+      PcOben spielt aus: SK SO SA S8
+        Gast spielt aus: HA EA HU H7
+      PcOben spielt aus: GA G8 HO G7
+      PcOben spielt aus: GZ GO HK E7
+      PcOben spielt aus: GK H9 HZ E9
+      PcOben spielt aus: G9 S9 SZ EO
+PcOben gewinnt den Wenz. Die Gegner haben 18 Augen
+Das Einzelspiel kostet 5 Punkte. Mit Schneider 6 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   66        6          +38           +4          -48           +6        0
+ 
+Geber: PcRechts
+        Gast hat: E7 GK GO GU E8 HU H9 SZ
+     PcLinks hat: H8 SA E9 GA HK HA G7 EU
+      PcOben hat: H7 S8 EZ EA SO G8 GZ SU
+    PcRechts hat: HZ HO EK S7 EO G9 S9 SK
+Es wurde Ramsch gespielt.
+        Gast spielt aus: GK GA GZ G9
+     PcLinks spielt aus: E9 EZ EK E8
+      PcOben spielt aus: S8 S7 SZ SA
+     PcLinks spielt aus: G7 G8 SK E7
+      PcOben spielt aus: H7 HO GU EU
+    PcRechts spielt aus: EO GO HA SO
+    PcRechts spielt aus: HZ H9 HK SU
+      PcOben spielt aus: EA S9 HU H8
+PcLinks verliert den Ramsch. PcLinks hat 46 Augen
+Der Ramsch kostet 1 Punkt.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   67        1          +35           +5          -47           +7        0
+ 
+Geber: Gast
+     PcLinks hat: EZ E7 SO EU H8 HA SK GK
+      PcOben hat: GA S9 G7 HU SZ G8 H7 G9
+    PcRechts hat: S8 GO S7 H9 HK SU E9 EK
+        Gast hat: HO GU EO E8 EA HZ GZ SA
+Gast spielt Mit der Grün-Ass
+     PcLinks spielt aus: GK GA HK GZ
+    PcRechts spielt aus: S7 SA SK SZ
+        Gast spielt aus: EO H8 H7 H9
+        Gast spielt aus: EA E7 G9 E9
+        Gast spielt aus: E8 EZ HU EK
+      PcOben spielt aus: S9 S8 GU EU
+     PcLinks spielt aus: SO G7 SU HO
+        Gast spielt aus: HZ HA G8 GO
+Du gewinnst das Rufspiel: Mit der Grün-Ass mit PcOben. Die Gegner 
+haben 57 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   68        2          +33           +7          -49           +9        0
+ 
+Geber: PcLinks
+      PcOben hat: HU GU E9 HO S7 GA EO HA
+    PcRechts hat: SO G7 EU S9 HZ EK SA SK
+        Gast hat: G8 H8 E7 GZ H7 GO HK EZ
+     PcLinks hat: GK S8 G9 E8 H9 EA SU SZ
+PcOben spielt Mit der Eichel-Ass
+      PcOben spielt aus: EO EU H7 H9
+      PcOben spielt aus: HU SO GO SU
+        Gast spielt aus: E7 EA E9 EK
+     PcLinks spielt aus: S8 S7 SA GZ
+    PcRechts spielt aus: SK HK SZ HA
+      PcOben spielt aus: GU HZ H8 GK
+      PcOben spielt aus: GA G7 G8 G9
+      PcOben spielt aus: HO S9 EZ E8
+PcOben gewinnt das Rufspiel: Mit der Eichel-Ass mit PcLinks. 
+Die Gegner haben 31 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   69        2          +35           +9          -51           +7        0
+ 
+Geber: PcOben
+    PcRechts hat: H9 SK SO GO EZ GK EO S8
+        Gast hat: EU HZ SU S9 EK G8 SA E8
+     PcLinks hat: S7 HO E9 SZ GZ E7 H8 EA
+      PcOben hat: G7 H7 HK HA G9 GU GA HU
+Es wurde Ramsch gespielt.
+    PcRechts spielt aus: GK G8 GZ G9
+     PcLinks spielt aus: E9 GA EZ EK
+    PcRechts spielt aus: H9 SU H8 HA
+        Gast spielt aus: EU HO GU SO
+     PcLinks spielt aus: E7 G7 SK E8
+        Gast spielt aus: HZ EA HK EO
+    PcRechts spielt aus: S8 S9 S7 HU
+      PcOben spielt aus: H7 GO SA SZ
+PcRechts verliert den Ramsch. PcRechts hat 77 Augen
+Der Ramsch kostet 1 Punkt.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   70        1          +36          +10          -54           +8        0
+ 
+Geber: PcRechts
+        Gast hat: E8 GA EU EO S8 GO EZ HU
+     PcLinks hat: E7 G8 G9 EA H8 HO GZ GU
+      PcOben hat: S7 HA S9 SA H7 G7 SU E9
+    PcRechts hat: EK SK H9 HK SO HZ GK SZ
+Gast spielt Mit der Schellen-Ass
+        Gast spielt aus: EO H8 HA H9
+        Gast spielt aus: GO GU H7 HK
+        Gast spielt aus: HU HO SU HZ
+     PcLinks spielt aus: EA E9 EK E8
+     PcLinks spielt aus: E7 G7 GK EZ
+        Gast spielt aus: GA G8 S9 SO
+    PcRechts spielt aus: SZ S8 G9 SA
+      PcOben spielt aus: S7 SK EU GZ
+Du gewinnst das Rufspiel: Mit der Schellen-Ass mit PcOben. Die 
+Gegner haben 46 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   71        2          +34          +12          -56          +10        0
+ 
+Geber: Gast
+     PcLinks hat: S7 SK G7 GZ E8 SO GA GK
+      PcOben hat: SA E7 SU H7 EA HZ H9 S8
+    PcRechts hat: E9 HU GO S9 HK EZ HO EO
+        Gast hat: GU HA EK H8 SZ EU G8 G9
+PcRechts spielt Mit der Schellen-Ass
+     PcLinks spielt aus: S7 SA S9 SZ
+      PcOben spielt aus: SU EO H8 SO
+    PcRechts spielt aus: HO HA E8 HZ
+    PcRechts spielt aus: GO GU G7 H7
+    PcRechts spielt aus: HK EU GA H9
+        Gast spielt aus: G8 GK EA HU
+    PcRechts spielt aus: EZ EK SK E7
+    PcRechts spielt aus: E9 G9 GZ S8
+PcRechts gewinnt das Rufspiel: Mit der Schellen-Ass mit PcOben. 
+Die Gegner haben 17 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit 3 Laufenden 
+6 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   72        6          +28          +18          -50           +4        0
+ 
+Geber: PcLinks
+      PcOben hat: E7 H8 GO EU E9 S9 HZ GU
+    PcRechts hat: HO GK H7 SO EA S8 SZ EZ
+        Gast hat: GZ GA H9 E8 SA EK HA HK
+     PcLinks hat: G9 SK SU G7 S7 HU G8 EO
+PcOben spielt Mit der Schellen-Ass
+      PcOben spielt aus: GO H7 H9 EO
+     PcLinks spielt aus: S7 S9 S8 SA
+        Gast spielt aus: HK HU GU SO
+    PcRechts spielt aus: SZ HA SK E7
+        Gast spielt aus: GA G7 E9 GK
+        Gast spielt aus: EK SU EU EZ
+      PcOben spielt aus: H8 HO E8 G9
+    PcRechts spielt aus: EA GZ G8 HZ
+PcOben gewinnt das Rufspiel: Mit der Schellen-Ass mit dir. Die 
+Gegner haben 20 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   73        3          +25          +21          -53           +7        0
+ 
+Geber: PcOben
+    PcRechts hat: EZ GU SU SK EO S7 HU EK
+        Gast hat: EU E9 GO HA HZ HK SO EA
+     PcLinks hat: H7 GZ GK S9 HO SZ GA G8
+      PcOben hat: E8 E7 SA G9 S8 H8 G7 H9
+PcRechts spielt Eichel-Wenz
+    PcRechts spielt aus: GU EU GA E7
+        Gast spielt aus: HA HO H9 EZ
+    PcRechts spielt aus: SU EA GZ E8
+    PcRechts spielt aus: EO E9 SZ H8
+    PcRechts spielt aus: S7 SO S9 SA
+      PcOben spielt aus: G9 EK GO G8
+    PcRechts spielt aus: SK HK H7 S8
+    PcRechts spielt aus: HU HZ GK G7
+PcRechts gewinnt den Eichel-Wenz. Die Gegner haben 29 Augen
+Das Einzelspiel kostet 5 Punkte. Mit Schneider 6 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   74        6          +19          +15          -35           +1        0
+ 
+Geber: PcRechts
+        Gast hat: HU GZ GO EK HA E7 EA S9
+     PcLinks hat: SO G7 G9 SK EU E8 GU H9
+      PcOben hat: H7 SU S7 GA H8 HK SZ HO
+    PcRechts hat: S8 G8 EZ HZ EO E9 GK SA
+PcOben spielt Mit der Schellen-Ass
+        Gast spielt aus: S9 SK SZ SA
+    PcRechts spielt aus: EO HU H9 HK
+    PcRechts spielt aus: HZ GO GU H7
+        Gast spielt aus: EA E8 H8 EZ
+      PcOben spielt aus: HO GK HA EU
+      PcOben spielt aus: GA G8 GZ G7
+      PcOben spielt aus: S7 S8 EK G9
+    PcRechts spielt aus: E9 E7 SO SU
+PcOben gewinnt das Rufspiel: Mit der Schellen-Ass mit PcRechts. 
+Die Gegner haben 20 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   75        3          +16          +18          -32           -2        0
+ 
+Geber: Gast
+     PcLinks hat: HU GK HZ H7 G9 G8 SK GU
+      PcOben hat: HA S8 H8 HO EU SO HK GZ
+    PcRechts hat: GO G7 GA H9 S9 E7 EO SU
+        Gast hat: EZ S7 E8 E9 EK SA SZ EA
+PcOben spielt Mit der Grün-Ass
+     PcLinks spielt aus: GK GZ GA S7
+    PcRechts spielt aus: GO E8 H7 HA
+    PcRechts spielt aus: EO E9 HU HK
+    PcRechts spielt aus: SU EK GU EU
+      PcOben spielt aus: HO H9 EZ HZ
+      PcOben spielt aus: S8 S9 SA SK
+        Gast spielt aus: EA G8 H8 E7
+      PcOben spielt aus: SO G7 SZ G9
+PcOben gewinnt das Rufspiel: Mit der Grün-Ass mit PcRechts. Die 
+Gegner haben 15 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit 5 Laufenden 
+8 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   76        8           +8          +26          -24          -10        0
+ 
+Geber: PcLinks
+      PcOben hat: SZ E7 HZ H9 GZ EZ GA G8
+    PcRechts hat: HA G7 EK S9 GO HK EA S7
+        Gast hat: H8 HO G9 SK S8 EO SU H7
+     PcLinks hat: E8 E9 EU HU GU SA SO GK
+PcLinks spielt Eichel-Wenz
+      PcOben spielt aus: GA GO G9 GK
+      PcOben spielt aus: SZ S7 S8 SA
+     PcLinks spielt aus: HU EZ EK EO
+     PcLinks spielt aus: GU E7 EA SU
+     PcLinks spielt aus: SO GZ S9 SK
+        Gast spielt aus: HO E8 H9 HK
+     PcLinks spielt aus: E9 G8 G7 H7
+     PcLinks spielt aus: EU HZ HA H8
+PcLinks gewinnt den Eichel-Wenz. Die Gegner haben 35 Augen
+Das Einzelspiel kostet 5 Punkte. Mit 3 Laufenden 8 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   77        8          +32          +18          -32          -18        0
+ 
+Geber: PcOben
+    PcRechts hat: E9 EO HU GO HA EU SU GU
+        Gast hat: H7 EZ G7 GK SO S7 E8 S9
+     PcLinks hat: EK E7 GZ HO GA HK HZ SA
+      PcOben hat: S8 H9 G9 EA H8 SK G8 SZ
+PcRechts spielt Eichel-Wenz
+    PcRechts spielt aus: SU EZ E7 EA
+    PcRechts spielt aus: HU E8 EK G8
+    PcRechts spielt aus: HA H7 HO H8
+    PcRechts spielt aus: GO GK GA G9
+     PcLinks spielt aus: SA SZ GU S7
+    PcRechts spielt aus: E9 SO HK S8
+    PcRechts spielt aus: EO G7 GZ H9
+    PcRechts spielt aus: EU S9 HZ SK
+PcRechts gewinnt den Eichel-Wenz. Die Gegner haben 18 Augen
+Das Einzelspiel kostet 5 Punkte. Mit Schneider 6 Punkte. Mit 
+4 Laufenden 10 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   78       10          +22           +8           -2          -28        0
+ 
+Geber: PcRechts
+        Gast hat: SK HK E7 EZ GU GA S9 G9
+     PcLinks hat: S7 HU SU SZ HO G8 S8 GK
+      PcOben hat: EA GZ SA HZ H7 EO G7 H9
+    PcRechts hat: E8 E9 EK EU HA GO SO H8
+PcRechts spielt Eichel-Geier
+        Gast spielt aus: GA GK GZ EK
+    PcRechts spielt aus: GO EZ HO EO
+      PcOben spielt aus: HZ HA HK HU
+    PcRechts spielt aus: SO E7 G8 EA
+    PcRechts spielt aus: H8 SK SZ H9
+      PcOben spielt aus: H7 EU S9 S7
+    PcRechts spielt aus: E8 G9 S8 G7
+    PcRechts spielt aus: E9 GU SU SA
+PcRechts gewinnt den Eichel-Geier. Die Gegner haben 33 Augen
+Das Einzelspiel kostet 5 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   79        5          +17           +3          +13          -33        0
+ 
+Geber: Gast
+     PcLinks hat: S9 EU GO SO HA EO EK H7
+      PcOben hat: EZ SU E7 EA GA SA SK G9
+    PcRechts hat: GU SZ G8 HO GZ HK S8 H9
+        Gast hat: HZ HU G7 E9 S7 H8 E8 GK
+PcLinks spielt Mit der Eichel-Ass
+     PcLinks spielt aus: EO SU H9 H8
+     PcLinks spielt aus: GO SK HK HU
+     PcLinks spielt aus: H7 G9 GU HZ
+    PcRechts spielt aus: S8 S7 S9 SA
+      PcOben spielt aus: EA HO E9 EK
+    PcRechts spielt aus: SZ E8 HA GA
+     PcLinks spielt aus: SO EZ G8 G7
+     PcLinks spielt aus: EU E7 GZ GK
+PcLinks gewinnt das Rufspiel: Mit der Eichel-Ass mit PcOben. 
+Die Gegner haben 30 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   80        2          +19           +5          +11          -35        0
+ 
+Geber: PcLinks
+      PcOben hat: H9 S9 HA G8 S7 G7 HK H8
+    PcRechts hat: GU SA SZ GO EZ H7 HU EO
+        Gast hat: E7 HO G9 SO GZ SK GK EU
+     PcLinks hat: HZ GA SU E8 EA EK S8 E9
+PcRechts spielt Mit der Eichel-Ass
+      PcOben spielt aus: S7 SA SK S8
+    PcRechts spielt aus: EO EU HZ H8
+    PcRechts spielt aus: GO SO SU H9
+    PcRechts spielt aus: H7 HO E8 HA
+        Gast spielt aus: E7 EA HK EZ
+      PcOben spielt aus: S9 SZ G9 EK
+    PcRechts spielt aus: GU GK GA G7
+    PcRechts spielt aus: HU GZ E9 G8
+PcRechts gewinnt das Rufspiel: Mit der Eichel-Ass mit PcLinks. 
+Die Gegner haben 39 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   81        2          +21           +3          +13          -37        0
+ 
+Geber: PcOben
+    PcRechts hat: SU EZ HU GU GK SZ EK E8
+        Gast hat: S8 H8 S7 H9 E9 G7 H7 EU
+     PcLinks hat: G9 HO EO GZ GO SK HK EA
+      PcOben hat: HZ G8 SO E7 GA HA SA S9
+PcLinks spielt Mit der Schellen-Ass
+    PcRechts spielt aus: SZ S7 SK SA
+      PcOben spielt aus: SO SU H7 HK
+      PcOben spielt aus: HZ GU H8 HO
+     PcLinks spielt aus: EO HA HU H9
+     PcLinks spielt aus: GO S9 GK EU
+     PcLinks spielt aus: EA E7 E8 E9
+     PcLinks spielt aus: G9 GA EK G7
+      PcOben spielt aus: G8 EZ S8 GZ
+PcLinks gewinnt das Rufspiel: Mit der Schellen-Ass mit PcOben. 
+Die Gegner haben 0 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit Schwarz 
+4 Punkte. Mit 4 Laufenden 8 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   82        8          +29          +11           +5          -45        0
+ 
+Geber: PcRechts
+        Gast hat: G8 H7 HO G9 H9 GA HA G7
+     PcLinks hat: GK SA EA GZ EU E9 H8 E8
+      PcOben hat: EZ S9 SK GU SO E7 HZ GO
+    PcRechts hat: HU EK SZ SU S7 S8 HK EO
+Es wurde Ramsch gespielt.
+        Gast spielt aus: G7 GK SK EK
+     PcLinks spielt aus: H8 GU HU HA
+      PcOben spielt aus: S9 S8 GA SA
+     PcLinks spielt aus: EU HZ SU H9
+     PcLinks spielt aus: E8 EZ SZ G9
+      PcOben spielt aus: E7 S7 G8 E9
+     PcLinks spielt aus: GZ GO EO HO
+    PcRechts spielt aus: HK H7 EA SO
+PcOben verliert den Ramsch. PcOben hat 53 Augen. Du bist Jungfrau
+Der Ramsch kostet 1 Punkt. Mit 1 mal Jungfrau 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   83        2          +31           +5           +7          -43        0
+ 
+Geber: Gast
+     PcLinks hat: H9 E9 EU G9 HK GO HA S7
+      PcOben hat: HU E8 SU EO S9 S8 GU SA
+    PcRechts hat: EK H7 GK G8 SO GZ SK HO
+        Gast hat: EA HZ EZ E7 GA G7 SZ H8
+PcOben spielt Mit der Eichel-Ass
+     PcLinks spielt aus: E9 E8 EK EA
+        Gast spielt aus: H8 H9 SU SO
+    PcRechts spielt aus: G8 GA G9 S9
+        Gast spielt aus: HZ HK EO H7
+      PcOben spielt aus: SA SK SZ S7
+      PcOben spielt aus: S8 GK G7 HA
+     PcLinks spielt aus: GO HU HO E7
+     PcLinks spielt aus: EU GU GZ EZ
+PcOben gewinnt das Rufspiel: Mit der Eichel-Ass mit dir. Die 
+Gegner haben 52 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   84        2          +29           +7           +5          -41        0
+ 
+Geber: PcLinks
+      PcOben hat: H8 GZ HU SU H9 SK EK HA
+    PcRechts hat: EU EO SZ GO GU HK E9 G7
+        Gast hat: G8 S9 H7 EZ G9 S8 E7 GK
+     PcLinks hat: S7 HZ SO HO SA GA EA E8
+PcRechts spielt Mit der Schellen-Ass
+      PcOben spielt aus: SK SZ S8 SA
+     PcLinks spielt aus: HO H8 HK H7
+     PcLinks spielt aus: SO H9 GU S9
+     PcLinks spielt aus: HZ HU EO G8
+    PcRechts spielt aus: GO G9 EA SU
+    PcRechts spielt aus: EU GK E8 HA
+    PcRechts spielt aus: G7 E7 GA GZ
+     PcLinks spielt aus: S7 EK E9 EZ
+PcRechts gewinnt das Rufspiel: Mit der Schellen-Ass mit PcLinks. 
+Die Gegner haben 0 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit Schwarz 
+4 Punkte. Mit 6 Laufenden 10 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   85       10          +39           -3          +15          -51        0
+ 
+Geber: PcOben
+    PcRechts hat: GK SK HZ HA GZ HO EU E9
+        Gast hat: S8 GU E7 EZ EA G9 H9 SU
+     PcLinks hat: H7 G8 HU EO GO E8 G7 S9
+      PcOben hat: GA SA SZ HK H8 S7 SO EK
+Es wurde Ramsch gespielt.
+    PcRechts spielt aus: SK S8 S9 S7
+    PcRechts spielt aus: E9 EZ E8 EK
+        Gast spielt aus: G9 G8 GA GZ
+      PcOben spielt aus: H8 EU GU HU
+    PcRechts spielt aus: HO SU H7 SO
+    PcRechts spielt aus: HZ H9 EO HK
+     PcLinks spielt aus: G7 SA GK EA
+    PcRechts spielt aus: HA E7 GO SZ
+PcRechts verliert den Ramsch. PcRechts hat 44 Augen
+Der Ramsch kostet 1 Punkt.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   86        1          +40           -2          +12          -50        0
+ 
+Geber: PcRechts
+        Gast hat: EA H8 GO GK G9 HU HK SK
+     PcLinks hat: SU E8 HZ S8 G8 S7 HO SZ
+      PcOben hat: EK H9 H7 GA EU G7 E9 GZ
+    PcRechts hat: SO EZ HA EO E7 SA S9 GU
+PcRechts spielt Mit der Eichel-Ass
+        Gast spielt aus: GO SU H7 HA
+        Gast spielt aus: HU HO H9 EO
+    PcRechts spielt aus: SO HK HZ EU
+    PcRechts spielt aus: SA SK S7 G7
+    PcRechts spielt aus: EZ EA E8 E9
+        Gast spielt aus: GK G8 GA GU
+    PcRechts spielt aus: E7 H8 S8 EK
+        Gast spielt aus: G9 SZ GZ S9
+PcRechts gewinnt das Rufspiel: Mit der Eichel-Ass mit dir. Die 
+Gegner haben 20 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   87        3          +37           -5          +15          -47        0
+ 
+Geber: Gast
+     PcLinks hat: G8 EA SU SA H7 E7 H9 HA
+      PcOben hat: EZ GZ E9 HK GO G9 E8 H8
+    PcRechts hat: SO EU EK GA S7 GU S8 SK
+        Gast hat: G7 S9 HO HU HZ EO GK SZ
+PcRechts spielt Schellen-Wenz
+     PcLinks spielt aus: EA EZ EK EO
+     PcLinks spielt aus: E7 E8 GU G7
+    PcRechts spielt aus: EU S9 SU E9
+    PcRechts spielt aus: S8 SZ SA GZ
+     PcLinks spielt aus: G8 G9 GA GK
+    PcRechts spielt aus: S7 HU HA HK
+        Gast spielt aus: HZ H7 H8 SO
+    PcRechts spielt aus: SK HO H9 GO
+PcRechts verliert den Schellen-Wenz. Die Gegner haben 76 Augen
+Das Einzelspiel kostet 5 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   88        5          +42           +0           +0          -42        0
+ 
+Geber: PcLinks
+      PcOben hat: HO E7 G8 GA G7 SO HA EO
+    PcRechts hat: H9 S9 SU H8 SK H7 HZ GU
+        Gast hat: GK EA S8 GO SZ HU SA EK
+     PcLinks hat: S7 GZ E8 HK G9 EU EZ E9
+PcOben spielt Grün-Geier
+      PcOben spielt aus: EO GU GK G9
+      PcOben spielt aus: HO HZ GO GZ
+        Gast spielt aus: EA EZ E7 SK
+        Gast spielt aus: EK E8 G7 H7
+      PcOben spielt aus: HA H8 HU HK
+      PcOben spielt aus: G8 SU SA E9
+      PcOben spielt aus: SO H9 S8 S7
+      PcOben spielt aus: GA S9 SZ EU
+PcOben gewinnt den Grün-Geier. Die Gegner haben 51 Augen
+Das Einzelspiel kostet 5 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   89        5          +37          +15           -5          -47        0
+ 
+Geber: PcOben
+    PcRechts hat: H9 GU EZ SO G8 HO H7 SK
+        Gast hat: EK EA S8 HK HZ EU GK GZ
+     PcLinks hat: SZ E9 S9 E8 H8 G9 HU E7
+      PcOben hat: S7 HA G7 SU GA GO SA EO
+PcOben spielt Schellen-Geier
+    PcRechts spielt aus: EZ EA E9 SA
+      PcOben spielt aus: GO HO S8 S9
+      PcOben spielt aus: EO SK EU SZ
+      PcOben spielt aus: S7 SO GZ HU
+    PcRechts spielt aus: H7 HK H8 HA
+      PcOben spielt aus: GA G8 GK G9
+      PcOben spielt aus: G7 GU HZ E7
+    PcRechts spielt aus: H9 EK E8 SU
+PcOben gewinnt den Schellen-Geier. Die Gegner haben 27 Augen
+Das Einzelspiel kostet 5 Punkte. Mit Schneider 6 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   90        6          +31          +33          -11          -53        0
+ 
+Geber: PcRechts
+        Gast hat: EK HO EA GU GO E7 SU S9
+     PcLinks hat: E9 SK HZ S8 EU SA G9 GK
+      PcOben hat: GZ H8 G7 HA H7 E8 SZ S7
+    PcRechts hat: HU GA G8 EZ SO H9 HK EO
+PcRechts spielt Mit der Eichel-Ass
+        Gast spielt aus: GO HZ H7 HK
+        Gast spielt aus: HO EU H8 H9
+        Gast spielt aus: GU E9 HA HU
+        Gast spielt aus: SU S8 E8 SO
+    PcRechts spielt aus: GA EK G9 G7
+    PcRechts spielt aus: EZ EA GK S7
+        Gast spielt aus: E7 SK GZ G8
+        Gast spielt aus: S9 SA SZ EO
+PcRechts gewinnt das Rufspiel: Mit der Eichel-Ass mit dir. Die 
+Gegner haben 0 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit Schwarz 
+4 Punkte. Mit 4 Laufenden 8 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   91        8          +23          +25           -3          -45        0
+ 
+Geber: Gast
+     PcLinks hat: H8 H9 SK HZ EK GO H7 E8
+      PcOben hat: EA E7 G9 SO EZ S9 E9 S8
+    PcRechts hat: HU S7 GU HO GZ SU GK HK
+        Gast hat: GA EO HA SA G8 G7 SZ EU
+PcLinks spielt Mit der Schellen-Ass
+     PcLinks spielt aus: GO SO HK HA
+     PcLinks spielt aus: H7 G9 GU EU
+        Gast spielt aus: EO HZ E7 SU
+        Gast spielt aus: SA SK S8 S7
+        Gast spielt aus: SZ E8 S9 HU
+    PcRechts spielt aus: GK GA EK E9
+        Gast spielt aus: G7 H9 EZ GZ
+     PcLinks spielt aus: H8 EA HO G8
+PcLinks gewinnt das Rufspiel: Mit der Schellen-Ass mit dir. Die 
+Gegner haben 26 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   92        3          +26          +22           -6          -42        0
+ 
+Geber: PcLinks
+      PcOben hat: G8 E9 GK H7 SK S9 S8 SA
+    PcRechts hat: E7 HK GU EU E8 SO S7 EO
+        Gast hat: EK GO G9 GA HU G7 EZ H8
+     PcLinks hat: HZ GZ SU HA EA HO SZ H9
+PcRechts spielt Mit der Schellen-Ass
+      PcOben spielt aus: S9 S7 H8 SZ
+        Gast spielt aus: GA GZ G8 HK
+    PcRechts spielt aus: EO HU H9 H7
+    PcRechts spielt aus: GU GO HA E9
+        Gast spielt aus: G7 EA GK E7
+      PcOben spielt aus: SA E8 G9 HZ
+     PcLinks spielt aus: HO S8 EU EZ
+     PcLinks spielt aus: SU SK SO EK
+PcRechts verliert das Rufspiel: Mit der Schellen-Ass mit PcOben. 
+Die Gegner haben 62 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   93        2          +28          +20           -8          -40        0
+ 
+Geber: PcOben
+    PcRechts hat: S7 S8 H7 GK SK GO SA HZ
+        Gast hat: GU EO HU HK E8 EZ SZ EA
+     PcLinks hat: S9 H9 G7 GA HO E9 EK GZ
+      PcOben hat: EU SO SU H8 G9 E7 HA G8
+Gast spielt Mit der Schellen-Ass
+    PcRechts spielt aus: S8 SZ S9 HA
+      PcOben spielt aus: E7 HZ EA E9
+    PcRechts spielt aus: GO HK H9 H8
+    PcRechts spielt aus: H7 EO HO SU
+        Gast spielt aus: EZ EK SO GK
+      PcOben spielt aus: G8 S7 HU G7
+        Gast spielt aus: E8 GZ EU SK
+      PcOben spielt aus: G9 SA GU GA
+Du gewinnst das Rufspiel: Mit der Schellen-Ass mit PcRechts. 
+Die Gegner haben 58 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   94        2          +26          +18           -6          -38        0
+ 
+Geber: PcRechts
+        Gast hat: GA S8 EZ HZ HK SO H8 GZ
+     PcLinks hat: EA E9 H7 HU HA SZ SA SU
+      PcOben hat: G9 EK S9 GU E8 EO G8 SK
+    PcRechts hat: G7 EU GO S7 GK HO H9 E7
+Es wurde Ramsch gespielt.
+        Gast spielt aus: S8 SZ SK S7
+     PcLinks spielt aus: H7 GU H9 HZ
+      PcOben spielt aus: EO GO SO HU
+      PcOben spielt aus: S9 GK EZ SA
+     PcLinks spielt aus: SU EK HO HK
+    PcRechts spielt aus: EU H8 HA G9
+    PcRechts spielt aus: E7 GA E9 E8
+     PcLinks spielt aus: EA G8 G7 GZ
+PcLinks verliert den Ramsch. PcLinks hat 71 Augen. Du bist Jungfrau
+Der Ramsch kostet 1 Punkt. Mit 1 mal Jungfrau 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   95        2          +20          +20           -4          -36        0
+ 
+Geber: Gast
+     PcLinks hat: EA GZ S8 HA HU EK G8 SU
+      PcOben hat: H9 SO GK HK S7 GU S9 GA
+    PcRechts hat: E7 H7 E9 G7 EO SK E8 GO
+        Gast hat: EZ HZ G9 SA SZ HO EU H8
+Gast spielt Mit der Eichel-Ass
+     PcLinks spielt aus: HU GU H7 EU
+        Gast spielt aus: H8 SU HK GO
+    PcRechts spielt aus: E9 EZ EA H9
+      PcOben spielt aus: GA G7 G9 G8
+      PcOben spielt aus: S7 SK SA S8
+        Gast spielt aus: SZ EK S9 EO
+    PcRechts spielt aus: E8 HO GZ GK
+        Gast spielt aus: HZ HA SO E7
+Du verlierst das Rufspiel: Mit der Eichel-Ass mit PcLinks. Die 
+Gegner haben 82 Augen
+Das Rufspiel kostet 2 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   96        2          +18          +22           -2          -38        0
+ 
+Geber: PcLinks
+      PcOben hat: SK H9 GO GK HK HA EA GZ
+    PcRechts hat: H8 GA HZ EU E8 E9 G9 H7
+        Gast hat: EK SU GU SA S7 EZ SO EO
+     PcLinks hat: SZ HO S9 S8 HU G7 G8 E7
+Gast spielt Mit der Eichel-Ass
+      PcOben spielt aus: GO H7 SU HU
+      PcOben spielt aus: H9 EU SO HO
+     PcLinks spielt aus: E7 EA E8 EZ
+      PcOben spielt aus: HK HZ EO G7
+        Gast spielt aus: EK G8 HA E9
+      PcOben spielt aus: SK H8 S7 SZ
+    PcRechts spielt aus: GA GU S8 GZ
+        Gast spielt aus: SA S9 GK G9
+Du gewinnst das Rufspiel: Mit der Eichel-Ass mit PcOben. Die 
+Gegner haben 22 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   97        3          +15          +25           -5          -35        0
+ 
+Geber: PcOben
+    PcRechts hat: SA SK S9 G7 SU S8 SO EZ
+        Gast hat: EA SZ EK EO E8 H8 HU E9
+     PcLinks hat: GZ G9 HO HK HA G8 GU GK
+      PcOben hat: S7 HZ H7 GO GA H9 E7 EU
+PcLinks spielt Grün-Geier
+    PcRechts spielt aus: SA SZ HO S7
+     PcLinks spielt aus: G8 GA G7 EO
+        Gast spielt aus: EA G9 E7 EZ
+     PcLinks spielt aus: GU GO SO EK
+      PcOben spielt aus: H7 S8 H8 HK
+     PcLinks spielt aus: HA H9 S9 HU
+     PcLinks spielt aus: GK HZ SU E8
+     PcLinks spielt aus: GZ EU SK E9
+PcLinks gewinnt den Grün-Geier. Die Gegner haben 26 Augen
+Das Einzelspiel kostet 5 Punkte. Mit Schneider 6 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   98        6          +33          +19          -11          -41        0
+ 
+Geber: PcRechts
+        Gast hat: SO EK EU SZ GZ HK GK S8
+     PcLinks hat: S7 HO H9 E7 HA G8 H7 HU
+      PcOben hat: EA EO SA S9 G7 EZ SU GU
+    PcRechts hat: SK GA H8 E8 G9 HZ E9 GO
+Es wurde Ramsch gespielt.
+        Gast spielt aus: EK E7 EZ E9
+      PcOben spielt aus: G7 G9 GK G8
+        Gast spielt aus: GZ S7 EA GA
+    PcRechts spielt aus: SK SZ HO SA
+     PcLinks spielt aus: H7 SU HZ HK
+      PcOben spielt aus: GU H8 SO HU
+        Gast spielt aus: EU HA EO GO
+      PcOben spielt aus: S9 E8 S8 H9
+PcOben verliert den Ramsch. PcOben hat 49 Augen
+Der Ramsch kostet 1 Punkt.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+   99        1          +34          +16          -10          -40        0
+ 
