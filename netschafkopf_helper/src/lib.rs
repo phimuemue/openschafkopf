@@ -565,7 +565,7 @@ enum VLogAndImprove {
     LogOnly,
     Improve(EImprovementScope),
 }
-static OLOGANDIMPROVE : Option<VLogAndImprove> = None;
+static OLOGANDIMPROVE : Option<VLogAndImprove> = None; // Some(VLogAndImprove::Improve(EImprovementScope::OnlyGast));
 
 static B_CHEAT: bool = true;
 
@@ -607,8 +607,8 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
             );
             let veccard_suggestion_openschafkopf = determinebestcardresult.cards_and_ts()
                 .filter_map(|(card, payoutstatsperstrategy)| {
-                    let n_payout_relevant = payoutstatsperstrategy.0[EMinMaxStrategy::Min].min();
-                    if_then_some!(n_payout_relevant > 0, (card, n_payout_relevant))
+                    let n_payout_relevant = payoutstatsperstrategy.0[EMinMaxStrategy::SelfishMin].min();
+                    if_then_some!(true, (card, n_payout_relevant))
                 })
                 .max_set_by_key(|&(_card, n_payout_relevant)| n_payout_relevant)
                 .into_iter()
