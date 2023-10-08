@@ -246,6 +246,10 @@ impl SStichTrie {
     }
 }
 
+// TODO: Another oracle could be useful: Explore all possible stichs, and - for each winner index -
+// keep the stich with minimum resp. maximum points (and possibly one randomly chosen one). Is this
+// maybe a sensible proxy for exploring a gametree completely?
+
 #[derive(Debug)]
 pub struct SFilterByOracle<'rules> {
     rules: &'rules dyn TRules,
