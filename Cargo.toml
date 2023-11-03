@@ -3,6 +3,7 @@ members = [
     "main",
     "util",
     "netschafkopf_helper",
+    "sauspiel_webext",
 ]
 resolver = "2"
 
