@@ -1,8 +1,9 @@
 [package]
 name = "netschafkopf_helper"
-version = "0.1.0"
-authors = ["phimuemue"]
-edition = "2021"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license-file.workspace = true
 
 [lib]
 crate-type = ["cdylib"]

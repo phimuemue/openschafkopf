@@ -1,9 +1,9 @@
 [package]
 name = "openschafkopf"
-version = "0.1.0"
-authors = ["openschafkopf"]
-edition = "2021"
-license-file = "../LICENSE"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license-file.workspace = true
 description = "An open source toolkit for Schafkopf, a Bavarian card game."
 
 [dependencies]
