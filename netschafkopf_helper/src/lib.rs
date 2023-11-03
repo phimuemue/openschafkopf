@@ -1000,7 +1000,7 @@ make_redirect_function!(
                     // TODO interpret vecch (or go one level deeper) and select
                     let select_item = |n_id_list: u16, str_item: &[u8]| {
                         let str_item = str_item.iter().copied().chain(std::iter::once(0)).collect::<Vec<_>>();
-                        let hwnd_list = unsafe{GetDlgItem(hwnd_spielabfrage, n_id_list as _)}; // TODO verify
+                        let hwnd_list = verify!(unsafe{GetDlgItem(hwnd_spielabfrage, n_id_list as _)});
                         verify_ne!(
                             unsafe{SendMessageA(
                                 hwnd_list,
