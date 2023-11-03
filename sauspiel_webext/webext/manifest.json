@@ -1,0 +1,19 @@
+{
+  "manifest_version": 2,
+  "name": "sauspiel_webext",
+  "version": "0.1",
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.sauspiel.de/spiele/*"],
+      "js": ["sauspiel_webext_content_script.js"]
+    }
+  ],
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "sauspiel_webext@openschafkopf.com"
+    }
+  }
+}
+
