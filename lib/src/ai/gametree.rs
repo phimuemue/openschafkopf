@@ -493,6 +493,17 @@ impl<T> SPerMinMaxStrategy<T> {
             perminmaxstrategy.0.as_raw()
         ).for_each(|(lhs, rhs)| fn_modify_element(lhs, rhs))
     }
+
+    pub fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)] {
+        use EMinMaxStrategy::*;
+        &[
+            (MinMin, (|slf| &slf.0[MinMin]) as fn(&Self)->&T),
+            (Min, |slf| &slf.0[Min]),
+            (SelfishMin, |slf| &slf.0[SelfishMin]),
+            (SelfishMax, |slf| &slf.0[SelfishMax]),
+            (Max, |slf| &slf.0[Max]),
+        ]
+    }
 }
 
 // TODO(performance) storing a whole EnumMap for each EMinMaxStrategy is unnecessary, and slows down the program

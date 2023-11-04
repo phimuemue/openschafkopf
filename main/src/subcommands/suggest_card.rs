@@ -30,20 +30,13 @@ fn print_payoutstatstable<T: std::fmt::Display>(
         println!("\nInterpreting a line of the following table (taking the first line as an example):");
         let SOutputLine{vect, perminmaxstrategyatplstrf} = &slcoutputline[0];
         println!("If you play {}, then:", vect.iter().join(" or "));
-        for emmstrategy in EMinMaxStrategy::values() {
-            let astr = perminmaxstrategyatplstrf.0[emmstrategy].clone().map(|tplstrf| tplstrf.0);
-            let n_columns = astr.len(); // TODO can we get rid of this
-            let [str_payout_min, str_payout_avg, str_payout_max, str_stats] = astr;
-            println!("* The {} {} columns show tell what happens if all other players play {}:",
-                EMinMaxStrategy::map_from_raw([
-                    "first",
-                    "second",
-                    "third",
-                    "fourth",
-                    "fifth",
-                ])[emmstrategy],
-                n_columns,
-                match emmstrategy {
+        for (i_strategy, (emmstrategy, fn_value_for_strategy)) in SPerMinMaxStrategy::accessors().iter().enumerate() {
+            let astr = fn_value_for_strategy(perminmaxstrategyatplstrf).clone().map(|tplstrf| tplstrf.0);
+            let [str_payout_min, str_payout_avg, str_payout_max, str_stats] = &astr;
+            println!("* Columns {i_strategy_1_based}.1 to {i_strategy_1_based}.{n_subcolumns} show tell what happens if all other players play {str_play}:",
+                i_strategy_1_based = i_strategy + 1,
+                n_subcolumns = astr.len(),
+                str_play = match emmstrategy {
                     EMinMaxStrategy::MinMin => "adversarially and you play pessimal",
                     EMinMaxStrategy::Min => "adversarially",
                     EMinMaxStrategy::SelfishMin => "optimally for themselves, in disfavor of you in case of doubt",
