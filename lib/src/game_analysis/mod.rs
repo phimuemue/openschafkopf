@@ -59,7 +59,7 @@ pub struct SGameAnalysis {
 }
 
 struct SPossiblePayout(
-    EnumMap<EMinMaxStrategy, isize>,
+    SPerMinMaxStrategy<isize>,
     (/*i_stich*/usize, /*i_card*/usize),
 );
 
@@ -110,9 +110,7 @@ pub fn analyze_game(
                             ),
                             &SSnapshotCacheNone::factory(), // TODO possibly use cache
                             &mut SNoVisualization,
-                        )
-                            .0
-                            .map(|mapepin_payout| mapepin_payout[epi]),
+                        ).map(|mapepin_payout| mapepin_payout[epi]),
                         (i_stich, game.stichseq.current_stich().size())
                     ));
                 }
@@ -342,7 +340,7 @@ fn generate_analysis_html(
             Some(format!("<table>{}</table>",
                 format!("<tr>{}</tr>",
                     vecpossiblepayout.iter()
-                        .map(|SPossiblePayout(_, (i_stich, i_card))|
+                        .map(|SPossiblePayout(_perminmaxstrategyn_payout, (i_stich, i_card))|
                             format!("<td>{}/{}</td>", i_stich+1, i_card+1)
                         )
                         .join("")
@@ -350,9 +348,9 @@ fn generate_analysis_html(
                     + type_inference!(&str, &EMinMaxStrategy::values().rev().map(|emmstrategy| {
                         format!("<tr>{}</tr>",
                             vecpossiblepayout.iter()
-                                .map(|possiblepayout|
+                                .map(|SPossiblePayout(perminmaxstrategyn_payout, (_i_stich, _i_card))|
                                     format!("<td>{}</td>",
-                                        possiblepayout.0[emmstrategy]
+                                        perminmaxstrategyn_payout.0[emmstrategy]
                                     )
                                 )
                                 .join("")
