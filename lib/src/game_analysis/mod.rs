@@ -345,12 +345,12 @@ fn generate_analysis_html(
                         )
                         .join("")
                 )
-                    + type_inference!(&str, &EMinMaxStrategy::values().rev().map(|emmstrategy| {
+                    + type_inference!(&str, &SPerMinMaxStrategy::accessors().iter().rev().map(|(_emmstrategy, fn_value_for_strategy)| {
                         format!("<tr>{}</tr>",
                             vecpossiblepayout.iter()
                                 .map(|SPossiblePayout(perminmaxstrategyn_payout, (_i_stich, _i_card))|
                                     format!("<td>{}</td>",
-                                        perminmaxstrategyn_payout.0[emmstrategy]
+                                        fn_value_for_strategy(perminmaxstrategyn_payout)
                                     )
                                 )
                                 .join("")
