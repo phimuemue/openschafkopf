@@ -46,8 +46,8 @@ fn print_payoutstatstable<T: std::fmt::Display>(
                 match emmstrategy {
                     EMinMaxStrategy::MinMin => "adversarially and you play pessimal",
                     EMinMaxStrategy::Min => "adversarially",
-                    EMinMaxStrategy::SelfishMin => "optimally for themselves, favouring you in case of doubt",
-                    EMinMaxStrategy::SelfishMax => "optimally for themselves, not favouring you in case of doubt",
+                    EMinMaxStrategy::SelfishMin => "optimally for themselves, in disfavor of you in case of doubt",
+                    EMinMaxStrategy::SelfishMax => "optimally for themselves, in favor of you in case of doubt",
                     EMinMaxStrategy::Max => "optimally for you",
                 },
             );
