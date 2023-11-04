@@ -405,7 +405,7 @@ fn generate_analysis_html(
                     str_per_card += &crate::ai::gametree::output_card(card, /*b_border*/card==analysispercard.card_played);
                 }
                 str_per_card += "</td>";
-                for atplstrf in outputline.mapemmstrategyatplstrf.iter() {
+                for atplstrf in outputline.perminmaxstrategyatplstrf.0.iter() {
                     // TODO simplify to one item per emmstrategy
                     for (str_num, _f) in atplstrf.iter() {
                         str_per_card += "<td>";
@@ -439,7 +439,7 @@ fn generate_analysis_html(
                         determine_best_card_table::N_COLUMNS * EMinMaxStrategy::SIZE,
                         unwrap!(vecoutputline.iter()
                             .map(|outputline|
-                                outputline.mapemmstrategyatplstrf.iter().flatten().count()
+                                outputline.perminmaxstrategyatplstrf.0.iter().flatten().count()
                             )
                             .all_equal_value())
                     ),

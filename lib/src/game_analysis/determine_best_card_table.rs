@@ -1,4 +1,4 @@
-use crate::ai::{SDetermineBestCardResult, SPayoutStats, SPerMinMaxStrategy, gametree::EMinMaxStrategy};
+use crate::ai::{SDetermineBestCardResult, SPayoutStats, SPerMinMaxStrategy};
 use crate::primitives::*;
 use itertools::*;
 use crate::util::*;
@@ -11,7 +11,7 @@ pub const N_COLUMNS : usize = 4;
 #[derive(PartialEq)]
 pub struct SOutputLine<T> {
     pub vect: Vec<T>,
-    pub mapemmstrategyatplstrf: EnumMap<EMinMaxStrategy, [(String, f32); N_COLUMNS]>,
+    pub perminmaxstrategyatplstrf: SPerMinMaxStrategy<[(String, f32); N_COLUMNS]>,
 }
 
 #[derive(Clone, /*TODO really needed for array construction?*/Copy)]
@@ -30,7 +30,7 @@ impl PartialEq for EGrouping {
 
 pub struct SPayoutStatsTable<T> {
     vecoutputline: Vec<SOutputLine<T>>,
-    mapemmstrategyaformatinfo: EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]>,
+    perminmaxstrategyaformatinfo: SPerMinMaxStrategy<[SFormatInfo; N_COLUMNS]>,
 }
 impl<T> SPayoutStatsTable<T> {
     // TODO? would an accessor macro be helpful?
@@ -40,8 +40,8 @@ impl<T> SPayoutStatsTable<T> {
     pub fn into_output_lines(self) -> Vec<SOutputLine<T>> {
         self.vecoutputline
     }
-    pub fn format_infos(&self) -> &EnumMap<EMinMaxStrategy, [SFormatInfo; N_COLUMNS]> {
-        &self.mapemmstrategyaformatinfo
+    pub fn format_infos(&self) -> &SPerMinMaxStrategy<[SFormatInfo; N_COLUMNS]> {
+        &self.perminmaxstrategyaformatinfo
     }
 }
 
@@ -55,7 +55,7 @@ pub fn internal_table<T, PayoutStatsPayload: Copy+Ord+std::fmt::Debug, PayoutSta
     });
     vectpayoutstatsperstrategy.reverse(); // descending
     let mut vecoutputline : Vec<SOutputLine<_>> = Vec::new();
-    let mut mapemmstrategyaformatinfo = EMinMaxStrategy::map_from_fn(|_emmstrategy| [
+    let mut perminmaxstrategyaformatinfo = SPerMinMaxStrategy::new([
         SFormatInfo {
             f_min: f32::MAX,
             f_max: f32::MIN,
@@ -63,7 +63,7 @@ pub fn internal_table<T, PayoutStatsPayload: Copy+Ord+std::fmt::Debug, PayoutSta
         };
         N_COLUMNS
     ]);
-    for ((mapemmstrategyatplstrf, _grouping), grptpltmapemmstrategyatplstrf) in vectpayoutstatsperstrategy.into_iter()
+    for ((perminmaxstrategyatplstrf, _grouping), grptpltmapemmstrategyatplstrf) in vectpayoutstatsperstrategy.into_iter()
         .map(|(t, minmax)| {
             let minmax = minmax.borrow();
             let column_counts = |paystats: &SPayoutStats<PayoutStatsPayload>| {
@@ -83,17 +83,17 @@ pub fn internal_table<T, PayoutStatsPayload: Copy+Ord+std::fmt::Debug, PayoutSta
             };
             (
                 t,
-                EMinMaxStrategy::map_from_fn(|emmstrategy| [
-                    column_min_or_max(minmax.0[emmstrategy].min()),
-                    column_average(&minmax.0[emmstrategy]),
-                    column_min_or_max(minmax.0[emmstrategy].max()),
-                    column_counts(&minmax.0[emmstrategy]),
+                minmax.map(|payoutstats| [
+                    column_min_or_max(payoutstats.min()),
+                    column_average(&payoutstats),
+                    column_min_or_max(payoutstats.max()),
+                    column_counts(&payoutstats),
                 ]),
             )
         })
-        .group_by(|(_t, mapemmstrategyatplstrf)| {
+        .group_by(|(_t, perminmaxstrategyatplstrf)| {
             (
-                mapemmstrategyatplstrf.clone(),
+                perminmaxstrategyatplstrf.clone(),
                 if b_group {
                     EGrouping::Group
                 } else {
@@ -103,7 +103,7 @@ pub fn internal_table<T, PayoutStatsPayload: Copy+Ord+std::fmt::Debug, PayoutSta
         })
         .into_iter()
     {
-        for (atplstrf, aformatinfo) in mapemmstrategyatplstrf.iter().zip_eq(mapemmstrategyaformatinfo.iter_mut()) {
+        for (atplstrf, aformatinfo) in perminmaxstrategyatplstrf.0.iter().zip_eq(perminmaxstrategyaformatinfo.0.iter_mut()) {
             for ((str_val, f_val), formatinfo) in atplstrf.iter().zip_eq(aformatinfo.iter_mut()) {
                 formatinfo.n_width = formatinfo.n_width.max(str_val.len());
                 assign_min_partial_ord(&mut formatinfo.f_min, *f_val);
@@ -114,12 +114,12 @@ pub fn internal_table<T, PayoutStatsPayload: Copy+Ord+std::fmt::Debug, PayoutSta
             vect: grptpltmapemmstrategyatplstrf.into_iter()
                 .map(|(t, _atplstrf)| t)
                 .collect(),
-            mapemmstrategyatplstrf,
+            perminmaxstrategyatplstrf,
         });
     }
     SPayoutStatsTable{
         vecoutputline,
-        mapemmstrategyaformatinfo,
+        perminmaxstrategyaformatinfo,
     }
 }
 

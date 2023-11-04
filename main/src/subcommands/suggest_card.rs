@@ -28,10 +28,10 @@ fn print_payoutstatstable<T: std::fmt::Display>(
     let slcoutputline = &payoutstatstable.output_lines();
     if b_verbose { // TODO? only for second-level verbosity
         println!("\nInterpreting a line of the following table (taking the first line as an example):");
-        let SOutputLine{vect, mapemmstrategyatplstrf} = &slcoutputline[0];
+        let SOutputLine{vect, perminmaxstrategyatplstrf} = &slcoutputline[0];
         println!("If you play {}, then:", vect.iter().join(" or "));
         for emmstrategy in EMinMaxStrategy::values() {
-            let astr = mapemmstrategyatplstrf[emmstrategy].clone().map(|tplstrf| tplstrf.0);
+            let astr = perminmaxstrategyatplstrf.0[emmstrategy].clone().map(|tplstrf| tplstrf.0);
             let n_columns = astr.len(); // TODO can we get rid of this
             let [str_payout_min, str_payout_avg, str_payout_max, str_stats] = astr;
             println!("* The {} {} columns show tell what happens if all other players play {}:",
@@ -66,9 +66,9 @@ fn print_payoutstatstable<T: std::fmt::Display>(
         assign_max(&mut n_width_id, str_id.len());
         vecstr_id.push(str_id);
     }
-    for (str_id, SOutputLine{vect:_, mapemmstrategyatplstrf}) in vecstr_id.iter().zip_eq(slcoutputline.iter()) {
+    for (str_id, SOutputLine{vect:_, perminmaxstrategyatplstrf}) in vecstr_id.iter().zip_eq(slcoutputline.iter()) {
         print!("{str_id:<n_width_id$}: ");
-        for (atplstrf, aformatinfo) in mapemmstrategyatplstrf.iter().zip_eq(payoutstatstable.format_infos().iter()) {
+        for (atplstrf, aformatinfo) in perminmaxstrategyatplstrf.0.iter().zip_eq(payoutstatstable.format_infos().0.iter()) {
             for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
                 use termcolor::*;
                 let mut stdout = StandardStream::stdout(if std::io::stdout().is_terminal() {
