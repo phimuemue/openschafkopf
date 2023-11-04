@@ -145,7 +145,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     #[derive(new, Serialize)]
     struct SJsonTableLine {
         ostr_header: Option<String>,
-        avecpayout_histogram: [Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>; EMinMaxStrategy::SIZE],
+        perminmaxstrategyvecpayout_histogram: SPerMinMaxStrategy<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>,
     }
     #[derive(new, Serialize)]
     struct SJson {
@@ -202,7 +202,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             *n_count,
                         ))
                         .collect()
-                ).0.into_raw()
+                )
             };
             let print_json = |vectableline| {
                 if_then_true!(clapmatches.is_present("json"), {
@@ -337,7 +337,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 if !print_json(
                     /*vectableline*/vec![SJsonTableLine::new(
                         /*ostr_header*/None, // already given by str_rules
-                        /*avecpayout_histogram*/json_histograms(&mapemmstrategypaystats),
+                        /*perminmaxstrategyvecpayout_histogram*/json_histograms(&mapemmstrategypaystats),
                     )],
                 ) {
                     print_payoutstatstable(
@@ -398,7 +398,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         .map(|(card, payoutstatsperstrategy)|
                             SJsonTableLine::new(
                                 /*ostr_header*/Some(card.to_string()),
-                                /*avecpayout_histogram*/json_histograms(payoutstatsperstrategy),
+                                /*perminmaxstrategyvecpayout_histogram*/json_histograms(payoutstatsperstrategy),
                             )
                         )
                         .collect(),

@@ -6,6 +6,7 @@ use itertools::Itertools;
 use rand::{self, Rng};
 use std::{cmp::Ordering, fmt, fs, io::{BufWriter, Write}};
 use super::cardspartition::*;
+use serde::{Serialize, ser::SerializeTuple};
 
 pub trait TForEachSnapshot {
     type Output;
@@ -455,6 +456,21 @@ plain_enum_mod!(modeminmaxstrategy, EMinMaxStrategy {
 // TODO(performance) offer possibility to constrain oneself to one value of EMinMaxStrategy (reduced run time by ~20%-25% in some tests)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SPerMinMaxStrategy<T>(pub EnumMap<EMinMaxStrategy, T>);
+
+impl<T: Serialize> Serialize for SPerMinMaxStrategy<T> { // TODO Could EnumMap impl Serialize itself?
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: serde::Serializer
+    {
+        let SPerMinMaxStrategy(ref mapemmstrategyt) = self;
+        // adapted from https://docs.rs/serde/latest/src/serde/ser/impls.rs.html#152-156
+        let at = mapemmstrategyt.as_raw();
+        let mut seq = serializer.serialize_tuple(at.len())?;
+        for t in at {
+            seq.serialize_element(t)?;
+        }
+        seq.end()
+    }
+}
 
 impl<T> SPerMinMaxStrategy<T> {
     pub fn new(t: T) -> Self
