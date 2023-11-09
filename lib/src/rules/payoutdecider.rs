@@ -310,8 +310,8 @@ pub fn snapshot_cache_points_monotonic(playerparties: impl TPlayerParties + 'sta
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             let perminmaxn_payout = self.mapsnapequivperminmaxn_payout
                 .get(&super::snap_equiv_base(stichseq))?;
-            Some(crate::ai::gametree::SPerMinMaxStrategy(crate::ai::gametree::EMinMaxStrategy::map_from_fn(|emmstrategy| {
-                let n_points_primary = perminmaxn_payout.0[emmstrategy]
+            Some(perminmaxn_payout.map(|n_payout_points| {
+                let n_points_primary = n_payout_points
                     + self.playerparties.primary_points_so_far(&rulestatecache.changing);
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
@@ -319,11 +319,11 @@ pub fn snapshot_cache_points_monotonic(playerparties: impl TPlayerParties + 'sta
                     primary_points_to_normalized_points(n_points_primary, &self.pointstowin),
                     &self.playerparties,
                 )
-            })))
+            }))
         }
         fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SMinMax) {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
-            let perminmaxn_payout = payoutstats.0.map(|mapepin_payout| {
+            let perminmaxn_payout = payoutstats.map(|mapepin_payout| {
                 let n_points_primary = payoutdecider::normalized_points_to_points(
                     (
                         unwrap!(self.playerparties.primary_players().map(|epi| mapepin_payout[epi]).all_equal_value())
@@ -339,7 +339,7 @@ pub fn snapshot_cache_points_monotonic(playerparties: impl TPlayerParties + 'sta
             self.mapsnapequivperminmaxn_payout
                 .insert(
                     super::snap_equiv_base(stichseq),
-                    crate::ai::gametree::SPerMinMaxStrategy(perminmaxn_payout),
+                    perminmaxn_payout,
                 );
             debug_assert_eq!(self.get(stichseq, rulestatecache).as_ref(), Some(payoutstats));
         }

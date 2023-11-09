@@ -456,6 +456,18 @@ plain_enum_mod!(modeminmaxstrategy, EMinMaxStrategy {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SPerMinMaxStrategy<T>(pub EnumMap<EMinMaxStrategy, T>);
 
+impl<T> SPerMinMaxStrategy<T> {
+    pub fn new(t: T) -> Self
+        where
+            T: Clone,
+    {
+        Self(EMinMaxStrategy::map_from_fn(|_| t.clone()))
+    }
+    pub fn map<R>(&self, f: impl Fn(&T)->R) -> SPerMinMaxStrategy<R> {
+        SPerMinMaxStrategy(self.0.map(f))
+    }
+}
+
 // TODO(performance) storing a whole EnumMap for each EMinMaxStrategy is unnecessary, and slows down the program
 pub type SMinMax = SPerMinMaxStrategy<EnumMap<EPlayerIndex, isize>>;
 

@@ -83,9 +83,9 @@ impl SAi {
                     ),
                     &SSnapshotCacheNone::factory(), // TODO make customizable
                     &mut SNoVisualization{},
-                ).0.map(|mapepiminmax| {
+                ).map(|mapepiminmax| {
                     SPayoutStats::new_1((mapepiminmax[epi_rank], ()))
-                })
+                }).0
             })
             .reduce(
                 /*identity*/|| EMinMaxStrategy::map_from_fn(|_|SPayoutStats::new_identity_for_accumulate()),
@@ -374,10 +374,8 @@ pub fn determine_best_card<
                     )
                 }
             });
-            let payoutstats = SPerMinMaxStrategy(
-                EMinMaxStrategy::map_from_fn(|emmstrategy| {
-                    SPayoutStats::new_1(fn_payout(&stichseq, &ahand, output.0[emmstrategy][epi_result]))
-                })
+            let payoutstats = output.map(|mapepin_payout|
+                SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[epi_result]))
             );
             let mapcardooutput = Arc::clone(&mapcardooutput);
             let ooutput = &mut unwrap!(mapcardooutput.lock())[card];

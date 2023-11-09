@@ -188,7 +188,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 }
             };
             let json_histograms = move |payoutstatsperstrategy: &SPerMinMaxStrategy<SPayoutStats<std::cmp::Ordering>>| {
-                payoutstatsperstrategy.0.map(|payoutstats| 
+                payoutstatsperstrategy.map(|payoutstats| 
                     payoutstats.histogram().iter()
                         .map(|((n_payout, ord_vs_0), n_count)| ( 
                             (
@@ -202,7 +202,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             *n_count,
                         ))
                         .collect()
-                ).into_raw()
+                ).0.into_raw()
             };
             let print_json = |vectableline| {
                 if_then_true!(clapmatches.is_present("json"), {
@@ -299,7 +299,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             }}
             if clapmatches.is_present("no-details") {
                 macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
-                    SPerMinMaxStrategy(itahand
+                    itahand
                         .enumerate()
                         .par_bridge() // TODO can we derive a true parallel iterator?
                         .map(|(i_ahand, ahand)| {
@@ -315,7 +315,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 ),
                                 &$fn_snapshotcache,
                                 &mut visualizer,
-                            ).0.map(|mapepiminmax| {
+                            ).map(|mapepiminmax| {
                                 SPayoutStats::new_1(fn_human_readable_payout(
                                     stichseq.clone(),
                                     (epi_position, ahand[epi_position].clone(/*TODO needed?*/)),
@@ -324,13 +324,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             })
                         })
                         .reduce(
-                            /*identity*/|| EMinMaxStrategy::map_from_fn(|_|SPayoutStats::new_identity_for_accumulate()),
+                            /*identity*/|| SPerMinMaxStrategy::new(SPayoutStats::new_identity_for_accumulate()),
                             /*op*/mutate_return!(|mapemmstrategypayoutstats_lhs, mapemmstrategypayoutstats_rhs| {
                                 for emmstrategy in EMinMaxStrategy::values() {
-                                    mapemmstrategypayoutstats_lhs[emmstrategy].accumulate(&mapemmstrategypayoutstats_rhs[emmstrategy]);
+                                    mapemmstrategypayoutstats_lhs.0[emmstrategy].accumulate(&mapemmstrategypayoutstats_rhs.0[emmstrategy]);
                                 }
                             }),
-                        ))
+                        )
                 }}}
                 let mapemmstrategypaystats = forward_with_args!(forward);
                 // TODO this prints a table/json for each iterated rules, but we want to only print one table
