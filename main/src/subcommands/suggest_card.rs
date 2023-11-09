@@ -325,10 +325,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         })
                         .reduce(
                             /*identity*/|| SPerMinMaxStrategy::new(SPayoutStats::new_identity_for_accumulate()),
-                            /*op*/mutate_return!(|mapemmstrategypayoutstats_lhs, mapemmstrategypayoutstats_rhs| {
-                                for emmstrategy in EMinMaxStrategy::values() {
-                                    mapemmstrategypayoutstats_lhs.0[emmstrategy].accumulate(&mapemmstrategypayoutstats_rhs.0[emmstrategy]);
-                                }
+                            /*op*/mutate_return!(|perminmaxstrategypayoutstats_lhs, perminmaxstrategypayoutstats_rhs| {
+                                perminmaxstrategypayoutstats_lhs.modify_with_other(
+                                    &perminmaxstrategypayoutstats_rhs,
+                                    SPayoutStats::accumulate,
+                                )
                             }),
                         )
                 }}}
