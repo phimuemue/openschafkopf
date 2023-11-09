@@ -103,13 +103,13 @@ pub fn internal_table<T, PayoutStatsPayload: Copy+Ord+std::fmt::Debug, PayoutSta
         })
         .into_iter()
     {
-        for (atplstrf, aformatinfo) in perminmaxstrategyatplstrf.0.iter().zip_eq(perminmaxstrategyaformatinfo.0.iter_mut()) {
+        perminmaxstrategyaformatinfo.modify_with_other(&perminmaxstrategyatplstrf, |aformatinfo, atplstrf| {
             for ((str_val, f_val), formatinfo) in atplstrf.iter().zip_eq(aformatinfo.iter_mut()) {
                 formatinfo.n_width = formatinfo.n_width.max(str_val.len());
                 assign_min_partial_ord(&mut formatinfo.f_min, *f_val);
                 assign_max_partial_ord(&mut formatinfo.f_max, *f_val);
             }
-        }
+        });
         vecoutputline.push(SOutputLine{
             vect: grptpltmapemmstrategyatplstrf.into_iter()
                 .map(|(t, _atplstrf)| t)
