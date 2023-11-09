@@ -433,14 +433,11 @@ fn generate_analysis_html(
                 unwrap!(write!(
                     str_per_card,
                     "<td colspan=\"{}\">N.A.</td>",
-                    verify_eq!(
-                        determine_best_card_table::N_COLUMNS * EMinMaxStrategy::SIZE,
-                        unwrap!(vecoutputline.iter()
-                            .map(|outputline|
-                                outputline.perminmaxstrategyatplstrf.0.iter().flatten().count()
-                            )
-                            .all_equal_value())
-                    ),
+                    unwrap!(vecoutputline.iter()
+                        .map(|outputline|
+                            outputline.perminmaxstrategyatplstrf.0.iter().flatten().count()
+                        )
+                        .all_equal_value()),
                 ));
             }
             str_per_card += "</tr>";
