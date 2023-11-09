@@ -133,32 +133,25 @@ pub fn analyze_game(
                         unwrap!(stichseq.current_stich().current_playerindex()),
                         /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
                     ));
-                    let mut ocardandpayout = None;
-                    for (eminmaxstrategy, emistake) in [
-                        (EMinMaxStrategy::Min, EMistake::Min),
-                        (EMinMaxStrategy::SelfishMin, EMistake::SelfishMin),
-                    ].into_iter()
-                    {
-                        assert!(ocardandpayout.is_none());
+                    let look_for_mistake = |eminmaxstrategy, emistake| {
                         let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(
                             |minmax_lhs, minmax_rhs| minmax_lhs.0[eminmaxstrategy].min().cmp(&minmax_rhs.0[eminmaxstrategy].min())
                         );
-                        if 
+                        if_then_some!(
                             an_payout[epi_zugeben]<minmax.0[eminmaxstrategy].min()
-                            && !veccard.contains(&card_played) // TODO can we improve this?
-                        {
-                            ocardandpayout = Some(SAnalysisCardAndPayout{
+                                && !veccard.contains(&card_played), // TODO can we improve this?
+                            SAnalysisCardAndPayout{
                                 veccard,
                                 n_payout: minmax.0[eminmaxstrategy].min(),
                                 emistake,
-                            });
-                            break;
-                        } else {
-                            // The decisive mistake must occur in subsequent stichs.
-                            // TODO assert that it actually occurs
-                        }
-                    }
-                    (determinebestcardresult.clone(), ocardandpayout)
+                            }
+                        ) // else The decisive mistake must occur in subsequent stichs. TODO assert that it actually occurs
+                    };
+                    (
+                        determinebestcardresult.clone(),
+                        look_for_mistake(EMinMaxStrategy::Min, EMistake::Min)
+                            .or_else(|| look_for_mistake(EMinMaxStrategy::SelfishMin, EMistake::SelfishMin))
+                    )
                 }}}
                 let look_for_mistakes_simulating = || {
                     let epi_current = unwrap!(game.stichseq.current_stich().current_playerindex());
