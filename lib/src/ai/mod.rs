@@ -60,7 +60,7 @@ impl SAi {
         }
     }
 
-    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &dyn TRules, expensifiers: &SExpensifiers) -> EnumMap<EMinMaxStrategy, SPayoutStats<()>> {
+    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &dyn TRules, expensifiers: &SExpensifiers) -> SPerMinMaxStrategy<SPayoutStats<()>> {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
         let ekurzlang = unwrap!(EKurzLang::from_cards_per_player(hand_fixed.get().len()));
         forever_rand_hands(
@@ -85,14 +85,15 @@ impl SAi {
                     &mut SNoVisualization{},
                 ).map(|mapepiminmax| {
                     SPayoutStats::new_1((mapepiminmax[epi_rank], ()))
-                }).0
+                })
             })
             .reduce(
-                /*identity*/|| EMinMaxStrategy::map_from_fn(|_|SPayoutStats::new_identity_for_accumulate()),
-                /*op*/mutate_return!(|mapemmstrategypayoutstats_lhs, mapemmstrategypayoutstats_rhs| {
-                    for emmstrategy in EMinMaxStrategy::values() {
-                        mapemmstrategypayoutstats_lhs[emmstrategy].accumulate(&mapemmstrategypayoutstats_rhs[emmstrategy]);
-                    }
+                /*identity*/|| SPerMinMaxStrategy::new(SPayoutStats::new_identity_for_accumulate()),
+                /*op*/mutate_return!(|perminmaxstrategypayoutstats_lhs, perminmaxstrategypayoutstats_rhs| {
+                    perminmaxstrategypayoutstats_lhs.modify_with_other(
+                        &perminmaxstrategypayoutstats_rhs,
+                        SPayoutStats::accumulate,
+                    );
                 }),
             )
     }
@@ -382,9 +383,10 @@ pub fn determine_best_card<
             match ooutput {
                 None => *ooutput = Some(payoutstats),
                 Some(ref mut output_return) => {
-                    for emmstrategy in EMinMaxStrategy::values() {
-                        output_return.0[emmstrategy].accumulate(&payoutstats.0[emmstrategy]);
-                    }
+                    output_return.modify_with_other(
+                        &payoutstats,
+                        SPayoutStats::accumulate,
+                    );
                 },
             }
             fn_inspect(/*b_before*/false, i_ahand, &ahand, card);

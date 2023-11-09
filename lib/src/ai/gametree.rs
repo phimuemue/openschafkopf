@@ -466,6 +466,17 @@ impl<T> SPerMinMaxStrategy<T> {
     pub fn map<R>(&self, f: impl Fn(&T)->R) -> SPerMinMaxStrategy<R> {
         SPerMinMaxStrategy(self.0.map(f))
     }
+
+    pub fn modify_with_other<T1>(
+        &mut self,
+        perminmaxstrategy: &SPerMinMaxStrategy<T1>, 
+        mut fn_modify_element: impl FnMut(&mut T, &T1),
+    ) {
+        itertools::zip_eq(
+            self.0.as_raw_mut(),
+            perminmaxstrategy.0.as_raw()
+        ).for_each(|(lhs, rhs)| fn_modify_element(lhs, rhs))
+    }
 }
 
 // TODO(performance) storing a whole EnumMap for each EMinMaxStrategy is unnecessary, and slows down the program
