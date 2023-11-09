@@ -2,7 +2,7 @@ use openschafkopf_util::*;
 use openschafkopf_lib::{
     ai::{
         determine_best_card,
-        gametree::{EMinMaxStrategy, SNoFilter, SMinReachablePayout, SSnapshotCacheNone, SNoVisualization},
+        gametree::{SNoFilter, SMinReachablePayout, SSnapshotCacheNone, SNoVisualization},
         handiterators::{all_possible_hands, TToAHand},
     },
     game::{SGame, SExpensifiersNoStoss, TGamePhase},
@@ -607,7 +607,7 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
             );
             let veccard_suggestion_openschafkopf = determinebestcardresult.cards_and_ts()
                 .filter_map(|(card, payoutstatsperstrategy)| {
-                    let n_payout_relevant = payoutstatsperstrategy.0[EMinMaxStrategy::SelfishMin].min();
+                    let n_payout_relevant = payoutstatsperstrategy.maxselfishmin.min();
                     if_then_some!(true, (card, n_payout_relevant))
                 })
                 .max_set_by_key(|&(_card, n_payout_relevant)| n_payout_relevant)

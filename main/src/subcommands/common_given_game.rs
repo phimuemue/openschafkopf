@@ -2,7 +2,6 @@ use openschafkopf_lib::{
     ai::{
         SAi,
         handiterators::*,
-        gametree::EMinMaxStrategy,
     },
     primitives::*,
     rules::{
@@ -374,7 +373,7 @@ pub fn with_common_args<FnWithArgs>(
                                         epi_active,
                                         rules,
                                         &expensifiers,
-                                    ).0[EMinMaxStrategy::SelfishMin].avg();
+                                    ).maxselfishmin.avg();
                                     (ahand, payout)
                                 })
                                 .collect::<Vec<_>>();

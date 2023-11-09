@@ -358,7 +358,6 @@ mod tests {
         },
         util::*,
         ai::{
-            gametree::EMinMaxStrategy,
             determine_best_card,
             SMinReachablePayout,
             SNoFilter,
@@ -2457,8 +2456,8 @@ mod tests {
                                 .map(|(card, payoutstatsperstrategy)| (
                                     card,
                                     verify_eq!(
-                                        &payoutstatsperstrategy.0[EMinMaxStrategy::SelfishMin],
-                                        &payoutstatsperstrategy.0[EMinMaxStrategy::SelfishMax]
+                                        &payoutstatsperstrategy.maxselfishmin,
+                                        &payoutstatsperstrategy.maxselfishmax
                                     ).clone()
                                 ))
                                 .collect::<Vec<_>>()

@@ -131,24 +131,24 @@ pub fn analyze_game(
                         unwrap!(stichseq.current_stich().current_playerindex()),
                         /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
                     ));
-                    let look_for_mistake = |eminmaxstrategy, emistake| {
+                    macro_rules! look_for_mistake{($strategy:ident, $emistake:expr) => {{
                         let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(
-                            |minmax_lhs, minmax_rhs| minmax_lhs.0[eminmaxstrategy].min().cmp(&minmax_rhs.0[eminmaxstrategy].min())
+                            |minmax_lhs, minmax_rhs| minmax_lhs.$strategy.min().cmp(&minmax_rhs.$strategy.min())
                         );
                         if_then_some!(
-                            an_payout[epi_zugeben]<minmax.0[eminmaxstrategy].min()
+                            an_payout[epi_zugeben]<minmax.$strategy.min()
                                 && !veccard.contains(&card_played), // TODO can we improve this?
                             SAnalysisCardAndPayout{
                                 veccard,
-                                n_payout: minmax.0[eminmaxstrategy].min(),
-                                emistake,
+                                n_payout: minmax.$strategy.min(),
+                                emistake: $emistake,
                             }
                         ) // else The decisive mistake must occur in subsequent stichs. TODO assert that it actually occurs
-                    };
+                    }}}
                     (
                         determinebestcardresult.clone(),
-                        look_for_mistake(EMinMaxStrategy::Min, EMistake::Min)
-                            .or_else(|| look_for_mistake(EMinMaxStrategy::SelfishMin, EMistake::SelfishMin))
+                        look_for_mistake!(maxmin, EMistake::Min)
+                            .or_else(|| look_for_mistake!(maxselfishmin, EMistake::SelfishMin))
                     )
                 }}}
                 let look_for_mistakes_simulating = || {
@@ -403,7 +403,7 @@ fn generate_analysis_html(
                     str_per_card += &crate::ai::gametree::output_card(card, /*b_border*/card==analysispercard.card_played);
                 }
                 str_per_card += "</td>";
-                for atplstrf in outputline.perminmaxstrategyatplstrf.0.iter() {
+                for atplstrf in outputline.perminmaxstrategyatplstrf.via_accessors() {
                     // TODO simplify to one item per emmstrategy
                     for (str_num, _f) in atplstrf.iter() {
                         str_per_card += "<td>";
@@ -435,7 +435,7 @@ fn generate_analysis_html(
                     "<td colspan=\"{}\">N.A.</td>",
                     unwrap!(vecoutputline.iter()
                         .map(|outputline|
-                            outputline.perminmaxstrategyatplstrf.0.iter().flatten().count()
+                            outputline.perminmaxstrategyatplstrf.via_accessors().flatten().count()
                         )
                         .all_equal_value()),
                 ));

@@ -273,41 +273,41 @@ impl<T: Ord + Copy + Debug> SPayoutStats<T> {
 impl<T: Ord + Copy + Debug> SPerMinMaxStrategy<SPayoutStats<T>> {
     pub fn compare_canonical(&self, other: &Self, fn_loss_or_win: impl Fn(isize, T)->std::cmp::Ordering) -> std::cmp::Ordering {
         use std::cmp::Ordering::*;
-        let cmp_avg = |emmstrategy| {
+        macro_rules! cmp_avg{($strategy:ident) => {{
             // prioritize positive vs non-positive and zero vs negative payouts.
-            let lhs = &self.0[emmstrategy];
-            let rhs = &other.0[emmstrategy];
+            let lhs = &self.$strategy;
+            let rhs = &other.$strategy;
             match unwrap!(lhs.avg().partial_cmp(&rhs.avg())) {
                 Greater => Greater,
                 Less => Less,
                 Equal => lhs.max().cmp(&rhs.max()),
             }
-        };
-        let strategy_enforces_win = |emmstrategy_win, emmstrategy_tie_breaker| {
+        }}}
+        macro_rules! strategy_enforces_win{($strategy_win:ident, $strategy_tie_breaker:ident) => {
             match (
-                self.0[emmstrategy_win].counts(&fn_loss_or_win)[Less],
-                other.0[emmstrategy_win].counts(&fn_loss_or_win)[Less],
+                self.$strategy_win.counts(&fn_loss_or_win)[Less],
+                other.$strategy_win.counts(&fn_loss_or_win)[Less],
             ) {
                 (0, 0) => {
                     unwrap!(f32::partial_cmp(
-                        &self.0[emmstrategy_tie_breaker].avg(),
-                        &other.0[emmstrategy_tie_breaker].avg(),
+                        &self.$strategy_tie_breaker.avg(),
+                        &other.$strategy_tie_breaker.avg(),
                     ))
                 },
                 (0, _) => Greater,
                 (_, 0) => Less,
                 (_, _) => Equal, // TODO good idea? Should we include some avg here?
             }
-        };
+        }}
         Equal
-            .then_with(|| strategy_enforces_win(EMinMaxStrategy::Min, EMinMaxStrategy::SelfishMin))
-            .then_with(|| strategy_enforces_win(EMinMaxStrategy::SelfishMin, EMinMaxStrategy::SelfishMin))
-            .then_with(|| strategy_enforces_win(EMinMaxStrategy::SelfishMax, EMinMaxStrategy::SelfishMax))
-            .then_with(|| cmp_avg(EMinMaxStrategy::Min))
-            .then_with(|| cmp_avg(EMinMaxStrategy::SelfishMin))
-            .then_with(|| cmp_avg(EMinMaxStrategy::SelfishMax))
-            .then_with(|| cmp_avg(EMinMaxStrategy::Max))
-            .then_with(|| cmp_avg(EMinMaxStrategy::MinMin))
+            .then_with(|| strategy_enforces_win!(maxmin, maxselfishmin))
+            .then_with(|| strategy_enforces_win!(maxselfishmin, maxselfishmin))
+            .then_with(|| strategy_enforces_win!(maxselfishmax, maxselfishmax))
+            .then_with(|| cmp_avg!(maxmin))
+            .then_with(|| cmp_avg!(maxselfishmin))
+            .then_with(|| cmp_avg!(maxselfishmax))
+            .then_with(|| cmp_avg!(maxmax))
+            .then_with(|| cmp_avg!(minmin))
     }
 }
 
@@ -570,23 +570,23 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         ));
         for card in [H7, H8, H9] {
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.0[EMinMaxStrategy::MinMin].min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.minmin.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.0[EMinMaxStrategy::Min].min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxmin.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.0[EMinMaxStrategy::SelfishMin].min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxselfishmin.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.0[EMinMaxStrategy::SelfishMax].min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxselfishmax.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.0[EMinMaxStrategy::Max].min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxmax.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
         }

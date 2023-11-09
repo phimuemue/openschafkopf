@@ -6,7 +6,7 @@ use itertools::Itertools;
 use rand::{self, Rng};
 use std::{cmp::Ordering, fmt, fs, io::{BufWriter, Write}};
 use super::cardspartition::*;
-use serde::{Serialize, ser::SerializeTuple};
+use serde::Serialize;
 
 pub trait TForEachSnapshot {
     type Output;
@@ -152,7 +152,7 @@ impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
         self.write_all(b"</li>\n");
         self.write_all(player_table(self.epi, |epi| {
             Some(
-                minmax.0.iter()
+                minmax.via_accessors()
                     .map(|an_payout| an_payout[epi])
                     .join("/")
             )
@@ -445,31 +445,24 @@ impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
     }
 }
 
-plain_enum_mod!(modeminmaxstrategy, EMinMaxStrategy {
+pub enum EMinMaxStrategy {
     MinMin,
     Min,
     SelfishMin,
     SelfishMax,
     Max,
-});
+}
 
-// TODO(performance) offer possibility to constrain oneself to one value of EMinMaxStrategy (reduced run time by ~20%-25% in some tests)
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SPerMinMaxStrategy<T>(pub EnumMap<EMinMaxStrategy, T>);
-
-impl<T: Serialize> Serialize for SPerMinMaxStrategy<T> { // TODO Could EnumMap impl Serialize itself?
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: serde::Serializer
-    {
-        let SPerMinMaxStrategy(ref mapemmstrategyt) = self;
-        // adapted from https://docs.rs/serde/latest/src/serde/ser/impls.rs.html#152-156
-        let at = mapemmstrategyt.as_raw();
-        let mut seq = serializer.serialize_tuple(at.len())?;
-        for t in at {
-            seq.serialize_element(t)?;
-        }
-        seq.end()
-    }
+// TODO(performance) offer possibility to constrain oneself to one value of strategy (reduced run time by ~20%-25% in some tests)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct SPerMinMaxStrategy<T> {
+    // Field nomenclature: self-strategy, followed by others-strategy
+    // TODO? pub a good idea?
+    pub minmin: T,
+    pub maxmin: T,
+    pub maxselfishmin: T,
+    pub maxselfishmax: T,
+    pub maxmax: T,
 }
 
 impl<T> SPerMinMaxStrategy<T> {
@@ -477,10 +470,30 @@ impl<T> SPerMinMaxStrategy<T> {
         where
             T: Clone,
     {
-        Self(EMinMaxStrategy::map_from_fn(|_| t.clone()))
+        Self {
+            minmin: t.clone(),
+            maxmin: t.clone(),
+            maxselfishmin: t.clone(),
+            maxselfishmax: t.clone(),
+            maxmax: t,
+        }
     }
-    pub fn map<R>(&self, f: impl Fn(&T)->R) -> SPerMinMaxStrategy<R> {
-        SPerMinMaxStrategy(self.0.map(f))
+
+    pub fn map<R>(&self, mut f: impl FnMut(&T)->R) -> SPerMinMaxStrategy<R> {
+        let SPerMinMaxStrategy{
+            ref minmin,
+            ref maxmin,
+            ref maxselfishmin,
+            ref maxselfishmax,
+            ref maxmax,
+        } = self;
+        SPerMinMaxStrategy{
+            minmin: f(minmin),
+            maxmin: f(maxmin),
+            maxselfishmin: f(maxselfishmin),
+            maxselfishmax: f(maxselfishmax),
+            maxmax: f(maxmax),
+        }
     }
 
     pub fn modify_with_other<T1>(
@@ -488,25 +501,41 @@ impl<T> SPerMinMaxStrategy<T> {
         perminmaxstrategy: &SPerMinMaxStrategy<T1>, 
         mut fn_modify_element: impl FnMut(&mut T, &T1),
     ) {
-        itertools::zip_eq(
-            self.0.as_raw_mut(),
-            perminmaxstrategy.0.as_raw()
-        ).for_each(|(lhs, rhs)| fn_modify_element(lhs, rhs))
+        let SPerMinMaxStrategy{
+            minmin,
+            maxmin,
+            maxselfishmin,
+            maxselfishmax,
+            maxmax,
+        } = perminmaxstrategy;
+        fn_modify_element(&mut self.minmin, minmin);
+        fn_modify_element(&mut self.maxmin, maxmin);
+        fn_modify_element(&mut self.maxselfishmin, maxselfishmin);
+        fn_modify_element(&mut self.maxselfishmax, maxselfishmax);
+        fn_modify_element(&mut self.maxmax, maxmax);
     }
 
-    pub fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)] {
+    pub fn via_accessors(&self) -> impl Iterator<Item=&T>
+        where
+            T: 'static, // TODO why is this needed?
+    {
+        Self::accessors().iter()
+            .map(move |(_emmstrategy, fn_value_for_strategy)| fn_value_for_strategy(&self))
+    }
+
+    pub fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)] { // TODO is there a better alternative?
         use EMinMaxStrategy::*;
         &[
-            (MinMin, (|slf| &slf.0[MinMin]) as fn(&Self)->&T),
-            (Min, |slf| &slf.0[Min]),
-            (SelfishMin, |slf| &slf.0[SelfishMin]),
-            (SelfishMax, |slf| &slf.0[SelfishMax]),
-            (Max, |slf| &slf.0[Max]),
+            (MinMin, (|slf: &SPerMinMaxStrategy<T>| &slf.minmin) as fn(&Self) -> &T),
+            (Min, (|slf: &SPerMinMaxStrategy<T>| &slf.maxmin) as fn(&Self) -> &T),
+            (SelfishMin, (|slf: &SPerMinMaxStrategy<T>| &slf.maxselfishmin) as fn(&Self) -> &T),
+            (SelfishMax, (|slf: &SPerMinMaxStrategy<T>| &slf.maxselfishmax) as fn(&Self) -> &T),
+            (Max, (|slf: &SPerMinMaxStrategy<T>| &slf.maxmax) as fn(&Self) -> &T),
         ]
     }
 }
 
-// TODO(performance) storing a whole EnumMap for each EMinMaxStrategy is unnecessary, and slows down the program
+// TODO(performance) storing a whole EnumMap for each strategy is unnecessary, and slows down the program
 pub type SMinMax = SPerMinMaxStrategy<EnumMap<EPlayerIndex, isize>>;
 
 impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
@@ -534,40 +563,38 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         unwrap!(if self.epi==epi_card {
             itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
                 assign_min_by_key(
-                    &mut minmax_acc.0[EMinMaxStrategy::MinMin],
-                    minmax.0[EMinMaxStrategy::MinMin],
+                    &mut minmax_acc.minmin,
+                    minmax.minmin,
                     |an_payout| an_payout[self.epi],
                 );
-                for emmstrategy in [
-                    // EMinMaxStrategy::MinMin done above
-                    EMinMaxStrategy::Min,
-                    EMinMaxStrategy::SelfishMin,
-                    EMinMaxStrategy::SelfishMax,
-                    EMinMaxStrategy::Max,
-                ] {
+                macro_rules! internal_assign_max{($strategy:ident) => {
                     assign_max_by_key(
-                        &mut minmax_acc.0[emmstrategy],
-                        minmax.0[emmstrategy],
+                        &mut minmax_acc.$strategy,
+                        minmax.$strategy,
                         |an_payout| an_payout[self.epi],
                     );
-                }
+                }}
+                internal_assign_max!(maxmin);
+                internal_assign_max!(maxselfishmin);
+                internal_assign_max!(maxselfishmax);
+                internal_assign_max!(maxmax);
             }))
         } else {
             // other players may play inconveniently for epi_stich
             itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
                 assign_min_by_key(
-                    &mut minmax_acc.0[EMinMaxStrategy::MinMin],
-                    minmax.0[EMinMaxStrategy::MinMin],
+                    &mut minmax_acc.minmin,
+                    minmax.minmin,
                     |an_payout| an_payout[self.epi],
                 );
                 assign_min_by_key(
-                    &mut minmax_acc.0[EMinMaxStrategy::Min],
-                    minmax.0[EMinMaxStrategy::Min],
+                    &mut minmax_acc.maxmin,
+                    minmax.maxmin,
                     |an_payout| an_payout[self.epi],
                 );
                 assign_better(
-                    &mut minmax_acc.0[EMinMaxStrategy::SelfishMin],
-                    minmax.0[EMinMaxStrategy::SelfishMin],
+                    &mut minmax_acc.maxselfishmin,
+                    minmax.maxselfishmin,
                     |an_payout_lhs, an_payout_rhs| {
                         match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
                             Ordering::Less => false,
@@ -577,8 +604,8 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                     },
                 );
                 assign_better(
-                    &mut minmax_acc.0[EMinMaxStrategy::SelfishMax],
-                    minmax.0[EMinMaxStrategy::SelfishMax],
+                    &mut minmax_acc.maxselfishmax,
+                    minmax.maxselfishmax,
                     |an_payout_lhs, an_payout_rhs| {
                         match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
                             Ordering::Less => false,
@@ -588,8 +615,8 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
                     },
                 );
                 assign_max_by_key(
-                    &mut minmax_acc.0[EMinMaxStrategy::Max],
-                    minmax.0[EMinMaxStrategy::Max],
+                    &mut minmax_acc.maxmax,
+                    minmax.maxmax,
                     |an_payout| an_payout[self.epi],
                 );
 

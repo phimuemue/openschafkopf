@@ -61,7 +61,10 @@ fn print_payoutstatstable<T: std::fmt::Display>(
     }
     for (str_id, SOutputLine{vect:_, perminmaxstrategyatplstrf}) in vecstr_id.iter().zip_eq(slcoutputline.iter()) {
         print!("{str_id:<n_width_id$}: ");
-        for (atplstrf, aformatinfo) in perminmaxstrategyatplstrf.0.iter().zip_eq(payoutstatstable.format_infos().0.iter()) {
+        for (atplstrf, aformatinfo) in itertools::zip_eq(
+            perminmaxstrategyatplstrf.via_accessors(),
+            payoutstatstable.format_infos().via_accessors(),
+        ) {
             for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
                 use termcolor::*;
                 let mut stdout = StandardStream::stdout(if std::io::stdout().is_terminal() {
