@@ -692,13 +692,6 @@ fn test_snapshotcache() {
                                 /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
                             ))
                                 .cards_and_ts()
-                                .map(|(card, payoutstatsperstrategy)| (
-                                    card,
-                                    verify_eq!(
-                                        &payoutstatsperstrategy.0,
-                                        &payoutstatsperstrategy.0
-                                    ).clone()
-                                ))
                                 .collect::<Vec<_>>()
                         }}
                         assert_eq!(
