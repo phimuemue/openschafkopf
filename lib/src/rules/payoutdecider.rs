@@ -1,6 +1,7 @@
 use crate::primitives::*;
 use crate::rules::{trumpfdecider::STrumpfDecider, *};
 use crate::util::*;
+use crate::ai::gametree::TMinMaxStrategiesPublic;
 
 #[derive(Clone, new, Debug)]
 pub struct SLaufendeParams {

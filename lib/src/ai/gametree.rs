@@ -459,15 +459,6 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
         $(pub $ident_strategy: $emmstrategy<T>,)*
     }
     impl<T> $struct<T> {
-        pub fn map<R>(&self, mut f: impl FnMut(&T)->R) -> $struct<R> {
-            let Self{
-                $(ref $ident_strategy,)*
-            } = self;
-            $struct{
-                $($ident_strategy: $emmstrategy::new(f(&$ident_strategy.0)),)*
-            }
-        }
-
         pub fn modify_with_other<T1>(
             &mut self,
             perminmaxstrategy: &$struct<T1>, 
@@ -495,10 +486,22 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
         }
     }
 
-    impl<T: Clone> TMinMaxStrategiesPublic<T> for $struct<T> {
-        fn new(t: T) -> Self {
+    impl<T> TMinMaxStrategiesPublic<T> for $struct<T> {
+        fn new(t: T) -> Self
+            where T: Clone
+        {
             Self {
                 $($ident_strategy: $emmstrategy::new(t.clone()),)* // TODO can we avoid one clone call?
+            }
+        }
+
+        type MappedType<R> = $struct<R>;
+        fn map<R>(&self, mut f: impl FnMut(&T)->R) -> Self::MappedType<R> {
+            let Self{
+                $(ref $ident_strategy,)*
+            } = self;
+            $struct{
+                $($ident_strategy: $emmstrategy::new(f(&$ident_strategy.0)),)*
             }
         }
     }
@@ -626,7 +629,9 @@ impl Max<EnumMap<EPlayerIndex, isize>> {
 pub type SMinMax = SPerMinMaxStrategy<EnumMap<EPlayerIndex, isize>>;
 
 pub trait TMinMaxStrategiesPublic<T> {
-    fn new(t: T) -> Self;
+    fn new(t: T) -> Self where T: Clone;
+    type MappedType<R>: TMinMaxStrategiesPublic<R>;
+    fn map<R>(&self, f: impl FnMut(&T)->R) -> Self::MappedType<R>;
 }
 pub trait TMinMaxStrategiesInternal : TMinMaxStrategiesPublic<EnumMap<EPlayerIndex, isize>> {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex);
