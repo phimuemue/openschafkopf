@@ -453,47 +453,27 @@ pub enum EMinMaxStrategy {
     Max,
 }
 
-// TODO(performance) offer possibility to constrain oneself to one value of strategy (reduced run time by ~20%-25% in some tests)
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct SPerMinMaxStrategy<T> {
-    // Field nomenclature: self-strategy, followed by others-strategy
-    // TODO? pub a good idea?
-    pub minmin: T,
-    pub maxmin: T,
-    pub maxselfishmin: T,
-    pub maxselfishmax: T,
-    pub maxmax: T,
-}
-
-macro_rules! impl_perminmaxstrategy {($struct:ident) => {
+macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_strategy:ident,)*}) => {
+    #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+    pub struct $struct<T> {
+        $(pub $ident_strategy: T,)*
+    }
     impl<T> $struct<T> {
         pub fn new(t: T) -> Self
             where
                 T: Clone,
         {
             Self {
-                minmin: t.clone(),
-                maxmin: t.clone(),
-                maxselfishmin: t.clone(),
-                maxselfishmax: t.clone(),
-                maxmax: t,
+                $($ident_strategy: t.clone(),)* // TODO can we avoid one clone call?
             }
         }
 
         pub fn map<R>(&self, mut f: impl FnMut(&T)->R) -> $struct<R> {
             let Self{
-                ref minmin,
-                ref maxmin,
-                ref maxselfishmin,
-                ref maxselfishmax,
-                ref maxmax,
+                $(ref $ident_strategy,)*
             } = self;
             $struct{
-                minmin: f(minmin),
-                maxmin: f(maxmin),
-                maxselfishmin: f(maxselfishmin),
-                maxselfishmax: f(maxselfishmax),
-                maxmax: f(maxmax),
+                $($ident_strategy: f($ident_strategy),)*
             }
         }
 
@@ -503,17 +483,9 @@ macro_rules! impl_perminmaxstrategy {($struct:ident) => {
             mut fn_modify_element: impl FnMut(&mut T, &T1),
         ) {
             let $struct{
-                minmin,
-                maxmin,
-                maxselfishmin,
-                maxselfishmax,
-                maxmax,
+                $($ident_strategy,)*
             } = perminmaxstrategy;
-            fn_modify_element(&mut self.minmin, minmin);
-            fn_modify_element(&mut self.maxmin, maxmin);
-            fn_modify_element(&mut self.maxselfishmin, maxselfishmin);
-            fn_modify_element(&mut self.maxselfishmax, maxselfishmax);
-            fn_modify_element(&mut self.maxmax, maxmax);
+            $(fn_modify_element(&mut self.$ident_strategy, $ident_strategy);)*
         }
 
         pub fn via_accessors(&self) -> impl Iterator<Item=&T>
@@ -527,17 +499,22 @@ macro_rules! impl_perminmaxstrategy {($struct:ident) => {
         pub fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)] { // TODO is there a better alternative?
             use EMinMaxStrategy::*;
             &[
-                (MinMin, (|slf: &Self| &slf.minmin) as fn(&Self) -> &T),
-                (Min, (|slf: &Self| &slf.maxmin) as fn(&Self) -> &T),
-                (SelfishMin, (|slf: &Self| &slf.maxselfishmin) as fn(&Self) -> &T),
-                (SelfishMax, (|slf: &Self| &slf.maxselfishmax) as fn(&Self) -> &T),
-                (Max, (|slf: &Self| &slf.maxmax) as fn(&Self) -> &T),
+                $(($emmstrategy, (|slf: &Self| &slf.$ident_strategy) as fn(&Self) -> &T),)*
             ]
         }
     }
 }}
 
-impl_perminmaxstrategy!(SPerMinMaxStrategy);
+// TODO(performance) offer possibility to constrain oneself to one value of strategy (reduced run time by ~20%-25% in some tests)
+// Field nomenclature: self-strategy, followed by others-strategy
+// TODO? pub a good idea?
+impl_perminmaxstrategy!(SPerMinMaxStrategy {
+    MinMin minmin,
+    Min maxmin,
+    SelfishMin maxselfishmin,
+    SelfishMax maxselfishmax,
+    Max maxmax,
+});
 
 // TODO(performance) storing a whole EnumMap for each strategy is unnecessary, and slows down the program
 pub type SMinMax = SPerMinMaxStrategy<EnumMap<EPlayerIndex, isize>>;
