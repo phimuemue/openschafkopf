@@ -465,75 +465,79 @@ pub struct SPerMinMaxStrategy<T> {
     pub maxmax: T,
 }
 
-impl<T> SPerMinMaxStrategy<T> {
-    pub fn new(t: T) -> Self
-        where
-            T: Clone,
-    {
-        Self {
-            minmin: t.clone(),
-            maxmin: t.clone(),
-            maxselfishmin: t.clone(),
-            maxselfishmax: t.clone(),
-            maxmax: t,
+macro_rules! impl_perminmaxstrategy {($struct:ident) => {
+    impl<T> $struct<T> {
+        pub fn new(t: T) -> Self
+            where
+                T: Clone,
+        {
+            Self {
+                minmin: t.clone(),
+                maxmin: t.clone(),
+                maxselfishmin: t.clone(),
+                maxselfishmax: t.clone(),
+                maxmax: t,
+            }
+        }
+
+        pub fn map<R>(&self, mut f: impl FnMut(&T)->R) -> $struct<R> {
+            let Self{
+                ref minmin,
+                ref maxmin,
+                ref maxselfishmin,
+                ref maxselfishmax,
+                ref maxmax,
+            } = self;
+            $struct{
+                minmin: f(minmin),
+                maxmin: f(maxmin),
+                maxselfishmin: f(maxselfishmin),
+                maxselfishmax: f(maxselfishmax),
+                maxmax: f(maxmax),
+            }
+        }
+
+        pub fn modify_with_other<T1>(
+            &mut self,
+            perminmaxstrategy: &$struct<T1>, 
+            mut fn_modify_element: impl FnMut(&mut T, &T1),
+        ) {
+            let $struct{
+                minmin,
+                maxmin,
+                maxselfishmin,
+                maxselfishmax,
+                maxmax,
+            } = perminmaxstrategy;
+            fn_modify_element(&mut self.minmin, minmin);
+            fn_modify_element(&mut self.maxmin, maxmin);
+            fn_modify_element(&mut self.maxselfishmin, maxselfishmin);
+            fn_modify_element(&mut self.maxselfishmax, maxselfishmax);
+            fn_modify_element(&mut self.maxmax, maxmax);
+        }
+
+        pub fn via_accessors(&self) -> impl Iterator<Item=&T>
+            where
+                T: 'static, // TODO why is this needed?
+        {
+            Self::accessors().iter()
+                .map(move |(_emmstrategy, fn_value_for_strategy)| fn_value_for_strategy(&self))
+        }
+
+        pub fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)] { // TODO is there a better alternative?
+            use EMinMaxStrategy::*;
+            &[
+                (MinMin, (|slf: &Self| &slf.minmin) as fn(&Self) -> &T),
+                (Min, (|slf: &Self| &slf.maxmin) as fn(&Self) -> &T),
+                (SelfishMin, (|slf: &Self| &slf.maxselfishmin) as fn(&Self) -> &T),
+                (SelfishMax, (|slf: &Self| &slf.maxselfishmax) as fn(&Self) -> &T),
+                (Max, (|slf: &Self| &slf.maxmax) as fn(&Self) -> &T),
+            ]
         }
     }
+}}
 
-    pub fn map<R>(&self, mut f: impl FnMut(&T)->R) -> SPerMinMaxStrategy<R> {
-        let SPerMinMaxStrategy{
-            ref minmin,
-            ref maxmin,
-            ref maxselfishmin,
-            ref maxselfishmax,
-            ref maxmax,
-        } = self;
-        SPerMinMaxStrategy{
-            minmin: f(minmin),
-            maxmin: f(maxmin),
-            maxselfishmin: f(maxselfishmin),
-            maxselfishmax: f(maxselfishmax),
-            maxmax: f(maxmax),
-        }
-    }
-
-    pub fn modify_with_other<T1>(
-        &mut self,
-        perminmaxstrategy: &SPerMinMaxStrategy<T1>, 
-        mut fn_modify_element: impl FnMut(&mut T, &T1),
-    ) {
-        let SPerMinMaxStrategy{
-            minmin,
-            maxmin,
-            maxselfishmin,
-            maxselfishmax,
-            maxmax,
-        } = perminmaxstrategy;
-        fn_modify_element(&mut self.minmin, minmin);
-        fn_modify_element(&mut self.maxmin, maxmin);
-        fn_modify_element(&mut self.maxselfishmin, maxselfishmin);
-        fn_modify_element(&mut self.maxselfishmax, maxselfishmax);
-        fn_modify_element(&mut self.maxmax, maxmax);
-    }
-
-    pub fn via_accessors(&self) -> impl Iterator<Item=&T>
-        where
-            T: 'static, // TODO why is this needed?
-    {
-        Self::accessors().iter()
-            .map(move |(_emmstrategy, fn_value_for_strategy)| fn_value_for_strategy(&self))
-    }
-
-    pub fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)] { // TODO is there a better alternative?
-        use EMinMaxStrategy::*;
-        &[
-            (MinMin, (|slf: &SPerMinMaxStrategy<T>| &slf.minmin) as fn(&Self) -> &T),
-            (Min, (|slf: &SPerMinMaxStrategy<T>| &slf.maxmin) as fn(&Self) -> &T),
-            (SelfishMin, (|slf: &SPerMinMaxStrategy<T>| &slf.maxselfishmin) as fn(&Self) -> &T),
-            (SelfishMax, (|slf: &SPerMinMaxStrategy<T>| &slf.maxselfishmax) as fn(&Self) -> &T),
-            (Max, (|slf: &SPerMinMaxStrategy<T>| &slf.maxmax) as fn(&Self) -> &T),
-        ]
-    }
-}
+impl_perminmaxstrategy!(SPerMinMaxStrategy);
 
 // TODO(performance) storing a whole EnumMap for each strategy is unnecessary, and slows down the program
 pub type SMinMax = SPerMinMaxStrategy<EnumMap<EPlayerIndex, isize>>;
