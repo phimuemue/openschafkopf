@@ -429,13 +429,13 @@ fn explore_snapshots_internal<ForEachSnapshot>(
 }
 
 #[derive(Clone, new)]
-pub struct SMinReachablePayoutBase<'rules, Pruner> {
+pub struct SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategies> {
     rules: &'rules dyn TRules,
     epi: EPlayerIndex,
     expensifiers: SExpensifiers, // TODO could this borrow?
-    phantom: std::marker::PhantomData<Pruner>,
+    phantom: std::marker::PhantomData<(Pruner, MinMaxStrategies)>,
 }
-impl<'rules, Pruner> SMinReachablePayoutBase<'rules, Pruner> {
+impl<'rules, Pruner, MinMaxStrategies> SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategies> {
     pub fn new_from_game<Ruleset>(game: &'rules SGameGeneric<Ruleset, (), ()>) -> Self {
         Self::new(
             game.rules.as_ref(),
@@ -504,7 +504,10 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
         }
     }
 
-    impl $struct<EnumMap<EPlayerIndex, isize>> {
+    impl TMinMaxStrategies for $struct<EnumMap<EPlayerIndex, isize>> {
+        fn new(an_payout: EnumMap<EPlayerIndex, isize>) -> Self {
+            Self::new(an_payout)
+        }
         fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
             let $struct{
                 $($ident_strategy,)*
@@ -627,11 +630,17 @@ impl Max<EnumMap<EPlayerIndex, isize>> {
 // TODO(performance) storing a whole EnumMap for each strategy is unnecessary, and slows down the program
 pub type SMinMax = SPerMinMaxStrategy<EnumMap<EPlayerIndex, isize>>;
 
-impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
-    type Output = SMinMax;
+pub trait TMinMaxStrategies {
+    fn new(an_payout: EnumMap<EPlayerIndex, isize>) -> Self;
+    fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex);
+    fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex);
+}
+
+impl<Pruner: TPruner, MinMaxStrategies: TMinMaxStrategies> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner, MinMaxStrategies> {
+    type Output = MinMaxStrategies;
 
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
-        SMinMax::new(self.rules.payout(
+        MinMaxStrategies::new(self.rules.payout(
             stichseq,
             &self.expensifiers,
             rulestatecache,
@@ -662,23 +671,25 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
     }
 }
 
-pub type SMinReachablePayout<'rules> = SMinReachablePayoutBase<'rules, SPrunerNothing>;
-pub type SMinReachablePayoutLowerBoundViaHint<'rules> = SMinReachablePayoutBase<'rules, SPrunerViaHint>;
+pub type SGenericMinReachablePayout<'rules, MinMaxStrategies> = SMinReachablePayoutBase<'rules, SPrunerNothing, MinMaxStrategies>;
+pub type SMinReachablePayout<'rules> = SMinReachablePayoutBase<'rules, SPrunerNothing, SMinMax>;
+pub type SGenericMinReachablePayoutLowerBoundViaHint<'rules, MinMaxStrategies> = SMinReachablePayoutBase<'rules, SPrunerViaHint, MinMaxStrategies>;
+pub type SMinReachablePayoutLowerBoundViaHint<'rules> = SMinReachablePayoutBase<'rules, SPrunerViaHint, SMinMax>;
 
 pub trait TPruner : Sized {
-    fn pruned_output(params: &SMinReachablePayoutBase<'_, Self>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SMinMax>;
+    fn pruned_output<MinMaxStrategies: TMinMaxStrategies>(params: &SMinReachablePayoutBase<'_, Self, MinMaxStrategies>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategies>;
 }
 
 pub struct SPrunerNothing;
 impl TPruner for SPrunerNothing {
-    fn pruned_output(_params: &SMinReachablePayoutBase<'_, Self>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
+    fn pruned_output<MinMaxStrategies: TMinMaxStrategies>(_params: &SMinReachablePayoutBase<'_, Self, MinMaxStrategies>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategies> {
         None
     }
 }
 
 pub struct SPrunerViaHint;
 impl TPruner for SPrunerViaHint {
-    fn pruned_output(params: &SMinReachablePayoutBase<'_, Self>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
+    fn pruned_output<MinMaxStrategies: TMinMaxStrategies>(params: &SMinReachablePayoutBase<'_, Self, MinMaxStrategies>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategies> {
         let mapepion_payout = params.rules.payouthints(tplahandstichseq, &params.expensifiers, rulestatecache)
             .map(|intvlon_payout| {
                 intvlon_payout[ELoHi::Lo].filter(|n_payout| 0<*n_payout)
@@ -686,7 +697,7 @@ impl TPruner for SPrunerViaHint {
             });
         if_then_some!(
             mapepion_payout.iter().all(Option::is_some),
-            SMinMax::new(mapepion_payout.map(|opayout| unwrap!(opayout)))
+            MinMaxStrategies::new(mapepion_payout.map(|opayout| unwrap!(opayout)))
         )
     }
 }
