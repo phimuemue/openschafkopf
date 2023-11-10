@@ -459,17 +459,6 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
         $(pub $ident_strategy: $emmstrategy<T>,)*
     }
     impl<T> $struct<T> {
-        pub fn modify_with_other<T1>(
-            &mut self,
-            perminmaxstrategy: &$struct<T1>, 
-            mut fn_modify_element: impl FnMut(&mut T, &T1),
-        ) {
-            let $struct{
-                $($ident_strategy,)*
-            } = perminmaxstrategy;
-            $(fn_modify_element(&mut self.$ident_strategy.0, &$ident_strategy.0);)*
-        }
-
         pub fn via_accessors(&self) -> impl Iterator<Item=&T>
             where
                 T: 'static, // TODO why is this needed?
@@ -503,6 +492,17 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
             $struct{
                 $($ident_strategy: $emmstrategy::new(f(&$ident_strategy.0)),)*
             }
+        }
+
+        fn modify_with_other<T1>(
+            &mut self,
+            other: &Self::MappedType<T1>, 
+            mut fn_modify_element: impl FnMut(&mut T, &T1),
+        ) {
+            let $struct{
+                $($ident_strategy,)*
+            } = other;
+            $(fn_modify_element(&mut self.$ident_strategy.0, &$ident_strategy.0);)*
         }
     }
     impl TMinMaxStrategiesInternal for $struct<EnumMap<EPlayerIndex, isize>> {
@@ -632,6 +632,11 @@ pub trait TMinMaxStrategiesPublic<T> {
     fn new(t: T) -> Self where T: Clone;
     type MappedType<R>: TMinMaxStrategiesPublic<R>;
     fn map<R>(&self, f: impl FnMut(&T)->R) -> Self::MappedType<R>;
+    fn modify_with_other<T1>(
+        &mut self,
+        other: &Self::MappedType<T1>, 
+        fn_modify_element: impl FnMut(&mut T, &T1),
+    );
 }
 pub trait TMinMaxStrategiesInternal : TMinMaxStrategiesPublic<EnumMap<EPlayerIndex, isize>> {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex);
