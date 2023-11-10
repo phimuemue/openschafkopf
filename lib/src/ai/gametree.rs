@@ -459,15 +459,6 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
         $(pub $ident_strategy: $emmstrategy<T>,)*
     }
     impl<T> $struct<T> {
-        pub fn new(t: T) -> Self
-            where
-                T: Clone,
-        {
-            Self {
-                $($ident_strategy: $emmstrategy::new(t.clone()),)* // TODO can we avoid one clone call?
-            }
-        }
-
         pub fn map<R>(&self, mut f: impl FnMut(&T)->R) -> $struct<R> {
             let Self{
                 $(ref $ident_strategy,)*
@@ -506,7 +497,9 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
 
     impl<T: Clone> TMinMaxStrategiesPublic<T> for $struct<T> {
         fn new(t: T) -> Self {
-            Self::new(t)
+            Self {
+                $($ident_strategy: $emmstrategy::new(t.clone()),)* // TODO can we avoid one clone call?
+            }
         }
     }
     impl TMinMaxStrategiesInternal for $struct<EnumMap<EPlayerIndex, isize>> {

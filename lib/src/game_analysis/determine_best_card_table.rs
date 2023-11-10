@@ -1,4 +1,7 @@
-use crate::ai::{SDetermineBestCardResult, SPayoutStats, SPerMinMaxStrategy};
+use crate::ai::{
+    gametree::TMinMaxStrategiesPublic,
+    SDetermineBestCardResult, SPayoutStats, SPerMinMaxStrategy
+};
 use crate::primitives::*;
 use itertools::*;
 use crate::util::*;
