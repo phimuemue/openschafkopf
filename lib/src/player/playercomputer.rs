@@ -62,7 +62,7 @@ impl TPlayer for SPlayerComputer {
                         /*epi_rank*/rules.active_playerindex(),
                         rules.upcast(),
                         expensifiers,
-                    ).maxmin.avg().as_num::<f64>()
+                    ).maxmin.0.avg().as_num::<f64>()
                 )
             ))
             .max_by(|&(_orules_lhs, f_payout_avg_lhs), &(_orules_rhs, f_payout_avg_rhs)| {
@@ -93,7 +93,7 @@ impl TPlayer for SPlayerComputer {
                             /*epi_rank*/epi_active,
                             rules,
                             expensifiers,
-                        ).maxmin.avg().as_num::<f64>()
+                        ).maxmin.0.avg().as_num::<f64>()
                     } else {
                         0f64
                     }
@@ -120,7 +120,7 @@ impl TPlayer for SPlayerComputer {
                         ),
                         &SSnapshotCacheNone::factory(), // TODO? use cache
                         &mut SNoVisualization,
-                    ).maxmin[epi]
+                    ).maxmin.0[epi]
                 })
                 .sum::<isize>().as_num::<f64>()
                 / n_samples_per_stoss.as_num::<f64>()

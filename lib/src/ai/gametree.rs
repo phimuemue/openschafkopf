@@ -456,7 +456,7 @@ pub enum EMinMaxStrategy {
 macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_strategy:ident,)*}) => {
     #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
     pub struct $struct<T> {
-        $(pub $ident_strategy: T,)*
+        $(pub $ident_strategy: $emmstrategy<T>,)*
     }
     impl<T> $struct<T> {
         pub fn new(t: T) -> Self
@@ -464,7 +464,7 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
                 T: Clone,
         {
             Self {
-                $($ident_strategy: t.clone(),)* // TODO can we avoid one clone call?
+                $($ident_strategy: $emmstrategy::new(t.clone()),)* // TODO can we avoid one clone call?
             }
         }
 
@@ -473,7 +473,7 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
                 $(ref $ident_strategy,)*
             } = self;
             $struct{
-                $($ident_strategy: f($ident_strategy),)*
+                $($ident_strategy: $emmstrategy::new(f(&$ident_strategy.0)),)*
             }
         }
 
@@ -485,7 +485,7 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
             let $struct{
                 $($ident_strategy,)*
             } = perminmaxstrategy;
-            $(fn_modify_element(&mut self.$ident_strategy, $ident_strategy);)*
+            $(fn_modify_element(&mut self.$ident_strategy.0, &$ident_strategy.0);)*
         }
 
         pub fn via_accessors(&self) -> impl Iterator<Item=&T>
@@ -499,7 +499,7 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
         pub fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)] { // TODO is there a better alternative?
             use EMinMaxStrategy::*;
             &[
-                $(($emmstrategy, (|slf: &Self| &slf.$ident_strategy) as fn(&Self) -> &T),)*
+                $(($emmstrategy, (|slf: &Self| &slf.$ident_strategy.0) as fn(&Self) -> &T),)*
             ]
         }
     }
@@ -515,6 +515,98 @@ impl_perminmaxstrategy!(SPerMinMaxStrategy {
     SelfishMax maxselfishmax,
     Max maxmax,
 });
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct MinMin<T>(pub T);
+impl<T> MinMin<T> {
+    fn new(t: T) -> Self {
+        Self(t)
+    }
+}
+impl MinMin<EnumMap<EPlayerIndex, isize>> {
+    fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
+        assign_min_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+    }
+    fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, _epi_card: EPlayerIndex) {
+        assign_min_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Min<T>(pub T);
+impl<T> Min<T> {
+    fn new(t: T) -> Self {
+        Self(t)
+    }
+}
+impl Min<EnumMap<EPlayerIndex, isize>> {
+    fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
+        assign_max_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+    }
+    fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, _epi_card: EPlayerIndex) {
+        assign_min_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct SelfishMin<T>(pub T);
+impl<T> SelfishMin<T> {
+    fn new(t: T) -> Self {
+        Self(t)
+    }
+}
+impl SelfishMin<EnumMap<EPlayerIndex, isize>> {
+    fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
+        assign_max_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+    }
+    fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex) {
+        assign_better(&mut self.0, other.0, |an_payout_lhs, an_payout_rhs| {
+            match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
+                Ordering::Less => false,
+                Ordering::Equal => an_payout_lhs[epi_self] < an_payout_rhs[epi_self],
+                Ordering::Greater => true,
+            }
+        });
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct SelfishMax<T>(pub T);
+impl<T> SelfishMax<T> {
+    fn new(t: T) -> Self {
+        Self(t)
+    }
+}
+impl SelfishMax<EnumMap<EPlayerIndex, isize>> {
+    fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
+        assign_max_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+    }
+    fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex) {
+        assign_better(&mut self.0, other.0, |an_payout_lhs, an_payout_rhs| {
+            match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
+                Ordering::Less => false,
+                Ordering::Equal => an_payout_lhs[epi_self] > an_payout_rhs[epi_self],
+                Ordering::Greater => true,
+            }
+        });
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Max<T>(pub T);
+impl<T> Max<T> {
+    fn new(t: T) -> Self {
+        Self(t)
+    }
+}
+impl Max<EnumMap<EPlayerIndex, isize>> {
+    fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
+        assign_max_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+    }
+    fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, _epi_card: EPlayerIndex) {
+        assign_max_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+    }
+}
 
 // TODO(performance) storing a whole EnumMap for each strategy is unnecessary, and slows down the program
 pub type SMinMax = SPerMinMaxStrategy<EnumMap<EPlayerIndex, isize>>;
@@ -543,63 +635,20 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         let itminmax = ittplcardoutput.map(|(_card, minmax)| minmax);
         unwrap!(if self.epi==epi_card {
             itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
-                assign_min_by_key(
-                    &mut minmax_acc.minmin,
-                    minmax.minmin,
-                    |an_payout| an_payout[self.epi],
-                );
-                macro_rules! internal_assign_max{($strategy:ident) => {
-                    assign_max_by_key(
-                        &mut minmax_acc.$strategy,
-                        minmax.$strategy,
-                        |an_payout| an_payout[self.epi],
-                    );
-                }}
-                internal_assign_max!(maxmin);
-                internal_assign_max!(maxselfishmin);
-                internal_assign_max!(maxselfishmax);
-                internal_assign_max!(maxmax);
+                minmax_acc.minmin.assign_minmax_self(minmax.minmin, self.epi);
+                minmax_acc.maxmin.assign_minmax_self(minmax.maxmin, self.epi);
+                minmax_acc.maxselfishmin.assign_minmax_self(minmax.maxselfishmin, self.epi);
+                minmax_acc.maxselfishmax.assign_minmax_self(minmax.maxselfishmax, self.epi);
+                minmax_acc.maxmax.assign_minmax_self(minmax.maxmax, self.epi);
             }))
         } else {
             // other players may play inconveniently for epi_stich
             itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
-                assign_min_by_key(
-                    &mut minmax_acc.minmin,
-                    minmax.minmin,
-                    |an_payout| an_payout[self.epi],
-                );
-                assign_min_by_key(
-                    &mut minmax_acc.maxmin,
-                    minmax.maxmin,
-                    |an_payout| an_payout[self.epi],
-                );
-                assign_better(
-                    &mut minmax_acc.maxselfishmin,
-                    minmax.maxselfishmin,
-                    |an_payout_lhs, an_payout_rhs| {
-                        match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
-                            Ordering::Less => false,
-                            Ordering::Equal => an_payout_lhs[self.epi] < an_payout_rhs[self.epi],
-                            Ordering::Greater => true,
-                        }
-                    },
-                );
-                assign_better(
-                    &mut minmax_acc.maxselfishmax,
-                    minmax.maxselfishmax,
-                    |an_payout_lhs, an_payout_rhs| {
-                        match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
-                            Ordering::Less => false,
-                            Ordering::Equal => an_payout_lhs[self.epi] > an_payout_rhs[self.epi],
-                            Ordering::Greater => true,
-                        }
-                    },
-                );
-                assign_max_by_key(
-                    &mut minmax_acc.maxmax,
-                    minmax.maxmax,
-                    |an_payout| an_payout[self.epi],
-                );
+                minmax_acc.minmin.assign_minmax_other(minmax.minmin, self.epi, epi_card);
+                minmax_acc.maxmin.assign_minmax_other(minmax.maxmin, self.epi, epi_card);
+                minmax_acc.maxselfishmin.assign_minmax_other(minmax.maxselfishmin, self.epi, epi_card);
+                minmax_acc.maxselfishmax.assign_minmax_other(minmax.maxselfishmax, self.epi, epi_card);
+                minmax_acc.maxmax.assign_minmax_other(minmax.maxmax, self.epi, epi_card);
 
             }))
         })

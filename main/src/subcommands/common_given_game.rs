@@ -373,7 +373,7 @@ pub fn with_common_args<FnWithArgs>(
                                         epi_active,
                                         rules,
                                         &expensifiers,
-                                    ).maxselfishmin.avg();
+                                    ).maxselfishmin.0.avg();
                                     (ahand, payout)
                                 })
                                 .collect::<Vec<_>>();

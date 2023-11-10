@@ -275,8 +275,8 @@ impl<T: Ord + Copy + Debug> SPerMinMaxStrategy<SPayoutStats<T>> {
         use std::cmp::Ordering::*;
         macro_rules! cmp_avg{($strategy:ident) => {{
             // prioritize positive vs non-positive and zero vs negative payouts.
-            let lhs = &self.$strategy;
-            let rhs = &other.$strategy;
+            let lhs = &self.$strategy.0;
+            let rhs = &other.$strategy.0;
             match unwrap!(lhs.avg().partial_cmp(&rhs.avg())) {
                 Greater => Greater,
                 Less => Less,
@@ -285,13 +285,13 @@ impl<T: Ord + Copy + Debug> SPerMinMaxStrategy<SPayoutStats<T>> {
         }}}
         macro_rules! strategy_enforces_win{($strategy_win:ident, $strategy_tie_breaker:ident) => {
             match (
-                self.$strategy_win.counts(&fn_loss_or_win)[Less],
-                other.$strategy_win.counts(&fn_loss_or_win)[Less],
+                self.$strategy_win.0.counts(&fn_loss_or_win)[Less],
+                other.$strategy_win.0.counts(&fn_loss_or_win)[Less],
             ) {
                 (0, 0) => {
                     unwrap!(f32::partial_cmp(
-                        &self.$strategy_tie_breaker.avg(),
-                        &other.$strategy_tie_breaker.avg(),
+                        &self.$strategy_tie_breaker.0.avg(),
+                        &other.$strategy_tie_breaker.0.avg(),
                     ))
                 },
                 (0, _) => Greater,
@@ -570,23 +570,23 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         ));
         for card in [H7, H8, H9] {
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.minmin.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.minmin.0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxmin.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxmin.0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxselfishmin.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxselfishmin.0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxselfishmax.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxselfishmax.0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxmax.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxmax.0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
         }

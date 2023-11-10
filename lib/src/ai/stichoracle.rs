@@ -2456,8 +2456,8 @@ mod tests {
                                 .map(|(card, payoutstatsperstrategy)| (
                                     card,
                                     verify_eq!(
-                                        &payoutstatsperstrategy.maxselfishmin,
-                                        &payoutstatsperstrategy.maxselfishmax
+                                        &payoutstatsperstrategy.maxselfishmin.0,
+                                        &payoutstatsperstrategy.maxselfishmax.0
                                     ).clone()
                                 ))
                                 .collect::<Vec<_>>()
