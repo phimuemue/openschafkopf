@@ -152,7 +152,7 @@ impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
         self.write_all(b"</li>\n");
         self.write_all(player_table(self.epi, |epi| {
             Some(
-                minmax.via_accessors()
+                minmax.via_accessors().into_iter()
                     .map(|an_payout| an_payout[epi])
                     .join("/")
             )
@@ -458,22 +458,6 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
     pub struct $struct<T> {
         $(pub $ident_strategy: $emmstrategy<T>,)*
     }
-    impl<T> $struct<T> {
-        pub fn via_accessors(&self) -> impl Iterator<Item=&T>
-            where
-                T: 'static, // TODO why is this needed?
-        {
-            Self::accessors().iter()
-                .map(move |(_emmstrategy, fn_value_for_strategy)| fn_value_for_strategy(&self))
-        }
-
-        pub fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)] { // TODO is there a better alternative?
-            use EMinMaxStrategy::*;
-            &[
-                $(($emmstrategy, (|slf: &Self| &slf.$ident_strategy.0) as fn(&Self) -> &T),)*
-            ]
-        }
-    }
 
     impl<T> TMinMaxStrategiesPublic<T> for $struct<T> {
         fn new(t: T) -> Self
@@ -503,6 +487,22 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
                 $($ident_strategy,)*
             } = other;
             $(fn_modify_element(&mut self.$ident_strategy.0, &$ident_strategy.0);)*
+        }
+
+        fn via_accessors(&self) -> Vec<&T>
+            where
+                T: 'static, // TODO why is this needed?
+        {
+            Self::accessors().iter()
+                .map(move |(_emmstrategy, fn_value_for_strategy)| fn_value_for_strategy(&self))
+                .collect()
+        }
+
+        fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)] { // TODO is there a better alternative?
+            use EMinMaxStrategy::*;
+            &[
+                $(($emmstrategy, (|slf: &Self| &slf.$ident_strategy.0) as fn(&Self) -> &T),)*
+            ]
         }
     }
     impl TMinMaxStrategiesInternal for $struct<EnumMap<EPlayerIndex, isize>> {
@@ -637,6 +637,10 @@ pub trait TMinMaxStrategiesPublic<T> {
         other: &Self::MappedType<T1>, 
         fn_modify_element: impl FnMut(&mut T, &T1),
     );
+    fn via_accessors(&self) -> Vec<&T>
+        where
+            T: 'static; // TODO why is this needed?
+    fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)]; // TODO is there a better alternative?
 }
 pub trait TMinMaxStrategiesInternal : TMinMaxStrategiesPublic<EnumMap<EPlayerIndex, isize>> {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex);

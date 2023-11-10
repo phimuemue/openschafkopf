@@ -435,7 +435,7 @@ fn generate_analysis_html(
                     "<td colspan=\"{}\">N.A.</td>",
                     unwrap!(vecoutputline.iter()
                         .map(|outputline|
-                            outputline.perminmaxstrategyatplstrf.via_accessors().flatten().count()
+                            outputline.perminmaxstrategyatplstrf.via_accessors().into_iter().flatten().count()
                         )
                         .all_equal_value()),
                 ));
