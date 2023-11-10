@@ -503,6 +503,22 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
             ]
         }
     }
+
+    impl $struct<EnumMap<EPlayerIndex, isize>> {
+        fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
+            let $struct{
+                $($ident_strategy,)*
+            } = other;
+            $(self.$ident_strategy.assign_minmax_self($ident_strategy, epi_self);)*
+        }
+
+        fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex) {
+            let $struct{
+                $($ident_strategy,)*
+            } = other;
+            $(self.$ident_strategy.assign_minmax_other($ident_strategy, epi_self, epi_card);)*
+        }
+    }
 }}
 
 // TODO(performance) offer possibility to constrain oneself to one value of strategy (reduced run time by ~20%-25% in some tests)
@@ -635,21 +651,12 @@ impl<Pruner: TPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner> {
         let itminmax = ittplcardoutput.map(|(_card, minmax)| minmax);
         unwrap!(if self.epi==epi_card {
             itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
-                minmax_acc.minmin.assign_minmax_self(minmax.minmin, self.epi);
-                minmax_acc.maxmin.assign_minmax_self(minmax.maxmin, self.epi);
-                minmax_acc.maxselfishmin.assign_minmax_self(minmax.maxselfishmin, self.epi);
-                minmax_acc.maxselfishmax.assign_minmax_self(minmax.maxselfishmax, self.epi);
-                minmax_acc.maxmax.assign_minmax_self(minmax.maxmax, self.epi);
+                minmax_acc.assign_minmax_self(minmax, self.epi);
             }))
         } else {
             // other players may play inconveniently for epi_stich
             itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
-                minmax_acc.minmin.assign_minmax_other(minmax.minmin, self.epi, epi_card);
-                minmax_acc.maxmin.assign_minmax_other(minmax.maxmin, self.epi, epi_card);
-                minmax_acc.maxselfishmin.assign_minmax_other(minmax.maxselfishmin, self.epi, epi_card);
-                minmax_acc.maxselfishmax.assign_minmax_other(minmax.maxselfishmax, self.epi, epi_card);
-                minmax_acc.maxmax.assign_minmax_other(minmax.maxmax, self.epi, epi_card);
-
+                minmax_acc.assign_minmax_other(minmax, self.epi, epi_card);
             }))
         })
     }
