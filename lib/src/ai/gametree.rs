@@ -129,7 +129,7 @@ pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, 
     )
 }
 
-impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
+impl<MinMaxStrategies: TMinMaxStrategiesPublic<EnumMap<EPlayerIndex, isize>>> TSnapshotVisualizer<MinMaxStrategies> for SForEachSnapshotHTMLVisualizer<'_> {
     fn begin_snapshot(&mut self, ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) {
         let str_item_id = format!("{}{}",
             stichseq.count_played_cards(),
@@ -147,7 +147,7 @@ impl TSnapshotVisualizer<SMinMax> for SForEachSnapshotHTMLVisualizer<'_> {
         self.write_all(b"<ul>\n");
     }
 
-    fn end_snapshot(&mut self, minmax: &SMinMax) {
+    fn end_snapshot(&mut self, minmax: &MinMaxStrategies) {
         self.write_all(b"</ul>\n");
         self.write_all(b"</li>\n");
         self.write_all(player_table(self.epi, |epi| {
