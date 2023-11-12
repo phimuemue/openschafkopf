@@ -4,7 +4,7 @@ use crate::rules::*;
 use crate::util::*;
 use itertools::Itertools;
 use rand::{self, Rng};
-use std::{cmp::Ordering, fmt::{self, Debug}, fs, io::{BufWriter, Write}};
+use std::{borrow::Borrow, cmp::Ordering, fmt::{self, Debug}, fs, io::{BufWriter, Write}};
 use super::{SPayoutStats, cardspartition::*};
 use serde::Serialize;
 
@@ -508,6 +508,38 @@ macro_rules! impl_perminmaxstrategy{(
                 $(($emmstrategy, (|slf: &Self| &slf.$ident_strategy.0) as fn(&Self) -> &T),)*
             ]
         }
+        fn compare_canonical<PayoutStatsPayload: Ord+Debug+Copy>(&self, other: &Self, fn_loss_or_win: impl Fn(isize, PayoutStatsPayload)->std::cmp::Ordering) -> std::cmp::Ordering where T: Borrow<SPayoutStats<PayoutStatsPayload>> {
+            use std::cmp::Ordering::*;
+            macro_rules! cmp_avg{($strategy:ident) => {{
+                // prioritize positive vs non-positive and zero vs negative payouts.
+                let lhs = &self.$strategy.0.borrow();
+                let rhs = &other.$strategy.0.borrow();
+                match unwrap!(lhs.avg().partial_cmp(&rhs.avg())) {
+                    Greater => Greater,
+                    Less => Less,
+                    Equal => lhs.max().cmp(&rhs.max()),
+                }
+            }}}
+            macro_rules! strategy_enforces_win{($strategy_win:ident, $strategy_tie_breaker:ident) => {
+                match (
+                    self.$strategy_win.0.borrow().counts(&fn_loss_or_win)[Less],
+                    other.$strategy_win.0.borrow().counts(&fn_loss_or_win)[Less],
+                ) {
+                    (0, 0) => {
+                        unwrap!(f32::partial_cmp(
+                            &self.$strategy_tie_breaker.0.borrow().avg(),
+                            &other.$strategy_tie_breaker.0.borrow().avg(),
+                        ))
+                    },
+                    (0, _) => Greater,
+                    (_, 0) => Less,
+                    (_, _) => Equal, // TODO good idea? Should we include some avg here?
+                }
+            }}
+            Equal
+                $(.then_with(|| strategy_enforces_win!($ident_strategy_win, $ident_strategy_tiebreaker)))+
+                $(.then_with(|| cmp_avg!($ident_strategy_cmp_avg)))+
+        }
     }
     impl TMinMaxStrategiesInternal for $struct<EnumMap<EPlayerIndex, isize>> {
         fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
@@ -522,40 +554,6 @@ macro_rules! impl_perminmaxstrategy{(
                 $($ident_strategy,)*
             } = other;
             $(self.$ident_strategy.assign_minmax_other($ident_strategy, epi_self, epi_card);)*
-        }
-    }
-    impl<T: Ord + Copy + Debug> $struct<SPayoutStats<T>> {
-        pub fn compare_canonical(&self, other: &Self, fn_loss_or_win: impl Fn(isize, T)->std::cmp::Ordering) -> std::cmp::Ordering {
-            use std::cmp::Ordering::*;
-            macro_rules! cmp_avg{($strategy:ident) => {{
-                // prioritize positive vs non-positive and zero vs negative payouts.
-                let lhs = &self.$strategy.0;
-                let rhs = &other.$strategy.0;
-                match unwrap!(lhs.avg().partial_cmp(&rhs.avg())) {
-                    Greater => Greater,
-                    Less => Less,
-                    Equal => lhs.max().cmp(&rhs.max()),
-                }
-            }}}
-            macro_rules! strategy_enforces_win{($strategy_win:ident, $strategy_tie_breaker:ident) => {
-                match (
-                    self.$strategy_win.0.counts(&fn_loss_or_win)[Less],
-                    other.$strategy_win.0.counts(&fn_loss_or_win)[Less],
-                ) {
-                    (0, 0) => {
-                        unwrap!(f32::partial_cmp(
-                            &self.$strategy_tie_breaker.0.avg(),
-                            &other.$strategy_tie_breaker.0.avg(),
-                        ))
-                    },
-                    (0, _) => Greater,
-                    (_, 0) => Less,
-                    (_, _) => Equal, // TODO good idea? Should we include some avg here?
-                }
-            }}
-            Equal
-                $(.then_with(|| strategy_enforces_win!($ident_strategy_win, $ident_strategy_tiebreaker)))+
-                $(.then_with(|| cmp_avg!($ident_strategy_cmp_avg)))+
         }
     }
 }}
@@ -687,6 +685,7 @@ pub trait TMinMaxStrategiesPublic<T> {
         where
             T: 'static; // TODO why is this needed?
     fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)]; // TODO is there a better alternative?
+    fn compare_canonical<PayoutStatsPayload: Ord+Debug+Copy>(&self, other: &Self, fn_loss_or_win: impl Fn(isize, PayoutStatsPayload)->std::cmp::Ordering) -> std::cmp::Ordering where T: Borrow<SPayoutStats<PayoutStatsPayload>>;
 }
 pub trait TMinMaxStrategiesInternal : TMinMaxStrategiesPublic<EnumMap<EPlayerIndex, isize>> {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex);
