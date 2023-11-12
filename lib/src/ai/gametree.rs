@@ -25,7 +25,7 @@ pub trait TSnapshotVisualizer<Output> {
 }
 
 
-pub fn visualizer_factory<'rules>(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SForEachSnapshotHTMLVisualizer<'rules> {
+pub fn visualizer_factory<'rules, HigherKinded>(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SForEachSnapshotHTMLVisualizer<'rules, HigherKinded> {
     unwrap!(std::fs::create_dir_all(&path));
     unwrap!(crate::game_analysis::generate_html_auxiliary_files(&path));
     move |i_ahand, ahand, ocard| {
@@ -52,14 +52,15 @@ pub fn visualizer_factory<'rules>(path: std::path::PathBuf, rules: &'rules dyn T
     }
 }
 
-pub struct SForEachSnapshotHTMLVisualizer<'rules> {
+pub struct SForEachSnapshotHTMLVisualizer<'rules, HigherKinded> {
     file_output: BufWriter<fs::File>,
     rules: &'rules dyn TRules,
     epi: EPlayerIndex,
+    phantom: std::marker::PhantomData<HigherKinded>,
 }
-impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
+impl<'rules, HigherKinded> SForEachSnapshotHTMLVisualizer<'rules, HigherKinded> {
     fn new(file_output: fs::File, rules: &'rules dyn TRules, epi: EPlayerIndex) -> Self {
-        let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output: BufWriter::with_capacity(16*1024*1024, file_output), rules, epi};
+        let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output: BufWriter::with_capacity(16*1024*1024, file_output), rules, epi, phantom: std::marker::PhantomData};
         foreachsnapshothtmlvisualizer.write_all(
             b"<link rel=\"stylesheet\" type=\"text/css\" href=\"../css.css\">
             <style>
@@ -129,7 +130,12 @@ pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, 
     )
 }
 
-impl<MinMaxStrategies: TMinMaxStrategiesPublic<EnumMap<EPlayerIndex, isize>>> TSnapshotVisualizer<MinMaxStrategies> for SForEachSnapshotHTMLVisualizer<'_> {
+impl<
+    HigherKinded: TMinMaxStrategiesPublicHigherKinded,
+    MinMaxStrategies: TMinMaxStrategiesPublic<HigherKinded> + TGenericArgs1<Arg0=EnumMap<EPlayerIndex, isize>>,
+>
+    TSnapshotVisualizer<MinMaxStrategies> for SForEachSnapshotHTMLVisualizer<'_, HigherKinded>
+{
     fn begin_snapshot(&mut self, ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) {
         let str_item_id = format!("{}{}",
             stichseq.count_played_cards(),
@@ -429,13 +435,13 @@ fn explore_snapshots_internal<ForEachSnapshot>(
 }
 
 #[derive(Clone, new)]
-pub struct SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategies> {
+pub struct SMinReachablePayoutBase<'rules, Pruner, HigherKinded, MinMaxStrategies> {
     rules: &'rules dyn TRules,
     epi: EPlayerIndex,
     expensifiers: SExpensifiers, // TODO could this borrow?
-    phantom: std::marker::PhantomData<(Pruner, MinMaxStrategies)>,
+    phantom: std::marker::PhantomData<(Pruner, HigherKinded, MinMaxStrategies)>,
 }
-impl<'rules, Pruner, MinMaxStrategies> SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategies> {
+impl<'rules, Pruner, HigherKinded, MinMaxStrategies> SMinReachablePayoutBase<'rules, Pruner, HigherKinded, MinMaxStrategies> {
     pub fn new_from_game<Ruleset>(game: &'rules SGameGeneric<Ruleset, (), ()>) -> Self {
         Self::new(
             game.rules.as_ref(),
@@ -455,6 +461,7 @@ pub enum EMinMaxStrategy {
 
 macro_rules! impl_perminmaxstrategy{(
     $struct:ident {$($emmstrategy:ident $ident_strategy:ident,)*}
+    $struct_higher_kinded:ident
     [$(($ident_strategy_win:ident, $ident_strategy_tiebreaker:ident))+]
     [$($ident_strategy_cmp_avg:ident)+]
 ) => {
@@ -463,7 +470,16 @@ macro_rules! impl_perminmaxstrategy{(
         $(pub $ident_strategy: $emmstrategy<T>,)*
     }
 
-    impl<T> TMinMaxStrategiesPublic<T> for $struct<T> {
+    pub struct $struct_higher_kinded;
+    impl TMinMaxStrategiesPublicHigherKinded for $struct_higher_kinded {
+        type Type<R> = $struct<R>;
+    }
+
+    impl<T> TGenericArgs1 for $struct<T> {
+        type Arg0 = T;
+    }
+
+    impl<T> TMinMaxStrategiesPublic<$struct_higher_kinded> for $struct<T> {
         fn new(t: T) -> Self
             where T: Clone
         {
@@ -472,8 +488,7 @@ macro_rules! impl_perminmaxstrategy{(
             }
         }
 
-        type MappedType<R> = $struct<R>;
-        fn map<R>(&self, mut f: impl FnMut(&T)->R) -> Self::MappedType<R> {
+        fn map<R>(&self, mut f: impl FnMut(&T)->R) -> $struct<R> {
             let Self{
                 $(ref $ident_strategy,)*
             } = self;
@@ -484,7 +499,7 @@ macro_rules! impl_perminmaxstrategy{(
 
         fn modify_with_other<T1>(
             &mut self,
-            other: &Self::MappedType<T1>, 
+            other: &$struct<T1>, 
             mut fn_modify_element: impl FnMut(&mut T, &T1),
         ) {
             let $struct{
@@ -541,7 +556,7 @@ macro_rules! impl_perminmaxstrategy{(
                 $(.then_with(|| cmp_avg!($ident_strategy_cmp_avg)))+
         }
     }
-    impl TMinMaxStrategiesInternal for $struct<EnumMap<EPlayerIndex, isize>> {
+    impl TMinMaxStrategiesInternal<$struct_higher_kinded> for $struct<EnumMap<EPlayerIndex, isize>> {
         fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
             let $struct{
                 $($ident_strategy,)*
@@ -569,6 +584,7 @@ impl_perminmaxstrategy!(
         SelfishMax maxselfishmax,
         Max maxmax,
     }
+    SPerMinMaxStrategyHigherKinded
     [
         (maxmin, maxselfishmin)
         (maxselfishmin, maxselfishmin)
@@ -672,27 +688,37 @@ impl Max<EnumMap<EPlayerIndex, isize>> {
 // TODO(performance) storing a whole EnumMap for each strategy is unnecessary, and slows down the program
 pub type SMinMax = SPerMinMaxStrategy<EnumMap<EPlayerIndex, isize>>;
 
-pub trait TMinMaxStrategiesPublic<T> {
-    fn new(t: T) -> Self where T: Clone;
-    type MappedType<R>: TMinMaxStrategiesPublic<R>;
-    fn map<R>(&self, f: impl FnMut(&T)->R) -> Self::MappedType<R>;
+pub trait TMinMaxStrategiesPublicHigherKinded : Sized {
+    type Type<R>: TMinMaxStrategiesPublic<Self> + TGenericArgs1<Arg0=R>;
+}
+
+pub trait TGenericArgs1 {
+    type Arg0;
+}
+
+pub trait TMinMaxStrategiesPublic<HigherKinded: TMinMaxStrategiesPublicHigherKinded> : TGenericArgs1 {
+    fn new(t: <Self as TGenericArgs1>::Arg0) -> Self where <Self as TGenericArgs1>::Arg0: Clone;
+    fn map<R>(&self, f: impl FnMut(&<Self as TGenericArgs1>::Arg0)->R) -> HigherKinded::Type<R>;
     fn modify_with_other<T1>(
         &mut self,
-        other: &Self::MappedType<T1>, 
-        fn_modify_element: impl FnMut(&mut T, &T1),
+        other: &HigherKinded::Type<T1>, 
+        fn_modify_element: impl FnMut(&mut <Self as TGenericArgs1>::Arg0, &T1),
     );
-    fn via_accessors(&self) -> Vec<&T>
+    fn via_accessors(&self) -> Vec<&<Self as TGenericArgs1>::Arg0>
         where
-            T: 'static; // TODO why is this needed?
-    fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)]; // TODO is there a better alternative?
-    fn compare_canonical<PayoutStatsPayload: Ord+Debug+Copy>(&self, other: &Self, fn_loss_or_win: impl Fn(isize, PayoutStatsPayload)->std::cmp::Ordering) -> std::cmp::Ordering where T: Borrow<SPayoutStats<PayoutStatsPayload>>;
+            <Self as TGenericArgs1>::Arg0: 'static; // TODO why is this needed?
+    fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&<Self as TGenericArgs1>::Arg0)]; // TODO is there a better alternative?
+    fn compare_canonical<PayoutStatsPayload: Ord+Debug+Copy>(&self, other: &Self, fn_loss_or_win: impl Fn(isize, PayoutStatsPayload)->std::cmp::Ordering) -> std::cmp::Ordering where <Self as TGenericArgs1>::Arg0: Borrow<SPayoutStats<PayoutStatsPayload>>;
 }
-pub trait TMinMaxStrategiesInternal : TMinMaxStrategiesPublic<EnumMap<EPlayerIndex, isize>> {
+pub trait TMinMaxStrategiesInternal<HigherKinded: TMinMaxStrategiesPublicHigherKinded> :
+    TMinMaxStrategiesPublic<HigherKinded>
+    + TGenericArgs1<Arg0=EnumMap<EPlayerIndex, isize>>
+{
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex);
     fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex);
 }
 
-impl<Pruner: TPruner, MinMaxStrategies: TMinMaxStrategiesInternal> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner, MinMaxStrategies> {
+impl<Pruner: TPruner, HigherKinded: TMinMaxStrategiesPublicHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<HigherKinded>> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner, HigherKinded, MinMaxStrategies> {
     type Output = MinMaxStrategies;
 
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
@@ -727,25 +753,25 @@ impl<Pruner: TPruner, MinMaxStrategies: TMinMaxStrategiesInternal> TForEachSnaps
     }
 }
 
-pub type SGenericMinReachablePayout<'rules, MinMaxStrategies> = SMinReachablePayoutBase<'rules, SPrunerNothing, MinMaxStrategies>;
-pub type SMinReachablePayout<'rules> = SMinReachablePayoutBase<'rules, SPrunerNothing, SMinMax>;
-pub type SGenericMinReachablePayoutLowerBoundViaHint<'rules, MinMaxStrategies> = SMinReachablePayoutBase<'rules, SPrunerViaHint, MinMaxStrategies>;
-pub type SMinReachablePayoutLowerBoundViaHint<'rules> = SMinReachablePayoutBase<'rules, SPrunerViaHint, SMinMax>;
+pub type SGenericMinReachablePayout<'rules, HigherKinded, MinMaxStrategies> = SMinReachablePayoutBase<'rules, SPrunerNothing, HigherKinded, MinMaxStrategies>;
+pub type SMinReachablePayout<'rules> = SMinReachablePayoutBase<'rules, SPrunerNothing, SPerMinMaxStrategyHigherKinded, SMinMax>;
+pub type SGenericMinReachablePayoutLowerBoundViaHint<'rules, HigherKinded, MinMaxStrategies> = SMinReachablePayoutBase<'rules, SPrunerViaHint, HigherKinded, MinMaxStrategies>;
+pub type SMinReachablePayoutLowerBoundViaHint<'rules> = SMinReachablePayoutBase<'rules, SPrunerViaHint, SPerMinMaxStrategyHigherKinded, SMinMax>;
 
 pub trait TPruner : Sized {
-    fn pruned_output<MinMaxStrategies: TMinMaxStrategiesInternal>(params: &SMinReachablePayoutBase<'_, Self, MinMaxStrategies>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategies>;
+    fn pruned_output<HigherKinded: TMinMaxStrategiesPublicHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<HigherKinded>>(params: &SMinReachablePayoutBase<'_, Self, HigherKinded, MinMaxStrategies>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategies>;
 }
 
 pub struct SPrunerNothing;
 impl TPruner for SPrunerNothing {
-    fn pruned_output<MinMaxStrategies: TMinMaxStrategiesInternal>(_params: &SMinReachablePayoutBase<'_, Self, MinMaxStrategies>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategies> {
+    fn pruned_output<HigherKinded: TMinMaxStrategiesPublicHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<HigherKinded>>(_params: &SMinReachablePayoutBase<'_, Self, HigherKinded, MinMaxStrategies>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategies> {
         None
     }
 }
 
 pub struct SPrunerViaHint;
 impl TPruner for SPrunerViaHint {
-    fn pruned_output<MinMaxStrategies: TMinMaxStrategiesInternal>(params: &SMinReachablePayoutBase<'_, Self, MinMaxStrategies>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategies> {
+    fn pruned_output<HigherKinded: TMinMaxStrategiesPublicHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<HigherKinded>>(params: &SMinReachablePayoutBase<'_, Self, HigherKinded, MinMaxStrategies>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategies> {
         let mapepion_payout = params.rules.payouthints(tplahandstichseq, &params.expensifiers, rulestatecache)
             .map(|intvlon_payout| {
                 intvlon_payout[ELoHi::Lo].filter(|n_payout| 0<*n_payout)
