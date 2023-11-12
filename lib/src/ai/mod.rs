@@ -270,47 +270,6 @@ impl<T: Ord + Copy + Debug> SPayoutStats<T> {
     }
 }
 
-impl<T: Ord + Copy + Debug> SPerMinMaxStrategy<SPayoutStats<T>> {
-    pub fn compare_canonical(&self, other: &Self, fn_loss_or_win: impl Fn(isize, T)->std::cmp::Ordering) -> std::cmp::Ordering {
-        use std::cmp::Ordering::*;
-        macro_rules! cmp_avg{($strategy:ident) => {{
-            // prioritize positive vs non-positive and zero vs negative payouts.
-            let lhs = &self.$strategy.0;
-            let rhs = &other.$strategy.0;
-            match unwrap!(lhs.avg().partial_cmp(&rhs.avg())) {
-                Greater => Greater,
-                Less => Less,
-                Equal => lhs.max().cmp(&rhs.max()),
-            }
-        }}}
-        macro_rules! strategy_enforces_win{($strategy_win:ident, $strategy_tie_breaker:ident) => {
-            match (
-                self.$strategy_win.0.counts(&fn_loss_or_win)[Less],
-                other.$strategy_win.0.counts(&fn_loss_or_win)[Less],
-            ) {
-                (0, 0) => {
-                    unwrap!(f32::partial_cmp(
-                        &self.$strategy_tie_breaker.0.avg(),
-                        &other.$strategy_tie_breaker.0.avg(),
-                    ))
-                },
-                (0, _) => Greater,
-                (_, 0) => Less,
-                (_, _) => Equal, // TODO good idea? Should we include some avg here?
-            }
-        }}
-        Equal
-            .then_with(|| strategy_enforces_win!(maxmin, maxselfishmin))
-            .then_with(|| strategy_enforces_win!(maxselfishmin, maxselfishmin))
-            .then_with(|| strategy_enforces_win!(maxselfishmax, maxselfishmax))
-            .then_with(|| cmp_avg!(maxmin))
-            .then_with(|| cmp_avg!(maxselfishmin))
-            .then_with(|| cmp_avg!(maxselfishmax))
-            .then_with(|| cmp_avg!(maxmax))
-            .then_with(|| cmp_avg!(minmin))
-    }
-}
-
 pub fn determine_best_card<
     'stichseq,
     FilterAllowedCards: TFilterAllowedCards,

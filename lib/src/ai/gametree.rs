@@ -4,8 +4,8 @@ use crate::rules::*;
 use crate::util::*;
 use itertools::Itertools;
 use rand::{self, Rng};
-use std::{cmp::Ordering, fmt, fs, io::{BufWriter, Write}};
-use super::cardspartition::*;
+use std::{cmp::Ordering, fmt::{self, Debug}, fs, io::{BufWriter, Write}};
+use super::{SPayoutStats, cardspartition::*};
 use serde::Serialize;
 
 pub trait TForEachSnapshot {
@@ -453,7 +453,11 @@ pub enum EMinMaxStrategy {
     Max,
 }
 
-macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_strategy:ident,)*}) => {
+macro_rules! impl_perminmaxstrategy{(
+    $struct:ident {$($emmstrategy:ident $ident_strategy:ident,)*}
+    [$(($ident_strategy_win:ident, $ident_strategy_tiebreaker:ident))+]
+    [$($ident_strategy_cmp_avg:ident)+]
+) => {
     #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
     pub struct $struct<T> {
         $(pub $ident_strategy: $emmstrategy<T>,)*
@@ -520,18 +524,60 @@ macro_rules! impl_perminmaxstrategy{($struct:ident {$($emmstrategy:ident $ident_
             $(self.$ident_strategy.assign_minmax_other($ident_strategy, epi_self, epi_card);)*
         }
     }
+    impl<T: Ord + Copy + Debug> $struct<SPayoutStats<T>> {
+        pub fn compare_canonical(&self, other: &Self, fn_loss_or_win: impl Fn(isize, T)->std::cmp::Ordering) -> std::cmp::Ordering {
+            use std::cmp::Ordering::*;
+            macro_rules! cmp_avg{($strategy:ident) => {{
+                // prioritize positive vs non-positive and zero vs negative payouts.
+                let lhs = &self.$strategy.0;
+                let rhs = &other.$strategy.0;
+                match unwrap!(lhs.avg().partial_cmp(&rhs.avg())) {
+                    Greater => Greater,
+                    Less => Less,
+                    Equal => lhs.max().cmp(&rhs.max()),
+                }
+            }}}
+            macro_rules! strategy_enforces_win{($strategy_win:ident, $strategy_tie_breaker:ident) => {
+                match (
+                    self.$strategy_win.0.counts(&fn_loss_or_win)[Less],
+                    other.$strategy_win.0.counts(&fn_loss_or_win)[Less],
+                ) {
+                    (0, 0) => {
+                        unwrap!(f32::partial_cmp(
+                            &self.$strategy_tie_breaker.0.avg(),
+                            &other.$strategy_tie_breaker.0.avg(),
+                        ))
+                    },
+                    (0, _) => Greater,
+                    (_, 0) => Less,
+                    (_, _) => Equal, // TODO good idea? Should we include some avg here?
+                }
+            }}
+            Equal
+                $(.then_with(|| strategy_enforces_win!($ident_strategy_win, $ident_strategy_tiebreaker)))+
+                $(.then_with(|| cmp_avg!($ident_strategy_cmp_avg)))+
+        }
+    }
 }}
 
 // TODO(performance) offer possibility to constrain oneself to one value of strategy (reduced run time by ~20%-25% in some tests)
 // Field nomenclature: self-strategy, followed by others-strategy
 // TODO? pub a good idea?
-impl_perminmaxstrategy!(SPerMinMaxStrategy {
-    MinMin minmin,
-    Min maxmin,
-    SelfishMin maxselfishmin,
-    SelfishMax maxselfishmax,
-    Max maxmax,
-});
+impl_perminmaxstrategy!(
+    SPerMinMaxStrategy {
+        MinMin minmin,
+        Min maxmin,
+        SelfishMin maxselfishmin,
+        SelfishMax maxselfishmax,
+        Max maxmax,
+    }
+    [
+        (maxmin, maxselfishmin)
+        (maxselfishmin, maxselfishmin)
+        (maxselfishmax, maxselfishmax)
+    ]
+    [maxmin maxselfishmin maxselfishmax maxmax minmin]
+);
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct MinMin<T>(pub T);
