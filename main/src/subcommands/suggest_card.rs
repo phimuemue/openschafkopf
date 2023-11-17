@@ -139,15 +139,21 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     #[derive(new, Serialize)]
-    struct SJsonTableLine {
+    struct SJsonTableLine<HigherKinded: TMinMaxStrategiesPublicHigherKinded>
+        where
+            HigherKinded::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
+    {
         ostr_header: Option<String>,
-        perminmaxstrategyvecpayout_histogram: SPerMinMaxStrategy<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>,
+        perminmaxstrategyvecpayout_histogram: HigherKinded::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>,
     }
     #[derive(new, Serialize)]
-    struct SJson {
+    struct SJson<HigherKinded: TMinMaxStrategiesPublicHigherKinded+Serialize>
+        where
+            HigherKinded::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
+    {
         str_rules: String,
         astr_hand: [String; EPlayerIndex::SIZE],
-        vectableline: Vec<SJsonTableLine>,
+        vectableline: Vec<SJsonTableLine<HigherKinded>>,
     }
     with_common_args(
         clapmatches,
@@ -202,7 +208,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         .collect()
                 )
             }
-            let print_json = |vectableline| {
+            let print_json = |vectableline: Vec<SJsonTableLine<SPerMinMaxStrategyHigherKinded>>| {
                 if_then_true!(clapmatches.is_present("json"), {
                     println!("{}", unwrap!(serde_json::to_string(
                         &SJson::new(

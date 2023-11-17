@@ -471,6 +471,7 @@ macro_rules! impl_perminmaxstrategy{(
         $(pub $ident_strategy: $emmstrategy<T>,)*
     }
 
+    #[derive(Serialize)] // TODO this should not be needed
     pub struct $struct_higher_kinded;
     impl TMinMaxStrategiesPublicHigherKinded for $struct_higher_kinded {
         type Type<R> = $struct<R>;
