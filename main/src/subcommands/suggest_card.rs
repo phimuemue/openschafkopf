@@ -375,69 +375,67 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 }}}
                 forward_with_args!(forward);
             } else {
-                let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
-                    macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($higherkinded:ident, $perminmaxstrategy:ident,), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
-                        let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
-                        determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_>( // TODO avoid explicit types
-                            stichseq,
+                // we are interested in payout => single-card-optimization useless
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($higherkinded:ident, $perminmaxstrategy:ident,), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                    let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
+                    let determinebestcardresult = determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_>( // TODO avoid explicit types
+                        stichseq,
+                        rules,
+                        Box::new(
+                            itahand
+                                .flat_map(|ahand| {
+                                    itertools::repeat_n(
+                                        ahand,
+                                        n_repeat_hand,
+                                    )
+                                })
+                        ) as Box<_>,
+                        $func_filter_allowed_cards,
+                        &<SMinReachablePayoutBase<$pruner, $higherkinded>>::new(
                             rules,
-                            Box::new(
-                                itahand
-                                    .flat_map(|ahand| {
-                                        itertools::repeat_n(
-                                            ahand,
-                                            n_repeat_hand,
-                                        )
-                                    })
-                            ) as Box<_>,
-                            $func_filter_allowed_cards,
-                            &<SMinReachablePayoutBase<$pruner, $higherkinded>>::new(
-                                rules,
-                                epi_position,
-                                expensifiers.clone(),
-                            ),
-                            $fn_snapshotcache,
-                            $fn_visualizer,
-                            /*fn_inspect*/&|b_before, i_ahand, ahand, card| {
-                                if b_verbose {
-                                    println!(" {} {} ({}): {}",
-                                        if b_before {'>'} else {'<'},
-                                        i_ahand+1, // TODO use same hand counters as in common_given_game
-                                        card,
-                                        display_card_slices(&ahand, &rules, " | "),
-                                    );
-                                }
-                            },
                             epi_position,
-                            /*fn_payout*/&|stichseq, ahand, n_payout| fn_human_readable_payout(
-                                stichseq.clone(),
-                                (epi_position, ahand[epi_position].clone(/*TODO needed?*/)),
-                                n_payout,
-                            ),
-                        )
-                    }}}
-                    forward_with_args!(forward)
-                        .ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?
-                };
-                if !print_json(
-                    /*vectableline*/determinebestcardresult.cards_and_ts()
-                        .map(|(card, payoutstatsperstrategy)|
-                            SJsonTableLine::new(
-                                /*ostr_header*/Some(card.to_string()),
-                                /*perminmaxstrategyvecpayout_histogram*/json_histograms::<SPerMinMaxStrategyHigherKinded>(payoutstatsperstrategy),
-                            )
-                        )
-                        .collect(),
-                ) {
-                    print_payoutstatstable::<_,SPerMinMaxStrategyHigherKinded>(
-                        &table(
-                            &determinebestcardresult,
-                            rules,
-                            /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
+                            expensifiers.clone(),
                         ),
-                        b_verbose,
-                    )
-                }
+                        $fn_snapshotcache,
+                        $fn_visualizer,
+                        /*fn_inspect*/&|b_before, i_ahand, ahand, card| {
+                            if b_verbose {
+                                println!(" {} {} ({}): {}",
+                                    if b_before {'>'} else {'<'},
+                                    i_ahand+1, // TODO use same hand counters as in common_given_game
+                                    card,
+                                    display_card_slices(&ahand, &rules, " | "),
+                                );
+                            }
+                        },
+                        epi_position,
+                        /*fn_payout*/&|stichseq, ahand, n_payout| fn_human_readable_payout(
+                            stichseq.clone(),
+                            (epi_position, ahand[epi_position].clone(/*TODO needed?*/)),
+                            n_payout,
+                        ),
+                    ).ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
+                    if !print_json(
+                        /*vectableline*/determinebestcardresult.cards_and_ts()
+                            .map(|(card, payoutstatsperstrategy)|
+                                SJsonTableLine::new(
+                                    /*ostr_header*/Some(card.to_string()),
+                                    /*perminmaxstrategyvecpayout_histogram*/json_histograms::<SPerMinMaxStrategyHigherKinded>(payoutstatsperstrategy),
+                                )
+                            )
+                            .collect(),
+                    ) {
+                        print_payoutstatstable::<_,SPerMinMaxStrategyHigherKinded>(
+                            &table(
+                                &determinebestcardresult,
+                                rules,
+                                /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
+                            ),
+                            b_verbose,
+                        )
+                    }
+                }}}
+                forward_with_args!(forward);
             }
             Ok(())
         }
