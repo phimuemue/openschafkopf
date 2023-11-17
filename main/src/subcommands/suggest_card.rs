@@ -183,7 +183,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     (n_payout, n_payout.cmp(&0))
                 }
             };
-            let json_histograms = move |payoutstatsperstrategy: &SPerMinMaxStrategy<SPayoutStats<std::cmp::Ordering>>| {
+            fn json_histograms<HigherKinded: TMinMaxStrategiesPublicHigherKinded>(payoutstatsperstrategy: &HigherKinded::Type<SPayoutStats<std::cmp::Ordering>>)
+                -> HigherKinded::Type<Vec<((isize, char), usize)>>
+            {
                 payoutstatsperstrategy.map(|payoutstats| 
                     payoutstats.histogram().iter()
                         .map(|((n_payout, ord_vs_0), n_count)| ( 
@@ -199,7 +201,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         ))
                         .collect()
                 )
-            };
+            }
             let print_json = |vectableline| {
                 if_then_true!(clapmatches.is_present("json"), {
                     println!("{}", unwrap!(serde_json::to_string(
@@ -344,7 +346,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 if !print_json(
                     /*vectableline*/vec![SJsonTableLine::new(
                         /*ostr_header*/None, // already given by str_rules
-                        /*perminmaxstrategyvecpayout_histogram*/json_histograms(&mapemmstrategypaystats),
+                        /*perminmaxstrategyvecpayout_histogram*/json_histograms::<SPerMinMaxStrategyHigherKinded>(&mapemmstrategypaystats),
                     )],
                 ) {
                     print_payoutstatstable::<_,SPerMinMaxStrategyHigherKinded>(
@@ -405,7 +407,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         .map(|(card, payoutstatsperstrategy)|
                             SJsonTableLine::new(
                                 /*ostr_header*/Some(card.to_string()),
-                                /*perminmaxstrategyvecpayout_histogram*/json_histograms(payoutstatsperstrategy),
+                                /*perminmaxstrategyvecpayout_histogram*/json_histograms::<SPerMinMaxStrategyHigherKinded>(payoutstatsperstrategy),
                             )
                         )
                         .collect(),
