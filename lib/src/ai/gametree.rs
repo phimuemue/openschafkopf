@@ -592,6 +592,18 @@ impl_perminmaxstrategy!(
     ]
     [maxmin maxselfishmin maxselfishmax maxmax minmin]
 );
+impl_perminmaxstrategy!(
+    SMaxMinMaxSelfishMin {
+        Min maxmin,
+        SelfishMin maxselfishmin,
+    }
+    SMaxMinMaxSelfishMinHigherKinded
+    [
+        (maxmin, maxselfishmin)
+        (maxselfishmin, maxselfishmin)
+    ]
+    [maxmin maxselfishmin]
+);
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct MinMin<T>(pub T);
