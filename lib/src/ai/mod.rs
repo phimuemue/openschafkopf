@@ -149,15 +149,15 @@ impl SAi {
                 match (eremainingcards) {
                     _1|_2|_3 => (
                         SNoFilter::factory(),
-                        SMinReachablePayoutBase::<SPrunerNothing, SMaxMinMaxSelfishMinHigherKinded, SMaxMinMaxSelfishMin<EnumMap<EPlayerIndex, isize>>>,
+                        SMinReachablePayoutBase::<SPrunerNothing, SMaxMinMaxSelfishMinHigherKinded>,
                     ),
                     _4 => (
                         SNoFilter::factory(),
-                        SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded, SMaxMinMaxSelfishMin<EnumMap<EPlayerIndex, isize>>>,
+                        SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded>,
                     ),
                     _5|_6|_7|_8 => (
                         SBranchingFactor::factory(1, self.n_suggest_card_branches+1),
-                        SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded, SMaxMinMaxSelfishMin<EnumMap<EPlayerIndex, isize>>>,
+                        SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded>,
                     ),
                 },
                 match ((&self.aiparams, eremainingcards)) {

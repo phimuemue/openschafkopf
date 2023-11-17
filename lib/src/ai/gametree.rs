@@ -435,13 +435,13 @@ fn explore_snapshots_internal<ForEachSnapshot>(
 }
 
 #[derive(Clone, new)]
-pub struct SMinReachablePayoutBase<'rules, Pruner, HigherKinded, MinMaxStrategies> {
+pub struct SMinReachablePayoutBase<'rules, Pruner, HigherKinded> {
     rules: &'rules dyn TRules,
     epi: EPlayerIndex,
     expensifiers: SExpensifiers, // TODO could this borrow?
-    phantom: std::marker::PhantomData<(Pruner, HigherKinded, MinMaxStrategies)>,
+    phantom: std::marker::PhantomData<(Pruner, HigherKinded)>,
 }
-impl<'rules, Pruner, HigherKinded, MinMaxStrategies> SMinReachablePayoutBase<'rules, Pruner, HigherKinded, MinMaxStrategies> {
+impl<'rules, Pruner, HigherKinded> SMinReachablePayoutBase<'rules, Pruner, HigherKinded> {
     pub fn new_from_game<Ruleset>(game: &'rules SGameGeneric<Ruleset, (), ()>) -> Self {
         Self::new(
             game.rules.as_ref(),
@@ -731,11 +731,14 @@ pub trait TMinMaxStrategiesInternal<HigherKinded: TMinMaxStrategiesPublicHigherK
     fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex);
 }
 
-impl<Pruner: TPruner, HigherKinded: TMinMaxStrategiesPublicHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<HigherKinded>> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner, HigherKinded, MinMaxStrategies> {
-    type Output = MinMaxStrategies;
+impl<Pruner: TPruner, HigherKinded: TMinMaxStrategiesPublicHigherKinded> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner, HigherKinded>
+    where
+        HigherKinded::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<HigherKinded>,
+{
+    type Output = HigherKinded::Type<EnumMap<EPlayerIndex, isize>>;
 
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
-        MinMaxStrategies::new(self.rules.payout(
+        Self::Output::new(self.rules.payout(
             stichseq,
             &self.expensifiers,
             rulestatecache,
@@ -766,25 +769,25 @@ impl<Pruner: TPruner, HigherKinded: TMinMaxStrategiesPublicHigherKinded, MinMaxS
     }
 }
 
-pub type SGenericMinReachablePayout<'rules, HigherKinded, MinMaxStrategies> = SMinReachablePayoutBase<'rules, SPrunerNothing, HigherKinded, MinMaxStrategies>;
-pub type SMinReachablePayout<'rules> = SMinReachablePayoutBase<'rules, SPrunerNothing, SPerMinMaxStrategyHigherKinded, SMinMax>;
-pub type SGenericMinReachablePayoutLowerBoundViaHint<'rules, HigherKinded, MinMaxStrategies> = SMinReachablePayoutBase<'rules, SPrunerViaHint, HigherKinded, MinMaxStrategies>;
-pub type SMinReachablePayoutLowerBoundViaHint<'rules> = SMinReachablePayoutBase<'rules, SPrunerViaHint, SPerMinMaxStrategyHigherKinded, SMinMax>;
+pub type SGenericMinReachablePayout<'rules, HigherKinded> = SMinReachablePayoutBase<'rules, SPrunerNothing, HigherKinded>;
+pub type SMinReachablePayout<'rules> = SMinReachablePayoutBase<'rules, SPrunerNothing, SPerMinMaxStrategyHigherKinded>;
+pub type SGenericMinReachablePayoutLowerBoundViaHint<'rules, HigherKinded> = SMinReachablePayoutBase<'rules, SPrunerViaHint, HigherKinded>;
+pub type SMinReachablePayoutLowerBoundViaHint<'rules> = SMinReachablePayoutBase<'rules, SPrunerViaHint, SPerMinMaxStrategyHigherKinded>;
 
 pub trait TPruner : Sized {
-    fn pruned_output<HigherKinded: TMinMaxStrategiesPublicHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<HigherKinded>>(params: &SMinReachablePayoutBase<'_, Self, HigherKinded, MinMaxStrategies>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategies>;
+    fn pruned_output<HigherKinded: TMinMaxStrategiesPublicHigherKinded>(params: &SMinReachablePayoutBase<'_, Self, HigherKinded>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<HigherKinded::Type<EnumMap<EPlayerIndex, isize>>>;
 }
 
 pub struct SPrunerNothing;
 impl TPruner for SPrunerNothing {
-    fn pruned_output<HigherKinded: TMinMaxStrategiesPublicHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<HigherKinded>>(_params: &SMinReachablePayoutBase<'_, Self, HigherKinded, MinMaxStrategies>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategies> {
+    fn pruned_output<HigherKinded: TMinMaxStrategiesPublicHigherKinded>(_params: &SMinReachablePayoutBase<'_, Self, HigherKinded>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<HigherKinded::Type<EnumMap<EPlayerIndex, isize>>> {
         None
     }
 }
 
 pub struct SPrunerViaHint;
 impl TPruner for SPrunerViaHint {
-    fn pruned_output<HigherKinded: TMinMaxStrategiesPublicHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<HigherKinded>>(params: &SMinReachablePayoutBase<'_, Self, HigherKinded, MinMaxStrategies>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategies> {
+    fn pruned_output<HigherKinded: TMinMaxStrategiesPublicHigherKinded>(params: &SMinReachablePayoutBase<'_, Self, HigherKinded>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<HigherKinded::Type<EnumMap<EPlayerIndex, isize>>> {
         let mapepion_payout = params.rules.payouthints(tplahandstichseq, &params.expensifiers, rulestatecache)
             .map(|intvlon_payout| {
                 intvlon_payout[ELoHi::Lo].filter(|n_payout| 0<*n_payout)
@@ -792,7 +795,7 @@ impl TPruner for SPrunerViaHint {
             });
         if_then_some!(
             mapepion_payout.iter().all(Option::is_some),
-            MinMaxStrategies::new(mapepion_payout.map(|opayout| unwrap!(opayout)))
+            HigherKinded::Type::<EnumMap<EPlayerIndex, isize>>::new(mapepion_payout.map(|opayout| unwrap!(opayout)))
         )
     }
 }
