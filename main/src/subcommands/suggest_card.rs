@@ -360,10 +360,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     if !print_json(
                         /*vectableline*/vec![SJsonTableLine::new(
                             /*ostr_header*/None, // already given by str_rules
-                            /*perminmaxstrategyvecpayout_histogram*/json_histograms::<SPerMinMaxStrategyHigherKinded>(&mapemmstrategypaystats),
+                            /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$higherkinded>(&mapemmstrategypaystats),
                         )],
                     ) {
-                        print_payoutstatstable::<_,SPerMinMaxStrategyHigherKinded>(
+                        print_payoutstatstable::<_,$higherkinded>(
                             &internal_table(
                                 vec![(rules, mapemmstrategypaystats)],
                                 /*b_group*/false,
