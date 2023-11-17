@@ -30,8 +30,8 @@ fn print_payoutstatstable<T: std::fmt::Display>(
         println!("\nInterpreting a line of the following table (taking the first line as an example):");
         let SOutputLine{vect, perminmaxstrategyatplstrf} = &slcoutputline[0];
         println!("If you play {}, then:", vect.iter().join(" or "));
-        for (i_strategy, (emmstrategy, fn_value_for_strategy)) in SPerMinMaxStrategy::accessors().iter().enumerate() {
-            let astr = fn_value_for_strategy(perminmaxstrategyatplstrf).clone().map(|tplstrf| tplstrf.0);
+        for (i_strategy, (emmstrategy, atplstrf)) in perminmaxstrategyatplstrf.via_accessors().into_iter().enumerate() {
+            let astr = atplstrf.clone().map(|tplstrf| tplstrf.0);
             let [str_payout_min, str_payout_avg, str_payout_max, str_stats] = &astr;
             println!("* Columns {i_strategy_1_based}.1 to {i_strategy_1_based}.{n_subcolumns} show tell what happens if all other players play {str_play}:",
                 i_strategy_1_based = i_strategy + 1,
