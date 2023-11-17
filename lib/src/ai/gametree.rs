@@ -246,8 +246,16 @@ pub trait TSnapshotCache<T> { // TODO? could this be implemented via TForEachSna
 }
 pub struct SSnapshotCacheNone;
 impl SSnapshotCacheNone {
+    pub fn factory_with_warning(ostr_warning: Option<&'static str>) -> impl Fn(&SRuleStateCacheFixed) -> Self {
+        move |_| {
+            if let Some(str_warning)=ostr_warning {
+                println!("{}", str_warning);
+            }
+            Self
+        }
+    }
     pub fn factory() -> impl Fn(&SRuleStateCacheFixed) -> Self {
-        |_| Self
+        Self::factory_with_warning(None)
     }
 }
 impl<T> TSnapshotCache<T> for SSnapshotCacheNone {
@@ -605,6 +613,22 @@ impl_perminmaxstrategy!(
         (maxselfishmin, maxselfishmin)
     ]
     [maxmin maxselfishmin]
+);
+impl_perminmaxstrategy!(
+    SMaxMinStrategy {
+        Min maxmin,
+    }
+    SMaxMinStrategyHigherKinded
+    [(maxmin, maxmin)]
+    [maxmin]
+);
+impl_perminmaxstrategy!(
+    SMaxSelfishMinStrategy {
+        SelfishMin maxselfishmin,
+    }
+    SMaxSelfishMinStrategyHigherKinded
+    [(maxselfishmin, maxselfishmin)]
+    [maxselfishmin]
 );
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
