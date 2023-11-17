@@ -215,12 +215,15 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         .collect()
                 )
             }
-            fn print_json( // TODORUST generic closure
+            fn print_json<HigherKinded: TMinMaxStrategiesPublicHigherKinded+Serialize>( // TODORUST generic closure
                 clapmatches: &clap::ArgMatches,
                 rules: &dyn TRules,
                 ahand_fixed_with_holes: &EnumMap<EPlayerIndex, SHand>,
-                vectableline: Vec<SJsonTableLine<SPerMinMaxStrategyHigherKinded>>
-            ) -> bool {
+                vectableline: Vec<SJsonTableLine<HigherKinded>>
+            ) -> bool
+                where
+                    HigherKinded::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
+            {
                 if_then_true!(clapmatches.is_present("json"), {
                     println!("{}", unwrap!(serde_json::to_string(
                         &SJson::new(
@@ -363,7 +366,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             }),
                         );
                     // TODO this prints a table/json for each iterated rules, but we want to only print one table
-                    if !print_json(
+                    if !print_json::<$higherkinded>(
                         clapmatches,
                         rules,
                         ahand_fixed_with_holes,
@@ -424,7 +427,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             n_payout,
                         ),
                     ).ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
-                    if !print_json(
+                    if !print_json::<$higherkinded>(
                         clapmatches,
                         rules,
                         ahand_fixed_with_holes,
