@@ -420,12 +420,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             .map(|(card, payoutstatsperstrategy)|
                                 SJsonTableLine::new(
                                     /*ostr_header*/Some(card.to_string()),
-                                    /*perminmaxstrategyvecpayout_histogram*/json_histograms::<SPerMinMaxStrategyHigherKinded>(payoutstatsperstrategy),
+                                    /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$higherkinded>(payoutstatsperstrategy),
                                 )
                             )
                             .collect(),
                     ) {
-                        print_payoutstatstable::<_,SPerMinMaxStrategyHigherKinded>(
+                        print_payoutstatstable::<_,$higherkinded>(
                             &table(
                                 &determinebestcardresult,
                                 rules,
