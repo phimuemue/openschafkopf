@@ -1,5 +1,6 @@
 use openschafkopf_lib::{
     ai::{*, gametree::*, stichoracle::SFilterByOracle, cardspartition::*},
+    rules::TRules,
     primitives::*,
     game_analysis::determine_best_card_table::{
         table,
@@ -15,7 +16,7 @@ use rayon::prelude::*;
 use serde::Serialize;
 use failure::*;
 use derive_new::new;
-use plain_enum::PlainEnum;
+use plain_enum::{EnumMap, PlainEnum};
 use super::common_given_game::*;
 use as_num::*;
 use std::io::IsTerminal;
@@ -214,7 +215,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         .collect()
                 )
             }
-            let print_json = |vectableline: Vec<SJsonTableLine<SPerMinMaxStrategyHigherKinded>>| {
+            fn print_json( // TODORUST generic closure
+                clapmatches: &clap::ArgMatches,
+                rules: &dyn TRules,
+                ahand_fixed_with_holes: &EnumMap<EPlayerIndex, SHand>,
+                vectableline: Vec<SJsonTableLine<SPerMinMaxStrategyHigherKinded>>
+            ) -> bool {
                 if_then_true!(clapmatches.is_present("json"), {
                     println!("{}", unwrap!(serde_json::to_string(
                         &SJson::new(
@@ -226,7 +232,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         ),
                     )));
                 })
-            };
+            }
             enum EBranching {
                 Branching(usize, usize),
                 Equivalent(usize, SCardsPartition),
@@ -358,6 +364,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         );
                     // TODO this prints a table/json for each iterated rules, but we want to only print one table
                     if !print_json(
+                        clapmatches,
+                        rules,
+                        ahand_fixed_with_holes,
                         /*vectableline*/vec![SJsonTableLine::new(
                             /*ostr_header*/None, // already given by str_rules
                             /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$higherkinded>(&mapemmstrategypaystats),
@@ -416,6 +425,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         ),
                     ).ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
                     if !print_json(
+                        clapmatches,
+                        rules,
+                        ahand_fixed_with_holes,
                         /*vectableline*/determinebestcardresult.cards_and_ts()
                             .map(|(card, payoutstatsperstrategy)|
                                 SJsonTableLine::new(
