@@ -22,8 +22,8 @@ use as_num::*;
 use std::io::IsTerminal;
 
 // TODO? can we make this a fn of SPayoutStatsTable?
-fn print_payoutstatstable<T: std::fmt::Display, HigherKinded: TMinMaxStrategiesHigherKinded>(
-    payoutstatstable: &SPayoutStatsTable<T, HigherKinded>,
+fn print_payoutstatstable<T: std::fmt::Display, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(
+    payoutstatstable: &SPayoutStatsTable<T, MinMaxStrategiesHK>,
     b_verbose: bool
 ) {
     let slcoutputline = &payoutstatstable.output_lines();
@@ -146,21 +146,21 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     #[derive(new, Serialize)]
-    struct SJsonTableLine<HigherKinded: TMinMaxStrategiesHigherKinded>
+    struct SJsonTableLine<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>
         where
-            HigherKinded::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
+            MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
     {
         ostr_header: Option<String>,
-        perminmaxstrategyvecpayout_histogram: HigherKinded::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>,
+        perminmaxstrategyvecpayout_histogram: MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>,
     }
     #[derive(new, Serialize)]
-    struct SJson<HigherKinded: TMinMaxStrategiesHigherKinded+Serialize>
+    struct SJson<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Serialize>
         where
-            HigherKinded::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
+            MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
     {
         str_rules: String,
         astr_hand: [String; EPlayerIndex::SIZE],
-        vectableline: Vec<SJsonTableLine<HigherKinded>>,
+        vectableline: Vec<SJsonTableLine<MinMaxStrategiesHK>>,
     }
     with_common_args(
         clapmatches,
@@ -196,8 +196,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     (n_payout, n_payout.cmp(&0))
                 }
             };
-            fn json_histograms<HigherKinded: TMinMaxStrategiesHigherKinded>(payoutstatsperstrategy: &HigherKinded::Type<SPayoutStats<std::cmp::Ordering>>)
-                -> HigherKinded::Type<Vec<((isize, char), usize)>>
+            fn json_histograms<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(payoutstatsperstrategy: &MinMaxStrategiesHK::Type<SPayoutStats<std::cmp::Ordering>>)
+                -> MinMaxStrategiesHK::Type<Vec<((isize, char), usize)>>
             {
                 payoutstatsperstrategy.map(|payoutstats| 
                     payoutstats.histogram().iter()
@@ -215,14 +215,14 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         .collect()
                 )
             }
-            fn print_json<HigherKinded: TMinMaxStrategiesHigherKinded+Serialize>( // TODORUST generic closure
+            fn print_json<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Serialize>( // TODORUST generic closure
                 clapmatches: &clap::ArgMatches,
                 rules: &dyn TRules,
                 ahand_fixed_with_holes: &EnumMap<EPlayerIndex, SHand>,
-                vectableline: Vec<SJsonTableLine<HigherKinded>>
+                vectableline: Vec<SJsonTableLine<MinMaxStrategiesHK>>
             ) -> bool
                 where
-                    HigherKinded::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
+                    MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
             {
                 if_then_true!(clapmatches.is_present("json"), {
                     println!("{}", unwrap!(serde_json::to_string(
@@ -357,7 +357,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 )
             }}
             if clapmatches.is_present("no-details") {
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($higherkinded:ident, $perminmaxstrategy:ident, $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident, $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let mapemmstrategypaystats = itahand
                         .enumerate()
                         .par_bridge() // TODO can we derive a true parallel iterator?
@@ -367,7 +367,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 (&mut ahand.clone(), &mut stichseq.clone()),
                                 rules,
                                 &$func_filter_allowed_cards,
-                                &<SMinReachablePayoutBase<$pruner, $higherkinded>>::new(
+                                &<SMinReachablePayoutBase<$pruner, $MinMaxStrategiesHK>>::new(
                                     rules,
                                     epi_position,
                                     expensifiers.clone(),
@@ -392,16 +392,16 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             }),
                         );
                     // TODO this prints a table/json for each iterated rules, but we want to only print one table
-                    if !print_json::<$higherkinded>(
+                    if !print_json::<$MinMaxStrategiesHK>(
                         clapmatches,
                         rules,
                         ahand_fixed_with_holes,
                         /*vectableline*/vec![SJsonTableLine::new(
                             /*ostr_header*/None, // already given by str_rules
-                            /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$higherkinded>(&mapemmstrategypaystats),
+                            /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$MinMaxStrategiesHK>(&mapemmstrategypaystats),
                         )],
                     ) {
-                        print_payoutstatstable::<_,$higherkinded>(
+                        print_payoutstatstable::<_,$MinMaxStrategiesHK>(
                             &internal_table(
                                 vec![(rules, mapemmstrategypaystats)],
                                 /*b_group*/false,
@@ -414,7 +414,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 forward_with_args!(forward);
             } else {
                 // we are interested in payout => single-card-optimization useless
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($higherkinded:ident, $perminmaxstrategy:ident, $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident, $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                     let determinebestcardresult = determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_>( // TODO avoid explicit types
                         stichseq,
@@ -429,7 +429,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 })
                         ) as Box<_>,
                         $func_filter_allowed_cards,
-                        &<SMinReachablePayoutBase<$pruner, $higherkinded>>::new(
+                        &<SMinReachablePayoutBase<$pruner, $MinMaxStrategiesHK>>::new(
                             rules,
                             epi_position,
                             expensifiers.clone(),
@@ -453,7 +453,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             n_payout,
                         ),
                     ).ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
-                    if !print_json::<$higherkinded>(
+                    if !print_json::<$MinMaxStrategiesHK>(
                         clapmatches,
                         rules,
                         ahand_fixed_with_holes,
@@ -461,12 +461,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             .map(|(card, payoutstatsperstrategy)|
                                 SJsonTableLine::new(
                                     /*ostr_header*/Some(card.to_string()),
-                                    /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$higherkinded>(payoutstatsperstrategy),
+                                    /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$MinMaxStrategiesHK>(payoutstatsperstrategy),
                                 )
                             )
                             .collect(),
                     ) {
-                        print_payoutstatstable::<_,$higherkinded>(
+                        print_payoutstatstable::<_,$MinMaxStrategiesHK>(
                             &table(
                                 &determinebestcardresult,
                                 rules,

@@ -273,7 +273,7 @@ impl<T: Ord + Copy> SPayoutStats<T> {
 pub fn determine_best_card<
     'stichseq,
     FilterAllowedCards: TFilterAllowedCards,
-    HigherKinded: TMinMaxStrategiesHigherKinded,
+    MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded,
     ForEachSnapshot: TForEachSnapshot + Sync,
     SnapshotCache: TSnapshotCache<ForEachSnapshot::Output>,
     OSnapshotCache: Into<Option<SnapshotCache>>,
@@ -291,10 +291,10 @@ pub fn determine_best_card<
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, ECard) + std::marker::Sync),
     epi_result: EPlayerIndex,
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
-) -> Option<SDetermineBestCardResult<HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>>>
+) -> Option<SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>>
     where
-        ForEachSnapshot::Output: TMinMaxStrategies<HigherKinded, Arg0=EnumMap<EPlayerIndex, isize>>,
-        HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>: Send,
+        ForEachSnapshot::Output: TMinMaxStrategies<MinMaxStrategiesHK, Arg0=EnumMap<EPlayerIndex, isize>>,
+        MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: Send,
 {
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
@@ -339,7 +339,7 @@ pub fn determine_best_card<
                     )
                 }
             });
-            let payoutstats : HigherKinded::Type<SPayoutStats<PayoutStatsPayload>> = output.map(|mapepin_payout|
+            let payoutstats : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output.map(|mapepin_payout|
                 SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[epi_result]))
             );
             let mapcardooutput = Arc::clone(&mapcardooutput);
