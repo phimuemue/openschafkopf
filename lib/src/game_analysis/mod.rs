@@ -364,7 +364,7 @@ fn generate_analysis_html(
     + "<h2>Details</h2>"
     + type_inference!(&str, &format!("{}", slcanalysispercard.iter()
         .map(|analysispercard| {
-            let vecoutputline = table(
+            let vecoutputline = table::</*TODO type annotations needed?*/SPerMinMaxStrategyHigherKinded, _>(
                 &analysispercard.determinebestcardresult_cheating,
                 game.rules.as_ref(),
                 /*fn_loss_or_win*/&|n_payout, ()| n_payout.cmp(&0),

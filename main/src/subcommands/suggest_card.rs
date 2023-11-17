@@ -22,7 +22,7 @@ use std::io::IsTerminal;
 
 // TODO? can we make this a fn of SPayoutStatsTable?
 fn print_payoutstatstable<T: std::fmt::Display>(
-    payoutstatstable: &SPayoutStatsTable<T>,
+    payoutstatstable: &SPayoutStatsTable<T, SPerMinMaxStrategyHigherKinded>,
     b_verbose: bool
 ) {
     let slcoutputline = &payoutstatstable.output_lines();

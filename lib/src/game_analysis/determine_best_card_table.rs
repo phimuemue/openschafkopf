@@ -1,6 +1,6 @@
 use crate::ai::{
-    gametree::TMinMaxStrategiesPublic,
-    SDetermineBestCardResult, SPayoutStats, SPerMinMaxStrategy
+    gametree::{TMinMaxStrategiesPublicHigherKinded, TMinMaxStrategiesPublic},
+    SDetermineBestCardResult, SPayoutStats,
 };
 use crate::primitives::*;
 use itertools::*;
@@ -12,9 +12,9 @@ pub const N_COLUMNS : usize = 4;
 
 // crude formatting: treat all numbers as f32, and convert structured input to a plain number table
 #[derive(PartialEq)]
-pub struct SOutputLine<T> {
+pub struct SOutputLine<T, HigherKinded: TMinMaxStrategiesPublicHigherKinded> {
     pub vect: Vec<T>,
-    pub perminmaxstrategyatplstrf: SPerMinMaxStrategy<[(String, f32); N_COLUMNS]>,
+    pub perminmaxstrategyatplstrf: HigherKinded::Type<[(String, f32); N_COLUMNS]>,
 }
 
 #[derive(Clone, /*TODO really needed for array construction?*/Copy)]
@@ -31,34 +31,42 @@ impl PartialEq for EGrouping {
     }
 }
 
-pub struct SPayoutStatsTable<T> {
-    vecoutputline: Vec<SOutputLine<T>>,
-    perminmaxstrategyaformatinfo: SPerMinMaxStrategy<[SFormatInfo; N_COLUMNS]>,
+pub struct SPayoutStatsTable<T, HigherKinded: TMinMaxStrategiesPublicHigherKinded> {
+    vecoutputline: Vec<SOutputLine<T, HigherKinded>>,
+    perminmaxstrategyaformatinfo: HigherKinded::Type<[SFormatInfo; N_COLUMNS]>,
 }
-impl<T> SPayoutStatsTable<T> {
+impl<T, HigherKinded: TMinMaxStrategiesPublicHigherKinded> SPayoutStatsTable<T, HigherKinded> {
     // TODO? would an accessor macro be helpful?
-    pub fn output_lines(&self) -> &Vec<SOutputLine<T>> {
+    pub fn output_lines(&self) -> &Vec<SOutputLine<T, HigherKinded>> {
         &self.vecoutputline
     }
-    pub fn into_output_lines(self) -> Vec<SOutputLine<T>> {
+    pub fn into_output_lines(self) -> Vec<SOutputLine<T, HigherKinded>> {
         self.vecoutputline
     }
-    pub fn format_infos(&self) -> &SPerMinMaxStrategy<[SFormatInfo; N_COLUMNS]> {
+    pub fn format_infos(&self) -> &HigherKinded::Type<[SFormatInfo; N_COLUMNS]> {
         &self.perminmaxstrategyaformatinfo
     }
 }
 
-pub fn internal_table<T, PayoutStatsPayload: Copy+Ord+std::fmt::Debug, PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategy<SPayoutStats<PayoutStatsPayload>>>>(
+pub fn internal_table<
+    HigherKinded: TMinMaxStrategiesPublicHigherKinded,
+    T,
+    PayoutStatsPayload: Copy+Ord+std::fmt::Debug,
+    PayoutStatsPerStrategy: Borrow<HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>>,
+>(
     mut vectpayoutstatsperstrategy: Vec<(T, PayoutStatsPerStrategy)>,
     b_group: bool,
     fn_loss_or_win: &dyn Fn(isize, PayoutStatsPayload) -> std::cmp::Ordering,
-) -> SPayoutStatsTable<T> {
+) -> SPayoutStatsTable<T, HigherKinded>
+    where
+        HigherKinded::Type<[(String, f32); N_COLUMNS]>: PartialEq+Clone,
+{
     vectpayoutstatsperstrategy.sort_unstable_by(|(_t_lhs, minmax_lhs), (_t_rhs, minmax_rhs)| {
         minmax_lhs.borrow().compare_canonical(minmax_rhs.borrow(), fn_loss_or_win)
     });
     vectpayoutstatsperstrategy.reverse(); // descending
-    let mut vecoutputline : Vec<SOutputLine<_>> = Vec::new();
-    let mut perminmaxstrategyaformatinfo = SPerMinMaxStrategy::new([
+    let mut vecoutputline : Vec<SOutputLine<_,_>> = Vec::new();
+    let mut perminmaxstrategyaformatinfo = HigherKinded::Type::new([
         SFormatInfo {
             f_min: f32::MAX,
             f_max: f32::MIN,
@@ -126,11 +134,18 @@ pub fn internal_table<T, PayoutStatsPayload: Copy+Ord+std::fmt::Debug, PayoutSta
     }
 }
 
-pub fn table<PayoutStatsPayload: Copy+Ord+std::fmt::Debug>(
-    determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<PayoutStatsPayload>>>,
+pub fn table<
+    HigherKinded: TMinMaxStrategiesPublicHigherKinded,
+    PayoutStatsPayload: Copy+Ord+std::fmt::Debug
+>(
+    determinebestcardresult: &SDetermineBestCardResult<HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>>,
     rules: &dyn TRules,
     fn_loss_or_win: &dyn Fn(isize, PayoutStatsPayload) -> std::cmp::Ordering,
-) -> SPayoutStatsTable<ECard> {
+) -> SPayoutStatsTable<ECard, HigherKinded>
+    where
+        HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>: std::fmt::Debug, // TODO needed?
+        HigherKinded::Type<[(String, f32); N_COLUMNS]>: PartialEq+Clone,
+{
     let mut payoutstatstable = internal_table(
         determinebestcardresult.cards_and_ts().collect(),
         /*b_group*/true,
