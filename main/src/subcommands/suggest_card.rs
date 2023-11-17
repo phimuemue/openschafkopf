@@ -417,7 +417,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         )
                     }}}
                     forward_with_args!(forward)
-                }.ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
+                        .ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?
+                };
                 if !print_json(
                     /*vectableline*/determinebestcardresult.cards_and_ts()
                         .map(|(card, payoutstatsperstrategy)|
