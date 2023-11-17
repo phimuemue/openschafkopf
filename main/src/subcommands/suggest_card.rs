@@ -323,7 +323,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             }}
             if clapmatches.is_present("no-details") {
                 macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($higherkinded:ident, $perminmaxstrategy:ident,), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
-                    itahand
+                    let mapemmstrategypaystats = itahand
                         .enumerate()
                         .par_bridge() // TODO can we derive a true parallel iterator?
                         .map(|(i_ahand, ahand)| {
@@ -355,25 +355,25 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     SPayoutStats::accumulate,
                                 )
                             }),
-                        )
+                        );
+                    // TODO this prints a table/json for each iterated rules, but we want to only print one table
+                    if !print_json(
+                        /*vectableline*/vec![SJsonTableLine::new(
+                            /*ostr_header*/None, // already given by str_rules
+                            /*perminmaxstrategyvecpayout_histogram*/json_histograms::<SPerMinMaxStrategyHigherKinded>(&mapemmstrategypaystats),
+                        )],
+                    ) {
+                        print_payoutstatstable::<_,SPerMinMaxStrategyHigherKinded>(
+                            &internal_table(
+                                vec![(rules, mapemmstrategypaystats)],
+                                /*b_group*/false,
+                                /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
+                            ),
+                            b_verbose,
+                        );
+                    }
                 }}}
-                let mapemmstrategypaystats = forward_with_args!(forward);
-                // TODO this prints a table/json for each iterated rules, but we want to only print one table
-                if !print_json(
-                    /*vectableline*/vec![SJsonTableLine::new(
-                        /*ostr_header*/None, // already given by str_rules
-                        /*perminmaxstrategyvecpayout_histogram*/json_histograms::<SPerMinMaxStrategyHigherKinded>(&mapemmstrategypaystats),
-                    )],
-                ) {
-                    print_payoutstatstable::<_,SPerMinMaxStrategyHigherKinded>(
-                        &internal_table(
-                            vec![(rules, mapemmstrategypaystats)],
-                            /*b_group*/false,
-                            /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
-                        ),
-                        b_verbose,
-                    );
-                }
+                forward_with_args!(forward);
             } else {
                 let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
                     macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($higherkinded:ident, $perminmaxstrategy:ident,), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
