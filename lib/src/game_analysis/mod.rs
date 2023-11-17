@@ -403,7 +403,7 @@ fn generate_analysis_html(
                     str_per_card += &crate::ai::gametree::output_card(card, /*b_border*/card==analysispercard.card_played);
                 }
                 str_per_card += "</td>";
-                for atplstrf in outputline.perminmaxstrategyatplstrf.via_accessors() {
+                for (_emmstrategy, atplstrf) in outputline.perminmaxstrategyatplstrf.via_accessors() {
                     // TODO simplify to one item per emmstrategy
                     for (str_num, _f) in atplstrf.iter() {
                         str_per_card += "<td>";
@@ -435,7 +435,7 @@ fn generate_analysis_html(
                     "<td colspan=\"{}\">N.A.</td>",
                     unwrap!(vecoutputline.iter()
                         .map(|outputline|
-                            outputline.perminmaxstrategyatplstrf.via_accessors().into_iter().flatten().count()
+                            outputline.perminmaxstrategyatplstrf.via_accessors().into_iter().map(|(_emmstrategy, atplstrf)| atplstrf).flatten().count()
                         )
                         .all_equal_value()),
                 ));

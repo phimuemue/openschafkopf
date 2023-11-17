@@ -61,7 +61,7 @@ fn print_payoutstatstable<T: std::fmt::Display>(
     }
     for (str_id, SOutputLine{vect:_, perminmaxstrategyatplstrf}) in vecstr_id.iter().zip_eq(slcoutputline.iter()) {
         print!("{str_id:<n_width_id$}: ");
-        for (atplstrf, aformatinfo) in itertools::zip_eq(
+        for ((_emmstrategy_atplstrf, atplstrf), (_emmstrategy_aformatinfo, aformatinfo)) in itertools::zip_eq(
             perminmaxstrategyatplstrf.via_accessors(),
             payoutstatstable.format_infos().via_accessors(),
         ) {

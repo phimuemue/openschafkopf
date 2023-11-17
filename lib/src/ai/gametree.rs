@@ -159,7 +159,7 @@ impl<
         self.write_all(player_table(self.epi, |epi| {
             Some(
                 minmax.via_accessors().into_iter()
-                    .map(|an_payout| an_payout[epi])
+                    .map(|(_emmstrategy, an_payout)| an_payout[epi])
                     .join("/")
             )
         }).as_bytes());
@@ -451,6 +451,7 @@ impl<'rules, Pruner, HigherKinded, MinMaxStrategies> SMinReachablePayoutBase<'ru
     }
 }
 
+#[derive(Clone, Copy)]
 pub enum EMinMaxStrategy {
     MinMin,
     Min,
@@ -508,12 +509,12 @@ macro_rules! impl_perminmaxstrategy{(
             $(fn_modify_element(&mut self.$ident_strategy.0, &$ident_strategy.0);)*
         }
 
-        fn via_accessors(&self) -> Vec<&T>
+        fn via_accessors(&self) -> Vec<(EMinMaxStrategy, &T)>
             where
                 T: 'static, // TODO why is this needed?
         {
             Self::accessors().iter()
-                .map(move |(_emmstrategy, fn_value_for_strategy)| fn_value_for_strategy(&self))
+                .map(move |(emmstrategy, fn_value_for_strategy)| (*emmstrategy, fn_value_for_strategy(&self)))
                 .collect()
         }
 
@@ -716,7 +717,7 @@ pub trait TMinMaxStrategiesPublic<HigherKinded: TMinMaxStrategiesPublicHigherKin
         other: &HigherKinded::Type<T1>, 
         fn_modify_element: impl FnMut(&mut <Self as TGenericArgs1>::Arg0, &T1),
     );
-    fn via_accessors(&self) -> Vec<&<Self as TGenericArgs1>::Arg0>
+    fn via_accessors(&self) -> Vec<(EMinMaxStrategy, &<Self as TGenericArgs1>::Arg0)>
         where
             <Self as TGenericArgs1>::Arg0: 'static; // TODO why is this needed?
     fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&<Self as TGenericArgs1>::Arg0)]; // TODO is there a better alternative?
