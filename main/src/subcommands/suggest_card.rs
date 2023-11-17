@@ -281,12 +281,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     },
                     match (clapmatches.value_of("prune")) {
                         Some("hint") => (
-                            SMinReachablePayoutBase,
                             SPrunerViaHint,
                             SPerMinMaxStrategyHigherKinded,
                         ),
                         _ => (
-                            SMinReachablePayoutBase,
                             SPrunerNothing,
                             SPerMinMaxStrategyHigherKinded,
                         ),
@@ -310,7 +308,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 )
             }}
             if clapmatches.is_present("no-details") {
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot:ident, $pruner:ident, $higherkinded:ident,), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident, $higherkinded:ident,), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     itahand
                         .enumerate()
                         .par_bridge() // TODO can we derive a true parallel iterator?
@@ -320,7 +318,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 (&mut ahand.clone(), &mut stichseq.clone()),
                                 rules,
                                 &$func_filter_allowed_cards,
-                                &<$foreachsnapshot<$pruner, $higherkinded>>::new(
+                                &<SMinReachablePayoutBase<$pruner, $higherkinded>>::new(
                                     rules,
                                     epi_position,
                                     expensifiers.clone(),
@@ -364,7 +362,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 }
             } else {
                 let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
-                    macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot:ident, $pruner:ident, $higherkinded:ident,), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                    macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident, $higherkinded:ident,), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                         let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                         determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_>( // TODO avoid explicit types
                             stichseq,
@@ -379,7 +377,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     })
                             ) as Box<_>,
                             $func_filter_allowed_cards,
-                            &<$foreachsnapshot<$pruner, $higherkinded>>::new(
+                            &<SMinReachablePayoutBase<$pruner, $higherkinded>>::new(
                                 rules,
                                 epi_position,
                                 expensifiers.clone(),
