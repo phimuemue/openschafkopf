@@ -21,8 +21,8 @@ use as_num::*;
 use std::io::IsTerminal;
 
 // TODO? can we make this a fn of SPayoutStatsTable?
-fn print_payoutstatstable<T: std::fmt::Display>(
-    payoutstatstable: &SPayoutStatsTable<T, SPerMinMaxStrategyHigherKinded>,
+fn print_payoutstatstable<T: std::fmt::Display, HigherKinded: TMinMaxStrategiesPublicHigherKinded>(
+    payoutstatstable: &SPayoutStatsTable<T, HigherKinded>,
     b_verbose: bool
 ) {
     let slcoutputline = &payoutstatstable.output_lines();
@@ -337,7 +337,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         /*perminmaxstrategyvecpayout_histogram*/json_histograms(&mapemmstrategypaystats),
                     )],
                 ) {
-                    print_payoutstatstable(
+                    print_payoutstatstable::<_,SPerMinMaxStrategyHigherKinded>(
                         &internal_table(
                             vec![(rules, mapemmstrategypaystats)],
                             /*b_group*/false,
@@ -400,7 +400,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         )
                         .collect(),
                 ) {
-                    print_payoutstatstable(
+                    print_payoutstatstable::<_,SPerMinMaxStrategyHigherKinded>(
                         &table(
                             &determinebestcardresult,
                             rules,
