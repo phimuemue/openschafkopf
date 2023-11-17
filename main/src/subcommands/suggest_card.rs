@@ -350,7 +350,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
                     macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($foreachsnapshot: ident), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                         let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
-                        determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_>( // TODO avoid explicit types
+                        determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_>( // TODO avoid explicit types
                             stichseq,
                             rules,
                             Box::new(

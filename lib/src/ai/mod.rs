@@ -98,7 +98,7 @@ impl SAi {
             )
     }
 
-    fn suggest_card_internal<SnapshotVisualizer: TSnapshotVisualizer<SMinMax>>(
+    fn suggest_card_internal<SnapshotVisualizer: TSnapshotVisualizer<SMaxMinMaxSelfishMin<EnumMap<EPlayerIndex, isize>>>>(
         &self,
         rules: &dyn TRules,
         stichseq: &SStichSequence,
@@ -119,7 +119,7 @@ impl SAi {
             card
         } else {
             macro_rules! forward_to_determine_best_card{(
-                ($func_filter_allowed_cards: expr, $foreachsnapshot: ident,),
+                ($func_filter_allowed_cards: expr, $foreachsnapshot: ty,),
                 $itahand: expr,
             ) => {{ // TODORUST generic closures
                 determine_best_card(
@@ -127,7 +127,7 @@ impl SAi {
                     rules,
                     Box::new($itahand) as Box<_>,
                     $func_filter_allowed_cards,
-                    &$foreachsnapshot::new(
+                    &<$foreachsnapshot>::new(
                         rules,
                         epi_current,
                         expensifiers.clone(),
@@ -149,15 +149,15 @@ impl SAi {
                 match (eremainingcards) {
                     _1|_2|_3 => (
                         SNoFilter::factory(),
-                        SMinReachablePayout,
+                        SMinReachablePayoutBase::<SPrunerNothing, SMaxMinMaxSelfishMinHigherKinded, SMaxMinMaxSelfishMin<EnumMap<EPlayerIndex, isize>>>,
                     ),
                     _4 => (
                         SNoFilter::factory(),
-                        SMinReachablePayoutLowerBoundViaHint,
+                        SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded, SMaxMinMaxSelfishMin<EnumMap<EPlayerIndex, isize>>>,
                     ),
                     _5|_6|_7|_8 => (
                         SBranchingFactor::factory(1, self.n_suggest_card_branches+1),
-                        SMinReachablePayoutLowerBoundViaHint,
+                        SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded, SMaxMinMaxSelfishMin<EnumMap<EPlayerIndex, isize>>>,
                     ),
                 },
                 match ((&self.aiparams, eremainingcards)) {
@@ -173,7 +173,7 @@ impl SAi {
                     },
                 },
             )).cards_with_maximum_value(|lhs, rhs| {
-                SPerMinMaxStrategy::compare_canonical( // TODO good idea?
+                SMaxMinMaxSelfishMin::compare_canonical( // TODO good idea?
                     lhs,
                     rhs,
                     |n_payout, ()| n_payout.cmp(&0), // TODO is this even correct?
@@ -182,7 +182,7 @@ impl SAi {
         }
     }
 
-    pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer<SMinMax>, Ruleset, GameAnnouncements, DetermineRules>(
+    pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer<SMaxMinMaxSelfishMin<EnumMap<EPlayerIndex, isize>>>, Ruleset, GameAnnouncements, DetermineRules>(
         &self,
         game: &SGameGeneric<Ruleset, GameAnnouncements, DetermineRules>,
         fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
@@ -273,7 +273,8 @@ impl<T: Ord + Copy + Debug> SPayoutStats<T> {
 pub fn determine_best_card<
     'stichseq,
     FilterAllowedCards: TFilterAllowedCards,
-    ForEachSnapshot: TForEachSnapshot<Output=SMinMax> + Sync,
+    HigherKinded: TMinMaxStrategiesPublicHigherKinded,
+    ForEachSnapshot: TForEachSnapshot + Sync,
     SnapshotCache: TSnapshotCache<ForEachSnapshot::Output>,
     OSnapshotCache: Into<Option<SnapshotCache>>,
     SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
@@ -290,7 +291,11 @@ pub fn determine_best_card<
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, ECard) + std::marker::Sync),
     epi_result: EPlayerIndex,
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
-) -> Option<SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<PayoutStatsPayload>>>> {
+) -> Option<SDetermineBestCardResult<HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>>>
+    where
+        ForEachSnapshot::Output: TMinMaxStrategiesPublic<HigherKinded, Arg0=EnumMap<EPlayerIndex, isize>>,
+        HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>: /*TODO avoidable?*/Debug+Send,
+{
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
         ECard::map_from_fn(|_card| None),
@@ -334,7 +339,7 @@ pub fn determine_best_card<
                     )
                 }
             });
-            let payoutstats = output.map(|mapepin_payout|
+            let payoutstats : HigherKinded::Type<SPayoutStats<PayoutStatsPayload>> = output.map(|mapepin_payout|
                 SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[epi_result]))
             );
             let mapcardooutput = Arc::clone(&mapcardooutput);
@@ -344,7 +349,7 @@ pub fn determine_best_card<
                 Some(ref mut output_return) => {
                     output_return.modify_with_other(
                         &payoutstats,
-                        SPayoutStats::accumulate,
+                        |lhs, rhs| SPayoutStats::accumulate(lhs, rhs),
                     );
                 },
             }
