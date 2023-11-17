@@ -112,6 +112,12 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
             .long_help("Prematurely stop game tree exploration if result is tenatively known. Example: If, for a Solo, someone already reached 70 points after the fifth stich, the Solo is surely won, so the exploration can just stop right there (at the expense of a more inaccurate result).")
             .possible_values(["none", "hint"])
         )
+        .arg(clap::Arg::new("strategy")
+            .long("strategy")
+            .takes_value(true)
+            .help("Restrict to one specific strategy")
+            .possible_values(["maxmin", "maxselfishmin"])
+        )
         .arg(clap::Arg::new("visualize")
             .long("visualize")
             .takes_value(true)
@@ -228,6 +234,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 OnePerWinnerIndex(Option<EPlayerIndex>),
             }
             use EBranching::*;
+            enum ESingleStrategy {
+                // TODO support
+            }
+            let oesinglestrategy : Option<ESingleStrategy> = match clapmatches.value_of("strategy") {
+                None => Ok(None),
+                Some(_) => Err(format_err!("Could not understand strategy.")),
+            }?;
             macro_rules! forward_with_args{($forward:ident) => {
                 cartesian_match!(
                     forward,
@@ -280,13 +293,14 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         }),
                     },
                     match (clapmatches.value_of("prune")) {
-                        Some("hint") => (
-                            SPrunerViaHint,
-                            SPerMinMaxStrategyHigherKinded,
-                        ),
+                        Some("hint") => (SPrunerViaHint),
+                        _ => (SPrunerNothing),
+                    },
+                    match (oesinglestrategy) {
+                        // TODO support this
                         _ => (
-                            SPrunerNothing,
                             SPerMinMaxStrategyHigherKinded,
+                            SPerMinMaxStrategy,
                         ),
                     },
                     match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
@@ -308,7 +322,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 )
             }}
             if clapmatches.is_present("no-details") {
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident, $higherkinded:ident,), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($higherkinded:ident, $perminmaxstrategy:ident,), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     itahand
                         .enumerate()
                         .par_bridge() // TODO can we derive a true parallel iterator?
@@ -334,7 +348,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             })
                         })
                         .reduce(
-                            /*identity*/|| SPerMinMaxStrategy::new(SPayoutStats::new_identity_for_accumulate()),
+                            /*identity*/|| $perminmaxstrategy::new(SPayoutStats::new_identity_for_accumulate()),
                             /*op*/mutate_return!(|perminmaxstrategypayoutstats_lhs, perminmaxstrategypayoutstats_rhs| {
                                 perminmaxstrategypayoutstats_lhs.modify_with_other(
                                     &perminmaxstrategypayoutstats_rhs,
@@ -362,7 +376,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 }
             } else {
                 let determinebestcardresult = { // we are interested in payout => single-card-optimization useless
-                    macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident, $higherkinded:ident,), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                    macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($higherkinded:ident, $perminmaxstrategy:ident,), ($fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                         let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                         determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_>( // TODO avoid explicit types
                             stichseq,
