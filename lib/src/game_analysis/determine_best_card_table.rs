@@ -1,5 +1,5 @@
 use crate::ai::{
-    gametree::{TMinMaxStrategiesPublicHigherKinded, TMinMaxStrategiesPublic},
+    gametree::{TMinMaxStrategiesHigherKinded, TMinMaxStrategies},
     SDetermineBestCardResult, SPayoutStats,
 };
 use crate::primitives::*;
@@ -12,7 +12,7 @@ pub const N_COLUMNS : usize = 4;
 
 // crude formatting: treat all numbers as f32, and convert structured input to a plain number table
 #[derive(PartialEq)]
-pub struct SOutputLine<T, HigherKinded: TMinMaxStrategiesPublicHigherKinded> {
+pub struct SOutputLine<T, HigherKinded: TMinMaxStrategiesHigherKinded> {
     pub vect: Vec<T>,
     pub perminmaxstrategyatplstrf: HigherKinded::Type<[(String, f32); N_COLUMNS]>,
 }
@@ -31,11 +31,11 @@ impl PartialEq for EGrouping {
     }
 }
 
-pub struct SPayoutStatsTable<T, HigherKinded: TMinMaxStrategiesPublicHigherKinded> {
+pub struct SPayoutStatsTable<T, HigherKinded: TMinMaxStrategiesHigherKinded> {
     vecoutputline: Vec<SOutputLine<T, HigherKinded>>,
     perminmaxstrategyaformatinfo: HigherKinded::Type<[SFormatInfo; N_COLUMNS]>,
 }
-impl<T, HigherKinded: TMinMaxStrategiesPublicHigherKinded> SPayoutStatsTable<T, HigherKinded> {
+impl<T, HigherKinded: TMinMaxStrategiesHigherKinded> SPayoutStatsTable<T, HigherKinded> {
     // TODO? would an accessor macro be helpful?
     pub fn output_lines(&self) -> &Vec<SOutputLine<T, HigherKinded>> {
         &self.vecoutputline
@@ -49,7 +49,7 @@ impl<T, HigherKinded: TMinMaxStrategiesPublicHigherKinded> SPayoutStatsTable<T, 
 }
 
 pub fn internal_table<
-    HigherKinded: TMinMaxStrategiesPublicHigherKinded,
+    HigherKinded: TMinMaxStrategiesHigherKinded,
     T,
     PayoutStatsPayload: Copy+Ord+std::fmt::Debug,
     PayoutStatsPerStrategy: Borrow<HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>>,
@@ -135,7 +135,7 @@ pub fn internal_table<
 }
 
 pub fn table<
-    HigherKinded: TMinMaxStrategiesPublicHigherKinded,
+    HigherKinded: TMinMaxStrategiesHigherKinded,
     PayoutStatsPayload: Copy+Ord+std::fmt::Debug
 >(
     determinebestcardresult: &SDetermineBestCardResult<HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>>,

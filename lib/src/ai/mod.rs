@@ -273,7 +273,7 @@ impl<T: Ord + Copy + Debug> SPayoutStats<T> {
 pub fn determine_best_card<
     'stichseq,
     FilterAllowedCards: TFilterAllowedCards,
-    HigherKinded: TMinMaxStrategiesPublicHigherKinded,
+    HigherKinded: TMinMaxStrategiesHigherKinded,
     ForEachSnapshot: TForEachSnapshot + Sync,
     SnapshotCache: TSnapshotCache<ForEachSnapshot::Output>,
     OSnapshotCache: Into<Option<SnapshotCache>>,
@@ -293,7 +293,7 @@ pub fn determine_best_card<
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
 ) -> Option<SDetermineBestCardResult<HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>>>
     where
-        ForEachSnapshot::Output: TMinMaxStrategiesPublic<HigherKinded, Arg0=EnumMap<EPlayerIndex, isize>>,
+        ForEachSnapshot::Output: TMinMaxStrategies<HigherKinded, Arg0=EnumMap<EPlayerIndex, isize>>,
         HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>: /*TODO avoidable?*/Debug+Send,
 {
     let mapcardooutput = Arc::new(Mutex::new(

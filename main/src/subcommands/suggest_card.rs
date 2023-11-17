@@ -22,7 +22,7 @@ use as_num::*;
 use std::io::IsTerminal;
 
 // TODO? can we make this a fn of SPayoutStatsTable?
-fn print_payoutstatstable<T: std::fmt::Display, HigherKinded: TMinMaxStrategiesPublicHigherKinded>(
+fn print_payoutstatstable<T: std::fmt::Display, HigherKinded: TMinMaxStrategiesHigherKinded>(
     payoutstatstable: &SPayoutStatsTable<T, HigherKinded>,
     b_verbose: bool
 ) {
@@ -146,7 +146,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     #[derive(new, Serialize)]
-    struct SJsonTableLine<HigherKinded: TMinMaxStrategiesPublicHigherKinded>
+    struct SJsonTableLine<HigherKinded: TMinMaxStrategiesHigherKinded>
         where
             HigherKinded::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
     {
@@ -154,7 +154,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         perminmaxstrategyvecpayout_histogram: HigherKinded::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>,
     }
     #[derive(new, Serialize)]
-    struct SJson<HigherKinded: TMinMaxStrategiesPublicHigherKinded+Serialize>
+    struct SJson<HigherKinded: TMinMaxStrategiesHigherKinded+Serialize>
         where
             HigherKinded::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
     {
@@ -196,7 +196,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     (n_payout, n_payout.cmp(&0))
                 }
             };
-            fn json_histograms<HigherKinded: TMinMaxStrategiesPublicHigherKinded>(payoutstatsperstrategy: &HigherKinded::Type<SPayoutStats<std::cmp::Ordering>>)
+            fn json_histograms<HigherKinded: TMinMaxStrategiesHigherKinded>(payoutstatsperstrategy: &HigherKinded::Type<SPayoutStats<std::cmp::Ordering>>)
                 -> HigherKinded::Type<Vec<((isize, char), usize)>>
             {
                 payoutstatsperstrategy.map(|payoutstats| 
@@ -215,7 +215,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         .collect()
                 )
             }
-            fn print_json<HigherKinded: TMinMaxStrategiesPublicHigherKinded+Serialize>( // TODORUST generic closure
+            fn print_json<HigherKinded: TMinMaxStrategiesHigherKinded+Serialize>( // TODORUST generic closure
                 clapmatches: &clap::ArgMatches,
                 rules: &dyn TRules,
                 ahand_fixed_with_holes: &EnumMap<EPlayerIndex, SHand>,
