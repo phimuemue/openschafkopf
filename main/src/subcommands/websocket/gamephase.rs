@@ -99,12 +99,12 @@ type VGamePhaseActivePlayerInfo<'a> = VGamePhaseGeneric<
 >;
 
 type SActivelyPlayableRulesIdentifier = String;
-fn find_rules_by_id(slcrulegroup: &[SRuleGroup], hand: SFullHand, orulesid: &Option<SActivelyPlayableRulesIdentifier>) -> Result<Option<Box<SActivelyPlayableRules>>, ()> {
+fn find_rules_by_id(slcrulegroup: &[SRuleGroup], hand: SFullHand, orulesid: &Option<SActivelyPlayableRulesIdentifier>) -> Result<Option<SActivelyPlayableRules>, ()> {
     allowed_rules(slcrulegroup, hand)
         .find(|orules|
             &orules.map(<SActivelyPlayableRules>::to_string)==orulesid
         )
-        .map(|orules| orules.map(TActivelyPlayableRulesBoxClone::box_clone)) // TODO box_clone needed?
+        .map(|orules| orules.map(|rules| rules.clone())) // TODO clone needed?
         .ok_or(())
 }
 
@@ -327,7 +327,7 @@ impl VGamePhase {
                 Game((game, (epi_card, vecepi_stoss))) => {
                     SSendToPlayers::new(
                         game.stichseq.visible_stichs(),
-                        Some(game.rules.as_ref()),
+                        Some(&game.rules),
                         |epi| game.ahand[epi].cards(),
                         /*fn_msg_active*/ |epi| {
                             if_then_some!(vecepi_stoss.contains(&epi),
@@ -357,7 +357,7 @@ impl VGamePhase {
                             &[]
                         },
                         if_then_some!(let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame,
-                            game.rules.as_ref()
+                            &game.rules
                         ),
                         /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
                         /*fn_msg_active*/ |epi| {

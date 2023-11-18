@@ -11,6 +11,7 @@ use openschafkopf_lib::{
         SDoublings,
         SStoss,
         SStossParams,
+        TRules,
         parser::parse_rule_description,
     },
 };
@@ -577,7 +578,7 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
         if game.stichseq.remaining_cards_per_hand()[epi_active]<=if_dbg_else!({2}{5}) {
             let determinebestcardresult = unwrap!(determine_best_card(
                 &game.stichseq,
-                game.rules.as_ref(),
+                &game.rules,
                 Box::new(all_possible_hands(
                     &game.stichseq,
                     if B_CHEAT {
@@ -585,12 +586,12 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
                     } else {
                         (game.ahand[epi_active].clone(), epi_active).to_ahand()
                     },
-                    game.rules.as_ref(),
+                    &game.rules,
                     &game.expensifiers.vecstoss,
                 )),
                 /*fn_make_filter*/SNoFilter::factory(),
                 /*foreachsnapshot*/&SMinReachablePayout::new(
-                    game.rules.as_ref(),
+                    &game.rules,
                     epi_active,
                     game.expensifiers.clone(),
                 ),
@@ -1252,7 +1253,7 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
                     aveccard_played
                         [epi_to_netschafkopf_playerindex(unwrap!(stichseq.current_stich().current_playerindex()))-1]
                         [stichseq.completed_stichs().len()],
-                    rules.as_ref(),
+                    &rules,
                 );
             }
             info!("{:?}", stichseq);

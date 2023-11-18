@@ -17,7 +17,7 @@ fn test_determine_best_card() {
             [H9, H8, H7, E9, GK, SA, SK, S9],
         ]).map_into(|acard| acard.into()),
         game::SExpensifiersNoStoss::new(/*n_stock*/0),
-        <dyn TRules>::box_clone(&rulesrufspiel::SRulesRufspiel::new(
+        SActivelyPlayableRules::from(rulesrufspiel::SRulesRufspiel::new(
             EPlayerIndex::EPI0,
             EFarbe::Eichel,
             payoutdecider::SPayoutDeciderParams::new(
@@ -31,7 +31,7 @@ fn test_determine_best_card() {
             SStossParams::new(
                 /*n_stoss_max*/4,
             ),
-        )),
+        )).into(),
     );
     fn play_stichs(game: &mut SGame, slctplepistich: &[(EPlayerIndex, [ECard; EPlayerIndex::SIZE])]) {
         for (epi, card) in slctplepistich.iter()
@@ -92,7 +92,7 @@ fn detect_expensive_all_possible_hands() {
                     let vecahand = all_possible_hands(
                         &game.stichseq,
                         (game.ahand[epi_current].clone(), epi_current),
-                        game.rules.as_ref(),
+                        &game.rules,
                         &game.expensifiers.vecstoss,
                     )
                         .collect::<Vec<_>>();
@@ -127,7 +127,7 @@ fn detect_expensive_all_possible_hands() {
                         assert_bound(
                             explore_snapshots(
                                 (&mut ahand, &mut game.stichseq.clone()),
-                                game.rules.as_ref(),
+                                &game.rules,
                                 &SNoFilter::factory(),
                                 &SLeafCounter{},
                                 &SSnapshotCacheNone::factory(),

@@ -11,7 +11,10 @@ mod common_given_game;
 
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    rules::ruleset::{SRuleSet, TRuleSet, VStockOrT},
+    rules::{
+        TRules,
+        ruleset::{SRuleSet, TRuleSet, VStockOrT},
+    },
     ai::SAi,
     primitives::card::EKurzLang,
     game::*,

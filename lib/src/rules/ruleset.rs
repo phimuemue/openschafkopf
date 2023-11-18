@@ -8,7 +8,7 @@ use std::{fs::File, io::prelude::*, path::Path};
 #[derive(Debug, Clone)]
 pub struct SRuleGroup {
     pub str_name : String,
-    pub vecorules : Vec<Option<Box<SActivelyPlayableRules>>>,
+    pub vecorules : Vec<Option<SActivelyPlayableRules>>,
 }
 
 impl SRuleGroup {
@@ -31,7 +31,8 @@ impl SRuleGroup {
     }
 
     pub fn allowed_rules<'retval, 'hand : 'retval, 'rules : 'retval>(&'rules self, hand: SFullHand<'hand>) -> impl Clone + Iterator<Item=Option<&'rules SActivelyPlayableRules>> + 'retval {
-        self.vecorules.iter().map(|orules| orules.as_ref().map(|rules| rules.as_ref()))
+        self.vecorules.iter()
+            .map(|orules| orules.as_ref())
             .filter(move |orules| orules.map_or(true, |rules| rules.can_be_played(hand)))
     }
 }
@@ -51,7 +52,7 @@ pub enum EDoublingScope {
 #[derive(new, Debug, Clone)]
 pub struct SRuleSet {
     pub avecrulegroup : EnumMap<EPlayerIndex, Vec<SRuleGroup>>,
-    pub stockorramsch : VStockOrT</*n_stock*/isize, Box<SRules>>,
+    pub stockorramsch : VStockOrT</*n_stock*/isize, SRulesRamsch>,
     pub oedoublingscope : Option<EDoublingScope>,
     pub ekurzlang : EKurzLang,
 }
@@ -142,13 +143,11 @@ impl SRuleSet {
                     }
                 } as Result<_, Error>)?;
                 read_int(val_ramsch, "price").map(|n_price|
-                    VStockOrT::OrT(Box::new(
-                        SRulesRamsch::new(
-                            n_price.as_num(),
-                            durchmarsch,
-                            ojungfrau,
-                        )
-                    ) as Box<SRules>)
+                    VStockOrT::OrT(SRulesRamsch::new(
+                        n_price.as_num(),
+                        durchmarsch,
+                        ojungfrau,
+                    ))
                 )
             },
             (None, Some(val_stock)) => {
@@ -198,12 +197,12 @@ impl SRuleSet {
                 |payoutparams: SPayoutDeciderParams| {
                     EFarbe::values()
                         .filter(|efarbe| EFarbe::Herz!=*efarbe)
-                        .map(|efarbe| Some(Box::new(SRulesRufspiel::new(
+                        .map(|efarbe| Some(SRulesRufspiel::new(
                             epi,
                             efarbe,
                             payoutparams.clone(),
                             stossparams.clone(),
-                        )) as Box<SActivelyPlayableRules>))
+                        ).into()))
                         .collect()
                 }
             )?;
@@ -288,15 +287,18 @@ impl SRuleSet {
                         .or_else(|_err| 
                             fallback(&format!("{}.price", str_rule_name_file), /*str_base_price_fallback*/"base-price")
                         )?;
-                    fn push_bettel<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich>(vecrulegroup: &mut Vec<SRuleGroup>, epi: EPlayerIndex, n_payout_base: isize, stossparams: SStossParams) {
+                    fn push_bettel<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich>(vecrulegroup: &mut Vec<SRuleGroup>, epi: EPlayerIndex, n_payout_base: isize, stossparams: SStossParams)
+                        where
+                            SRulesBettel<BettelAllAllowedCardsWithinStich>: Into<SActivelyPlayableRules>,
+                    {
                         vecrulegroup.push(SRuleGroup{
                             str_name: "Bettel".to_string(),
-                            vecorules: vec![Some(Box::new(SRulesBettel::<BettelAllAllowedCardsWithinStich>::new(
+                            vecorules: vec![Some(SRulesBettel::<BettelAllAllowedCardsWithinStich>::new(
                                 epi,
                                 /*i_prio, large negative number to make less important than any sololike*/-999_999,
                                 n_payout_base.as_num::<isize>(),
                                 stossparams,
-                            )) as Box<SActivelyPlayableRules>)],
+                            ).into())],
                         });
                     }
                     if Some(true) == tomlval_bettel.get("stichzwang").and_then(|tomlval| tomlval.as_bool()) {

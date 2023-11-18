@@ -4,6 +4,7 @@ use crate::{
         SPlayerPartiesTable,
         card_points::points_card,
         SRules,
+        TRules,
     },
     util::*,
     ai::{
@@ -354,7 +355,8 @@ mod tests {
             },
             SStossParams,
             SRules,
-            TRulesBoxClone,
+            SActivelyPlayableRules,
+            TRules,
         },
         util::*,
         ai::{
@@ -374,7 +376,7 @@ mod tests {
         let stossparams = SStossParams::new(
             /*n_stoss_max*/4,
         );
-        let rules_rufspiel_eichel_epi0 = SRulesRufspiel::new(
+        let rules_rufspiel_eichel_epi0 = SRules::from(SActivelyPlayableRules::from(SRulesRufspiel::new(
             EPlayerIndex::EPI0,
             EFarbe::Eichel,
             SPayoutDeciderParams::new(
@@ -386,7 +388,7 @@ mod tests {
                 ),
             ),
             stossparams.clone(),
-        );
+        )));
         fn assert_stichoracle(
             rules: &SRules,
             aslccard_hand: [&[ECard]; EPlayerIndex::SIZE],
@@ -435,7 +437,7 @@ mod tests {
                     "\nRules:{} von {}\nHands:\n {}\nStichseq: {}\nStichs:\n{:?}\n{}\n",
                     rules,
                     unwrap!(rules.playerindex()),
-                    display_card_slices(ahand, &rules, "\n "),
+                    display_card_slices(ahand, rules, "\n "),
                     stichseq.visible_stichs().iter().join(", "),
                     vecstich_not_in_superset,
                     str_msg,
@@ -739,7 +741,7 @@ mod tests {
                 // [S8, __, SZ, S7] // covered by [S8, __, SZ, S9]
             ],
         );
-        let rules_rufspiel_gras_epi3 = SRulesRufspiel::new(
+        let rules_rufspiel_gras_epi3 = SRules::from(SActivelyPlayableRules::from(SRulesRufspiel::new(
             EPlayerIndex::EPI3,
             EFarbe::Gras,
             SPayoutDeciderParams::new(
@@ -751,7 +753,7 @@ mod tests {
                 ),
             ),
             stossparams.clone(),
-        );
+        )));
         assert_stichoracle(
             &rules_rufspiel_gras_epi3,
             [
@@ -813,7 +815,7 @@ mod tests {
             ESoloLike::Solo,
         );
         assert_stichoracle(
-            TRulesBoxClone::box_clone(rules_solo_gras_epi0.as_ref()).as_ref(),
+            &rules_solo_gras_epi0.into(),
             [
                 &[EO, GO, HO, GZ, G7, EA, EZ, HK],
                 &[SO, EU, HU, GA, GK, HA, SA, S9],
@@ -1173,9 +1175,9 @@ mod tests {
             EPlayerIndex::EPI3,
             EFarbe::Eichel,
             ESoloLike::Wenz,
-        );
+        ).into();
         assert_stichoracle(
-            TRulesBoxClone::box_clone(rules_farbwenz_eichel_epi3.as_ref()).as_ref(),
+            &rules_farbwenz_eichel_epi3,
             [ // This seems to be an expensive card distribution.
                 &[GA, GZ, G8, HA, HK, H8, H7, SO],
                 &[GU, GK, GO, G9, G7, H9, SK, S8],
@@ -2012,7 +2014,7 @@ mod tests {
             ],
         );
         assert_stichoracle(
-            TRulesBoxClone::box_clone(rules_farbwenz_eichel_epi3.as_ref()).as_ref(),
+            &rules_farbwenz_eichel_epi3,
             [
                 &[GA, GZ, G8, HA, HK, H8, SO],
                 &[GU, GK, GO, G9, G7, SK, S8],
@@ -2343,7 +2345,7 @@ mod tests {
             ],
         );
         assert_stichoracle(
-            TRulesBoxClone::box_clone(rules_farbwenz_eichel_epi3.as_ref()).as_ref(),
+            &rules_farbwenz_eichel_epi3,
             [
                 &[GA, GZ, G8, HA, HK, H8, SO],
                 &[GU, GK, GO, G9, G7, SK, S8],
@@ -2442,7 +2444,7 @@ mod tests {
                         macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr,) => {
                             unwrap!(determine_best_card::<$ty_fn_make_filter,_,_,_,_,_,_,_>(
                                 &game.stichseq,
-                                game.rules.as_ref(),
+                                &game.rules,
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                                 $fn_make_filter,
                                 &SMinReachablePayout::new_from_game(game),
@@ -2466,7 +2468,7 @@ mod tests {
                             fwd!(
                                 SFilterByOracle,
                                 /*fn_make_filter*/|stichseq, ahand| {
-                                    SFilterByOracle::new(game.rules.as_ref(), ahand, stichseq)
+                                    SFilterByOracle::new(&game.rules, ahand, stichseq)
                                 },
                             ),
                             fwd!(
@@ -2508,7 +2510,7 @@ mod tests {
                                 SGameGeneric::new_with(
                                     gamepreparations.aveccard.clone(),
                                     gamepreparations.expensifiers.clone(),
-                                    rules.upcast().box_clone(),
+                                    rules.clone().into(),
                                     gamepreparations.ruleset,
                                     /*gameannouncements*/(),
                                     /*determinerules*/(),

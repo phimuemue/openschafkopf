@@ -1,8 +1,5 @@
 use super::*;
 use crate::player::*;
-use crate::rules::{
-    TActivelyPlayableRulesBoxClone, // TODO improve trait-object behaviour
-};
 use std::sync::mpsc;
 
 pub struct SAtTable {
@@ -48,7 +45,7 @@ pub fn internal_run_simple_game_loop<ItStockOrGame: Iterator<Item=VStockOrT<SGam
                                     communicate_via_channel(|txb_stoss| {
                                         aattable[**epi].player.ask_for_stoss(
                                             **epi,
-                                            game.rules.as_ref(),
+                                            &game.rules,
                                             &game.ahand[**epi],
                                             &game.stichseq,
                                             &game.expensifiers,
@@ -111,7 +108,7 @@ pub fn run_simple_game_loop(
                             None,
                             txorules
                         );
-                    }).map(TActivelyPlayableRulesBoxClone::box_clone)
+                    }).map(SActivelyPlayableRules::clone)
                 ));
             }
             info!("Asked players if they want to play. Determining rules");
@@ -128,7 +125,7 @@ pub fn run_simple_game_loop(
                                 Some(determinerules.currently_offered_prio()),
                                 txorules
                             );
-                        }).map(TActivelyPlayableRulesBoxClone::box_clone) {
+                        }).map(SActivelyPlayableRules::clone) {
                             unwrap!(determinerules.announce_game(epi, rules));
                         } else {
                             unwrap!(determinerules.resign(epi));

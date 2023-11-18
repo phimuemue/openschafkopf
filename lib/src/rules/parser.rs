@@ -8,7 +8,7 @@ pub fn parse_rule_description(
     (n_tarif_extra, n_tarif_ruf, n_tarif_solo): (isize, isize, isize),
     stossparams: SStossParams,
     fn_player_to_epi: impl Fn(&str)->Result<EPlayerIndex, Error>,
-) -> Result<Box<SRules>, Error> {
+) -> Result<SRules, Error> {
     use crate::rules::rulesrufspiel::*;
     use crate::rules::rulessolo::*;
     use crate::rules::rulesbettel::*;
@@ -67,7 +67,7 @@ pub fn parse_rule_description(
                     ),
                 ),
                 stossparams.clone(),
-            ).upcast_box())
+            ).into())
         }}
         if str_rules_contains(&["tout"]) {
             make_sololike_internal!(SPayoutDeciderTout)
@@ -83,7 +83,7 @@ pub fn parse_rule_description(
                     EFarbe::Herz => Err(format_err!("Rufspiel incompatible with EFarbe::Herz")),
                     EFarbe::Eichel | EFarbe::Gras | EFarbe::Schelln => {
                         get_epi_active().map(|epi| {
-                            Box::new(SRulesRufspiel::new(
+                            SActivelyPlayableRules::from(SRulesRufspiel::new(
                                 epi,
                                 efarbe,
                                 SPayoutDeciderParams::new(
@@ -95,7 +95,7 @@ pub fn parse_rule_description(
                                     ),
                                 ),
                                 stossparams.clone(),
-                            )) as Box<SRules>
+                            )).into()
                         })
                     }
                 }
@@ -106,30 +106,30 @@ pub fn parse_rule_description(
         (&["geier"], make_sololike(ESoloLike::Geier)),
         (&["bettel normal"], {
             get_epi_active().map(|epi| {
-                Box::new(SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>::new(
+                SActivelyPlayableRules::from(SRulesBettel::<SBettelAllAllowedCardsWithinStichNormal>::new(
                     epi,
                     /*i_prio*/-999_999,
                     /*n_payout_base*/n_tarif_solo,
                     stossparams.clone(),
-                )) as Box<SRules>
+                )).into()
             })
         }),
         (&["bettel stich"], {
             get_epi_active().map(|epi| {
-                Box::new(SRulesBettel::<SBettelAllAllowedCardsWithinStichStichzwang>::new(
+                SActivelyPlayableRules::from(SRulesBettel::<SBettelAllAllowedCardsWithinStichStichzwang>::new(
                     epi,
                     /*i_prio*/-999_999,
                     /*n_payout_base*/n_tarif_solo,
                     stossparams.clone(),
-                )) as Box<SRules>
+                )).into()
             })
         }),
         (&["ramsch"], {
-            Ok(Box::new(SRulesRamsch::new(
+            Ok(SRulesRamsch::new(
                 /*n_price*/n_tarif_ruf,
                 VDurchmarsch::AtLeast(91), // https://www.sauspiel.de/blog/66-bei-sauspiel-wird-jetzt-mit-ramsch-gespielt
                 Some(VJungfrau::DoubleAll),
-            )) as Box<SRules>)
+            ).into())
         }),
     ].into_iter()
         .filter(|(slcstr, _)| str_rules_contains(slcstr))
@@ -147,7 +147,7 @@ pub fn parse_rule_description(
     }
 }
 
-pub fn parse_rule_description_simple(str_rules: &str) -> Result<Box<SRules>, Error> {
+pub fn parse_rule_description_simple(str_rules: &str) -> Result<SRules, Error> {
     crate::rules::parser::parse_rule_description(
         str_rules,
         (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO? make customizable

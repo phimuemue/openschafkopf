@@ -30,6 +30,7 @@ use std::{
     collections::HashMap,
 };
 use itertools::Itertools;
+use enum_dispatch::enum_dispatch;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum VTrumpfOrFarbe {
@@ -299,9 +300,10 @@ impl SRuleStateCache {
     }
 }
 
-pub type SRules = dyn TRules;
+#[enum_dispatch]
+pub trait TRules : fmt::Display + Sync + fmt::Debug + Send + Clone {
+    fn disable_trait_objects<T>(self, _t: T) {}
 
-pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone + Send {
     // STrumpfDecider
     fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe;
     fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering>;
@@ -442,7 +444,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
     }
 
     fn points_as_payout(&self) -> Option<(
-        Box<SRules>,
+        SRules,
         Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
         None
@@ -471,9 +473,6 @@ impl<'rules> TWinnerIndex for &'rules SRules {
         self.preliminary_winner_index(stich.borrow())
     }
 }
-
-make_upcastable!(TAsRules, TRules);
-make_box_clone!(TRulesBoxClone, TRules);
 
 #[derive(PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]
 pub enum VGameAnnouncementPrioritySoloLike {
@@ -521,47 +520,89 @@ plain_enum_mod!(modebid, EBid {
     Higher,
 });
 
-pub type SActivelyPlayableRules = dyn TActivelyPlayableRules;
-
-pub trait TActivelyPlayableRules : TRules + TActivelyPlayableRulesBoxClone {
+#[enum_dispatch]
+pub trait TActivelyPlayableRules : TRules {
     fn priority(&self) -> VGameAnnouncementPriority;
-    fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<SActivelyPlayableRules>> {
+    fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<SActivelyPlayableRules>
+        where
+            Self: Into<SActivelyPlayableRules>,
+    {
         if match ebid {
             EBid::AtLeast => {*prio<=self.priority()},
             EBid::Higher => {*prio<self.priority()},
         } {
-            Some(TActivelyPlayableRulesBoxClone::box_clone(self))
+            Some(self.clone().into())
         } else {
             self.with_increased_prio(prio, ebid)
         }
     }
-    fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Box<SActivelyPlayableRules>> {
+    fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<SActivelyPlayableRules> {
         None
     }
     fn active_playerindex(&self) -> EPlayerIndex {
         unwrap!(self.playerindex())
     }
 }
-make_box_clone!(TActivelyPlayableRulesBoxClone, TActivelyPlayableRules);
 
-impl TCardSorter for &SRules {
+use rulesrufspiel::{SRulesRufspiel, SRulesRufspielGeneric, SRufspielPayoutPointsAsPayout};
+use rulesramsch::SRulesRamsch;
+use rulessolo::{SRulesSoloLike, SPayoutDeciderTout, SPayoutDeciderSie};
+use rulesbettel::{SRulesBettel, SBettelAllAllowedCardsWithinStichNormal, SBettelAllAllowedCardsWithinStichStichzwang};
+use payoutdecider::{SPayoutDeciderPointBased, SPayoutDeciderPointsAsPayout};
+
+#[derive(Debug, Clone)]
+#[enum_dispatch(TRules)]
+pub enum SRules {
+    ActivelyPlayable(SActivelyPlayableRules),
+    Ramsch(SRulesRamsch),
+}
+
+impl std::fmt::Display for SRules {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            Self::ActivelyPlayable(rules) => rules.fmt(fmt),
+            Self::Ramsch(rules) => rules.fmt(fmt),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+#[enum_dispatch(TActivelyPlayableRules)]
+#[enum_dispatch(TRules)]
+pub enum SActivelyPlayableRules {
+    Rufspiel(SRulesRufspiel),
+    RufspielPointsAsPayout(SRulesRufspielGeneric<SRufspielPayoutPointsAsPayout>),
+    SoloLikePointBased(SRulesSoloLike<SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike>>),
+    SoloLikeTout(SRulesSoloLike<SPayoutDeciderTout>),
+    SoloLikeSie(SRulesSoloLike<SPayoutDeciderSie>),
+    SoloLikePointsAsPayout(SRulesSoloLike<SPayoutDeciderPointsAsPayout<VGameAnnouncementPrioritySoloLike>>),
+    BettelNormal(SRulesBettel<SBettelAllAllowedCardsWithinStichNormal>),
+    BettelStichzwang(SRulesBettel<SBettelAllAllowedCardsWithinStichStichzwang>),
+}
+
+impl std::fmt::Display for SActivelyPlayableRules {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            Self::Rufspiel(rules) => rules.fmt(fmt),
+            Self::RufspielPointsAsPayout(rules) => rules.fmt(fmt),
+            Self::SoloLikePointBased(rules) => rules.fmt(fmt),
+            Self::SoloLikeTout(rules) => rules.fmt(fmt),
+            Self::SoloLikeSie(rules) => rules.fmt(fmt),
+            Self::SoloLikePointsAsPayout(rules) => rules.fmt(fmt),
+            Self::BettelNormal(rules) => rules.fmt(fmt),
+            Self::BettelStichzwang(rules) => rules.fmt(fmt),
+        }
+    }
+}
+
+impl TCardSorter for SRules {
     fn sort_cards(&self, slccard: &mut [ECard]) {
         self.sort_cards_first_trumpf_then_farbe(slccard);
     }
 }
-impl TCardSorter for Box<SRules> {
-    fn sort_cards(&self, slccard: &mut [ECard]) {
-        self.as_ref().sort_cards(slccard)
-    }
-}
-impl TCardSorter for &SActivelyPlayableRules {
+impl TCardSorter for SActivelyPlayableRules {
     fn sort_cards(&self, slccard: &mut [ECard]) {
         self.sort_cards_first_trumpf_then_farbe(slccard);
-    }
-}
-impl TCardSorter for Box<SActivelyPlayableRules> {
-    fn sort_cards(&self, slccard: &mut [ECard]) {
-        self.as_ref().sort_cards(slccard)
     }
 }
 
@@ -685,7 +726,7 @@ fn test_snapshotcache() {
                         macro_rules! fwd{($fn_snapshotcache:expr) => {
                             unwrap!(determine_best_card(
                                 &game.stichseq,
-                                game.rules.as_ref(),
+                                &game.rules,
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                                 /*fn_make_filter*/SNoFilter::factory(),
                                 &SMinReachablePayout::new_from_game(game),
@@ -749,7 +790,7 @@ fn test_snapshotcache() {
                             SGameGeneric::new_with(
                                 gamepreparations.aveccard.clone(),
                                 gamepreparations.expensifiers.clone(),
-                                rules.upcast().box_clone(),
+                                rules.clone().into(),
                                 gamepreparations.ruleset,
                                 /*gameannouncements*/(),
                                 /*determinerules*/(),

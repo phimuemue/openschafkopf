@@ -1,3 +1,4 @@
+#[allow(unused_macros)]
 macro_rules! make_box_clone {
     ($box_clone_trait:ident, $trait:ident) => {
         pub trait $box_clone_trait {

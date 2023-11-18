@@ -98,13 +98,13 @@ pub fn analyze_game(
                     mapepivecpossiblepayout[epi].push(SPossiblePayout(
                         explore_snapshots(
                             (&mut game.ahand.clone(), &mut game.stichseq.clone()),
-                            game.rules.as_ref(),
+                            &game.rules,
                             &|_,_| equivalent_cards_filter(
                                 /*n_until_stichseq_len*/7,
                                 /*cardspartition*/game.rules.equivalent_when_on_same_hand(),
                             )(&game.stichseq, &game.ahand),
                             &SMinReachablePayout::new(
-                                game.rules.as_ref(),
+                                &game.rules,
                                 epi,
                                 game.expensifiers.clone(),
                             ),
@@ -118,7 +118,7 @@ pub fn analyze_game(
                 macro_rules! look_for_mistakes{($itahand: expr$(,)?) => {{
                     let determinebestcardresult = unwrap!(determine_best_card(
                         stichseq,
-                        game.rules.as_ref(),
+                        &game.rules,
                         Box::new($itahand) as Box<_>,
                         equivalent_cards_filter(
                             /*n_until_stichseq_len, determined heuristically*/7,
@@ -156,7 +156,7 @@ pub fn analyze_game(
                     look_for_mistakes!(all_possible_hands(
                         &game.stichseq,
                         (game.ahand[epi_current].clone(), epi_current),
-                        game.rules.as_ref(),
+                        &game.rules,
                         &game.expensifiers.vecstoss,
                     )).1
                 };
@@ -277,7 +277,7 @@ fn generate_analysis_html(
         str_rules=str_rules,
     )
     + "<table><tr>"
-    + type_inference!(&str, &crate::ai::gametree::player_table_ahand(epi_self, &ahand, game.rules.as_ref(), /*fn_border*/|_card| false))
+    + type_inference!(&str, &crate::ai::gametree::player_table_ahand(epi_self, &ahand, &game.rules, /*fn_border*/|_card| false))
     + "</tr></table><table><tr>"
     + type_inference!(&str, &crate::ai::gametree::player_table_stichseq(epi_self, &game.stichseq))
     + "</tr></table>"
@@ -366,7 +366,7 @@ fn generate_analysis_html(
         .map(|analysispercard| {
             let vecoutputline = table::</*TODO type annotations needed?*/SPerMinMaxStrategyHigherKinded, _>(
                 &analysispercard.determinebestcardresult_cheating,
-                game.rules.as_ref(),
+                &game.rules,
                 /*fn_loss_or_win*/&|n_payout, ()| n_payout.cmp(&0),
             ).into_output_lines();
             // TODO simplify output (as it currently only shows results from one ahand)
@@ -391,7 +391,7 @@ fn generate_analysis_html(
                 player_table_ahand(
                     epi_self,
                     ahand,
-                    game.rules.as_ref(),
+                    &game.rules,
                     /*fn_border*/|card| card==analysispercard.card_played,
                 ),
             ));

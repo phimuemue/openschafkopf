@@ -112,7 +112,7 @@ impl SDealCards {
 }
 
 pub type SGameAnnouncementsGeneric<GameAnnouncement> = SPlayersInRound<Option<GameAnnouncement>, SStaticEPI0>;
-pub type SGameAnnouncements = SGameAnnouncementsGeneric<Box<SActivelyPlayableRules>>;
+pub type SGameAnnouncements = SGameAnnouncementsGeneric<SActivelyPlayableRules>;
 
 #[derive(Debug, Clone)]
 pub struct SGamePreparations {
@@ -150,7 +150,7 @@ impl TGamePhase for SGamePreparations {
     }
 
     fn finish_success(self) -> Self::Finish {
-        let mut vectplepirules : Vec<(_, Box<SActivelyPlayableRules>)> = self.gameannouncements.into_iter()
+        let mut vectplepirules : Vec<(_, SActivelyPlayableRules)> = self.gameannouncements.into_iter()
             .filter_map(|(epi, orules)| orules.map(|rules| (epi, rules)))
             .collect();
         if let Some(tplepirules_current_bid) = vectplepirules.pop() {
@@ -167,7 +167,7 @@ impl TGamePhase for SGamePreparations {
                     VGamePreparationsFinish::DirectGame(SGameGeneric::new_with(
                         self.aveccard,
                         self.expensifiers,
-                        rulesramsch.clone(),
+                        rulesramsch.clone().into(),
                         self.ruleset,
                         /*gameannouncements*/(),
                         /*determinerules*/(),
@@ -201,7 +201,7 @@ macro_rules! impl_fullhand { () => {
 impl SGamePreparations {
     impl_fullhand!();
 
-    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<SActivelyPlayableRules>>) -> Result<(), Error> {
+    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<SActivelyPlayableRules>) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
@@ -222,8 +222,8 @@ pub struct SDetermineRules {
     pub aveccard : EnumMap<EPlayerIndex, SHandVector>,
     pub expensifiers : SExpensifiersNoStoss,
     pub ruleset : SRuleSet,
-    pub vectplepirules_queued : Vec<(EPlayerIndex, Box<SActivelyPlayableRules>)>,
-    pub tplepirules_current_bid : (EPlayerIndex, Box<SActivelyPlayableRules>),
+    pub vectplepirules_queued : Vec<(EPlayerIndex, SActivelyPlayableRules)>,
+    pub tplepirules_current_bid : (EPlayerIndex, SActivelyPlayableRules),
 }
 
 impl TGamePhase for SDetermineRules {
@@ -265,7 +265,7 @@ impl TGamePhase for SDetermineRules {
         SGameGeneric::new_with(
             self.aveccard,
             self.expensifiers,
-            self.tplepirules_current_bid.1.upcast().box_clone(),
+            self.tplepirules_current_bid.1.clone().into(),
             self.ruleset,
             /*gameannouncements*/(),
             /*determinerules*/(),
@@ -280,7 +280,7 @@ impl SDetermineRules {
         (self.tplepirules_current_bid.0, self.tplepirules_current_bid.1.priority())
     }
 
-    pub fn announce_game(&mut self, epi: EPlayerIndex, rules: Box<SActivelyPlayableRules>) -> Result<(), Error> {
+    pub fn announce_game(&mut self, epi: EPlayerIndex, rules: SActivelyPlayableRules) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
             bail!("announce_game not allowed for specified EPlayerIndex");
         }
@@ -318,7 +318,7 @@ pub struct SGameGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     gameannouncements : GameAnnouncements,
     determinerules: DetermineRules,
-    pub rules : Box<SRules>,
+    pub rules : SRules,
     pub expensifiers: SExpensifiers,
     pub stichseq: SStichSequence,
     ruleset: Ruleset,
@@ -355,7 +355,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Rul
                 &self.expensifiers,
                 &SRuleStateCache::new_from_gamefinishedstiche(
                     stichseq,
-                    self.rules.as_ref(),
+                    &self.rules,
                 ),
                 /*b_test_points_as_payout*/dbg_argument!(true),
             ),
@@ -368,7 +368,7 @@ impl SGame {
     pub fn new(
         aveccard : EnumMap<EPlayerIndex, SHandVector>,
         expensifiers : SExpensifiersNoStoss,
-        rules : Box<SRules>,
+        rules : SRules,
     ) -> SGame {
         SGame::new_with(
             aveccard,
@@ -385,7 +385,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
     pub fn new_with(
         aveccard : EnumMap<EPlayerIndex, SHandVector>,
         expensifiers : SExpensifiersNoStoss,
-        rules : Box<SRules>,
+        rules : SRules,
         ruleset: Ruleset,
         gameannouncements: GameAnnouncements,
         determinerules: DetermineRules,
@@ -406,7 +406,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
     }
 
     pub fn new_finished(
-        rules : Box<SRules>,
+        rules : SRules,
         expensifiers: SExpensifiers,
         stichseq: SStichSequenceGameFinished,
     ) -> Result<SGame, Error> {
@@ -448,7 +448,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         Ok(self)
     }
 
-    pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2, fn_rules: impl FnOnce(Box<SRules>)->Box<SRules>) -> SGameGeneric<Ruleset2, GameAnnouncements2, DetermineRules2> {
+    pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2, fn_rules: impl FnOnce(SRules)->SRules) -> SGameGeneric<Ruleset2, GameAnnouncements2, DetermineRules2> {
         let SGameGeneric {
             aveccard,
             ahand,
@@ -507,7 +507,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
             bail!("{} is not allowed", card);
         }
         self.ahand[epi].play_card(card);
-        self.stichseq.zugeben(card, self.rules.as_ref());
+        self.stichseq.zugeben(card, &self.rules);
         Ok(())
     }
 

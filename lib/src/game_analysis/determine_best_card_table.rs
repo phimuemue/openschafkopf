@@ -5,7 +5,7 @@ use crate::ai::{
 use crate::primitives::*;
 use itertools::*;
 use crate::util::*;
-use crate::rules::SRules;
+use crate::rules::{SRules, TRules};
 use std::borrow::Borrow;
 
 pub const N_COLUMNS : usize = 4;

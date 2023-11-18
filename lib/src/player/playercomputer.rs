@@ -58,11 +58,10 @@ impl TPlayer for SPlayerComputer {
                 orules.map_or(
                     0., // TODO how to rank None?
                     |rules| {
-                        let rules_as_box = TRulesBoxClone::box_clone(rules); // TODO avoid box_clone
                         self.ai.rank_rules(
                             hand,
                             /*epi_rank*/rules.active_playerindex(),
-                            rules_as_box.as_ref(),
+                            &rules.clone().into(), // TODO avoid clone
                             expensifiers,
                         ).maxmin.0.avg().as_num::<f64>()
                     }

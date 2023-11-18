@@ -302,13 +302,9 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
     }
 
     fn points_as_payout(&self) -> Option<(
-        Box<SRules>,
+        SRules,
         Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
-        #[derive(Debug, Clone)]
-        struct SRufspielPayoutPointsAsPayout {
-            payoutdecider: SPayoutDeciderPointsAsPayout<SPointsToWin61>,
-        }
         impl SRufspielPayoutPointsAsPayout {
             fn payout_to_points(
                 epi_active: EPlayerIndex,
@@ -326,64 +322,10 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 )
             }
         }
-        impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
-            fn payout(&self, rules: &SRulesRufspielGeneric<Self>, stichseq: SStichSequenceGameFinished, _expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
-                let playerparties = rules.playerparties(&rulestatecache.fixed);
-                let an_payout = self.payoutdecider.payout(
-                    dbg_argument!(rules),
-                    &rules.trumpfdecider,
-                    rulestatecache,
-                    stichseq,
-                    &playerparties,
-                );
-                #[cfg(debug_assertions)] {
-                    let mut stichseq_check = SStichSequence::new(stichseq.get().kurzlang());
-                    let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
-                        SHand::new_from_iter(stichseq.get().completed_cards_by(epi))
-                    );
-                    for (epi_card, card) in stichseq.get().completed_cards() {
-                        let b_primary = playerparties.is_primary_party(epi_card);
-                        assert_eq!(
-                            Self::payout_to_points(
-                                /*epi_active*/rules.epi,
-                                rules.rufsau(),
-                                &stichseq_check,
-                                (epi_card, &ahand_check[epi_card]),
-                                an_payout[epi_card].as_num::<f32>(),
-                            ).as_num::<isize>(),
-                            EPlayerIndex::values()
-                                .filter(|epi| playerparties.is_primary_party(*epi)==b_primary)
-                                .map(|epi|
-                                    rulestatecache.changing.mapepipointstichcount[epi].n_point
-                                )
-                                .sum::<isize>(),
-                        );
-                        stichseq_check.zugeben(*card, rules);
-                        ahand_check[epi_card].play_card(*card);
-                    }
-
-                }
-                an_payout
-            }
-            fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-                self.payoutdecider.payouthints(
-                    dbg_argument!(rules),
-                    rulestatecache,
-                    tplahandstichseq,
-                    &rules.playerparties(&rulestatecache.fixed),
-                )
-            }
-            fn snapshot_cache(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
-                payoutdecider::snapshot_cache_points_monotonic(
-                    rules.playerparties(rulestatecachefixed),
-                    SPointsToWin61,
-                )
-            }
-        }
         let epi_active = self.epi;
         let card_rufsau = self.rufsau();
         Some((
-            Box::new(SRulesRufspielGeneric{
+            SActivelyPlayableRules::from(SRulesRufspielGeneric{
                 epi: self.epi,
                 efarbe: self.efarbe,
                 rufspielpayout: SRufspielPayoutPointsAsPayout {
@@ -391,7 +333,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 },
                 trumpfdecider: self.trumpfdecider.clone(),
                 stossparams: self.stossparams.clone(),
-            }) as Box<SRules>,
+            }).into(),
             Box::new(move |stichseq: &SStichSequence, (epi_hand, hand): (EPlayerIndex, &SHand), f_payout: f32| {
                 assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
                 SRufspielPayoutPointsAsPayout::payout_to_points(
@@ -411,5 +353,65 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
 
     fn heuristic_active_occurence_probability(&self) -> Option<f64> {
         Some(0.09)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct SRufspielPayoutPointsAsPayout {
+    payoutdecider: SPayoutDeciderPointsAsPayout<SPointsToWin61>,
+}
+
+impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
+    fn payout(&self, rules: &SRulesRufspielGeneric<Self>, stichseq: SStichSequenceGameFinished, _expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+        let playerparties = rules.playerparties(&rulestatecache.fixed);
+        let an_payout = self.payoutdecider.payout(
+            dbg_argument!(rules),
+            &rules.trumpfdecider,
+            rulestatecache,
+            stichseq,
+            &playerparties,
+        );
+        #[cfg(debug_assertions)] {
+            let mut stichseq_check = SStichSequence::new(stichseq.get().kurzlang());
+            let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
+                SHand::new_from_iter(stichseq.get().completed_cards_by(epi))
+            );
+            for (epi_card, card) in stichseq.get().completed_cards() {
+                let b_primary = playerparties.is_primary_party(epi_card);
+                assert_eq!(
+                    Self::payout_to_points(
+                        /*epi_active*/rules.epi,
+                        rules.rufsau(),
+                        &stichseq_check,
+                        (epi_card, &ahand_check[epi_card]),
+                        an_payout[epi_card].as_num::<f32>(),
+                    ).as_num::<isize>(),
+                    EPlayerIndex::values()
+                        .filter(|epi| playerparties.is_primary_party(*epi)==b_primary)
+                        .map(|epi|
+                            rulestatecache.changing.mapepipointstichcount[epi].n_point
+                        )
+                        .sum::<isize>(),
+                );
+                stichseq_check.zugeben(*card, rules);
+                ahand_check[epi_card].play_card(*card);
+            }
+
+        }
+        an_payout
+    }
+    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+        self.payoutdecider.payouthints(
+            dbg_argument!(rules),
+            rulestatecache,
+            tplahandstichseq,
+            &rules.playerparties(&rulestatecache.fixed),
+        )
+    }
+    fn snapshot_cache(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
+        payoutdecider::snapshot_cache_points_monotonic(
+            rules.playerparties(rulestatecachefixed),
+            SPointsToWin61,
+        )
     }
 }

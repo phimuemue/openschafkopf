@@ -382,7 +382,7 @@ pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failur
                     .and_then(EKurzLang::from_cards_per_player)
                     .ok_or_else(|| format_err!("Incorrect number of cards: {}", veccard.len()))?,
                 veccard.iter().copied(),
-                rules.as_ref(),
+                &rules,
             );
             SGame::new_finished(
                 rules,
@@ -466,7 +466,7 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*
                         ).into_raw()),
                     ).map_err(|err| format_err!("Failed to parse stich {:?}", err))?;
                     for card in veccard {
-                        stichseq.zugeben(card, rules.as_ref());
+                        stichseq.zugeben(card, &rules);
                     }
                 }
                 SGame::new_finished(

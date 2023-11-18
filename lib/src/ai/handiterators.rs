@@ -166,7 +166,7 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, HandIteratorCore: TH
                 && SGame::new(
                     /*aveccard*/aveccard,
                     SExpensifiersNoStoss::new(/*n_stock*/0),
-                    rules.box_clone(),
+                    rules.clone(),
                 ).play_cards_and_stoss(
                     slcstoss,
                     stichseq.visible_cards(),

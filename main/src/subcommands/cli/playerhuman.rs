@@ -28,7 +28,7 @@ fn choose_ruleset_or_rules<'t, T>(
         |ncwin, i_ot_chosen, _ot_suggest| {
             let orules = fn_choose(i_ot_chosen);
             assert!(_ot_suggest.is_none());
-            skui::wprintln(ncwin, &format!("Your cards: {}. What do you want to play?", SDisplayCardSlice::new(hand.cards().clone(), &orules)));
+            skui::wprintln(ncwin, &format!("Your cards: {}. What do you want to play?", SDisplayCardSlice::new(hand.cards().clone(), &orules.map(|rules| rules.clone()))));
             if let Some(ref tplepiprio) = *otplepiprio {
                 skui::wprintln(ncwin, &format!("{} offers {:?}", tplepiprio.0, tplepiprio.1)); // TODO improve output here
             }
@@ -94,14 +94,14 @@ impl TPlayer for SPlayerHuman {
                         skui::wprintln(ncwin, &format!("AI: {}", card));
                     }
                     skui::print_hand(&veccard, Some(i_card_chosen));
-                    skui::print_game_info(game.rules.as_ref(), &game.expensifiers);
+                    skui::print_game_info(&game.rules, &game.expensifiers);
                 },
                 || {
                     Some(self.ai.suggest_card(
                         game,
                         visualizer_factory(
                             std::path::Path::new("gametree").to_path_buf(),
-                            game.rules.as_ref(),
+                            &game.rules,
                             epi,
                         ),
                     ))
@@ -133,7 +133,7 @@ impl TPlayer for SPlayerHuman {
                         &SHand::new_from_iter(hand.get()),
                         &vecrulegroup,
                         |rulegroup| rulegroup.str_name.clone(),
-                        |i_rulegroup_chosen| vecrulegroup[i_rulegroup_chosen].vecorules[0].as_ref().map(|rules| rules.as_ref()),
+                        |i_rulegroup_chosen| vecrulegroup[i_rulegroup_chosen].vecorules[0].as_ref(),
                         &otplepiprio,
                     )
                         .allowed_rules(hand)

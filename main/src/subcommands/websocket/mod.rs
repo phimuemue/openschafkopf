@@ -10,6 +10,7 @@ use std::{
 };
 use openschafkopf_lib::{
     game::*,
+    rules::TRules,
     rules::trumpfdecider::STrumpfDecider,
     rules::ruleset::{SRuleSet},
     primitives::*,

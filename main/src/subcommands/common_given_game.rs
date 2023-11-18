@@ -10,7 +10,7 @@ use openschafkopf_lib::{
         SExpensifiers,
         SStoss,
         SRules,
-        TRulesBoxClone,
+        TRules,
         parser::parse_rule_description_simple,
     },
 };
@@ -169,21 +169,21 @@ pub fn with_common_args<FnWithArgs>(
                                     rulegroup.vecorules.into_iter()
                                         .filter_map(|orules|
                                             orules.as_ref().map(|rules|
-                                                TRulesBoxClone::box_clone(rules.upcast())
+                                                SRules::from(rules.clone())
                                             )
                                         )
                                 })
                             )
                             .chain(match ruleset.stockorramsch {
                                 VStockOrT::Stock(_) => None,
-                                VStockOrT::OrT(rules) => Some(rules)
+                                VStockOrT::OrT(rules) => Some(rules.into())
                             })
-                        ) as Box<dyn Iterator<Item=Box<SRules>>>,
+                        ) as Box<dyn Iterator<Item=SRules>>,
                         /*b_single_rules*/false,
                     )
                 } else {
                     let b_single_rules = vecrules.len()==1;
-                    (Box::new(vecrules.into_iter()) as Box<dyn Iterator<Item=Box<SRules>>>, b_single_rules)
+                    (Box::new(vecrules.into_iter()) as Box<dyn Iterator<Item=SRules>>, b_single_rules)
                 }
             },
             Err(err) => {
@@ -191,7 +191,7 @@ pub fn with_common_args<FnWithArgs>(
             },
         };
         for rules in itrules {
-            let rules = rules.as_ref();
+            let rules = &rules;
             let (stichseq, ahand_with_holes, epi_position) = EKurzLang::values()
                 .filter_map(|ekurzlang| {
                     let mut stichseq = SStichSequence::new(ekurzlang);
@@ -299,7 +299,7 @@ pub fn with_common_args<FnWithArgs>(
                                 n_ahand_seen += 1;
                                 let b_valid = b_valid_so_far
                                     && oconstraint.as_ref().map_or(true, |relation|
-                                        relation.eval(ahand, rules.box_clone())
+                                        relation.eval(ahand, rules.clone())
                                     );
                                 if b_valid {
                                     n_ahand_valid += 1;
@@ -314,7 +314,7 @@ pub fn with_common_args<FnWithArgs>(
                                         n_ahand_valid,
                                         n_ahand_seen,
                                         $n_ahand_total,
-                                        display_card_slices(&ahand, &rules, " | "),
+                                        display_card_slices(&ahand, rules, " | "),
                                     )
                                 }
                                 b_valid

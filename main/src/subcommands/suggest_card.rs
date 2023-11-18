@@ -1,6 +1,6 @@
 use openschafkopf_lib::{
     ai::{*, gametree::*, stichoracle::SFilterByOracle, cardspartition::*},
-    rules::SRules,
+    rules::{SRules, TRules},
     primitives::*,
     game_analysis::determine_best_card_table::{
         table,
@@ -178,11 +178,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 None
             };
             let rules = if let Some((rules, _fn_payout_to_points)) = &otplrulesfn_points_as_payout {
-                rules.box_clone()
+                rules.clone()
             } else {
-                rules.box_clone()
+                rules.clone()
             };
-            let rules = rules.as_ref();
+            let rules = &rules;
             let fn_human_readable_payout = |stichseq: SStichSequence, (epi_position, hand), n_payout: isize| -> (isize, std::cmp::Ordering) {
                 if let Some((_rules, fn_payout_to_points)) = &otplrulesfn_points_as_payout {
                     (
@@ -230,7 +230,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         &SJson::new(
                             /*str_rules*/rules.to_string(),
                             /*str_hand*/ahand_fixed_with_holes.map(|hand|
-                                SDisplayCardSlice::new(hand.cards().clone(), &rules).to_string()
+                                SDisplayCardSlice::new(hand.cards().clone(), rules).to_string()
                             ).into_raw(),
                             vectableline,
                         ),
@@ -443,7 +443,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     if b_before {'>'} else {'<'},
                                     i_ahand+1, // TODO use same hand counters as in common_given_game
                                     card,
-                                    display_card_slices(&ahand, &rules, " | "),
+                                    display_card_slices(&ahand, rules, " | "),
                                 );
                             }
                         },

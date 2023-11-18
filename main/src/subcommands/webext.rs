@@ -10,7 +10,10 @@ use openschafkopf_lib::{
         cardvector::parse_cards,
         eplayerindex::EPlayerIndex,
     },
-    rules::parser::parse_rule_description_simple,
+    rules::{
+        TRules,
+        parser::parse_rule_description_simple,
+    },
 };
 use openschafkopf_util::*;
 use plain_enum::PlainEnum;

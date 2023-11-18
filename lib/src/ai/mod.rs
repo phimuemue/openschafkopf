@@ -188,7 +188,7 @@ impl SAi {
         fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     ) -> ECard {
         self.suggest_card_internal(
-            game.rules.as_ref(),
+            &game.rules,
             &game.stichseq,
             &game.ahand,
             &game.expensifiers,
@@ -407,7 +407,7 @@ fn test_is_compatible_with_game_so_far() {
         let mut game = game::SGame::new(
             ahand,
             SExpensifiersNoStoss::new(/*n_stock*/ 0),
-            rules.box_clone(),
+            rules.clone(),
         );
         let mut vectplepitrumpforfarbe_frei = Vec::new();
         for testaction in vectestaction {
@@ -432,7 +432,7 @@ fn test_is_compatible_with_game_so_far() {
                     game.ahand[unwrap!(game.which_player_can_do_something()).0].clone(),
                     unwrap!(game.which_player_can_do_something()).0,
                 ),
-                game.rules.as_ref(),
+                &game.rules,
                 &game.expensifiers.vecstoss,
             )
                 .take(100)
@@ -449,7 +449,7 @@ fn test_is_compatible_with_game_so_far() {
     };
     test_game(
         [[H9, E7, GA, GZ, G9, E9, EK, EA], [HU, HA, SO, S8, GO, E8, SK, EZ], [H8, SU, G7, S7, GU, EO, GK, S9], [EU, H7, G8, SA, HO, SZ, HK, HZ]],
-        &SRulesRufspiel::new(EPlayerIndex::EPI3, EFarbe::Gras, SPayoutDeciderParams::new(/*n_payout_base*/ 20, /*n_payout_schneider_schwarz*/ 10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)),
+        &SActivelyPlayableRules::from(SRulesRufspiel::new(EPlayerIndex::EPI3, EFarbe::Gras, SPayoutDeciderParams::new(/*n_payout_base*/ 20, /*n_payout_schneider_schwarz*/ 10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4))).into(),
         vec![
             VTestAction::AssertNotFrei(EPlayerIndex::EPI3, VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
             VTestAction::PlayStich([H9, HU, H8, EU]),
@@ -466,7 +466,7 @@ fn test_is_compatible_with_game_so_far() {
     );
     test_game(
         [[S7, GZ, H7, HO, G7, SA, S8, S9], [E9, EK, GU, GO, GK, SU, SK, HU], [SO, EZ, EO, H9, HZ, H8, HA, EU], [SZ, GA, HK, G8, EA, E8, G9, E7]],
-        &SRulesRufspiel::new(EPlayerIndex::EPI3, EFarbe::Schelln, SPayoutDeciderParams::new(/*n_payout_base*/ 20, /*n_payout_schneider_schwarz*/ 10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)),
+        &SActivelyPlayableRules::from(SRulesRufspiel::new(EPlayerIndex::EPI3, EFarbe::Schelln, SPayoutDeciderParams::new(/*n_payout_base*/ 20, /*n_payout_schneider_schwarz*/ 10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4))).into(),
         vec![
             VTestAction::AssertNotFrei(EPlayerIndex::EPI3, VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
             VTestAction::PlayStich([S9, SK, HZ, SZ]),
@@ -496,7 +496,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             [SO,SU,E9,G9,S9,SA,SZ,SK],
         ]).map_into(|acard| acard.into()),
         SExpensifiersNoStoss::new(/*n_stock*/0),
-        TRulesBoxClone::box_clone(sololike(
+        sololike(
             epi_active,
             EFarbe::Herz,
             ESoloLike::Solo,
@@ -504,7 +504,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             SStossParams::new(
                 /*n_stoss_max*/ 4,
             ),
-        ).as_ref()),
+        ).into(),
     );
     for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]] {
         assert_eq!(EPlayerIndex::values().next(), Some(epi_active));
@@ -515,14 +515,14 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
     for ahand in all_possible_hands(
         &game.stichseq,
         (game.ahand[epi_active].clone(), epi_active),
-        game.rules.as_ref(),
+        &game.rules,
         &game.expensifiers.vecstoss,
     ) {
         assert!(!game.current_playable_stich().is_full());
         let stichseq = &game.stichseq;
         let determinebestcardresult = unwrap!(determine_best_card(
             stichseq,
-            game.rules.as_ref(),
+            &game.rules,
             Box::new(std::iter::once(ahand)) as Box<_>,
             /*fn_make_filter*/SBranchingFactor::factory(1, 2),
             &SMinReachablePayout::new_from_game(&game),

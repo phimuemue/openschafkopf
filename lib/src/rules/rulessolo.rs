@@ -16,7 +16,7 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
     fn equivalent_when_on_same_hand(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>>;
 
     fn points_as_payout(&self, _rules: &SRulesSoloLike<Self>) -> Option<(
-        Box<SRules>,
+        SRules,
         Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
         None
@@ -116,14 +116,14 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
     }
 
     fn points_as_payout(&self, rules: &SRulesSoloLike<Self>) -> Option<(
-        Box<SRules>,
+        SRules,
         Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
         //assert_eq!(self, rules.payoutdecider); // TODO
         let pointstowin = self.pointstowin.clone();
         let epi_active = rules.epi;
         Some((
-            Box::new(SRulesSoloLike{
+            SActivelyPlayableRules::from(SRulesSoloLike{
                 str_name: rules.str_name.clone(),
                 epi: rules.epi,
                 payoutdecider: SPayoutDeciderPointsAsPayout{
@@ -132,7 +132,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
                 trumpfdecider: rules.trumpfdecider.clone(),
                 of_heuristic_active_occurence_probability: rules.of_heuristic_active_occurence_probability,
                 stossparams: rules.stossparams.clone(),
-            }) as Box<SRules>,
+            }).into(),
             Box::new(move |stichseq: &SStichSequence, (epi_hand, hand): (EPlayerIndex, &SHand), f_payout: f32| {
                 assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
                 SPayoutDeciderPointsAsPayout::payout_to_points(
@@ -361,20 +361,23 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> fmt::Display for SRulesSoloLike<Payo
     }
 }
 
-impl<PayoutDecider: TPayoutDeciderSoloLike> TActivelyPlayableRules for SRulesSoloLike<PayoutDecider> {
+impl<PayoutDecider: TPayoutDeciderSoloLike> TActivelyPlayableRules for SRulesSoloLike<PayoutDecider> 
+    where
+        Self: Into<SActivelyPlayableRules>,
+{
     fn priority(&self) -> VGameAnnouncementPriority {
         self.payoutdecider.priority()
     }
-    fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<SActivelyPlayableRules>> {
+    fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<SActivelyPlayableRules> {
         self.payoutdecider.with_increased_prio(prio, ebid)
-            .map(|payoutdecider| Box::new(Self{
+            .map(|payoutdecider| Self{
                 payoutdecider,
                 trumpfdecider: self.trumpfdecider.clone(),
                 epi: self.epi,
                 str_name: self.str_name.clone(),
                 of_heuristic_active_occurence_probability: None, // No data about occurence probabilities with increased priority.
                 stossparams: self.stossparams.clone(),
-            }) as Box<SActivelyPlayableRules>)
+            }.into())
     }
 }
 
@@ -423,7 +426,7 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<PayoutDeci
     }
 
     fn points_as_payout(&self) -> Option<(
-        Box<SRules>,
+        SRules,
         Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
         self.payoutdecider.points_as_payout(self)
@@ -456,13 +459,13 @@ pub fn sololike(
     esololike: ESoloLike,
     payoutdecider_in: impl Into<VPayoutDeciderSoloLike>,
     stossparams: SStossParams,
-) -> Box<SActivelyPlayableRules> {
+) -> SActivelyPlayableRules {
     let (oefarbe, payoutdecider_in) = (oefarbe.into(), payoutdecider_in.into());
     macro_rules! sololike_internal{(
         ($payoutdecider: expr, $str_payoutdecider: expr),
         $of_heuristic_active_occurence_probability: expr,
     ) => {
-        Box::new(SRulesSoloLike{
+        SRulesSoloLike{
             payoutdecider: $payoutdecider,
             trumpfdecider: {
                 STrumpfDecider::new(
@@ -489,7 +492,7 @@ pub fn sololike(
             ),
             of_heuristic_active_occurence_probability: $of_heuristic_active_occurence_probability,
             stossparams,
-        }) as Box<SActivelyPlayableRules>
+        }.into()
     }}
     cartesian_match!(
         sololike_internal,
@@ -570,7 +573,7 @@ fn test_equivalent_when_on_same_hand_rulessolo() {
         let sololike_internal = |
             oefarbe: Option<EFarbe>,
             payoutdecider: VPayoutDeciderSoloLike,
-        | -> Box<SActivelyPlayableRules> {
+        | -> SActivelyPlayableRules {
             sololike(
                 epi,
                 oefarbe,

@@ -452,7 +452,7 @@ pub struct SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> {
 impl<'rules, Pruner, MinMaxStrategiesHK> SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> {
     pub fn new_from_game<Ruleset>(game: &'rules SGameGeneric<Ruleset, (), ()>) -> Self {
         Self::new(
-            game.rules.as_ref(),
+            &game.rules,
             unwrap!(game.current_playable_stich().current_playerindex()),
             game.expensifiers.clone(),
         )

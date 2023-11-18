@@ -36,7 +36,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     *mapostrn.entry(
                         constraint.internal_eval(
                             &ahand,
-                            rules.box_clone(),
+                            rules.clone(),
                             |resdynamic| resdynamic.ok().map(|dynamic| dynamic.to_string()),
                         ),
                     ).or_insert(0) += 1;

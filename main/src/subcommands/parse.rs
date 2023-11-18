@@ -4,6 +4,7 @@ use openschafkopf_lib::{
     rules::{
         SRuleStateCache,
         ruleset::{VStockOrT},
+        TRules,
     },
     primitives::*,
 };
@@ -184,7 +185,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     });
                 let mut rulestatecache = SRuleStateCache::new(
                     (&game_csv.ahand, &game_csv.stichseq),
-                    game_csv.rules.as_ref(),
+                    &game_csv.rules,
                 );
                 for stich in verify_eq!(game.stichseq.completed_stichs(), game.stichseq.visible_stichs()).iter().map(SFullStich::new) {
                     for (epi, &card_zugeben) in stich.iter() {
@@ -218,7 +219,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         rulestatecache,
                         SRuleStateCache::new(
                             (&game_csv.ahand, &game_csv.stichseq),
-                            game_csv.rules.as_ref(),
+                            &game_csv.rules,
                         ),
                     );
                 }
