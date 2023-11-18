@@ -7,7 +7,7 @@ use crate::util::*;
 
 fn internal_test_rules(
     str_info: &str,
-    rules: &dyn TRules,
+    rules: &SRules,
     aveccard: EnumMap<EPlayerIndex, SHandVector>,
     vecn_doubling: Vec<usize>,
     veci_epi_stoss: Vec<usize>,
@@ -63,7 +63,7 @@ pub fn make_stich_vector(slctplepiacard_stich: &[(EPlayerIndex, [ECard; EPlayerI
 
 pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLang>(
     str_info: &str,
-    rules: &dyn TRules,
+    rules: &SRules,
     aacard_hand: [CardArrayKurzLang; EPlayerIndex::SIZE],
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
@@ -85,7 +85,7 @@ pub fn test_rules<CardArrayKurzLang: TCardArrayKurzLang>(
 
 pub fn test_rules_manual(
     str_info: &str,
-    rules: &dyn TRules,
+    rules: &SRules,
     vecn_doubling: Vec<usize>,
     vecn_stoss: Vec<usize>,
     n_stock: isize,
@@ -415,7 +415,7 @@ fn test_rulesfarbwenz() {
     use EPlayerIndex::*;
     test_rules(
         "../../testdata/games/11.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GA,G9,EZ,E8,HZ,H9,H8,SK],[EK,EO,E9,E7,HA,HK,SZ,S8],[SU,GK,GO,G7,EA,H7,SO,S9],[EU,GU,HU,GZ,G8,HO,SA,S7],],
         vec![],
         vec![],
@@ -424,7 +424,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/12.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,HA,HZ,H9,H7,GA,GZ,G8],[HU,EK,EO,E9,GO,G9,G7,SK],[SU,HO,EA,EZ,E8,E7,S9,S7],[GU,HK,H8,GK,SA,SZ,SO,S8],],
         vec![],
         vec![],
@@ -433,7 +433,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/15.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Herz, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Herz, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HK,EZ,E8,GK,G7,SK,SO,S9],[GU,HA,HZ,HO,H7,EK,SA,S8],[EU,H8,EO,E9,E7,GA,G9,S7],[HU,SU,H9,EA,GZ,GO,G8,SZ],],
         vec![],
         vec![],
@@ -442,7 +442,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/17.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SU,GA,GZ,GO,G8,EA,EK,HA],[EU,GU,GK,G7,E8,HK,SO,S7],[HU,G9,HO,H8,H7,SA,S9,S8],[EZ,EO,E9,E7,HZ,H9,SZ,SK],],
         vec![],
         vec![],
@@ -451,7 +451,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/23.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,HU,G9,EK,E9,E8,E7,HK],[GO,EZ,HA,HZ,H9,H7,SZ,S8],[EU,GA,GZ,GK,G7,EA,SA,S9],[SU,G8,EO,HO,H8,SK,SO,S7],],
         vec![],
         vec![],
@@ -460,7 +460,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/25.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,HU,GA,GK,G7,HA,H7,SA],[EU,EA,EZ,E7,HO,H8,SZ,S8],[GZ,GO,G9,G8,EO,H9,S9,S7],[SU,EK,E9,E8,HZ,HK,SK,SO],],
         vec![],
         vec![],
@@ -469,7 +469,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/37.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,HU,GA,G9,HZ,HK,SO,S9],[EA,GZ,G7,HO,H9,SK,S8,S7],[SU,EO,E9,GK,GO,G8,HA,H8],[EU,EZ,EK,E8,E7,H7,SA,SZ],],
         vec![],
         vec![],
@@ -478,7 +478,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/4.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,HA,HZ,HK,H9,H7,EK,GA],[EU,HO,H8,GZ,G8,SA,S8,S7],[HU,EA,E9,GO,G9,SZ,SK,SO],[SU,EZ,EO,E8,E7,GK,G7,S9],],
         vec![],
         vec![],
@@ -487,7 +487,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/54.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,HA,HK,HO,H9,G9,SA,S9],[HU,H7,E7,GO,G8,G7,SO,S8],[GU,H8,EZ,E9,E8,GZ,SK,S7],[SU,HZ,EA,EK,EO,GA,GK,SZ],],
         vec![],
         vec![],
@@ -496,7 +496,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/9.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Herz, ESoloLike::Wenz, SPayoutDeciderTout::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Herz, ESoloLike::Wenz, SPayoutDeciderTout::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[H8,EZ,E9,E8,GA,GZ,GK,G7],[EU,GU,HU,SU,HA,HK,H9,SA],[HO,EA,EK,EO,SZ,SK,S8,S7],[HZ,H7,E7,GO,G9,G8,SO,S9],],
         vec![],
         vec![],
@@ -505,7 +505,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/farbwenz/1.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderTout::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderTout::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,GU,HU,SU,GK,G9],[GZ,EK,E9,HZ,SO,S9],[GO,EA,EO,HK,H9,SZ],[GA,EZ,HA,HO,SA,SK],],
         vec![0,],
         vec![],
@@ -514,7 +514,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/farbwenz/10.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,EA,EO,GO,G9,H9],[HU,GZ,HA,HZ,HO,S9],[EU,GA,GK,HK,SZ,SO],[SU,EZ,EK,E9,SA,SK],],
         vec![],
         vec![],
@@ -523,7 +523,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/farbwenz/2.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,EA,EO,GO,G9,H9],[HU,GZ,HA,HZ,HO,S9],[EU,GA,GK,HK,SZ,SO],[SU,EZ,EK,E9,SA,SK],],
         vec![],
         vec![],
@@ -532,7 +532,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/farbwenz/5.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Herz, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Herz, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,HU,HA,EK,GZ,S9],[HZ,HK,HO,GA,GK,SA],[EA,EO,E9,G9,SK,SO],[GU,SU,H9,EZ,GO,SZ],],
         vec![1,],
         vec![],
@@ -541,7 +541,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/farbwenz/7.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SU,GZ,EA,HA,HZ,SZ],[HU,G9,EK,EO,E9,SO],[GA,EZ,HK,HO,SK,S9],[EU,GU,GK,GO,H9,SA],],
         vec![3,],
         vec![],
@@ -550,7 +550,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/farbwenz/8.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SU,GK,GO,EO,E8,H7,SZ,S8],[EU,GU,HU,E7,HZ,H8,S9,S7],[GZ,G9,G8,G7,EA,EK,HA,SA],[GA,EZ,E9,HK,HO,H9,SK,SO],],
         vec![3,1,],
         vec![1,],
@@ -559,7 +559,7 @@ fn test_rulesfarbwenz() {
     );
     test_rules(
         "../../testdata/games/farbwenz/9.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,SU,EA,EK,E9,E8,E7,S7],[EU,HU,GK,G9,G8,SA,SO,S8],[GA,GO,HZ,HK,HO,H8,SZ,SK],[EZ,EO,GZ,G7,HA,H9,H7,S9],],
         vec![],
         vec![],
@@ -573,7 +573,7 @@ fn test_ruleswenz() {
     use EPlayerIndex::*;
     test_rules(
         "../../testdata/games/13.html",
-        sololike(EPlayerIndex::EPI0, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,HU,GA,GZ,HA,HZ,SA,S9],[GU,GO,G7,HK,H7,SK,SO,S8],[SU,EK,EO,GK,G9,G8,HO,SZ],[EA,EZ,E9,E8,E7,H9,H8,S7],],
         vec![],
         vec![],
@@ -582,7 +582,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/52.html",
-        sololike(EPlayerIndex::EPI3, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EK,E9,E7,GK,GO,G8,HA,HK],[HU,EZ,EO,E8,HZ,H9,SZ,SO],[GZ,G9,G7,HO,H7,SK,S9,S8],[EU,GU,SU,EA,GA,H8,SA,S7],],
         vec![],
         vec![],
@@ -591,7 +591,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/8.html",
-        sololike(EPlayerIndex::EPI0, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HU,SU,EA,EZ,E9,HZ,SA,S8],[GU,EK,G9,G8,SK,SO,S9,S7],[EU,GA,GK,G7,HO,H9,H7,SZ],[EO,E8,E7,GZ,GO,HA,HK,H8],],
         vec![],
         vec![],
@@ -600,7 +600,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/1.html",
-        sololike(EPlayerIndex::EPI0, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,SU,EA,HZ,SA,SZ],[EU,HU,GA,GZ,GK,S9],[HA,HK,HO,H9,SK,SO],[EZ,EK,EO,E9,GO,G9],],
         vec![1,3,],
         vec![1,],
@@ -609,7 +609,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/10.html",
-        sololike(EPlayerIndex::EPI2, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EZ,EK,GK,GO,HO,H9,SZ,S7],[GU,EO,G8,G7,HZ,H8,SO,S8],[EA,E9,E8,GA,G9,HA,H7,SA],[EU,HU,SU,E7,GZ,HK,SK,S9],],
         vec![],
         vec![],
@@ -618,7 +618,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/11.html",
-        sololike(EPlayerIndex::EPI1, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,SU,EO,E9,HZ,S9],[GU,HU,EA,GA,SA,SZ],[EK,GZ,G9,H9,SK,SO],[EZ,GK,GO,HA,HK,HO],],
         vec![0,],
         vec![0,1,],
@@ -627,7 +627,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/12.html",
-        sololike(EPlayerIndex::EPI3, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EA,EO,HZ,HO,H9,S9],[EK,E9,GA,GK,G9,HK],[GZ,GO,HA,SA,SK,SO],[EU,GU,HU,SU,EZ,SZ],],
         vec![3,],
         vec![],
@@ -636,7 +636,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/13.html",
-        sololike(EPlayerIndex::EPI2, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GA,GZ,GK,HA,HO,H9,SZ],[SU,E8,G7,HZ,SK,SO,S9,S7],[GU,HU,EA,EZ,EK,E9,GO,G9],[EU,E7,G8,HK,H8,H7,SA,S8],],
         vec![1,],
         vec![],
@@ -645,7 +645,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/14.html",
-        sololike(EPlayerIndex::EPI2, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,HU,SU,EK,GZ,SZ],[E9,HZ,HK,HO,SK,S9],[EA,GA,GO,HA,H9,SA],[EU,EZ,EO,GK,G9,SO],],
         vec![0,3,],
         vec![0,],
@@ -654,7 +654,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/2.html",
-        sololike(EPlayerIndex::EPI1, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,E7,GA,HO,H7,SK,S9,S8],[EU,SU,GK,G8,G7,HA,HZ,SA],[GU,HU,EZ,EK,E8,HK,H9,SO],[EA,E9,GZ,GO,G9,H8,SZ,S7],],
         vec![1,],
         vec![],
@@ -663,7 +663,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/3.html",
-        sololike(EPlayerIndex::EPI1, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,E9,GZ,G7,HO,H7,SZ,S9],[EU,GU,HU,EK,GA,GO,HK,SA],[SU,EZ,GK,HA,H9,H8,SK,S7],[EA,E8,E7,G9,G8,HZ,SO,S8],],
         vec![],
         vec![],
@@ -672,7 +672,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/4.html",
-        sololike(EPlayerIndex::EPI0, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,SU,GZ,HZ,SA,SZ],[GU,EA,EK,E9,G9,HA],[HU,EZ,GA,GK,GO,S9],[EO,HK,HO,H9,SK,SO],],
         vec![3,],
         vec![],
@@ -681,7 +681,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/5.html",
-        sololike(EPlayerIndex::EPI3, None, ESoloLike::Wenz, SPayoutDeciderTout::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, None, ESoloLike::Wenz, SPayoutDeciderTout::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EK,EO,GO,SA,SK,S9],[HU,E9,GA,HZ,H9,SO],[EA,EZ,GZ,GK,G9,SZ],[EU,GU,SU,HA,HK,HO],],
         vec![3,0,1,],
         vec![],
@@ -690,7 +690,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/6.html",
-        sololike(EPlayerIndex::EPI3, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EK,E8,E7,GZ,G9,HK,SZ,SO],[EU,HU,GK,GO,G8,HO,H7,S8],[GU,SU,EZ,EO,H9,H8,SK,S7],[EA,E9,GA,G7,HA,HZ,SA,S9],],
         vec![2,],
         vec![],
@@ -699,7 +699,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/7.html",
-        sololike(EPlayerIndex::EPI2, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EZ,EK,GK,GO,HO,H9,SZ,S7],[GU,EO,G8,G7,HZ,H8,SO,S8],[EA,E9,E8,GA,G9,HA,H7,SA],[EU,HU,SU,E7,GZ,HK,SK,S9],],
         vec![],
         vec![],
@@ -708,7 +708,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/8.html",
-        sololike(EPlayerIndex::EPI0, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,SU,GZ,G9,HZ,HO,H7,SA],[HU,E7,GA,GK,HA,HK,SO,S7],[EA,EZ,EK,G8,H9,H8,S9,S8],[GU,EO,E9,E8,GO,G7,SZ,SK],],
         vec![],
         vec![],
@@ -717,7 +717,7 @@ fn test_ruleswenz() {
     );
     test_rules(
         "../../testdata/games/wenz/9.html",
-        sololike(EPlayerIndex::EPI2, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, None, ESoloLike::Wenz, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SU,EK,GZ,HK,SO,S9],[EO,GK,GO,G9,HA,SA],[GU,HU,EA,EZ,E9,GA],[EU,HZ,HO,H9,SZ,SK],],
         vec![],
         vec![],
@@ -731,7 +731,7 @@ fn test_rulessolo() {
     use EPlayerIndex::*;
     test_rules(
         "../../testdata/games/28.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,HO,GZ,G7,EA,EZ,HK],[SO,EU,HU,GA,GK,HA,SA,S9],[GU,SU,G9,G8,E9,H8,SK,S7],[EK,E8,E7,HZ,H9,H7,SZ,S8],],
         vec![],
         vec![],
@@ -740,7 +740,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/34.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,HO,GU,HU,EK,E9,HA,H7],[GO,SO,EU,SU,E7,G7,HK,SZ],[EZ,E8,GA,G9,G8,H9,SK,S8],[EA,GZ,GK,HZ,H8,SA,S9,S7],],
         vec![],
         vec![],
@@ -749,7 +749,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/7.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SU,GA,HZ,H8,H7,SA,S9,S7],[GO,HU,G8,EZ,EK,E8,E7,S8],[EO,SO,GU,GZ,GK,G9,HA,HK],[HO,EU,G7,EA,E9,H9,SZ,SK],],
         vec![],
         vec![],
@@ -758,7 +758,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/1-herz-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,SO,HU,SU,HK,H8,H7,G7],[HO,HZ,E7,GK,G8,SA,S9,S7],[GU,HA,EA,EK,GA,GZ,G9,SZ],[GO,EU,H9,EZ,E9,E8,SK,S8],],
         vec![],
         vec![],
@@ -768,7 +768,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/10-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/100-eichel-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,EU,EZ,GA,G7,HZ,HK,SA],[SO,GU,EA,GK,G9,H8,SZ,SK],[EK,GZ,HA,H9,H7,S9,S8,S7],[GO,HO,HU,SU,E9,E8,E7,G8],],
         vec![],
         vec![],
@@ -777,7 +777,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/104-herz-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HU,EA,EK,E9,E8,E7,SA,S9],[SO,HA,EZ,GZ,GK,G8,G7,SZ],[GU,SU,HZ,H9,GA,SK,S8,S7],[EO,GO,HO,EU,HK,H8,H7,G9],],
         vec![],
         vec![],
@@ -786,7 +786,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/105-eichel-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SO,EK,G7,HZ,HK,H7,SK,S8],[EU,HU,E7,GA,G8,H8,SZ,S9],[HO,EA,EZ,GZ,G9,H9,SA,S7],[EO,GO,GU,SU,E9,E8,GK,HA],],
         vec![],
         vec![],
@@ -796,7 +796,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/106-gras-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/109-herz-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,HO,SO,EU,GU,HK,E7,G8],[GO,H8,E8,GZ,GK,G9,G7,SZ],[HU,HA,H9,EA,EK,GA,S9,S8],[SU,HZ,H7,EZ,E9,SA,SK,S7],],
         vec![],
         vec![],
@@ -806,7 +806,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/11-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/111-herz-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,HU,EZ,E9,E8,GA,GZ,SA],[HO,GU,SU,HK,H9,EA,SZ,S9],[GO,SO,EU,HA,HZ,H8,H7,GK],[EK,E7,G9,G8,G7,SK,S8,S7],],
         vec![],
         vec![],
@@ -816,7 +816,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/112-gras-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/113-herz-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HZ,HK,EK,E7,GA,G9,SA,SK],[GO,H8,EZ,E8,GK,G8,S9,S8],[EO,SO,EU,HU,HA,H9,H7,S7],[HO,GU,SU,EA,E9,GZ,G7,SZ],],
         vec![],
         vec![],
@@ -825,7 +825,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/114-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,EU,GU,EZ,E9,E8,S7],[HU,SU,E7,G8,HA,H8,H7,SZ],[HO,SO,GK,HZ,HK,H9,S9,S8],[EA,EK,GA,GZ,G9,G7,SA,SK],],
         vec![],
         vec![],
@@ -835,7 +835,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/116-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/119-eichel-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SO,EU,EK,E8,E7,GZ,GK,SZ],[HO,GU,SU,HK,H9,H8,SA,S9],[EO,GO,HU,EA,EZ,E9,GA,H7],[G9,G8,G7,HA,HZ,SK,S8,S7],],
         vec![],
         vec![],
@@ -846,7 +846,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/122-gras-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/123-eichel-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[E9,GK,G8,HA,H7,SA,SZ,S8],[GO,HO,EU,EA,EK,E8,E7,HK],[EO,SO,HU,SU,GZ,G9,H9,H8],[GU,EZ,GA,G7,HZ,SK,S9,S7],],
         vec![],
         vec![2,],
@@ -855,7 +855,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/124-herz-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,SO,EU,GU,HK,H7,SA],[H8,EA,EZ,E9,E8,GA,G9,S9],[HA,E7,GZ,G8,G7,SZ,S8,S7],[HO,HU,SU,HZ,H9,EK,GK,SK],],
         vec![],
         vec![],
@@ -865,7 +865,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/126-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/127-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,G9,G7,EA,E9,HA,H9],[EU,GA,GZ,E8,E7,HZ,HK,S7],[HO,SO,GU,HU,SU,H8,SZ,SK],[GK,G8,EZ,EK,H7,SA,S9,S8],],
         vec![],
         vec![],
@@ -875,7 +875,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/128-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/129-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,SO,HU,GK,G8,E7,S9],[G7,EZ,E8,HA,HZ,H9,SK,S8],[EU,GU,SU,GA,GZ,EA,EK,H8],[HO,G9,E9,HK,H7,SA,SZ,S7],],
         vec![],
         vec![],
@@ -885,7 +885,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/13-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/130-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,HU,GK,G9,G7,H8,SA],[GU,GZ,G8,E8,E7,HK,SZ,S9],[EU,SU,GA,EZ,E9,H9,H7,S8],[HO,SO,EA,EK,HA,HZ,SK,S7],],
         vec![],
         vec![],
@@ -894,7 +894,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/131-herz-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HZ,EK,E9,E8,GA,GZ,G8,S8],[EU,H7,EA,EZ,GK,G7,SK,S7],[EO,HO,SO,GU,HU,HA,HK,SZ],[GO,SU,H9,H8,E7,G9,SA,S9],],
         vec![],
         vec![],
@@ -903,7 +903,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/132-herz-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SU,EA,EZ,EK,E9,GZ,SZ,S8],[SO,EU,HK,G9,G7,SK,S9,S7],[GO,GU,H8,E7,GA,GK,G8,SA],[EO,HO,HU,HA,HZ,H9,H7,E8],],
         vec![],
         vec![],
@@ -913,7 +913,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/134-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/135-eichel-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SO,SU,EA,E7,HA,HZ,H9,SK],[HO,EU,GU,GZ,GK,H7,SA,S9],[EK,G9,G8,G7,HK,H8,S8,S7],[EO,GO,HU,EZ,E9,E8,GA,SZ],],
         vec![],
         vec![],
@@ -922,7 +922,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/137-gras-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,GK,G9,EA,E8,E7,SZ,SK],[EU,HU,EK,E9,HA,H8,S9,S8],[EO,GO,SO,GZ,G8,G7,H9,H7],[HO,SU,GA,EZ,HZ,HK,SA,S7],],
         vec![],
         vec![],
@@ -931,7 +931,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/139-gras-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,GU,G7,EA,E7,HK,H9,S9],[EU,HU,GZ,E9,HA,H8,H7,S7],[EO,HO,SO,SU,GA,GK,G8,EK],[G9,EZ,E8,HZ,SA,SZ,SK,S8],],
         vec![],
         vec![],
@@ -940,7 +940,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/142-gras-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,SU,G7,EA,E9,SA,SZ,S8],[EO,GO,HO,SO,HU,GA,G9,E8],[G8,EZ,E7,HA,HZ,HK,S9,S7],[EU,GZ,GK,EK,H9,H8,H7,SK],],
         vec![],
         vec![],
@@ -949,7 +949,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/143-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,HO,SO,GU,HU,GK,G7,H9],[EU,GZ,EA,HZ,HK,SA,SZ,SK],[GA,G8,E9,E7,HA,H8,H7,S9],[GO,SU,G9,EZ,EK,E8,S8,S7],],
         vec![],
         vec![],
@@ -959,7 +959,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/144-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/146-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HO,SO,SU,EA,EK,E8,HA,HZ],[EO,GO,EU,E9,GK,G7,HK,SZ],[G9,G8,H9,H8,H7,SA,SK,S8],[GU,HU,EZ,E7,GA,GZ,S9,S7],],
         vec![],
         vec![],
@@ -968,7 +968,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/149-herz-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,HO,SO,EU,GU,HK,H8,G8],[SU,H9,EZ,E8,E7,GA,SZ,S8],[EO,HU,HA,H7,EK,GK,SK,S9],[HZ,EA,E9,GZ,G9,G7,SA,S7],],
         vec![],
         vec![],
@@ -977,7 +977,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/15-herz-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HU,SU,H9,GA,GK,G9],[EO,GU,HK,EZ,EK,SK],[GO,HO,SO,EU,HZ,SA],[HA,EA,E9,GZ,SZ,S9],],
         vec![],
         vec![],
@@ -986,7 +986,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/150-gras-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SO,EU,G9,EZ,E7,HZ,HK,SA],[EO,GO,GU,HU,GZ,G7,EA,E8],[SU,GA,GK,EK,H9,H8,SK,S9],[HO,G8,E9,HA,H7,SZ,S8,S7],],
         vec![],
         vec![],
@@ -995,7 +995,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/151-gras-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HU,GK,G9,G8,E9,HA,H9,H8],[EO,SO,GU,GA,GZ,G7,SZ,S8],[GO,EU,SU,EZ,EK,H7,S9,S7],[HO,EA,E8,E7,HZ,HK,SA,SK],],
         vec![],
         vec![],
@@ -1006,7 +1006,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/154-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/155-herz-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,SO,EU,GU,H8,EA,S9],[HK,H9,EZ,E9,GK,G7,SA,S7],[SU,HA,H7,EK,G9,G8,SK,S8],[HO,HU,HZ,E8,E7,GA,GZ,SZ],],
         vec![],
         vec![],
@@ -1015,7 +1015,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/156-eichel-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[E9,E8,GA,HZ,HK,H8,H7,S8],[HU,SU,GZ,GK,G9,SZ,SK,S7],[EO,HO,EU,EA,EZ,EK,E7,SA],[GO,SO,GU,G8,G7,HA,H9,S9],],
         vec![],
         vec![],
@@ -1024,7 +1024,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/157-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,SU,E9,E8,G7,HA,HZ],[EA,E7,GA,GK,G9,H8,SK,S8],[HO,SO,GU,EK,GZ,G8,HK,SZ],[EU,HU,EZ,H9,H7,SA,S9,S7],],
         vec![],
         vec![],
@@ -1033,7 +1033,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/159-herz-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SO,EU,E7,GZ,GK,G9,G7,SA],[EO,GO,HO,HU,SU,HA,H7,EK],[HK,H9,EZ,E9,G8,SZ,S9,S7],[GU,HZ,H8,EA,E8,GA,SK,S8],],
         vec![],
         vec![],
@@ -1042,7 +1042,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/160-gras-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,GU,G8,EA,HK,H8,SA,S9],[GA,E9,E8,E7,H9,SZ,SK,S8],[EO,GO,HO,HU,SU,GK,G9,EZ],[SO,GZ,G7,EK,HA,HZ,H7,S7],],
         vec![],
         vec![],
@@ -1051,7 +1051,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/161-herz-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,EU,H9,EA,E8,E7,G9,S9],[SO,GU,EZ,E9,G8,SZ,SK,S7],[SU,HA,HZ,HK,H7,GA,GZ,G7],[EO,HO,HU,H8,EK,GK,SA,S8],],
         vec![],
         vec![],
@@ -1060,7 +1060,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/162-eichel-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[E7,G9,G7,HZ,H8,SA,SZ,S7],[GO,HO,HU,SU,EA,EZ,E8,HA],[EK,GA,GZ,GK,H9,SK,S9,S8],[EO,SO,EU,GU,E9,G8,HK,H7],],
         vec![],
         vec![3,],
@@ -1070,7 +1070,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/163-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/164-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,SO,HU,EK,E9,HZ,HK],[HO,EA,EZ,E7,H8,SZ,SK,S7],[GU,GA,GZ,G9,G7,HA,H9,SA],[EU,SU,E8,GK,G8,H7,S9,S8],],
         vec![0,],
         vec![],
@@ -1080,7 +1080,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/165-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/166-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HO,SO,HU,SU,GA,G9,EA,HA],[GO,GZ,GK,EZ,E7,SA,S9,S8],[EU,GU,G8,G7,E9,E8,HZ,H7],[EO,EK,HK,H9,H8,SZ,SK,S7],],
         vec![],
         vec![],
@@ -1089,7 +1089,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/168-gras-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SU,GZ,GK,EZ,E9,E7,HZ,SK],[SO,G8,EA,E8,HA,H7,SA,S7],[EO,HU,EK,H9,H8,SZ,S9,S8],[GO,HO,EU,GU,GA,G9,G7,HK],],
         vec![],
         vec![],
@@ -1101,7 +1101,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/171-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/172-gras-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SO,HU,EA,EZ,E7,H7,SZ,S9],[EU,GU,GA,GZ,G8,HK,H8,S7],[G7,EK,E9,E8,H9,SA,SK,S8],[EO,GO,HO,SU,GK,G9,HA,HZ],],
         vec![],
         vec![],
@@ -1110,7 +1110,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/173-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,HO,EU,EA,EZ,E9,G9,HA],[SO,HU,SU,E8,HZ,H8,S8,S7],[GA,GZ,GK,G8,G7,HK,SZ,S9],[EO,GU,EK,E7,H9,H7,SA,SK],],
         vec![],
         vec![],
@@ -1119,7 +1119,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/174-eichel-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HU,SU,EK,GA,H9,H8,H7,SZ],[EO,GO,GU,EA,E8,E7,G8,SA],[HO,EU,E9,GK,G7,HA,SK,S9],[SO,EZ,GZ,G9,HZ,HK,S8,S7],],
         vec![],
         vec![],
@@ -1131,7 +1131,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/178-gras-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/179-herz-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HU,SU,HZ,EA,E8,GA,GZ,S7],[GU,HA,H8,EZ,EK,G9,SZ,S8],[H9,H7,E9,E7,GK,G8,SK,S9],[EO,GO,HO,SO,EU,HK,G7,SA],],
         vec![],
         vec![],
@@ -1140,7 +1140,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/18-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,HO,SO,GU,EK,G7,H8],[HU,SU,EA,EZ,E9,G8,H7,SK],[EU,E7,GA,GK,HZ,HK,SA,S7],[E8,GZ,G9,HA,H9,SZ,S9,S8],],
         vec![],
         vec![],
@@ -1149,7 +1149,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/180-gras-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,EA,E8,H8,SZ,S9,S8,S7],[HO,SO,GU,SU,GK,G9,G8,HA],[EO,HU,EZ,E9,E7,HK,SA,SK],[GO,GA,GZ,G7,EK,HZ,H9,H7],],
         vec![],
         vec![],
@@ -1158,7 +1158,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/181-eichel-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,HU,E8,GZ,HZ,H9,SZ,S7],[HO,GK,G8,G7,HA,H8,SA,S9],[SO,EU,GU,EA,EZ,EK,GA,S8],[EO,SU,E9,E7,G9,HK,H7,SK],],
         vec![],
         vec![],
@@ -1167,7 +1167,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/182-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HO,SO,EU,HU,SU,E7,GA,HA],[GU,E9,G8,G7,HZ,SZ,SK,S8],[EZ,E8,GZ,GK,HK,H8,H7,S7],[EO,GO,EA,EK,G9,H9,SA,S9],],
         vec![],
         vec![],
@@ -1176,7 +1176,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/183-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HO,SO,SU,EA,EZ,E8,E7,S8],[EK,G9,HA,H8,H7,SA,SZ,SK],[EO,GO,EU,GU,HU,G7,H9,S7],[E9,GA,GZ,GK,G8,HZ,HK,S9],],
         vec![],
         vec![2,],
@@ -1185,7 +1185,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/184-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,HO,SO,EU,GA,G8,G7,SK],[G9,HA,HZ,H9,SZ,S9,S8,S7],[EO,HU,SU,GZ,GK,H8,H7,SA],[GU,EA,EZ,EK,E9,E8,E7,HK],],
         vec![],
         vec![2,],
@@ -1213,7 +1213,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/201-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/202-gras-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HO,HU,GA,EZ,E7,HK,H9,S8],[EO,GO,SO,EU,GZ,GK,G8,H7],[GU,SU,EK,E8,HA,HZ,SA,SK],[G9,G7,EA,E9,H8,SZ,S9,S7],],
         vec![],
         vec![],
@@ -1222,7 +1222,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/203-eichel-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,SO,GU,EZ,E9,G7,HA,SZ],[EK,GA,G9,G8,H9,H8,SA,S8],[E7,GZ,GK,HZ,HK,H7,SK,S9],[EO,HO,EU,HU,SU,EA,E8,S7],],
         vec![],
         vec![],
@@ -1232,7 +1232,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/204-gras-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/205-eichel-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,EK,E8,GK,G8,G7,HZ,H8],[EU,HU,EA,G9,H9,H7,SA,S9],[SU,GZ,HA,HK,SZ,SK,S8,S7],[EO,HO,SO,GU,EZ,E9,E7,GA],],
         vec![],
         vec![],
@@ -1243,7 +1243,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/207-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/209-eichel-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EZ,G9,G7,HA,H9,H8,SA,S8],[SO,EU,GU,SU,EK,E9,E8,E7],[EO,GA,GZ,GK,G8,HK,SZ,S7],[GO,HO,HU,EA,HZ,H7,SK,S9],],
         vec![],
         vec![],
@@ -1254,7 +1254,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/210-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/211-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,SO,EU,HU,EK,E9,E7,SA],[GO,HO,SU,EZ,H9,H8,H7,SZ],[GU,EA,GZ,GK,G9,HK,S9,S8],[E8,GA,G8,G7,HA,HZ,SK,S7],],
         vec![],
         vec![],
@@ -1263,7 +1263,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/213-gras-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,HO,SU,HA,HK,SZ,S9,S7],[SO,EU,G7,EZ,E7,SA,SK,S8],[EO,GU,GA,GZ,GK,G9,G8,H9],[HU,EA,EK,E9,E8,HZ,H8,H7],],
         vec![],
         vec![],
@@ -1272,7 +1272,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/215-herz-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,HO,SO,EU,HK,H9,H7,GK],[EO,HU,SU,HZ,E7,G8,G7,S9],[H8,EK,E8,GA,GZ,SZ,S8,S7],[GU,HA,EA,EZ,E9,G9,SA,SK],],
         vec![],
         vec![],
@@ -1281,7 +1281,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/216-herz-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,HU,HA,EZ,E8,E7,SZ,S8],[GO,EK,GZ,GK,SA,SK,S9,S7],[HO,HZ,H9,H7,GA,G9,G8,G7],[EO,SO,GU,SU,HK,H8,EA,E9],],
         vec![],
         vec![],
@@ -1290,7 +1290,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/217-eichel-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SO,HU,E7,GA,G7,H9,SZ,S8],[E8,GK,G9,G8,HK,H8,H7,S7],[EO,GO,HO,EU,SU,EA,EZ,HA],[GU,EK,E9,GZ,HZ,SA,SK,S9],],
         vec![],
         vec![],
@@ -1299,7 +1299,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/219-gras-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SU,GA,HZ,H8,H7,SA,S9,S7],[GO,HU,G8,EZ,EK,E8,E7,S8],[EO,SO,GU,GZ,GK,G9,HA,HK],[HO,EU,G7,EA,E9,H9,SZ,SK],],
         vec![],
         vec![],
@@ -1308,7 +1308,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/22-eichel-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,E8,GZ,G8,G7,HA,SZ,S8],[HU,G9,HZ,H9,H8,SA,S9,S7],[EO,SU,EA,EK,E7,GK,HK,H7],[GO,HO,SO,EU,EZ,E9,GA,SK],],
         vec![],
         vec![2,],
@@ -1317,7 +1317,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/220-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,HO,GZ,G7,EA,EZ,HK],[SO,EU,HU,GA,GK,HA,SA,S9],[GU,SU,G9,G8,E9,H8,SK,S7],[EK,E8,E7,HZ,H9,H7,SZ,S8],],
         vec![],
         vec![],
@@ -1326,7 +1326,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/221-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,HO,GU,HU,EK,E9,HA,H7],[GO,SO,EU,SU,E7,G7,HK,SZ],[EZ,E8,GA,G9,G8,H9,SK,S8],[EA,GZ,GK,HZ,H8,SA,S9,S7],],
         vec![],
         vec![],
@@ -1336,7 +1336,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/23-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/25-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,HO,SO,HU,GA,G8,HA,S9],[GZ,G9,G7,EA,EZ,H9,H8,S7],[EO,EU,GU,E8,E7,HZ,HK,S8],[SU,GK,EK,E9,H7,SA,SZ,SK],],
         vec![],
         vec![],
@@ -1345,7 +1345,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/26-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,HO,GU,GA,G9,EA,E8,HA],[GO,SU,G8,EZ,E7,HK,SA,S9],[SO,HU,GZ,G7,E9,HZ,H7,SZ],[EU,GK,EK,H9,H8,SK,S8,S7],],
         vec![],
         vec![],
@@ -1355,7 +1355,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/27-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/29-herz-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HU,HK,H9,E9,GK,G7,SK,S9],[EZ,EK,E7,GZ,G9,G8,SA,SZ],[HO,SU,HA,H7,EA,E8,S8,S7],[EO,GO,SO,EU,GU,HZ,H8,GA],],
         vec![],
         vec![],
@@ -1364,7 +1364,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/30-gras-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SO,GA,G9,E7,HK,H9,H8,S9],[EU,GU,EK,HZ,H7,SZ,S8,S7],[HO,SU,GK,G7,EZ,E9,E8,SK],[EO,GO,HU,GZ,G8,EA,HA,SA],],
         vec![],
         vec![],
@@ -1373,7 +1373,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/31-herz-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,GU,EK,E9,G7,SZ,SK,S9],[HO,EU,H7,EZ,GA,GK,G8,SA],[SU,HZ,H9,E8,GZ,G9,S8,S7],[EO,SO,HU,HA,HK,H8,EA,E7],],
         vec![],
         vec![],
@@ -1382,7 +1382,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/32-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,GU,EA,E9,E7,G9,SA],[SU,EZ,EK,E8,GA,G7,H9,S8],[HO,EU,HU,GK,G8,HA,H8,SZ],[SO,GZ,HZ,HK,H7,SK,S9,S7],],
         vec![],
         vec![],
@@ -1392,7 +1392,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/34-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/36-herz-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,H8,EA,EK,E8,GK,SK,S8],[EO,EU,SU,HA,HZ,HK,H9,SA],[SO,H7,EZ,E7,GA,GZ,G9,SZ],[HO,GU,HU,E9,G8,G7,S9,S7],],
         vec![],
         vec![],
@@ -1401,7 +1401,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/37-gras-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HU,SU,GA,E9,E7,H8,H7,S9],[HO,SO,G9,G7,EZ,HA,HK,S8],[GU,EK,E8,HZ,H9,SA,SZ,SK],[EO,GO,EU,GZ,GK,G8,EA,S7],],
         vec![],
         vec![],
@@ -1410,7 +1410,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/38-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,SO,GU,GA,GZ,G9,G8,HA],[HO,HU,EZ,E7,HK,SA,SK,S9],[EO,EU,EA,E9,E8,H9,H8,S7],[SU,GK,G7,EK,HZ,H7,SZ,S8],],
         vec![],
         vec![],
@@ -1420,7 +1420,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/39-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/4-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,HO,SO,G9,G7,EA,S7],[HU,SU,GA,EZ,E9,E7,HZ,H7],[EU,GK,G8,EK,HA,H8,SA,S9],[GU,GZ,E8,HK,H9,SZ,SK,S8],],
         vec![],
         vec![],
@@ -1429,7 +1429,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/40-herz-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,HU,SU,H8,EA,E7,GA,G8],[SO,H9,EZ,E8,G9,G7,SZ,S7],[HA,HZ,EK,GZ,GK,SA,SK,S9],[EO,GO,HO,EU,HK,H7,E9,S8],],
         vec![],
         vec![],
@@ -1438,7 +1438,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/41-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SO,HU,SU,EZ,E8,GA,HA,SA],[GO,EK,G9,HK,H8,SZ,S9,S7],[EO,HO,E9,GK,HZ,H9,H7,SK],[EU,GU,EA,E7,GZ,G8,G7,S8],],
         vec![],
         vec![],
@@ -1447,7 +1447,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/44-gras-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,GZ,EA,EK,E7,SA,S9,S8],[EO,GO,HO,SO,GU,GK,E8,HK],[HU,SU,G9,G7,HA,HZ,H9,SK],[GA,G8,EZ,E9,H8,H7,SZ,S7],],
         vec![],
         vec![],
@@ -1457,7 +1457,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/46-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/49-herz-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,HU,HA,H7,E8,E7,GA,G9],[EZ,GZ,G7,SA,SZ,SK,S9,S8],[SU,HZ,HK,H9,H8,EA,EK,E9],[EO,GO,HO,SO,GU,GK,G8,S7],],
         vec![],
         vec![3,],
@@ -1468,7 +1468,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/50-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/51-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,HO,SU,EZ,E9,GA,HA,HK],[SO,HU,EK,E8,G9,G8,HZ,S9],[GU,E7,H9,H7,SA,SK,S8,S7],[GO,EU,EA,GZ,GK,G7,H8,SZ],],
         vec![],
         vec![],
@@ -1478,7 +1478,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/52-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/53-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,HO,EU,EA,E9,E8,G9,SA],[GU,HU,SU,E7,GA,GZ,SK,S8],[EZ,EK,GK,HA,H8,H7,SZ,S9],[GO,SO,G8,G7,HZ,HK,H9,S7],],
         vec![],
         vec![],
@@ -1487,7 +1487,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/54-gras-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,G9,EZ,HZ,H9,S9,S8,S7],[GO,SO,GU,SU,EA,E7,HK,H8],[HO,G7,EK,E8,H7,SA,SZ,SK],[EO,HU,GA,GZ,GK,G8,E9,HA],],
         vec![],
         vec![],
@@ -1496,7 +1496,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/55-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,SO,GU,GK,G9,G8,E9],[GA,G7,EZ,EK,E7,HA,H7,SK],[EU,HU,SU,GZ,H9,H8,SA,S7],[HO,EA,E8,HZ,HK,SZ,S9,S8],],
         vec![],
         vec![],
@@ -1505,7 +1505,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/57-eichel-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,EZ,GZ,G9,G7,HZ,H9,H7],[EO,HO,HU,SU,EA,E9,E7,S7],[GO,EK,GA,H8,SZ,SK,S9,S8],[SO,GU,E8,GK,G8,HA,HK,SA],],
         vec![],
         vec![],
@@ -1514,7 +1514,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/58-eichel-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HO,EU,EZ,E7,GZ,G8,SA,SZ],[HU,E9,G9,HA,HK,H8,H7,S9],[SO,GU,GK,G7,HZ,H9,SK,S7],[EO,GO,SU,EA,EK,E8,GA,S8],],
         vec![],
         vec![],
@@ -1523,7 +1523,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/59-herz-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,EU,H8,EK,E7,GK,S8],[HO,HU,H9,G9,G8,SZ,SK,S9],[SO,GU,SU,HA,HZ,H7,EA,GA],[HK,EZ,E9,E8,GZ,G7,SA,S7],],
         vec![],
         vec![],
@@ -1532,7 +1532,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/6-herz-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,HK,EA,E7,G9,G8,G7,S9],[HA,HZ,H7,E8,GZ,SZ,SK,S8],[HO,EU,HU,EZ,EK,E9,SA,S7],[EO,SO,GU,SU,H9,H8,GA,GK],],
         vec![],
         vec![],
@@ -1545,7 +1545,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/66-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/67-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,HO,EU,GU,SU,G9,G7],[SO,G8,E9,E8,HA,H8,SK,S9],[HU,GZ,GK,EA,EZ,EK,HZ,HK],[GA,E7,H9,H7,SA,SZ,S8,S7],],
         vec![],
         vec![],
@@ -1554,7 +1554,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/68-gras-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,G8,EA,E9,E8,E7,HA,S8],[SO,G9,HK,H9,H7,SK,S9,S7],[EO,HO,GU,SU,GZ,GK,G7,HZ],[EU,HU,GA,EZ,EK,H8,SA,SZ],],
         vec![],
         vec![],
@@ -1564,7 +1564,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/7-eichel-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/70-gras-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,HU,EZ,E7,H8,SZ,SK,S7],[EU,GZ,G7,E9,HA,H9,SA,S8],[EO,SO,GU,SU,GA,GK,G9,E8],[HO,G8,EA,EK,HZ,HK,H7,S9],],
         vec![],
         vec![],
@@ -1573,7 +1573,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/72-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,EU,GU,G9,G8,EA,S7],[SO,GZ,EK,E7,HA,HK,H7,SA],[HO,GA,EZ,E9,HZ,H9,H8,S8],[HU,SU,GK,G7,E8,SZ,SK,S9],],
         vec![],
         vec![],
@@ -1582,7 +1582,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/73-herz-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,H8,EZ,EK,E9,GA,GK,S9],[HU,HK,H7,GZ,G8,G7,SK,S8],[EO,GO,SU,HZ,EA,E7,SA,S7],[HO,SO,GU,HA,H9,E8,G9,SZ],],
         vec![],
         vec![],
@@ -1591,7 +1591,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/74-eichel-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EU,EA,E8,GA,G7,SA,SZ,S9],[GO,GU,E7,GZ,G9,H7,SK,S7],[EK,E9,GK,G8,HZ,H9,H8,S8],[EO,HO,SO,HU,SU,EZ,HA,HK],],
         vec![],
         vec![],
@@ -1604,7 +1604,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/81-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/82-gras-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GU,GA,GK,EA,EZ,E7,SK,S7],[SO,G9,G8,E9,HA,HZ,H8,S8],[HU,SU,E8,HK,H9,H7,SZ,S9],[EO,GO,HO,EU,GZ,G7,EK,SA],],
         vec![],
         vec![],
@@ -1614,7 +1614,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/83-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/84-eichel-solo.html",
-        sololike(EPlayerIndex::EPI2, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[SO,EU,GU,SU,G9,G8,H9,SA],[HO,E9,HK,H8,SZ,SK,S8,S7],[EO,GO,HU,EA,EZ,EK,E7,GA],[E8,GZ,GK,G7,HA,HZ,H7,S9],],
         vec![],
         vec![],
@@ -1623,7 +1623,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/86-eichel-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,EZ,GA,HZ,HK,SA,S9,S8],[GO,EU,E8,E7,G7,HA,H9,SZ],[HO,HU,SU,GZ,GK,G9,H8,S7],[SO,GU,EA,EK,E9,G8,H7,SK],],
         vec![],
         vec![],
@@ -1632,7 +1632,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/87-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,SO,EU,HU,GZ,GK,EK,SA],[GU,G8,E9,E7,HA,HZ,H9,H7],[EO,HO,G9,G7,EZ,E8,H8,SZ],[SU,GA,EA,HK,SK,S9,S8,S7],],
         vec![],
         vec![],
@@ -1641,7 +1641,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/9-herz-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,EU,HZ,HK,H9,GA,SA,S7],[GU,E9,E8,E7,GK,G7,SZ,SK],[GO,HO,H8,EA,EZ,EK,GZ,S9],[SO,HU,SU,HA,H7,G9,G8,S8],],
         vec![],
         vec![],
@@ -1654,7 +1654,7 @@ fn test_rulessolo() {
     // ../../testdata/games/solo/93-herz-solo.html has wrong format
     test_rules(
         "../../testdata/games/solo/94-eichel-solo.html",
-        sololike(EPlayerIndex::EPI1, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HU,SU,E8,G9,SZ,SK,S9,S8],[EO,GO,HO,SO,EU,EK,E7,H7],[GU,EA,GA,GZ,HA,HZ,HK,H9],[EZ,E9,GK,G8,G7,H8,SA,S7],],
         vec![],
         vec![],
@@ -1663,7 +1663,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/96-herz-solo.html",
-        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, EFarbe::Herz, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[H7,EA,EZ,EK,E9,E7,GK,SZ],[GU,HK,E8,GA,GZ,G8,S9,S8],[HO,HA,HZ,H8,G7,SA,SK,S7],[EO,GO,SO,EU,HU,SU,H9,G9],],
         vec![],
         vec![],
@@ -1672,7 +1672,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/97-gras-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Gras, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,GO,HO,EU,GA,G9,E8,SA],[HU,GZ,GK,G7,EK,E9,S9,S8],[SO,GU,SU,E7,HZ,H9,H8,S7],[G8,EA,EZ,HA,HK,H7,SZ,SK],],
         vec![],
         vec![],
@@ -1681,7 +1681,7 @@ fn test_rulessolo() {
     );
     test_rules(
         "../../testdata/games/solo/98-eichel-solo.html",
-        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, EFarbe::Eichel, ESoloLike::Solo, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 3)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HO,EU,HU,EZ,E9,E7,SA,SK],[SO,GU,SU,E8,GZ,G9,H9,S7],[EO,EK,G7,HZ,HK,H8,H7,S9],[GO,EA,GA,GK,G8,HA,SZ,S8],],
         vec![],
         vec![],
@@ -1695,7 +1695,7 @@ fn test_rulesgeier() {
     use EPlayerIndex::*;
     test_rules(
         "../../testdata/games/39.html",
-        sololike(EPlayerIndex::EPI2, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,EZ,EU,GK,G9,H8,SU,S9],[GO,HO,E7,GZ,G8,HK,HU,S7],[SO,EA,EK,GA,G7,HA,SA,SZ],[E9,E8,GU,HZ,H9,H7,SK,S8],],
         vec![],
         vec![],
@@ -1704,7 +1704,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/42.html",
-        sololike(EPlayerIndex::EPI2, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI2, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[E9,E7,GA,GZ,HU,H8,S9,S8],[GO,EK,GU,G9,H7,SA,SZ,S7],[EO,HO,EA,EZ,G8,HA,HZ,HK],[SO,EU,E8,GK,G7,H9,SK,SU],],
         vec![],
         vec![],
@@ -1713,7 +1713,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/1.html",
-        sololike(EPlayerIndex::EPI0, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/200, /*n_payout_schneider_schwarz*/50, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/200, /*n_payout_schneider_schwarz*/50, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,SO,EA,EU,E7,G8,SA,S7],[GO,HO,HA,HK,H9,SZ,SK,S9],[EZ,E9,E8,GK,GU,G9,H7,SU],[EK,GA,GZ,G7,HZ,HU,H8,S8],],
         vec![],
         vec![],
@@ -1722,7 +1722,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/10.html",
-        sololike(EPlayerIndex::EPI3, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,E9,E7,GZ,HK,H7,SU,S7],[SO,EK,G9,G7,H9,SK,S9,S8],[HO,E8,GK,GU,G8,HZ,HU,SZ],[EO,EA,EZ,EU,GA,HA,H8,SA],],
         vec![],
         vec![],
@@ -1731,7 +1731,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/2.html",
-        sololike(EPlayerIndex::EPI0, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,HO,SO,EZ,E9,GZ,GK,SA],[GO,EU,GA,G8,HU,H9,H8,S9],[EA,G9,G7,HA,HZ,H7,SZ,SK],[EK,E8,E7,GU,HK,SU,S8,S7],],
         vec![],
         vec![],
@@ -1740,7 +1740,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/3.html",
-        sololike(EPlayerIndex::EPI0, None, ESoloLike::Geier, SPayoutDeciderTout::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, None, ESoloLike::Geier, SPayoutDeciderTout::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,SO,EA,EZ,SA,SZ,SU,S9],[E8,E7,G7,HA,HZ,H7,S8,S7],[HO,GA,GZ,GK,G9,G8,HU,H9],[GO,EK,EU,E9,GU,HK,H8,SK],],
         vec![],
         vec![],
@@ -1749,7 +1749,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/4.html",
-        sololike(EPlayerIndex::EPI3, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,EA,GZ,GK,G9,HU,SA,S7],[EK,EU,GA,G7,HZ,HK,H8,S9],[GU,G8,HA,H7,SZ,SK,SU,S8],[GO,HO,SO,EZ,E9,E8,E7,H9],],
         vec![],
         vec![],
@@ -1758,7 +1758,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/5.html",
-        sololike(EPlayerIndex::EPI0, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HO,SO,EA,EZ,GA,H9,SA,S7],[EO,GZ,G7,HA,HZ,HU,H8,SU],[EK,E8,E7,G9,G8,HK,H7,SK],[GO,EU,E9,GK,GU,SZ,S9,S8],],
         vec![3,0,1,],
         vec![],
@@ -1767,7 +1767,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/6.html",
-        sololike(EPlayerIndex::EPI0, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GO,HO,SO,EZ,GZ,GK],[E9,GU,HZ,HK,SA,SU],[EO,EA,EK,G9,HA,H9],[EU,GA,HU,SZ,SK,S9],],
         vec![2,],
         vec![],
@@ -1776,7 +1776,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/7.html",
-        sololike(EPlayerIndex::EPI3, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI3, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[GZ,GK,HA,HK,HU,H8,H7,S8],[EU,E9,E7,GU,G8,G7,SZ,SU],[GO,SO,EK,GA,G9,H9,SK,S7],[EO,HO,EA,EZ,E8,HZ,SA,S9],],
         vec![3,1,],
         vec![],
@@ -1785,7 +1785,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/8.html",
-        sololike(EPlayerIndex::EPI0, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI0, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[EO,SO,EA,EU,E9,E8,E7,G9],[GO,HO,EK,GA,G7,HA,HK,H7],[GK,G8,HU,H9,H8,SZ,S9,S7],[EZ,GZ,GU,HZ,SA,SK,SU,S8],],
         vec![],
         vec![],
@@ -1794,7 +1794,7 @@ fn test_rulesgeier() {
     );
     test_rules(
         "../../testdata/games/geier/9.html",
-        sololike(EPlayerIndex::EPI1, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast(),
+        sololike(EPlayerIndex::EPI1, None, ESoloLike::Geier, SPayoutDeciderPointBased::default_payoutdecider(/*n_payout_base*/50, /*n_payout_schneider_schwarz*/10, SLaufendeParams::new(10, 2)), SStossParams::new(/*n_stoss_max*/4)).upcast_box().as_ref(),
         [[HO,E8,GU,G8,HZ,HU,S9,S7],[EO,GO,SO,EZ,EK,E9,HK,H8],[GZ,G9,G7,HA,H9,SA,SK,SU],[EA,EU,E7,GA,GK,H7,SZ,S8],],
         vec![],
         vec![],

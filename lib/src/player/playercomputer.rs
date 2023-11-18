@@ -57,12 +57,15 @@ impl TPlayer for SPlayerComputer {
                 orules,
                 orules.map_or(
                     0., // TODO how to rank None?
-                    |rules| self.ai.rank_rules(
-                        hand,
-                        /*epi_rank*/rules.active_playerindex(),
-                        rules.upcast(),
-                        expensifiers,
-                    ).maxmin.0.avg().as_num::<f64>()
+                    |rules| {
+                        let rules_as_box = TRulesBoxClone::box_clone(rules); // TODO avoid box_clone
+                        self.ai.rank_rules(
+                            hand,
+                            /*epi_rank*/rules.active_playerindex(),
+                            rules_as_box.as_ref(),
+                            expensifiers,
+                        ).maxmin.0.avg().as_num::<f64>()
+                    }
                 )
             ))
             .max_by(|&(_orules_lhs, f_payout_avg_lhs), &(_orules_rhs, f_payout_avg_rhs)| {
@@ -76,7 +79,7 @@ impl TPlayer for SPlayerComputer {
     fn ask_for_stoss(
         &self,
         epi: EPlayerIndex,
-        rules: &dyn TRules,
+        rules: &SRules,
         hand: &SHand,
         stichseq: &SStichSequence,
         expensifiers: &SExpensifiers,

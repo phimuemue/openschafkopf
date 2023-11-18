@@ -160,7 +160,7 @@ impl TPlayer for SPlayerHuman {
     fn ask_for_stoss(
         &self,
         _epi: EPlayerIndex,
-        rules: &dyn TRules,
+        rules: &SRules,
         hand: &SHand,
         _stichseq: &SStichSequence,
         expensifiers: &SExpensifiers,

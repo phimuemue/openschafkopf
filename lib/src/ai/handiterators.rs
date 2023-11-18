@@ -144,7 +144,7 @@ fn make_handiterator<HandIteratorCore: THandIteratorCore>(
 fn make_handiterator_compatible_with_game_so_far<'lifetime, HandIteratorCore: THandIteratorCore + 'lifetime>(
     stichseq: &'lifetime SStichSequence,
     ahand_known: EnumMap<EPlayerIndex, SHand>,
-    rules: &'lifetime dyn TRules,
+    rules: &'lifetime SRules,
     slcstoss: &'lifetime [SStoss],
     mut fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
@@ -202,7 +202,7 @@ impl TToAHand for (SHand, EPlayerIndex) {
 pub fn internal_all_possible_hands<'lifetime>(
     stichseq: &'lifetime SStichSequence,
     tohand: impl TToAHand + 'lifetime,
-    rules: &'lifetime dyn TRules,
+    rules: &'lifetime SRules,
     slcstoss: &'lifetime [SStoss],
     fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
@@ -218,7 +218,7 @@ pub fn internal_all_possible_hands<'lifetime>(
 pub fn all_possible_hands<'lifetime>(
     stichseq: &'lifetime SStichSequence,
     tohand: impl TToAHand + 'lifetime,
-    rules: &'lifetime dyn TRules,
+    rules: &'lifetime SRules,
     slcstoss: &'lifetime [SStoss],
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     internal_all_possible_hands(
@@ -233,7 +233,7 @@ pub fn all_possible_hands<'lifetime>(
 pub fn internal_forever_rand_hands<'lifetime>(
     stichseq: &'lifetime SStichSequence,
     tohand: impl TToAHand,
-    rules: &'lifetime dyn TRules,
+    rules: &'lifetime SRules,
     slcstoss: &'lifetime [SStoss],
     fn_inspect: impl FnMut(bool/*b_valid*/, &EnumMap<EPlayerIndex, SHand>)->bool + 'lifetime,
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
@@ -249,7 +249,7 @@ pub fn internal_forever_rand_hands<'lifetime>(
 pub fn forever_rand_hands<'lifetime>(
     stichseq: &'lifetime SStichSequence,
     tohand: impl TToAHand + 'lifetime,
-    rules: &'lifetime dyn TRules,
+    rules: &'lifetime SRules,
     slcstoss: &'lifetime [SStoss],
 ) -> impl Iterator<Item = EnumMap<EPlayerIndex, SHand>> + 'lifetime {
     internal_forever_rand_hands(

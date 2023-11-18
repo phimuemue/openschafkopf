@@ -5,7 +5,7 @@ use crate::ai::{
 use crate::primitives::*;
 use itertools::*;
 use crate::util::*;
-use crate::rules::TRules;
+use crate::rules::SRules;
 use std::borrow::Borrow;
 
 pub const N_COLUMNS : usize = 4;
@@ -139,7 +139,7 @@ pub fn table<
     PayoutStatsPayload: Copy+Ord+std::fmt::Debug
 >(
     determinebestcardresult: &SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>,
-    rules: &dyn TRules,
+    rules: &SRules,
     fn_loss_or_win: &dyn Fn(isize, PayoutStatsPayload) -> std::cmp::Ordering,
 ) -> SPayoutStatsTable<ECard, MinMaxStrategiesHK>
     where

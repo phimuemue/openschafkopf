@@ -50,7 +50,7 @@ impl<FnCheckAskForCard: Fn(&SGameGeneric<SRuleSet, (), ()>)> TPlayer for SPlayer
     fn ask_for_stoss(
         &self,
         _epi: EPlayerIndex,
-        _rules: &dyn TRules,
+        _rules: &SRules,
         _hand: &SHand,
         _stichseq: &SStichSequence,
         _expensifiers: &SExpensifiers,

@@ -16,7 +16,7 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
     fn equivalent_when_on_same_hand(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>>;
 
     fn points_as_payout(&self, _rules: &SRulesSoloLike<Self>) -> Option<(
-        Box<dyn TRules>,
+        Box<SRules>,
         Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
         None
@@ -116,7 +116,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
     }
 
     fn points_as_payout(&self, rules: &SRulesSoloLike<Self>) -> Option<(
-        Box<dyn TRules>,
+        Box<SRules>,
         Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
         //assert_eq!(self, rules.payoutdecider); // TODO
@@ -132,7 +132,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
                 trumpfdecider: rules.trumpfdecider.clone(),
                 of_heuristic_active_occurence_probability: rules.of_heuristic_active_occurence_probability,
                 stossparams: rules.stossparams.clone(),
-            }) as Box<dyn TRules>,
+            }) as Box<SRules>,
             Box::new(move |stichseq: &SStichSequence, (epi_hand, hand): (EPlayerIndex, &SHand), f_payout: f32| {
                 assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
                 SPayoutDeciderPointsAsPayout::payout_to_points(
@@ -423,7 +423,7 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<PayoutDeci
     }
 
     fn points_as_payout(&self) -> Option<(
-        Box<dyn TRules>,
+        Box<SRules>,
         Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
         self.payoutdecider.points_as_payout(self)

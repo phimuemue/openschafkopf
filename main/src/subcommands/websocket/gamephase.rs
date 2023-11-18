@@ -155,7 +155,7 @@ pub struct STimeoutAction {
 #[derive(Debug)]
 pub struct SSendToPlayers<'game> {
     pub slcstich: &'game [SStich],
-    pub orules: Option<&'game dyn TRules>,
+    pub orules: Option<&'game SRules>,
     pub mapepiveccard: EnumMap<EPlayerIndex, Vec<ECard>>,
     pub mapepiomsg_active: EnumMap<EPlayerIndex, Option<VMessage>>,
     pub msg_inactive: VMessage,
@@ -165,7 +165,7 @@ pub struct SSendToPlayers<'game> {
 impl<'game> SSendToPlayers<'game> {
     pub fn new<Card: TMoveOrClone<ECard>, ItCard: IntoIterator<Item=Card>> (
         slcstich: &'game [SStich],
-        orules: Option<&'game dyn TRules>,
+        orules: Option<&'game SRules>,
         fn_cards: impl Fn(EPlayerIndex)->ItCard,
         fn_msg_active: impl Fn(EPlayerIndex)->Option<VMessage>,
         msg_inactive: VMessage,

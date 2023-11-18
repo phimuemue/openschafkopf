@@ -8,7 +8,7 @@ pub fn parse_rule_description(
     (n_tarif_extra, n_tarif_ruf, n_tarif_solo): (isize, isize, isize),
     stossparams: SStossParams,
     fn_player_to_epi: impl Fn(&str)->Result<EPlayerIndex, Error>,
-) -> Result<Box<dyn TRules>, Error> {
+) -> Result<Box<SRules>, Error> {
     use crate::rules::rulesrufspiel::*;
     use crate::rules::rulessolo::*;
     use crate::rules::rulesbettel::*;
@@ -95,7 +95,7 @@ pub fn parse_rule_description(
                                     ),
                                 ),
                                 stossparams.clone(),
-                            )) as Box<dyn TRules>
+                            )) as Box<SRules>
                         })
                     }
                 }
@@ -111,7 +111,7 @@ pub fn parse_rule_description(
                     /*i_prio*/-999_999,
                     /*n_payout_base*/n_tarif_solo,
                     stossparams.clone(),
-                )) as Box<dyn TRules>
+                )) as Box<SRules>
             })
         }),
         (&["bettel stich"], {
@@ -121,7 +121,7 @@ pub fn parse_rule_description(
                     /*i_prio*/-999_999,
                     /*n_payout_base*/n_tarif_solo,
                     stossparams.clone(),
-                )) as Box<dyn TRules>
+                )) as Box<SRules>
             })
         }),
         (&["ramsch"], {
@@ -129,7 +129,7 @@ pub fn parse_rule_description(
                 /*n_price*/n_tarif_ruf,
                 VDurchmarsch::AtLeast(91), // https://www.sauspiel.de/blog/66-bei-sauspiel-wird-jetzt-mit-ramsch-gespielt
                 Some(VJungfrau::DoubleAll),
-            )) as Box<dyn TRules>)
+            )) as Box<SRules>)
         }),
     ].into_iter()
         .filter(|(slcstr, _)| str_rules_contains(slcstr))
@@ -147,7 +147,7 @@ pub fn parse_rule_description(
     }
 }
 
-pub fn parse_rule_description_simple(str_rules: &str) -> Result<Box<dyn TRules>, Error> {
+pub fn parse_rule_description_simple(str_rules: &str) -> Result<Box<SRules>, Error> {
     crate::rules::parser::parse_rule_description(
         str_rules,
         (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO? make customizable

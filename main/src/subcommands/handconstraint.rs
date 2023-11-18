@@ -20,7 +20,7 @@ type SRhaiEPlayerIndex = i64; // TODO good idea?
 #[derive(Clone)]
 struct SContext {
     ahand: EnumMap<EPlayerIndex, SHand>,
-    rules: Box<dyn TRules>,
+    rules: Box<SRules>,
 }
 
 impl SContext {
@@ -43,7 +43,7 @@ impl SConstraint {
     pub fn internal_eval<R>(
         &self,
         ahand: &EnumMap<EPlayerIndex, SHand>,
-        rules: Box<dyn TRules>,
+        rules: Box<SRules>,
         fn_eval: impl Fn(Result<rhai::Dynamic, Box<rhai::EvalAltResult>>)->R,
     ) -> R {
         fn_eval(self.engine.call_fn(
@@ -53,7 +53,7 @@ impl SConstraint {
             (SContext{ahand: ahand.clone(), rules},),
         ))
     }
-    pub fn eval(&self, ahand: &EnumMap<EPlayerIndex, SHand>, rules: Box<dyn TRules>) -> bool {
+    pub fn eval(&self, ahand: &EnumMap<EPlayerIndex, SHand>, rules: Box<SRules>) -> bool {
         self.internal_eval(ahand, rules, |resdynamic| {
             match resdynamic {
                 Ok(dynamic) => {

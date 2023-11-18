@@ -1,6 +1,6 @@
 use openschafkopf_lib::{
     ai::{*, gametree::*, stichoracle::SFilterByOracle, cardspartition::*},
-    rules::TRules,
+    rules::SRules,
     primitives::*,
     game_analysis::determine_best_card_table::{
         table,
@@ -178,10 +178,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 None
             };
             let rules = if let Some((rules, _fn_payout_to_points)) = &otplrulesfn_points_as_payout {
-                rules.as_ref()
+                rules.box_clone()
             } else {
-                rules
+                rules.box_clone()
             };
+            let rules = rules.as_ref();
             let fn_human_readable_payout = |stichseq: SStichSequence, (epi_position, hand), n_payout: isize| -> (isize, std::cmp::Ordering) {
                 if let Some((_rules, fn_payout_to_points)) = &otplrulesfn_points_as_payout {
                     (
@@ -217,7 +218,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             }
             fn print_json<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Serialize>( // TODORUST generic closure
                 clapmatches: &clap::ArgMatches,
-                rules: &dyn TRules,
+                rules: &SRules,
                 ahand_fixed_with_holes: &EnumMap<EPlayerIndex, SHand>,
                 vectableline: Vec<SJsonTableLine<MinMaxStrategiesHK>>
             ) -> bool

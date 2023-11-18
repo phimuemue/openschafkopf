@@ -25,7 +25,7 @@ pub trait TSnapshotVisualizer<Output> {
 }
 
 
-pub fn visualizer_factory<'rules, MinMaxStrategiesHK>(path: std::path::PathBuf, rules: &'rules dyn TRules, epi: EPlayerIndex) -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SForEachSnapshotHTMLVisualizer<'rules, MinMaxStrategiesHK> {
+pub fn visualizer_factory<'rules, MinMaxStrategiesHK>(path: std::path::PathBuf, rules: &'rules SRules, epi: EPlayerIndex) -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SForEachSnapshotHTMLVisualizer<'rules, MinMaxStrategiesHK> {
     unwrap!(std::fs::create_dir_all(&path));
     unwrap!(crate::game_analysis::generate_html_auxiliary_files(&path));
     move |i_ahand, ahand, ocard| {
@@ -54,12 +54,12 @@ pub fn visualizer_factory<'rules, MinMaxStrategiesHK>(path: std::path::PathBuf, 
 
 pub struct SForEachSnapshotHTMLVisualizer<'rules, MinMaxStrategiesHK> {
     file_output: BufWriter<fs::File>,
-    rules: &'rules dyn TRules,
+    rules: &'rules SRules,
     epi: EPlayerIndex,
     phantom: std::marker::PhantomData<MinMaxStrategiesHK>,
 }
 impl<'rules, MinMaxStrategiesHK> SForEachSnapshotHTMLVisualizer<'rules, MinMaxStrategiesHK> {
-    fn new(file_output: fs::File, rules: &'rules dyn TRules, epi: EPlayerIndex) -> Self {
+    fn new(file_output: fs::File, rules: &'rules SRules, epi: EPlayerIndex) -> Self {
         let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output: BufWriter::with_capacity(16*1024*1024, file_output), rules, epi, phantom: std::marker::PhantomData};
         foreachsnapshothtmlvisualizer.write_all(
             b"<link rel=\"stylesheet\" type=\"text/css\" href=\"../css.css\">
@@ -117,7 +117,7 @@ pub fn player_table_stichseq(epi_self: EPlayerIndex, stichseq: &SStichSequence) 
     }).format("\n"))
 }
 
-pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &dyn TRules, fn_border: impl Fn(ECard)->bool) -> String {
+pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &SRules, fn_border: impl Fn(ECard)->bool) -> String {
     format!(
         "<td>{}</td>\n",
         player_table(epi_self, |epi| {
@@ -190,7 +190,7 @@ pub trait TFilterAllowedCards {
 #[derive(new)]
 pub struct SFilterOnePerWinnerIndex<'rules> {
     oepi_unfiltered: Option<EPlayerIndex>,
-    rules: &'rules dyn TRules,
+    rules: &'rules SRules,
 }
 
 impl<'rules> TFilterAllowedCards for SFilterOnePerWinnerIndex<'rules> {
@@ -286,7 +286,7 @@ pub fn explore_snapshots<
     OSnapshotCache: Into<Option<SnapshotCache>>,
 >(
     (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
-    rules: &dyn TRules,
+    rules: &SRules,
     fn_make_filter: &impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
     fn_snapshotcache: &impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache,
@@ -324,7 +324,7 @@ pub fn explore_snapshots<
 
 fn explore_snapshots_internal<ForEachSnapshot>(
     (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
-    rules: &dyn TRules,
+    rules: &SRules,
     rulestatecache: &mut SRuleStateCache,
     func_filter_allowed_cards: &mut impl TFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
@@ -444,7 +444,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
 
 #[derive(Clone, new)]
 pub struct SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> {
-    rules: &'rules dyn TRules,
+    rules: &'rules SRules,
     epi: EPlayerIndex,
     expensifiers: SExpensifiers, // TODO could this borrow?
     phantom: std::marker::PhantomData<(Pruner, MinMaxStrategiesHK)>,

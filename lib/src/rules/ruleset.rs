@@ -51,7 +51,7 @@ pub enum EDoublingScope {
 #[derive(new, Debug, Clone)]
 pub struct SRuleSet {
     pub avecrulegroup : EnumMap<EPlayerIndex, Vec<SRuleGroup>>,
-    pub stockorramsch : VStockOrT</*n_stock*/isize, Box<dyn TRules>>,
+    pub stockorramsch : VStockOrT</*n_stock*/isize, Box<SRules>>,
     pub oedoublingscope : Option<EDoublingScope>,
     pub ekurzlang : EKurzLang,
 }
@@ -148,7 +148,7 @@ impl SRuleSet {
                             durchmarsch,
                             ojungfrau,
                         )
-                    ) as Box<dyn TRules>)
+                    ) as Box<SRules>)
                 )
             },
             (None, Some(val_stock)) => {

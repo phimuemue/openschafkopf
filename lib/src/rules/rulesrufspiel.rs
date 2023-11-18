@@ -302,7 +302,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
     }
 
     fn points_as_payout(&self) -> Option<(
-        Box<dyn TRules>,
+        Box<SRules>,
         Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
         #[derive(Debug, Clone)]
@@ -391,7 +391,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 },
                 trumpfdecider: self.trumpfdecider.clone(),
                 stossparams: self.stossparams.clone(),
-            }) as Box<dyn TRules>,
+            }) as Box<SRules>,
             Box::new(move |stichseq: &SStichSequence, (epi_hand, hand): (EPlayerIndex, &SHand), f_payout: f32| {
                 assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
                 SRufspielPayoutPointsAsPayout::payout_to_points(
