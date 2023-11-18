@@ -299,6 +299,8 @@ impl SRuleStateCache {
     }
 }
 
+pub type SRules = dyn TRules;
+
 pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone + Send {
     // STrumpfDecider
     fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe;
@@ -440,7 +442,7 @@ pub trait TRules : fmt::Display + TAsRules + Sync + fmt::Debug + TRulesBoxClone 
     }
 
     fn points_as_payout(&self) -> Option<(
-        Box<dyn TRules>,
+        Box<SRules>,
         Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
         None
@@ -464,7 +466,7 @@ impl<Rules: TRules + ?Sized> TWinnerIndex for Rules {
         self.preliminary_winner_index(stich.borrow())
     }
 }
-impl<'rules> TWinnerIndex for &'rules dyn TRules {
+impl<'rules> TWinnerIndex for &'rules SRules {
     fn winner_index(&self, stich: SFullStich<&SStich>) -> EPlayerIndex {
         self.preliminary_winner_index(stich.borrow())
     }
@@ -540,12 +542,12 @@ pub trait TActivelyPlayableRules : TRules + TActivelyPlayableRulesBoxClone {
 }
 make_box_clone!(TActivelyPlayableRulesBoxClone, TActivelyPlayableRules);
 
-impl TCardSorter for &dyn TRules {
+impl TCardSorter for &SRules {
     fn sort_cards(&self, slccard: &mut [ECard]) {
         self.sort_cards_first_trumpf_then_farbe(slccard);
     }
 }
-impl TCardSorter for Box<dyn TRules> {
+impl TCardSorter for Box<SRules> {
     fn sort_cards(&self, slccard: &mut [ECard]) {
         self.as_ref().sort_cards(slccard)
     }

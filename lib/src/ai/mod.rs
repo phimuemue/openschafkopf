@@ -60,7 +60,7 @@ impl SAi {
         }
     }
 
-    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &dyn TRules, expensifiers: &SExpensifiers) -> SPerMinMaxStrategy<SPayoutStats<()>> {
+    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &SRules, expensifiers: &SExpensifiers) -> SPerMinMaxStrategy<SPayoutStats<()>> {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
         let ekurzlang = unwrap!(EKurzLang::from_cards_per_player(hand_fixed.get().len()));
         forever_rand_hands(
@@ -100,7 +100,7 @@ impl SAi {
 
     fn suggest_card_internal<SnapshotVisualizer: TSnapshotVisualizer<SMaxMinMaxSelfishMin<EnumMap<EPlayerIndex, isize>>>>(
         &self,
-        rules: &dyn TRules,
+        rules: &SRules,
         stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
         expensifiers: &SExpensifiers,
@@ -282,7 +282,7 @@ pub fn determine_best_card<
     PayoutStatsPayload: Ord + Copy + Sync + Send,
 >(
     stichseq: &'stichseq SStichSequence,
-    rules: &dyn TRules,
+    rules: &SRules,
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &ForEachSnapshot,
@@ -400,7 +400,7 @@ fn test_is_compatible_with_game_so_far() {
         AssertFrei(EPlayerIndex, VTrumpfOrFarbe),
         AssertNotFrei(EPlayerIndex, VTrumpfOrFarbe),
     }
-    let test_game = |aacard_hand: [[ECard; EKurzLang::Lang.cards_per_player()]; EPlayerIndex::SIZE], rules: &dyn TRules, vectestaction: Vec<VTestAction>| {
+    let test_game = |aacard_hand: [[ECard; EKurzLang::Lang.cards_per_player()]; EPlayerIndex::SIZE], rules: &SRules, vectestaction: Vec<VTestAction>| {
         // TODO implement tests for SStoss
         let ahand = EPlayerIndex::map_from_raw(aacard_hand)
             .map_into(|acard| acard.into());

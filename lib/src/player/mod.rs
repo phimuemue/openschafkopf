@@ -31,7 +31,7 @@ pub trait TPlayer {
     fn ask_for_stoss(
         &self,
         epi: EPlayerIndex,
-        rules: &dyn TRules,
+        rules: &SRules,
         hand: &SHand,
         stichseq: &SStichSequence,
         expensifiers: &SExpensifiers,

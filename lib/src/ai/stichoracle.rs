@@ -3,7 +3,7 @@ use crate::{
     rules::{
         SPlayerPartiesTable,
         card_points::points_card,
-        TRules,
+        SRules,
     },
     util::*,
     ai::{
@@ -81,14 +81,14 @@ impl SStichTrie {
 
     pub fn new_with(
         (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
-        rules: &dyn TRules,
+        rules: &SRules,
         cardspartition_completed_cards: &SCardsPartition,
         playerparties: &SPlayerPartiesTable,
     ) -> Self {
         fn for_each_allowed_card(
             n_depth: usize, // TODO? static enum type, possibly difference of EPlayerIndex
             (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
-            rules: &dyn TRules,
+            rules: &SRules,
             cardspartition_completed_cards: &SCardsPartition,
             playerparties: &SPlayerPartiesTable,
         ) -> (SStichTrie, Option<bool/*b_stich_winner_is_primary*/>) {
@@ -252,7 +252,7 @@ impl SStichTrie {
 
 #[derive(Debug)]
 pub struct SFilterByOracle<'rules> {
-    rules: &'rules dyn TRules,
+    rules: &'rules SRules,
     stichtrie: SStichTrie,
     cardspartition_completed_cards: SCardsPartition,
     playerparties: SPlayerPartiesTable,
@@ -260,7 +260,7 @@ pub struct SFilterByOracle<'rules> {
 
 impl<'rules> SFilterByOracle<'rules> {
     pub fn new(
-        rules: &'rules dyn TRules,
+        rules: &'rules SRules,
         ahand_in_game: &EnumMap<EPlayerIndex, SHand>,
         stichseq_in_game: &SStichSequence,
     ) -> Option<Self> {
@@ -353,7 +353,7 @@ mod tests {
                 VStockOrT,
             },
             SStossParams,
-            TRules,
+            SRules,
             TRulesBoxClone,
         },
         util::*,
@@ -388,7 +388,7 @@ mod tests {
             stossparams.clone(),
         );
         fn assert_stichoracle(
-            rules: &dyn TRules,
+            rules: &SRules,
             aslccard_hand: [&[ECard]; EPlayerIndex::SIZE],
             slccard_stichseq: &[ECard],
             slcacard_stich: &[[ECard; EPlayerIndex::SIZE]],

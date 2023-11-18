@@ -318,7 +318,7 @@ pub struct SGameGeneric<Ruleset, GameAnnouncements, DetermineRules> {
     pub ahand : EnumMap<EPlayerIndex, SHand>,
     gameannouncements : GameAnnouncements,
     determinerules: DetermineRules,
-    pub rules : Box<dyn TRules>,
+    pub rules : Box<SRules>,
     pub expensifiers: SExpensifiers,
     pub stichseq: SStichSequence,
     ruleset: Ruleset,
@@ -368,7 +368,7 @@ impl SGame {
     pub fn new(
         aveccard : EnumMap<EPlayerIndex, SHandVector>,
         expensifiers : SExpensifiersNoStoss,
-        rules : Box<dyn TRules>,
+        rules : Box<SRules>,
     ) -> SGame {
         SGame::new_with(
             aveccard,
@@ -385,7 +385,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
     pub fn new_with(
         aveccard : EnumMap<EPlayerIndex, SHandVector>,
         expensifiers : SExpensifiersNoStoss,
-        rules : Box<dyn TRules>,
+        rules : Box<SRules>,
         ruleset: Ruleset,
         gameannouncements: GameAnnouncements,
         determinerules: DetermineRules,
@@ -406,7 +406,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
     }
 
     pub fn new_finished(
-        rules : Box<dyn TRules>,
+        rules : Box<SRules>,
         expensifiers: SExpensifiers,
         stichseq: SStichSequenceGameFinished,
     ) -> Result<SGame, Error> {
@@ -448,7 +448,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         Ok(self)
     }
 
-    pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2, fn_rules: impl FnOnce(Box<dyn TRules>)->Box<dyn TRules>) -> SGameGeneric<Ruleset2, GameAnnouncements2, DetermineRules2> {
+    pub fn map<Ruleset2, GameAnnouncements2, DetermineRules2>(self, fn_announcements: impl FnOnce(GameAnnouncements)->GameAnnouncements2, fn_determinerules: impl FnOnce(DetermineRules)->DetermineRules2, fn_ruleset: impl FnOnce(Ruleset)->Ruleset2, fn_rules: impl FnOnce(Box<SRules>)->Box<SRules>) -> SGameGeneric<Ruleset2, GameAnnouncements2, DetermineRules2> {
         let SGameGeneric {
             aveccard,
             ahand,

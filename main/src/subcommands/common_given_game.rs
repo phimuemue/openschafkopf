@@ -9,7 +9,7 @@ use openschafkopf_lib::{
         SDoublings,
         SExpensifiers,
         SStoss,
-        TRules,
+        SRules,
         TRulesBoxClone,
         parser::parse_rule_description_simple,
     },
@@ -93,7 +93,7 @@ pub fn with_common_args<FnWithArgs>(
     where
         for<'rules> FnWithArgs: FnMut(
             Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
-            &'rules dyn TRules,
+            &'rules SRules,
             &SStichSequence,
             &EnumMap<EPlayerIndex, SHand>, // TODO? Good idea? Could this simply given by itahand?
             EPlayerIndex/*epi_position*/,
@@ -178,12 +178,12 @@ pub fn with_common_args<FnWithArgs>(
                                 VStockOrT::Stock(_) => None,
                                 VStockOrT::OrT(rules) => Some(rules)
                             })
-                        ) as Box<dyn Iterator<Item=Box<dyn TRules>>>,
+                        ) as Box<dyn Iterator<Item=Box<SRules>>>,
                         /*b_single_rules*/false,
                     )
                 } else {
                     let b_single_rules = vecrules.len()==1;
-                    (Box::new(vecrules.into_iter()) as Box<dyn Iterator<Item=Box<dyn TRules>>>, b_single_rules)
+                    (Box::new(vecrules.into_iter()) as Box<dyn Iterator<Item=Box<SRules>>>, b_single_rules)
                 }
             },
             Err(err) => {
