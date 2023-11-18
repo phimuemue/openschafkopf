@@ -221,11 +221,11 @@ impl<T> SDetermineBestCardResult<T> {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct SPayoutStats<T: Ord + Debug> {
+pub struct SPayoutStats<T: Ord> {
     mapnn_histogram: BTreeMap<(isize/*n_payout*/, T), usize/*n_count*/>, // TODO manually sorted Vec better?
 }
 
-impl<T: Ord + Copy + Debug> SPayoutStats<T> {
+impl<T: Ord + Copy> SPayoutStats<T> {
     pub fn new_1((n_payout, t): (isize, T)) -> Self {
         Self {
             mapnn_histogram: Some(((n_payout, t), 1)).into_iter().collect()
@@ -279,7 +279,7 @@ pub fn determine_best_card<
     OSnapshotCache: Into<Option<SnapshotCache>>,
     SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
-    PayoutStatsPayload: Ord + Debug + Copy + Sync + Send,
+    PayoutStatsPayload: Ord + Copy + Sync + Send,
 >(
     stichseq: &'stichseq SStichSequence,
     rules: &dyn TRules,
@@ -294,7 +294,7 @@ pub fn determine_best_card<
 ) -> Option<SDetermineBestCardResult<HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>>>
     where
         ForEachSnapshot::Output: TMinMaxStrategies<HigherKinded, Arg0=EnumMap<EPlayerIndex, isize>>,
-        HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>: /*TODO avoidable?*/Debug+Send,
+        HigherKinded::Type<SPayoutStats<PayoutStatsPayload>>: Send,
 {
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
@@ -356,7 +356,7 @@ pub fn determine_best_card<
             fn_inspect(/*b_before*/false, i_ahand, &ahand, card);
         });
     let mapcardooutput = unwrap!(
-        unwrap!(Arc::try_unwrap(mapcardooutput)) // "Returns the contained value, if the Arc has exactly one strong reference"   
+        unwrap!(Arc::into_inner(mapcardooutput)) // "Returns the inner value, if the Arc has exactly one strong reference"   
             .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
     );
     if_then_some!(mapcardooutput.iter().any(Option::is_some), {
