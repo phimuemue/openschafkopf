@@ -99,10 +99,10 @@ type VGamePhaseActivePlayerInfo<'a> = VGamePhaseGeneric<
 >;
 
 type SActivelyPlayableRulesIdentifier = String;
-fn find_rules_by_id(slcrulegroup: &[SRuleGroup], hand: SFullHand, orulesid: &Option<SActivelyPlayableRulesIdentifier>) -> Result<Option<Box<dyn TActivelyPlayableRules>>, ()> {
+fn find_rules_by_id(slcrulegroup: &[SRuleGroup], hand: SFullHand, orulesid: &Option<SActivelyPlayableRulesIdentifier>) -> Result<Option<Box<SActivelyPlayableRules>>, ()> {
     allowed_rules(slcrulegroup, hand)
         .find(|orules|
-            &orules.map(<dyn TActivelyPlayableRules>::to_string)==orulesid
+            &orules.map(<SActivelyPlayableRules>::to_string)==orulesid
         )
         .map(|orules| orules.map(TActivelyPlayableRulesBoxClone::box_clone)) // TODO box_clone needed?
         .ok_or(())
@@ -117,7 +117,7 @@ pub fn rules_to_gamephaseaction<'retval, 'rules : 'retval, 'hand : 'retval>(slcr
                  } else {
                      "Weiter".to_string()
                  },
-                 fn_gamephaseaction(orules.map(<dyn TActivelyPlayableRules>::to_string)),
+                 fn_gamephaseaction(orules.map(<SActivelyPlayableRules>::to_string)),
              )
         )
 }

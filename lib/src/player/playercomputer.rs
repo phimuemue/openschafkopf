@@ -49,7 +49,7 @@ impl TPlayer for SPlayerComputer {
         vecrulegroup: &'rules [SRuleGroup],
         expensifiers: &SExpensifiers,
         _otplepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
-        txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
+        txorules: mpsc::Sender<Option<&'rules SActivelyPlayableRules>>
     ) {
         // TODO: implement a more intelligent decision strategy
         unwrap!(txorules.send(unwrap!(allowed_rules(vecrulegroup, hand)

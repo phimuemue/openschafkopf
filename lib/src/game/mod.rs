@@ -112,7 +112,7 @@ impl SDealCards {
 }
 
 pub type SGameAnnouncementsGeneric<GameAnnouncement> = SPlayersInRound<Option<GameAnnouncement>, SStaticEPI0>;
-pub type SGameAnnouncements = SGameAnnouncementsGeneric<Box<dyn TActivelyPlayableRules>>;
+pub type SGameAnnouncements = SGameAnnouncementsGeneric<Box<SActivelyPlayableRules>>;
 
 #[derive(Debug, Clone)]
 pub struct SGamePreparations {
@@ -150,7 +150,7 @@ impl TGamePhase for SGamePreparations {
     }
 
     fn finish_success(self) -> Self::Finish {
-        let mut vectplepirules : Vec<(_, Box<dyn TActivelyPlayableRules>)> = self.gameannouncements.into_iter()
+        let mut vectplepirules : Vec<(_, Box<SActivelyPlayableRules>)> = self.gameannouncements.into_iter()
             .filter_map(|(epi, orules)| orules.map(|rules| (epi, rules)))
             .collect();
         if let Some(tplepirules_current_bid) = vectplepirules.pop() {
@@ -201,7 +201,7 @@ macro_rules! impl_fullhand { () => {
 impl SGamePreparations {
     impl_fullhand!();
 
-    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<dyn TActivelyPlayableRules>>) -> Result<(), Error> {
+    pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<Box<SActivelyPlayableRules>>) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
@@ -222,8 +222,8 @@ pub struct SDetermineRules {
     pub aveccard : EnumMap<EPlayerIndex, SHandVector>,
     pub expensifiers : SExpensifiersNoStoss,
     pub ruleset : SRuleSet,
-    pub vectplepirules_queued : Vec<(EPlayerIndex, Box<dyn TActivelyPlayableRules>)>,
-    pub tplepirules_current_bid : (EPlayerIndex, Box<dyn TActivelyPlayableRules>),
+    pub vectplepirules_queued : Vec<(EPlayerIndex, Box<SActivelyPlayableRules>)>,
+    pub tplepirules_current_bid : (EPlayerIndex, Box<SActivelyPlayableRules>),
 }
 
 impl TGamePhase for SDetermineRules {
@@ -280,7 +280,7 @@ impl SDetermineRules {
         (self.tplepirules_current_bid.0, self.tplepirules_current_bid.1.priority())
     }
 
-    pub fn announce_game(&mut self, epi: EPlayerIndex, rules: Box<dyn TActivelyPlayableRules>) -> Result<(), Error> {
+    pub fn announce_game(&mut self, epi: EPlayerIndex, rules: Box<SActivelyPlayableRules>) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
             bail!("announce_game not allowed for specified EPlayerIndex");
         }

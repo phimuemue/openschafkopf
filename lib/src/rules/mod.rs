@@ -521,9 +521,11 @@ plain_enum_mod!(modebid, EBid {
     Higher,
 });
 
+pub type SActivelyPlayableRules = dyn TActivelyPlayableRules;
+
 pub trait TActivelyPlayableRules : TRules + TActivelyPlayableRulesBoxClone {
     fn priority(&self) -> VGameAnnouncementPriority;
-    fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<dyn TActivelyPlayableRules>> {
+    fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<SActivelyPlayableRules>> {
         if match ebid {
             EBid::AtLeast => {*prio<=self.priority()},
             EBid::Higher => {*prio<self.priority()},
@@ -533,7 +535,7 @@ pub trait TActivelyPlayableRules : TRules + TActivelyPlayableRulesBoxClone {
             self.with_increased_prio(prio, ebid)
         }
     }
-    fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Box<dyn TActivelyPlayableRules>> {
+    fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<Box<SActivelyPlayableRules>> {
         None
     }
     fn active_playerindex(&self) -> EPlayerIndex {
@@ -552,12 +554,12 @@ impl TCardSorter for Box<SRules> {
         self.as_ref().sort_cards(slccard)
     }
 }
-impl TCardSorter for &dyn TActivelyPlayableRules {
+impl TCardSorter for &SActivelyPlayableRules {
     fn sort_cards(&self, slccard: &mut [ECard]) {
         self.sort_cards_first_trumpf_then_farbe(slccard);
     }
 }
-impl TCardSorter for Box<dyn TActivelyPlayableRules> {
+impl TCardSorter for Box<SActivelyPlayableRules> {
     fn sort_cards(&self, slccard: &mut [ECard]) {
         self.as_ref().sort_cards(slccard)
     }

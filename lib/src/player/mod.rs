@@ -25,7 +25,7 @@ pub trait TPlayer {
         vecrulegroup: &'rules [SRuleGroup],
         expensifiers: &SExpensifiers,
         otplepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
-        txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
+        txorules: mpsc::Sender<Option<&'rules SActivelyPlayableRules>>
     );
 
     fn ask_for_stoss(

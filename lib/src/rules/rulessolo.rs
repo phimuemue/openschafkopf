@@ -365,7 +365,7 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> TActivelyPlayableRules for SRulesSol
     fn priority(&self) -> VGameAnnouncementPriority {
         self.payoutdecider.priority()
     }
-    fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<dyn TActivelyPlayableRules>> {
+    fn with_increased_prio(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<Box<SActivelyPlayableRules>> {
         self.payoutdecider.with_increased_prio(prio, ebid)
             .map(|payoutdecider| Box::new(Self{
                 payoutdecider,
@@ -374,7 +374,7 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> TActivelyPlayableRules for SRulesSol
                 str_name: self.str_name.clone(),
                 of_heuristic_active_occurence_probability: None, // No data about occurence probabilities with increased priority.
                 stossparams: self.stossparams.clone(),
-            }) as Box<dyn TActivelyPlayableRules>)
+            }) as Box<SActivelyPlayableRules>)
     }
 }
 
@@ -456,7 +456,7 @@ pub fn sololike(
     esololike: ESoloLike,
     payoutdecider_in: impl Into<VPayoutDeciderSoloLike>,
     stossparams: SStossParams,
-) -> Box<dyn TActivelyPlayableRules> {
+) -> Box<SActivelyPlayableRules> {
     let (oefarbe, payoutdecider_in) = (oefarbe.into(), payoutdecider_in.into());
     macro_rules! sololike_internal{(
         ($payoutdecider: expr, $str_payoutdecider: expr),
@@ -489,7 +489,7 @@ pub fn sololike(
             ),
             of_heuristic_active_occurence_probability: $of_heuristic_active_occurence_probability,
             stossparams,
-        }) as Box<dyn TActivelyPlayableRules>
+        }) as Box<SActivelyPlayableRules>
     }}
     cartesian_match!(
         sololike_internal,
@@ -570,7 +570,7 @@ fn test_equivalent_when_on_same_hand_rulessolo() {
         let sololike_internal = |
             oefarbe: Option<EFarbe>,
             payoutdecider: VPayoutDeciderSoloLike,
-        | -> Box<dyn TActivelyPlayableRules> {
+        | -> Box<SActivelyPlayableRules> {
             sololike(
                 epi,
                 oefarbe,

@@ -40,7 +40,7 @@ impl<FnCheckAskForCard: Fn(&SGameGeneric<SRuleSet, (), ()>)> TPlayer for SPlayer
         vecrulegroup: &'rules [SRuleGroup],
         _expensifiers: &SExpensifiers,
         _otplepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
-        txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>
+        txorules: mpsc::Sender<Option<&'rules SActivelyPlayableRules>>
     ) {
         unwrap!(txorules.send(
             unwrap!(allowed_rules(vecrulegroup, hand).choose(&mut rand::thread_rng()))

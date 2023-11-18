@@ -18,7 +18,7 @@ fn choose_ruleset_or_rules<'t, T>(
     hand: &SHand,
     vect : &'t [T],
     fn_format: impl Fn(&T)->String,
-    fn_choose: impl Fn(usize)->Option<&'t dyn TActivelyPlayableRules>,
+    fn_choose: impl Fn(usize)->Option<&'t SActivelyPlayableRules>,
     otplepiprio: &Option<(EPlayerIndex, VGameAnnouncementPriority)>,
 ) -> &'t T {
     skui::ask_for_alternative(
@@ -120,14 +120,14 @@ impl TPlayer for SPlayerHuman {
         vecrulegroup: &'rules [SRuleGroup],
         _expensifiers: &SExpensifiers,
         otplepiprio: Option<(EPlayerIndex, VGameAnnouncementPriority)>,
-        txorules: mpsc::Sender<Option<&'rules dyn TActivelyPlayableRules>>,
+        txorules: mpsc::Sender<Option<&'rules SActivelyPlayableRules>>,
     ) {
         skui::print_game_announcements(epi, gameannouncements);
         let vecrulegroup : Vec<&SRuleGroup> = vecrulegroup.iter()
             .filter(|rulegroup| 0 < rulegroup.allowed_rules(hand).count())
             .collect();
         loop {
-            let vecoorules : Vec<Option<Option<&dyn TActivelyPlayableRules>>> = std::iter::once(None) // stands for "back"
+            let vecoorules : Vec<Option<Option<&SActivelyPlayableRules>>> = std::iter::once(None) // stands for "back"
                 .chain(
                     choose_ruleset_or_rules(
                         &SHand::new_from_iter(hand.get()),
