@@ -20,13 +20,13 @@ pub mod dbg_argument;
 macro_rules! make_upcastable {
     ($upcasttrait:ident, $trait:ident) => {
         pub trait $upcasttrait {
-            fn upcast(&self) -> &dyn $trait;
+            fn upcast<'retval, 'slf: 'retval>(&'slf self) -> &'retval dyn $trait;
             fn upcast_box(self: Box<Self>) -> Box<dyn $trait>
             where
                 Self: 'static;
         }
         impl<T: $trait> $upcasttrait for T {
-            fn upcast(&self) -> &dyn $trait {
+            fn upcast<'retval, 'slf: 'retval>(&'slf self) -> &'retval dyn $trait {
                 self
             }
             fn upcast_box(self: Box<Self>) -> Box<dyn $trait>
