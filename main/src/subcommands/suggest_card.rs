@@ -1,6 +1,6 @@
 use openschafkopf_lib::{
     ai::{*, gametree::*, stichoracle::SFilterByOracle, cardspartition::*},
-    rules::{SRules, TRules},
+    rules::{SRules, TRules, SRuleStateCacheFixed},
     primitives::*,
     game_analysis::determine_best_card_table::{
         table,
@@ -254,6 +254,15 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 None => Ok(None),
                 Some(_) => Err(format_err!("Could not understand strategy.")),
             }?;
+            fn make_snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(rules: &SRules) -> impl Fn(&SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>> + '_
+                where
+                    MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+std::fmt::Debug+Clone,
+            {
+                move |rulestatecache| rules.snapshot_cache::<MinMaxStrategiesHK>(rulestatecache)
+            }
+            fn make_snapshot_cache_none<MinMaxStrategiesHK>(_rules: &SRules) -> impl Fn(&SRuleStateCacheFixed)->SSnapshotCacheNone {
+                SSnapshotCacheNone::factory()
+            }
             macro_rules! forward_with_args{($forward:ident) => {
                 cartesian_match!(
                     forward,
@@ -317,32 +326,32 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         (true, None) => (
                             SPerMinMaxStrategyHigherKinded,
                             SPerMinMaxStrategy,
-                            (|rulestatecache| rules.snapshot_cache::<SPerMinMaxStrategyHigherKinded>(rulestatecache))
+                            make_snapshot_cache
                         ),
                         (true, Some(ESingleStrategy::MaxMin)) => (
                             SMaxMinStrategyHigherKinded,
                             SMaxMinStrategy,
-                            (|rulestatecache| rules.snapshot_cache::<SMaxMinStrategyHigherKinded>(rulestatecache))
+                            make_snapshot_cache
                         ),
                         (true, Some(ESingleStrategy::MaxSelfishMin)) => (
                             SMaxSelfishMinStrategyHigherKinded,
                             SMaxSelfishMinStrategy,
-                            (|rulestatecache| rules.snapshot_cache::<SMaxSelfishMinStrategyHigherKinded>(rulestatecache))
+                            make_snapshot_cache
                         ),
                         (false, None) => (
                             SPerMinMaxStrategyHigherKinded,
                             SPerMinMaxStrategy,
-                            SSnapshotCacheNone::factory()
+                            make_snapshot_cache_none
                         ),
                         (false, Some(ESingleStrategy::MaxMin)) => (
                             SMaxMinStrategyHigherKinded,
                             SMaxMinStrategy,
-                            SSnapshotCacheNone::factory()
+                            make_snapshot_cache_none
                         ),
                         (false, Some(ESingleStrategy::MaxSelfishMin)) => (
                             SMaxSelfishMinStrategyHigherKinded,
                             SMaxSelfishMinStrategy,
-                            SSnapshotCacheNone::factory()
+                            make_snapshot_cache_none
                         ),
                     },
                     match (clapmatches.value_of("visualize")) {
@@ -358,7 +367,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 )
             }}
             if clapmatches.is_present("no-details") {
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident, $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident, $fn_snapshotcache:ident), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let mapemmstrategypaystats = itahand
                         .enumerate()
                         .par_bridge() // TODO can we derive a true parallel iterator?
@@ -373,7 +382,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     epi_position,
                                     expensifiers.clone(),
                                 ),
-                                &$fn_snapshotcache,
+                                &$fn_snapshotcache::<$MinMaxStrategiesHK>(rules),
                                 &mut visualizer,
                             ).map(|mapepiminmax| {
                                 SPayoutStats::new_1(fn_human_readable_payout(
@@ -415,7 +424,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 forward_with_args!(forward);
             } else {
                 // we are interested in payout => single-card-optimization useless
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident, $fn_snapshotcache:expr), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident, $fn_snapshotcache:ident), $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                     let determinebestcardresult = determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_>( // TODO avoid explicit types
                         stichseq,
@@ -435,7 +444,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             epi_position,
                             expensifiers.clone(),
                         ),
-                        $fn_snapshotcache,
+                        $fn_snapshotcache::<$MinMaxStrategiesHK>(rules),
                         $fn_visualizer,
                         /*fn_inspect*/&|b_before, i_ahand, ahand, card| {
                             if b_verbose {
