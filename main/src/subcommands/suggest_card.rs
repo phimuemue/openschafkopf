@@ -318,41 +318,23 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         Some("hint") => (SPrunerViaHint),
                         _ => (SPrunerNothing),
                     },
-                    match ((
-                        // TODO support snapshotcache for single-strategies
-                        clapmatches.is_present("snapshotcache"), // TODO customizable depth
-                        oesinglestrategy,
-                    )) {
-                        (true, None) => (
+                    match (oesinglestrategy) {
+                        None => (
                             SPerMinMaxStrategyHigherKinded,
                             SPerMinMaxStrategy,
-                            make_snapshot_cache
                         ),
-                        (true, Some(ESingleStrategy::MaxMin)) => (
+                        Some(ESingleStrategy::MaxMin) => (
                             SMaxMinStrategyHigherKinded,
                             SMaxMinStrategy,
-                            make_snapshot_cache
                         ),
-                        (true, Some(ESingleStrategy::MaxSelfishMin)) => (
+                        Some(ESingleStrategy::MaxSelfishMin) => (
                             SMaxSelfishMinStrategyHigherKinded,
                             SMaxSelfishMinStrategy,
-                            make_snapshot_cache
                         ),
-                        (false, None) => (
-                            SPerMinMaxStrategyHigherKinded,
-                            SPerMinMaxStrategy,
-                            make_snapshot_cache_none
-                        ),
-                        (false, Some(ESingleStrategy::MaxMin)) => (
-                            SMaxMinStrategyHigherKinded,
-                            SMaxMinStrategy,
-                            make_snapshot_cache_none
-                        ),
-                        (false, Some(ESingleStrategy::MaxSelfishMin)) => (
-                            SMaxSelfishMinStrategyHigherKinded,
-                            SMaxSelfishMinStrategy,
-                            make_snapshot_cache_none
-                        ),
+                    },
+                    match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
+                        true => make_snapshot_cache,
+                        false => make_snapshot_cache_none,
                     },
                     match (clapmatches.value_of("visualize")) {
                         None => (SNoVisualization::factory()),
@@ -367,7 +349,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 )
             }}
             if clapmatches.is_present("no-details") {
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident, $fn_snapshotcache:ident), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let mapemmstrategypaystats = itahand
                         .enumerate()
                         .par_bridge() // TODO can we derive a true parallel iterator?
@@ -424,7 +406,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 forward_with_args!(forward);
             } else {
                 // we are interested in payout => single-card-optimization useless
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident, $fn_snapshotcache:ident), $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                     let determinebestcardresult = determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_>( // TODO avoid explicit types
                         stichseq,
