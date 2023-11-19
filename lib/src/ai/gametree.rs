@@ -479,7 +479,7 @@ macro_rules! impl_perminmaxstrategy{(
         $(pub $ident_strategy: $emmstrategy<T>,)*
     }
 
-    #[derive(Serialize)] // TODO this should not be needed
+    #[derive(Serialize, Clone)] // TODO this should not be needed
     pub struct $struct_higher_kinded;
     impl TMinMaxStrategiesHigherKinded for $struct_higher_kinded {
         type Type<R> = $struct<R>;
@@ -726,7 +726,7 @@ impl Max<EnumMap<EPlayerIndex, isize>> {
 // TODO(performance) storing a whole EnumMap for each strategy is unnecessary, and slows down the program
 pub type SMinMax = SPerMinMaxStrategy<EnumMap<EPlayerIndex, isize>>;
 
-pub trait TMinMaxStrategiesHigherKinded : Sized {
+pub trait TMinMaxStrategiesHigherKinded : Sized + 'static {
     type Type<R>: TMinMaxStrategies<Self> + TGenericArgs1<Arg0=R>;
 }
 

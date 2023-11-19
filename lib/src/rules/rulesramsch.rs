@@ -201,8 +201,11 @@ impl TRules for SRulesRamsch {
         )
     }
 
-    fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
-        super::snapshot_cache(|rulestatecache| {
+    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
+        where
+            MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone,
+    {
+        super::snapshot_cache::<MinMaxStrategiesHK>(|rulestatecache| {
             let mut payload_point_stich_count = 0;
             let point_stich_count = |epi| {
                 let pointstichcount = &rulestatecache.changing.mapepipointstichcount[epi];

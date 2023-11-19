@@ -192,8 +192,11 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
         BettelAllAllowedCardsWithinStich::all_allowed_cards_within_stich(self, stichseq, hand)
     }
 
-    fn snapshot_cache(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
-        super::snapshot_cache(|rulestatecache| {
+    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
+        where
+            MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone,
+    {
+        super::snapshot_cache::<MinMaxStrategiesHK>(|rulestatecache| {
             let mut payload_stich_count = 0;
             for (i_epi, epi) in EPlayerIndex::values()
                 .skip(1) // first EPI implicitly clear

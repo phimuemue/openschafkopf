@@ -317,7 +317,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         (true, None) => (
                             SPerMinMaxStrategyHigherKinded,
                             SPerMinMaxStrategy,
-                            (|rulestatecache| rules.snapshot_cache(rulestatecache))
+                            (|rulestatecache| rules.snapshot_cache::<SPerMinMaxStrategyHigherKinded>(rulestatecache))
                         ),
                         (true, Some(ESingleStrategy::MaxMin)) => (
                             SMaxMinStrategyHigherKinded,

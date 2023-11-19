@@ -2,7 +2,7 @@ use crate::ai::{cardspartition::*, rulespecific::airufspiel::*};
 use crate::primitives::*;
 use crate::rules::{payoutdecider::*, trumpfdecider::*, *};
 use crate::util::*;
-use std::{cmp::Ordering, fmt};
+use std::{cmp::Ordering, fmt::{self, Debug}};
 
 pub trait TRufspielPayout: Clone + Sync + fmt::Debug + Send + 'static {
     fn payout(
@@ -19,11 +19,14 @@ pub trait TRufspielPayout: Clone + Sync + fmt::Debug + Send + 'static {
         expensifiers: &SExpensifiers,
         rulestatecache: &SRuleStateCache,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
-    fn snapshot_cache(
+    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(
         &self,
         rules: &SRulesRufspielGeneric<Self>,
         rulestatecachefixed: &SRuleStateCacheFixed,
-    ) -> Box<dyn TSnapshotCache<SMinMax>>;
+    ) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
+        where
+            MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+Debug+Clone,
+    ;
 }
 
 #[derive(Debug, Clone)]
@@ -75,8 +78,11 @@ impl TRufspielPayout for SRufspielPayout {
         ))
     }
 
-    fn snapshot_cache(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
-        super::snapshot_cache_point_based(rules.playerparties(rulestatecachefixed))
+    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
+        where
+            MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+Debug+Clone,
+    {
+        super::snapshot_cache_point_based::<MinMaxStrategiesHK,_>(rules.playerparties(rulestatecachefixed))
     }
 }
 
@@ -347,8 +353,11 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         ))
     }
 
-    fn snapshot_cache(&self, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
-        self.rufspielpayout.snapshot_cache(self, rulestatecachefixed)
+    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(&self, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
+        where
+            MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+Debug+Clone,
+    {
+        self.rufspielpayout.snapshot_cache::<MinMaxStrategiesHK>(self, rulestatecachefixed)
     }
 
     fn heuristic_active_occurence_probability(&self) -> Option<f64> {
@@ -408,8 +417,11 @@ impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
             &rules.playerparties(&rulestatecache.fixed),
         )
     }
-    fn snapshot_cache(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SMinMax>> {
-        payoutdecider::snapshot_cache_points_monotonic(
+    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
+        where
+            MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+Debug+Clone,
+    {
+        payoutdecider::snapshot_cache_points_monotonic::<MinMaxStrategiesHK>(
             rules.playerparties(rulestatecachefixed),
             SPointsToWin61,
         )

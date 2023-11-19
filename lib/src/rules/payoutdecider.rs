@@ -294,20 +294,26 @@ pub trait TPayoutDecider : Sync + Send + 'static + Clone + fmt::Debug {
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 }
 
-pub fn snapshot_cache_points_monotonic(playerparties: impl TPlayerParties + 'static, pointstowin: impl TPointsToWin) -> Box<dyn TSnapshotCache<SMinMax>> {
+pub fn snapshot_cache_points_monotonic<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(playerparties: impl TPlayerParties + 'static, pointstowin: impl TPointsToWin) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
+    where
+        MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+'static,
+{
     type SSnapshotEquivalenceClass = u64; // space-saving variant of this:
     // struct SSnapshotEquivalenceClass { // packed into SSnapshotEquivalenceClass TODO? use bitfield crate
     //     epi_next_stich: EPlayerIndex,
     //     setcard_played: EnumMap<ECard, bool>, // TODO enumset
     // }
     #[derive(Debug)]
-    struct SSnapshotCachePointsMonotonic<PlayerParties, PointsToWin> {
-        mapsnapequivperminmaxn_payout: HashMap<SSnapshotEquivalenceClass, crate::ai::gametree::SPerMinMaxStrategy<isize>>,
+    struct SSnapshotCachePointsMonotonic<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, PlayerParties, PointsToWin> {
+        mapsnapequivperminmaxn_payout: HashMap<SSnapshotEquivalenceClass, MinMaxStrategiesHK::Type<isize>>,
         playerparties: PlayerParties,
         pointstowin: PointsToWin,
     }
-    impl<PlayerParties: TPlayerParties, PointsToWin: TPointsToWin> TSnapshotCache<SMinMax> for SSnapshotCachePointsMonotonic<PlayerParties, PointsToWin> {
-        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<SMinMax> {
+    impl<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, PlayerParties: TPlayerParties, PointsToWin: TPointsToWin> TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>> for SSnapshotCachePointsMonotonic<MinMaxStrategiesHK, PlayerParties, PointsToWin>
+        where
+            MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+'static,
+    {
+        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>> {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             let perminmaxn_payout = self.mapsnapequivperminmaxn_payout
                 .get(&super::snap_equiv_base(stichseq))?;
@@ -322,7 +328,7 @@ pub fn snapshot_cache_points_monotonic(playerparties: impl TPlayerParties + 'sta
                 )
             }))
         }
-        fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SMinMax) {
+        fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>) {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             let perminmaxn_payout = payoutstats.map(|mapepin_payout| {
                 let n_points_primary = payoutdecider::normalized_points_to_points(
@@ -349,7 +355,7 @@ pub fn snapshot_cache_points_monotonic(playerparties: impl TPlayerParties + 'sta
         }
     }
     Box::new(
-        SSnapshotCachePointsMonotonic{
+        SSnapshotCachePointsMonotonic::<MinMaxStrategiesHK, _, _>{
             mapsnapequivperminmaxn_payout: Default::default(),
             playerparties,
             pointstowin,
