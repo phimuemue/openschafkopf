@@ -322,12 +322,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         (true, Some(ESingleStrategy::MaxMin)) => (
                             SMaxMinStrategyHigherKinded,
                             SMaxMinStrategy,
-                            SSnapshotCacheNone::factory_with_warning(Some("Snapshot cache incompatible with single strategy."))
+                            (|rulestatecache| rules.snapshot_cache::<SMaxMinStrategyHigherKinded>(rulestatecache))
                         ),
                         (true, Some(ESingleStrategy::MaxSelfishMin)) => (
                             SMaxSelfishMinStrategyHigherKinded,
                             SMaxSelfishMinStrategy,
-                            SSnapshotCacheNone::factory_with_warning(Some("Snapshot cache incompatible with single strategy."))
+                            (|rulestatecache| rules.snapshot_cache::<SMaxSelfishMinStrategyHigherKinded>(rulestatecache))
                         ),
                         (false, None) => (
                             SPerMinMaxStrategyHigherKinded,

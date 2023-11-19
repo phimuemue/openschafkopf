@@ -246,16 +246,8 @@ pub trait TSnapshotCache<T> { // TODO? could this be implemented via TForEachSna
 }
 pub struct SSnapshotCacheNone;
 impl SSnapshotCacheNone {
-    pub fn factory_with_warning(ostr_warning: Option<&'static str>) -> impl Fn(&SRuleStateCacheFixed) -> Self {
-        move |_| {
-            if let Some(str_warning)=ostr_warning {
-                println!("{}", str_warning);
-            }
-            Self
-        }
-    }
     pub fn factory() -> impl Fn(&SRuleStateCacheFixed) -> Self {
-        Self::factory_with_warning(None)
+        |_| Self
     }
 }
 impl<T> TSnapshotCache<T> for SSnapshotCacheNone {
