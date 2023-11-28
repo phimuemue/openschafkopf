@@ -124,7 +124,6 @@ impl SAi {
             ) => {{ // TODORUST generic closures
                 determine_best_card(
                     &stichseq,
-                    rules,
                     Box::new($itahand) as Box<_>,
                     $func_filter_allowed_cards,
                     &<$foreachsnapshot>::new(
@@ -282,7 +281,6 @@ pub fn determine_best_card<
     PayoutStatsPayload: Ord + Copy + Sync + Send,
 >(
     stichseq: &'stichseq SStichSequence,
-    rules: &'rules SRules,
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &SMinReachablePayoutBase<Pruner, MinMaxStrategiesHK>,
@@ -296,6 +294,7 @@ pub fn determine_best_card<
         MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: Send,
         MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK>,
 {
+    let rules = foreachsnapshot.rules;
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
         ECard::map_from_fn(|_card| None),
@@ -522,7 +521,6 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         let stichseq = &game.stichseq;
         let determinebestcardresult = unwrap!(determine_best_card(
             stichseq,
-            &game.rules,
             Box::new(std::iter::once(ahand)) as Box<_>,
             /*fn_make_filter*/SBranchingFactor::factory(1, 2),
             &SMinReachablePayout::new_from_game(&game),

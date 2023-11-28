@@ -578,7 +578,6 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
         if game.stichseq.remaining_cards_per_hand()[epi_active]<=if_dbg_else!({2}{5}) {
             let determinebestcardresult = unwrap!(determine_best_card(
                 &game.stichseq,
-                &game.rules,
                 Box::new(all_possible_hands(
                     &game.stichseq,
                     if B_CHEAT {

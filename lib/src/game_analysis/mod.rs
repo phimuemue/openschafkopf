@@ -118,7 +118,6 @@ pub fn analyze_game(
                 macro_rules! look_for_mistakes{($itahand: expr$(,)?) => {{
                     let determinebestcardresult = unwrap!(determine_best_card(
                         stichseq,
-                        &game.rules,
                         Box::new($itahand) as Box<_>,
                         equivalent_cards_filter(
                             /*n_until_stichseq_len, determined heuristically*/7,

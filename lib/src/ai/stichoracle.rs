@@ -2444,7 +2444,6 @@ mod tests {
                         macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr,) => {
                             unwrap!(determine_best_card::<$ty_fn_make_filter,_,_,_,_,_,_,_>(
                                 &game.stichseq,
-                                &game.rules,
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                                 $fn_make_filter,
                                 &SMinReachablePayout::new_from_game(game),

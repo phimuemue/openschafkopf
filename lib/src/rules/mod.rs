@@ -737,7 +737,6 @@ fn test_snapshotcache() {
                         macro_rules! fwd{($fn_snapshotcache:expr) => {
                             unwrap!(determine_best_card(
                                 &game.stichseq,
-                                &game.rules,
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                                 /*fn_make_filter*/SNoFilter::factory(),
                                 &SMinReachablePayout::new_from_game(game),

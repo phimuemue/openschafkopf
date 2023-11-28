@@ -410,7 +410,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                     let determinebestcardresult = determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_>( // TODO avoid explicit types
                         stichseq,
-                        rules,
                         Box::new(
                             itahand
                                 .flat_map(|ahand| {
