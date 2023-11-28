@@ -28,7 +28,7 @@ fn choose_ruleset_or_rules<'t, T>(
         |ncwin, i_ot_chosen, _ot_suggest| {
             let orules = fn_choose(i_ot_chosen);
             assert!(_ot_suggest.is_none());
-            skui::wprintln(ncwin, &format!("Your cards: {}. What do you want to play?", SDisplayCardSlice::new(hand.cards().clone(), &orules.map(|rules| rules.clone()))));
+            skui::wprintln(ncwin, &format!("Your cards: {}. What do you want to play?", SDisplayCardSlice::new(hand.cards().clone(), &orules.cloned())));
             if let Some(ref tplepiprio) = *otplepiprio {
                 skui::wprintln(ncwin, &format!("{} offers {:?}", tplepiprio.0, tplepiprio.1)); // TODO improve output here
             }

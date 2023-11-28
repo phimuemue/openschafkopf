@@ -104,7 +104,7 @@ fn find_rules_by_id(slcrulegroup: &[SRuleGroup], hand: SFullHand, orulesid: &Opt
         .find(|orules|
             &orules.map(<SActivelyPlayableRules>::to_string)==orulesid
         )
-        .map(|orules| orules.map(|rules| rules.clone())) // TODO clone needed?
+        .map(|orules| orules.cloned()) // TODO clone needed?
         .ok_or(())
 }
 
