@@ -272,20 +272,21 @@ impl<T: Ord + Copy> SPayoutStats<T> {
 
 pub fn determine_best_card<
     'stichseq,
+    'rules,
     FilterAllowedCards: TFilterAllowedCards,
-    MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded,
-    ForEachSnapshot: TForEachSnapshot + Sync,
-    SnapshotCache: TSnapshotCache<ForEachSnapshot::Output>,
+    MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Sync,
+    Pruner: TPruner+Sync,
+    SnapshotCache: TSnapshotCache<<SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> as TForEachSnapshot>::Output>,
     OSnapshotCache: Into<Option<SnapshotCache>>,
-    SnapshotVisualizer: TSnapshotVisualizer<ForEachSnapshot::Output>,
+    SnapshotVisualizer: TSnapshotVisualizer<<SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> as TForEachSnapshot>::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
     PayoutStatsPayload: Ord + Copy + Sync + Send,
 >(
     stichseq: &'stichseq SStichSequence,
-    rules: &SRules,
+    rules: &'rules SRules,
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
-    foreachsnapshot: &ForEachSnapshot,
+    foreachsnapshot: &SMinReachablePayoutBase<Pruner, MinMaxStrategiesHK>,
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, ECard) + std::marker::Sync),
@@ -293,8 +294,9 @@ pub fn determine_best_card<
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
 ) -> Option<SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>>
     where
-        ForEachSnapshot::Output: TMinMaxStrategies<MinMaxStrategiesHK, Arg0=EnumMap<EPlayerIndex, isize>>,
+        <SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> as TForEachSnapshot>::Output: TMinMaxStrategies<MinMaxStrategiesHK, Arg0=EnumMap<EPlayerIndex, isize>>,
         MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: Send,
+        MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK>,
 {
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
