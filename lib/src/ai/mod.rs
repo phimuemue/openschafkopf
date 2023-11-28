@@ -135,7 +135,6 @@ impl SAi {
                     SSnapshotCacheNone::factory(), // TODO possibly use cache
                     fn_visualizer,
                     /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
-                    epi_current,
                     /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
                 )
             }}}
@@ -290,7 +289,6 @@ pub fn determine_best_card<
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, ECard) + std::marker::Sync),
-    epi_result: EPlayerIndex,
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
 ) -> Option<SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>>
     where
@@ -342,7 +340,7 @@ pub fn determine_best_card<
                 }
             });
             let payoutstats : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output.map(|mapepin_payout|
-                SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[epi_result]))
+                SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
             );
             let mapcardooutput = Arc::clone(&mapcardooutput);
             let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
@@ -531,7 +529,6 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO test cache
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
-            unwrap!(stichseq.current_stich().current_playerindex()),
             /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
         ));
         for card in [H7, H8, H9] {

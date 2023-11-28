@@ -438,7 +438,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 );
                             }
                         },
-                        epi_position,
                         /*fn_payout*/&|stichseq, ahand, n_payout| fn_human_readable_payout(
                             stichseq.clone(),
                             (epi_position, ahand[epi_position].clone(/*TODO needed?*/)),

@@ -437,7 +437,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
 #[derive(Clone, new)]
 pub struct SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> {
     rules: &'rules SRules,
-    epi: EPlayerIndex,
+    pub(super) epi: EPlayerIndex,
     expensifiers: SExpensifiers, // TODO could this borrow?
     phantom: std::marker::PhantomData<(Pruner, MinMaxStrategiesHK)>,
 }
