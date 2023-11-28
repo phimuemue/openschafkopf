@@ -22,8 +22,6 @@ use std::{
     collections::BTreeMap,
 };
 
-plain_enum_mod!(moderemainingcards, ERemainingCards {_1, _2, _3, _4, _5, _6, _7, _8,});
-
 pub fn ahand_vecstich_card_count_is_compatible(ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) -> bool {
     ahand.map(|hand| hand.cards().len()) == stichseq.remaining_cards_per_hand()
 }
@@ -137,35 +135,33 @@ impl SAi {
                     /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
                 )
             }}}
-            let eremainingcards = unwrap!(ERemainingCards::checked_from_usize(
-                stichseq.remaining_cards_per_hand()[epi_current] - 1 // ERemainingCards starts with 1
-            ));
-            use ERemainingCards::*;
+            let n_remaining_cards = stichseq.remaining_cards_per_hand()[epi_current];
+            assert!(0<n_remaining_cards);
             let vecstoss = &expensifiers.vecstoss;
             *unwrap!(unwrap!(cartesian_match!(
                 forward_to_determine_best_card,
-                match (eremainingcards) {
-                    _1|_2|_3 => (
+                match (n_remaining_cards) {
+                    1..=3 => (
                         SNoFilter::factory(),
                         SMinReachablePayoutBase::<SPrunerNothing, SMaxMinMaxSelfishMinHigherKinded>,
                     ),
-                    _4 => (
+                    4 => (
                         SNoFilter::factory(),
                         SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded>,
                     ),
-                    _5|_6|_7|_8 => (
+                    _ => (
                         SBranchingFactor::factory(1, self.n_suggest_card_branches+1),
                         SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded>,
                     ),
                 },
-                match ((&self.aiparams, eremainingcards)) {
+                match ((&self.aiparams, n_remaining_cards)) {
                     (&VAIParams::Cheating, _) => {
                         std::iter::once(ahand.clone())
                     },
-                    (&VAIParams::Simulating{n_suggest_card_samples:_}, _1|_2|_3|_4) => {
+                    (&VAIParams::Simulating{n_suggest_card_samples:_}, 1..=4) => {
                         all_possible_hands(stichseq, (hand_fixed.clone(), epi_current), rules, vecstoss)
                     },
-                    (&VAIParams::Simulating{n_suggest_card_samples}, _5|_6|_7|_8) =>{ 
+                    (&VAIParams::Simulating{n_suggest_card_samples}, _) =>{ 
                         forever_rand_hands(stichseq, (hand_fixed.clone(), epi_current), rules, vecstoss)
                             .take(n_suggest_card_samples)
                     },
