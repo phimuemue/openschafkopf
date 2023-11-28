@@ -96,9 +96,9 @@ pub fn internal_table<
                 t,
                 minmax.map(|payoutstats| [
                     column_min_or_max(payoutstats.min()),
-                    column_average(&payoutstats),
+                    column_average(payoutstats),
                     column_min_or_max(payoutstats.max()),
-                    column_counts(&payoutstats),
+                    column_counts(payoutstats),
                 ]),
             )
         })
