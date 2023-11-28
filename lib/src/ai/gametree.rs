@@ -468,6 +468,7 @@ macro_rules! impl_perminmaxstrategy{(
 ) => {
     #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
     pub struct $struct<T> {
+        // TODO? pub a good idea?
         $(pub $ident_strategy: $emmstrategy<T>,)*
     }
 
@@ -575,9 +576,7 @@ macro_rules! impl_perminmaxstrategy{(
     }
 }}
 
-// TODO(performance) offer possibility to constrain oneself to one value of strategy (reduced run time by ~20%-25% in some tests)
 // Field nomenclature: self-strategy, followed by others-strategy
-// TODO? pub a good idea?
 impl_perminmaxstrategy!(
     SPerMinMaxStrategy {
         MinMin minmin,
@@ -624,7 +623,7 @@ impl_perminmaxstrategy!(
 );
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct MinMin<T>(pub T);
+pub struct MinMin<T>(pub T); // TODO this does not require a whole EnumMap - entry for epi_self is sufficient.
 impl<T> MinMin<T> {
     fn new(t: T) -> Self {
         Self(t)
