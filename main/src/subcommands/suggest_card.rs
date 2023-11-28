@@ -260,6 +260,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             {
                 move |rulestatecache| rules.snapshot_cache::<MinMaxStrategiesHK>(rulestatecache)
             }
+            #[allow(clippy::extra_unused_type_parameters)]
             fn make_snapshot_cache_none<MinMaxStrategiesHK>(_rules: &SRules) -> impl Fn(&SRuleStateCacheFixed)->SSnapshotCacheNone {
                 SSnapshotCacheNone::factory()
             }
