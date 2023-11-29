@@ -7,7 +7,7 @@ use crate::game_analysis::determine_best_card_table::table;
 use itertools::Itertools;
 use std::{
     io::Write,
-    time::{Instant, Duration},
+    time::Instant,
     sync::{Arc, atomic::{AtomicUsize, Ordering}, Mutex},
 };
 use std::fmt::Write as _;
@@ -55,7 +55,6 @@ pub struct SGameAnalysis {
     pub str_html: String,
     pub n_findings_cheating: usize,
     pub n_findings_simulating: usize,
-    pub duration: Duration,
 }
 
 struct SPossiblePayout(
@@ -70,7 +69,6 @@ pub fn analyze_game(
     n_max_remaining_cards: usize,
     b_simulate_all_hands: bool,
 ) -> SGameAnalysis {
-    let instant_begin = Instant::now();
     let mut vecanalysispercard = Vec::new();
     let an_payout = unwrap!(game_in.clone().finish()).an_payout;
     let str_rules = format!("{}{}",
@@ -205,7 +203,6 @@ pub fn analyze_game(
         n_findings_simulating: itanalysisimpr.clone() // TODO distinguish emistake
             .filter(|analysisimpr| matches!(analysisimpr.improvementsimulating, VImprovementSimulating::Found(_)))
             .count(),
-        duration: instant_begin.elapsed(),
     }
 }
 
@@ -509,6 +506,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                     let path_analysis_game = path_analysis.join(gamewithdesc.str_description.replace(['/', '.'], "_"));
                     create_dir_if_not_existent(&path_analysis_game)?;
                     let path = path_analysis_game.join("analysis.html");
+                    let instant_analysis_begin = Instant::now();
                     let gameanalysis = analyze_game(
                         &gamewithdesc.str_description,
                         &fn_link(&gamewithdesc.str_description),
@@ -516,6 +514,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                         n_max_remaining_cards,
                         b_simulate_all_hands,
                     );
+                    let duration = instant_analysis_begin.elapsed();
                     let path = write_html(path, &gameanalysis.str_html)?;
                     let n_findings_simulating = gameanalysis.n_findings_simulating;
                     let n_findings_cheating = gameanalysis.n_findings_cheating;
@@ -545,7 +544,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                             n_findings_cheating = n_findings_cheating,
                             chr_stopwatch = '\u{23F1}',
                             str_duration_as_secs = {
-                                let n_secs = gameanalysis.duration.as_secs();
+                                let n_secs = duration.as_secs();
                                 if 0==n_secs {
                                     "&lt;1s".to_owned()
                                 } else {
