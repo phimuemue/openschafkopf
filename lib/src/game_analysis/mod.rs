@@ -68,6 +68,7 @@ pub fn analyze_game(
     game_in: SGame,
     n_max_remaining_cards: usize,
     b_simulate_all_hands: bool,
+    str_openschafkopf_executable: &str,
 ) -> SGameAnalysis {
     let mut vecanalysispercard = Vec::new();
     let an_payout = unwrap!(game_in.clone().finish()).an_payout;
@@ -198,6 +199,7 @@ pub fn analyze_game(
             &unwrap!(game.clone().finish()).an_payout,
             &vecanalysispercard,
             &mapepivecpossiblepayout,
+            str_openschafkopf_executable,
         ),
         n_findings_cheating: itanalysisimpr.clone().count(), // TODO distinguish emistake
         n_findings_simulating: itanalysisimpr.clone() // TODO distinguish emistake
@@ -231,6 +233,7 @@ fn generate_analysis_html(
     mapepin_payout: &EnumMap<EPlayerIndex, isize>,
     slcanalysispercard: &[SAnalysisPerCard],
     mapepivecpossiblepayout: &EnumMap<EPlayerIndex, Vec<SPossiblePayout>>,
+    str_openschafkopf_executable: &str,
 ) -> String {
     use crate::game::*;
     assert!(game.which_player_can_do_something().is_none()); // TODO use SGameResult (see comment in SGameResult)
@@ -370,9 +373,7 @@ fn generate_analysis_html(
             let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
             let mut str_per_card = format!(r###"<h3>{} <button onclick='copyToClipboard("{}", this)'>&#128203</button></h3>"###,
                 stich_caption(stichseq),
-                format!("{str_exe} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand}\" --branching \"equiv7\"",
-                    // TODO error handling
-                    str_exe=unwrap!(unwrap!(unwrap!(std::env::current_exe()).canonicalize()).to_str()),
+                format!("{str_openschafkopf_executable} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand}\" --branching \"equiv7\"",
                     str_cards_on_table=stichseq.visible_stichs().iter()
                         .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
                         .join("  "),
@@ -461,7 +462,7 @@ pub struct SGameWithDesc {
     pub resgameresult: Result<SGameResult</*Ruleset*/()>, failure::Error>,
 }
 
-pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String+Sync, vecgamewithdesc: Vec<SGameWithDesc>, b_include_no_findings: bool, n_max_remaining_cards: usize, b_simulate_all_hands: bool) -> Result<std::path::PathBuf, failure::Error> {
+pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String+Sync, vecgamewithdesc: Vec<SGameWithDesc>, b_include_no_findings: bool, n_max_remaining_cards: usize, b_simulate_all_hands: bool, str_openschafkopf_executable: &str) -> Result<std::path::PathBuf, failure::Error> {
     // TODO can all this be done with fewer locks and more elegant?
     create_dir_if_not_existent(path_analysis)?;
     generate_html_auxiliary_files(path_analysis)?;
@@ -513,6 +514,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                         game,
                         n_max_remaining_cards,
                         b_simulate_all_hands,
+                        str_openschafkopf_executable,
                     );
                     let duration = instant_analysis_begin.elapsed();
                     let path = write_html(path, &gameanalysis.str_html)?;

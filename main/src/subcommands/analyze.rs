@@ -85,6 +85,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         /*b_include_no_findings*/clapmatches.is_present("include-no-findings"),
         /*n_max_remaining_cards*/unwrap!(clapmatches.value_of("max-remaining-cards")).parse()?,
         /*b_simulate_all_hands*/clapmatches.is_present("simulate-all-hands"),
+        /*str_openschafkopf_executable*/unwrap!(unwrap!(unwrap!(std::env::current_exe()).canonicalize()).to_str()),
     )?;
     println!("Analysis written to {}.", path_out.display());
     Ok(())
