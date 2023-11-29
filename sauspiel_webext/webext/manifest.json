@@ -6,8 +6,15 @@
   "content_scripts": [
     {
       "matches": ["*://*.sauspiel.de/spiele/*"],
-      "js": ["sauspiel_webext_content_script.js"]
+      "js": [
+          "sauspiel_webext.js",
+          "sauspiel_webext_content_script.js"
+      ]
     }
+  ],
+
+  "web_accessible_resources": [
+      "sauspiel_webext_bg.wasm"
   ],
 
   "browser_specific_settings": {
