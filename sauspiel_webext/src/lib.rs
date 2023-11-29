@@ -7,7 +7,7 @@ extern "C" {
     fn alert(s: &str);
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(start)]
 pub fn greet() {
     alert("Hello, sauspiel-webext!");
 }
