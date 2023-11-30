@@ -69,6 +69,7 @@ pub fn analyze_game(
     n_max_remaining_cards: usize,
     b_simulate_all_hands: bool,
     str_openschafkopf_executable: &str,
+    fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->String,
 ) -> SGameAnalysis {
     let mut vecanalysispercard = Vec::new();
     let an_payout = unwrap!(game_in.clone().finish()).an_payout;
@@ -200,6 +201,7 @@ pub fn analyze_game(
             &vecanalysispercard,
             &mapepivecpossiblepayout,
             str_openschafkopf_executable,
+            fn_output_card,
         ),
         n_findings_cheating: itanalysisimpr.clone().count(), // TODO distinguish emistake
         n_findings_simulating: itanalysisimpr.clone() // TODO distinguish emistake
@@ -234,6 +236,7 @@ fn generate_analysis_html(
     slcanalysispercard: &[SAnalysisPerCard],
     mapepivecpossiblepayout: &EnumMap<EPlayerIndex, Vec<SPossiblePayout>>,
     str_openschafkopf_executable: &str,
+    fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->String,
 ) -> String {
     use crate::game::*;
     assert!(game.which_player_can_do_something().is_none()); // TODO use SGameResult (see comment in SGameResult)
@@ -275,9 +278,9 @@ fn generate_analysis_html(
         str_rules=str_rules,
     )
     + "<table><tr>"
-    + type_inference!(&str, &crate::ai::gametree::player_table_ahand(epi_self, &ahand, &game.rules, /*fn_border*/|_card| false))
+    + type_inference!(&str, &crate::ai::gametree::player_table_ahand(epi_self, &ahand, &game.rules, /*fn_border*/|_card| false, fn_output_card))
     + "</tr></table><table><tr>"
-    + type_inference!(&str, &crate::ai::gametree::player_table_stichseq(epi_self, &game.stichseq))
+    + type_inference!(&str, &crate::ai::gametree::player_table_stichseq(epi_self, &game.stichseq, fn_output_card))
     + "</tr></table>"
     + "<ul>"
     + type_inference!(&str, &format!("{}", slcanalysispercard.iter()
@@ -383,12 +386,13 @@ fn generate_analysis_html(
             unwrap!(write!(
                 str_per_card,
                 "<table><tr>{}{}</tr></table>",
-                player_table_stichseq(epi_self, stichseq),
+                player_table_stichseq(epi_self, stichseq, fn_output_card),
                 player_table_ahand(
                     epi_self,
                     ahand,
                     &game.rules,
                     /*fn_border*/|card| card==analysispercard.card_played,
+                    fn_output_card,
                 ),
             ));
             str_per_card += "<table>";
@@ -396,7 +400,7 @@ fn generate_analysis_html(
                 str_per_card += "<tr>";
                 str_per_card += "<td>";
                 for &card in outputline.vect.iter() {
-                    str_per_card += &crate::ai::gametree::output_card(card, /*b_border*/card==analysispercard.card_played);
+                    str_per_card += &fn_output_card(card, /*b_border*/card==analysispercard.card_played);
                 }
                 str_per_card += "</td>";
                 for (_emmstrategy, atplstrf) in outputline.perminmaxstrategyatplstrf.via_accessors() {
@@ -423,7 +427,7 @@ fn generate_analysis_html(
             if !veccard_non_allowed.is_empty() {
                 str_per_card += "<td>";
                 for card in veccard_non_allowed {
-                    str_per_card += &crate::ai::gametree::output_card(card, /*b_border*/false);
+                    str_per_card += &fn_output_card(card, /*b_border*/false);
                 }
                 str_per_card += "</td>";
                 unwrap!(write!(
@@ -462,7 +466,7 @@ pub struct SGameWithDesc {
     pub resgameresult: Result<SGameResult</*Ruleset*/()>, failure::Error>,
 }
 
-pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String+Sync, vecgamewithdesc: Vec<SGameWithDesc>, b_include_no_findings: bool, n_max_remaining_cards: usize, b_simulate_all_hands: bool, str_openschafkopf_executable: &str) -> Result<std::path::PathBuf, failure::Error> {
+pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String+Sync, vecgamewithdesc: Vec<SGameWithDesc>, b_include_no_findings: bool, n_max_remaining_cards: usize, b_simulate_all_hands: bool, str_openschafkopf_executable: &str, fn_output_card: &(dyn Fn(ECard, bool/*b_highlight*/)->String + Sync)) -> Result<std::path::PathBuf, failure::Error> {
     // TODO can all this be done with fewer locks and more elegant?
     create_dir_if_not_existent(path_analysis)?;
     generate_html_auxiliary_files(path_analysis)?;
@@ -515,6 +519,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                         n_max_remaining_cards,
                         b_simulate_all_hands,
                         str_openschafkopf_executable,
+                        fn_output_card,
                     );
                     let duration = instant_analysis_begin.elapsed();
                     let path = write_html(path, &gameanalysis.str_html)?;

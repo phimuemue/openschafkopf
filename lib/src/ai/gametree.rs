@@ -107,24 +107,24 @@ pub fn player_table<T: fmt::Display>(epi_self: EPlayerIndex, fn_per_player: impl
     )
 }
 
-pub fn player_table_stichseq(epi_self: EPlayerIndex, stichseq: &SStichSequence) -> String {
+pub fn player_table_stichseq(epi_self: EPlayerIndex, stichseq: &SStichSequence, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->String) -> String {
     format!("{}", stichseq.visible_stichs().iter().map(|stich| {
         format!("<td>{}</td>", player_table(epi_self, |epi| {
             stich.get(epi).map(|card| {
-                output_card(*card, /*b_border*/epi==stich.first_playerindex())
+                fn_output_card(*card, /*b_border*/epi==stich.first_playerindex())
             })
         }))
     }).format("\n"))
 }
 
-pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &SRules, fn_border: impl Fn(ECard)->bool) -> String {
+pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &SRules, fn_border: impl Fn(ECard)->bool, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->String) -> String {
     format!(
         "<td>{}</td>\n",
         player_table(epi_self, |epi| {
             let mut veccard = ahand[epi].cards().clone();
             rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
             Some(veccard.into_iter()
-                .map(|card| output_card(card, fn_border(card)))
+                .map(|card| fn_output_card(card, fn_border(card)))
                 .join(""))
         }),
     )
@@ -147,8 +147,8 @@ impl<
             "TODO", // slccard_allowed.len(),
         ).as_bytes());
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(ahand, stichseq));
-        self.write_all(player_table_stichseq(self.epi, stichseq).as_bytes());
-        self.write_all(player_table_ahand(self.epi, ahand, self.rules, /*fn_border*/|_card| false).as_bytes());
+        self.write_all(player_table_stichseq(self.epi, stichseq, &output_card).as_bytes());
+        self.write_all(player_table_ahand(self.epi, ahand, self.rules, /*fn_border*/|_card| false, &output_card).as_bytes());
         self.write_all(b"</tr></table></label>\n");
         self.write_all(b"<ul>\n");
     }

@@ -1,6 +1,7 @@
 use openschafkopf_lib::{
     game_analysis::{*, parser::*},
     game::*,
+    ai::gametree::output_card,
     rules::ruleset::VStockOrT,
 };
 use openschafkopf_util::*;
@@ -86,6 +87,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         /*n_max_remaining_cards*/unwrap!(clapmatches.value_of("max-remaining-cards")).parse()?,
         /*b_simulate_all_hands*/clapmatches.is_present("simulate-all-hands"),
         /*str_openschafkopf_executable*/unwrap!(unwrap!(unwrap!(std::env::current_exe()).canonicalize()).to_str()),
+        /*fn_output_card*/&output_card,
     )?;
     println!("Analysis written to {}.", path_out.display());
     Ok(())
