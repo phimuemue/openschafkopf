@@ -96,9 +96,9 @@ pub fn player_table<T: fmt::Display>(epi_self: EPlayerIndex, fn_per_player: impl
     };
     format!(
         "<table class=\"player-table\">
-          <tr><td colspan=\"2\">{}</td></tr>
-          <tr><td>{}</td><td>{}</td></tr>
-          <tr><td colspan=\"2\">{}</td></tr>
+          <tr><td colspan=\"2\" style=\"text-align: center;\">{}</td></tr>
+          <tr><td style=\"text-align: center;\">{}</td><td style=\"text-align: center;\">{}</td></tr>
+          <tr><td colspan=\"2\" style=\"text-align: center;\">{}</td></tr>
         </table>\n",
         fn_per_player_internal(EPlayerIndex::EPI2),
         fn_per_player_internal(EPlayerIndex::EPI1),
