@@ -30,7 +30,7 @@ pub fn greet() {
                     /*fn_ruleset*/|_| (),
                     /*fn_rules*/|rules| rules,
                 ),
-                /*n_max_remaining_cards*/3,
+                /*n_max_remaining_cards*/4,
                 /*b_simulate_all_hands*/true,
                 /*str_openschafkopf_executable*/"openschafkopf",
                 /*fn_output_card*/&|card, b_highlight| {
