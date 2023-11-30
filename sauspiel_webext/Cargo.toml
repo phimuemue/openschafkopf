@@ -13,12 +13,26 @@ default = ["console_error_panic_hook"]
 
 [dependencies]
 wasm-bindgen = "0.2.84"
+openschafkopf_util = {path = "../util"}
+openschafkopf_lib = {path = "../lib"}
+plain_enum = "0"
+getrandom = { version = "0", features = ["js"] } # see https://docs.rs/getrandom/latest/getrandom/#webassembly-support
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
 console_error_panic_hook = { version = "0.1.7", optional = true }
+[dependencies.web-sys]
+version = "0.3.66"
+features = [
+    'Document',
+    'Element',
+    'HtmlCollection',
+    'HtmlElement',
+    'Node',
+    'Window',
+]
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.34"
