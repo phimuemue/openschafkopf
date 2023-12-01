@@ -3,7 +3,7 @@ use crate::game::*;
 use crate::primitives::*;
 use crate::rules::{ruleset::VStockOrT, *};
 use crate::util::*;
-use crate::game_analysis::determine_best_card_table::table;
+use crate::game_analysis::determine_best_card_table::{table, N_COLUMNS};
 use itertools::Itertools;
 use std::{
     io::Write,
@@ -365,7 +365,7 @@ fn generate_analysis_html(
     + "<h2>Details</h2>"
     + type_inference!(&str, &format!("{}", slcanalysispercard.iter()
         .map(|analysispercard| {
-            let vecoutputline = table::</*TODO type annotations needed?*/SPerMinMaxStrategyHigherKinded, _>(
+            let vecoutputline_cheating = table::</*TODO type annotations needed?*/SPerMinMaxStrategyHigherKinded, _>(
                 &analysispercard.determinebestcardresult_cheating,
                 &game.rules,
                 /*fn_loss_or_win*/&|n_payout, ()| n_payout.cmp(&0),
@@ -396,17 +396,24 @@ fn generate_analysis_html(
                 ),
             ));
             str_per_card += "<table>";
-            for outputline in vecoutputline.iter() {
+            fn condensed_cheating_columns(atplstrf: &[(String, f32); N_COLUMNS]) -> impl Iterator<Item=&(String, f32)> {
+                assert_eq!(
+                    verify_eq!(&atplstrf[0], &atplstrf[2]).1,
+                    atplstrf[1].1,
+                );
+                atplstrf.get(0).into_iter()
+            }
+            for outputline in vecoutputline_cheating.iter() {
                 str_per_card += "<tr>";
-                str_per_card += "<td>";
+                str_per_card += r#"<td style="padding: 5px;">"#;
                 for &card in outputline.vect.iter() {
                     str_per_card += &fn_output_card(card, /*b_border*/card==analysispercard.card_played);
                 }
                 str_per_card += "</td>";
                 for (_emmstrategy, atplstrf) in outputline.perminmaxstrategyatplstrf.via_accessors() {
                     // TODO simplify to one item per emmstrategy
-                    for (str_num, _f) in atplstrf.iter() {
-                        str_per_card += "<td>";
+                    for (str_num, _f) in condensed_cheating_columns(atplstrf) {
+                        str_per_card += r#"<td style="padding: 5px;">"#;
                         // TODO colored output as in suggest_card
                         str_per_card += str_num;
                         str_per_card += "</td>";
@@ -425,17 +432,17 @@ fn generate_analysis_html(
                 .collect::<Vec<_>>();
             game.rules.sort_cards_first_trumpf_then_farbe(&mut veccard_non_allowed);
             if !veccard_non_allowed.is_empty() {
-                str_per_card += "<td>";
+                str_per_card += r#"<td style="padding: 5px;">"#;
                 for card in veccard_non_allowed {
                     str_per_card += &fn_output_card(card, /*b_border*/false);
                 }
                 str_per_card += "</td>";
                 unwrap!(write!(
                     str_per_card,
-                    "<td colspan=\"{}\">N.A.</td>",
-                    unwrap!(vecoutputline.iter()
+                    r#"<td colspan="{}" style="padding: 5px;">N.A.</td>"#,
+                    unwrap!(vecoutputline_cheating.iter()
                         .map(|outputline|
-                            outputline.perminmaxstrategyatplstrf.via_accessors().into_iter().flat_map(|(_emmstrategy, atplstrf)| atplstrf).count()
+                            outputline.perminmaxstrategyatplstrf.via_accessors().into_iter().flat_map(|(_emmstrategy, atplstrf)| condensed_cheating_columns(atplstrf)).count()
                         )
                         .all_equal_value()),
                 ));
