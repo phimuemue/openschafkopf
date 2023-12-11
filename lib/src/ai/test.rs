@@ -110,6 +110,9 @@ fn detect_expensive_all_possible_hands() {
                         struct SLeafCounter;
                         impl TForEachSnapshot for SLeafCounter {
                             type Output = usize;
+                            type InfoFromParent = ();
+                            fn initial_info_from_parent() -> Self::InfoFromParent {
+                            }
                             fn final_output(&self, _stichseq: SStichSequenceGameFinished, _rulestatecache: &SRuleStateCache) -> Self::Output {
                                 1 // leaf
                             }
@@ -119,10 +122,11 @@ fn detect_expensive_all_possible_hands() {
                             fn combine_outputs(
                                 &self,
                                 _epi_card: EPlayerIndex,
+                                _infofromparent: Self::InfoFromParent,
                                 veccard_allowed: SHandVector,
-                                fn_card_to_output: impl FnMut(ECard) -> Self::Output,
+                                mut fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent) -> Self::Output,
                             ) -> Self::Output {
-                                veccard_allowed.into_iter().map(fn_card_to_output).sum()
+                                veccard_allowed.into_iter().map(|card| fn_card_to_output(card, ())).sum()
                             }
                         }
                         assert_bound(

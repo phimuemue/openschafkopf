@@ -10,13 +10,16 @@ use serde::Serialize;
 
 pub trait TForEachSnapshot {
     type Output;
+    type InfoFromParent;
+    fn initial_info_from_parent() -> Self::InfoFromParent;
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output;
     fn pruned_output(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<Self::Output>;
     fn combine_outputs(
         &self,
         epi_card: EPlayerIndex,
+        infofromparent: Self::InfoFromParent,
         veccard_allowed: SHandVector,
-        fn_card_to_output: impl FnMut(ECard) -> Self::Output,
+        fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent) -> Self::Output,
     ) -> Self::Output;
 }
 
@@ -299,6 +302,7 @@ pub fn explore_snapshots<
             &mut rulestatecache,
             $func_filter_allowed_cards,
             foreachsnapshot,
+            ForEachSnapshot::initial_info_from_parent(),
             $snapshotcache,
             snapshotvisualizer,
         )
@@ -321,6 +325,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
     rulestatecache: &mut SRuleStateCache,
     func_filter_allowed_cards: &mut impl TFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
+    infofromparent: ForEachSnapshot::InfoFromParent,
     snapshotcache: &mut impl TSnapshotCache<ForEachSnapshot::Output>,
     snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
@@ -377,8 +382,9 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             // TODO? use equivalent card optimization
             foreachsnapshot.combine_outputs(
                 epi_current,
+                infofromparent,
                 veccard_allowed,
-                /*fn_card_to_output*/|card| {
+                /*fn_card_to_output*/|card, infofromparent| {
                     stichseq.zugeben_and_restore_with_hands(ahand, epi_current, card, rules, |ahand, stichseq| {
                         macro_rules! next_step {($func_filter_allowed_cards:expr, $snapshotcache:expr) => {explore_snapshots_internal(
                             (ahand, stichseq),
@@ -386,6 +392,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                             rulestatecache,
                             $func_filter_allowed_cards,
                             foreachsnapshot,
+                            infofromparent,
                             $snapshotcache,
                             snapshotvisualizer,
                         )}}
@@ -750,6 +757,10 @@ impl<Pruner: TPruner, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> TForEac
         MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK>,
 {
     type Output = MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>;
+    type InfoFromParent = ();
+
+    fn initial_info_from_parent() -> Self::InfoFromParent {
+    }
 
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
         Self::Output::new(self.rules.payout(
@@ -767,10 +778,20 @@ impl<Pruner: TPruner, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> TForEac
     fn combine_outputs(
         &self,
         epi_card: EPlayerIndex,
+        infofromparent: Self::InfoFromParent,
         veccard_allowed: SHandVector,
-        fn_card_to_output: impl FnMut(ECard) -> Self::Output,
+        mut fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent) -> Self::Output,
     ) -> Self::Output {
-        let mut itminmax = veccard_allowed.into_iter().map(fn_card_to_output);
+        let mut itminmax = veccard_allowed.into_iter()
+            .map(|card| {
+                let infofromparent_clone = infofromparent.clone();
+                let output = fn_card_to_output(
+                    card,
+                    infofromparent_clone,
+                );
+                // TODO update infofromparent
+                output
+            });
         let mut minmax_acc = unwrap!(itminmax.next());
         if self.epi==epi_card {
             for minmax in itminmax {
