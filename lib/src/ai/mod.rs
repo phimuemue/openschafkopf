@@ -79,6 +79,7 @@ impl SAi {
                         epi_rank,
                         expensifiers.clone(), // TODO? can clone be avoided
                     ),
+                    /*infofromparent*/(),
                     &SSnapshotCacheNone::factory(), // TODO make customizable
                     &mut SNoVisualization{},
                 ).map(|mapepiminmax| {
@@ -129,6 +130,7 @@ impl SAi {
                         epi_current,
                         expensifiers.clone(),
                     ),
+                    /*infofromparent*/(),
                     SSnapshotCacheNone::factory(), // TODO possibly use cache
                     fn_visualizer,
                     /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
@@ -280,6 +282,7 @@ pub fn determine_best_card<
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     foreachsnapshot: &SMinReachablePayoutBase<Pruner, MinMaxStrategiesHK>,
+    infofromparent: <SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> as TForEachSnapshot>::InfoFromParent,
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, ECard) + std::marker::Sync),
@@ -287,6 +290,7 @@ pub fn determine_best_card<
 ) -> Option<SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>>
     where
         <SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> as TForEachSnapshot>::Output: TMinMaxStrategies<MinMaxStrategiesHK, Arg0=EnumMap<EPlayerIndex, isize>>,
+        <SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> as TForEachSnapshot>::InfoFromParent: Clone,
         MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: Send,
         MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK>,
 {
@@ -329,6 +333,7 @@ pub fn determine_best_card<
                         rules,
                         &fn_make_filter,
                         foreachsnapshot,
+                        infofromparent.clone(),
                         &fn_snapshotcache,
                         &mut visualizer,
                     )
@@ -520,6 +525,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             Box::new(std::iter::once(ahand)) as Box<_>,
             /*fn_make_filter*/SBranchingFactor::factory(1, 2),
             &SMinReachablePayout::new_from_game(&game),
+            /*infofromparent*/(),
             /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO test cache
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},

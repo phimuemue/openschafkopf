@@ -120,6 +120,7 @@ impl TPlayer for SPlayerComputer {
                             epi,
                             expensifiers.clone(),
                         ),
+                        /*infofromparent*/(),
                         &SSnapshotCacheNone::factory(), // TODO? use cache
                         &mut SNoVisualization,
                     ).maxmin.0[epi]

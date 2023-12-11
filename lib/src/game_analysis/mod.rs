@@ -108,6 +108,7 @@ pub fn analyze_game(
                                 epi,
                                 game.expensifiers.clone(),
                             ),
+                            /*infofromparent*/(),
                             &SSnapshotCacheNone::factory(), // TODO possibly use cache
                             &mut SNoVisualization,
                         ).map(|mapepin_payout| mapepin_payout[epi]),
@@ -124,6 +125,7 @@ pub fn analyze_game(
                             game.rules.equivalent_when_on_same_hand(),
                         ),
                         &SMinReachablePayout::new_from_game(game),
+                        /*infofromparent*/(),
                         /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO possibly use cache
                         /*fn_visualizer*/SNoVisualization::factory(),
                         /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
