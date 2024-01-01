@@ -2447,7 +2447,7 @@ mod tests {
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                                 $fn_make_filter,
                                 &SMinReachablePayout::new_from_game(game),
-                                /*infofromparent*/(),
+                                /*infofromparent*/ELoHi::map_from_raw([isize::MIN, isize::MAX]),
                                 /*fn_snapshotcache*/SSnapshotCacheNone::factory(),
                                 SNoVisualization::factory(),
                                 /*fn_inspect*/&|_,_,_,_| {},

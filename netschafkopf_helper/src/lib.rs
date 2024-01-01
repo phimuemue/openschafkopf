@@ -594,7 +594,7 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
                     epi_active,
                     game.expensifiers.clone(),
                 ),
-                /*infofromparent*/(),
+                /*infofromparent*/ELoHi::map_from_raw([isize::MIN, isize::MAX]),
                 SSnapshotCacheNone::factory(),
                 SNoVisualization::factory(),
                 /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},

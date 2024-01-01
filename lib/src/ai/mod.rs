@@ -79,7 +79,7 @@ impl SAi {
                         epi_rank,
                         expensifiers.clone(), // TODO? can clone be avoided
                     ),
-                    /*infofromparent*/(),
+                    /*infofromparent*/ELoHi::map_from_raw([isize::MIN, isize::MAX]),
                     &SSnapshotCacheNone::factory(), // TODO make customizable
                     &mut SNoVisualization{},
                 ).map(|mapepiminmax| {
@@ -130,7 +130,7 @@ impl SAi {
                         epi_current,
                         expensifiers.clone(),
                     ),
-                    /*infofromparent*/(),
+                    /*infofromparent*/ELoHi::map_from_raw([isize::MIN, isize::MAX]),
                     SSnapshotCacheNone::factory(), // TODO possibly use cache
                     fn_visualizer,
                     /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
@@ -525,7 +525,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             Box::new(std::iter::once(ahand)) as Box<_>,
             /*fn_make_filter*/SBranchingFactor::factory(1, 2),
             &SMinReachablePayout::new_from_game(&game),
-            /*infofromparent*/(),
+            /*infofromparent*/ELoHi::map_from_raw([isize::MIN, isize::MAX]),
             /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO test cache
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},

@@ -365,7 +365,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     epi_position,
                                     expensifiers.clone(),
                                 ),
-                                /*infofromparent*/(),
+                                /*infofromparent*/ELoHi::map_from_raw([isize::MIN, isize::MAX]),
                                 &$fn_snapshotcache::<$MinMaxStrategiesHK>(rules),
                                 &mut visualizer,
                             ).map(|mapepiminmax| {
@@ -427,7 +427,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             epi_position,
                             expensifiers.clone(),
                         ),
-                        /*infofromparent*/(),
+                        /*infofromparent*/ELoHi::map_from_raw([isize::MIN, isize::MAX]),
                         $fn_snapshotcache::<$MinMaxStrategiesHK>(rules),
                         $fn_visualizer,
                         /*fn_inspect*/&|b_before, i_ahand, ahand, card| {

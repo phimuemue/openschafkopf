@@ -757,7 +757,7 @@ impl<Pruner: TPruner, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> TForEac
         MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK>,
 {
     type Output = MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>;
-    type InfoFromParent = ();
+    type InfoFromParent = EnumMap<ELoHi, isize>;
 
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
         Self::Output::new(self.rules.payout(
