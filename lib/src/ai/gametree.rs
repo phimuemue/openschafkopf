@@ -473,6 +473,7 @@ macro_rules! impl_perminmaxstrategy{(
     $struct_higher_kinded:ident
     [$(($ident_strategy_win:ident, $ident_strategy_tiebreaker:ident))+]
     [$($ident_strategy_cmp_avg:ident)+]
+    $ident_strategy_maxmin_for_pruner:ident
 ) => {
     #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
     pub struct $struct<T> {
@@ -581,6 +582,10 @@ macro_rules! impl_perminmaxstrategy{(
             } = other;
             $(self.$ident_strategy.assign_minmax_other($ident_strategy, epi_self, epi_card);)*
         }
+
+        fn maxmin_for_pruner(&self, epi_self: EPlayerIndex) -> isize {
+            self.$ident_strategy_maxmin_for_pruner.0[epi_self]
+        }
     }
 }}
 
@@ -600,6 +605,7 @@ impl_perminmaxstrategy!(
         (maxselfishmax, maxselfishmax)
     ]
     [maxmin maxselfishmin maxselfishmax maxmax minmin]
+    maxmin
 );
 impl_perminmaxstrategy!(
     SMaxMinMaxSelfishMin {
@@ -612,6 +618,7 @@ impl_perminmaxstrategy!(
         (maxselfishmin, maxselfishmin)
     ]
     [maxmin maxselfishmin]
+    maxmin
 );
 impl_perminmaxstrategy!(
     SMaxMinStrategy {
@@ -620,6 +627,7 @@ impl_perminmaxstrategy!(
     SMaxMinStrategyHigherKinded
     [(maxmin, maxmin)]
     [maxmin]
+    maxmin
 );
 impl_perminmaxstrategy!(
     SMaxSelfishMinStrategy {
@@ -628,6 +636,7 @@ impl_perminmaxstrategy!(
     SMaxSelfishMinStrategyHigherKinded
     [(maxselfishmin, maxselfishmin)]
     [maxselfishmin]
+    maxselfishmin
 );
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -750,6 +759,7 @@ pub trait TMinMaxStrategiesInternal<MinMaxStrategiesHK: TMinMaxStrategiesHigherK
 {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex);
     fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex);
+    fn maxmin_for_pruner(&self, epi_self: EPlayerIndex) -> isize;
 }
 
 impl<Pruner: TPruner, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner, MinMaxStrategiesHK>
@@ -775,29 +785,37 @@ impl<Pruner: TPruner, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> TForEac
     fn combine_outputs(
         &self,
         epi_card: EPlayerIndex,
-        infofromparent: Self::InfoFromParent,
+        mut infofromparent: Self::InfoFromParent,
         veccard_allowed: SHandVector,
         mut fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent) -> Self::Output,
     ) -> Self::Output {
-        let mut itminmax = veccard_allowed.into_iter()
-            .map(|card| {
-                let infofromparent_clone = infofromparent.clone();
-                let output = fn_card_to_output(
-                    card,
-                    infofromparent_clone,
-                );
-                // TODO update infofromparent
-                output
-            });
-        let mut minmax_acc = unwrap!(itminmax.next());
+        let mut itcard_allowed = veccard_allowed.into_iter();
+        let mut minmax_acc = fn_card_to_output(
+            unwrap!(itcard_allowed.next()),
+            infofromparent
+        );
         if self.epi==epi_card {
-            for minmax in itminmax {
-                minmax_acc.assign_minmax_self(minmax, self.epi);
+            for card_allowed in itcard_allowed {
+                let n_payout_for_pruner = minmax_acc.maxmin_for_pruner(self.epi);
+                if n_payout_for_pruner >= infofromparent[ELoHi::Hi] {
+                    // I'm maximizing myself, but if my parent will minimize against what's already in there, I do not need to investigate any further
+                    break;
+                } else {
+                    assign_max(&mut infofromparent[ELoHi::Lo], n_payout_for_pruner);
+                    minmax_acc.assign_minmax_self(fn_card_to_output(card_allowed, infofromparent.clone()), self.epi);
+                }
             }
         } else {
             // other players may play inconveniently for epi_stich
-            for minmax in itminmax {
-                minmax_acc.assign_minmax_other(minmax, self.epi, epi_card);
+            for card_allowed in itcard_allowed {
+                let n_payout_for_pruner = minmax_acc.maxmin_for_pruner(self.epi);
+                if n_payout_for_pruner <= infofromparent[ELoHi::Lo] {
+                    // I'm minimizing myself, but if my parent will maximize against what's already in there, I do not need to investigate any further
+                    break;
+                } else {
+                    assign_min(&mut infofromparent[ELoHi::Hi], n_payout_for_pruner);
+                    minmax_acc.assign_minmax_other(fn_card_to_output(card_allowed, infofromparent.clone()), self.epi, epi_card);
+                }
             }
         }
         minmax_acc
