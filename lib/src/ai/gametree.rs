@@ -12,10 +12,11 @@ pub trait TForEachSnapshot {
     type Output;
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output;
     fn pruned_output(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<Self::Output>;
-    fn combine_outputs<ItTplCardOutput: Iterator<Item=(ECard, Self::Output)>>(
+    fn combine_outputs(
         &self,
         epi_card: EPlayerIndex,
-        ittplcardoutput: ItTplCardOutput,
+        veccard_allowed: SHandVector,
+        fn_card_to_output: impl FnMut(ECard) -> Self::Output,
     ) -> Self::Output;
 }
 
@@ -370,14 +371,15 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             },
         }
     } else {
-        foreachsnapshot.pruned_output((ahand, stichseq), rulestatecache).unwrap_or_else(|| {
+        foreachsnapshot./*TODO fold pruned_output into combine_outputs*/pruned_output((ahand, stichseq), rulestatecache).unwrap_or_else(|| {
             let mut veccard_allowed = rules.all_allowed_cards(stichseq, &ahand[epi_current]);
             func_filter_allowed_cards.filter_allowed_cards(stichseq, &mut veccard_allowed);
             // TODO? use equivalent card optimization
             foreachsnapshot.combine_outputs(
                 epi_current,
-                veccard_allowed.into_iter().map(|card| {
-                    let output = stichseq.zugeben_and_restore_with_hands(ahand, epi_current, card, rules, |ahand, stichseq| {
+                veccard_allowed,
+                /*fn_card_to_output*/|card| {
+                    stichseq.zugeben_and_restore_with_hands(ahand, epi_current, card, rules, |ahand, stichseq| {
                         macro_rules! next_step {($func_filter_allowed_cards:expr, $snapshotcache:expr) => {explore_snapshots_internal(
                             (ahand, stichseq),
                             rules,
@@ -424,9 +426,8 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                         } else {
                             next_step!(func_filter_allowed_cards, snapshotcache)
                         }
-                    });
-                    (card, output)
-                })
+                    })
+                },
             )
         })
     };
@@ -763,12 +764,13 @@ impl<Pruner: TPruner, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> TForEac
         Pruner::pruned_output(self, tplahandstichseq, rulestatecache)
     }
 
-    fn combine_outputs<ItTplCardOutput: Iterator<Item=(ECard, Self::Output)>>(
+    fn combine_outputs(
         &self,
         epi_card: EPlayerIndex,
-        ittplcardoutput: ItTplCardOutput,
+        veccard_allowed: SHandVector,
+        fn_card_to_output: impl FnMut(ECard) -> Self::Output,
     ) -> Self::Output {
-        let mut itminmax = ittplcardoutput.map(|(_card, minmax)| minmax);
+        let mut itminmax = veccard_allowed.into_iter().map(fn_card_to_output);
         let mut minmax_acc = unwrap!(itminmax.next());
         if self.epi==epi_card {
             for minmax in itminmax {
