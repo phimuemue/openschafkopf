@@ -768,17 +768,19 @@ impl<Pruner: TPruner, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> TForEac
         epi_card: EPlayerIndex,
         ittplcardoutput: ItTplCardOutput,
     ) -> Self::Output {
-        let itminmax = ittplcardoutput.map(|(_card, minmax)| minmax);
-        unwrap!(if self.epi==epi_card {
-            itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
+        let mut itminmax = ittplcardoutput.map(|(_card, minmax)| minmax);
+        let mut minmax_acc = unwrap!(itminmax.next());
+        if self.epi==epi_card {
+            for minmax in itminmax {
                 minmax_acc.assign_minmax_self(minmax, self.epi);
-            }))
+            }
         } else {
             // other players may play inconveniently for epi_stich
-            itminmax.reduce(mutate_return!(|minmax_acc, minmax| {
+            for minmax in itminmax {
                 minmax_acc.assign_minmax_other(minmax, self.epi, epi_card);
-            }))
-        })
+            }
+        }
+        minmax_acc
     }
 }
 
