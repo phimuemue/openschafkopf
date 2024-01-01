@@ -3,7 +3,7 @@ mod utils;
 use wasm_bindgen::prelude::*;
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    ai::{determine_best_card, gametree::{SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}, stichoracle::SFilterByOracle},
+    ai::{determine_best_card, gametree::{SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}, stichoracle::SFilterByOracle},
     game::SGameResultGeneric,
     game_analysis::{append_html_payout_table, parser::{internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
     rules::{TRules, ruleset::VStockOrT},
@@ -125,13 +125,13 @@ pub fn greet() {
         Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}) => {
             let rules = &game_finished.rules;
             for ((ahand, stichseq), card_played, epi, element_played_card) in vecahandstichseqcardepielement {
-                let determinebestcardresult = unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_,_>(
+                let determinebestcardresult = unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_,_,_>(
                     &stichseq,
                     Box::new(std::iter::once(ahand.clone())) as Box<_>,
                     /*fn_filter*/|stichseq, ahand| {
                         SFilterByOracle::new(rules, ahand, stichseq)
                     },
-                    &SGenericMinReachablePayout::<SMaxSelfishMinStrategyHigherKinded>::new(
+                    &SGenericMinReachablePayout::<SMaxSelfishMinStrategyHigherKinded, SAlphaBetaPrunerNone>::new(
                         rules,
                         verify_eq!(epi, unwrap!(stichseq.current_playable_stich().current_playerindex())),
                         game_finished.expensifiers.clone(),

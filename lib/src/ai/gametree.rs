@@ -4,7 +4,7 @@ use crate::rules::*;
 use crate::util::*;
 use itertools::Itertools;
 use rand::{self, Rng};
-use std::{borrow::Borrow, cmp::Ordering, fmt::{self, Debug}, fs, io::{BufWriter, Write}};
+use std::{borrow::Borrow, cmp::Ordering, fmt::{self, Debug}, fs, io::{BufWriter, Write}, ops::ControlFlow, convert::Infallible};
 use super::{SPayoutStats, cardspartition::*};
 use serde::Serialize;
 
@@ -443,13 +443,13 @@ fn explore_snapshots_internal<ForEachSnapshot>(
 }
 
 #[derive(Clone, new)]
-pub struct SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> {
+pub struct SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> {
     pub(super) rules: &'rules SRules,
     pub(super) epi: EPlayerIndex,
     expensifiers: SExpensifiers, // TODO could this borrow?
-    phantom: std::marker::PhantomData<(Pruner, MinMaxStrategiesHK)>,
+    phantom: std::marker::PhantomData<(Pruner, MinMaxStrategiesHK, AlphaBetaPruner)>,
 }
-impl<'rules, Pruner, MinMaxStrategiesHK> SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> {
+impl<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> {
     pub fn new_from_game<Ruleset>(game: &'rules SGameGeneric<Ruleset, (), ()>) -> Self {
         Self::new(
             &game.rules,
@@ -473,6 +473,7 @@ macro_rules! impl_perminmaxstrategy{(
     $struct_higher_kinded:ident
     [$(($ident_strategy_win:ident, $ident_strategy_tiebreaker:ident))+]
     [$($ident_strategy_cmp_avg:ident)+]
+    $ident_strategy_maxmin_for_pruner:ident
 ) => {
     #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
     pub struct $struct<T> {
@@ -581,6 +582,10 @@ macro_rules! impl_perminmaxstrategy{(
             } = other;
             $(self.$ident_strategy.assign_minmax_other($ident_strategy, epi_self, epi_card);)*
         }
+
+        fn maxmin_for_pruner(&self, epi_self: EPlayerIndex) -> isize {
+            self.$ident_strategy_maxmin_for_pruner.0[epi_self]
+        }
     }
 }}
 
@@ -600,6 +605,7 @@ impl_perminmaxstrategy!(
         (maxselfishmax, maxselfishmax)
     ]
     [maxmin maxselfishmin maxselfishmax maxmax minmin]
+    maxmin
 );
 impl_perminmaxstrategy!(
     SMaxMinMaxSelfishMin {
@@ -612,6 +618,7 @@ impl_perminmaxstrategy!(
         (maxselfishmin, maxselfishmin)
     ]
     [maxmin maxselfishmin]
+    maxmin
 );
 impl_perminmaxstrategy!(
     SMaxMinStrategy {
@@ -620,6 +627,7 @@ impl_perminmaxstrategy!(
     SMaxMinStrategyHigherKinded
     [(maxmin, maxmin)]
     [maxmin]
+    maxmin
 );
 impl_perminmaxstrategy!(
     SMaxSelfishMinStrategy {
@@ -628,6 +636,7 @@ impl_perminmaxstrategy!(
     SMaxSelfishMinStrategyHigherKinded
     [(maxselfishmin, maxselfishmin)]
     [maxselfishmin]
+    maxselfishmin
 );
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -750,16 +759,69 @@ pub trait TMinMaxStrategiesInternal<MinMaxStrategiesHK: TMinMaxStrategiesHigherK
 {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex);
     fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex);
+    fn maxmin_for_pruner(&self, epi_self: EPlayerIndex) -> isize;
 }
 
-impl<Pruner: TPruner, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner, MinMaxStrategiesHK>
+pub trait TAlphaBetaPruner {
+    type InfoFromParent: Clone;
+    fn initial_info_from_parent() -> Self::InfoFromParent;
+    type BreakType;
+    fn is_prunable_self<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(minmax: &MinMaxStrategies, infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent>;
+    fn is_prunable_other<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(minmax: &MinMaxStrategies, infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent>;
+}
+
+pub struct SAlphaBetaPrunerNone;
+impl TAlphaBetaPruner for SAlphaBetaPrunerNone {
+    type InfoFromParent = ();
+    fn initial_info_from_parent() -> Self::InfoFromParent {
+    }
+    type BreakType = Infallible;
+    fn is_prunable_self<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(_minmax: &MinMaxStrategies, _infofromparent: Self::InfoFromParent, _epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
+        ControlFlow::Continue(())
+    }
+    fn is_prunable_other<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(_minmax: &MinMaxStrategies, _infofromparent: Self::InfoFromParent, _epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
+        ControlFlow::Continue(())
+    }
+}
+
+pub struct SAlphaBetaPruner;
+impl TAlphaBetaPruner for SAlphaBetaPruner {
+    type InfoFromParent = EnumMap<ELoHi, isize>;
+    fn initial_info_from_parent() -> Self::InfoFromParent {
+        ELoHi::map_from_raw([isize::MIN, isize::MAX])
+    }
+    type BreakType = ();
+    fn is_prunable_self<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(minmax: &MinMaxStrategies, mut infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
+        let n_payout_for_pruner = minmax.maxmin_for_pruner(epi_self);
+        if n_payout_for_pruner >= infofromparent[ELoHi::Hi] {
+            // I'm maximizing myself, but if my parent will minimize against what's already in there, I do not need to investigate any further
+            ControlFlow::Break(())
+        } else {
+            assign_max(&mut infofromparent[ELoHi::Lo], n_payout_for_pruner);
+            ControlFlow::Continue(infofromparent)
+        }
+    }
+    fn is_prunable_other<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(minmax: &MinMaxStrategies, mut infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
+        let n_payout_for_pruner = minmax.maxmin_for_pruner(epi_self);
+        if n_payout_for_pruner <= infofromparent[ELoHi::Lo] {
+            // I'm minimizing myself, but if my parent will maximize against what's already in there, I do not need to investigate any further
+            ControlFlow::Break(())
+        } else {
+            assign_min(&mut infofromparent[ELoHi::Hi], n_payout_for_pruner);
+            ControlFlow::Continue(infofromparent)
+        }
+    }
+}
+
+impl<Pruner: TPruner, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, AlphaBetaPruner: TAlphaBetaPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner, MinMaxStrategiesHK, AlphaBetaPruner>
     where
         MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK>,
 {
     type Output = MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>;
-    type InfoFromParent = ();
+    type InfoFromParent = AlphaBetaPruner::InfoFromParent;
 
     fn initial_info_from_parent() -> Self::InfoFromParent {
+        AlphaBetaPruner::initial_info_from_parent()
     }
 
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output {
@@ -778,54 +840,64 @@ impl<Pruner: TPruner, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> TForEac
     fn combine_outputs(
         &self,
         epi_card: EPlayerIndex,
-        infofromparent: Self::InfoFromParent,
+        mut infofromparent: Self::InfoFromParent,
         veccard_allowed: SHandVector,
         mut fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent) -> Self::Output,
     ) -> Self::Output {
-        let mut itminmax = veccard_allowed.into_iter()
-            .map(|card| {
-                let infofromparent_clone = infofromparent.clone();
-                let output = fn_card_to_output(
-                    card,
-                    infofromparent_clone,
-                );
-                // TODO update infofromparent
-                output
-            });
-        let mut minmax_acc = unwrap!(itminmax.next());
+        let mut itcard_allowed = veccard_allowed.into_iter();
+        let mut minmax_acc = fn_card_to_output(
+            unwrap!(itcard_allowed.next()),
+            infofromparent.clone(),
+        );
         if self.epi==epi_card {
-            for minmax in itminmax {
-                minmax_acc.assign_minmax_self(minmax, self.epi);
+            for card_allowed in itcard_allowed {
+                match AlphaBetaPruner::is_prunable_self(&minmax_acc, infofromparent.clone(), self.epi) {
+                    ControlFlow::Break(_) => {
+                        break;
+                    },
+                    ControlFlow::Continue(infofromparent_new) => {
+                        infofromparent = infofromparent_new;
+                        minmax_acc.assign_minmax_self(fn_card_to_output(card_allowed, infofromparent.clone()), self.epi);
+                    },
+                }
             }
         } else {
             // other players may play inconveniently for epi_stich
-            for minmax in itminmax {
-                minmax_acc.assign_minmax_other(minmax, self.epi, epi_card);
+            for card_allowed in itcard_allowed {
+                match AlphaBetaPruner::is_prunable_other(&minmax_acc, infofromparent.clone(), self.epi) {
+                    ControlFlow::Break(_) => {
+                        break;
+                    },
+                    ControlFlow::Continue(infofromparent_new) => {
+                        infofromparent = infofromparent_new;
+                        minmax_acc.assign_minmax_other(fn_card_to_output(card_allowed, infofromparent.clone()), self.epi, epi_card);
+                    },
+                }
             }
         }
         minmax_acc
     }
 }
 
-pub type SGenericMinReachablePayout<'rules, MinMaxStrategiesHK> = SMinReachablePayoutBase<'rules, SPrunerNothing, MinMaxStrategiesHK>;
-pub type SMinReachablePayout<'rules> = SMinReachablePayoutBase<'rules, SPrunerNothing, SPerMinMaxStrategyHigherKinded>;
-pub type SGenericMinReachablePayoutLowerBoundViaHint<'rules, MinMaxStrategiesHK> = SMinReachablePayoutBase<'rules, SPrunerViaHint, MinMaxStrategiesHK>;
-pub type SMinReachablePayoutLowerBoundViaHint<'rules> = SMinReachablePayoutBase<'rules, SPrunerViaHint, SPerMinMaxStrategyHigherKinded>;
+pub type SGenericMinReachablePayout<'rules, MinMaxStrategiesHK, AlphaBetaPruner> = SMinReachablePayoutBase<'rules, SPrunerNothing, MinMaxStrategiesHK, AlphaBetaPruner>;
+pub type SMinReachablePayout<'rules> = SMinReachablePayoutBase<'rules, SPrunerNothing, SPerMinMaxStrategyHigherKinded, SAlphaBetaPrunerNone>;
+pub type SGenericMinReachablePayoutLowerBoundViaHint<'rules, MinMaxStrategiesHK, AlphaBetaPruner> = SMinReachablePayoutBase<'rules, SPrunerViaHint, MinMaxStrategiesHK, AlphaBetaPruner>;
+pub type SMinReachablePayoutLowerBoundViaHint<'rules> = SMinReachablePayoutBase<'rules, SPrunerViaHint, SPerMinMaxStrategyHigherKinded, SAlphaBetaPrunerNone>;
 
 pub trait TPruner : Sized {
-    fn pruned_output<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(params: &SMinReachablePayoutBase<'_, Self, MinMaxStrategiesHK>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>;
+    fn pruned_output<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, AlphaBetaPruner>(params: &SMinReachablePayoutBase<'_, Self, MinMaxStrategiesHK, AlphaBetaPruner>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>;
 }
 
 pub struct SPrunerNothing;
 impl TPruner for SPrunerNothing {
-    fn pruned_output<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(_params: &SMinReachablePayoutBase<'_, Self, MinMaxStrategiesHK>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>> {
+    fn pruned_output<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, AlphaBetaPruner>(_params: &SMinReachablePayoutBase<'_, Self, MinMaxStrategiesHK, AlphaBetaPruner>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>> {
         None
     }
 }
 
 pub struct SPrunerViaHint;
 impl TPruner for SPrunerViaHint {
-    fn pruned_output<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(params: &SMinReachablePayoutBase<'_, Self, MinMaxStrategiesHK>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>> {
+    fn pruned_output<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, AlphaBetaPruner>(params: &SMinReachablePayoutBase<'_, Self, MinMaxStrategiesHK, AlphaBetaPruner>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>> {
         let mapepion_payout = params.rules.payouthints(tplahandstichseq, &params.expensifiers, rulestatecache)
             .map(|intvlon_payout| {
                 intvlon_payout[ELoHi::Lo].filter(|n_payout| 0<*n_payout)

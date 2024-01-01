@@ -129,6 +129,11 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
             .help("Use points as criterion")
             .long_help("When applicable (e.g. for Solo, Rufspiel), investigate the points reached instead of the raw payout.")
         )
+        .arg(clap::Arg::new("abprune")
+            .long("abprune")
+            .help("Use alpha-beta-pruning")
+            .long_help("Use alpha-beta-pruning to possibly speed up game tree exploration.")
+        )
         .arg(clap::Arg::new("snapshotcache")
             .long("snapshotcache")
             .help("Use snapshot cache")
@@ -333,6 +338,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             SMaxSelfishMinStrategy,
                         ),
                     },
+                    match (clapmatches.is_present("abprune")) {
+                        true => SAlphaBetaPruner,
+                        false => SAlphaBetaPrunerNone,
+                    },
                     match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
                         true => make_snapshot_cache,
                         false => make_snapshot_cache_none,
@@ -350,7 +359,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 )
             }}
             if clapmatches.is_present("no-details") {
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident,), $AlphaBetaPruner:ident, $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let mapemmstrategypaystats = itahand
                         .enumerate()
                         .par_bridge() // TODO can we derive a true parallel iterator?
@@ -360,7 +369,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 (&mut ahand.clone(), &mut stichseq.clone()),
                                 rules,
                                 &$func_filter_allowed_cards,
-                                &<SMinReachablePayoutBase<$pruner, $MinMaxStrategiesHK>>::new(
+                                &<SMinReachablePayoutBase<$pruner, $MinMaxStrategiesHK, $AlphaBetaPruner>>::new(
                                     rules,
                                     epi_position,
                                     expensifiers.clone(),
@@ -407,9 +416,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 forward_with_args!(forward);
             } else {
                 // we are interested in payout => single-card-optimization useless
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident,), $AlphaBetaPruner:ident, $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
-                    let determinebestcardresult = determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_>( // TODO avoid explicit types
+                    let determinebestcardresult = determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_,_>( // TODO avoid explicit types
                         stichseq,
                         Box::new(
                             itahand
@@ -421,7 +430,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 })
                         ) as Box<_>,
                         $func_filter_allowed_cards,
-                        &<SMinReachablePayoutBase<$pruner, $MinMaxStrategiesHK>>::new(
+                        &<SMinReachablePayoutBase<$pruner, $MinMaxStrategiesHK, $AlphaBetaPruner>>::new(
                             rules,
                             epi_position,
                             expensifiers.clone(),
