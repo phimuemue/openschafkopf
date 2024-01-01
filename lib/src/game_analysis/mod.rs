@@ -397,11 +397,12 @@ fn generate_analysis_html(
             ));
             str_per_card += "<table>";
             fn condensed_cheating_columns(atplstrf: &[(String, f32); N_COLUMNS]) -> impl Iterator<Item=&(String, f32)> {
+                let otplstrf_first = verify!(atplstrf.first());
                 assert_eq!(
-                    verify_eq!(&atplstrf[0], &atplstrf[2]).1,
+                    verify_eq!(unwrap!(otplstrf_first), &atplstrf[2]).1,
                     atplstrf[1].1,
                 );
-                atplstrf.get(0).into_iter()
+                otplstrf_first.into_iter()
             }
             for outputline in vecoutputline_cheating.iter() {
                 str_per_card += "<tr>";
