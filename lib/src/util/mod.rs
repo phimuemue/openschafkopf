@@ -5,7 +5,7 @@ pub mod staticvalue;
 pub mod interval;
 pub mod vecext;
 pub mod negext;
-pub use self::{staticvalue::*, interval::*, if_then::*, vecext::*, negext::*, dbg_argument::*};
+pub use self::{staticvalue::*, interval::*, vecext::*, negext::*};
 pub use derive_new::new;
 pub use failure::{bail, format_err, Error};
 pub use openschafkopf_util::*;
