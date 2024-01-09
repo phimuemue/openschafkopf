@@ -257,18 +257,6 @@ fn generate_analysis_html(
                 <title>Schafkopf-Analyse: {str_description}</title>
                 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
                 <link rel="stylesheet" type="text/css" href="../css.css">
-                <script>
-                    function copyToClipboard(str, btn) {{
-                        navigator.clipboard.writeText(str).then(
-                            function() {{
-                                btn.innerHTML = "Copied (" + (new Date()).toLocaleString() + ")";
-                            }},
-                            function() {{
-                                // indicate fail by doing nothing
-                            }},
-                        );
-                    }}
-                </script>
             </head>
             <body>
                 <h1>Schafkopf-Analyse: <a href="{str_link}">{str_description}</a></h1>
@@ -374,7 +362,18 @@ fn generate_analysis_html(
             let stichseq = &analysispercard.stichseq;
             let ahand = &analysispercard.ahand;
             let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
-            let mut str_per_card = format!(r###"<h3>{} <button onclick='copyToClipboard("{}", this)'>&#128203</button></h3>"###,
+            let mut str_per_card = format!(r###"<h3>{} <button onclick='
+                (function /*copyToClipboard*/(str, btn) {{
+                    navigator.clipboard.writeText(str).then(
+                        function() {{
+                            btn.innerHTML = "Copied (" + (new Date()).toLocaleString() + ")";
+                        }},
+                        function() {{
+                            // indicate fail by doing nothing
+                        }},
+                    );
+                }})("{}", this)
+                '>&#128203</button></h3>"###,
                 stich_caption(stichseq),
                 format!("{str_openschafkopf_executable} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand}\" --branching \"equiv7\"",
                     str_cards_on_table=stichseq.visible_stichs().iter()
