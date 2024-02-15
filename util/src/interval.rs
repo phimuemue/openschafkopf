@@ -1,4 +1,4 @@
-use crate::util::*;
+use plain_enum::*;
 
 plain_enum_mod!(modelohi, ELoHi {Lo, Hi,});
 
