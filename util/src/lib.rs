@@ -28,3 +28,5 @@ pub use parser::*;
 pub mod type_inference;
 pub mod unpack_and_apply;
 pub use unpack_and_apply::*;
+pub mod interval;
+pub use interval::*;

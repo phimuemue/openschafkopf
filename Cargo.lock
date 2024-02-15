@@ -1645,6 +1645,7 @@ dependencies = [
  "fern",
  "itertools 0.12.1",
  "log",
+ "plain_enum",
 ]
 
 [[package]]

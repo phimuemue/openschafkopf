@@ -2,10 +2,9 @@ pub use as_num::AsNum;
 pub use plain_enum::*;
 #[macro_use]
 pub mod staticvalue;
-pub mod interval;
 pub mod vecext;
 pub mod negext;
-pub use self::{staticvalue::*, interval::*, vecext::*, negext::*};
+pub use self::{staticvalue::*, vecext::*, negext::*};
 pub use derive_new::new;
 pub use failure::{bail, format_err, Error};
 pub use openschafkopf_util::*;
