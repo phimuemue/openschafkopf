@@ -103,12 +103,12 @@ pub fn analyze_game(
                                 /*n_until_stichseq_len*/7,
                                 /*cardspartition*/game.rules.equivalent_when_on_same_hand(),
                             )(&game.stichseq, &game.ahand),
-                            &SMinReachablePayout::new(
+                            /*TODO use SAlphaBetaPruner*/&SMinReachablePayout::new(
                                 &game.rules,
                                 epi,
                                 game.expensifiers.clone(),
                             ),
-                            /*infofromparent*/ELoHi::map_from_raw([isize::MIN, isize::MAX]),
+                            /*infofromparent*/(),
                             &SSnapshotCacheNone::factory(), // TODO possibly use cache
                             &mut SNoVisualization,
                         ).map(|mapepin_payout| mapepin_payout[epi]),
@@ -124,8 +124,8 @@ pub fn analyze_game(
                             /*n_until_stichseq_len, determined heuristically*/7,
                             game.rules.equivalent_when_on_same_hand(),
                         ),
-                        &SMinReachablePayout::new_from_game(game),
-                        /*infofromparent*/ELoHi::map_from_raw([isize::MIN, isize::MAX]),
+                        /*TODO use SAlphaBetaPruner*/&SMinReachablePayout::new_from_game(game),
+                        /*infofromparent*/(),
                         /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO possibly use cache
                         /*fn_visualizer*/SNoVisualization::factory(),
                         /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},

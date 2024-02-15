@@ -79,7 +79,7 @@ impl SAi {
                         epi_rank,
                         expensifiers.clone(), // TODO? can clone be avoided
                     ),
-                    /*infofromparent*/ELoHi::map_from_raw([isize::MIN, isize::MAX]),
+                    /*infofromparent*/(),
                     &SSnapshotCacheNone::factory(), // TODO make customizable
                     &mut SNoVisualization{},
                 ).map(|mapepiminmax| {
@@ -130,7 +130,7 @@ impl SAi {
                         epi_current,
                         expensifiers.clone(),
                     ),
-                    /*infofromparent*/ELoHi::map_from_raw([isize::MIN, isize::MAX]),
+                    /*infofromparent*/(),
                     SSnapshotCacheNone::factory(), // TODO possibly use cache
                     fn_visualizer,
                     /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
@@ -145,15 +145,15 @@ impl SAi {
                 match (n_remaining_cards) {
                     1..=3 => (
                         SNoFilter::factory(),
-                        SMinReachablePayoutBase::<SPrunerNothing, SMaxMinMaxSelfishMinHigherKinded>,
+                        SMinReachablePayoutBase::<SPrunerNothing, SMaxMinMaxSelfishMinHigherKinded, /*TODO*/SAlphaBetaPrunerNone>,
                     ),
                     4 => (
                         SNoFilter::factory(),
-                        SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded>,
+                        SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded, /*TODO*/SAlphaBetaPrunerNone>,
                     ),
                     _ => (
                         SBranchingFactor::factory(1, self.n_suggest_card_branches+1),
-                        SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded>,
+                        SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded, /*TODO*/SAlphaBetaPrunerNone>,
                     ),
                 },
                 match ((&self.aiparams, n_remaining_cards)) {
@@ -271,28 +271,31 @@ pub fn determine_best_card<
     'rules,
     FilterAllowedCards: TFilterAllowedCards,
     MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Sync,
+    AlphaBetaPruner: TAlphaBetaPruner,
     Pruner: TPruner+Sync,
-    SnapshotCache: TSnapshotCache<<SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> as TForEachSnapshot>::Output>,
+    SnapshotCache: TSnapshotCache<<SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> as TForEachSnapshot>::Output>,
     OSnapshotCache: Into<Option<SnapshotCache>>,
-    SnapshotVisualizer: TSnapshotVisualizer<<SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> as TForEachSnapshot>::Output>,
+    SnapshotVisualizer: TSnapshotVisualizer<<SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> as TForEachSnapshot>::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
     PayoutStatsPayload: Ord + Copy + Sync + Send,
 >(
     stichseq: &'stichseq SStichSequence,
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
-    foreachsnapshot: &SMinReachablePayoutBase<Pruner, MinMaxStrategiesHK>,
-    infofromparent: <SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> as TForEachSnapshot>::InfoFromParent,
+    foreachsnapshot: &SMinReachablePayoutBase<Pruner, MinMaxStrategiesHK, AlphaBetaPruner>,
+    infofromparent: <SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> as TForEachSnapshot>::InfoFromParent,
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, ECard) + std::marker::Sync),
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
 ) -> Option<SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>>
     where
-        <SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> as TForEachSnapshot>::Output: TMinMaxStrategies<MinMaxStrategiesHK, Arg0=EnumMap<EPlayerIndex, isize>>,
-        <SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> as TForEachSnapshot>::InfoFromParent: Clone,
+        <SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> as TForEachSnapshot>::Output: TMinMaxStrategies<MinMaxStrategiesHK, Arg0=EnumMap<EPlayerIndex, isize>>,
+        <SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> as TForEachSnapshot>::InfoFromParent: Clone,
         MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: Send,
         MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK>,
+        AlphaBetaPruner: Sync,
+        AlphaBetaPruner::InfoFromParent: Sync,
 {
     let rules = foreachsnapshot.rules;
     let mapcardooutput = Arc::new(Mutex::new(
@@ -525,7 +528,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             Box::new(std::iter::once(ahand)) as Box<_>,
             /*fn_make_filter*/SBranchingFactor::factory(1, 2),
             &SMinReachablePayout::new_from_game(&game),
-            /*infofromparent*/ELoHi::map_from_raw([isize::MIN, isize::MAX]),
+            /*infofromparent*/(),
             /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO test cache
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
