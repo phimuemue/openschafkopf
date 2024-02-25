@@ -786,7 +786,7 @@ pub trait TAlphaBetaPruner {
     fn initial_info_from_parent() -> Self::InfoFromParent;
     type BreakType;
     fn is_prunable_self<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(&self, minmax: &MinMaxStrategies, infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent>;
-    fn is_prunable_other<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(&self, minmax: &MinMaxStrategies, infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent>;
+    fn is_prunable_other<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(&self, minmax: &MinMaxStrategies, infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex, epi_card: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent>;
 }
 
 #[derive(Default)]
@@ -799,13 +799,15 @@ impl TAlphaBetaPruner for SAlphaBetaPrunerNone {
     fn is_prunable_self<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(&self, _minmax: &MinMaxStrategies, _infofromparent: Self::InfoFromParent, _epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
         ControlFlow::Continue(())
     }
-    fn is_prunable_other<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(&self, _minmax: &MinMaxStrategies, _infofromparent: Self::InfoFromParent, _epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
+    fn is_prunable_other<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(&self, _minmax: &MinMaxStrategies, _infofromparent: Self::InfoFromParent, _epi_self: EPlayerIndex, _epi_card: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
         ControlFlow::Continue(())
     }
 }
 
-#[derive(Default)]
-pub struct SAlphaBetaPruner;
+#[derive(new)]
+pub struct SAlphaBetaPruner {
+    mapepilohi: EnumMap<EPlayerIndex, ELoHi>, // Does epi minimize (Lo) or maximize (Hi)?
+}
 impl TAlphaBetaPruner for SAlphaBetaPruner {
     type InfoFromParent = EnumMap<ELoHi, isize>;
     fn initial_info_from_parent() -> Self::InfoFromParent {
@@ -813,6 +815,7 @@ impl TAlphaBetaPruner for SAlphaBetaPruner {
     }
     type BreakType = ();
     fn is_prunable_self<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(&self, minmax: &MinMaxStrategies, mut infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
+        assert_eq!(self.mapepilohi[epi_self], ELoHi::Hi);
         let n_payout_for_pruner = minmax.maxmin_for_pruner(epi_self);
         if n_payout_for_pruner >= infofromparent[ELoHi::Hi] {
             // I'm maximizing myself, but if my parent will minimize against what's already in there, I do not need to investigate any further
@@ -822,14 +825,25 @@ impl TAlphaBetaPruner for SAlphaBetaPruner {
             ControlFlow::Continue(infofromparent)
         }
     }
-    fn is_prunable_other<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(&self, minmax: &MinMaxStrategies, mut infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
-        let n_payout_for_pruner = minmax.maxmin_for_pruner(epi_self);
-        if n_payout_for_pruner <= infofromparent[ELoHi::Lo] {
-            // I'm minimizing myself, but if my parent will maximize against what's already in there, I do not need to investigate any further
-            ControlFlow::Break(())
-        } else {
-            assign_min(&mut infofromparent[ELoHi::Hi], n_payout_for_pruner);
-            ControlFlow::Continue(infofromparent)
+    fn is_prunable_other<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, MinMaxStrategies: TMinMaxStrategiesInternal<MinMaxStrategiesHK>>(&self, minmax: &MinMaxStrategies, mut infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex, epi_card: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
+        match self.mapepilohi[epi_card] {
+            ELoHi::Hi => {
+                self.is_prunable_self(
+                    minmax,
+                    infofromparent,
+                    epi_self, // TODO we should asser that we could also pass epi_card here.
+                )
+            },
+            ELoHi::Lo => {
+                let n_payout_for_pruner = minmax.maxmin_for_pruner(epi_self);
+                if n_payout_for_pruner <= infofromparent[ELoHi::Lo] {
+                    // I'm minimizing myself, but if my parent will maximize against what's already in there, I do not need to investigate any further
+                    ControlFlow::Break(())
+                } else {
+                    assign_min(&mut infofromparent[ELoHi::Hi], n_payout_for_pruner);
+                    ControlFlow::Continue(infofromparent)
+                }
+            }
         }
     }
 }
@@ -885,7 +899,7 @@ impl<Pruner: TPruner, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, AlphaBe
         } else {
             // other players may play inconveniently for epi_stich
             for card_allowed in itcard_allowed {
-                match self.alphabetapruner.is_prunable_other(&minmax_acc, infofromparent.clone(), self.epi) {
+                match self.alphabetapruner.is_prunable_other(&minmax_acc, infofromparent.clone(), self.epi, epi_card) {
                     ControlFlow::Break(_) => {
                         break;
                     },

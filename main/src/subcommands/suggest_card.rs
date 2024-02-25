@@ -249,6 +249,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 OnePerWinnerIndex(Option<EPlayerIndex>),
             }
             use EBranching::*;
+            #[derive(Clone)]
             enum ESingleStrategy {
                 MaxMin,
                 MaxSelfishMin,
@@ -324,7 +325,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         Some("hint") => (SPrunerViaHint),
                         _ => (SPrunerNothing),
                     },
-                    match (oesinglestrategy) {
+                    match (oesinglestrategy.clone()) {
                         None => (
                             SPerMinMaxStrategyHigherKinded,
                             SPerMinMaxStrategy,
@@ -338,9 +339,29 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             SMaxSelfishMinStrategy,
                         ),
                     },
-                    match (clapmatches.is_present("abprune")) {
-                        true => (|_stichseq, _ahand| SAlphaBetaPruner),
-                        false => (|_stichseq, _ahand| SAlphaBetaPrunerNone),
+                    match ((oesinglestrategy.clone(), clapmatches.is_present("abprune"), rules.alpha_beta_pruner_lohi_values())) {
+                        (None, b_abprune, _) | (_, b_abprune@false, _) | (Some(ESingleStrategy::MaxSelfishMin), b_abprune@true, None) => {
+                            if b_abprune && b_verbose {
+                                println!("Warning: abprune not supported strategy/rules combination. Continuing without.");
+                            }
+                            |_stichseq, _ahand| SAlphaBetaPrunerNone
+                        },
+                        (Some(ESingleStrategy::MaxSelfishMin), true, Some(fn_alpha_beta_pruner_lohi_values)) => (|stichseq, ahand| SAlphaBetaPruner::new({
+                            let mut mapepilohi = fn_alpha_beta_pruner_lohi_values(
+                                &SRuleStateCacheFixed::new(ahand, stichseq),
+                            );
+                            if mapepilohi[epi_position]==ELoHi::Lo {
+                                for lohi in mapepilohi.iter_mut() {
+                                    *lohi = -*lohi;
+                                }
+                            }
+                            mapepilohi
+                        })),
+                        (Some(ESingleStrategy::MaxMin), true, _) => (|_stichseq, _ahand| SAlphaBetaPruner::new({
+                            let mut mapepilohi = EPlayerIndex::map_from_fn(|_| ELoHi::Lo);
+                            mapepilohi[epi_position] = ELoHi::Hi;
+                            mapepilohi
+                        })),
                     },
                     match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
                         true => make_snapshot_cache,
