@@ -739,7 +739,7 @@ fn test_snapshotcache() {
                                 &game.stichseq,
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                                 /*fn_make_filter*/SNoFilter::factory(),
-                                &SMinReachablePayout::new_from_game(game),
+                                &|_stichseq, _ahand| SMinReachablePayout::new_from_game(game),
                                 $fn_snapshotcache,
                                 SNoVisualization::factory(),
                                 /*fn_inspect*/&|_,_,_,_| {},

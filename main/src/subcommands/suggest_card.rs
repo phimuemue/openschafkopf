@@ -430,7 +430,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 })
                         ) as Box<_>,
                         $func_filter_allowed_cards,
-                        &<SMinReachablePayoutBase<$pruner, $MinMaxStrategiesHK, $AlphaBetaPruner>>::new(
+                        &|_stichseq, _ahand| <SMinReachablePayoutBase<$pruner, $MinMaxStrategiesHK, $AlphaBetaPruner>>::new(
                             rules,
                             epi_position,
                             expensifiers.clone(),

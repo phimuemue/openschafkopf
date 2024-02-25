@@ -111,7 +111,7 @@ pub fn analyze_game(
                             /*n_until_stichseq_len, determined heuristically*/7,
                             game.rules.equivalent_when_on_same_hand(),
                         ),
-                        /*TODO use SAlphaBetaPruner*/&SMinReachablePayout::new_from_game(game),
+                        /*TODO use SAlphaBetaPruner*/&|_stichseq, _ahand| SMinReachablePayout::new_from_game(game),
                         /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO possibly use cache
                         /*fn_visualizer*/SNoVisualization::factory(),
                         /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},

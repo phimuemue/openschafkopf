@@ -598,7 +598,7 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
                     &game.expensifiers.vecstoss,
                 )),
                 /*fn_make_filter*/SNoFilter::factory(),
-                /*foreachsnapshot*/&SMinReachablePayout::new(
+                /*fn_make_foreachsnapshot*/&|_stichseq, _ahand| SMinReachablePayout::new(
                     &game.rules,
                     epi_active,
                     game.expensifiers.clone(),

@@ -124,7 +124,7 @@ impl SAi {
                     &stichseq,
                     Box::new($itahand) as Box<_>,
                     $func_filter_allowed_cards,
-                    &<$foreachsnapshot>::new(
+                    &|_stichseq, _ahand| <$foreachsnapshot>::new(
                         rules,
                         epi_current,
                         expensifiers.clone(),
@@ -269,7 +269,7 @@ pub fn determine_best_card<
     'rules,
     FilterAllowedCards: TFilterAllowedCards,
     MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded,
-    AlphaBetaPruner: TAlphaBetaPruner,
+    AlphaBetaPruner: TAlphaBetaPruner+Sync,
     Pruner: TPruner+Sync,
     SnapshotCache: TSnapshotCache<<SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> as TForEachSnapshot>::Output>,
     OSnapshotCache: Into<Option<SnapshotCache>>,
@@ -280,7 +280,7 @@ pub fn determine_best_card<
     stichseq: &'stichseq SStichSequence,
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
-    foreachsnapshot: &SMinReachablePayoutBase<Pruner, MinMaxStrategiesHK, AlphaBetaPruner>,
+    fn_make_foreachsnapshot: &(dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>) -> SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> + std::marker::Sync),
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, ECard) + std::marker::Sync),
@@ -292,7 +292,6 @@ pub fn determine_best_card<
         MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK>,
         AlphaBetaPruner: Sync,
 {
-    let rules = foreachsnapshot.rules;
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
         ECard::map_from_fn(|_card| None),
@@ -301,7 +300,8 @@ pub fn determine_best_card<
     itahand
         .enumerate()
         .flat_map(|(i_ahand, ahand)| {
-            rules.all_allowed_cards(
+            let foreachsnapshot = fn_make_foreachsnapshot(stichseq, &ahand);
+            foreachsnapshot.rules.all_allowed_cards(
                 stichseq,
                 &ahand[epi_current],
             )
@@ -311,10 +311,12 @@ pub fn determine_best_card<
         .par_bridge() // TODO can we derive a true parallel iterator?
         .for_each(|(i_ahand, mut ahand, card)| {
             fn_inspect(/*b_before*/true, i_ahand, &ahand, card);
+            let foreachsnapshot = fn_make_foreachsnapshot(stichseq, &ahand);
             let mut visualizer = fn_visualizer(i_ahand, &ahand, Some(card)); // do before ahand is modified
             debug_assert!(ahand[epi_current].cards().contains(&card));
             let mut stichseq = stichseq.clone();
             assert!(ahand_vecstich_card_count_is_compatible(&ahand, &stichseq));
+            let rules = foreachsnapshot.rules;
             let output = stichseq.zugeben_and_restore_with_hands(&mut ahand, epi_current, card, rules, |ahand, stichseq| {
                 if ahand.iter().all(|hand| hand.cards().is_empty()) {
                     let stichseq_finished = SStichSequenceGameFinished::new(stichseq);
@@ -330,7 +332,7 @@ pub fn determine_best_card<
                         (ahand, stichseq),
                         rules,
                         &fn_make_filter,
-                        foreachsnapshot,
+                        &foreachsnapshot,
                         &fn_snapshotcache,
                         &mut visualizer,
                     )
@@ -521,7 +523,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             stichseq,
             Box::new(std::iter::once(ahand)) as Box<_>,
             /*fn_make_filter*/SBranchingFactor::factory(1, 2),
-            &SMinReachablePayout::new_from_game(&game),
+            &|_stichseq, _ahand| SMinReachablePayout::new_from_game(&game),
             /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO test cache
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},

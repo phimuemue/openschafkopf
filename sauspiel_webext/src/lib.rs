@@ -131,7 +131,7 @@ pub fn greet() {
                     /*fn_filter*/|stichseq, ahand| {
                         SFilterByOracle::new(rules, ahand, stichseq)
                     },
-                    &SGenericMinReachablePayout::<SMaxSelfishMinStrategyHigherKinded, SAlphaBetaPrunerNone>::new(
+                    &|_stichseq, _ahand| SGenericMinReachablePayout::<SMaxSelfishMinStrategyHigherKinded, SAlphaBetaPrunerNone>::new(
                         rules,
                         verify_eq!(epi, unwrap!(stichseq.current_playable_stich().current_playerindex())),
                         game_finished.expensifiers.clone(),
