@@ -455,14 +455,6 @@ fn generate_analysis_html(
     + "</body></html>"
 }
 
-fn create_dir_if_not_existent(path: &std::path::Path) -> Result<(), failure::Error> {
-    if !path.exists() {
-        std::fs::create_dir(path).map_err(|err| format_err!("{:?}", err))
-    } else {
-        Ok(())
-    }
-}
-
 fn write_html(path: std::path::PathBuf, str_html: &str) -> Result<std::path::PathBuf, failure::Error> {
     std::fs::File::create(path.clone())?.write_all(str_html.as_bytes())?;
     Ok(path)
@@ -475,7 +467,7 @@ pub struct SGameWithDesc {
 
 pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String+Sync, vecgamewithdesc: Vec<SGameWithDesc>, b_include_no_findings: bool, n_max_remaining_cards: usize, b_simulate_all_hands: bool, str_openschafkopf_executable: &str, fn_output_card: &(dyn Fn(ECard, bool/*b_highlight*/)->String + Sync)) -> Result<std::path::PathBuf, failure::Error> {
     // TODO can all this be done with fewer locks and more elegant?
-    create_dir_if_not_existent(path_analysis)?;
+    std::fs::create_dir_all(path_analysis)?;
     generate_html_auxiliary_files(path_analysis)?;
     let str_date = format!("{}", chrono::Local::now().format("%Y%m%d%H%M%S"));
     let str_index_html = Arc::new(Mutex::new(format!(
@@ -516,7 +508,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
                     n_games_non_stock.fetch_add(1, Ordering::SeqCst);
                     let str_rules = format!("{}", game.rules);
                     let path_analysis_game = path_analysis.join(gamewithdesc.str_description.replace(['/', '.'], "_"));
-                    create_dir_if_not_existent(&path_analysis_game)?;
+                    std::fs::create_dir_all(&path_analysis_game)?;
                     let path = path_analysis_game.join("analysis.html");
                     let instant_analysis_begin = Instant::now();
                     let gameanalysis = analyze_game(
