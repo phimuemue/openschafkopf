@@ -25,32 +25,34 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     with_common_args(
         clapmatches,
         |itahand, rules, _stichseq, _ahand_fixed_with_holes, _epi_position, _expensifiers, b_verbose| {
-            let mut vectplmapostrnconstraint = vecconstraint
+            let mut vectplmapresstrnconstraint = vecconstraint
                 .iter()
                 .map(|constraint| (std::collections::HashMap::new(), constraint))
                 .collect::<Vec<_>>();
             let mut n_ahand_total = 0;
             for ahand in itahand {
                 // assert_eq!(ahand[epi_position], hand_fixed);
-                for (mapostrn, constraint) in vectplmapostrnconstraint.iter_mut() {
-                    *mapostrn.entry(
+                for (mapresstrn, constraint) in vectplmapresstrnconstraint.iter_mut() {
+                    *mapresstrn.entry(
                         constraint.internal_eval(
                             &ahand,
                             rules.clone(),
-                            |resdynamic| resdynamic.ok().map(|dynamic| dynamic.to_string()),
+                            |resdynamic| resdynamic
+                                .map(|dynamic| dynamic.to_string())
+                                .map_err(|err| format!("Error: {:?}", err)),
                         ),
                     ).or_insert(0) += 1;
                 }
                 n_ahand_total += 1;
             }
-            for (mapostrn, constraint) in vectplmapostrnconstraint {
+            for (mapresstrn, constraint) in vectplmapresstrnconstraint {
                 if b_verbose || 1<vecconstraint.len() {
                     println!("{}", constraint);
                 }
-                for (ostr, n_count) in mapostrn.into_iter()
+                for (resstr, n_count) in mapresstrn.into_iter()
                     .sorted_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0))
                 {
-                    println!("{} {} ({:.2}%)", ostr.unwrap_or_else(|| "<Error>".into()), n_count, (n_count.as_num::<f64>()/n_ahand_total.as_num::<f64>())*100.);
+                    println!("{} {} ({:.2}%)", resstr.unwrap_or_else(|err| err), n_count, (n_count.as_num::<f64>()/n_ahand_total.as_num::<f64>())*100.);
                 }
                     
             }
