@@ -91,7 +91,7 @@ impl std::str::FromStr for SConstraint {
     type Err = Error;
     fn from_str(str_in: &str) -> Result<Self, Self::Err> {
         let mut engine = rhai::Engine::new();
-        let mut scope_constants = rhai::Scope::new();
+        let mut module_card = rhai::Module::new();
         engine.set_strict_variables(true);
         engine
             .register_type::<SContext>()
@@ -141,7 +141,7 @@ impl std::str::FromStr for SConstraint {
         for card_for_fn in <ECard as PlainEnum>::values() {
             let str_card_lower = card_for_fn.to_string().to_lowercase();
             for str_card in [&str_card_lower, &str_card_lower.to_uppercase()] {
-                scope_constants.push_constant(str_card, card_for_fn);
+                module_card.set_var(str_card, card_for_fn);
                 register_count_fn(&mut engine, str_card, move |_ctx, card_hand| {
                     card_hand==card_for_fn
                 });
@@ -164,11 +164,12 @@ impl std::str::FromStr for SConstraint {
             .register_type::<EPlayerIndex>()
             .register_fn("to_string", EPlayerIndex::to_string)
         ;
-        engine.compile_with_scope(&scope_constants, format!("fn inspect(ctx) {{ {} }}", str_in))
+        engine.register_static_module("card", module_card.into());
+        engine.compile(format!("fn inspect(ctx) {{ {} }}", str_in))
             .or_else(|_err|
                 str_in.parse()
                     .map_err(|err| format_err!("Cannot parse path: {:?}", err))
-                    .and_then(|path| engine.compile_file_with_scope(&scope_constants, path)
+                    .and_then(|path| engine.compile_file(path)
                         .map_err(|err| format_err!("Cannot compile file: {:?}", err))
                     )
             )
