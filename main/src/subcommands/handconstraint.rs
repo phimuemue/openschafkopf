@@ -131,13 +131,13 @@ impl std::str::FromStr for SConstraint {
             });
         }
         for card_for_fn in <ECard as PlainEnum>::values() {
-            register_count_fn(&mut engine, &card_for_fn.to_string().to_lowercase(), move |_ctx, card_hand| {
-                card_hand==card_for_fn
-            });
-            register_count_fn(&mut engine, &card_for_fn.to_string().to_uppercase(), move |_ctx, card_hand| {
-                card_hand==card_for_fn
-            });
-            engine.register_fn(format!("who_has_{}", card_for_fn.to_string().to_lowercase()), move |ctx: SContext| -> SRhaiEPlayerIndex {
+            let str_card_lower = card_for_fn.to_string().to_lowercase();
+            for str_card in [&str_card_lower, &str_card_lower.to_uppercase()] {
+                register_count_fn(&mut engine, str_card, move |_ctx, card_hand| {
+                    card_hand==card_for_fn
+                });
+            }
+            engine.register_fn(format!("who_has_{}", str_card_lower), move |ctx: SContext| -> SRhaiEPlayerIndex {
                 unwrap!(EPlayerIndex::values().find(|&epi| ctx.ahand[epi].contains(card_for_fn)))
                     .to_usize()
                     .as_num::<SRhaiEPlayerIndex>()
