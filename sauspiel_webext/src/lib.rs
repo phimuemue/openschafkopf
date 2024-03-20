@@ -30,8 +30,8 @@ pub fn greet() {
                     /*fn_ruleset*/|_| (),
                     /*fn_rules*/|rules| rules,
                 ),
-                /*n_max_remaining_cards*/4,
-                /*b_simulate_all_hands*/true,
+                /*n_max_remaining_cards*/5,
+                /*b_simulate_all_hands*/false,
                 /*str_openschafkopf_executable*/"openschafkopf",
                 /*fn_output_card*/&|card, b_highlight| {
                     let str_card = format!("{}", card).replace('Z', "X"); // TODO proper card formatter
