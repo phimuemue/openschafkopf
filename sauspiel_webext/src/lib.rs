@@ -38,6 +38,20 @@ pub fn greet() {
                     format!(r#"<span class="card-icon card-icon-by card-icon-{str_card}" title="{str_card}" {str_style}>{str_card}</span>"#,
                         str_style = if b_highlight {r#"style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;""#} else {""},
                     )
+                    /* // TODO Show table directly below played card, similar to this:
+                    <div class="game-protocol-trick-card position-1  " style="/*! text-align: center; */justify-content: center;">
+                        <a data-userid="119592" data-username="TiltBoi" class="profile-link" href="/profile/TiltBoi" style="margin: 0 auto;">TiltBoi</a>
+                        <span class="card-image by g2 HO" title="Der Rote" style="margin: 0 auto;">Der Rote</span>
+                        <table><tbody>
+                            <tr>
+                                <td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-HA" title="HA" style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;">HA</span><span class="card-icon card-icon-by card-icon-HX" title="HX">HX</span><span class="card-icon card-icon-by card-icon-SA" title="SA">SA</span><span class="card-icon card-icon-by card-icon-SO" title="SO">SO</span></td><td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-EK" title="EK">EK</span></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px;text-align: center;">100</td><td style="padding: 5px;text-align: center;">-100 </td>
+                            </tr>
+                        </tbody></table>
+                    </div>
+                    */
                 },
             );
             let htmlcol = document.get_elements_by_class_name("container content");
