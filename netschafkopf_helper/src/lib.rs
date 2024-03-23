@@ -520,7 +520,7 @@ make_redirect_function!(
         log_in_out("read_regel_to_registry_bytes", (pbyte,), |pbyte| {
             verify_is_unit!(unsafe{call_original(pbyte)});
             let abyte_regeldaten_new = unwrap!(unsafe{std::slice::from_raw_parts(pbyte, N_BYTES_REGELDATEN)}.try_into());
-            if let Some(abyte_regeldaten_old) = unsafe{&OABYTE_REGELDATEN} {
+            if let Some(ref abyte_regeldaten_old) = unsafe{OABYTE_REGELDATEN} {
                 for (i, byte_old, byte_new) in itertools::zip_eq(
                     abyte_regeldaten_old,
                     &abyte_regeldaten_new,
