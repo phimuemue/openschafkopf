@@ -108,7 +108,7 @@ pub fn run_simple_game_loop(
                             None,
                             txorules
                         );
-                    }).map(SActivelyPlayableRules::clone)
+                    }).cloned()
                 ));
             }
             info!("Asked players if they want to play. Determining rules");
@@ -125,7 +125,7 @@ pub fn run_simple_game_loop(
                                 Some(determinerules.currently_offered_prio()),
                                 txorules
                             );
-                        }).map(SActivelyPlayableRules::clone) {
+                        }).cloned() {
                             unwrap!(determinerules.announce_game(epi, rules));
                         } else {
                             unwrap!(determinerules.resign(epi));
