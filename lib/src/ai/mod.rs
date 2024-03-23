@@ -268,7 +268,7 @@ pub fn determine_best_card<
     'stichseq,
     'rules,
     FilterAllowedCards: TFilterAllowedCards,
-    MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Sync,
+    MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded,
     Pruner: TPruner+Sync,
     SnapshotCache: TSnapshotCache<<SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK> as TForEachSnapshot>::Output>,
     OSnapshotCache: Into<Option<SnapshotCache>>,

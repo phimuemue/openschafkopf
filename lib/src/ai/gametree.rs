@@ -714,7 +714,7 @@ impl Max<EnumMap<EPlayerIndex, isize>> {
     }
 }
 
-pub trait TMinMaxStrategiesHigherKinded : Sized + 'static {
+pub trait TMinMaxStrategiesHigherKinded : Sized + 'static + Sync {
     type Type<R>: TMinMaxStrategies<Self> + TGenericArgs1<Arg0=R>;
 }
 
