@@ -67,7 +67,8 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
     };
     // TODO ensure that "key_figure_table" looks exactly as we expect
     let scrape_from_key_figure_table = |str_key| -> Result<_, failure::Error> {
-        doc.find(Name("th").and(|node: &Node| node.inner_html()==str_key))
+        doc.find(Name("th"))
+            .filter(|node| node.inner_html()==str_key)
             .exactly_one().map_err(|it| format_err!("{:?}", it))?
             .parent().ok_or_else(|| format_err!("Error with {}: {} has no parent", str_key, str_key))?
             .find(Name("td"))
@@ -257,7 +258,8 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         tokens2(|l,r|l==r, mapepistr_username[epi].chars()) // TODO? can we use combine::char::string?
             .map(move |mut str_username| verify_eq!(epi, unwrap!(username_to_epi(&str_username.join("")))))
     };
-    let mut itnode_gameannouncement = ((((doc.find(Name("h4").and(|node: &Node| node.inner_html()=="Spielermittlung"))
+    let mut itnode_gameannouncement = ((((doc.find(Name("h4"))
+        .filter(|node: &Node| node.inner_html()=="Spielermittlung")
         .exactly_one()
         .map_err(|it| format_err!("{:?}", it)))?
         .parent().ok_or_else(|| format_err!("Spielermittlung has no parent")))?
