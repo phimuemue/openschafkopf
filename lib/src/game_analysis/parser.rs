@@ -41,8 +41,8 @@ impl TRuleSet for SSauspielRuleset {
 #[derive(Debug)]
 pub struct SGameAnnouncementAnonymous;
 
-fn vec_to_arr<T: std::fmt::Debug>(vect: Vec<T>) -> Result<[T; EPlayerIndex::SIZE], failure::Error> {
-    let (card0, card1, card2, card3) = vect.into_iter()
+fn iter_to_arr<T: std::fmt::Debug>(it: impl IntoIterator<Item=T>) -> Result<[T; EPlayerIndex::SIZE], failure::Error> {
+    let (card0, card1, card2, card3) = it.into_iter()
         .collect_tuple()
         .ok_or_else(|| format_err!("Wrong number of elements"))?;
     Ok([card0, card1, card2, card3])
@@ -52,13 +52,12 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
     // TODO acknowledge timeouts
     use select::{document::Document, node::Node, predicate::*};
     let doc = Document::from(str_html);
-    let mapepistr_username = vec_to_arr(
+    let mapepistr_username = iter_to_arr(
         doc.find(Class("game-participants"))
             .exactly_one()
             .map_err(|it| format_err!("{:?}", it))?
             .find(Attr("data-username", ()))
             .map(|node_username| unwrap!(node_username.attr("data-username")))
-            .collect()
     ).map(EPlayerIndex::map_from_raw)?;
     let username_to_epi = |str_username: &str| {
         EPlayerIndex::values()
@@ -101,7 +100,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             })
             .collect::<Result<Vec<_>,_>>()
     }
-    let aveccard = vec_to_arr(
+    let aveccard = iter_to_arr(
         doc.find(|node: &Node| node.inner_html()=="Karten von:")
             .try_fold(Vec::new(), |mut vecveccard, node| -> Result<_, failure::Error> {
                 let mut veccardb = get_cards(
@@ -270,7 +269,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         .find(Class("card-row"));
     let gameannouncements = SGameAnnouncementsGeneric::new_full(
         SStaticEPI0{},
-        vec_to_arr(
+        iter_to_arr(
             EPlayerIndex::values().zip(itnode_gameannouncement.by_ref())
                 .map(|(epi, node_gameannouncement)| -> Result<_, _> {
                     parse_trimmed(
@@ -326,7 +325,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
     if let Some(rules) = orules {
         let vecstich = doc.find(|node: &Node| node.inner_html()=="Stich von")
             .try_fold((EPlayerIndex::EPI0, Vec::new()), |(epi_first, mut vecstich), node| -> Result<_, _> {
-                vec_to_arr(get_cards(
+                iter_to_arr(get_cards(
                     &node.parent().ok_or_else(|| format_err!(r#""Stich von" has no parent"#))?
                         .parent().ok_or_else(|| format_err!("walking html failed"))?,
                     /*fn_card_highlight*/|card, _ostr_highlight| card,
@@ -434,7 +433,7 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*
                 );
             }
             let ekurzlang = EKurzLang::Lang; // TODO does NetSchafkopf support EKurzLang::Kurz?
-            let mapepistr_player = EPlayerIndex::map_from_raw(unwrap!(vec_to_arr(vecstr_player_name)));
+            let mapepistr_player = EPlayerIndex::map_from_raw(unwrap!(iter_to_arr(vecstr_player_name)));
             let player_to_epi = |str_player: &str| {
                 EPlayerIndex::values()
                     .find(|epi| mapepistr_player[*epi]==str_player)
