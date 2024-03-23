@@ -73,13 +73,12 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             .find(Name("td"))
             .exactly_one().map_err(|it| format_err!("{:?}", it))
     };
-    fn get_cards<T>(
+    fn get_cards(
         node: &Node,
-        fn_card_highlight: impl Fn(ECard, Option<&str>)->T
-    ) -> Result<Vec<T>, failure::Error> {
+    ) -> Result<Vec<(ECard, bool/*b_highlight*/)>, failure::Error> {
         node
             .find(Class("card-image"))
-            .map(|node_card| -> Result<T, _> {
+            .map(|node_card| -> Result<_, _> {
                 let str_class = unwrap!(node_card.attr("class")); // "class" must be present
                 (
                     string("card-image "),
@@ -90,13 +89,14 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 )
                 .with((
                     card_parser(),
-                    optional(string(" highlight")),
+                    optional(string(" highlight"))
+                        .map(|ostr_highlight| ostr_highlight.is_some()),
                 ))
                 .skip(eof())
                     // end of parser
                     .parse(str_class)
                     .map_err(|err| format_err!("Card parsing: {:?} on {}", err, str_class))
-                    .map(|((card, ostr_highlight), _str)| fn_card_highlight(card, ostr_highlight))
+                    .map(|((card, b_highlight), _str)| (card, b_highlight))
             })
             .collect::<Result<Vec<_>,_>>()
     }
@@ -107,7 +107,6 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                     &node
                         .parent().ok_or_else(|| format_err!(r#""Karten von:" has no parent"#))?
                         .parent().ok_or_else(|| format_err!("walking html failed"))?,
-                    /*fn_card_highlight*/|card, ostr_highlight| (card, ostr_highlight.is_some()),
                 )?;
                 veccardb.sort_unstable_by_key(|&(_card, b_highlight)| !b_highlight);
                 vecveccard.push(SHandVector::try_from(
@@ -328,8 +327,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 iter_to_arr(get_cards(
                     &node.parent().ok_or_else(|| format_err!(r#""Stich von" has no parent"#))?
                         .parent().ok_or_else(|| format_err!("walking html failed"))?,
-                    /*fn_card_highlight*/|card, _ostr_highlight| card,
-                )?).map(|acard| {
+                )?.into_iter().map(|(card, _b_highlight)| card)).map(|acard| {
                     let stich = SFullStich::new(SStich::new_full(epi_first, acard));
                     let epi_winner = rules.winner_index(stich.as_ref());
                     vecstich.push(stich);
