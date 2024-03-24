@@ -335,9 +335,6 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 })
             })?
             .1;
-        if vecstich.len()!=ekurzlang.cards_per_player() {
-            return Err(format_err!("Contradicting kurz/lang values."));
-        }
         let mut game = SGameGeneric::new_with(
             aveccard,
             SExpensifiersNoStoss::new_with_doublings(/*n_stock: Sauspiel does not support Stock*/0, doublings),
