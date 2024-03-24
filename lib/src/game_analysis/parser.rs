@@ -322,19 +322,6 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         })
         .collect::<Result<Vec<(EPlayerIndex, &'static str)>, _>>()?;
     if let Some(rules) = orules {
-        let vecstich = doc.find(|node: &Node| node.inner_html()=="Stich von")
-            .try_fold((EPlayerIndex::EPI0, Vec::new()), |(epi_first, mut vecstich), node| -> Result<_, _> {
-                iter_to_arr(get_cards(
-                    &node.parent().ok_or_else(|| format_err!(r#""Stich von" has no parent"#))?
-                        .parent().ok_or_else(|| format_err!("walking html failed"))?,
-                )?.into_iter().map(|(card, _b_highlight)| card)).map(|acard| {
-                    let stich = SFullStich::new(SStich::new_full(epi_first, acard));
-                    let epi_winner = rules.winner_index(stich.as_ref());
-                    vecstich.push(stich);
-                    (epi_winner, vecstich)
-                })
-            })?
-            .1;
         let mut game = SGameGeneric::new_with(
             aveccard,
             SExpensifiersNoStoss::new_with_doublings(/*n_stock: Sauspiel does not support Stock*/0, doublings),
@@ -346,10 +333,18 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         for resepi in get_doublings_stoss("Kontra und Retour")? {
             verify_is_unit!(game.stoss(resepi?)?);
         }
-        for stich in vecstich.into_iter() {
+        let mut epi_first = EPlayerIndex::EPI0;
+        for node_stich in doc.find(|node: &Node| node.inner_html()=="Stich von") {
+            let stich = iter_to_arr(get_cards(
+                &node_stich.parent().ok_or_else(|| format_err!(r#""Stich von" has no parent"#))?
+                    .parent().ok_or_else(|| format_err!("walking html failed"))?,
+            )?.into_iter().map(|(card, _b_highlight)| card)).map(|acard| {
+                SFullStich::new(SStich::new_full(epi_first, acard))
+            })?;
             for (epi, card) in stich.iter() {
                 verify_is_unit!(game.zugeben(*card, epi)?);
             }
+            epi_first = game.rules.winner_index(stich.as_ref());
         }
         game.finish().map_err(|_game| format_err!("Could not game.finish"))
     } else {
