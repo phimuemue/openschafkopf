@@ -103,7 +103,10 @@ pub fn greet() {
     set_panic_hook();
 
     let document = unwrap!(unwrap!(web_sys::window()).document());
-    match internal_analyze_sauspiel_html(SWebsysDocument(document.clone())) {
+    match internal_analyze_sauspiel_html(
+        SWebsysDocument(document.clone()),
+        |_game, _card, _epi, _element_played_card| (),
+    ) {
         Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game), an_payout:_}) => {
             let str_html = analyze_game(
                 game.map(

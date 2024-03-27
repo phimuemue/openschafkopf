@@ -129,10 +129,19 @@ impl<'node> TSauspielHtmlNode<'node> for select::node::Node<'node> {
 }
 
 pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error> {
-    internal_analyze_sauspiel_html(Document::from(str_html))
+    internal_analyze_sauspiel_html(
+        Document::from(str_html),
+        /*fn_before_play_card*/|_,_,_,_| (),
+    )
 }
 
-pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument>(doc: Document) -> Result<SGameResultGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error> {
+pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, FnBeforePlayCard>(
+    doc: Document,
+    mut fn_before_play_card: FnBeforePlayCard,
+) -> Result<SGameResultGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error>
+    where
+        for <'card> FnBeforePlayCard: FnMut(&SGameGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, ECard, EPlayerIndex, Document::HtmlNode<'card>),
+{
     // TODO acknowledge timeouts
     let mapepistr_username = iter_to_arr(
         doc.find_class("game-participants")
@@ -155,14 +164,14 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument>(doc: Docu
             .find_name("td")
             .exactly_one().map_err(|it| format_err!("{:?}", it))
     };
-    fn get_cards<'node>(
-        node: &impl TSauspielHtmlNode<'node>,
-    ) -> Result<Vec<(ECard, bool/*b_highlight*/)>, failure::Error> {
+    fn get_cards<'node, HtmlNode: TSauspielHtmlNode<'node>>(
+        node: &HtmlNode,
+    ) -> Result<Vec<(ECard, bool/*b_highlight*/, HtmlNode)>, failure::Error> {
         node
             .find_class("card-image")
             .map(|node_card| -> Result<_, _> {
                 let str_class = unwrap!(node_card.attr("class")); // "class" must be present
-                let /*TODO why is this temporary needed?*/rescardb = (
+                let res = (
                     string("card-image "),
                     choice!(string("by"), string("fn")),
                     string(" g"),
@@ -178,23 +187,23 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument>(doc: Docu
                     // end of parser
                     .parse(str_class.as_str())
                     .map_err(|err| format_err!("Card parsing: {:?} on {}", err, str_class))
-                    .map(|((card, b_highlight), _str)| (card, b_highlight));
-                rescardb
+                    .map(|((card, b_highlight), _str)| (card, b_highlight, node_card));
+                res
             })
             .collect::<Result<Vec<_>,_>>()
     }
     let aveccard = iter_to_arr(
         doc.find_inner_html("Karten von:")
             .try_fold(Vec::new(), |mut vecveccard, node| -> Result<_, failure::Error> {
-                let mut veccardb = get_cards(
+                let mut veccardbnode = get_cards(
                     &node
                         .parent().ok_or_else(|| format_err!(r#""Karten von:" has no parent"#))?
                         .parent().ok_or_else(|| format_err!("walking html failed"))?,
                 )?;
-                veccardb.sort_unstable_by_key(|&(_card, b_highlight)| !b_highlight);
+                veccardbnode.sort_unstable_by_key(|&(_card, b_highlight, ref _node_card)| !b_highlight);
                 vecveccard.push(SHandVector::try_from(
-                    veccardb.into_iter()
-                        .map(|(card, _b_highlight)| card)
+                    veccardbnode.into_iter()
+                        .map(|(card, _b_highlight, _node_card)| card)
                         .collect::<Vec<_>>()
                         .as_slice()
                 )?);
@@ -418,18 +427,17 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument>(doc: Docu
         for epi in get_doublings_stoss("Kontra und Retour")? {
             verify_is_unit!(game.stoss(epi)?);
         }
-        let mut epi_first = EPlayerIndex::EPI0;
         for node_stich in doc.find_inner_html("Stich von") {
-            let stich = iter_to_arr(get_cards(
+            for (card, _b_highlight, node_card) in get_cards(
                 &node_stich.parent().ok_or_else(|| format_err!(r#""Stich von" has no parent"#))?
                     .parent().ok_or_else(|| format_err!("walking html failed"))?,
-            )?.into_iter().map(|(card, _b_highlight)| card)).map(|acard| {
-                SFullStich::new(SStich::new_full(epi_first, acard))
-            })?;
-            for (epi, card) in stich.iter() {
-                verify_is_unit!(game.zugeben(*card, epi)?);
+            )? {
+                let epi_zugeben = game.which_player_can_do_something()
+                    .map(|(epi_zugeben, _vecepi_stoss)| epi_zugeben)
+                    .ok_or_else(|| format_err!("which_player_can_do_something"))?;
+                fn_before_play_card(&game, card, epi_zugeben, node_card);
+                verify_is_unit!(game.zugeben(card, epi_zugeben)?);
             }
-            epi_first = game.rules.winner_index(stich.as_ref());
         }
         game.finish().map_err(|_game| format_err!("Could not game.finish"))
     } else {
