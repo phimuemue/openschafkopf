@@ -4,14 +4,98 @@ use wasm_bindgen::prelude::*;
 use openschafkopf_util::*;
 use openschafkopf_lib::{
     game::SGameResultGeneric,
-    game_analysis::{analyze_game, parser::analyze_sauspiel_html},
+    game_analysis::{analyze_game, parser::{internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
     rules::ruleset::VStockOrT,
 };
 use crate::utils::*;
+use std::fmt::Debug;
 
 #[wasm_bindgen]
 extern "C" {
     fn alert(s: &str);
+}
+
+#[derive(Debug)]
+struct SWebsysDocument(web_sys::Document);
+#[derive(Debug)]
+struct SWebsysElement(web_sys::Element);
+#[derive(Debug)]
+struct SHtmlCollectionIterator{
+    i: u32, // index type for HtmlCollection::item
+    htmlcol: web_sys::HtmlCollection,
+}
+
+impl SHtmlCollectionIterator {
+    fn new(htmlcol: web_sys::HtmlCollection) -> Self {
+        Self {
+            i: 0,
+            htmlcol,
+        }
+    }
+}
+
+impl Iterator for SHtmlCollectionIterator {
+    type Item = SWebsysElement;
+    fn next(&mut self) -> Option<Self::Item> {
+        let oelement = self.htmlcol.item(self.i);
+        if oelement.is_some() {
+            self.i += 1;
+        }
+        oelement.map(SWebsysElement)
+    }
+}
+
+impl TSauspielHtmlDocument for SWebsysDocument {
+    type HtmlNode<'node> = SWebsysElement;
+    fn find_class<'slf>(&'slf self, str_class: &'static str) -> impl Debug+Iterator<Item=Self::HtmlNode<'slf>>+'slf {
+        SHtmlCollectionIterator::new(self.0.get_elements_by_class_name(str_class))
+    }
+    fn find_name(&self, str_name: &'static str) -> impl Debug+Iterator<Item=Self::HtmlNode<'_>> + '_ {
+        SHtmlCollectionIterator::new(self.0.get_elements_by_tag_name(str_name))
+    }
+    fn find_inner_html<'slf>(&'slf self, str_inner_html: &str) -> impl Debug+Iterator<Item=Self::HtmlNode<'slf>> {
+        self.find_name("*") // all elements, see https://developer.mozilla.org/en-US/docs/Web/API/Document/getElementsByTagName
+            .filter(move |element| element.0.inner_html()==str_inner_html)
+    }
+}
+
+impl<'node> TSauspielHtmlNode<'node> for SWebsysElement {
+    fn find_name(&self, str_name: &'static str) -> impl Debug+Iterator<Item=Self> {
+        SHtmlCollectionIterator::new(self.0.get_elements_by_tag_name(str_name))
+    }
+    fn find_attr(&self, str_attr: &str, attr: ()) -> impl Debug+Iterator<Item=Self> {
+        verify_is_unit!(attr); // otherwise has_attribute not meaningful
+        SHtmlCollectionIterator::new(self.0.get_elements_by_tag_name("*"))
+            .filter(move |element| element.0.has_attribute(str_attr))
+    }
+    fn find_class(&self, str_class: &'static str) -> impl Debug+Iterator<Item=Self> {
+        SHtmlCollectionIterator::new(self.0.get_elements_by_class_name(str_class))
+    }
+    fn attr(&self, str_attr: &str) -> Option<String> {
+        self.0.get_attribute(str_attr)
+    }
+    fn parent(&self) -> Option<Self> {
+        self.0.parent_element().map(SWebsysElement)
+    }
+    fn inner_html(&self) -> String {
+        self.0.inner_html()
+    }
+    fn children(&self) -> impl Debug+Iterator<Item=Self> {
+        SHtmlCollectionIterator::new(self.0.children())
+    }
+    fn data(&self) -> VSauspielHtmlData {
+        match self.0.node_type() {
+            3 => VSauspielHtmlData::Text(self.text()),
+            1 => VSauspielHtmlData::Element,
+            _ => VSauspielHtmlData::Comment, // TODO unsupported types
+        }
+    }
+    fn name(&self) -> Option<String> {
+        Some(self.0.tag_name())
+    }
+    fn text(&self) -> String {
+        unwrap!(self.0.text_content())
+    }
 }
 
 #[wasm_bindgen(start)]
@@ -19,7 +103,7 @@ pub fn greet() {
     set_panic_hook();
 
     let document = unwrap!(unwrap!(web_sys::window()).document());
-    match analyze_sauspiel_html(&unwrap!(document.body()).inner_html()) {
+    match internal_analyze_sauspiel_html(SWebsysDocument(document.clone())) {
         Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game), an_payout:_}) => {
             let str_html = analyze_game(
                 game.map(
