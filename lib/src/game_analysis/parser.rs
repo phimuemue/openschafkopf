@@ -7,6 +7,7 @@ use crate::rules::{
 use crate::primitives::cardvector::*;
 use itertools::Itertools;
 use combine::{char::*, *};
+use std::fmt::Debug;
 
 #[derive(Debug)]
 pub struct SSauspielAllowedRules {
@@ -48,39 +49,120 @@ fn iter_to_arr<T: std::fmt::Debug>(it: impl IntoIterator<Item=T>) -> Result<[T; 
     Ok([card0, card1, card2, card3])
 }
 
+pub trait TSauspielHtmlDocument : Debug {
+    type HtmlNode<'node>: TSauspielHtmlNode<'node> + 'node
+        where Self: 'node;
+    fn find_class<'slf>(&'slf self, str_class: &'static str) -> impl Debug+Iterator<Item=Self::HtmlNode<'slf>>+'slf;
+    fn find_name(&self, str_name: &'static str) -> impl Debug+Iterator<Item=Self::HtmlNode<'_>> + '_;
+    fn find_inner_html<'slf>(&'slf self, str_inner_html: &str) -> impl Debug+Iterator<Item=Self::HtmlNode<'slf>>;
+}
+
+use select::{document::Document, predicate::{Class, Name}};
+impl TSauspielHtmlDocument for Document {
+    type HtmlNode<'node> = select::node::Node<'node>;
+    fn find_class<'slf>(&'slf self, str_class: &'static str) -> impl Debug+Iterator<Item=Self::HtmlNode<'slf>>+'slf {
+        self.find(Class(str_class))
+    }
+    fn find_name(&self, str_name: &'static str) -> impl Debug+Iterator<Item=Self::HtmlNode<'_>> + '_ {
+        self.find(Name(str_name))
+    }
+    fn find_inner_html<'slf>(&'slf self, str_inner_html: &str) -> impl Debug+Iterator<Item=Self::HtmlNode<'slf>> {
+        self.find(move |node: &select::node::Node| node.inner_html()==str_inner_html)
+    }
+}
+
+pub trait TSauspielHtmlNode<'node> : Debug + Sized + 'node {
+    fn find_name(&self, str_name: &'static str) -> impl Debug+Iterator<Item=Self>;
+    fn find_attr(&self, str_attr: &str, attr: ()) -> impl Debug+Iterator<Item=Self>;
+    fn find_class(&self, str_class: &'static str) -> impl Debug+Iterator<Item=Self>;
+    fn attr(&self, str_attr: &str) -> Option<String>;
+    fn parent(&self) -> Option<Self>;
+    fn inner_html(&self) -> String;
+    fn children(&self) -> impl Debug+Iterator<Item=Self>;
+    fn data(&self) -> VSauspielHtmlData;
+    fn name(&self) -> Option<String>;
+    fn text(&self) -> String;
+}
+
+#[derive(Debug)]
+pub enum VSauspielHtmlData {
+    Element,
+    Text(String),
+    Comment,
+}
+
+impl<'node> TSauspielHtmlNode<'node> for select::node::Node<'node> {
+    fn find_name(&self, str_name: &'static str) -> impl Debug+Iterator<Item=Self> {
+        self.find(Name(str_name))
+    }
+    fn find_attr(&self, str_attr: &str, attr: ()) -> impl Debug+Iterator<Item=Self> {
+        self.find(select::predicate::Attr(str_attr, attr))
+    }
+    fn find_class(&self, str_class: &'static str) -> impl Debug+Iterator<Item=Self> {
+        self.find(Class(str_class))
+    }
+    fn attr(&self, str_attr: &str) -> Option<String> {
+        self.attr(str_attr).map(String::from)
+    }
+    fn parent(&self) -> Option<Self> {
+        self.parent()
+    }
+    fn inner_html(&self) -> String {
+        self.inner_html()
+    }
+    fn children(&self) -> impl Debug+Iterator<Item=Self> {
+        self.children()
+    }
+    fn data(&self) -> VSauspielHtmlData {
+        match self.data() {
+            select::node::Data::Text(str_text) => VSauspielHtmlData::Text(str_text.to_string()),
+            select::node::Data::Element(_,_) => VSauspielHtmlData::Element,
+            select::node::Data::Comment(_) => VSauspielHtmlData::Comment,
+        }
+    }
+    fn name(&self) -> Option<String> {
+        self.name().map(String::from)
+    }
+    fn text(&self) -> String {
+        self.text()
+    }
+}
+
 pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error> {
+    internal_analyze_sauspiel_html(Document::from(str_html))
+}
+
+pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument>(doc: Document) -> Result<SGameResultGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error> {
     // TODO acknowledge timeouts
-    use select::{document::Document, node::Node, predicate::*};
-    let doc = Document::from(str_html);
     let mapepistr_username = iter_to_arr(
-        doc.find(Class("game-participants"))
+        doc.find_class("game-participants")
             .exactly_one()
             .map_err(|it| format_err!("{:?}", it))?
-            .find(Attr("data-username", ()))
+            .find_attr("data-username", ())
             .map(|node_username| unwrap!(node_username.attr("data-username")))
     ).map(EPlayerIndex::map_from_raw)?;
-    let username_to_epi = |str_username: &str| {
+    let username_to_epi = |str_username: &str| -> Result<EPlayerIndex, failure::Error> {
         EPlayerIndex::values()
             .find(|epi| mapepistr_username[*epi]==str_username)
             .ok_or_else(|| format_err!("username {} not part of mapepistr_username {:?}", str_username, mapepistr_username))
     };
     // TODO ensure that "key_figure_table" looks exactly as we expect
     let scrape_from_key_figure_table = |str_key| -> Result<_, failure::Error> {
-        doc.find(Name("th"))
+        doc.find_name("th")
             .filter(|node| node.inner_html()==str_key)
             .exactly_one().map_err(|it| format_err!("{:?}", it))?
             .parent().ok_or_else(|| format_err!("Error with {}: {} has no parent", str_key, str_key))?
-            .find(Name("td"))
+            .find_name("td")
             .exactly_one().map_err(|it| format_err!("{:?}", it))
     };
-    fn get_cards(
-        node: &Node,
+    fn get_cards<'node>(
+        node: &impl TSauspielHtmlNode<'node>,
     ) -> Result<Vec<(ECard, bool/*b_highlight*/)>, failure::Error> {
         node
-            .find(Class("card-image"))
+            .find_class("card-image")
             .map(|node_card| -> Result<_, _> {
                 let str_class = unwrap!(node_card.attr("class")); // "class" must be present
-                (
+                let /*TODO why is this temporary needed?*/rescardb = (
                     string("card-image "),
                     choice!(string("by"), string("fn")),
                     string(" g"),
@@ -94,14 +176,15 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 ))
                 .skip(eof())
                     // end of parser
-                    .parse(str_class)
+                    .parse(str_class.as_str())
                     .map_err(|err| format_err!("Card parsing: {:?} on {}", err, str_class))
-                    .map(|((card, b_highlight), _str)| (card, b_highlight))
+                    .map(|((card, b_highlight), _str)| (card, b_highlight));
+                rescardb
             })
             .collect::<Result<Vec<_>,_>>()
     }
     let aveccard = iter_to_arr(
-        doc.find(|node: &Node| node.inner_html()=="Karten von:")
+        doc.find_inner_html("Karten von:")
             .try_fold(Vec::new(), |mut vecveccard, node| -> Result<_, failure::Error> {
                 let mut veccardb = get_cards(
                     &node
@@ -168,7 +251,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             allowedrules: VSauspielAllowedRules::AllowedRules(scrape_from_key_figure_table("Sonderregeln")?
                 .children()
                 .filter(|node|
-                    !matches!(node.data(), select::node::Data::Text(str_text) if str_text.trim().is_empty() || str_text.trim()!="-")
+                    !matches!(node.data(), VSauspielHtmlData::Text(str_text) if str_text.trim().is_empty() || str_text.trim()!="-")
                 )
                 .try_fold(
                     SSauspielAllowedRules{
@@ -177,16 +260,16 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                         b_ramsch: false,
                     },
                     |mut ruleset, node| {
-                        if !matches!(node.data(), select::node::Data::Element(_,_)) {
+                        if !matches!(node.data(), VSauspielHtmlData::Element) {
                             return Err(format_err!("Unexpected data {:?} in Sonderregeln", node.data()));
-                        } else if node.name()!=Some("img") {
+                        } else if node.name()!=Some("img".into()) && node.name()!=Some("IMG".into()) {
                             return Err(format_err!("Unexpected name {:?} in Sonderregeln", node.name()));
-                        } else if node.attr("class")!=Some("rules__rule") {
+                        } else if node.attr("class")!=Some("rules__rule".into()) {
                             return Err(format_err!("Unexpected class {:?} in Sonderregeln", node.attr("class")));
                         } else if node.attr("alt")!=node.attr("title") {
                             return Err(format_err!("alt {:?} differs from title {:?} in Sonderregeln", node.attr("alt"), node.attr("title")));
                         } else {
-                            match node.attr("title") {
+                            match node.attr("title").as_deref() {
                                 Some("Kurze Karte") => {
                                     if ekurzlang!=EKurzLang::Kurz {
                                         return Err(format_err!("Contradicting kurz/lang values."));
@@ -217,11 +300,11 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
     } else {
         return Err(format_err!("Ruleset"));
     };
-    let orules = doc.find(Class("title-supertext"))
+    let orules = doc.find_class("title-supertext")
         .exactly_one()
         .map_err(|it| format_err!("{:?}", it))?
         .parent().ok_or_else(|| format_err!("title-supertext has no parent"))?
-        .find(Name("h1"))
+        .find_name("h1")
         .exactly_one()
         .map_err(|it| format_err!("{:?}", it))
         .and_then(|node_rules| {
@@ -238,13 +321,14 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
                 Err(format_err!("Could not parse rules"))
             }
         })?;
-    let get_doublings_stoss = |str_key| -> Result<_, failure::Error> {
-        Ok(scrape_from_key_figure_table(str_key)?
-            .find(Name("a"))
-            .map(|node| username_to_epi(&node.inner_html())))
+    let get_doublings_stoss = |str_key: &'static str| -> Result<_, failure::Error> {
+        scrape_from_key_figure_table(str_key)?
+            .find_name("a")
+            .map(|node| username_to_epi(&node.inner_html()))
+            .collect::<Result<Vec<_>, _>>() // TODO avoid this
     };
     let doublings = {
-        let vecepi_doubling = get_doublings_stoss("Klopfer")?.collect::<Result<Vec<_>, _>>()?;
+        let vecepi_doubling = get_doublings_stoss("Klopfer")?;
         SDoublings::new_full(
             SStaticEPI0{},
             EPlayerIndex::map_from_fn(|epi| 
@@ -256,16 +340,17 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         tokens2(|l,r|l==r, mapepistr_username[epi].chars()) // TODO? can we use combine::char::string?
             .map(move |mut str_username| verify_eq!(epi, unwrap!(username_to_epi(&str_username.join("")))))
     };
-    let mut itnode_gameannouncement = ((((doc.find(Name("h4"))
-        .filter(|node: &Node| node.inner_html()=="Spielermittlung")
+    let node_card_rows = ((((doc.find_name("h4")
+        .filter(|node| node.inner_html()=="Spielermittlung")
         .exactly_one()
         .map_err(|it| format_err!("{:?}", it)))?
         .parent().ok_or_else(|| format_err!("Spielermittlung has no parent")))?
         .parent().ok_or_else(|| format_err!("Spielermittlung parent has no parent")))?
-        .find(Class("card-rows"))
+        .find_class("card-rows")
         .exactly_one()
-        .map_err(|it| format_err!("{:?}", it)))?
-        .find(Class("card-row"));
+        .map_err(|it| format_err!("{:?}", it)))?;
+    let mut itnode_gameannouncement = node_card_rows
+        .find_class("card-row");
     let gameannouncements = SGameAnnouncementsGeneric::new_full(
         SStaticEPI0{},
         iter_to_arr(
@@ -330,11 +415,11 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
             gameannouncements,
             vecvectplepistr_determinerules,
         );
-        for resepi in get_doublings_stoss("Kontra und Retour")? {
-            verify_is_unit!(game.stoss(resepi?)?);
+        for epi in get_doublings_stoss("Kontra und Retour")? {
+            verify_is_unit!(game.stoss(epi)?);
         }
         let mut epi_first = EPlayerIndex::EPI0;
-        for node_stich in doc.find(|node: &Node| node.inner_html()=="Stich von") {
+        for node_stich in doc.find_inner_html("Stich von") {
             let stich = iter_to_arr(get_cards(
                 &node_stich.parent().ok_or_else(|| format_err!(r#""Stich von" has no parent"#))?
                     .parent().ok_or_else(|| format_err!("walking html failed"))?,
