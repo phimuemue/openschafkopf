@@ -385,7 +385,7 @@ impl SGameAnalysis {
     }
 }
 
-fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(
+pub fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(
     str_per_card: &mut String,
     rules: &SRules,
     ahand: &EnumMap<EPlayerIndex, SHand>,

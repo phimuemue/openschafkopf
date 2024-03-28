@@ -3,9 +3,10 @@ mod utils;
 use wasm_bindgen::prelude::*;
 use openschafkopf_util::*;
 use openschafkopf_lib::{
+    ai::{determine_best_card, gametree::{equivalent_cards_filter, SGenericMinReachablePayout, SSnapshotCacheNone, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}},
     game::SGameResultGeneric,
-    game_analysis::{analyze_game, parser::{internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
-    rules::ruleset::VStockOrT,
+    game_analysis::{append_html_payout_table, parser::{internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
+    rules::{TRules, ruleset::VStockOrT},
 };
 use crate::utils::*;
 use std::fmt::Debug;
@@ -103,52 +104,78 @@ pub fn greet() {
     set_panic_hook();
 
     let document = unwrap!(unwrap!(web_sys::window()).document());
+    let mut vecahandstichseqcardepielement = Vec::new();
     match internal_analyze_sauspiel_html(
         SWebsysDocument(document.clone()),
-        |_game, _card, _epi, _element_played_card| (),
+        |game, card, epi, element_played_card| {
+            if game.stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}) {
+                vecahandstichseqcardepielement.push((
+                    (game.ahand.clone(), game.stichseq.clone()),
+                    card,
+                    epi,
+                    element_played_card.0
+                ));
+            }
+        },
     ) {
-        Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game), an_payout:_}) => {
-            let str_html = analyze_game(
-                game.map(
-                    /*fn_announcements*/|_| (),
-                    /*fn_determinerules*/|_| (),
-                    /*fn_ruleset*/|_| (),
-                    /*fn_rules*/|rules| rules,
-                ),
-                /*n_max_remaining_cards*/5,
-                /*b_simulate_all_hands*/false,
-            )
-                .generate_analysis_html(
-                    /*str_description*/"",
-                    /*str_link*/"", // TODO get URL
-                    /*str_openschafkopf_executable*/"openschafkopf",
-                    /*fn_output_card*/&|card, b_highlight| {
-                        let str_card = format!("{}", card).replace('Z', "X"); // TODO proper card formatter
-                        format!(r#"<span class="card-icon card-icon-by card-icon-{str_card}" title="{str_card}" {str_style}>{str_card}</span>"#,
-                            str_style = if b_highlight {r#"style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;""#} else {""},
-                        )
-                        /* // TODO Show table directly below played card, similar to this:
-                        <div class="game-protocol-trick-card position-1  " style="/*! text-align: center; */justify-content: center;">
-                            <a data-userid="119592" data-username="TiltBoi" class="profile-link" href="/profile/TiltBoi" style="margin: 0 auto;">TiltBoi</a>
-                            <span class="card-image by g2 HO" title="Der Rote" style="margin: 0 auto;">Der Rote</span>
-                            <table><tbody>
-                                <tr>
-                                    <td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-HA" title="HA" style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;">HA</span><span class="card-icon card-icon-by card-icon-HX" title="HX">HX</span><span class="card-icon card-icon-by card-icon-SA" title="SA">SA</span><span class="card-icon card-icon-by card-icon-SO" title="SO">SO</span></td><td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-EK" title="EK">EK</span></td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 5px;text-align: center;">100</td><td style="padding: 5px;text-align: center;">-100 </td>
-                                </tr>
-                            </tbody></table>
-                        </div>
-                        */
-                    },
+        Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}) => {
+            let rules = &game_finished.rules;
+            for ((ahand, stichseq), card_played, epi, element_played_card) in vecahandstichseqcardepielement {
+                let determinebestcardresult = unwrap!(determine_best_card(
+                    &stichseq,
+                    Box::new(std::iter::once(ahand.clone())) as Box<_>,
+                    equivalent_cards_filter(
+                        /*n_until_stichseq_len, determined heuristically*/7,
+                        rules.equivalent_when_on_same_hand(),
+                    ),
+                    &SGenericMinReachablePayout::<SMaxSelfishMinStrategyHigherKinded>::new(
+                        rules,
+                        verify_eq!(epi, unwrap!(stichseq.current_playable_stich().current_playerindex())),
+                        game_finished.expensifiers.clone(),
+                    ),
+                    /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO possibly use cache
+                    /*fn_visualizer*/SNoVisualization::factory(),
+                    /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
+                    /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
+                ));
+                let div_table = unwrap!(document.create_element("div"));
+                div_table.set_inner_html(&{
+                    let mut str_table = String::new();
+                    append_html_payout_table::<SMaxSelfishMinStrategyHigherKinded>(
+                        &mut str_table,
+                        rules,
+                        &ahand,
+                        &stichseq,
+                        &determinebestcardresult,
+                        card_played,
+                        /*fn_output_card*/&|card, b_highlight| {
+                            let str_card = format!("{}", card).replace('Z', "X"); // TODO proper card formatter
+                            format!(r#"<span class="card-icon card-icon-by card-icon-{str_card}" title="{str_card}" {str_style}>{str_card}</span>"#,
+                                str_style = if b_highlight {r#"style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;""#} else {""},
+                            )
+                            /* // TODO This would look better:
+                            <div class="game-protocol-trick-card position-1  " style="/*! text-align: center; */justify-content: center;">
+                                <a data-userid="119592" data-username="TiltBoi" class="profile-link" href="/profile/TiltBoi" style="margin: 0 auto;">TiltBoi</a>
+                                <span class="card-image by g2 HO" title="Der Rote" style="margin: 0 auto;">Der Rote</span>
+                                <table><tbody>
+                                    <tr>
+                                        <td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-HA" title="HA" style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;">HA</span><span class="card-icon card-icon-by card-icon-HX" title="HX">HX</span><span class="card-icon card-icon-by card-icon-SA" title="SA">SA</span><span class="card-icon card-icon-by card-icon-SO" title="SO">SO</span></td><td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-EK" title="EK">EK</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 5px;text-align: center;">100</td><td style="padding: 5px;text-align: center;">-100 </td>
+                                    </tr>
+                                </tbody></table>
+                            </div>
+                            */
+                        },
+                    );
+                    str_table
+                });
+                unwrap!(
+                    unwrap!(element_played_card.parent_element())
+                        .append_child(&div_table)
                 );
-            let htmlcol = document.get_elements_by_class_name("container content");
-            assert_eq!(htmlcol.length(), 1);
-            let div_container_content = unwrap!(htmlcol.item(0));
-            let div_analysis = unwrap!(document.create_element("div"));
-            div_analysis.set_inner_html(&str_html);
-            unwrap!(div_container_content.append_child(&div_analysis));
+            }
         },
         Ok(SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}) => {
             alert("Game does not contain any played cards.");
