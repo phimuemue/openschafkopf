@@ -3,7 +3,7 @@ mod utils;
 use wasm_bindgen::prelude::*;
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    ai::{determine_best_card, gametree::{equivalent_cards_filter, SGenericMinReachablePayout, SSnapshotCacheNone, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}},
+    ai::{determine_best_card, gametree::{SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}, stichoracle::SFilterByOracle},
     game::SGameResultGeneric,
     game_analysis::{append_html_payout_table, parser::{internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
     rules::{TRules, ruleset::VStockOrT},
@@ -121,19 +121,20 @@ pub fn greet() {
         Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}) => {
             let rules = &game_finished.rules;
             for ((ahand, stichseq), card_played, epi, element_played_card) in vecahandstichseqcardepielement {
-                let determinebestcardresult = unwrap!(determine_best_card(
+                let determinebestcardresult = unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_,_>(
                     &stichseq,
                     Box::new(std::iter::once(ahand.clone())) as Box<_>,
-                    equivalent_cards_filter(
-                        /*n_until_stichseq_len, determined heuristically*/7,
-                        rules.equivalent_when_on_same_hand(),
-                    ),
+                    /*fn_filter*/|stichseq, ahand| {
+                        SFilterByOracle::new(rules, ahand, stichseq)
+                    },
                     &SGenericMinReachablePayout::<SMaxSelfishMinStrategyHigherKinded>::new(
                         rules,
                         verify_eq!(epi, unwrap!(stichseq.current_playable_stich().current_playerindex())),
                         game_finished.expensifiers.clone(),
                     ),
-                    /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO possibly use cache
+                    /*fn_snapshotcache*/|rulestatecache| {
+                        rules.snapshot_cache::<SMaxSelfishMinStrategyHigherKinded>(rulestatecache)
+                    },
                     /*fn_visualizer*/SNoVisualization::factory(),
                     /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
                     /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
