@@ -369,7 +369,7 @@ impl SGameAnalysis {
                         fn_output_card,
                     ),
                 ));
-                append_html_payout_table(
+                append_html_payout_table::<SPerMinMaxStrategyHigherKinded>(
                     &mut str_per_card,
                     &game.rules,
                     &analysispercard.ahand,
@@ -385,15 +385,19 @@ impl SGameAnalysis {
     }
 }
 
-fn append_html_payout_table(
+fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(
     str_per_card: &mut String,
     rules: &SRules,
     ahand: &EnumMap<EPlayerIndex, SHand>,
     stichseq: &SStichSequence,
-    determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>,
+    determinebestcardresult: &SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<()>>>,
     card_played: ECard,
     fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->String,
-) {
+)
+    where
+        MinMaxStrategiesHK::Type<SPayoutStats<()>>: std::fmt::Debug,
+        MinMaxStrategiesHK::Type<[(String, f32); N_COLUMNS]>: PartialEq+Clone,
+{
     *str_per_card += "<table>";
     fn condensed_cheating_columns(atplstrf: &[(String, f32); N_COLUMNS]) -> impl Iterator<Item=&(String, f32)> {
         let otplstrf_first = verify!(atplstrf.first());
@@ -403,7 +407,7 @@ fn append_html_payout_table(
         );
         otplstrf_first.into_iter()
     }
-    let vecoutputline_cheating = table::</*TODO type annotations needed?*/SPerMinMaxStrategyHigherKinded, _>(
+    let vecoutputline_cheating = table::</*TODO type annotations needed?*/MinMaxStrategiesHK, _>(
         determinebestcardresult,
         rules,
         /*fn_loss_or_win*/&|n_payout, ()| n_payout.cmp(&0),
