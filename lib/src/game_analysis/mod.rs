@@ -31,7 +31,7 @@ pub struct SAnalysisCardAndPayout {
 
 #[derive(Clone)]
 pub struct SAnalysisPerCard {
-    stichseq: SStichSequence, // TODO this is space-inefficient
+    pub stichseq: SStichSequence, // TODO this is space-inefficient
     ahand: EnumMap<EPlayerIndex, SHand>, // TODO this is space-inefficient
     card_played: ECard,
     determinebestcardresult_cheating: SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>,
@@ -334,15 +334,9 @@ impl SGameAnalysis {
         + "<h2>Details</h2>"
         + type_inference!(&str, &format!("{}", self.vecanalysispercard.iter()
             .map(|analysispercard| {
-                let vecoutputline_cheating = table::</*TODO type annotations needed?*/SPerMinMaxStrategyHigherKinded, _>(
-                    &analysispercard.determinebestcardresult_cheating,
-                    &game.rules,
-                    /*fn_loss_or_win*/&|n_payout, ()| n_payout.cmp(&0),
-                ).into_output_lines();
                 // TODO simplify output (as it currently only shows results from one ahand)
                 let stichseq = &analysispercard.stichseq;
                 let ahand = &analysispercard.ahand;
-                let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
                 let mut str_per_card = format!(r###"<h3>{} <button onclick='
                     (function /*copyToClipboard*/(str, btn) {{
                         navigator.clipboard.writeText(str).then(
@@ -375,66 +369,92 @@ impl SGameAnalysis {
                         fn_output_card,
                     ),
                 ));
-                str_per_card += "<table>";
-                fn condensed_cheating_columns(atplstrf: &[(String, f32); N_COLUMNS]) -> impl Iterator<Item=&(String, f32)> {
-                    let otplstrf_first = verify!(atplstrf.first());
-                    assert_eq!(
-                        verify_eq!(unwrap!(otplstrf_first), &atplstrf[2]).1,
-                        atplstrf[1].1,
-                    );
-                    otplstrf_first.into_iter()
-                }
-                for outputline in vecoutputline_cheating.iter() {
-                    str_per_card += "<tr>";
-                    str_per_card += r#"<td style="padding: 5px;">"#;
-                    for &card in outputline.vect.iter() {
-                        str_per_card += &fn_output_card(card, /*b_border*/card==analysispercard.card_played);
-                    }
-                    str_per_card += "</td>";
-                    for (_emmstrategy, atplstrf) in outputline.perminmaxstrategyatplstrf.via_accessors() {
-                        // TODO simplify to one item per emmstrategy
-                        for (str_num, _f) in condensed_cheating_columns(atplstrf) {
-                            str_per_card += r#"<td style="padding: 5px;">"#;
-                            // TODO colored output as in suggest_card
-                            str_per_card += str_num;
-                            str_per_card += "</td>";
-                        }
-                    }
-                    str_per_card += "</tr>";
-                }
-                str_per_card += "<tr>";
-                // TODO? should veccard_non_allowed be a separate row in determine_best_card_table::table?
-                let veccard_allowed = game.rules.all_allowed_cards(
-                    stichseq,
-                    &ahand[epi_current],
+                append_html_payout_table(
+                    &mut str_per_card,
+                    &game.rules,
+                    &analysispercard.ahand,
+                    &analysispercard.stichseq,
+                    &analysispercard.determinebestcardresult_cheating,
+                    analysispercard.card_played,
+                    fn_output_card,
                 );
-                let mut veccard_non_allowed = ahand[epi_current].cards().iter()
-                    .filter_map(|card| if_then_some!(!veccard_allowed.contains(card), *card))
-                    .collect::<Vec<_>>();
-                game.rules.sort_cards_first_trumpf_then_farbe(&mut veccard_non_allowed);
-                if !veccard_non_allowed.is_empty() {
-                    str_per_card += r#"<td style="padding: 5px;">"#;
-                    for card in veccard_non_allowed {
-                        str_per_card += &fn_output_card(card, /*b_border*/false);
-                    }
-                    str_per_card += "</td>";
-                    unwrap!(write!(
-                        str_per_card,
-                        r#"<td colspan="{}" style="padding: 5px;">N.A.</td>"#,
-                        unwrap!(vecoutputline_cheating.iter()
-                            .map(|outputline|
-                                outputline.perminmaxstrategyatplstrf.via_accessors().into_iter().flat_map(|(_emmstrategy, atplstrf)| condensed_cheating_columns(atplstrf)).count()
-                            )
-                            .all_equal_value()),
-                    ));
-                }
-                str_per_card += "</tr>";
-                str_per_card += "</table>";
                 str_per_card
             }).format("")
         ))
         + "</body></html>"
     }
+}
+
+fn append_html_payout_table(
+    str_per_card: &mut String,
+    rules: &SRules,
+    ahand: &EnumMap<EPlayerIndex, SHand>,
+    stichseq: &SStichSequence,
+    determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>,
+    card_played: ECard,
+    fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->String,
+) {
+    *str_per_card += "<table>";
+    fn condensed_cheating_columns(atplstrf: &[(String, f32); N_COLUMNS]) -> impl Iterator<Item=&(String, f32)> {
+        let otplstrf_first = verify!(atplstrf.first());
+        assert_eq!(
+            verify_eq!(unwrap!(otplstrf_first), &atplstrf[2]).1,
+            atplstrf[1].1,
+        );
+        otplstrf_first.into_iter()
+    }
+    let vecoutputline_cheating = table::</*TODO type annotations needed?*/SPerMinMaxStrategyHigherKinded, _>(
+        determinebestcardresult,
+        rules,
+        /*fn_loss_or_win*/&|n_payout, ()| n_payout.cmp(&0),
+    ).into_output_lines();
+    for outputline in vecoutputline_cheating.iter() {
+        *str_per_card += "<tr>";
+        *str_per_card += r#"<td style="padding: 5px;">"#;
+        for &card in outputline.vect.iter() {
+            *str_per_card += &fn_output_card(card, /*b_border*/card==card_played);
+        }
+        *str_per_card += "</td>";
+        for (_emmstrategy, atplstrf) in outputline.perminmaxstrategyatplstrf.via_accessors() {
+            // TODO simplify to one item per emmstrategy
+            for (str_num, _f) in condensed_cheating_columns(atplstrf) {
+                *str_per_card += r#"<td style="padding: 5px;">"#;
+                // TODO colored output as in suggest_card
+                *str_per_card += str_num;
+                *str_per_card += "</td>";
+            }
+        }
+        *str_per_card += "</tr>";
+    }
+    *str_per_card += "<tr>";
+    // TODO? should veccard_non_allowed be a separate row in determine_best_card_table::table?
+    let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
+    let veccard_allowed = rules.all_allowed_cards(
+        stichseq,
+        &ahand[epi_current],
+    );
+    let mut veccard_non_allowed = ahand[epi_current].cards().iter()
+        .filter_map(|card| if_then_some!(!veccard_allowed.contains(card), *card))
+        .collect::<Vec<_>>();
+    rules.sort_cards_first_trumpf_then_farbe(&mut veccard_non_allowed);
+    if !veccard_non_allowed.is_empty() {
+        *str_per_card += r#"<td style="padding: 5px;">"#;
+        for card in veccard_non_allowed {
+            *str_per_card += &fn_output_card(card, /*b_border*/false);
+        }
+        *str_per_card += "</td>";
+        unwrap!(write!(
+            *str_per_card,
+            r#"<td colspan="{}" style="padding: 5px;">N.A.</td>"#,
+            unwrap!(vecoutputline_cheating.iter()
+                .map(|outputline|
+                    outputline.perminmaxstrategyatplstrf.via_accessors().into_iter().flat_map(|(_emmstrategy, atplstrf)| condensed_cheating_columns(atplstrf)).count()
+                )
+                .all_equal_value()),
+        ));
+    }
+    *str_per_card += "</tr>";
+    *str_per_card += "</table>";
 }
 
 fn write_html(path: std::path::PathBuf, str_html: &str) -> Result<std::path::PathBuf, failure::Error> {
