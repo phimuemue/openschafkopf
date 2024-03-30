@@ -16,6 +16,10 @@ extern "C" {
     fn alert(s: &str);
 }
 
+macro_rules! dbg_alert{($expr:expr) => {
+    if_dbg_else!({alert($expr)} {web_sys::console::log_1})(&$expr.into());
+}}
+
 #[derive(Debug)]
 struct SWebsysDocument(web_sys::Document);
 #[derive(Debug)]
@@ -179,10 +183,10 @@ pub fn greet() {
             }
         },
         Ok(SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}) => {
-            alert("Game does not contain any played cards.");
+            // Nothing to analyze for Stock.
         },
-        Err(err) => {
-            alert(&format!("Error parsing document: {:?}", err));
+        Err(err) => { // TODO we should distinguish between "Game not visible/found/accessible" and "HTML not understood"
+            dbg_alert!(&format!("Error parsing document: {:?}", err));
         },
     };
 }
