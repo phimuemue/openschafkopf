@@ -17,7 +17,7 @@ extern "C" {
 }
 
 macro_rules! dbg_alert{($expr:expr) => {
-    if_dbg_else!({alert($expr)} {web_sys::console::log_1})(&$expr.into());
+    if_dbg_else!({alert($expr)} {web_sys::console::log_1(&$expr.into())});
 }}
 
 #[derive(Debug)]
