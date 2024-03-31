@@ -17,3 +17,10 @@ cd sauspiel_webext
 cd webext
 ./webext/run_webext_in_browser.sh
 ```
+## How does it look?
+
+Starting with the fourth-to-last trick, below each played card, the extension lists the cards a player could have played and shows the associated win/loss under the assumption that all players maximize their own reward. 
+
+For [one of sauspiel's example games](https://www.sauspiel.de/spiele/1381879056) (**Caution**: Web design skills ahead.):
+
+![sauspiel webext screenshot](assets/screenshot.png)
