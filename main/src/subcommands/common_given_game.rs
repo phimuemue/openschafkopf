@@ -81,6 +81,7 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
         .arg(clap::Arg::new("constrain_hands")
             .long("constrain-hands")
             .takes_value(true)
+            .multiple_occurrences(true)
             .help("Constrain simulated hands")
             .long_help("Constrain simulated hands so that certain criteria are fulfilled. Example: \"4<ctx.trumpf(0) && ctx.ea(1)\" only considers card distributions where player 0 has more than 4 Trumpf and player 1 has Eichel-Ass. (Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).)") // TODO improve docs
         )
@@ -114,6 +115,26 @@ pub fn with_common_args<FnWithArgs>(
                 .map(|vecocard| (vecocard, str_ahand))
         )
         .collect::<Result<Vec<_>, _>>()?;
+    let vecotplconstraintstr = clapmatches.values_of("constrain_hands")
+        .map(|values_constrain_hands| -> Result<Vec<(SConstraint, &str)>, _> {
+            values_constrain_hands
+                .map(|str_constrain_hands|
+                    str_constrain_hands.parse::<SConstraint>()
+                        .map_err(|err| format_err!("Cannot parse hand constraints: {:?}", err))
+                        .map(|constraint| (
+                            constraint,
+                            str_constrain_hands,
+                        )),
+                )
+                .collect::<Result<Vec<_>,_>>()
+        })
+        .transpose()?
+        .map(|vectplconstraintstr: Vec<(SConstraint, &str)>| -> Vec<Option<(SConstraint, &str)>> {
+            vectplconstraintstr.into_iter().map(Some).collect()
+        })
+        .unwrap_or_else(|| vec!(None));
+    assert!(!vecotplconstraintstr.is_empty());
+    assert!(vecotplconstraintstr.iter().map(Option::is_some).all_equal());
     let vecstoss = match clapmatches.value_of("stoss")
         .map(|str_stoss| {
             if str_stoss.trim().is_empty() {
@@ -144,7 +165,10 @@ pub fn with_common_args<FnWithArgs>(
         ),
         vecstoss,
     );
-    for (vecocard_hand, str_ahand) in vectplvecocardstr_ahand.iter() {
+    for ((vecocard_hand, str_ahand), otplconstraintstr) in itertools::iproduct!(
+        vectplvecocardstr_ahand.iter(),
+        vecotplconstraintstr.iter() // TODO itertools support trailing comma
+    ) {
         let veccard_duplicate = veccard_stichseq.iter()
             .chain(vecocard_hand.iter().filter_map(|ocard| ocard.as_ref()))
             .duplicates()
@@ -248,13 +272,6 @@ pub fn with_common_args<FnWithArgs>(
                     // let hand iterators try to generate valid hands.
                 }
             }
-            let oconstraint = if_then_some!(let Some(str_constrain_hands)=clapmatches.value_of("constrain_hands"), {
-                let relation = str_constrain_hands.parse::<SConstraint>().map_err(|_|format_err!("Cannot parse hand constraints"))?;
-                if b_verbose {
-                    println!("Constraint parsed as: {}", relation);
-                }
-                relation
-            });
             let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
             use VChooseItAhand::*;
             let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
@@ -284,8 +301,19 @@ pub fn with_common_args<FnWithArgs>(
                 if b_verbose || !b_single_rules {
                     println!("Rules: {}", rules);
                 }
-                if b_verbose || 1</*b_single_itahand*/vectplvecocardstr_ahand.len() {
-                    println!("Hand(s): {}", str_ahand);
+                if b_verbose
+                    || 1</*b_single_itahand*/vectplvecocardstr_ahand.len()
+                    || 1<vecotplconstraintstr.len()
+                {
+                    println!("Hand(s): {} {}",
+                        str_ahand,
+                        match otplconstraintstr {
+                            Some((_constraint, str_constraint)) if 1<vecotplconstraintstr.len() => {
+                                format!("[{}]", str_constraint)
+                            },
+                            _ => "".to_string(),
+                        },
+                    );
                 }
                 fn_with_args(
                     Box::new(
@@ -298,8 +326,8 @@ pub fn with_common_args<FnWithArgs>(
                             /*fn_inspect*/|b_valid_so_far, ahand| {
                                 n_ahand_seen += 1;
                                 let b_valid = b_valid_so_far
-                                    && oconstraint.as_ref().map_or(true, |relation|
-                                        relation.eval(ahand, rules.clone())
+                                    && otplconstraintstr.as_ref().map_or(true, |(constraint, _str_constraint)|
+                                        constraint.eval(ahand, rules.clone())
                                     );
                                 if b_valid {
                                     n_ahand_valid += 1;
