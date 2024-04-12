@@ -42,12 +42,11 @@ regex = "1"
 serde_test = "1"
 
 [features]
-default = ["cli", "suggest-card", "parse", "analyze", "websocket", "hand-stats", "dl", "webext"]
+default = ["cli", "suggest-card", "parse", "analyze", "websocket", "hand-stats", "webext"]
 cli = []
 suggest-card = []
 parse = []
 analyze = []
 websocket = []
 hand-stats = []
-dl = []
 webext = ["suggest-card"]
