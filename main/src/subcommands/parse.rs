@@ -22,6 +22,9 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
         .arg(clap::Arg::new("neural-net")
             .long("neural-net")
         )
+        .arg(clap::Arg::new("raw")
+            .long("raw")
+        )
 }
 
 macro_rules! card_neural_network_mapping(($macro:ident) => {
@@ -88,6 +91,11 @@ fn neural_network_input_to_card(n: usize) -> Result<Option<ECard>, &'static str>
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let mut omapstrfile_neural_net = if_then_some!(clapmatches.is_present("neural-net"),
         std::collections::HashMap::new()
+    );
+    let opath_raw_parse = if_then_some!(clapmatches.is_present("raw"),
+        std::path::PathBuf::from(&format!("raw/{}",
+            chrono::Local::now().format("%Y%m%d%H%M%S"),
+        ))
     );
     fn write_columns<
         PlayerIndexActive: std::fmt::Display,
@@ -157,7 +165,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     ));
     super::glob_files_or_read_stdin(
         clapmatches.values_of("file").into_iter().flatten(),
-        |opath, str_input| {
+        |opath, str_input, i_input| {
             if let Ok(ref gameresult@SGameResultGeneric{stockorgame: VStockOrT::OrT(ref game), ..}) = analyze_sauspiel_html(&str_input) {
                 let mut game_csv = SGame::new(
                     game.aveccard.clone(),
@@ -230,8 +238,22 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         );
                     }
                 }
+                if let Some(ref path_raw_parse) = opath_raw_parse {
+                    let path_gameresult = path_raw_parse.join(super::gameresult_to_dir(gameresult));
+                    unwrap!(std::fs::create_dir_all(&path_gameresult));
+                    unwrap!(unwrap!(std::fs::File::create(
+                        path_gameresult.join(format!("{}.html", i_input))
+                    )).write_all(str_input.as_bytes()));
+                }
             } else {
                 eprintln!("Nothing found in {:?}: Trying to continue.", opath);
+                if let Some(ref path_raw_parse) = opath_raw_parse {
+                    let path_err = path_raw_parse.join("error");
+                    unwrap!(std::fs::create_dir_all(&path_err));
+                    unwrap!(unwrap!(std::fs::File::create(
+                        path_err.join(format!("{}.html", i_input))
+                    )).write_all(str_input.as_bytes()));
+                }
             }
         },
     )?;

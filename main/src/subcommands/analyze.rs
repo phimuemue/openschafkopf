@@ -31,7 +31,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let mut vecgamewithdesc = Vec::new();
     super::glob_files_or_read_stdin(
         clapmatches.values_of("sauspiel-files").into_iter().flatten(),
-        |opath, str_input| {
+        |opath, str_input, _i_input| {
             let str_path = match &opath {
                 Some(path) => path.to_string_lossy(),
                 None => Cow::Borrowed("stdin"), // hope that path is not "stdin"

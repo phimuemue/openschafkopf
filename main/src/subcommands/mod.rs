@@ -74,8 +74,13 @@ pub fn ai(subcommand_matches: &clap::ArgMatches) -> SAi {
 
 pub fn glob_files_or_read_stdin<'str_glob>(
     itstr_glob: impl Iterator<Item=&'str_glob str>,
-    mut fn_ok: impl FnMut(Option<std::path::PathBuf>, String),
+    mut fn_ok: impl FnMut(Option<std::path::PathBuf>, String, usize),
 ) -> Result<(), Error> {
+    let mut i_ok = 0;
+    let mut fn_ok = move |opath, str_ok| {
+        fn_ok(opath, str_ok, i_ok);
+        i_ok += 1;
+    };
     let mut b_from_file = false;
     for str_glob in itstr_glob {
         b_from_file = true;
