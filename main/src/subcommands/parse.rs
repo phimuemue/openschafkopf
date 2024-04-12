@@ -19,6 +19,9 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
     clap::Command::new(str_subcommand)
         .about("Parse a game into a simple format")
         .arg(input_files_arg("file"))
+        .arg(clap::Arg::new("neural-net")
+            .long("neural-net")
+        )
 }
 
 macro_rules! card_neural_network_mapping(($macro:ident) => {
@@ -83,7 +86,9 @@ fn neural_network_input_to_card(n: usize) -> Result<Option<ECard>, &'static str>
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
-    let mut mapstrfile = std::collections::HashMap::new();
+    let mut omapstrfile_neural_net = if_then_some!(clapmatches.is_present("neural-net"),
+        std::collections::HashMap::new()
+    );
     fn write_columns<
         PlayerIndexActive: std::fmt::Display,
         PlayerIndexStichSeq: std::fmt::Display,
@@ -147,7 +152,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         }
         unwrap!(write!(wrtr, "\n"));
     }
-    let path_dst = std::path::PathBuf::from(&format!("neural_network_input/{}",
+    let path_neural_network = std::path::PathBuf::from(&format!("neural_network_input/{}",
         chrono::Local::now().format("%Y%m%d%H%M%S"),
     ));
     super::glob_files_or_read_stdin(
@@ -163,73 +168,77 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     game.rules.clone(),
                 );
                 assert_eq!(game.stichseq.visible_stichs(), game.stichseq.completed_stichs());
-                let path_gameresult = path_dst.join(super::gameresult_to_dir(gameresult));
-                let oepi_active = verify_eq!(game_csv.rules.playerindex(), game.rules.playerindex());
-                let file = mapstrfile.entry(path_gameresult.clone())
-                    .or_insert_with(|| {
-                        unwrap!(std::fs::create_dir_all(&path_gameresult));
-                        let mut file = std::io::BufWriter::new(unwrap!(std::fs::File::create(path_gameresult.join("csv.csv"))));
-                        write_columns(
-                            &mut file,
-                            oepi_active.map(|_epi| "epi_active"),
-                            /*fn_card_in_hand*/|i_card, _card| format!("card_hand_{}", i_card),
-                            /*fn_card_allowed*/|i_card, _card| format!("card_allowed_{}", i_card),
-                            &game.stichseq,
-                            /*fn_card_stichseq*/|i_card, _ocard| format!("card_stichseq_{}", i_card),
-                            /*fn_epi_stichseq*/|i_card, _oepi| format!("epi_stichseq_{}", i_card),
-                            /*fn_points_for_player*/|epi| format!("n_points_{}", epi),
-                            /*fn_stichs_for_player*/|epi| format!("n_stichs_{}", epi),
-                            /*fn_result_column*/|epi, card| format!("{}_at_epi{}", card, epi.to_usize()),
-                        );
-                        file
-                    });
-                let mut rulestatecache = SRuleStateCache::new(
-                    (&game_csv.ahand, &game_csv.stichseq),
-                    &game_csv.rules,
-                );
-                for stich in verify_eq!(game.stichseq.completed_stichs(), game.stichseq.visible_stichs()).iter().map(SFullStich::new) {
-                    for (epi, &card_zugeben) in stich.iter() {
-                        assert_eq!(epi, unwrap!(game_csv.which_player_can_do_something()).0);
-                        let veccard_allowed = game_csv.rules.all_allowed_cards(&game_csv.stichseq, &game_csv.ahand[epi]);
-                        let bool_to_usize = usize::from;
-                        write_columns(
-                            file,
-                            oepi_active,
-                            /*fn_card_in_hand*/|_i_card, card| bool_to_usize(game_csv.ahand[epi].contains(card)),
-                            /*fn_card_allowed*/|_i_card, card| bool_to_usize(veccard_allowed.contains(&card)),
-                            &game_csv.stichseq,
-                            /*fn_card_stichseq*/|_i_card, ocard| {
-                                card_to_neural_network_input(ocard)
-                            },
-                            /*fn_epi_stichseq*/|_i_card, oepi| {
-                                if let Some(epi) = oepi {
-                                    verify_ne!(epi.to_usize() + 1, 0)
-                                } else {
-                                    0
-                                }
-                            },
-                            /*fn_points_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].n_point,
-                            /*fn_stichs_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].n_stich,
-                            /*fn_result_column*/|epi, card| bool_to_usize(rulestatecache.fixed.who_has_card(card)==epi) ,
-                        );
-                        unwrap!(game_csv.zugeben(card_zugeben, epi)); // validated by analyze_sauspiel_html
-                    }
-                    rulestatecache.register_stich(stich, game_csv.rules.winner_index(stich));
-                    debug_assert_eq!(
-                        rulestatecache,
-                        SRuleStateCache::new(
-                            (&game_csv.ahand, &game_csv.stichseq),
-                            &game_csv.rules,
-                        ),
+                if let Some(ref mut mapstrfile_neural_net) = omapstrfile_neural_net {
+                    let path_gameresult = path_neural_network.join(super::gameresult_to_dir(gameresult));
+                    let oepi_active = verify_eq!(game_csv.rules.playerindex(), game.rules.playerindex());
+                    let file = mapstrfile_neural_net.entry(path_gameresult.clone())
+                        .or_insert_with(|| {
+                            unwrap!(std::fs::create_dir_all(&path_gameresult));
+                            let mut file = std::io::BufWriter::new(unwrap!(std::fs::File::create(path_gameresult.join("csv.csv"))));
+                            write_columns(
+                                &mut file,
+                                oepi_active.map(|_epi| "epi_active"),
+                                /*fn_card_in_hand*/|i_card, _card| format!("card_hand_{}", i_card),
+                                /*fn_card_allowed*/|i_card, _card| format!("card_allowed_{}", i_card),
+                                &game.stichseq,
+                                /*fn_card_stichseq*/|i_card, _ocard| format!("card_stichseq_{}", i_card),
+                                /*fn_epi_stichseq*/|i_card, _oepi| format!("epi_stichseq_{}", i_card),
+                                /*fn_points_for_player*/|epi| format!("n_points_{}", epi),
+                                /*fn_stichs_for_player*/|epi| format!("n_stichs_{}", epi),
+                                /*fn_result_column*/|epi, card| format!("{}_at_epi{}", card, epi.to_usize()),
+                            );
+                            file
+                        });
+                    let mut rulestatecache = SRuleStateCache::new(
+                        (&game_csv.ahand, &game_csv.stichseq),
+                        &game_csv.rules,
                     );
+                    for stich in verify_eq!(game.stichseq.completed_stichs(), game.stichseq.visible_stichs()).iter().map(SFullStich::new) {
+                        for (epi, &card_zugeben) in stich.iter() {
+                            assert_eq!(epi, unwrap!(game_csv.which_player_can_do_something()).0);
+                            let veccard_allowed = game_csv.rules.all_allowed_cards(&game_csv.stichseq, &game_csv.ahand[epi]);
+                            let bool_to_usize = usize::from;
+                            write_columns(
+                                file,
+                                oepi_active,
+                                /*fn_card_in_hand*/|_i_card, card| bool_to_usize(game_csv.ahand[epi].contains(card)),
+                                /*fn_card_allowed*/|_i_card, card| bool_to_usize(veccard_allowed.contains(&card)),
+                                &game_csv.stichseq,
+                                /*fn_card_stichseq*/|_i_card, ocard| {
+                                    card_to_neural_network_input(ocard)
+                                },
+                                /*fn_epi_stichseq*/|_i_card, oepi| {
+                                    if let Some(epi) = oepi {
+                                        verify_ne!(epi.to_usize() + 1, 0)
+                                    } else {
+                                        0
+                                    }
+                                },
+                                /*fn_points_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].n_point,
+                                /*fn_stichs_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].n_stich,
+                                /*fn_result_column*/|epi, card| bool_to_usize(rulestatecache.fixed.who_has_card(card)==epi) ,
+                            );
+                            unwrap!(game_csv.zugeben(card_zugeben, epi)); // validated by analyze_sauspiel_html
+                        }
+                        rulestatecache.register_stich(stich, game_csv.rules.winner_index(stich));
+                        debug_assert_eq!(
+                            rulestatecache,
+                            SRuleStateCache::new(
+                                (&game_csv.ahand, &game_csv.stichseq),
+                                &game_csv.rules,
+                            ),
+                        );
+                    }
                 }
             } else {
                 eprintln!("Nothing found in {:?}: Trying to continue.", opath);
             }
         },
     )?;
-    for (_str_path, file) in mapstrfile.iter_mut() {
-        unwrap!(file.flush());
+    if let Some(mut mapstrfile_neural_net) = omapstrfile_neural_net {
+        for (_str_path, file) in mapstrfile_neural_net.iter_mut() {
+            unwrap!(file.flush());
+        }
     }
     Ok(())
 }
