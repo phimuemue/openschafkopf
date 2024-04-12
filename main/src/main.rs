@@ -39,7 +39,6 @@ fn main() -> Result<(), Error> {
         ([cfg(feature="suggest-card")] suggest_card, "suggest-card")
         ([cfg(feature="hand-stats")] hand_stats, "hand-stats")
         // misc
-        ([cfg(feature="dl")] dl, "dl")
         ([cfg(feature="parse")] parse, "parse")
         ([cfg(feature="webext")] webext, "webext")
     );
