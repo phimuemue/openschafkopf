@@ -818,10 +818,7 @@ make_redirect_function!(
         log_in_out("SetWindowTextA", (hwnd, lpcstr,), |hwnd, lpcstr: LPCSTR| {
             //info!("SetWindowText {:?}", OsString::new(lpcstr));
             info!("SetWindowTextA: {:?}", CString::new(
-                unsafe{scan_until_0(as_ptr!(u8, lpcstr), None)}
-                    .iter()
-                    .map(|&c| c as u8)
-                    .collect::<Vec<_>>()
+                unsafe{scan_until_0(as_ptr!(u8, lpcstr), None)}.to_vec(),
             ));
             unsafe{call_original(hwnd, lpcstr)}
         })
