@@ -440,8 +440,8 @@ make_redirect_function!(
                         },
                     }
                 } else if 
-                    (u_msg==NETSCHK_MSG_SPIELABFRAGE_1 && lparam==N_INDEX_GAST)
-                    || (u_msg==NETSCHK_MSG_SPIELABFRAGE_2 && lparam==N_INDEX_GAST)
+                    lparam==N_INDEX_GAST
+                    && (u_msg==NETSCHK_MSG_SPIELABFRAGE_1 || u_msg==NETSCHK_MSG_SPIELABFRAGE_2)
                 {
                     let hwnd_spielabfrage = unsafe{*as_ptr!(mut HWND, 0x004bd4dc)};
                     if 0!=unsafe{IsWindow(hwnd_spielabfrage)} {
