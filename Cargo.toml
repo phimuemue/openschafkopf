@@ -13,9 +13,6 @@ authors = ["openschafkopf"]
 edition = "2021"
 license-file = "LICENSE"
 
-[profile.release]
-codegen-units = 1
-
 [profile.release-profile]
 inherits = "release"
 debug = true
