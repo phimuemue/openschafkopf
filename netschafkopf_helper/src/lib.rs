@@ -381,8 +381,8 @@ make_redirect_function!(
                     _ => Err(()), // no expectation at all
                 });
                 info!("{:?}", resoknownduaktion_expected);
+                let retval = unsafe{call_original(hwnd, u_msg, wparam, lparam)};
                 if let Ok(_oknownduaktion_expected) = resoknownduaktion_expected {
-                    let retval = unsafe{call_original(hwnd, u_msg, wparam, lparam)};
                     match unsafe{scan_until_0(as_ptr!(u8, 0x004c8438), None)} {
                         b"Du ? Kartenwahl" => {
                             // "Vorschlag machen"
@@ -439,9 +439,7 @@ make_redirect_function!(
                             info!("Unknown status: {:?}", str_status);
                         },
                     }
-                    return retval
                 } else {
-                    let retval = unsafe{call_original(hwnd, u_msg, wparam, lparam)};
                     if 
                         (u_msg==NETSCHK_MSG_SPIELABFRAGE_1 && lparam==N_INDEX_GAST)
                         || (u_msg==NETSCHK_MSG_SPIELABFRAGE_2 && lparam==N_INDEX_GAST)
@@ -506,8 +504,8 @@ make_redirect_function!(
                             }
                         }
                     }
-                    retval
                 }
+                retval
             },
         )
     },
