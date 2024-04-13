@@ -354,7 +354,7 @@ make_redirect_function!(
                         0!=(unsafe{GetKeyState(VK_CONTROL)}&unsafe{std::mem::transmute::<_,SHORT>(0x8000u16)})
                         && wparam==unsafe{std::mem::transmute(0x4F)} // "O key" https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
                     {
-                        Some(format!("WM_KEYDOWN, Ctrl+O"))
+                        Some("WM_KEYDOWN, Ctrl+O".to_string())
                     } else {
                         None
                     }
