@@ -21,16 +21,13 @@ arrayvec = "0"
 rayon = "1"
 toml = "0"
 as_num = "0"
-num-integer = "0"
 failure = "0" # TODO remove this dependency
 derive-new = "0"
 chrono = "0"
 # TODO can we have a cfg feature "sauspiel" that does not use the corresponding crates?
 select = "0"
-glob = "0"
 openschafkopf_util = {path = "../util"}
 serde = {version = "1", features = ["derive"]}
-serde_json = "1"
 serde_repr = "0"
 enum_dispatch = "0.3.12"
 
