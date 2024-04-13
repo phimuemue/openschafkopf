@@ -112,6 +112,19 @@ macro_rules! as_ptr{
 }
 
 #[cfg(windows)]
+macro_rules! ptr_as {
+    ($p:expr) => {
+        ptr_as!($p, _)
+    };
+    ($p:expr, $ty_dst:ty) => {{
+        fn is_ptr<T>(_p: *const T) {}
+        is_ptr($p);
+        #[allow(clippy::transmutes_expressible_as_ptr_casts)]
+        std::mem::transmute::<_, $ty_dst>($p)
+    }};
+}
+
+#[cfg(windows)]
 #[no_mangle]
 #[allow(non_snake_case, unused_variables)]
 extern "system" fn DllMain(
@@ -1002,7 +1015,7 @@ make_redirect_function!(
                                 hwnd_list,
                                 LB_SELECTSTRING,
                                 std::mem::transmute(-1), // search entire list
-                                std::mem::transmute(str_item.as_ptr()),
+                                ptr_as!(str_item.as_ptr()),
                             )},
                             LB_ERR
                         );
@@ -1014,7 +1027,7 @@ make_redirect_function!(
                                     n_id_list,
                                     LBN_SELCHANGE,
                                 )),
-                                std::mem::transmute(hwnd_list),
+                                ptr_as!(hwnd_list),
                             )},
                             LB_ERR
                         );
