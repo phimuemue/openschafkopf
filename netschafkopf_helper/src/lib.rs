@@ -439,69 +439,67 @@ make_redirect_function!(
                             info!("Unknown status: {:?}", str_status);
                         },
                     }
-                } else {
-                    if 
-                        (u_msg==NETSCHK_MSG_SPIELABFRAGE_1 && lparam==N_INDEX_GAST)
-                        || (u_msg==NETSCHK_MSG_SPIELABFRAGE_2 && lparam==N_INDEX_GAST)
-                    {
-                        let hwnd_spielabfrage = unsafe{*as_ptr!(mut HWND, 0x004bd4dc)};
-                        if 0!=unsafe{IsWindow(hwnd_spielabfrage)} {
-                            // TODO can we move this to dialogproc_spielabfrage?
-                            let mut vecch_orig : Vec<CHAR> = vec![0; 1000];
-                            unsafe{netschk_maybe_vorschlag(vecch_orig.as_mut_ptr(), vecch_orig.len())};
-                            let vecch = vecch_orig.into_iter()
-                                .map(|c| c as u8)
-                                .filter(|&c| c!=0)
-                                .collect::<Vec<_>>();
-                            if let Err(str_error) = click_button(
-                                hwnd_spielabfrage,
-                                /*n_id_dlg_item*/match vecch.as_slice() {
-                                    b"Weiter" => /*"Nein"*/1081,
-                                    | b"Rufspiel"
-                                    | b"Mit der Eichel-Ass"
-                                    | b"Mit der Gr\xFCn-Ass"
-                                    | b"Mit der Schellen-Ass"
-                                    | b"Solo"
-                                    | b"Eichel-Solo"
-                                    | b"Gr\xFCn-Solo"
-                                    | b"Herz-Solo"
-                                    | b"Schellen-Solo"
-                                    | b"Wenz"
-                                    | b"Farbwenz"
-                                    | b"Eichel-Wenz"
-                                    | b"Gr\xFCn-Wenz"
-                                    | b"Herz-Wenz"
-                                    | b"Schellen-Wenz"
-                                    | b"Geier"
-                                    | b"Farbgeier"
-                                    | b"Eichel-Geier"
-                                    | b"Gr\xFCn-Geier"
-                                    | b"Herz-Geier"
-                                    | b"Schellen-Geier"
-                                    | b"Solo Tout"
-                                    | b"Eichel-Solo Tout"
-                                    | b"Gr\xFCn-Solo Tout"
-                                    | b"Herz-Solo Tout"
-                                    | b"Schellen-Solo Tout"
-                                    | b"Wenz Tout"
-                                    | b"Eichel-Wenz Tout"
-                                    | b"Gr\xFCn-Wenz Tout"
-                                    | b"Herz-Wenz Tout"
-                                    | b"Schellen-Wenz Tout"
-                                    | b"Geier Tout"
-                                    | b"Eichel-Geier Tout"
-                                    | b"Gr\xFCn-Geier Tout"
-                                    | b"Herz-Geier Tout"
-                                    | b"Schellen-Geier Tout"
-                                    | b"Sie"
-                                    | b"Bettel" => /*"Ja"*/1082,
-                                    _ => panic!("Unknown Vorschlag: {:?}", vecch)
-                                },
-                                /*b_allow_invisible*/false,
-                                ESendOrPost::Send,
-                            ) {
-                                info!("click_button failed: {}", str_error);
-                            }
+                } else if 
+                    (u_msg==NETSCHK_MSG_SPIELABFRAGE_1 && lparam==N_INDEX_GAST)
+                    || (u_msg==NETSCHK_MSG_SPIELABFRAGE_2 && lparam==N_INDEX_GAST)
+                {
+                    let hwnd_spielabfrage = unsafe{*as_ptr!(mut HWND, 0x004bd4dc)};
+                    if 0!=unsafe{IsWindow(hwnd_spielabfrage)} {
+                        // TODO can we move this to dialogproc_spielabfrage?
+                        let mut vecch_orig : Vec<CHAR> = vec![0; 1000];
+                        unsafe{netschk_maybe_vorschlag(vecch_orig.as_mut_ptr(), vecch_orig.len())};
+                        let vecch = vecch_orig.into_iter()
+                            .map(|c| c as u8)
+                            .filter(|&c| c!=0)
+                            .collect::<Vec<_>>();
+                        if let Err(str_error) = click_button(
+                            hwnd_spielabfrage,
+                            /*n_id_dlg_item*/match vecch.as_slice() {
+                                b"Weiter" => /*"Nein"*/1081,
+                                | b"Rufspiel"
+                                | b"Mit der Eichel-Ass"
+                                | b"Mit der Gr\xFCn-Ass"
+                                | b"Mit der Schellen-Ass"
+                                | b"Solo"
+                                | b"Eichel-Solo"
+                                | b"Gr\xFCn-Solo"
+                                | b"Herz-Solo"
+                                | b"Schellen-Solo"
+                                | b"Wenz"
+                                | b"Farbwenz"
+                                | b"Eichel-Wenz"
+                                | b"Gr\xFCn-Wenz"
+                                | b"Herz-Wenz"
+                                | b"Schellen-Wenz"
+                                | b"Geier"
+                                | b"Farbgeier"
+                                | b"Eichel-Geier"
+                                | b"Gr\xFCn-Geier"
+                                | b"Herz-Geier"
+                                | b"Schellen-Geier"
+                                | b"Solo Tout"
+                                | b"Eichel-Solo Tout"
+                                | b"Gr\xFCn-Solo Tout"
+                                | b"Herz-Solo Tout"
+                                | b"Schellen-Solo Tout"
+                                | b"Wenz Tout"
+                                | b"Eichel-Wenz Tout"
+                                | b"Gr\xFCn-Wenz Tout"
+                                | b"Herz-Wenz Tout"
+                                | b"Schellen-Wenz Tout"
+                                | b"Geier Tout"
+                                | b"Eichel-Geier Tout"
+                                | b"Gr\xFCn-Geier Tout"
+                                | b"Herz-Geier Tout"
+                                | b"Schellen-Geier Tout"
+                                | b"Sie"
+                                | b"Bettel" => /*"Ja"*/1082,
+                                _ => panic!("Unknown Vorschlag: {:?}", vecch)
+                            },
+                            /*b_allow_invisible*/false,
+                            ESendOrPost::Send,
+                        ) {
+                            info!("click_button failed: {}", str_error);
                         }
                     }
                 }
