@@ -2462,16 +2462,17 @@ mod tests {
                                 ))
                                 .collect::<Vec<_>>()
                         }}
+                        let determinebestcardresult_simple = fwd!(
+                            _,
+                            /*fn_make_filter*/SNoFilter::factory(),
+                        );
                         assert_eq!(
+                            determinebestcardresult_simple,
                             fwd!(
                                 SFilterByOracle,
                                 /*fn_make_filter*/|stichseq, ahand| {
                                     SFilterByOracle::new(&game.rules, ahand, stichseq)
                                 },
-                            ),
-                            fwd!(
-                                _,
-                                /*fn_make_filter*/SNoFilter::factory(),
                             ),
                         );
                     }
