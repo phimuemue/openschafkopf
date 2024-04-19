@@ -361,9 +361,12 @@ mod tests {
         util::*,
         ai::{
             determine_best_card,
-            SMinReachablePayout,
+            SMinReachablePayoutBase,
             SNoFilter,
             SNoVisualization,
+            SPrunerNothing,
+            SAlphaBetaPrunerNone,
+            SPerMinMaxStrategyHigherKinded,
             SRuleStateCacheFixed,
             SSnapshotCacheNone,
         },
@@ -2441,12 +2444,18 @@ mod tests {
                 /*fn_check_ask_for_card*/|game: &SGameGeneric<SRuleSet, (), ()>| {
                     if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
                         //let epi = unwrap!(game.current_playable_stich().current_playerindex());
-                        macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr,) => {
+                        macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr, $fn_alphabetapruner:expr,) => {
                             unwrap!(determine_best_card::<$ty_fn_make_filter,_,_,_,_,_,_,_,_>(
                                 &game.stichseq,
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                                 $fn_make_filter,
-                                &|_stichseq, _ahand| SMinReachablePayout::new_from_game(game),
+                                &|stichseq, ahand| <SMinReachablePayoutBase<SPrunerNothing, SPerMinMaxStrategyHigherKinded, _>>::new_with_pruner(
+                                    &game.rules,
+                                    unwrap!(game.current_playable_stich().current_playerindex()),
+                                    game.expensifiers.clone(),
+                                    #[allow(clippy::redundant_closure_call)]
+                                    $fn_alphabetapruner(stichseq, ahand),
+                                ),
                                 /*fn_snapshotcache*/SSnapshotCacheNone::factory(),
                                 SNoVisualization::factory(),
                                 /*fn_inspect*/&|_,_,_,_| {},
@@ -2465,6 +2474,7 @@ mod tests {
                         let determinebestcardresult_simple = fwd!(
                             _,
                             /*fn_make_filter*/SNoFilter::factory(),
+                            /*fn_alphabetapruner*/|_stichseq, _ahand| SAlphaBetaPrunerNone,
                         );
                         assert_eq!(
                             determinebestcardresult_simple,
@@ -2473,6 +2483,7 @@ mod tests {
                                 /*fn_make_filter*/|stichseq, ahand| {
                                     SFilterByOracle::new(&game.rules, ahand, stichseq)
                                 },
+                                /*fn_alphabetapruner*/|_stichseq, _ahand| SAlphaBetaPrunerNone,
                             ),
                         );
                     }
