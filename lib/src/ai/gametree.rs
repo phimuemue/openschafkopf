@@ -451,17 +451,20 @@ pub struct SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBeta
     phantom: std::marker::PhantomData<(Pruner, MinMaxStrategiesHK)>,
 }
 impl<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> {
-    pub fn new(rules: &'rules SRules, epi: EPlayerIndex, expensifiers: SExpensifiers) -> Self
-        where
-            AlphaBetaPruner: Default,
-    {
+    pub fn new_with_pruner(rules: &'rules SRules, epi: EPlayerIndex, expensifiers: SExpensifiers, alphabetapruner: AlphaBetaPruner) -> Self {
         Self {
             rules,
             epi,
             expensifiers,
-            alphabetapruner: Default::default(),
+            alphabetapruner,
             phantom: Default::default(),
         }
+    }
+    pub fn new(rules: &'rules SRules, epi: EPlayerIndex, expensifiers: SExpensifiers) -> Self
+        where
+            AlphaBetaPruner: Default,
+    {
+        Self::new_with_pruner(rules, epi, expensifiers, /*alphabetapruner*/Default::default())
     }
     pub fn new_from_game<Ruleset>(game: &'rules SGameGeneric<Ruleset, (), ()>) -> Self
         where

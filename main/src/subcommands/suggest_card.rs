@@ -339,8 +339,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         ),
                     },
                     match (clapmatches.is_present("abprune")) {
-                        true => SAlphaBetaPruner,
-                        false => SAlphaBetaPrunerNone,
+                        true => (|_stichseq, _ahand| SAlphaBetaPruner),
+                        false => (|_stichseq, _ahand| SAlphaBetaPrunerNone),
                     },
                     match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
                         true => make_snapshot_cache,
@@ -359,7 +359,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 )
             }}
             if clapmatches.is_present("no-details") {
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident,), $AlphaBetaPruner:ident, $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident,), $fn_alphabetapruner:expr, $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let mapemmstrategypaystats = itahand
                         .enumerate()
                         .par_bridge() // TODO can we derive a true parallel iterator?
@@ -369,10 +369,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 (&mut ahand.clone(), &mut stichseq.clone()),
                                 rules,
                                 &$func_filter_allowed_cards,
-                                &<SMinReachablePayoutBase<$pruner, $MinMaxStrategiesHK, $AlphaBetaPruner>>::new(
+                                &<SMinReachablePayoutBase<$pruner, $MinMaxStrategiesHK, _>>::new_with_pruner(
                                     rules,
                                     epi_position,
                                     expensifiers.clone(),
+                                    #[allow(clippy::redundant_closure_call)]
+                                    $fn_alphabetapruner(stichseq, &ahand),
                                 ),
                                 &$fn_snapshotcache::<$MinMaxStrategiesHK>(rules),
                                 &mut visualizer,
@@ -416,7 +418,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 forward_with_args!(forward);
             } else {
                 // we are interested in payout => single-card-optimization useless
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident,), $AlphaBetaPruner:ident, $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident,), $fn_alphabetapruner:expr, $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                     let determinebestcardresult = determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_,_>( // TODO avoid explicit types
                         stichseq,
@@ -430,10 +432,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 })
                         ) as Box<_>,
                         $func_filter_allowed_cards,
-                        &|_stichseq, _ahand| <SMinReachablePayoutBase<$pruner, $MinMaxStrategiesHK, $AlphaBetaPruner>>::new(
+                        &|stichseq, ahand| <SMinReachablePayoutBase<$pruner, $MinMaxStrategiesHK, _>>::new_with_pruner(
                             rules,
                             epi_position,
                             expensifiers.clone(),
+                            #[allow(clippy::redundant_closure_call)]
+                            $fn_alphabetapruner(stichseq, ahand),
                         ),
                         $fn_snapshotcache::<$MinMaxStrategiesHK>(rules),
                         $fn_visualizer,
