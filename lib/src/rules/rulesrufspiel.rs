@@ -359,6 +359,16 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
     {
         self.rufspielpayout.snapshot_cache::<MinMaxStrategiesHK>(self, rulestatecachefixed)
     }
+    fn alpha_beta_pruner_lohi_values(&self) -> Option<Box<dyn Fn(&SRuleStateCacheFixed)->EnumMap<EPlayerIndex, ELoHi> + Sync>> {
+        let epi_self = self.epi;
+        let card_rufsau = self.rufsau();
+        Some(Box::new(move |rulestatecache| {
+            let mut mapepilohi = EPlayerIndex::map_from_fn(|_| ELoHi::Lo);
+            mapepilohi[epi_self] = ELoHi::Hi;
+            mapepilohi[verify_ne!(rulestatecache.who_has_card(card_rufsau), epi_self)] = ELoHi::Hi;
+            mapepilohi
+        }))
+    }
 
     fn heuristic_active_occurence_probability(&self) -> Option<f64> {
         Some(0.09)

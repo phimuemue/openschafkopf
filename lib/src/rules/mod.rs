@@ -452,6 +452,7 @@ pub trait TRules : fmt::Display + Sync + fmt::Debug + Send + Clone {
     }
 
     fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>> where MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone;
+    fn alpha_beta_pruner_lohi_values(&self) -> Option<Box<dyn Fn(&SRuleStateCacheFixed)->EnumMap<EPlayerIndex, ELoHi> + Sync>>;
 
     fn heuristic_active_occurence_probability(&self) -> Option<f64> {
         // This estimates the probability of the respective rules being played.

@@ -14,4 +14,13 @@ macro_rules! impl_single_play {() => {
             (epi==self.epi)==(vecstoss.len()%2==1)
         }
     }
+
+    fn alpha_beta_pruner_lohi_values(&self) -> Option<Box<dyn Fn(&SRuleStateCacheFixed)->EnumMap<EPlayerIndex, ELoHi> + Sync>> {
+        let epi_self = self.epi;
+        Some(Box::new(move |_rulestatecache| {
+            let mut mapepilohi = EPlayerIndex::map_from_fn(|_| ELoHi::Lo);
+            mapepilohi[epi_self] = ELoHi::Hi;
+            mapepilohi
+        }))
+    }
 }}

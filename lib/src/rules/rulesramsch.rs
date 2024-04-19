@@ -232,4 +232,8 @@ impl TRules for SRulesRamsch {
             payload_point_stich_count
         })
     }
+
+    fn alpha_beta_pruner_lohi_values(&self) -> Option<Box<dyn Fn(&SRuleStateCacheFixed)->EnumMap<EPlayerIndex, ELoHi> + Sync>> {
+        None
+    }
 }
