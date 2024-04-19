@@ -366,7 +366,10 @@ mod tests {
             SNoVisualization,
             SPrunerNothing,
             SAlphaBetaPrunerNone,
+            SAlphaBetaPruner,
             SPerMinMaxStrategyHigherKinded,
+            SMaxSelfishMinStrategyHigherKinded,
+            SMaxMinStrategyHigherKinded,
             SRuleStateCacheFixed,
             SSnapshotCacheNone,
         },
@@ -2443,15 +2446,15 @@ mod tests {
             EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
                 /*fn_check_ask_for_card*/|game: &SGameGeneric<SRuleSet, (), ()>| {
                     if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
-                        //let epi = unwrap!(game.current_playable_stich().current_playerindex());
-                        macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr, $fn_alphabetapruner:expr,) => {
+                        let epi = unwrap!(game.current_playable_stich().current_playerindex());
+                        macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr, $MinMaxStrategiesHK:ty, $fn_alphabetapruner:expr,) => {
                             unwrap!(determine_best_card::<$ty_fn_make_filter,_,_,_,_,_,_,_,_>(
                                 &game.stichseq,
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                                 $fn_make_filter,
-                                &|stichseq, ahand| <SMinReachablePayoutBase<SPrunerNothing, SPerMinMaxStrategyHigherKinded, _>>::new_with_pruner(
+                                &|stichseq, ahand| <SMinReachablePayoutBase<SPrunerNothing, $MinMaxStrategiesHK, _>>::new_with_pruner(
                                     &game.rules,
-                                    unwrap!(game.current_playable_stich().current_playerindex()),
+                                    epi,
                                     game.expensifiers.clone(),
                                     #[allow(clippy::redundant_closure_call)]
                                     $fn_alphabetapruner(stichseq, ahand),
@@ -2462,29 +2465,76 @@ mod tests {
                                 /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
                             ))
                                 .cards_and_ts()
-                                .map(|(card, payoutstatsperstrategy)| (
-                                    card,
-                                    verify_eq!(
-                                        &payoutstatsperstrategy.maxselfishmin.0,
-                                        &payoutstatsperstrategy.maxselfishmax.0
-                                    ).clone()
-                                ))
+                                .map(|(card, payoutstats)| (card, payoutstats.clone()))
                                 .collect::<Vec<_>>()
                         }}
                         let determinebestcardresult_simple = fwd!(
                             _,
                             /*fn_make_filter*/SNoFilter::factory(),
+                            SPerMinMaxStrategyHigherKinded,
                             /*fn_alphabetapruner*/|_stichseq, _ahand| SAlphaBetaPrunerNone,
                         );
-                        assert_eq!(
+                        macro_rules! eq_on_field{($lhs:expr, $rhs:expr, $field:ident,) => {
+                            assert_eq!(
+                                $lhs.iter().map(|(card, payoutstats)| (
+                                    (card, payoutstats.$field.clone())
+                                )).collect::<Vec<_>>(),
+                                $rhs.iter().map(|(card, payoutstats)| (
+                                    (card, payoutstats.$field.clone())
+                                )).collect::<Vec<_>>(),
+                                "\nRules:{} von {}\nHands:\n {}\nStichseq: {}\nStichs:\n",
+                                &game.rules,
+                                unwrap!(game.rules.playerindex()),
+                                display_card_slices(&game.ahand, &game.rules, "\n "),
+                                game.stichseq.visible_stichs().iter().join(", "),
+                            );
+                        }}
+                        eq_on_field!(
                             determinebestcardresult_simple,
                             fwd!(
                                 SFilterByOracle,
                                 /*fn_make_filter*/|stichseq, ahand| {
                                     SFilterByOracle::new(&game.rules, ahand, stichseq)
                                 },
+                                SMaxSelfishMinStrategyHigherKinded,
                                 /*fn_alphabetapruner*/|_stichseq, _ahand| SAlphaBetaPrunerNone,
                             ),
+                            maxselfishmin, // TODO must be same as maxselfishmax
+                        );
+                        eq_on_field!(
+                            determinebestcardresult_simple,
+                            fwd!(
+                                _,
+                                /*fn_make_filter*/SNoFilter::factory(),
+                                SMaxMinStrategyHigherKinded,
+                                /*fn_alphabetapruner*/|_stichseq, _ahand| SAlphaBetaPruner::new({
+                                    let mut mapepilohi = EPlayerIndex::map_from_fn(|_| ELoHi::Lo);
+                                    mapepilohi[epi] = ELoHi::Hi;
+                                    mapepilohi
+                                }),
+                            ),
+                            maxmin,
+                        );
+                        eq_on_field!(
+                            determinebestcardresult_simple,
+                            fwd!(
+                                _,
+                                /*fn_make_filter*/SNoFilter::factory(),
+                                SMaxSelfishMinStrategyHigherKinded,
+                                /*fn_alphabetapruner*/|stichseq, ahand| SAlphaBetaPruner::new({
+                                    let mut mapepilohi = unwrap!(game.rules.alpha_beta_pruner_lohi_values())(
+                                        &SRuleStateCacheFixed::new(ahand, stichseq),
+                                    );
+                                    if mapepilohi[epi]==ELoHi::Lo {
+                                        for lohi in mapepilohi.iter_mut() {
+                                            *lohi = -*lohi;
+                                        }
+                                    }
+                                    assert_eq!(mapepilohi[epi], ELoHi::Hi);
+                                    mapepilohi
+                                }),
+                            ),
+                            maxselfishmin,
                         );
                     }
                 },

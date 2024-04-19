@@ -355,6 +355,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     *lohi = -*lohi;
                                 }
                             }
+                            assert_eq!(mapepilohi[epi_position], ELoHi::Hi);
                             mapepilohi
                         })),
                         (Some(ESingleStrategy::MaxMin), true, _) => (|_stichseq, _ahand| SAlphaBetaPruner::new({
