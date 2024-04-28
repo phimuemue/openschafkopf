@@ -299,60 +299,60 @@ pub fn determine_best_card<
     let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
     itahand
         .enumerate()
-        .flat_map(|(i_ahand, ahand)| {
+        .par_bridge() // TODO can we derive a true parallel iterator?
+        .for_each(|(i_ahand, ahand)| {
             let foreachsnapshot = fn_make_foreachsnapshot(stichseq, &ahand);
             foreachsnapshot.rules.all_allowed_cards(
                 stichseq,
                 &ahand[epi_current],
             )
-                .into_iter()
-                .map(move |card| (i_ahand, ahand.clone(), card))
-        })
-        .par_bridge() // TODO can we derive a true parallel iterator?
-        .for_each(|(i_ahand, mut ahand, card)| {
-            fn_inspect(/*b_before*/true, i_ahand, &ahand, card);
-            let foreachsnapshot = fn_make_foreachsnapshot(stichseq, &ahand);
-            let mut visualizer = fn_visualizer(i_ahand, &ahand, Some(card)); // do before ahand is modified
-            debug_assert!(ahand[epi_current].cards().contains(&card));
-            let mut stichseq = stichseq.clone();
-            assert!(ahand_vecstich_card_count_is_compatible(&ahand, &stichseq));
-            let rules = foreachsnapshot.rules;
-            let output = stichseq.zugeben_and_restore_with_hands(&mut ahand, epi_current, card, rules, |ahand, stichseq| {
-                if ahand.iter().all(|hand| hand.cards().is_empty()) {
-                    let stichseq_finished = SStichSequenceGameFinished::new(stichseq);
-                    foreachsnapshot.final_output(
-                        stichseq_finished,
-                        &SRuleStateCache::new_from_gamefinishedstiche(
-                            stichseq_finished,
-                            rules,
-                        ),
-                    )
-                } else {
-                    explore_snapshots(
-                        (ahand, stichseq),
-                        rules,
-                        &fn_make_filter,
-                        &foreachsnapshot,
-                        &fn_snapshotcache,
-                        &mut visualizer,
-                    )
-                }
-            });
-            let payoutstats : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output.map(|mapepin_payout|
-                SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
-            );
-            let mapcardooutput = Arc::clone(&mapcardooutput);
-            let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
-            match ooutput {
-                None => *ooutput = Some(payoutstats),
-                Some(ref mut output_return) => {
-                    output_return.modify_with_other(
-                        &payoutstats,
-                        |lhs, rhs| SPayoutStats::accumulate(lhs, rhs),
+                .into_par_iter()
+                .for_each(|&card| {
+                    let mut ahand = ahand.clone();
+                    fn_inspect(/*b_before*/true, i_ahand, &ahand, card);
+                    let foreachsnapshot = fn_make_foreachsnapshot(stichseq, &ahand);
+                    let mut visualizer = fn_visualizer(i_ahand, &ahand, Some(card)); // do before ahand is modified
+                    debug_assert!(ahand[epi_current].cards().contains(&card));
+                    let mut stichseq = stichseq.clone();
+                    assert!(ahand_vecstich_card_count_is_compatible(&ahand, &stichseq));
+                    let rules = foreachsnapshot.rules;
+                    let output = stichseq.zugeben_and_restore_with_hands(&mut ahand, epi_current, card, rules, |ahand, stichseq| {
+                        if ahand.iter().all(|hand| hand.cards().is_empty()) {
+                            let stichseq_finished = SStichSequenceGameFinished::new(stichseq);
+                            foreachsnapshot.final_output(
+                                stichseq_finished,
+                                &SRuleStateCache::new_from_gamefinishedstiche(
+                                    stichseq_finished,
+                                    rules,
+                                ),
+                            )
+                        } else {
+                            explore_snapshots(
+                                (ahand, stichseq),
+                                rules,
+                                &fn_make_filter,
+                                &foreachsnapshot,
+                                &fn_snapshotcache,
+                                &mut visualizer,
+                            )
+                        }
+                    });
+                    let payoutstats : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output.map(|mapepin_payout|
+                        SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
                     );
-                },
-            }
-            fn_inspect(/*b_before*/false, i_ahand, &ahand, card);
+                    let mapcardooutput = Arc::clone(&mapcardooutput);
+                    let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
+                    match ooutput {
+                        None => *ooutput = Some(payoutstats),
+                        Some(ref mut output_return) => {
+                            output_return.modify_with_other(
+                                &payoutstats,
+                                |lhs, rhs| SPayoutStats::accumulate(lhs, rhs),
+                            );
+                        },
+                    }
+                    fn_inspect(/*b_before*/false, i_ahand, &ahand, card);
+                })
         });
     let mapcardooutput = unwrap!(
         unwrap!(Arc::into_inner(mapcardooutput)) // "Returns the inner value, if the Arc has exactly one strong reference"   
