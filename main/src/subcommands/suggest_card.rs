@@ -347,7 +347,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 forward,
                 match (
                     if let Some(str_branching) = clapmatches.value_of("branching") {
-                        if str_branching=="" {
+                        if str_branching.is_empty() {
                             None
                         } else if str_branching=="oracle" {
                             Some(Oracle)
