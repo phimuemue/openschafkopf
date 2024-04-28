@@ -326,18 +326,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         _ => (SPrunerNothing),
                     },
                     match (oesinglestrategy.clone()) {
-                        None => (
-                            SPerMinMaxStrategyHigherKinded,
-                            SPerMinMaxStrategy,
-                        ),
-                        Some(ESingleStrategy::MaxMin) => (
-                            SMaxMinStrategyHigherKinded,
-                            SMaxMinStrategy,
-                        ),
-                        Some(ESingleStrategy::MaxSelfishMin) => (
-                            SMaxSelfishMinStrategyHigherKinded,
-                            SMaxSelfishMinStrategy,
-                        ),
+                        None => SPerMinMaxStrategyHigherKinded,
+                        Some(ESingleStrategy::MaxMin) => SMaxMinStrategyHigherKinded,
+                        Some(ESingleStrategy::MaxSelfishMin) => SMaxSelfishMinStrategyHigherKinded,
                     },
                     match ((oesinglestrategy.clone(), clapmatches.is_present("abprune"), rules.alpha_beta_pruner_lohi_values())) {
                         (None, b_abprune, _) | (_, b_abprune@false, _) | (Some(ESingleStrategy::MaxSelfishMin), b_abprune@true, None) => {
@@ -381,7 +372,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 )
             }}
             if clapmatches.is_present("no-details") {
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident,), $fn_alphabetapruner:expr, $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), $MinMaxStrategiesHK:ident, $fn_alphabetapruner:expr, $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let mapemmstrategypaystats = itahand
                         .enumerate()
                         .par_bridge() // TODO can we derive a true parallel iterator?
@@ -409,7 +400,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             })
                         })
                         .reduce(
-                            /*identity*/|| $perminmaxstrategy::new(SPayoutStats::new_identity_for_accumulate()),
+                            /*identity*/|| <<$MinMaxStrategiesHK as TMinMaxStrategiesHigherKinded>::Type::<_> as TMinMaxStrategies<_>>::new(SPayoutStats::new_identity_for_accumulate()),
                             /*op*/mutate_return!(|perminmaxstrategypayoutstats_lhs, perminmaxstrategypayoutstats_rhs| {
                                 perminmaxstrategypayoutstats_lhs.modify_with_other(
                                     &perminmaxstrategypayoutstats_rhs,
@@ -440,7 +431,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 forward_with_args!(forward);
             } else {
                 // we are interested in payout => single-card-optimization useless
-                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $perminmaxstrategy:ident,), $fn_alphabetapruner:expr, $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), $MinMaxStrategiesHK:ident, $fn_alphabetapruner:expr, $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                     let determinebestcardresult = determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_,_>( // TODO avoid explicit types
                         stichseq,
