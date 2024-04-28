@@ -84,14 +84,15 @@ impl SAi {
         )).t_combined
     }
 
-    fn suggest_card_internal<SnapshotVisualizer: TSnapshotVisualizer<SMaxMinMaxSelfishMin<EnumMap<EPlayerIndex, isize>>>>(
+    pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer<SMaxMinMaxSelfishMin<EnumMap<EPlayerIndex, isize>>>, Ruleset, GameAnnouncements, DetermineRules>(
         &self,
-        rules: &SRules,
-        stichseq: &SStichSequence,
-        ahand: &EnumMap<EPlayerIndex, SHand>,
-        expensifiers: &SExpensifiers,
+        game: &SGameGeneric<Ruleset, GameAnnouncements, DetermineRules>,
         fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     ) -> ECard {
+        let rules = &game.rules;
+        let stichseq = &game.stichseq;
+        let ahand = &game.ahand;
+        let expensifiers = &game.expensifiers;
         let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
         let hand_fixed = &ahand[epi_current];
         if let Ok(card)=rules.all_allowed_cards(
@@ -162,20 +163,6 @@ impl SAi {
                 )
             }).0.first())
         }
-    }
-
-    pub fn suggest_card<SnapshotVisualizer: TSnapshotVisualizer<SMaxMinMaxSelfishMin<EnumMap<EPlayerIndex, isize>>>, Ruleset, GameAnnouncements, DetermineRules>(
-        &self,
-        game: &SGameGeneric<Ruleset, GameAnnouncements, DetermineRules>,
-        fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
-    ) -> ECard {
-        self.suggest_card_internal(
-            &game.rules,
-            &game.stichseq,
-            &game.ahand,
-            &game.expensifiers,
-            fn_visualizer,
-        )
     }
 }
 
