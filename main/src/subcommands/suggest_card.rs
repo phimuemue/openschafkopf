@@ -265,107 +265,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             fn make_snapshot_cache_none<MinMaxStrategiesHK>(_rules: &SRules) -> impl Fn(&SRuleStateCacheFixed)->SSnapshotCacheNone {
                 SSnapshotCacheNone::factory()
             }
-            macro_rules! forward_with_args{($forward:ident) => {
-                cartesian_match!(
-                    forward,
-                    match (
-                        if let Some(str_branching) = clapmatches.value_of("branching") {
-                            if str_branching=="" {
-                                None
-                            } else if str_branching=="oracle" {
-                                Some(Oracle)
-                            } else if let Some(oepi_unfiltered) = str_branching.strip_prefix("oneperwinnerindex")
-                                .map(|str_oepi_unfiltered| str_oepi_unfiltered.parse().ok())
-                            {
-                                Some(OnePerWinnerIndex(oepi_unfiltered))
-                            } else if let Some(n_until_stichseq_len) = str_branching.strip_prefix("equiv")
-                                .and_then(|str_n_until_remaining_cards| str_n_until_remaining_cards.parse().ok())
-                            {
-                                Some(Equivalent(n_until_stichseq_len, rules.equivalent_when_on_same_hand()))
-                            } else {
-                                let (str_lo, str_hi) = str_branching
-                                    .split(',')
-                                    .collect_tuple()
-                                    .ok_or_else(|| format_err!("Could not parse branching"))?;
-                                let (n_lo, n_hi) = (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?);
-                                Some(Branching(n_lo, n_hi)) // TODO we should avoid branching in case n_lo is greater than all hand's fixed cards
-                            }
-                        } else {
-                            None
-                        }
-                    ) {
-                        None => ((_), SNoFilter::factory()),
-                        Some(Branching(n_lo, n_hi)) => ((_), {
-                            let n_lo = n_lo.max(1);
-                            SBranchingFactor::factory(n_lo, n_hi.max(n_lo+1))
-                        }),
-                        Some(Equivalent(n_until_stichseq_len, cardspartition)) => (
-                            (_),
-                            equivalent_cards_filter(
-                                n_until_stichseq_len,
-                                cardspartition.clone(),
-                            )
-                        ),
-                        Some(Oracle) => ((SFilterByOracle), |stichseq, ahand| {
-                            SFilterByOracle::new(rules, ahand, stichseq)
-                        }),
-                        Some(OnePerWinnerIndex(oepi_unfiltered)) => ((_), |_stichseq, _ahand| {
-                            SFilterOnePerWinnerIndex::new(
-                                oepi_unfiltered,
-                                rules,
-                            )
-                        }),
-                    },
-                    match (clapmatches.value_of("prune")) {
-                        Some("hint") => (SPrunerViaHint),
-                        _ => (SPrunerNothing),
-                    },
-                    match (oesinglestrategy.clone()) {
-                        None => SPerMinMaxStrategyHigherKinded,
-                        Some(ESingleStrategy::MaxMin) => SMaxMinStrategyHigherKinded,
-                        Some(ESingleStrategy::MaxSelfishMin) => SMaxSelfishMinStrategyHigherKinded,
-                    },
-                    match ((oesinglestrategy.clone(), clapmatches.is_present("abprune"), rules.alpha_beta_pruner_lohi_values())) {
-                        (None, b_abprune, _) | (_, b_abprune@false, _) | (Some(ESingleStrategy::MaxSelfishMin), b_abprune@true, None) => {
-                            if b_abprune && b_verbose {
-                                println!("Warning: abprune not supported strategy/rules combination. Continuing without.");
-                            }
-                            |_stichseq, _ahand| SAlphaBetaPrunerNone
-                        },
-                        (Some(ESingleStrategy::MaxSelfishMin), true, Some(fn_alpha_beta_pruner_lohi_values)) => (|stichseq, ahand| SAlphaBetaPruner::new({
-                            let mut mapepilohi = fn_alpha_beta_pruner_lohi_values(
-                                &SRuleStateCacheFixed::new(ahand, stichseq),
-                            );
-                            if mapepilohi[epi_position]==ELoHi::Lo {
-                                for lohi in mapepilohi.iter_mut() {
-                                    *lohi = -*lohi;
-                                }
-                            }
-                            assert_eq!(mapepilohi[epi_position], ELoHi::Hi);
-                            mapepilohi
-                        })),
-                        (Some(ESingleStrategy::MaxMin), true, _) => (|_stichseq, _ahand| SAlphaBetaPruner::new({
-                            let mut mapepilohi = EPlayerIndex::map_from_fn(|_| ELoHi::Lo);
-                            mapepilohi[epi_position] = ELoHi::Hi;
-                            mapepilohi
-                        })),
-                    },
-                    match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
-                        true => make_snapshot_cache,
-                        false => make_snapshot_cache_none,
-                    },
-                    match (clapmatches.value_of("visualize")) {
-                        None => (SNoVisualization::factory()),
-                        Some(str_path) => {
-                            visualizer_factory(
-                                std::path::Path::new(str_path).to_path_buf(),
-                                rules,
-                                epi_position,
-                            )
-                        },
-                    },
-                )
-            }}
             // we are interested in payout => single-card-optimization useless
             macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), $MinMaxStrategiesHK:ident, $fn_alphabetapruner:expr, $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                 let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
@@ -444,7 +343,105 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     );
                 }
             }}}
-            forward_with_args!(forward);
+            cartesian_match!(
+                forward,
+                match (
+                    if let Some(str_branching) = clapmatches.value_of("branching") {
+                        if str_branching=="" {
+                            None
+                        } else if str_branching=="oracle" {
+                            Some(Oracle)
+                        } else if let Some(oepi_unfiltered) = str_branching.strip_prefix("oneperwinnerindex")
+                            .map(|str_oepi_unfiltered| str_oepi_unfiltered.parse().ok())
+                        {
+                            Some(OnePerWinnerIndex(oepi_unfiltered))
+                        } else if let Some(n_until_stichseq_len) = str_branching.strip_prefix("equiv")
+                            .and_then(|str_n_until_remaining_cards| str_n_until_remaining_cards.parse().ok())
+                        {
+                            Some(Equivalent(n_until_stichseq_len, rules.equivalent_when_on_same_hand()))
+                        } else {
+                            let (str_lo, str_hi) = str_branching
+                                .split(',')
+                                .collect_tuple()
+                                .ok_or_else(|| format_err!("Could not parse branching"))?;
+                            let (n_lo, n_hi) = (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?);
+                            Some(Branching(n_lo, n_hi)) // TODO we should avoid branching in case n_lo is greater than all hand's fixed cards
+                        }
+                    } else {
+                        None
+                    }
+                ) {
+                    None => ((_), SNoFilter::factory()),
+                    Some(Branching(n_lo, n_hi)) => ((_), {
+                        let n_lo = n_lo.max(1);
+                        SBranchingFactor::factory(n_lo, n_hi.max(n_lo+1))
+                    }),
+                    Some(Equivalent(n_until_stichseq_len, cardspartition)) => (
+                        (_),
+                        equivalent_cards_filter(
+                            n_until_stichseq_len,
+                            cardspartition.clone(),
+                        )
+                    ),
+                    Some(Oracle) => ((SFilterByOracle), |stichseq, ahand| {
+                        SFilterByOracle::new(rules, ahand, stichseq)
+                    }),
+                    Some(OnePerWinnerIndex(oepi_unfiltered)) => ((_), |_stichseq, _ahand| {
+                        SFilterOnePerWinnerIndex::new(
+                            oepi_unfiltered,
+                            rules,
+                        )
+                    }),
+                },
+                match (clapmatches.value_of("prune")) {
+                    Some("hint") => (SPrunerViaHint),
+                    _ => (SPrunerNothing),
+                },
+                match (oesinglestrategy.clone()) {
+                    None => SPerMinMaxStrategyHigherKinded,
+                    Some(ESingleStrategy::MaxMin) => SMaxMinStrategyHigherKinded,
+                    Some(ESingleStrategy::MaxSelfishMin) => SMaxSelfishMinStrategyHigherKinded,
+                },
+                match ((oesinglestrategy.clone(), clapmatches.is_present("abprune"), rules.alpha_beta_pruner_lohi_values())) {
+                    (None, b_abprune, _) | (_, b_abprune@false, _) | (Some(ESingleStrategy::MaxSelfishMin), b_abprune@true, None) => {
+                        if b_abprune && b_verbose {
+                            println!("Warning: abprune not supported strategy/rules combination. Continuing without.");
+                        }
+                        |_stichseq, _ahand| SAlphaBetaPrunerNone
+                    },
+                    (Some(ESingleStrategy::MaxSelfishMin), true, Some(fn_alpha_beta_pruner_lohi_values)) => (|stichseq, ahand| SAlphaBetaPruner::new({
+                        let mut mapepilohi = fn_alpha_beta_pruner_lohi_values(
+                            &SRuleStateCacheFixed::new(ahand, stichseq),
+                        );
+                        if mapepilohi[epi_position]==ELoHi::Lo {
+                            for lohi in mapepilohi.iter_mut() {
+                                *lohi = -*lohi;
+                            }
+                        }
+                        assert_eq!(mapepilohi[epi_position], ELoHi::Hi);
+                        mapepilohi
+                    })),
+                    (Some(ESingleStrategy::MaxMin), true, _) => (|_stichseq, _ahand| SAlphaBetaPruner::new({
+                        let mut mapepilohi = EPlayerIndex::map_from_fn(|_| ELoHi::Lo);
+                        mapepilohi[epi_position] = ELoHi::Hi;
+                        mapepilohi
+                    })),
+                },
+                match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
+                    true => make_snapshot_cache,
+                    false => make_snapshot_cache_none,
+                },
+                match (clapmatches.value_of("visualize")) {
+                    None => (SNoVisualization::factory()),
+                    Some(str_path) => {
+                        visualizer_factory(
+                            std::path::Path::new(str_path).to_path_buf(),
+                            rules,
+                            epi_position,
+                        )
+                    },
+                },
+            );
             Ok(())
         }
     )
