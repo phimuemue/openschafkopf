@@ -474,23 +474,38 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         clapmatches,
                         rules,
                         ahand_fixed_with_holes,
-                        /*vectableline*/determinebestcardresult.cards_and_ts()
-                            .map(|(card, payoutstatsperstrategy)|
-                                SJsonTableLine::new(
-                                    /*ostr_header*/Some(card.to_string()),
-                                    /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$MinMaxStrategiesHK>(payoutstatsperstrategy),
-                                )
-                            )
-                            .collect(),
+                        /*vectableline*/itertools::chain(
+                            determinebestcardresult.cards_and_ts()
+                                .map(|(card, payoutstatsperstrategy)|
+                                    SJsonTableLine::new(
+                                        /*ostr_header*/Some(card.to_string()),
+                                        /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$MinMaxStrategiesHK>(payoutstatsperstrategy),
+                                    )
+                                ),
+                            std::iter::once(SJsonTableLine::new(
+                                /*ostr_header*/Some("no-details".to_string()),
+                                /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$MinMaxStrategiesHK>(&determinebestcardresult.t_combined),
+                            )),
+                        ).collect(),
                     ) {
+                        let payoutstatstable = table(
+                            &determinebestcardresult,
+                            rules,
+                            /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
+                        );
                         print_payoutstatstable::<_,$MinMaxStrategiesHK>(
-                            &table(
-                                &determinebestcardresult,
-                                rules,
+                            &payoutstatstable,
+                            b_verbose,
+                        );
+                        println!("-----");
+                        print_payoutstatstable::<_,$MinMaxStrategiesHK>(
+                            &internal_table(
+                                vec!(("no-details", determinebestcardresult.t_combined)),
+                                /*b_group*/false,
                                 /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
                             ),
                             b_verbose,
-                        )
+                        );
                     }
                 }}}
                 forward_with_args!(forward);
