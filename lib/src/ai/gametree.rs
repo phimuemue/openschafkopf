@@ -18,7 +18,7 @@ pub trait TForEachSnapshot {
         &self,
         epi_card: EPlayerIndex,
         infofromparent: Self::InfoFromParent,
-        veccard_allowed: SHandVector,
+        itcard_allowed: impl Iterator<Item=ECard>,
         fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent) -> Self::Output,
     ) -> Self::Output;
 }
@@ -383,7 +383,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             foreachsnapshot.combine_outputs(
                 epi_current,
                 infofromparent,
-                veccard_allowed,
+                veccard_allowed.into_iter(),
                 /*fn_card_to_output*/|card, infofromparent| {
                     stichseq.zugeben_and_restore_with_hands(ahand, epi_current, card, rules, |ahand, stichseq| {
                         macro_rules! next_step {($func_filter_allowed_cards:expr, $snapshotcache:expr) => {explore_snapshots_internal(
@@ -876,10 +876,9 @@ impl<Pruner: TPruner, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, AlphaBe
         &self,
         epi_card: EPlayerIndex,
         mut infofromparent: Self::InfoFromParent,
-        veccard_allowed: SHandVector,
+        mut itcard_allowed: impl Iterator<Item=ECard>,
         mut fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent) -> Self::Output,
     ) -> Self::Output {
-        let mut itcard_allowed = veccard_allowed.into_iter();
         let mut minmax_acc = fn_card_to_output(
             unwrap!(itcard_allowed.next()),
             infofromparent.clone(),
