@@ -62,9 +62,9 @@ impl SAi {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
         let stichseq = &SStichSequence::new(unwrap!(EKurzLang::from_cards_per_player(hand_fixed.get().len())));
         unwrap!(determine_best_card(
-            &stichseq,
+            stichseq,
             Box::new(forever_rand_hands(
-                &stichseq,
+                stichseq,
                 (SHand::new_from_iter(hand_fixed.get()), epi_rank),
                 rules,
                 &expensifiers.vecstoss,
@@ -356,7 +356,7 @@ pub fn determine_best_card<
                 },
             );
             let payoutstats_per_hand : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output_per_ahand.map(|mapepin_payout|
-                SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
+                SPayoutStats::new_1(fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
             );
             let ooutput_combined = Arc::clone(&ooutput_combined);
             let mut ooutput_combined = unwrap!(ooutput_combined.lock());
