@@ -347,10 +347,9 @@ pub fn determine_best_card<
             let output_per_ahand = foreachsnapshot.combine_outputs(
                 epi_current,
                 /*infofromparent*/SMinReachablePayoutBase::<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner>::initial_info_from_parent(),
-                <ECard as PlainEnum>::values().filter_map(|card| if_then_some!(
-                    mapcardooutput_per_ahand[card].is_some(),
-                    card
-                )),
+                <ECard as PlainEnum>::values().filter(|&card| 
+                    mapcardooutput_per_ahand[card].is_some()
+                ),
                 /*fn_card_to_output*/|card, _infofromparent| {
                     unwrap!(mapcardooutput_per_ahand[card].as_ref()).clone()
                 },
