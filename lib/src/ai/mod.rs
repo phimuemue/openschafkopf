@@ -60,40 +60,28 @@ impl SAi {
 
     pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &SRules, expensifiers: &SExpensifiers) -> SPerMinMaxStrategy<SPayoutStats<()>> {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
-        let ekurzlang = unwrap!(EKurzLang::from_cards_per_player(hand_fixed.get().len()));
-        forever_rand_hands(
-            &SStichSequence::new(ekurzlang),
-            (SHand::new_from_iter(hand_fixed.get()), epi_rank),
-            rules,
-            &expensifiers.vecstoss,
-        )
-            .take(self.n_rank_rules_samples)
-            .par_bridge() // TODO can we derive a true parallel iterator?
-            .map(|mut ahand| {
-                explore_snapshots(
-                    (&mut ahand, &mut SStichSequence::new(ekurzlang)),
+        let stichseq = &SStichSequence::new(unwrap!(EKurzLang::from_cards_per_player(hand_fixed.get().len())));
+        unwrap!(determine_best_card(
+            &stichseq,
+            Box::new(forever_rand_hands(
+                &stichseq,
+                (SHand::new_from_iter(hand_fixed.get()), epi_rank),
+                rules,
+                &expensifiers.vecstoss,
+            ).take(self.n_rank_rules_samples)),
+            SBranchingFactor::factory(1, 2),
+            &|_stichseq, _ahand| {
+                SMinReachablePayoutLowerBoundViaHint::new(
                     rules,
-                    &SBranchingFactor::factory(1, 2),
-                    &SMinReachablePayoutLowerBoundViaHint::new(
-                        rules,
-                        epi_rank,
-                        expensifiers.clone(), // TODO? can clone be avoided
-                    ),
-                    &SSnapshotCacheNone::factory(), // TODO make customizable
-                    &mut SNoVisualization{},
-                ).map(|mapepiminmax| {
-                    SPayoutStats::new_1((mapepiminmax[epi_rank], ()))
-                })
-            })
-            .reduce(
-                /*identity*/|| SPerMinMaxStrategy::new(SPayoutStats::new_identity_for_accumulate()),
-                /*op*/mutate_return!(|perminmaxstrategypayoutstats_lhs, perminmaxstrategypayoutstats_rhs| {
-                    perminmaxstrategypayoutstats_lhs.modify_with_other(
-                        &perminmaxstrategypayoutstats_rhs,
-                        SPayoutStats::accumulate,
-                    );
-                }),
-            )
+                    epi_rank,
+                    expensifiers.clone(), // TODO? can clone be avoided
+                )
+            },
+            SSnapshotCacheNone::factory(), // TODO? make customizable
+            /*fn_visualizer*/SNoVisualization::factory(),
+            /*fn_inspect*/&|_,_,_,_|{},
+            /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
+        )).t_combined
     }
 
     fn suggest_card_internal<SnapshotVisualizer: TSnapshotVisualizer<SMaxMinMaxSelfishMin<EnumMap<EPlayerIndex, isize>>>>(
