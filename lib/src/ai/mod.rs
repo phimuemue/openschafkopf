@@ -194,6 +194,7 @@ impl SAi {
 #[derive(Clone, Debug)]
 pub struct SDetermineBestCardResult<T> {
     mapcardt: EnumMap<ECard, Option<T>>,
+    pub t_combined: T,
 }
 
 impl<T> SDetermineBestCardResult<T> {
@@ -288,19 +289,27 @@ pub fn determine_best_card<
 ) -> Option<SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>>
     where
         <SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> as TForEachSnapshot>::Output: TMinMaxStrategies<MinMaxStrategiesHK, Arg0=EnumMap<EPlayerIndex, isize>>,
-        MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: Send,
-        MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK>,
+        MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: Send + Clone,
+        MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK> + Clone + Sync + Send,
         AlphaBetaPruner: Sync,
 {
+    fn finalize_arc_mutex<T>(arcmutex: Arc<Mutex<T>>) -> T {
+        unwrap!(
+            unwrap!(Arc::into_inner(arcmutex)) // "Returns the inner value, if the Arc has exactly one strong reference"   
+                .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
+        )
+    }
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
         ECard::map_from_fn(|_card| None),
     ));
+    let ooutput_combined = Arc::new(Mutex::new(None));
     let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
     itahand
         .enumerate()
         .par_bridge() // TODO can we derive a true parallel iterator?
         .for_each(|(i_ahand, ahand)| {
+            let mapcardooutput_per_ahand = Arc::new(Mutex::new(ECard::map_from_fn(|_| None)));
             let foreachsnapshot = fn_make_foreachsnapshot(stichseq, &ahand);
             foreachsnapshot.rules.all_allowed_cards(
                 stichseq,
@@ -337,6 +346,12 @@ pub fn determine_best_card<
                             )
                         }
                     });
+                    {
+                        let mapcardooutput_per_ahand = Arc::clone(&mapcardooutput_per_ahand);
+                        let mut mapcardooutput_per_ahand = unwrap!(mapcardooutput_per_ahand.lock());
+                        assert!(mapcardooutput_per_ahand[card].is_none());
+                        mapcardooutput_per_ahand[card] = Some(output.clone());
+                    }
                     let payoutstats : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output.map(|mapepin_payout|
                         SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
                     );
@@ -352,15 +367,40 @@ pub fn determine_best_card<
                         },
                     }
                     fn_inspect(/*b_before*/false, i_ahand, &ahand, card);
-                })
+                });
+            let mapcardooutput_per_ahand = finalize_arc_mutex(mapcardooutput_per_ahand);
+            let output_per_ahand = foreachsnapshot.combine_outputs(
+                epi_current,
+                /*infofromparent*/SMinReachablePayoutBase::<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner>::initial_info_from_parent(),
+                <ECard as PlainEnum>::values().filter_map(|card| if_then_some!(
+                    mapcardooutput_per_ahand[card].is_some(),
+                    card
+                )),
+                /*fn_card_to_output*/|card, _infofromparent| {
+                    unwrap!(mapcardooutput_per_ahand[card].as_ref()).clone()
+                },
+            );
+            let payoutstats_per_hand : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output_per_ahand.map(|mapepin_payout|
+                SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
+            );
+            let ooutput_combined = Arc::clone(&ooutput_combined);
+            let mut ooutput_combined = unwrap!(ooutput_combined.lock());
+            match *ooutput_combined {
+                None => *ooutput_combined = Some(payoutstats_per_hand),
+                Some(ref mut output_combined) => {
+                    output_combined.modify_with_other(
+                        &payoutstats_per_hand,
+                        |lhs, rhs| lhs.accumulate(rhs),
+                    );
+                },
+            }
         });
-    let mapcardooutput = unwrap!(
-        unwrap!(Arc::into_inner(mapcardooutput)) // "Returns the inner value, if the Arc has exactly one strong reference"   
-            .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
-    );
-    if_then_some!(mapcardooutput.iter().any(Option::is_some), {
+    let mapcardooutput = finalize_arc_mutex(mapcardooutput);
+    let ooutput_combined = finalize_arc_mutex(ooutput_combined);
+    if_then_some!(let Some(output_combined) = ooutput_combined, {
         SDetermineBestCardResult{
             mapcardt: mapcardooutput,
+            t_combined: output_combined,
         }
     })
 }
