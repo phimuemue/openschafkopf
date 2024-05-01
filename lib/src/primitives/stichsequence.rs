@@ -46,6 +46,9 @@ impl std::fmt::Display for SStichSequence {
     }
 }
 
+#[derive(Debug)]
+pub struct SDuplicateCard(pub ECard);
+
 impl SStichSequence { // TODO implement wrappers for SStichSequence that allow only zugeben_and_restore and no other manipulations and use them where applicable. My first try ran into some lifetime issues.
     #[cfg(debug_assertions)]
     fn assert_invariant(&self) {
@@ -73,10 +76,16 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         stichseq
     }
 
-    pub fn new_from_cards(ekurzlang: EKurzLang, itcard: impl Iterator<Item=ECard>, winnerindex: &(impl TWinnerIndex + ?Sized)) -> Self {
-        itcard.fold(Self::new(ekurzlang), mutate_return!(|stichseq, card| {
-            stichseq.zugeben(card, winnerindex);
-        }))
+    pub fn new_from_cards(ekurzlang: EKurzLang, mut itcard: impl Iterator<Item=ECard>, winnerindex: &(impl TWinnerIndex + ?Sized)) -> Result<Self, SDuplicateCard> {
+        let mut mapcardb = ECard::map_from_fn(|_| false); // TODO enumset
+        itcard.try_fold(Self::new(ekurzlang), |mut stichseq, card| {
+            if assign_neq(&mut mapcardb[card], true) {
+                stichseq.zugeben(card, winnerindex);
+                Ok(stichseq)
+            } else {
+                Err(SDuplicateCard(card))
+            }
+        })
     }
 
     pub fn game_finished(&self) -> bool {

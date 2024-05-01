@@ -401,11 +401,11 @@ mod tests {
             slccard_stichseq: &[ECard],
             slcacard_stich: &[[ECard; EPlayerIndex::SIZE]],
         ) {
-            let stichseq = SStichSequence::new_from_cards(
+            let stichseq = unwrap!(SStichSequence::new_from_cards(
                 EKurzLang::Lang,
                 slccard_stichseq.iter().copied(),
                 rules,
-            );
+            ));
             let epi_first = stichseq.current_stich().first_playerindex();
             let ahand = &EPlayerIndex::map_from_raw(aslccard_hand)
                 .map_into(SHand::new_from_iter);

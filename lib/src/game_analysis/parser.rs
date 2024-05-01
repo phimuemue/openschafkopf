@@ -467,7 +467,7 @@ pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failur
                     .ok_or_else(|| format_err!("Incorrect number of cards: {}", veccard.len()))?,
                 veccard.iter().copied(),
                 &rules,
-            );
+            ).map_err(|SDuplicateCard(card)| format_err!("Duplicate card: {}", card))?;
             SGame::new_finished(
                 rules,
                 SExpensifiers::new_no_stock_doublings_stoss(),
