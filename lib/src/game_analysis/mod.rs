@@ -226,9 +226,13 @@ impl SGameAnalysis {
         });
         let epi_self = EPlayerIndex::EPI0;
         let stich_caption = |stichseq: &SStichSequence| {
-            format!("Stich {}, Spieler {}",
-                stichseq.completed_stichs().len() + 1, // humans count 1-based
-                unwrap!(stichseq.current_stich().current_playerindex()),
+            let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
+            (
+                format!("Stich {}, Spieler {}",
+                    stichseq.completed_stichs().len() + 1, // humans count 1-based
+                    epi_current,
+                ),
+                epi_current,
             )
         };
         format!(
@@ -263,7 +267,7 @@ impl SGameAnalysis {
                         {str_stich_caption}:
                         Bei gegebener Kartenverteilung: {str_card_suggested_cheating} {str_gewinn}: {n_payout_cheating} (statt {n_payout_real}).
                     </li>"###,
-                    str_stich_caption=stich_caption(stichseq),
+                    str_stich_caption=stich_caption(stichseq).0,
                     str_card_suggested_cheating = analysisimpr.cardandpayout_cheating.veccard
                         .iter()
                         .map(ECard::to_string)
@@ -337,6 +341,7 @@ impl SGameAnalysis {
                 // TODO simplify output (as it currently only shows results from one ahand)
                 let stichseq = &analysispercard.stichseq;
                 let ahand = &analysispercard.ahand;
+                let (str_stich_caption, epi_current) = stich_caption(stichseq);
                 let mut str_per_card = format!(r###"<h3>{} <button onclick='
                     (function /*copyToClipboard*/(str, btn) {{
                         navigator.clipboard.writeText(str).then(
@@ -349,12 +354,13 @@ impl SGameAnalysis {
                         );
                     }})("{}", this)
                     '>&#128203</button></h3>"###,
-                    stich_caption(stichseq),
-                    format!("{str_openschafkopf_executable} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand}\" --branching \"equiv7\"",
+                    str_stich_caption,
+                    format!("{str_openschafkopf_executable} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand_all}\" --hand \"{str_hand_single}\"",
                         str_cards_on_table=stichseq.visible_stichs().iter()
                             .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
                             .join("  "),
-                        str_hand=display_card_slices(ahand, &game.rules, "  "),
+                        str_hand_all=display_card_slices(ahand, &game.rules, "  "),
+                        str_hand_single=SDisplayCardSlice::new(ahand[epi_current].cards().to_vec(), &game.rules),
                     ).replace('\"', "\\\""),
                 );
                 unwrap!(write!(
