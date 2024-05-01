@@ -1,5 +1,5 @@
 #!/bin/bash
-cargo build -j16 --release --no-default-features --features suggest-card
+cargo build -j16 --release
 
 hyperfine -r3 -- \
     "./target/release/openschafkopf suggest-card --rules 'rufspiel eichel von 0' --cards-on-table 'go eo ho so  sz sa s9 ha   h7 eu hz su  sk e9 S7 gk' --hand 'E7 H9 EA E8' --simulate-hands all --branching equiv6" \
