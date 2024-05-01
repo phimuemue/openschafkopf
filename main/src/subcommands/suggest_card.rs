@@ -216,27 +216,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         .collect()
                 )
             }
-            fn print_json<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Serialize>( // TODORUST generic closure
-                clapmatches: &clap::ArgMatches,
-                rules: &SRules,
-                ahand_fixed_with_holes: &EnumMap<EPlayerIndex, SHand>,
-                vectableline: Vec<SJsonTableLine<MinMaxStrategiesHK>>
-            ) -> bool
-                where
-                    MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
-            {
-                if_then_true!(clapmatches.is_present("json"), {
-                    println!("{}", unwrap!(serde_json::to_string(
-                        &SJson::new(
-                            /*str_rules*/rules.to_string(),
-                            /*str_hand*/ahand_fixed_with_holes.map(|hand|
-                                SDisplayCardSlice::new(hand.cards().clone(), rules).to_string()
-                            ).into_raw(),
-                            vectableline,
-                        ),
-                    )));
-                })
-            }
             enum EBranching {
                 Branching(usize, usize),
                 Equivalent(usize, SCardsPartition),
@@ -305,24 +284,29 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         n_payout,
                     ),
                 ).ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
-                if !print_json::<$MinMaxStrategiesHK>(
-                    clapmatches,
-                    rules,
-                    ahand_fixed_with_holes,
-                    /*vectableline*/itertools::chain(
-                        determinebestcardresult.cards_and_ts()
-                            .map(|(card, payoutstatsperstrategy)|
-                                SJsonTableLine::new(
-                                    /*ostr_header*/Some(card.to_string()),
-                                    /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$MinMaxStrategiesHK>(payoutstatsperstrategy),
-                                )
-                            ),
-                        std::iter::once(SJsonTableLine::new(
-                            /*ostr_header*/Some("no-details".to_string()),
-                            /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$MinMaxStrategiesHK>(&determinebestcardresult.t_combined),
-                        )),
-                    ).collect(),
-                ) {
+                if clapmatches.is_present("json") {
+                    println!("{}", unwrap!(serde_json::to_string(
+                        &SJson::new(
+                            /*str_rules*/rules.to_string(),
+                            /*str_hand*/ahand_fixed_with_holes.map(|hand|
+                                SDisplayCardSlice::new(hand.cards().clone(), rules).to_string()
+                            ).into_raw(),
+                            /*vectableline*/itertools::chain(
+                                determinebestcardresult.cards_and_ts()
+                                    .map(|(card, payoutstatsperstrategy)|
+                                        SJsonTableLine::new(
+                                            /*ostr_header*/Some(card.to_string()),
+                                            /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$MinMaxStrategiesHK>(payoutstatsperstrategy),
+                                        )
+                                    ),
+                                std::iter::once(SJsonTableLine::new(
+                                    /*ostr_header*/Some("no-details".to_string()),
+                                    /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$MinMaxStrategiesHK>(&determinebestcardresult.t_combined),
+                                )),
+                            ).collect::<Vec<SJsonTableLine<$MinMaxStrategiesHK>>>(),
+                        ),
+                    )));
+                } else {
                     let payoutstatstable = table(
                         &determinebestcardresult,
                         rules,
