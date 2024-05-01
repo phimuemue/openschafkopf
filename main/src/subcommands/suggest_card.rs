@@ -23,10 +23,10 @@ use std::io::IsTerminal;
 // TODO? can we make this a fn of SPayoutStatsTable?
 fn print_payoutstatstable<T: std::fmt::Display, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(
     payoutstatstable: &SPayoutStatsTable<T, MinMaxStrategiesHK>,
-    b_verbose: bool
+    b_print_table_description_before_table: bool
 ) {
     let slcoutputline = &payoutstatstable.output_lines();
-    if b_verbose { // TODO? only for second-level verbosity
+    if b_print_table_description_before_table { // TODO? only for second-level verbosity
         println!("\nInterpreting a line of the following table (taking the first line as an example):");
         let SOutputLine{vect, perminmaxstrategyatplstrf} = &slcoutputline[0];
         println!("If you play {}, then:", vect.iter().join(" or "));
@@ -314,7 +314,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     );
                     print_payoutstatstable::<_,$MinMaxStrategiesHK>(
                         &payoutstatstable,
-                        b_verbose,
+                        /*b_print_table_description_before_table*/b_verbose,
                     );
                     println!("-----");
                     print_payoutstatstable::<_,$MinMaxStrategiesHK>(
@@ -323,7 +323,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             /*b_group*/false,
                             /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
                         ),
-                        b_verbose,
+                        /*b_print_table_description_before_table*/false,
                     );
                 }
             }}}
