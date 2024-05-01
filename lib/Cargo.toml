@@ -24,7 +24,6 @@ as_num = "0"
 failure = "0" # TODO remove this dependency
 derive-new = "0"
 chrono = "0"
-# TODO can we have a cfg feature "sauspiel" that does not use the corresponding crates?
 select = "0"
 openschafkopf_util = {path = "../util"}
 serde = {version = "1", features = ["derive"]}

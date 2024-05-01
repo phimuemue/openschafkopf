@@ -10,13 +10,12 @@ use failure::*;
 
 fn main() -> Result<(), Error> {
     logging::init_logging("openschafkopf")?; // TODO? split for certain subcommands (e.g. webext)
-    macro_rules! subcommands{($(($([$($t:tt)*])? $mod:ident, $str_cmd:expr))*) => {
+    macro_rules! subcommands{($(($mod:ident, $str_cmd:expr))*) => {
         let clapmatches = clap::Command::new("schafkopf")
             .arg_required_else_help(true);
             let mut i_subcommand = 0; // TODO(clap) support for subcommand grouping (see https://github.com/clap-rs/clap/issues/1553)
             $(
                 i_subcommand += 1;
-                $(#[$($t)*])?
                 let clapmatches = clapmatches
                     .subcommand(subcommands::$mod::subcommand($str_cmd)
                         .display_order(i_subcommand)
@@ -24,7 +23,6 @@ fn main() -> Result<(), Error> {
             )*
             let clapmatches = clapmatches.get_matches();
         $(
-            $(#[$($t)*])?
             if let Some(clapmatches_subcommand)=clapmatches.subcommand_matches($str_cmd) {
                 return subcommands::$mod::run(clapmatches_subcommand);
             }
@@ -32,15 +30,15 @@ fn main() -> Result<(), Error> {
     }}
     subcommands!(
         // play
-        ([cfg(feature="cli")] cli, "cli")
-        ([cfg(feature="websocket")] websocket, "websocket")
+        (cli, "cli")
+        (websocket, "websocket")
         // analyze
-        ([cfg(feature="analyze")] analyze, "analyze")
-        ([cfg(feature="suggest-card")] suggest_card, "suggest-card")
-        ([cfg(feature="hand-stats")] hand_stats, "hand-stats")
+        (analyze, "analyze")
+        (suggest_card, "suggest-card")
+        (hand_stats, "hand-stats")
         // misc
-        ([cfg(feature="parse")] parse, "parse")
-        ([cfg(feature="webext")] webext, "webext")
+        (parse, "parse")
+        (webext, "webext")
     );
     Ok(())
 }
