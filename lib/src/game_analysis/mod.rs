@@ -58,7 +58,7 @@ pub struct SGameAnalysis {
 }
 
 pub struct SPossiblePayout(
-    SPerMinMaxStrategy<isize>,
+    SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>,
     (/*i_stich*/usize, /*i_card*/usize),
 );
 
@@ -82,29 +82,11 @@ pub fn analyze_game(
         game_in.stichseq.visible_cards(),
         /*fn_before_zugeben*/|game, i_stich, epi_zugeben, card_played| {
             if game.stichseq.remaining_cards_per_hand()[epi_zugeben] <= n_max_remaining_cards {
+                let stichseq = &game.stichseq;
                 for epi in EPlayerIndex::values() {
                     mapepivecpossiblepayout[epi].push(SPossiblePayout(
-                        explore_snapshots(
-                            (&mut game.ahand.clone(), &mut game.stichseq.clone()),
-                            &game.rules,
-                            &|_,_| equivalent_cards_filter(
-                                /*n_until_stichseq_len*/7,
-                                /*cardspartition*/game.rules.equivalent_when_on_same_hand(),
-                            )(&game.stichseq, &game.ahand),
-                            /*TODO use SAlphaBetaPruner*/&SMinReachablePayout::new(
-                                &game.rules,
-                                epi,
-                                game.expensifiers.clone(),
-                            ),
-                            &SSnapshotCacheNone::factory(), // TODO possibly use cache
-                            &mut SNoVisualization,
-                        ).map(|mapepin_payout| mapepin_payout[epi]),
-                        (i_stich, game.stichseq.current_stich().size())
-                    ));
-                    assert_eq!(
-                        unwrap!(mapepivecpossiblepayout[epi].last()).0,
                         unwrap!(determine_best_card(
-                            &game.stichseq,
+                            stichseq,
                             Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                             equivalent_cards_filter(
                                 /*n_until_stichseq_len, determined heuristically*/7,
@@ -119,10 +101,10 @@ pub fn analyze_game(
                             /*fn_visualizer*/SNoVisualization::factory(),
                             /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
                             /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
-                        )).t_combined.map(|payoutstats| verify_eq!(payoutstats.min(), payoutstats.max())),
-                    );
+                        )),
+                        (i_stich, stichseq.current_stich().size()),
+                    ));
                 }
-                let stichseq = &game.stichseq;
                 macro_rules! look_for_mistakes{($itahand: expr$(,)?) => {{
                     let determinebestcardresult = unwrap!(determine_best_card(
                         stichseq,
@@ -170,9 +152,8 @@ pub fn analyze_game(
                     std::iter::once(game.ahand.clone()),
                 );
                 assert_eq!(
-                    determinebestcardresult_cheating.t_combined
-                        .map(|payoutstats| verify_eq!(payoutstats.min(), payoutstats.max())),
-                    unwrap!(mapepivecpossiblepayout[epi_current].last()).0,
+                    determinebestcardresult_cheating.t_combined,
+                    unwrap!(mapepivecpossiblepayout[epi_current].last()).0.t_combined,
                 );
                 vecanalysispercard.push(SAnalysisPerCard {
                     determinebestcardresult_cheating,
@@ -347,9 +328,11 @@ impl SGameAnalysis {
                         + type_inference!(&str, &SPerMinMaxStrategy::accessors().iter().rev().map(|(_emmstrategy, fn_value_for_strategy)| {
                             format!("<tr>{}</tr>",
                                 vecpossiblepayout.iter()
-                                    .map(|SPossiblePayout(perminmaxstrategyn_payout, (_i_stich, _i_card))|
+                                    .map(|SPossiblePayout(determinebestcardresult, (_i_stich, _i_card))|
                                         format!("<td>{}</td>",
-                                            fn_value_for_strategy(perminmaxstrategyn_payout)
+                                            fn_value_for_strategy(&determinebestcardresult
+                                                .t_combined
+                                                .map(|payoutstats| verify_eq!(payoutstats.min(), payoutstats.max()))),
                                         )
                                     )
                                     .join("")
