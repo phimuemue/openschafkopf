@@ -101,6 +101,26 @@ pub fn analyze_game(
                         ).map(|mapepin_payout| mapepin_payout[epi]),
                         (i_stich, game.stichseq.current_stich().size())
                     ));
+                    assert_eq!(
+                        unwrap!(mapepivecpossiblepayout[epi].last()).0,
+                        unwrap!(determine_best_card(
+                            &game.stichseq,
+                            Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
+                            equivalent_cards_filter(
+                                /*n_until_stichseq_len, determined heuristically*/7,
+                                game.rules.equivalent_when_on_same_hand(),
+                            ),
+                            /*TODO use SAlphaBetaPruner*/&|_stichseq, _ahand| SMinReachablePayout::new(
+                                &game.rules,
+                                epi,
+                                game.expensifiers.clone(),
+                            ),
+                            /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO possibly use cache
+                            /*fn_visualizer*/SNoVisualization::factory(),
+                            /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
+                            /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
+                        )).t_combined.map(|payoutstats| verify_eq!(payoutstats.min(), payoutstats.max())),
+                    );
                 }
                 let stichseq = &game.stichseq;
                 macro_rules! look_for_mistakes{($itahand: expr$(,)?) => {{
@@ -137,8 +157,8 @@ pub fn analyze_game(
                             .or_else(|| look_for_mistake!(maxselfishmin, EMistake::SelfishMin))
                     )
                 }}}
+                let epi_current = unwrap!(game.stichseq.current_stich().current_playerindex());
                 let look_for_mistakes_simulating = || {
-                    let epi_current = unwrap!(game.stichseq.current_stich().current_playerindex());
                     look_for_mistakes!(all_possible_hands(
                         &game.stichseq,
                         (game.ahand[epi_current].clone(), epi_current),
@@ -148,6 +168,11 @@ pub fn analyze_game(
                 };
                 let (determinebestcardresult_cheating, ocardandpayout_cheating) = look_for_mistakes!(
                     std::iter::once(game.ahand.clone()),
+                );
+                assert_eq!(
+                    determinebestcardresult_cheating.t_combined
+                        .map(|payoutstats| verify_eq!(payoutstats.min(), payoutstats.max())),
+                    unwrap!(mapepivecpossiblepayout[epi_current].last()).0,
                 );
                 vecanalysispercard.push(SAnalysisPerCard {
                     determinebestcardresult_cheating,
