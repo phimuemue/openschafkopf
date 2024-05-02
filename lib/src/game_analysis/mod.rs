@@ -83,42 +83,39 @@ pub fn analyze_game(
         /*fn_before_zugeben*/|game, i_stich, epi_zugeben, card_played| {
             if game.stichseq.remaining_cards_per_hand()[epi_zugeben] <= n_max_remaining_cards {
                 let stichseq = &game.stichseq;
-                for epi in EPlayerIndex::values() {
-                    mapepivecpossiblepayout[epi].push(SPossiblePayout(
-                        unwrap!(determine_best_card(
-                            stichseq,
-                            Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
-                            equivalent_cards_filter(
-                                /*n_until_stichseq_len, determined heuristically*/7,
-                                game.rules.equivalent_when_on_same_hand(),
-                            ),
-                            /*TODO use SAlphaBetaPruner*/&|_stichseq, _ahand| SMinReachablePayout::new(
-                                &game.rules,
-                                epi,
-                                game.expensifiers.clone(),
-                            ),
-                            /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO possibly use cache
-                            /*fn_visualizer*/SNoVisualization::factory(),
-                            /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
-                            /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
-                        )),
-                        (i_stich, stichseq.current_stich().size()),
-                    ));
-                }
-                macro_rules! look_for_mistakes{($itahand: expr$(,)?) => {{
-                    let determinebestcardresult = unwrap!(determine_best_card(
+                let fwd_to_determine_best_card = |epi, itahand| {
+                    unwrap!(determine_best_card(
                         stichseq,
-                        Box::new($itahand) as Box<_>,
+                        itahand,
                         equivalent_cards_filter(
                             /*n_until_stichseq_len, determined heuristically*/7,
                             game.rules.equivalent_when_on_same_hand(),
                         ),
-                        /*TODO use SAlphaBetaPruner*/&|_stichseq, _ahand| SMinReachablePayout::new_from_game(game),
+                        /*TODO use SAlphaBetaPruner*/&|_stichseq, _ahand| SMinReachablePayout::new(
+                            &game.rules,
+                            epi,
+                            game.expensifiers.clone(),
+                        ),
                         /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO possibly use cache
                         /*fn_visualizer*/SNoVisualization::factory(),
                         /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
                         /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
+                    ))
+                };
+                for epi in EPlayerIndex::values() {
+                    mapepivecpossiblepayout[epi].push(SPossiblePayout(
+                        fwd_to_determine_best_card(
+                            epi,
+                            Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
+                        ),
+                        (i_stich, stichseq.current_stich().size()),
                     ));
+                }
+                macro_rules! look_for_mistakes{($itahand: expr$(,)?) => {{
+                    let determinebestcardresult = fwd_to_determine_best_card(
+                        epi_zugeben,
+                        Box::new($itahand) as Box<_>,
+                    );
                     macro_rules! look_for_mistake{($strategy:ident, $emistake:expr) => {{
                         let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(
                             |minmax_lhs, minmax_rhs| minmax_lhs.$strategy.0.min().cmp(&minmax_rhs.$strategy.0.min())
