@@ -111,11 +111,7 @@ pub fn analyze_game(
                         (i_stich, stichseq.current_stich().size()),
                     ));
                 }
-                macro_rules! look_for_mistakes{($itahand: expr$(,)?) => {{
-                    let determinebestcardresult = fwd_to_determine_best_card(
-                        epi_zugeben,
-                        Box::new($itahand) as Box<_>,
-                    );
+                let look_for_mistakes = |determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>| {
                     macro_rules! look_for_mistake{($strategy:ident, $emistake:expr) => {{
                         let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(
                             |minmax_lhs, minmax_rhs| minmax_lhs.$strategy.0.min().cmp(&minmax_rhs.$strategy.0.min())
@@ -130,26 +126,27 @@ pub fn analyze_game(
                             }
                         ) // else The decisive mistake must occur in subsequent stichs. TODO assert that it actually occurs
                     }}}
-                    (
-                        determinebestcardresult.clone(),
-                        look_for_mistake!(maxmin, EMistake::Min)
-                            .or_else(|| look_for_mistake!(maxselfishmin, EMistake::SelfishMin))
-                    )
-                }}}
+                    look_for_mistake!(maxmin, EMistake::Min)
+                        .or_else(|| look_for_mistake!(maxselfishmin, EMistake::SelfishMin))
+                };
                 let epi_current = unwrap!(game.stichseq.current_stich().current_playerindex());
                 let look_for_mistakes_simulating = || {
-                    look_for_mistakes!(all_possible_hands(
-                        &game.stichseq,
-                        (game.ahand[epi_current].clone(), epi_current),
-                        &game.rules,
-                        &game.expensifiers.vecstoss,
-                    )).1
+                    look_for_mistakes(
+                        &fwd_to_determine_best_card(
+                            epi_zugeben,
+                            Box::new(all_possible_hands(
+                                &game.stichseq,
+                                (game.ahand[epi_current].clone(), epi_current),
+                                &game.rules,
+                                &game.expensifiers.vecstoss,
+                            )) as Box<_>,
+                        )
+                    )
                 };
-                let (_determinebestcardresult_cheating, ocardandpayout_cheating) = look_for_mistakes!(
-                    std::iter::once(game.ahand.clone()),
-                );
+                let determinebestcardresult_cheating = unwrap!(mapepivecpossiblepayout[epi_current].last()).0.clone();
+                let ocardandpayout_cheating = look_for_mistakes(&determinebestcardresult_cheating);
                 vecanalysispercard.push(SAnalysisPerCard {
-                    determinebestcardresult_cheating: unwrap!(mapepivecpossiblepayout[epi_current].last()).0.clone(),
+                    determinebestcardresult_cheating,
                     stichseq: game.stichseq.clone(),
                     card_played,
                     ahand: game.ahand.clone(),
