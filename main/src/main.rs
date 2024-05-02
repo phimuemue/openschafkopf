@@ -1,7 +1,7 @@
-#![cfg_attr(feature = "cargo-clippy", allow(
+#![allow(
     clippy::blocks_in_conditions,
     clippy::clone_on_copy, // TODORUST I think that some types that implement Copy should not implement it (in particular: large arrays)
-))]
+)]
 
 mod subcommands;
 
