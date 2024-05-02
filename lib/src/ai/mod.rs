@@ -266,7 +266,6 @@ pub fn determine_best_card<
         <SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> as TForEachSnapshot>::Output: TMinMaxStrategies<MinMaxStrategiesHK, Arg0=EnumMap<EPlayerIndex, isize>>,
         MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: Send + Clone,
         MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK> + Clone + Sync + Send,
-        AlphaBetaPruner: Sync,
 {
     fn finalize_arc_mutex<T>(arcmutex: Arc<Mutex<T>>) -> T {
         unwrap!(
