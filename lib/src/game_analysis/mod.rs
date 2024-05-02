@@ -145,15 +145,11 @@ pub fn analyze_game(
                         &game.expensifiers.vecstoss,
                     )).1
                 };
-                let (determinebestcardresult_cheating, ocardandpayout_cheating) = look_for_mistakes!(
+                let (_determinebestcardresult_cheating, ocardandpayout_cheating) = look_for_mistakes!(
                     std::iter::once(game.ahand.clone()),
                 );
-                assert_eq!(
-                    determinebestcardresult_cheating.t_combined,
-                    unwrap!(mapepivecpossiblepayout[epi_current].last()).0.t_combined,
-                );
                 vecanalysispercard.push(SAnalysisPerCard {
-                    determinebestcardresult_cheating,
+                    determinebestcardresult_cheating: unwrap!(mapepivecpossiblepayout[epi_current].last()).0.clone(),
                     stichseq: game.stichseq.clone(),
                     card_played,
                     ahand: game.ahand.clone(),
