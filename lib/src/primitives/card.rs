@@ -22,6 +22,18 @@ impl fmt::Display for EFarbe {
     }
 }
 
+impl<'de> serde::Deserialize<'de> for EFarbe {
+    fn deserialize<D>(deserializer: D) -> Result<EFarbe, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+    {
+        parse_trimmed(
+            &String::deserialize(deserializer)?,
+            crate::primitives::cardvector::farbe_parser(),
+        ).map_err(serde::de::Error::custom)
+    }
+}
+
 plain_enum_mod!(modeschlag, ESchlag {
     Ass,
     Zehn,

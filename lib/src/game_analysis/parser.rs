@@ -8,6 +8,8 @@ use crate::primitives::cardvector::*;
 use itertools::Itertools;
 use combine::{char::*, *};
 use std::fmt::Debug;
+use serde::Deserialize;
+use serde_repr::Deserialize_repr;
 
 #[derive(Debug)]
 pub struct SSauspielAllowedRules {
@@ -447,6 +449,150 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, FnBeforeP
             stockorgame: VStockOrT::Stock(ruleset),
         })
     }
+}
+
+plain_enum_mod!(modesauspielposition, derive(Deserialize_repr,), map_derive(), ESauspielPosition {_0, _1, _2, _3,});
+
+pub fn analyze_sauspiel_json(str_json: &str) -> Result<SGameResultGeneric</*Ruleset*/EKurzLang, (), ()>, failure::Error> {
+    #[derive(Deserialize, Debug)]
+    #[serde(tag = "type")]
+    #[allow(non_camel_case_types, non_snake_case)] // to match Sauspiel JSON
+    #[allow(dead_code)] // to find unexpected errors in matching
+    enum VSauspielJSONEvent {
+        yourAuthenticationSucceeded {
+            // position: ESauspielPosition,
+            // userName: String,
+            // playInstant: bool,
+            // userID: usize,
+            // balancePlay: isize,
+            // avatar: SAvatar,
+        },
+        joinedTable {
+            // position: ESauspielPosition,
+            // userName: String,
+            // playInstant: bool,
+            // userID: usize,
+            // balancePlay: isize,
+            // avatar: SAvatar,
+        },
+        gameStarted {
+            // gameID: usize,
+            // playInstant: bool,
+        },
+        youGotCards {
+            cards: Vec<ECard>,
+        },
+        hasKnocked {
+            position: ESauspielPosition,
+        },
+        playsTheGame {
+            suit: Option<EFarbe>,
+            gameType: usize,
+            position: Option<ESauspielPosition>,
+            announcement: usize
+        },
+        hasContra {
+            position: ESauspielPosition,
+        },
+        playedACard {
+            position: ESauspielPosition,
+            cardID: ECard,
+        },
+        wonTheTrick {
+            // position: ESauspielPosition,
+            // cards: [ECard; EPlayerIndex::SIZE],
+            // playInstant: bool,
+        },
+        gameResult {
+            won: bool,
+            points: isize,
+            amount: isize,
+            balanceType: isize,
+            gameType: String,
+            gameRate: String,
+            baseRate: String,
+            runners: isize,
+            result: isize,
+            knockings: usize,
+            contras: usize,
+            announcement: usize,
+            // players: [EPlayerRole; EPlayerIndex::SIZE]
+        },
+    }
+
+    #[derive(Debug)]
+    struct SMissing;
+    let mut resstr_rules_no_playerindex = Err(SMissing);
+    let mut resoposition_active = Err(SMissing);
+    let mut resoefarbe = Err(SMissing);
+    let mut vectplpositioncard_played = Vec::new();
+    let mut vecerr = Vec::new();
+
+    for jsonval_sauspieljsonevent in serde_json::from_str::<Vec<serde_json::Value>>(str_json)? {
+        match serde_json::value::from_value(jsonval_sauspieljsonevent) {
+            Err(err) => {
+                vecerr.push(err);
+            },
+            Ok(
+                VSauspielJSONEvent::yourAuthenticationSucceeded{..}
+                | VSauspielJSONEvent::joinedTable{..}
+                | VSauspielJSONEvent::gameStarted{..}
+                | VSauspielJSONEvent::youGotCards{..} // TODO? derive EKurzLang from this
+                | VSauspielJSONEvent::hasKnocked{..} // TODO collect doublings
+                | VSauspielJSONEvent::hasContra{..} // TODO collect stoss
+                | VSauspielJSONEvent::wonTheTrick{..} // TODO? consistency checks
+            )
+            => {
+            },
+            Ok(VSauspielJSONEvent::playsTheGame{suit, position, ..}) => {
+                resoefarbe = Ok(suit);
+                resoposition_active = Ok(position);
+            },
+            Ok(VSauspielJSONEvent::playedACard{position, cardID}) => {
+                vectplpositioncard_played.push((position, cardID));
+            },
+            Ok(VSauspielJSONEvent::gameResult{gameType, ..}) => {
+                resstr_rules_no_playerindex = Ok(gameType);
+                // TODO? consistency check gameresult
+            },
+        }
+    }
+    move || -> Result<_,_> {
+        let position_corresponding_to_epi0 = vectplpositioncard_played.first()
+            .ok_or_else(|| format_err!("Cannot determine position_corresponding_to_epi0"))
+            .map(|(position, _card)| *position)?;
+        let position_to_epi = move |position: ESauspielPosition| {
+            unwrap!(EPlayerIndex::checked_from_usize(position.wrapped_difference(position_corresponding_to_epi0).0.to_usize()))
+        };
+        let rules = crate::rules::parser::parse_rule_description_simple(&{
+            // TODO? good to go through parse_rule_description_simple?
+            let mut str_rules = "".to_string();
+            if let Some(efarbe) = resoefarbe.map_err(|err| format_err!("oefarbe not found: {:?}", err))? {
+                str_rules += &format!("{} ", efarbe);
+            }
+            str_rules += &resstr_rules_no_playerindex.map_err(|err| format_err!("str_rules_no_playerindex not found: {:?}", err))?;
+            if let Some(position_active)=resoposition_active.map_err(|err| format_err!("oepi_active not found: {:?}", err))? {
+                str_rules += &format!(" von {}", position_to_epi(position_active));
+            }
+            str_rules
+        })?;
+        let ekurzlang = EKurzLang::values()
+            .find(|ekurzlang| ekurzlang.cards_per_player()*EPlayerIndex::SIZE==vectplpositioncard_played.len())
+            .ok_or(format_err!("Could not determine ekurzlang"))?;
+        let stichseq = SStichSequence::new_from_cards(
+            ekurzlang,
+            vectplpositioncard_played.iter().map(|tplpositioncard| tplpositioncard.1),
+            &rules
+        ).map_err(|SDuplicateCard(card)| format_err!("Duplicate card: {}", card))?;
+        SGameGeneric::</*Ruleset*/EKurzLang, (), ()>::new_finished_with_ruleset(
+            rules,
+            SExpensifiers::new_no_stock_doublings_stoss(), // TODO
+            SStichSequenceGameFinished::new(&stichseq),
+            ekurzlang,
+        ).and_then(|game| game.finish()
+            .map_err(|err| format_err!("Could not finish game: {:?}", err))
+        )
+    }().map_err(|err| format_err!("{}: {:?}", err, vecerr))
 }
 
 pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failure::Error>> + std::fmt::Debug + '_ {

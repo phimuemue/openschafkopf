@@ -1428,6 +1428,7 @@ dependencies = [
  "resvg",
  "select",
  "serde",
+ "serde_json",
  "serde_repr",
  "serde_test",
  "toml",

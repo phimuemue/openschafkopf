@@ -45,10 +45,15 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     resgameresult,
                 });
             };
-            if let resgameresult@Ok(_) = analyze_sauspiel_html(&str_input) {
+            if let resgameresult@Ok(_) = analyze_sauspiel_html(&str_input)
+                .map(|game| game.map(|_|(), |_|(), |_|()))
+                .or_else(|_err| analyze_sauspiel_json(&str_input)
+                    .map(|game| game.map(|_|(), |_|(), |_|()))
+                )
+            {
                 push_game(
                     str_path.clone().into_owned(),
-                    resgameresult.map(|game| game.map(|_|(), |_|(), |_|()))
+                    resgameresult
                 )
             } else {
                 let mut b_found_plain = false;

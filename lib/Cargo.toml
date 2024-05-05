@@ -28,6 +28,7 @@ select = "0"
 openschafkopf_util = {path = "../util"}
 serde = {version = "1", features = ["derive"]}
 serde_repr = "0"
+serde_json = "1"
 enum_dispatch = "0.3.12"
 
 [dev-dependencies]

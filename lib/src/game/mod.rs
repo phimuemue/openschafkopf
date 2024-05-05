@@ -364,19 +364,35 @@ impl<Ruleset, GameAnnouncements, DetermineRules> TGamePhase for SGameGeneric<Rul
     }
 }
 
+impl<Ruleset> SGameGeneric<Ruleset, (), ()> {
+    pub fn new_with_ruleset(
+        aveccard : EnumMap<EPlayerIndex, SHandVector>,
+        expensifiers : SExpensifiersNoStoss,
+        rules : SRules,
+        ruleset: Ruleset,
+    ) -> Self {
+        Self::new_with(
+            aveccard,
+            expensifiers,
+            rules,
+            ruleset,
+            /*gameannouncements*/(),
+            /*determinerules*/(),
+        )
+    }
+}
+
 impl SGame {
     pub fn new(
         aveccard : EnumMap<EPlayerIndex, SHandVector>,
         expensifiers : SExpensifiersNoStoss,
         rules : SRules,
     ) -> SGame {
-        SGame::new_with(
+        SGame::new_with_ruleset(
             aveccard,
             expensifiers,
             rules,
             /*ruleset*/(),
-            /*gameannouncements*/(),
-            /*determinerules*/(),
         )
     }
 }
@@ -410,13 +426,22 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         expensifiers: SExpensifiers,
         stichseq: SStichSequenceGameFinished,
     ) -> Result<SGame, Error> {
+        SGame::new_finished_with_ruleset(rules, expensifiers, stichseq, /*ruleset*/())
+    }
+
+    pub fn new_finished_with_ruleset(
+        rules : SRules,
+        expensifiers: SExpensifiers,
+        stichseq: SStichSequenceGameFinished,
+        ruleset: Ruleset,
+    ) -> Result<SGameGeneric<Ruleset, (), ()>, Error> {
         let aveccard = EPlayerIndex::map_from_fn(|epi|
             stichseq.get()
                 .completed_cards_by(epi)
                 .collect()
         );
         let SExpensifiers{n_stock, doublings, vecstoss} = expensifiers;
-        let game = SGame::new(aveccard, SExpensifiersNoStoss::new_with_doublings(n_stock, doublings), rules)
+        let game = SGameGeneric::new_with_ruleset(aveccard, SExpensifiersNoStoss::new_with_doublings(n_stock, doublings), rules, ruleset)
             .play_cards_and_stoss(vecstoss, stichseq.get().visible_cards(), |_,_,_,_| {})?;
         assert!(game.which_player_can_do_something().is_none());
         Ok(game)

@@ -12,7 +12,7 @@ use openschafkopf_util::*;
 use openschafkopf_lib::{
     rules::{
         TRules,
-        ruleset::{SRuleSet, TRuleSet, VStockOrT},
+        ruleset::{SRuleSet, VStockOrT},
     },
     ai::SAi,
     primitives::card::EKurzLang,
@@ -106,8 +106,8 @@ pub fn glob_files_or_read_stdin<'str_glob>(
     Ok(())
 }
 
-pub fn gameresult_to_dir<Ruleset: TRuleSet, GameAnnouncements, DetermineRules>(
-    gameresult: &SGameResultGeneric<Ruleset, GameAnnouncements, DetermineRules>,
+pub fn gameresult_to_dir<GameAnnouncements, DetermineRules>(
+    gameresult: &SGameResultGeneric</*Ruleset*/EKurzLang, GameAnnouncements, DetermineRules>,
 ) -> std::path::PathBuf {
     let path_to_kurzlang = |ekurzlang| {
         std::path::Path::new(match ekurzlang {
@@ -116,8 +116,8 @@ pub fn gameresult_to_dir<Ruleset: TRuleSet, GameAnnouncements, DetermineRules>(
         })
     };
     match &gameresult.stockorgame {
-        VStockOrT::Stock(ruleset) => {
-            path_to_kurzlang(ruleset.kurzlang())
+        VStockOrT::Stock(ekurzlang_ruleset) => {
+            path_to_kurzlang(*ekurzlang_ruleset)
                 .join("stock")
         },
         VStockOrT::OrT(game) => {

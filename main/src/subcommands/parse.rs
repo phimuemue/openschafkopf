@@ -1,9 +1,9 @@
 use openschafkopf_lib::{
-    game_analysis::parser::analyze_sauspiel_html,
+    game_analysis::parser::{analyze_sauspiel_html, analyze_sauspiel_json},
     game::*,
     rules::{
         SRuleStateCache,
-        ruleset::{VStockOrT},
+        ruleset::{VStockOrT, TRuleSet},
         TRules,
     },
     primitives::*,
@@ -166,7 +166,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     super::glob_files_or_read_stdin(
         clapmatches.values_of("file").into_iter().flatten(),
         |opath, str_input, i_input| {
-            if let Ok(ref gameresult@SGameResultGeneric{stockorgame: VStockOrT::OrT(ref game), ..}) = analyze_sauspiel_html(&str_input) {
+            if let Ok(ref gameresult@SGameResultGeneric{stockorgame: VStockOrT::OrT(ref game), ..}) = analyze_sauspiel_html(&str_input)
+                .map(|game| game.map(|_|(), |_|(), |ruleset| ruleset.kurzlang()))
+                .or_else(|_err| analyze_sauspiel_json(&str_input))
+            {
                 let mut game_csv = SGame::new(
                     game.aveccard.clone(),
                     SExpensifiersNoStoss::new_with_doublings(
