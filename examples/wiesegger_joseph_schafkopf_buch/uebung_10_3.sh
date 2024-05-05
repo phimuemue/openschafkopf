@@ -17,7 +17,6 @@ do
         --rules "Eichel-Wenz von 2" \
         --cards-on-table "ha hk ea h8  gu ez eu e7  sk s7 ek sa  su g7 e8 hu $card" \
         --hand "eo e9 gz g9" \
-        --no-details \
         --points --snapshotcache
 done
 echo "The above shows that we should not play Gras-Ass but some other card."
