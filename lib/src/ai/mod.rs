@@ -264,7 +264,7 @@ pub fn determine_best_card<
 ) -> Option<SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>>
     where
         MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: Send,
-        MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK> + Clone + Sync + Send,
+        MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK> + Clone + Send,
 {
     fn finalize_arc_mutex<T>(arcmutex: Arc<Mutex<T>>) -> T {
         unwrap!(
