@@ -322,12 +322,7 @@ pub fn determine_best_card<
                     let payoutstats : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output.map(|mapepin_payout|
                         SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
                     );
-                    {
-                        let mapcardooutput_per_ahand = Arc::clone(&mapcardooutput_per_ahand);
-                        let mut mapcardooutput_per_ahand = unwrap!(mapcardooutput_per_ahand.lock());
-                        assert!(mapcardooutput_per_ahand[card].is_none());
-                        mapcardooutput_per_ahand[card] = Some(output);
-                    }
+                    verify!(unwrap!(Arc::clone(&mapcardooutput_per_ahand).lock())[card].replace(output).is_none());
                     let mapcardooutput = Arc::clone(&mapcardooutput);
                     let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
                     match ooutput {

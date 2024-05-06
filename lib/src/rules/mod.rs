@@ -199,8 +199,7 @@ impl SRuleStateCacheFixed {
         debug_assert!(ahand_vecstich_card_count_is_compatible(ahand, stichseq));
         let mut mapcardoepi = ECard::map_from_fn(|_| None);
         let mut register_card = |card, epi| {
-            assert!(mapcardoepi[card].is_none());
-            mapcardoepi[card] = Some(epi);
+            verify!(mapcardoepi[card].replace(epi).is_none());
         };
         for (epi, card) in stichseq.visible_cards() {
             register_card(*card, epi);

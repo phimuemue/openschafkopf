@@ -18,8 +18,7 @@ impl STrumpfDeciderInternal {
     fn new_with_custom_ace_to_7_ordering(slcschlag_trumpf: &'static [ESchlag], oefarbe: impl Into<Option<EFarbe>>, itschlag_no_trumpf: impl IntoIterator<Item=ESchlag>) -> Self {
         let mut mapschlagoi_higher_is_stronger = ESchlag::map_from_fn(|_eschlag| None);
         for (i_schlag_no_trumpf, schlag_no_trumpf) in itschlag_no_trumpf.into_iter().enumerate() {
-            assert!(mapschlagoi_higher_is_stronger[schlag_no_trumpf].is_none());
-            mapschlagoi_higher_is_stronger[schlag_no_trumpf] = verify!(NonZeroUsize::new(ESchlag::SIZE - i_schlag_no_trumpf));
+            verify!(mapschlagoi_higher_is_stronger[schlag_no_trumpf].replace(unwrap!(NonZeroUsize::new(ESchlag::SIZE - i_schlag_no_trumpf))).is_none());
         }
         for schlag in ESchlag::values() {
             assert_eq!(mapschlagoi_higher_is_stronger[schlag].is_some(), !slcschlag_trumpf.contains(&schlag));
