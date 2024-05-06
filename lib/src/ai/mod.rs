@@ -290,15 +290,13 @@ pub fn determine_best_card<
             )
                 .into_par_iter()
                 .for_each(|&card| {
-                    let mut ahand = ahand.clone();
                     fn_inspect(/*b_before*/true, i_ahand, &ahand, card);
                     let foreachsnapshot = fn_make_foreachsnapshot(stichseq, &ahand);
                     let mut visualizer = fn_visualizer(i_ahand, &ahand, Some(card)); // do before ahand is modified
                     debug_assert!(ahand[epi_current].cards().contains(&card));
-                    let mut stichseq = stichseq.clone();
                     assert!(ahand_vecstich_card_count_is_compatible(&ahand, &stichseq));
                     let rules = foreachsnapshot.rules;
-                    let output = stichseq.zugeben_and_restore_with_hands(&mut ahand, epi_current, card, rules, |ahand, stichseq| {
+                    let output = stichseq.clone().zugeben_and_restore_with_hands(&mut ahand.clone(), epi_current, card, rules, |ahand, stichseq| {
                         if ahand.iter().all(|hand| hand.cards().is_empty()) {
                             let stichseq_finished = SStichSequenceGameFinished::new(stichseq);
                             foreachsnapshot.final_output(
