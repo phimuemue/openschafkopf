@@ -144,24 +144,71 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
         )
 }
 
+#[derive(new, Serialize)]
+struct SJsonTableLine<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>
+    where
+        MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
+{
+    ostr_header: Option<String>,
+    perminmaxstrategyvecpayout_histogram: MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>,
+}
+
+#[derive(new, Serialize)]
+struct SJson<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Serialize>
+    where
+        MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
+{
+    str_rules: String,
+    astr_hand: [String; EPlayerIndex::SIZE],
+    vectableline: Vec<SJsonTableLine<MinMaxStrategiesHK>>,
+}
+
+fn json_histograms<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(payoutstatsperstrategy: &MinMaxStrategiesHK::Type<SPayoutStats<std::cmp::Ordering>>)
+    -> MinMaxStrategiesHK::Type<Vec<((isize, char), usize)>>
+{
+    payoutstatsperstrategy.map(|payoutstats| 
+        payoutstats.histogram().iter()
+            .map(|((n_payout, ord_vs_0), n_count)| ( 
+                (
+                    *n_payout,
+                    match ord_vs_0 {
+                        std::cmp::Ordering::Less => '-',
+                        std::cmp::Ordering::Equal => '\u{00b1}', // plus-minus 0
+                        std::cmp::Ordering::Greater => '+',
+                    },
+                ),
+                *n_count,
+            ))
+            .collect()
+    )
+}
+
+enum EBranching {
+    Branching(usize, usize),
+    Equivalent(usize, SCardsPartition),
+    Oracle,
+    OnePerWinnerIndex(Option<EPlayerIndex>),
+}
+
+#[derive(Clone)]
+enum ESingleStrategy {
+    MaxMin,
+    MaxSelfishMin,
+}
+
+fn make_snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(rules: &SRules) -> impl Fn(&SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>> + '_
+    where
+        MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+std::fmt::Debug+Clone,
+{
+    move |rulestatecache| rules.snapshot_cache::<MinMaxStrategiesHK>(rulestatecache)
+}
+
+#[allow(clippy::extra_unused_type_parameters)]
+fn make_snapshot_cache_none<MinMaxStrategiesHK>(_rules: &SRules) -> impl Fn(&SRuleStateCacheFixed)->SSnapshotCacheNone {
+    SSnapshotCacheNone::factory()
+}
+
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
-    #[derive(new, Serialize)]
-    struct SJsonTableLine<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>
-        where
-            MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
-    {
-        ostr_header: Option<String>,
-        perminmaxstrategyvecpayout_histogram: MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>,
-    }
-    #[derive(new, Serialize)]
-    struct SJson<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Serialize>
-        where
-            MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
-    {
-        str_rules: String,
-        astr_hand: [String; EPlayerIndex::SIZE],
-        vectableline: Vec<SJsonTableLine<MinMaxStrategiesHK>>,
-    }
     with_common_args(
         clapmatches,
         |itahand, rules, stichseq, ahand_fixed_with_holes, epi_position, expensifiers, b_verbose| {
@@ -197,53 +244,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     (n_payout, n_payout.cmp(&0))
                 }
             };
-            fn json_histograms<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(payoutstatsperstrategy: &MinMaxStrategiesHK::Type<SPayoutStats<std::cmp::Ordering>>)
-                -> MinMaxStrategiesHK::Type<Vec<((isize, char), usize)>>
-            {
-                payoutstatsperstrategy.map(|payoutstats| 
-                    payoutstats.histogram().iter()
-                        .map(|((n_payout, ord_vs_0), n_count)| ( 
-                            (
-                                *n_payout,
-                                match ord_vs_0 {
-                                    std::cmp::Ordering::Less => '-',
-                                    std::cmp::Ordering::Equal => '\u{00b1}', // plus-minus 0
-                                    std::cmp::Ordering::Greater => '+',
-                                },
-                            ),
-                            *n_count,
-                        ))
-                        .collect()
-                )
-            }
-            enum EBranching {
-                Branching(usize, usize),
-                Equivalent(usize, SCardsPartition),
-                Oracle,
-                OnePerWinnerIndex(Option<EPlayerIndex>),
-            }
             use EBranching::*;
-            #[derive(Clone)]
-            enum ESingleStrategy {
-                MaxMin,
-                MaxSelfishMin,
-            }
             let oesinglestrategy = match clapmatches.value_of("strategy") {
                 Some("maxmin") => Ok(Some(ESingleStrategy::MaxMin)),
                 Some("maxselfishmin") => Ok(Some(ESingleStrategy::MaxSelfishMin)),
                 None => Ok(None),
                 Some(_) => Err(format_err!("Could not understand strategy.")),
             }?;
-            fn make_snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(rules: &SRules) -> impl Fn(&SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>> + '_
-                where
-                    MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+std::fmt::Debug+Clone,
-            {
-                move |rulestatecache| rules.snapshot_cache::<MinMaxStrategiesHK>(rulestatecache)
-            }
-            #[allow(clippy::extra_unused_type_parameters)]
-            fn make_snapshot_cache_none<MinMaxStrategiesHK>(_rules: &SRules) -> impl Fn(&SRuleStateCacheFixed)->SSnapshotCacheNone {
-                SSnapshotCacheNone::factory()
-            }
             // we are interested in payout => single-card-optimization useless
             macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), $MinMaxStrategiesHK:ident, $fn_alphabetapruner:expr, $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                 let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
