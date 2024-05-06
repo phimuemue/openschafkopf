@@ -263,7 +263,7 @@ pub fn determine_best_card<
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
 ) -> Option<SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>>
     where
-        MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: Send + Clone,
+        MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: Send,
         MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK> + Clone + Sync + Send,
 {
     fn finalize_arc_mutex<T>(arcmutex: Arc<Mutex<T>>) -> T {
@@ -319,15 +319,15 @@ pub fn determine_best_card<
                             )
                         }
                     });
+                    let payoutstats : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output.map(|mapepin_payout|
+                        SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
+                    );
                     {
                         let mapcardooutput_per_ahand = Arc::clone(&mapcardooutput_per_ahand);
                         let mut mapcardooutput_per_ahand = unwrap!(mapcardooutput_per_ahand.lock());
                         assert!(mapcardooutput_per_ahand[card].is_none());
-                        mapcardooutput_per_ahand[card] = Some(output.clone());
+                        mapcardooutput_per_ahand[card] = Some(output);
                     }
-                    let payoutstats : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output.map(|mapepin_payout|
-                        SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
-                    );
                     let mapcardooutput = Arc::clone(&mapcardooutput);
                     let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
                     match ooutput {
