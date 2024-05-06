@@ -263,7 +263,6 @@ pub fn determine_best_card<
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
 ) -> Option<SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>>
     where
-        <SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> as TForEachSnapshot>::Output: TMinMaxStrategies<MinMaxStrategiesHK, Arg0=EnumMap<EPlayerIndex, isize>>,
         MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: Send + Clone,
         MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK> + Clone + Sync + Send,
 {
