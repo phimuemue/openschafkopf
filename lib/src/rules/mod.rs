@@ -450,7 +450,7 @@ pub trait TRules : fmt::Display + Sync + fmt::Debug + Send + Clone {
         None
     }
 
-    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>> where MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone;
+    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>> where MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone;
     fn alpha_beta_pruner_lohi_values(&self) -> Option<Box<dyn Fn(&SRuleStateCacheFixed)->EnumMap<EPlayerIndex, ELoHi> + Sync>>;
 
     fn heuristic_active_occurence_probability(&self) -> Option<f64> {
@@ -607,7 +607,7 @@ impl TCardSorter for SActivelyPlayableRules {
     }
 }
 
-fn snapshot_cache_point_based<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone, PlayerParties: TPlayerParties+'static>(playerparties: PlayerParties) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
+fn snapshot_cache_point_based<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, PlayerParties: TPlayerParties+'static>(playerparties: PlayerParties) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
     where
         MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone,
 {
@@ -650,7 +650,7 @@ fn snap_equiv_base(stichseq: &SStichSequence) -> u64 {
     snapequiv
 }
 
-fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(fn_payload: impl Fn(&SRuleStateCache)->u64 + 'static) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
+fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(fn_payload: impl Fn(&SRuleStateCache)->u64 + 'static) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
     where
         MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone,
 {
@@ -661,18 +661,18 @@ fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(fn_pa
     //     payload: <result of fn_payload>,
     // }
     #[derive(Debug)]
-    struct SSnapshotCachePointBased<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone, FnPayload> {
+    struct SSnapshotCachePointBased<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, FnPayload> {
         fn_payload: FnPayload,
         mapsnapequivperminmaxmapepin_payout: HashMap<SSnapshotEquivalenceClass, MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>,
     }
-    impl<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone, FnPayload: Fn(&SRuleStateCache)->u64> SSnapshotCachePointBased<MinMaxStrategiesHK, FnPayload> {
+    impl<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, FnPayload: Fn(&SRuleStateCache)->u64> SSnapshotCachePointBased<MinMaxStrategiesHK, FnPayload> {
         fn snap_equiv(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> SSnapshotEquivalenceClass {
             let mut snapequiv = snap_equiv_base(stichseq);
             set_bits!(snapequiv, (self.fn_payload)(rulestatecache), 34);
             snapequiv
         }
     }
-    impl<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone, FnPayload: Fn(&SRuleStateCache)->u64> TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>> for SSnapshotCachePointBased<MinMaxStrategiesHK, FnPayload>
+    impl<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, FnPayload: Fn(&SRuleStateCache)->u64> TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>> for SSnapshotCachePointBased<MinMaxStrategiesHK, FnPayload>
         where
             MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone,
     {

@@ -19,7 +19,7 @@ pub trait TRufspielPayout: Clone + Sync + fmt::Debug + Send + 'static {
         expensifiers: &SExpensifiers,
         rulestatecache: &SRuleStateCache,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
-    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(
+    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(
         &self,
         rules: &SRulesRufspielGeneric<Self>,
         rulestatecachefixed: &SRuleStateCacheFixed,
@@ -78,7 +78,7 @@ impl TRufspielPayout for SRufspielPayout {
         ))
     }
 
-    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
+    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
         where
             MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+Debug+Clone,
     {
@@ -353,7 +353,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         ))
     }
 
-    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(&self, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
+    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(&self, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
         where
             MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+Debug+Clone,
     {
@@ -427,7 +427,7 @@ impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
             &rules.playerparties(&rulestatecache.fixed),
         )
     }
-    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
+    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(&self, rules: &SRulesRufspielGeneric<Self>, rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
         where
             MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+Debug+Clone,
     {

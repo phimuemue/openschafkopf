@@ -154,7 +154,7 @@ struct SJsonTableLine<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>
 }
 
 #[derive(new, Serialize)]
-struct SJson<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Serialize>
+struct SJson<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>
     where
         MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
 {
@@ -196,7 +196,7 @@ enum ESingleStrategy {
     MaxSelfishMin,
 }
 
-fn make_snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(rules: &SRules) -> impl Fn(&SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>> + '_
+fn make_snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(rules: &SRules) -> impl Fn(&SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>> + '_
     where
         MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+std::fmt::Debug+Clone,
 {
