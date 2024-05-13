@@ -252,7 +252,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 Some(_) => Err(format_err!("Could not understand strategy.")),
             }?;
             // we are interested in payout => single-card-optimization useless
-            macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), $MinMaxStrategiesHK:ident, $fn_alphabetapruner:expr, $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
+            macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $fn_alphabetapruner:expr,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                 let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                 let determinebestcardresult = determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_,_>( // TODO avoid explicit types
                     stichseq,
@@ -388,35 +388,52 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     // Some("hint") => (SPrunerViaHint), // TODO re-enable
                     _ => (SPrunerNothing),
                 },
-                match (oesinglestrategy.clone()) {
-                    None => SPerMinMaxStrategyHigherKinded,
-                    Some(ESingleStrategy::MaxMin) => SMaxMinStrategyHigherKinded,
-                    Some(ESingleStrategy::MaxSelfishMin) => SMaxSelfishMinStrategyHigherKinded,
-                },
-                match ((oesinglestrategy.clone(), clapmatches.is_present("abprune"), rules.alpha_beta_pruner_lohi_values())) {
-                    (None, b_abprune, _) | (_, b_abprune@false, _) | (Some(ESingleStrategy::MaxSelfishMin), b_abprune@true, None) => {
-                        if b_abprune && b_verbose {
-                            println!("Warning: abprune not supported strategy/rules combination. Continuing without.");
-                        }
-                        |_stichseq, _ahand| SAlphaBetaPrunerNone
-                    },
-                    (Some(ESingleStrategy::MaxSelfishMin), true, Some(fn_alpha_beta_pruner_lohi_values)) => (|stichseq, ahand| SAlphaBetaPruner::new({
-                        let mut mapepilohi = fn_alpha_beta_pruner_lohi_values(
-                            &SRuleStateCacheFixed::new(ahand, stichseq),
-                        );
-                        if mapepilohi[epi_position]==ELoHi::Lo {
-                            for lohi in mapepilohi.iter_mut() {
-                                *lohi = -*lohi;
+                match ((oesinglestrategy, clapmatches.is_present("abprune"), rules.alpha_beta_pruner_lohi_values())) {
+                    (None, b_abprune, _) => (
+                        SPerMinMaxStrategyHigherKinded,
+                        {
+                            if b_abprune && b_verbose {
+                                println!("Warning: abprune not supported strategy/rules combination. Continuing without.");
                             }
-                        }
-                        assert_eq!(mapepilohi[epi_position], ELoHi::Hi);
-                        mapepilohi
-                    })),
-                    (Some(ESingleStrategy::MaxMin), true, _) => (|_stichseq, _ahand| SAlphaBetaPruner::new({
-                        let mut mapepilohi = EPlayerIndex::map_from_fn(|_| ELoHi::Lo);
-                        mapepilohi[epi_position] = ELoHi::Hi;
-                        mapepilohi
-                    })),
+                            |_stichseq, _ahand| SAlphaBetaPrunerNone
+                        },
+                    ),
+                    (Some(ESingleStrategy::MaxMin), false, _) => (
+                        SMaxMinStrategyHigherKinded,
+                        |_stichseq, _ahand| SAlphaBetaPrunerNone,
+                    ),
+                    (Some(ESingleStrategy::MaxMin), true, _) => (
+                        SMaxMinStrategyHigherKinded,
+                        (|_stichseq, _ahand| SAlphaBetaPruner::new({
+                            let mut mapepilohi = EPlayerIndex::map_from_fn(|_| ELoHi::Lo);
+                            mapepilohi[epi_position] = ELoHi::Hi;
+                            mapepilohi
+                        })),
+                    ),
+                    (Some(ESingleStrategy::MaxSelfishMin), b_abprune@false, _) | (Some(ESingleStrategy::MaxSelfishMin), b_abprune@true, None) => (
+                        SMaxSelfishMinStrategyHigherKinded,
+                        {
+                            if b_abprune && b_verbose {
+                                println!("Warning: abprune not supported strategy/rules combination. Continuing without.");
+                            }
+                            |_stichseq, _ahand| SAlphaBetaPrunerNone
+                        },
+                    ),
+                    (Some(ESingleStrategy::MaxSelfishMin), true, Some(fn_alpha_beta_pruner_lohi_values)) => (
+                        SMaxSelfishMinStrategyHigherKinded,
+                        (|stichseq, ahand| SAlphaBetaPruner::new({
+                            let mut mapepilohi = fn_alpha_beta_pruner_lohi_values(
+                                &SRuleStateCacheFixed::new(ahand, stichseq),
+                            );
+                            if mapepilohi[epi_position]==ELoHi::Lo {
+                                for lohi in mapepilohi.iter_mut() {
+                                    *lohi = -*lohi;
+                                }
+                            }
+                            assert_eq!(mapepilohi[epi_position], ELoHi::Hi);
+                            mapepilohi
+                        })),
+                    ),
                 },
                 match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
                     true => make_snapshot_cache,
