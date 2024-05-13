@@ -135,10 +135,9 @@ pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, 
 }
 
 impl<
-    MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded,
-    MinMaxStrategies: TMinMaxStrategies<MinMaxStrategiesHK> + TGenericArgs1<Arg0=EnumMap<EPlayerIndex, isize>>,
+    MinMaxStrategies: TMinMaxStrategies + TGenericArgs1<Arg0=EnumMap<EPlayerIndex, isize>>,
 >
-    TSnapshotVisualizer<MinMaxStrategies> for SForEachSnapshotHTMLVisualizer<'_, MinMaxStrategiesHK>
+    TSnapshotVisualizer<MinMaxStrategies> for SForEachSnapshotHTMLVisualizer<'_, MinMaxStrategies::HigherKinded>
 {
     fn begin_snapshot(&mut self, ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) {
         let str_item_id = format!("{}{}",
@@ -510,7 +509,8 @@ macro_rules! impl_perminmaxstrategy{(
         type Arg0 = T;
     }
 
-    impl<T> TMinMaxStrategies<$struct_higher_kinded> for $struct<T> {
+    impl<T> TMinMaxStrategies for $struct<T> {
+        type HigherKinded = $struct_higher_kinded;
         fn new(t: T) -> Self
             where T: Clone
         {
@@ -751,19 +751,20 @@ impl Max<EnumMap<EPlayerIndex, isize>> {
 }
 
 pub trait TMinMaxStrategiesHigherKinded : Sized + 'static + Sync {
-    type Type<R>: TMinMaxStrategies<Self> + TGenericArgs1<Arg0=R>;
+    type Type<R>: TMinMaxStrategies<HigherKinded=Self> + TGenericArgs1<Arg0=R>;
 }
 
 pub trait TGenericArgs1 {
     type Arg0;
 }
 
-pub trait TMinMaxStrategies<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> : TGenericArgs1 {
+pub trait TMinMaxStrategies : TGenericArgs1 {
+    type HigherKinded: TMinMaxStrategiesHigherKinded;
     fn new(t: <Self as TGenericArgs1>::Arg0) -> Self where <Self as TGenericArgs1>::Arg0: Clone;
-    fn map<R>(&self, f: impl FnMut(&<Self as TGenericArgs1>::Arg0)->R) -> MinMaxStrategiesHK::Type<R>;
+    fn map<R>(&self, f: impl FnMut(&<Self as TGenericArgs1>::Arg0)->R) -> <Self::HigherKinded as TMinMaxStrategiesHigherKinded>::Type<R>;
     fn modify_with_other<T1>(
         &mut self,
-        other: &MinMaxStrategiesHK::Type<T1>, 
+        other: &<Self::HigherKinded as TMinMaxStrategiesHigherKinded>::Type<T1>, 
         fn_modify_element: impl FnMut(&mut <Self as TGenericArgs1>::Arg0, &T1),
     );
     fn via_accessors(&self) -> Vec<(EMinMaxStrategy, &<Self as TGenericArgs1>::Arg0)>
@@ -773,7 +774,7 @@ pub trait TMinMaxStrategies<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> :
     fn compare_canonical<PayoutStatsPayload: Ord+Debug+Copy>(&self, other: &Self, fn_loss_or_win: impl Fn(isize, PayoutStatsPayload)->std::cmp::Ordering) -> std::cmp::Ordering where <Self as TGenericArgs1>::Arg0: Borrow<SPayoutStats<PayoutStatsPayload>>;
 }
 pub trait TMinMaxStrategiesInternal<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> :
-    TMinMaxStrategies<MinMaxStrategiesHK>
+    TMinMaxStrategies<HigherKinded=MinMaxStrategiesHK>
     + TGenericArgs1<Arg0=EnumMap<EPlayerIndex, isize>>
 {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex);
