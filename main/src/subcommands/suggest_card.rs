@@ -385,7 +385,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     }),
                 },
                 match (clapmatches.value_of("prune")) {
-                    Some("hint") => (SPrunerViaHint),
+                    // Some("hint") => (SPrunerViaHint), // TODO re-enable
                     _ => (SPrunerNothing),
                 },
                 match (oesinglestrategy.clone()) {
@@ -423,14 +423,14 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     false => make_snapshot_cache_none,
                 },
                 match (clapmatches.value_of("visualize")) {
-                    None => (SNoVisualization::factory()),
-                    Some(str_path) => {
-                        visualizer_factory(
-                            std::path::Path::new(str_path).to_path_buf(),
-                            rules,
-                            epi_position,
-                        )
-                    },
+                    _ => (SNoVisualization::factory()),
+                    // Some(str_path) => { // TODO re-enable
+                    //     visualizer_factory(
+                    //         std::path::Path::new(str_path).to_path_buf(),
+                    //         rules,
+                    //         epi_position,
+                    //     )
+                    // },
                 },
             );
             Ok(())
