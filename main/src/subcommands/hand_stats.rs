@@ -88,7 +88,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 (RecognizableAsNumber(ref mut number_self), RecognizableAsNumber(number_rhs)) => {
                     *number_self += number_rhs * f_percentage;
                 },
-                (Array(ref mut vecinspectionresult_self), Array(vecinspectionresult_rhs)) => {
+                (Array(ref mut vecinspectionresult_self), Array(vecinspectionresult_rhs)) if vecinspectionresult_self.len()==vecinspectionresult_rhs.len() => {
                     itertools::zip_eq(vecinspectionresult_self, vecinspectionresult_rhs)
                         .for_each(|(lhs, rhs)| lhs.accumulate_weighted_sum(rhs, f_percentage));
                 },
