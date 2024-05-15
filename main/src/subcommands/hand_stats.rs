@@ -57,7 +57,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     }
     #[derive(Hash, Eq, PartialEq, Ord, PartialOrd)]
     enum VInspectionResult<Number, Unknown> {
-        Number(Number),
+        RecognizableAsNumber(Number),
         Array(Vec<VInspectionResult<Number, Unknown>>),
         Unknown(Unknown),
     }
@@ -71,7 +71,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     impl <Number, Unknown> VInspectionResult<Number, Unknown> {
         fn map_numbers_remove_unknown<Number2>(&self, fn_number: &impl Fn(&Number)->Number2) -> VInspectionResult<Number2, SUndefined> {
             match self {
-                VInspectionResult::Number(number) => VInspectionResult::Number(fn_number(number)),
+                VInspectionResult::RecognizableAsNumber(number) => VInspectionResult::RecognizableAsNumber(fn_number(number)),
                 VInspectionResult::Unknown(_unknown) => VInspectionResult::Unknown(SUndefined),
                 VInspectionResult::Array(vecinspectionresult) => VInspectionResult::Array(
                     vecinspectionresult.iter()
@@ -85,7 +85,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         fn accumulate_weighted_sum(&mut self, inspectionresult: &Self, f_percentage: f64) {
             use VInspectionResult::*;
             match (self, inspectionresult) {
-                (Number(ref mut number_self), Number(number_rhs)) => {
+                (RecognizableAsNumber(ref mut number_self), RecognizableAsNumber(number_rhs)) => {
                     *number_self += number_rhs * f_percentage;
                 },
                 (Array(ref mut vecinspectionresult_self), Array(vecinspectionresult_rhs)) => {
@@ -98,12 +98,14 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             }
         }
     }
-    impl VInspectionResult<VIntFloat, String> {
+    impl VInspectionResult<VRecognizableAsNumber<bool>, String> {
         fn new(dynamic: rhai::Dynamic) -> Self {
-            if let Ok(n) = dynamic.as_int() {
-                VInspectionResult::Number(VIntFloat::Int(n))
+            if let Ok(b) = dynamic.as_bool() {
+                VInspectionResult::RecognizableAsNumber(VRecognizableAsNumber::Bool(b))
+            } else if let Ok(n) = dynamic.as_int() {
+                VInspectionResult::RecognizableAsNumber(VRecognizableAsNumber::Int(n))
             } else if let Ok(f) = dynamic.as_float() {
-                VInspectionResult::Number(VIntFloat::Float(STotalOrderedFloat(f)))
+                VInspectionResult::RecognizableAsNumber(VRecognizableAsNumber::Float(STotalOrderedFloat(f)))
             } else if dynamic.is_array() {
                 VInspectionResult::Array(
                     unwrap!(dynamic.into_array()).into_iter()
@@ -118,7 +120,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     impl<Number: Display, Unknown: Display> Display for VInspectionResult<Number, Unknown> {
         fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
             match self {
-                VInspectionResult::Number(n) => n.fmt(f),
+                VInspectionResult::RecognizableAsNumber(n) => n.fmt(f),
                 VInspectionResult::Unknown(unknown) => unknown.fmt(f),
                 VInspectionResult::Array(vecinspectionresult) => {
                     // TODO itertools: Could join respect formatting width, etc?
@@ -136,32 +138,35 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         }
     }
     #[derive(/*TODO? Hash by numeric value?*/Hash, Eq, PartialEq)]
-    enum VIntFloat { // TODO distinction even useful?
+    enum VRecognizableAsNumber<Bool> { // TODO distinction even useful?
         Int(rhai::INT),
         Float(STotalOrderedFloat),
+        Bool(Bool),
     }
-    impl Display for VIntFloat {
+    impl<Bool: Display> Display for VRecognizableAsNumber<Bool> {
         fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
             match self {
-                VIntFloat::Int(n) => n.fmt(formatter),
-                VIntFloat::Float(f) => f.fmt(formatter),
+                VRecognizableAsNumber::Int(n) => n.fmt(formatter),
+                VRecognizableAsNumber::Float(f) => f.fmt(formatter),
+                VRecognizableAsNumber::Bool(b) => b.fmt(formatter),
             }
         }
     }
-    impl VIntFloat {
+    impl VRecognizableAsNumber<bool> {
         fn to_total_ordered_float(&self) -> STotalOrderedFloat {
-            match self {
-                VIntFloat::Int(n) => STotalOrderedFloat(n.as_num::<f64>()),
-                VIntFloat::Float(STotalOrderedFloat(f)) => STotalOrderedFloat(*f),
-            }
+            STotalOrderedFloat(match self {
+                VRecognizableAsNumber::Int(n) => n.as_num::<f64>(),
+                VRecognizableAsNumber::Float(STotalOrderedFloat(f)) => *f,
+                VRecognizableAsNumber::Bool(b) => usize::from(*b).as_num::<f64>(),
+            })
         }
     }
-    impl PartialOrd for VIntFloat {
+    impl PartialOrd for VRecognizableAsNumber<bool> {
         fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
             Some(self.cmp(other))
         }
     }
-    impl Ord for VIntFloat {
+    impl Ord for VRecognizableAsNumber<bool> {
         fn cmp(&self, other: &Self) -> Ordering {
             // Order by numerical value
             Ord::cmp(&self.to_total_ordered_float(), &other.to_total_ordered_float())
