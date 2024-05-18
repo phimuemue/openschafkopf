@@ -94,12 +94,14 @@ impl std::str::FromStr for SConstraint {
         let mut module_card = rhai::Module::new();
         let mut module_farbe = rhai::Module::new();
         let mut module_schlag = rhai::Module::new();
+        let mut module_trumpforfarbe = rhai::Module::new();
         engine.set_strict_variables(true);
         engine
             .register_type::<SContext>()
             .register_type::<ECard>()
             .register_type::<EFarbe>()
-            .register_type::<ESchlag>();
+            .register_type::<ESchlag>()
+            .register_type::<VTrumpfOrFarbe>();
         fn register_count_fn(
             engine: &mut rhai::Engine,
             str_name: &str,
@@ -117,12 +119,30 @@ impl std::str::FromStr for SConstraint {
                     .collect()
             });
         }
+        fn register_parametrized_count_fn<T: Send+Sync+Clone+'static>(
+            engine: &mut rhai::Engine,
+            str_name: &str,
+            fn_pred: impl Fn(&SContext, T, ECard)->bool + Clone + Send + Sync + 'static,
+        ) {
+            let fn_pred_clone = fn_pred.clone();
+            engine.register_fn(str_name, move |ctx: SContext, t: T, i_epi: SRhaiUsize| {
+                ctx.count(i_epi, |card| fn_pred_clone(&ctx, t.clone(), card))
+            });
+            engine.register_fn(str_name, move |ctx: SContext, t: T| -> rhai::Array {
+                EPlayerIndex::map_from_fn(|epi| ctx.internal_count(epi, |card| fn_pred(&ctx, t.clone(), card)))
+                    .into_raw()
+                    .into_iter()
+                    .map(rhai::Dynamic::from)
+                    .collect()
+            });
+        }
         let mut register_trumpforfarbe = |str_trumpforfarbe: &str, trumpforfarbe| {
             register_count_fn(&mut engine, str_trumpforfarbe, move |ctx, card| {
                 ctx.rules.trumpforfarbe(card)==trumpforfarbe
             });
         };
         register_trumpforfarbe("trumpf", VTrumpfOrFarbe::Trumpf);
+        module_trumpforfarbe.set_var("Trumpf", VTrumpfOrFarbe::Trumpf); 
         for (str_farbe_capitalized, efarbe) in [
             ("Eichel", EFarbe::Eichel),
             ("Gras", EFarbe::Gras),
@@ -131,7 +151,12 @@ impl std::str::FromStr for SConstraint {
         ] {
             register_trumpforfarbe(&str_farbe_capitalized.to_ascii_lowercase(), VTrumpfOrFarbe::Farbe(efarbe));
             module_farbe.set_var(str_farbe_capitalized, efarbe); 
+            module_trumpforfarbe.set_var(str_farbe_capitalized, VTrumpfOrFarbe::Farbe(efarbe)); 
+
         }
+        register_parametrized_count_fn(&mut engine, "trumpforfarbe", |ctx, trumpforfarbe, card| {
+            ctx.rules.trumpforfarbe(card)==trumpforfarbe
+        });
         for (str_schlag_capitalized, eschlag) in [
             ("Sieben", ESchlag::S7),
             ("Acht", ESchlag::S8),
@@ -147,6 +172,9 @@ impl std::str::FromStr for SConstraint {
             });
             module_schlag.set_var(str_schlag_capitalized, eschlag);
         }
+        register_parametrized_count_fn(&mut engine, "schlag", |_ctx, eschlag, card| {
+            card.schlag()==eschlag
+        });
         rhai::FuncRegistration::new("new_card")
             .with_namespace(rhai::FnNamespace::Internal)
             .with_purity(true)
@@ -164,6 +192,9 @@ impl std::str::FromStr for SConstraint {
                 ctx.who_has_card(card_for_fn)
             });
         }
+        register_parametrized_count_fn(&mut engine, "card", |_ctx, card_queried, card| {
+            card==card_queried
+        });
         engine.register_fn("who_has_card", |ctx: SContext, card: ECard| ctx.who_has_card(card));
         engine
             .register_fn("hand_to_string", |ctx: SContext, i_epi: SRhaiUsize| -> String {
@@ -181,6 +212,7 @@ impl std::str::FromStr for SConstraint {
         engine.register_static_module("card", module_card.into());
         engine.register_static_module("farbe", module_farbe.into());
         engine.register_static_module("schlag", module_schlag.into());
+        engine.register_static_module("trumpforfarbe", module_trumpforfarbe.into());
         engine.compile(format!("fn inspect(ctx) {{ {} }}", str_in))
             .or_else(|_err|
                 str_in.parse()
