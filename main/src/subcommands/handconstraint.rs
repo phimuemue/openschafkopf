@@ -92,10 +92,14 @@ impl std::str::FromStr for SConstraint {
     fn from_str(str_in: &str) -> Result<Self, Self::Err> {
         let mut engine = rhai::Engine::new();
         let mut module_card = rhai::Module::new();
+        let mut module_farbe = rhai::Module::new();
+        let mut module_schlag = rhai::Module::new();
         engine.set_strict_variables(true);
         engine
             .register_type::<SContext>()
-            .register_type::<ECard>();
+            .register_type::<ECard>()
+            .register_type::<EFarbe>()
+            .register_type::<ESchlag>();
         fn register_count_fn(
             engine: &mut rhai::Engine,
             str_name: &str,
@@ -113,31 +117,41 @@ impl std::str::FromStr for SConstraint {
                     .collect()
             });
         }
-        for (str_trumpforfarbe, trumpforfarbe) in [
-            ("trumpf", VTrumpfOrFarbe::Trumpf),
-            ("eichel", VTrumpfOrFarbe::Farbe(EFarbe::Eichel)),
-            ("gras", VTrumpfOrFarbe::Farbe(EFarbe::Gras)),
-            ("herz", VTrumpfOrFarbe::Farbe(EFarbe::Herz)),
-            ("schelln", VTrumpfOrFarbe::Farbe(EFarbe::Schelln)),
-        ] {
+        let mut register_trumpforfarbe = |str_trumpforfarbe: &str, trumpforfarbe| {
             register_count_fn(&mut engine, str_trumpforfarbe, move |ctx, card| {
                 ctx.rules.trumpforfarbe(card)==trumpforfarbe
             });
-        }
-        for (str_schlag, eschlag) in [
-            ("sieben", ESchlag::S7),
-            ("acht", ESchlag::S8),
-            ("neun", ESchlag::S9),
-            ("zehn", ESchlag::Zehn),
-            ("unter", ESchlag::Unter),
-            ("ober", ESchlag::Ober),
-            ("koenig", ESchlag::Koenig),
-            ("ass", ESchlag::Ass),
+        };
+        register_trumpforfarbe("trumpf", VTrumpfOrFarbe::Trumpf);
+        for (str_farbe_capitalized, efarbe) in [
+            ("Eichel", EFarbe::Eichel),
+            ("Gras", EFarbe::Gras),
+            ("Herz", EFarbe::Herz),
+            ("Schelln", EFarbe::Schelln),
         ] {
-            register_count_fn(&mut engine, str_schlag, move |_ctx, card| {
+            register_trumpforfarbe(&str_farbe_capitalized.to_ascii_lowercase(), VTrumpfOrFarbe::Farbe(efarbe));
+            module_farbe.set_var(str_farbe_capitalized, efarbe); 
+        }
+        for (str_schlag_capitalized, eschlag) in [
+            ("Sieben", ESchlag::S7),
+            ("Acht", ESchlag::S8),
+            ("Neun", ESchlag::S9),
+            ("Zehn", ESchlag::Zehn),
+            ("Unter", ESchlag::Unter),
+            ("Ober", ESchlag::Ober),
+            ("Koenig", ESchlag::Koenig),
+            ("Ass", ESchlag::Ass),
+        ] {
+            register_count_fn(&mut engine, &str_schlag_capitalized.to_ascii_lowercase(), move |_ctx, card| {
                 card.schlag()==eschlag
             });
+            module_schlag.set_var(str_schlag_capitalized, eschlag);
         }
+        rhai::FuncRegistration::new("new_card")
+            .with_namespace(rhai::FnNamespace::Internal)
+            .with_purity(true)
+            .with_volatility(false)
+            .set_into_module(&mut module_card, ECard::new);
         for card_for_fn in <ECard as PlainEnum>::values() {
             let str_card_lower = card_for_fn.to_string().to_lowercase();
             for str_card in [&str_card_lower, &str_card_lower.to_uppercase()] {
@@ -165,6 +179,8 @@ impl std::str::FromStr for SConstraint {
             .register_fn("to_string", EPlayerIndex::to_string)
         ;
         engine.register_static_module("card", module_card.into());
+        engine.register_static_module("farbe", module_farbe.into());
+        engine.register_static_module("schlag", module_schlag.into());
         engine.compile(format!("fn inspect(ctx) {{ {} }}", str_in))
             .or_else(|_err|
                 str_in.parse()
