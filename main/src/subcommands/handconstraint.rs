@@ -38,6 +38,14 @@ impl SContext {
         self.internal_count(unwrap!(EPlayerIndex::checked_from_usize(i_epi.as_num::<usize>())), fn_pred)
     }
 
+    fn count_enummap(&self, fn_pred: impl Fn(&Self, ECard)->bool) -> rhai::Array {
+        EPlayerIndex::map_from_fn(|epi| self.internal_count(epi, |card| fn_pred(self, card)))
+            .into_raw()
+            .into_iter()
+            .map(rhai::Dynamic::from)
+            .collect()
+    }
+
     fn who_has_card(&self, card: ECard) -> SRhaiEPlayerIndex {
         unwrap!(EPlayerIndex::values().find(|&epi| self.ahand[epi].contains(card)))
             .to_usize()
@@ -111,12 +119,8 @@ impl std::str::FromStr for SConstraint {
             engine.register_fn(str_name, move |ctx: SContext, i_epi: SRhaiUsize| {
                 ctx.count(i_epi, |card| fn_pred_clone(&ctx, card))
             });
-            engine.register_fn(str_name, move |ctx: SContext| -> rhai::Array {
-                EPlayerIndex::map_from_fn(|epi| ctx.internal_count(epi, |card| fn_pred(&ctx, card)))
-                    .into_raw()
-                    .into_iter()
-                    .map(rhai::Dynamic::from)
-                    .collect()
+            engine.register_fn(str_name, move |ctx: SContext| {
+                ctx.count_enummap(&fn_pred)
             });
         }
         fn register_parametrized_count_fn<T: Send+Sync+Clone+'static>(
@@ -128,12 +132,8 @@ impl std::str::FromStr for SConstraint {
             engine.register_fn(str_name, move |ctx: SContext, t: T, i_epi: SRhaiUsize| {
                 ctx.count(i_epi, |card| fn_pred_clone(&ctx, t.clone(), card))
             });
-            engine.register_fn(str_name, move |ctx: SContext, t: T| -> rhai::Array {
-                EPlayerIndex::map_from_fn(|epi| ctx.internal_count(epi, |card| fn_pred(&ctx, t.clone(), card)))
-                    .into_raw()
-                    .into_iter()
-                    .map(rhai::Dynamic::from)
-                    .collect()
+            engine.register_fn(str_name, move |ctx: SContext, t: T| {
+                ctx.count_enummap(|ctx, card| fn_pred(&ctx, t.clone(), card))
             });
         }
         let mut register_trumpforfarbe = |str_trumpforfarbe: &str, trumpforfarbe| {
