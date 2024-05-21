@@ -629,7 +629,7 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*
         .filter(|str_gespielt_von| str_gespielt_von.starts_with("gespielt von")) // TODO be more precise?
         .ok_or_else(|| format_err!("Expected 'gespielt von'."))?;
     Ok(itstr_line
-        .group_by(|str_line| str_line.trim().is_empty())
+        .chunk_by(|str_line| str_line.trim().is_empty())
         .into_iter()
         .filter(|(b_is_empty, _grpstr_line)| !b_is_empty)
         .map(|(_b_is_empty, grpstr_line)| -> Result<_, _> {

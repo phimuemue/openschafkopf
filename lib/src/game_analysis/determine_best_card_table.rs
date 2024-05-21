@@ -102,7 +102,7 @@ pub fn internal_table<
                 ]),
             )
         })
-        .group_by(|(_t, perminmaxstrategyatplstrf)| {
+        .chunk_by(|(_t, perminmaxstrategyatplstrf)| {
             (
                 perminmaxstrategyatplstrf.clone(),
                 if b_group {
