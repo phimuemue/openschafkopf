@@ -67,6 +67,15 @@ impl VTrumpfOrFarbe {
     }
 }
 
+impl fmt::Display for VTrumpfOrFarbe {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            VTrumpfOrFarbe::Trumpf => write!(f, "Trumpf"),
+            VTrumpfOrFarbe::Farbe(efarbe) => efarbe.fmt(f),
+        }
+    }
+}
+
 pub type SDoublings = SPlayersInRound<bool, SStaticEPI0>; // assume that doublings occur in order
 
 #[derive(Clone, new, Debug)]
