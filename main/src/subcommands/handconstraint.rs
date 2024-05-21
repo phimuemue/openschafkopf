@@ -163,6 +163,11 @@ impl std::str::FromStr for SConstraint {
             module_trumpforfarbe.set_var(str_farbe_capitalized, VTrumpfOrFarbe::Farbe(efarbe)); 
 
         }
+        rhai::FuncRegistration::new("farbe")
+            .with_namespace(rhai::FnNamespace::Internal)
+            .with_purity(true)
+            .with_volatility(false)
+            .set_into_module(&mut module_trumpforfarbe, VTrumpfOrFarbe::Farbe);
         register_parametrized_count_fn(&mut engine, "trumpforfarbe", |ctx, trumpforfarbe, card| {
             ctx.rules.trumpforfarbe(card)==trumpforfarbe
         });
