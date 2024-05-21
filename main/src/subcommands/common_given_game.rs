@@ -384,7 +384,7 @@ pub fn with_common_args<FnWithArgs>(
                         n_samples,
                         internal_forever_rand_hands,
                         |itahand_pool| {
-                            let mut vectplahandpayout = Iterator::take(itahand_pool, n_pool)
+                            Iterator::take(itahand_pool, n_pool)
                                 .map(|ahand: EnumMap<EPlayerIndex, SHand>| {
                                     let payout = SAi::new_simulating(
                                         /*n_rank_rules_samples*/100,
@@ -404,11 +404,8 @@ pub fn with_common_args<FnWithArgs>(
                                     ).maxselfishmin.0.avg();
                                     (ahand, payout)
                                 })
-                                .collect::<Vec<_>>();
-                            vectplahandpayout.sort_unstable_by(|tplahandpayout_lhs, tplahandpayout_rhs| unwrap!(tplahandpayout_rhs.1.partial_cmp(&tplahandpayout_lhs.1)));
-                            vectplahandpayout.into_iter()
-                                .take(n_samples)
-                                .map(|tplahandpayout| tplahandpayout.0)
+                                .k_largest_by(n_samples, |tplahandpayout_lhs, tplahandpayout_rhs| unwrap!(tplahandpayout_lhs.1.partial_cmp(&tplahandpayout_rhs.1)))
+                                .map(|(ahand, _payout)| ahand)
                         }
                     )
                 },
