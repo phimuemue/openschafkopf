@@ -110,6 +110,15 @@ impl std::str::FromStr for SConstraint {
             .register_type::<EFarbe>()
             .register_type::<ESchlag>()
             .register_type::<VTrumpfOrFarbe>();
+        fn register_output_fn<T: std::fmt::Display+std::fmt::Debug+Sync+Send+Clone+'static>(engine: &mut rhai::Engine) {
+            engine
+                .register_fn("to_string", |t: &mut T| t.to_string())
+                .register_fn("to_debug", |t: &mut T| format!("{t:?}"));
+        }
+        register_output_fn::<ECard>(&mut engine);
+        register_output_fn::<EFarbe>(&mut engine);
+        register_output_fn::<ESchlag>(&mut engine);
+        register_output_fn::<VTrumpfOrFarbe>(&mut engine);
         fn register_count_fn(
             engine: &mut rhai::Engine,
             str_name: &str,
