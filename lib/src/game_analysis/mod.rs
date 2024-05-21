@@ -197,6 +197,17 @@ pub fn generate_html_auxiliary_files(path_out_dir: &std::path::Path) -> Result<(
     Ok(())
 }
 
+fn rules_to_string(rules: &SRules) -> String {
+    format!("{}{}", // TODO unify rule formatting
+        rules,
+        if let Some(epi) = rules.playerindex() {
+            format!(" von {}", epi)
+        } else {
+            "".to_owned()
+        },
+    )
+}
+
 impl SGameAnalysis {
     pub fn generate_analysis_html(
         &self,
@@ -206,14 +217,6 @@ impl SGameAnalysis {
         fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->String,
     ) -> String {
         let game = &self.game;
-        let str_rules = format!("{}{}", // TODO unify rule formatting
-            game.rules,
-            if let Some(epi) = game.rules.playerindex() {
-                format!(" von {}", epi)
-            } else {
-                "".to_owned()
-            },
-        );
         let mapepin_payout = unwrap!(game.clone().finish()).an_payout;
         use crate::game::*;
         assert!(game.which_player_can_do_something().is_none()); // TODO use SGameResult (see comment in SGameResult)
@@ -244,7 +247,7 @@ impl SGameAnalysis {
                     <h2>{str_rules}</h2>"###,
             str_description=str_description,
             str_link=str_link,
-            str_rules=str_rules,
+            str_rules=rules_to_string(&game.rules),
         )
         + "<table><tr>"
         + type_inference!(&str, &crate::ai::gametree::player_table_ahand(epi_self, &ahand, &game.rules, /*fn_border*/|_card| false, fn_output_card))
@@ -339,28 +342,8 @@ impl SGameAnalysis {
                 // TODO simplify output (as it currently only shows results from one ahand)
                 let stichseq = &analysispercard.stichseq;
                 let ahand = &analysispercard.ahand;
-                let (str_stich_caption, epi_current) = stich_caption(stichseq);
-                let mut str_per_card = format!(r###"<h3>{} <button onclick='
-                    (function /*copyToClipboard*/(str, btn) {{
-                        navigator.clipboard.writeText(str).then(
-                            function() {{
-                                btn.innerHTML = "Copied (" + (new Date()).toLocaleString() + ")";
-                            }},
-                            function() {{
-                                // indicate fail by doing nothing
-                            }},
-                        );
-                    }})("{}", this)
-                    '>&#128203</button></h3>"###,
-                    str_stich_caption,
-                    format!("{str_openschafkopf_executable} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand_all}\" --hand \"{str_hand_single}\"",
-                        str_cards_on_table=stichseq.visible_stichs().iter()
-                            .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
-                            .join("  "),
-                        str_hand_all=display_card_slices(ahand, &game.rules, "  "),
-                        str_hand_single=SDisplayCardSlice::new(ahand[epi_current].cards().to_vec(), &game.rules),
-                    ).replace('\"', "\\\""),
-                );
+                let str_stich_caption = stich_caption(stichseq).0;
+                let mut str_per_card = format!(r"<h3>{}</h3>", str_stich_caption);
                 unwrap!(write!(
                     str_per_card,
                     "<table><tr>{}{}</tr></table>",
@@ -381,6 +364,7 @@ impl SGameAnalysis {
                     &analysispercard.determinebestcardresult_cheating,
                     analysispercard.card_played,
                     fn_output_card,
+                    str_openschafkopf_executable,
                 );
                 str_per_card
             }).format("")
@@ -397,6 +381,7 @@ pub fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinde
     determinebestcardresult: &SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<()>>>,
     card_played: ECard,
     fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->String,
+    str_openschafkopf_executable: &str,
 )
     where
         MinMaxStrategiesHK::Type<SPayoutStats<()>>: std::fmt::Debug,
@@ -463,6 +448,27 @@ pub fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinde
     }
     *str_per_card += "</tr>";
     *str_per_card += "</table>";
+    *str_per_card += &format!(r###"<button onclick='
+        (function /*copyToClipboard*/(str, btn) {{
+            navigator.clipboard.writeText(str).then(
+                function() {{
+                    btn.innerHTML = "Copied (" + (new Date()).toLocaleString() + ")";
+                }},
+                function() {{
+                    // indicate fail by doing nothing
+                }},
+            );
+        }})("{}", this)
+        '>&#128203</button>"###,
+        format!("{str_openschafkopf_executable} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand_all}\" --hand \"{str_hand_single}\"",
+            str_rules=rules_to_string(rules),
+            str_cards_on_table=stichseq.visible_stichs().iter()
+                .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
+                .join("  "),
+            str_hand_all=display_card_slices(ahand, rules, "  "),
+            str_hand_single=SDisplayCardSlice::new(ahand[epi_current].cards().to_vec(), rules),
+        ).replace('\"', "\\\""),
+    );
 }
 
 fn write_html(path: std::path::PathBuf, str_html: &str) -> Result<std::path::PathBuf, failure::Error> {

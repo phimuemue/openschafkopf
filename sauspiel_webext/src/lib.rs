@@ -173,6 +173,7 @@ pub fn greet() {
                             </div>
                             */
                         },
+                        /*str_openschafkopf_executable*/"openschafkopf",
                     );
                     str_table
                 });
