@@ -82,7 +82,8 @@ pub fn internal_table<
                 (
                     format!("{} ", mapordn_count.iter().join("/")),
                     (mapordn_count[std::cmp::Ordering::Equal]+mapordn_count[std::cmp::Ordering::Greater])
-                        .as_num::<f32>(),
+                        .as_num::<f32>()
+                        / (mapordn_count.iter().sum::<usize>().as_num::<f32>()),
                 )
             };
             let column_min_or_max = |n: isize| {
