@@ -321,17 +321,12 @@ pub fn determine_best_card<
                         SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
                     );
                     verify!(unwrap!(Arc::clone(&mapcardooutput_per_ahand).lock())[card].replace(output).is_none());
-                    let mapcardooutput = Arc::clone(&mapcardooutput);
-                    let ooutput = &mut unwrap!(mapcardooutput.lock())[card];
-                    match ooutput {
-                        None => *ooutput = Some(payoutstats),
-                        Some(ref mut output_return) => {
-                            output_return.modify_with_other(
-                                &payoutstats,
-                                |lhs, rhs| SPayoutStats::accumulate(lhs, rhs),
-                            );
-                        },
-                    }
+                    unwrap!(mapcardooutput.lock())[card].insert_or_fold(payoutstats, |payoutstats_acc, payoutstats| {
+                        payoutstats_acc.modify_with_other(
+                            &payoutstats,
+                            |lhs, rhs| SPayoutStats::accumulate(lhs, rhs),
+                        )
+                    });
                     fn_inspect(/*b_before*/false, i_ahand, &ahand, card);
                 });
             let mapcardooutput_per_ahand = finalize_arc_mutex(mapcardooutput_per_ahand);
@@ -348,17 +343,12 @@ pub fn determine_best_card<
             let payoutstats_per_hand : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output_per_ahand.map(|mapepin_payout|
                 SPayoutStats::new_1(fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
             );
-            let ooutput_combined = Arc::clone(&ooutput_combined);
-            let mut ooutput_combined = unwrap!(ooutput_combined.lock());
-            match *ooutput_combined {
-                None => *ooutput_combined = Some(payoutstats_per_hand),
-                Some(ref mut output_combined) => {
-                    output_combined.modify_with_other(
-                        &payoutstats_per_hand,
-                        |lhs, rhs| lhs.accumulate(rhs),
-                    );
-                },
-            }
+            unwrap!(ooutput_combined.lock()).insert_or_fold(payoutstats_per_hand, |payoutstats_acc, payoutstats_per_hand| {
+                payoutstats_acc.modify_with_other(
+                    &payoutstats_per_hand,
+                    |lhs, rhs| lhs.accumulate(rhs),
+                );
+            });
         });
     let mapcardooutput = finalize_arc_mutex(mapcardooutput);
     let ooutput_combined = finalize_arc_mutex(ooutput_combined);
