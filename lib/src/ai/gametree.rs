@@ -489,8 +489,7 @@ pub enum EMinMaxStrategy {
 macro_rules! impl_perminmaxstrategy{(
     $struct:ident {$($emmstrategy:ident $ident_strategy:ident,)*}
     $struct_higher_kinded:ident
-    [$(($ident_strategy_win:ident, $ident_strategy_tiebreaker:ident))+]
-    [$($ident_strategy_cmp_avg:ident)+]
+    [$($ident_strategy_cmp:ident)+]
     $ident_strategy_maxmin_for_pruner:ident
 ) => {
     #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -556,35 +555,27 @@ macro_rules! impl_perminmaxstrategy{(
         }
         fn compare_canonical<PayoutStatsPayload: Ord+Debug+Copy>(&self, other: &Self, fn_loss_or_win: impl Fn(isize, PayoutStatsPayload)->std::cmp::Ordering) -> std::cmp::Ordering where T: Borrow<SPayoutStats<PayoutStatsPayload>> {
             use std::cmp::Ordering::*;
-            macro_rules! cmp_avg{($strategy:ident) => {{
-                // prioritize positive vs non-positive and zero vs negative payouts.
-                let lhs = &self.$strategy.0.borrow();
-                let rhs = &other.$strategy.0.borrow();
-                match unwrap!(lhs.avg().partial_cmp(&rhs.avg())) {
-                    Greater => Greater,
-                    Less => Less,
-                    Equal => lhs.max().cmp(&rhs.max()),
-                }
-            }}}
-            macro_rules! strategy_enforces_win{($strategy_win:ident, $strategy_tie_breaker:ident) => {
-                match (
-                    self.$strategy_win.0.borrow().counts(&fn_loss_or_win)[Less],
-                    other.$strategy_win.0.borrow().counts(&fn_loss_or_win)[Less],
-                ) {
-                    (0, 0) => {
-                        unwrap!(f32::partial_cmp(
-                            &self.$strategy_tie_breaker.0.borrow().avg(),
-                            &other.$strategy_tie_breaker.0.borrow().avg(),
-                        ))
-                    },
-                    (0, _) => Greater,
-                    (_, 0) => Less,
-                    (_, _) => Equal, // TODO good idea? Should we include some avg here?
-                }
-            }}
+            fn compare_fractions((numerator_lhs, denominator_lhs): (u128, u128), (numerator_rhs, denominator_rhs): (u128, u128)) -> std::cmp::Ordering {
+                u128::cmp(&(numerator_lhs * denominator_rhs), &(denominator_lhs * numerator_rhs))
+            }
             Equal
-                $(.then_with(|| strategy_enforces_win!($ident_strategy_win, $ident_strategy_tiebreaker)))+
-                $(.then_with(|| cmp_avg!($ident_strategy_cmp_avg)))+
+                $(.then_with(|| {
+                    let payoutstats_lhs = self.$ident_strategy_cmp.0.borrow();
+                    let payoutstats_rhs = other.$ident_strategy_cmp.0.borrow();
+                    let mapordn_lhs = payoutstats_lhs.counts(&fn_loss_or_win).map_into(|n| n.as_num::<u128>());
+                    let mapordn_rhs = payoutstats_rhs.counts(&fn_loss_or_win).map_into(|n| n.as_num::<u128>());
+                    let compare_winning_probability_internal = |ord| compare_fractions(
+                        (mapordn_lhs[ord], mapordn_lhs.iter().sum()),
+                        (mapordn_rhs[ord], mapordn_rhs.iter().sum()),
+                    );
+                    compare_winning_probability_internal(Greater)
+                        .then_with(|| compare_winning_probability_internal(Less).reverse())
+                        .then_with(|| match unwrap!(payoutstats_lhs.avg().partial_cmp(&payoutstats_rhs.avg())) {
+                            Greater => Greater,
+                            Less => Less,
+                            Equal => payoutstats_lhs.max().cmp(&payoutstats_rhs.max()),
+                        })
+                }))+
         }
     }
     impl TMinMaxStrategiesInternal<$struct_higher_kinded> for $struct<EnumMap<EPlayerIndex, isize>> {
@@ -618,12 +609,7 @@ impl_perminmaxstrategy!(
         Max maxmax,
     }
     SPerMinMaxStrategyHigherKinded
-    [
-        (maxmin, maxselfishmin)
-        (maxselfishmin, maxselfishmin)
-        (maxselfishmax, maxselfishmax)
-    ]
-    [maxmin maxselfishmin maxselfishmax maxmax minmin]
+    [maxselfishmin maxselfishmax maxmin maxmax minmin]
     maxmin
 );
 impl_perminmaxstrategy!(
@@ -632,10 +618,6 @@ impl_perminmaxstrategy!(
         SelfishMin maxselfishmin,
     }
     SMaxMinMaxSelfishMinHigherKinded
-    [
-        (maxmin, maxselfishmin)
-        (maxselfishmin, maxselfishmin)
-    ]
     [maxmin maxselfishmin]
     maxmin
 );
@@ -644,7 +626,6 @@ impl_perminmaxstrategy!(
         Min maxmin,
     }
     SMaxMinStrategyHigherKinded
-    [(maxmin, maxmin)]
     [maxmin]
     maxmin
 );
@@ -653,7 +634,6 @@ impl_perminmaxstrategy!(
         SelfishMin maxselfishmin,
     }
     SMaxSelfishMinStrategyHigherKinded
-    [(maxselfishmin, maxselfishmin)]
     [maxselfishmin]
     maxselfishmin
 );
