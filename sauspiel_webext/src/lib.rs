@@ -1,3 +1,6 @@
+#![allow(
+    clippy::blocks_in_conditions,
+)]
 mod utils;
 
 use wasm_bindgen::prelude::*;
