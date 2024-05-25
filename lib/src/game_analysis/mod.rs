@@ -364,6 +364,12 @@ impl SGameAnalysis {
                     &analysispercard.determinebestcardresult_cheating,
                     analysispercard.card_played,
                     fn_output_card,
+                );
+                append_html_copy_button(
+                    &mut str_per_card,
+                    &game.rules,
+                    &analysispercard.ahand,
+                    &analysispercard.stichseq,
                     str_openschafkopf_executable,
                 );
                 str_per_card
@@ -381,7 +387,6 @@ pub fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinde
     determinebestcardresult: &SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<()>>>,
     card_played: ECard,
     fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->String,
-    str_openschafkopf_executable: &str,
 )
     where
         MinMaxStrategiesHK::Type<SPayoutStats<()>>: std::fmt::Debug,
@@ -448,6 +453,15 @@ pub fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinde
     }
     *str_per_card += "</tr>";
     *str_per_card += "</table>";
+}
+
+pub fn append_html_copy_button(
+    str_per_card: &mut String,
+    rules: &SRules,
+    ahand: &EnumMap<EPlayerIndex, SHand>,
+    stichseq: &SStichSequence,
+    str_openschafkopf_executable: &str,
+) {
     *str_per_card += &format!(r###"<button onclick='
         (function /*copyToClipboard*/(str, btn) {{
             navigator.clipboard.writeText(str).then(
@@ -466,7 +480,7 @@ pub fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinde
                 .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
                 .join("  "),
             str_hand_all=display_card_slices(ahand, rules, "  "),
-            str_hand_single=SDisplayCardSlice::new(ahand[epi_current].cards().to_vec(), rules),
+            str_hand_single=SDisplayCardSlice::new(ahand[unwrap!(stichseq.current_stich().current_playerindex())].cards().to_vec(), rules),
         ).replace('\"', "\\\""),
     );
 }

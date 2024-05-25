@@ -5,7 +5,7 @@ use openschafkopf_util::*;
 use openschafkopf_lib::{
     ai::{determine_best_card, gametree::{SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}, stichoracle::SFilterByOracle},
     game::SGameResultGeneric,
-    game_analysis::{append_html_payout_table, parser::{internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
+    game_analysis::{append_html_payout_table, append_html_copy_button, parser::{internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
     rules::{TRules, ruleset::VStockOrT},
 };
 use crate::utils::*;
@@ -173,6 +173,12 @@ pub fn greet() {
                             </div>
                             */
                         },
+                    );
+                    append_html_copy_button(
+                        &mut str_table,
+                        rules,
+                        &ahand,
+                        &stichseq,
                         /*str_openschafkopf_executable*/"openschafkopf",
                     );
                     str_table
