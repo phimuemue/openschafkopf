@@ -42,7 +42,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     }
     impl PartialOrd for STotalOrderedFloat {
         fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-            Some(self.0.total_cmp(&other.0))
+            Some(self.cmp(other))
         }
     }
     impl Ord for STotalOrderedFloat {
