@@ -112,80 +112,87 @@ pub fn greet() {
     match internal_analyze_sauspiel_html(
         SWebsysDocument(document.clone()),
         |game, card, epi, element_played_card| {
-            if game.stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}) {
-                vecahandstichseqcardepielement.push((
-                    (game.ahand.clone(), game.stichseq.clone()),
-                    card,
-                    epi,
-                    element_played_card.0
-                ));
-            }
+            vecahandstichseqcardepielement.push((
+                (game.ahand.clone(), game.stichseq.clone()),
+                card,
+                epi,
+                element_played_card.0
+            ));
         },
     ) {
         Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}) => {
             let rules = &game_finished.rules;
             for ((ahand, stichseq), card_played, epi, element_played_card) in vecahandstichseqcardepielement {
-                let determinebestcardresult = unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_,_,_>(
-                    &stichseq,
-                    Box::new(std::iter::once(ahand.clone())) as Box<_>,
-                    /*fn_filter*/|stichseq, ahand| {
-                        SFilterByOracle::new(rules, ahand, stichseq)
-                    },
-                    &|_stichseq, _ahand| SGenericMinReachablePayout::<SMaxSelfishMinStrategyHigherKinded, SAlphaBetaPrunerNone>::new(
-                        rules,
-                        verify_eq!(epi, unwrap!(stichseq.current_playable_stich().current_playerindex())),
-                        game_finished.expensifiers.clone(),
-                    ),
-                    /*fn_snapshotcache*/|rulestatecache| {
-                        rules.snapshot_cache::<SMaxSelfishMinStrategyHigherKinded>(rulestatecache)
-                    },
-                    /*fn_visualizer*/SNoVisualization::factory(),
-                    /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
-                    /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
-                ));
-                let div_table = unwrap!(document.create_element("div"));
-                div_table.set_inner_html(&{
-                    let mut str_table = String::new();
-                    append_html_payout_table::<SMaxSelfishMinStrategyHigherKinded>(
-                        &mut str_table,
-                        rules,
-                        &ahand,
+                if stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}) {
+                    let determinebestcardresult = unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_,_,_>(
                         &stichseq,
-                        &determinebestcardresult,
-                        card_played,
-                        /*fn_output_card*/&|card, b_highlight| {
-                            let str_card = format!("{}", card).replace('Z', "X"); // TODO proper card formatter
-                            format!(r#"<span class="card-icon card-icon-by card-icon-{str_card}" title="{str_card}" {str_style}>{str_card}</span>"#,
-                                str_style = if b_highlight {r#"style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;""#} else {""},
-                            )
-                            /* // TODO This would look better:
-                            <div class="game-protocol-trick-card position-1  " style="/*! text-align: center; */justify-content: center;">
-                                <a data-userid="119592" data-username="TiltBoi" class="profile-link" href="/profile/TiltBoi" style="margin: 0 auto;">TiltBoi</a>
-                                <span class="card-image by g2 HO" title="Der Rote" style="margin: 0 auto;">Der Rote</span>
-                                <table><tbody>
-                                    <tr>
-                                        <td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-HA" title="HA" style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;">HA</span><span class="card-icon card-icon-by card-icon-HX" title="HX">HX</span><span class="card-icon card-icon-by card-icon-SA" title="SA">SA</span><span class="card-icon card-icon-by card-icon-SO" title="SO">SO</span></td><td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-EK" title="EK">EK</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 5px;text-align: center;">100</td><td style="padding: 5px;text-align: center;">-100 </td>
-                                    </tr>
-                                </tbody></table>
-                            </div>
-                            */
+                        Box::new(std::iter::once(ahand.clone())) as Box<_>,
+                        /*fn_filter*/|stichseq, ahand| {
+                            SFilterByOracle::new(rules, ahand, stichseq)
                         },
+                        &|_stichseq, _ahand| SGenericMinReachablePayout::<SMaxSelfishMinStrategyHigherKinded, SAlphaBetaPrunerNone>::new(
+                            rules,
+                            verify_eq!(epi, unwrap!(stichseq.current_playable_stich().current_playerindex())),
+                            game_finished.expensifiers.clone(),
+                        ),
+                        /*fn_snapshotcache*/|rulestatecache| {
+                            rules.snapshot_cache::<SMaxSelfishMinStrategyHigherKinded>(rulestatecache)
+                        },
+                        /*fn_visualizer*/SNoVisualization::factory(),
+                        /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
+                        /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
+                    ));
+                    let div_table = unwrap!(document.create_element("div"));
+                    div_table.set_inner_html(&{
+                        let mut str_table = String::new();
+                        append_html_payout_table::<SMaxSelfishMinStrategyHigherKinded>(
+                            &mut str_table,
+                            rules,
+                            &ahand,
+                            &stichseq,
+                            &determinebestcardresult,
+                            card_played,
+                            /*fn_output_card*/&|card, b_highlight| {
+                                let str_card = format!("{}", card).replace('Z', "X"); // TODO proper card formatter
+                                format!(r#"<span class="card-icon card-icon-by card-icon-{str_card}" title="{str_card}" {str_style}>{str_card}</span>"#,
+                                    str_style = if b_highlight {r#"style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;""#} else {""},
+                                )
+                                /* // TODO This would look better:
+                                <div class="game-protocol-trick-card position-1  " style="/*! text-align: center; */justify-content: center;">
+                                    <a data-userid="119592" data-username="TiltBoi" class="profile-link" href="/profile/TiltBoi" style="margin: 0 auto;">TiltBoi</a>
+                                    <span class="card-image by g2 HO" title="Der Rote" style="margin: 0 auto;">Der Rote</span>
+                                    <table><tbody>
+                                        <tr>
+                                            <td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-HA" title="HA" style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;">HA</span><span class="card-icon card-icon-by card-icon-HX" title="HX">HX</span><span class="card-icon card-icon-by card-icon-SA" title="SA">SA</span><span class="card-icon card-icon-by card-icon-SO" title="SO">SO</span></td><td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-EK" title="EK">EK</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 5px;text-align: center;">100</td><td style="padding: 5px;text-align: center;">-100 </td>
+                                        </tr>
+                                    </tbody></table>
+                                </div>
+                                */
+                            },
+                        );
+                        str_table
+                    });
+                    unwrap!(
+                        unwrap!(element_played_card.parent_element())
+                            .append_child(&div_table)
                     );
+                }
+                let div_button = unwrap!(document.create_element("div"));
+                div_button.set_inner_html(&via_out_param(|str_button| 
                     append_html_copy_button(
-                        &mut str_table,
+                        str_button,
                         rules,
                         &ahand,
                         &stichseq,
                         /*str_openschafkopf_executable*/"openschafkopf",
-                    );
-                    str_table
-                });
+                    )
+                ).0);
                 unwrap!(
                     unwrap!(element_played_card.parent_element())
-                        .append_child(&div_table)
+                        .append_child(&div_button)
                 );
             }
         },
