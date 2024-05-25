@@ -294,7 +294,7 @@ pub fn determine_best_card<
                     let foreachsnapshot = fn_make_foreachsnapshot(stichseq, &ahand);
                     let mut visualizer = fn_visualizer(i_ahand, &ahand, Some(card)); // do before ahand is modified
                     debug_assert!(ahand[epi_current].cards().contains(&card));
-                    assert!(ahand_vecstich_card_count_is_compatible(&ahand, &stichseq));
+                    assert!(ahand_vecstich_card_count_is_compatible(&ahand, stichseq));
                     let rules = foreachsnapshot.rules;
                     let output = stichseq.clone().zugeben_and_restore_with_hands(&mut ahand.clone(), epi_current, card, rules, |ahand, stichseq| {
                         if ahand.iter().all(|hand| hand.cards().is_empty()) {
@@ -318,7 +318,7 @@ pub fn determine_best_card<
                         }
                     });
                     let payoutstats : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output.map(|mapepin_payout|
-                        SPayoutStats::new_1(fn_payout(&stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
+                        SPayoutStats::new_1(fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
                     );
                     verify!(unwrap!(Arc::clone(&mapcardooutput_per_ahand).lock())[card].replace(output).is_none());
                     unwrap!(mapcardooutput.lock())[card].insert_or_fold(payoutstats, |payoutstats_acc, payoutstats| {

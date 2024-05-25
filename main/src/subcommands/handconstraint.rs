@@ -142,7 +142,7 @@ impl std::str::FromStr for SConstraint {
                 ctx.count(i_epi, |card| fn_pred_clone(&ctx, t.clone(), card))
             });
             engine.register_fn(str_name, move |ctx: SContext, t: T| {
-                ctx.count_enummap(|ctx, card| fn_pred(&ctx, t.clone(), card))
+                ctx.count_enummap(|ctx, card| fn_pred(ctx, t.clone(), card))
             });
         }
         let mut register_trumpforfarbe = |str_trumpforfarbe: &str, trumpforfarbe| {
