@@ -17,6 +17,7 @@ openschafkopf_util = {path = "../util"}
 openschafkopf_lib = {path = "../lib"}
 plain_enum = "0"
 getrandom = { version = "0", features = ["js"] } # see https://docs.rs/getrandom/latest/getrandom/#webassembly-support
+itertools = "0"
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
@@ -31,8 +32,10 @@ features = [
     'Element',
     'HtmlCollection',
     'HtmlElement',
+    'Location',
     'Node',
     'Window',
+    'XmlHttpRequest',
 ]
 
 [dev-dependencies]

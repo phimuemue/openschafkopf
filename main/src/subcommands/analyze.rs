@@ -47,7 +47,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             };
             if let resgameresult@Ok(_) = analyze_sauspiel_html(&str_input)
                 .map(|game| game.map(|_|(), |_|(), |_|()))
-                .or_else(|_err| analyze_sauspiel_json(&str_input)
+                .or_else(|_err| analyze_sauspiel_json(&str_input, |_,_,_,_| {})
                     .map(|game| game.map(|_|(), |_|(), |_|()))
                 )
             {

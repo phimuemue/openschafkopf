@@ -6,13 +6,16 @@ mod utils;
 use wasm_bindgen::prelude::*;
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    ai::{determine_best_card, gametree::{SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}, stichoracle::SFilterByOracle},
+    ai::{determine_best_card, gametree::{SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded, player_table_stichseq, player_table_ahand}, stichoracle::SFilterByOracle},
     game::SGameResultGeneric,
-    game_analysis::{append_html_payout_table, append_html_copy_button, parser::{internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
-    rules::{TRules, ruleset::VStockOrT},
+    game_analysis::{append_html_payout_table, append_html_copy_button, parser::{internal_analyze_sauspiel_html, analyze_sauspiel_json, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
+    rules::{TRules, ruleset::VStockOrT, SExpensifiers},
+    primitives::{ECard, EPlayerIndex, SHand, SStichSequence},
 };
 use crate::utils::*;
-use std::fmt::Debug;
+use std::fmt::{Debug, Write};
+use plain_enum::*;
+use itertools::Itertools;
 
 #[wasm_bindgen]
 extern "C" {
@@ -106,10 +109,57 @@ impl<'node> TSauspielHtmlNode<'node> for SWebsysElement {
     }
 }
 
+fn output_card_sauspiel_img(card: ECard, b_highlight: bool) -> String {
+    let str_card = format!("{}", card).replace('Z', "X"); // TODO proper card formatter
+    format!(r#"<span class="card-icon card-icon-by card-icon-{str_card}" title="{str_card}" {str_style}>{str_card}</span>"#,
+        str_style = if b_highlight {r#"style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;""#} else {""},
+    )
+    /* // TODO This would look better:
+    <div class="game-protocol-trick-card position-1  " style="/*! text-align: center; */justify-content: center;">
+        <a data-userid="119592" data-username="TiltBoi" class="profile-link" href="/profile/TiltBoi" style="margin: 0 auto;">TiltBoi</a>
+        <span class="card-image by g2 HO" title="Der Rote" style="margin: 0 auto;">Der Rote</span>
+        <table><tbody>
+            <tr>
+                <td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-HA" title="HA" style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;">HA</span><span class="card-icon card-icon-by card-icon-HX" title="HX">HX</span><span class="card-icon card-icon-by card-icon-SA" title="SA">SA</span><span class="card-icon card-icon-by card-icon-SO" title="SO">SO</span></td><td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-EK" title="EK">EK</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 5px;text-align: center;">100</td><td style="padding: 5px;text-align: center;">-100 </td>
+            </tr>
+        </tbody></table>
+    </div>
+    */
+}
+
 #[wasm_bindgen(start)]
 pub fn greet() {
     set_panic_hook();
 
+    let determine_best_card_sauspiel = |ahand: EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence, epi, rules, expensifiers: &SExpensifiers| {
+        unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_,_,_>(
+            stichseq,
+            Box::new(std::iter::once(ahand)) as Box<_>,
+            /*fn_filter*/|stichseq, ahand| {
+                SFilterByOracle::new(rules, ahand, stichseq)
+            },
+            &|_stichseq, _ahand| SGenericMinReachablePayout::<SMaxSelfishMinStrategyHigherKinded, SAlphaBetaPrunerNone>::new(
+                rules,
+                verify_eq!(epi, unwrap!(stichseq.current_playable_stich().current_playerindex())),
+                expensifiers.clone(),
+            ),
+            /*fn_snapshotcache*/|rulestatecache| {
+                rules.snapshot_cache::<SMaxSelfishMinStrategyHigherKinded>(rulestatecache)
+            },
+            /*fn_visualizer*/SNoVisualization::factory(),
+            /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
+            /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
+        ))
+    };
+    fn append_sibling(node_existing: &web_sys::Node, node_new: &web_sys::Node) {
+        unwrap!(
+            unwrap!(node_existing.parent_element())
+                .append_child(node_new)
+        );
+    }
     let document = unwrap!(unwrap!(web_sys::window()).document());
     let mut vecahandstichseqcardepielement = Vec::new();
     match internal_analyze_sauspiel_html(
@@ -127,24 +177,13 @@ pub fn greet() {
             let rules = &game_finished.rules;
             for ((ahand, stichseq), card_played, epi, element_played_card) in vecahandstichseqcardepielement {
                 if stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}) {
-                    let determinebestcardresult = unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_,_,_>(
+                    let determinebestcardresult = determine_best_card_sauspiel(
+                        ahand.clone(),
                         &stichseq,
-                        Box::new(std::iter::once(ahand.clone())) as Box<_>,
-                        /*fn_filter*/|stichseq, ahand| {
-                            SFilterByOracle::new(rules, ahand, stichseq)
-                        },
-                        &|_stichseq, _ahand| SGenericMinReachablePayout::<SMaxSelfishMinStrategyHigherKinded, SAlphaBetaPrunerNone>::new(
-                            rules,
-                            verify_eq!(epi, unwrap!(stichseq.current_playable_stich().current_playerindex())),
-                            game_finished.expensifiers.clone(),
-                        ),
-                        /*fn_snapshotcache*/|rulestatecache| {
-                            rules.snapshot_cache::<SMaxSelfishMinStrategyHigherKinded>(rulestatecache)
-                        },
-                        /*fn_visualizer*/SNoVisualization::factory(),
-                        /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
-                        /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
-                    ));
+                        epi,
+                        rules,
+                        &game_finished.expensifiers,
+                    );
                     let div_table = unwrap!(document.create_element("div"));
                     div_table.set_inner_html(&{
                         let mut str_table = String::new();
@@ -155,33 +194,11 @@ pub fn greet() {
                             &stichseq,
                             &determinebestcardresult,
                             card_played,
-                            /*fn_output_card*/&|card, b_highlight| {
-                                let str_card = format!("{}", card).replace('Z', "X"); // TODO proper card formatter
-                                format!(r#"<span class="card-icon card-icon-by card-icon-{str_card}" title="{str_card}" {str_style}>{str_card}</span>"#,
-                                    str_style = if b_highlight {r#"style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;""#} else {""},
-                                )
-                                /* // TODO This would look better:
-                                <div class="game-protocol-trick-card position-1  " style="/*! text-align: center; */justify-content: center;">
-                                    <a data-userid="119592" data-username="TiltBoi" class="profile-link" href="/profile/TiltBoi" style="margin: 0 auto;">TiltBoi</a>
-                                    <span class="card-image by g2 HO" title="Der Rote" style="margin: 0 auto;">Der Rote</span>
-                                    <table><tbody>
-                                        <tr>
-                                            <td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-HA" title="HA" style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;">HA</span><span class="card-icon card-icon-by card-icon-HX" title="HX">HX</span><span class="card-icon card-icon-by card-icon-SA" title="SA">SA</span><span class="card-icon card-icon-by card-icon-SO" title="SO">SO</span></td><td style="padding: 5px;text-align: center;"><span class="card-icon card-icon-by card-icon-EK" title="EK">EK</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 5px;text-align: center;">100</td><td style="padding: 5px;text-align: center;">-100 </td>
-                                        </tr>
-                                    </tbody></table>
-                                </div>
-                                */
-                            },
+                            &output_card_sauspiel_img,
                         );
                         str_table
                     });
-                    unwrap!(
-                        unwrap!(element_played_card.parent_element())
-                            .append_child(&div_table)
-                    );
+                    append_sibling(&element_played_card, &div_table);
                 }
                 let div_button = unwrap!(document.create_element("div"));
                 div_button.set_inner_html(&via_out_param(|str_button| 
@@ -193,17 +210,100 @@ pub fn greet() {
                         /*str_openschafkopf_executable*/"openschafkopf",
                     )
                 ).0);
-                unwrap!(
-                    unwrap!(element_played_card.parent_element())
-                        .append_child(&div_button)
-                );
+                append_sibling(&element_played_card, &div_button);
             }
         },
         Ok(SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}) => {
             // Nothing to analyze for Stock.
         },
-        Err(err) => { // TODO we should distinguish between "Game not visible/found/accessible" and "HTML not understood"
-            dbg_alert!(&format!("Error parsing document: {:?}", err));
+        Err(err_html) => { // TODO we should distinguish between "Game not visible/found/accessible" and "HTML not understood"
+            let mut vecahandstichseqcardepi = Vec::new();
+            match analyze_sauspiel_json(
+                &{
+                    let xmlhttprequest = unwrap!(web_sys::XmlHttpRequest::new());
+                    let str_json_url = format!("{}.json", unwrap!(unwrap!(web_sys::window()).location().href()));
+                    dbg_alert!(&str_json_url);
+                    unwrap!(xmlhttprequest.open_with_async(
+                        "GET",
+                        &str_json_url,
+                        /*async*/false,
+                    ));
+                    unwrap!(xmlhttprequest.send());
+                    let str_json = unwrap!( // unwrap Option
+                        unwrap!(xmlhttprequest.response_text()) // unwrap Result
+                    );
+                    assert!(xmlhttprequest.status().is_ok());
+                    dbg_alert!(&str_json);
+                    str_json
+                },
+                /*fn_before_zugeben*/|game, _i_stich, epi, card| {
+                    vecahandstichseqcardepi.push((
+                        (game.ahand.clone(), game.stichseq.clone()),
+                        card,
+                        epi,
+                    ));
+                },
+            ) {
+                Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}) => {
+                    let mut str_html_out = String::new();
+                    for ((ahand, stichseq), card_played, epi) in vecahandstichseqcardepi {
+                        unwrap!(write!(
+                            str_html_out,
+                            "<table><tr>{}{}</tr></table>",
+                            player_table_stichseq(/*epi_self*/EPlayerIndex::EPI0, &stichseq, &output_card_sauspiel_img),
+                            player_table_ahand(
+                                /*epi_self*/EPlayerIndex::EPI0,
+                                &ahand,
+                                &game_finished.rules,
+                                /*fn_border*/|card| card==card_played,
+                                &output_card_sauspiel_img,
+                            ),
+                        ));
+                        if stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}) {
+                            append_html_payout_table::<SMaxSelfishMinStrategyHigherKinded>(
+                                &mut str_html_out,
+                                &game_finished.rules,
+                                &ahand,
+                                &stichseq,
+                                &determine_best_card_sauspiel(
+                                    ahand.clone(),
+                                    &stichseq,
+                                    epi,
+                                    &game_finished.rules,
+                                    &game_finished.expensifiers,
+                                ),
+                                card_played,
+                                &output_card_sauspiel_img,
+                            );
+                        }
+                        str_html_out += "<div>";
+                        append_html_copy_button(
+                            &mut str_html_out,
+                            &game_finished.rules,
+                            &ahand,
+                            &stichseq,
+                            /*str_openschafkopf_executable*/"openschafkopf",
+                        );
+                        str_html_out += "</div>";
+                    }
+                    let div_openschafkopf_overview = unwrap!(document.create_element("div"));
+                    div_openschafkopf_overview.set_inner_html(&str_html_out);
+                    append_sibling(
+                        &unwrap!(
+                            SWebsysDocument(document)
+                                .find_class("game-overview")
+                                .exactly_one()
+                        ).0,
+                        &div_openschafkopf_overview,
+                    );
+                },
+                Ok(SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}) => {
+                    // Nothing to analyze for Stock.
+                },
+                Err(err_json) => {
+                    dbg_alert!(&format!("Error parsing document:\n{:?}\n{:?}", err_html, err_json));
+                },
+            }
         },
     };
 }
