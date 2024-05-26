@@ -31,8 +31,10 @@ features = [
     'Element',
     'HtmlCollection',
     'HtmlElement',
+    'Location',
     'Node',
     'Window',
+    'XmlHttpRequest',
 ]
 
 [dev-dependencies]

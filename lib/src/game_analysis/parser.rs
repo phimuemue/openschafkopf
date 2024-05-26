@@ -453,7 +453,10 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, FnBeforeP
 
 plain_enum_mod!(modesauspielposition, derive(Deserialize_repr,), map_derive(), ESauspielPosition {_0, _1, _2, _3,});
 
-pub fn analyze_sauspiel_json(str_json: &str) -> Result<SGameResultGeneric</*Ruleset*/EKurzLang, (), ()>, failure::Error> {
+pub fn analyze_sauspiel_json(
+    str_json: &str,
+    fn_before_zugeben: impl FnMut(&SGameGeneric<EKurzLang, (), ()>, /*i_stich*/usize, EPlayerIndex, ECard),
+) -> Result<SGameResultGeneric</*Ruleset*/EKurzLang, (), ()>, failure::Error> {
     #[derive(Deserialize, Debug)]
     #[serde(tag = "type")]
     #[allow(non_camel_case_types, non_snake_case)] // to match Sauspiel JSON
@@ -589,6 +592,7 @@ pub fn analyze_sauspiel_json(str_json: &str) -> Result<SGameResultGeneric</*Rule
             SExpensifiers::new_no_stock_doublings_stoss(), // TODO
             SStichSequenceGameFinished::new(&stichseq),
             ekurzlang,
+            fn_before_zugeben,
         ).and_then(|game| game.finish()
             .map_err(|err| format_err!("Could not finish game: {:?}", err))
         )

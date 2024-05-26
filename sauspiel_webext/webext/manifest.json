@@ -17,6 +17,11 @@
       "sauspiel_webext_bg.wasm"
   ],
 
+  "permissions": [
+      "webRequest",
+      "https://www.sauspiel.de/spiele/*"
+  ],
+
   "browser_specific_settings": {
     "gecko": {
       "id": "sauspiel_webext@openschafkopf.com"

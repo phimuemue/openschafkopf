@@ -426,7 +426,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         expensifiers: SExpensifiers,
         stichseq: SStichSequenceGameFinished,
     ) -> Result<SGame, Error> {
-        SGame::new_finished_with_ruleset(rules, expensifiers, stichseq, /*ruleset*/())
+        SGame::new_finished_with_ruleset(rules, expensifiers, stichseq, /*ruleset*/(), /*fn_before_zugeben*/|_,_,_,_| {})
     }
 
     pub fn new_finished_with_ruleset(
@@ -434,6 +434,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         expensifiers: SExpensifiers,
         stichseq: SStichSequenceGameFinished,
         ruleset: Ruleset,
+        fn_before_zugeben: impl FnMut(&SGameGeneric<Ruleset, (), ()>, /*i_stich*/usize, EPlayerIndex, ECard),
     ) -> Result<SGameGeneric<Ruleset, (), ()>, Error> {
         let aveccard = EPlayerIndex::map_from_fn(|epi|
             stichseq.get()
@@ -442,7 +443,7 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         );
         let SExpensifiers{n_stock, doublings, vecstoss} = expensifiers;
         let game = SGameGeneric::new_with_ruleset(aveccard, SExpensifiersNoStoss::new_with_doublings(n_stock, doublings), rules, ruleset)
-            .play_cards_and_stoss(vecstoss, stichseq.get().visible_cards(), |_,_,_,_| {})?;
+            .play_cards_and_stoss(vecstoss, stichseq.get().visible_cards(), fn_before_zugeben)?;
         assert!(game.which_player_can_do_something().is_none());
         Ok(game)
     }

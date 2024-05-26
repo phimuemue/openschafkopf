@@ -8,7 +8,7 @@ use openschafkopf_util::*;
 use openschafkopf_lib::{
     ai::{determine_best_card, gametree::{SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}, stichoracle::SFilterByOracle},
     game::SGameResultGeneric,
-    game_analysis::{append_html_payout_table, append_html_copy_button, parser::{internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
+    game_analysis::{append_html_payout_table, append_html_copy_button, parser::{internal_analyze_sauspiel_html, analyze_sauspiel_json, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
     rules::{TRules, ruleset::VStockOrT},
 };
 use crate::utils::*;
@@ -202,8 +202,41 @@ pub fn greet() {
         Ok(SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}) => {
             // Nothing to analyze for Stock.
         },
-        Err(err) => { // TODO we should distinguish between "Game not visible/found/accessible" and "HTML not understood"
-            dbg_alert!(&format!("Error parsing document: {:?}", err));
+        Err(err_html) => { // TODO we should distinguish between "Game not visible/found/accessible" and "HTML not understood"
+            let mut vecahandstichseqcardepi = Vec::new();
+            match analyze_sauspiel_json(
+                &{
+                    let xmlhttprequest = unwrap!(web_sys::XmlHttpRequest::new());
+                    unwrap!(xmlhttprequest.open(
+                        "GET",
+                        &format!("{}.json", unwrap!(unwrap!(web_sys::window()).location().href()))
+                    )); // implicitly synchronous
+                    unwrap!(xmlhttprequest.send());
+                    let str_json = unwrap!( // unwrap Option
+                        unwrap!(xmlhttprequest.response_text()) // unwrap Result
+                    );
+                    assert!(xmlhttprequest.status().is_ok());
+                    dbg_alert!(&str_json);
+                    str_json
+                },
+                /*fn_before_zugeben*/|game, _i_stich, epi, card| {
+                    vecahandstichseqcardepi.push((
+                        (game.ahand.clone(), game.stichseq.clone()),
+                        card,
+                        epi,
+                    ));
+                },
+            ) {
+                Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}) => {
+                    todo!("{:?}", game_finished);
+                },
+                Ok(SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}) => {
+                    // Nothing to analyze for Stock.
+                },
+                Err(err_json) => {
+                    dbg_alert!(&format!("Error parsing document:\n{:?}\n{:?}", err_html, err_json));
+                },
+            }
         },
     };
 }
