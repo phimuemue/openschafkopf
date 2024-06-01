@@ -116,6 +116,12 @@ impl std::str::FromStr for SConstraint {
                 .register_fn("to_debug", |t: &mut T| format!("{t:?}"));
         }
         register_output_fn::<ECard>(&mut engine);
+        engine.register_fn("==", |card_lhs: &mut ECard, card_rhs: ECard| {
+            card_lhs == &card_rhs
+        });
+        engine.register_fn("!=", |card_lhs: &mut ECard, card_rhs: ECard| {
+            card_lhs != &card_rhs
+        });
         register_output_fn::<EFarbe>(&mut engine);
         register_output_fn::<ESchlag>(&mut engine);
         register_output_fn::<VTrumpfOrFarbe>(&mut engine);
