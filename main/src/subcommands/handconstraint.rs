@@ -46,10 +46,10 @@ impl SContext {
             .collect()
     }
 
-    fn who_has_card(&self, card: ECard) -> SRhaiEPlayerIndex {
-        unwrap!(EPlayerIndex::values().find(|&epi| self.ahand[epi].contains(card)))
-            .to_usize()
-            .as_num::<SRhaiEPlayerIndex>()
+    fn who_has_card(&self, card: ECard) -> SRhaiEPlayerIndex/*or -1*/ {
+        EPlayerIndex::values().find(|&epi| self.ahand[epi].contains(card))
+            .map(|epi| epi.to_usize().as_num::<SRhaiEPlayerIndex>())
+            .unwrap_or(-1)
     }
 }
 
