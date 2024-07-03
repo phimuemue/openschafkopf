@@ -98,7 +98,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             }
         }
     }
-    impl VInspectionResult<VRecognizableAsNumber<bool>, String> {
+    impl VInspectionResult<VRecognizableAsNumber, String> {
         fn new(dynamic: rhai::Dynamic) -> Self {
             if let Ok(b) = dynamic.as_bool() {
                 VInspectionResult::RecognizableAsNumber(VRecognizableAsNumber::Bool(b))
@@ -138,12 +138,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         }
     }
     #[derive(/*TODO? Hash by numeric value?*/Hash, Eq, PartialEq)]
-    enum VRecognizableAsNumber<Bool> { // TODO distinction even useful?
+    enum VRecognizableAsNumber { // TODO distinction even useful?
         Int(rhai::INT),
         Float(STotalOrderedFloat),
-        Bool(Bool),
+        Bool(bool),
     }
-    impl<Bool: Display> Display for VRecognizableAsNumber<Bool> {
+    impl Display for VRecognizableAsNumber {
         fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
             match self {
                 VRecognizableAsNumber::Int(n) => n.fmt(formatter),
@@ -152,7 +152,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             }
         }
     }
-    impl VRecognizableAsNumber<bool> {
+    impl VRecognizableAsNumber {
         fn to_total_ordered_float(&self) -> STotalOrderedFloat {
             STotalOrderedFloat(match self {
                 VRecognizableAsNumber::Int(n) => n.as_num::<f64>(),
@@ -161,12 +161,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             })
         }
     }
-    impl PartialOrd for VRecognizableAsNumber<bool> {
+    impl PartialOrd for VRecognizableAsNumber {
         fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
             Some(self.cmp(other))
         }
     }
-    impl Ord for VRecognizableAsNumber<bool> {
+    impl Ord for VRecognizableAsNumber {
         fn cmp(&self, other: &Self) -> Ordering {
             // Order by numerical value
             Ord::cmp(&self.to_total_ordered_float(), &other.to_total_ordered_float())
