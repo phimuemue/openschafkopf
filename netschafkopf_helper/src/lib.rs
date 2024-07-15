@@ -345,14 +345,14 @@ make_redirect_function!(
             (hwnd, u_msg, wparam, lparam),
             |&(_hwnd, u_msg, _wparam, _lparam)| match u_msg {
                 WM_KEYDOWN => {
-                    if wparam==unsafe{std::mem::transmute(VK_LEFT)} || wparam==unsafe{std::mem::transmute(VK_RIGHT)} {
+                    if wparam==unsafe{std::mem::transmute::<_,WPARAM>(VK_LEFT)} || wparam==unsafe{std::mem::transmute::<_,WPARAM>(VK_RIGHT)} {
                         Some(format!(
                             "WM_KEYDOWN, VK_LEFT/VK_RIGHT: {:?}",
                             unsafe{std::slice::from_raw_parts(as_ptr!(u8, 0x004ca2b0), 4)},
                         ))
                     } else if
                         0!=(unsafe{GetKeyState(VK_CONTROL)}&unsafe{std::mem::transmute::<_,SHORT>(0x8000u16)})
-                        && wparam==unsafe{std::mem::transmute(0x4F)} // "O key" https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+                        && wparam==0x4F // "O key" https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
                     {
                         Some("WM_KEYDOWN, Ctrl+O".to_string())
                     } else {
