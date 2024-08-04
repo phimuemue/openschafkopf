@@ -645,27 +645,38 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*
                 grpstr_line.next();
             }
             let mut vecstr_player_name = Vec::<String>::new();
+            let mut oekurzlang = None;
             for _epi in EPlayerIndex::values() {
-                vecstr_player_name.push(
-                    grpstr_line.next()
-                        .ok_or_else(|| format_err!("Expected description of player's hand"))
-                        .and_then(|str_player_hand| {
-                            parse_trimmed(
-                                str_player_hand,
-                                attempt(many1::<String,_>(alpha_num())) // TODO allow more characters for player names
-                                    .skip((
-                                        string(" hat: "),
-                                        sep_by::<Vec<_>,_,_>(
-                                            choice!(card_parser().map(|_|()), string("DU").map(|_|())), // TODO be more precise
-                                            char(' ')
-                                        ), // TODO determine ekurzlang?
-                                    ))
-                            ).map_err(|err| format_err!("Failed to parse <player> hat <hand>: {:?}", err))
-                        })?
-                        .to_string()
-                );
+                let (str_player_name, resekurzlang_epi) = grpstr_line.next()
+                    .ok_or_else(|| format_err!("Expected description of player's hand"))
+                    .and_then(|str_player_hand| {
+                        parse_trimmed(
+                            str_player_hand,
+                            (
+                                attempt(many1::<String,_>(alpha_num())), // TODO allow more characters for player names
+                                string(" hat: "),
+                                sep_by::<Vec<_>,_,_>(
+                                    choice!(card_parser().map(Some), string("DU").map(|_|None)), // TODO? be more precise
+                                    char(' ')
+                                ),
+                            ).map(|(str_player_name, _, vecocard): (_, _, Vec<Option<ECard>>)| (
+                                str_player_name,
+                                EKurzLang::from_cards_per_player(vecocard.len())
+                                    .ok_or_else(|| format_err!("Incorrect number of cards: {}", vecocard.len())),
+                            ))
+                        ).map_err(|err| format_err!("Failed to parse <player> hat <hand>: {:?}", err))
+                    })?;
+                vecstr_player_name.push(str_player_name);
+                match (oekurzlang, resekurzlang_epi?) {
+                    (None, ekurzlang_epi) => oekurzlang=Some(ekurzlang_epi),
+                    (Some(ekurzlang), ekurzlang_epi) => {
+                        if ekurzlang!=ekurzlang_epi {
+                            Err(format_err!("Mismatched ekurzlang values"))?;
+                        }
+                    },
+                }
             }
-            let ekurzlang = EKurzLang::Lang; // TODO NetSchafkopf supports EKurzLang::Kurz
+            let ekurzlang = unwrap!(oekurzlang);
             let mapepistr_player = EPlayerIndex::map_from_raw(unwrap!(iter_to_arr(vecstr_player_name)));
             let player_to_epi = |str_player: &str| {
                 EPlayerIndex::values()
