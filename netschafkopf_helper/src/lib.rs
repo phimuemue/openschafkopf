@@ -1247,7 +1247,11 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
                 }))
             ));
             info!("{}", rules);
-            let ekurzlang = EKurzLang::Lang; // TODO extract from NetSchafkopf
+            let ekurzlang = /*g_bKurzeKarte*/match unsafe{*as_ptr!(u8, 0x004ca5c8)} {
+                0 => EKurzLang::Lang,
+                1 => EKurzLang::Kurz,
+                n_kurze_karte_unsupported => panic!("Unknown value for g_bKurzeKarte: {}", n_kurze_karte_unsupported),
+            };
             let mut stichseq = SStichSequence::new(ekurzlang);
             for _i_card in 0..n_stichs_completed*EPlayerIndex::SIZE + n_current_stich_size {
                 stichseq.zugeben(
