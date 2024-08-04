@@ -739,6 +739,7 @@ fn test_parse_netschafkopf() {
     test_internal(include_bytes!("Schafkopfprotokoll_vom_14.12.22.txt"));
     test_internal(include_bytes!("Schafkopfprotokoll_vom_16.05.20.txt"));
     test_internal(include_bytes!("Schafkopfprotokoll_vom_20.03.23.txt"));
+    test_internal(include_bytes!("Schafkopfprotokoll_vom_04.08.24.txt"));
 }
 
 #[test]

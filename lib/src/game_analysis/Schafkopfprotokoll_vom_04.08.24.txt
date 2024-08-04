@@ -1,0 +1,73 @@
+netschafkopf_helper
+gespielt von Gast am 04.08.24 mit Version 8.00, Update 07.09.20.
+ 
+Geber: PcOben
+    PcRechts hat: H9 EZ EU S9 E9 HU
+        Gast hat: SO SZ GA SA GO G9
+     PcLinks hat: HA EA SK GZ GU SU
+      PcOben hat: HO EO HK HZ EK GK
+Gast spielt Schellen-Geier
+    PcRechts spielt aus: EZ SO EA EK
+        Gast spielt aus: GO SK EO S9
+      PcOben spielt aus: HK H9 G9 HA
+     PcLinks spielt aus: GU GK E9 GA
+        Gast spielt aus: SZ SU HO EU
+      PcOben spielt aus: HZ HU SA GZ
+Du gewinnst den Schellen-Geier. Die Gegner haben 42 Augen
+Das Einzelspiel kostet 5 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+    1        5           -5           -5           -5          +15        0
+ 
+Geber: PcRechts
+        Gast hat: SO HA SU S9 GZ GO
+     PcLinks hat: EU EK EZ GU GA E9
+      PcOben hat: SZ SK GK H9 G9 EA
+    PcRechts hat: HK SA HU HO HZ EO
+PcLinks spielt Eichel-Wenz
+        Gast spielt aus: GZ GA G9 EO
+    PcRechts spielt aus: HO HA GU H9
+     PcLinks spielt aus: EU EA HU SU
+     PcLinks spielt aus: E9 SZ HZ GO
+     PcLinks spielt aus: EK GK HK S9
+     PcLinks spielt aus: EZ SK SA SO
+PcLinks gewinnt den Eichel-Wenz. Die Gegner haben 24 Augen
+Das Einzelspiel kostet 5 Punkte. Mit Schneider 6 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+    2        6          +13          -11          -11           +9        0
+ 
+Geber: Gast
+     PcLinks hat: GU SO E9 HA S9 GA
+      PcOben hat: H9 EO HO EA SA HK
+    PcRechts hat: GZ SK EU GO EZ GK
+        Gast hat: SU EK SZ G9 HZ HU
+PcOben spielt Herz-Geier
+     PcLinks spielt aus: GA H9 GK G9
+      PcOben spielt aus: EO GO HU SO
+      PcOben spielt aus: HO SK HZ HA
+      PcOben spielt aus: EA EU EK E9
+      PcOben spielt aus: SA EZ SU S9
+      PcOben spielt aus: HK GZ SZ GU
+PcOben gewinnt den Herz-Geier. Die Gegner haben 0 Augen
+Das Einzelspiel kostet 5 Punkte. Mit Schneider 6 Punkte. Mit 
+Schwarz 7 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+    3        7           +6          +10          -18           +2        0
+ 
+Geber: PcLinks
+      PcOben hat: SO SU EK SA HU EO
+    PcRechts hat: HO SK G9 S9 GZ E9
+        Gast hat: GK EZ GU GA EU HZ
+     PcLinks hat: SZ H9 HK HA EA GO
+PcOben spielt Mit der Eichel-Ass
+      PcOben spielt aus: EO HO GU HA
+      PcOben spielt aus: SU GZ EU GO
+     PcLinks spielt aus: HK SO E9 HZ
+      PcOben spielt aus: HU G9 GK H9
+      PcOben spielt aus: SA S9 EZ SZ
+      PcOben spielt aus: EK SK GA EA
+PcOben gewinnt das Rufspiel: Mit der Eichel-Ass mit PcLinks. 
+Die Gegner haben 0 Augen
+Das Rufspiel kostet 2 Punkte. Mit Schneider 3 Punkte. Mit Schwarz 4 Punkte.
+Spiel    Preis      PcLinks       PcOben     PcRechts         Gast    Stock
+    4        4          +10          +14          -22           -2        0
+ 
