@@ -641,7 +641,7 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*
             grpstr_line.next()
                 .filter(|str_geber| str_geber.starts_with("Geber: ")) // TODO be more precise?
                 .ok_or_else(|| format_err!("Expected 'Geber: '"))?;
-            if Some(&"Spielart: Schieber")==dbg!(grpstr_line.peek()) {
+            if Some(&"Spielart: Schieber")==grpstr_line.peek() {
                 grpstr_line.next();
             }
             let mut vecstr_player_name = Vec::<String>::new();
