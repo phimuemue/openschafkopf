@@ -36,7 +36,7 @@ The injector starts NetSchafkopf, waits for its main window to appear and inject
 * The DLL relies on NetSchafkopf version 8.00 from 07.09.2020.
 * The DLL assumes that the other players' names are `PcLinks`, `PcOben`, `PcRects`.
 * The DLL does not support all of NetSchafkopf's rules:
-  * Unsupported, will probably crash or hang: kurze Karte, Spiel ersteigern, Renonce, "Der Alte Muss", Überkreuzsitzende, Hochzeit, Doppeln, Schieberrunde
+  * Unsupported, will probably crash or hang: Spiel ersteigern, Renonce, "Der Alte Muss", Überkreuzsitzende, Hochzeit, Doppeln, Schieberrunde
   * Ignored: "Scharf spielen", Nächstes Spiel doppelt, Stock, Anzahl Kontras, Zeitpunkt Kontras, Stoß übernimmt, Preise, Laufende, "Beim Tout Schneider und Schwarz werten"
 * When the DLL is used for autoplay, it assumes "Alles automatisch berechnen" (from "Einstellungen -> Einstellungen für <Spieler> ändern -> Spielablauf -> Berechnung der Spielgewinne").
 
