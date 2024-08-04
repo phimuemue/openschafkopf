@@ -348,7 +348,7 @@ make_redirect_function!(
                     if wparam==unsafe{std::mem::transmute::<_,WPARAM>(VK_LEFT)} || wparam==unsafe{std::mem::transmute::<_,WPARAM>(VK_RIGHT)} {
                         Some(format!(
                             "WM_KEYDOWN, VK_LEFT/VK_RIGHT: {:?}",
-                            unsafe{std::slice::from_raw_parts(as_ptr!(u8, 0x004ca2b0), 4)},
+                            unsafe{std::slice::from_raw_parts(as_ptr!(u8, /*g_iSelectedCard*/0x004ca2b0), 4)},
                         ))
                     } else if
                         0!=(unsafe{GetKeyState(VK_CONTROL)}&unsafe{std::mem::transmute::<_,SHORT>(0x8000u16)})
