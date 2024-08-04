@@ -665,7 +665,7 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*
                         .to_string()
                 );
             }
-            let ekurzlang = EKurzLang::Lang; // TODO does NetSchafkopf support EKurzLang::Kurz?
+            let ekurzlang = EKurzLang::Lang; // TODO NetSchafkopf supports EKurzLang::Kurz
             let mapepistr_player = EPlayerIndex::map_from_raw(unwrap!(iter_to_arr(vecstr_player_name)));
             let player_to_epi = |str_player: &str| {
                 EPlayerIndex::values()
