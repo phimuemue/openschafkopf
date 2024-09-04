@@ -125,7 +125,7 @@ impl SExpensifiers {
 }
 
 fn all_allowed_cards_within_stich_distinguish_farbe_frei (
-    rules: &(impl TRules + ?Sized),
+    rules: &impl TRules,
     card_first_in_stich: ECard,
     hand: &SHand,
     fn_farbe_not_frei: impl Fn(SHandVector)->SHandVector,
@@ -473,7 +473,7 @@ pub trait TRules : fmt::Display + Sync + fmt::Debug + Send + Clone {
     }
 }
 
-impl<Rules: TRules + ?Sized> TWinnerIndex for Rules {
+impl<Rules: TRules> TWinnerIndex for Rules {
     fn winner_index(&self, stich: SFullStich<&SStich>) -> EPlayerIndex {
         self.preliminary_winner_index(stich.borrow())
     }
