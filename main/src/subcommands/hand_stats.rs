@@ -21,12 +21,15 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
-    let vecconstraint = unwrap!(clapmatches.values_of("inspect"))
-        .map(|str_inspect| /*-> Result<_, Error>*/ {
-            str_inspect.parse::<SConstraint>()
-                .map_err(|_| format_err!("Cannot parse inspection target."))
-        })
-        .collect::<Result<Vec<_>,_>>()?;
+    let vecconstraint : Vec<SConstraint> = clapmatches.values_of("inspect")
+        .map(|itstr_inspect|
+            itstr_inspect.map(|str_inspect| /*-> Result<_, Error>*/ {
+                str_inspect.parse::<SConstraint>()
+                    .map_err(|_| format_err!("Cannot parse inspection target."))
+            }).collect::<Result<_,_>>()
+        )
+        .transpose()?
+        .unwrap_or_default();
     #[derive(Clone, Copy)]
     struct STotalOrderedFloat(rhai::FLOAT); // TODO good idea?
     impl Display for STotalOrderedFloat {
