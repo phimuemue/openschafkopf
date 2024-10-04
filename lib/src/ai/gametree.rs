@@ -538,13 +538,8 @@ macro_rules! impl_perminmaxstrategy{(
             $(fn_modify_element(&mut self.$ident_strategy.0, &$ident_strategy.0);)*
         }
 
-        fn via_accessors(&self) -> Vec<(EMinMaxStrategy, &T)>
-            where
-                T: 'static, // TODO why is this needed?
-        {
-            Self::accessors().iter()
-                .map(move |(emmstrategy, fn_value_for_strategy)| (*emmstrategy, fn_value_for_strategy(&self)))
-                .collect()
+        fn via_accessors(&self) -> Vec<(EMinMaxStrategy, &T)> {
+            [$((EMinMaxStrategy::$emmstrategy, &self.$ident_strategy.0),)*].into()
         }
 
         fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)] { // TODO is there a better alternative?
