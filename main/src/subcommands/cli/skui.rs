@@ -5,7 +5,7 @@ use openschafkopf_lib::{
 };
 use openschafkopf_util::*;
 use itertools::Itertools;
-use plain_enum::{plain_enum_mod, EnumMap, PlainEnum};
+use plain_enum::{EnumMap, PlainEnum};
 use as_num::*;
 
 // TODO do we update output too often?
@@ -58,12 +58,13 @@ fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: ECard) {
     ncurses::wattroff(ncwin, nccolorpair);
 }
 
-plain_enum_mod!(moderelativeplayerposition, ERelativePlayerPosition {
+#[derive(Clone, Copy)]
+enum ERelativePlayerPosition {
     Myself,
     Left,
     VisAVis,
     Right,
-});
+}
 
 trait TEplayerIndexExt { // TODO? move to lib?
     fn to_relativeplayerposition(self, epi_myself: EPlayerIndex) -> ERelativePlayerPosition;
@@ -71,7 +72,6 @@ trait TEplayerIndexExt { // TODO? move to lib?
 
 impl TEplayerIndexExt for EPlayerIndex {
     fn to_relativeplayerposition(self, epi_myself: EPlayerIndex) -> ERelativePlayerPosition {
-        static_assert!(assert_eq(EPlayerIndex::SIZE, ERelativePlayerPosition::SIZE));
         match self.wrapped_difference(epi_myself).0 {
             EPlayerIndex::EPI0 => ERelativePlayerPosition::Myself,
             EPlayerIndex::EPI1 => ERelativePlayerPosition::Left,
@@ -102,18 +102,21 @@ fn do_in_window<RetVal>(skuiwin: &VSkUiWindow, fn_do: impl FnOnce(ncurses::WINDO
     };
     let ncwin = match *skuiwin {
         VSkUiWindow::PlayerInfo(erelativeplayerpos) => {
+            let new_win_for_other = |i_left_middle_right: i32| {
+                ncurses::newwin(
+                    1, // height
+                    24, // width
+                    0, // y
+                    ((i_left_middle_right - 1)*25).as_num() // x
+                )
+            };
             match erelativeplayerpos {
                 ERelativePlayerPosition::Myself => {
                     create_fullwidth_window(n_height-2, n_height-1)
                 },
-                ERelativePlayerPosition::Left | ERelativePlayerPosition::VisAVis | ERelativePlayerPosition::Right => {
-                    ncurses::newwin(
-                        1, // height
-                        24, // width
-                        0, // y
-                        ((erelativeplayerpos.to_usize() - 1)*25).as_num() // x
-                    )
-                }
+                ERelativePlayerPosition::Left => new_win_for_other(0),
+                ERelativePlayerPosition::VisAVis => new_win_for_other(1),
+                ERelativePlayerPosition::Right => new_win_for_other(2),
             }
         },
         VSkUiWindow::Stich => {create_fullwidth_window(1, 6)},
