@@ -84,8 +84,11 @@ pub fn internal_table<
             let minmax = minmax.borrow();
             let column_counts = |paystats: &SPayoutStats<PayoutStatsPayload>| {
                 let mapordn_count = paystats.counts(fn_loss_or_win);
+                let f_percentage_not_lost = (mapordn_count[std::cmp::Ordering::Equal]+mapordn_count[std::cmp::Ordering::Greater])
+                    .as_num::<f32>()
+                    / (mapordn_count.iter().sum::<usize>().as_num::<f32>());
                 (
-                    format!("{} ",
+                    format!("{} ({:>6.2}%)",
                         std::cmp::Ordering::values()
                             .filter_map(|ord| {
                                 let n_count = mapordn_count[ord];
@@ -98,11 +101,10 @@ pub fn internal_table<
                                     },
                                 }
                             })
-                            .join("/")
+                            .join("/"),
+                        f_percentage_not_lost * 100.,
                     ),
-                    (mapordn_count[std::cmp::Ordering::Equal]+mapordn_count[std::cmp::Ordering::Greater])
-                        .as_num::<f32>()
-                        / (mapordn_count.iter().sum::<usize>().as_num::<f32>()),
+                    f_percentage_not_lost,
                 )
             };
             let column_min_or_max = |n: isize| {

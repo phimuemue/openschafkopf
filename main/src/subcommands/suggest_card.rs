@@ -47,7 +47,7 @@ fn print_payoutstatstable<T: std::fmt::Display, MinMaxStrategiesHK: TMinMaxStrat
             println!("  * In the worst case (over all generated card distributions), you can enforce a payout of {}", str_payout_min);
             println!("  * On average (over all generated card distributions), you can enforce a payout of {}", str_payout_avg);
             println!("  * In the best case (over all generated card distributions), you can enforce a payout of {}", str_payout_max);
-            println!("  * {} shows the number of games lost[/zero-payout]/won", str_stats);
+            println!("  * {} shows the number of games lost[/zero-payout]/won (percentage not lost)", str_stats);
         }
         println!();
     }
