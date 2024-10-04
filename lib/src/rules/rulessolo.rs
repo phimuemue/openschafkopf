@@ -459,11 +459,12 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<PayoutDeci
     }
 }
 
-plain_enum_mod!(modesololike, ESoloLike {
+#[derive(Copy, Clone)]
+pub enum ESoloLike {
     Solo,
     Wenz,
     Geier,
-});
+}
 
 type_dispatch_enum!(pub enum VPayoutDeciderSoloLike {
     PointBased(SPayoutDeciderPointBased<VGameAnnouncementPrioritySoloLike>),

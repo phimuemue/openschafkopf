@@ -525,10 +525,11 @@ fn test_gameannouncementprio() {
     assert!(SoloTout(0)<SoloTout(1));
 }
 
-plain_enum_mod!(modebid, EBid {
+#[derive(Copy, Clone)]
+pub enum EBid {
     AtLeast,
     Higher,
-});
+}
 
 #[enum_dispatch]
 pub trait TActivelyPlayableRules : TRules {
