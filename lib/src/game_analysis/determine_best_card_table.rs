@@ -51,7 +51,7 @@ impl<T, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> SPayoutStatsTable<T, 
 pub fn internal_table<
     MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded,
     T,
-    PayoutStatsPayload: Copy+Ord+std::fmt::Debug,
+    PayoutStatsPayload: Copy+Ord+std::fmt::Debug+'static, // TODO why is 'static needed?
     PayoutStatsPerStrategy: Borrow<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>,
 >(
     mut vectpayoutstatsperstrategy: Vec<(T, PayoutStatsPerStrategy)>,
@@ -74,13 +74,32 @@ pub fn internal_table<
         };
         N_COLUMNS
     ]);
+    let b_exists_count_of_zero_payout_positive = vectpayoutstatsperstrategy.iter().any(|(_, perminmaxstrategypaystats)| {
+        perminmaxstrategypaystats.borrow().via_accessors().iter().any(|(_emmstrategy, paystats)|
+            0!=paystats.counts(fn_loss_or_win)[std::cmp::Ordering::Equal]
+        )
+    });
     for ((perminmaxstrategyatplstrf, _grouping), grptpltmapemmstrategyatplstrf) in vectpayoutstatsperstrategy.into_iter()
         .map(|(t, minmax)| {
             let minmax = minmax.borrow();
             let column_counts = |paystats: &SPayoutStats<PayoutStatsPayload>| {
                 let mapordn_count = paystats.counts(fn_loss_or_win);
                 (
-                    format!("{} ", mapordn_count.iter().join("/")),
+                    format!("{} ",
+                        std::cmp::Ordering::values()
+                            .filter_map(|ord| {
+                                let n_count = mapordn_count[ord];
+                                match ord {
+                                    std::cmp::Ordering::Less => Some(n_count),
+                                    std::cmp::Ordering::Greater => Some(n_count),
+                                    std::cmp::Ordering::Equal => {
+                                        assert!(b_exists_count_of_zero_payout_positive || n_count==0);
+                                        if_then_some!(b_exists_count_of_zero_payout_positive, n_count)
+                                    },
+                                }
+                            })
+                            .join("/")
+                    ),
                     (mapordn_count[std::cmp::Ordering::Equal]+mapordn_count[std::cmp::Ordering::Greater])
                         .as_num::<f32>()
                         / (mapordn_count.iter().sum::<usize>().as_num::<f32>()),
@@ -137,7 +156,7 @@ pub fn internal_table<
 
 pub fn table<
     MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded,
-    PayoutStatsPayload: Copy+Ord+std::fmt::Debug
+    PayoutStatsPayload: Copy+Ord+std::fmt::Debug+'static,
 >(
     determinebestcardresult: &SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>,
     rules: &SRules,
