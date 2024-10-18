@@ -259,7 +259,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     Box::new(
                         itahand
                             .flat_map(|ahand| {
-                                itertools::repeat_n(
+                                std::iter::repeat_n(
                                     ahand,
                                     n_repeat_hand,
                                 )
