@@ -148,7 +148,7 @@ pub fn parse_rule_description(
 }
 
 pub fn parse_rule_description_simple(str_rules: &str) -> Result<SRules, Error> {
-    crate::rules::parser::parse_rule_description(
+    parse_rule_description(
         str_rules,
         (/*n_tarif_extra*/10, /*n_tarif_ruf*/20, /*n_tarif_solo*/50), // TODO? make customizable
         SStossParams::new(
