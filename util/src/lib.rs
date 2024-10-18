@@ -30,3 +30,5 @@ pub mod unpack_and_apply;
 pub use unpack_and_apply::*;
 pub mod interval;
 pub use interval::*;
+pub mod enumset;
+pub use enumset::*;
