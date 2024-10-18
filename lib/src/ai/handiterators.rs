@@ -44,7 +44,7 @@ impl THandIteratorCore for SHandIteratorCorePermutation {
             vecepi.extend(std::iter::repeat(epi).take(mapepin_count_unplayed_unknown[epi]));
         }
         assert_eq!(veccard_unplayed_unknown.len(), vecepi.len());
-        assert!(vecepi.iter().is_sorted_unstable_name_collision());
+        assert!(vecepi.iter().is_sorted());
         Self {
             vecepi,
             veccard_unplayed_unknown,
