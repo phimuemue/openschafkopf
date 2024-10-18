@@ -3,8 +3,6 @@ pub mod if_dbg_else;
 #[macro_use]
 pub mod verify;
 pub use self::verify::*;
-pub mod iteratorext;
-pub use self::iteratorext::*;
 pub mod via_out_param;
 pub use self::via_out_param::*;
 #[macro_use]
