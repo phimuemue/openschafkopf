@@ -1950,6 +1950,42 @@ fn test_rulesramsch() {
         ],
         ([-90, 10, 40, 40], 0),
     );
+    test_rules_manual(
+        "0 and 1 have same number of points, but 0 had higher Trumpf",
+        SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/None),
+        vec![],
+        vec![],
+        /*n_stock*/40,
+        &[
+            (EPI0, [EA,EZ,EK,EU]),
+            (EPI3, [GA,GZ,GK,GU]),
+            (EPI2, [SA,SZ,SK,SU]),
+            (EPI1, [HA,HZ,HK,HU]),
+            (EPI0, [EO,GO,H8,H7]), // 0 has Eichel-Ober, 1 has Gras-Ober
+            (EPI0, [SO,HO,H9,G9]), // 0 has Schelln-Ober, 1 has Gras-Ober
+            (EPI1, [G8,E9,S8,E8]),
+            (EPI1, [G7,S9,S7,E7]),
+        ],
+        ([-30, 10, 10, 10], 0),
+    );
+    test_rules_manual(
+        "0 and 1 have same number of points, but 1 had higher Trumpf",
+        SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/None),
+        vec![],
+        vec![],
+        /*n_stock*/40,
+        &[
+            (EPI0, [GO,HO,H8,H7]), // 0 has Gras-Ober, 1 has Herz-Ober
+            (EPI0, [EA,EZ,EK,EU]),
+            (EPI3, [GA,GZ,GK,GU]),
+            (EPI2, [SA,SZ,SK,SU]),
+            (EPI1, [HA,HZ,HK,HU]),
+            (EPI0, [SO,EO,H9,G9]), // 0 has Schelln-Ober, 1 has Eichel-Ober
+            (EPI1, [G8,E9,S8,E8]),
+            (EPI1, [G7,S9,S7,E7]),
+        ],
+        ([10, -30, 10, 10], 0),
+    );
 }
 
 #[test]
