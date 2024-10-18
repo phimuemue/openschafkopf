@@ -55,8 +55,7 @@ impl TGamePhase for SWebsocketGameResult {
     type ActivePlayerInfo = EnumSet<EPlayerIndex>;
     type Finish = SAccepted;
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
-        let oinfallible : /*mention type to get compiler error upon change*/Option<std::convert::Infallible> = self.gameresult.which_player_can_do_something(); // TODO simplify
-        verify!(oinfallible.is_none());
+        let None /*Option<Infallible>*/ = self.gameresult.which_player_can_do_something(); // TODO simplify
         if_then_some!(!self.setepi_confirmed.is_full(),
             self.setepi_confirmed.clone()
         )
@@ -383,10 +382,7 @@ impl VGamePhase {
                             ),
                     )
                 },
-                Accepted((_accepted, infallible)) => {
-                    let _infallible : /*mention type to get compiler error upon change*/Infallible = infallible;
-                    panic!() // TODO avoid
-                },
+                // Accepted(_, Infallible) unreachable
             }
         })
     }
@@ -463,8 +459,7 @@ impl VGamePhase {
                     },
                     GameResult(gameresult) => match gameresult.finish() {
                         Ok(accepted) => {
-                            let oinfallible : Option</*mention type to get compiler error upon change*/Infallible> = accepted.which_player_can_do_something();
-                            assert!(oinfallible.is_none());
+                            let None /*Option<Infallible>*/ = accepted.which_player_can_do_something();
                             self = Accepted(accepted);
                         },
                         Err(gameresult) => return Ok(GameResult(gameresult)),
