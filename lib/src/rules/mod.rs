@@ -180,19 +180,19 @@ impl TPlayerParties for SPlayerParties13 {
 
 #[derive(Debug)]
 pub struct SPlayerPartiesTable { // TODO? use this as canonical representation, and get rid of TPlayerParties and its implementors?
-    mapepib_primary: EnumMap<EPlayerIndex, bool>, // TODO? use enumset
+    setepi_primary: EnumSet<EPlayerIndex>,
 }
 
 impl SPlayerPartiesTable {
     pub fn is_primary_party(&self, epi: EPlayerIndex) -> bool {
-        self.mapepib_primary[epi]
+        self.setepi_primary.contains(epi)
     }
 }
 
 impl<PlayerParties: TPlayerParties> From<PlayerParties> for SPlayerPartiesTable {
     fn from(playerparties: PlayerParties) -> Self {
         Self {
-            mapepib_primary: EPlayerIndex::map_from_fn(|epi|
+            setepi_primary: EnumSet::new_from_fn(|epi|
                 playerparties.is_primary_party(epi)
             ),
         }
@@ -667,7 +667,7 @@ fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(fn_payload:
     type SSnapshotEquivalenceClass = u64; // space-saving variant of this:
     // struct SSnapshotEquivalenceClass { // packed into SSnapshotEquivalenceClass TODO? use bitfield crate
     //     epi_next_stich: EPlayerIndex,
-    //     setcard_played: EnumMap<ECard, bool>, // TODO enumset
+    //     setcard_played: EnumSet<ECard>,
     //     payload: <result of fn_payload>,
     // }
     #[derive(Debug)]

@@ -301,7 +301,7 @@ pub fn snapshot_cache_points_monotonic<MinMaxStrategiesHK: TMinMaxStrategiesHigh
     type SSnapshotEquivalenceClass = u64; // space-saving variant of this:
     // struct SSnapshotEquivalenceClass { // packed into SSnapshotEquivalenceClass TODO? use bitfield crate
     //     epi_next_stich: EPlayerIndex,
-    //     setcard_played: EnumMap<ECard, bool>, // TODO enumset
+    //     setcard_played: EnumSet<ECard>,
     // }
     #[derive(Debug)]
     struct SSnapshotCachePointsMonotonic<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded, PlayerParties, PointsToWin> {

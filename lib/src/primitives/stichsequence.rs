@@ -77,9 +77,9 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
     }
 
     pub fn new_from_cards(ekurzlang: EKurzLang, mut itcard: impl Iterator<Item=ECard>, winnerindex: &(impl TWinnerIndex + ?Sized)) -> Result<Self, SDuplicateCard> {
-        let mut mapcardb = ECard::map_from_fn(|_| false); // TODO enumset
+        let mut setcard = EnumSet::new_empty();
         itcard.try_fold(Self::new(ekurzlang), |mut stichseq, card| {
-            if assign_neq(&mut mapcardb[card], true) {
+            if setcard.insert(card) {
                 stichseq.zugeben(card, winnerindex);
                 Ok(stichseq)
             } else {

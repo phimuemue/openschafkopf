@@ -39,26 +39,26 @@ impl<DealCards, GamePreparations, DetermineRules, Game, GameResult, Accepted> VG
 pub struct SWebsocketGameResult {
     // TODO? should the members be private?
     pub gameresult: SGameResult<SRuleSet>,
-    pub mapepib_confirmed: EnumMap<EPlayerIndex, bool>, // TODO? enumset
+    pub setepi_confirmed: EnumSet<EPlayerIndex>,
 }
 
 impl SWebsocketGameResult {
     fn new(gameresult: SGameResult<SRuleSet>) -> Self {
         Self {
             gameresult,
-            mapepib_confirmed: EPlayerIndex::map_from_fn(|_epi| false),
+            setepi_confirmed: EnumSet::new_empty(),
         }
     }
 }
 
 impl TGamePhase for SWebsocketGameResult {
-    type ActivePlayerInfo = EnumMap<EPlayerIndex, bool>;
+    type ActivePlayerInfo = EnumSet<EPlayerIndex>;
     type Finish = SAccepted;
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
         let oinfallible : /*mention type to get compiler error upon change*/Option<std::convert::Infallible> = self.gameresult.which_player_can_do_something(); // TODO simplify
         verify!(oinfallible.is_none());
-        if_then_some!(self.mapepib_confirmed.iter().any(|b_confirmed| !b_confirmed),
-            self.mapepib_confirmed.clone()
+        if_then_some!(!self.setepi_confirmed.is_full(),
+            self.setepi_confirmed.clone()
         )
     }
     fn finish_success(self) -> Self::Finish {
@@ -349,7 +349,7 @@ impl VGamePhase {
                         ),
                     )
                 },
-                GameResult((gameresult, mapepib_confirmed)) => {
+                GameResult((gameresult, setepi_confirmed)) => {
                     SSendToPlayers::new(
                         /*slcstich*/if let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame {
                             game.stichseq.completed_stichs()
@@ -361,7 +361,7 @@ impl VGamePhase {
                         ),
                         /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
                         /*fn_msg_active*/ |epi| {
-                            if_then_some!(!mapepib_confirmed[epi],
+                            if_then_some!(!setepi_confirmed.contains(epi),
                                 VMessage::Ask{
                                     str_question: format!("Spiel beendet. {}", if gameresult.gameresult.an_payout[epi] < 0 {
                                         format!("Verlust: {}", -gameresult.gameresult.an_payout[epi])
@@ -374,7 +374,7 @@ impl VGamePhase {
                         },
                         /*msg_inactive*/VMessage::Info("Game finished".into()),
                         EPlayerIndex::values()
-                            .find(|epi| !mapepib_confirmed[*epi])
+                            .find(|epi| !setepi_confirmed.contains(*epi))
                             .map(|epi_confirm|
                                 STimeoutAction::new(
                                     epi_confirm,
@@ -429,7 +429,7 @@ impl VGamePhase {
                 }.is_ok()
             },
             (VGamePhase::GameResult(ref mut gameresult), VGamePhaseAction::GameResult(())) => {
-                assign_neq(&mut gameresult.mapepib_confirmed[epi], true)
+                gameresult.setepi_confirmed.insert(epi)
             },
             (VGamePhase::Accepted(_), VGamePhaseAction::Accepted(_)) => {
                 false

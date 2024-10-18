@@ -1,7 +1,6 @@
 use crate::primitives::{card::*, eplayerindex::*};
 use arrayvec::ArrayVec;
 #[cfg(debug_assertions)]
-use plain_enum::PlainEnum;
 use crate::util::*;
 use std::fmt;
 use std::borrow::{Borrow, BorrowMut};
@@ -31,12 +30,12 @@ impl<'hand> SFullHand<'hand> {
 #[cfg(debug_assertions)]
 impl std::cmp::PartialEq for SHand {
     fn eq(&self, other: &SHand) -> bool {
-        let to_enumset = |hand: &SHand| {
-            let mut mapcardb = ECard::map_from_fn(|_| false); // TODO enumset
+        let to_enumset = |hand: &SHand| { // TODO? FromIterator for EnumSet
+            let mut setcard = EnumSet::new_empty();
             for card in hand.cards() {
-                verify!(assign_neq(&mut mapcardb[*card], true));
+                verify!(setcard.insert(*card));
             }
-            mapcardb
+            setcard
         };
         to_enumset(self)==to_enumset(other)
     }
@@ -52,9 +51,9 @@ impl SHand {
             self.veccard.shuffle(&mut rand::thread_rng());
         }
         { // invariants
-            let mut setcardb = ECard::map_from_fn(|_card| false); // TODO enumset
+            let mut setcard = EnumSet::new_empty();
             for card in self.veccard.iter() {
-                verify!(assign_neq(&mut setcardb[*card], true));
+                verify!(setcard.insert(*card));
             }
         }
     }
