@@ -1,6 +1,5 @@
 use crate::primitives::{card::*, eplayerindex::*};
 use arrayvec::ArrayVec;
-#[cfg(debug_assertions)]
 use crate::util::*;
 use std::fmt;
 use std::borrow::{Borrow, BorrowMut};
