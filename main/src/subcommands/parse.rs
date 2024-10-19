@@ -29,46 +29,46 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
 
 macro_rules! card_neural_network_mapping(($macro:ident) => {
     $macro!(
-        (Eichel, Ass, 1)
-        (Gras, Ass, 2)
-        (Herz, Ass, 3)
-        (Schelln, Ass, 4)
-        (Eichel, Zehn, 5)
-        (Gras, Zehn, 6)
-        (Herz, Zehn, 7)
-        (Schelln, Zehn, 8)
-        (Eichel, Koenig, 9)
-        (Gras, Koenig, 10)
-        (Herz, Koenig, 11)
-        (Schelln, Koenig, 12)
-        (Eichel, Ober, 13)
-        (Gras, Ober, 14)
-        (Herz, Ober, 15)
-        (Schelln, Ober, 16)
-        (Eichel, Unter, 17)
-        (Gras, Unter, 18)
-        (Herz, Unter, 19)
-        (Schelln, Unter, 20)
-        (Eichel, S9, 21)
-        (Gras, S9, 22)
-        (Herz, S9, 23)
-        (Schelln, S9, 24)
-        (Eichel, S8, 25)
-        (Gras, S8, 26)
-        (Herz, S8, 27)
-        (Schelln, S8, 28)
-        (Eichel, S7, 29)
-        (Gras, S7, 30)
-        (Herz, S7, 31)
-        (Schelln, S7, 32)
+        (EA, 1)
+        (GA, 2)
+        (HA, 3)
+        (SA, 4)
+        (EZ, 5)
+        (GZ, 6)
+        (HZ, 7)
+        (SZ, 8)
+        (EK, 9)
+        (GK, 10)
+        (HK, 11)
+        (SK, 12)
+        (EO, 13)
+        (GO, 14)
+        (HO, 15)
+        (SO, 16)
+        (EU, 17)
+        (GU, 18)
+        (HU, 19)
+        (SU, 20)
+        (E9, 21)
+        (G9, 22)
+        (H9, 23)
+        (S9, 24)
+        (E8, 25)
+        (G8, 26)
+        (H8, 27)
+        (S8, 28)
+        (E7, 29)
+        (G7, 30)
+        (H7, 31)
+        (S7, 32)
     )
 });
 
 fn card_to_neural_network_input(ocard: Option<ECard>) -> usize {
     if let Some(card) = ocard {
-        macro_rules! inner(($(($efarbe:ident, $eschlag:ident, $n:expr))*) => {
-            match (card.farbe(), card.schlag()) {
-                $((EFarbe::$efarbe, ESchlag::$eschlag) => $n,)*
+        macro_rules! inner(($(($ecard:ident, $n:expr))*) => {
+            match card {
+                $(ECard::$ecard => $n,)*
             }
         });
         verify_ne!(card_neural_network_mapping!(inner), 0)
@@ -78,10 +78,10 @@ fn card_to_neural_network_input(ocard: Option<ECard>) -> usize {
 }
 
 fn neural_network_input_to_card(n: usize) -> Result<Option<ECard>, &'static str> {
-    macro_rules! inner(($(($efarbe:ident, $eschlag:ident, $n:expr))*) => {
+    macro_rules! inner(($(($ecard:ident, $n:expr))*) => {
         match n {
             0 => Ok(None),
-            $($n => Ok(Some(ECard::new(EFarbe::$efarbe, ESchlag::$eschlag))),)*
+            $($n => Ok(Some(ECard::$ecard)),)*
             _/*TODORUST 33..=usize::MAX*/ => Err("Unknown neural network input index"),
         }
     });
