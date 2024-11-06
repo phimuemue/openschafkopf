@@ -115,16 +115,22 @@ impl std::str::FromStr for SConstraint {
                 .register_fn("to_string", |t: &mut T| t.to_string())
                 .register_fn("to_debug", |t: &mut T| format!("{t:?}"));
         }
+        fn register_equality_operators<T: Eq+Sync+Send+Clone+'static>(engine: &mut rhai::Engine) {
+            engine.register_fn("==", |lhs: &mut T, rhs: T| {
+                lhs == &rhs
+            });
+            engine.register_fn("!=", |lhs: &mut T, rhs: T| {
+                lhs != &rhs
+            });
+        }
         register_output_fn::<ECard>(&mut engine);
-        engine.register_fn("==", |card_lhs: &mut ECard, card_rhs: ECard| {
-            card_lhs == &card_rhs
-        });
-        engine.register_fn("!=", |card_lhs: &mut ECard, card_rhs: ECard| {
-            card_lhs != &card_rhs
-        });
+        register_equality_operators::<ECard>(&mut engine);
         register_output_fn::<EFarbe>(&mut engine);
+        register_equality_operators::<EFarbe>(&mut engine);
         register_output_fn::<ESchlag>(&mut engine);
+        register_equality_operators::<ESchlag>(&mut engine);
         register_output_fn::<VTrumpfOrFarbe>(&mut engine);
+        register_equality_operators::<VTrumpfOrFarbe>(&mut engine);
         fn register_count_fn(
             engine: &mut rhai::Engine,
             str_name: &str,
