@@ -77,13 +77,13 @@ impl TRules for SRulesRamsch {
             *unwrap!(vecepi_most_points.iter().exactly_one())
         };
         if match self.odurchmarsch {
-            Some(VDurchmarsch::All) if 120==n_points_max =>
-                debug_verify_eq!(
+            None => false,
+            Some(VDurchmarsch::All) => {
+                120==n_points_max && debug_verify_eq!(
                     mapepipointstichcount[the_one_epi()].n_stich==stichseq.get().kurzlang().cards_per_player(),
                     stichseq.get().completed_stichs_winner_index(self).all(|(_stich, epi_winner)| epi_winner==the_one_epi())
-                ),
-            Some(VDurchmarsch::All) | None =>
-                false,
+                )
+            },
             Some(VDurchmarsch::AtLeast(n_points_durchmarsch)) => {
                 assert!(n_points_durchmarsch>=61); // otherwise, it may not be clear who is the durchmarsch winner
                 n_points_max>=n_points_durchmarsch
