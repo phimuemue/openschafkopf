@@ -1808,7 +1808,7 @@ fn test_rulesramsch() {
     use EPlayerIndex::*;
     test_rules_manual(
         "0 has durchmarsch all",
-        SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/None),
+        SRulesRamsch::new(10, Some(VDurchmarsch::All), /*ojungfrau*/None),
         vec![],
         vec![],
         /*n_stock*/20,
@@ -1826,7 +1826,7 @@ fn test_rulesramsch() {
     );
     test_rules_manual(
         "0 has durchmarsch all",
-        SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/Some(VJungfrau::DoubleAll)),
+        SRulesRamsch::new(10, Some(VDurchmarsch::All), /*ojungfrau*/Some(VJungfrau::DoubleAll)),
         vec![],
         vec![],
         /*n_stock*/20,
@@ -1844,7 +1844,7 @@ fn test_rulesramsch() {
     );
     test_rules_manual(
         "0 has durchmarsch 120",
-        SRulesRamsch::new(10, VDurchmarsch::AtLeast(120), /*ojungfrau*/None),
+        SRulesRamsch::new(10, Some(VDurchmarsch::AtLeast(120)), /*ojungfrau*/None),
         vec![],
         vec![],
         /*n_stock*/160,
@@ -1862,7 +1862,7 @@ fn test_rulesramsch() {
     );
     test_rules_manual(
         "0 has durchmarsch 120",
-        SRulesRamsch::new(10, VDurchmarsch::AtLeast(120), /*ojungfrau*/Some(VJungfrau::DoubleAll)),
+        SRulesRamsch::new(10, Some(VDurchmarsch::AtLeast(120)), /*ojungfrau*/Some(VJungfrau::DoubleAll)),
         vec![],
         vec![],
         /*n_stock*/160,
@@ -1880,7 +1880,7 @@ fn test_rulesramsch() {
     );
     test_rules_manual(
         "0 has 120, but no durchmarsch",
-        SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/None),
+        SRulesRamsch::new(10, Some(VDurchmarsch::All), /*ojungfrau*/None),
         vec![],
         vec![],
         /*n_stock*/40,
@@ -1898,7 +1898,7 @@ fn test_rulesramsch() {
     );
     test_rules_manual(
         "0 has 120, but no durchmarsch",
-        SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/Some(VJungfrau::DoubleAll)),
+        SRulesRamsch::new(10, Some(VDurchmarsch::All), /*ojungfrau*/Some(VJungfrau::DoubleAll)),
         vec![],
         vec![],
         /*n_stock*/40,
@@ -1916,7 +1916,7 @@ fn test_rulesramsch() {
     );
     test_rules_manual(
         "0 has 120, but no durchmarsch",
-        SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/Some(VJungfrau::DoubleIndividuallyOnce)),
+        SRulesRamsch::new(10, Some(VDurchmarsch::All), /*ojungfrau*/Some(VJungfrau::DoubleIndividuallyOnce)),
         vec![],
         vec![],
         /*n_stock*/40,
@@ -1934,7 +1934,7 @@ fn test_rulesramsch() {
     );
     test_rules_manual(
         "0 has 120, but no durchmarsch",
-        SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/Some(VJungfrau::DoubleIndividuallyMultiple)),
+        SRulesRamsch::new(10, Some(VDurchmarsch::All), /*ojungfrau*/Some(VJungfrau::DoubleIndividuallyMultiple)),
         vec![],
         vec![],
         /*n_stock*/40,
@@ -1952,7 +1952,7 @@ fn test_rulesramsch() {
     );
     test_rules_manual(
         "0 and 1 have same number of points, but 0 had higher Trumpf",
-        SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/None),
+        SRulesRamsch::new(10, Some(VDurchmarsch::All), /*ojungfrau*/None),
         vec![],
         vec![],
         /*n_stock*/40,
@@ -1970,7 +1970,7 @@ fn test_rulesramsch() {
     );
     test_rules_manual(
         "0 and 1 have same number of points, but 1 had higher Trumpf",
-        SRulesRamsch::new(10, VDurchmarsch::All, /*ojungfrau*/None),
+        SRulesRamsch::new(10, Some(VDurchmarsch::All), /*ojungfrau*/None),
         vec![],
         vec![],
         /*n_stock*/40,

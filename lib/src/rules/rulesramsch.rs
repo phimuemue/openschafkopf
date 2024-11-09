@@ -7,7 +7,6 @@ use std::{cmp::Ordering, fmt};
 
 #[derive(Clone, Debug)]
 pub enum VDurchmarsch {
-    None,
     All,
     AtLeast(isize),
 }
@@ -22,16 +21,16 @@ pub enum VJungfrau {
 #[derive(Clone, Debug)]
 pub struct SRulesRamsch {
     n_price : isize,
-    durchmarsch : VDurchmarsch,
+    odurchmarsch : Option<VDurchmarsch>,
     trumpfdecider: STrumpfDecider,
     ojungfrau: Option<VJungfrau>,
 }
 
 impl SRulesRamsch {
-    pub fn new(n_price: isize, durchmarsch: VDurchmarsch, ojungfrau: Option<VJungfrau>) -> Self {
+    pub fn new(n_price: isize, odurchmarsch: Option<VDurchmarsch>, ojungfrau: Option<VJungfrau>) -> Self {
         Self {
             n_price,
-            durchmarsch,
+            odurchmarsch,
             trumpfdecider: STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz)),
             ojungfrau,
         }
@@ -77,15 +76,15 @@ impl TRules for SRulesRamsch {
             assert!(n_points_max>=61);
             *unwrap!(vecepi_most_points.iter().exactly_one())
         };
-        if match self.durchmarsch {
-            VDurchmarsch::All if 120==n_points_max =>
+        if match self.odurchmarsch {
+            Some(VDurchmarsch::All) if 120==n_points_max =>
                 debug_verify_eq!(
                     mapepipointstichcount[the_one_epi()].n_stich==stichseq.get().kurzlang().cards_per_player(),
                     stichseq.get().completed_stichs_winner_index(self).all(|(_stich, epi_winner)| epi_winner==the_one_epi())
                 ),
-            VDurchmarsch::All | VDurchmarsch::None =>
+            Some(VDurchmarsch::All) | None =>
                 false,
-            VDurchmarsch::AtLeast(n_points_durchmarsch) => {
+            Some(VDurchmarsch::AtLeast(n_points_durchmarsch)) => {
                 assert!(n_points_durchmarsch>=61); // otherwise, it may not be clear who is the durchmarsch winner
                 n_points_max>=n_points_durchmarsch
             },

@@ -127,7 +127,7 @@ pub fn parse_rule_description(
         (&["ramsch"], {
             Ok(SRulesRamsch::new(
                 /*n_price*/n_tarif_ruf,
-                VDurchmarsch::AtLeast(91), // https://www.sauspiel.de/blog/66-bei-sauspiel-wird-jetzt-mit-ramsch-gespielt
+                Some(VDurchmarsch::AtLeast(91)), // https://www.sauspiel.de/blog/66-bei-sauspiel-wird-jetzt-mit-ramsch-gespielt
                 Some(VJungfrau::DoubleAll),
             ).into())
         }),
