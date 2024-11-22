@@ -145,15 +145,11 @@ impl STrumpfDecider {
 }
 
 macro_rules! impl_rules_trumpf {() => {
-    fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
-        self.trumpfdecider.trumpforfarbe(card)
-    }
-    fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering> {
-        self.trumpfdecider.compare_cards(card_fst, card_snd)
-    }
-    fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [ECard]) {
-        self.trumpfdecider.sort_cards_first_trumpf_then_farbe(slccard)
-    }
+    forward_to_field!(self.trumpfdecider,
+        fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe;
+        fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering>;
+        fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [ECard]);
+    );
 }}
 
 #[test]
