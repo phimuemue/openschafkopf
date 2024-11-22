@@ -497,14 +497,11 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         }
     }
 
-    pub fn current_playable_stich(&self) -> &SStich {
-        self.stichseq.current_playable_stich()
-    }
-
-    pub fn kurzlang(&self) -> EKurzLang {
-        debug_assert_eq!(self.stichseq.remaining_cards_per_hand(), self.ahand.map(|hand| hand.cards().len()));
-        self.stichseq.kurzlang()
-    }
+    forward_to_field!(self.stichseq,
+        pub fn current_playable_stich(&self) -> &SStich;
+        pub fn completed_stichs(&self) -> &[SStich];
+        pub fn kurzlang(&self) -> EKurzLang;
+    );
 
     pub fn stoss(&mut self, epi_stoss: EPlayerIndex) -> Result<(), Error> {
         match self.which_player_can_do_something() {
@@ -535,10 +532,6 @@ impl<Ruleset, GameAnnouncements, DetermineRules> SGameGeneric<Ruleset, GameAnnou
         self.ahand[epi].play_card(card);
         self.stichseq.zugeben(card, &self.rules);
         Ok(())
-    }
-
-    pub fn completed_stichs(&self) -> &[SStich] {
-        self.stichseq.completed_stichs()
     }
 }
 
