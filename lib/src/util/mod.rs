@@ -13,6 +13,8 @@ pub use openschafkopf_util::*;
 pub mod bitfield;
 #[macro_use]
 pub mod dbg_argument;
+#[macro_use]
+pub mod forward_to_field;
 
 pub fn tpl_flip_if<T>(b: bool, (t0, t1): (T, T)) -> (T, T) {
     if b {
