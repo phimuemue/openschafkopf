@@ -135,14 +135,12 @@ impl STrumpfDeciderInternal {
 }
 
 impl STrumpfDecider {
-    pub fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
-        self.trumpfdecider.trumpforfarbe(card)
-    }
+    forward_to_field!(self.trumpfdecider,
+        pub fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe;
+        pub fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering>;
+    );
     pub fn trumpfs_in_descending_order(&self, ) -> impl Iterator<Item=ECard>+'_ {
         self.veccard_trumpf_in_descending_order.iter().copied()
-    }
-    pub fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering> {
-        self.trumpfdecider.compare_cards(card_fst, card_snd)
     }
 }
 
