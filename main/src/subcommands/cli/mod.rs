@@ -10,7 +10,7 @@ use openschafkopf_lib::{
 use openschafkopf_util::*;
 use plain_enum::PlainEnum;
 
-pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
     use super::clap_arg;
     use super::shared_args::*;
     clap::Command::new(str_subcommand)

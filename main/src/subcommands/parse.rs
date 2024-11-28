@@ -14,7 +14,7 @@ use std::io::Write;
 use failure::*;
 use plain_enum::PlainEnum;
 
-pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
     use super::shared_args::*;
     clap::Command::new(str_subcommand)
         .about("Parse a game into a simple format")

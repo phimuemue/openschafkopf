@@ -8,7 +8,7 @@ use openschafkopf_util::*;
 use std::borrow::Cow;
 use failure::*;
 
-pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
     use super::shared_args::*;
     clap::Command::new(str_subcommand)
         .about("Analyze played games and spot suboptimal decisions")

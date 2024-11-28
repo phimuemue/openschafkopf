@@ -9,7 +9,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
     subcommand_given_game(str_subcommand, "Statistics about hands that could be dealt.")
         .arg(clap::Arg::new("inspect")
             .long("inspect")

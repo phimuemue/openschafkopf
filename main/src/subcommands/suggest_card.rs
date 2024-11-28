@@ -92,7 +92,7 @@ fn print_payoutstatstable<T: std::fmt::Display, MinMaxStrategiesHK: TMinMaxStrat
     }
 }
 
-pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
     subcommand_given_game(str_subcommand, "Suggest a card to play given the game so far")
         .arg(clap::Arg::new("repeat_hands")
             .long("repeat-hands")

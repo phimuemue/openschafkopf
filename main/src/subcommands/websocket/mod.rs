@@ -43,7 +43,7 @@ use gamephase::{
     VMessage,
 };
 
-pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
     use super::shared_args::*;
     clap::Command::new(str_subcommand)
         .about("Play in the browser")

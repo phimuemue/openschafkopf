@@ -19,7 +19,7 @@ use openschafkopf_util::*;
 use plain_enum::PlainEnum;
 use as_num::*;
 
-pub fn subcommand(str_subcommand: &'static str) -> clap::Command {
+pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
     clap::Command::new(str_subcommand)
         .about("Backend of a web-extension suggesting a card for a given game state")
 }
