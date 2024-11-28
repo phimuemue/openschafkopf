@@ -311,23 +311,6 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         SRules,
         Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), f32)->f32 + Sync>,
     )> {
-        impl SRufspielPayoutPointsAsPayout {
-            fn payout_to_points(
-                epi_active: EPlayerIndex,
-                card_rufsau: ECard,
-                stichseq: &SStichSequence,
-                (epi_hand, hand): (EPlayerIndex, &SHand),
-                f_payout: f32,
-            ) -> f32 {
-                assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
-                normalized_points_to_points(
-                    f_payout / playerparties22_multiplier().as_num::<f32>(),
-                    &SPointsToWin61{},
-                    /*b_primary*/ epi_hand==epi_active
-                        || stichseq.cards_from_player(hand, epi_hand).any(|card| card==card_rufsau),
-                )
-            }
-        }
         let epi_active = self.epi;
         let card_rufsau = self.rufsau();
         Some((
@@ -378,6 +361,24 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
 #[derive(Debug, Clone)]
 pub struct SRufspielPayoutPointsAsPayout {
     payoutdecider: SPayoutDeciderPointsAsPayout<SPointsToWin61>,
+}
+
+impl SRufspielPayoutPointsAsPayout {
+    fn payout_to_points(
+        epi_active: EPlayerIndex,
+        card_rufsau: ECard,
+        stichseq: &SStichSequence,
+        (epi_hand, hand): (EPlayerIndex, &SHand),
+        f_payout: f32,
+    ) -> f32 {
+        assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
+        normalized_points_to_points(
+            f_payout / playerparties22_multiplier().as_num::<f32>(),
+            &SPointsToWin61{},
+            /*b_primary*/ epi_hand==epi_active
+                || stichseq.cards_from_player(hand, epi_hand).any(|card| card==card_rufsau),
+        )
+    }
 }
 
 impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
