@@ -31,7 +31,7 @@ fn main() {
             std::ptr::null(),
         )};
         if 
-            hwnd != std::ptr::null_mut()
+            !hwnd.is_null()
             && unsafe { IsWindow(hwnd) } != 0
         {
             println!("Window found. Injecting DLL...");
