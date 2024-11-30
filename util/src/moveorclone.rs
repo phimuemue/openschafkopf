@@ -12,7 +12,7 @@ impl<T> TMoveOrClone<T> for T {
     }
 }
 
-impl<'t, T: Clone> TMoveOrClone<T> for &'t T {
+impl<T: Clone> TMoveOrClone<T> for &T {
     fn move_or_clone(self) -> T {
         self.clone()
     }

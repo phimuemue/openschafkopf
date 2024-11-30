@@ -478,7 +478,7 @@ impl<Rules: TRules> TWinnerIndex for Rules {
         self.preliminary_winner_index(stich.borrow())
     }
 }
-impl<'rules> TWinnerIndex for &'rules SRules {
+impl TWinnerIndex for &'_ SRules {
     fn winner_index(&self, stich: SFullStich<&SStich>) -> EPlayerIndex {
         self.preliminary_winner_index(stich.borrow())
     }

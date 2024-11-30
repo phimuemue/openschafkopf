@@ -196,7 +196,7 @@ pub struct SFilterOnePerWinnerIndex<'rules> {
     rules: &'rules SRules,
 }
 
-impl<'rules> TFilterAllowedCards for SFilterOnePerWinnerIndex<'rules> {
+impl TFilterAllowedCards for SFilterOnePerWinnerIndex<'_> {
     type UnregisterStich = ();
     fn register_stich(&mut self, _ahand: &mut EnumMap<EPlayerIndex, SHand>, _stichseq: &mut SStichSequence) -> Self::UnregisterStich {
     }
