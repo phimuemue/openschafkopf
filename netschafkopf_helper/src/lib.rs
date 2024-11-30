@@ -242,15 +242,25 @@ macro_rules! make_redirect_function(
             use super::*;
             use retour::GenericDetour;
 
-            static mut OHOOK: Option<GenericDetour<
-                unsafe extern $($extern)* fn ($($paramname: $paramtype,)*)->$rettype
-            >> = None;
+            unsafe fn get_detour() -> &'static mut Option<GenericDetour< unsafe extern $($extern)* fn ($($paramname: $paramtype,)*)->$rettype>> {
+                static mut ODETOUR: Option<GenericDetour<
+                    unsafe extern $($extern)* fn ($($paramname: $paramtype,)*)->$rettype
+                >> = None;
+                /* As far as I understand https://doc.rust-lang.org/nightly/edition-guide/rust-2024/static-mut-references.html,
+                the problem lies in "taking such a reference in violation of Rust's mutability XOR aliasing requirement".
+                Function detouring seems generally very dangerous, and and I guess even Mutex-ing ODETOUR would not automatically make the program safe,
+                because when we enable the detour, couldn't other threads already be in the detoured function?
+                Thus, and because ODETOUR is set only when initializing the detour,
+                I allow(static_mut_refs) here and hope that NetSchafkopf fail spectacularly upon problems, so the problem is observable.*/
+                #[allow(static_mut_refs)]
+                unsafe{&mut ODETOUR}
+            }
 
             #[inline(always)]
             pub unsafe fn call_original(
                 $($paramname: $paramtype,)*
             ) -> $rettype {
-                unwrap!(OHOOK.as_ref()).call($($paramname,)*)
+                unwrap!(get_detour().as_ref()).call($($paramname,)*)
             }
 
             pub extern $($extern)* fn redirected_should_only_be_called_from_wrapper($($paramname: $paramtype,)*)->$rettype {
@@ -261,8 +271,8 @@ macro_rules! make_redirect_function(
                 log_in_out(&format!("{}::redirect", stringify!($fn_name)), (), || {
                     let pfn_original: unsafe extern $($extern)* fn($($paramtype,)*)->$rettype =
                         std::mem::transmute($pfn_original as usize);
-                    OHOOK = Some(unwrap!(GenericDetour::new(pfn_original, redirected_should_only_be_called_from_wrapper)));
-                    unwrap!(unwrap!(OHOOK.as_ref()).enable());
+                    *get_detour() = Some(unwrap!(GenericDetour::new(pfn_original, redirected_should_only_be_called_from_wrapper)));
+                    unwrap!(unwrap!(get_detour().as_ref()).enable());
                 })
             }
         }
