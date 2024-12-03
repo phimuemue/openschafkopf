@@ -142,6 +142,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
             .long("json")
             .help("Output result as json")
         )
+        // TODO support "compute optimal game tree"
 }
 
 #[derive(new, Serialize)]
