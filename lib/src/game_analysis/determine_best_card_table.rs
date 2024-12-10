@@ -165,7 +165,6 @@ pub fn table<
     fn_loss_or_win: &dyn Fn(isize, PayoutStatsPayload) -> std::cmp::Ordering,
 ) -> SPayoutStatsTable<ECard, MinMaxStrategiesHK>
     where
-        MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: std::fmt::Debug, // TODO needed?
         MinMaxStrategiesHK::Type<[(String, f32); N_COLUMNS]>: PartialEq+Clone,
 {
     let mut payoutstatstable = internal_table(

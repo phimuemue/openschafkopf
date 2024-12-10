@@ -173,7 +173,7 @@ pub struct SDetermineBestCardResult<T> {
 }
 
 impl<T> SDetermineBestCardResult<T> {
-    pub fn cards_and_ts(&self) -> impl Iterator<Item=(ECard, &T)> where T: Debug {
+    pub fn cards_and_ts(&self) -> impl Iterator<Item=(ECard, &T)> {
         <ECard as PlainEnum>::values()
             .filter_map(|card| self.mapcardt[card].as_ref().map(|t| (card, t)))
     }
