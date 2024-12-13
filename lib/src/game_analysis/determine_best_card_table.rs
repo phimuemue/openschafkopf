@@ -140,7 +140,7 @@ pub fn internal_table<
             for ((str_val, f_val), formatinfo) in atplstrf.iter().zip_eq(aformatinfo.iter_mut()) {
                 formatinfo.n_width = formatinfo.n_width.max(str_val.len());
                 assign_lt_partial_ord(&mut formatinfo.f_min, *f_val);
-                assign_max_partial_ord(&mut formatinfo.f_max, *f_val);
+                assign_gt_partial_ord(&mut formatinfo.f_max, *f_val);
             }
         });
         vecoutputline.push(SOutputLine{

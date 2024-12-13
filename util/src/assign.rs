@@ -22,7 +22,7 @@ pub fn assign_lt_partial_ord<T: PartialOrd, Src: TMoveOrClone<T>+Borrow<T>>(dst:
     assign_better(dst, src, |lhs, rhs| lhs < rhs)
 }
 
-pub fn assign_max_partial_ord<T: PartialOrd, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) -> bool {
+pub fn assign_gt_partial_ord<T: PartialOrd, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs > rhs)
 }
 
