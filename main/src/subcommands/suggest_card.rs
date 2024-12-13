@@ -56,7 +56,7 @@ fn print_payoutstatstable<T: std::fmt::Display, MinMaxStrategiesHK: TMinMaxStrat
     let mut n_width_id = 0;
     for outputline in slcoutputline.iter() {
         let str_id = outputline.vect.iter().join(" ");
-        assign_max(&mut n_width_id, str_id.len());
+        assign_gt(&mut n_width_id, str_id.len());
         vecstr_id.push(str_id);
     }
     for (str_id, SOutputLine{vect:_, perminmaxstrategyatplstrf}) in vecstr_id.iter().zip_eq(slcoutputline.iter()) {

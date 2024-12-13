@@ -797,7 +797,7 @@ impl TAlphaBetaPruner for SAlphaBetaPruner {
             // I'm maximizing myself, but if my parent will minimize against what's already in there, I do not need to investigate any further
             ControlFlow::Break(())
         } else {
-            assign_max(&mut infofromparent[ELoHi::Lo], n_payout_for_pruner);
+            assign_gt(&mut infofromparent[ELoHi::Lo], n_payout_for_pruner);
             ControlFlow::Continue(infofromparent)
         }
     }

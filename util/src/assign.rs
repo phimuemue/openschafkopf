@@ -14,7 +14,7 @@ pub fn assign_lt<T: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) 
     assign_better(dst, src, |lhs, rhs| lhs < rhs)
 }
 
-pub fn assign_max<T: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) -> bool {
+pub fn assign_gt<T: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs > rhs)
 }
 
