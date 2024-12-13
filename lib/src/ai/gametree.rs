@@ -548,7 +548,7 @@ macro_rules! impl_perminmaxstrategy{(
                 $(($emmstrategy, (|slf: &Self| &slf.$ident_strategy.0) as fn(&Self) -> &T),)*
             ]
         }
-        fn compare_canonical<PayoutStatsPayload: Ord+Debug+Copy>(&self, other: &Self, fn_loss_or_win: impl Fn(isize, PayoutStatsPayload)->std::cmp::Ordering) -> std::cmp::Ordering where T: Borrow<SPayoutStats<PayoutStatsPayload>> {
+        fn compare_canonical<PayoutStatsPayload: Ord+Copy>(&self, other: &Self, fn_loss_or_win: impl Fn(isize, PayoutStatsPayload)->std::cmp::Ordering) -> std::cmp::Ordering where T: Borrow<SPayoutStats<PayoutStatsPayload>> {
             use std::cmp::Ordering::*;
             fn compare_fractions((numerator_lhs, denominator_lhs): (u128, u128), (numerator_rhs, denominator_rhs): (u128, u128)) -> std::cmp::Ordering {
                 u128::cmp(&(numerator_lhs * denominator_rhs), &(denominator_lhs * numerator_rhs))
@@ -746,7 +746,7 @@ pub trait TMinMaxStrategies : TGenericArgs1 {
         where
             <Self as TGenericArgs1>::Arg0: 'static; // TODO why is this needed?
     fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&<Self as TGenericArgs1>::Arg0)]; // TODO is there a better alternative?
-    fn compare_canonical<PayoutStatsPayload: Ord+Debug+Copy>(&self, other: &Self, fn_loss_or_win: impl Fn(isize, PayoutStatsPayload)->std::cmp::Ordering) -> std::cmp::Ordering where <Self as TGenericArgs1>::Arg0: Borrow<SPayoutStats<PayoutStatsPayload>>;
+    fn compare_canonical<PayoutStatsPayload: Ord+Copy>(&self, other: &Self, fn_loss_or_win: impl Fn(isize, PayoutStatsPayload)->std::cmp::Ordering) -> std::cmp::Ordering where <Self as TGenericArgs1>::Arg0: Borrow<SPayoutStats<PayoutStatsPayload>>;
 }
 pub trait TMinMaxStrategiesInternal<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> :
     TMinMaxStrategies<HigherKinded=MinMaxStrategiesHK>
