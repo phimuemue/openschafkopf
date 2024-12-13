@@ -642,10 +642,10 @@ impl<T> MinMin<T> {
 }
 impl MinMin<EnumMap<EPlayerIndex, isize>> {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
-        assign_min_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+        assign_lt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }
     fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, _epi_card: EPlayerIndex) {
-        assign_min_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+        assign_lt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }
 }
 
@@ -661,7 +661,7 @@ impl Min<EnumMap<EPlayerIndex, isize>> {
         assign_max_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }
     fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, _epi_card: EPlayerIndex) {
-        assign_min_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+        assign_lt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }
 }
 
