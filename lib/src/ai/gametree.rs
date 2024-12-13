@@ -658,7 +658,7 @@ impl<T> Min<T> {
 }
 impl Min<EnumMap<EPlayerIndex, isize>> {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
-        assign_max_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+        assign_gt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }
     fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, _epi_card: EPlayerIndex) {
         assign_lt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
@@ -674,7 +674,7 @@ impl<T> SelfishMin<T> {
 }
 impl SelfishMin<EnumMap<EPlayerIndex, isize>> {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
-        assign_max_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+        assign_gt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }
     fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex) {
         assign_better(&mut self.0, other.0, |an_payout_lhs, an_payout_rhs| {
@@ -696,7 +696,7 @@ impl<T> SelfishMax<T> {
 }
 impl SelfishMax<EnumMap<EPlayerIndex, isize>> {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
-        assign_max_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+        assign_gt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }
     fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex) {
         assign_better(&mut self.0, other.0, |an_payout_lhs, an_payout_rhs| {
@@ -718,10 +718,10 @@ impl<T> Max<T> {
 }
 impl Max<EnumMap<EPlayerIndex, isize>> {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
-        assign_max_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+        assign_gt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }
     fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, _epi_card: EPlayerIndex) {
-        assign_max_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
+        assign_gt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }
 }
 

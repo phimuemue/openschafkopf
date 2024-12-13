@@ -30,7 +30,7 @@ pub fn assign_lt_by_key<T, K: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, 
     assign_better(dst, src, |lhs, rhs| fn_key(lhs) < fn_key(rhs))
 }
 
-pub fn assign_max_by_key<T, K: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src, mut fn_key: impl FnMut(&T) -> K) -> bool {
+pub fn assign_gt_by_key<T, K: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src, mut fn_key: impl FnMut(&T) -> K) -> bool {
     assign_better(dst, src, |lhs, rhs| fn_key(lhs) > fn_key(rhs))
 }
 
@@ -41,7 +41,7 @@ pub fn assign_neq<T: Eq, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) 
 #[test]
 fn test_assign_by_key() {
     let mut n = 0;
-    assign_max_by_key(&mut n, 1, |t| *t);
+    assign_gt_by_key(&mut n, 1, |t| *t);
     assert_eq!(n, 1);
     assign_lt_by_key(&mut n, 0, |t| *t);
     assert_eq!(n, 0);

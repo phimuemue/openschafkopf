@@ -172,7 +172,7 @@ impl SStichTrie {
                             }});
                             stichtrie.push(
                                 if b_stich_winner_is_primary==playerparties.is_primary_party(epi_card) {
-                                    card_min_or_max!(assign_max_by_key)
+                                    card_min_or_max!(assign_gt_by_key)
                                 } else {
                                     card_min_or_max!(assign_lt_by_key)
                                 },
