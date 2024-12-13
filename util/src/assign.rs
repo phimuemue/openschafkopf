@@ -10,7 +10,6 @@ pub fn assign_better<T, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src, f
     })
 }
 
-#[allow(dead_code)]
 pub fn assign_min<T: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs < rhs)
 }
