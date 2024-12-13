@@ -252,6 +252,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 None => Ok(None),
                 Some(_) => Err(format_err!("Could not understand strategy.")),
             }?;
+            let fn_loss_or_win = |_n_payout, ord_vs_0| ord_vs_0;
             // we are interested in payout => single-card-optimization useless
             macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $fn_alphabetapruner:expr,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                 let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
@@ -318,7 +319,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     let payoutstatstable = table(
                         &determinebestcardresult,
                         rules,
-                        /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
+                        &fn_loss_or_win,
                     );
                     print_payoutstatstable::<_,$MinMaxStrategiesHK>(
                         &payoutstatstable,
@@ -329,7 +330,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         &internal_table(
                             vec!(("no-details", determinebestcardresult.t_combined)),
                             /*b_group*/false,
-                            /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0,
+                            &fn_loss_or_win,
                         ),
                         /*b_print_table_description_before_table*/false,
                     );
