@@ -10,7 +10,7 @@ pub fn assign_better<T, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src, f
     })
 }
 
-pub fn assign_min<T: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) -> bool {
+pub fn assign_lt<T: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs < rhs)
 }
 
