@@ -14,6 +14,8 @@ pub mod moveorclone;
 pub use moveorclone::*;
 pub mod assign;
 pub use assign::*;
+pub mod cmp;
+pub use cmp::*;
 #[macro_use]
 pub mod cartesian_match;
 #[macro_use]
