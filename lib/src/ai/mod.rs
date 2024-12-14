@@ -172,10 +172,14 @@ pub struct SDetermineBestCardResult<T> {
     pub t_combined: T,
 }
 
+pub fn internal_cards_and_ts<T>(mapcardt: &EnumMap<ECard, Option<T>>) -> impl Iterator<Item=(ECard, &T)> {
+    <ECard as PlainEnum>::values()
+        .filter_map(|card| mapcardt[card].as_ref().map(|t| (card, t)))
+}
+
 impl<T> SDetermineBestCardResult<T> {
     pub fn cards_and_ts(&self) -> impl Iterator<Item=(ECard, &T)> {
-        <ECard as PlainEnum>::values()
-            .filter_map(|card| self.mapcardt[card].as_ref().map(|t| (card, t)))
+        internal_cards_and_ts(&self.mapcardt)
     }
     pub fn cards_with_maximum_value(&self, mut fn_cmp: impl FnMut(&T, &T)->std::cmp::Ordering) -> (Vec<ECard>, &T) where T: Debug {
         let veccard = <ECard as PlainEnum>::values()
@@ -240,11 +244,14 @@ impl<T: Ord + Copy> SPayoutStats<T> {
     }
 }
 
-pub enum VInspectionPoint {
+pub enum VInspectionPoint<AfterHand> {
     Card{
         b_before: bool,
         card: ECard,
     },
+    AfterHand(
+        AfterHand,
+    ),
 }
 
 pub fn determine_best_card<
@@ -266,7 +273,7 @@ pub fn determine_best_card<
     fn_make_foreachsnapshot: &(dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>) -> SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> + std::marker::Sync),
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
-    fn_inspect: &(dyn Fn(&VInspectionPoint, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
+    fn_inspect: &(dyn Fn(&VInspectionPoint<&EnumMap<ECard, Option<<MinMaxStrategiesHK>::Type<SPayoutStats<PayoutStatsPayload>>>>>, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
 ) -> Option<SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>>
     where
@@ -336,6 +343,13 @@ pub fn determine_best_card<
                     });
                     fn_inspect(&VInspectionPoint::Card{b_before: false, card}, i_ahand, &ahand);
                 });
+            fn_inspect(
+                &VInspectionPoint::AfterHand(
+                    &*unwrap!(mapcardooutput.lock()) // TODO Can we avoid locking?
+                ),
+                i_ahand,
+                &ahand
+            );
             let mapcardooutput_per_ahand = finalize_arc_mutex(mapcardooutput_per_ahand);
             let output_per_ahand = foreachsnapshot.combine_outputs(
                 epi_current,
