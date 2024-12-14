@@ -277,14 +277,18 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     ),
                     $fn_snapshotcache::<$MinMaxStrategiesHK>(rules),
                     $fn_visualizer,
-                    /*fn_inspect*/&|b_before, i_ahand, ahand, card| {
+                    /*fn_inspect*/&|inspectionpoint, i_ahand, ahand| {
                         if b_verbose {
-                            println!(" {} {} ({}): {}",
-                                if b_before {'>'} else {'<'},
-                                i_ahand+1, // TODO use same hand counters as in common_given_game
-                                card,
-                                display_card_slices(&ahand, rules, " | "),
-                            );
+                            match inspectionpoint {
+                                VInspectionPoint::Card{b_before, card} => {
+                                    println!(" {} {} ({}): {}",
+                                        if *b_before {'>'} else {'<'},
+                                        i_ahand+1, // TODO use same hand counters as in common_given_game
+                                        card,
+                                        display_card_slices(&ahand, rules, " | "),
+                                    );
+                                },
+                            }
                         }
                     },
                     /*fn_payout*/&|stichseq, ahand, n_payout| fn_human_readable_payout(

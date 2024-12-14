@@ -2461,7 +2461,7 @@ mod tests {
                                 ),
                                 /*fn_snapshotcache*/SSnapshotCacheNone::factory(),
                                 SNoVisualization::factory(),
-                                /*fn_inspect*/&|_,_,_,_| {},
+                                /*fn_inspect*/&|_,_,_| {},
                                 /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
                             ))
                                 .cards_and_ts()

@@ -615,7 +615,7 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
                 ),
                 SSnapshotCacheNone::factory(),
                 SNoVisualization::factory(),
-                /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
+                /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
                 /*fn_payout*/&|_stichseq, _ahand, n_payout: isize| (n_payout, n_payout.cmp(&0)),
             ));
             let card_suggestion_netschk = aveccard_netschafkopf[epi_active][(i_suggestion_netschk_1_based-1).as_num::<usize>()];

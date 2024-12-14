@@ -79,7 +79,7 @@ impl SAi {
             },
             SSnapshotCacheNone::factory(), // TODO? make customizable
             /*fn_visualizer*/SNoVisualization::factory(),
-            /*fn_inspect*/&|_,_,_,_|{},
+            /*fn_inspect*/&|_,_,_|{},
             /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
         )).t_combined
     }
@@ -120,7 +120,7 @@ impl SAi {
                     ),
                     SSnapshotCacheNone::factory(), // TODO possibly use cache
                     fn_visualizer,
-                    /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
+                    /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
                     /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
                 )
             }}}
@@ -240,6 +240,13 @@ impl<T: Ord + Copy> SPayoutStats<T> {
     }
 }
 
+pub enum VInspectionPoint {
+    Card{
+        b_before: bool,
+        card: ECard,
+    },
+}
+
 pub fn determine_best_card<
     'stichseq,
     'rules,
@@ -259,7 +266,7 @@ pub fn determine_best_card<
     fn_make_foreachsnapshot: &(dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>) -> SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> + std::marker::Sync),
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
-    fn_inspect: &(dyn Fn(bool/*b_before*/, usize, &EnumMap<EPlayerIndex, SHand>, ECard) + std::marker::Sync),
+    fn_inspect: &(dyn Fn(&VInspectionPoint, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
 ) -> Option<SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>>
     where
@@ -290,7 +297,7 @@ pub fn determine_best_card<
             )
                 .into_par_iter()
                 .for_each(|&card| {
-                    fn_inspect(/*b_before*/true, i_ahand, &ahand, card);
+                    fn_inspect(&VInspectionPoint::Card{b_before: true, card}, i_ahand, &ahand);
                     let foreachsnapshot = fn_make_foreachsnapshot(stichseq, &ahand);
                     let mut visualizer = fn_visualizer(i_ahand, &ahand, Some(card)); // do before ahand is modified
                     debug_assert!(ahand[epi_current].cards().contains(&card));
@@ -327,7 +334,7 @@ pub fn determine_best_card<
                             |lhs, rhs| SPayoutStats::accumulate(lhs, rhs),
                         )
                     });
-                    fn_inspect(/*b_before*/false, i_ahand, &ahand, card);
+                    fn_inspect(&VInspectionPoint::Card{b_before: false, card}, i_ahand, &ahand);
                 });
             let mapcardooutput_per_ahand = finalize_arc_mutex(mapcardooutput_per_ahand);
             let output_per_ahand = foreachsnapshot.combine_outputs(
@@ -521,7 +528,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             &|_stichseq, _ahand| SMinReachablePayout::new_from_game(&game),
             /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO test cache
             /*fn_visualizer*/SNoVisualization::factory(),
-            /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
+            /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
             /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
         ));
         for card in [H7, H8, H9] {

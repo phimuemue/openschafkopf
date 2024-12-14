@@ -150,7 +150,7 @@ pub fn greet() {
                 rules.snapshot_cache::<SMaxSelfishMinStrategyHigherKinded>(rulestatecache)
             },
             /*fn_visualizer*/SNoVisualization::factory(),
-            /*fn_inspect*/&|_b_before, _i_ahand, _ahand, _card| {},
+            /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
             /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
         ))
     };
