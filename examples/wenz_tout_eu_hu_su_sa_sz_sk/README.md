@@ -11,19 +11,30 @@ The results were:
 * For position 2: 86.59%
 * For position 3: 90.29%
 
-# My take for position 1 or 2
+# My take
 
-TODO: In this case, Schelln is dangerous and leads to a direct loss if another player has no Schelln but holds Gras-Unter. In addition to that, other Farben may lead to loss if the player's Herz- or Schelln-Unter can be topped by another player.
+My thoughts:
 
-# My take for position 3
+* Schelln is dangerous and we assume a direct loss if another player is Schelln frei but holds Gras-Unter.
+* Other Farben may lead to loss if the player's Her- or Schelln-Unter can be topped by another opponent's Gras-Unter.
 
-When the Wenz Tout is played in the last position, the game is only lost if the opening player chooses Schelln, and player 1 or 2 has no schelln *and* holds Gras-Unter.
+`script.sh` computes the winning probability accordingly. It can be customized by setting `EPI_POSITION` to 1, 2 or 3, depending on the player's position. The results are:
+
+* For position 1: 82.96%
+* For position 2: 87.43%
+* For position 3: 92.08%
+
+I.e. they are all slightly higher than the student's results.
+
+# Special casing position 3
+
+The Wenz Tout in the last position is only lost if the opening player chooses Schelln, and player 1 or 2 has no schelln *and* holds Gras-Unter.
 
 We can simulate this by fixing the hand of player 3 to EU HU SU SA SZ SK, randomly distributing the other cards onto players 0 to 2.
 
 If I got it right, the student assumed that player 0 plays a card of their longest Farben without an Ass. If there are multiple applicable Farben, player 0 chooses randomly between them.
 
-This is implemented by `position_3.sh`. Running it resulted in this:
+This is special-cased in `position_3.sh`. Running it resulted in this:
 
 ```
 [[Eichel, Gras, Herz], 0, 0, 0] 8481 (0.85%)
@@ -60,4 +71,4 @@ This is implemented by `position_3.sh`. Running it resulted in this:
 ⌀ [⊥, 0.3236, 0.1565, 0.0794]
 ```
 
-The very last number (`0.0794`) indicates that the probability that player 0 plays schelln and another player has no Schelln *and* holds the Gras-Unter is just below 8%. Inverting this leads to a winning probability of ~92% - close to the student's result, but not exactly equal.
+Here, the very last number (`0.0794`) indicates that the probability that player 0 plays Schelln and another player has no Schelln *and* holds the Gras-Unter is just below 8%. Inverting this leads to a winning probability of ~92% - confirming the results of `script.sh`.
