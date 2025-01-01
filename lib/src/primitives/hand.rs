@@ -9,7 +9,7 @@ pub type SHandVector = ArrayVec<ECard, {EKurzLang::max_cards_per_player()}>;
 
 #[derive(Clone, Debug)]
 pub struct SHand {
-    veccard: SHandVector,
+    veccard: SHandVector, // TODO Investigate if an EnumSet<ECard> (backed by a 32-bit bitset) is faster
 }
 
 #[derive(Copy, Clone)]
