@@ -280,11 +280,10 @@ pub fn ask_for_alternative<'vect, T>(
 
 pub fn print_hand(veccard: &[ECard], oi_card: Option<usize>) {
     do_in_window(&VSkUiWindow::Hand, |ncwin| {
-        let is_oi_card = |i| { oi_card.map_or(false, |i_card| i==i_card) };
         for (i, card) in veccard.iter().enumerate() {
             let n_card_width = 10;
             ncurses::wmove(ncwin,
-                /*n_y; convert bool to isize*/ i32::from(!is_oi_card(i)),
+                /*n_y; convert bool to isize*/ i32::from(oi_card!=Some(i)),
                 /*n_x*/ (n_card_width * i).as_num()
             );
             wprint(ncwin, " +--");
