@@ -44,7 +44,7 @@ impl TRuleSet for SSauspielRuleset {
 #[derive(Debug)]
 pub struct SGameAnnouncementAnonymous;
 
-fn iter_to_arr<T: std::fmt::Debug>(it: impl IntoIterator<Item=T>) -> Result<[T; EPlayerIndex::SIZE], failure::Error> {
+fn iter_to_arr<T>(it: impl IntoIterator<Item=T>) -> Result<[T; EPlayerIndex::SIZE], failure::Error> {
     let (card0, card1, card2, card3) = it.into_iter()
         .collect_tuple()
         .ok_or_else(|| format_err!("Wrong number of elements"))?;
