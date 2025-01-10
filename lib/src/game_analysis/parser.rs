@@ -130,19 +130,22 @@ impl<'node> TSauspielHtmlNode<'node> for select::node::Node<'node> {
     }
 }
 
-pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, Option<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error> {
+pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, Option<SGameAnnouncementAnonymous>, Vec<()>>, failure::Error> {
     internal_analyze_sauspiel_html(
         Document::from(str_html),
+        /*fn_determinerules_step*/|_,_,_| (),
         /*fn_before_play_card*/|_,_,_,_| (),
     )
 }
 
-pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, FnBeforePlayCard>(
+pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, DetermineRulesStep, FnDetermineRulesStep, FnBeforePlayCard>(
     doc: Document,
+    mut fn_determinerules_step: FnDetermineRulesStep,
     mut fn_before_play_card: FnBeforePlayCard,
-) -> Result<SGameResultGeneric<SSauspielRuleset, Option<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error>
+) -> Result<SGameResultGeneric<SSauspielRuleset, Option<SGameAnnouncementAnonymous>, Vec<DetermineRulesStep>>, failure::Error>
     where
-        for <'card> FnBeforePlayCard: FnMut(&SGameGeneric<SSauspielRuleset, Option<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, ECard, EPlayerIndex, Document::HtmlNode<'card>),
+        for <'card> FnDetermineRulesStep: FnMut(EPlayerIndex, &str, Document::HtmlNode<'card>)->DetermineRulesStep,
+        for <'card> FnBeforePlayCard: FnMut(&SGameGeneric<SSauspielRuleset, Option<SGameAnnouncementAnonymous>, Vec<DetermineRulesStep>>, ECard, EPlayerIndex, Document::HtmlNode<'card>),
 {
     // TODO acknowledge timeouts
     let mapepistr_username = iter_to_arr(
@@ -412,8 +415,9 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, FnBeforeP
                     ))
                 ).into_raw()),
             ).map_err(|err| format_err!("Failed to parse game announcement 2: {:?}", err))
+            .map(|(epi, str_determinerules)| fn_determinerules_step(epi, str_determinerules, node_gameannouncement))
         })
-        .collect::<Result<Vec<(EPlayerIndex, &'static str)>, _>>()?;
+        .collect::<Result<Vec<_>, _>>()?;
     if let Some(rules) = orules {
         let mut game = SGameGeneric::new_with(
             aveccard,
