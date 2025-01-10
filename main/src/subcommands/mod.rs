@@ -11,7 +11,6 @@ mod common_given_game;
 use openschafkopf_util::*;
 use openschafkopf_lib::{
     rules::{
-        TRules,
         ruleset::{SRuleSet, VStockOrT},
     },
     ai::SAi,

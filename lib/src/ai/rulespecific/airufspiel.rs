@@ -13,7 +13,7 @@ impl<RufspielPayout: TRufspielPayout> TRuleSpecificAI for SAIRufspiel<'_, Rufspi
         let rules = self.rules;
         // suchen
         if 
-            unwrap!(stichseq.current_playable_stich().current_playerindex())!=rules.active_playerindex()
+            unwrap!(stichseq.current_playable_stich().current_playerindex())!=rules.playerindex()
             && stichseq.no_card_played()
             && !hand.contains(rules.rufsau())
         {

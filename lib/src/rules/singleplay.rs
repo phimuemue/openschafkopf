@@ -1,8 +1,4 @@
 macro_rules! impl_single_play {() => {
-    fn playerindex(&self) -> Option<EPlayerIndex> {
-        Some(self.epi)
-    }
-
     fn stoss_allowed(&self, stichseq: &SStichSequence, hand: &SHand, epi: EPlayerIndex, vecstoss: &[SStoss]) -> bool {
         self.stossparams.stoss_allowed(stichseq, vecstoss) && {
             assert!(

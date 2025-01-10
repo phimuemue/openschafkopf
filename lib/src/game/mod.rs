@@ -205,7 +205,7 @@ impl SGamePreparations {
         if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
-        if orules.as_ref().map_or(false, |rules| Some(epi)!=rules.playerindex()) {
+        if orules.as_ref().map_or(false, |rules| epi!=rules.playerindex()) {
             bail!("Only actively playable rules can be announced");
         }
         if !orules.as_ref().map_or(true, |rules| rules.can_be_played(self.fullhand(epi))) {

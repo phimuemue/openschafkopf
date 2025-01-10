@@ -133,6 +133,9 @@ impl<RufspielPayout: TRufspielPayout> TActivelyPlayableRules for SRulesRufspielG
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::RufspielLike
     }
+    fn playerindex(&self) -> EPlayerIndex {
+        self.epi
+    }
 }
 
 #[derive(Debug)]
@@ -172,10 +175,6 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         let it = || {hand.get().iter().filter(|&card| self.is_ruffarbe(*card))};
         it().all(|card| card.schlag()!=ESchlag::Ass)
         && 0<it().count()
-    }
-
-    fn playerindex(&self) -> Option<EPlayerIndex> {
-        Some(self.epi)
     }
 
     fn stoss_allowed(&self, stichseq: &SStichSequence, hand: &SHand, epi: EPlayerIndex, vecstoss: &[SStoss]) -> bool {

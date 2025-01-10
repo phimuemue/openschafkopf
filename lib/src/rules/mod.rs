@@ -318,8 +318,6 @@ pub trait TRules : fmt::Display + Sync + fmt::Debug + Send + Clone {
     fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering>;
     fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [ECard]);
 
-    fn playerindex(&self) -> Option<EPlayerIndex>;
-
     fn can_be_played(&self, _hand: SFullHand) -> bool {
         true // probably, only Rufspiel is prevented in some cases
     }
@@ -550,9 +548,7 @@ pub trait TActivelyPlayableRules : TRules {
     fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<SActivelyPlayableRules> {
         None
     }
-    fn active_playerindex(&self) -> EPlayerIndex {
-        unwrap!(self.playerindex())
-    }
+    fn playerindex(&self) -> EPlayerIndex;
 }
 
 use rulesrufspiel::{SRulesRufspiel, SRulesRufspielGeneric, SRufspielPayoutPointsAsPayout};
@@ -566,6 +562,15 @@ use payoutdecider::{SPayoutDeciderPointBased, SPayoutDeciderPointsAsPayout};
 pub enum SRules {
     ActivelyPlayable(SActivelyPlayableRules),
     Ramsch(SRulesRamsch),
+}
+
+impl SRules {
+    pub fn playerindex(&self) -> Option<EPlayerIndex> {
+        match self {
+            Self::ActivelyPlayable(rules) => Some(rules.playerindex()),
+            Self::Ramsch(rulesramsch) => rulesramsch.playerindex(), // Leave decision to rulesramsch
+        }
+    }
 }
 
 impl std::fmt::Display for SRules {

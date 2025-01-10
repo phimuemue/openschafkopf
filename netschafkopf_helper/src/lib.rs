@@ -11,7 +11,6 @@ use openschafkopf_lib::{
         SDoublings,
         SStoss,
         SStossParams,
-        TRules,
         parser::parse_rule_description,
     },
 };

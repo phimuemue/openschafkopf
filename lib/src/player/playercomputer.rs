@@ -60,7 +60,7 @@ impl TPlayer for SPlayerComputer {
                     |rules| {
                         self.ai.rank_rules(
                             hand,
-                            /*epi_rank*/rules.active_playerindex(),
+                            /*epi_rank*/rules.playerindex(),
                             &rules.clone().into(), // TODO avoid clone
                             expensifiers,
                         ).maxmin.0.avg().as_num::<f64>()

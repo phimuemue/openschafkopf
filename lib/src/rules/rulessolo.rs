@@ -394,6 +394,9 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> TActivelyPlayableRules for SRulesSol
                 stossparams: self.stossparams.clone(),
             }.into())
     }
+    fn playerindex(&self) -> EPlayerIndex {
+        self.epi
+    }
 }
 
 impl<PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<PayoutDecider> {

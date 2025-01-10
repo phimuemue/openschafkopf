@@ -35,6 +35,9 @@ impl SRulesRamsch {
             ojungfrau,
         }
     }
+    pub fn playerindex(&self) -> Option<EPlayerIndex> {
+        None // Ramsch is not an actively playable. // TODO? Is EPI3 the active player?
+    }
 }
 
 impl fmt::Display for SRulesRamsch {
@@ -51,10 +54,6 @@ impl TRules for SRulesRamsch {
         assert!(vecstoss.is_empty());
         assert_eq!(stichseq.remaining_cards_per_hand()[epi], hand.cards().len());
         false
-    }
-
-    fn playerindex(&self) -> Option<EPlayerIndex> {
-        None
     }
 
     fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {

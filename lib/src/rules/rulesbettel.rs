@@ -55,6 +55,9 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TActiv
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::SoloLike(VGameAnnouncementPrioritySoloLike::SoloSimple(self.i_prio))
     }
+    fn playerindex(&self) -> EPlayerIndex {
+        self.epi
+    }
 }
 
 #[derive(Clone, Debug)]
