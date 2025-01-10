@@ -205,11 +205,13 @@ impl SGamePreparations {
         if Some(epi)!=self.which_player_can_do_something() {
             bail!("Wrong player index");
         }
-        if orules.as_ref().map_or(false, |rules| epi!=rules.playerindex()) {
-            bail!("Only actively playable rules can be announced");
-        }
-        if !orules.as_ref().map_or(true, |rules| rules.can_be_played(self.fullhand(epi))) {
-            bail!("Rules cannot be played. {}", SDisplayCardSlice::new(self.aveccard[epi].clone(), &orules));
+        if let Some(ref rules) = orules {
+            if epi!=rules.playerindex() {
+                bail!("Rules have wrong player index.");
+            }
+            if !rules.can_be_played(self.fullhand(epi)) {
+                bail!("Rules cannot be played. {}", SDisplayCardSlice::new(self.aveccard[epi].clone(), &orules));
+            }
         }
         self.gameannouncements.push(orules);
         assert!(!self.gameannouncements.is_empty());
