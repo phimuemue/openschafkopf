@@ -70,7 +70,7 @@ impl TSauspielHtmlDocument for SWebsysDocument {
     }
 }
 
-impl<'node> TSauspielHtmlNode<'node> for SWebsysElement {
+impl TSauspielHtmlNode<'_> for SWebsysElement {
     fn find_name(&self, str_name: &'static str) -> impl Debug+Iterator<Item=Self> {
         SHtmlCollectionIterator::new(self.0.get_elements_by_tag_name(str_name))
     }
