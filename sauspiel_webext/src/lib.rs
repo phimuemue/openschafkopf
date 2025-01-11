@@ -164,6 +164,7 @@ pub fn greet() {
     let mut vecahandstichseqcardepielement = Vec::new();
     match internal_analyze_sauspiel_html(
         SWebsysDocument(document.clone()),
+        /*fn_gameannouncement*/|_,_,_| (),
         /*fn_determinerules_step*/|_,_,_| (),
         /*fn_before_play_card*/|game, card, epi, element_played_card| {
             vecahandstichseqcardepielement.push((

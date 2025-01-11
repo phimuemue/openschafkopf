@@ -130,22 +130,25 @@ impl<'node> TSauspielHtmlNode<'node> for select::node::Node<'node> {
     }
 }
 
-pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, Option<SGameAnnouncementAnonymous>, Vec<()>>, failure::Error> {
+pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, /*GameAnnouncement*/(), Vec<()>>, failure::Error> {
     internal_analyze_sauspiel_html(
         Document::from(str_html),
+        /*fn_gameannouncement*/|_,_,_| (),
         /*fn_determinerules_step*/|_,_,_| (),
         /*fn_before_play_card*/|_,_,_,_| (),
     )
 }
 
-pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, DetermineRulesStep, FnDetermineRulesStep, FnBeforePlayCard>(
+pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnouncement, FnGameAnnouncement, DetermineRulesStep, FnDetermineRulesStep, FnBeforePlayCard>(
     doc: Document,
+    mut fn_gameannouncement: FnGameAnnouncement,
     mut fn_determinerules_step: FnDetermineRulesStep,
     mut fn_before_play_card: FnBeforePlayCard,
-) -> Result<SGameResultGeneric<SSauspielRuleset, Option<SGameAnnouncementAnonymous>, Vec<DetermineRulesStep>>, failure::Error>
+) -> Result<SGameResultGeneric<SSauspielRuleset, GameAnnouncement, Vec<DetermineRulesStep>>, failure::Error>
     where
+        for <'card> FnGameAnnouncement: FnMut(EPlayerIndex, &Option<SGameAnnouncementAnonymous>, Document::HtmlNode<'card>)->GameAnnouncement,
         for <'card> FnDetermineRulesStep: FnMut(EPlayerIndex, &str, Document::HtmlNode<'card>)->DetermineRulesStep,
-        for <'card> FnBeforePlayCard: FnMut(&SGameGeneric<SSauspielRuleset, Option<SGameAnnouncementAnonymous>, Vec<DetermineRulesStep>>, ECard, EPlayerIndex, Document::HtmlNode<'card>),
+        for <'card> FnBeforePlayCard: FnMut(&SGameGeneric<SSauspielRuleset, GameAnnouncement, Vec<DetermineRulesStep>>, ECard, EPlayerIndex, Document::HtmlNode<'card>),
 {
     // TODO acknowledge timeouts
     let mapepistr_username = iter_to_arr(
@@ -382,6 +385,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, Determine
                                 .map(|_| Some(SGameAnnouncementAnonymous))
                         ))
                 ).map_err(|err| format_err!("Failed to parse game announcement 1: {:1}", err))
+                .map(|ogameannouncement| fn_gameannouncement(epi, &ogameannouncement, node_gameannouncement))
             })
             .collect::<Result<Vec<_>, _>>()?
     ).map(EPlayerIndex::map_from_raw)?;
