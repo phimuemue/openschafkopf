@@ -130,7 +130,7 @@ impl<'node> TSauspielHtmlNode<'node> for select::node::Node<'node> {
     }
 }
 
-pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error> {
+pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, Option<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error> {
     internal_analyze_sauspiel_html(
         Document::from(str_html),
         /*fn_before_play_card*/|_,_,_,_| (),
@@ -140,9 +140,9 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
 pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, FnBeforePlayCard>(
     doc: Document,
     mut fn_before_play_card: FnBeforePlayCard,
-) -> Result<SGameResultGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error>
+) -> Result<SGameResultGeneric<SSauspielRuleset, Option<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, failure::Error>
     where
-        for <'card> FnBeforePlayCard: FnMut(&SGameGeneric<SSauspielRuleset, SGameAnnouncementsGeneric<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, ECard, EPlayerIndex, Document::HtmlNode<'card>),
+        for <'card> FnBeforePlayCard: FnMut(&SGameGeneric<SSauspielRuleset, Option<SGameAnnouncementAnonymous>, Vec<(EPlayerIndex, &'static str)>>, ECard, EPlayerIndex, Document::HtmlNode<'card>),
 {
     // TODO acknowledge timeouts
     let mapepistr_username = iter_to_arr(
@@ -362,29 +362,26 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, FnBeforeP
         .map_err(|it| format_err!("{:?}", it)))?;
     let mut itnode_gameannouncement = node_card_rows
         .find_class("card-row");
-    let gameannouncements = SGameAnnouncementsGeneric::new_full(
-        SStaticEPI0{},
-        iter_to_arr(
-            EPlayerIndex::values().zip(itnode_gameannouncement.by_ref())
-                .map(|(epi, node_gameannouncement)| -> Result<_, _> {
-                    parse_trimmed(
-                        node_gameannouncement.inner_html().trim(), // trim to avoid newlines // TODO move newlines into parser
-                        (
-                            username_parser(epi),
-                            newline(),
-                            spaces(),
-                        )
-                            .with(choice!(
-                                (string("sagt weiter."), optional((newline(), spaces(), string("(timeout)"))))
-                                    .map(|_| None),
-                                (string("dad gern."))
-                                    .map(|_| Some(SGameAnnouncementAnonymous))
-                            ))
-                    ).map_err(|err| format_err!("Failed to parse game announcement 1: {:1}", err))
-                })
-                .collect::<Result<Vec<_>, _>>()?
-        )?
-    );
+    let mapepigameannouncement = iter_to_arr(
+        EPlayerIndex::values().zip(itnode_gameannouncement.by_ref())
+            .map(|(epi, node_gameannouncement)| -> Result<_, _> {
+                parse_trimmed(
+                    node_gameannouncement.inner_html().trim(), // trim to avoid newlines // TODO move newlines into parser
+                    (
+                        username_parser(epi),
+                        newline(),
+                        spaces(),
+                    )
+                        .with(choice!(
+                            (string("sagt weiter."), optional((newline(), spaces(), string("(timeout)"))))
+                                .map(|_| None),
+                            (string("dad gern."))
+                                .map(|_| Some(SGameAnnouncementAnonymous))
+                        ))
+                ).map_err(|err| format_err!("Failed to parse game announcement 1: {:1}", err))
+            })
+            .collect::<Result<Vec<_>, _>>()?
+    ).map(EPlayerIndex::map_from_raw)?;
     let vecvectplepistr_determinerules = itnode_gameannouncement
         .map(|node_gameannouncement| {
             parse_trimmed(
@@ -423,7 +420,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, FnBeforeP
             SExpensifiersNoStoss::new_with_doublings(/*n_stock: Sauspiel does not support Stock*/0, doublings),
             rules,
             ruleset,
-            gameannouncements,
+            mapepigameannouncement,
             vecvectplepistr_determinerules,
         );
         for epi in get_doublings_stoss("Kontra und Retour")? {

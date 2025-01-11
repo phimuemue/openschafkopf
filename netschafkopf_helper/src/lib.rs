@@ -1292,7 +1292,7 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
                         ),
                         rules,
                         /*ruleset*/(), // TODO extract from NetSchafkopf
-                        /*gameannouncements*/(), // TODO extract from NetSchafkopf
+                        /*mapepigameannouncement*/EPlayerIndex::map_from_fn(|_epi| ()), // TODO extract from NetSchafkopf
                         /*determinerules*/(), // TODO extract from NetSchafkopf
                     )
                     .play_cards_and_stoss(

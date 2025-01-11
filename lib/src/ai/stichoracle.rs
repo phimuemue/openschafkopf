@@ -2572,7 +2572,7 @@ mod tests {
                                     gamepreparations.expensifiers.clone(),
                                     rules.clone().into(),
                                     gamepreparations.ruleset,
-                                    /*gameannouncements*/(),
+                                    /*mapepigameannouncement*/EPlayerIndex::map_from_fn(|_epi| ()),
                                     /*determinerules*/(),
                                 )
                             )

@@ -772,7 +772,7 @@ fn test_snapshotcache() {
                 internal_test(game_in);
                 if let Some((rules, _fn_payout_to_points))=game_in.rules.points_as_payout() {
                     internal_test(&game_in.clone().map(
-                        /*fn_announcements*/|gameannouncements| gameannouncements,
+                        /*fn_announcement*/|gameannouncement| gameannouncement,
                         /*fn_determinerules*/|determinerules| determinerules,
                         /*fn_ruleset*/|ruleset| ruleset,
                         /*fn_rules*/|_rules| rules,
@@ -816,7 +816,7 @@ fn test_snapshotcache() {
                                 gamepreparations.expensifiers.clone(),
                                 rules.clone().into(),
                                 gamepreparations.ruleset,
-                                /*gameannouncements*/(),
+                                /*mapepigameannouncement*/EPlayerIndex::map_from_fn(|_epi| ()),
                                 /*determinerules*/(),
                             )
                         )
