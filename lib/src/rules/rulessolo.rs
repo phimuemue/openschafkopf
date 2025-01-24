@@ -1,7 +1,7 @@
 use crate::primitives::*;
 use crate::rules::{payoutdecider::*, trumpfdecider::*, *};
 use crate::util::*;
-use std::{cmp::Ordering, fmt};
+use std::fmt;
 
 pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
     fn priority(&self) -> VGameAnnouncementPriority;

@@ -316,8 +316,12 @@ pub trait TRules : fmt::Display + Sync + fmt::Debug + Send + Clone {
 
     // STrumpfDecider
     fn trumpfdecider(&self) -> &STrumpfDecider;
-    fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe;
-    fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering>;
+    fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
+        self.trumpfdecider().trumpforfarbe(card)
+    }
+    fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering> {
+        self.trumpfdecider().compare_cards(card_fst, card_snd)
+    }
 
     fn can_be_played(&self, _hand: SFullHand) -> bool {
         true // probably, only Rufspiel is prevented in some cases

@@ -148,10 +148,6 @@ impl STrumpfDecider {
 }
 
 macro_rules! impl_rules_trumpf {() => {
-    forward_to_field!(self.trumpfdecider,
-        fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe;
-        fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering>;
-    );
     fn trumpfdecider(&self) -> &STrumpfDecider {
         &self.trumpfdecider
     }

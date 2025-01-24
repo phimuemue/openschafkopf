@@ -2,7 +2,7 @@ use crate::ai::{cardspartition::*, rulespecific::airufspiel::*};
 use crate::primitives::*;
 use crate::rules::{payoutdecider::*, trumpfdecider::*, *};
 use crate::util::*;
-use std::{cmp::Ordering, fmt::{self, Debug}};
+use std::fmt::{self, Debug};
 
 pub trait TRufspielPayout: Clone + Sync + fmt::Debug + Send + 'static {
     fn payout(
