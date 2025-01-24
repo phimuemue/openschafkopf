@@ -400,7 +400,9 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> TActivelyPlayableRules for SRulesSol
 }
 
 impl<PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<PayoutDecider> {
-    impl_rules_trumpf!();
+    fn trumpfdecider(&self) -> &STrumpfDecider {
+        &self.trumpfdecider
+    }
     impl_single_play!();
 
     fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {

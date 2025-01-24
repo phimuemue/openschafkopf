@@ -152,7 +152,9 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStic
 }
 
 impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules for SRulesBettel<BettelAllAllowedCardsWithinStich> {
-    impl_rules_trumpf!();
+    fn trumpfdecider(&self) -> &STrumpfDecider {
+        &self.trumpfdecider
+    }
     impl_single_play!();
 
     fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {

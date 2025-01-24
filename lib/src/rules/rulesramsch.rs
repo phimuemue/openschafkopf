@@ -47,7 +47,9 @@ impl fmt::Display for SRulesRamsch {
 }
 
 impl TRules for SRulesRamsch {
-    impl_rules_trumpf!();
+    fn trumpfdecider(&self) -> &STrumpfDecider {
+        &self.trumpfdecider
+    }
 
     fn stoss_allowed(&self, stichseq: &SStichSequence, hand: &SHand, epi: EPlayerIndex, vecstoss: &[SStoss]) -> bool {
         // TODO? Use SStossParams?

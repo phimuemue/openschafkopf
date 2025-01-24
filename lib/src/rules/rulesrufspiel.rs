@@ -169,7 +169,9 @@ impl TPlayerParties for SPlayerParties22 {
 }
 
 impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielPayout> {
-    impl_rules_trumpf!();
+    fn trumpfdecider(&self) -> &STrumpfDecider {
+        &self.trumpfdecider
+    }
 
     fn can_be_played(&self, hand: SFullHand) -> bool {
         let it = || {hand.get().iter().filter(|&card| self.is_ruffarbe(*card))};

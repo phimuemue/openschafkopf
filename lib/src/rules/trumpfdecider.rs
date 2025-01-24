@@ -147,12 +147,6 @@ impl STrumpfDecider {
     }
 }
 
-macro_rules! impl_rules_trumpf {() => {
-    fn trumpfdecider(&self) -> &STrumpfDecider {
-        &self.trumpfdecider
-    }
-}}
-
 #[test]
 fn test_equivalent_when_on_same_hand_trumpfdecider() {
     let maptrumpforfarbeveccard = STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz)).equivalent_when_on_same_hand();
