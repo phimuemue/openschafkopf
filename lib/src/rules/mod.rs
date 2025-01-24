@@ -22,6 +22,7 @@ use crate::ai::cardspartition::*;
 use crate::ai::gametree::{TSnapshotCache, TMinMaxStrategiesHigherKinded};
 use crate::primitives::*;
 use crate::rules::card_points::points_stich;
+use trumpfdecider::STrumpfDecider;
 use crate::util::*;
 use std::{
     borrow::Borrow,
@@ -314,9 +315,9 @@ pub trait TRules : fmt::Display + Sync + fmt::Debug + Send + Clone {
     fn disable_trait_objects<T>(self, _t: T) {}
 
     // STrumpfDecider
+    fn trumpfdecider(&self) -> &STrumpfDecider;
     fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe;
     fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering>;
-    fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [ECard]);
 
     fn can_be_played(&self, _hand: SFullHand) -> bool {
         true // probably, only Rufspiel is prevented in some cases
@@ -613,7 +614,7 @@ impl std::fmt::Display for SActivelyPlayableRules {
 
 impl<Rules: TRules> TCardSorter for Rules {
     fn sort_cards(&self, slccard: &mut [ECard]) {
-        self.sort_cards_first_trumpf_then_farbe(slccard);
+        self.trumpfdecider().sort_cards(slccard);
     }
 }
 
