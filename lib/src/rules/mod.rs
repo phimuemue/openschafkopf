@@ -611,12 +611,7 @@ impl std::fmt::Display for SActivelyPlayableRules {
     }
 }
 
-impl TCardSorter for SRules {
-    fn sort_cards(&self, slccard: &mut [ECard]) {
-        self.sort_cards_first_trumpf_then_farbe(slccard);
-    }
-}
-impl TCardSorter for SActivelyPlayableRules {
+impl<Rules: TRules> TCardSorter for Rules {
     fn sort_cards(&self, slccard: &mut [ECard]) {
         self.sort_cards_first_trumpf_then_farbe(slccard);
     }

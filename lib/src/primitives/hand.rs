@@ -97,12 +97,6 @@ pub trait TCardSorter {
     fn sort_cards(&self, slccard: &mut [ECard]);
 }
 
-impl<F: Fn(&mut [ECard])> TCardSorter for F {
-    fn sort_cards(&self, slccard: &mut [ECard]) {
-        self(slccard)
-    }
-}
-
 impl<CardSorter: TCardSorter> TCardSorter for Option<CardSorter> {
     fn sort_cards(&self, slccard: &mut [ECard]) {
         if let Some(cardsorter) = self {
