@@ -41,7 +41,7 @@ fn choose_ruleset_or_rules<'t, T>(
             }
             let mut veccard = hand.cards().clone();
             if let Some(rules)=orules {
-                rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
+                rules.sort_cards(veccard.as_mut_slice());
             }
             skui::print_hand(&veccard, None);
         },
@@ -80,7 +80,7 @@ impl TPlayer for SPlayerHuman {
         let epi = unwrap!(game.which_player_can_do_something()).0;
         let veccard = {
             let mut veccard = game.ahand[epi].cards().clone();
-            game.rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
+            game.rules.sort_cards(&mut veccard);
             veccard
         };
         let veccard_allowed = game.rules.all_allowed_cards(&game.stichseq, &SHand::new_from_vec(veccard.clone()));
@@ -176,7 +176,7 @@ impl TPlayer for SPlayerHuman {
                 skui::print_game_info(rules, expensifiers);
                 {
                     let mut veccard = hand.cards().clone();
-                    rules.sort_cards_first_trumpf_then_farbe(veccard.as_mut_slice());
+                    rules.sort_cards(veccard.as_mut_slice());
                     skui::print_hand(&veccard, None);
                 }
                 for (i_b_stoss, b_stoss) in ab_stoss.iter().enumerate() {

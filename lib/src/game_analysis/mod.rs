@@ -434,7 +434,7 @@ pub fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinde
     let mut veccard_non_allowed = ahand[epi_current].cards().iter()
         .filter_map(|card| if_then_some!(!veccard_allowed.contains(card), *card))
         .collect::<Vec<_>>();
-    rules.sort_cards_first_trumpf_then_farbe(&mut veccard_non_allowed);
+    rules.sort_cards(&mut veccard_non_allowed);
     if !veccard_non_allowed.is_empty() {
         *str_per_card += r#"<td style="padding: 5px;">"#;
         for card in veccard_non_allowed {

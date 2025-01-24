@@ -5,7 +5,7 @@ use crate::ai::{
 use crate::primitives::*;
 use itertools::*;
 use crate::util::*;
-use crate::rules::{SRules, TRules};
+use crate::rules::SRules;
 use std::borrow::Borrow;
 
 pub const N_COLUMNS : usize = 4;
@@ -173,7 +173,7 @@ pub fn table<
         fn_loss_or_win,
     );
     for outputline in payoutstatstable.vecoutputline.iter_mut() {
-        rules.sort_cards_first_trumpf_then_farbe(&mut outputline.vect);
+        rules.sort_cards(&mut outputline.vect);
     }
     payoutstatstable
 }

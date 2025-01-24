@@ -126,7 +126,7 @@ pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, 
         "<td>{}</td>\n",
         player_table(epi_self, |epi| {
             let mut veccard = ahand[epi].cards().clone();
-            rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
+            rules.sort_cards(&mut veccard);
             Some(veccard.into_iter()
                 .map(|card| fn_output_card(card, fn_border(card)))
                 .join(""))

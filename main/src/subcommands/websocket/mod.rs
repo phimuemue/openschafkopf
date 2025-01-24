@@ -10,7 +10,6 @@ use std::{
 };
 use openschafkopf_lib::{
     game::*,
-    rules::TRules,
     rules::trumpfdecider::STrumpfDecider,
     rules::ruleset::{SRuleSet},
     primitives::*,
@@ -255,7 +254,7 @@ impl SPlayers {
             if let Some(ref mut peer) = activepeer.opeer.as_mut() {
                 let mut veccard = sendtoplayers.mapepiveccard[epi].clone(); // TODO? avoid clone
                 if let Some(rules) = sendtoplayers.orules {
-                    rules.sort_cards_first_trumpf_then_farbe(&mut veccard);
+                    rules.sort_cards(&mut veccard);
                 } else {
                     STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz))
                         .sort_cards_first_trumpf_then_farbe(&mut veccard)
