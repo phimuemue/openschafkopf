@@ -78,7 +78,10 @@ impl STrumpfDecider {
         }
         maptrumpforfarbeveccard
     }
-    pub fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [ECard]) {
+}
+
+impl TCardSorter for STrumpfDecider {
+    fn sort_cards(&self, slccard: &mut [ECard]) {
         slccard.sort_unstable_by(|&card_lhs, &card_rhs| {
             match self.compare_cards(card_lhs, card_rhs) {
                 Some(ord) => ord.reverse(),
@@ -148,8 +151,10 @@ macro_rules! impl_rules_trumpf {() => {
     forward_to_field!(self.trumpfdecider,
         fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe;
         fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering>;
-        fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [ECard]);
     );
+    fn sort_cards_first_trumpf_then_farbe(&self, slccard: &mut [ECard]) {
+        self.trumpfdecider.sort_cards(slccard)
+    }
 }}
 
 #[test]

@@ -257,7 +257,7 @@ impl SPlayers {
                     rules.sort_cards(&mut veccard);
                 } else {
                     STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz))
-                        .sort_cards_first_trumpf_then_farbe(&mut veccard)
+                        .sort_cards(&mut veccard)
                 }
                 communicate(
                     Some(epi),
