@@ -318,8 +318,8 @@ impl SDetermineRules {
 pub struct SGameGeneric<Ruleset, GameAnnouncement, DetermineRules> {
     pub aveccard: EnumMap<EPlayerIndex, SHandVector>, // remembers order of dealt cards
     pub ahand : EnumMap<EPlayerIndex, SHand>,
-    mapepigameannouncement : EnumMap<EPlayerIndex, GameAnnouncement>,
-    determinerules: DetermineRules,
+    pub mapepigameannouncement : EnumMap<EPlayerIndex, GameAnnouncement>,
+    pub determinerules: DetermineRules,
     pub rules : SRules,
     pub expensifiers: SExpensifiers,
     pub stichseq: SStichSequence,

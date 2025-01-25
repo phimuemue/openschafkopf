@@ -8,14 +8,14 @@ use openschafkopf_util::*;
 use openschafkopf_lib::{
     ai::{determine_best_card, gametree::{SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded, player_table_stichseq, player_table_ahand}, stichoracle::SFilterByOracle},
     game::SGameResultGeneric,
-    game_analysis::{append_html_payout_table, append_html_copy_button, parser::{internal_analyze_sauspiel_html, analyze_sauspiel_json, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
-    rules::{TRules, ruleset::VStockOrT, SExpensifiers},
-    primitives::{ECard, EPlayerIndex, SHand, SStichSequence},
+    game_analysis::{append_html_payout_table, append_html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, analyze_sauspiel_json, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
+    rules::{TRules, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe},
+    primitives::{ECard, EFarbe, ESchlag, EPlayerIndex, SHand, SStichSequence, TCardSorter},
 };
 use crate::utils::*;
 use std::fmt::{Debug, Write};
 use plain_enum::*;
-use itertools::Itertools;
+use itertools::{Itertools, EitherOrBoth};
 
 #[wasm_bindgen]
 extern "C" {
@@ -162,10 +162,22 @@ pub fn greet() {
     }
     let document = unwrap!(unwrap!(web_sys::window()).document());
     let mut vecahandstichseqcardepielement = Vec::new();
+    #[derive(Clone)]
+    struct SDetermineRulesStep {
+        epi: EPlayerIndex,
+        node_determinerules: web_sys::Element,
+        resslcschlag_trumpf: Result<&'static [ESchlag], ()>,
+        resoefarbe_trumpf: Result<Option<EFarbe>, ()>,
+    }
     match internal_analyze_sauspiel_html(
         SWebsysDocument(document.clone()),
-        /*fn_gameannouncement*/|_,_,_| (),
-        /*fn_determinerules_step*/|_,_,_| (),
+        /*fn_gameannouncement*/|_, ogameannouncement, node_gameannouncement| (ogameannouncement.clone(), node_gameannouncement),
+        /*fn_determinerules_step*/|epi, oeobslcschlagoefarbe_trumpf, SWebsysElement(node_determinerules)| SDetermineRulesStep {
+            epi,
+            resslcschlag_trumpf: oeobslcschlagoefarbe_trumpf.clone().and_then(EitherOrBoth::left).ok_or(()),
+            resoefarbe_trumpf: oeobslcschlagoefarbe_trumpf.clone().and_then(EitherOrBoth::right).ok_or(()),
+            node_determinerules,
+        },
         /*fn_before_play_card*/|game, card, epi, element_played_card| {
             vecahandstichseqcardepielement.push((
                 (game.ahand.clone(), game.stichseq.clone()),
@@ -176,6 +188,81 @@ pub fn greet() {
         },
     ) {
         Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}) => {
+            for epi in EPlayerIndex::values() {
+                let prepend_cards = |slcschlag_trumpf: &'static [ESchlag], oefarbe_trumpf: Option<EFarbe>, node: &web_sys::Element| {
+                    let mut veccard = game_finished.aveccard[epi].clone();
+                    let mut str_epi_and_cards = format!("({}) ", epi.to_usize() + 1);
+                    STrumpfDecider::new(slcschlag_trumpf, oefarbe_trumpf).sort_cards(&mut veccard);
+                    for &card in veccard.iter() {
+                        str_epi_and_cards += &output_card_sauspiel_img(
+                            card,
+                            /*b_highlight*/false,
+                        );
+                    }
+                    node.set_inner_html(&format!("{} {}", str_epi_and_cards, node.inner_html()));
+                };
+                let (ogameannouncement, SWebsysElement(node_gameannouncement)) = &game_finished.mapepigameannouncement[epi];
+                let mut itdeterminerulesstep_epi = game_finished.determinerules.iter()
+                    .filter(|determinerulesstep| determinerulesstep.epi==epi);
+                let (slcschlag_trumpf_gameannouncement, oefarbe_trumpf_gameannouncement) = if let Some(SGameAnnouncementAnonymous) = ogameannouncement {
+                    let mut vecdeterminerulesstep = itdeterminerulesstep_epi.cloned().collect::<Vec<_>>(); // TODO can we work directly on game.determinerules?
+                    assert!(!vecdeterminerulesstep.is_empty());
+                    { // Sauspiel reveals slcschlag_trumpf first, so we propagate that forwards
+                        if vecdeterminerulesstep[0].resslcschlag_trumpf.is_err() {
+                            vecdeterminerulesstep[0].resslcschlag_trumpf = Ok(&[ESchlag::Ober, ESchlag::Unter]);
+                        }
+                        for i_determinerulesstep in 1..vecdeterminerulesstep.len() {
+                            if vecdeterminerulesstep[i_determinerulesstep].resslcschlag_trumpf.is_err() {
+                                vecdeterminerulesstep[i_determinerulesstep].resslcschlag_trumpf = verify!(vecdeterminerulesstep[i_determinerulesstep-1].resslcschlag_trumpf);
+                            }
+                        }
+                    }
+                    { // Sauspiel reveals oefarbe_trumpf potentially last, so we propagate that backwards
+                        let determinerulesstep_last = unwrap!(vecdeterminerulesstep.last_mut());
+                        assert!(determinerulesstep_last.resslcschlag_trumpf.is_ok());
+                        if determinerulesstep_last.resoefarbe_trumpf.is_err() {
+                            // determine oefarbe_trumpf heuristically
+                            let trumpfdecider_no_farbe = STrumpfDecider::new(
+                                unwrap!(determinerulesstep_last.resslcschlag_trumpf),
+                                /*ofearbe*/None
+                            );
+                            let mut mapefarben_count = EFarbe::map_from_fn(|_efarbe| 0);
+                            for &card in &game_finished.aveccard[epi] {
+                                match trumpfdecider_no_farbe.trumpforfarbe(card) {
+                                    VTrumpfOrFarbe::Trumpf => {},
+                                    VTrumpfOrFarbe::Farbe(efarbe) => {
+                                        mapefarben_count[efarbe] += 1;
+                                    },
+                                }
+                            }
+                            determinerulesstep_last.resoefarbe_trumpf = Ok(EFarbe::values().max_by(|&efarbe_lhs, &efarbe_rhs|
+                                mapefarben_count[efarbe_lhs].cmp(&mapefarben_count[efarbe_rhs])
+                                    .then_with(|| {
+                                        let has_ass = |efarbe| {
+                                            game_finished.aveccard[epi].contains(&ECard::new(efarbe, ESchlag::Ass))
+                                        };
+                                        has_ass(efarbe_rhs).cmp(&has_ass(efarbe_lhs))
+                                    })
+                            ))
+                        }
+                        for i_determinerulesstep in (1..vecdeterminerulesstep.len()).rev() {
+                            if vecdeterminerulesstep[i_determinerulesstep-1].resoefarbe_trumpf.is_err() {
+                                vecdeterminerulesstep[i_determinerulesstep-1].resoefarbe_trumpf = verify!(vecdeterminerulesstep[i_determinerulesstep].resoefarbe_trumpf);
+                            }
+                        }
+                    }
+                    // vecdeterminerulesstep is prepared, so we can improve determinerules section
+                    for SDetermineRulesStep{epi:_, node_determinerules, resslcschlag_trumpf, resoefarbe_trumpf} in &vecdeterminerulesstep {
+                        prepend_cards(unwrap!(resslcschlag_trumpf), unwrap!(resoefarbe_trumpf), &node_determinerules);
+                    }
+                    let determinerulesstep_first = unwrap!(vecdeterminerulesstep.first());
+                    (unwrap!(determinerulesstep_first.resslcschlag_trumpf), unwrap!(determinerulesstep_first.resoefarbe_trumpf))
+                } else {
+                    assert!(itdeterminerulesstep_epi.next().is_none());
+                    (type_inference!(&'static[ESchlag], &[ESchlag::Ober, ESchlag::Unter]), Some(EFarbe::Herz))
+                };
+                prepend_cards(slcschlag_trumpf_gameannouncement, oefarbe_trumpf_gameannouncement, node_gameannouncement);
+            }
             let rules = &game_finished.rules;
             for ((ahand, stichseq), card_played, epi, element_played_card) in vecahandstichseqcardepielement {
                 if stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}) {

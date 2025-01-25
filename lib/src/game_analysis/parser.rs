@@ -41,7 +41,7 @@ impl TRuleSet for SSauspielRuleset {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SGameAnnouncementAnonymous;
 
 fn iter_to_arr<T>(it: impl IntoIterator<Item=T>) -> Result<[T; EPlayerIndex::SIZE], failure::Error> {
@@ -147,7 +147,11 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
 ) -> Result<SGameResultGeneric<SSauspielRuleset, GameAnnouncement, Vec<DetermineRulesStep>>, failure::Error>
     where
         for <'card> FnGameAnnouncement: FnMut(EPlayerIndex, &Option<SGameAnnouncementAnonymous>, Document::HtmlNode<'card>)->GameAnnouncement,
-        for <'card> FnDetermineRulesStep: FnMut(EPlayerIndex, &str, Document::HtmlNode<'card>)->DetermineRulesStep,
+        for <'card> FnDetermineRulesStep: FnMut(
+            EPlayerIndex,
+            &Option<itertools::EitherOrBoth<&'static [ESchlag], Option<EFarbe>>>,
+            Document::HtmlNode<'card>,
+        )->DetermineRulesStep,
         for <'card> FnBeforePlayCard: FnMut(&SGameGeneric<SSauspielRuleset, GameAnnouncement, Vec<DetermineRulesStep>>, ECard, EPlayerIndex, Document::HtmlNode<'card>),
 {
     // TODO acknowledge timeouts
@@ -391,35 +395,44 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
     ).map(EPlayerIndex::map_from_raw)?;
     let vecvectplepistr_determinerules = itnode_gameannouncement
         .map(|node_gameannouncement| {
+            const SLCSCHLAG_OBER_UNTER: &'static [ESchlag] = &[ESchlag::Ober, ESchlag::Unter];
+            const SLCSCHLAG_OBER: &'static [ESchlag] = &[ESchlag::Ober];
+            const SLCSCHLAG_UNTER: &'static [ESchlag] = &[ESchlag::Unter];
+            use itertools::EitherOrBoth as EOB;
             parse_trimmed(
                 node_gameannouncement.inner_html().trim(), // TODO move newlines to parser
                 choice(EPlayerIndex::map_from_fn(
                     |epi| attempt((
                         username_parser(epi),
-                        choice((
-                            attempt(string(" h\u{00E4}tt a Sauspiel")),
-                            attempt(string(" h\u{00E4}tt a Solo-Tout")),
-                            attempt(string(" h\u{00E4}tt a Solo")),
-                            attempt(string(" h\u{00E4}tt an Wenz-Tout")),
-                            attempt(string(" h\u{00E4}tt an Wenz")),
-                            attempt(string(" h\u{00E4}tt an Farbwenz-Tout")),
-                            attempt(string(" h\u{00E4}tt an Farbwenz")),
-                            attempt(string(" h\u{00E4}tt an Geier-Tout")),
-                            attempt(string(" h\u{00E4}tt an Geier")),
-                            attempt(string(" spielt auf die Alte")),
-                            attempt(string(" spielt auf die Blaue")),
-                            attempt(string(" spielt auf die Hundsgfickte")),
-                            attempt(string(" spielt Eichel")),
-                            attempt(string(" spielt Gras")),
-                            attempt(string(" spielt Herz")),
-                            attempt(string(" spielt Schelle")),
-                            attempt(string(" l\u{00E4}sst den Vortritt.")),
-                        ))
+                        choice(
+                            [
+                                (" h\u{00E4}tt a Sauspiel", Some(EOB::Both(SLCSCHLAG_OBER_UNTER, Some(EFarbe::Herz)))),
+                                (" h\u{00E4}tt a Solo-Tout", Some(EOB::Left(SLCSCHLAG_OBER_UNTER))),
+                                (" h\u{00E4}tt a Solo", Some(EOB::Left(SLCSCHLAG_OBER_UNTER))),
+                                (" h\u{00E4}tt an Wenz-Tout", Some(EOB::Both(SLCSCHLAG_UNTER, None))),
+                                (" h\u{00E4}tt an Wenz", Some(EOB::Both(SLCSCHLAG_UNTER, None))),
+                                (" h\u{00E4}tt an Farbwenz-Tout", Some(EOB::Left(SLCSCHLAG_UNTER))),
+                                (" h\u{00E4}tt an Farbwenz", Some(EOB::Left(SLCSCHLAG_UNTER))),
+                                (" h\u{00E4}tt an Geier-Tout", Some(EOB::Both(SLCSCHLAG_OBER, None))),
+                                (" h\u{00E4}tt an Geier", Some(EOB::Both(SLCSCHLAG_OBER, None))),
+                                (" spielt auf die Alte", Some(EOB::Both(SLCSCHLAG_OBER_UNTER, Some(EFarbe::Herz)))),
+                                (" spielt auf die Blaue", Some(EOB::Both(SLCSCHLAG_OBER_UNTER, Some(EFarbe::Herz)))),
+                                (" spielt auf die Hundsgfickte", Some(EOB::Both(SLCSCHLAG_OBER_UNTER, Some(EFarbe::Herz)))),
+                                (" spielt Eichel", Some(EOB::Right(Some(EFarbe::Eichel)))),
+                                (" spielt Gras", Some(EOB::Right(Some(EFarbe::Gras)))),
+                                (" spielt Herz", Some(EOB::Right(Some(EFarbe::Herz)))),
+                                (" spielt Schelle", Some(EOB::Right(Some(EFarbe::Schelln)))),
+                                (" l\u{00E4}sst den Vortritt.", None),
+                            ].map(|(str_determinerules, oeobslcschlagoefarbe_trumpf): (_, Option<_>)| {
+                                attempt(string(str_determinerules))
+                                    .map(move |_| oeobslcschlagoefarbe_trumpf.clone()/*TODO clone needed?*/)
+                            })
+                        )
                             .skip(optional(string(" (timeout)"))),
                     ))
                 ).into_raw()),
             ).map_err(|err| format_err!("Failed to parse game announcement 2: {:?}", err))
-            .map(|(epi, str_determinerules)| fn_determinerules_step(epi, str_determinerules, node_gameannouncement))
+            .map(|(epi, oeobslcschlagoefarbe_trumpf)| fn_determinerules_step(epi, &oeobslcschlagoefarbe_trumpf, node_gameannouncement))
         })
         .collect::<Result<Vec<_>, _>>()?;
     if let Some(rules) = orules {
