@@ -29,11 +29,9 @@ impl TPlayer for SPlayerComputer {
                     ESchlag::Ober==card.schlag() || ESchlag::Unter==card.schlag() || EFarbe::Herz==card.farbe()
                 })
                 .count() >= 3
-            || EFarbe::values().any(|efarbe| {
-                veccard.iter()
-                    .filter(|card| efarbe==card.farbe())
+            || veccard.iter()
+                    .map(|card| card.farbe())
                     .all_equal()
-            })
         ).ok(); // TODO more intelligent doubling strategy
     }
 
