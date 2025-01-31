@@ -500,6 +500,9 @@ pub fn analyze_sauspiel_json(
             // gameID: usize,
             // playInstant: bool,
         },
+        playersGotCards {
+            cards: Vec<Vec<ECard>>,
+        },
         youGotCards {
             cards: Vec<ECard>,
         },
@@ -558,6 +561,7 @@ pub fn analyze_sauspiel_json(
                 VSauspielJSONEvent::yourAuthenticationSucceeded{..}
                 | VSauspielJSONEvent::joinedTable{..}
                 | VSauspielJSONEvent::gameStarted{..}
+                | VSauspielJSONEvent::playersGotCards{..} // TODO? derive EKurzLang and aveccard from this
                 | VSauspielJSONEvent::youGotCards{..} // TODO? derive EKurzLang from this
                 | VSauspielJSONEvent::hasKnocked{..} // TODO collect doublings
                 | VSauspielJSONEvent::hasContra{..} // TODO collect stoss
