@@ -395,9 +395,9 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
     ).map(EPlayerIndex::map_from_raw)?;
     let vecvectplepistr_determinerules = itnode_gameannouncement
         .map(|node_gameannouncement| {
-            const SLCSCHLAG_OBER_UNTER: &'static [ESchlag] = &[ESchlag::Ober, ESchlag::Unter];
-            const SLCSCHLAG_OBER: &'static [ESchlag] = &[ESchlag::Ober];
-            const SLCSCHLAG_UNTER: &'static [ESchlag] = &[ESchlag::Unter];
+            const SLCSCHLAG_OBER_UNTER: &[ESchlag] = &[ESchlag::Ober, ESchlag::Unter];
+            const SLCSCHLAG_OBER: &[ESchlag] = &[ESchlag::Ober];
+            const SLCSCHLAG_UNTER: &[ESchlag] = &[ESchlag::Unter];
             use itertools::EitherOrBoth as EOB;
             parse_trimmed(
                 node_gameannouncement.inner_html().trim(), // TODO move newlines to parser
