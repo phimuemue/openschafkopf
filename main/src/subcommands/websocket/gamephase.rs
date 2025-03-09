@@ -390,17 +390,17 @@ impl VGamePhase {
     #[allow(clippy::result_large_err)]
     pub fn action(mut self, epi: EPlayerIndex, gamephaseaction: VGamePhaseAction) -> Result<Self, /*Err contains original self*/Self> {
         let b_change = match (&mut self, gamephaseaction) {
-            (VGamePhase::DealCards(ref mut dealcards), VGamePhaseAction::DealCards(b_doubling)) => {
+            (VGamePhase::DealCards(dealcards), VGamePhaseAction::DealCards(b_doubling)) => {
                 dealcards.announce_doubling(epi, b_doubling).is_ok()
             },
-            (VGamePhase::GamePreparations(ref mut gamepreparations), VGamePhaseAction::GamePreparations(ref orulesid)) => {
+            (VGamePhase::GamePreparations(gamepreparations), VGamePhaseAction::GamePreparations(ref orulesid)) => {
                 find_rules_by_id(
                     &gamepreparations.ruleset.avecrulegroup[epi],
                     gamepreparations.fullhand(epi),
                     orulesid
                 ).ok().and_then(|orules| gamepreparations.announce_game(epi, orules).ok()).is_some()
             },
-            (VGamePhase::DetermineRules(ref mut determinerules), VGamePhaseAction::DetermineRules(ref orulesid)) => {
+            (VGamePhase::DetermineRules(determinerules), VGamePhaseAction::DetermineRules(ref orulesid)) => {
                 determinerules.which_player_can_do_something()
                     .filter(|(epi_active, _vecrulegroup)| epi==*epi_active) // TODO needed?
                     .and_then(|(epi_active, vecrulegroup)| {
@@ -418,13 +418,13 @@ impl VGamePhase {
                     })
                     .is_some()
             },
-            (VGamePhase::Game(ref mut game), VGamePhaseAction::Game(ref gameaction)) => {
+            (VGamePhase::Game(game), VGamePhaseAction::Game(ref gameaction)) => {
                 match gameaction {
                     VGameAction::Stoss => game.stoss(epi),
                     VGameAction::Zugeben(card) => game.zugeben(*card, epi),
                 }.is_ok()
             },
-            (VGamePhase::GameResult(ref mut gameresult), VGamePhaseAction::GameResult(())) => {
+            (VGamePhase::GameResult(gameresult), VGamePhaseAction::GameResult(())) => {
                 gameresult.setepi_confirmed.insert(epi)
             },
             (VGamePhase::Accepted(_), VGamePhaseAction::Accepted(_)) => {

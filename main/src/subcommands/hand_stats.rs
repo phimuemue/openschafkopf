@@ -88,10 +88,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         fn accumulate_weighted_sum(&mut self, inspectionresult: &Self, f_percentage: f64) {
             use VInspectionResult::*;
             match (self, inspectionresult) {
-                (RecognizableAsNumber(ref mut number_self), RecognizableAsNumber(number_rhs)) => {
+                (RecognizableAsNumber(number_self), RecognizableAsNumber(number_rhs)) => {
                     *number_self += number_rhs * f_percentage;
                 },
-                (Array(ref mut vecinspectionresult_self), Array(vecinspectionresult_rhs)) if vecinspectionresult_self.len()==vecinspectionresult_rhs.len() => {
+                (Array(vecinspectionresult_self), Array(vecinspectionresult_rhs)) if vecinspectionresult_self.len()==vecinspectionresult_rhs.len() => {
                     itertools::zip_eq(vecinspectionresult_self, vecinspectionresult_rhs)
                         .for_each(|(lhs, rhs)| lhs.accumulate_weighted_sum(rhs, f_percentage));
                 },
@@ -209,7 +209,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 {
                     let str_result_or_err = match resinspectionresult {
                         Ok(inspectionresult) => {
-                            if let Ok(ref mut inspectionresult_weighted_sum) = oresinspectionresult_weighted_sum.get_or_insert_with(||
+                            if let Ok(inspectionresult_weighted_sum) = oresinspectionresult_weighted_sum.get_or_insert_with(||
                                 Ok(inspectionresult.map_numbers_remove_unknown(&|_| 0.,)) // Determine structure, initialize numbers with 0
                             ) {
                                 inspectionresult_weighted_sum.accumulate_weighted_sum(

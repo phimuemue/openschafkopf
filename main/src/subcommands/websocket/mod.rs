@@ -251,7 +251,7 @@ impl SPlayers {
                     task::spawn(timerfuture);
                 }
             }
-            if let Some(ref mut peer) = activepeer.opeer.as_mut() {
+            if let Some(peer) = activepeer.opeer.as_mut() {
                 let mut veccard = sendtoplayers.mapepiveccard[epi].clone(); // TODO? avoid clone
                 if let Some(rules) = sendtoplayers.orules {
                     rules.sort_cards(&mut veccard);
@@ -292,7 +292,7 @@ impl STable {
                         match gamephase {
                             VGamePhase::GameResult(gameresult) => {
                                 gameresult.gameresult.clone(/*TODO avoid clone (and force apply_payout on construction?)*/).apply_payout(&mut self.n_stock, |epi, n_payout| {
-                                    if let Some(ref mut peer) = &mut self.players.mapepiopeer[epi].opeer {
+                                    if let Some(peer) = &mut self.players.mapepiopeer[epi].opeer {
                                         peer.n_money += n_payout;
                                     }
                                 });
