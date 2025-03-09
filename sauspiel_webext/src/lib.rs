@@ -253,7 +253,7 @@ pub fn greet() {
                     }
                     // vecdeterminerulesstep is prepared, so we can improve determinerules section
                     for SDetermineRulesStep{epi:_, node_determinerules, resslcschlag_trumpf, resoefarbe_trumpf} in &vecdeterminerulesstep {
-                        prepend_cards(unwrap!(resslcschlag_trumpf), unwrap!(resoefarbe_trumpf), &node_determinerules);
+                        prepend_cards(unwrap!(resslcschlag_trumpf), unwrap!(resoefarbe_trumpf), node_determinerules);
                     }
                     let determinerulesstep_first = unwrap!(vecdeterminerulesstep.first());
                     (unwrap!(determinerulesstep_first.resslcschlag_trumpf), unwrap!(determinerulesstep_first.resoefarbe_trumpf))
