@@ -48,7 +48,7 @@ unsafe impl PlainEnum for VTrumpfOrFarbe { // TODO(plain_enum) support enums wit
         if n==0 {
             VTrumpfOrFarbe::Trumpf
         } else {
-            VTrumpfOrFarbe::Farbe(EFarbe::from_usize(n-1))
+            VTrumpfOrFarbe::Farbe(unsafe { EFarbe::from_usize(n-1) })
         }
     }
     fn to_usize(self) -> usize {

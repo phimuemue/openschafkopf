@@ -255,7 +255,7 @@ unsafe impl PlainEnum for ECard {
     type EnumMapArray<T> = [T; ECard::SIZE];
     unsafe fn from_usize(n: usize) -> Self {
         debug_assert!(n < Self::SIZE);
-        std::mem::transmute(n.as_num::<u8>())
+        unsafe { std::mem::transmute(n.as_num::<u8>()) }
     }
     fn to_usize(self) -> usize {
         (self as u8).as_num::<usize>()
