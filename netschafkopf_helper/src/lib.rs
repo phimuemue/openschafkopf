@@ -137,7 +137,7 @@ extern "system" fn DllMain(
     TRUE
 }
 #[cfg(not(windows))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 extern "system" fn dummy_dll_main_to_avoid_dead_code_warnings() {
     initialize();
 }
@@ -259,7 +259,7 @@ macro_rules! make_redirect_function(
             pub unsafe fn call_original(
                 $($paramname: $paramtype,)*
             ) -> $rettype {
-                unwrap!(get_detour().as_ref()).call($($paramname,)*)
+                unsafe { unwrap!(get_detour().as_ref()).call($($paramname,)*) }
             }
 
             pub extern $($extern)* fn redirected_should_only_be_called_from_wrapper($($paramname: $paramtype,)*)->$rettype {
@@ -269,9 +269,9 @@ macro_rules! make_redirect_function(
             pub unsafe fn redirect() {
                 log_in_out(&format!("{}::redirect", stringify!($fn_name)), (), || {
                     let pfn_original: unsafe extern $($extern)* fn($($paramtype,)*)->$rettype =
-                        std::mem::transmute($pfn_original as usize);
-                    *get_detour() = Some(unwrap!(GenericDetour::new(pfn_original, redirected_should_only_be_called_from_wrapper)));
-                    unwrap!(unwrap!(get_detour().as_ref()).enable());
+                        unsafe { std::mem::transmute($pfn_original as usize) };
+                    unsafe { *get_detour()  = Some(unwrap!(GenericDetour::new(pfn_original, redirected_should_only_be_called_from_wrapper))) };
+                    unwrap!(unsafe{unwrap!(get_detour().as_ref()).enable()});
                 })
             }
         }
@@ -298,11 +298,11 @@ unsafe fn scan_until_0<'slc>(pch: *const u8, on_max_bytes: impl Into<Option<usiz
     let mut pch_current = pch;
     let mut n_bytes_before_0 = 0;
     let n_max_bytes = on_max_bytes.into().unwrap_or(usize::MAX);
-    while *pch_current!=0 && n_bytes_before_0 <= n_max_bytes {
-        pch_current = pch_current.add(1);
+    while unsafe{*pch_current}!=0 && n_bytes_before_0 <= n_max_bytes {
+        pch_current = unsafe{pch_current.add(1)};
         n_bytes_before_0 += 1;
     }
-    std::slice::from_raw_parts(pch, n_bytes_before_0)
+    unsafe{std::slice::from_raw_parts(pch, n_bytes_before_0)}
 }
 
 make_redirect_function!(
@@ -1147,7 +1147,7 @@ make_redirect_function!(
 const N_BYTES_PER_NETSCHAFKOPF_CARD: usize = 3;
 
 unsafe fn interpret_as_cards(pbyte: *const u8, n_cards_max: usize) -> Vec<ECard> {
-    let slcbyte = std::slice::from_raw_parts(pbyte, n_cards_max * N_BYTES_PER_NETSCHAFKOPF_CARD);
+    let slcbyte = unsafe{std::slice::from_raw_parts(pbyte, n_cards_max * N_BYTES_PER_NETSCHAFKOPF_CARD)};
     let mut veccard = Vec::new();
     while veccard.len() < n_cards_max && {
         let i_byte = veccard.len() * N_BYTES_PER_NETSCHAFKOPF_CARD;
