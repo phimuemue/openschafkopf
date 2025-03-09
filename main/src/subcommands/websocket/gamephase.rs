@@ -339,12 +339,13 @@ impl VGamePhase {
                         /*msg_inactive*/VMessage::Info(format!("Asking {:?} for card", epi_card)),
                         STimeoutAction::new(
                             epi_card,
-                            VGamePhaseAction::Game(VGameAction::Zugeben(
-                                *unwrap!(game.rules.all_allowed_cards(
+                            VGamePhaseAction::Game(VGameAction::Zugeben({
+                                let itrules =game.rules.all_allowed_cards(
                                     &game.stichseq,
                                     &game.ahand[epi_card],
-                                ).choose(&mut thread_rng()))
-                            )),
+                                );
+                                *unwrap!(itrules.choose(&mut thread_rng()))
+                            })),
                         ),
                     )
                 },

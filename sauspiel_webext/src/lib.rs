@@ -377,9 +377,10 @@ pub fn greet() {
                     }
                     let div_openschafkopf_overview = unwrap!(document.create_element("div"));
                     div_openschafkopf_overview.set_inner_html(&str_html_out);
+                    let document = SWebsysDocument(document);
                     append_sibling(
                         &unwrap!(
-                            SWebsysDocument(document)
+                            document
                                 .find_class("game-overview")
                                 .exactly_one()
                         ).0,

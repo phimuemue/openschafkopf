@@ -127,7 +127,7 @@ impl SAi {
             let n_remaining_cards = stichseq.remaining_cards_per_hand()[epi_current];
             assert!(0<n_remaining_cards);
             let vecstoss = &expensifiers.vecstoss;
-            *unwrap!(unwrap!(cartesian_match!(
+            let veccard_maximum_value = unwrap!(cartesian_match!(
                 forward_to_determine_best_card,
                 match (n_remaining_cards) {
                     1..=3 => (
@@ -161,7 +161,8 @@ impl SAi {
                     rhs,
                     |n_payout, ()| n_payout.cmp(&0), // TODO is this even correct?
                 )
-            }).0.first())
+            }).0;
+            *unwrap!(veccard_maximum_value.first())
         }
     }
 }
@@ -334,7 +335,10 @@ pub fn determine_best_card<
                     let payoutstats : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output.map(|mapepin_payout|
                         SPayoutStats::new_1(fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
                     );
-                    verify!(unwrap!(Arc::clone(&mapcardooutput_per_ahand).lock())[card].replace(output).is_none());
+                    {
+                        let mapcardooutput_per_ahand = Arc::clone(&mapcardooutput_per_ahand);
+                        verify!(unwrap!(mapcardooutput_per_ahand.lock())[card].replace(output).is_none());
+                    }
                     unwrap!(mapcardooutput.lock())[card].insert_or_fold(payoutstats, |payoutstats_acc, payoutstats| {
                         payoutstats_acc.modify_with_other(
                             &payoutstats,
