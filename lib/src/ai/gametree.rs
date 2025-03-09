@@ -520,7 +520,7 @@ macro_rules! impl_perminmaxstrategy{(
 
         fn map<R>(&self, mut f: impl FnMut(&T)->R) -> $struct<R> {
             let Self{
-                $(ref $ident_strategy,)*
+                $($ident_strategy,)*
             } = self;
             $struct{
                 $($ident_strategy: $emmstrategy::new(f(&$ident_strategy.0)),)*
