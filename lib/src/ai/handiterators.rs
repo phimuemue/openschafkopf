@@ -157,7 +157,7 @@ fn make_handiterator_compatible_with_game_so_far<'lifetime, HandIteratorCore: TH
                 assert_eq!(veccard.len(), stichseq.kurzlang().cards_per_player());
                 veccard
             });
-            rules.playerindex().map_or(true, |epi_active| {
+            rules.playerindex().is_none_or(|epi_active| {
                 rules.can_be_played(SFullHand::new(
                     &aveccard[epi_active],
                     stichseq.kurzlang(),

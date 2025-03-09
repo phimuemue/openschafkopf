@@ -241,7 +241,7 @@ impl SPlayers {
                         table_mutex.clone(),
                         verify_eq!(timeoutaction.epi, epi),
                     ));
-                    assert!(activepeer.otimeoutcmd.as_ref().map_or(true, |timeoutcmd|
+                    assert!(activepeer.otimeoutcmd.as_ref().is_none_or(|timeoutcmd|
                         timeoutcmd.gamephaseaction.matches_phase(&timeoutaction.gamephaseaction_timeout)
                     )); // only one active timeout cmd
                     activepeer.otimeoutcmd = Some(STimeoutCmd{
