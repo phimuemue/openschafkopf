@@ -11,7 +11,7 @@ This software allows to play and analyze the game [Schafkopf](https://en.wikiped
 
 Requirements:
 * [rust](https://www.rust-lang.org/en-US/install.html) stable
-* [less](http://lesscss.org/) (tested with 3.9.0)
+* [less](http://lesscss.org/) (tested with 3.13.1 and 4.2.1)
 
 ```
 git clone https://github.com/phimuemue/openschafkopf.git
