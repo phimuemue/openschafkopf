@@ -124,7 +124,7 @@ macro_rules! ptr_as {
 }
 
 #[cfg(windows)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[allow(non_snake_case, unused_variables)]
 extern "system" fn DllMain(
     dll_module: HINSTANCE,
