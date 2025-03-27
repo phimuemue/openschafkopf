@@ -78,6 +78,11 @@ impl TGamePhase for SDealCards {
     }
 }
 
+pub fn first_hand_for(slccard: &[ECard], ekurzlang: EKurzLang) -> &[ECard] {
+    assert_eq!(slccard.len(), ekurzlang.cards_per_player());
+    &slccard[0..slccard.len()/2]
+}
+
 impl SDealCards {
     pub fn new(ruleset: SRuleSet, n_stock: isize) -> SDealCards {
         let ekurzlang = ruleset.ekurzlang;
@@ -95,9 +100,7 @@ impl SDealCards {
     }
 
     pub fn first_hand_for(&self, epi: EPlayerIndex) -> &[ECard] {
-        let veccard = &self.aveccard[epi];
-        assert_eq!(veccard.len(), self.ruleset.ekurzlang.cards_per_player());
-        &veccard[0..veccard.len()/2]
+        first_hand_for(&self.aveccard[epi], self.ruleset.ekurzlang)
     }
 
     pub fn announce_doubling(&mut self, epi: EPlayerIndex, b_doubling: bool) -> Result<(), &'static str> {

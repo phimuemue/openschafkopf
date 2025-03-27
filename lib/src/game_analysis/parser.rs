@@ -136,7 +136,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         /*fn_gameannouncement*/|_,_,_| (),
         /*fn_determinerules_step*/|_,_,_| (),
         /*fn_before_play_card*/|_,_,_,_| (),
-    )
+    ).map(|(gameresult, _mapepistr_username)| gameresult)
 }
 
 pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnouncement, FnGameAnnouncement, DetermineRulesStep, FnDetermineRulesStep, FnBeforePlayCard>(
@@ -144,7 +144,13 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
     mut fn_gameannouncement: FnGameAnnouncement,
     mut fn_determinerules_step: FnDetermineRulesStep,
     mut fn_before_play_card: FnBeforePlayCard,
-) -> Result<SGameResultGeneric<SSauspielRuleset, GameAnnouncement, Vec<DetermineRulesStep>>, failure::Error>
+) -> Result<
+        (
+            SGameResultGeneric<SSauspielRuleset, GameAnnouncement, Vec<DetermineRulesStep>>,
+            EnumMap<EPlayerIndex, String>,
+        ),
+        failure::Error
+    >
     where
         for <'card> FnGameAnnouncement: FnMut(EPlayerIndex, &Option<SGameAnnouncementAnonymous>, Document::HtmlNode<'card>)->GameAnnouncement,
         for <'card> FnDetermineRulesStep: FnMut(
@@ -466,7 +472,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
             an_payout: EPlayerIndex::map_from_fn(|_epi| /*Sauspiel does not know stock*/0),
             stockorgame: VStockOrT::Stock(ruleset),
         })
-    }
+    }.map(|gameresult| (gameresult, mapepistr_username))
 }
 
 plain_enum_mod!(modesauspielposition, derive(Deserialize_repr,), map_derive(), ESauspielPosition {_0, _1, _2, _3,});

@@ -7,7 +7,7 @@ use wasm_bindgen::prelude::*;
 use openschafkopf_util::*;
 use openschafkopf_lib::{
     ai::{determine_best_card, gametree::{SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}, stichoracle::SFilterByOracle},
-    game::SGameResultGeneric,
+    game::{first_hand_for, SGameResultGeneric},
     game_analysis::{append_html_payout_table, append_html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
     rules::{TRules, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe},
     primitives::{ECard, EFarbe, ESchlag, EPlayerIndex, SHand, SStichSequence, TCardSorter},
@@ -197,19 +197,25 @@ pub fn greet() {
             ));
         },
     ) {
-        Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}) => {
+        Ok((SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}, mapepistr_username)) => {
+            let (_ogameannouncement, SWebsysElement(node_gameannouncement_epi0)) = &game_finished.mapepigameannouncement[EPlayerIndex::EPI0];
+            fn output_position_and_cards_sauspiel_img(epi: EPlayerIndex, slccard: &mut [ECard], trumpfdecider: &STrumpfDecider) -> String {
+                let mut str_position_and_cards = format!("({}) ", epi.to_usize() + 1);
+                trumpfdecider.sort_cards(slccard);
+                for &card in slccard.iter() {
+                    str_position_and_cards += &output_card_sauspiel_img(
+                        card,
+                        /*b_highlight*/false,
+                    );
+                }
+                str_position_and_cards
+            }
             for epi in EPlayerIndex::values() {
                 let prepend_cards = |slcschlag_trumpf: &'static [ESchlag], oefarbe_trumpf: Option<EFarbe>, node: &web_sys::Element| {
-                    let mut veccard = game_finished.aveccard[epi].clone();
-                    let mut str_epi_and_cards = format!("({}) ", epi.to_usize() + 1);
-                    STrumpfDecider::new(slcschlag_trumpf, oefarbe_trumpf).sort_cards(&mut veccard);
-                    for &card in veccard.iter() {
-                        str_epi_and_cards += &output_card_sauspiel_img(
-                            card,
-                            /*b_highlight*/false,
-                        );
-                    }
-                    node.set_inner_html(&format!("{} {}", str_epi_and_cards, node.inner_html()));
+                    node.set_inner_html(&format!("{} {}",
+                        output_position_and_cards_sauspiel_img(epi, &mut game_finished.aveccard[epi].clone(), &STrumpfDecider::new(slcschlag_trumpf, oefarbe_trumpf)),
+                        node.inner_html()),
+                    );
                 };
                 let (ogameannouncement, SWebsysElement(node_gameannouncement)) = &game_finished.mapepigameannouncement[epi];
                 let mut itdeterminerulesstep_epi = game_finished.determinerules.iter()
@@ -274,6 +280,51 @@ pub fn greet() {
                 prepend_cards(slcschlag_trumpf_gameannouncement, oefarbe_trumpf_gameannouncement, node_gameannouncement);
             }
             let rules = &game_finished.rules;
+            { // Add doublings and stoss to protocol
+                let node_doubling_or_stoss = |epi, mut veccard: Vec<ECard>, str_explanation, trumpfdecider| {
+                    let node_doubling_or_stoss = unwrap!(
+                        unwrap!(node_gameannouncement_epi0.clone_node())
+                            .dyn_into::<web_sys::Element>() // TODO can we avoid this?
+                    );
+                    node_doubling_or_stoss.set_inner_html(&format!("{} {} {}",
+                        output_position_and_cards_sauspiel_img(epi, &mut veccard, trumpfdecider),
+                        mapepistr_username[epi],
+                        str_explanation,
+                    ));
+                    node_doubling_or_stoss
+                };
+                let node_gameannouncements = unwrap!(node_gameannouncement_epi0.parent_element()); // TODO? Find common predecessor of all nodes in game_finished.mapepigameannouncement?
+                // Add doublings to protocol
+                let trumpfdecider_doubling = STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz));
+                for epi in EPlayerIndex::values().rev(/*so that we can repeatedly prepend*/) {
+                    unwrap!(node_gameannouncements.prepend_with_node_1(&node_doubling_or_stoss(
+                        epi,
+                        first_hand_for(&game_finished.aveccard[epi], game_finished.kurzlang()).to_vec(),
+                        if *unwrap!(game_finished.expensifiers.doublings.get(epi)) {
+                            "klopft"
+                        } else {
+                            "klopft nicht"
+                        },
+                        &trumpfdecider_doubling,
+                    )));
+                }
+                // Add stoss to protocol
+                for (stoss, str_explanation_stoss) in std::iter::zip(
+                    &game_finished.expensifiers.vecstoss,
+                    itertools::chain(
+                        ["gibt Kontra", "gibt Retour"],
+                        std::iter::repeat("gibt Stoss"),
+                    )
+                ) {
+                    let epi = stoss.epi;
+                    unwrap!(node_gameannouncements.append_with_node_1(&node_doubling_or_stoss(
+                        epi,
+                        game_finished.aveccard[epi].to_vec(),
+                        str_explanation_stoss,
+                        rules.trumpfdecider(),
+                    )));
+                }
+            }
             for ((ahand, stichseq), card_played, epi, element_played_card) in vecahandstichseqcardepielement {
                 if stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}) {
                     let determinebestcardresult = determine_best_card_sauspiel(
@@ -312,7 +363,7 @@ pub fn greet() {
                 append_sibling(&element_played_card, &div_button);
             }
         },
-        Ok(SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}) => {
+        Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepistr_username)) => {
             // Nothing to analyze for Stock.
         },
         Err(err_html) => { // TODO we should distinguish between "Game not visible/found/accessible" and "HTML not understood"
