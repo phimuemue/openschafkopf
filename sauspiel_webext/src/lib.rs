@@ -6,7 +6,7 @@ mod utils;
 use wasm_bindgen::prelude::*;
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    ai::{determine_best_card, gametree::{SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}, stichoracle::SFilterByOracle},
+    ai::{SPayoutStats, determine_best_card, gametree::{SMaxSelfishMinStrategy, SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}, stichoracle::SFilterByOracle},
     game::{first_hand_for, SGameResultGeneric},
     game_analysis::{append_html_payout_table, append_html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
     rules::{TRules, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe},
@@ -14,6 +14,7 @@ use openschafkopf_lib::{
 };
 use crate::utils::*;
 use std::fmt::Debug;
+use std::cmp::Ordering;
 use plain_enum::*;
 use itertools::EitherOrBoth;
 
@@ -119,11 +120,9 @@ impl TSauspielHtmlNode<'_> for SWebsysElement {
     }
 }
 
-fn output_card_sauspiel_img(card: ECard, b_highlight: bool) -> String {
+fn internal_output_card_sauspiel_img(card: ECard, str_style: &str) -> String {
     let str_card = format!("{}", card).replace('Z', "X"); // TODO proper card formatter
-    format!(r#"<span class="card-icon card-icon-by card-icon-{str_card}" title="{str_card}" {str_style}>{str_card}</span>"#,
-        str_style = if b_highlight {r#"style="box-shadow: inset 0px 0px 5px black;border-radius: 5px;""#} else {""},
-    )
+    format!(r#"<span class="card-icon card-icon-by card-icon-{str_card}" title="{str_card}" style="{str_style}">{str_card}</span>"#)
     /* // TODO This would look better:
     <div class="game-protocol-trick-card position-1  " style="/*! text-align: center; */justify-content: center;">
         <a data-userid="119592" data-username="TiltBoi" class="profile-link" href="/profile/TiltBoi" style="margin: 0 auto;">TiltBoi</a>
@@ -138,6 +137,13 @@ fn output_card_sauspiel_img(card: ECard, b_highlight: bool) -> String {
         </tbody></table>
     </div>
     */
+}
+
+fn output_card_sauspiel_img(card: ECard, b_highlight: bool) -> String {
+    internal_output_card_sauspiel_img(
+        card,
+        /*str_style*/if b_highlight { "box-shadow: inset 0px 0px 5px black;border-radius: 4px;" } else { "" },
+    )
 }
 
 #[wasm_bindgen(start)]
@@ -197,18 +203,21 @@ pub fn greet() {
             ));
         },
     ) {
-        Ok((SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}, mapepistr_username)) => {
+        Ok((SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout}, mapepistr_username)) => {
             let (_ogameannouncement, SWebsysElement(node_gameannouncement_epi0)) = &game_finished.mapepigameannouncement[EPlayerIndex::EPI0];
-            fn output_position_and_cards_sauspiel_img(epi: EPlayerIndex, slccard: &mut [ECard], trumpfdecider: &STrumpfDecider) -> String {
-                let mut str_position_and_cards = format!("({}) ", epi.to_usize() + 1);
-                trumpfdecider.sort_cards(slccard);
-                for &card in slccard.iter() {
-                    str_position_and_cards += &output_card_sauspiel_img(
+            fn output_cards_sauspiel_img<Str: std::borrow::Borrow<str>>(ittplcardstr_style: impl Iterator<Item=(ECard, Str)>) -> String {
+                let mut str_cards = String::new();
+                for (card, str_style) in ittplcardstr_style {
+                    str_cards += &internal_output_card_sauspiel_img(
                         card,
-                        /*b_highlight*/false,
+                        str_style.borrow(),
                     );
                 }
-                str_position_and_cards
+                str_cards
+            }
+            fn output_position_and_cards_sauspiel_img(epi: EPlayerIndex, slccard: &mut [ECard], trumpfdecider: &STrumpfDecider) -> String {
+                trumpfdecider.sort_cards(slccard);
+                format!("({}) {}", epi.to_usize() + 1, output_cards_sauspiel_img(slccard.iter().map(|card| (*card, /*str_style*/""))))
             }
             for epi in EPlayerIndex::values() {
                 let prepend_cards = |slcschlag_trumpf: &'static [ESchlag], oefarbe_trumpf: Option<EFarbe>, node: &web_sys::Element| {
@@ -280,6 +289,7 @@ pub fn greet() {
                 prepend_cards(slcschlag_trumpf_gameannouncement, oefarbe_trumpf_gameannouncement, node_gameannouncement);
             }
             let rules = &game_finished.rules;
+            let node_gameannouncements = unwrap!(node_gameannouncement_epi0.parent_element()); // TODO? Find common predecessor of all nodes in game_finished.mapepigameannouncement?
             { // Add doublings and stoss to protocol
                 let node_doubling_or_stoss = |epi, mut veccard: Vec<ECard>, str_explanation, trumpfdecider| {
                     let node_doubling_or_stoss = unwrap!(
@@ -293,7 +303,6 @@ pub fn greet() {
                     ));
                     node_doubling_or_stoss
                 };
-                let node_gameannouncements = unwrap!(node_gameannouncement_epi0.parent_element()); // TODO? Find common predecessor of all nodes in game_finished.mapepigameannouncement?
                 // Add doublings to protocol
                 let trumpfdecider_doubling = STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz));
                 for epi in EPlayerIndex::values().rev(/*so that we can repeatedly prepend*/) {
@@ -325,8 +334,9 @@ pub fn greet() {
                     )));
                 }
             }
+            let mut veccardstr_color = Vec::new();
             for ((ahand, stichseq), card_played, epi, element_played_card) in vecahandstichseqcardepielement {
-                if stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}) {
+                let str_color_indicating_played_card_quality = if stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}) {
                     let determinebestcardresult = determine_best_card_sauspiel(
                         ahand.clone(),
                         &stichseq,
@@ -349,7 +359,27 @@ pub fn greet() {
                         str_table
                     });
                     append_sibling(&element_played_card, &div_table);
-                }
+                    let get_min_max_eq = |payoutstats: &SMaxSelfishMinStrategy<SPayoutStats<()>>| {
+                        let payoutstats = &payoutstats.maxselfishmin.0;
+                        verify_eq!(payoutstats.min(), payoutstats.max())
+                    };
+                    let (veccard_optimal, payoutstats_optimal) = determinebestcardresult.cards_with_maximum_value(
+                        |lhs: &SMaxSelfishMinStrategy<SPayoutStats<()>>, rhs| {
+                            get_min_max_eq(lhs).cmp(&get_min_max_eq(rhs))
+                        },
+                    );
+                    if !veccard_optimal.contains(&card_played) {
+                        match an_payout[epi].cmp(&get_min_max_eq(payoutstats_optimal)) {
+                            Ordering::Greater | Ordering::Equal => "#ffef00", // yellow
+                            Ordering::Less => "#d70000", // red
+                        }
+                    } else {
+                        "#78db00" // green
+                    }
+                } else {
+                    "lightgrey"
+                };
+                veccardstr_color.push((card_played, str_color_indicating_played_card_quality));
                 let div_button = unwrap!(document.create_element("div"));
                 div_button.set_inner_html(&via_out_param(|str_button| 
                     append_html_copy_button(
@@ -362,6 +392,16 @@ pub fn greet() {
                 ).0);
                 append_sibling(&element_played_card, &div_button);
             }
+            let node_whole_game = unwrap!(
+                unwrap!(node_gameannouncement_epi0.clone_node())
+                    .dyn_into::<web_sys::Element>() // TODO can we avoid this?
+            );
+            node_whole_game.set_inner_html(
+                &output_cards_sauspiel_img(veccardstr_color.iter().map(|(card, str_color)| {
+                    (*card, format!("border-top: 5px solid {str_color};box-sizing: content-box;"))
+                })),
+            );
+            unwrap!(node_gameannouncements.append_with_node_1(&node_whole_game));
         },
         Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepistr_username)) => {
             // Nothing to analyze for Stock.
