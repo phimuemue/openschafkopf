@@ -180,7 +180,7 @@ pub fn analyze_game(
     }
 }
 
-pub fn generate_html_auxiliary_files(path_out_dir: &std::path::Path) -> Result<(), failure::Error> {
+pub fn generate_html_auxiliary_files(path_out_dir: &std::path::Path) -> Result<(), std::io::Error> {
     macro_rules! write_auxiliary_file(($str_filename: expr) => {
         std::fs::File::create(
             path_out_dir
