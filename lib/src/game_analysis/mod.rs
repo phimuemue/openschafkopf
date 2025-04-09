@@ -485,7 +485,7 @@ pub fn append_html_copy_button(
     );
 }
 
-fn write_html(path: std::path::PathBuf, str_html: &str) -> Result<std::path::PathBuf, failure::Error> {
+fn write_html(path: std::path::PathBuf, str_html: &str) -> Result<std::path::PathBuf, std::io::Error> {
     std::fs::File::create(path.clone())?.write_all(str_html.as_bytes())?;
     Ok(path)
 }
@@ -495,7 +495,7 @@ pub struct SGameWithDesc {
     pub resgameresult: Result<SGameResult</*Ruleset*/()>, failure::Error>,
 }
 
-pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String+Sync, vecgamewithdesc: Vec<SGameWithDesc>, b_include_no_findings: bool, n_max_remaining_cards: usize, b_simulate_all_hands: bool, str_openschafkopf_executable: &str, fn_output_card: &(dyn Fn(ECard, bool/*b_highlight*/)->String + Sync)) -> Result<std::path::PathBuf, failure::Error> {
+pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String+Sync, vecgamewithdesc: Vec<SGameWithDesc>, b_include_no_findings: bool, n_max_remaining_cards: usize, b_simulate_all_hands: bool, str_openschafkopf_executable: &str, fn_output_card: &(dyn Fn(ECard, bool/*b_highlight*/)->String + Sync)) -> Result<std::path::PathBuf, std::io::Error> {
     // TODO can all this be done with fewer locks and more elegant?
     std::fs::create_dir_all(path_analysis)?;
     generate_html_auxiliary_files(path_analysis)?;
@@ -518,7 +518,7 @@ pub fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->St
     let n_games_done = Arc::new(AtomicUsize::new(0));
     let n_games_non_stock = Arc::new(AtomicUsize::new(0));
     let n_games_findings = Arc::new(AtomicUsize::new(0));
-    vecgamewithdesc.into_par_iter().try_for_each(|gamewithdesc| -> Result<_, failure::Error> {
+    vecgamewithdesc.into_par_iter().try_for_each(|gamewithdesc| -> Result<_, std::io::Error> {
         if let Ok(gameresult) = gamewithdesc.resgameresult {
             match gameresult.stockorgame {
                 VStockOrT::Stock(_) => {
