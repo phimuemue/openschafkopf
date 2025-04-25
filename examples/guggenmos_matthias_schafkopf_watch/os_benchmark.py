@@ -113,7 +113,7 @@ def os_execution_time(gameid, hands, cards, ausspieler, gametype, farbe, positio
 
                 start_time = datetime.now()
                 os_result_json = subprocess.check_output(command, shell=True, text=True)
-                execution_time += [(datetime.now() - start_time).total_seconds()]
+                execution_time += [int(np.round(1000*(datetime.now() - start_time).total_seconds()))]
                 if verbose:
                     os_result = json.loads(os_result_json)['vectableline'][:-1]
                     points_predicted = {res['ostr_header']:
@@ -125,9 +125,9 @@ def os_execution_time(gameid, hands, cards, ausspieler, gametype, farbe, positio
                 hands1d = np.setdiff1d(hands1d, cards_round[s], assume_unique=True)
                 position = (position + 1) % nplayers
                 if verbose:
-                    print(f'\t\tExecution time: {execution_time[-1]:.4f} secs')
+                    print(f'\t\tExecution time: {execution_time[-1]:0f} ms')
 
-        result = [np.sum(execution_time), execution_time]
+        result = [int(sum(execution_time)), execution_time]
         return result
 
 
