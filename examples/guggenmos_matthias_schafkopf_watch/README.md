@@ -35,3 +35,32 @@ For this analysis, 25,000 games were assessed. The results are stored separately
 This notebook analyzes and visualizes the results from `os_benachmark.py`. Execution times are assessed and visualized separately for Lange/Kurze Karte, game type (Rufspiel, Farbwenz, Geier, Wenz, Farbsolo) and Ausspiel number. 
 
 **Requirements:** Up-to-date versions of `pandas`, `numpy`, `matplotlib` and `scipy`. At the time of this investigation, `pandas` was used in version `2.2.2`, `numpy` in version `1.26.4`, `matplotlib` in version `3.9.0` and `scipy` in version `1.13.1`.
+
+## Results
+
+Based on the present analyses, a suggested set of strategies for `openschafkopf suggest-card` is as follows:
+
+
+| Kurze Karte    |                   |   |   |
+|----------------|-------------------|---|---|
+| ***Rufspiel*** | Ausspiel 1-7 abo  | Rest ssc |   |
+| ***Farbwenz*** | Ausspiel 1-4 ssco | Rest ssc |   |
+| ***Geier***    | ssc               |   |   |
+| ***Wenz***     | ssc               |   |   |
+| ***Farbsolo*** | Ausspiel 1-2 ssco | Ausspiel 3-4 abo | Rest ssc |
+
+| Lange Karte    |                    |   |   |
+|----------------|--------------------|---|---|
+| ***Rufspiel*** | Ausspiel 1-16 abo  | Rest ssc |   |
+| ***Farbwenz*** | Ausspiel 1-7 ssco  | Ausspiel 8-16 abo |  Rest ssc |
+| ***Geier***    | Ausspiel 1-9 ssco  | Ausspiel 10-15 abo |  Rest ssc |
+| ***Wenz***     | Ausspiel 1-10 ssco | Ausspiel 11-16 abo |  Rest ssc |
+| ***Farbsolo*** | Ausspiel 1-9 ssco  | Ausspiel 10-16 abo | Rest ssc |
+
+**Abbreviations:** abo=`--abprune --branching oracle`, scc=`--snapshotcache`, ssc4=`--snapshotcache --branching equiv4`, ssc5=`--snapshotcache --branching equiv5`, ssc6=`--snapshotcache --branching equiv6`, ssco=`--snapshotcache --branching oracle`
+
+**Limitations:**
+
+- Ramsch was not assessed.
+- Computing resources are not exactly identical for all strategies (but likely minor effect).
+- There is residual uncertainty with respect to the exact Ausspiel number on which a strategy switch should occur, but this is likewise a neglegible effect.
