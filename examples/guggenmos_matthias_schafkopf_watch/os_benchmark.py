@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 # IMPORTANT: replace with path to openschafkopf binary
-PATH_OS = '/opt/openschafkopf/openschafkopf'
+PATH_OS = '../../target/release/openschafkopf'
 
 multiproc = False  # if True, use one thread per optimizer; if False, use a single thread
 test_mode = True  # if True, analyze only the first test_mode_ngames games
@@ -99,7 +99,7 @@ def os_execution_time(gameid, hands, cards, ausspieler, gametype, farbe, positio
         cards_table = ''
         for r in range(nrounds - 1):
             if verbose:
-                print(f'\t[{datetime.now().strftime('%H:%M:%S')}] Round {r + 1} / {len(cards)}')
+                print(f'\t[{datetime.now().strftime("%H:%M:%S")}] Round {r + 1} / {len(cards)}')
                 print(f'\t\tAusspieler: {ausspieler[r]}')
             cards_round = [KARTEN[c] for c in cards[r]]
             position = ausspieler[r]
@@ -156,7 +156,7 @@ def loop(f):
 
     path_save = f'data/{k}{"_testmode" if test_mode else ""}.parquet'
     df[['id', 'rule_kurze', 'game_type'] + cols_new].to_parquet(path_save)
-    print(f'\t[{datetime.now().strftime('%H:%M:%S')}] Wrote file to {path_save}')
+    print(f'\t[{datetime.now().strftime("%H:%M:%S")}] Wrote file to {path_save}')
 
 
 if __name__ == '__main__':
@@ -172,4 +172,4 @@ if __name__ == '__main__':
         for i in range(noptimizers):
             loop(i)
 
-    print(f'[{datetime.now().strftime('%H:%M:%S')}] Finished')
+    print(f'[{datetime.now().strftime("%H:%M:%S")}] Finished')
