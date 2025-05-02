@@ -1,7 +1,7 @@
 import itertools
 import subprocess
 
-veccard_trumpf = "eo go ho so eu gu hu su ha hz hk h9 h8 h7".split(" ")
+veccard_trumpf = "eu gu hu su ha hz ho hk h9 h8 h7".split(" ")
 
 # open table
 print("") # according to https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables, a newline is necessary before tables
@@ -23,7 +23,7 @@ for veccard_hand in itertools.combinations(veccard_trumpf, 8):
         [
             "target/release/openschafkopf",
             "hand-stats",
-            "--rules", "herz solo von 0",
+            "--rules", "herz wenz von 0",
             "--hand", str_hand,
             "--simulate-hands", "10000",
             "--inspect", " && ".join(vecstr_opponent_is_weak_enough),
