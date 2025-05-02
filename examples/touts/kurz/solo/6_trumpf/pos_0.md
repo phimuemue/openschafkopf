@@ -1,0 +1,513 @@
+
+Hand | Gewinnwahrscheinlichkeit
+-- | -
+eo go ho so eu gu | 100.0%
+eo go ho so eu hu | 99.99%
+eo go ho so eu su | 99.97%
+eo go ho so eu ha | 100.0%
+eo go ho so eu hz | 99.99%
+eo go ho so eu hk | 100.0%
+eo go ho so eu h9 | 100.0%
+eo go ho so gu hu | 99.00999999999999%
+eo go ho so gu su | 99.1%
+eo go ho so gu ha | 98.97%
+eo go ho so gu hz | 99.00999999999999%
+eo go ho so gu hk | 99.18%
+eo go ho so gu h9 | 99.02%
+eo go ho so hu su | 98.95%
+eo go ho so hu ha | 98.95%
+eo go ho so hu hz | 98.79%
+eo go ho so hu hk | 98.95%
+eo go ho so hu h9 | 99.03%
+eo go ho so su ha | 98.81%
+eo go ho so su hz | 98.63%
+eo go ho so su hk | 98.69%
+eo go ho so su h9 | 98.77%
+eo go ho so ha hz | 98.87%
+eo go ho so ha hk | 98.83%
+eo go ho so ha h9 | 98.61%
+eo go ho so hz hk | 98.96000000000001%
+eo go ho so hz h9 | 98.76%
+eo go ho so hk h9 | 98.83%
+eo go ho eu gu hu | 88.36%
+eo go ho eu gu su | 88.64999999999999%
+eo go ho eu gu ha | 88.79%
+eo go ho eu gu hz | 88.66000000000001%
+eo go ho eu gu hk | 88.9%
+eo go ho eu gu h9 | 87.98%
+eo go ho eu hu su | 88.03999999999999%
+eo go ho eu hu ha | 88.47%
+eo go ho eu hu hz | 88.09%
+eo go ho eu hu hk | 88.21%
+eo go ho eu hu h9 | 87.94%
+eo go ho eu su ha | 88.82%
+eo go ho eu su hz | 88.24%
+eo go ho eu su hk | 87.77000000000001%
+eo go ho eu su h9 | 87.8%
+eo go ho eu ha hz | 88.73%
+eo go ho eu ha hk | 88.17%
+eo go ho eu ha h9 | 87.56%
+eo go ho eu hz hk | 88.68%
+eo go ho eu hz h9 | 88.18%
+eo go ho eu hk h9 | 88.09%
+eo go ho gu hu su | 83.82%
+eo go ho gu hu ha | 84.32%
+eo go ho gu hu hz | 83.42%
+eo go ho gu hu hk | 83.76%
+eo go ho gu hu h9 | 83.81%
+eo go ho gu su ha | 83.97%
+eo go ho gu su hz | 83.36%
+eo go ho gu su hk | 83.73%
+eo go ho gu su h9 | 83.91%
+eo go ho gu ha hz | 83.28999999999999%
+eo go ho gu ha hk | 83.82%
+eo go ho gu ha h9 | 84.3%
+eo go ho gu hz hk | 83.6%
+eo go ho gu hz h9 | 83.19%
+eo go ho gu hk h9 | 82.92%
+eo go ho hu su ha | 82.6%
+eo go ho hu su hz | 82.67%
+eo go ho hu su hk | 83.0%
+eo go ho hu su h9 | 83.02000000000001%
+eo go ho hu ha hz | 83.04%
+eo go ho hu ha hk | 83.07%
+eo go ho hu ha h9 | 83.17999999999999%
+eo go ho hu hz hk | 83.06%
+eo go ho hu hz h9 | 82.49%
+eo go ho hu hk h9 | 82.11%
+eo go ho su ha hz | 82.5%
+eo go ho su ha hk | 82.66%
+eo go ho su ha h9 | 82.46%
+eo go ho su hz hk | 83.27%
+eo go ho su hz h9 | 82.57%
+eo go ho su hk h9 | 82.73%
+eo go ho ha hz hk | 83.38%
+eo go ho ha hz h9 | 83.04%
+eo go ho ha hk h9 | 82.82000000000001%
+eo go ho hz hk h9 | 82.36%
+eo go so eu gu hu | 52.35999999999999%
+eo go so eu gu su | 52.33%
+eo go so eu gu ha | 52.800000000000004%
+eo go so eu gu hz | 52.64%
+eo go so eu gu hk | 53.059999999999995%
+eo go so eu gu h9 | 53.22%
+eo go so eu hu su | 51.300000000000004%
+eo go so eu hu ha | 53.02%
+eo go so eu hu hz | 52.6%
+eo go so eu hu hk | 52.400000000000006%
+eo go so eu hu h9 | 53.0%
+eo go so eu su ha | 52.7%
+eo go so eu su hz | 53.22%
+eo go so eu su hk | 52.07000000000001%
+eo go so eu su h9 | 52.400000000000006%
+eo go so eu ha hz | 51.970000000000006%
+eo go so eu ha hk | 52.01%
+eo go so eu ha h9 | 52.349999999999994%
+eo go so eu hz hk | 52.22%
+eo go so eu hz h9 | 53.49%
+eo go so eu hk h9 | 51.72%
+eo go so gu hu su | 47.77%
+eo go so gu hu ha | 47.69%
+eo go so gu hu hz | 48.54%
+eo go so gu hu hk | 48.41%
+eo go so gu hu h9 | 49.02%
+eo go so gu su ha | 47.57%
+eo go so gu su hz | 49.4%
+eo go so gu su hk | 47.599999999999994%
+eo go so gu su h9 | 48.79%
+eo go so gu ha hz | 47.65%
+eo go so gu ha hk | 49.05%
+eo go so gu ha h9 | 48.24%
+eo go so gu hz hk | 49.059999999999995%
+eo go so gu hz h9 | 49.19%
+eo go so gu hk h9 | 48.36%
+eo go so hu su ha | 47.96%
+eo go so hu su hz | 47.63%
+eo go so hu su hk | 47.660000000000004%
+eo go so hu su h9 | 48.36%
+eo go so hu ha hz | 47.21%
+eo go so hu ha hk | 47.21%
+eo go so hu ha h9 | 47.449999999999996%
+eo go so hu hz hk | 46.73%
+eo go so hu hz h9 | 46.72%
+eo go so hu hk h9 | 46.53%
+eo go so su ha hz | 47.699999999999996%
+eo go so su ha hk | 46.73%
+eo go so su ha h9 | 47.910000000000004%
+eo go so su hz hk | 47.82%
+eo go so su hz h9 | 48.04%
+eo go so su hk h9 | 47.449999999999996%
+eo go so ha hz hk | 46.81%
+eo go so ha hz h9 | 47.65%
+eo go so ha hk h9 | 45.85%
+eo go so hz hk h9 | 47.47%
+eo go eu gu hu su | 29.92%
+eo go eu gu hu ha | 30.97%
+eo go eu gu hu hz | 31.96%
+eo go eu gu hu hk | 30.680000000000003%
+eo go eu gu hu h9 | 30.959999999999997%
+eo go eu gu su ha | 30.79%
+eo go eu gu su hz | 31.019999999999996%
+eo go eu gu su hk | 31.080000000000002%
+eo go eu gu su h9 | 31.290000000000003%
+eo go eu gu ha hz | 30.69%
+eo go eu gu ha hk | 31.4%
+eo go eu gu ha h9 | 30.759999999999998%
+eo go eu gu hz hk | 30.740000000000002%
+eo go eu gu hz h9 | 30.769999999999996%
+eo go eu gu hk h9 | 31.35%
+eo go eu hu su ha | 30.34%
+eo go eu hu su hz | 30.049999999999997%
+eo go eu hu su hk | 29.45%
+eo go eu hu su h9 | 29.830000000000002%
+eo go eu hu ha hz | 31.380000000000003%
+eo go eu hu ha hk | 29.520000000000003%
+eo go eu hu ha h9 | 30.130000000000003%
+eo go eu hu hz hk | 29.03%
+eo go eu hu hz h9 | 30.43%
+eo go eu hu hk h9 | 29.01%
+eo go eu su ha hz | 29.82%
+eo go eu su ha hk | 30.0%
+eo go eu su ha h9 | 29.79%
+eo go eu su hz hk | 30.220000000000002%
+eo go eu su hz h9 | 30.12%
+eo go eu su hk h9 | 29.78%
+eo go eu ha hz hk | 30.080000000000002%
+eo go eu ha hz h9 | 29.659999999999997%
+eo go eu ha hk h9 | 29.630000000000003%
+eo go eu hz hk h9 | 29.880000000000003%
+eo go gu hu su ha | 20.79%
+eo go gu hu su hz | 21.099999999999998%
+eo go gu hu su hk | 20.8%
+eo go gu hu su h9 | 21.82%
+eo go gu hu ha hz | 20.91%
+eo go gu hu ha hk | 20.96%
+eo go gu hu ha h9 | 20.27%
+eo go gu hu hz hk | 21.26%
+eo go gu hu hz h9 | 21.48%
+eo go gu hu hk h9 | 21.12%
+eo go gu su ha hz | 20.78%
+eo go gu su ha hk | 20.3%
+eo go gu su ha h9 | 21.14%
+eo go gu su hz hk | 20.919999999999998%
+eo go gu su hz h9 | 21.13%
+eo go gu su hk h9 | 21.65%
+eo go gu ha hz hk | 21.67%
+eo go gu ha hz h9 | 21.66%
+eo go gu ha hk h9 | 21.87%
+eo go gu hz hk h9 | 21.09%
+eo go hu su ha hz | 18.52%
+eo go hu su ha hk | 17.28%
+eo go hu su ha h9 | 17.86%
+eo go hu su hz hk | 17.93%
+eo go hu su hz h9 | 17.66%
+eo go hu su hk h9 | 18.08%
+eo go hu ha hz hk | 18.990000000000002%
+eo go hu ha hz h9 | 18.02%
+eo go hu ha hk h9 | 18.279999999999998%
+eo go hu hz hk h9 | 17.88%
+eo go su ha hz hk | 17.46%
+eo go su ha hz h9 | 18.63%
+eo go su ha hk h9 | 18.21%
+eo go su hz hk h9 | 18.6%
+eo go ha hz hk h9 | 18.099999999999998%
+eo ho so eu gu hu | 13.11%
+eo ho so eu gu su | 13.07%
+eo ho so eu gu ha | 12.93%
+eo ho so eu gu hz | 12.23%
+eo ho so eu gu hk | 12.86%
+eo ho so eu gu h9 | 12.33%
+eo ho so eu hu su | 12.049999999999999%
+eo ho so eu hu ha | 12.740000000000002%
+eo ho so eu hu hz | 13.15%
+eo ho so eu hu hk | 11.68%
+eo ho so eu hu h9 | 12.58%
+eo ho so eu su ha | 12.23%
+eo ho so eu su hz | 12.540000000000001%
+eo ho so eu su hk | 12.520000000000001%
+eo ho so eu su h9 | 12.620000000000001%
+eo ho so eu ha hz | 12.67%
+eo ho so eu ha hk | 12.67%
+eo ho so eu ha h9 | 12.15%
+eo ho so eu hz hk | 12.790000000000001%
+eo ho so eu hz h9 | 12.989999999999998%
+eo ho so eu hk h9 | 12.509999999999998%
+eo ho so gu hu su | 10.02%
+eo ho so gu hu ha | 10.33%
+eo ho so gu hu hz | 10.4%
+eo ho so gu hu hk | 10.26%
+eo ho so gu hu h9 | 9.950000000000001%
+eo ho so gu su ha | 10.45%
+eo ho so gu su hz | 10.56%
+eo ho so gu su hk | 10.18%
+eo ho so gu su h9 | 10.12%
+eo ho so gu ha hz | 10.02%
+eo ho so gu ha hk | 10.86%
+eo ho so gu ha h9 | 10.69%
+eo ho so gu hz hk | 10.489999999999998%
+eo ho so gu hz h9 | 9.93%
+eo ho so gu hk h9 | 10.16%
+eo ho so hu su ha | 9.62%
+eo ho so hu su hz | 9.54%
+eo ho so hu su hk | 9.77%
+eo ho so hu su h9 | 9.629999999999999%
+eo ho so hu ha hz | 9.56%
+eo ho so hu ha hk | 10.0%
+eo ho so hu ha h9 | 9.89%
+eo ho so hu hz hk | 10.0%
+eo ho so hu hz h9 | 9.49%
+eo ho so hu hk h9 | 9.48%
+eo ho so su ha hz | 9.99%
+eo ho so su ha hk | 9.55%
+eo ho so su ha h9 | 9.629999999999999%
+eo ho so su hz hk | 9.66%
+eo ho so su hz h9 | 9.49%
+eo ho so su hk h9 | 10.12%
+eo ho so ha hz hk | 9.55%
+eo ho so ha hz h9 | 10.059999999999999%
+eo ho so ha hk h9 | 9.74%
+eo ho so hz hk h9 | 9.569999999999999%
+eo ho eu gu hu su | 4.52%
+eo ho eu gu hu ha | 4.42%
+eo ho eu gu hu hz | 4.5%
+eo ho eu gu hu hk | 4.54%
+eo ho eu gu hu h9 | 4.130000000000001%
+eo ho eu gu su ha | 4.75%
+eo ho eu gu su hz | 4.25%
+eo ho eu gu su hk | 4.590000000000001%
+eo ho eu gu su h9 | 4.91%
+eo ho eu gu ha hz | 4.87%
+eo ho eu gu ha hk | 4.5600000000000005%
+eo ho eu gu ha h9 | 4.41%
+eo ho eu gu hz hk | 4.279999999999999%
+eo ho eu gu hz h9 | 4.71%
+eo ho eu gu hk h9 | 4.72%
+eo ho eu hu su ha | 3.9800000000000004%
+eo ho eu hu su hz | 3.8%
+eo ho eu hu su hk | 3.5900000000000003%
+eo ho eu hu su h9 | 3.7900000000000005%
+eo ho eu hu ha hz | 3.7699999999999996%
+eo ho eu hu ha hk | 4.16%
+eo ho eu hu ha h9 | 3.7600000000000002%
+eo ho eu hu hz hk | 3.66%
+eo ho eu hu hz h9 | 4.34%
+eo ho eu hu hk h9 | 3.9899999999999998%
+eo ho eu su ha hz | 4.29%
+eo ho eu su ha hk | 4.01%
+eo ho eu su ha h9 | 3.9%
+eo ho eu su hz hk | 3.91%
+eo ho eu su hz h9 | 4.01%
+eo ho eu su hk h9 | 3.9699999999999998%
+eo ho eu ha hz hk | 3.7199999999999998%
+eo ho eu ha hz h9 | 3.62%
+eo ho eu ha hk h9 | 3.7600000000000002%
+eo ho eu hz hk h9 | 3.6799999999999997%
+eo ho gu hu su ha | 0.9299999999999999%
+eo ho gu hu su hz | 0.88%
+eo ho gu hu su hk | 0.76%
+eo ho gu hu su h9 | 1.13%
+eo ho gu hu ha hz | 1.01%
+eo ho gu hu ha hk | 0.7100000000000001%
+eo ho gu hu ha h9 | 0.9199999999999999%
+eo ho gu hu hz hk | 1.05%
+eo ho gu hu hz h9 | 1.11%
+eo ho gu hu hk h9 | 0.8999999999999999%
+eo ho gu su ha hz | 0.97%
+eo ho gu su ha hk | 0.9299999999999999%
+eo ho gu su ha h9 | 0.9299999999999999%
+eo ho gu su hz hk | 0.8200000000000001%
+eo ho gu su hz h9 | 1.09%
+eo ho gu su hk h9 | 0.96%
+eo ho gu ha hz hk | 0.95%
+eo ho gu ha hz h9 | 0.9900000000000001%
+eo ho gu ha hk h9 | 0.91%
+eo ho gu hz hk h9 | 0.77%
+eo ho hu su ha hz | 0.0%
+eo ho hu su ha hk | 0.0%
+eo ho hu su ha h9 | 0.0%
+eo ho hu su hz hk | 0.0%
+eo ho hu su hz h9 | 0.0%
+eo ho hu su hk h9 | 0.0%
+eo ho hu ha hz hk | 0.0%
+eo ho hu ha hz h9 | 0.0%
+eo ho hu ha hk h9 | 0.0%
+eo ho hu hz hk h9 | 0.0%
+eo ho su ha hz hk | 0.0%
+eo ho su ha hz h9 | 0.0%
+eo ho su ha hk h9 | 0.0%
+eo ho su hz hk h9 | 0.0%
+eo ho ha hz hk h9 | 0.0%
+eo so eu gu hu su | 0.5599999999999999%
+eo so eu gu hu ha | 0.58%
+eo so eu gu hu hz | 0.67%
+eo so eu gu hu hk | 0.74%
+eo so eu gu hu h9 | 0.52%
+eo so eu gu su ha | 0.67%
+eo so eu gu su hz | 0.76%
+eo so eu gu su hk | 0.54%
+eo so eu gu su h9 | 0.5499999999999999%
+eo so eu gu ha hz | 0.5%
+eo so eu gu ha hk | 0.67%
+eo so eu gu ha h9 | 0.75%
+eo so eu gu hz hk | 0.5%
+eo so eu gu hz h9 | 0.7000000000000001%
+eo so eu gu hk h9 | 0.51%
+eo so eu hu su ha | 0.0%
+eo so eu hu su hz | 0.0%
+eo so eu hu su hk | 0.0%
+eo so eu hu su h9 | 0.0%
+eo so eu hu ha hz | 0.0%
+eo so eu hu ha hk | 0.0%
+eo so eu hu ha h9 | 0.0%
+eo so eu hu hz hk | 0.0%
+eo so eu hu hz h9 | 0.0%
+eo so eu hu hk h9 | 0.0%
+eo so eu su ha hz | 0.0%
+eo so eu su ha hk | 0.0%
+eo so eu su ha h9 | 0.0%
+eo so eu su hz hk | 0.0%
+eo so eu su hz h9 | 0.0%
+eo so eu su hk h9 | 0.0%
+eo so eu ha hz hk | 0.0%
+eo so eu ha hz h9 | 0.0%
+eo so eu ha hk h9 | 0.0%
+eo so eu hz hk h9 | 0.0%
+eo so gu hu su ha | 0.0%
+eo so gu hu su hz | 0.0%
+eo so gu hu su hk | 0.0%
+eo so gu hu su h9 | 0.0%
+eo so gu hu ha hz | 0.0%
+eo so gu hu ha hk | 0.0%
+eo so gu hu ha h9 | 0.0%
+eo so gu hu hz hk | 0.0%
+eo so gu hu hz h9 | 0.0%
+eo so gu hu hk h9 | 0.0%
+eo so gu su ha hz | 0.0%
+eo so gu su ha hk | 0.0%
+eo so gu su ha h9 | 0.0%
+eo so gu su hz hk | 0.0%
+eo so gu su hz h9 | 0.0%
+eo so gu su hk h9 | 0.0%
+eo so gu ha hz hk | 0.0%
+eo so gu ha hz h9 | 0.0%
+eo so gu ha hk h9 | 0.0%
+eo so gu hz hk h9 | 0.0%
+eo so hu su ha hz | 0.0%
+eo so hu su ha hk | 0.0%
+eo so hu su ha h9 | 0.0%
+eo so hu su hz hk | 0.0%
+eo so hu su hz h9 | 0.0%
+eo so hu su hk h9 | 0.0%
+eo so hu ha hz hk | 0.0%
+eo so hu ha hz h9 | 0.0%
+eo so hu ha hk h9 | 0.0%
+eo so hu hz hk h9 | 0.0%
+eo so su ha hz hk | 0.0%
+eo so su ha hz h9 | 0.0%
+eo so su ha hk h9 | 0.0%
+eo so su hz hk h9 | 0.0%
+eo so ha hz hk h9 | 0.0%
+eo eu gu hu su ha | 0.0%
+eo eu gu hu su hz | 0.0%
+eo eu gu hu su hk | 0.0%
+eo eu gu hu su h9 | 0.0%
+eo eu gu hu ha hz | 0.0%
+eo eu gu hu ha hk | 0.0%
+eo eu gu hu ha h9 | 0.0%
+eo eu gu hu hz hk | 0.0%
+eo eu gu hu hz h9 | 0.0%
+eo eu gu hu hk h9 | 0.0%
+eo eu gu su ha hz | 0.0%
+eo eu gu su ha hk | 0.0%
+eo eu gu su ha h9 | 0.0%
+eo eu gu su hz hk | 0.0%
+eo eu gu su hz h9 | 0.0%
+eo eu gu su hk h9 | 0.0%
+eo eu gu ha hz hk | 0.0%
+eo eu gu ha hz h9 | 0.0%
+eo eu gu ha hk h9 | 0.0%
+eo eu gu hz hk h9 | 0.0%
+eo eu hu su ha hz | 0.0%
+eo eu hu su ha hk | 0.0%
+eo eu hu su ha h9 | 0.0%
+eo eu hu su hz hk | 0.0%
+eo eu hu su hz h9 | 0.0%
+eo eu hu su hk h9 | 0.0%
+eo eu hu ha hz hk | 0.0%
+eo eu hu ha hz h9 | 0.0%
+eo eu hu ha hk h9 | 0.0%
+eo eu hu hz hk h9 | 0.0%
+eo eu su ha hz hk | 0.0%
+eo eu su ha hz h9 | 0.0%
+eo eu su ha hk h9 | 0.0%
+eo eu su hz hk h9 | 0.0%
+eo eu ha hz hk h9 | 0.0%
+eo gu hu su ha hz | 0.0%
+eo gu hu su ha hk | 0.0%
+eo gu hu su ha h9 | 0.0%
+eo gu hu su hz hk | 0.0%
+eo gu hu su hz h9 | 0.0%
+eo gu hu su hk h9 | 0.0%
+eo gu hu ha hz hk | 0.0%
+eo gu hu ha hz h9 | 0.0%
+eo gu hu ha hk h9 | 0.0%
+eo gu hu hz hk h9 | 0.0%
+eo gu su ha hz hk | 0.0%
+eo gu su ha hz h9 | 0.0%
+eo gu su ha hk h9 | 0.0%
+eo gu su hz hk h9 | 0.0%
+eo gu ha hz hk h9 | 0.0%
+eo hu su ha hz hk | 0.0%
+eo hu su ha hz h9 | 0.0%
+eo hu su ha hk h9 | 0.0%
+eo hu su hz hk h9 | 0.0%
+eo hu ha hz hk h9 | 0.0%
+eo su ha hz hk h9 | 0.0%
+
+```
+import itertools
+import subprocess
+
+veccard_trumpf = "eo go ho so eu gu hu su ha hz hk h9".split(" ")
+
+# open table
+print("") # according to https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables, a newline is necessary before tables
+print("Hand | Gewinnwahrscheinlichkeit")
+print("-- | -")
+
+for veccard_hand in itertools.combinations(veccard_trumpf, 6):
+    if veccard_trumpf[0] not in veccard_hand: # inefficient but makes code simpler
+        continue
+    str_hand = " ".join(veccard_hand)
+    n_high_trumpf_with_active_player = 0
+    vecstr_opponent_is_weak_enough = []
+    for card_trumpf in veccard_trumpf:
+        if card_trumpf in veccard_hand:
+            n_high_trumpf_with_active_player = n_high_trumpf_with_active_player + 1
+        else:
+            vecstr_opponent_is_weak_enough.append(f"ctx.trumpf(ctx.who_has_{card_trumpf}()) <= {n_high_trumpf_with_active_player}")
+    str_openschafkopf_output = subprocess.run(
+        [
+            "target/release/openschafkopf",
+            "hand-stats",
+            "--rules", "herz solo von 0",
+            "--hand", str_hand,
+            "--simulate-hands", "10000",
+            "--inspect", " && ".join(vecstr_opponent_is_weak_enough),
+            # "--json", # TODO support json in hand-stats
+        ],
+        capture_output=True,
+        text=True,
+        check=True
+    ).stdout
+    print(str_hand + " | " + str(float(str_openschafkopf_output.splitlines()[-1].split(" ")[1])*100) + "%")
+
+print("") # the table
+
+# for reference, also print this file's contents
+print("```")
+with open(__file__, "r") as file_this_script:
+    print(file_this_script.read())
+print("```")
+
+```
