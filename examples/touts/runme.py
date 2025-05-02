@@ -1,14 +1,14 @@
 import itertools
 import subprocess
 
-veccard_trumpf = "eo go ho so eu gu hu su ha hz hk h9".split(" ")
+veccard_trumpf = "eo go ho so eu gu hu su ha hz hk h9 h8 h7".split(" ")
 
 # open table
 print("") # according to https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables, a newline is necessary before tables
 print("Hand | Gewinnwahrscheinlichkeit")
 print("-- | -")
 
-for veccard_hand in itertools.combinations(veccard_trumpf, 6):
+for veccard_hand in itertools.combinations(veccard_trumpf, 8):
     if veccard_trumpf[0] not in veccard_hand: # inefficient but makes code simpler
         continue
     str_hand = " ".join(veccard_hand)
