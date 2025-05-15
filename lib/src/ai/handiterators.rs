@@ -41,7 +41,7 @@ impl THandIteratorCore for SHandIteratorCorePermutation {
     fn new(mapepin_count_unplayed_unknown: EnumMap<EPlayerIndex, usize>, veccard_unplayed_unknown: Vec<ECard>) -> Self {
         let mut vecepi = Vec::new();
         for epi in EPlayerIndex::values() {
-            vecepi.extend(std::iter::repeat(epi).take(mapepin_count_unplayed_unknown[epi]));
+            vecepi.extend(std::iter::repeat_n(epi, mapepin_count_unplayed_unknown[epi]));
         }
         assert_eq!(veccard_unplayed_unknown.len(), vecepi.len());
         assert!(vecepi.iter().is_sorted());
