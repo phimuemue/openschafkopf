@@ -189,7 +189,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
             .find_class("card-image")
             .map(|node_card| -> Result<_, _> {
                 let str_class = unwrap!(node_card.attr("class")); // "class" must be present
-                let res = (
+                (
                     string("card-image "),
                     choice!(string("by"), string("fn")),
                     string(" g"),
@@ -205,8 +205,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
                     // end of parser
                     .parse(str_class.as_str())
                     .map_err(|err| format_err!("Card parsing: {:?} on {}", err, str_class))
-                    .map(|((card, b_highlight), _str)| (card, b_highlight, node_card));
-                res
+                    .map(|((card, b_highlight), _str)| (card, b_highlight, node_card))
             })
             .collect::<Result<Vec<_>,_>>()
     }
