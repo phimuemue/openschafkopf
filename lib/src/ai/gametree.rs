@@ -216,7 +216,7 @@ impl TFilterAllowedCards for SFilterOnePerWinnerIndex<'_> {
             *veccard = mapepiveccard.into_raw().into_iter()
                 .filter_map(|veccard_epi| {
                     if_then_some!(!veccard_epi.is_empty(),
-                        veccard_epi[rand::rng().gen_range(0..veccard_epi.len())]
+                        veccard_epi[rand::rng().random_range(0..veccard_epi.len())]
                     )
                 })
                 .collect()

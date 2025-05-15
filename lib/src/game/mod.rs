@@ -129,7 +129,7 @@ pub fn random_hand(n_size: usize, veccard : &mut Vec<ECard>) -> SHandVector {
     assert!(veccard.len()>=n_size);
     let mut veccard_hand = SHandVector::new();
     for _i in 0..n_size {
-        let i_card = rand::rng().gen_range(0..veccard.len());
+        let i_card = rand::rng().random_range(0..veccard.len());
         veccard_hand.push(veccard.swap_remove(i_card));
     }
     assert_eq!(veccard_hand.len(), n_size);
