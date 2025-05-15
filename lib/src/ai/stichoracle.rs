@@ -192,13 +192,7 @@ impl SStichTrie {
                         },
                     }
                 }
-                (
-                    stichtrie,
-                    match unwrap!(oresb_stich_winner_is_primary) {
-                        Ok(b_stich_winner_is_primary) => Some(b_stich_winner_is_primary),
-                        Err(()) => None,
-                    },
-                )
+                (stichtrie, unwrap!(oresb_stich_winner_is_primary).ok())
             }
         }
         let stich_current = stichseq.current_stich().clone();
