@@ -512,7 +512,7 @@ impl<Ruleset, GameAnnouncement, DetermineRules> SGameGeneric<Ruleset, GameAnnoun
         match self.which_player_can_do_something() {
             None => bail!("Game already ended."),
             Some(gameaction) => {
-                if !gameaction.1.iter().any(|&epi| epi==epi_stoss) {
+                if !gameaction.1.contains(&epi_stoss) {
                     bail!(format!("Stoss not allowed for specified epi {:?}", gameaction.1));
                 }
                 self.expensifiers.vecstoss.push(SStoss{
