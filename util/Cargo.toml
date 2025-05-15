@@ -10,7 +10,6 @@ itertools = "0"
 # TODO: can we get rid of these?
 log = "0"
 fern = "0"
-dirs = "2"
 chrono = "0"
 combine = "3"
 plain_enum = "0"

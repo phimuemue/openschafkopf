@@ -29,7 +29,7 @@ pub fn init_logging(str_log_basename: &str) -> Result<(), VInitLoggingError> {
         })
         .level(if_dbg_else!({log::LevelFilter::Trace}{log::LevelFilter::Info}))
         .chain(fern::log_file({
-            dirs::home_dir()
+            std::env::home_dir()
                 .ok_or(VInitLoggingError::HomeDir)?
                 .join(format!("{str_log_basename}.log"))
         }).map_err(|_| VInitLoggingError::FernLogFile)?)
