@@ -47,7 +47,7 @@ impl SHand {
     fn finalize_and_assert_invariant(&mut self) {
         { // SHand is actually a set-like container, users must not rely on the ordering of cards.
             use rand::prelude::SliceRandom;
-            self.veccard.shuffle(&mut rand::thread_rng());
+            self.veccard.shuffle(&mut rand::rng());
         }
         { // invariants
             let mut setcard = EnumSet::new_empty();

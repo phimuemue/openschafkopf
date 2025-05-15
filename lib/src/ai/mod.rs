@@ -394,7 +394,7 @@ impl TFilterAllowedCards for SBranchingFactor {
     fn unregister_stich(&mut self, _unregisterstich: Self::UnregisterStich) {}
     fn filter_allowed_cards(&self, _stichseq: &SStichSequence, veccard: &mut SHandVector) {
         assert!(!veccard.is_empty());
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let n = rng.gen_range(self.intvln[ELoHi::Lo]..self.intvln[ELoHi::Hi]);
         while n<veccard.len() {
             veccard.swap_remove(rng.gen_range(0..veccard.len()));

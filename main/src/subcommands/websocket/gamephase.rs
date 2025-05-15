@@ -8,7 +8,7 @@ use openschafkopf_util::*;
 use serde::{Serialize, Deserialize};
 use std::mem::discriminant;
 use rand::{
-    thread_rng,
+    rng,
     prelude::*,
 };
 use itertools::Itertools;
@@ -344,7 +344,7 @@ impl VGamePhase {
                                     &game.stichseq,
                                     &game.ahand[epi_card],
                                 );
-                                *unwrap!(itrules.choose(&mut thread_rng()))
+                                *unwrap!(itrules.choose(&mut rng()))
                             })),
                         ),
                     )

@@ -21,7 +21,7 @@ impl THandIteratorCore for SHandIteratorCoreShuffle {
         }
     }
     fn next(&mut self, mut fn_add_card_to_hand: impl FnMut(EPlayerIndex, ECard)) -> bool {
-        self.veccard_unplayed_unknown.shuffle(&mut rand::thread_rng());
+        self.veccard_unplayed_unknown.shuffle(&mut rand::rng());
         let mut i = 0;
         for epi in EPlayerIndex::values() {
             for _ in 0..self.mapepin_count_unplayed_unknown[epi] {

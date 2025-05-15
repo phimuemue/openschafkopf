@@ -153,7 +153,7 @@ fn test_game_loop() {
         *,
         playercomputer::*,
     };
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     use itertools::iproduct;
     for ruleset in
         iproduct!(

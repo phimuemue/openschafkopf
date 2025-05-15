@@ -142,7 +142,7 @@ impl<
     fn begin_snapshot(&mut self, ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) {
         let str_item_id = format!("{}{}",
             stichseq.count_played_cards(),
-            rand::thread_rng().sample_iter(&rand::distr::Alphanumeric).take(16).join(""), // we simply assume no collisions here TODO uuid
+            rand::rng().sample_iter(&rand::distr::Alphanumeric).take(16).join(""), // we simply assume no collisions here TODO uuid
         );
         self.write_all(format!("<li><<input type=\"checkbox\" id=\"{}\" />>\n", str_item_id).as_bytes());
         self.write_all(format!("<label for=\"{}\">{} direct successors<table><tr>\n",
@@ -216,7 +216,7 @@ impl TFilterAllowedCards for SFilterOnePerWinnerIndex<'_> {
             *veccard = mapepiveccard.into_raw().into_iter()
                 .filter_map(|veccard_epi| {
                     if_then_some!(!veccard_epi.is_empty(),
-                        veccard_epi[rand::thread_rng().gen_range(0..veccard_epi.len())]
+                        veccard_epi[rand::rng().gen_range(0..veccard_epi.len())]
                     )
                 })
                 .collect()

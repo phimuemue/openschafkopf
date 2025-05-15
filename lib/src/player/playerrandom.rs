@@ -27,7 +27,7 @@ impl<FnCheckAskForCard: Fn(&SGameGeneric<SRuleSet, (), ()>)> TPlayer for SPlayer
                 game.rules.all_allowed_cards(
                     &game.stichseq,
                     &game.ahand[unwrap!(game.which_player_can_do_something()).0],
-                ).choose(&mut rand::thread_rng()).copied()
+                ).choose(&mut rand::rng()).copied()
             )
         ));
     }
@@ -43,7 +43,7 @@ impl<FnCheckAskForCard: Fn(&SGameGeneric<SRuleSet, (), ()>)> TPlayer for SPlayer
         txorules: mpsc::Sender<Option<&'rules SActivelyPlayableRules>>
     ) {
         unwrap!(txorules.send(
-            unwrap!(allowed_rules(vecrulegroup, hand).choose(&mut rand::thread_rng()))
+            unwrap!(allowed_rules(vecrulegroup, hand).choose(&mut rand::rng()))
         ));
     }
 
