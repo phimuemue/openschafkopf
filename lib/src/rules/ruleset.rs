@@ -33,7 +33,7 @@ impl SRuleGroup {
     pub fn allowed_rules<'retval, 'hand : 'retval, 'rules : 'retval>(&'rules self, hand: SFullHand<'hand>) -> impl Clone + Iterator<Item=Option<&'rules SActivelyPlayableRules>> + 'retval {
         self.vecorules.iter()
             .map(|orules| orules.as_ref())
-            .filter(move |orules| orules.map_or(true, |rules| rules.can_be_played(hand)))
+            .filter(move |orules| orules.is_none_or(|rules| rules.can_be_played(hand)))
     }
 }
 
