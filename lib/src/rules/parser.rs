@@ -15,9 +15,9 @@ pub fn parse_rule_description(
     use crate::rules::rulesramsch::*;
     use crate::rules::payoutdecider::*;
     let (str_rules, ostr_epi_active) = {
-        if let Some((str_rules, str_epi_active)) = str_rules_with_player.split(" von ").collect_tuple() {
+        if let Some([str_rules, str_epi_active]) = str_rules_with_player.split(" von ").collect_array() {
             (str_rules, Some(str_epi_active))
-        } else if let Some((str_epi_active, str_rules)) = str_rules_with_player.split(" spielt ").collect_tuple() {
+        } else if let Some([str_epi_active, str_rules]) = str_rules_with_player.split(" spielt ").collect_array() {
             (str_rules, Some(str_epi_active))
         } else {
             (str_rules_with_player, None)

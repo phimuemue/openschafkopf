@@ -452,9 +452,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         {
                             Some(Equivalent(n_until_stichseq_len, rules.equivalent_when_on_same_hand()))
                         } else {
-                            let (str_lo, str_hi) = str_branching
+                            let [str_lo, str_hi] = str_branching
                                 .split(',')
-                                .collect_tuple()
+                                .collect_array()
                                 .ok_or_else(|| format_err!("Could not parse branching"))?;
                             let (n_lo, n_hi) = (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?);
                             Some(Branching(n_lo, n_hi)) // TODO we should avoid branching in case n_lo is greater than all hand's fixed cards

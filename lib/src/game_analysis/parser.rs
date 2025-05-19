@@ -45,10 +45,9 @@ impl TRuleSet for SSauspielRuleset {
 pub struct SGameAnnouncementAnonymous;
 
 fn iter_to_arr<T>(it: impl IntoIterator<Item=T>) -> Result<[T; EPlayerIndex::SIZE], failure::Error> {
-    let (card0, card1, card2, card3) = it.into_iter()
-        .collect_tuple()
-        .ok_or_else(|| format_err!("Wrong number of elements"))?;
-    Ok([card0, card1, card2, card3])
+    it.into_iter()
+        .collect_array()
+        .ok_or_else(|| format_err!("Wrong number of elements"))
 }
 
 pub trait TSauspielHtmlDocument : Debug {
@@ -630,9 +629,9 @@ pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failur
     str_lines
         .lines()
         .map(|str_plain| {
-            let (str_rules, str_cards) = str_plain
+            let [str_rules, str_cards] = str_plain
                 .split(':')
-                .collect_tuple()
+                .collect_array()
                 .ok_or_else(|| format_err!("':' does not separate rules from stichs."))?;
             let str_cards = str_cards.trim();
             let rules = crate::rules::parser::parse_rule_description_simple(str_rules)?;
