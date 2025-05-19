@@ -17,7 +17,7 @@ wasm-bindgen = "0.2.100"
 openschafkopf_util = {path = "../util"}
 openschafkopf_lib = {path = "../lib"}
 plain_enum = "0"
-getrandom = { version = "0", features = ["js"] } # see https://docs.rs/getrandom/latest/getrandom/#webassembly-support
+getrandom = { version = "0", features = ["wasm_js"] } # see https://docs.rs/getrandom/latest/getrandom/#webassembly-support
 itertools = "0"
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
