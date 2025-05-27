@@ -251,14 +251,11 @@ impl TGamePhase for SDetermineRules {
             self.ruleset.avecrulegroup[epi].iter()
                 .filter_map(|rulegroup| rulegroup.with_higher_prio_than(
                     &self.currently_offered_prio().1,
-                    {
-                        assert_ne!(epi, self.tplepirules_current_bid.0);
-                        if epi < self.tplepirules_current_bid.0 {
-                            EBid::AtLeast
-                        } else {
-                            EBid::Higher
-                        }
-                    }
+                    if epi < verify_ne!(self.tplepirules_current_bid.0, epi) {
+                        EBid::AtLeast
+                    } else {
+                        EBid::Higher
+                    },
                 ))
                 .collect()
         ))
