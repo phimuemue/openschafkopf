@@ -307,8 +307,7 @@ impl SDetermineRules {
             bail!("announce_game not allowed for specified EPlayerIndex");
         }
         assert!(!self.vectplepirules_queued.is_empty());
-        let tpleplayerindexorules = unwrap!(self.vectplepirules_queued.pop());
-        assert_eq!(epi, tpleplayerindexorules.0);
+        verify_eq!(unwrap!(self.vectplepirules_queued.pop()).0, epi);
         Ok(())
     }
 }
