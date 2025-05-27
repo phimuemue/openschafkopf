@@ -294,8 +294,7 @@ impl SDetermineRules {
         }
         assert_ne!(epi, self.tplepirules_current_bid.0);
         assert!(!self.vectplepirules_queued.is_empty());
-        let epi_check = unwrap!(self.vectplepirules_queued.pop()).0;
-        assert_eq!(epi, epi_check);
+        verify_eq!(unwrap!(self.vectplepirules_queued.pop()).0, epi);
         let mut tplepirules_current_bid = (epi, rules);
         mem::swap(&mut self.tplepirules_current_bid, &mut tplepirules_current_bid);
         self.vectplepirules_queued.push(tplepirules_current_bid);
