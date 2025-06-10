@@ -59,6 +59,7 @@ enum VPlayerCmd {
 struct STimeoutCmd {
     gamephaseaction: VGamePhaseAction,
     aborthandle: future::AbortHandle,
+    epi: EPlayerIndex,
 }
 
 #[derive(Debug)]
@@ -72,13 +73,13 @@ struct SPeer {
 #[derive(Debug, Default)]
 struct SActivePeer {
     opeer: Option<SPeer>,
-    otimeoutcmd: Option<STimeoutCmd>,
 }
 
 #[derive(Default, Debug)]
 struct SPlayers {
     mapepiopeer: EnumMap<EPlayerIndex, SActivePeer>, // active
     vecpeer: Vec<SPeer>, // inactive
+    otimeoutcmd: Option<STimeoutCmd>, // TODO move to STable
 }
 #[derive(Debug)]
 struct STable{
@@ -107,7 +108,6 @@ impl STable {
                 assert!(opeer.opeer.is_none());
                 *opeer = SActivePeer{
                     opeer: Some(peer),
-                    otimeoutcmd: None,
                 }
             },
             _ => {
@@ -234,23 +234,6 @@ impl SPlayers {
         };
         for epi in EPlayerIndex::values() {
             let activepeer = &mut self.mapepiopeer[epi];
-            if let Some(timeoutaction) = &sendtoplayers.otimeoutaction {
-                if timeoutaction.epi==epi {
-                    let (timerfuture, aborthandle) = future::abortable(STimerFuture::new(
-                        /*n_secs*/2,
-                        table_mutex.clone(),
-                        verify_eq!(timeoutaction.epi, epi),
-                    ));
-                    assert!(activepeer.otimeoutcmd.as_ref().is_none_or(|timeoutcmd|
-                        timeoutcmd.gamephaseaction.matches_phase(&timeoutaction.gamephaseaction_timeout)
-                    )); // only one active timeout cmd
-                    activepeer.otimeoutcmd = Some(STimeoutCmd{
-                        gamephaseaction: timeoutaction.gamephaseaction_timeout.clone(/*TODO needed?*/),
-                        aborthandle,
-                    });
-                    task::spawn(timerfuture);
-                }
-            }
             if let Some(peer) = activepeer.opeer.as_mut() {
                 let mut veccard = sendtoplayers.mapepiveccard[epi].clone(); // TODO? avoid clone
                 if let Some(rules) = sendtoplayers.orules {
@@ -273,6 +256,22 @@ impl SPlayers {
         for peer in self.vecpeer.iter_mut() {
             communicate(None, vec![], /*msg*/sendtoplayers.msg_inactive.clone(/*TODO? needed?*/), peer);
         }
+        if let Some(timeoutaction) = &sendtoplayers.otimeoutaction {
+            let (timerfuture, aborthandle) = future::abortable(STimerFuture::new(
+                /*n_secs*/2,
+                table_mutex.clone(),
+                timeoutaction.epi,
+            ));
+            assert!(self.otimeoutcmd.as_ref().is_none_or(|timeoutcmd|
+                timeoutcmd.gamephaseaction.matches_phase(&timeoutaction.gamephaseaction_timeout)
+            ));
+            self.otimeoutcmd = Some(STimeoutCmd{
+                gamephaseaction: timeoutaction.gamephaseaction_timeout.clone(/*TODO needed?*/),
+                aborthandle,
+                epi: timeoutaction.epi,
+            });
+            task::spawn(timerfuture);
+        }
     }
 }
 
@@ -283,10 +282,11 @@ impl STable {
             if let (Some(epi), Some(gamephaseaction)) = (oepi, ogamephaseaction) {
                 self.ogamephase = match verify_or_println!(unwrap!(self.ogamephase.take()).action(epi, gamephaseaction.clone())) {
                     Ok(gamephase) => {
-                        if let Some(timeoutcmd) = &self.players.mapepiopeer[epi].otimeoutcmd {
-                            if gamephaseaction.matches_phase(&timeoutcmd.gamephaseaction) {
+                        if let Some(timeoutcmd) = &self.players.otimeoutcmd {
+                            if timeoutcmd.epi==epi && gamephaseaction.matches_phase(&timeoutcmd.gamephaseaction) {
                                 timeoutcmd.aborthandle.abort();
-                                self.players.mapepiopeer[epi].otimeoutcmd = None;
+                                assert_eq!(epi, timeoutcmd.epi);
+                                self.players.otimeoutcmd = None;
                             }
                         }
                         match gamephase {
@@ -379,8 +379,8 @@ impl Future for STimerFuture {
         if state.b_completed {
             let table_mutex = self.table.clone();
             let mut table = unwrap!(self.table.lock());
-            if let Some(timeoutcmd) = table.players.mapepiopeer[self.epi].otimeoutcmd.take() {
-                table.on_incoming_message(table_mutex, Some(self.epi), Some(timeoutcmd.gamephaseaction));
+            if let Some(timeoutcmd) = table.players.otimeoutcmd.take_if(|timeoutcmd| timeoutcmd.epi==self.epi) {
+                table.on_incoming_message(table_mutex, Some(verify_eq!(timeoutcmd.epi, self.epi)), Some(timeoutcmd.gamephaseaction));
             }
             Poll::Ready(())
         } else {
