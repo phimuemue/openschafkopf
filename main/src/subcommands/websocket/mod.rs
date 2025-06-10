@@ -70,15 +70,10 @@ struct SPeer {
     str_name: String,
 }
 
-#[derive(Debug, Default)]
-struct SActivePeer {
-    opeer: Option<SPeer>,
-}
-
 #[derive(Default, Debug)]
 struct SPlayers {
-    mapepiopeer: EnumMap<EPlayerIndex, SActivePeer>, // active
-    vecpeer: Vec<SPeer>, // inactive
+    mapepiopeer_active: EnumMap<EPlayerIndex, Option<SPeer>>,
+    vecpeer_inactive: Vec<SPeer>,
     otimeoutcmd: Option<STimeoutCmd>, // TODO move to STable
 }
 #[derive(Debug)]
@@ -100,24 +95,21 @@ impl STable {
     }
 
     fn insert(&mut self, self_mutex: Arc<Mutex<Self>>, peer: SPeer) {
-        match self.players.mapepiopeer
+        match self.players.mapepiopeer_active
             .iter_mut()
-            .find(|opeer| opeer.opeer.is_none())
+            .find(|opeer| opeer.is_none())
         {
             Some(opeer) if self.ogamephase.is_none() => {
-                assert!(opeer.opeer.is_none());
-                *opeer = SActivePeer{
-                    opeer: Some(peer),
-                }
+                verify!(opeer.replace(peer).is_none());
             },
             _ => {
-                self.players.vecpeer.push(peer);
+                self.players.vecpeer_inactive.push(peer);
             }
         }
         if self.ogamephase.is_none()
-            && self.players.mapepiopeer
+            && self.players.mapepiopeer_active
                 .iter()
-                .all(|opeer| opeer.opeer.is_some())
+                .all(|opeer| opeer.is_some())
         {
             self.ogamephase = Some(VGamePhase::DealCards(SDealCards::new(
                 self.ruleset.clone(),
@@ -133,11 +125,11 @@ impl STable {
 
     fn remove(&mut self, sockaddr: &SocketAddr) {
         for epi in EPlayerIndex::values() {
-            if self.players.mapepiopeer[epi].opeer.as_ref().map(|peer| peer.sockaddr)==Some(*sockaddr) {
-                self.players.mapepiopeer[epi].opeer = None;
+            if self.players.mapepiopeer_active[epi].as_ref().map(|peer| peer.sockaddr)==Some(*sockaddr) {
+                self.players.mapepiopeer_active[epi] = None;
             }
         }
-        self.players.vecpeer.retain(|peer| peer.sockaddr!=*sockaddr);
+        self.players.vecpeer_inactive.retain(|peer| peer.sockaddr!=*sockaddr);
     }
 }
 
@@ -147,9 +139,8 @@ impl SPlayers {
         table_mutex: Arc<Mutex<STable>>,
         sendtoplayers: &SSendToPlayers,
     ) {
-        let mapepistr_name = self.mapepiopeer.map(|activepeer| // TODO can we avoid temporary storage?
-            activepeer
-                .opeer
+        let mapepistr_name = self.mapepiopeer_active.map(|opeer_active| // TODO can we avoid temporary storage?
+            opeer_active
                 .as_ref()
                 .map(|peer| peer.str_name.clone())
                 .unwrap_or_else(||"<BOT>".to_string())
@@ -233,8 +224,8 @@ impl SPlayers {
             }
         };
         for epi in EPlayerIndex::values() {
-            let activepeer = &mut self.mapepiopeer[epi];
-            if let Some(peer) = activepeer.opeer.as_mut() {
+            let opeer_active = &mut self.mapepiopeer_active[epi];
+            if let Some(peer) = opeer_active.as_mut() {
                 let mut veccard = sendtoplayers.mapepiveccard[epi].clone(); // TODO? avoid clone
                 if let Some(rules) = sendtoplayers.orules {
                     rules.sort_cards(&mut veccard);
@@ -253,7 +244,7 @@ impl SPlayers {
                 );
             }
         }
-        for peer in self.vecpeer.iter_mut() {
+        for peer in self.vecpeer_inactive.iter_mut() {
             communicate(None, vec![], /*msg*/sendtoplayers.msg_inactive.clone(/*TODO? needed?*/), peer);
         }
         if let Some(timeoutaction) = &sendtoplayers.otimeoutaction {
@@ -292,7 +283,7 @@ impl STable {
                         match gamephase {
                             VGamePhase::GameResult(gameresult) => {
                                 gameresult.gameresult.clone(/*TODO avoid clone (and force apply_payout on construction?)*/).apply_payout(&mut self.n_stock, |epi, n_payout| {
-                                    if let Some(peer) = &mut self.players.mapepiopeer[epi].opeer {
+                                    if let Some(peer) = &mut self.players.mapepiopeer_active[epi] {
                                         peer.n_money += n_payout;
                                     }
                                 });
@@ -309,23 +300,23 @@ impl STable {
                                  * E2 E3 S0 S1 [S2 ... SN E0 E1]
                                  */
                                 // Players: E0 E1 E2 E3 [S0 S1 S2 ... SN] (S0 is longest waiting inactive player)
-                                let mapepiopeer = &mut self.players.mapepiopeer;
-                                mapepiopeer.as_raw_mut().rotate_left(1);
+                                let mapepiopeer_active = &mut self.players.mapepiopeer_active;
+                                mapepiopeer_active.as_raw_mut().rotate_left(1);
                                 // Players: E1 E2 E3 E0 [S0 S1 S2 ... SN]
-                                if let Some(peer_epi3) = mapepiopeer[EPlayerIndex::EPI3].opeer.take() {
-                                    self.players.vecpeer.push(peer_epi3);
+                                if let Some(peer_epi3) = mapepiopeer_active[EPlayerIndex::EPI3].take() {
+                                    self.players.vecpeer_inactive.push(peer_epi3);
                                 }
                                 // Players: E1 E2 E3 -- [S0 S1 S2 ... SN E0] (E1, E2, E3 may be None)
                                 // Fill up players one after another
-                                assert!(mapepiopeer[EPlayerIndex::EPI3].opeer.is_none());
+                                assert!(mapepiopeer_active[EPlayerIndex::EPI3].is_none());
                                 for epi in EPlayerIndex::values() {
-                                    if mapepiopeer[epi].opeer.is_none() && !self.players.vecpeer.is_empty() {
-                                        mapepiopeer[epi].opeer = Some(self.players.vecpeer.remove(0));
+                                    if mapepiopeer_active[epi].is_none() && !self.players.vecpeer_inactive.is_empty() {
+                                        mapepiopeer_active[epi] = Some(self.players.vecpeer_inactive.remove(0));
                                     }
                                 }
                                 // Players: E1 E2 E3 S0 [S1 S2 ... SN E0] (E1, E2, E3 may be None)
                                 // TODO should we clear timeouts?
-                                if_then_some!(mapepiopeer.iter().all(|activepeer| activepeer.opeer.is_some()),
+                                if_then_some!(mapepiopeer_active.iter().all(|opeer_active| opeer_active.is_some()),
                                     VGamePhase::DealCards(SDealCards::new(self.ruleset.clone(), self.n_stock))
                                 )
                             },
@@ -435,7 +426,7 @@ async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sock
             let str_msg = unwrap!(msg.to_text());
             let mut table = unwrap!(table.lock());
             let oepi = EPlayerIndex::values()
-                .find(|epi| table.players.mapepiopeer[*epi].opeer.as_ref().map(|peer| peer.sockaddr)==Some(sockaddr));
+                .find(|epi| table.players.mapepiopeer_active[*epi].as_ref().map(|peer| peer.sockaddr)==Some(sockaddr));
             println!(
                 "Received a message from {} ({:?}): {}",
                 sockaddr,
@@ -447,10 +438,10 @@ async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sock
                     VPlayerCmd::GamePhaseAction(gamephaseaction) => table.on_incoming_message(table_mutex.clone(), oepi, Some(gamephaseaction)),
                     VPlayerCmd::PlayerLogin{str_player_name} => {
                         if let Some(ref epi)=oepi {
-                            if let Some(ref mut peer) = table.players.mapepiopeer[*epi].opeer {
+                            if let Some(ref mut peer) = table.players.mapepiopeer_active[*epi] {
                                 peer.str_name = str_player_name;
                             }
-                        } else if let Some(ref mut peer) = table.players.vecpeer.iter_mut().find(|peer| peer.sockaddr==sockaddr) {
+                        } else if let Some(ref mut peer) = table.players.vecpeer_inactive.iter_mut().find(|peer| peer.sockaddr==sockaddr) {
                             peer.str_name = str_player_name;
                         }
                     },
