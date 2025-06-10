@@ -134,14 +134,14 @@ impl STable {
 }
 
 impl SPlayers {
-    fn communicate_to_players(&mut self, sendtoplayers: &SSendToPlayers) {
+    fn communicate_to_players(&self, sendtoplayers: &SSendToPlayers) {
         let mapepistr_name = self.mapepiopeer_active.map(|opeer_active| // TODO can we avoid temporary storage?
             opeer_active
                 .as_ref()
                 .map(|peer| peer.str_name.clone())
                 .unwrap_or_else(||"<BOT>".to_string())
         );
-        let communicate = |oepi: Option<EPlayerIndex>, veccard: Vec<ECard>, msg, peer: &mut SPeer| {
+        let communicate = |oepi: Option<EPlayerIndex>, veccard: Vec<ECard>, msg, peer: &SPeer| {
             let i_epi_relative = oepi.unwrap_or(EPlayerIndex::EPI0).to_usize();
             let playerindex_server_to_client = |epi: EPlayerIndex| {
                 epi.wrapping_add(EPlayerIndex::SIZE - i_epi_relative)
@@ -220,8 +220,7 @@ impl SPlayers {
             }
         };
         for epi in EPlayerIndex::values() {
-            let opeer_active = &mut self.mapepiopeer_active[epi];
-            if let Some(peer) = opeer_active.as_mut() {
+            if let Some(peer_active) = self.mapepiopeer_active[epi].as_ref() {
                 let mut veccard = sendtoplayers.mapepiveccard[epi].clone(); // TODO? avoid clone
                 if let Some(rules) = sendtoplayers.orules {
                     rules.sort_cards(&mut veccard);
@@ -236,11 +235,11 @@ impl SPlayers {
                         .as_ref()
                         .unwrap_or(&sendtoplayers.msg_inactive)
                         .clone(),
-                    peer
+                    peer_active
                 );
             }
         }
-        for peer in self.vecpeer_inactive.iter_mut() {
+        for peer in self.vecpeer_inactive.iter() {
             communicate(None, vec![], /*msg*/sendtoplayers.msg_inactive.clone(/*TODO? needed?*/), peer);
         }
     }
