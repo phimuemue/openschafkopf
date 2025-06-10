@@ -281,7 +281,7 @@ impl STable {
         println!("on_incoming_message({:?}, {:?})", oepi, ogamephaseaction);
         if self.ogamephase.is_some() {
             if let (Some(epi), Some(gamephaseaction)) = (oepi, ogamephaseaction) {
-                self.ogamephase = match unwrap!(self.ogamephase.take()).action(epi, gamephaseaction.clone()) {
+                self.ogamephase = match verify_or_println!(unwrap!(self.ogamephase.take()).action(epi, gamephaseaction.clone())) {
                     Ok(gamephase) => {
                         if let Some(timeoutcmd) = &self.players.mapepiopeer[epi].otimeoutcmd {
                             if gamephaseaction.matches_phase(&timeoutcmd.gamephaseaction) {
@@ -334,10 +334,7 @@ impl STable {
                             },
                         }
                     },
-                    Err(gamephase) => {
-                        println!("Error:\n{:?}\n{:?}", gamephase, gamephaseaction);
-                        Some(gamephase)
-                    },
+                    Err(gamephase) => Some(gamephase),
                 }
             }
             if let Some(ref gamephase) = self.ogamephase {
@@ -414,12 +411,8 @@ impl STimerFuture {
 
 async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sockaddr: SocketAddr) {
     println!("Incoming TCP connection from: {}", sockaddr);
-    let wsstream = match accept_async(tcpstream).await {
-        Ok(wsstream) => wsstream,
-        Err(e) => {
-            println!("Error in accepting tcpstream: {}", e);
-            return;
-        }
+    let Ok(wsstream) = verify_or_println!(accept_async(tcpstream).await) else {
+        return;
     };
     println!("WebSocket connection established: {}", sockaddr);
     // Insert the write part of this peer to the peer map.
@@ -449,19 +442,19 @@ async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sock
                 oepi,
                 str_msg,
             );
-            use VPlayerCmd::*;
-            match serde_json::from_str(str_msg) {
-                Ok(GamePhaseAction(gamephaseaction)) => table.on_incoming_message(table_mutex.clone(), oepi, Some(gamephaseaction)),
-                Ok(PlayerLogin{str_player_name}) => {
-                    if let Some(ref epi)=oepi {
-                        if let Some(ref mut peer) = table.players.mapepiopeer[*epi].opeer {
+            if let Ok(playercmd) = verify_or_println!(serde_json::from_str(str_msg)) {
+                match playercmd {
+                    VPlayerCmd::GamePhaseAction(gamephaseaction) => table.on_incoming_message(table_mutex.clone(), oepi, Some(gamephaseaction)),
+                    VPlayerCmd::PlayerLogin{str_player_name} => {
+                        if let Some(ref epi)=oepi {
+                            if let Some(ref mut peer) = table.players.mapepiopeer[*epi].opeer {
+                                peer.str_name = str_player_name;
+                            }
+                        } else if let Some(ref mut peer) = table.players.vecpeer.iter_mut().find(|peer| peer.sockaddr==sockaddr) {
                             peer.str_name = str_player_name;
                         }
-                    } else if let Some(ref mut peer) = table.players.vecpeer.iter_mut().find(|peer| peer.sockaddr==sockaddr) {
-                        peer.str_name = str_player_name;
-                    }
-                },
-                Err(e) => println!("Error: {}", e),
+                    },
+                }
             }
             future::ok(())
         });

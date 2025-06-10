@@ -83,16 +83,11 @@ pub fn glob_files_or_read_stdin<'str_glob>(
     for str_glob in itstr_glob {
         b_from_file = true;
         for globresult in glob::glob(str_glob)? {
-            match globresult {
-                Ok(path) => {
-                    let str_input = String::from_utf8_lossy(&via_out_param_result(|vecu8|
-                        std::fs::File::open(&path)?.read_to_end(vecu8)
-                    )?.0).to_string();
-                    fn_ok(Some(path), str_input);
-                },
-                Err(e) => {
-                    eprintln!("Error: {:?}. Trying to continue.", e);
-                },
+            if let Ok(path) = verify_or_println!(globresult) {
+                let str_input = String::from_utf8_lossy(&via_out_param_result(|vecu8|
+                    std::fs::File::open(&path)?.read_to_end(vecu8)
+                )?.0).to_string();
+                fn_ok(Some(path), str_input);
             }
         }
     }
