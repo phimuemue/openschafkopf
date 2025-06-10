@@ -134,11 +134,7 @@ impl STable {
 }
 
 impl SPlayers {
-    fn for_each(
-        &mut self,
-        table_mutex: Arc<Mutex<STable>>,
-        sendtoplayers: &SSendToPlayers,
-    ) {
+    fn communicate_to_players(&mut self, sendtoplayers: &SSendToPlayers) {
         let mapepistr_name = self.mapepiopeer_active.map(|opeer_active| // TODO can we avoid temporary storage?
             opeer_active
                 .as_ref()
@@ -247,22 +243,6 @@ impl SPlayers {
         for peer in self.vecpeer_inactive.iter_mut() {
             communicate(None, vec![], /*msg*/sendtoplayers.msg_inactive.clone(/*TODO? needed?*/), peer);
         }
-        if let Some(timeoutaction) = &sendtoplayers.otimeoutaction {
-            let (timerfuture, aborthandle) = future::abortable(STimerFuture::new(
-                /*n_secs*/2,
-                table_mutex.clone(),
-                timeoutaction.epi,
-            ));
-            assert!(self.otimeoutcmd.as_ref().is_none_or(|timeoutcmd|
-                timeoutcmd.gamephaseaction.matches_phase(&timeoutaction.gamephaseaction_timeout)
-            ));
-            self.otimeoutcmd = Some(STimeoutCmd{
-                gamephaseaction: timeoutaction.gamephaseaction_timeout.clone(/*TODO needed?*/),
-                aborthandle,
-                epi: timeoutaction.epi,
-            });
-            task::spawn(timerfuture);
-        }
     }
 }
 
@@ -330,12 +310,27 @@ impl STable {
             }
             if let Some(ref gamephase) = self.ogamephase {
                 if let Some(sendtoplayers) = verify!(gamephase.which_player_can_do_something()) {
-                    self.players.for_each(self_mutex, &sendtoplayers);
+                    self.players.communicate_to_players(&sendtoplayers);
+                    if let Some(timeoutaction) = &sendtoplayers.otimeoutaction {
+                        let (timerfuture, aborthandle) = future::abortable(STimerFuture::new(
+                            /*n_secs*/2,
+                            self_mutex.clone(),
+                            timeoutaction.epi,
+                        ));
+                        assert!(self.players.otimeoutcmd.as_ref().is_none_or(|timeoutcmd|
+                            timeoutcmd.gamephaseaction.matches_phase(&timeoutaction.gamephaseaction_timeout)
+                        ));
+                        self.players.otimeoutcmd = Some(STimeoutCmd{
+                            gamephaseaction: timeoutaction.gamephaseaction_timeout.clone(/*TODO needed?*/),
+                            aborthandle,
+                            epi: timeoutaction.epi,
+                        });
+                        task::spawn(timerfuture);
+                    }
                 }
             }
         } else {
-            self.players.for_each(
-                self_mutex,
+            self.players.communicate_to_players(
                 &SSendToPlayers::new(
                     /*slcstich*/&[],
                     /*orules*/None,
