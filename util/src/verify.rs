@@ -76,6 +76,18 @@ macro_rules! verify {($e: expr) => {{
     verify_internal($e, stringify!($e)) // TODORUST why can we not make verify_internal a closure?
 }}}
 
+pub fn verify_or_println_internal<E: TVerifiableByVerifyMacro>(e: E, str_e: &str) -> E {
+    if let Err(err) = e.is_verify_true() {
+        println!("verify_or_println!({}): {:?}", str_e, err);
+    }
+    e
+}
+
+#[macro_export]
+macro_rules! verify_or_println {($e: expr) => {{
+    verify_or_println_internal($e, stringify!($e))
+}}}
+
 #[macro_export]
 macro_rules! debug_verify{($e: expr) => {
     if_dbg_else!({verify!($e)}{$e})
