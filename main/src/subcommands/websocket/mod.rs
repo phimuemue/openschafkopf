@@ -74,12 +74,12 @@ struct SPeer {
 struct SPlayers {
     mapepiopeer_active: EnumMap<EPlayerIndex, Option<SPeer>>,
     vecpeer_inactive: Vec<SPeer>,
-    otimeoutcmd: Option<STimeoutCmd>, // TODO move to STable
 }
 #[derive(Debug)]
 struct STable{
     players: SPlayers,
     ogamephase: Option<VGamePhase>,
+    otimeoutcmd: Option<STimeoutCmd>, // TODO? tie to ogamephase?
     n_stock: isize, // TODO would that be better within VGamePhase?
     ruleset: SRuleSet,
 }
@@ -89,6 +89,7 @@ impl STable {
         Self {
             players: SPlayers::default(),
             ogamephase: None,
+            otimeoutcmd: None,
             n_stock: 0,
             ruleset,
         }
@@ -252,11 +253,11 @@ impl STable {
             if let (Some(epi), Some(gamephaseaction)) = (oepi, ogamephaseaction) {
                 self.ogamephase = match verify_or_println!(unwrap!(self.ogamephase.take()).action(epi, gamephaseaction.clone())) {
                     Ok(gamephase) => {
-                        if let Some(timeoutcmd) = &self.players.otimeoutcmd {
+                        if let Some(timeoutcmd) = &self.otimeoutcmd {
                             if timeoutcmd.epi==epi && gamephaseaction.matches_phase(&timeoutcmd.gamephaseaction) {
                                 timeoutcmd.aborthandle.abort();
                                 assert_eq!(epi, timeoutcmd.epi);
-                                self.players.otimeoutcmd = None;
+                                self.otimeoutcmd = None;
                             }
                         }
                         match gamephase {
@@ -316,10 +317,10 @@ impl STable {
                             self_mutex.clone(),
                             timeoutaction.epi,
                         ));
-                        assert!(self.players.otimeoutcmd.as_ref().is_none_or(|timeoutcmd|
+                        assert!(self.otimeoutcmd.as_ref().is_none_or(|timeoutcmd|
                             timeoutcmd.gamephaseaction.matches_phase(&timeoutaction.gamephaseaction_timeout)
                         ));
-                        self.players.otimeoutcmd = Some(STimeoutCmd{
+                        self.otimeoutcmd = Some(STimeoutCmd{
                             gamephaseaction: timeoutaction.gamephaseaction_timeout.clone(/*TODO needed?*/),
                             aborthandle,
                             epi: timeoutaction.epi,
@@ -364,7 +365,7 @@ impl Future for STimerFuture {
         if state.b_completed {
             let table_mutex = self.table.clone();
             let mut table = unwrap!(self.table.lock());
-            if let Some(timeoutcmd) = table.players.otimeoutcmd.take_if(|timeoutcmd| timeoutcmd.epi==self.epi) {
+            if let Some(timeoutcmd) = table.otimeoutcmd.take_if(|timeoutcmd| timeoutcmd.epi==self.epi) {
                 table.on_incoming_message(table_mutex, Some(verify_eq!(timeoutcmd.epi, self.epi)), Some(timeoutcmd.gamephaseaction));
             }
             Poll::Ready(())
