@@ -438,7 +438,7 @@ impl VGamePhase {
         };
         if b_change {
             use VGamePhaseGeneric::*;
-            self = loop {
+            loop {
                 match self {
                     DealCards(dealcards) => match dealcards.finish() {
                         Ok(gamepreparations) => self = GamePreparations(gamepreparations),
@@ -465,10 +465,9 @@ impl VGamePhase {
                         },
                         Err(gameresult) => return Ok(GameResult(gameresult)),
                     },
-                    Accepted(accepted) => break Accepted(accepted),
+                    Accepted(accepted) => return Ok(Accepted(accepted)),
                 };
             };
-            Ok(self)
         } else {
             Err(self)
         }
