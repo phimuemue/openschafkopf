@@ -31,7 +31,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
     std::thread::spawn(move || {
         while let Ok(str_openschafkopf_out) = recvstr.recv() {
             let str_json_out = json!({ "strOpenschafkopfOut": str_openschafkopf_out }).to_string();
-            info!("Trying to send \"{}\"", str_json_out);
+            info!("Trying to send \"{str_json_out}\"");
             unwrap!(std::io::stdout().write_all(
                 &via_out_param(|abyte_buffer_msg_len: &mut [u8; 4]| {
                     byteorder::NativeEndian::write_u32(
@@ -71,14 +71,14 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                         ))
                         .0
                     ));
-                    info!("Received \"{}\"", str_json_in);
+                    info!("Received \"{str_json_in}\"");
                     str_json_in
                 }
-                _ => panic!("Unexpected value for n_bytes_read: {}", n_bytes_read),
+                _ => panic!("Unexpected value for n_bytes_read: {n_bytes_read}"),
             }
         };
         fn internal_communicate_error(sendstr: &std::sync::mpsc::Sender<String>, str_error_msg: &str, str_json_in: &str) {
-            warn!("Communicating error: {}", str_error_msg);
+            warn!("Communicating error: {str_error_msg}");
             unwrap!(sendstr.send(
                 json!({
                     "Err": {
@@ -125,7 +125,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                     {
                         Ok((n_epi_active, _str_announcement)) => n_epi_active,
                         Err(e) => {
-                            communicate_error(&format!("No single announcement: {:?}", e));
+                            communicate_error(&format!("No single announcement: {e:?}"));
                             continue;
                         }
                     }
@@ -150,7 +150,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                             "Solo"|"Farbwenz" => format!("{}-{}", extract_farbe!(), str_selected_game_name),
                             "Wenz"|"Geier" => str_selected_game_name.to_owned(),
                             _ => {
-                                communicate_error(&format!("Unknown game type: {}", str_selected_game_name));
+                                communicate_error(&format!("Unknown game type: {str_selected_game_name}"));
                                 continue;
                             },
                         }
@@ -171,7 +171,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                         N_AHAND_POOL
                     )
                 } else {
-                    format!("{}", N_AHAND_POOL)
+                    format!("{N_AHAND_POOL}")
                 };
                 let str_branching = if n_hand_cards<=4 {
                     ""

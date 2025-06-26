@@ -260,10 +260,10 @@ pub fn with_common_args<FnWithArgs>(
                 if veccard_hand_active.len()==stichseq.kurzlang().cards_per_player() {
                     if !rules.can_be_played(SFullHand::new(&veccard_hand_active, stichseq.kurzlang())) {
                         if b_single_rules {
-                            bail!("Rules {} cannot be played given these cards.", rules);
+                            bail!("Rules {rules} cannot be played given these cards.");
                         } else {
                             if b_verbose {
-                                println!("Rules {} cannot be played given these cards.", rules);
+                                println!("Rules {rules} cannot be played given these cards.");
                             }
                             continue;
                         }
@@ -299,7 +299,7 @@ pub fn with_common_args<FnWithArgs>(
                 let mut n_ahand_seen = 0;
                 let mut n_ahand_valid = 0;
                 if b_verbose || !b_single_rules {
-                    println!("Rules: {}", rules);
+                    println!("Rules: {rules}");
                 }
                 if b_verbose
                     || 1</*b_single_itahand*/vectplvecocardstr_ahand.len()

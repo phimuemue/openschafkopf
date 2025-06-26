@@ -45,10 +45,10 @@ fn print_payoutstatstable<T: std::fmt::Display, MinMaxStrategiesHK: TMinMaxStrat
                     EMinMaxStrategy::Max => "optimally for you",
                 },
             );
-            println!("  * In the worst case (over all generated card distributions), you can enforce a payout of {}", str_payout_min);
-            println!("  * On average (over all generated card distributions), you can enforce a payout of {}", str_payout_avg);
-            println!("  * In the best case (over all generated card distributions), you can enforce a payout of {}", str_payout_max);
-            println!("  * {} shows the number of games lost[/zero-payout]/won (percentage not lost)", str_stats);
+            println!("  * In the worst case (over all generated card distributions), you can enforce a payout of {str_payout_min}");
+            println!("  * On average (over all generated card distributions), you can enforce a payout of {str_payout_avg}");
+            println!("  * In the best case (over all generated card distributions), you can enforce a payout of {str_payout_max}");
+            println!("  * {str_stats} shows the number of games lost[/zero-payout]/won (percentage not lost)");
         }
         println!();
     }
@@ -84,7 +84,7 @@ fn print_payoutstatstable<T: std::fmt::Display, MinMaxStrategiesHK: TMinMaxStrat
                         set_color(Color::Green);
                     }
                 }
-                print!("{:>width$}", str_num, width=n_width);
+                print!("{str_num:>n_width$}");
                 unwrap!(stdout.reset());
             }
             print!("   ");
@@ -219,7 +219,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     Some(tplrulesfn_points_as_payout)
                 } else {
                     if b_verbose { // TODO? dispatch statically
-                        println!("Rules {} do not support point based variant.", rules);
+                        println!("Rules {rules} do not support point based variant.");
                     }
                     None
                 }

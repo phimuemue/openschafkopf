@@ -54,7 +54,7 @@ fn print_card_with_farbe(ncwin: ncurses::WINDOW, card: ECard) {
     ncurses::init_pair(i_color_tpl, tplcolorcolor.0, tplcolorcolor.1);
     let nccolorpair = ncurses::COLOR_PAIR(i_color_tpl);
     ncurses::wattron(ncwin, nccolorpair);
-    wprint(ncwin, &format!("{}", card));
+    wprint(ncwin, &format!("{card}"));
     ncurses::wattroff(ncwin, nccolorpair);
 }
 
@@ -162,9 +162,9 @@ pub fn print_game_announcements(epi_myself: EPlayerIndex, gameannouncements: &SG
     for (epi, orules) in gameannouncements.iter() {
         do_in_window(&VSkUiWindow::PlayerInfo(epi.to_relativeplayerposition(epi_myself)), |ncwin| {
             if let Some(ref rules) = *orules {
-                wprint(ncwin, &format!("{}: {}", epi, rules));
+                wprint(ncwin, &format!("{epi}: {rules}"));
             } else {
-                wprint(ncwin, &format!("{}: Nothing", epi));
+                wprint(ncwin, &format!("{epi}: Nothing"));
             }
         });
     }
@@ -172,15 +172,15 @@ pub fn print_game_announcements(epi_myself: EPlayerIndex, gameannouncements: &SG
 
 pub fn print_game_info(rules: &SRules, expensifiers: &SExpensifiers) {
     do_in_window(&VSkUiWindow::GameInfo, |ncwin| {
-        wprint(ncwin, &format!("{}", rules));
+        wprint(ncwin, &format!("{rules}"));
         if let Some(epi) = rules.playerindex() {
-            wprint(ncwin, &format!(", played by {}", epi));
+            wprint(ncwin, &format!(", played by {epi}"));
         }
         let print_special = |str_special, vecepi: Vec<EPlayerIndex>| {
             if !vecepi.is_empty() {
                 wprint(ncwin, str_special);
                 for epi in vecepi {
-                    wprint(ncwin, &format!("{},", epi));
+                    wprint(ncwin, &format!("{epi},"));
                 }
             }
         };
@@ -204,7 +204,7 @@ pub fn account_balance_string(an: &EnumMap<EPlayerIndex, isize>, n_stock: isize)
     EPlayerIndex::values()
         .map(|epi| format!("{}: {} | ", epi, an[epi]))
         .join("")
-        + type_inference!(&str, &format!("Stock: {}", n_stock))
+        + type_inference!(&str, &format!("Stock: {n_stock}"))
 }
 
 pub fn print_account_balance(an: &EnumMap<EPlayerIndex, isize>, n_stock: isize) {

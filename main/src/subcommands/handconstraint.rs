@@ -81,7 +81,7 @@ impl SConstraint {
                     }
                 },
                 Err(e) => {
-                    eprintln!("Error evaluating script ({:?}).", e);
+                    eprintln!("Error evaluating script ({e:?}).");
                     false
                 }
             }
@@ -214,7 +214,7 @@ impl std::str::FromStr for SConstraint {
                     card_hand==card_for_fn
                 });
             }
-            engine.register_fn(format!("who_has_{}", str_card_lower), move |ctx: SContext| -> SRhaiEPlayerIndex {
+            engine.register_fn(format!("who_has_{str_card_lower}"), move |ctx: SContext| -> SRhaiEPlayerIndex {
                 ctx.who_has_card(card_for_fn)
             });
         }
@@ -239,7 +239,7 @@ impl std::str::FromStr for SConstraint {
         engine.register_static_module("farbe", module_farbe.into());
         engine.register_static_module("schlag", module_schlag.into());
         engine.register_static_module("trumpforfarbe", module_trumpforfarbe.into());
-        engine.compile(format!("fn inspect(ctx) {{ {} }}", str_in))
+        engine.compile(format!("fn inspect(ctx) {{ {str_in} }}"))
             .or_else(|_err|
                 str_in.parse()
                     .map_err(|err| format_err!("Cannot parse path: {:?}", err))

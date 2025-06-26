@@ -189,13 +189,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             write_columns(
                                 &mut file,
                                 oepi_active.map(|_epi| "epi_active"),
-                                /*fn_card_in_hand*/|i_card, _card| format!("card_hand_{}", i_card),
-                                /*fn_card_allowed*/|i_card, _card| format!("card_allowed_{}", i_card),
+                                /*fn_card_in_hand*/|i_card, _card| format!("card_hand_{i_card}"),
+                                /*fn_card_allowed*/|i_card, _card| format!("card_allowed_{i_card}"),
                                 &game.stichseq,
-                                /*fn_card_stichseq*/|i_card, _ocard| format!("card_stichseq_{}", i_card),
-                                /*fn_epi_stichseq*/|i_card, _oepi| format!("epi_stichseq_{}", i_card),
-                                /*fn_points_for_player*/|epi| format!("n_points_{}", epi),
-                                /*fn_stichs_for_player*/|epi| format!("n_stichs_{}", epi),
+                                /*fn_card_stichseq*/|i_card, _ocard| format!("card_stichseq_{i_card}"),
+                                /*fn_epi_stichseq*/|i_card, _oepi| format!("epi_stichseq_{i_card}"),
+                                /*fn_points_for_player*/|epi| format!("n_points_{epi}"),
+                                /*fn_stichs_for_player*/|epi| format!("n_stichs_{epi}"),
                                 /*fn_result_column*/|epi, card| format!("{}_at_epi{}", card, epi.to_usize()),
                             );
                             file
@@ -245,16 +245,16 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     let path_gameresult = path_raw_parse.join(super::gameresult_to_dir(gameresult));
                     unwrap!(std::fs::create_dir_all(&path_gameresult));
                     unwrap!(unwrap!(std::fs::File::create(
-                        path_gameresult.join(format!("{}.html", i_input))
+                        path_gameresult.join(format!("{i_input}.html"))
                     )).write_all(str_input.as_bytes()));
                 }
             } else {
-                eprintln!("Nothing found in {:?}: Trying to continue.", opath);
+                eprintln!("Nothing found in {opath:?}: Trying to continue.");
                 if let Some(ref path_raw_parse) = opath_raw_parse {
                     let path_err = path_raw_parse.join("error");
                     unwrap!(std::fs::create_dir_all(&path_err));
                     unwrap!(unwrap!(std::fs::File::create(
-                        path_err.join(format!("{}.html", i_input))
+                        path_err.join(format!("{i_input}.html"))
                     )).write_all(str_input.as_bytes()));
                 }
             }

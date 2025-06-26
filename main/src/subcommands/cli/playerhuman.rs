@@ -91,7 +91,7 @@ impl TPlayer for SPlayerHuman {
                 |card| {veccard_allowed.iter().any(|card_allowed| card_allowed==card)},
                 |ncwin, i_card_chosen, ocard_suggest| {
                     if let Some(card) = *ocard_suggest {
-                        skui::wprintln(ncwin, &format!("AI: {}", card));
+                        skui::wprintln(ncwin, &format!("AI: {card}"));
                     }
                     skui::print_hand(&veccard, Some(i_card_chosen));
                     skui::print_game_info(&game.rules, &game.expensifiers);
@@ -188,7 +188,7 @@ impl TPlayer for SPlayerHuman {
                             1 => "Re".to_string(),
                             2 => "Sup".to_string(),
                             3 => "Hirsch".to_string(),
-                            i_stoss => format!("Stoss #{}", i_stoss)
+                            i_stoss => format!("Stoss #{i_stoss}")
                         } },
                     ));
                 }

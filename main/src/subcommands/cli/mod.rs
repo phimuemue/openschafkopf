@@ -41,7 +41,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     for attable in aattable.iter() {
         println!("{} {}", attable.player.name(), attable.n_money);
     }
-    println!("Stock: {}", n_stock);
+    println!("Stock: {n_stock}");
     Ok(())
 }
 

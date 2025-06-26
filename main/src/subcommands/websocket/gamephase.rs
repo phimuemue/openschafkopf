@@ -220,7 +220,7 @@ impl VGamePhase {
                                 }
                             )
                         },
-                        /*msg_inactive*/VMessage::Info(format!("Asking {:?} for doubling", epi_doubling)),
+                        /*msg_inactive*/VMessage::Info(format!("Asking {epi_doubling:?} for doubling")),
                         STimeoutAction::new(
                             epi_doubling,
                             VGamePhaseAction::DealCards(/*b_doubling*/false),
@@ -284,7 +284,7 @@ impl VGamePhase {
                                 }
                             )
                         },
-                        /*msg_inactive*/VMessage::Info(format!("Asking {:?} for game", epi_announce_game)),
+                        /*msg_inactive*/VMessage::Info(format!("Asking {epi_announce_game:?} for game")),
                         STimeoutAction::new(
                             epi_announce_game,
                             gamephaseaction_rules_default,
@@ -316,7 +316,7 @@ impl VGamePhase {
                                 }
                             )
                         },
-                        /*msg_inactive*/VMessage::Info(format!("Re-Asking {:?} for game", epi_determine)),
+                        /*msg_inactive*/VMessage::Info(format!("Re-Asking {epi_determine:?} for game")),
                         STimeoutAction::new(
                             epi_determine,
                             gamephaseaction_rules_default,
@@ -336,7 +336,7 @@ impl VGamePhase {
                                 }
                             )
                         },
-                        /*msg_inactive*/VMessage::Info(format!("Asking {:?} for card", epi_card)),
+                        /*msg_inactive*/VMessage::Info(format!("Asking {epi_card:?} for card")),
                         STimeoutAction::new(
                             epi_card,
                             VGamePhaseAction::Game(VGameAction::Zugeben({

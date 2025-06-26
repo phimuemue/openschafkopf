@@ -46,7 +46,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 Some(path) => path.to_string_lossy(),
                 None => Cow::Borrowed("stdin"), // hope that path is not "stdin"
             };
-            println!("Opened {}", str_path);
+            println!("Opened {str_path}");
             let mut b_found = false;
             let mut push_game = |str_description: String, resgameresult: Result<_, _>| {
                 b_found = b_found || resgameresult.is_ok();
@@ -81,7 +81,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 {
                     b_found_plain = true;
                     push_game(
-                        format!("{}_{}", str_path, i),
+                        format!("{str_path}_{i}"),
                         resgame.and_then(|game| game.finish().map_err(|_game| format_err!("Could not game.finish")))
                     )
                 }
@@ -90,7 +90,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 }
             }
             if !b_found {
-                eprintln!("Nothing found in {}: Trying to continue.", str_path);
+                eprintln!("Nothing found in {str_path}: Trying to continue.");
             }
         },
     )?;
@@ -248,7 +248,6 @@ fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String
             <body>
                 <h1>Schafkopf-Analyse: {str_date}</h1>
                 "###,
-        str_date = str_date,
     )));
     *unwrap!(str_index_html.lock()) += "<table>";
     let n_games_total = vecgamewithdesc.len();
@@ -326,7 +325,7 @@ fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String
                                 if 0==n_secs {
                                     "&lt;1s".to_owned()
                                 } else {
-                                    format!("{}s", n_secs)
+                                    format!("{n_secs}s")
                                 }
                             },
                         ));
@@ -346,7 +345,7 @@ fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String
     let mut str_index_html = unwrap!(unwrap!(Arc::try_unwrap(str_index_html)).into_inner());
     str_index_html += "</table>";
     str_index_html += "</body></html>";
-    write_html(path_analysis.join(format!("{}.html", str_date)), &str_index_html)
+    write_html(path_analysis.join(format!("{str_date}.html")), &str_index_html)
 }
 
 #[derive(Clone, Debug)]
@@ -529,7 +528,7 @@ impl SGameAnalysis {
                 let stichseq = &analysispercard.stichseq;
                 let ahand = &analysispercard.ahand;
                 let str_stich_caption = stich_caption(stichseq).0;
-                let mut str_per_card = format!(r"<h3>{}</h3>", str_stich_caption);
+                let mut str_per_card = format!(r"<h3>{str_stich_caption}</h3>");
                 unwrap!(write!(
                     str_per_card,
                     "<table><tr>{}{}</tr></table>",

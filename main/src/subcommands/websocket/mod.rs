@@ -210,7 +210,7 @@ impl SPlayers {
                     ).into_raw(),
                     sendtoplayers.orules.map(|rules| (
                         playerindex_server_to_client(rules.playerindex().unwrap_or(EPlayerIndex::EPI3)), // geber designates rules if no active
-                        format!("{}", rules),
+                        format!("{rules}"),
                     )),
                     sendtoplayers.otimeoutaction
                         .as_ref()
@@ -248,7 +248,7 @@ impl SPlayers {
 
 impl STable {
     fn on_incoming_message(&mut self, /*TODO avoid this parameter*/self_mutex: Arc<Mutex<Self>>, oepi: Option<EPlayerIndex>, ogamephaseaction: Option<VGamePhaseAction>) {
-        println!("on_incoming_message({:?}, {:?})", oepi, ogamephaseaction);
+        println!("on_incoming_message({oepi:?}, {ogamephaseaction:?})");
         if self.ogamephase.is_some() {
             if let (Some(epi), Some(gamephaseaction)) = (oepi, ogamephaseaction) {
                 self.ogamephase = match verify_or_println!(unwrap!(self.ogamephase.take()).action(epi, gamephaseaction.clone())) {
@@ -396,11 +396,11 @@ impl STimerFuture {
 }
 
 async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sockaddr: SocketAddr) {
-    println!("Incoming TCP connection from: {}", sockaddr);
+    println!("Incoming TCP connection from: {sockaddr}");
     let Ok(wsstream) = verify_or_println!(accept_async(tcpstream).await) else {
         return;
     };
-    println!("WebSocket connection established: {}", sockaddr);
+    println!("WebSocket connection established: {sockaddr}");
     // Insert the write part of this peer to the peer map.
     let (txmsg, rxmsg) = unbounded();
     let table_mutex = table.clone();
@@ -422,12 +422,7 @@ async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sock
             let mut table = unwrap!(table.lock());
             let oepi = EPlayerIndex::values()
                 .find(|epi| table.players.mapepiopeer_active[*epi].as_ref().map(|peer| peer.sockaddr)==Some(sockaddr));
-            println!(
-                "Received a message from {} ({:?}): {}",
-                sockaddr,
-                oepi,
-                str_msg,
-            );
+            println!("Received a message from {sockaddr} ({oepi:?}): {str_msg}");
             if let Ok(playercmd) = verify_or_println!(serde_json::from_str(str_msg)) {
                 match playercmd {
                     VPlayerCmd::GamePhaseAction(gamephaseaction) => table.on_incoming_message(table_mutex.clone(), oepi, Some(gamephaseaction)),
@@ -455,7 +450,7 @@ async fn internal_run(ruleset: SRuleSet) -> Result<(), Error> {
     let table = Arc::new(Mutex::new(STable::new(ruleset)));
     // Create the event loop and TCP listener we'll accept connections on.
     let listener = unwrap!(TcpListener::bind(&str_addr).await);
-    println!("Listening on: {}", str_addr);
+    println!("Listening on: {str_addr}");
     // Let's spawn the handling of each connection in a separate task.
     while let Ok((tcpstream, sockaddr)) = listener.accept().await {
         task::spawn(handle_connection(table.clone(), tcpstream, sockaddr));

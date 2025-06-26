@@ -192,7 +192,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             rules.clone(),
                             |resdynamic| resdynamic
                                 .map(VInspectionResult::new)
-                                .map_err(|err| format!("Error: {:?}", err)),
+                                .map_err(|err| format!("Error: {err:?}")),
                         ),
                     ).or_insert(0) += 1;
                 }
@@ -201,7 +201,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             let percentage = |n_count: usize| n_count.as_num::<f64>()/n_ahand_total.as_num::<f64>();
             for (mapresinspectionresultn, constraint) in vectplmapresinspectionresultnconstraint {
                 if b_verbose || 1<vecconstraint.len() {
-                    println!("{}", constraint);
+                    println!("{constraint}");
                 }
                 let mut oresinspectionresult_weighted_sum = None;
                 for (resinspectionresult, n_count) in mapresinspectionresultn.into_iter()
@@ -217,7 +217,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     percentage(n_count),
                                 );
                             }
-                            format!("{}", inspectionresult)
+                            format!("{inspectionresult}")
                         },
                         Err(str_err) => {
                             oresinspectionresult_weighted_sum = Some(Err(())); // Do not show weighted sum if there are errors.
@@ -228,7 +228,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 }
                 if let Some(Ok(inspectionresult_weighted_sum))=oresinspectionresult_weighted_sum {
                     println!("-----");
-                    println!("\u{2300} {:.4}", inspectionresult_weighted_sum);
+                    println!("\u{2300} {inspectionresult_weighted_sum:.4}");
                 }
             }
             Ok(())
