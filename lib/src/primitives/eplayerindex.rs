@@ -39,7 +39,7 @@ impl<T: fmt::Debug, PlayerIndex: Copy+TStaticOrDynamicValue<EPlayerIndex>> fmt::
             }
             match self.get(epi) {
                 None => {write!(f, "__")?;}
-                Some(t) => {write!(f, "{:?}", t)?;}
+                Some(t) => {write!(f, "{t:?}")?;}
             }
         }
         write!(f, "")

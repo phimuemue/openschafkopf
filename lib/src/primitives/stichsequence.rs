@@ -39,7 +39,7 @@ impl SStichSequenceGameFinished<'_> {
 impl std::fmt::Display for SStichSequence {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for stich in self.completed_stichs() {
-            write!(f, "{} | ", stich)?;
+            write!(f, "{stich} | ")?;
         }
         write!(f, "{}", self.current_stich())?;
         Ok(())

@@ -45,7 +45,7 @@ impl fmt::Display for SStich {
             }
             match self.get(epi) {
                 None => {write!(f, "__")?;}
-                Some(card) => {write!(f, "{}", card)?;}
+                Some(card) => {write!(f, "{card}")?;}
             }
         }
         write!(f, "")
