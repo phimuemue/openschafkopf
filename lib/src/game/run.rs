@@ -227,15 +227,14 @@ fn test_game_loop() {
         )
             .map(|(n_base_price, n_solo_price, n_lauf_min, str_allowed_games, str_no_active_game, str_extras)| {
                 let str_ruleset = format!(
-                    "base-price={}
-                    solo-price={}
-                    lauf-min={}
-                    {}
-                    {}
-                    {}",
-                    n_base_price, n_solo_price, n_lauf_min, str_allowed_games, str_no_active_game, str_extras
+                    "base-price={n_base_price}
+                    solo-price={n_solo_price}
+                    lauf-min={n_lauf_min}
+                    {str_allowed_games}
+                    {str_no_active_game}
+                    {str_extras}"
                 );
-                println!("{}", str_ruleset);
+                println!("{str_ruleset}");
                 unwrap!(crate::rules::ruleset::SRuleSet::from_string(&str_ruleset))
             })
             .choose_multiple(&mut rng, 2)

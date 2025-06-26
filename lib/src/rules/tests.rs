@@ -15,7 +15,7 @@ fn internal_test_rules(
     slcstich_test: &[SFullStich<SStich>],
     (an_payout, n_stock_payout): ([isize; EPlayerIndex::SIZE], isize),
 ) {
-    println!("Testing rules: {}", str_info);
+    println!("Testing rules: {str_info}");
     // TODO? check _ahand
     let an_payout_check = unwrap!(unwrap!(SGame::new(
         aveccard,
