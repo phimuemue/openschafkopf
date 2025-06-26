@@ -361,7 +361,7 @@ make_redirect_function!(
                     }
                 },
                 netschk_msg@WM_USER..=0xffff => {
-                    Some(format!("NETSCHK_MSG {:#x}, {}, {}", netschk_msg, wparam, lparam))
+                    Some(format!("NETSCHK_MSG {netschk_msg:#x}, {wparam}, {lparam}"))
                 },
                 u_msg => stringify_matches!(u_msg, (wparam, lparam,),
                     WM_COMMAND
@@ -381,7 +381,7 @@ make_redirect_function!(
                     },
                     _ => Err(()), // no expectation at all
                 });
-                info!("{:?}", resoknownduaktion_expected);
+                info!("{resoknownduaktion_expected:?}");
                 let retval = unsafe{call_original(hwnd, u_msg, wparam, lparam)};
                 if let Ok(_oknownduaktion_expected) = resoknownduaktion_expected {
                     match unsafe{scan_until_0(as_ptr!(u8, 0x004c8438), None)} {
@@ -437,7 +437,7 @@ make_redirect_function!(
                             | b"PcRechts ? Sto\xDFen"
                         => {},
                         str_status => {
-                            info!("Unknown status: {:?}", str_status);
+                            info!("Unknown status: {str_status:?}");
                         },
                     }
                 } else if 
@@ -495,12 +495,12 @@ make_redirect_function!(
                                 | b"Schellen-Geier Tout"
                                 | b"Sie"
                                 | b"Bettel" => /*"Ja"*/1082,
-                                _ => panic!("Unknown Vorschlag: {:?}", vecch)
+                                _ => panic!("Unknown Vorschlag: {vecch:?}")
                             },
                             /*b_allow_invisible*/false,
                             ESendOrPost::Send,
                         ) {
-                            info!("click_button failed: {}", str_error);
+                            info!("click_button failed: {str_error}");
                         }
                     }
                 }
@@ -798,14 +798,14 @@ fn get_module_symbol_address(module: &str, symbol: &str) -> FARPROC {
         .encode_utf16()
         .chain(std::iter::once(0))
         .collect::<Vec<u16>>();
-    info!("module {:?}", module);
+    info!("module {module:?}");
     let symbol = unwrap!(CString::new(symbol));
-    info!("symbol {:?}", symbol);
+    info!("symbol {symbol:?}");
     unsafe {
         let handle = GetModuleHandleW(module.as_ptr() as _);
-        info!("handle {:?}", handle);
+        info!("handle {handle:?}");
         let procaddress = GetProcAddress(handle, symbol.as_ptr() as _);
-        info!("procaddress {:?}", procaddress);
+        info!("procaddress {procaddress:?}");
         procaddress
     }
 }
@@ -998,7 +998,7 @@ make_redirect_function!(
                         b"Schellen-Geier Tout" => (b"Geier Tout", Some(b"Schellen")),
                         b"Sie" => (b"Solo Tout", Some(b"Sie")),
                         b"Bettel" => (b"Bettel", None),
-                        _ => panic!("Unknown Vorschlag: {:?}", vecch)
+                        _ => panic!("Unknown Vorschlag: {vecch:?}")
                     };
                     // TODO interpret vecch (or go one level deeper) and select
                     let select_item = |n_id_list: u16, str_item: &[u8]| {
@@ -1036,7 +1036,7 @@ make_redirect_function!(
                         /*b_allow_invisible*/false,
                         ESendOrPost::Send,
                     ) {
-                        info!("click_button failed: {}", str_error);
+                        info!("click_button failed: {str_error}");
                     }
                 }
                 res
