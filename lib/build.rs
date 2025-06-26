@@ -27,7 +27,7 @@ fn main() {
                     Ok("windows") => b"TODO css on windows".to_vec(), // TODO
                     _ => {
                         let output_lessc = unwrap!(cmd_lessc.output());
-                        assert!(output_lessc.status.success(), "{:?}: {:?}", cmd_lessc, output_lessc);
+                        assert!(output_lessc.status.success(), "{cmd_lessc:?}: {output_lessc:?}");
                         output_lessc.stdout
                     },
                 }
@@ -76,7 +76,7 @@ fn main() {
                             .join("site")
                             .join("img");
                         unwrap!(std::fs::create_dir_all(&path_img));
-                        path_img.join(format!("{}{}.png", ch_efarbe, ch_eschlag))
+                        path_img.join(format!("{ch_efarbe}{ch_eschlag}.png"))
                     })
             );
         }
