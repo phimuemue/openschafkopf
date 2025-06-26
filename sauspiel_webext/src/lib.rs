@@ -121,7 +121,7 @@ impl TSauspielHtmlNode<'_> for SWebsysElement {
 }
 
 fn internal_output_card_sauspiel_img(card: ECard, str_style: &str) -> String {
-    let str_card = format!("{}", card).replace('Z', "X"); // TODO proper card formatter
+    let str_card = format!("{card}").replace('Z', "X"); // TODO proper card formatter
     format!(r#"<span class="card-icon card-icon-by card-icon-{str_card}" title="{str_card}" style="{str_style}">{str_card}</span>"#)
     /* // TODO This would look better:
     <div class="game-protocol-trick-card position-1  " style="/*! text-align: center; */justify-content: center;">
@@ -408,7 +408,7 @@ pub fn greet() {
         },
         Err(err_html) => { // TODO we should distinguish between "Game not visible/found/accessible" and "HTML not understood"
             #[cfg(not(feature="sauspiel_webext_use_json"))] {
-                dbg_alert!(&format!("Error parsing document:\n{:?}", err_html));
+                dbg_alert!(&format!("Error parsing document:\n{err_html:?}"));
             }
             #[cfg(feature="sauspiel_webext_use_json")] {
                 let mut vecahandstichseqcardepi = Vec::new();
