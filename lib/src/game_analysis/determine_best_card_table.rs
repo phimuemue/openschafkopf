@@ -108,11 +108,11 @@ pub fn internal_table<
                 )
             };
             let column_min_or_max = |n: isize| {
-                (format!("{} ", n), n.as_num::<f32>())
+                (format!("{n} "), n.as_num::<f32>())
             };
             let column_average = |paystats: &SPayoutStats<PayoutStatsPayload>| {
                 let f_avg = paystats.avg();
-                (format!("{:.2} ", f_avg), f_avg)
+                (format!("{f_avg:.2} "), f_avg)
             };
             (
                 t,

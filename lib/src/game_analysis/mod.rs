@@ -17,7 +17,7 @@ pub fn rules_to_string(rules: &SRules) -> String {
     format!("{}{}", // TODO unify rule formatting
         rules,
         if let Some(epi) = rules.playerindex() {
-            format!(" von {}", epi)
+            format!(" von {epi}")
         } else {
             "".to_owned()
         },

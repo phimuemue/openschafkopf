@@ -597,7 +597,7 @@ pub fn analyze_sauspiel_json(
             // TODO? good to go through parse_rule_description_simple?
             let mut str_rules = "".to_string();
             if let Some(efarbe) = resoefarbe.map_err(|err| format_err!("oefarbe not found: {:?}", err))? {
-                str_rules += &format!("{} ", efarbe);
+                str_rules += &format!("{efarbe} ");
             }
             str_rules += &resstr_rules_no_playerindex.map_err(|err| format_err!("str_rules_no_playerindex not found: {:?}", err))?;
             if let Some(position_active)=resoposition_active.map_err(|err| format_err!("oepi_active not found: {:?}", err))? {
