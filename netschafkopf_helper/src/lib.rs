@@ -206,9 +206,9 @@ fn log_in_out_cond<
 ) -> R {
     if let Some(shouldlog) = fn_cond(&args) {
         let args_clone = args.clone();
-        info!("{} {:?} [{:?}] <-", str_f, args_clone, shouldlog);
+        info!("{str_f} {args_clone:?} [{shouldlog:?}] <-");
         let retval = f.apply(args);
-        info!("{} {:?} [{:?}] -> {:?}", str_f, args_clone, shouldlog, retval);
+        info!("{str_f} {args_clone:?} [{shouldlog:?}] -> {retval:?}");
         retval
     } else {
         f.apply(args)
@@ -318,20 +318,12 @@ make_redirect_function!(
         if let Some(card) = if_then_some!(n_bytes_requested==N_BYTES_PER_NETSCHAFKOPF_CARD, ()).and_then(|()|
             bytes_are_card(unwrap!(unsafe{std::slice::from_raw_parts(as_ptr!(u8, src), N_BYTES_PER_NETSCHAFKOPF_CARD)}.try_into()))
         ) {
-            info!("Moving card {}: {:?} => {:?}",
-                card,
-                src,
-                dst,
-            );
+            info!("Moving card {card}: {src:?} => {dst:?}");
         } else {
             let str_src = String::from_utf8_lossy(
                 unsafe{scan_until_0(as_ptr!(u8, src), n_bytes_requested)}
             );
-            info!("strcpy_s: {:?} => {:?}: {}",
-                src,
-                dst,
-                str_src,
-            );
+            info!("strcpy_s: {src:?} => {dst:?}: {str_src}");
         }
         res
     },
@@ -549,7 +541,7 @@ make_redirect_function!(
                         if_then_some!(byte_old!=byte_new, (i, byte_old, byte_new))
                     )
                 {
-                    info!("Difference at {:#x}/{}: {} => {}", i, i, byte_old, byte_new);
+                    info!("Difference at {i:#x}/{i}: {byte_old} => {byte_new}");
                 }
             }
             unsafe {OABYTE_REGELDATEN = Some(abyte_regeldaten_new)};
@@ -635,12 +627,12 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
                     game.stichseq.visible_cards().map(|(_epi, card)|card).join(""),
                     game.ahand[epi_active].cards().iter().join(""),
                 );
-                info!("Writing replay to {}", str_file_osk_replay);
+                info!("Writing replay to {str_file_osk_replay}");
                 {
                     let str_rules = format!("{}{}",
                         game.rules,
                         if let Some(epi) = game.rules.playerindex() {
-                            format!(" von {}", epi)
+                            format!(" von {epi}")
                         } else {
                             "".to_owned()
                         },
@@ -1196,11 +1188,11 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
             );
         }
         let i_netschafkopf_geber = unsafe{*as_ptr!(usize, 0x004ca578)};
-        info!("Geber: {}", i_netschafkopf_geber);
+        info!("Geber: {i_netschafkopf_geber}");
         let n_stichs_completed = unsafe{*as_ptr!(usize, 0x004b5988)};
-        info!("# komplette Stiche: {}", n_stichs_completed);
+        info!("# komplette Stiche: {n_stichs_completed}");
         let n_current_stich_size = unsafe{*as_ptr!(usize, 0x004963e4)};
-        info!("# played cards in current stich: {}", n_current_stich_size);
+        info!("# played cards in current stich: {n_current_stich_size}");
         info!("g_iEPIPresumablyNextCard: {}",
             unsafe{*as_ptr!(isize, 0x004b596c)}
         );
@@ -1216,7 +1208,7 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
             (str_rules_pri, Some(str_active_player))
         };
         let str_rules = format!("{}{}", str_rules_pri, if let Some(str_active_player)=ostr_active_player {
-            format!(" von {}", str_active_player)
+            format!(" von {str_active_player}")
         } else {
             "".to_string()
         });
@@ -1238,9 +1230,9 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
             i_netschafkopf
         };
         let n_stichs_remaining = unsafe{*as_ptr!(usize, 0x004963b8)};
-        info!("n_stichs_remaining: {}", n_stichs_remaining);
+        info!("n_stichs_remaining: {n_stichs_remaining}");
         let n_presumably_total_games = unsafe{*PN_TOTAL_GAMES};
-        info!("n_presumably_total_games: {}", n_presumably_total_games);
+        info!("n_presumably_total_games: {n_presumably_total_games}");
         if_then_some!("Normal"!=str_rules_pri, {
             let rules = unwrap!(parse_rule_description(
                 &str_rules,
@@ -1252,14 +1244,14 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
                     "PcOben" => 2,
                     "PcRechts" => 3,
                     "Du selbst" => 4,
-                    _ => panic!("Unknown value for str_player: {}", str_player),
+                    _ => panic!("Unknown value for str_player: {str_player}"),
                 }))
             ));
-            info!("{}", rules);
+            info!("{rules}");
             let ekurzlang = /*g_bKurzeKarte*/match unsafe{*as_ptr!(u8, 0x004ca5c8)} {
                 0 => EKurzLang::Lang,
                 1 => EKurzLang::Kurz,
-                n_kurze_karte_unsupported => panic!("Unknown value for g_bKurzeKarte: {}", n_kurze_karte_unsupported),
+                n_kurze_karte_unsupported => panic!("Unknown value for g_bKurzeKarte: {n_kurze_karte_unsupported}"),
             };
             let mut stichseq = SStichSequence::new(ekurzlang);
             for _i_card in 0..n_stichs_completed*EPlayerIndex::SIZE + n_current_stich_size {
@@ -1270,7 +1262,7 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
                     &rules,
                 );
             }
-            info!("{:?}", stichseq);
+            info!("{stichseq:?}");
             let an_cards_hand = stichseq.remaining_cards_per_hand();
             let aveccard_netschafkopf = EPlayerIndex::map_from_fn(|epi| {
                 aveccard_hand[epi_to_netschafkopf_playerindex(epi)-1][0..an_cards_hand[epi]]
@@ -1353,7 +1345,7 @@ fn initialize() {
 
     let fn_panic_handler_original = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panicinfo| {
-        error!("panic: {}", panicinfo);
+        error!("panic: {panicinfo}");
         log_game();
         fn_panic_handler_original(panicinfo)
     }));
