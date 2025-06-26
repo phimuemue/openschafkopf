@@ -95,7 +95,7 @@ pub fn run_simple_game_loop(
         ruleset,
         /*fn_gamepreparations_to_stockorgame*/|mut gamepreparations, aattable| {
             while let Some(epi) = gamepreparations.which_player_can_do_something() {
-                info!("Asking player {} for game", epi);
+                info!("Asking player {epi} for game");
                 unwrap!(gamepreparations.announce_game(
                     epi,
                     communicate_via_channel(|txorules| {

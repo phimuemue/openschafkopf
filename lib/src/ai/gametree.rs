@@ -41,7 +41,7 @@ pub fn visualizer_factory<'rules, MinMaxStrategiesHK>(path: std::path::PathBuf, 
                         .map(|hand| hand.cards().iter().join(""))
                         .join("_"),
                     if let Some(card)=ocard {
-                        format!("_{}", card)
+                        format!("_{card}")
                     } else {
                         "".to_owned()
                     }
@@ -81,7 +81,7 @@ impl<'rules, MinMaxStrategiesHK> SForEachSnapshotHTMLVisualizer<'rules, MinMaxSt
 
     fn write_all(&mut self, buf: &[u8]) {
         if let Err(err) = self.file_output.write_all(buf) {
-            error!("Error writing file: {}", err);
+            error!("Error writing file: {err}");
         }
     }
 }
@@ -144,7 +144,7 @@ impl<
             stichseq.count_played_cards(),
             rand::rng().sample_iter(&rand::distr::Alphanumeric).take(16).join(""), // we simply assume no collisions here TODO uuid
         );
-        self.write_all(format!("<li><<input type=\"checkbox\" id=\"{}\" />>\n", str_item_id).as_bytes());
+        self.write_all(format!("<li><<input type=\"checkbox\" id=\"{str_item_id}\" />>\n").as_bytes());
         self.write_all(format!("<label for=\"{}\">{} direct successors<table><tr>\n",
             str_item_id,
             "TODO", // slccard_allowed.len(),

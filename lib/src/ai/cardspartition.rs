@@ -125,7 +125,7 @@ impl SCardsPartition {
                 cardspartition_readd.readd(removed.clone());
                 cardspartition_readd
             },
-            "{:?}\n{:?}", card, removed,
+            "{card:?}\n{removed:?}",
         );
         removed
     }
