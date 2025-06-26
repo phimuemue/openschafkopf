@@ -372,7 +372,7 @@ pub trait TRules : fmt::Display + Sync + fmt::Debug + Send + Clone {
                     assert!(
                         mapepiintvlon_payout.iter().zip_eq(mapepiintvlon_payout_after.iter())
                             .all(|(intvlon_payout, intvlon_payout_other)| payouthint_contains(intvlon_payout, intvlon_payout_other)),
-                        "{}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepiintvlon_payout, mapepiintvlon_payout_after,
+                        "{stichseq_check}\n{ahand_check:?}\n{mapepiintvlon_payout:?}\n{mapepiintvlon_payout_after:?}",
                     );
                     mapepiintvlon_payout = mapepiintvlon_payout_after;
                 }
@@ -383,7 +383,7 @@ pub trait TRules : fmt::Display + Sync + fmt::Debug + Send + Clone {
                                 Some(payoutinfo)
                             }))
                         ),
-                    "{}\n{:?}\n{:?}\n{:?}", stichseq_check, ahand_check, mapepiintvlon_payout, apayoutinfo,
+                    "{stichseq_check}\n{ahand_check:?}\n{mapepiintvlon_payout:?}\n{apayoutinfo:?}",
                 );
             }
             if b_test_points_as_payout {

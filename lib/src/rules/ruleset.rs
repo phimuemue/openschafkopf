@@ -87,7 +87,7 @@ impl SRuleSet {
             }
         };
         let fallback = |str_not_found: &str, str_fallback: &str| {
-            info!("SRuleSet: Did not find {}. Falling back to {}.", str_not_found, str_fallback);
+            info!("SRuleSet: Did not find {str_not_found}. Falling back to {str_fallback}.");
             read_int(&tomltbl, str_fallback)
         };
         let stossparams = tomltbl.get("stoss") // TODO beautify construction of stossparams // TODO support stossparams on per rule
@@ -98,7 +98,7 @@ impl SRuleSet {
                         .and_then(|tomlval| tomlval.as_integer())
                         .map_or(n_stoss_max_default, |n_stoss_max| {
                             if n_stoss_max<=0 {
-                                info!("SRuleSet: stoss.max less than 0. Defaulting to {}.", n_stoss_max_default);
+                                info!("SRuleSet: stoss.max less than 0. Defaulting to {n_stoss_max_default}.");
                                 n_stoss_max_default
                             } else {
                                 n_stoss_max.as_num::<usize>()
@@ -285,7 +285,7 @@ impl SRuleSet {
                 if let Some(tomlval_bettel) = tomltbl.get(str_rule_name_file) {
                     let n_payout_base = read_int(tomlval_bettel, "price")
                         .or_else(|_err| 
-                            fallback(&format!("{}.price", str_rule_name_file), /*str_base_price_fallback*/"base-price")
+                            fallback(&format!("{str_rule_name_file}.price"), /*str_base_price_fallback*/"base-price")
                         )?;
                     fn push_bettel<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich>(vecrulegroup: &mut Vec<SRuleGroup>, epi: EPlayerIndex, n_payout_base: isize, stossparams: SStossParams)
                         where
@@ -318,7 +318,7 @@ impl SRuleSet {
                         EDoublingScope::GamesAndStock
                     } else {
                         if "no"!=str_doubling_stock {
-                            info!("SRuleSet: doubling.stock has invalid value '{}'. Falling back to 'no'", str_doubling_stock);
+                            info!("SRuleSet: doubling.stock has invalid value '{str_doubling_stock}'. Falling back to 'no'");
                         }
                         EDoublingScope::Games
                     }
@@ -331,7 +331,7 @@ impl SRuleSet {
                 Some("kurz") => EKurzLang::Kurz,
                 None | Some("lang") => EKurzLang::Lang,
                 Some(str_kurzlang) => {
-                    info!("SRuleSet: {} is not a valid value for 'deck' (supported values: kurz, lang). Defaulting to 'lang'", str_kurzlang);
+                    info!("SRuleSet: {str_kurzlang} is not a valid value for 'deck' (supported values: kurz, lang). Defaulting to 'lang'");
                     EKurzLang::Lang
                 },
             },
