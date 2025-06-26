@@ -66,7 +66,7 @@ impl<T> TVerifiableByVerifyMacro for *mut T {
 #[track_caller]
 pub fn verify_internal<E: TVerifiableByVerifyMacro>(e: E, str_e: &str) -> E {
     if let Err(err) = e.is_verify_true() {
-        panic!("verify!({}): {:?}", str_e, err);
+        panic!("verify!({str_e}): {err:?}");
     }
     e
 }
@@ -78,7 +78,7 @@ macro_rules! verify {($e: expr) => {{
 
 pub fn verify_or_println_internal<E: TVerifiableByVerifyMacro>(e: E, str_e: &str) -> E {
     if let Err(err) = e.is_verify_true() {
-        println!("verify_or_println!({}): {:?}", str_e, err);
+        println!("verify_or_println!({str_e}): {err:?}");
     }
     e
 }
