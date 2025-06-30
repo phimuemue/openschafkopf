@@ -312,6 +312,55 @@ impl STable {
                 if let Some(sendtoplayers) = verify!(gamephase.which_player_can_do_something()) {
                     self.players.communicate_to_players(&sendtoplayers);
                     if let Some(timeoutaction) = &sendtoplayers.otimeoutaction {
+
+                        // timer adapted from https://rust-lang.github.io/async-book/02_execution/03_wakeups.html
+                        // TODO should possibly be replaced standard facility
+                        struct STimerFuture {
+                            state: Arc<Mutex<STimerFutureState>>,
+                            table: Arc<Mutex<STable>>,
+                            epi: EPlayerIndex,
+                        }
+                        #[derive(Debug)]
+                        struct STimerFutureState {
+                            b_completed: bool,
+                            owaker: Option<Waker>,
+                        }
+                        impl Future for STimerFuture {
+                            type Output = ();
+                            fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+                                let mut state = unwrap!(self.state.lock());
+                                if state.b_completed {
+                                    let table_mutex = self.table.clone();
+                                    let mut table = unwrap!(self.table.lock());
+                                    if let Some(timeoutcmd) = table.otimeoutcmd.take_if(|timeoutcmd| timeoutcmd.epi==self.epi) {
+                                        table.on_incoming_message(table_mutex, Some(verify_eq!(timeoutcmd.epi, self.epi)), Some(timeoutcmd.gamephaseaction));
+                                    }
+                                    Poll::Ready(())
+                                } else {
+                                    state.owaker = Some(cx.waker().clone());
+                                    Poll::Pending
+                                }
+                            }
+                        }
+                        impl STimerFuture {
+                            fn new(n_secs: u64, table: Arc<Mutex<STable>>, epi: EPlayerIndex) -> Self {
+                                let state = Arc::new(Mutex::new(STimerFutureState {
+                                    b_completed: false,
+                                    owaker: None,
+                                }));
+                                let thread_shared_state = state.clone();
+                                spawn(move || {
+                                    sleep(Duration::new(n_secs, /*nanos*/0));
+                                    let mut state = unwrap!(thread_shared_state.lock());
+                                    state.b_completed = true;
+                                    if let Some(waker) = state.owaker.take() {
+                                        waker.wake()
+                                    }
+                                });
+                                Self {state, table, epi}
+                            }
+                        }
+
                         let (timerfuture, aborthandle) = future::abortable(STimerFuture::new(
                             /*n_secs*/2,
                             self_mutex.clone(),
@@ -341,57 +390,6 @@ impl STable {
                 ),
             );
         }
-    }
-}
-
-// timer adapted from https://rust-lang.github.io/async-book/02_execution/03_wakeups.html
-// TODO should possibly be replaced standard facility
-struct STimerFuture {
-    state: Arc<Mutex<STimerFutureState>>,
-    table: Arc<Mutex<STable>>,
-    epi: EPlayerIndex,
-}
-
-#[derive(Debug)]
-struct STimerFutureState {
-    b_completed: bool,
-    owaker: Option<Waker>,
-}
-
-impl Future for STimerFuture {
-    type Output = ();
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let mut state = unwrap!(self.state.lock());
-        if state.b_completed {
-            let table_mutex = self.table.clone();
-            let mut table = unwrap!(self.table.lock());
-            if let Some(timeoutcmd) = table.otimeoutcmd.take_if(|timeoutcmd| timeoutcmd.epi==self.epi) {
-                table.on_incoming_message(table_mutex, Some(verify_eq!(timeoutcmd.epi, self.epi)), Some(timeoutcmd.gamephaseaction));
-            }
-            Poll::Ready(())
-        } else {
-            state.owaker = Some(cx.waker().clone());
-            Poll::Pending
-        }
-    }
-}
-
-impl STimerFuture {
-    fn new(n_secs: u64, table: Arc<Mutex<STable>>, epi: EPlayerIndex) -> Self {
-        let state = Arc::new(Mutex::new(STimerFutureState {
-            b_completed: false,
-            owaker: None,
-        }));
-        let thread_shared_state = state.clone();
-        spawn(move || {
-            sleep(Duration::new(n_secs, /*nanos*/0));
-            let mut state = unwrap!(thread_shared_state.lock());
-            state.b_completed = true;
-            if let Some(waker) = state.owaker.take() {
-                waker.wake()
-            }
-        });
-        Self {state, table, epi}
     }
 }
 
