@@ -3,9 +3,6 @@
 use std::{
     net::SocketAddr,
     sync::{Arc, Mutex},
-    task::{Context, Poll, Waker},
-    pin::Pin,
-    thread::{sleep, spawn},
     time::Duration,
 };
 use openschafkopf_lib::{
@@ -312,67 +309,23 @@ impl STable {
                 if let Some(sendtoplayers) = verify!(gamephase.which_player_can_do_something()) {
                     self.players.communicate_to_players(&sendtoplayers);
                     if let Some(timeoutaction) = &sendtoplayers.otimeoutaction {
-
-                        // timer adapted from https://rust-lang.github.io/async-book/02_execution/03_wakeups.html
-                        // TODO should possibly be replaced standard facility
-                        struct STimerFuture {
-                            state: Arc<Mutex<STimerFutureState>>,
-                            table: Arc<Mutex<STable>>,
-                            epi: EPlayerIndex,
-                        }
-                        #[derive(Debug)]
-                        struct STimerFutureState {
-                            b_completed: bool,
-                            owaker: Option<Waker>,
-                        }
-                        impl Future for STimerFuture {
-                            type Output = ();
-                            fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-                                let mut state = unwrap!(self.state.lock());
-                                if state.b_completed {
-                                    let table_mutex = self.table.clone();
-                                    let mut table = unwrap!(self.table.lock());
-                                    if let Some(timeoutcmd) = table.otimeoutcmd.take_if(|timeoutcmd| timeoutcmd.epi==self.epi) {
-                                        table.on_incoming_message(table_mutex, Some(verify_eq!(timeoutcmd.epi, self.epi)), Some(timeoutcmd.gamephaseaction));
-                                    }
-                                    Poll::Ready(())
-                                } else {
-                                    state.owaker = Some(cx.waker().clone());
-                                    Poll::Pending
-                                }
+                        let epi_timeoutaction = timeoutaction.epi;
+                        let gamephaseaction_timeout = timeoutaction.gamephaseaction_timeout.clone(); // TODO clone needed?
+                        let (timerfuture, aborthandle) = future::abortable(async move {
+                            task::sleep(Duration::new(/*secs*/2, /*nanos*/0)).await;
+                            let table_mutex = self_mutex.clone();
+                            let mut table = unwrap!(table_mutex.lock());
+                            if let Some(timeoutcmd) = table.otimeoutcmd.take_if(|timeoutcmd| timeoutcmd.epi==epi_timeoutaction) {
+                                table.on_incoming_message(table_mutex.clone(), Some(verify_eq!(timeoutcmd.epi, epi_timeoutaction)), Some(timeoutcmd.gamephaseaction));
                             }
-                        }
-                        impl STimerFuture {
-                            fn new(n_secs: u64, table: Arc<Mutex<STable>>, epi: EPlayerIndex) -> Self {
-                                let state = Arc::new(Mutex::new(STimerFutureState {
-                                    b_completed: false,
-                                    owaker: None,
-                                }));
-                                let thread_shared_state = state.clone();
-                                spawn(move || {
-                                    sleep(Duration::new(n_secs, /*nanos*/0));
-                                    let mut state = unwrap!(thread_shared_state.lock());
-                                    state.b_completed = true;
-                                    if let Some(waker) = state.owaker.take() {
-                                        waker.wake()
-                                    }
-                                });
-                                Self {state, table, epi}
-                            }
-                        }
-
-                        let (timerfuture, aborthandle) = future::abortable(STimerFuture::new(
-                            /*n_secs*/2,
-                            self_mutex.clone(),
-                            timeoutaction.epi,
-                        ));
+                        });
                         assert!(self.otimeoutcmd.as_ref().is_none_or(|timeoutcmd|
-                            timeoutcmd.gamephaseaction.matches_phase(&timeoutaction.gamephaseaction_timeout)
+                            timeoutcmd.gamephaseaction.matches_phase(&gamephaseaction_timeout)
                         ));
                         self.otimeoutcmd = Some(STimeoutCmd{
                             gamephaseaction: timeoutaction.gamephaseaction_timeout.clone(/*TODO needed?*/),
                             aborthandle,
-                            epi: timeoutaction.epi,
+                            epi: epi_timeoutaction,
                         });
                         task::spawn(timerfuture);
                     }
