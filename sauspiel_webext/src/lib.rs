@@ -205,22 +205,16 @@ pub fn greet() {
     ) {
         Ok((SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout}, mapepistr_username)) => {
             let (_ogameannouncement, SWebsysElement(node_gameannouncement_epi0)) = &game_finished.mapepigameannouncement[EPlayerIndex::EPI0];
-            fn output_cards_sauspiel_img<Str: std::borrow::Borrow<str>>(ittplcardstr_style: impl Iterator<Item=(ECard, Str)>) -> String {
-                let mut str_cards = String::new();
-                for (card, str_style) in ittplcardstr_style {
-                    str_cards += &internal_output_card_sauspiel_img(
-                        card,
-                        str_style.borrow(),
-                    );
-                }
-                str_cards
-            }
             fn epi_to_sauspiel_position(epi: EPlayerIndex) -> usize {
                 epi.to_usize() + 1
             }
             fn output_position_and_cards_sauspiel_img(epi: EPlayerIndex, slccard: &mut [ECard], trumpfdecider: &STrumpfDecider) -> String {
                 trumpfdecider.sort_cards(slccard);
-                format!("({}) {}", epi_to_sauspiel_position(epi), output_cards_sauspiel_img(slccard.iter().map(|card| (*card, /*str_style*/""))))
+                let mut str_position_and_cards = format!("({})", epi_to_sauspiel_position(epi));
+                for card in slccard {
+                    str_position_and_cards += &internal_output_card_sauspiel_img(*card, "");
+                }
+                str_position_and_cards
             }
             for epi in EPlayerIndex::values() {
                 let prepend_cards = |slcschlag_trumpf: &'static [ESchlag], oefarbe_trumpf: Option<EFarbe>, node: &web_sys::Element| {
