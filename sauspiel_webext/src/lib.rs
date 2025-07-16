@@ -215,9 +215,12 @@ pub fn greet() {
                 }
                 str_cards
             }
+            fn epi_to_sauspiel_position(epi: EPlayerIndex) -> usize {
+                epi.to_usize() + 1
+            }
             fn output_position_and_cards_sauspiel_img(epi: EPlayerIndex, slccard: &mut [ECard], trumpfdecider: &STrumpfDecider) -> String {
                 trumpfdecider.sort_cards(slccard);
-                format!("({}) {}", epi.to_usize() + 1, output_cards_sauspiel_img(slccard.iter().map(|card| (*card, /*str_style*/""))))
+                format!("({}) {}", epi_to_sauspiel_position(epi), output_cards_sauspiel_img(slccard.iter().map(|card| (*card, /*str_style*/""))))
             }
             for epi in EPlayerIndex::values() {
                 let prepend_cards = |slcschlag_trumpf: &'static [ESchlag], oefarbe_trumpf: Option<EFarbe>, node: &web_sys::Element| {
