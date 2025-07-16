@@ -331,9 +331,14 @@ pub fn greet() {
                     )));
                 }
             }
-            let mut vecepicardstr_color = Vec::new();
+            enum EPlayedCardSeverity {
+                Optimal,
+                SuboptimalWithoutLoss,
+                SuboptimalWithLoss,
+            }
+            let mut vecepicardocardseverity = Vec::new();
             for ((ahand, stichseq), card_played, epi, element_played_card) in vecahandstichseqcardepielement {
-                let str_color_indicating_played_card_quality = if stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}) {
+                let ocardseverity = if_then_some!(stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}), {
                     let determinebestcardresult = determine_best_card_sauspiel(
                         ahand.clone(),
                         &stichseq,
@@ -367,16 +372,14 @@ pub fn greet() {
                     );
                     if !veccard_optimal.contains(&card_played) {
                         match an_payout[epi].cmp(&get_min_max_eq(payoutstats_optimal)) {
-                            Ordering::Greater | Ordering::Equal => "#ffef00", // yellow
-                            Ordering::Less => "#d70000", // red
+                            Ordering::Greater | Ordering::Equal => EPlayedCardSeverity::SuboptimalWithoutLoss,
+                            Ordering::Less => EPlayedCardSeverity::SuboptimalWithLoss,
                         }
                     } else {
-                        "#78db00" // green
+                        EPlayedCardSeverity::Optimal
                     }
-                } else {
-                    "lightgrey"
-                };
-                vecepicardstr_color.push((epi, card_played, str_color_indicating_played_card_quality));
+                });
+                vecepicardocardseverity.push((epi, card_played, ocardseverity));
                 let div_button = unwrap!(document.create_element("div"));
                 div_button.set_inner_html(&via_out_param(|str_button| 
                     append_html_copy_button(
@@ -400,12 +403,12 @@ pub fn greet() {
                 str_table_whole_game += &format!("<th>{}</th>", epi_to_sauspiel_position(epi_header));
             });
             str_table_whole_game += "</tr>";
-            for slcepicardstr_stich in vecepicardstr_color.chunks(EPlayerIndex::SIZE) {
+            for slcepicardocardseverity_stich in vecepicardocardseverity.chunks(EPlayerIndex::SIZE) {
                 str_table_whole_game += "<tr>";
                 itertools::merge_join_by(
                     itepi_cycled_twice.clone(),
-                    slcepicardstr_stich,
-                    |epi_running_index, (epi_card, _card, _str_color)| {
+                    slcepicardocardseverity_stich,
+                    |epi_running_index, (epi_card, _card, _ocardseverity)| {
                         epi_running_index.cmp(epi_card)
                     },
                 ).for_each(|eitherorboth| {
@@ -414,8 +417,14 @@ pub fn greet() {
                         EitherOrBoth::Left(_epi_running_index) => {
                             "".to_string() // empty cell
                         },
-                        EitherOrBoth::Both(epi_running_index, (epi_card, card, str_color)) => {
+                        EitherOrBoth::Both(epi_running_index, (epi_card, card, ocardseverity)) => {
                             assert_eq!(epi_running_index, *epi_card);
+                            let str_color = match ocardseverity {
+                                Some(EPlayedCardSeverity::Optimal) => "#78db00", // green
+                                Some(EPlayedCardSeverity::SuboptimalWithoutLoss) => "#ffef00", // yellow
+                                Some(EPlayedCardSeverity::SuboptimalWithLoss) =>  "#d70000", // red
+                                None => "lightgrey",
+                            };
                             internal_output_card_sauspiel_img(*card, &format!("border-top: 5px solid {str_color};box-sizing: content-box;"))
                         },
                         EitherOrBoth::Right(_) => panic!(),
