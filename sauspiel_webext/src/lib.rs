@@ -337,7 +337,7 @@ pub fn greet() {
                     )));
                 }
             }
-            let mut veccardstr_color = Vec::new();
+            let mut vecepicardstr_color = Vec::new();
             for ((ahand, stichseq), card_played, epi, element_played_card) in vecahandstichseqcardepielement {
                 let str_color_indicating_played_card_quality = if stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}) {
                     let determinebestcardresult = determine_best_card_sauspiel(
@@ -382,7 +382,7 @@ pub fn greet() {
                 } else {
                     "lightgrey"
                 };
-                veccardstr_color.push((card_played, str_color_indicating_played_card_quality));
+                vecepicardstr_color.push((epi, card_played, str_color_indicating_played_card_quality));
                 let div_button = unwrap!(document.create_element("div"));
                 div_button.set_inner_html(&via_out_param(|str_button| 
                     append_html_copy_button(
@@ -395,15 +395,47 @@ pub fn greet() {
                 ).0);
                 append_sibling(&element_played_card, &div_button);
             }
+            let mut str_table_whole_game = String::new();
+            str_table_whole_game += "<table><tbody>";
+            let itepi_cycled_twice = itertools::chain(
+                EPlayerIndex::values(),
+                EPlayerIndex::values().take(EPlayerIndex::SIZE - 1),
+            );
+            str_table_whole_game += "<tr>";
+            itepi_cycled_twice.clone().for_each(|epi_header| {
+                str_table_whole_game += &format!("<th>{}</th>", epi_to_sauspiel_position(epi_header));
+            });
+            str_table_whole_game += "</tr>";
+            for slcepicardstr_stich in vecepicardstr_color.chunks(EPlayerIndex::SIZE) {
+                str_table_whole_game += "<tr>";
+                itertools::merge_join_by(
+                    itepi_cycled_twice.clone(),
+                    slcepicardstr_stich,
+                    |epi_running_index, (epi_card, _card, _str_color)| {
+                        epi_running_index.cmp(epi_card)
+                    },
+                ).for_each(|eitherorboth| {
+                    str_table_whole_game += "<td>";
+                    str_table_whole_game += &match eitherorboth {
+                        EitherOrBoth::Left(_epi_running_index) => {
+                            "".to_string() // empty cell
+                        },
+                        EitherOrBoth::Both(epi_running_index, (epi_card, card, str_color)) => {
+                            assert_eq!(epi_running_index, *epi_card);
+                            internal_output_card_sauspiel_img(*card, &format!("border-top: 5px solid {str_color};box-sizing: content-box;"))
+                        },
+                        EitherOrBoth::Right(_) => panic!(),
+                    };
+                    str_table_whole_game += "</td>";
+                });
+                str_table_whole_game += "</tr>";
+            }
+            str_table_whole_game += "</tbody></table>";
             let node_whole_game = unwrap!(
                 unwrap!(node_gameannouncement_epi0.clone_node())
                     .dyn_into::<web_sys::Element>() // TODO can we avoid this?
             );
-            node_whole_game.set_inner_html(
-                &output_cards_sauspiel_img(veccardstr_color.iter().map(|(card, str_color)| {
-                    (*card, format!("border-top: 5px solid {str_color};box-sizing: content-box;"))
-                })),
-            );
+            node_whole_game.set_inner_html(&str_table_whole_game);
             unwrap!(node_gameannouncements.append_with_node_1(&node_whole_game));
         },
         Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepistr_username)) => {
