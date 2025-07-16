@@ -331,10 +331,17 @@ pub fn greet() {
                     )));
                 }
             }
+            #[derive(PartialOrd, Ord, PartialEq, Eq, Clone)]
             enum EPlayedCardSeverity {
                 Optimal,
-                SuboptimalWithoutLoss,
-                SuboptimalWithLoss,
+                Suboptimal(bool/*b_loss_realized*/),
+            }
+            fn suboptimal_quality_to_html_color(b_loss_realized: bool) -> &'static str {
+                if b_loss_realized {
+                    "#d70000" // red
+                } else {
+                    "#ffef00" // yellow
+                }
             }
             let mut vecepicardocardseverity = Vec::new();
             for ((ahand, stichseq), card_played, epi, element_played_card) in vecahandstichseqcardepielement {
@@ -372,8 +379,8 @@ pub fn greet() {
                     );
                     if !veccard_optimal.contains(&card_played) {
                         match an_payout[epi].cmp(&get_min_max_eq(payoutstats_optimal)) {
-                            Ordering::Greater | Ordering::Equal => EPlayedCardSeverity::SuboptimalWithoutLoss,
-                            Ordering::Less => EPlayedCardSeverity::SuboptimalWithLoss,
+                            Ordering::Greater | Ordering::Equal => EPlayedCardSeverity::Suboptimal(/*b_loss_realized*/false),
+                            Ordering::Less => EPlayedCardSeverity::Suboptimal(/*b_loss_realized*/true),
                         }
                     } else {
                         EPlayedCardSeverity::Optimal
@@ -392,6 +399,13 @@ pub fn greet() {
                 ).0);
                 append_sibling(&element_played_card, &div_button);
             }
+            fn table_cell_with_background(str_tag: &str, str_text: impl std::fmt::Display, ocardseverity: &Option<EPlayedCardSeverity>) -> String {
+                let str_color = match ocardseverity {
+                    None | Some(EPlayedCardSeverity::Optimal) => "", // Do not indicate "unchecked" or "optimal" in overview cells
+                    Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
+                };
+                format!(r#"<{str_tag} style="background-color: {str_color};">{str_text}</{str_tag}>"#)
+            }
             let mut str_table_whole_game = String::new();
             str_table_whole_game += "<table><tbody>";
             let itepi_cycled_twice = itertools::chain(
@@ -399,12 +413,25 @@ pub fn greet() {
                 EPlayerIndex::values().take(EPlayerIndex::SIZE - 1),
             );
             str_table_whole_game += "<tr>";
+            let mut mapepiocardseverity = EPlayerIndex::map_from_fn(|_epi| None);
+            for (epi, _card, ocardseverity) in vecepicardocardseverity.iter() {
+                assign_gt(&mut mapepiocardseverity[*epi], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
+            }
+            str_table_whole_game += "<th></th>"; // empty cell to match subsequent rows
+            const STR_GAP_CELL : &str = r#"<th style="width: 10px; background: none;"></th>"#;
+            str_table_whole_game += STR_GAP_CELL;
             itepi_cycled_twice.clone().for_each(|epi_header| {
-                str_table_whole_game += &format!("<th>{}</th>", epi_to_sauspiel_position(epi_header));
+                str_table_whole_game += &table_cell_with_background("th", epi_to_sauspiel_position(epi_header), &mapepiocardseverity[epi_header]);
             });
             str_table_whole_game += "</tr>";
-            for slcepicardocardseverity_stich in vecepicardocardseverity.chunks(EPlayerIndex::SIZE) {
+            for (i_stich, slcepicardocardseverity_stich) in vecepicardocardseverity.chunks(EPlayerIndex::SIZE).enumerate() {
                 str_table_whole_game += "<tr>";
+                str_table_whole_game += &table_cell_with_background(
+                    "td",
+                    /*str_text*/format!("{}. Stich", i_stich+1),
+                    unwrap!(slcepicardocardseverity_stich.iter().map(|(_epi, _card, ocardseverity)| ocardseverity).max()),
+                );
+                str_table_whole_game += STR_GAP_CELL; // gap cell
                 itertools::merge_join_by(
                     itepi_cycled_twice.clone(),
                     slcepicardocardseverity_stich,
@@ -421,8 +448,7 @@ pub fn greet() {
                             assert_eq!(epi_running_index, *epi_card);
                             let str_color = match ocardseverity {
                                 Some(EPlayedCardSeverity::Optimal) => "#78db00", // green
-                                Some(EPlayedCardSeverity::SuboptimalWithoutLoss) => "#ffef00", // yellow
-                                Some(EPlayedCardSeverity::SuboptimalWithLoss) =>  "#d70000", // red
+                                Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
                                 None => "lightgrey",
                             };
                             internal_output_card_sauspiel_img(*card, &format!("border-top: 5px solid {str_color};box-sizing: content-box;"))
