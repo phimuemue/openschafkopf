@@ -4,6 +4,7 @@ members = [
     "util",
     "netschafkopf_helper",
     "sauspiel_webext",
+    "html_generator",
 ]
 resolver = "2"
 
