@@ -122,7 +122,15 @@ impl TSauspielHtmlNode<'_> for SWebsysElement {
 
 fn internal_output_card_sauspiel_img(card: ECard, str_style: &str) -> String {
     let str_card = format!("{card}").replace('Z', "X"); // TODO proper card formatter
-    format!(r#"<span class="card-icon card-icon-by card-icon-{str_card}" title="{str_card}" style="{str_style}">{str_card}</span>"#)
+    use html_generator::*;
+    span::with_attrs(
+        [
+            ("class", format!("\"card-icon card-icon-by card-icon-{str_card}\"")),
+            ("title", format!("\"{str_card}\"")),
+            ("style", format!("\"{str_style}\"")),
+        ],
+        str_card
+    ).to_string()
     /* // TODO This would look better:
     <div class="game-protocol-trick-card position-1  " style="/*! text-align: center; */justify-content: center;">
         <a data-userid="119592" data-username="TiltBoi" class="profile-link" href="/profile/TiltBoi" style="margin: 0 auto;">TiltBoi</a>
