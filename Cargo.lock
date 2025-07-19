@@ -1909,6 +1909,7 @@ version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
  "getrandom 0.3.3",
+ "html_generator",
  "itertools 0.14.0",
  "openschafkopf_lib",
  "openschafkopf_util",

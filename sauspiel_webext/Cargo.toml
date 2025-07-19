@@ -14,6 +14,7 @@ sauspiel_webext_use_json = []
 
 [dependencies]
 wasm-bindgen = "0.2.100"
+html_generator = {path = "../html_generator"}
 openschafkopf_util = {path = "../util"}
 openschafkopf_lib = {path = "../lib"}
 plain_enum = "0"
