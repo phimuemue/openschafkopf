@@ -120,7 +120,7 @@ impl TSauspielHtmlNode<'_> for SWebsysElement {
     }
 }
 
-fn internal_output_card_sauspiel_img(card: ECard, str_style: &str) -> String {
+fn internal_output_card_sauspiel_img(card: ECard, str_style: String) -> html_generator::SHtmlElement<impl html_generator::THtmlAttrs, impl html_generator::THtmlChildren> {
     let str_card = format!("{card}").replace('Z', "X"); // TODO proper card formatter
     use html_generator::*;
     span::with_attrs(
@@ -130,7 +130,7 @@ fn internal_output_card_sauspiel_img(card: ECard, str_style: &str) -> String {
             ("style", format!("\"{str_style}\"")),
         ],
         str_card
-    ).to_string()
+    )
     /* // TODO This would look better:
     <div class="game-protocol-trick-card position-1  " style="/*! text-align: center; */justify-content: center;">
         <a data-userid="119592" data-username="TiltBoi" class="profile-link" href="/profile/TiltBoi" style="margin: 0 auto;">TiltBoi</a>
@@ -150,8 +150,8 @@ fn internal_output_card_sauspiel_img(card: ECard, str_style: &str) -> String {
 fn output_card_sauspiel_img(card: ECard, b_highlight: bool) -> String {
     internal_output_card_sauspiel_img(
         card,
-        /*str_style*/if b_highlight { "box-shadow: inset 0px 0px 5px black;border-radius: 4px;" } else { "" },
-    )
+        /*str_style*/if b_highlight { "box-shadow: inset 0px 0px 5px black;border-radius: 4px;" } else { "" }.into(),
+    ).to_string()
 }
 
 #[wasm_bindgen(start)]
@@ -220,7 +220,7 @@ pub fn greet() {
                 trumpfdecider.sort_cards(slccard);
                 let mut str_position_and_cards = format!("({})", epi_to_sauspiel_position(epi));
                 for card in slccard {
-                    str_position_and_cards += &internal_output_card_sauspiel_img(*card, "");
+                    str_position_and_cards += &internal_output_card_sauspiel_img(*card, "".into()).to_string();
                 }
                 str_position_and_cards
             }
@@ -407,72 +407,67 @@ pub fn greet() {
                 ).0);
                 append_sibling(&element_played_card, &div_button);
             }
-            fn table_cell_with_background(str_tag: &str, str_text: impl std::fmt::Display, ocardseverity: &Option<EPlayedCardSeverity>) -> String {
+            use html_generator::*; // TODO narrower scope?
+            fn table_cell_with_background(str_tag_name: &'static str, str_text: impl THtmlChildren, ocardseverity: &Option<EPlayedCardSeverity>) -> SHtmlElement<impl THtmlAttrs, impl THtmlChildren> {
                 let str_color = match ocardseverity {
                     None | Some(EPlayedCardSeverity::Optimal) => "", // Do not indicate "unchecked" or "optimal" in overview cells
                     Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
                 };
-                format!(r#"<{str_tag} style="background-color: {str_color};">{str_text}</{str_tag}>"#)
+                SHtmlElement::new(str_tag_name, [("style", format!("\"background-color: {str_color};\""))], str_text)
             }
-            let mut str_table_whole_game = String::new();
-            str_table_whole_game += "<table><tbody>";
             let itepi_cycled_twice = itertools::chain(
                 EPlayerIndex::values(),
                 EPlayerIndex::values().take(EPlayerIndex::SIZE - 1),
             );
-            str_table_whole_game += "<tr>";
-            let mut mapepiocardseverity = EPlayerIndex::map_from_fn(|_epi| None);
-            for (epi, _card, ocardseverity) in vecepicardocardseverity.iter() {
-                assign_gt(&mut mapepiocardseverity[*epi], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
-            }
-            str_table_whole_game += "<th></th>"; // empty cell to match subsequent rows
-            const STR_GAP_CELL : &str = r#"<th style="width: 10px; background: none;"></th>"#;
-            str_table_whole_game += STR_GAP_CELL;
-            itepi_cycled_twice.clone().for_each(|epi_header| {
-                str_table_whole_game += &table_cell_with_background("th", epi_to_sauspiel_position(epi_header), &mapepiocardseverity[epi_header]);
-            });
-            str_table_whole_game += "</tr>";
-            for (i_stich, slcepicardocardseverity_stich) in vecepicardocardseverity.chunks(EPlayerIndex::SIZE).enumerate() {
-                str_table_whole_game += "<tr>";
-                str_table_whole_game += &table_cell_with_background(
-                    "td",
-                    /*str_text*/format!("{}. Stich", i_stich+1),
-                    unwrap!(slcepicardocardseverity_stich.iter().map(|(_epi, _card, ocardseverity)| ocardseverity).max()),
-                );
-                str_table_whole_game += STR_GAP_CELL; // gap cell
-                itertools::merge_join_by(
-                    itepi_cycled_twice.clone(),
-                    slcepicardocardseverity_stich,
-                    |epi_running_index, (epi_card, _card, _ocardseverity)| {
-                        epi_running_index.cmp(epi_card)
-                    },
-                ).for_each(|eitherorboth| {
-                    str_table_whole_game += "<td>";
-                    str_table_whole_game += &match eitherorboth {
-                        EitherOrBoth::Left(_epi_running_index) => {
-                            "".to_string() // empty cell
-                        },
-                        EitherOrBoth::Both(epi_running_index, (epi_card, card, ocardseverity)) => {
-                            assert_eq!(epi_running_index, *epi_card);
-                            let str_color = match ocardseverity {
-                                Some(EPlayedCardSeverity::Optimal) => "#78db00", // green
-                                Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
-                                None => "lightgrey",
-                            };
-                            internal_output_card_sauspiel_img(*card, &format!("border-top: 5px solid {str_color};box-sizing: content-box;"))
-                        },
-                        EitherOrBoth::Right(_) => panic!(),
-                    };
-                    str_table_whole_game += "</td>";
-                });
-                str_table_whole_game += "</tr>";
-            }
-            str_table_whole_game += "</tbody></table>";
+            /*TODO const*/let html_table_gap_cell = th::with_attrs(("style", "\"width: 10px; background: none;\""), ());
             let node_whole_game = unwrap!(
                 unwrap!(node_gameannouncement_epi0.clone_node())
                     .dyn_into::<web_sys::Element>() // TODO can we avoid this?
             );
-            node_whole_game.set_inner_html(&str_table_whole_game);
+            let mut mapepiocardseverity = EPlayerIndex::map_from_fn(|_epi| None);
+            for (epi, _card, ocardseverity) in vecepicardocardseverity.iter() {
+                assign_gt(&mut mapepiocardseverity[*epi], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
+            }
+            node_whole_game.set_inner_html(&table(tbody((
+                tr((
+                    th(()), // empty cell to match subsequent rows
+                    html_table_gap_cell.clone(),
+                    itepi_cycled_twice.clone().map(|epi_header| {
+                        table_cell_with_background("th", format!("{}", epi_to_sauspiel_position(epi_header)), &mapepiocardseverity[epi_header])
+                    }).collect::<Vec<_>>(),
+                )),
+                vecepicardocardseverity.chunks(EPlayerIndex::SIZE).enumerate().map(|(i_stich, slcepicardocardseverity_stich)| {
+                    tr((
+                        table_cell_with_background(
+                            "td",
+                            /*str_text*/format!("{}. Stich", i_stich+1),
+                            unwrap!(slcepicardocardseverity_stich.iter().map(|(_epi, _card, ocardseverity)| ocardseverity).max()),
+                        ),
+                        html_table_gap_cell.clone(),
+                        itertools::merge_join_by(
+                            itepi_cycled_twice.clone(),
+                            slcepicardocardseverity_stich,
+                            |epi_running_index, (epi_card, _card, _ocardseverity)| {
+                                epi_running_index.cmp(epi_card)
+                            },
+                        ).map(move |eitherorboth| td(match eitherorboth {
+                            EitherOrBoth::Left(_epi_running_index) => None,
+                            EitherOrBoth::Both(epi_running_index, (epi_card, card, ocardseverity)) => {
+                                assert_eq!(epi_running_index, *epi_card);
+                                let str_color = match ocardseverity {
+                                    Some(EPlayedCardSeverity::Optimal) => "#78db00", // green
+                                    Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
+                                    None => "lightgrey",
+                                };
+                                Some(internal_output_card_sauspiel_img(*card, format!("border-top: 5px solid {str_color};box-sizing: content-box;")))
+                            },
+                            EitherOrBoth::Right(_) => panic!(),
+                        }))
+                        .collect::<Vec<SHtmlElement<_,_>>>() // TODO avoid
+                    ))
+                })
+                .collect::<Vec<_>>() // TODO avoid
+            ))).to_string());
             unwrap!(node_gameannouncements.append_with_node_1(&node_whole_game));
         },
         Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepistr_username)) => {
