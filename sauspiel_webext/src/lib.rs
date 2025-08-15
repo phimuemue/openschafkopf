@@ -125,8 +125,8 @@ fn internal_output_card_sauspiel_img(card: ECard, str_style: String) -> html_gen
     span::with_attrs(
         [
             ("class", format!("card-icon card-icon-by card-icon-{str_card}")),
-            ("title", format!("{str_card}")),
-            ("style", format!("{str_style}")),
+            ("title", str_card.clone()),
+            ("style", str_style),
         ],
         str_card
     )
