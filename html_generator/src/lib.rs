@@ -60,8 +60,7 @@ impl THtmlAttrs for () {
 impl<StrName: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> THtmlAttrs for Vec<(StrName, StrVal)> {
     fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         for (str_name, str_val) in self {
-            write!(formatter, " {}{}", str_name.borrow(), '=')?;
-            write!(formatter, "\"{}\"", str_val.borrow())?;
+            write!(formatter, " {}=\"{}\"", str_name.borrow(), str_val.borrow())?;
         }
         Ok(())
     }
@@ -69,8 +68,7 @@ impl<StrName: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> THtmlA
 impl<const N: usize, StrName: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> THtmlAttrs for [(StrName, StrVal); N] {
     fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         for (str_name, str_val) in self {
-            write!(formatter, " {}{}", str_name.borrow(), '=')?;
-            write!(formatter, "\"{}\"", str_val.borrow())?;
+            write!(formatter, " {}=\"{}\"", str_name.borrow(), str_val.borrow())?;
         }
         Ok(())
     }
