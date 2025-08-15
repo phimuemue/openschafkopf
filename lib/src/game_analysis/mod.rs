@@ -89,12 +89,12 @@ pub fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinde
     }
     *str_per_card += "<tr>";
     // TODO? should veccard_non_allowed be a separate row in determine_best_card_table::table?
-    let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
+    let hand_current_player = &ahand[unwrap!(stichseq.current_stich().current_playerindex())];
     let veccard_allowed = rules.all_allowed_cards(
         stichseq,
-        &ahand[epi_current],
+        hand_current_player,
     );
-    let mut veccard_non_allowed = ahand[epi_current].cards().iter()
+    let mut veccard_non_allowed = hand_current_player.cards().iter()
         .filter_map(|card| if_then_some!(!veccard_allowed.contains(card), *card))
         .collect::<Vec<_>>();
     rules.sort_cards(&mut veccard_non_allowed);
