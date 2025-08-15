@@ -9,7 +9,7 @@ use openschafkopf_lib::{
     ai::{SPayoutStats, determine_best_card, gametree::{SMaxSelfishMinStrategy, SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}, stichoracle::SFilterByOracle},
     game::{first_hand_for, SGameResultGeneric},
     game_analysis::{append_html_payout_table, append_html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
-    rules::{TRules, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe},
+    rules::{TRules, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe, card_points::points_stich},
     primitives::{ECard, EFarbe, ESchlag, EPlayerIndex, SHand, SStichSequence, TCardSorter},
 };
 use crate::utils::*;
@@ -25,7 +25,6 @@ use openschafkopf_lib::{
 };
 #[cfg(feature="sauspiel_webext_use_json")]
 use std::fmt::Write;
-#[cfg(feature="sauspiel_webext_use_json")]
 use itertools::Itertools;
 
 #[wasm_bindgen]
@@ -430,13 +429,31 @@ pub fn greet() {
             }
             node_whole_game.set_inner_html(&table(tbody((
                 tr((
+                    th(()), // empty cell to match subsequent rows // TODO merge with next row's cell?
+                    html_table_gap_cell.clone(),
+                    th::with_attrs(
+                        ("colspan", format!("\"{}\"", itepi_cycled_twice.clone().count())),
+                        "Karten",
+                    ),
+                    html_table_gap_cell.clone(),
+                    th::with_attrs(
+                        ("colspan", format!("\"{}\"", EPlayerIndex::SIZE)),
+                        "Augen", // "Augen" as used by sauspiel.de
+                    ),
+                )),
+                tr((
                     th(()), // empty cell to match subsequent rows
                     html_table_gap_cell.clone(),
                     itepi_cycled_twice.clone().map(|epi_header| {
                         table_cell_with_background("th", format!("{}", epi_to_sauspiel_position(epi_header)), &mapepiocardseverity[epi_header])
                     }).collect::<Vec<_>>(),
+                    html_table_gap_cell.clone(),
+                    EPlayerIndex::values().map(|epi_points|
+                        th(format!("{}", epi_to_sauspiel_position(epi_points)))
+                    )
+                    .collect::<Vec<_>>(), // TODO avoid
                 )),
-                vecepicardocardseverity.chunks(EPlayerIndex::SIZE).enumerate().map(|(i_stich, slcepicardocardseverity_stich)| {
+                vecepicardocardseverity.chunks(EPlayerIndex::SIZE).zip_eq(game_finished.stichseq.completed_stichs_winner_index(&game_finished.rules)).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
                     tr((
                         table_cell_with_background(
                             "td",
@@ -463,10 +480,15 @@ pub fn greet() {
                             },
                             EitherOrBoth::Right(_) => panic!(),
                         }))
-                        .collect::<Vec<SHtmlElement<_,_>>>() // TODO avoid
+                        .collect::<Vec<SHtmlElement<_,_>>>(), // TODO avoid
+                        html_table_gap_cell.clone(),
+                        EPlayerIndex::values().map(|epi_points| 
+                            td(if_then_some!(epi_points==epi_winner, format!("{}", points_stich(stich))))
+                        )
+                        .collect::<Vec<SHtmlElement<_,_>>>(), // TODO avoid
                     ))
                 })
-                .collect::<Vec<_>>() // TODO avoid
+                .collect::<Vec<_>>(), // TODO avoid
             ))).to_string());
             unwrap!(node_gameannouncements.append_with_node_1(&node_whole_game));
         },
