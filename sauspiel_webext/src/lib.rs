@@ -444,14 +444,13 @@ pub fn greet() {
                 tr((
                     th(()), // empty cell to match subsequent rows
                     html_table_gap_cell.clone(),
-                    itepi_cycled_twice.clone().map(|epi_header| {
+                    html_iter(itepi_cycled_twice.clone().map(|epi_header| {
                         table_cell_with_background("th", format!("{}", epi_to_sauspiel_position(epi_header)), &mapepiocardseverity[epi_header])
-                    }).collect::<Vec<_>>(),
+                    })),
                     html_table_gap_cell.clone(),
-                    EPlayerIndex::values().map(|epi_points|
+                    html_iter(EPlayerIndex::values().map(|epi_points|
                         th(format!("{}", epi_to_sauspiel_position(epi_points)))
-                    )
-                    .collect::<Vec<_>>(), // TODO avoid
+                    )),
                 )),
                 vecepicardocardseverity.chunks(EPlayerIndex::SIZE).zip_eq(game_finished.stichseq.completed_stichs_winner_index(&game_finished.rules)).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
                     tr((
@@ -461,7 +460,7 @@ pub fn greet() {
                             unwrap!(slcepicardocardseverity_stich.iter().map(|(_epi, _card, ocardseverity)| ocardseverity).max()),
                         ),
                         html_table_gap_cell.clone(),
-                        itertools::merge_join_by(
+                        html_iter(itertools::merge_join_by(
                             itepi_cycled_twice.clone(),
                             slcepicardocardseverity_stich,
                             |epi_running_index, (epi_card, _card, _ocardseverity)| {
@@ -479,13 +478,11 @@ pub fn greet() {
                                 Some(internal_output_card_sauspiel_img(*card, format!("border-top: 5px solid {str_color};box-sizing: content-box;")))
                             },
                             EitherOrBoth::Right(_) => panic!(),
-                        }))
-                        .collect::<Vec<SHtmlElement<_,_>>>(), // TODO avoid
+                        }))),
                         html_table_gap_cell.clone(),
-                        EPlayerIndex::values().map(|epi_points| 
+                        html_iter(EPlayerIndex::values().map(move |epi_points| 
                             td(if_then_some!(epi_points==epi_winner, format!("{}", points_stich(stich))))
-                        )
-                        .collect::<Vec<SHtmlElement<_,_>>>(), // TODO avoid
+                        )),
                     ))
                 })
                 .collect::<Vec<_>>(), // TODO avoid
