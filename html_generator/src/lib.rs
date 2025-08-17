@@ -128,3 +128,23 @@ impl<HtmlChildren: THtmlChildren> THtmlChildren for Option<HtmlChildren> {
     }
 }
 
+pub fn html_iter<Iter>(it: Iter) -> impl THtmlChildren
+    where
+        Iter: Iterator+Clone,
+        Iter::Item: THtmlChildren,
+{
+    struct SHtmlChildrenIterator<Iter>(Iter);
+    impl<Iter> THtmlChildren for SHtmlChildrenIterator<Iter>
+        where
+            Iter: Iterator+Clone,
+            Iter::Item: THtmlChildren,
+    {
+        fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+            for htmlchild in self.0.clone() {
+                htmlchild.fmt_children(formatter)?;
+            }
+            Ok(())
+        }
+    }
+    SHtmlChildrenIterator(it)
+}
