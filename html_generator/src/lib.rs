@@ -1,26 +1,26 @@
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone)]
-pub struct SHtmlElement<Attrs, Children> {
+pub struct SHtmlElement<Attrs: THtmlAttrs, Children: THtmlChildren> {
     str_tag_name: &'static str, // TODO impl Borrow<str>?
     attrs: Attrs,
     children: Children,
 }
 
-impl<Attrs, Children> SHtmlElement<Attrs, Children> {
+impl<Attrs: THtmlAttrs, Children: THtmlChildren> SHtmlElement<Attrs, Children> {
     pub fn new(str_tag_name: &'static str, attrs: Attrs, children: Children) -> Self {
         Self{str_tag_name, attrs, children}
     }
 }
 
 macro_rules! impl_element(($tag_name:ident) => {
-    pub fn $tag_name<Children>(children: Children) -> SHtmlElement</*Attrs*/(), Children> {
+    pub fn $tag_name<Children: THtmlChildren>(children: Children) -> SHtmlElement</*Attrs*/(), Children> {
         $tag_name::with_attrs(/*attrs*/(), children)
         
     }
     pub mod $tag_name {
-        use super::SHtmlElement;
-        pub fn with_attrs<Attrs, Children>(attrs: Attrs, children: Children) -> SHtmlElement<Attrs, Children> {
+        use super::{SHtmlElement, THtmlAttrs, THtmlChildren};
+        pub fn with_attrs<Attrs: THtmlAttrs, Children: THtmlChildren>(attrs: Attrs, children: Children) -> SHtmlElement<Attrs, Children> {
             SHtmlElement::new(stringify!($tag_name), attrs, children)
         }
     }
