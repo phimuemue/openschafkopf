@@ -52,11 +52,24 @@ impl<Attrs: THtmlAttrs, Children: THtmlChildren> Display for SHtmlElement<Attrs,
     }
 }
 
-impl THtmlAttrs for () {
-    fn fmt_attrs(&self, _formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        Ok(())
+#[derive(Clone)]
+pub struct SHtmlAttr<StrKey, StrVal>(StrKey, StrVal);
+impl<StrKey: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> THtmlAttrs for SHtmlAttr<StrKey, StrVal> {
+    fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(formatter, " {}=\"{}\"", self.0.borrow(), self.1.borrow())
     }
 }
+
+macro_rules! impl_attr(($attr:ident) => {
+    pub fn $attr<StrVal: std::borrow::Borrow<str>>(str_val: StrVal) -> SHtmlAttr<&'static str, StrVal> {
+        SHtmlAttr(stringify!($attr), str_val)
+    }
+});
+impl_attr!(class);
+impl_attr!(title);
+impl_attr!(style);
+impl_attr!(colspan);
+
 impl<StrName: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> THtmlAttrs for Vec<(StrName, StrVal)> {
     fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         for (str_name, str_val) in self {
@@ -71,11 +84,6 @@ impl<const N: usize, StrName: std::borrow::Borrow<str>, StrVal: std::borrow::Bor
             write!(formatter, " {}=\"{}\"", str_name.borrow(), str_val.borrow())?;
         }
         Ok(())
-    }
-}
-impl<StrName: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> THtmlAttrs for (StrName, StrVal) {
-    fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        std::array::from_ref(self).fmt_attrs(formatter)
     }
 }
 impl<Attrs: THtmlAttrs, Children: THtmlChildren> THtmlChildren for SHtmlElement<Attrs, Children> {
@@ -93,23 +101,32 @@ impl THtmlChildren for String {
         self.fmt(formatter)
     }
 }
-macro_rules! impl_html_children_for_tuple{($($htmlchildren:ident)*) => {
-    impl<$($htmlchildren: THtmlChildren,)*> THtmlChildren for ($($htmlchildren,)*) {
+macro_rules! impl_html_attrs_and_children_for_tuple{($($tuple_component:ident)*) => {
+    impl<$($tuple_component: THtmlAttrs,)*> THtmlAttrs for ($($tuple_component,)*) {
+        #[allow(unused_variables)]
+        fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+            #[allow(non_snake_case)]
+            let ($($tuple_component,)*) = self;
+            $($tuple_component.fmt_attrs(formatter)?;)*
+            Ok(())
+        }
+    }
+    impl<$($tuple_component: THtmlChildren,)*> THtmlChildren for ($($tuple_component,)*) {
         #[allow(unused_variables)]
         fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
             #[allow(non_snake_case)]
-            let ($($htmlchildren,)*) = self;
-            $($htmlchildren.fmt_children(formatter)?;)*
+            let ($($tuple_component,)*) = self;
+            $($tuple_component.fmt_children(formatter)?;)*
             Ok(())
         }
     }
 }}
-impl_html_children_for_tuple!();
-impl_html_children_for_tuple!(T0);
-impl_html_children_for_tuple!(T0 T1);
-impl_html_children_for_tuple!(T0 T1 T2);
-impl_html_children_for_tuple!(T0 T1 T2 T3);
-impl_html_children_for_tuple!(T0 T1 T2 T3 T4);
+impl_html_attrs_and_children_for_tuple!();
+impl_html_attrs_and_children_for_tuple!(T0);
+impl_html_attrs_and_children_for_tuple!(T0 T1);
+impl_html_attrs_and_children_for_tuple!(T0 T1 T2);
+impl_html_attrs_and_children_for_tuple!(T0 T1 T2 T3);
+impl_html_attrs_and_children_for_tuple!(T0 T1 T2 T3 T4);
 
 impl<HtmlChildren: THtmlChildren> THtmlChildren for Vec<HtmlChildren> {
     fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {

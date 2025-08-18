@@ -123,11 +123,11 @@ fn internal_output_card_sauspiel_img(card: ECard, str_style: String) -> html_gen
     let str_card = format!("{card}").replace('Z', "X"); // TODO proper card formatter
     use html_generator::*;
     span::with_attrs(
-        [
-            ("class", format!("card-icon card-icon-by card-icon-{str_card}")),
-            ("title", str_card.clone()),
-            ("style", str_style),
-        ],
+        (
+            class(format!("card-icon card-icon-by card-icon-{str_card}")),
+            title(str_card.clone()),
+            style(str_style),
+        ),
         str_card
     )
     /* // TODO This would look better:
@@ -412,13 +412,13 @@ pub fn greet() {
                     None | Some(EPlayedCardSeverity::Optimal) => "", // Do not indicate "unchecked" or "optimal" in overview cells
                     Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
                 };
-                SHtmlElement::new(str_tag_name, ("style", format!("background-color: {str_color};")), str_text)
+                SHtmlElement::new(str_tag_name, style(format!("background-color: {str_color};")), str_text)
             }
             let itepi_cycled_twice = itertools::chain(
                 EPlayerIndex::values(),
                 EPlayerIndex::values().take(EPlayerIndex::SIZE - 1),
             );
-            /*TODO const*/let html_table_gap_cell = th::with_attrs(("style", "width: 10px; background: none;"), ());
+            /*TODO const*/let html_table_gap_cell = th::with_attrs(style("width: 10px; background: none;"), ());
             let node_whole_game = unwrap!(
                 unwrap!(node_gameannouncement_epi0.clone_node())
                     .dyn_into::<web_sys::Element>() // TODO can we avoid this?
@@ -432,12 +432,12 @@ pub fn greet() {
                     th(()), // empty cell to match subsequent rows // TODO merge with next row's cell?
                     html_table_gap_cell.clone(),
                     th::with_attrs(
-                        ("colspan", format!("{}", itepi_cycled_twice.clone().count())),
+                        colspan(format!("{}", itepi_cycled_twice.clone().count())),
                         "Karten",
                     ),
                     html_table_gap_cell.clone(),
                     th::with_attrs(
-                        ("colspan", format!("{}", EPlayerIndex::SIZE)),
+                        colspan(format!("{}", EPlayerIndex::SIZE)),
                         "Augen", // "Augen" as used by sauspiel.de
                     ),
                 )),
