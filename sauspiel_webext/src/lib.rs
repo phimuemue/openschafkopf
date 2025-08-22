@@ -122,14 +122,12 @@ impl TSauspielHtmlNode<'_> for SWebsysElement {
 fn internal_output_card_sauspiel_img(card: ECard, str_style: String) -> html_generator::SHtmlElement<impl html_generator::THtmlAttrs, impl html_generator::THtmlChildren> {
     let str_card = format!("{card}").replace('Z', "X"); // TODO proper card formatter
     use html_generator::*;
-    span::with_attrs(
-        (
-            class(format!("card-icon card-icon-by card-icon-{str_card}")),
-            title(str_card.clone()),
-            style(str_style),
-        ),
+    span((
+        class(format!("card-icon card-icon-by card-icon-{str_card}")),
+        title(str_card.clone()),
+        style(str_style),
         str_card
-    )
+    ))
     /* // TODO This would look better:
     <div class="game-protocol-trick-card position-1  " style="/*! text-align: center; */justify-content: center;">
         <a data-userid="119592" data-username="TiltBoi" class="profile-link" href="/profile/TiltBoi" style="margin: 0 auto;">TiltBoi</a>
@@ -418,7 +416,7 @@ pub fn greet() {
                 EPlayerIndex::values(),
                 EPlayerIndex::values().take(EPlayerIndex::SIZE - 1),
             );
-            /*TODO const*/let html_table_gap_cell = th::with_attrs(style("width: 10px; background: none;"), ());
+            /*TODO const*/let html_table_gap_cell = th(style("width: 10px; background: none;"));
             let node_whole_game = unwrap!(
                 unwrap!(node_gameannouncement_epi0.clone_node())
                     .dyn_into::<web_sys::Element>() // TODO can we avoid this?
@@ -431,15 +429,15 @@ pub fn greet() {
                 tr((
                     th(()), // empty cell to match subsequent rows // TODO merge with next row's cell?
                     html_table_gap_cell.clone(),
-                    th::with_attrs(
+                    th((
                         colspan(format!("{}", itepi_cycled_twice.clone().count())),
                         "Karten",
-                    ),
+                    )),
                     html_table_gap_cell.clone(),
-                    th::with_attrs(
+                    th((
                         colspan(format!("{}", EPlayerIndex::SIZE)),
                         "Augen", // "Augen" as used by sauspiel.de
-                    ),
+                    )),
                 )),
                 tr((
                     th(()), // empty cell to match subsequent rows

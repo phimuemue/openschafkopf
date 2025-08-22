@@ -14,17 +14,23 @@ impl<Attrs: THtmlAttrs, Children: THtmlChildren> SHtmlElement<Attrs, Children> {
 }
 
 macro_rules! impl_element(($tag_name:ident) => {
-    pub fn $tag_name<Children: THtmlChildren>(children: Children) -> SHtmlElement</*Attrs*/(), Children> {
-        $tag_name::with_attrs(/*attrs*/(), children)
-        
-    }
-    pub mod $tag_name {
-        use super::{SHtmlElement, THtmlAttrs, THtmlChildren};
-        pub fn with_attrs<Attrs: THtmlAttrs, Children: THtmlChildren>(attrs: Attrs, children: Children) -> SHtmlElement<Attrs, Children> {
-            SHtmlElement::new(stringify!($tag_name), attrs, children)
-        }
+    pub fn $tag_name<MakeAttrsAndChildren: TMakeAttrsAndChildren>(makeattrsandchildren: MakeAttrsAndChildren) -> SHtmlElement<MakeAttrsAndChildren::PrependedAttrs<()>, MakeAttrsAndChildren::PrependedChildren<()>> {
+        makeattrsandchildren.prepend_to_html_element(SHtmlElement::new(
+            stringify!($tag_name),
+            /*attrs*/(),
+            /*children*/(),
+        ))
     }
 });
+
+pub trait THtmlElement : std::fmt::Display {
+}
+
+pub trait TMakeAttrsAndChildren {
+    type PrependedAttrs<Attrs: THtmlAttrs>: THtmlAttrs;
+    type PrependedChildren<Children: THtmlChildren>: THtmlChildren;
+    fn prepend_to_html_element<Attrs: THtmlAttrs, Children: THtmlChildren>(self, htmlelement: SHtmlElement<Attrs, Children>) -> SHtmlElement<Self::PrependedAttrs<Attrs>, Self::PrependedChildren<Children>>;
+}
 
 impl_element!(table);
 impl_element!(tbody);
@@ -51,6 +57,8 @@ impl<Attrs: THtmlAttrs, Children: THtmlChildren> Display for SHtmlElement<Attrs,
         Ok(())
     }
 }
+impl<Attrs: THtmlAttrs, Children: THtmlChildren> THtmlElement for SHtmlElement<Attrs, Children> {
+}
 
 #[derive(Clone)]
 pub struct SHtmlAttr<StrKey, StrVal>(StrKey, StrVal);
@@ -69,6 +77,55 @@ impl_attr!(class);
 impl_attr!(title);
 impl_attr!(style);
 impl_attr!(colspan);
+impl<StrKey: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> TMakeAttrsAndChildren for SHtmlAttr<StrKey, StrVal> {
+    type PrependedAttrs<Attrs: THtmlAttrs> = (Self, Attrs);
+    type PrependedChildren<Children: THtmlChildren> = Children;
+    fn prepend_to_html_element<Attrs: THtmlAttrs, Children: THtmlChildren>(self, htmlelement: SHtmlElement<Attrs, Children>) -> SHtmlElement<Self::PrependedAttrs<Attrs>, Self::PrependedChildren<Children>> {
+        let SHtmlElement { str_tag_name, attrs, children } = htmlelement;
+        SHtmlElement::new(
+            str_tag_name,
+            (self, attrs),
+            children,
+        )
+    }
+}
+impl TMakeAttrsAndChildren for () {
+    type PrependedAttrs<Attrs: THtmlAttrs> = Attrs;
+    type PrependedChildren<Children: THtmlChildren> = Children;
+    fn prepend_to_html_element<Attrs: THtmlAttrs, Children: THtmlChildren>(self, htmlelement: SHtmlElement<Attrs, Children>) -> SHtmlElement<Self::PrependedAttrs<Attrs>, Self::PrependedChildren<Children>> {
+        htmlelement
+    }
+}
+
+
+macro_rules! nest_prepended_args(
+    ($attrsorchildren:ident, $prepended:ident,) => {
+        $attrsorchildren
+    };
+    ($attrsorchildren:ident, $prepended:ident, $t0:ident $($t:ident)*) => {
+        $t0::$prepended<nest_prepended_args!($attrsorchildren, $prepended, $($t)*)>
+    };
+);
+
+macro_rules! impl_make_attrs_and_children(
+    ($tuple_component_0:ident $($tuple_component:ident)*) => {
+        impl<$tuple_component_0: TMakeAttrsAndChildren, $($tuple_component: TMakeAttrsAndChildren,)*> TMakeAttrsAndChildren for ($tuple_component_0, $($tuple_component,)*) {
+            type PrependedAttrs<Attrs: THtmlAttrs> = nest_prepended_args!(Attrs, PrependedAttrs, $tuple_component_0 $($tuple_component)*);
+            type PrependedChildren<Children: THtmlChildren> = nest_prepended_args!(Children, PrependedChildren, $tuple_component_0 $($tuple_component)*);
+            fn prepend_to_html_element<Attrs: THtmlAttrs, Children: THtmlChildren>(self, htmlelement: SHtmlElement<Attrs, Children>) -> SHtmlElement<Self::PrependedAttrs<Attrs>, Self::PrependedChildren<Children>> {
+                #[allow(non_snake_case)]
+                let ($tuple_component_0, $($tuple_component,)*) = self;
+                let htmlelement = ($($tuple_component,)*).prepend_to_html_element(htmlelement);
+                $tuple_component_0.prepend_to_html_element(htmlelement)
+            }
+        }
+    }
+);
+impl_make_attrs_and_children!(T0);
+impl_make_attrs_and_children!(T0 T1);
+impl_make_attrs_and_children!(T0 T1 T2);
+impl_make_attrs_and_children!(T0 T1 T2 T3);
+impl_make_attrs_and_children!(T0 T1 T2 T3 T4);
 
 impl<StrName: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> THtmlAttrs for Vec<(StrName, StrVal)> {
     fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
@@ -86,14 +143,50 @@ impl<const N: usize, StrName: std::borrow::Borrow<str>, StrVal: std::borrow::Bor
         Ok(())
     }
 }
+impl<AttrsOuter: THtmlAttrs, ChildrenOuter: THtmlChildren> TMakeAttrsAndChildren for SHtmlElement<AttrsOuter, ChildrenOuter> {
+    type PrependedAttrs<Attrs: THtmlAttrs> = Attrs;
+    type PrependedChildren<Children: THtmlChildren> = (Self, Children);
+    fn prepend_to_html_element<Attrs: THtmlAttrs, Children: THtmlChildren>(self, htmlelement: SHtmlElement<Attrs, Children>) -> SHtmlElement<Self::PrependedAttrs<Attrs>, Self::PrependedChildren<Children>> {
+        let SHtmlElement { str_tag_name, attrs, children } = htmlelement;
+        SHtmlElement::new(
+            str_tag_name,
+            attrs,
+            (self, children),
+        )
+    }
+}
 impl<Attrs: THtmlAttrs, Children: THtmlChildren> THtmlChildren for SHtmlElement<Attrs, Children> {
     fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.fmt(formatter)
     }
 }
+impl TMakeAttrsAndChildren for &str {
+    type PrependedAttrs<Attrs: THtmlAttrs> = Attrs;
+    type PrependedChildren<Children: THtmlChildren> = (Self, Children);
+    fn prepend_to_html_element<Attrs: THtmlAttrs, Children: THtmlChildren>(self, htmlelement: SHtmlElement<Attrs, Children>) -> SHtmlElement<Self::PrependedAttrs<Attrs>, Self::PrependedChildren<Children>> {
+        let SHtmlElement { str_tag_name, attrs, children } = htmlelement;
+        SHtmlElement::new(
+            str_tag_name,
+            attrs,
+            (self, children),
+        )
+    }
+}
 impl THtmlChildren for &str {
     fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.fmt(formatter)
+    }
+}
+impl TMakeAttrsAndChildren for String {
+    type PrependedAttrs<Attrs: THtmlAttrs> = Attrs;
+    type PrependedChildren<Children: THtmlChildren> = (Self, Children);
+    fn prepend_to_html_element<Attrs: THtmlAttrs, Children: THtmlChildren>(self, htmlelement: SHtmlElement<Attrs, Children>) -> SHtmlElement<Self::PrependedAttrs<Attrs>, Self::PrependedChildren<Children>> {
+        let SHtmlElement { str_tag_name, attrs, children } = htmlelement;
+        SHtmlElement::new(
+            str_tag_name,
+            attrs,
+            (self, children),
+        )
     }
 }
 impl THtmlChildren for String {
@@ -128,12 +221,36 @@ impl_html_attrs_and_children_for_tuple!(T0 T1 T2);
 impl_html_attrs_and_children_for_tuple!(T0 T1 T2 T3);
 impl_html_attrs_and_children_for_tuple!(T0 T1 T2 T3 T4);
 
+impl<HtmlChildren: THtmlChildren> TMakeAttrsAndChildren for Vec<HtmlChildren> {
+    type PrependedAttrs<Attrs: THtmlAttrs> = Attrs;
+    type PrependedChildren<Children: THtmlChildren> = (Self, Children);
+    fn prepend_to_html_element<Attrs: THtmlAttrs, Children: THtmlChildren>(self, htmlelement: SHtmlElement<Attrs, Children>) -> SHtmlElement<Self::PrependedAttrs<Attrs>, Self::PrependedChildren<Children>> {
+        let SHtmlElement { str_tag_name, attrs, children } = htmlelement;
+        SHtmlElement::new(
+            str_tag_name,
+            attrs,
+            (self, children),
+        )
+    }
+}
 impl<HtmlChildren: THtmlChildren> THtmlChildren for Vec<HtmlChildren> {
     fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         for htmlchild in self {
             htmlchild.fmt_children(formatter)?;
         }
         Ok(())
+    }
+}
+impl<HtmlChildren: THtmlChildren> TMakeAttrsAndChildren for Option<HtmlChildren> {
+    type PrependedAttrs<Attrs: THtmlAttrs> = Attrs;
+    type PrependedChildren<Children: THtmlChildren> = (Self, Children);
+    fn prepend_to_html_element<Attrs: THtmlAttrs, Children: THtmlChildren>(self, htmlelement: SHtmlElement<Attrs, Children>) -> SHtmlElement<Self::PrependedAttrs<Attrs>, Self::PrependedChildren<Children>> {
+        let SHtmlElement { str_tag_name, attrs, children } = htmlelement;
+        SHtmlElement::new(
+            str_tag_name,
+            attrs,
+            (self, children),
+        )
     }
 }
 impl<HtmlChildren: THtmlChildren> THtmlChildren for Option<HtmlChildren> {
@@ -145,7 +262,7 @@ impl<HtmlChildren: THtmlChildren> THtmlChildren for Option<HtmlChildren> {
     }
 }
 
-pub fn html_iter<Iter>(it: Iter) -> impl THtmlChildren
+pub fn html_iter<Iter>(it: Iter) -> impl THtmlChildren + TMakeAttrsAndChildren
     where
         Iter: Iterator+Clone,
         Iter::Item: THtmlChildren,
@@ -161,6 +278,22 @@ pub fn html_iter<Iter>(it: Iter) -> impl THtmlChildren
                 htmlchild.fmt_children(formatter)?;
             }
             Ok(())
+        }
+    }
+    impl<Iter> TMakeAttrsAndChildren for SHtmlChildrenIterator<Iter>
+        where
+            Iter: Iterator+Clone,
+            Iter::Item: THtmlChildren,
+    {
+        type PrependedAttrs<Attrs: THtmlAttrs> = Attrs;
+        type PrependedChildren<Children: THtmlChildren> = (Self, Children);
+        fn prepend_to_html_element<Attrs: THtmlAttrs, Children: THtmlChildren>(self, htmlelement: SHtmlElement<Attrs, Children>) -> SHtmlElement<Self::PrependedAttrs<Attrs>, Self::PrependedChildren<Children>> {
+            let SHtmlElement { str_tag_name, attrs, children } = htmlelement;
+            SHtmlElement::new(
+                str_tag_name,
+                attrs,
+                (self, children),
+            )
         }
     }
     SHtmlChildrenIterator(it)
