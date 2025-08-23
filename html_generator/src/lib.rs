@@ -131,9 +131,6 @@ macro_rules! impl_element(($tag_name:ident) => {
     }
 });
 
-pub trait THtmlElement : std::fmt::Display {
-}
-
 impl_element!(table);
 impl_element!(tbody);
 impl_element!(tr);
@@ -158,8 +155,6 @@ impl<Attrs: THtmlAttrs, Children: THtmlChildren> Display for SHtmlElement<Attrs,
         write!(formatter, "</{str_tag_name}>")?;
         Ok(())
     }
-}
-impl<Attrs: THtmlAttrs, Children: THtmlChildren> THtmlElement for SHtmlElement<Attrs, Children> {
 }
 
 #[derive(Debug, Clone)]
