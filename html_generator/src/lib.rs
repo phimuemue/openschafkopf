@@ -1,5 +1,126 @@
 use std::fmt::{Display, Formatter};
 
+struct SPrependToAttrs;
+struct SPrependToChildren;
+trait TIntoPrependToAttrsOrChildren {
+    type PrependToAttrsOrChildren: TPrependToAttrsOrChildren;
+}
+
+trait TPrependToAttrsOrChildren {
+    type PrependedAttrs<T, O0>;
+    type PrependedChildren<T, O1>;
+    fn prepend_to_attrs_or_children<T, O0, O1>(t: T, other: (O0, O1)) -> (Self::PrependedAttrs<T, O0>, Self::PrependedChildren<T, O1>);
+}
+impl TPrependToAttrsOrChildren for SPrependToAttrs {
+    type PrependedAttrs<T, O0> = (T, O0);
+    type PrependedChildren<T, O1> = O1;
+    fn prepend_to_attrs_or_children<T, O0, O1>(t: T, (o0, o1): (O0, O1)) -> (Self::PrependedAttrs<T, O0>, Self::PrependedChildren<T, O1>) {
+        ((t, o0), o1)
+    }
+}
+impl TPrependToAttrsOrChildren for SPrependToChildren {
+    type PrependedAttrs<T, O0> = O0;
+    type PrependedChildren<T, O1> = (T, O1);
+    fn prepend_to_attrs_or_children<T, O0, O1>(t: T, (o0, o1): (O0, O1)) -> (Self::PrependedAttrs<T, O0>, Self::PrependedChildren<T, O1>) {
+        (o0, (t, o1))
+    }
+}
+
+impl<StrKey, StrVal> TIntoPrependToAttrsOrChildren for SHtmlAttr<StrKey, StrVal> {
+    type PrependToAttrsOrChildren = SPrependToAttrs;
+}
+
+impl<Attrs: THtmlAttrs, Children: THtmlChildren> TIntoPrependToAttrsOrChildren for SHtmlElement<Attrs, Children> {
+    type PrependToAttrsOrChildren = SPrependToChildren;
+}
+
+trait TSplitIntoAttrsAndChildren {
+    type AttrsAndChildren;
+    fn split_into_attrs_and_children(self) -> Self::AttrsAndChildren;
+}
+
+impl TSplitIntoAttrsAndChildren for () {
+    type AttrsAndChildren = ((), ());
+    fn split_into_attrs_and_children(self) -> Self::AttrsAndChildren {
+        ((), ())
+    }
+}
+
+impl<IntoPrependToAttrsOrChildren: TIntoPrependToAttrsOrChildren> TSplitIntoAttrsAndChildren for IntoPrependToAttrsOrChildren {
+    type AttrsAndChildren = (<IntoPrependToAttrsOrChildren::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedAttrs<Self, ()>, <IntoPrependToAttrsOrChildren::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedChildren<Self, ()>);
+    fn split_into_attrs_and_children(self) -> Self::AttrsAndChildren {
+        <IntoPrependToAttrsOrChildren::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::prepend_to_attrs_or_children(self, ((), ()))
+    }
+}
+
+impl<IntoPrependToAttrsOrChildren: TIntoPrependToAttrsOrChildren> TSplitIntoAttrsAndChildren for (IntoPrependToAttrsOrChildren, ) {
+    type AttrsAndChildren = (<IntoPrependToAttrsOrChildren::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedAttrs<Self, ()>, <IntoPrependToAttrsOrChildren::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedChildren<Self, ()>);
+    fn split_into_attrs_and_children(self) -> Self::AttrsAndChildren {
+        <IntoPrependToAttrsOrChildren::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::prepend_to_attrs_or_children(self, ((), ()))
+    }
+}
+
+impl<Into01_0: TIntoPrependToAttrsOrChildren, Into01_1: TIntoPrependToAttrsOrChildren> TSplitIntoAttrsAndChildren for (Into01_0, Into01_1) {
+    type AttrsAndChildren = (
+        <Into01_0::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedAttrs<
+            Into01_0,
+            <Into01_1::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedAttrs<Into01_1, ()>
+        >,
+        <Into01_0::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedChildren<
+            Into01_0,
+            <Into01_1::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedChildren<Into01_1, ()>
+        >
+    );
+    fn split_into_attrs_and_children(self) -> Self::AttrsAndChildren {
+        <Into01_0::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::prepend_to_attrs_or_children(
+            self.0,
+            <Into01_1::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::prepend_to_attrs_or_children(self.1, ((), ()))
+        )
+    }
+}
+
+impl<Into01_0: TIntoPrependToAttrsOrChildren, Into01_1: TIntoPrependToAttrsOrChildren, Into01_2: TIntoPrependToAttrsOrChildren> TSplitIntoAttrsAndChildren for (Into01_0, Into01_1, Into01_2) {
+    type AttrsAndChildren = (
+        <Into01_0::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedAttrs<
+            Into01_0,
+            <Into01_1::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedAttrs<
+                Into01_1,
+                <Into01_2::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedAttrs<
+                    Into01_2,
+                    ()
+                >
+            >
+        >,
+        <Into01_0::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedChildren<
+            Into01_0,
+            <Into01_1::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedChildren<
+                Into01_1,
+                <Into01_2::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedChildren<
+                    Into01_2,
+                    ()
+                >
+            >
+        >
+    );
+    fn split_into_attrs_and_children(self) -> Self::AttrsAndChildren {
+        <Into01_0::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::prepend_to_attrs_or_children(
+            self.0,
+            <Into01_1::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::prepend_to_attrs_or_children(
+                self.1,
+                <Into01_2::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::prepend_to_attrs_or_children(
+                    self.2,
+                    ((), ())
+                )
+            )
+        )
+    }
+}
+
+#[test]
+pub fn testme() { // TODO remove this
+    dbg!((class("Test"), title("Test2"), div((class("innerdiv"), div(span("test")), div("test")))).split_into_attrs_and_children());
+}
+
 #[derive(Debug, Clone)]
 pub struct SHtmlElement<Attrs: THtmlAttrs, Children: THtmlChildren> {
     str_tag_name: &'static str, // TODO impl Borrow<str>?
@@ -60,7 +181,7 @@ impl<Attrs: THtmlAttrs, Children: THtmlChildren> Display for SHtmlElement<Attrs,
 impl<Attrs: THtmlAttrs, Children: THtmlChildren> THtmlElement for SHtmlElement<Attrs, Children> {
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct SHtmlAttr<StrKey, StrVal>(StrKey, StrVal);
 impl<StrKey: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> THtmlAttrs for SHtmlAttr<StrKey, StrVal> {
     fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
