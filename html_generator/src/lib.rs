@@ -48,14 +48,6 @@ pub trait TSplitIntoAttrsAndChildren {
     fn split_into_attrs_and_children(self) -> (Self::Attrs, Self::Children);
 }
 
-impl<IntoPrependToAttrsOrChildren: TIntoPrependToAttrsOrChildren> TSplitIntoAttrsAndChildren for IntoPrependToAttrsOrChildren {
-    type Attrs = <IntoPrependToAttrsOrChildren::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedAttrs<Self, ()>;
-    type Children = <IntoPrependToAttrsOrChildren::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::PrependedChildren<Self, ()>;
-    fn split_into_attrs_and_children(self) -> (Self::Attrs, Self::Children) {
-        <IntoPrependToAttrsOrChildren::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::prepend_to_attrs_or_children(self, ((), ()))
-    }
-}
-
 macro_rules! nest_prepend_to_attrs_or_children(
     ($prepended:ident,) => {
         ()
@@ -78,6 +70,14 @@ macro_rules! impl_split_into_attrs_and_children(
         )
     };
 );
+impl<IntoPrependToAttrsOrChildren: TIntoPrependToAttrsOrChildren> TSplitIntoAttrsAndChildren for IntoPrependToAttrsOrChildren {
+    type Attrs = nest_prepend_to_attrs_or_children!(PrependedAttrs, IntoPrependToAttrsOrChildren);
+    type Children = nest_prepend_to_attrs_or_children!(PrependedChildren, IntoPrependToAttrsOrChildren);
+    fn split_into_attrs_and_children(self) -> (Self::Attrs, Self::Children) {
+        <IntoPrependToAttrsOrChildren::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::prepend_to_attrs_or_children(self, ((), ()))
+    }
+}
+
 
 macro_rules! impl_t_split_into_attrs_and_children {($($t:ident)*) => {
     impl<$($t: TIntoPrependToAttrsOrChildren,)*> TSplitIntoAttrsAndChildren for ($($t,)*) {
