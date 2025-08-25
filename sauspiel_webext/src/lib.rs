@@ -124,8 +124,8 @@ fn internal_output_card_sauspiel_img(card: ECard, str_style: String) -> html_gen
     use html_generator::*;
     span((
         class(format!("card-icon card-icon-by card-icon-{str_card}")),
-        title(str_card.clone()),
-        style(str_style),
+        attributes::title(str_card.clone()),
+        attributes::style(str_style),
         str_card
     ))
     /* // TODO This would look better:
@@ -410,7 +410,7 @@ pub fn greet() {
                     None | Some(EPlayedCardSeverity::Optimal) => "", // Do not indicate "unchecked" or "optimal" in overview cells
                     Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
                 };
-                HtmlElement::new(str_tag_name, style(format!("background-color: {str_color};")), str_text)
+                HtmlElement::new(str_tag_name, attributes::style(format!("background-color: {str_color};")), str_text)
             }
             let itepi_cycled_twice = itertools::chain(
                 EPlayerIndex::values(),
