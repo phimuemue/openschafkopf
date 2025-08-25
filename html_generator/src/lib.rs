@@ -4,6 +4,7 @@ pub struct IsAttribute;
 pub struct IsChild;
 pub trait AttributeOrChild {
     type IsAttributeOrChild: IsAttributeOrChild;
+    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error>;
 }
 
 pub trait IsAttributeOrChild {
@@ -26,20 +27,38 @@ impl IsAttributeOrChild for IsChild {
     }
 }
 
-impl<StrKey, StrVal> AttributeOrChild for SHtmlAttr<StrKey, StrVal> {
+impl<StrKey: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> AttributeOrChild for SHtmlAttr<StrKey, StrVal> {
     type IsAttributeOrChild = IsAttribute;
+    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(formatter, " {}=\"{}\"", self.0.borrow(), self.1.borrow())
+    }
 }
 
 impl<Attributes: HtmlAttrs, Children: HtmlChildren> AttributeOrChild for HtmlElement<Attributes, Children> {
     type IsAttributeOrChild = IsChild;
+    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        let tag_name = self.tag_name;
+        write!(formatter, "<{tag_name}")?;
+        self.attributes.fmt_attrs(formatter)?;
+        write!(formatter, ">")?;
+        self.children.fmt_children(formatter)?;
+        write!(formatter, "</{tag_name}>")?;
+        Ok(())
+    }
 }
 
 impl AttributeOrChild for &str {
     type IsAttributeOrChild = IsChild;
+    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.fmt(formatter)
+    }
 }
 
 impl AttributeOrChild for String {
     type IsAttributeOrChild = IsChild;
+    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.fmt(formatter)
+    }
 }
 
 pub trait AttributesAndChildren {
@@ -122,28 +141,27 @@ impl_element!(span);
 pub trait HtmlAttrs {
     fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error>;
 }
+impl<T: AttributeOrChild<IsAttributeOrChild=IsAttribute>> HtmlAttrs for T {
+    fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.fmt_attribute_or_child(formatter)
+    }
+}
 pub trait HtmlChildren {
     fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error>;
 }
+impl<T: AttributeOrChild<IsAttributeOrChild=IsChild>> HtmlChildren for T {
+    fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.fmt_attribute_or_child(formatter)
+    }
+}
 impl<Attributes: HtmlAttrs, Children: HtmlChildren> Display for HtmlElement<Attributes, Children> {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        let tag_name = self.tag_name;
-        write!(formatter, "<{tag_name}")?;
-        self.attributes.fmt_attrs(formatter)?;
-        write!(formatter, ">")?;
-        self.children.fmt_children(formatter)?;
-        write!(formatter, "</{tag_name}>")?;
-        Ok(())
+        self.fmt_attribute_or_child(formatter)
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct SHtmlAttr<StrKey, StrVal>(StrKey, StrVal);
-impl<StrKey: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> HtmlAttrs for SHtmlAttr<StrKey, StrVal> {
-    fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(formatter, " {}=\"{}\"", self.0.borrow(), self.1.borrow())
-    }
-}
 
 macro_rules! impl_attr(($attr:ident) => {
     pub fn $attr<StrVal: std::borrow::Borrow<str>>(str_val: StrVal) -> SHtmlAttr<&'static str, StrVal> {
@@ -155,21 +173,6 @@ impl_attr!(title);
 impl_attr!(style);
 impl_attr!(colspan);
 
-impl<Attributes: HtmlAttrs, Children: HtmlChildren> HtmlChildren for HtmlElement<Attributes, Children> {
-    fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        self.fmt(formatter)
-    }
-}
-impl HtmlChildren for &str {
-    fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        self.fmt(formatter)
-    }
-}
-impl HtmlChildren for String {
-    fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        self.fmt(formatter)
-    }
-}
 macro_rules! impl_html_attrs_and_children_for_tuple{($($tuple_component:ident)*) => {
     impl<$($tuple_component: HtmlAttrs,)*> HtmlAttrs for ($($tuple_component,)*) {
         #[allow(unused_variables)]
@@ -197,69 +200,43 @@ impl_html_attrs_and_children_for_tuple!(T0 T1 T2);
 impl_html_attrs_and_children_for_tuple!(T0 T1 T2 T3);
 impl_html_attrs_and_children_for_tuple!(T0 T1 T2 T3 T4);
 
-impl<Attributes: HtmlAttrs> HtmlAttrs for Vec<Attributes> {
-    fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        for htmlattr in self {
-            htmlattr.fmt_attrs(formatter)?;
-        }
-        Ok(())
-    }
-}
-impl<Children: HtmlChildren> HtmlChildren for Vec<Children> {
-    fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        for htmlchild in self {
-            htmlchild.fmt_children(formatter)?;
-        }
-        Ok(())
-    }
-}
 impl<T: AttributeOrChild> AttributeOrChild for Vec<T> {
     type IsAttributeOrChild = T::IsAttributeOrChild;
-}
-impl<Attributes: HtmlAttrs> HtmlAttrs for Option<Attributes> {
-    fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        if let Some(htmlattr) = self {
-            htmlattr.fmt_attrs(formatter)?;
-        }
-        Ok(())
-    }
-}
-impl<Children: HtmlChildren> HtmlChildren for Option<Children> {
-    fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        if let Some(htmlchild) = self {
-            htmlchild.fmt_children(formatter)?;
+    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        for attributeorchild in self {
+            attributeorchild.fmt_attribute_or_child(formatter)?;
         }
         Ok(())
     }
 }
 impl<T: AttributeOrChild> AttributeOrChild for Option<T> {
     type IsAttributeOrChild = T::IsAttributeOrChild;
+    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        if let Some(attributeorchild) = self {
+            attributeorchild.fmt_attribute_or_child(formatter)?;
+        }
+        Ok(())
+    }
 }
 
-pub fn html_iter<Iter>(it: Iter) -> impl HtmlChildren + AttributeOrChild<IsAttributeOrChild=<Iter::Item as AttributeOrChild>::IsAttributeOrChild>
+pub fn html_iter<Iter>(it: Iter) -> impl AttributeOrChild<IsAttributeOrChild=<Iter::Item as AttributeOrChild>::IsAttributeOrChild>
     where
         Iter: Iterator+Clone,
-        Iter::Item: HtmlChildren + AttributeOrChild,
+        Iter::Item: AttributeOrChild,
 {
-    struct SHtmlChildrenIterator<Iter>(Iter);
-    impl<Iter> HtmlChildren for SHtmlChildrenIterator<Iter>
+    struct HtmlAttributeOrChildIterator<Iter>(Iter);
+    impl<Iter> AttributeOrChild for HtmlAttributeOrChildIterator<Iter>
         where
             Iter: Iterator+Clone,
-            Iter::Item: HtmlChildren + AttributeOrChild,
+            Iter::Item: AttributeOrChild,
     {
-        fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        type IsAttributeOrChild = <Iter::Item as AttributeOrChild>::IsAttributeOrChild;
+        fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
             for htmlchild in self.0.clone() {
-                htmlchild.fmt_children(formatter)?;
+                htmlchild.fmt_attribute_or_child(formatter)?;
             }
             Ok(())
         }
     }
-    impl<Iter> AttributeOrChild for SHtmlChildrenIterator<Iter>
-        where
-            Iter: Iterator+Clone,
-            Iter::Item: HtmlChildren + AttributeOrChild,
-    {
-        type IsAttributeOrChild = <Iter::Item as AttributeOrChild>::IsAttributeOrChild;
-    }
-    SHtmlChildrenIterator(it)
+    HtmlAttributeOrChildIterator(it)
 }
