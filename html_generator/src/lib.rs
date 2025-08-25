@@ -59,17 +59,6 @@ macro_rules! nest_prepend_to_attrs_or_children(
         >
     };
 );
-macro_rules! impl_split_into_attrs_and_children(
-    () => {
-        ((), ())
-    };
-    ($t0:ident $($t:ident)*) => {
-        <$t0::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::prepend_to_attrs_or_children(
-            $t0,
-            impl_split_into_attrs_and_children!($($t)*)
-        )
-    };
-);
 impl<IntoPrependToAttrsOrChildren: TIntoPrependToAttrsOrChildren> TSplitIntoAttrsAndChildren for IntoPrependToAttrsOrChildren {
     type Attrs = nest_prepend_to_attrs_or_children!(PrependedAttrs, IntoPrependToAttrsOrChildren);
     type Children = nest_prepend_to_attrs_or_children!(PrependedChildren, IntoPrependToAttrsOrChildren);
@@ -78,15 +67,16 @@ impl<IntoPrependToAttrsOrChildren: TIntoPrependToAttrsOrChildren> TSplitIntoAttr
     }
 }
 
-
 macro_rules! impl_t_split_into_attrs_and_children {($($t:ident)*) => {
-    impl<$($t: TIntoPrependToAttrsOrChildren,)*> TSplitIntoAttrsAndChildren for ($($t,)*) {
-        type Attrs = nest_prepend_to_attrs_or_children!(PrependedAttrs, $($t)*);
-        type Children = nest_prepend_to_attrs_or_children!(PrependedChildren, $($t)*);
+    impl<$($t: TSplitIntoAttrsAndChildren,)*> TSplitIntoAttrsAndChildren for ($($t,)*) {
+        type Attrs = ($($t::Attrs,)*);
+        type Children = ($($t::Children,)*);
         fn split_into_attrs_and_children(self) -> (Self::Attrs, Self::Children) {
             #[allow(non_snake_case)]
             let ($($t,)*) = self;
-            impl_split_into_attrs_and_children!($($t)*)
+            #[allow(non_snake_case)]
+            let ($($t,)*) = ($($t.split_into_attrs_and_children(),)*);
+            (($($t.0,)*), ($($t.1,)*))
         }
     }
 }}
@@ -101,6 +91,7 @@ impl_t_split_into_attrs_and_children!(T0 T1 T2 T3 T4);
 #[test]
 pub fn testme() { // TODO remove this
     dbg!((class("Test"), Some(title("Test2")), div((class("innerdiv"), div(Some(span("test"))), div("test")))).split_into_attrs_and_children());
+    dbg!(((class("Test"), class("test2")), Some(title("Test2")), div((class("innerdiv"), div(Some(span("test"))), div("test")))).split_into_attrs_and_children());
 }
 
 #[derive(Debug, Clone)]
