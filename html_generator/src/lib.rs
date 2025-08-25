@@ -48,20 +48,9 @@ pub trait AttributesAndChildren {
     fn split_into_attributes_and_children(self) -> (Self::Attributes, Self::Children);
 }
 
-macro_rules! nest_prepend_to_attrs_or_children(
-    ($prepended:ident,) => {
-        ()
-    };
-    ($prepended:ident, $t0:ident $($t:ident)*) => {
-        <$t0::IsAttributeOrChild as IsAttributeOrChild>::$prepended<
-            $t0,
-            nest_prepend_to_attrs_or_children!($prepended, $($t)*)
-        >
-    };
-);
 impl<AorC: AttributeOrChild> AttributesAndChildren for AorC {
-    type Attributes = nest_prepend_to_attrs_or_children!(PrependedAttrs, AorC);
-    type Children = nest_prepend_to_attrs_or_children!(PrependedChildren, AorC);
+    type Attributes = <AorC::IsAttributeOrChild as IsAttributeOrChild>::PrependedAttrs<AorC, ()>;
+    type Children = <AorC::IsAttributeOrChild as IsAttributeOrChild>::PrependedChildren<AorC, ()>;
     fn split_into_attributes_and_children(self) -> (Self::Attributes, Self::Children) {
         <AorC::IsAttributeOrChild as IsAttributeOrChild>::prepend_to_attrs_or_children(self, ((), ()))
     }
