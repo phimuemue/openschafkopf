@@ -119,7 +119,7 @@ impl TSauspielHtmlNode<'_> for SWebsysElement {
     }
 }
 
-fn internal_output_card_sauspiel_img(card: ECard, str_style: String) -> html_generator::SHtmlElement<impl html_generator::THtmlAttrs, impl html_generator::THtmlChildren> {
+fn internal_output_card_sauspiel_img(card: ECard, str_style: String) -> html_generator::HtmlElement<impl html_generator::HtmlAttrs, impl html_generator::HtmlChildren> {
     let str_card = format!("{card}").replace('Z', "X"); // TODO proper card formatter
     use html_generator::*;
     span((
@@ -405,12 +405,12 @@ pub fn greet() {
                 append_sibling(&element_played_card, &div_button);
             }
             use html_generator::*; // TODO narrower scope?
-            fn table_cell_with_background(str_tag_name: &'static str, str_text: impl THtmlChildren, ocardseverity: &Option<EPlayedCardSeverity>) -> SHtmlElement<impl THtmlAttrs, impl THtmlChildren> {
+            fn table_cell_with_background(str_tag_name: &'static str, str_text: impl HtmlChildren, ocardseverity: &Option<EPlayedCardSeverity>) -> HtmlElement<impl HtmlAttrs, impl HtmlChildren> {
                 let str_color = match ocardseverity {
                     None | Some(EPlayedCardSeverity::Optimal) => "", // Do not indicate "unchecked" or "optimal" in overview cells
                     Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
                 };
-                SHtmlElement::new(str_tag_name, style(format!("background-color: {str_color};")), str_text)
+                HtmlElement::new(str_tag_name, style(format!("background-color: {str_color};")), str_text)
             }
             let itepi_cycled_twice = itertools::chain(
                 EPlayerIndex::values(),

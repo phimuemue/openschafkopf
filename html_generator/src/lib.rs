@@ -1,24 +1,24 @@
 use std::fmt::{Display, Formatter};
 
-pub struct SPrependToAttrs;
-pub struct SPrependToChildren;
-pub trait TIntoPrependToAttrsOrChildren {
-    type PrependToAttrsOrChildren: TPrependToAttrsOrChildren;
+pub struct IsAttribute;
+pub struct IsChild;
+pub trait AttributeOrChild {
+    type IsAttributeOrChild: IsAttributeOrChild;
 }
 
-pub trait TPrependToAttrsOrChildren {
+pub trait IsAttributeOrChild {
     type PrependedAttrs<T, O0>;
     type PrependedChildren<T, O1>;
     fn prepend_to_attrs_or_children<T, O0, O1>(t: T, other: (O0, O1)) -> (Self::PrependedAttrs<T, O0>, Self::PrependedChildren<T, O1>);
 }
-impl TPrependToAttrsOrChildren for SPrependToAttrs {
+impl IsAttributeOrChild for IsAttribute {
     type PrependedAttrs<T, O0> = (T, O0);
     type PrependedChildren<T, O1> = O1;
     fn prepend_to_attrs_or_children<T, O0, O1>(t: T, (o0, o1): (O0, O1)) -> (Self::PrependedAttrs<T, O0>, Self::PrependedChildren<T, O1>) {
         ((t, o0), o1)
     }
 }
-impl TPrependToAttrsOrChildren for SPrependToChildren {
+impl IsAttributeOrChild for IsChild {
     type PrependedAttrs<T, O0> = O0;
     type PrependedChildren<T, O1> = (T, O1);
     fn prepend_to_attrs_or_children<T, O0, O1>(t: T, (o0, o1): (O0, O1)) -> (Self::PrependedAttrs<T, O0>, Self::PrependedChildren<T, O1>) {
@@ -26,26 +26,26 @@ impl TPrependToAttrsOrChildren for SPrependToChildren {
     }
 }
 
-impl<StrKey, StrVal> TIntoPrependToAttrsOrChildren for SHtmlAttr<StrKey, StrVal> {
-    type PrependToAttrsOrChildren = SPrependToAttrs;
+impl<StrKey, StrVal> AttributeOrChild for SHtmlAttr<StrKey, StrVal> {
+    type IsAttributeOrChild = IsAttribute;
 }
 
-impl<Attrs: THtmlAttrs, Children: THtmlChildren> TIntoPrependToAttrsOrChildren for SHtmlElement<Attrs, Children> {
-    type PrependToAttrsOrChildren = SPrependToChildren;
+impl<Attributes: HtmlAttrs, Children: HtmlChildren> AttributeOrChild for HtmlElement<Attributes, Children> {
+    type IsAttributeOrChild = IsChild;
 }
 
-impl TIntoPrependToAttrsOrChildren for &str {
-    type PrependToAttrsOrChildren = SPrependToChildren;
+impl AttributeOrChild for &str {
+    type IsAttributeOrChild = IsChild;
 }
 
-impl TIntoPrependToAttrsOrChildren for String {
-    type PrependToAttrsOrChildren = SPrependToChildren;
+impl AttributeOrChild for String {
+    type IsAttributeOrChild = IsChild;
 }
 
-pub trait TSplitIntoAttrsAndChildren {
-    type Attrs;
+pub trait AttributesAndChildren {
+    type Attributes;
     type Children;
-    fn split_into_attrs_and_children(self) -> (Self::Attrs, Self::Children);
+    fn split_into_attributes_and_children(self) -> (Self::Attributes, Self::Children);
 }
 
 macro_rules! nest_prepend_to_attrs_or_children(
@@ -53,29 +53,29 @@ macro_rules! nest_prepend_to_attrs_or_children(
         ()
     };
     ($prepended:ident, $t0:ident $($t:ident)*) => {
-        <$t0::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::$prepended<
+        <$t0::IsAttributeOrChild as IsAttributeOrChild>::$prepended<
             $t0,
             nest_prepend_to_attrs_or_children!($prepended, $($t)*)
         >
     };
 );
-impl<IntoPrependToAttrsOrChildren: TIntoPrependToAttrsOrChildren> TSplitIntoAttrsAndChildren for IntoPrependToAttrsOrChildren {
-    type Attrs = nest_prepend_to_attrs_or_children!(PrependedAttrs, IntoPrependToAttrsOrChildren);
-    type Children = nest_prepend_to_attrs_or_children!(PrependedChildren, IntoPrependToAttrsOrChildren);
-    fn split_into_attrs_and_children(self) -> (Self::Attrs, Self::Children) {
-        <IntoPrependToAttrsOrChildren::PrependToAttrsOrChildren as TPrependToAttrsOrChildren>::prepend_to_attrs_or_children(self, ((), ()))
+impl<AorC: AttributeOrChild> AttributesAndChildren for AorC {
+    type Attributes = nest_prepend_to_attrs_or_children!(PrependedAttrs, AorC);
+    type Children = nest_prepend_to_attrs_or_children!(PrependedChildren, AorC);
+    fn split_into_attributes_and_children(self) -> (Self::Attributes, Self::Children) {
+        <AorC::IsAttributeOrChild as IsAttributeOrChild>::prepend_to_attrs_or_children(self, ((), ()))
     }
 }
 
 macro_rules! impl_t_split_into_attrs_and_children {($($t:ident)*) => {
-    impl<$($t: TSplitIntoAttrsAndChildren,)*> TSplitIntoAttrsAndChildren for ($($t,)*) {
-        type Attrs = ($($t::Attrs,)*);
+    impl<$($t: AttributesAndChildren,)*> AttributesAndChildren for ($($t,)*) {
+        type Attributes = ($($t::Attributes,)*);
         type Children = ($($t::Children,)*);
-        fn split_into_attrs_and_children(self) -> (Self::Attrs, Self::Children) {
+        fn split_into_attributes_and_children(self) -> (Self::Attributes, Self::Children) {
             #[allow(non_snake_case)]
             let ($($t,)*) = self;
             #[allow(non_snake_case)]
-            let ($($t,)*) = ($($t.split_into_attrs_and_children(),)*);
+            let ($($t,)*) = ($($t.split_into_attributes_and_children(),)*);
             (($($t.0,)*), ($($t.1,)*))
         }
     }
@@ -90,33 +90,33 @@ impl_t_split_into_attrs_and_children!(T0 T1 T2 T3 T4);
 
 #[test]
 pub fn testme() { // TODO remove this
-    dbg!((class("Test"), Some(title("Test2")), div((class("innerdiv"), div(Some(span("test"))), div("test")))).split_into_attrs_and_children());
-    dbg!(((class("Test"), class("test2")), Some(title("Test2")), div((class("innerdiv"), div(Some(span("test"))), div("test")))).split_into_attrs_and_children());
+    dbg!((class("Test"), Some(title("Test2")), div((class("innerdiv"), div(Some(span("test"))), div("test")))).split_into_attributes_and_children());
+    dbg!(((class("Test"), class("test2")), Some(title("Test2")), div((class("innerdiv"), div(Some(span("test"))), div("test")))).split_into_attributes_and_children());
 }
 
 #[derive(Debug, Clone)]
-pub struct SHtmlElement<Attrs: THtmlAttrs, Children: THtmlChildren> {
-    str_tag_name: &'static str, // TODO impl Borrow<str>?
-    attrs: Attrs,
+pub struct HtmlElement<Attributes: HtmlAttrs, Children: HtmlChildren> {
+    tag_name: &'static str, // TODO impl Borrow<str>?
+    attributes: Attributes,
     children: Children,
 }
 
-impl<Attrs: THtmlAttrs, Children: THtmlChildren> SHtmlElement<Attrs, Children> {
-    pub fn new(str_tag_name: &'static str, attrs: Attrs, children: Children) -> Self {
-        Self{str_tag_name, attrs, children}
+impl<Attributes: HtmlAttrs, Children: HtmlChildren> HtmlElement<Attributes, Children> {
+    pub fn new(tag_name: &'static str, attributes: Attributes, children: Children) -> Self {
+        Self{tag_name, attributes, children}
     }
 }
 
 macro_rules! impl_element(($tag_name:ident) => {
-    pub fn $tag_name<MakeAttrsAndChildren: TSplitIntoAttrsAndChildren>(makeattrsandchildren: MakeAttrsAndChildren) -> SHtmlElement<MakeAttrsAndChildren::Attrs, MakeAttrsAndChildren::Children>
+    pub fn $tag_name<AandC: AttributesAndChildren>(attributes_and_children: AandC) -> HtmlElement<AandC::Attributes, AandC::Children>
         where
-            MakeAttrsAndChildren::Attrs: THtmlAttrs,
-            MakeAttrsAndChildren::Children: THtmlChildren,
+            AandC::Attributes: HtmlAttrs,
+            AandC::Children: HtmlChildren,
     {
-        let (attrs, children) = makeattrsandchildren.split_into_attrs_and_children();
-        SHtmlElement::new(
+        let (attributes, children) = attributes_and_children.split_into_attributes_and_children();
+        HtmlElement::new(
             stringify!($tag_name),
-            attrs,
+            attributes,
             children,
         )
     }
@@ -130,27 +130,27 @@ impl_element!(td);
 impl_element!(div);
 impl_element!(span);
 
-pub trait THtmlAttrs {
+pub trait HtmlAttrs {
     fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error>;
 }
-pub trait THtmlChildren {
+pub trait HtmlChildren {
     fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error>;
 }
-impl<Attrs: THtmlAttrs, Children: THtmlChildren> Display for SHtmlElement<Attrs, Children> {
+impl<Attributes: HtmlAttrs, Children: HtmlChildren> Display for HtmlElement<Attributes, Children> {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        let str_tag_name = self.str_tag_name;
-        write!(formatter, "<{str_tag_name}")?;
-        self.attrs.fmt_attrs(formatter)?;
+        let tag_name = self.tag_name;
+        write!(formatter, "<{tag_name}")?;
+        self.attributes.fmt_attrs(formatter)?;
         write!(formatter, ">")?;
         self.children.fmt_children(formatter)?;
-        write!(formatter, "</{str_tag_name}>")?;
+        write!(formatter, "</{tag_name}>")?;
         Ok(())
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct SHtmlAttr<StrKey, StrVal>(StrKey, StrVal);
-impl<StrKey: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> THtmlAttrs for SHtmlAttr<StrKey, StrVal> {
+impl<StrKey: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> HtmlAttrs for SHtmlAttr<StrKey, StrVal> {
     fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(formatter, " {}=\"{}\"", self.0.borrow(), self.1.borrow())
     }
@@ -166,7 +166,7 @@ impl_attr!(title);
 impl_attr!(style);
 impl_attr!(colspan);
 
-impl<const N: usize, StrName: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> THtmlAttrs for [(StrName, StrVal); N] {
+impl<const N: usize, StrName: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> HtmlAttrs for [(StrName, StrVal); N] {
     fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         for (str_name, str_val) in self {
             write!(formatter, " {}=\"{}\"", str_name.borrow(), str_val.borrow())?;
@@ -174,23 +174,23 @@ impl<const N: usize, StrName: std::borrow::Borrow<str>, StrVal: std::borrow::Bor
         Ok(())
     }
 }
-impl<Attrs: THtmlAttrs, Children: THtmlChildren> THtmlChildren for SHtmlElement<Attrs, Children> {
+impl<Attributes: HtmlAttrs, Children: HtmlChildren> HtmlChildren for HtmlElement<Attributes, Children> {
     fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.fmt(formatter)
     }
 }
-impl THtmlChildren for &str {
+impl HtmlChildren for &str {
     fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.fmt(formatter)
     }
 }
-impl THtmlChildren for String {
+impl HtmlChildren for String {
     fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.fmt(formatter)
     }
 }
 macro_rules! impl_html_attrs_and_children_for_tuple{($($tuple_component:ident)*) => {
-    impl<$($tuple_component: THtmlAttrs,)*> THtmlAttrs for ($($tuple_component,)*) {
+    impl<$($tuple_component: HtmlAttrs,)*> HtmlAttrs for ($($tuple_component,)*) {
         #[allow(unused_variables)]
         fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
             #[allow(non_snake_case)]
@@ -199,7 +199,7 @@ macro_rules! impl_html_attrs_and_children_for_tuple{($($tuple_component:ident)*)
             Ok(())
         }
     }
-    impl<$($tuple_component: THtmlChildren,)*> THtmlChildren for ($($tuple_component,)*) {
+    impl<$($tuple_component: HtmlChildren,)*> HtmlChildren for ($($tuple_component,)*) {
         #[allow(unused_variables)]
         fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
             #[allow(non_snake_case)]
@@ -216,7 +216,7 @@ impl_html_attrs_and_children_for_tuple!(T0 T1 T2);
 impl_html_attrs_and_children_for_tuple!(T0 T1 T2 T3);
 impl_html_attrs_and_children_for_tuple!(T0 T1 T2 T3 T4);
 
-impl<HtmlAttrs: THtmlAttrs> THtmlAttrs for Vec<HtmlAttrs> {
+impl<Attributes: HtmlAttrs> HtmlAttrs for Vec<Attributes> {
     fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         for htmlattr in self {
             htmlattr.fmt_attrs(formatter)?;
@@ -224,7 +224,7 @@ impl<HtmlAttrs: THtmlAttrs> THtmlAttrs for Vec<HtmlAttrs> {
         Ok(())
     }
 }
-impl<HtmlChildren: THtmlChildren> THtmlChildren for Vec<HtmlChildren> {
+impl<Children: HtmlChildren> HtmlChildren for Vec<Children> {
     fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         for htmlchild in self {
             htmlchild.fmt_children(formatter)?;
@@ -232,10 +232,10 @@ impl<HtmlChildren: THtmlChildren> THtmlChildren for Vec<HtmlChildren> {
         Ok(())
     }
 }
-impl<T: TIntoPrependToAttrsOrChildren> TIntoPrependToAttrsOrChildren for Vec<T> {
-    type PrependToAttrsOrChildren = T::PrependToAttrsOrChildren;
+impl<T: AttributeOrChild> AttributeOrChild for Vec<T> {
+    type IsAttributeOrChild = T::IsAttributeOrChild;
 }
-impl<HtmlAttrs: THtmlAttrs> THtmlAttrs for Option<HtmlAttrs> {
+impl<Attributes: HtmlAttrs> HtmlAttrs for Option<Attributes> {
     fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         if let Some(htmlattr) = self {
             htmlattr.fmt_attrs(formatter)?;
@@ -243,7 +243,7 @@ impl<HtmlAttrs: THtmlAttrs> THtmlAttrs for Option<HtmlAttrs> {
         Ok(())
     }
 }
-impl<HtmlChildren: THtmlChildren> THtmlChildren for Option<HtmlChildren> {
+impl<Children: HtmlChildren> HtmlChildren for Option<Children> {
     fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         if let Some(htmlchild) = self {
             htmlchild.fmt_children(formatter)?;
@@ -251,20 +251,20 @@ impl<HtmlChildren: THtmlChildren> THtmlChildren for Option<HtmlChildren> {
         Ok(())
     }
 }
-impl<T: TIntoPrependToAttrsOrChildren> TIntoPrependToAttrsOrChildren for Option<T> {
-    type PrependToAttrsOrChildren = T::PrependToAttrsOrChildren;
+impl<T: AttributeOrChild> AttributeOrChild for Option<T> {
+    type IsAttributeOrChild = T::IsAttributeOrChild;
 }
 
-pub fn html_iter<Iter>(it: Iter) -> impl THtmlChildren + TIntoPrependToAttrsOrChildren<PrependToAttrsOrChildren=<Iter::Item as TIntoPrependToAttrsOrChildren>::PrependToAttrsOrChildren>
+pub fn html_iter<Iter>(it: Iter) -> impl HtmlChildren + AttributeOrChild<IsAttributeOrChild=<Iter::Item as AttributeOrChild>::IsAttributeOrChild>
     where
         Iter: Iterator+Clone,
-        Iter::Item: THtmlChildren + TIntoPrependToAttrsOrChildren,
+        Iter::Item: HtmlChildren + AttributeOrChild,
 {
     struct SHtmlChildrenIterator<Iter>(Iter);
-    impl<Iter> THtmlChildren for SHtmlChildrenIterator<Iter>
+    impl<Iter> HtmlChildren for SHtmlChildrenIterator<Iter>
         where
             Iter: Iterator+Clone,
-            Iter::Item: THtmlChildren + TIntoPrependToAttrsOrChildren,
+            Iter::Item: HtmlChildren + AttributeOrChild,
     {
         fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
             for htmlchild in self.0.clone() {
@@ -273,12 +273,12 @@ pub fn html_iter<Iter>(it: Iter) -> impl THtmlChildren + TIntoPrependToAttrsOrCh
             Ok(())
         }
     }
-    impl<Iter> TIntoPrependToAttrsOrChildren for SHtmlChildrenIterator<Iter>
+    impl<Iter> AttributeOrChild for SHtmlChildrenIterator<Iter>
         where
             Iter: Iterator+Clone,
-            Iter::Item: THtmlChildren + TIntoPrependToAttrsOrChildren,
+            Iter::Item: HtmlChildren + AttributeOrChild,
     {
-        type PrependToAttrsOrChildren = <Iter::Item as TIntoPrependToAttrsOrChildren>::PrependToAttrsOrChildren;
+        type IsAttributeOrChild = <Iter::Item as AttributeOrChild>::IsAttributeOrChild;
     }
     SHtmlChildrenIterator(it)
 }
