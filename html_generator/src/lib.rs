@@ -166,14 +166,6 @@ impl_attr!(title);
 impl_attr!(style);
 impl_attr!(colspan);
 
-impl<const N: usize, StrName: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> HtmlAttrs for [(StrName, StrVal); N] {
-    fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        for (str_name, str_val) in self {
-            write!(formatter, " {}=\"{}\"", str_name.borrow(), str_val.borrow())?;
-        }
-        Ok(())
-    }
-}
 impl<Attributes: HtmlAttrs, Children: HtmlChildren> HtmlChildren for HtmlElement<Attributes, Children> {
     fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.fmt(formatter)
