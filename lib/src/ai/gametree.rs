@@ -4,7 +4,7 @@ use crate::rules::*;
 use crate::util::*;
 use itertools::Itertools;
 use rand::{self, Rng};
-use std::{borrow::Borrow, cmp::Ordering, fmt::{self, Debug}, fs, io::{BufWriter, Write}, ops::ControlFlow, convert::Infallible};
+use std::{borrow::Borrow, cmp::Ordering, fmt::Debug, fs, io::{BufWriter, Write}, ops::ControlFlow, convert::Infallible};
 use super::{SPayoutStats, cardspartition::*};
 use serde::Serialize;
 
@@ -94,25 +94,26 @@ pub fn output_card(card: ECard, b_border: bool) -> html_generator::HtmlElement<i
     )))
 }
 
-pub fn player_table<T: fmt::Display>(epi_self: EPlayerIndex, fn_per_player: impl Fn(EPlayerIndex)->Option<T>) -> String {
-    let fn_per_player_internal = move |epi: EPlayerIndex| {
-        fn_per_player(epi.wrapping_add(epi_self.to_usize()))
-            .map_or("".to_string(), |t| t.to_string())
+pub fn player_table<HtmlChildrenPerPlayer: html_generator::HtmlChildren + html_generator::AttributeOrChild<IsAttributeOrChild=html_generator::IsChild/*TODO(html_generator) either HtmlChildren or AttributeOrChild<IsChild> should be enough*/>>(epi_self: EPlayerIndex, fn_per_player: impl Fn(EPlayerIndex)->Option<HtmlChildrenPerPlayer>) -> html_generator::HtmlElement<impl html_generator::HtmlAttrs, impl html_generator::HtmlChildren> {
+    use html_generator::*;
+    let table_cell = |ostr_colspan: Option<&'static str>, epi: EPlayerIndex| {
+        td((
+            (ostr_colspan.map(colspan), attributes::style("text-align: center;")),
+            fn_per_player(epi.wrapping_add(epi_self.to_usize())),
+        ))
     };
-    format!(
-        "<table class=\"player-table\">
-          <tr><td colspan=\"2\" style=\"text-align: center;\">{}</td></tr>
-          <tr><td style=\"text-align: center;\">{}</td><td style=\"text-align: center;\">{}</td></tr>
-          <tr><td colspan=\"2\" style=\"text-align: center;\">{}</td></tr>
-        </table>\n",
-        fn_per_player_internal(EPlayerIndex::EPI2),
-        fn_per_player_internal(EPlayerIndex::EPI1),
-        fn_per_player_internal(EPlayerIndex::EPI3),
-        fn_per_player_internal(EPlayerIndex::EPI0),
-    )
+    table((
+        class("player-table"),
+        tr(table_cell(/*ostr_colspan*/Some("2"), EPlayerIndex::EPI2)),
+        tr((
+            table_cell(/*ostr_colspan*/None, EPlayerIndex::EPI1),
+            table_cell(/*ostr_colspan*/None, EPlayerIndex::EPI3),
+        )),
+        tr(table_cell(/*ostr_colspan*/Some("2"), EPlayerIndex::EPI0)),
+    ))
 }
 
-pub fn player_table_stichseq(epi_self: EPlayerIndex, stichseq: &SStichSequence, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->String) -> String {
+pub fn player_table_stichseq<HtmlChildrenCard: html_generator::HtmlChildren + html_generator::AttributeOrChild<IsAttributeOrChild=html_generator::IsChild>>(epi_self: EPlayerIndex, stichseq: &SStichSequence, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlChildrenCard) -> String {
     format!("{}", stichseq.visible_stichs().iter().map(|stich| {
         format!("<td>{}</td>", player_table(epi_self, |epi| {
             stich.get(epi).map(|card| {
@@ -122,15 +123,15 @@ pub fn player_table_stichseq(epi_self: EPlayerIndex, stichseq: &SStichSequence, 
     }).format("\n"))
 }
 
-pub fn player_table_ahand(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &SRules, fn_border: impl Fn(ECard)->bool, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->String) -> String {
+pub fn player_table_ahand<HtmlChildrenCard: html_generator::HtmlChildren + html_generator::AttributeOrChild<IsAttributeOrChild=html_generator::IsChild>>(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &SRules, fn_border: impl Fn(ECard)->bool, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlChildrenCard) -> String {
     format!(
         "<td>{}</td>\n",
         player_table(epi_self, |epi| {
             let mut veccard = ahand[epi].cards().clone();
             rules.sort_cards(&mut veccard);
-            Some(veccard.into_iter()
+            Some(html_generator::html_iter(veccard.into_iter()
                 .map(|card| fn_output_card(card, fn_border(card)))
-                .join(""))
+            ))
         }),
     )
 }
@@ -166,7 +167,7 @@ impl<
                     .map(|(_emmstrategy, an_payout)| an_payout[epi])
                     .join("/")
             )
-        }).as_bytes());
+        }).to_string().as_bytes());
     }
 }
 

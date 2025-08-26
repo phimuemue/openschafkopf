@@ -495,32 +495,23 @@ impl SGameAnalysis {
                 // TODO? replace this by a line/area chart
                 // TODO group unchanged columns
                 let vecpossiblepayout = &self.mapepivecpossiblepayout[epi];
-                Some(format!("<table>{}</table>",
-                    format!("<tr>{}</tr>",
-                        vecpossiblepayout.iter()
-                            .map(|SPossiblePayout(_perminmaxstrategyn_payout, (i_stich, i_card))|
-                                format!("<td>{}/{}</td>", i_stich+1, i_card+1)
-                            )
-                            .join("")
-                    )
-                        + type_inference!(&str, &SPerMinMaxStrategy::accessors().iter().rev().map(|(_emmstrategy, fn_value_for_strategy)| {
-                            format!("<tr>{}</tr>",
-                                vecpossiblepayout.iter()
-                                    .map(|SPossiblePayout(determinebestcardresult, (_i_stich, _i_card))|
-                                        format!("<td>{}</td>",
-                                            fn_value_for_strategy(&determinebestcardresult
-                                                .t_combined
-                                                .map(|payoutstats| verify_eq!(payoutstats.min(), payoutstats.max()))),
-                                        )
-                                    )
-                                    .join("")
-                            )
-                        })
-                        .join("")
-                        )
-                ))
+                use html_generator::*;
+                Some(table((
+                    tr(html_iter(vecpossiblepayout.iter().map(|SPossiblePayout(_perminmaxstrategyn_payout, (i_stich, i_card))|
+                            td(format!("{}/{}", i_stich+1, i_card+1)) // TODO(html_generator) avoid creation of String
+                    ))),
+                    html_iter(SPerMinMaxStrategy::accessors().iter().rev().map(|(_emmstrategy, fn_value_for_strategy)| {
+                        tr(html_iter(vecpossiblepayout.iter().map(|SPossiblePayout(determinebestcardresult, (_i_stich, _i_card))|
+                            td(format!("{}", // TODO(html_generator) avoid creation of String
+                                fn_value_for_strategy(&determinebestcardresult
+                                    .t_combined
+                                    .map(|payoutstats| verify_eq!(payoutstats.min(), payoutstats.max()))),
+                            ))
+                        )))
+                    })),
+                )))
             },
-        ))
+        ).to_string())
         + "<h2>Details</h2>"
         + type_inference!(&str, &format!("{}", self.vecanalysispercard.iter()
             .map(|analysispercard| {
