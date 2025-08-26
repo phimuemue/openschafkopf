@@ -25,6 +25,7 @@ select = "0"
 glob = "0"
 openschafkopf_util = {path = "../util"}
 openschafkopf_lib = {path = "../lib"}
+html_generator = {path = "../html_generator"}
 futures = "0.3"
 async-std = "1" # Probably TODO migrate to smol, according to https://github.com/async-rs/async-std/pull/1099
 async-tungstenite = "0"
