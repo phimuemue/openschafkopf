@@ -152,8 +152,8 @@ impl<
             "TODO", // slccard_allowed.len(),
         ).as_bytes());
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(ahand, stichseq));
-        self.write_all(player_table_stichseq(self.epi, stichseq, &|card, b_highlight| output_card(card, b_highlight).to_string()).as_bytes());
-        self.write_all(player_table_ahand(self.epi, ahand, self.rules, /*fn_border*/|_card| false, &|card, b_highlight| output_card(card, b_highlight).to_string()).as_bytes());
+        self.write_all(player_table_stichseq(self.epi, stichseq, &output_card).as_bytes());
+        self.write_all(player_table_ahand(self.epi, ahand, self.rules, /*fn_border*/|_card| false, &output_card).as_bytes());
         self.write_all(b"</tr></table></label>\n");
         self.write_all(b"<ul>\n");
     }
