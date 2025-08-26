@@ -103,7 +103,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         /*n_max_remaining_cards*/unwrap!(clapmatches.value_of("max-remaining-cards")).parse()?,
         /*b_simulate_all_hands*/clapmatches.is_present("simulate-all-hands"),
         /*str_openschafkopf_executable*/unwrap!(path_openschafkopf_executable.to_str()),
-        /*fn_output_card*/&output_card,
+        /*fn_output_card*/&|card, b_highlight| output_card(card, b_highlight).to_string(),
     )?;
     println!("Analysis written to {}.", path_out.display());
     Ok(())

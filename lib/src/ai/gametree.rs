@@ -86,11 +86,12 @@ impl<'rules, MinMaxStrategiesHK> SForEachSnapshotHTMLVisualizer<'rules, MinMaxSt
     }
 }
 
-pub fn output_card(card: ECard, b_border: bool) -> String {
-    format!(r#"<div class="card-image {}{}"></div>"#,
+pub fn output_card(card: ECard, b_border: bool) -> html_generator::HtmlElement<impl html_generator::HtmlAttrs, impl html_generator::HtmlChildren> {
+    use html_generator::*;
+    div(class(format!("card-image {}{}",
         card,
         if b_border {" border"} else {""},
-    )
+    )))
 }
 
 pub fn player_table<T: fmt::Display>(epi_self: EPlayerIndex, fn_per_player: impl Fn(EPlayerIndex)->Option<T>) -> String {
@@ -150,8 +151,8 @@ impl<
             "TODO", // slccard_allowed.len(),
         ).as_bytes());
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(ahand, stichseq));
-        self.write_all(player_table_stichseq(self.epi, stichseq, &output_card).as_bytes());
-        self.write_all(player_table_ahand(self.epi, ahand, self.rules, /*fn_border*/|_card| false, &output_card).as_bytes());
+        self.write_all(player_table_stichseq(self.epi, stichseq, &|card, b_highlight| output_card(card, b_highlight).to_string()).as_bytes());
+        self.write_all(player_table_ahand(self.epi, ahand, self.rules, /*fn_border*/|_card| false, &|card, b_highlight| output_card(card, b_highlight).to_string()).as_bytes());
         self.write_all(b"</tr></table></label>\n");
         self.write_all(b"<ul>\n");
     }
