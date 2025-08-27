@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use log::error;
 
 pub trait TVerifiableByVerifyMacro {
     type ErrDisplay<'err>: Debug
@@ -86,6 +87,18 @@ pub fn verify_or_println_internal<E: TVerifiableByVerifyMacro>(e: E, str_e: &str
 #[macro_export]
 macro_rules! verify_or_println {($e: expr) => {{
     verify_or_println_internal($e, stringify!($e))
+}}}
+
+pub fn verify_or_error_internal<E: TVerifiableByVerifyMacro>(e: E, str_e: &str) -> E {
+    if let Err(err) = e.is_verify_true() {
+        error!("verify_or_error!({str_e}): {err:?}");
+    }
+    e
+}
+
+#[macro_export]
+macro_rules! verify_or_error {($e: expr) => {{
+    verify_or_error_internal($e, stringify!($e))
 }}}
 
 #[macro_export]
