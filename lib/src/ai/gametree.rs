@@ -66,7 +66,7 @@ impl<'rules, MinMaxStrategiesHK> SForEachSnapshotHTMLVisualizer<'rules, MinMaxSt
     fn new(file_output: fs::File, rules: &'rules SRules, epi: EPlayerIndex) -> Self {
         let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output: BufWriter::with_capacity(16*1024*1024, file_output), rules, epi, phantom: std::marker::PhantomData};
         foreachsnapshothtmlvisualizer.write_all(
-            b"<link rel=\"stylesheet\" type=\"text/css\" href=\"../css.css\">
+            &"<link rel=\"stylesheet\" type=\"text/css\" href=\"../css.css\">
             <style>
             input + label + ul {
                 display: none;
@@ -79,8 +79,8 @@ impl<'rules, MinMaxStrategiesHK> SForEachSnapshotHTMLVisualizer<'rules, MinMaxSt
         foreachsnapshothtmlvisualizer
     }
 
-    fn write_all(&mut self, buf: &[u8]) {
-        let _ = verify_or_error!(self.file_output.write_all(buf));
+    fn write_all(&mut self, t: &impl std::fmt::Display) {
+        let _ = verify_or_error!(write!(self.file_output, "{}", t));
     }
 }
 
@@ -144,28 +144,28 @@ impl<
             stichseq.count_played_cards(),
             rand::rng().sample_iter(&rand::distr::Alphanumeric).take(16).join(""), // we simply assume no collisions here TODO uuid
         );
-        self.write_all(format!("<li><<input type=\"checkbox\" id=\"{str_item_id}\" />>\n").as_bytes());
-        self.write_all(format!("<label for=\"{}\">{} direct successors<table><tr>\n",
+        self.write_all(&format!("<li><<input type=\"checkbox\" id=\"{str_item_id}\" />>\n"));
+        self.write_all(&format!("<label for=\"{}\">{} direct successors<table><tr>\n",
             str_item_id,
             "TODO", // slccard_allowed.len(),
-        ).as_bytes());
+        ));
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(ahand, stichseq));
-        self.write_all(player_table_stichseq(self.epi, stichseq, &output_card).as_bytes());
-        self.write_all(player_table_ahand(self.epi, ahand, self.rules, /*fn_border*/|_card| false, &output_card).as_bytes());
-        self.write_all(b"</tr></table></label>\n");
-        self.write_all(b"<ul>\n");
+        self.write_all(&player_table_stichseq(self.epi, stichseq, &output_card));
+        self.write_all(&player_table_ahand(self.epi, ahand, self.rules, /*fn_border*/|_card| false, &output_card));
+        self.write_all(&"</tr></table></label>\n");
+        self.write_all(&"<ul>\n");
     }
 
     fn end_snapshot(&mut self, minmax: &MinMaxStrategies) {
-        self.write_all(b"</ul>\n");
-        self.write_all(b"</li>\n");
-        self.write_all(player_table(self.epi, |epi| {
+        self.write_all(&"</ul>\n");
+        self.write_all(&"</li>\n");
+        self.write_all(&player_table(self.epi, |epi| {
             Some(
                 minmax.via_accessors().into_iter()
                     .map(|(_emmstrategy, an_payout)| an_payout[epi])
                     .join("/")
             )
-        }).to_string().as_bytes());
+        }).to_string());
     }
 }
 
