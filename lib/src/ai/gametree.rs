@@ -92,7 +92,7 @@ pub fn output_card(card: ECard, b_border: bool) -> html_generator::HtmlElement<i
     )))
 }
 
-pub fn player_table<HtmlChildrenPerPlayer: html_generator::HtmlChildren + html_generator::AttributeOrChild<IsAttributeOrChild=html_generator::IsChild/*TODO(html_generator) either HtmlChildren or AttributeOrChild<IsChild> should be enough*/>>(epi_self: EPlayerIndex, fn_per_player: impl Fn(EPlayerIndex)->Option<HtmlChildrenPerPlayer>) -> html_generator::HtmlElement<impl html_generator::HtmlAttrs, impl html_generator::HtmlChildren> {
+pub fn player_table<HtmlAttributesAndChildrenPerPlayer: html_generator::AttributesAndChildren>(epi_self: EPlayerIndex, fn_per_player: impl Fn(EPlayerIndex)->HtmlAttributesAndChildrenPerPlayer) -> html_generator::HtmlElement<impl html_generator::HtmlAttrs, impl html_generator::HtmlChildren> {
     use html_generator::*;
     let table_cell = |ostr_colspan: Option<&'static str>, epi: EPlayerIndex| {
         td((

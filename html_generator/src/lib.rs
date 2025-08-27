@@ -72,12 +72,16 @@ impl AttributeOrChild for String {
 }
 
 pub trait AttributesAndChildren {
-    type Attributes;
-    type Children;
+    type Attributes: HtmlAttrs;
+    type Children: HtmlChildren;
     fn split_into_attributes_and_children(self) -> (Self::Attributes, Self::Children);
 }
 
-impl<AorC: AttributeOrChild> AttributesAndChildren for AorC {
+impl<AorC: AttributeOrChild> AttributesAndChildren for AorC
+    where
+        <AorC::IsAttributeOrChild as IsAttributeOrChild>::PrependedAttrs<AorC, ()>: HtmlAttrs,
+        <AorC::IsAttributeOrChild as IsAttributeOrChild>::PrependedChildren<AorC, ()>: HtmlChildren,
+{
     type Attributes = <AorC::IsAttributeOrChild as IsAttributeOrChild>::PrependedAttrs<AorC, ()>;
     type Children = <AorC::IsAttributeOrChild as IsAttributeOrChild>::PrependedChildren<AorC, ()>;
     fn split_into_attributes_and_children(self) -> (Self::Attributes, Self::Children) {
