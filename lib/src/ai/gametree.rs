@@ -80,9 +80,7 @@ impl<'rules, MinMaxStrategiesHK> SForEachSnapshotHTMLVisualizer<'rules, MinMaxSt
     }
 
     fn write_all(&mut self, buf: &[u8]) {
-        if let Err(err) = self.file_output.write_all(buf) {
-            error!("Error writing file: {err}");
-        }
+        let _ = verify_or_error!(self.file_output.write_all(buf));
     }
 }
 
