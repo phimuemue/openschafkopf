@@ -3,112 +3,116 @@ use std::fmt::{Display, Formatter};
 pub struct IsAttribute;
 pub struct IsChild;
 pub trait AttributeOrChild {
-    type IsAttributeOrChild: IsAttributeOrChild;
+    type Attribute: AttributeOrChild;
+    type Child: AttributeOrChild;
+    fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child);
     fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error>;
 }
 
-pub trait IsAttributeOrChild {
-    type PrependedAttrs<T, O0>;
-    type PrependedChildren<T, O1>;
-    fn prepend_to_attrs_or_children<T, O0, O1>(t: T, other: (O0, O1)) -> (Self::PrependedAttrs<T, O0>, Self::PrependedChildren<T, O1>);
-}
-impl IsAttributeOrChild for IsAttribute {
-    type PrependedAttrs<T, O0> = (T, O0);
-    type PrependedChildren<T, O1> = O1;
-    fn prepend_to_attrs_or_children<T, O0, O1>(t: T, (o0, o1): (O0, O1)) -> (Self::PrependedAttrs<T, O0>, Self::PrependedChildren<T, O1>) {
-        ((t, o0), o1)
+impl AttributeOrChild for () {
+    type Attribute = ();
+    type Child = ();
+    fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
+        ((), ())
     }
-}
-impl IsAttributeOrChild for IsChild {
-    type PrependedAttrs<T, O0> = O0;
-    type PrependedChildren<T, O1> = (T, O1);
-    fn prepend_to_attrs_or_children<T, O0, O1>(t: T, (o0, o1): (O0, O1)) -> (Self::PrependedAttrs<T, O0>, Self::PrependedChildren<T, O1>) {
-        (o0, (t, o1))
+    fn fmt_attribute_or_child(&self, _formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        Ok(())
     }
 }
 
+macro_rules! impl_attributeorchild_for_tuple {($($t:ident)*) => {
+    impl<$($t: AttributeOrChild,)*> AttributeOrChild for ($($t,)*) {
+        type Attribute = ($($t::Attribute,)*);
+        type Child = ($($t::Child,)*);
+        fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
+            #[allow(non_snake_case)]
+            let ($($t,)*) = self;
+            #[allow(non_snake_case)]
+            let ($($t,)*) = ($($t.split_into_attributes_and_children(),)*);
+            (
+                ($($t.0,)*),
+                ($($t.1,)*),
+            )
+        }
+        #[allow(unused_variables)]
+        fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+            #[allow(non_snake_case)]
+            let ($($t,)*) = self;
+            $($t.fmt_attribute_or_child(formatter)?;)*
+            Ok(())
+        }
+    }
+}}
+impl_attributeorchild_for_tuple!(T0);
+impl_attributeorchild_for_tuple!(T0 T1);
+impl_attributeorchild_for_tuple!(T0 T1 T2);
+impl_attributeorchild_for_tuple!(T0 T1 T2 T3);
+impl_attributeorchild_for_tuple!(T0 T1 T2 T3 T4);
+
+
 impl<StrKey: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> AttributeOrChild for SHtmlAttr<StrKey, StrVal> {
-    type IsAttributeOrChild = IsAttribute;
+    type Attribute = Self;
+    type Child = ();
+    fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
+        (self, ())
+    }
     fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(formatter, " {}=\"{}\"", self.0.borrow(), self.1.borrow())
     }
 }
 
-impl<Attributes: HtmlAttrs, Children: HtmlChildren> AttributeOrChild for HtmlElement<Attributes, Children> {
-    type IsAttributeOrChild = IsChild;
+impl<AoC: AttributeOrChild> AttributeOrChild for HtmlElement<AoC> {
+    type Attribute = ();
+    type Child = Self;
+    fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
+        ((), self)
+    }
     fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         let tag_name = self.tag_name;
         write!(formatter, "<{tag_name}")?;
-        self.attributes.fmt_attrs(formatter)?;
+        self.attributes.fmt_attribute_or_child(formatter)?;
         write!(formatter, ">")?;
-        self.children.fmt_children(formatter)?;
+        self.children.fmt_attribute_or_child(formatter)?;
         write!(formatter, "</{tag_name}>")?;
         Ok(())
     }
 }
-impl<Attributes: HtmlAttrs> AttributeOrChild for VoidElement<Attributes> {
-    type IsAttributeOrChild = IsChild;
+impl<AoC: AttributeOrChild> AttributeOrChild for VoidElement<AoC> {
+    type Attribute = ();
+    type Child = Self;
+    fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
+        ((), self)
+    }
     fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         let tag_name = self.tag_name;
         write!(formatter, "<{tag_name}")?;
-        self.attributes.fmt_attrs(formatter)?;
+        self.attributes.fmt_attribute_or_child(formatter)?;
         write!(formatter, "/>")?;
         Ok(())
     }
 }
 
 impl AttributeOrChild for &str {
-    type IsAttributeOrChild = IsChild;
+    type Attribute = ();
+    type Child = Self;
+    fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
+        ((), self)
+    }
     fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.fmt(formatter)
     }
 }
 
 impl AttributeOrChild for String {
-    type IsAttributeOrChild = IsChild;
+    type Attribute = ();
+    type Child = Self;
+    fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
+        ((), self)
+    }
     fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.fmt(formatter)
     }
 }
-
-pub trait AttributesAndChildren {
-    type Attributes: HtmlAttrs;
-    type Children: HtmlChildren;
-    fn split_into_attributes_and_children(self) -> (Self::Attributes, Self::Children);
-}
-
-impl<AorC: AttributeOrChild> AttributesAndChildren for AorC
-    where
-        <AorC::IsAttributeOrChild as IsAttributeOrChild>::PrependedAttrs<AorC, ()>: HtmlAttrs,
-        <AorC::IsAttributeOrChild as IsAttributeOrChild>::PrependedChildren<AorC, ()>: HtmlChildren,
-{
-    type Attributes = <AorC::IsAttributeOrChild as IsAttributeOrChild>::PrependedAttrs<AorC, ()>;
-    type Children = <AorC::IsAttributeOrChild as IsAttributeOrChild>::PrependedChildren<AorC, ()>;
-    fn split_into_attributes_and_children(self) -> (Self::Attributes, Self::Children) {
-        <AorC::IsAttributeOrChild as IsAttributeOrChild>::prepend_to_attrs_or_children(self, ((), ()))
-    }
-}
-
-macro_rules! impl_t_split_into_attrs_and_children {($($t:ident)*) => {
-    impl<$($t: AttributesAndChildren,)*> AttributesAndChildren for ($($t,)*) {
-        type Attributes = ($($t::Attributes,)*);
-        type Children = ($($t::Children,)*);
-        fn split_into_attributes_and_children(self) -> (Self::Attributes, Self::Children) {
-            #[allow(non_snake_case)]
-            let ($($t,)*) = self;
-            #[allow(non_snake_case)]
-            let ($($t,)*) = ($($t.split_into_attributes_and_children(),)*);
-            (($($t.0,)*), ($($t.1,)*))
-        }
-    }
-}}
-
-impl_t_split_into_attrs_and_children!();
-impl_t_split_into_attrs_and_children!(T0);
-impl_t_split_into_attrs_and_children!(T0 T1);
-impl_t_split_into_attrs_and_children!(T0 T1 T2);
-impl_t_split_into_attrs_and_children!(T0 T1 T2 T3);
-impl_t_split_into_attrs_and_children!(T0 T1 T2 T3 T4);
 
 #[test]
 pub fn testme() { // TODO remove this
@@ -134,26 +138,31 @@ pub fn testme() { // TODO remove this
 }
 
 #[derive(Debug, Clone)]
-pub struct HtmlElement<Attributes: HtmlAttrs, Children: HtmlChildren> {
+pub struct HtmlElement<AoC: AttributeOrChild> {
     tag_name: &'static str, // TODO impl Borrow<str>?
-    attributes: Attributes,
-    children: Children,
+    attributes: AoC::Attribute,
+    children: AoC::Child,
 }
 
-impl<Attributes: HtmlAttrs, Children: HtmlChildren> HtmlElement<Attributes, Children> {
-    pub fn new(tag_name: &'static str, attributes: Attributes, children: Children) -> Self {
+impl<AoC: AttributeOrChild> HtmlElement<AoC> {
+    pub fn new(tag_name: &'static str, attributeorchild: AoC) -> Self {
+        let (attributes, children) = attributeorchild.split_into_attributes_and_children();
         Self{tag_name, attributes, children}
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct VoidElement<Attributes: HtmlAttrs> {
+pub struct VoidElement<A>
+    where (A, ()): AttributeOrChild
+{
     tag_name: &'static str, // TODO impl Borrow<str>?
-    attributes: Attributes,
+    attributes: A,
 }
 
-impl<Attributes: HtmlAttrs> VoidElement<Attributes> {
-    pub fn new(tag_name: &'static str, attributes: Attributes) -> Self {
+impl<A> VoidElement<A>
+    where (A, ()): AttributeOrChild
+{
+    pub fn new(tag_name: &'static str, attributes: A) -> Self {
         Self{tag_name, attributes}
     }
 }
@@ -161,21 +170,15 @@ impl<Attributes: HtmlAttrs> VoidElement<Attributes> {
 pub mod elements {
     use super::*;
     macro_rules! impl_element(($tag_name:ident) => {
-        pub fn $tag_name<AandC: AttributesAndChildren>(attributes_and_children: AandC) -> HtmlElement<AandC::Attributes, AandC::Children>
-            where
-                AandC::Attributes: HtmlAttrs,
-                AandC::Children: HtmlChildren,
-        {
-            let (attributes, children) = attributes_and_children.split_into_attributes_and_children();
-            HtmlElement::new(
-                stringify!($tag_name),
-                attributes,
-                children,
-            )
+        pub fn $tag_name<AoC: AttributeOrChild>(attributes_and_children: AoC) -> HtmlElement<AoC> {
+            HtmlElement::new(stringify!($tag_name), attributes_and_children)
         }
     });
     macro_rules! impl_void(($tag_name:ident) => {
-        pub fn $tag_name<Attributes: HtmlAttrs>(attributes: Attributes) -> VoidElement<Attributes> {
+        pub fn $tag_name<A>(attributes: A) -> VoidElement<A>
+            where
+                (A, ()): AttributeOrChild,
+        {
             VoidElement::new(stringify!($tag_name), attributes)
         }
     });
@@ -312,28 +315,12 @@ pub mod elements {
 #[allow(ambiguous_glob_reexports)]
 pub use elements::*;
 
-pub trait HtmlAttrs {
-    fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error>;
-}
-impl<T: AttributeOrChild<IsAttributeOrChild=IsAttribute>> HtmlAttrs for T {
-    fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        self.fmt_attribute_or_child(formatter)
-    }
-}
-pub trait HtmlChildren {
-    fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error>;
-}
-impl<T: AttributeOrChild<IsAttributeOrChild=IsChild>> HtmlChildren for T {
-    fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        self.fmt_attribute_or_child(formatter)
-    }
-}
-impl<Attributes: HtmlAttrs, Children: HtmlChildren> Display for HtmlElement<Attributes, Children> {
+impl<AoC: AttributeOrChild> Display for HtmlElement<AoC> {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.fmt_attribute_or_child(formatter)
     }
 }
-impl<Attributes: HtmlAttrs> Display for VoidElement<Attributes> {
+impl<AoC: AttributeOrChild> Display for VoidElement<AoC> {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.fmt_attribute_or_child(formatter)
     }
@@ -475,35 +462,19 @@ pub mod attributes {
 #[allow(ambiguous_glob_reexports)]
 pub use attributes::*;
 
-macro_rules! impl_html_attrs_and_children_for_tuple{($($tuple_component:ident)*) => {
-    impl<$($tuple_component: HtmlAttrs,)*> HtmlAttrs for ($($tuple_component,)*) {
-        #[allow(unused_variables)]
-        fn fmt_attrs(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-            #[allow(non_snake_case)]
-            let ($($tuple_component,)*) = self;
-            $($tuple_component.fmt_attrs(formatter)?;)*
-            Ok(())
+impl<AoC: AttributeOrChild> AttributeOrChild for Vec<AoC> {
+    type Attribute = Vec<AoC::Attribute>;
+    type Child = Vec<AoC::Child>;
+    fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
+        let mut vecattribute = Vec::new();
+        let mut vecchild = Vec::new();
+        for attributeorchild in self {
+            let (attribute, child) = attributeorchild.split_into_attributes_and_children();
+            vecattribute.push(attribute);
+            vecchild.push(child);
         }
+        (vecattribute, vecchild)
     }
-    impl<$($tuple_component: HtmlChildren,)*> HtmlChildren for ($($tuple_component,)*) {
-        #[allow(unused_variables)]
-        fn fmt_children(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-            #[allow(non_snake_case)]
-            let ($($tuple_component,)*) = self;
-            $($tuple_component.fmt_children(formatter)?;)*
-            Ok(())
-        }
-    }
-}}
-impl_html_attrs_and_children_for_tuple!();
-impl_html_attrs_and_children_for_tuple!(T0);
-impl_html_attrs_and_children_for_tuple!(T0 T1);
-impl_html_attrs_and_children_for_tuple!(T0 T1 T2);
-impl_html_attrs_and_children_for_tuple!(T0 T1 T2 T3);
-impl_html_attrs_and_children_for_tuple!(T0 T1 T2 T3 T4);
-
-impl<T: AttributeOrChild> AttributeOrChild for Vec<T> {
-    type IsAttributeOrChild = T::IsAttributeOrChild;
     fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         for attributeorchild in self {
             attributeorchild.fmt_attribute_or_child(formatter)?;
@@ -511,8 +482,17 @@ impl<T: AttributeOrChild> AttributeOrChild for Vec<T> {
         Ok(())
     }
 }
-impl<T: AttributeOrChild> AttributeOrChild for Option<T> {
-    type IsAttributeOrChild = T::IsAttributeOrChild;
+impl<AoC: AttributeOrChild> AttributeOrChild for Option<AoC> {
+    type Attribute = Option<AoC::Attribute>;
+    type Child = Option<AoC::Child>;
+    fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
+        if let Some(attributeorchild) = self {
+            let (attribute, child) = attributeorchild.split_into_attributes_and_children();
+            (Some(attribute), Some(child))
+        } else {
+            (None, None)
+        }
+    }
     fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         if let Some(attributeorchild) = self {
             attributeorchild.fmt_attribute_or_child(formatter)?;
@@ -521,24 +501,9 @@ impl<T: AttributeOrChild> AttributeOrChild for Option<T> {
     }
 }
 
-pub fn html_iter<Iter>(it: Iter) -> impl AttributeOrChild<IsAttributeOrChild=<Iter::Item as AttributeOrChild>::IsAttributeOrChild>
+pub fn html_iter<Iter: Iterator>(it: Iter) -> impl AttributeOrChild
     where
-        Iter: Iterator+Clone,
         Iter::Item: AttributeOrChild,
 {
-    struct HtmlAttributeOrChildIterator<Iter>(Iter);
-    impl<Iter> AttributeOrChild for HtmlAttributeOrChildIterator<Iter>
-        where
-            Iter: Iterator+Clone,
-            Iter::Item: AttributeOrChild,
-    {
-        type IsAttributeOrChild = <Iter::Item as AttributeOrChild>::IsAttributeOrChild;
-        fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-            for htmlchild in self.0.clone() {
-                htmlchild.fmt_attribute_or_child(formatter)?;
-            }
-            Ok(())
-        }
-    }
-    HtmlAttributeOrChildIterator(it)
+    it.collect::<Vec<_>>() // TODO this is too expensive
 }

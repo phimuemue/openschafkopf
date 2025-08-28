@@ -84,7 +84,7 @@ impl<'rules, MinMaxStrategiesHK> SForEachSnapshotHTMLVisualizer<'rules, MinMaxSt
     }
 }
 
-pub fn output_card(card: ECard, b_border: bool) -> html_generator::HtmlElement<impl html_generator::HtmlAttrs, impl html_generator::HtmlChildren> {
+pub fn output_card(card: ECard, b_border: bool) -> html_generator::HtmlElement<impl html_generator::AttributeOrChild> {
     use html_generator::*;
     div(class(format!("card-image {}{}",
         card,
@@ -92,7 +92,7 @@ pub fn output_card(card: ECard, b_border: bool) -> html_generator::HtmlElement<i
     )))
 }
 
-pub fn player_table<HtmlAttributesAndChildrenPerPlayer: html_generator::AttributesAndChildren>(epi_self: EPlayerIndex, fn_per_player: impl Fn(EPlayerIndex)->HtmlAttributesAndChildrenPerPlayer) -> html_generator::HtmlElement<impl html_generator::HtmlAttrs, impl html_generator::HtmlChildren> {
+pub fn player_table<HtmlAttributesAndChildrenPerPlayer: html_generator::AttributeOrChild>(epi_self: EPlayerIndex, fn_per_player: impl Fn(EPlayerIndex)->HtmlAttributesAndChildrenPerPlayer) -> html_generator::HtmlElement<impl html_generator::AttributeOrChild> {
     use html_generator::*;
     let table_cell = |ostr_colspan: Option<&'static str>, epi: EPlayerIndex| {
         td((
@@ -111,7 +111,7 @@ pub fn player_table<HtmlAttributesAndChildrenPerPlayer: html_generator::Attribut
     ))
 }
 
-pub fn player_table_stichseq<HtmlChildrenCard: html_generator::HtmlChildren + html_generator::AttributeOrChild<IsAttributeOrChild=html_generator::IsChild>>(epi_self: EPlayerIndex, stichseq: &SStichSequence, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlChildrenCard) -> String {
+pub fn player_table_stichseq<HtmlAttributeOrChildCard: html_generator::AttributeOrChild>(epi_self: EPlayerIndex, stichseq: &SStichSequence, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard) -> String {
     format!("{}", stichseq.visible_stichs().iter().map(|stich| {
         format!("<td>{}</td>", player_table(epi_self, |epi| {
             stich.get(epi).map(|card| {
@@ -121,7 +121,7 @@ pub fn player_table_stichseq<HtmlChildrenCard: html_generator::HtmlChildren + ht
     }).format("\n"))
 }
 
-pub fn player_table_ahand<HtmlChildrenCard: html_generator::HtmlChildren + html_generator::AttributeOrChild<IsAttributeOrChild=html_generator::IsChild>>(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &SRules, fn_border: impl Fn(ECard)->bool, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlChildrenCard) -> String {
+pub fn player_table_ahand<HtmlAttributeOrChildCard: html_generator::AttributeOrChild>(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &SRules, fn_border: impl Fn(ECard)->bool, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard) -> String {
     format!(
         "<td>{}</td>\n",
         player_table(epi_self, |epi| {
