@@ -111,14 +111,15 @@ pub fn player_table<HtmlAttributesAndChildrenPerPlayer: html_generator::Attribut
     ))
 }
 
-pub fn player_table_stichseq<HtmlAttributeOrChildCard: html_generator::AttributeOrChild>(epi_self: EPlayerIndex, stichseq: &SStichSequence, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard) -> String {
-    format!("{}", stichseq.visible_stichs().iter().map(|stich| {
-        format!("<td>{}</td>", player_table(epi_self, |epi| {
+pub fn player_table_stichseq<HtmlAttributeOrChildCard: html_generator::AttributeOrChild>(epi_self: EPlayerIndex, stichseq: &SStichSequence, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard) -> impl html_generator::AttributeOrChild {
+    use html_generator::*;
+    html_iter(stichseq.visible_stichs().iter().map(move |stich| {
+        td(player_table(epi_self, |epi| {
             stich.get(epi).map(|card| {
                 fn_output_card(*card, /*b_border*/epi==stich.first_playerindex())
             })
         }))
-    }).format("\n"))
+    }))
 }
 
 pub fn player_table_ahand<HtmlAttributeOrChildCard: html_generator::AttributeOrChild>(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &SRules, fn_border: impl Fn(ECard)->bool, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard) -> String {
@@ -150,7 +151,7 @@ impl<
             "TODO", // slccard_allowed.len(),
         ));
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(ahand, stichseq));
-        self.write_all(&player_table_stichseq(self.epi, stichseq, &output_card));
+        self.write_all(&html_generator::html_display(player_table_stichseq(self.epi, stichseq, &output_card)));
         self.write_all(&player_table_ahand(self.epi, ahand, self.rules, /*fn_border*/|_card| false, &output_card));
         self.write_all(&"</tr></table></label>\n");
         self.write_all(&"<ul>\n");
