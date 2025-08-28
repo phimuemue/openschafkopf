@@ -325,6 +325,15 @@ impl<AoC: AttributeOrChild> Display for VoidElement<AoC> {
         self.fmt_attribute_or_child(formatter)
     }
 }
+pub fn html_display(t: impl AttributeOrChild) -> impl Display {
+    struct SDisplay<T: AttributeOrChild>(T);
+    impl<AoC: AttributeOrChild> Display for SDisplay<AoC> {
+        fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+            self.0.fmt_attribute_or_child(formatter)
+        }
+    }
+    SDisplay(t)
+}
 
 #[derive(Debug, Clone)]
 pub struct SHtmlAttr<StrKey, StrVal>(StrKey, StrVal);
