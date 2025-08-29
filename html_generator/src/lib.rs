@@ -139,6 +139,19 @@ impl AttributeOrChild for String {
         self.fmt(formatter)
     }
 }
+impl<'a> AttributeOrChild for std::fmt::Arguments<'a> {
+    type Attribute = ();
+    type Child = Self;
+    fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
+        ((), self)
+    }
+    fn fmt_attr(&self, _formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        Ok(())
+    }
+    fn fmt_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.fmt(formatter)
+    }
+}
 
 #[test]
 pub fn testme() { // TODO remove this
