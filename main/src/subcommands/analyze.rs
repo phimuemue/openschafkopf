@@ -435,7 +435,7 @@ impl SGameAnalysis {
             str_rules=rules_to_string(&game.rules),
         )
         + "<table><tr>"
-        + type_inference!(&str, &player_table_ahand(epi_self, &ahand, &game.rules, /*fn_border*/|_card| false, fn_output_card))
+        + type_inference!(&str, &player_table_ahand(epi_self, &ahand, &game.rules, /*fn_border*/|_card| false, fn_output_card).to_string())
         + "</tr></table><table><tr>"
         + type_inference!(&str, &html_generator::html_display_children(player_table_stichseq(epi_self, &game.stichseq, fn_output_card)).to_string())
         + "</tr></table>"

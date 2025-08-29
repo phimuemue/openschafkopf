@@ -122,17 +122,16 @@ pub fn player_table_stichseq<HtmlAttributeOrChildCard: html_generator::Attribute
     }))
 }
 
-pub fn player_table_ahand<HtmlAttributeOrChildCard: html_generator::AttributeOrChild>(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &SRules, fn_border: impl Fn(ECard)->bool, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard) -> String {
-    format!(
-        "<td>{}</td>\n",
-        player_table(epi_self, |epi| {
-            let mut veccard = ahand[epi].cards().clone();
-            rules.sort_cards(&mut veccard);
-            Some(html_generator::html_iter(veccard.into_iter()
-                .map(|card| fn_output_card(card, fn_border(card)))
-            ))
-        }),
-    )
+pub fn player_table_ahand<HtmlAttributeOrChildCard: html_generator::AttributeOrChild>(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &SRules, fn_border: impl Fn(ECard)->bool + Clone, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard) -> html_generator::HtmlElement<impl html_generator::AttributeOrChild> {
+    use html_generator::*;
+    td(player_table(epi_self, move |epi| {
+        let mut veccard = ahand[epi].cards().clone();
+        rules.sort_cards(&mut veccard);
+        let fn_border = fn_border.clone(); // TODO really required?
+        html_generator::html_iter(veccard.into_iter()
+            .map(move |card| fn_output_card(card, fn_border(card)))
+        )
+    }))
 }
 
 impl<
