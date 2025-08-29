@@ -420,122 +420,123 @@ impl SGameAnalysis {
             )
         };
         use html_generator::*;
-        format!(
-            r###"<!DOCTYPE html>
-            <html lang="de" class="no-js">
-                <head>
-                    <title>Schafkopf-Analyse: {str_description}</title>
-                    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-                    <link rel="stylesheet" type="text/css" href="../css.css">
-                </head>"###,
-        )
-        + type_inference!(&str, &body((
-            h1(("Schafkopf-Analyse: ", a((href(str_link), str_description)))),
-            h2(rules_to_string(&game.rules)),
-            table(tr(
-                player_table_ahand(epi_self, &ahand, &game.rules, /*fn_border*/|_card| false, fn_output_card)
-            )),
-            table(tr(
-                player_table_stichseq(epi_self, &game.stichseq, fn_output_card)
-            )),
-            ul(html_iter(self.vecanalysispercard.iter()
-                .filter_map(|analysispercard| analysispercard.oanalysisimpr.as_ref().map(|analysisimpr|
-                    (analysisimpr, &analysispercard.stichseq)
-                ))
-                .map(|(analysisimpr, stichseq)| {
-                    let epi = unwrap!(stichseq.current_stich().current_playerindex());
-                    li((
-                        format!(
-                            "{str_stich_caption}: Bei gegebener Kartenverteilung: {str_card_suggested_cheating} {str_gewinn}: {n_payout_cheating} (statt {n_payout_real}).",
-                            str_stich_caption=stich_caption(stichseq).0,
-                            str_card_suggested_cheating = analysisimpr.cardandpayout_cheating.veccard
-                                .iter()
-                                .map(ECard::to_string)
-                                .join(", "),
-                            str_gewinn = match analysisimpr.cardandpayout_cheating.emistake {
-                                EMistake::Min => "garantierter Mindestgewinn",
-                                EMistake::SelfishMin => "Mindestgewinn, wenn jeder Spieler optimal spielt",
-                            },
-                            n_payout_cheating = analysisimpr.cardandpayout_cheating.n_payout,
-                            n_payout_real = mapepin_payout[epi],
-                        ),
-                        if_then_some!(let VImprovementSimulating::Found(ref cardandpayout) = analysisimpr.improvementsimulating, {
-                            ul(li(format!(
-                                "Bei unbekannter Kartenverteilung: {str_card_suggested} {str_gewinn}: {n_payout} (statt {n_payout_real}).",
-                                str_card_suggested = cardandpayout.veccard
-                                    .iter()
-                                    .map(ECard::to_string)
-                                    .join(", "),
-                                str_gewinn = match cardandpayout.emistake {
-                                    EMistake::Min => "garantierter Mindestgewinn",
-                                    EMistake::SelfishMin => "Mindestgewinn, wenn jeder Spieler optimal spielt",
-                                },
-                                n_payout = cardandpayout.n_payout,
-                                n_payout_real = mapepin_payout[epi],
-                            )))
-                        }),
-                    ))
-                })
-            )),
-            h2("Gewinnspanne pro Karte"),
-            player_table(epi_self, |epi| {
-                // TODO? replace this by a line/area chart
-                // TODO group unchanged columns
-                let vecpossiblepayout = &self.mapepivecpossiblepayout[epi];
-                use html_generator::*;
-                table((
-                    tr(html_iter(vecpossiblepayout.iter().map(|SPossiblePayout(_perminmaxstrategyn_payout, (i_stich, i_card))|
-                            td(format!("{}/{}", i_stich+1, i_card+1)) // TODO(html_generator) avoid creation of String
-                    ))),
-                    html_iter(SPerMinMaxStrategy::accessors().iter().rev().map(|(_emmstrategy, fn_value_for_strategy)| {
-                        tr(html_iter(vecpossiblepayout.iter().map(|SPossiblePayout(determinebestcardresult, (_i_stich, _i_card))|
-                            td(format!("{}", // TODO(html_generator) avoid creation of String
-                                fn_value_for_strategy(&determinebestcardresult
-                                    .t_combined
-                                    .map(|payoutstats| verify_eq!(payoutstats.min(), payoutstats.max()))),
+        format!("<!DOCTYPE html>{}",
+            html((
+                lang("de"),
+                class("no-js"),
+                head((
+                    title(("Schafkopf-Analyse: ", str_description)),
+                    meta(charset("UTF-8")),
+                    link((rel("stylesheet"), type_("text/css"), href("../css.css"))),
+                )),
+                body((
+                    h1(("Schafkopf-Analyse: ", a((href(str_link), str_description)))),
+                    h2(rules_to_string(&game.rules)),
+                    table(tr(
+                        player_table_ahand(epi_self, &ahand, &game.rules, /*fn_border*/|_card| false, fn_output_card)
+                    )),
+                    table(tr(
+                        player_table_stichseq(epi_self, &game.stichseq, fn_output_card)
+                    )),
+                    ul(html_iter(self.vecanalysispercard.iter()
+                        .filter_map(|analysispercard| analysispercard.oanalysisimpr.as_ref().map(|analysisimpr|
+                            (analysisimpr, &analysispercard.stichseq)
+                        ))
+                        .map(|(analysisimpr, stichseq)| {
+                            let epi = unwrap!(stichseq.current_stich().current_playerindex());
+                            li((
+                                format!(
+                                    "{str_stich_caption}: Bei gegebener Kartenverteilung: {str_card_suggested_cheating} {str_gewinn}: {n_payout_cheating} (statt {n_payout_real}).",
+                                    str_stich_caption=stich_caption(stichseq).0,
+                                    str_card_suggested_cheating = analysisimpr.cardandpayout_cheating.veccard
+                                        .iter()
+                                        .map(ECard::to_string)
+                                        .join(", "),
+                                    str_gewinn = match analysisimpr.cardandpayout_cheating.emistake {
+                                        EMistake::Min => "garantierter Mindestgewinn",
+                                        EMistake::SelfishMin => "Mindestgewinn, wenn jeder Spieler optimal spielt",
+                                    },
+                                    n_payout_cheating = analysisimpr.cardandpayout_cheating.n_payout,
+                                    n_payout_real = mapepin_payout[epi],
+                                ),
+                                if_then_some!(let VImprovementSimulating::Found(ref cardandpayout) = analysisimpr.improvementsimulating, {
+                                    ul(li(format!(
+                                        "Bei unbekannter Kartenverteilung: {str_card_suggested} {str_gewinn}: {n_payout} (statt {n_payout_real}).",
+                                        str_card_suggested = cardandpayout.veccard
+                                            .iter()
+                                            .map(ECard::to_string)
+                                            .join(", "),
+                                        str_gewinn = match cardandpayout.emistake {
+                                            EMistake::Min => "garantierter Mindestgewinn",
+                                            EMistake::SelfishMin => "Mindestgewinn, wenn jeder Spieler optimal spielt",
+                                        },
+                                        n_payout = cardandpayout.n_payout,
+                                        n_payout_real = mapepin_payout[epi],
+                                    )))
+                                }),
                             ))
-                        )))
-                    })),
-                ))
-            }),
-            h2("Details"),
-            html_iter(self.vecanalysispercard.iter().map(|analysispercard| {
-                // TODO simplify output (as it currently only shows results from one ahand)
-                let stichseq = &analysispercard.stichseq;
-                let ahand = &analysispercard.ahand;
-                let mut str_per_card = html_display_children((
-                    h3(stich_caption(stichseq).0),
-                    table(tr((
-                        player_table_stichseq(epi_self, stichseq, fn_output_card),
-                        player_table_ahand(
-                            epi_self,
-                            ahand,
+                        })
+                    )),
+                    h2("Gewinnspanne pro Karte"),
+                    player_table(epi_self, |epi| {
+                        // TODO? replace this by a line/area chart
+                        // TODO group unchanged columns
+                        let vecpossiblepayout = &self.mapepivecpossiblepayout[epi];
+                        use html_generator::*;
+                        table((
+                            tr(html_iter(vecpossiblepayout.iter().map(|SPossiblePayout(_perminmaxstrategyn_payout, (i_stich, i_card))|
+                                    td(format!("{}/{}", i_stich+1, i_card+1)) // TODO(html_generator) avoid creation of String
+                            ))),
+                            html_iter(SPerMinMaxStrategy::accessors().iter().rev().map(|(_emmstrategy, fn_value_for_strategy)| {
+                                tr(html_iter(vecpossiblepayout.iter().map(|SPossiblePayout(determinebestcardresult, (_i_stich, _i_card))|
+                                    td(format!("{}", // TODO(html_generator) avoid creation of String
+                                        fn_value_for_strategy(&determinebestcardresult
+                                            .t_combined
+                                            .map(|payoutstats| verify_eq!(payoutstats.min(), payoutstats.max()))),
+                                    ))
+                                )))
+                            })),
+                        ))
+                    }),
+                    h2("Details"),
+                    html_iter(self.vecanalysispercard.iter().map(|analysispercard| {
+                        // TODO simplify output (as it currently only shows results from one ahand)
+                        let stichseq = &analysispercard.stichseq;
+                        let ahand = &analysispercard.ahand;
+                        let mut str_per_card = html_display_children((
+                            h3(stich_caption(stichseq).0),
+                            table(tr((
+                                player_table_stichseq(epi_self, stichseq, fn_output_card),
+                                player_table_ahand(
+                                    epi_self,
+                                    ahand,
+                                    &game.rules,
+                                    /*fn_border*/|card| card==analysispercard.card_played,
+                                    fn_output_card,
+                                ),
+                            ))),
+                        )).to_string();
+                        append_html_payout_table::<SPerMinMaxStrategyHigherKinded>(
+                            &mut str_per_card,
                             &game.rules,
-                            /*fn_border*/|card| card==analysispercard.card_played,
+                            &analysispercard.ahand,
+                            &analysispercard.stichseq,
+                            &analysispercard.determinebestcardresult_cheating,
+                            analysispercard.card_played,
                             fn_output_card,
-                        ),
-                    ))),
-                )).to_string();
-                append_html_payout_table::<SPerMinMaxStrategyHigherKinded>(
-                    &mut str_per_card,
-                    &game.rules,
-                    &analysispercard.ahand,
-                    &analysispercard.stichseq,
-                    &analysispercard.determinebestcardresult_cheating,
-                    analysispercard.card_played,
-                    fn_output_card,
-                );
-                append_html_copy_button(
-                    &mut str_per_card,
-                    &game.rules,
-                    &analysispercard.ahand,
-                    &analysispercard.stichseq,
-                    str_openschafkopf_executable,
-                );
-                str_per_card
-            })),
-        )).to_string())
-        + "</html>"
+                        );
+                        append_html_copy_button(
+                            &mut str_per_card,
+                            &game.rules,
+                            &analysispercard.ahand,
+                            &analysispercard.stichseq,
+                            str_openschafkopf_executable,
+                        );
+                        str_per_card
+                    })),
+                )),
+            ))
+        )
     }
 }
 
