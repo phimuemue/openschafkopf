@@ -6,7 +6,8 @@ pub trait AttributeOrChild {
     type Attribute: AttributeOrChild;
     type Child: AttributeOrChild;
     fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child);
-    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error>;
+    fn fmt_attr(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error>;
+    fn fmt_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error>;
 }
 
 impl AttributeOrChild for () {
@@ -15,7 +16,10 @@ impl AttributeOrChild for () {
     fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
         ((), ())
     }
-    fn fmt_attribute_or_child(&self, _formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt_attr(&self, _formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        Ok(())
+    }
+    fn fmt_child(&self, _formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         Ok(())
     }
 }
@@ -35,10 +39,17 @@ macro_rules! impl_attributeorchild_for_tuple {($($t:ident)*) => {
             )
         }
         #[allow(unused_variables)]
-        fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        fn fmt_attr(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
             #[allow(non_snake_case)]
             let ($($t,)*) = self;
-            $($t.fmt_attribute_or_child(formatter)?;)*
+            $($t.fmt_attr(formatter)?;)*
+            Ok(())
+        }
+        #[allow(unused_variables)]
+        fn fmt_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+            #[allow(non_snake_case)]
+            let ($($t,)*) = self;
+            $($t.fmt_child(formatter)?;)*
             Ok(())
         }
     }
@@ -56,8 +67,11 @@ impl<StrKey: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> Attribu
     fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
         (self, ())
     }
-    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt_attr(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(formatter, " {}=\"{}\"", self.0.borrow(), self.1.borrow())
+    }
+    fn fmt_child(&self, _formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        Ok(())
     }
 }
 
@@ -67,12 +81,15 @@ impl<AoC: AttributeOrChild> AttributeOrChild for HtmlElement<AoC> {
     fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
         ((), self)
     }
-    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt_attr(&self, _formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        Ok(())
+    }
+    fn fmt_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         let tag_name = self.tag_name;
         write!(formatter, "<{tag_name}")?;
-        self.attributes.fmt_attribute_or_child(formatter)?;
+        self.attributes.fmt_attr(formatter)?;
         write!(formatter, ">")?;
-        self.children.fmt_attribute_or_child(formatter)?;
+        self.children.fmt_child(formatter)?;
         write!(formatter, "</{tag_name}>")?;
         Ok(())
     }
@@ -83,10 +100,13 @@ impl<AoC: AttributeOrChild> AttributeOrChild for VoidElement<AoC> {
     fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
         ((), self)
     }
-    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt_attr(&self, _formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        Ok(())
+    }
+    fn fmt_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         let tag_name = self.tag_name;
         write!(formatter, "<{tag_name}")?;
-        self.attributes.fmt_attribute_or_child(formatter)?;
+        self.attributes.fmt_attr(formatter)?;
         write!(formatter, "/>")?;
         Ok(())
     }
@@ -98,7 +118,10 @@ impl AttributeOrChild for &str {
     fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
         ((), self)
     }
-    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt_attr(&self, _formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        Ok(())
+    }
+    fn fmt_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.fmt(formatter)
     }
 }
@@ -109,7 +132,10 @@ impl AttributeOrChild for String {
     fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
         ((), self)
     }
-    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt_attr(&self, _formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        Ok(())
+    }
+    fn fmt_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.fmt(formatter)
     }
 }
@@ -317,19 +343,19 @@ pub use elements::*;
 
 impl<AoC: AttributeOrChild> Display for HtmlElement<AoC> {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        self.fmt_attribute_or_child(formatter)
+        self.fmt_child(formatter)
     }
 }
 impl<AoC: AttributeOrChild> Display for VoidElement<AoC> {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        self.fmt_attribute_or_child(formatter)
+        self.fmt_child(formatter)
     }
 }
-pub fn html_display(t: impl AttributeOrChild) -> impl Display {
+pub fn html_display_children(t: impl AttributeOrChild) -> impl Display {
     struct SDisplay<T: AttributeOrChild>(T);
     impl<AoC: AttributeOrChild> Display for SDisplay<AoC> {
         fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-            self.0.fmt_attribute_or_child(formatter)
+            self.0.fmt_child(formatter)
         }
     }
     SDisplay(t)
@@ -484,9 +510,15 @@ impl<AoC: AttributeOrChild> AttributeOrChild for Vec<AoC> {
         }
         (vecattribute, vecchild)
     }
-    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt_attr(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         for attributeorchild in self {
-            attributeorchild.fmt_attribute_or_child(formatter)?;
+            attributeorchild.fmt_attr(formatter)?;
+        }
+        Ok(())
+    }
+    fn fmt_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        for attributeorchild in self {
+            attributeorchild.fmt_child(formatter)?;
         }
         Ok(())
     }
@@ -502,17 +534,49 @@ impl<AoC: AttributeOrChild> AttributeOrChild for Option<AoC> {
             (None, None)
         }
     }
-    fn fmt_attribute_or_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt_attr(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         if let Some(attributeorchild) = self {
-            attributeorchild.fmt_attribute_or_child(formatter)?;
+            attributeorchild.fmt_attr(formatter)?;
+        }
+        Ok(())
+    }
+    fn fmt_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        if let Some(attributeorchild) = self {
+            attributeorchild.fmt_child(formatter)?;
         }
         Ok(())
     }
 }
 
-pub fn html_iter<Iter: Iterator>(it: Iter) -> impl AttributeOrChild
+#[derive(Debug, Clone)]
+pub struct HtmlIter<Iter>(Iter);
+
+impl<Iter: Iterator + Clone> AttributeOrChild for HtmlIter<Iter>
     where
         Iter::Item: AttributeOrChild,
 {
-    it.collect::<Vec<_>>() // TODO this is too expensive
+    type Attribute = Self;
+    type Child = Self;
+    fn split_into_attributes_and_children(self) -> (Self::Attribute, Self::Child) {
+        (self.clone(), self)
+    }
+    fn fmt_attr(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        for attributeorchild in self.0.clone() {
+            attributeorchild.fmt_attr(formatter)?;
+        }
+        Ok(())
+    }
+    fn fmt_child(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        for attributeorchild in self.0.clone() {
+            attributeorchild.fmt_child(formatter)?;
+        }
+        Ok(())
+    }
+}
+
+pub fn html_iter<Iter: Iterator + Clone>(it: Iter) -> HtmlIter<Iter>
+    where
+        Iter::Item: AttributeOrChild,
+{
+    HtmlIter(it)
 }

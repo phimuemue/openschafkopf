@@ -437,7 +437,7 @@ impl SGameAnalysis {
         + "<table><tr>"
         + type_inference!(&str, &player_table_ahand(epi_self, &ahand, &game.rules, /*fn_border*/|_card| false, fn_output_card))
         + "</tr></table><table><tr>"
-        + type_inference!(&str, &player_table_stichseq(epi_self, &game.stichseq, fn_output_card))
+        + type_inference!(&str, &html_generator::html_display_children(player_table_stichseq(epi_self, &game.stichseq, fn_output_card)).to_string())
         + "</tr></table>"
         + "<ul>"
         + type_inference!(&str, &format!("{}", self.vecanalysispercard.iter()
@@ -523,7 +523,7 @@ impl SGameAnalysis {
                 unwrap!(write!(
                     str_per_card,
                     "<table><tr>{}{}</tr></table>",
-                    player_table_stichseq(epi_self, stichseq, fn_output_card),
+                    html_generator::html_display_children(player_table_stichseq(epi_self, stichseq, fn_output_card)),
                     player_table_ahand(
                         epi_self,
                         ahand,

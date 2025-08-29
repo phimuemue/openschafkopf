@@ -151,7 +151,7 @@ impl<
             "TODO", // slccard_allowed.len(),
         ));
         assert!(crate::ai::ahand_vecstich_card_count_is_compatible(ahand, stichseq));
-        self.write_all(&html_generator::html_display(player_table_stichseq(self.epi, stichseq, &output_card)));
+        self.write_all(&html_generator::html_display_children(player_table_stichseq(self.epi, stichseq, &output_card)));
         self.write_all(&player_table_ahand(self.epi, ahand, self.rules, /*fn_border*/|_card| false, &output_card));
         self.write_all(&"</tr></table></label>\n");
         self.write_all(&"<ul>\n");
