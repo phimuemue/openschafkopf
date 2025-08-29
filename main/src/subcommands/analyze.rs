@@ -443,11 +443,10 @@ impl SGameAnalysis {
                             (analysisimpr, &analysispercard.stichseq)
                         ))
                         .map(|(analysisimpr, stichseq)| {
-                            let epi = unwrap!(stichseq.current_stich().current_playerindex());
+                            let (str_stich_caption, epi) = stich_caption(stichseq);
                             li((
                                 format!(
                                     "{str_stich_caption}: Bei gegebener Kartenverteilung: {str_card_suggested_cheating} {str_gewinn}: {n_payout_cheating} (statt {n_payout_real}).",
-                                    str_stich_caption=stich_caption(stichseq).0,
                                     str_card_suggested_cheating = analysisimpr.cardandpayout_cheating.veccard
                                         .iter()
                                         .map(ECard::to_string)
