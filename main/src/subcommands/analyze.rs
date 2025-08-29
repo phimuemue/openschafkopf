@@ -419,6 +419,7 @@ impl SGameAnalysis {
                 epi_current,
             )
         };
+        use html_generator::*;
         format!(
             r###"<!DOCTYPE html>
             <html lang="de" class="no-js">
@@ -434,11 +435,14 @@ impl SGameAnalysis {
             str_link=str_link,
             str_rules=rules_to_string(&game.rules),
         )
-        + "<table><tr>"
-        + type_inference!(&str, &player_table_ahand(epi_self, &ahand, &game.rules, /*fn_border*/|_card| false, fn_output_card).to_string())
-        + "</tr></table><table><tr>"
-        + type_inference!(&str, &html_generator::html_display_children(player_table_stichseq(epi_self, &game.stichseq, fn_output_card)).to_string())
-        + "</tr></table>"
+        + type_inference!(&str, &html_display_children((
+            table(tr(
+                player_table_ahand(epi_self, &ahand, &game.rules, /*fn_border*/|_card| false, fn_output_card)
+            )),
+            table(tr(
+                player_table_stichseq(epi_self, &game.stichseq, fn_output_card)
+            )),
+        )).to_string())
         + "<ul>"
         + type_inference!(&str, &format!("{}", self.vecanalysispercard.iter()
             .filter_map(|analysispercard| analysispercard.oanalysisimpr.as_ref().map(|analysisimpr|
