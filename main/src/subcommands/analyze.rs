@@ -395,12 +395,12 @@ pub struct SPossiblePayout(
 );
 
 impl SGameAnalysis {
-    fn generate_analysis_html(
+    fn generate_analysis_html<HtmlAttributeOrChildCard: html_generator::AttributeOrChild>(
         &self,
         str_description: &str,
         str_link: &str,
         str_openschafkopf_executable: &str,
-        fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->String,
+        fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard,
     ) -> String {
         let game = &self.game;
         let mapepin_payout = unwrap!(game.clone().finish()).an_payout;
@@ -515,7 +515,7 @@ impl SGameAnalysis {
                                 ),
                             ))),
                         )).to_string();
-                        append_html_payout_table::<SPerMinMaxStrategyHigherKinded>(
+                        append_html_payout_table::<_, SPerMinMaxStrategyHigherKinded>(
                             &mut str_per_card,
                             &game.rules,
                             &analysispercard.ahand,

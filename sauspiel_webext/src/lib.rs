@@ -144,11 +144,11 @@ fn internal_output_card_sauspiel_img(card: ECard, str_style: String) -> html_gen
     */
 }
 
-fn output_card_sauspiel_img(card: ECard, b_highlight: bool) -> String {
+fn output_card_sauspiel_img(card: ECard, b_highlight: bool) -> impl html_generator::AttributeOrChild {
     internal_output_card_sauspiel_img(
         card,
         /*str_style*/if b_highlight { "box-shadow: inset 0px 0px 5px black;border-radius: 4px;" } else { "" }.into(),
-    ).to_string()
+    )
 }
 
 #[wasm_bindgen(start)]
@@ -361,7 +361,7 @@ pub fn greet() {
                     let div_table = unwrap!(document.create_element("div"));
                     div_table.set_inner_html(&{
                         let mut str_table = String::new();
-                        append_html_payout_table::<SMaxSelfishMinStrategyHigherKinded>(
+                        append_html_payout_table::<_, SMaxSelfishMinStrategyHigherKinded>(
                             &mut str_table,
                             rules,
                             &ahand,

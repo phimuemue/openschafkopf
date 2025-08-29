@@ -3,7 +3,7 @@ use crate::game::*;
 use crate::primitives::*;
 use crate::rules::*;
 use crate::util::*;
-use crate::game_analysis::determine_best_card_table::{table, N_COLUMNS};
+use crate::game_analysis::determine_best_card_table::N_COLUMNS;
 use itertools::Itertools;
 use std::{
     io::Write,
@@ -42,19 +42,20 @@ pub fn generate_html_auxiliary_files(path_out_dir: &std::path::Path) -> Result<(
     Ok(())
 }
 
-pub fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(
+pub fn append_html_payout_table<HtmlAttributeOrChildCard: html_generator::AttributeOrChild, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(
     str_per_card: &mut String,
     rules: &SRules,
     ahand: &EnumMap<EPlayerIndex, SHand>,
     stichseq: &SStichSequence,
     determinebestcardresult: &SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<()>>>,
     card_played: ECard,
-    fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->String,
+    fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard,
 )
     where
         MinMaxStrategiesHK::Type<SPayoutStats<()>>: std::fmt::Debug,
         MinMaxStrategiesHK::Type<[(String, f32); N_COLUMNS]>: PartialEq+Clone,
 {
+    use html_generator::*;
     *str_per_card += "<table>";
     fn condensed_cheating_columns(atplstrf: &[(String, f32); N_COLUMNS]) -> impl Iterator<Item=&(String, f32)> {
         let otplstrf_first = verify!(atplstrf.first());
@@ -64,7 +65,7 @@ pub fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinde
         );
         otplstrf_first.into_iter()
     }
-    let vecoutputline_cheating = table::</*TODO type annotations needed?*/MinMaxStrategiesHK, _>(
+    let vecoutputline_cheating = determine_best_card_table::table::</*TODO type annotations needed?*/MinMaxStrategiesHK, _>(
         determinebestcardresult,
         rules,
         /*fn_loss_or_win*/&|n_payout, ()| n_payout.cmp(&0),
@@ -73,7 +74,7 @@ pub fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinde
         *str_per_card += "<tr>";
         *str_per_card += r#"<td style="padding: 5px;">"#;
         for &card in outputline.vect.iter() {
-            *str_per_card += &fn_output_card(card, /*b_border*/card==card_played);
+            *str_per_card += &html_display_children(fn_output_card(card, /*b_border*/card==card_played)).to_string();
         }
         *str_per_card += "</td>";
         for (_emmstrategy, atplstrf) in outputline.perminmaxstrategyatplstrf.via_accessors() {
@@ -101,7 +102,7 @@ pub fn append_html_payout_table<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinde
     if !veccard_non_allowed.is_empty() {
         *str_per_card += r#"<td style="padding: 5px;">"#;
         for card in veccard_non_allowed {
-            *str_per_card += &fn_output_card(card, /*b_border*/false);
+            *str_per_card += &html_display_children(fn_output_card(card, /*b_border*/false)).to_string();
         }
         *str_per_card += "</td>";
         unwrap!(write!(
