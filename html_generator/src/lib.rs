@@ -59,6 +59,10 @@ impl_attributeorchild_for_tuple!(T0 T1);
 impl_attributeorchild_for_tuple!(T0 T1 T2);
 impl_attributeorchild_for_tuple!(T0 T1 T2 T3);
 impl_attributeorchild_for_tuple!(T0 T1 T2 T3 T4);
+impl_attributeorchild_for_tuple!(T0 T1 T2 T3 T4 T5);
+impl_attributeorchild_for_tuple!(T0 T1 T2 T3 T4 T5 T6);
+impl_attributeorchild_for_tuple!(T0 T1 T2 T3 T4 T5 T6 T7);
+impl_attributeorchild_for_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8);
 
 
 impl<StrKey: std::borrow::Borrow<str>, StrVal: std::borrow::Borrow<str>> AttributeOrChild for SHtmlAttr<StrKey, StrVal> {
