@@ -270,6 +270,11 @@ pub mod elements {
     impl_element!(frame);
     impl_element!(frameset);
     impl_element!(h1);
+    impl_element!(h2);
+    impl_element!(h3);
+    impl_element!(h4);
+    impl_element!(h5);
+    impl_element!(h6);
     impl_element!(head);
     impl_element!(header);
     impl_element!(hgroup);
