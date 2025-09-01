@@ -417,6 +417,16 @@ pub fn greet() {
             for (epi, _card, ocardseverity) in vecepicardocardseverity.iter() {
                 assign_gt(&mut mapepiocardseverity[*epi], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
             }
+            let points_cell_style = |b_border_top: bool, epi: EPlayerIndex| {
+                let mut str_style = "padding: 5px;".to_string(); // TODO could html_generator solve this nicely?
+                if b_border_top {
+                    str_style += "border-top: 1px solid black;";
+                }
+                if rules.playerindex() == Some(epi) { // TODO support "Mitspieler" for Rufspiel
+                    str_style += "background-color: #11111111";
+                }
+                attributes::style(str_style)
+            };
             node_whole_game.set_inner_html(&table(tbody((
                 tr((
                     th(()), // empty cell to match subsequent rows // TODO merge with next row's cell?
@@ -439,7 +449,10 @@ pub fn greet() {
                     })),
                     html_table_gap_cell.clone(),
                     html_iter(EPlayerIndex::values().map(|epi_points|
-                        th(format!("{}", epi_to_sauspiel_position(epi_points)))
+                        th((
+                            points_cell_style(/*b_border_top*/false, epi_points),
+                            format!("{}", epi_to_sauspiel_position(epi_points)),
+                        ))
                     )),
                 )),
                 vecepicardocardseverity.chunks(EPlayerIndex::SIZE).zip_eq(game_finished.stichseq.completed_stichs_winner_index(&game_finished.rules)).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
@@ -472,7 +485,7 @@ pub fn greet() {
                         html_table_gap_cell.clone(),
                         html_iter(EPlayerIndex::values().map(move |epi_points| 
                             td((
-                                attributes::style("padding: 5px;"),
+                                points_cell_style(/*b_border_top*/false, epi_points),
                                 if_then_some!(epi_points==epi_winner, format!("{}", points_stich(stich))),
                             ))
                         )),
@@ -493,7 +506,7 @@ pub fn greet() {
                             )
                             .sum::<isize>();
                         td((
-                            attributes::style("padding: 5px; border-top: 1px solid black;"),
+                            points_cell_style(/*b_border_top*/true, epi_points),
                             format!("{}", n_points),
                         ))
 
