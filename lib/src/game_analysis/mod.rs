@@ -98,8 +98,8 @@ pub fn append_html_payout_table<HtmlAttributeOrChildCard: html_generator::Attrib
     let mut veccard_non_allowed = hand_current_player.cards().iter()
         .filter_map(|card| if_then_some!(!veccard_allowed.contains(card), *card))
         .collect::<Vec<_>>();
-    rules.sort_cards(&mut veccard_non_allowed);
     if !veccard_non_allowed.is_empty() {
+        rules.sort_cards(&mut veccard_non_allowed);
         *str_per_card += r#"<td style="padding: 5px;">"#;
         for card in veccard_non_allowed {
             *str_per_card += &html_display_children(fn_output_card(card, /*b_border*/false)).to_string();
