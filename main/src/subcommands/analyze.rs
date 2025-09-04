@@ -514,16 +514,15 @@ impl SGameAnalysis {
                                     fn_output_card,
                                 ),
                             ))),
+                            html_payout_table::<_, SPerMinMaxStrategyHigherKinded>(
+                                &game.rules,
+                                &analysispercard.ahand,
+                                &analysispercard.stichseq,
+                                &analysispercard.determinebestcardresult_cheating,
+                                analysispercard.card_played,
+                                fn_output_card,
+                            ),
                         )).to_string();
-                        append_html_payout_table::<_, SPerMinMaxStrategyHigherKinded>(
-                            &mut str_per_card,
-                            &game.rules,
-                            &analysispercard.ahand,
-                            &analysispercard.stichseq,
-                            &analysispercard.determinebestcardresult_cheating,
-                            analysispercard.card_played,
-                            fn_output_card,
-                        );
                         append_html_copy_button(
                             &mut str_per_card,
                             &game.rules,

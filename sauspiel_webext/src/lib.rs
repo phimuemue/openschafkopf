@@ -8,7 +8,7 @@ use openschafkopf_util::*;
 use openschafkopf_lib::{
     ai::{SPayoutStats, determine_best_card, gametree::{SMaxSelfishMinStrategy, SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}, stichoracle::SFilterByOracle},
     game::{first_hand_for, SGameResultGeneric},
-    game_analysis::{append_html_payout_table, append_html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
+    game_analysis::{html_payout_table, append_html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
     rules::{TRules, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe, card_points::points_stich},
     primitives::{ECard, EFarbe, ESchlag, EPlayerIndex, SHand, SStichSequence, TCardSorter},
 };
@@ -360,17 +360,14 @@ pub fn greet() {
                     );
                     let div_table = unwrap!(document.create_element("div"));
                     div_table.set_inner_html(&{
-                        let mut str_table = String::new();
-                        append_html_payout_table::<_, SMaxSelfishMinStrategyHigherKinded>(
-                            &mut str_table,
+                        html_display_children(html_payout_table::<_, SMaxSelfishMinStrategyHigherKinded>(
                             rules,
                             &ahand,
                             &stichseq,
                             &determinebestcardresult,
                             card_played,
                             &output_card_sauspiel_img,
-                        );
-                        str_table
+                        )).to_string()
                     });
                     append_sibling(&element_played_card, &div_table);
                     let get_min_max_eq = |payoutstats: &SMaxSelfishMinStrategy<SPayoutStats<()>>| {
@@ -539,21 +536,24 @@ pub fn greet() {
                                 ),
                             ));
                             if stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}) {
-                                append_html_payout_table::<SMaxSelfishMinStrategyHigherKinded>(
-                                    &mut str_html_out,
-                                    &game_finished.rules,
-                                    &ahand,
-                                    &stichseq,
-                                    &determine_best_card_sauspiel(
-                                        ahand.clone(),
-                                        &stichseq,
-                                        epi,
+                                unwrap!(write!(
+                                    str_html_out,
+                                    "{}",
+                                    html_display_children(html_payout_table::<_, SMaxSelfishMinStrategyHigherKinded>(
                                         &game_finished.rules,
-                                        &game_finished.expensifiers,
-                                    ),
-                                    card_played,
-                                    &output_card_sauspiel_img,
-                                );
+                                        &ahand,
+                                        &stichseq,
+                                        &determine_best_card_sauspiel(
+                                            ahand.clone(),
+                                            &stichseq,
+                                            epi,
+                                            &game_finished.rules,
+                                            &game_finished.expensifiers,
+                                        ),
+                                        card_played,
+                                        &output_card_sauspiel_img,
+                                    )),
+                                ));
                             }
                             str_html_out += "<div>";
                             append_html_copy_button(

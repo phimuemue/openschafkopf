@@ -11,7 +11,7 @@ use std::borrow::Borrow;
 pub const N_COLUMNS : usize = 4;
 
 // crude formatting: treat all numbers as f32, and convert structured input to a plain number table
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct SOutputLine<T, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> {
     pub vect: Vec<T>,
     pub perminmaxstrategyatplstrf: MinMaxStrategiesHK::Type<[(String, f32); N_COLUMNS]>,
