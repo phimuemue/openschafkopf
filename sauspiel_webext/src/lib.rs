@@ -518,25 +518,20 @@ pub fn greet() {
                 ) {
                     Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}) => {
                         use html_generator::*;
-                        let mut str_html_out = String::new();
-                        for ((ahand, stichseq), card_played, epi) in vecahandstichseqcardepi {
-                            unwrap!(write!(
-                                str_html_out,
-                                "<table><tr>{}{}</tr></table>",
-                                html_display_children(player_table_stichseq(/*epi_self*/EPlayerIndex::EPI0, &stichseq, &output_card_sauspiel_img)),
-                                player_table_ahand(
-                                    /*epi_self*/EPlayerIndex::EPI0,
-                                    &ahand,
-                                    &game_finished.rules,
-                                    /*fn_border*/|card| card==card_played,
-                                    &output_card_sauspiel_img,
-                                ),
-                            ));
-                            if stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}) {
-                                unwrap!(write!(
-                                    str_html_out,
-                                    "{}",
-                                    html_display_children(html_payout_table::<_, SMaxSelfishMinStrategyHigherKinded>(
+                        let str_html_out = html_display_children(html_iter(vecahandstichseqcardepi.into_iter().map(|((ahand, stichseq), card_played, epi)| {
+                            (
+                                table(tr((
+                                    player_table_stichseq(/*epi_self*/EPlayerIndex::EPI0, &stichseq, &output_card_sauspiel_img),
+                                    player_table_ahand(
+                                        /*epi_self*/EPlayerIndex::EPI0,
+                                        &ahand,
+                                        &game_finished.rules,
+                                        /*fn_border*/|card| card==card_played,
+                                        &output_card_sauspiel_img,
+                                    ),
+                                ))),
+                                if_then_some!(stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}), {
+                                    html_payout_table::<_, SMaxSelfishMinStrategyHigherKinded>(
                                         &game_finished.rules,
                                         &ahand,
                                         &stichseq,
@@ -549,18 +544,16 @@ pub fn greet() {
                                         ),
                                         card_played,
                                         &output_card_sauspiel_img,
-                                    )),
-                                ));
-                            }
-                            str_html_out += "<div>";
-                            str_html_out += &html_copy_button(
-                                &game_finished.rules,
-                                &ahand,
-                                &stichseq,
-                                /*str_openschafkopf_executable*/"openschafkopf",
-                            );
-                            str_html_out += "</div>";
-                        }
+                                    )
+                                }),
+                                div(html_copy_button(
+                                    &game_finished.rules,
+                                    &ahand,
+                                    &stichseq,
+                                    /*str_openschafkopf_executable*/"openschafkopf",
+                                )),
+                            )
+                        }))).to_string();
                         let div_openschafkopf_overview = unwrap!(document.create_element("div"));
                         div_openschafkopf_overview.set_inner_html(&str_html_out);
                         let document = SWebsysDocument(document);
