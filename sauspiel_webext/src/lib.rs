@@ -577,7 +577,7 @@ pub fn greet() {
                         // Nothing to analyze for Stock.
                     },
                     Err(err_json) => {
-                        dbg_alert!(&format!("Error parsing document:\n{:?}\n{:?}", err_html, err_json));
+                        dbg_alert!(&format!("Error parsing document:\n{err_html:?}\n{err_json:?}"));
                     },
                 }
             }
