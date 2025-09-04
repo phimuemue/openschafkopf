@@ -8,7 +8,7 @@ use openschafkopf_util::*;
 use openschafkopf_lib::{
     ai::{SPayoutStats, determine_best_card, gametree::{SMaxSelfishMinStrategy, SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}, stichoracle::SFilterByOracle},
     game::{first_hand_for, SGameResultGeneric},
-    game_analysis::{html_payout_table, append_html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
+    game_analysis::{html_payout_table, html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
     rules::{TRules, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe, card_points::points_stich},
     primitives::{ECard, EFarbe, ESchlag, EPlayerIndex, SHand, SStichSequence, TCardSorter},
 };
@@ -390,15 +390,12 @@ pub fn greet() {
                 });
                 vecepicardocardseverity.push((epi, card_played, ocardseverity));
                 let div_button = unwrap!(document.create_element("div"));
-                div_button.set_inner_html(&via_out_param(|str_button| 
-                    append_html_copy_button(
-                        str_button,
-                        rules,
-                        &ahand,
-                        &stichseq,
-                        /*str_openschafkopf_executable*/"openschafkopf",
-                    )
-                ).0);
+                div_button.set_inner_html(&html_copy_button(
+                    rules,
+                    &ahand,
+                    &stichseq,
+                    /*str_openschafkopf_executable*/"openschafkopf",
+                ));
                 append_sibling(&element_played_card, &div_button);
             }
             use html_generator::*; // TODO narrower scope?
@@ -556,8 +553,7 @@ pub fn greet() {
                                 ));
                             }
                             str_html_out += "<div>";
-                            append_html_copy_button(
-                                &mut str_html_out,
+                            str_html_out += &html_copy_button(
                                 &game_finished.rules,
                                 &ahand,
                                 &stichseq,

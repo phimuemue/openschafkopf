@@ -502,7 +502,7 @@ impl SGameAnalysis {
                         // TODO simplify output (as it currently only shows results from one ahand)
                         let stichseq = &analysispercard.stichseq;
                         let ahand = &analysispercard.ahand;
-                        let mut str_per_card = html_display_children((
+                        (
                             h3(stich_caption(stichseq).0),
                             table(tr((
                                 player_table_stichseq(epi_self, stichseq, fn_output_card),
@@ -522,15 +522,13 @@ impl SGameAnalysis {
                                 analysispercard.card_played,
                                 fn_output_card,
                             ),
-                        )).to_string();
-                        append_html_copy_button(
-                            &mut str_per_card,
-                            &game.rules,
-                            &analysispercard.ahand,
-                            &analysispercard.stichseq,
-                            str_openschafkopf_executable,
-                        );
-                        str_per_card
+                            html_copy_button(
+                                &game.rules,
+                                &analysispercard.ahand,
+                                &analysispercard.stichseq,
+                                str_openschafkopf_executable,
+                            ),
+                        )
                     })),
                 )),
             ))

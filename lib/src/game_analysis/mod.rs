@@ -128,14 +128,13 @@ pub fn html_payout_table<'a, HtmlAttributeOrChildCard: html_generator::Attribute
     ))
 }
 
-pub fn append_html_copy_button(
-    str_per_card: &mut String,
+pub fn html_copy_button(
     rules: &SRules,
     ahand: &EnumMap<EPlayerIndex, SHand>,
     stichseq: &SStichSequence,
     str_openschafkopf_executable: &str,
-) {
-    *str_per_card += &format!(r###"<button onclick='
+) -> String { // TODO use html_generator
+    format!(r###"<button onclick='
         (function /*copyToClipboard*/(str, btn) {{
             navigator.clipboard.writeText(str).then(
                 function() {{
@@ -155,6 +154,6 @@ pub fn append_html_copy_button(
             str_hand_all=display_card_slices(ahand, rules, "  "),
             str_hand_single=SDisplayCardSlice::new(ahand[unwrap!(stichseq.current_stich().current_playerindex())].cards().to_vec(), rules),
         ).replace('\"', "\\\""),
-    );
+    )
 }
 
