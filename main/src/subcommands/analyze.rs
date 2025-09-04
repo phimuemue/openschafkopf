@@ -255,11 +255,11 @@ fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String
     let n_games_non_stock = Arc::new(AtomicUsize::new(0));
     let n_games_findings = Arc::new(AtomicUsize::new(0));
     vecgamewithdesc.into_par_iter().try_for_each(|gamewithdesc| -> Result<_, std::io::Error> {
+        use html_generator::*;
         if let Ok(gameresult) = gamewithdesc.resgameresult {
             match gameresult.stockorgame {
                 VStockOrT::Stock(_) => {
                     if b_include_no_findings {
-                        use html_generator::*;
                         unwrap!(write!(
                             *unwrap!(str_index_html.lock()),
                             "{}",
@@ -299,32 +299,28 @@ fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String
                     if b_include_no_findings || 0 < n_findings_cheating {
                         unwrap!(write!(
                             *unwrap!(str_index_html.lock()),
-                            r#"<tr>
-                                <td>
-                                    <a href="{str_path}">{str_rules}</a>
-                                </td>
-                                <td>
-                                    ({n_findings_simulating}/{n_findings_cheating} Funde)
-                                </td>
-                                <td>
-                                    ({chr_stopwatch} {str_duration_as_secs})
-                                </td>
-                            </tr>"#,
-                            str_path = unwrap!(
-                                unwrap!(path.strip_prefix(path_analysis)).to_str()
-                            ),
-                            str_rules = str_rules,
-                            n_findings_simulating = n_findings_simulating,
-                            n_findings_cheating = n_findings_cheating,
-                            chr_stopwatch = '\u{23F1}',
-                            str_duration_as_secs = {
-                                let n_secs = duration.as_secs();
-                                if 0==n_secs {
-                                    "&lt;1s".to_owned()
-                                } else {
-                                    format!("{n_secs}s")
-                                }
-                            },
+                            "{}",
+                            tr((
+                                td(a((
+                                    href(/*str_path*/unwrap!(
+                                        unwrap!(path.strip_prefix(path_analysis)).to_str()
+                                    )),
+                                    str_rules,
+                                ))),
+                                td(format_args!("({n_findings_simulating}/{n_findings_cheating} Funde)")),
+                                td(format_args!(
+                                    "({chr_stopwatch} {str_duration_as_secs})",
+                                    chr_stopwatch = '\u{23F1}',
+                                    str_duration_as_secs = {
+                                        let n_secs = duration.as_secs();
+                                        if 0==n_secs {
+                                            "&lt;1s".to_owned()
+                                        } else {
+                                            format!("{n_secs}s")
+                                        }
+                                    },
+                                )),
+                            )),
                         ));
                     }
                 },
