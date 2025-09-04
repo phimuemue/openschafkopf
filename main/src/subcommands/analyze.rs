@@ -326,7 +326,7 @@ fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String
                 },
             }
         } else {
-            unwrap!(write!(*unwrap!(str_index_html.lock()), "<tr><td>Fehler ({})</td></tr>", gamewithdesc.str_description));
+            unwrap!(write!(*unwrap!(str_index_html.lock()), "{}", tr(td(format_args!("Fehler ({})", gamewithdesc.str_description)))));
         }
         n_games_done.fetch_add(1, Ordering::SeqCst);
         let n_games_non_stock = n_games_non_stock.load(Ordering::SeqCst);
