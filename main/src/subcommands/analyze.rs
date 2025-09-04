@@ -259,14 +259,11 @@ fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String
             match gameresult.stockorgame {
                 VStockOrT::Stock(_) => {
                     if b_include_no_findings {
+                        use html_generator::*;
                         unwrap!(write!(
                             *unwrap!(str_index_html.lock()),
-                            r#"<tr>
-                                <td>
-                                    Stock: {}
-                                </td>
-                            </tr>"#,
-                            gameresult.an_payout.iter().join("/"),
+                            "{}",
+                            tr(td(format_args!("Stock: {}", gameresult.an_payout.iter().join("/")))),
                         ));
                     }
                 },
