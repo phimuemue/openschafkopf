@@ -111,7 +111,7 @@ pub fn player_table<HtmlAttributesAndChildrenPerPlayer: html_generator::Attribut
     ))
 }
 
-pub fn player_table_stichseq<HtmlAttributeOrChildCard: html_generator::AttributeOrChild>(epi_self: EPlayerIndex, stichseq: &SStichSequence, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard) -> impl html_generator::AttributeOrChild {
+pub fn player_table_stichseq<'a, HtmlAttributeOrChildCard: html_generator::AttributeOrChild>(epi_self: EPlayerIndex, stichseq: &'a SStichSequence, fn_output_card: &'a dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard) -> impl html_generator::AttributeOrChild + use<'a, HtmlAttributeOrChildCard> {
     use html_generator::*;
     html_iter(stichseq.visible_stichs().iter().map(move |stich| {
         td(player_table(epi_self, |epi| {
@@ -122,7 +122,7 @@ pub fn player_table_stichseq<HtmlAttributeOrChildCard: html_generator::Attribute
     }))
 }
 
-pub fn player_table_ahand<HtmlAttributeOrChildCard: html_generator::AttributeOrChild>(epi_self: EPlayerIndex, ahand: &EnumMap<EPlayerIndex, SHand>, rules: &SRules, fn_border: impl Fn(ECard)->bool + Clone, fn_output_card: &dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard) -> html_generator::HtmlElement<impl html_generator::AttributeOrChild> {
+pub fn player_table_ahand<'a, HtmlAttributeOrChildCard: html_generator::AttributeOrChild>(epi_self: EPlayerIndex, ahand: &'a EnumMap<EPlayerIndex, SHand>, rules: &'a SRules, fn_border: impl Fn(ECard)->bool + Clone, fn_output_card: &'a dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard) -> html_generator::HtmlElement<impl html_generator::AttributeOrChild> {
     use html_generator::*;
     td(player_table(epi_self, move |epi| {
         let mut veccard = ahand[epi].cards().clone();

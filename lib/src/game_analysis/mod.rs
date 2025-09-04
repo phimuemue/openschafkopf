@@ -41,14 +41,14 @@ pub fn generate_html_auxiliary_files(path_out_dir: &std::path::Path) -> Result<(
     Ok(())
 }
 
-pub fn html_payout_table<'a, HtmlAttributeOrChildCard: html_generator::AttributeOrChild, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(
-    rules: &'a SRules,
-    ahand: &'a EnumMap<EPlayerIndex, SHand>,
-    stichseq: &'a SStichSequence,
-    determinebestcardresult: &'a SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<()>>>,
+pub fn html_payout_table<'a, 'b, HtmlAttributeOrChildCard: html_generator::AttributeOrChild, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(
+    rules: &'b SRules,
+    ahand: &'b EnumMap<EPlayerIndex, SHand>,
+    stichseq: &'b SStichSequence,
+    determinebestcardresult: &'b SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<()>>>,
     card_played: ECard,
     fn_output_card: &'a dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard,
-) -> impl html_generator::AttributeOrChild<Attribute=()> + 'a
+) -> impl html_generator::AttributeOrChild<Attribute=()> + use<'a, HtmlAttributeOrChildCard, MinMaxStrategiesHK>
     where
         MinMaxStrategiesHK::Type<SPayoutStats<()>>: std::fmt::Debug,
         MinMaxStrategiesHK::Type<[(String, f32); N_COLUMNS]>: PartialEq+Clone,

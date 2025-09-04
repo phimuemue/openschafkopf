@@ -23,8 +23,6 @@ use openschafkopf_lib::{
     game_analysis::parser::analyze_sauspiel_json,
     ai::gametree::{player_table_ahand, player_table_stichseq},
 };
-#[cfg(feature="sauspiel_webext_use_json")]
-use std::fmt::Write;
 use itertools::Itertools;
 
 #[wasm_bindgen]
@@ -521,14 +519,14 @@ pub fn greet() {
                         let str_html_out = html_display_children(html_iter(vecahandstichseqcardepi.into_iter().map(|((ahand, stichseq), card_played, epi)| {
                             (
                                 table(tr((
-                                    player_table_stichseq(/*epi_self*/EPlayerIndex::EPI0, &stichseq, &output_card_sauspiel_img),
-                                    player_table_ahand(
+                                    html_display_children(player_table_stichseq(/*epi_self*/EPlayerIndex::EPI0, &stichseq, &output_card_sauspiel_img)).to_string(),
+                                    html_display_children(player_table_ahand(
                                         /*epi_self*/EPlayerIndex::EPI0,
                                         &ahand,
                                         &game_finished.rules,
-                                        /*fn_border*/|card| card==card_played,
+                                        /*fn_border*/move |card| card==card_played,
                                         &output_card_sauspiel_img,
-                                    ),
+                                    )).to_string(),
                                 ))),
                                 if_then_some!(stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}), {
                                     html_payout_table::<_, SMaxSelfishMinStrategyHigherKinded>(
