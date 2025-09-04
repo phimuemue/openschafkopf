@@ -523,12 +523,13 @@ pub fn greet() {
                     },
                 ) {
                     Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}) => {
+                        use html_generator::*;
                         let mut str_html_out = String::new();
                         for ((ahand, stichseq), card_played, epi) in vecahandstichseqcardepi {
                             unwrap!(write!(
                                 str_html_out,
                                 "<table><tr>{}{}</tr></table>",
-                                player_table_stichseq(/*epi_self*/EPlayerIndex::EPI0, &stichseq, &output_card_sauspiel_img),
+                                html_display_children(player_table_stichseq(/*epi_self*/EPlayerIndex::EPI0, &stichseq, &output_card_sauspiel_img)),
                                 player_table_ahand(
                                     /*epi_self*/EPlayerIndex::EPI0,
                                     &ahand,
