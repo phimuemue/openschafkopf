@@ -500,14 +500,15 @@ pub fn greet() {
                         + 1 // html_table_gap_cell
                     ))),
                     html_iter(EPlayerIndex::values().map(|epi_points| {
-                        let n_points = game_finished.stichseq.completed_stichs_winner_index(&game_finished.rules)
-                            .filter_map(|(stich, epi_winner)|
-                                if_then_some!(epi_points==epi_winner, points_stich(stich))
-                            )
-                            .sum::<isize>();
                         td((
                             points_cell_style(/*b_border_top*/true, epi_points),
-                            format!("{}", n_points),
+                            format!("{}",
+                                game_finished.stichseq.completed_stichs_winner_index(&game_finished.rules)
+                                    .filter_map(|(stich, epi_winner)|
+                                        if_then_some!(epi_points==epi_winner, points_stich(stich))
+                                    )
+                                    .sum::<isize>()
+                            ),
                         ))
 
                     })),
