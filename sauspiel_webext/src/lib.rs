@@ -471,11 +471,34 @@ pub fn greet() {
                         }))),
                         html_table_gap_cell.clone(),
                         html_iter(EPlayerIndex::values().map(move |epi_points| 
-                            td(if_then_some!(epi_points==epi_winner, format!("{}", points_stich(stich))))
+                            td((
+                                attributes::style("padding: 5px;"),
+                                if_then_some!(epi_points==epi_winner, format!("{}", points_stich(stich))),
+                            ))
                         )),
                     ))
                 })
                 .collect::<Vec<_>>(), // TODO avoid
+                tr((
+                    td(colspan(format!("{}", // TODO(html_generator) support format_args
+                        1 // Column "i-th Stich"
+                        + 1 // html_table_gap_cell
+                        + itepi_cycled_twice.clone().count()
+                        + 1 // html_table_gap_cell
+                    ))),
+                    html_iter(EPlayerIndex::values().map(|epi_points| {
+                        let n_points = game_finished.stichseq.completed_stichs_winner_index(&game_finished.rules)
+                            .filter_map(|(stich, epi_winner)|
+                                if_then_some!(epi_points==epi_winner, points_stich(stich))
+                            )
+                            .sum::<isize>();
+                        td((
+                            attributes::style("padding: 5px; border-top: 1px solid black;"),
+                            format!("{}", n_points),
+                        ))
+
+                    })),
+                ))
             ))).to_string());
             unwrap!(node_gameannouncements.append_with_node_1(&node_whole_game));
         },
