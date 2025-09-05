@@ -210,158 +210,173 @@ impl<A> VoidElement<A>
     }
 }
 
+macro_rules! for_each_element{($m:ident) => {
+    // Scraped from https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements, https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+    $m!(a);
+    $m!(abbr);
+    $m!(acronym);
+    $m!(address);
+    $m!(area, void_element);
+    $m!(article);
+    $m!(aside);
+    $m!(audio);
+    $m!(b);
+    $m!(base, void_element);
+    $m!(bdi);
+    $m!(bdo);
+    $m!(big);
+    $m!(blockquote);
+    $m!(body);
+    $m!(br, void_element);
+    $m!(button);
+    $m!(canvas);
+    $m!(caption);
+    $m!(center);
+    $m!(code);
+    $m!(col, void_element);
+    $m!(colgroup);
+    $m!(datalist);
+    $m!(dd);
+    $m!(del);
+    $m!(details);
+    $m!(dfn);
+    $m!(dialog);
+    $m!(div);
+    $m!(dl);
+    $m!(dt);
+    $m!(em);
+    $m!(embed, void_element);
+    $m!(fencedframe);
+    $m!(fieldset);
+    $m!(figcaption);
+    $m!(figure);
+    $m!(font);
+    $m!(footer);
+    $m!(frame);
+    $m!(frameset);
+    $m!(h1);
+    $m!(h2);
+    $m!(h3);
+    $m!(h4);
+    $m!(h5);
+    $m!(h6);
+    $m!(head);
+    $m!(header);
+    $m!(hgroup);
+    $m!(hr, void_element);
+    $m!(html);
+    $m!(i);
+    $m!(iframe);
+    $m!(img, void_element);
+    $m!(input, void_element);
+    $m!(ins);
+    $m!(kbd);
+    $m!(legend);
+    $m!(li);
+    $m!(link, void_element);
+    $m!(main);
+    $m!(map);
+    $m!(mark);
+    $m!(marquee);
+    $m!(menu);
+    $m!(meta, void_element);
+    $m!(meter);
+    $m!(nav);
+    $m!(nobr);
+    $m!(noembed);
+    $m!(noframes);
+    $m!(noscript);
+    $m!(object);
+    $m!(ol);
+    $m!(optgroup);
+    $m!(option);
+    $m!(output);
+    $m!(p);
+    $m!(param, void_element);
+    $m!(picture);
+    $m!(plaintext);
+    $m!(pre);
+    $m!(progress);
+    $m!(q);
+    $m!(rb);
+    $m!(rp);
+    $m!(rt);
+    $m!(rtc);
+    $m!(ruby);
+    $m!(s);
+    $m!(samp);
+    $m!(script);
+    $m!(search);
+    $m!(section);
+    $m!(select);
+    $m!(selectedcontent);
+    $m!(small);
+    $m!(source, void_element);
+    $m!(strike);
+    $m!(strong);
+    $m!(sub);
+    $m!(sup);
+    $m!(table);
+    $m!(tbody);
+    $m!(td);
+    $m!(template);
+    $m!(textarea);
+    $m!(tfoot);
+    $m!(th);
+    $m!(thead);
+    $m!(time);
+    $m!(tr);
+    $m!(track, void_element);
+    $m!(tt);
+    $m!(u);
+    $m!(ul);
+    $m!(var);
+    $m!(video);
+    $m!(wbr, void_element);
+    $m!(xmp);
+}}
+
+macro_rules! for_each_attribute_and_element{($m:ident) => {
+    $m!(cite);
+    $m!(data);
+    $m!(dir);
+    $m!(form);
+    $m!(label);
+    $m!(slot);
+    $m!(span);
+    $m!(style);
+    $m!(summary);
+    $m!(title);
+}}
+
 pub mod elements {
     use super::*;
-    macro_rules! impl_element(($tag_name:ident) => {
-        pub fn $tag_name<AoC: AttributeOrChild>(attributes_and_children: AoC) -> HtmlElement<AoC> {
-            HtmlElement::new(stringify!($tag_name), attributes_and_children)
-        }
-    });
-    macro_rules! impl_void(($tag_name:ident) => {
-        pub fn $tag_name<A>(attributes: A) -> VoidElement<A>
-            where
-                (A, ()): AttributeOrChild,
-        {
-            VoidElement::new(stringify!($tag_name), attributes)
-        }
-    });
+    macro_rules! impl_element(
+        ($tag_name:ident) => {
+            pub fn $tag_name<AoC: AttributeOrChild>(attributes_and_children: AoC) -> HtmlElement<AoC> {
+                HtmlElement::new(stringify!($tag_name), attributes_and_children)
+            }
+        };
+        ($tag_name:ident, void_element) => {
+            pub fn $tag_name<A>(attributes: A) -> VoidElement<A>
+                where
+                    (A, ()): AttributeOrChild,
+            {
+                VoidElement::new(stringify!($tag_name), attributes)
+            }
+        };
+    );
 
-    // Scraped from https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements, https://developer.mozilla.org/en-US/docs/Glossary/Void_element
-    impl_element!(a);
-    impl_element!(abbr);
-    impl_element!(acronym);
-    impl_element!(address);
-    impl_void!(area);
-    impl_element!(article);
-    impl_element!(aside);
-    impl_element!(audio);
-    impl_element!(b);
-    impl_void!(base);
-    impl_element!(bdi);
-    impl_element!(bdo);
-    impl_element!(big);
-    impl_element!(blockquote);
-    impl_element!(body);
-    impl_void!(br);
-    impl_element!(button);
-    impl_element!(canvas);
-    impl_element!(caption);
-    impl_element!(center);
-    impl_element!(cite);
-    impl_element!(code);
-    impl_void!(col);
-    impl_element!(colgroup);
-    impl_element!(data);
-    impl_element!(datalist);
-    impl_element!(dd);
-    impl_element!(del);
-    impl_element!(details);
-    impl_element!(dfn);
-    impl_element!(dialog);
-    impl_element!(dir);
-    impl_element!(div);
-    impl_element!(dl);
-    impl_element!(dt);
-    impl_element!(em);
-    impl_void!(embed);
-    impl_element!(fencedframe);
-    impl_element!(fieldset);
-    impl_element!(figcaption);
-    impl_element!(figure);
-    impl_element!(font);
-    impl_element!(footer);
-    impl_element!(form);
-    impl_element!(frame);
-    impl_element!(frameset);
-    impl_element!(h1);
-    impl_element!(h2);
-    impl_element!(h3);
-    impl_element!(h4);
-    impl_element!(h5);
-    impl_element!(h6);
-    impl_element!(head);
-    impl_element!(header);
-    impl_element!(hgroup);
-    impl_void!(hr);
-    impl_element!(html);
-    impl_element!(i);
-    impl_element!(iframe);
-    impl_void!(img);
-    impl_void!(input);
-    impl_element!(ins);
-    impl_element!(kbd);
-    impl_element!(label);
-    impl_element!(legend);
-    impl_element!(li);
-    impl_void!(link);
-    impl_element!(main);
-    impl_element!(map);
-    impl_element!(mark);
-    impl_element!(marquee);
-    impl_element!(menu);
-    impl_void!(meta);
-    impl_element!(meter);
-    impl_element!(nav);
-    impl_element!(nobr);
-    impl_element!(noembed);
-    impl_element!(noframes);
-    impl_element!(noscript);
-    impl_element!(object);
-    impl_element!(ol);
-    impl_element!(optgroup);
-    impl_element!(option);
-    impl_element!(output);
-    impl_element!(p);
-    impl_void!(param);
-    impl_element!(picture);
-    impl_element!(plaintext);
-    impl_element!(pre);
-    impl_element!(progress);
-    impl_element!(q);
-    impl_element!(rb);
-    impl_element!(rp);
-    impl_element!(rt);
-    impl_element!(rtc);
-    impl_element!(ruby);
-    impl_element!(s);
-    impl_element!(samp);
-    impl_element!(script);
-    impl_element!(search);
-    impl_element!(section);
-    impl_element!(select);
-    impl_element!(selectedcontent);
-    impl_element!(slot);
-    impl_element!(small);
-    impl_void!(source);
-    impl_element!(span);
-    impl_element!(strike);
-    impl_element!(strong);
-    impl_element!(style);
-    impl_element!(sub);
-    impl_element!(summary);
-    impl_element!(sup);
-    impl_element!(table);
-    impl_element!(tbody);
-    impl_element!(td);
-    impl_element!(template);
-    impl_element!(textarea);
-    impl_element!(tfoot);
-    impl_element!(th);
-    impl_element!(thead);
-    impl_element!(time);
-    impl_element!(title);
-    impl_element!(tr);
-    impl_void!(track);
-    impl_element!(tt);
-    impl_element!(u);
-    impl_element!(ul);
-    impl_element!(var);
-    impl_element!(video);
-    impl_void!(wbr);
-    impl_element!(xmp);
+    for_each_element!(impl_element);
+    for_each_attribute_and_element!(impl_element);
 }
-#[allow(ambiguous_glob_reexports)]
-pub use elements::*;
+macro_rules! pub_use_element{
+    ($tag_name:ident $(, void_element)?) => {
+        pub use elements::$tag_name;
+    };
+    ($tag_name:ident, no_pub_use) => {};
+}
+for_each_element!(pub_use_element);
 
 impl<AoC: AttributeOrChild> Display for HtmlElement<AoC> {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
@@ -386,6 +401,121 @@ pub fn html_display_children(t: impl AttributeOrChild) -> impl Display {
 #[derive(Debug, Clone)]
 pub struct SHtmlAttr<StrKey, StrVal>(StrKey, StrVal);
 
+macro_rules! for_each_attribute{($m:ident) => {
+    $m!(accept);
+    $m!(accept_charset);
+    $m!(accesskey);
+    $m!(action);
+    $m!(align);
+    $m!(allow);
+    $m!(alt);
+    $m!(as_); // "as" is a Rust keyword
+    $m!(async_);
+    $m!(autocapitalize);
+    $m!(autocomplete);
+    $m!(autoplay);
+    $m!(background);
+    $m!(bgcolor);
+    $m!(border);
+    $m!(capture);
+    $m!(charset);
+    $m!(checked);
+    $m!(class);
+    $m!(color);
+    $m!(cols);
+    $m!(colspan);
+    $m!(content);
+    $m!(contenteditable);
+    $m!(controls);
+    $m!(coords);
+    $m!(crossorigin);
+    $m!(csp);
+    $m!(data_star); // asterisk cannot be used
+    $m!(datetime);
+    $m!(decoding);
+    $m!(default);
+    $m!(defer);
+    $m!(dirname);
+    $m!(disabled);
+    $m!(download);
+    $m!(draggable);
+    $m!(enctype);
+    $m!(enterkeyhint);
+    $m!(elementtiming);
+    $m!(for_); // "for" is a Rust keyword
+    $m!(formaction);
+    $m!(formenctype);
+    $m!(formmethod);
+    $m!(formnovalidate);
+    $m!(formtarget);
+    $m!(headers);
+    $m!(height);
+    $m!(hidden);
+    $m!(high);
+    $m!(href);
+    $m!(hreflang);
+    $m!(http_equiv);
+    $m!(id);
+    $m!(integrity);
+    $m!(inputmode);
+    $m!(ismap);
+    $m!(itemprop);
+    $m!(kind);
+    $m!(lang);
+    $m!(language);
+    $m!(loading);
+    $m!(list);
+    $m!(loop_); // "loop" is a Rust keyword
+    $m!(low);
+    $m!(max);
+    $m!(maxlength);
+    $m!(minlength);
+    $m!(media);
+    $m!(method);
+    $m!(min);
+    $m!(multiple);
+    $m!(muted);
+    $m!(name);
+    $m!(novalidate);
+    $m!(open);
+    $m!(optimum);
+    $m!(pattern);
+    $m!(ping);
+    $m!(placeholder);
+    $m!(playsinline);
+    $m!(poster);
+    $m!(preload);
+    $m!(readonly);
+    $m!(referrerpolicy);
+    $m!(rel);
+    $m!(required);
+    $m!(reversed);
+    $m!(role);
+    $m!(rows);
+    $m!(rowspan);
+    $m!(sandbox);
+    $m!(scope);
+    $m!(selected);
+    $m!(shape);
+    $m!(size);
+    $m!(sizes);
+    $m!(spellcheck);
+    $m!(src);
+    $m!(srcdoc);
+    $m!(srclang);
+    $m!(srcset);
+    $m!(start);
+    $m!(step);
+    $m!(tabindex);
+    $m!(target);
+    $m!(translate);
+    $m!(type_); // "type" is a Rust keyword
+    $m!(usemap);
+    $m!(value);
+    $m!(width);
+    $m!(wrap);
+}}
+
 pub mod attributes {
     use super::*;
     macro_rules! impl_attr(($attr:ident) => {
@@ -393,131 +523,13 @@ pub mod attributes {
             SHtmlAttr(stringify!($attr), str_val)
         }
     });
-    impl_attr!(accept);
-    impl_attr!(accept_charset);
-    impl_attr!(accesskey);
-    impl_attr!(action);
-    impl_attr!(align);
-    impl_attr!(allow);
-    impl_attr!(alt);
-    impl_attr!(as_); // "as" is a Rust keyword
-    impl_attr!(async_);
-    impl_attr!(autocapitalize);
-    impl_attr!(autocomplete);
-    impl_attr!(autoplay);
-    impl_attr!(background);
-    impl_attr!(bgcolor);
-    impl_attr!(border);
-    impl_attr!(capture);
-    impl_attr!(charset);
-    impl_attr!(checked);
-    impl_attr!(cite);
-    impl_attr!(class);
-    impl_attr!(color);
-    impl_attr!(cols);
-    impl_attr!(colspan);
-    impl_attr!(content);
-    impl_attr!(contenteditable);
-    impl_attr!(controls);
-    impl_attr!(coords);
-    impl_attr!(crossorigin);
-    impl_attr!(csp);
-    impl_attr!(data);
-    impl_attr!(data_star); // asterisk cannot be used
-    impl_attr!(datetime);
-    impl_attr!(decoding);
-    impl_attr!(default);
-    impl_attr!(defer);
-    impl_attr!(dir);
-    impl_attr!(dirname);
-    impl_attr!(disabled);
-    impl_attr!(download);
-    impl_attr!(draggable);
-    impl_attr!(enctype);
-    impl_attr!(enterkeyhint);
-    impl_attr!(elementtiming);
-    impl_attr!(for_); // "for" is a Rust keyword
-    impl_attr!(form);
-    impl_attr!(formaction);
-    impl_attr!(formenctype);
-    impl_attr!(formmethod);
-    impl_attr!(formnovalidate);
-    impl_attr!(formtarget);
-    impl_attr!(headers);
-    impl_attr!(height);
-    impl_attr!(hidden);
-    impl_attr!(high);
-    impl_attr!(href);
-    impl_attr!(hreflang);
-    impl_attr!(http_equiv);
-    impl_attr!(id);
-    impl_attr!(integrity);
-    impl_attr!(inputmode);
-    impl_attr!(ismap);
-    impl_attr!(itemprop);
-    impl_attr!(kind);
-    impl_attr!(label);
-    impl_attr!(lang);
-    impl_attr!(language);
-    impl_attr!(loading);
-    impl_attr!(list);
-    impl_attr!(loop_); // "loop" is a Rust keyword
-    impl_attr!(low);
-    impl_attr!(max);
-    impl_attr!(maxlength);
-    impl_attr!(minlength);
-    impl_attr!(media);
-    impl_attr!(method);
-    impl_attr!(min);
-    impl_attr!(multiple);
-    impl_attr!(muted);
-    impl_attr!(name);
-    impl_attr!(novalidate);
-    impl_attr!(open);
-    impl_attr!(optimum);
-    impl_attr!(pattern);
-    impl_attr!(ping);
-    impl_attr!(placeholder);
-    impl_attr!(playsinline);
-    impl_attr!(poster);
-    impl_attr!(preload);
-    impl_attr!(readonly);
-    impl_attr!(referrerpolicy);
-    impl_attr!(rel);
-    impl_attr!(required);
-    impl_attr!(reversed);
-    impl_attr!(role);
-    impl_attr!(rows);
-    impl_attr!(rowspan);
-    impl_attr!(sandbox);
-    impl_attr!(scope);
-    impl_attr!(selected);
-    impl_attr!(shape);
-    impl_attr!(size);
-    impl_attr!(sizes);
-    impl_attr!(slot);
-    impl_attr!(span);
-    impl_attr!(spellcheck);
-    impl_attr!(src);
-    impl_attr!(srcdoc);
-    impl_attr!(srclang);
-    impl_attr!(srcset);
-    impl_attr!(start);
-    impl_attr!(step);
-    impl_attr!(style);
-    impl_attr!(summary);
-    impl_attr!(tabindex);
-    impl_attr!(target);
-    impl_attr!(title);
-    impl_attr!(translate);
-    impl_attr!(type_); // "type" is a Rust keyword
-    impl_attr!(usemap);
-    impl_attr!(value);
-    impl_attr!(width);
-    impl_attr!(wrap);
+    for_each_attribute!(impl_attr);
+    for_each_attribute_and_element!(impl_attr);
 }
-#[allow(ambiguous_glob_reexports)]
-pub use attributes::*;
+macro_rules! pub_use_attribute{($tag_name:ident) => {
+    pub use attributes::$tag_name;
+}}
+for_each_attribute!(pub_use_attribute);
 
 impl<AoC: AttributeOrChild> AttributeOrChild for Vec<AoC> {
     type Attribute = Vec<AoC::Attribute>;

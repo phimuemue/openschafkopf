@@ -120,7 +120,7 @@ impl TSauspielHtmlNode<'_> for SWebsysElement {
 fn internal_output_card_sauspiel_img(card: ECard, str_style: String) -> html_generator::HtmlElement<impl html_generator::AttributeOrChild> {
     let str_card = format!("{card}").replace('Z', "X"); // TODO proper card formatter
     use html_generator::*;
-    span((
+    elements::span((
         class(format!("card-icon card-icon-by card-icon-{str_card}")),
         attributes::title(str_card.clone()),
         attributes::style(str_style),
@@ -408,7 +408,7 @@ pub fn greet() {
                 EPlayerIndex::values(),
                 EPlayerIndex::values().take(EPlayerIndex::SIZE - 1),
             );
-            /*TODO const*/let html_table_gap_cell = th(style("width: 10px; background: none;"));
+            /*TODO const*/let html_table_gap_cell = th(attributes::style("width: 10px; background: none;"));
             let node_whole_game = unwrap!(
                 unwrap!(node_gameannouncement_epi0.clone_node())
                     .dyn_into::<web_sys::Element>() // TODO can we avoid this?

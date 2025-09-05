@@ -418,7 +418,7 @@ impl SGameAnalysis {
                 lang("de"),
                 class("no-js"),
                 head((
-                    title(("Schafkopf-Analyse: ", str_description)),
+                    elements::title(("Schafkopf-Analyse: ", str_description)),
                     meta(charset("UTF-8")),
                     link((rel("stylesheet"), type_("text/css"), href("../css.css"))),
                 )),
