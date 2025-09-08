@@ -253,18 +253,22 @@ impl SLaufendeParams {
             ),
             rulestatecache.fixed,
         );
-        let laufende_relevant = |card: ECard| { // TODO should we make this part of SRuleStateCacheFixed?
-            playerparties.is_primary_party(rulestatecache.fixed.who_has_card(card))
-        };
-        let mut itcard_trumpf_descending = trumpfdecider.trumpfs_in_descending_order();
-        let b_might_have_lauf = laufende_relevant(unwrap!(itcard_trumpf_descending.next()));
-        let n_laufende = itcard_trumpf_descending
-            .filter(|card| ekurzlang.supports_card(*card))
-            .take_while(|card| b_might_have_lauf==laufende_relevant(*card))
-            .count()
-            + 1 // consumed by next()
-        ;
-        (if n_laufende<self.n_lauf_lbound {0} else {n_laufende}).as_num::<isize>() * self.n_payout_per_lauf
+        let mut itcard_trumpf_descending = trumpfdecider.trumpfs_in_descending_order()
+            .filter(|card| ekurzlang.supports_card(*card));
+        if let Some(card_hightest_trumpf) = itcard_trumpf_descending.next() {
+            let laufende_relevant = |card: ECard| { // TODO should we make this part of SRuleStateCacheFixed?
+                playerparties.is_primary_party(rulestatecache.fixed.who_has_card(card))
+            };
+            let b_might_have_lauf = laufende_relevant(card_hightest_trumpf);
+            let n_laufende = itcard_trumpf_descending
+                .take_while(|card| b_might_have_lauf==laufende_relevant(*card))
+                .count()
+                + 1 // consumed by next()
+            ;
+            (if n_laufende<self.n_lauf_lbound {0} else {n_laufende}).as_num::<isize>() * self.n_payout_per_lauf
+        } else {
+            0 // no Laufende
+        }
     }
 }
 
