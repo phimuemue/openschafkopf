@@ -131,15 +131,13 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
                 .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
         ) {
             internal_payout(
-                /*n_payout_primary_unmultiplied; loss is certain*/-self.n_payout_base,
+                /*n_payout_primary_unmultiplied; loss is certain*/-self.n_payout_base * expensifiers.stoss_doubling_factor(),
                 &playerparties13,
             )
                 .map(|n_payout| SInterval::from_raw([Some(*n_payout), Some(*n_payout)]))
         } else {
             EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
-        }.map(|intvlon_payout| intvlon_payout.map(|on_payout|
-             on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),
-        ))
+        }
     }
 
     fn equivalent_when_on_same_hand(&self) -> SCardsPartition {
