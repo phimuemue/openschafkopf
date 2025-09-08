@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "sauspiel_webext",
-  "version": "0.6",
+  "version": "0.7",
 
   "content_scripts": [
     {
