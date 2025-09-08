@@ -13,7 +13,7 @@ pub trait TBettelAllAllowedCardsWithinStich : Sync + 'static + Clone + fmt::Debu
 pub struct SRulesBettel<BettelAllAllowedCardsWithinStich> {
     epi : EPlayerIndex,
     i_prio : isize,
-    payoutdecider : SPayoutDeciderBettel,
+    n_payout_base: isize,
     trumpfdecider: STrumpfDecider,
     stossparams: SStossParams,
     phantom : PhantomData<BettelAllAllowedCardsWithinStich>,
@@ -24,7 +24,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> SRules
         SRulesBettel{
             epi,
             i_prio,
-            payoutdecider: SPayoutDeciderBettel{n_payout_base},
+            n_payout_base,
             trumpfdecider: STrumpfDecider::new_with_custom_ace_to_7_ordering(
                 /*slcschlag_trumpf*/&[],
                 /*oefarbe*/None,
@@ -57,52 +57,6 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TActiv
     }
     fn playerindex(&self) -> EPlayerIndex {
         self.epi
-    }
-}
-
-#[derive(Clone, Debug)]
-struct SPayoutDeciderBettel {
-    n_payout_base : isize,
-}
-
-impl SPayoutDeciderBettel {
-    fn payout(
-        &self,
-        if_dbg_else!({rules}{_rules}): &SRulesBettel<impl TBettelAllAllowedCardsWithinStich>,
-        rulestatecache: &SRuleStateCache,
-        if_dbg_else!({stichseq}{_stichseq}): SStichSequenceGameFinished,
-        playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, isize> {
-        internal_payout(
-            /*n_payout_primary_unmultiplied*/ self.n_payout_base.neg_if(!/*b_primary_party_wins*/debug_verify_eq!(
-                rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==0,
-                stichseq.get().completed_stichs_winner_index(rules)
-                    .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
-            )),
-            playerparties13,
-        )
-    }
-
-    fn payouthints(
-        &self,
-        if_dbg_else!({rules}{_rules}): &SRulesBettel<impl TBettelAllAllowedCardsWithinStich>,
-        rulestatecache: &SRuleStateCache,
-        (_ahand, if_dbg_else!({stichseq}{_stichseq})): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
-        playerparties13: &SPlayerParties13,
-    ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-        if debug_verify_eq!(
-            0 < rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich,
-            !stichseq.completed_stichs_winner_index(rules)
-                .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
-        ) {
-            internal_payout(
-                /*n_payout_primary_unmultiplied; loss is certain*/-self.n_payout_base,
-                playerparties13,
-            )
-                .map(|n_payout| SInterval::from_raw([Some(*n_payout), Some(*n_payout)]))
-        } else {
-            EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
-        }
     }
 }
 
@@ -158,21 +112,32 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
     impl_single_play!();
 
     fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
-        self.payoutdecider.payout(
-            self,
-            rulestatecache,
-            stichseq,
-            &SPlayerParties13::new(self.epi),
+        let playerparties13 = SPlayerParties13::new(self.epi);
+        internal_payout(
+            /*n_payout_primary_unmultiplied*/ self.n_payout_base.neg_if(!/*b_primary_party_wins*/debug_verify_eq!(
+                rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==0,
+                stichseq.get().completed_stichs_winner_index(self)
+                    .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
+            )),
+            &playerparties13,
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
 
     fn payouthints(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-        self.payoutdecider.payouthints(
-            self,
-            rulestatecache,
-            tplahandstichseq,
-            &SPlayerParties13::new(self.epi),
-        ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
+        let playerparties13 = SPlayerParties13::new(self.epi);
+        if debug_verify_eq!(
+            0 < rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich,
+            !tplahandstichseq.1.completed_stichs_winner_index(self)
+                .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
+        ) {
+            internal_payout(
+                /*n_payout_primary_unmultiplied; loss is certain*/-self.n_payout_base,
+                &playerparties13,
+            )
+                .map(|n_payout| SInterval::from_raw([Some(*n_payout), Some(*n_payout)]))
+        } else {
+            EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
+        }.map(|intvlon_payout| intvlon_payout.map(|on_payout|
              on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),
         ))
     }
