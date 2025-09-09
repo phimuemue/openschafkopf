@@ -14,7 +14,7 @@ dirs = "5.0.1"
 itertools = "0.11.0"
 libc = "0.2.147"
 log = "0.4.19"
-retour = "0.3.1"
+retour = { git = "https://github.com/phimuemue/retour-rs.git" } # TODO eliminate own fork once https://github.com/Hpmason/retour-rs/issues/69 is solved
 simple-logging = "2.0.2"
 winapi = { version = "0.3.9", features = ["consoleapi", "libloaderapi", "minwindef", "memoryapi", "winuser"] }
 openschafkopf_util = {path = "../util"}

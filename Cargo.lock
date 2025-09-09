@@ -973,6 +973,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "iced-x86"
+version = "1.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c447cff8c7f384a7d4f741cfcff32f75f3ad02b406432e8d6c878d56b1edf6b"
+dependencies = [
+ "lazy_static",
+]
+
+[[package]]
 name = "imagesize"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1095,16 +1104,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0ff37bd590ca25063e35af745c343cb7a0271906fb7b37e4813e8f79f00268d"
 dependencies = [
  "bitflags 2.9.1",
- "libc",
-]
-
-[[package]]
-name = "libudis86-sys"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "139bbf9ddb1bfc90c1ac64dd2923d9c957cd433cee7315c018125d72ab08a6b0"
-dependencies = [
- "cc",
  "libc",
 ]
 
@@ -1742,14 +1741,13 @@ dependencies = [
 
 [[package]]
 name = "retour"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9af44d40e2400b44d491bfaf8eae111b09f23ac4de6e92728e79d93e699c527"
+version = "0.4.0-alpha.3"
+source = "git+https://github.com/phimuemue/retour-rs.git#b36c368354611e6b5ec73d4aad309217c2d8e387"
 dependencies = [
  "cfg-if",
  "generic-array",
+ "iced-x86",
  "libc",
- "libudis86-sys",
  "mmap-fixed-fixed",
  "once_cell",
  "region",
