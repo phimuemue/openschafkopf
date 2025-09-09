@@ -250,12 +250,12 @@ impl STable {
             if let (Some(epi), Some(gamephaseaction)) = (oepi, ogamephaseaction) {
                 self.ogamephase = match verify_or_println!(unwrap!(self.ogamephase.take()).action(epi, gamephaseaction.clone())) {
                     Ok(gamephase) => {
-                        if let Some(timeoutcmd) = &self.otimeoutcmd {
-                            if timeoutcmd.epi==epi && gamephaseaction.matches_phase(&timeoutcmd.gamephaseaction) {
-                                timeoutcmd.aborthandle.abort();
-                                assert_eq!(epi, timeoutcmd.epi);
-                                self.otimeoutcmd = None;
-                            }
+                        if let Some(timeoutcmd) = &self.otimeoutcmd
+                            && timeoutcmd.epi==epi && gamephaseaction.matches_phase(&timeoutcmd.gamephaseaction)
+                        {
+                            timeoutcmd.aborthandle.abort();
+                            assert_eq!(epi, timeoutcmd.epi);
+                            self.otimeoutcmd = None;
                         }
                         match gamephase {
                             VGamePhase::GameResult(gameresult) => {
@@ -305,30 +305,30 @@ impl STable {
                     Err(gamephase) => Some(gamephase),
                 }
             }
-            if let Some(ref gamephase) = self.ogamephase {
-                if let Some(sendtoplayers) = verify!(gamephase.which_player_can_do_something()) {
-                    self.players.communicate_to_players(&sendtoplayers);
-                    if let Some(timeoutaction) = &sendtoplayers.otimeoutaction {
-                        let epi_timeoutaction = timeoutaction.epi;
-                        let gamephaseaction_timeout = timeoutaction.gamephaseaction_timeout.clone(); // TODO clone needed?
-                        let (timerfuture, aborthandle) = future::abortable(async move {
-                            task::sleep(Duration::new(/*secs*/2, /*nanos*/0)).await;
-                            let table_mutex = self_mutex.clone();
-                            let mut table = unwrap!(table_mutex.lock());
-                            if let Some(timeoutcmd) = table.otimeoutcmd.take_if(|timeoutcmd| timeoutcmd.epi==epi_timeoutaction) {
-                                table.on_incoming_message(table_mutex.clone(), Some(verify_eq!(timeoutcmd.epi, epi_timeoutaction)), Some(timeoutcmd.gamephaseaction));
-                            }
-                        });
-                        assert!(self.otimeoutcmd.as_ref().is_none_or(|timeoutcmd|
-                            timeoutcmd.gamephaseaction.matches_phase(&gamephaseaction_timeout)
-                        ));
-                        self.otimeoutcmd = Some(STimeoutCmd{
-                            gamephaseaction: timeoutaction.gamephaseaction_timeout.clone(/*TODO needed?*/),
-                            aborthandle,
-                            epi: epi_timeoutaction,
-                        });
-                        task::spawn(timerfuture);
-                    }
+            if let Some(ref gamephase) = self.ogamephase
+                && let Some(sendtoplayers) = verify!(gamephase.which_player_can_do_something())
+            {
+                self.players.communicate_to_players(&sendtoplayers);
+                if let Some(timeoutaction) = &sendtoplayers.otimeoutaction {
+                    let epi_timeoutaction = timeoutaction.epi;
+                    let gamephaseaction_timeout = timeoutaction.gamephaseaction_timeout.clone(); // TODO clone needed?
+                    let (timerfuture, aborthandle) = future::abortable(async move {
+                        task::sleep(Duration::new(/*secs*/2, /*nanos*/0)).await;
+                        let table_mutex = self_mutex.clone();
+                        let mut table = unwrap!(table_mutex.lock());
+                        if let Some(timeoutcmd) = table.otimeoutcmd.take_if(|timeoutcmd| timeoutcmd.epi==epi_timeoutaction) {
+                            table.on_incoming_message(table_mutex.clone(), Some(verify_eq!(timeoutcmd.epi, epi_timeoutaction)), Some(timeoutcmd.gamephaseaction));
+                        }
+                    });
+                    assert!(self.otimeoutcmd.as_ref().is_none_or(|timeoutcmd|
+                        timeoutcmd.gamephaseaction.matches_phase(&gamephaseaction_timeout)
+                    ));
+                    self.otimeoutcmd = Some(STimeoutCmd{
+                        gamephaseaction: timeoutaction.gamephaseaction_timeout.clone(/*TODO needed?*/),
+                        aborthandle,
+                        epi: epi_timeoutaction,
+                    });
+                    task::spawn(timerfuture);
                 }
             }
         } else {

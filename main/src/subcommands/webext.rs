@@ -55,10 +55,10 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
             match n_bytes_read {
                 0 => {
                     info!("Received 0 bytes. Exiting.");
-                    if let Some(mut cmd_openschafkopf) = unwrap!(ocmd_openschafkopf.lock()).take() {
-                        if let Ok(()) = cmd_openschafkopf.kill() {
-                            info!("Could not kill openschafkopf upon exiting.");
-                        }
+                    if let Some(mut cmd_openschafkopf) = unwrap!(ocmd_openschafkopf.lock()).take()
+                        && let Ok(()) = cmd_openschafkopf.kill()
+                    {
+                        info!("Could not kill openschafkopf upon exiting.");
                     }
                     return Ok(());
                 }
@@ -214,10 +214,10 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                 let ocmd_openschafkopf = ocmd_openschafkopf.clone();
                 {
                     let mut ocmd_openschafkopf = unwrap!(ocmd_openschafkopf.lock());
-                    if let Some(mut cmd_openschafkopf) = ocmd_openschafkopf.take() {
-                        if let Ok(()) = cmd_openschafkopf.kill() {
-                            communicate_error("Process did not finish early enough.");
-                        }
+                    if let Some(mut cmd_openschafkopf) = ocmd_openschafkopf.take()
+                        && let Ok(()) = cmd_openschafkopf.kill()
+                    {
+                        communicate_error("Process did not finish early enough.");
                     }
                     *ocmd_openschafkopf = Some(cmd_openschafkopf);
                 }

@@ -39,8 +39,8 @@ pub fn internal_run_simple_game_loop<ItStockOrGame: Iterator<Item=VStockOrT<SGam
             let gameresult = match stockorgame {
                 VStockOrT::OrT(mut game) => {
                     while let Some(gameaction)=game.which_player_can_do_something() {
-                        if !gameaction.1.is_empty() {
-                            if let Some(epi_stoss) = gameaction.1.iter()
+                        if !gameaction.1.is_empty()
+                            && let Some(epi_stoss) = gameaction.1.iter()
                                 .find(|epi| {
                                     communicate_via_channel(|txb_stoss| {
                                         aattable[**epi].player.ask_for_stoss(
@@ -53,10 +53,9 @@ pub fn internal_run_simple_game_loop<ItStockOrGame: Iterator<Item=VStockOrT<SGam
                                         );
                                     })
                                 })
-                            {
+                        {
                                 unwrap!(game.stoss(*epi_stoss));
                                 continue;
-                            }
                         }
                         unwrap!(game.zugeben(
                             communicate_via_channel(|txcard| {

@@ -386,15 +386,15 @@ pub trait TRules : fmt::Display + Sync + fmt::Debug + Send + Clone {
                     "{stichseq_check}\n{ahand_check:?}\n{mapepiintvlon_payout:?}\n{apayoutinfo:?}",
                 );
             }
-            if b_test_points_as_payout {
-                if let Some((rules, _fn_payout_to_points)) = self.points_as_payout() {
-                    rules.payout(
-                        stichseq,
-                        expensifiers,
-                        rulestatecache,
-                        /*b_test_points_as_payout*/false,
-                    );
-                }
+            if b_test_points_as_payout
+                && let Some((rules, _fn_payout_to_points)) = self.points_as_payout()
+            {
+		rules.payout(
+		    stichseq,
+		    expensifiers,
+		    rulestatecache,
+		    /*b_test_points_as_payout*/false,
+		);
             }
         }
         apayoutinfo
