@@ -196,7 +196,7 @@ impl TGamePhase for SGamePreparations {
 }
 
 macro_rules! impl_fullhand { () => {
-    pub fn fullhand(&self, epi: EPlayerIndex) -> SFullHand {
+    pub fn fullhand(&self, epi: EPlayerIndex) -> SFullHand<'_> {
         SFullHand::new(&self.aveccard[epi], self.ruleset.ekurzlang)
     }
 }}

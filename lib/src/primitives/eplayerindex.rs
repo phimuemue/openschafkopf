@@ -114,7 +114,7 @@ impl<T, PlayerIndex: TStaticOrDynamicValue<EPlayerIndex>+Copy> SPlayersInRound<T
         debug_assert_eq!(self.position(self.first_playerindex()), 0);
         unwrap!(self.vect.first())
     }
-    pub fn iter(&self) -> SPlayersInRoundIterator<slice::Iter<T>> {
+    pub fn iter(&self) -> SPlayersInRoundIterator<slice::Iter<'_, T>> {
         SPlayersInRoundIterator {
             iter: self.vect.iter(),
             n_epi: self.epi_first.value().to_usize(),

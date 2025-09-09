@@ -16,7 +16,7 @@ pub struct SHand {
 pub struct SFullHand<'hand>(&'hand [ECard]);
 
 impl<'hand> SFullHand<'hand> {
-    pub fn new(slccard: &[ECard], ekurzlang: EKurzLang) -> SFullHand {
+    pub fn new(slccard: &[ECard], ekurzlang: EKurzLang) -> SFullHand<'_> {
         assert_eq!(slccard.len(), ekurzlang.cards_per_player());
         SFullHand(slccard)
     }

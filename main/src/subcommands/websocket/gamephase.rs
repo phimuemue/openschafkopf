@@ -182,7 +182,7 @@ impl<'game> SSendToPlayers<'game> {
 }
 
 impl VGamePhase {
-    fn internal_which_player_can_do_something(&self) -> Option<VGamePhaseActivePlayerInfo> {
+    fn internal_which_player_can_do_something(&self) -> Option<VGamePhaseActivePlayerInfo<'_>> {
         use VGamePhaseGeneric::*;
         fn internal<GamePhase: TGamePhase>(gamephase: &GamePhase) -> Option<(&GamePhase, GamePhase::ActivePlayerInfo)> {
             gamephase.which_player_can_do_something()
@@ -198,7 +198,7 @@ impl VGamePhase {
         }
     }
 
-    pub fn which_player_can_do_something(&self) -> Option<SSendToPlayers> {
+    pub fn which_player_can_do_something(&self) -> Option<SSendToPlayers<'_>> {
         self.internal_which_player_can_do_something().map(|whichplayercandosomething| {
             use VGamePhaseGeneric::*;
             match whichplayercandosomething {

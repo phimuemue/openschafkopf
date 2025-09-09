@@ -19,7 +19,7 @@ impl<Stich: Borrow<SStich>> SFullStich<Stich> {
     pub fn as_ref(&self) -> SFullStich<&SStich> {
         SFullStich::new(self.borrow())
     }
-    pub fn iter(&self) -> SPlayersInRoundIterator<std::slice::Iter<ECard>> {
+    pub fn iter(&self) -> SPlayersInRoundIterator<std::slice::Iter<'_, ECard>> {
         self.0.borrow().iter()
     }
 }

@@ -27,7 +27,7 @@ pub struct SStichSequence {
 pub struct SStichSequenceGameFinished<'stichseq>(&'stichseq SStichSequence);
 
 impl SStichSequenceGameFinished<'_> {
-    pub fn new(stichseq: &SStichSequence) -> SStichSequenceGameFinished {
+    pub fn new(stichseq: &SStichSequence) -> SStichSequenceGameFinished<'_> {
         assert!(stichseq.game_finished());
         SStichSequenceGameFinished(stichseq)
     }
