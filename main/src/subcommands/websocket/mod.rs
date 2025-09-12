@@ -44,6 +44,10 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
     clap::Command::new(str_subcommand)
         .about("Play in the browser")
         .arg(ruleset_arg())
+        .arg(clap::Arg::new("with-bots")
+            .long("with-bots")
+            .help("Allow playing against bots")
+        )
 }
 
 #[derive(Serialize, Deserialize)]
@@ -79,17 +83,31 @@ struct STable{
     otimeoutcmd: Option<STimeoutCmd>, // TODO? tie to ogamephase?
     n_stock: isize, // TODO would that be better within VGamePhase?
     ruleset: SRuleSet,
+    b_with_bots: bool,
 }
 
 impl STable {
-    fn new(ruleset: SRuleSet) -> Self {
+    fn new(ruleset: SRuleSet, b_with_bots: bool) -> Self {
         Self {
             players: SPlayers::default(),
             ogamephase: None,
             otimeoutcmd: None,
             n_stock: 0,
             ruleset,
+            b_with_bots,
         }
+    }
+
+    fn start_new_game(&self) -> Option<SDealCards> {
+        let mut itopeer = self.players.mapepiopeer_active.iter();
+        if_then_some!(
+            (self.b_with_bots && itopeer.any(Option::is_some))
+                || itopeer.all(Option::is_some),
+            SDealCards::new(
+                self.ruleset.clone(),
+                self.n_stock,
+            )
+        )
     }
 
     fn insert(&mut self, self_mutex: Arc<Mutex<Self>>, peer: SPeer) {
@@ -104,15 +122,8 @@ impl STable {
                 self.players.vecpeer_inactive.push(peer);
             }
         }
-        if self.ogamephase.is_none()
-            && self.players.mapepiopeer_active
-                .iter()
-                .all(|opeer| opeer.is_some())
-        {
-            self.ogamephase = Some(VGamePhase::DealCards(SDealCards::new(
-                self.ruleset.clone(),
-                self.n_stock,
-            )));
+        if self.ogamephase.is_none() && let Some(dealcards) = self.start_new_game() {
+            self.ogamephase = Some(VGamePhase::DealCards(dealcards));
             self.on_incoming_message(
                 self_mutex,
                 /*oepi*/None,
@@ -293,9 +304,8 @@ impl STable {
                                 }
                                 // Players: E1 E2 E3 S0 [S1 S2 ... SN E0] (E1, E2, E3 may be None)
                                 // TODO should we clear timeouts?
-                                if_then_some!(mapepiopeer_active.iter().all(|opeer_active| opeer_active.is_some()),
-                                    VGamePhase::DealCards(SDealCards::new(self.ruleset.clone(), self.n_stock))
-                                )
+                                self.start_new_game()
+                                    .map(|dealcards| VGamePhase::DealCards(dealcards))
                             },
                             gamephase => {
                                 Some(gamephase)
@@ -396,9 +406,9 @@ async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sock
     unwrap!(table.lock()).remove(&sockaddr);
 }
 
-async fn internal_run(ruleset: SRuleSet) -> Result<(), Error> {
+async fn internal_run(ruleset: SRuleSet, b_with_bots: bool) -> Result<(), Error> {
     let str_addr = "127.0.0.1:8080";
-    let table = Arc::new(Mutex::new(STable::new(ruleset)));
+    let table = Arc::new(Mutex::new(STable::new(ruleset, b_with_bots)));
     // Create the event loop and TCP listener we'll accept connections on.
     let listener = unwrap!(TcpListener::bind(&str_addr).await);
     println!("Listening on: {str_addr}");
@@ -410,6 +420,9 @@ async fn internal_run(ruleset: SRuleSet) -> Result<(), Error> {
 }
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
-    task::block_on(internal_run(super::get_ruleset(clapmatches)?))
+    task::block_on(internal_run(
+        super::get_ruleset(clapmatches)?,
+        /*b_with_bots*/clapmatches.is_present("with-bots"),
+    ))
 }
 
