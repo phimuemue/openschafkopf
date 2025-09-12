@@ -322,8 +322,18 @@ impl STable {
                 if let Some(timeoutaction) = &sendtoplayers.otimeoutaction {
                     let epi_timeoutaction = timeoutaction.epi;
                     let gamephaseaction_timeout = timeoutaction.gamephaseaction_timeout.clone(); // TODO clone needed?
+                    let b_timeout_player_is_connected = self.players.mapepiopeer_active[epi_timeoutaction].is_some();
                     let (timerfuture, aborthandle) = future::abortable(async move {
-                        task::sleep(Duration::new(/*secs*/2, /*nanos*/0)).await;
+                        task::sleep(Duration::from_millis(
+                            if b_timeout_player_is_connected {
+                                // TODO Improve timeout duration:
+                                // * choice of active rules disappears too early
+                                // * earlier cards should allow more time than later cards
+                                2000
+                            } else {
+                                750 // TODO? Improve (randomize?) timeout duration?
+                            }
+                        )).await;
                         let table_mutex = self_mutex.clone();
                         let mut table = unwrap!(table_mutex.lock());
                         if let Some(timeoutcmd) = table.otimeoutcmd.take_if(|timeoutcmd| timeoutcmd.epi==epi_timeoutaction) {
