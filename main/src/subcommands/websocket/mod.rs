@@ -304,8 +304,7 @@ impl STable {
                                 }
                                 // Players: E1 E2 E3 S0 [S1 S2 ... SN E0] (E1, E2, E3 may be None)
                                 // TODO should we clear timeouts?
-                                self.start_new_game()
-                                    .map(|dealcards| VGamePhase::DealCards(dealcards))
+                                self.start_new_game().map(VGamePhase::DealCards)
                             },
                             gamephase => {
                                 Some(gamephase)
