@@ -192,26 +192,26 @@ pub struct STimeoutAction {
 }
 
 #[derive(Debug)]
-pub struct SSendToPlayers<'game> {
-    pub slcstich: &'game [SStich],
-    pub orules: Option<&'game SRules>,
+pub struct SSendToPlayers {
+    pub vecstich: Vec<SStich>, // TODO? Could borrow?
+    pub orules: Option<SRules>, // TODO? Could borrow?
     pub mapepiveccard: EnumMap<EPlayerIndex, Vec<ECard>>,
     pub mapepiomsg_active: EnumMap<EPlayerIndex, Option<VMessage>>,
     pub msg_inactive: VMessage,
     pub otimeoutaction: Option<STimeoutAction>, // TODO can we avoid Option here?
 }
 
-impl<'game> SSendToPlayers<'game> {
+impl SSendToPlayers {
     pub fn new<Card: TMoveOrClone<ECard>, ItCard: IntoIterator<Item=Card>> (
-        slcstich: &'game [SStich],
-        orules: Option<&'game SRules>,
+        vecstich: Vec<SStich>,
+        orules: Option<SRules>,
         fn_cards: impl Fn(EPlayerIndex)->ItCard,
         fn_msg_active: impl Fn(EPlayerIndex)->Option<VMessage>,
         msg_inactive: VMessage,
         otimeoutaction: impl Into<Option<STimeoutAction>>,
     ) -> Self {
         Self {
-            slcstich,
+            vecstich,
             orules,
             mapepiveccard: EPlayerIndex::map_from_fn(|epi| fn_cards(epi).into_iter().map(TMoveOrClone::move_or_clone).collect()),
             mapepiomsg_active: EPlayerIndex::map_from_fn(fn_msg_active),
@@ -238,13 +238,13 @@ impl VGamePhase {
         }
     }
 
-    pub fn which_player_can_do_something(&self) -> Option<SSendToPlayers<'_>> {
+    pub fn which_player_can_do_something(&self) -> Option<SSendToPlayers> {
         self.internal_which_player_can_do_something().map(|whichplayercandosomething| {
             use VGamePhaseGeneric::*;
             match whichplayercandosomething {
                 DealCards((dealcards, epi_doubling)) => {
                     SSendToPlayers::new(
-                        /*slcstich*/&[],
+                        /*vecstich*/Vec::new(),
                         /*orules*/None,
                         |epi| dealcards.first_hand_for(epi),
                         /*fn_msg_active*/ |epi| {
@@ -276,7 +276,7 @@ impl VGamePhase {
                     let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1;
                     let vecstrgamephaseaction = itgamephaseaction_rules.collect::<Vec<_>>();
                     SSendToPlayers::new(
-                        /*slcstich*/&[],
+                        /*vecstich*/Vec::new(),
                         /*orules*/None,
                         |epi| gamepreparations.fullhand(epi).get(),
                         /*fn_msg_active*/ |epi| {
@@ -340,7 +340,7 @@ impl VGamePhase {
                     let gamephaseaction_rules_default = unwrap!(itgamephaseaction_rules.clone().next()).1;
                     let vecstrgamephaseaction = itgamephaseaction_rules.collect::<Vec<_>>();
                     SSendToPlayers::new(
-                        /*slcstich*/&[],
+                        /*vecstich*/Vec::new(),
                         /*orules*/None,
                         |epi| determinerules.fullhand(epi).get(),
                         /*fn_msg_active*/ |epi| {
@@ -365,8 +365,8 @@ impl VGamePhase {
                 },
                 Game((game, (epi_card, vecepi_stoss))) => {
                     SSendToPlayers::new(
-                        game.stichseq.visible_stichs(),
-                        Some(&game.rules),
+                        game.stichseq.visible_stichs().to_vec(),
+                        Some(game.rules.clone()),
                         |epi| game.ahand[epi].cards(),
                         /*fn_msg_active*/ |epi| {
                             if_then_some!(vecepi_stoss.contains(&epi),
@@ -391,13 +391,13 @@ impl VGamePhase {
                 },
                 GameResult((gameresult, setepi_confirmed)) => {
                     SSendToPlayers::new(
-                        /*slcstich*/if let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame {
-                            game.stichseq.completed_stichs()
+                        /*vecstich*/if let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame {
+                            game.stichseq.completed_stichs().to_vec()
                         } else {
-                            &[]
+                            Vec::new()
                         },
                         if_then_some!(let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame,
-                            &game.rules
+                            game.rules.clone()
                         ),
                         /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
                         /*fn_msg_active*/ |epi| {

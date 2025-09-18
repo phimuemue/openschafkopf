@@ -186,7 +186,7 @@ impl SPlayers {
                         .map(|card| (card.to_string(), VGamePhaseAction::Game(VGameAction::Zugeben(card))))
                         .collect::<Vec<_>>(),
                     msg,
-                    /*odisplayedstichs*/sendtoplayers.slcstich
+                    /*odisplayedstichs*/sendtoplayers.vecstich
                         .split_last()
                         .map(|(stich_current, slcstich_up_to_last)| {
                             SDisplayedStichs{
@@ -212,7 +212,7 @@ impl SPlayers {
                             playerindex_client_to_server(epi).to_usize(),
                         )
                     ).into_raw(),
-                    sendtoplayers.orules.map(|rules| (
+                    sendtoplayers.orules.as_ref().map(|rules| (
                         playerindex_server_to_client(rules.playerindex().unwrap_or(EPlayerIndex::EPI3)), // geber designates rules if no active
                         format!("{rules}"),
                     )),
@@ -227,7 +227,7 @@ impl SPlayers {
         for epi in EPlayerIndex::values() {
             if let Some(peer_active) = self.mapepiopeer_active[epi].as_ref() {
                 let mut veccard = sendtoplayers.mapepiveccard[epi].clone(); // TODO? avoid clone
-                if let Some(rules) = sendtoplayers.orules {
+                if let Some(rules) = &sendtoplayers.orules {
                     rules.sort_cards(&mut veccard);
                 } else {
                     STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz))
@@ -310,7 +310,7 @@ impl STable {
         if self.ogamephase.is_none() {
             self.players.communicate_to_players(
                 &SSendToPlayers::new(
-                    /*slcstich*/&[],
+                    /*vecstich*/Vec::new(),
                     /*orules*/None,
                     /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
                     /*fn_msg_active*/|_epi| None,
