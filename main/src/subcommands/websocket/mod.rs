@@ -259,7 +259,6 @@ impl STable {
                     && timeoutcmd.epi==epi && gamephaseaction.matches_phase(&timeoutcmd.gamephaseaction)
                 {
                     timeoutcmd.aborthandle.abort();
-                    assert_eq!(epi, timeoutcmd.epi);
                     self.otimeoutcmd = None;
                 }
                 match gamephase {
