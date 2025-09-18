@@ -24,7 +24,7 @@ impl<E: PlainEnum> EnumSet<E>
     }
 
     pub fn is_full(&self) -> bool {
-        self.0.iter().any(|b| !b)
+        self.0.iter().all(|b| *b)
     }
 
     pub fn contains(&self, e: E) -> bool {
