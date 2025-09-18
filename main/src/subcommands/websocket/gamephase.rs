@@ -479,28 +479,28 @@ impl VGamePhase {
                 match self {
                     DealCards(dealcards) => match dealcards.finish() {
                         Ok(gamepreparations) => self = GamePreparations(gamepreparations),
-                        Err(dealcards) => return Ok(DealCards(dealcards)),
+                        Err((dealcards, _activeplayerinfo)) => return Ok(DealCards(dealcards)),
                     },
                     GamePreparations(gamepreparations) => match gamepreparations.finish() {
                         Ok(VGamePreparationsFinish::DetermineRules(determinerules)) => self = DetermineRules(determinerules),
                         Ok(VGamePreparationsFinish::DirectGame(game)) => self = Game(game),
                         Ok(VGamePreparationsFinish::Stock(gameresult)) => self = GameResult(SWebsocketGameResult::new(gameresult)),
-                        Err(gamepreparations) => return Ok(GamePreparations(gamepreparations)),
+                        Err((gamepreparations, _activeplayerinfo)) => return Ok(GamePreparations(gamepreparations)),
                     },
                     DetermineRules(determinerules) => match determinerules.finish() {
                         Ok(game) => self = Game(game),
-                        Err(determinerules) => return Ok(DetermineRules(determinerules)),
+                        Err((determinerules, _activeplayerinfo)) => return Ok(DetermineRules(determinerules)),
                     },
                     Game(game) => match game.finish() {
                         Ok(gameresult) => self = GameResult(SWebsocketGameResult::new(gameresult)),
-                        Err(game) => return Ok(Game(game)),
+                        Err((game, _activeplayerinfo)) => return Ok(Game(game)),
                     },
                     GameResult(gameresult) => match gameresult.finish() {
                         Ok(accepted) => {
                             let None /*Option<Infallible>*/ = accepted.which_player_can_do_something();
                             self = Accepted(accepted);
                         },
-                        Err(gameresult) => return Ok(GameResult(gameresult)),
+                        Err((gameresult, _activeplayerinfo)) => return Ok(GameResult(gameresult)),
                     },
                     Accepted(accepted) => return Ok(Accepted(accepted)),
                 };

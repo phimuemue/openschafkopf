@@ -14,9 +14,9 @@ pub trait TGamePhase : Sized {
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo>;
     fn finish_success(self) -> Self::Finish;
 
-    fn finish(self) -> Result<Self::Finish, Self> {
-        if self.which_player_can_do_something().is_some() {
-            Err(self)
+    fn finish(self) -> Result<Self::Finish, (Self, Self::ActivePlayerInfo)> {
+        if let Some(activeplayerinfo) = self.which_player_can_do_something() {
+            Err((self, activeplayerinfo))
         } else {
             Ok(self.finish_success())
         }
