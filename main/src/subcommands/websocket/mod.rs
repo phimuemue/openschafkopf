@@ -253,63 +253,62 @@ impl SPlayers {
 impl STable {
     fn on_incoming_gamephaseaction(&mut self, /*TODO avoid this parameter*/self_mutex: Arc<Mutex<Self>>, epi: EPlayerIndex, gamephaseaction: VGamePhaseAction) {
         println!("on_incoming_gamephaseaction({epi:?}, {gamephaseaction:?})");
-        if self.ogamephase.is_some() {
-            self.ogamephase = match verify_or_println!(unwrap!(self.ogamephase.take()).action(epi, gamephaseaction.clone())) {
-                Ok(gamephase) => {
-                    if let Some(timeoutcmd) = &self.otimeoutcmd
-                        && timeoutcmd.epi==epi && gamephaseaction.matches_phase(&timeoutcmd.gamephaseaction)
-                    {
-                        timeoutcmd.aborthandle.abort();
-                        assert_eq!(epi, timeoutcmd.epi);
-                        self.otimeoutcmd = None;
-                    }
-                    match gamephase {
-                        VGamePhase::GameResult(gameresult) => {
-                            gameresult.gameresult.clone(/*TODO avoid clone (and force apply_payout on construction?)*/).apply_payout(&mut self.n_stock, |epi, n_payout| {
-                                if let Some(peer) = &mut self.players.mapepiopeer_active[epi] {
-                                    peer.n_money += n_payout;
-                                }
-                            });
-                            Some(VGamePhase::GameResult(gameresult))
-                        },
-                        VGamePhase::Accepted(_accepted) => {
-                            // advance to next game
-                            /*           E2
-                             * E1                      E3
-                             *    E0 SN SN-1 ... S1 S0
-                             *
-                             * E0 E1 E2 E3 [S0 S1 S2 ... SN]
-                             * E1 E2 E3 S0 [S1 S2 ... SN E0]
-                             * E2 E3 S0 S1 [S2 ... SN E0 E1]
-                             */
-                            // Players: E0 E1 E2 E3 [S0 S1 S2 ... SN] (S0 is longest waiting inactive player)
-                            let mapepiopeer_active = &mut self.players.mapepiopeer_active;
-                            mapepiopeer_active.as_raw_mut().rotate_left(1);
-                            // Players: E1 E2 E3 E0 [S0 S1 S2 ... SN]
-                            if let Some(peer_epi3) = mapepiopeer_active[EPlayerIndex::EPI3].take() {
-                                self.players.vecpeer_inactive.push(peer_epi3);
+        self.ogamephase = self.ogamephase.take().and_then(|gamephase| match gamephase.action(epi, gamephaseaction.clone()) {
+            Ok(gamephase) => {
+                if let Some(timeoutcmd) = &self.otimeoutcmd
+                    && timeoutcmd.epi==epi && gamephaseaction.matches_phase(&timeoutcmd.gamephaseaction)
+                {
+                    timeoutcmd.aborthandle.abort();
+                    assert_eq!(epi, timeoutcmd.epi);
+                    self.otimeoutcmd = None;
+                }
+                match gamephase {
+                    VGamePhase::GameResult(gameresult) => {
+                        gameresult.gameresult.clone(/*TODO avoid clone (and force apply_payout on construction?)*/).apply_payout(&mut self.n_stock, |epi, n_payout| {
+                            if let Some(peer) = &mut self.players.mapepiopeer_active[epi] {
+                                peer.n_money += n_payout;
                             }
-                            // Players: E1 E2 E3 -- [S0 S1 S2 ... SN E0] (E1, E2, E3 may be None)
-                            // Fill up players one after another
-                            assert!(mapepiopeer_active[EPlayerIndex::EPI3].is_none());
-                            for epi in EPlayerIndex::values() {
-                                if mapepiopeer_active[epi].is_none() && !self.players.vecpeer_inactive.is_empty() {
-                                    mapepiopeer_active[epi] = Some(self.players.vecpeer_inactive.remove(0));
-                                }
+                        });
+                        Some(VGamePhase::GameResult(gameresult))
+                    },
+                    VGamePhase::Accepted(_accepted) => {
+                        // advance to next game
+                        /*           E2
+                         * E1                      E3
+                         *    E0 SN SN-1 ... S1 S0
+                         *
+                         * E0 E1 E2 E3 [S0 S1 S2 ... SN]
+                         * E1 E2 E3 S0 [S1 S2 ... SN E0]
+                         * E2 E3 S0 S1 [S2 ... SN E0 E1]
+                         */
+                        // Players: E0 E1 E2 E3 [S0 S1 S2 ... SN] (S0 is longest waiting inactive player)
+                        let mapepiopeer_active = &mut self.players.mapepiopeer_active;
+                        mapepiopeer_active.as_raw_mut().rotate_left(1);
+                        // Players: E1 E2 E3 E0 [S0 S1 S2 ... SN]
+                        if let Some(peer_epi3) = mapepiopeer_active[EPlayerIndex::EPI3].take() {
+                            self.players.vecpeer_inactive.push(peer_epi3);
+                        }
+                        // Players: E1 E2 E3 -- [S0 S1 S2 ... SN E0] (E1, E2, E3 may be None)
+                        // Fill up players one after another
+                        assert!(mapepiopeer_active[EPlayerIndex::EPI3].is_none());
+                        for epi in EPlayerIndex::values() {
+                            if mapepiopeer_active[epi].is_none() && !self.players.vecpeer_inactive.is_empty() {
+                                mapepiopeer_active[epi] = Some(self.players.vecpeer_inactive.remove(0));
                             }
-                            // Players: E1 E2 E3 S0 [S1 S2 ... SN E0] (E1, E2, E3 may be None)
-                            // TODO should we clear timeouts?
-                            self.start_new_game().map(VGamePhase::DealCards)
-                        },
-                        gamephase => {
-                            Some(gamephase)
-                        },
-                    }
-                },
-                Err(gamephase) => Some(gamephase),
-            };
-            self.communicate_to_players_and_set_timeoutaction(self_mutex);
-        } else {
+                        }
+                        // Players: E1 E2 E3 S0 [S1 S2 ... SN E0] (E1, E2, E3 may be None)
+                        // TODO should we clear timeouts?
+                        self.start_new_game().map(VGamePhase::DealCards)
+                    },
+                    gamephase => {
+                        Some(gamephase)
+                    },
+                }
+            },
+            Err(gamephase) => Some(gamephase),
+        });
+        self.communicate_to_players_and_set_timeoutaction(self_mutex);
+        if self.ogamephase.is_none() {
             self.players.communicate_to_players(
                 &SSendToPlayers::new(
                     /*slcstich*/&[],
