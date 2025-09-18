@@ -142,7 +142,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         write_indicator_vars(wrtr, n_cards_total, fn_card_in_hand);
         write_indicator_vars(wrtr, n_cards_total, fn_card_allowed);
         for (i_card_stichseq, otplepicard_stichseq) in stichseq.visible_cards()
-            .map(|(epi, &card_stichseq)| (Some((epi, card_stichseq))))
+            .map(|(epi, &card_stichseq)| Some((epi, card_stichseq)))
             .pad_using(n_cards_total, |_| None)
             .enumerate()
         {
