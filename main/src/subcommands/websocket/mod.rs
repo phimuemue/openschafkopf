@@ -32,6 +32,7 @@ use failure::*;
 
 mod gamephase;
 use gamephase::{
+    dealcards_sendtoplayers,
     SSendToPlayers,
     VGamePhase,
     VGamePhaseAction,
@@ -98,15 +99,22 @@ impl STable {
         }
     }
 
-    fn start_new_game(&self) -> Option<SDealCards> {
+    fn start_new_game(&self) -> Option<(SDealCards, SSendToPlayers)> {
         let mut itopeer = self.players.mapepiopeer_active.iter();
         if_then_some!(
             (self.b_with_bots && itopeer.any(Option::is_some))
                 || itopeer.all(Option::is_some),
-            SDealCards::new(
-                self.ruleset.clone(),
-                self.n_stock,
-            )
+            {
+                let dealcards = SDealCards::new(
+                    self.ruleset.clone(),
+                    self.n_stock,
+                );
+                let sendtoplayers = dealcards_sendtoplayers(
+                    EPlayerIndex::EPI0,
+                    |epi| dealcards.first_hand_for(epi),
+                );
+                (dealcards, sendtoplayers)
+            }
         )
     }
 
@@ -122,9 +130,9 @@ impl STable {
                 self.players.vecpeer_inactive.push(peer);
             }
         }
-        if self.ogamephase.is_none() && let Some(dealcards) = self.start_new_game() {
+        if self.ogamephase.is_none() && let Some((dealcards, sendtoplayers)) = self.start_new_game() {
             self.ogamephase = Some(VGamePhase::DealCards(dealcards));
-            self.communicate_to_players_and_set_timeoutaction(self_mutex); // Trigger game logic.
+            self.communicate_to_players_and_set_timeoutaction(self_mutex, &sendtoplayers); // Trigger game logic.
         }
     }
 
@@ -253,8 +261,10 @@ impl SPlayers {
 impl STable {
     fn on_incoming_gamephaseaction(&mut self, /*TODO avoid this parameter*/self_mutex: Arc<Mutex<Self>>, epi: EPlayerIndex, gamephaseaction: VGamePhaseAction) {
         println!("on_incoming_gamephaseaction({epi:?}, {gamephaseaction:?})");
-        self.ogamephase = self.ogamephase.take().and_then(|gamephase| match gamephase.action(epi, gamephaseaction.clone()) {
-            Ok(gamephase) => {
+        let mut osendtoplayers : Option<SSendToPlayers> = None; // TODO avoid this
+        self.ogamephase = self.ogamephase.take().and_then(|gamephase| match verify_or_println!(gamephase.action(epi, gamephaseaction.clone())) {
+            Ok((gamephase, sendtoplayers)) => {
+                osendtoplayers = Some(sendtoplayers);
                 if let Some(timeoutcmd) = &self.otimeoutcmd
                     && timeoutcmd.epi==epi && gamephaseaction.matches_phase(&timeoutcmd.gamephaseaction)
                 {
@@ -297,7 +307,10 @@ impl STable {
                         }
                         // Players: E1 E2 E3 S0 [S1 S2 ... SN E0] (E1, E2, E3 may be None)
                         // TODO should we clear timeouts?
-                        self.start_new_game().map(VGamePhase::DealCards)
+                        self.start_new_game().map(|(dealcards, sendtoplayers)| {
+                            osendtoplayers = Some(sendtoplayers);
+                            VGamePhase::DealCards(dealcards)
+                        })
                     },
                     gamephase => {
                         Some(gamephase)
@@ -306,7 +319,9 @@ impl STable {
             },
             Err(gamephase) => Some(gamephase),
         });
-        self.communicate_to_players_and_set_timeoutaction(self_mutex);
+        if let Some(sendtoplayers) = osendtoplayers {
+            self.communicate_to_players_and_set_timeoutaction(self_mutex, &sendtoplayers);
+        }
         if self.ogamephase.is_none() {
             self.players.communicate_to_players(
                 &SSendToPlayers::new(
@@ -321,42 +336,38 @@ impl STable {
         }
     }
 
-    fn communicate_to_players_and_set_timeoutaction(&mut self, self_mutex: Arc<Mutex<Self>>) {
-        if let Some(ref gamephase) = self.ogamephase
-            && let Some(sendtoplayers) = verify!(gamephase.which_player_can_do_something())
-        {
-            self.players.communicate_to_players(&sendtoplayers);
-            if let Some(timeoutaction) = &sendtoplayers.otimeoutaction {
-                let epi_timeoutaction = timeoutaction.epi;
-                let gamephaseaction_timeout = timeoutaction.gamephaseaction_timeout.clone(); // TODO clone needed?
-                let b_timeout_player_is_connected = self.players.mapepiopeer_active[epi_timeoutaction].is_some();
-                let (timerfuture, aborthandle) = future::abortable(async move {
-                    task::sleep(Duration::from_millis(
-                        if b_timeout_player_is_connected {
-                            // TODO Improve timeout duration:
-                            // * choice of active rules disappears too early
-                            // * earlier cards should allow more time than later cards
-                            2000
-                        } else {
-                            750 // TODO? Improve (randomize?) timeout duration?
-                        }
-                    )).await;
-                    let table_mutex = self_mutex.clone();
-                    let mut table = unwrap!(table_mutex.lock());
-                    if let Some(timeoutcmd) = table.otimeoutcmd.take_if(|timeoutcmd| timeoutcmd.epi==epi_timeoutaction) {
-                        table.on_incoming_gamephaseaction(table_mutex.clone(), verify_eq!(timeoutcmd.epi, epi_timeoutaction), timeoutcmd.gamephaseaction);
+    fn communicate_to_players_and_set_timeoutaction(&mut self, self_mutex: Arc<Mutex<Self>>, sendtoplayers: &SSendToPlayers) {
+        self.players.communicate_to_players(sendtoplayers);
+        if let Some(timeoutaction) = &sendtoplayers.otimeoutaction {
+            let epi_timeoutaction = timeoutaction.epi;
+            let gamephaseaction_timeout = timeoutaction.gamephaseaction_timeout.clone(); // TODO clone needed?
+            let b_timeout_player_is_connected = self.players.mapepiopeer_active[epi_timeoutaction].is_some();
+            let (timerfuture, aborthandle) = future::abortable(async move {
+                task::sleep(Duration::from_millis(
+                    if b_timeout_player_is_connected {
+                        // TODO Improve timeout duration:
+                        // * choice of active rules disappears too early
+                        // * earlier cards should allow more time than later cards
+                        2000
+                    } else {
+                        750 // TODO? Improve (randomize?) timeout duration?
                     }
-                });
-                assert!(self.otimeoutcmd.as_ref().is_none_or(|timeoutcmd|
-                    timeoutcmd.gamephaseaction.matches_phase(&gamephaseaction_timeout)
-                ));
-                self.otimeoutcmd = Some(STimeoutCmd{
-                    gamephaseaction: timeoutaction.gamephaseaction_timeout.clone(/*TODO needed?*/),
-                    aborthandle,
-                    epi: epi_timeoutaction,
-                });
-                task::spawn(timerfuture);
-            }
+                )).await;
+                let table_mutex = self_mutex.clone();
+                let mut table = unwrap!(table_mutex.lock());
+                if let Some(timeoutcmd) = table.otimeoutcmd.take_if(|timeoutcmd| timeoutcmd.epi==epi_timeoutaction) {
+                    table.on_incoming_gamephaseaction(table_mutex.clone(), verify_eq!(timeoutcmd.epi, epi_timeoutaction), timeoutcmd.gamephaseaction);
+                }
+            });
+            assert!(self.otimeoutcmd.as_ref().is_none_or(|timeoutcmd|
+                timeoutcmd.gamephaseaction.matches_phase(&gamephaseaction_timeout)
+            ));
+            self.otimeoutcmd = Some(STimeoutCmd{
+                gamephaseaction: timeoutaction.gamephaseaction_timeout.clone(/*TODO needed?*/),
+                aborthandle,
+                epi: epi_timeoutaction,
+            });
+            task::spawn(timerfuture);
         }
     }
 }
