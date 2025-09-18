@@ -6,7 +6,6 @@ use openschafkopf_lib::{
 };
 use openschafkopf_util::*;
 use serde::{Serialize, Deserialize};
-use std::mem::discriminant;
 use rand::{
     rng,
     prelude::*,
@@ -28,10 +27,51 @@ pub enum VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, Ga
     Accepted(Accepted),
 }
 
+macro_rules! impl_try_zip{($fn_name:ident ($($refmut_lhs:tt)*) ($($refmut_rhs:tt)*)) => {
+    fn $fn_name<R, DealCardsOther, GamePreparationsOther, DetermineRulesOther, GameOther, GameResultOther, AcceptedOther>(
+        $($refmut_lhs)* self,
+        other: $($refmut_rhs)* VGamePhaseGeneric<DealCardsOther, GamePreparationsOther, DetermineRulesOther, GameOther, GameResultOther, AcceptedOther>,
+        value_on_failing_match: R,
+        fn_deal_cards: impl FnOnce($($refmut_lhs)* DealCards, $($refmut_rhs)* DealCardsOther) -> R,
+        fn_game_preparations: impl FnOnce($($refmut_lhs)* GamePreparations, $($refmut_rhs)* GamePreparationsOther) -> R,
+        fn_determine_rules: impl FnOnce($($refmut_lhs)* DetermineRules, $($refmut_rhs)* DetermineRulesOther) -> R,
+        fn_game: impl FnOnce($($refmut_lhs)* Game, $($refmut_rhs)* GameOther) -> R,
+        fn_game_result: impl FnOnce($($refmut_lhs)* GameResult, $($refmut_rhs)* GameResultOther) -> R,
+        fn_accepted: impl FnOnce($($refmut_lhs)* Accepted, $($refmut_rhs)* AcceptedOther) -> R,
+    ) -> R {
+        use VGamePhaseGeneric::*;
+        match (self, other) {
+            (DealCards(lhs), DealCards(rhs)) => fn_deal_cards(lhs, rhs),
+            (DealCards(_), _) => value_on_failing_match,
+            (GamePreparations(lhs), GamePreparations(rhs)) => fn_game_preparations(lhs, rhs),
+            (GamePreparations(_), _) => value_on_failing_match,
+            (DetermineRules(lhs), DetermineRules(rhs)) => fn_determine_rules(lhs, rhs),
+            (DetermineRules(_), _) => value_on_failing_match,
+            (Game(lhs), Game(rhs)) => fn_game(lhs, rhs),
+            (Game(_), _) => value_on_failing_match,
+            (GameResult(lhs), GameResult(rhs)) => fn_game_result(lhs, rhs),
+            (GameResult(_), _) => value_on_failing_match,
+            (Accepted(lhs), Accepted(rhs)) => fn_accepted(lhs, rhs),
+            (Accepted(_), _) => value_on_failing_match,
+        }
+    }
+}}
 
 impl<DealCards, GamePreparations, DetermineRules, Game, GameResult, Accepted> VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, GameResult, Accepted> {
+    impl_try_zip!(try_zip (&) (&));
+    impl_try_zip!(try_zip_mutref_move (&mut) ());
+
     pub fn matches_phase(&self, gamephase: &Self) -> bool {
-        discriminant(self)==discriminant(gamephase)
+        self.try_zip(
+            gamephase,
+            /*value_on_failing_match*/false,
+            |_,_| true,
+            |_,_| true,
+            |_,_| true,
+            |_,_| true,
+            |_,_| true,
+            |_,_| true,
+        )
     }
 }
 
@@ -390,25 +430,26 @@ impl VGamePhase {
 
     #[allow(clippy::result_large_err)]
     pub fn action(mut self, epi: EPlayerIndex, gamephaseaction: VGamePhaseAction) -> Result<Self, /*Err contains original self*/Self> {
-        let b_change = match (&mut self, gamephaseaction) {
-            (VGamePhase::DealCards(dealcards), VGamePhaseAction::DealCards(b_doubling)) => {
+        let b_change = self.try_zip_mutref_move(gamephaseaction,
+            /*value_on_failing_match*/false,
+            |dealcards, b_doubling| {
                 dealcards.announce_doubling(epi, b_doubling).is_ok()
             },
-            (VGamePhase::GamePreparations(gamepreparations), VGamePhaseAction::GamePreparations(ref orulesid)) => {
+            |gamepreparations, orulesid| {
                 find_rules_by_id(
                     &gamepreparations.ruleset.avecrulegroup[epi],
                     gamepreparations.fullhand(epi),
-                    orulesid
+                    &orulesid
                 ).ok().and_then(|orules| gamepreparations.announce_game(epi, orules).ok()).is_some()
             },
-            (VGamePhase::DetermineRules(determinerules), VGamePhaseAction::DetermineRules(ref orulesid)) => {
+            |determinerules, orulesid| {
                 determinerules.which_player_can_do_something()
                     .filter(|(epi_active, _vecrulegroup)| epi==*epi_active) // TODO needed?
                     .and_then(|(epi_active, vecrulegroup)| {
                         find_rules_by_id(
                             &vecrulegroup,
                             determinerules.fullhand(verify_eq!(epi, epi_active)),
-                            orulesid
+                            &orulesid
                         ).ok().and_then(|orules| {
                             if let Some(rules) = orules {
                                 determinerules.announce_game(epi, rules)
@@ -419,23 +460,19 @@ impl VGamePhase {
                     })
                     .is_some()
             },
-            (VGamePhase::Game(game), VGamePhaseAction::Game(ref gameaction)) => {
+            |game, gameaction| {
                 match gameaction {
                     VGameAction::Stoss => game.stoss(epi),
-                    VGameAction::Zugeben(card) => game.zugeben(*card, epi),
+                    VGameAction::Zugeben(card) => game.zugeben(card, epi),
                 }.is_ok()
             },
-            (VGamePhase::GameResult(gameresult), VGamePhaseAction::GameResult(())) => {
+            |gameresult, ()| {
                 gameresult.setepi_confirmed.insert(epi)
             },
-            (VGamePhase::Accepted(_), VGamePhaseAction::Accepted(_)) => {
+            |_accepted, _| {
                 false
             },
-            (_gamephase, _cmd) => {
-                // TODO assert!(!self.matches_phase(&gamephaseaction));
-                false
-            },
-        };
+        );
         if b_change {
             use VGamePhaseGeneric::*;
             loop {
