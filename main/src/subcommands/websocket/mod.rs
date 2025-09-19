@@ -6,7 +6,6 @@ use std::{
     time::Duration,
 };
 use openschafkopf_lib::{
-    game::*,
     rules::trumpfdecider::STrumpfDecider,
     rules::ruleset::{SRuleSet},
     primitives::*,
@@ -32,7 +31,6 @@ use failure::*;
 
 mod gamephase;
 use gamephase::{
-    dealcards_sendtoplayers,
     SSendToPlayers,
     VGamePhase,
     VGamePhaseAction,
@@ -104,17 +102,7 @@ impl STable {
         if_then_some!(
             (self.b_with_bots && itopeer.any(Option::is_some))
                 || itopeer.all(Option::is_some),
-            {
-                let dealcards = SDealCards::new(
-                    self.ruleset.clone(),
-                    self.n_stock,
-                );
-                let sendtoplayers = dealcards_sendtoplayers(
-                    EPlayerIndex::EPI0,
-                    |epi| dealcards.first_hand_for(epi),
-                );
-                (VGamePhase::DealCards(dealcards), sendtoplayers)
-            }
+            VGamePhase::new(self.ruleset.clone(), self.n_stock)
         )
     }
 

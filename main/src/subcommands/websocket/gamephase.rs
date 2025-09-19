@@ -213,7 +213,7 @@ impl SSendToPlayers {
     }
 }
 
-pub fn dealcards_sendtoplayers<Card: TMoveOrClone<ECard>, ItCard: IntoIterator<Item=Card>>(epi_doubling: EPlayerIndex, fn_cards: impl Fn(EPlayerIndex)->ItCard) -> SSendToPlayers {
+fn dealcards_sendtoplayers<Card: TMoveOrClone<ECard>, ItCard: IntoIterator<Item=Card>>(epi_doubling: EPlayerIndex, fn_cards: impl Fn(EPlayerIndex)->ItCard) -> SSendToPlayers {
     SSendToPlayers::new(
         /*vecstich*/Vec::new(),
         /*orules*/None,
@@ -240,6 +240,16 @@ pub fn dealcards_sendtoplayers<Card: TMoveOrClone<ECard>, ItCard: IntoIterator<I
 }
 
 impl VGamePhase {
+    pub fn new(ruleset: SRuleSet, n_stock: isize) -> (Self, SSendToPlayers) {
+        let dealcards = SDealCards::new(ruleset, n_stock);
+        let sendtoplayers = dealcards_sendtoplayers(
+            EPlayerIndex::EPI0,
+            |epi| dealcards.first_hand_for(epi),
+        );
+        // TODO: fast-forward to correct game phase (if e.g. doubling is not allowed)
+        (VGamePhase::DealCards(dealcards), sendtoplayers)
+    }
+
     #[allow(clippy::result_large_err)]
     pub fn action(mut self, epi: EPlayerIndex, gamephaseaction: VGamePhaseAction) -> Result<(Self, SSendToPlayers), /*Err contains original self*/Self> {
         let b_change = self.try_zip_mutref_move(gamephaseaction,
