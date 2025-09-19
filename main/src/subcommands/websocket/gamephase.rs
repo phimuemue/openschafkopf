@@ -191,7 +191,7 @@ impl VGamePhase {
 
     #[allow(clippy::result_large_err)]
     pub fn action(mut self, epi: EPlayerIndex, gamephaseaction: VGamePhaseAction) -> Result<(VGamePhaseOrResultGeneric<VGamePhase, SGameResult<SRuleSet>>, SSendToPlayers), /*Err contains original self*/Self> {
-        let b_change = self.try_zip_mutref_move(gamephaseaction,
+        if self.try_zip_mutref_move(gamephaseaction,
             /*value_on_failing_match*/false,
             |dealcards, b_doubling| {
                 dealcards.announce_doubling(epi, b_doubling).is_ok()
@@ -227,8 +227,7 @@ impl VGamePhase {
                     VGameAction::Zugeben(card) => game.zugeben(card, epi),
                 }.is_ok()
             },
-        );
-        if b_change {
+        ) {
             Ok(self.forward_to_blocking_gamephase())
         } else {
             Err(self)
