@@ -15,29 +15,28 @@ use derive_new::new;
 use plain_enum::{EnumMap, PlainEnum};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum Infallible {} // TODO use std::convert::Infallible
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, GameResult, Accepted> {
+pub enum VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game> {
     DealCards(DealCards),
     GamePreparations(GamePreparations),
     DetermineRules(DetermineRules),
     Game(Game),
+}
+
+#[derive(Debug)]
+pub enum VGamePhaseOrResultGeneric<GamePhase, GameResult> {
+    GamePhase(GamePhase),
     GameResult(GameResult),
-    Accepted(Accepted),
 }
 
 macro_rules! impl_try_zip{($fn_name:ident ($($refmut_lhs:tt)*) ($($refmut_rhs:tt)*)) => {
-    fn $fn_name<R, DealCardsOther, GamePreparationsOther, DetermineRulesOther, GameOther, GameResultOther, AcceptedOther>(
+    fn $fn_name<R, DealCardsOther, GamePreparationsOther, DetermineRulesOther, GameOther, >(
         $($refmut_lhs)* self,
-        other: $($refmut_rhs)* VGamePhaseGeneric<DealCardsOther, GamePreparationsOther, DetermineRulesOther, GameOther, GameResultOther, AcceptedOther>,
+        other: $($refmut_rhs)* VGamePhaseGeneric<DealCardsOther, GamePreparationsOther, DetermineRulesOther, GameOther>,
         value_on_failing_match: R,
         fn_deal_cards: impl FnOnce($($refmut_lhs)* DealCards, $($refmut_rhs)* DealCardsOther) -> R,
         fn_game_preparations: impl FnOnce($($refmut_lhs)* GamePreparations, $($refmut_rhs)* GamePreparationsOther) -> R,
         fn_determine_rules: impl FnOnce($($refmut_lhs)* DetermineRules, $($refmut_rhs)* DetermineRulesOther) -> R,
         fn_game: impl FnOnce($($refmut_lhs)* Game, $($refmut_rhs)* GameOther) -> R,
-        fn_game_result: impl FnOnce($($refmut_lhs)* GameResult, $($refmut_rhs)* GameResultOther) -> R,
-        fn_accepted: impl FnOnce($($refmut_lhs)* Accepted, $($refmut_rhs)* AcceptedOther) -> R,
     ) -> R {
         use VGamePhaseGeneric::*;
         match (self, other) {
@@ -49,15 +48,11 @@ macro_rules! impl_try_zip{($fn_name:ident ($($refmut_lhs:tt)*) ($($refmut_rhs:tt
             (DetermineRules(_), _) => value_on_failing_match,
             (Game(lhs), Game(rhs)) => fn_game(lhs, rhs),
             (Game(_), _) => value_on_failing_match,
-            (GameResult(lhs), GameResult(rhs)) => fn_game_result(lhs, rhs),
-            (GameResult(_), _) => value_on_failing_match,
-            (Accepted(lhs), Accepted(rhs)) => fn_accepted(lhs, rhs),
-            (Accepted(_), _) => value_on_failing_match,
         }
     }
 }}
 
-impl<DealCards, GamePreparations, DetermineRules, Game, GameResult, Accepted> VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game, GameResult, Accepted> {
+impl<DealCards, GamePreparations, DetermineRules, Game> VGamePhaseGeneric<DealCards, GamePreparations, DetermineRules, Game> {
     impl_try_zip!(try_zip (&) (&));
     impl_try_zip!(try_zip_mutref_move (&mut) ());
 
@@ -69,54 +64,7 @@ impl<DealCards, GamePreparations, DetermineRules, Game, GameResult, Accepted> VG
             |_,_| true,
             |_,_| true,
             |_,_| true,
-            |_,_| true,
-            |_,_| true,
         )
-    }
-}
-
-#[derive(Debug)]
-pub struct SWebsocketGameResult {
-    // TODO? should the members be private?
-    pub gameresult: SGameResult<SRuleSet>,
-    pub setepi_confirmed: EnumSet<EPlayerIndex>,
-}
-
-impl SWebsocketGameResult {
-    fn new(gameresult: SGameResult<SRuleSet>) -> Self {
-        Self {
-            gameresult,
-            setepi_confirmed: EnumSet::new_empty(),
-        }
-    }
-}
-
-impl TGamePhase for SWebsocketGameResult {
-    type ActivePlayerInfo = EnumSet<EPlayerIndex>;
-    type Finish = SAccepted;
-    fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
-        let None /*Option<Infallible>*/ = self.gameresult.which_player_can_do_something(); // TODO simplify
-        if_then_some!(!self.setepi_confirmed.is_full(),
-            self.setepi_confirmed.clone()
-        )
-    }
-    fn finish_success(self) -> Self::Finish {
-        SAccepted{}
-    }
-}
-
-#[derive(Debug)]
-pub struct SAccepted {
-}
-
-impl TGamePhase for SAccepted {
-    type ActivePlayerInfo = Infallible; // TODO good idea to use Infallible here?
-    type Finish = Self; // TODO? use SDealCards
-    fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
-        None
-    }
-    fn finish_success(self) -> Self::Finish {
-        self
     }
 }
 
@@ -125,8 +73,6 @@ pub type VGamePhase = VGamePhaseGeneric<
     SGamePreparations,
     SDetermineRules,
     SGameGeneric<SRuleSet, (), ()>,
-    SWebsocketGameResult,
-    SAccepted,
 >;
 
 type SActivelyPlayableRulesIdentifier = String;
@@ -164,8 +110,6 @@ pub type VGamePhaseAction = VGamePhaseGeneric<
     /*GamePreparations announce_game*/Option<SActivelyPlayableRulesIdentifier>,
     /*DetermineRules*/Option<SActivelyPlayableRulesIdentifier>,
     /*Game*/VGameAction,
-    /*GameResult*/(),
-    /*Accepted*/Infallible,
 >;
 
 #[derive(Serialize, Clone, Debug)]
@@ -240,15 +184,13 @@ fn dealcards_sendtoplayers<Card: TMoveOrClone<ECard>, ItCard: IntoIterator<Item=
 }
 
 impl VGamePhase {
-    pub fn new(ruleset: SRuleSet, n_stock: isize) -> (Self, SSendToPlayers) {
-        unwrap!(
-            Self::DealCards(SDealCards::new(ruleset, n_stock))
-                .forward_to_blocking_gamephase()
-        )
+    pub fn new(ruleset: SRuleSet, n_stock: isize) -> (VGamePhaseOrResultGeneric<Self, SGameResult<SRuleSet>>, SSendToPlayers) {
+        Self::DealCards(SDealCards::new(ruleset, n_stock))
+            .forward_to_blocking_gamephase()
     }
 
     #[allow(clippy::result_large_err)]
-    pub fn action(mut self, epi: EPlayerIndex, gamephaseaction: VGamePhaseAction) -> Result<(Self, SSendToPlayers), /*Err contains original self*/Self> {
+    pub fn action(mut self, epi: EPlayerIndex, gamephaseaction: VGamePhaseAction) -> Result<(VGamePhaseOrResultGeneric<VGamePhase, SGameResult<SRuleSet>>, SSendToPlayers), /*Err contains original self*/Self> {
         let b_change = self.try_zip_mutref_move(gamephaseaction,
             /*value_on_failing_match*/false,
             |dealcards, b_doubling| {
@@ -285,23 +227,18 @@ impl VGamePhase {
                     VGameAction::Zugeben(card) => game.zugeben(card, epi),
                 }.is_ok()
             },
-            |gameresult, ()| {
-                gameresult.setepi_confirmed.insert(epi)
-            },
-            |_accepted, _| {
-                false
-            },
         );
         if b_change {
-            self.forward_to_blocking_gamephase()
+            Ok(self.forward_to_blocking_gamephase())
         } else {
             Err(self)
         }
     }
 
     #[allow(clippy::result_large_err)]
-    fn forward_to_blocking_gamephase(mut self) -> Result<(Self, SSendToPlayers), /*TODO can we avoid Err entirely here?*/Self> {
+    fn forward_to_blocking_gamephase(mut self) -> (VGamePhaseOrResultGeneric<Self, SGameResult<SRuleSet>>, SSendToPlayers) {
         use VGamePhaseGeneric::*;
+        use VGamePhaseOrResultGeneric::*;
         loop {
             match self {
                 DealCards(dealcards) => match dealcards.finish() {
@@ -311,13 +248,23 @@ impl VGamePhase {
                             epi_doubling,
                             |epi| dealcards.first_hand_for(epi),
                         );
-                        return Ok((DealCards(dealcards), sendtoplayers));
+                        return (GamePhase(DealCards(dealcards)), sendtoplayers);
                     },
                 },
                 GamePreparations(gamepreparations) => match gamepreparations.finish() {
                     Ok(VGamePreparationsFinish::DetermineRules(determinerules)) => self = DetermineRules(determinerules),
                     Ok(VGamePreparationsFinish::DirectGame(game)) => self = Game(game),
-                    Ok(VGamePreparationsFinish::Stock(gameresult)) => self = GameResult(SWebsocketGameResult::new(gameresult)),
+                    Ok(VGamePreparationsFinish::Stock(gameresult)) => return (
+                        GameResult(gameresult),
+                        SSendToPlayers::new(
+                            /*vecstich*/Vec::new(),
+                            /*orules*/None,
+                            /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
+                            /*fn_msg_active*/|_epi| None,
+                            /*msg_inactive*/VMessage::Info("Stock".into()),
+                            /*otimeoutaction*/None,
+                        ),
+                    ),
                     Err((gamepreparations, epi_announce_game)) => {
                         let itgamephaseaction_rules = rules_to_gamephaseaction(
                             &gamepreparations.ruleset.avecrulegroup[epi_announce_game],
@@ -381,7 +328,7 @@ impl VGamePhase {
                                 gamephaseaction_rules_default,
                             ),
                         );
-                        return Ok((GamePreparations(gamepreparations), sendtoplayers));
+                        return (GamePhase(GamePreparations(gamepreparations)), sendtoplayers);
                     },
 
                 },
@@ -418,11 +365,34 @@ impl VGamePhase {
                                 gamephaseaction_rules_default,
                             ),
                         );
-                        return Ok((DetermineRules(determinerules), sendtoplayers));
+                        return (GamePhase(DetermineRules(determinerules)), sendtoplayers);
                     },
                 },
                 Game(game) => match game.finish() {
-                    Ok(gameresult) => self = GameResult(SWebsocketGameResult::new(gameresult)),
+                    Ok(gameresult) => {
+                        let sendtoplayers = SSendToPlayers::new(
+                            /*vecstich*/if let VStockOrT::OrT(ref game) = gameresult.stockorgame {
+                                game.stichseq.completed_stichs().to_vec()
+                            } else {
+                                Vec::new()
+                            },
+                            if_then_some!(let VStockOrT::OrT(ref game) = gameresult.stockorgame,
+                                game.rules.clone()
+                            ),
+                            /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
+                            /*fn_msg_active*/ |epi| Some(VMessage::Ask{ // TODO: Make this info
+                                str_question: format!("Spiel beendet. {}", if gameresult.an_payout[epi] < 0 {
+                                    format!("Verlust: {}", -gameresult.an_payout[epi])
+                                } else {
+                                    format!("Gewinn: {}", gameresult.an_payout[epi])
+                                }),
+                                vecstrgamephaseaction: Vec::new(),
+                            }),
+                            /*msg_inactive*/VMessage::Info("Game finished".into()),
+                            /*otimeoutaction*/None, // Players do not need to actively confirm finished game
+                        );
+                        return (GameResult(gameresult), sendtoplayers);
+                    },
                     Err((game, (epi_card, vecepi_stoss))) => {
                         let sendtoplayers = SSendToPlayers::new(
                             game.stichseq.visible_stichs().to_vec(),
@@ -448,63 +418,8 @@ impl VGamePhase {
                                 })),
                             ),
                         );
-                        return Ok((Game(game), sendtoplayers));
+                        return (GamePhase(Game(game)), sendtoplayers);
                     },
-                },
-                GameResult(gameresult) => match gameresult.finish() {
-                    Ok(accepted) => {
-                        let None /*Option<Infallible>*/ = accepted.which_player_can_do_something();
-                        return Ok((
-                            Accepted(accepted),
-                            SSendToPlayers::new(
-                                /*vecstich*/Vec::new(),
-                                /*orules*/None,
-                                /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
-                                /*fn_msg_active*/|_epi| None,
-                                /*msg_inactive*/VMessage::Info("Game finished.".into()),
-                                /*otimeoutaction*/None,
-                            ),
-                        ));
-                    },
-                    Err((gameresult, setepi_confirmed)) => {
-                        let sendtoplayers = SSendToPlayers::new(
-                            /*vecstich*/if let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame {
-                                game.stichseq.completed_stichs().to_vec()
-                            } else {
-                                Vec::new()
-                            },
-                            if_then_some!(let VStockOrT::OrT(ref game) = gameresult.gameresult.stockorgame,
-                                game.rules.clone()
-                            ),
-                            /*fn_cards*/|_epi| std::iter::empty::<ECard>(),
-                            /*fn_msg_active*/ |epi| {
-                                if_then_some!(!setepi_confirmed.contains(epi),
-                                    VMessage::Ask{
-                                        str_question: format!("Spiel beendet. {}", if gameresult.gameresult.an_payout[epi] < 0 {
-                                            format!("Verlust: {}", -gameresult.gameresult.an_payout[epi])
-                                        } else {
-                                            format!("Gewinn: {}", gameresult.gameresult.an_payout[epi])
-                                        }),
-                                        vecstrgamephaseaction: Some(("Ok".into(), VGamePhaseAction::GameResult(()))).into_iter().collect(),
-                                    }
-                                )
-                            },
-                            /*msg_inactive*/VMessage::Info("Game finished".into()),
-                            EPlayerIndex::values()
-                                .find(|epi| !setepi_confirmed.contains(*epi))
-                                .map(|epi_confirm|
-                                    STimeoutAction::new(
-                                        epi_confirm,
-                                        VGamePhaseAction::GameResult(()),
-                                    )
-                                ),
-                        );
-                        return Ok((GameResult(gameresult), sendtoplayers));
-                    },
-                },
-                Accepted(accepted) => {
-                    let Ok(accepted) = accepted.finish(); // Always succeeds
-                    return Err(Accepted(accepted)); // Avoid infinite loop
                 },
             };
         };

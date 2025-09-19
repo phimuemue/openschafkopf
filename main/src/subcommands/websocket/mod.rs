@@ -6,6 +6,7 @@ use std::{
     time::Duration,
 };
 use openschafkopf_lib::{
+    game::SGameResult,
     rules::trumpfdecider::STrumpfDecider,
     rules::ruleset::{SRuleSet},
     primitives::*,
@@ -34,6 +35,7 @@ use gamephase::{
     SSendToPlayers,
     VGamePhase,
     VGamePhaseAction,
+    VGamePhaseOrResultGeneric,
     VGameAction,
     VMessage,
 };
@@ -78,8 +80,8 @@ struct SPlayers {
 #[derive(Debug)]
 struct STable{
     players: SPlayers,
-    ogamephase: Option<VGamePhase>,
-    otimeoutcmd: Option<STimeoutCmd>, // TODO? tie to ogamephase?
+    ogamephaseorresult: Option<VGamePhaseOrResultGeneric<VGamePhase, SGameResult<SRuleSet>>>,
+    otimeoutcmd: Option<STimeoutCmd>, // TODO? tie to ogamephaseorresult?
     n_stock: isize, // TODO would that be better within VGamePhase?
     ruleset: SRuleSet,
     b_with_bots: bool,
@@ -89,7 +91,7 @@ impl STable {
     fn new(ruleset: SRuleSet, b_with_bots: bool) -> Self {
         Self {
             players: SPlayers::default(),
-            ogamephase: None,
+            ogamephaseorresult: None,
             otimeoutcmd: None,
             n_stock: 0,
             ruleset,
@@ -97,13 +99,16 @@ impl STable {
         }
     }
 
-    fn start_new_game(&self) -> Option<(VGamePhase, SSendToPlayers)> {
+    fn start_new_game(&mut self, self_mutex: Arc<Mutex<Self>>) {
+        assert!(self.ogamephaseorresult.is_none()); // Otherwise we'd collide with a running game.
         let mut itopeer = self.players.mapepiopeer_active.iter();
-        if_then_some!(
-            (self.b_with_bots && itopeer.any(Option::is_some))
-                || itopeer.all(Option::is_some),
-            VGamePhase::new(self.ruleset.clone(), self.n_stock)
-        )
+        if (self.b_with_bots && itopeer.any(Option::is_some))
+            || itopeer.all(Option::is_some)
+        {
+            let (gamephaseorresult, sendtoplayers) = VGamePhase::new(self.ruleset.clone(), self.n_stock);
+            self.ogamephaseorresult = Some(gamephaseorresult);
+            self.communicate_to_players_and_set_timeoutaction(self_mutex, &sendtoplayers); // Trigger game logic.
+        }
     }
 
     fn insert(&mut self, self_mutex: Arc<Mutex<Self>>, peer: SPeer) {
@@ -111,16 +116,15 @@ impl STable {
             .iter_mut()
             .find(|opeer| opeer.is_none())
         {
-            Some(opeer) if self.ogamephase.is_none() => {
+            Some(opeer) if self.ogamephaseorresult.is_none() => {
                 verify!(opeer.replace(peer).is_none());
             },
             _ => {
                 self.players.vecpeer_inactive.push(peer);
             }
         }
-        if self.ogamephase.is_none() && let Some((gamephase, sendtoplayers)) = self.start_new_game() {
-            self.ogamephase = Some(gamephase);
-            self.communicate_to_players_and_set_timeoutaction(self_mutex, &sendtoplayers); // Trigger game logic.
+        if self.ogamephaseorresult.is_none() {
+            self.start_new_game(self_mutex);
         }
     }
 
@@ -250,67 +254,82 @@ impl STable {
     fn on_incoming_gamephaseaction(&mut self, /*TODO avoid this parameter*/self_mutex: Arc<Mutex<Self>>, epi: EPlayerIndex, gamephaseaction: VGamePhaseAction) {
         println!("on_incoming_gamephaseaction({epi:?}, {gamephaseaction:?})");
         let mut osendtoplayers : Option<SSendToPlayers> = None; // TODO avoid this
-        self.ogamephase = self.ogamephase.take().and_then(|gamephase| match verify_or_println!(gamephase.action(epi, gamephaseaction.clone())) {
-            Ok((gamephase, sendtoplayers)) => {
-                osendtoplayers = Some(sendtoplayers);
-                if let Some(timeoutcmd) = &self.otimeoutcmd
-                    && timeoutcmd.epi==epi && gamephaseaction.matches_phase(&timeoutcmd.gamephaseaction)
-                {
-                    timeoutcmd.aborthandle.abort();
-                    self.otimeoutcmd = None;
-                }
-                match gamephase {
-                    VGamePhase::GameResult(gameresult) => {
-                        gameresult.gameresult.clone(/*TODO avoid clone (and force apply_payout on construction?)*/).apply_payout(&mut self.n_stock, |epi, n_payout| {
-                            if let Some(peer) = &mut self.players.mapepiopeer_active[epi] {
-                                peer.n_money += n_payout;
-                            }
-                        });
-                        Some(VGamePhase::GameResult(gameresult))
-                    },
-                    VGamePhase::Accepted(_accepted) => {
-                        // advance to next game
-                        /*           E2
-                         * E1                      E3
-                         *    E0 SN SN-1 ... S1 S0
-                         *
-                         * E0 E1 E2 E3 [S0 S1 S2 ... SN]
-                         * E1 E2 E3 S0 [S1 S2 ... SN E0]
-                         * E2 E3 S0 S1 [S2 ... SN E0 E1]
-                         */
-                        // Players: E0 E1 E2 E3 [S0 S1 S2 ... SN] (S0 is longest waiting inactive player)
-                        let mapepiopeer_active = &mut self.players.mapepiopeer_active;
-                        mapepiopeer_active.as_raw_mut().rotate_left(1);
-                        // Players: E1 E2 E3 E0 [S0 S1 S2 ... SN]
-                        if let Some(peer_epi3) = mapepiopeer_active[EPlayerIndex::EPI3].take() {
-                            self.players.vecpeer_inactive.push(peer_epi3);
-                        }
-                        // Players: E1 E2 E3 -- [S0 S1 S2 ... SN E0] (E1, E2, E3 may be None)
-                        // Fill up players one after another
-                        assert!(mapepiopeer_active[EPlayerIndex::EPI3].is_none());
-                        for epi in EPlayerIndex::values() {
-                            if mapepiopeer_active[epi].is_none() && !self.players.vecpeer_inactive.is_empty() {
-                                mapepiopeer_active[epi] = Some(self.players.vecpeer_inactive.remove(0));
-                            }
-                        }
-                        // Players: E1 E2 E3 S0 [S1 S2 ... SN E0] (E1, E2, E3 may be None)
-                        // TODO should we clear timeouts?
-                        self.start_new_game().map(|(gamephase, sendtoplayers)| {
+        self.ogamephaseorresult = self.ogamephaseorresult.take().map(|gamephaseorresult| 
+            match gamephaseorresult {
+                VGamePhaseOrResultGeneric::GamePhase(gamephase) => {
+                    match verify_or_println!(gamephase.action(epi, gamephaseaction.clone())) {
+                        Ok((gamephaseorresult, sendtoplayers)) => {
                             osendtoplayers = Some(sendtoplayers);
-                            gamephase
-                        })
-                    },
-                    gamephase => {
-                        Some(gamephase)
-                    },
-                }
-            },
-            Err(gamephase) => Some(gamephase),
-        });
+                            if let Some(timeoutcmd) = &self.otimeoutcmd
+                                && timeoutcmd.epi==epi && gamephaseaction.matches_phase(&timeoutcmd.gamephaseaction)
+                            {
+                                timeoutcmd.aborthandle.abort();
+                                self.otimeoutcmd = None;
+                            }
+                            match &gamephaseorresult {
+                                VGamePhaseOrResultGeneric::GamePhase(_gamephase) => { },
+                                VGamePhaseOrResultGeneric::GameResult(_gameresult) => {
+                                    let table_mutex = self_mutex.clone();
+                                    task::spawn(async move {
+                                        task::sleep(Duration::from_millis(5000)).await;
+                                        let mut table = unwrap!(table_mutex.lock());
+                                        let table : &mut STable = &mut table;
+                                        let Some(VGamePhaseOrResultGeneric::GameResult(gameresult)) = table.ogamephaseorresult.take() else {
+                                            panic!("GameResult unexpectedly taken out.");
+                                        };
+                                        // TODO it seems fishy that apply_payout runs *after* the task slept.
+                                        gameresult.apply_payout(&mut table.n_stock, |epi, n_payout| {
+                                            if let Some(peer) = &mut table.players.mapepiopeer_active[epi] {
+                                                peer.n_money += n_payout;
+                                            }
+                                        });
+                                        { // advance to next game
+                                            /*           E2
+                                             * E1                      E3
+                                             *    E0 SN SN-1 ... S1 S0
+                                             *
+                                             * E0 E1 E2 E3 [S0 S1 S2 ... SN]
+                                             * E1 E2 E3 S0 [S1 S2 ... SN E0]
+                                             * E2 E3 S0 S1 [S2 ... SN E0 E1]
+                                             */
+                                            // Players: E0 E1 E2 E3 [S0 S1 S2 ... SN] (S0 is longest waiting inactive player)
+                                            let mapepiopeer_active = &mut table.players.mapepiopeer_active;
+                                            mapepiopeer_active.as_raw_mut().rotate_left(1);
+                                            // Players: E1 E2 E3 E0 [S0 S1 S2 ... SN]
+                                            if let Some(peer_epi3) = mapepiopeer_active[EPlayerIndex::EPI3].take() {
+                                                table.players.vecpeer_inactive.push(peer_epi3);
+                                            }
+                                            // Players: E1 E2 E3 -- [S0 S1 S2 ... SN E0] (E1, E2, E3 may be None)
+                                            // Fill up players one after another
+                                            assert!(mapepiopeer_active[EPlayerIndex::EPI3].is_none());
+                                            for epi in EPlayerIndex::values() {
+                                                if mapepiopeer_active[epi].is_none() && !table.players.vecpeer_inactive.is_empty() {
+                                                    mapepiopeer_active[epi] = Some(table.players.vecpeer_inactive.remove(0));
+                                                }
+                                            }
+                                            // Players: E1 E2 E3 S0 [S1 S2 ... SN E0] (E1, E2, E3 may be None)
+                                            // TODO should we clear timeouts?
+                                            assert!(table.ogamephaseorresult.is_none());
+                                            table.start_new_game(table_mutex.clone());
+                                        }
+                                    });
+                                },
+                            }
+                            gamephaseorresult
+                        },
+                        Err(gamephase) => VGamePhaseOrResultGeneric::GamePhase(gamephase),
+                    }
+                },
+                VGamePhaseOrResultGeneric::GameResult(gameresult) => {
+                    // Wait until sleeping task clears self.ogamephaseorresult // TODO? Can we somehow assert that this will happen?
+                    VGamePhaseOrResultGeneric::GameResult(gameresult)
+                },
+            }
+        );
         if let Some(sendtoplayers) = osendtoplayers {
             self.communicate_to_players_and_set_timeoutaction(self_mutex, &sendtoplayers);
         }
-        if self.ogamephase.is_none() {
+        if self.ogamephaseorresult.is_none() {
             self.players.communicate_to_players(
                 &SSendToPlayers::new(
                     /*vecstich*/Vec::new(),
