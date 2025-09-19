@@ -99,7 +99,7 @@ impl STable {
         }
     }
 
-    fn start_new_game(&self) -> Option<(SDealCards, SSendToPlayers)> {
+    fn start_new_game(&self) -> Option<(VGamePhase, SSendToPlayers)> {
         let mut itopeer = self.players.mapepiopeer_active.iter();
         if_then_some!(
             (self.b_with_bots && itopeer.any(Option::is_some))
@@ -113,7 +113,7 @@ impl STable {
                     EPlayerIndex::EPI0,
                     |epi| dealcards.first_hand_for(epi),
                 );
-                (dealcards, sendtoplayers)
+                (VGamePhase::DealCards(dealcards), sendtoplayers)
             }
         )
     }
@@ -130,8 +130,8 @@ impl STable {
                 self.players.vecpeer_inactive.push(peer);
             }
         }
-        if self.ogamephase.is_none() && let Some((dealcards, sendtoplayers)) = self.start_new_game() {
-            self.ogamephase = Some(VGamePhase::DealCards(dealcards));
+        if self.ogamephase.is_none() && let Some((gamephase, sendtoplayers)) = self.start_new_game() {
+            self.ogamephase = Some(gamephase);
             self.communicate_to_players_and_set_timeoutaction(self_mutex, &sendtoplayers); // Trigger game logic.
         }
     }
@@ -307,9 +307,9 @@ impl STable {
                         }
                         // Players: E1 E2 E3 S0 [S1 S2 ... SN E0] (E1, E2, E3 may be None)
                         // TODO should we clear timeouts?
-                        self.start_new_game().map(|(dealcards, sendtoplayers)| {
+                        self.start_new_game().map(|(gamephase, sendtoplayers)| {
                             osendtoplayers = Some(sendtoplayers);
-                            VGamePhase::DealCards(dealcards)
+                            gamephase
                         })
                     },
                     gamephase => {
