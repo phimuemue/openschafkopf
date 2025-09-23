@@ -168,9 +168,15 @@ impl SPlayers {
                 stichcurrent: SDisplayedStichCurrent,
                 ostichprev: Option<SDisplayedStichPrev>,
             }
+            #[typeshare]
+            struct SNamedGamePhaseAction {
+                str_name: String,
+                gamephaseaction: VGamePhaseAction,
+            }
             #[derive(new, Serialize)]
+            #[typeshare]
             struct SSiteState {
-                vectplstrstr_caption_message_zugeben: Vec<(String, VGamePhaseAction)>,
+                vecnamedgamephaseaction: Vec<SNamedGamePhaseAction>,
                 msg: VMessage,
                 odisplayedstichs: Option<SDisplayedStichs>,
                 mapepistr: [String; EPlayerIndex::SIZE],
