@@ -51,6 +51,14 @@ class SSiteState {
     readonly oepi_timeout: null | EPlayerIndex;
 }
 
+class SLocalState {
+    veccard_hand: Array<string>;
+
+    constructor() {
+        this.veccard_hand = new Array();
+    }
+}
+
 function assert(b: any) {
     if (!b) {
         throw {};
@@ -98,6 +106,12 @@ function replace_div_with(div_old: HTMLElement, div_new: HTMLElement) {
     unwrap(div_old.parentNode).replaceChild(div_new, div_old);
 }
 
+function arrays_are_equal(vec_lhs, vec_rhs) : boolean { // TODO? General deep comparison utility
+    return vec_lhs.length === vec_rhs.length
+        && vec_lhs.every((element, i) => element === vec_rhs[i]);
+}
+
+let localstate = new SLocalState();
 let str_player_name = prompt("Name:");
 let ws = new WebSocket("ws://localhost:8080");
 ws.onopen = function(event) {
@@ -107,15 +121,21 @@ ws.onmessage = function(msg) {
     let sitestate = dbg(JSON.parse(msg.data) as SSiteState); // assume that server sends valid SSiteState // TODO? assert/check
     {
         let div_hand_new = new_div_with_id("hand");
-        for (let tplstrstr of sitestate.vectplstrstr_caption_message_zugeben) {
-            let div_card = new_div_card_in_hand(tplstrstr[0]);
-            div_hand_new.appendChild(div_card);
-            (<HTMLElement>div_card).onclick = function () {
-                // TODO if (!player is active) { check } else
-                ws.send(JSON.stringify({"GamePhaseAction": dbg(tplstrstr[1])}));
-            };
+        let veccard_hand = sitestate.vectplstrstr_caption_message_zugeben.map((tplstrstr) => {
+            tplstrstr[0]
+        });
+        if (!arrays_are_equal(veccard_hand, localstate.veccard_hand)) {
+            localstate.veccard_hand = veccard_hand;
+            for (let tplstrstr of sitestate.vectplstrstr_caption_message_zugeben) {
+                let div_card = new_div_card_in_hand(tplstrstr[0]);
+                div_hand_new.appendChild(div_card);
+                (<HTMLElement>div_card).onclick = function () {
+                    // TODO if (!player is active) { check } else
+                    ws.send(JSON.stringify({"GamePhaseAction": dbg(tplstrstr[1])}));
+                };
+            }
+            replace_div_with(unwrap(document.getElementById("hand")), div_hand_new);
         }
-        replace_div_with(unwrap(document.getElementById("hand")), div_hand_new);
     }
     let div_askpanel = unwrap(document.getElementById("askpanel"));
     let oask = getAsk(sitestate.msg);
