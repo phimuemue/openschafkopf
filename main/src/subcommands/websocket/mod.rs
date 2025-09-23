@@ -7,7 +7,6 @@ use std::{
 };
 use openschafkopf_lib::{
     game::SGameResult,
-    rules::trumpfdecider::STrumpfDecider,
     rules::ruleset::{SRuleSet},
     primitives::*,
 };
@@ -226,16 +225,9 @@ impl SPlayers {
         };
         for epi in EPlayerIndex::values() {
             if let Some(peer_active) = self.mapepiopeer_active[epi].as_ref() {
-                let mut veccard = sendtoplayers.mapepiveccard[epi].clone(); // TODO? avoid clone
-                if let Some(rules) = &sendtoplayers.orules {
-                    rules.sort_cards(&mut veccard);
-                } else {
-                    STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz))
-                        .sort_cards(&mut veccard)
-                }
                 communicate(
                     Some(epi),
-                    veccard,
+                    sendtoplayers.mapepiveccard[epi].clone(), // TODO? avoid clone
                     sendtoplayers.mapepiomsg_active[epi]
                         .as_ref()
                         .unwrap_or(&sendtoplayers.msg_inactive)

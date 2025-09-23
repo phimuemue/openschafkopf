@@ -2,7 +2,10 @@ use openschafkopf_lib::{
     primitives::*,
     game::*,
     rules::*,
-    rules::ruleset::{SRuleSet, SRuleGroup, allowed_rules, VStockOrT},
+    rules::{
+        ruleset::{SRuleSet, SRuleGroup, allowed_rules, VStockOrT},
+        trumpfdecider::STrumpfDecider,
+    },
 };
 use openschafkopf_util::*;
 use serde::{Serialize, Deserialize};
@@ -146,10 +149,20 @@ impl SSendToPlayers {
         msg_inactive: VMessage,
         otimeoutaction: impl Into<Option<STimeoutAction>>,
     ) -> Self {
+        let mapepiveccard = EPlayerIndex::map_from_fn(|epi| {
+            let mut veccard = fn_cards(epi).into_iter().map(TMoveOrClone::move_or_clone).collect::<Vec<_>>();
+            if let Some(rules) = &orules {
+                rules.sort_cards(&mut veccard);
+            } else {
+                STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz))
+                    .sort_cards(&mut veccard)
+            }
+            veccard
+        });
         Self {
             vecstich,
             orules,
-            mapepiveccard: EPlayerIndex::map_from_fn(|epi| fn_cards(epi).into_iter().map(TMoveOrClone::move_or_clone).collect()),
+            mapepiveccard,
             mapepiomsg_active: EPlayerIndex::map_from_fn(fn_msg_active),
             msg_inactive,
             otimeoutaction: otimeoutaction.into(),
