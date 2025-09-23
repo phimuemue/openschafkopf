@@ -92,7 +92,14 @@
   height: 100%;
   max-width: 10%;
   top: 0;
+  cursor: pointer;
+  transition: transform 0.1s;
 }
+.card_hand:hover {
+  transform: translateY(-15px); /* move card upwards */
+  z-index: 1000;                /* ensures hovered card is above others */
+}
+
 .card_checked {
     background-position: top;
 }
