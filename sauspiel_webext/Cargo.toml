@@ -20,6 +20,7 @@ openschafkopf_lib = {path = "../lib"}
 plain_enum = "0"
 getrandom = { version = "0", features = ["wasm_js"] } # see https://docs.rs/getrandom/latest/getrandom/#webassembly-support
 itertools = "0"
+js-sys = "0"
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
@@ -29,14 +30,23 @@ console_error_panic_hook = { version = "0.1.7", optional = true }
 [dependencies.web-sys]
 version = "0.3.66"
 features = [
+    'Blob',
     'console',
+    'DedicatedWorkerGlobalScope',
     'Document',
+    'DomParser',
     'Element',
     'HtmlCollection',
     'HtmlElement',
     'Location',
+    'MessageEvent',
     'Node',
+    'SupportedType',
+    'Url',
     'Window',
+    'Worker',
+    'WorkerOptions',
+    'WorkerType',
     'XmlHttpRequest',
 ]
 

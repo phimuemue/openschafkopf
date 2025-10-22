@@ -5,6 +5,13 @@
 
   "content_scripts": [
     {
+      "matches": ["*://*.sauspiel.de/forum/diskussionen/*"],
+      "js": [
+          "sauspiel_webext.js",
+          "sauspiel_webext_diskussionen_content_script.js"
+      ]
+    },
+    {
       "matches": ["*://*.sauspiel.de/spiele/*"],
       "js": [
           "sauspiel_webext.js",
@@ -14,6 +21,7 @@
   ],
 
   "web_accessible_resources": [
+      "web_worker.js",
       "sauspiel_webext_bg.wasm"
   ],
 

@@ -28,6 +28,9 @@ use itertools::Itertools;
 #[wasm_bindgen]
 extern "C" {
     fn alert(s: &str);
+
+    #[wasm_bindgen(js_namespace = ["chrome", "runtime"], js_name = getURL)]
+    fn get_url(path: &str) -> JsValue;
 }
 
 macro_rules! dbg_alert{($expr:expr) => {
@@ -36,7 +39,7 @@ macro_rules! dbg_alert{($expr:expr) => {
 
 #[derive(Debug)]
 struct SWebsysDocument(web_sys::Document);
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct SWebsysElement(web_sys::Element);
 #[derive(Debug)]
 struct SHtmlCollectionIterator{
@@ -149,10 +152,151 @@ fn output_card_sauspiel_img(card: ECard, b_highlight: bool) -> impl html_generat
     )
 }
 
-#[wasm_bindgen(start)]
-pub fn greet() {
+// pub async fn sleep_ms(ms: i32) {
+//     // Create a JavaScript Promise manually
+//     let promise = Promise::new(&mut |resolve, _reject| {
+//         // Create closure for setTimeout callback
+//         let cb = Closure::once(Box::new(move || {
+//             let _ = resolve.call0(&JsValue::NULL);
+//         }) as Box<dyn FnOnce()>);
+// 
+//         // Get the worker global scope (no window in WebExtension workers)
+//         let global: DedicatedWorkerGlobalScope = js_sys::global().unchecked_into();
+// 
+//         // Schedule callback with setTimeout
+//         global
+//             .set_timeout_with_callback_and_timeout_and_arguments_0(
+//                 cb.as_ref().unchecked_ref(),
+//                 ms,
+//             )
+//             .expect("setTimeout failed");
+// 
+//         // Leak the closure so it stays alive until called
+//         cb.forget();
+//     });
+// 
+//     // Await the promise
+//     // This is the core trick: we can use `.await` directly on a JS Promise!
+//     // wasm-bindgen generates the glue for async/await automatically.
+//     wasm_bindgen_futures::future_to_promise(async move {
+//         // Wait for the timer
+//         let _ = wasm_bindgen_futures::JsFuture::from(promise).await;
+//         Ok(JsValue::NULL)
+//     }).await;
+// }
+
+fn sleep_ms(ms: i32, on_done: Closure<dyn FnMut()>) {
+    let global: web_sys::DedicatedWorkerGlobalScope = js_sys::global().unchecked_into();
+
+    global
+        .set_timeout_with_callback_and_timeout_and_arguments_0(
+            on_done.as_ref().unchecked_ref(),
+            ms,
+        )
+        .expect("setTimeout failed");
+
+    // We must leak the closure so it lives until setTimeout fires
+    on_done.forget();
+}
+
+#[wasm_bindgen]
+pub fn parse_and_extend_diskussionen_start_worker() {
     set_panic_hook();
 
+    web_sys::console::log_1(&JsValue::from_str("parse_and_extend_diskussionen_start_worker"));
+
+    let worker = unwrap!(web_sys::Worker::new_with_options(
+        //&unwrap!(web_sys::Url::create_object_url_with_blob(
+        //    &unwrap!(web_sys::Blob::new_with_str_sequence(&js_sys::Array::of1(
+        //        &JsValue::from_str(r#"
+        //            self.onmessage = function(msg) {
+        //                console.log("before import");
+        //                //import './pkg/sauspiel_webext_bg.js';
+        //                importScripts('./pkg/sauspiel_webext.js');
+        //                console.log("after import");
+        //                console.log("worker got", msg.data);
+        //                self.postMessage("Msg back " + msg.data);
+        //            };
+        //        "#)
+        //    ))),
+        //)),
+        &unwrap!(get_url("web_worker.js").as_string()),
+        &web_sys::WorkerOptions::new(),
+    ));
+
+    let onmessage = Closure::wrap(Box::new(move |e: web_sys::MessageEvent| {
+        web_sys::console::log_1(&"received from worker:".into());
+        web_sys::console::log_1(&e.data());
+    }) as Box<dyn FnMut(_)>);
+
+    worker.set_onmessage(Some(onmessage.as_ref().unchecked_ref()));
+    onmessage.forget();
+
+    unwrap!(worker.post_message(&JsValue::from_str("Hallo")));
+
+
+    let mut n_delay_milliseconds : i32 = 0;
+    SWebsysDocument(unwrap!(unwrap!(web_sys::window()).document()))
+        .find_class("conversation-item-text")
+        .collect::<Vec<_>>().into_iter().rev() // Research newest entries first
+        .for_each(|div_conversation_item| {
+            div_conversation_item.clone()
+                .find_name("a") // .find_class("game-link") would only find Sauspiel-tagged links
+                .for_each(move |div| {
+                    n_delay_milliseconds += 1000;
+                    let div_conversation_item = div_conversation_item.0.clone();
+                    sleep_ms(n_delay_milliseconds, Closure::once(Box::new(move || {
+                        web_sys::console::log_1(&"game-link:".into());
+                        web_sys::console::log_1(&div.0.to_string().into());
+                        { // TODO de-duplicate XmlHttpRequest related stuff
+                            let xmlhttprequest = unwrap!(web_sys::XmlHttpRequest::new());
+                            unwrap!(xmlhttprequest.open_with_async(
+                                "GET",
+                                &String::from(div.0.to_string()), // TODO is this a good idea?
+                                /*async*/false,
+                            ));
+                            unwrap!(xmlhttprequest.send());
+                            let str_html = unwrap!( // unwrap Option
+                                unwrap!(xmlhttprequest.response_text()) // unwrap Result
+                            );
+                            assert!(xmlhttprequest.status().is_ok());
+                            let document_game = unwrap!(
+                                unwrap!(web_sys::DomParser::new())
+                                    .parse_from_string(
+                                        &str_html,
+                                        web_sys::SupportedType::TextHtml,
+                                    )
+                            );
+                            if let Some(element_game_shortdesc) = parse_and_extend_game_document(document_game.clone()) {
+                                unwrap!(div_conversation_item.append_with_node_1(
+                                    &element_game_shortdesc,
+                                ));
+                            }
+                            //web_sys::console::log_1(&element_game_shortdesc.inner_html().into());
+                            web_sys::console::log_1(&str_html.into());
+                        }
+                    }) as Box<dyn FnOnce()>));
+                });
+
+        });
+}
+
+#[wasm_bindgen]
+pub fn greet() {
+
+    set_panic_hook();
+
+    parse_and_extend_game_document(unwrap!(unwrap!(web_sys::window()).document()));
+
+}
+
+fn parse_and_extend_game_document(document: web_sys::Document) -> Option<web_sys::Element> {
+    fn append_sibling(node_existing: &web_sys::Node, node_new: &web_sys::Node) {
+        unwrap!(
+            unwrap!(node_existing.parent_element())
+                .append_child(node_new)
+        );
+    }
     let determine_best_card_sauspiel = |ahand: EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence, epi, rules, expensifiers: &SExpensifiers| {
         unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_,_,_>(
             stichseq,
@@ -173,13 +317,6 @@ pub fn greet() {
             /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
         ))
     };
-    fn append_sibling(node_existing: &web_sys::Node, node_new: &web_sys::Node) {
-        unwrap!(
-            unwrap!(node_existing.parent_element())
-                .append_child(node_new)
-        );
-    }
-    let document = unwrap!(unwrap!(web_sys::window()).document());
     let mut vecahandstichseqcardepielement = Vec::new();
     #[derive(Clone)]
     struct SDetermineRulesStep {
@@ -510,14 +647,15 @@ pub fn greet() {
                                     .sum::<isize>()
                             ),
                         ))
-
                     })),
                 ))
             ))).to_string());
             unwrap!(node_gameannouncements.append_with_node_1(&node_whole_game));
+            Some(node_gameannouncements)
         },
         Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepistr_username)) => {
             // Nothing to analyze for Stock.
+            None
         },
         Err(err_html) => { // TODO we should distinguish between "Game not visible/found/accessible" and "HTML not understood"
             #[cfg(not(feature="sauspiel_webext_use_json"))] {
@@ -609,8 +747,9 @@ pub fn greet() {
                     },
                 }
             }
+            None
         },
-    };
+    }
 }
 
 

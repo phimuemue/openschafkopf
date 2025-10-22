@@ -1911,6 +1911,7 @@ dependencies = [
  "getrandom 0.3.3",
  "html_generator",
  "itertools 0.14.0",
+ "js-sys",
  "openschafkopf_lib",
  "openschafkopf_util",
  "plain_enum",
