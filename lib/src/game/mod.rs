@@ -421,14 +421,6 @@ impl<Ruleset, GameAnnouncement, DetermineRules> SGameGeneric<Ruleset, GameAnnoun
         }
     }
 
-    pub fn new_finished(
-        rules : SRules,
-        expensifiers: SExpensifiers,
-        stichseq: SStichSequenceGameFinished,
-    ) -> Result<SGame, Error> {
-        SGame::new_finished_with_ruleset(rules, expensifiers, stichseq, /*ruleset*/(), /*fn_before_zugeben*/|_,_,_,_| {})
-    }
-
     pub fn new_finished_with_ruleset(
         rules : SRules,
         expensifiers: SExpensifiers,

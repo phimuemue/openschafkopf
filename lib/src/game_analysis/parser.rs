@@ -644,10 +644,12 @@ pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failur
                 veccard.iter().copied(),
                 &rules,
             ).map_err(|SDuplicateCard(card)| format_err!("Duplicate card: {}", card))?;
-            SGame::new_finished(
+            SGame::new_finished_with_ruleset(
                 rules,
                 SExpensifiers::new_no_stock_doublings_stoss(),
                 SStichSequenceGameFinished::new(&stichseq),
+                /*ruleset*/(),
+                /*fn_before_zugeben*/|_,_,_,_| {},
             )
         })
 }
