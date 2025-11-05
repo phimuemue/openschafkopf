@@ -71,8 +71,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     .chain(analyze_netschafkopf(&str_input).into_iter().flatten()
                         .map(|resgameresult| resgameresult.and_then(|gameresult| {
                             match gameresult.stockorgame {
-                                VStockOrT::Stock(()) => Err(format_err!("Nothing to analyze.")),
-                                VStockOrT::OrT(game) => Ok(game),
+                                VStockOrT::Stock(_ruleset) => Err(format_err!("Nothing to analyze.")),
+                                VStockOrT::OrT(game) => Ok(game.map(|_|(), |_|(), |_|(), |rules| rules)),
                             }
                         }))
                     )

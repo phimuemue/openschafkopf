@@ -652,9 +652,9 @@ pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failur
         })
 }
 
-pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*Ruleset*/()>, failure::Error>>, failure::Error> {
+pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*Ruleset*/String>, failure::Error>>, failure::Error> {
     let mut itstr_line = str_lines.lines();
-    itstr_line.next().ok_or_else(|| format_err!("First line should contain rules"))?;
+    let ruleset = itstr_line.next().ok_or_else(|| format_err!("First line should contain rules"))?.to_string();
     itstr_line.next()
         .filter(|str_gespielt_von| str_gespielt_von.starts_with("gespielt von")) // TODO be more precise?
         .ok_or_else(|| format_err!("Expected 'gespielt von'."))?;
@@ -716,7 +716,7 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*
             if Some(&"Es wurde zusammengeworfen.")==grpstr_line.peek() {
                 Ok(SGameResultGeneric {
                     an_payout: EPlayerIndex::map_from_fn(|_epi| 0), // TODO could there be stock?
-                    stockorgame: VStockOrT::Stock(()),
+                    stockorgame: VStockOrT::Stock(ruleset.clone()),
                 })
             } else {
                 let rules = parse_rule_description(
@@ -740,10 +740,12 @@ pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*
                         stichseq.zugeben(card, &rules);
                     }
                 }
-                SGame::new_finished(
+                SGameGeneric::</*Ruleset*/String, /*GameAnnouncement*/(), /*DetermineRules*/()>::new_finished_with_ruleset(
                     rules,
                     SExpensifiers::new_no_stock_doublings_stoss(), // TODO? support
                     SStichSequenceGameFinished::new(&stichseq),
+                    ruleset.clone(),
+                    /*fn_before_zugeben*/|_,_,_,_| {},
                 )
                     .and_then(|game| game.finish()
                         .map_err(|err| format_err!("Could not finish game: {:?}", err))
