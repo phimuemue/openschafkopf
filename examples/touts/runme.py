@@ -1,7 +1,7 @@
 import itertools
 import subprocess
 
-veccard_trumpf = "eu gu hu su ha hz ho hk h9".split(" ")
+veccard_trumpf = "eo go ho so eu gu hu su ha hz hk h9".split(" ")
 
 # open table
 print("") # according to https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables, a newline is necessary before tables
@@ -11,9 +11,14 @@ print("-- | -")
 for veccard_hand in itertools.combinations(veccard_trumpf, 6):
     if veccard_trumpf[0] not in veccard_hand: # inefficient but makes code simpler
         continue
+    veccard_hand = veccard_hand + ("ea", "ez")
     str_hand = " ".join(veccard_hand)
     n_high_trumpf_with_active_player = 0
-    vecstr_opponent_is_weak_enough = []
+    vecstr_opponent_is_weak_enough = [
+        "ctx.trumpf(0)>=ctx.trumpf(1)",
+        "ctx.trumpf(0)>=ctx.trumpf(2)",
+        "ctx.trumpf(0)>=ctx.trumpf(3)",
+    ]
     for card_trumpf in veccard_trumpf:
         if card_trumpf in veccard_hand:
             n_high_trumpf_with_active_player = n_high_trumpf_with_active_player + 1
@@ -23,7 +28,7 @@ for veccard_hand in itertools.combinations(veccard_trumpf, 6):
         [
             "target/release/openschafkopf",
             "hand-stats",
-            "--rules", "herz wenz von 0",
+            "--rules", "herz solo von 0",
             "--hand", str_hand,
             "--simulate-hands", "10000",
             "--inspect", " && ".join(vecstr_opponent_is_weak_enough),
