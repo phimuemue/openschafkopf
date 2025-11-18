@@ -27,6 +27,13 @@ enum VChooseItAhand {
     Sample(/*n_samples*/usize, /*on_pool*/Option<usize>),
 }
 
+#[derive(Clone)]
+enum VUserSuppliedPosition {
+	CurrentPlayer,
+	Concrete(EPlayerIndex),
+	// TODO ActivePlayer,
+}
+
 pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::Command<'static> {
     use super::shared_args::*;
     clap::Command::new(str_subcommand)
@@ -44,8 +51,17 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
         .arg(clap::Arg::new("position")
             .long("position")
             .help("Position of the player")
-            .long_help("Position of the player. Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly). If not given, this is assumed to be the one to play the next card.")
-            .takes_value(true)
+			.value_parser(|str_position: &str| -> Result<VUserSuppliedPosition, String> {
+				match str_position {
+					"0" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI0)),
+					"1" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI1)),
+					"2" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI2)),
+					"3" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI3)),
+					"current" => Ok(VUserSuppliedPosition::CurrentPlayer),
+					_ => Err(format!("{str_position} not recognized. Supported values: 0, 1, 2, 3, current."))
+				}
+			})
+            .default_value("current")
         )
         .arg(clap::Arg::new("hand")
             .long("hand")
@@ -227,8 +243,14 @@ pub fn with_common_args<FnWithArgs>(
                         }
                         stichseq.zugeben(card, rules);
                     }
-                    let epi_position = clapmatches.value_of_t("position")
-                        .unwrap_or_else(|_|unwrap!(stichseq.current_stich().current_playerindex()));
+                    let epi_position = match unwrap!(clapmatches.get_one("position")) {
+						VUserSuppliedPosition::CurrentPlayer => {
+							unwrap!(stichseq.current_stich().current_playerindex())
+						},
+						VUserSuppliedPosition::Concrete(epi_position) => {
+							*epi_position
+						}
+					};
                     if_then_some!(
                         stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(), // TODO Allow to specify more than only currently held cards if compatible with stichseq
                         (SHand::new_from_iter(vecocard_hand.iter().flatten()), epi_position)
