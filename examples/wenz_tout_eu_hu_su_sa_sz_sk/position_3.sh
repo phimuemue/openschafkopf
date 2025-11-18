@@ -4,7 +4,7 @@ N_SIMULATE_HANDS=1000000
 
 target/release/openschafkopf hand-stats \
     --rules "wenz tout von 3" \
-    --position 3 \
+    --position rulesannouncer \
     --hand "eu hu su sa sz sk" \
     --simulate-hands $N_SIMULATE_HANDS \
     --inspect '

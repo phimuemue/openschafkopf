@@ -27,5 +27,5 @@ echo "Can also be confirmed more comfortably:"
     --cards-on-table "ha hk ea h8  gu ez eu e7  sk s7 ek sa  su g7 e8 hu" \
     --hand "eo e9 gz g9" \
     --points \
-    --position 2
+    --position rulesannouncer
         

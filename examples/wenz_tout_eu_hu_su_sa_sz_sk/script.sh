@@ -5,7 +5,7 @@ EPI_POSITION=3
 
 target/release/openschafkopf hand-stats \
     --rules "wenz tout von $EPI_POSITION" \
-    --position $EPI_POSITION \
+    --position rulesannouncer \
     --hand "eu hu su sa sz sk" \
     --simulate-hands $N_SIMULATE_HANDS \
     --inspect '
