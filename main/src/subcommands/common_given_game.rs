@@ -232,6 +232,12 @@ pub fn with_common_args<FnWithArgs>(
         };
         for rules in itrules {
             let rules = &rules;
+			let oepi_position_concrete = match unwrap!(clapmatches.get_one("position")) {
+				VUserSuppliedPosition::CurrentPlayer => None, // To be determined with stichseq
+				VUserSuppliedPosition::Concrete(epi_position_concrete) => {
+					Some(*epi_position_concrete)
+				}
+			};
             let (stichseq, ahand_with_holes, epi_position) = EKurzLang::values()
                 .filter_map(|ekurzlang| {
                     let mut stichseq = SStichSequence::new(ekurzlang);
@@ -243,14 +249,9 @@ pub fn with_common_args<FnWithArgs>(
                         }
                         stichseq.zugeben(card, rules);
                     }
-                    let epi_position = match unwrap!(clapmatches.get_one("position")) {
-						VUserSuppliedPosition::CurrentPlayer => {
-							unwrap!(stichseq.current_stich().current_playerindex())
-						},
-						VUserSuppliedPosition::Concrete(epi_position) => {
-							*epi_position
-						}
-					};
+                    let epi_position = oepi_position_concrete.unwrap_or_else(||
+						unwrap!(stichseq.current_stich().current_playerindex())
+					);
                     if_then_some!(
                         stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(), // TODO Allow to specify more than only currently held cards if compatible with stichseq
                         (SHand::new_from_iter(vecocard_hand.iter().flatten()), epi_position)
@@ -275,6 +276,9 @@ pub fn with_common_args<FnWithArgs>(
                 })
                 .exactly_one()
                 .map_err(|err| format_err!("Could not determine ekurzlang: {}", err))?;
+			assert!(
+				oepi_position_concrete.is_none() || oepi_position_concrete==Some(epi_position)
+			);
             // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
             if let Some(epi_active) = rules.playerindex() {
                 let veccard_hand_active = stichseq.cards_from_player(&ahand_with_holes[epi_active], epi_active)
