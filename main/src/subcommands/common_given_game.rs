@@ -31,7 +31,7 @@ enum VChooseItAhand {
 enum VUserSuppliedPosition {
 	CurrentPlayer,
 	Concrete(EPlayerIndex),
-	// TODO ActivePlayer,
+	RulesAnnouncer,
 }
 
 pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::Command<'static> {
@@ -58,7 +58,8 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
 					"2" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI2)),
 					"3" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI3)),
 					"current" => Ok(VUserSuppliedPosition::CurrentPlayer),
-					_ => Err(format!("{str_position} not recognized. Supported values: 0, 1, 2, 3, current."))
+					"rulesannouncer" => Ok(VUserSuppliedPosition::RulesAnnouncer),
+					_ => Err(format!("{str_position} not recognized. Supported values: 0, 1, 2, 3, current, rulesannouncer."))
 				}
 			})
             .default_value("current")
@@ -237,6 +238,12 @@ pub fn with_common_args<FnWithArgs>(
 				VUserSuppliedPosition::Concrete(epi_position_concrete) => {
 					Some(*epi_position_concrete)
 				}
+				VUserSuppliedPosition::RulesAnnouncer => {
+					Some(
+						rules.playerindex()
+							.ok_or_else(||format_err!("Rules are not 'announced'."))?
+					)
+				},
 			};
             let (stichseq, ahand_with_holes, epi_position) = EKurzLang::values()
                 .filter_map(|ekurzlang| {
