@@ -260,7 +260,7 @@ pub fn with_common_args<FnWithArgs>(
 						unwrap!(stichseq.current_stich().current_playerindex())
 					);
                     if_then_some!(
-                        stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(), // TODO Allow to specify more than only currently held cards if compatible with stichseq
+                        stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
                         (SHand::new_from_iter(vecocard_hand.iter().flatten()), epi_position)
                             .to_ahand()
                     ).or_else(|| {
