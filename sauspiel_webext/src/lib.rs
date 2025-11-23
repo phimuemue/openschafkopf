@@ -211,12 +211,15 @@ pub fn greet() {
             fn epi_to_sauspiel_position(epi: EPlayerIndex) -> usize {
                 epi.to_usize() + 1
             }
-            fn output_position_and_cards_sauspiel_img(epi: EPlayerIndex, mut veccard: Vec<ECard>, trumpfdecider: &STrumpfDecider) -> impl html_generator::AttributeOrChild {
+            fn output_cards_sauspiel_img_as_spans(mut veccard: Vec<ECard>, trumpfdecider: &STrumpfDecider) -> impl html_generator::AttributeOrChild {
+                use html_generator::*;
                 trumpfdecider.sort_cards(&mut veccard);
-                use html_generator::*; // TODO narrower scope?
+                html_iter(veccard.into_iter().map(|card| internal_output_card_sauspiel_img(card, "".into())))
+            }
+            fn output_position_and_cards_sauspiel_img(epi: EPlayerIndex, veccard: Vec<ECard>, trumpfdecider: &STrumpfDecider) -> impl html_generator::AttributeOrChild {
                 (
                     format!("({})", epi_to_sauspiel_position(epi)),
-                    html_iter(veccard.into_iter().map(|card| internal_output_card_sauspiel_img(card, "".into())))
+                    output_cards_sauspiel_img_as_spans(veccard, trumpfdecider)
                 )
             }
             for epi in EPlayerIndex::values() {
@@ -427,92 +430,110 @@ pub fn greet() {
                 }
                 attributes::style(str_style)
             };
-            node_whole_game.set_inner_html(&table(tbody((
-                tr((
-                    th(()), // empty cell to match subsequent rows // TODO merge with next row's cell?
-                    html_table_gap_cell.clone(),
-                    th((
-                        colspan(format!("{}", itepi_cycled_twice.clone().count())),
-                        "Karten",
-                    )),
-                    html_table_gap_cell.clone(),
-                    th((
-                        colspan(format!("{}", EPlayerIndex::SIZE)),
-                        "Augen", // "Augen" as used by sauspiel.de
-                    )),
-                )),
-                tr((
-                    th(()), // empty cell to match subsequent rows
-                    html_table_gap_cell.clone(),
-                    html_iter(itepi_cycled_twice.clone().map(|epi_header| {
-                        table_cell_with_background("th", format!("{}", epi_to_sauspiel_position(epi_header)), &mapepiocardseverity[epi_header])
-                    })),
-                    html_table_gap_cell.clone(),
-                    html_iter(EPlayerIndex::values().map(|epi_points|
-                        th((
-                            points_cell_style(/*b_border_top*/false, epi_points),
-                            format!("{}", epi_to_sauspiel_position(epi_points)),
-                        ))
+            node_whole_game.set_inner_html(&html_display_children((
+                // TODO Spielansage
+                table((
+                    attributes::style("border-collapse: separate; border-spacing: 0 5px;"), // space between lines
+                    tbody((
+                        html_iter(EPlayerIndex::values().map(|epi_hand| tr((
+                            td(format!("({})", epi_to_sauspiel_position(epi_hand))),
+                            html_table_gap_cell.clone(),
+                            td(output_cards_sauspiel_img_as_spans(
+                                game_finished.aveccard[epi_hand].to_vec(),
+                                &rules.trumpfdecider(),
+                            )),
+                            html_table_gap_cell.clone(),
+                            td(format!(" Karten von {}", mapepistr_username[epi_hand])),
+                        )))),
                     )),
                 )),
-                vecepicardocardseverity.chunks(EPlayerIndex::SIZE).zip_eq(game_finished.stichseq.completed_stichs_winner_index(&game_finished.rules)).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
+                table(tbody((
                     tr((
-                        table_cell_with_background(
-                            "td",
-                            /*str_text*/format!("{}. Stich", i_stich+1),
-                            unwrap!(slcepicardocardseverity_stich.iter().map(|(_epi, _card, ocardseverity)| ocardseverity).max()),
-                        ),
+                        th(()), // empty cell to match subsequent rows // TODO merge with next row's cell?
                         html_table_gap_cell.clone(),
-                        html_iter(itertools::merge_join_by(
-                            itepi_cycled_twice.clone(),
-                            slcepicardocardseverity_stich,
-                            |epi_running_index, (epi_card, _card, _ocardseverity)| {
-                                epi_running_index.cmp(epi_card)
-                            },
-                        ).map(move |eitherorboth| td(match eitherorboth {
-                            EitherOrBoth::Left(_epi_running_index) => None,
-                            EitherOrBoth::Both(epi_running_index, (epi_card, card, ocardseverity)) => {
-                                assert_eq!(epi_running_index, *epi_card);
-                                let str_color = match ocardseverity {
-                                    Some(EPlayedCardSeverity::Optimal) => "#78db00", // green
-                                    Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
-                                    None => "lightgrey",
-                                };
-                                Some(internal_output_card_sauspiel_img(*card, format!("border-top: 5px solid {str_color};box-sizing: content-box;")))
-                            },
-                            EitherOrBoth::Right(_) => panic!(),
-                        }))),
+                        th((
+                            colspan(format!("{}", itepi_cycled_twice.clone().count())),
+                            "Karten",
+                        )),
                         html_table_gap_cell.clone(),
-                        html_iter(EPlayerIndex::values().map(move |epi_points| 
-                            td((
+                        th((
+                            colspan(format!("{}", EPlayerIndex::SIZE)),
+                            "Augen", // "Augen" as used by sauspiel.de
+                        )),
+                    )),
+                    tr((
+                        th(()), // empty cell to match subsequent rows
+                        html_table_gap_cell.clone(),
+                        html_iter(itepi_cycled_twice.clone().map(|epi_header| {
+                            table_cell_with_background("th", format!("{}", epi_to_sauspiel_position(epi_header)), &mapepiocardseverity[epi_header])
+                        })),
+                        html_table_gap_cell.clone(),
+                        html_iter(EPlayerIndex::values().map(|epi_points|
+                            th((
                                 points_cell_style(/*b_border_top*/false, epi_points),
-                                if_then_some!(epi_points==epi_winner, format!("{}", points_stich(stich))),
+                                format!("{}", epi_to_sauspiel_position(epi_points)),
                             ))
                         )),
-                    ))
-                })
-                .collect::<Vec<_>>(), // TODO avoid
-                tr((
-                    td(colspan(format!("{}", // TODO(html_generator) support format_args
-                        1 // Column "i-th Stich"
-                        + 1 // html_table_gap_cell
-                        + itepi_cycled_twice.clone().count()
-                        + 1 // html_table_gap_cell
-                    ))),
-                    html_iter(EPlayerIndex::values().map(|epi_points| {
-                        td((
-                            points_cell_style(/*b_border_top*/true, epi_points),
-                            format!("{}",
-                                game_finished.stichseq.completed_stichs_winner_index(&game_finished.rules)
-                                    .filter_map(|(stich, epi_winner)|
-                                        if_then_some!(epi_points==epi_winner, points_stich(stich))
-                                    )
-                                    .sum::<isize>()
+                    )),
+                    vecepicardocardseverity.chunks(EPlayerIndex::SIZE).zip_eq(game_finished.stichseq.completed_stichs_winner_index(&game_finished.rules)).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
+                        tr((
+                            table_cell_with_background(
+                                "td",
+                                /*str_text*/format!("{}. Stich", i_stich+1),
+                                unwrap!(slcepicardocardseverity_stich.iter().map(|(_epi, _card, ocardseverity)| ocardseverity).max()),
                             ),
+                            html_table_gap_cell.clone(),
+                            html_iter(itertools::merge_join_by(
+                                itepi_cycled_twice.clone(),
+                                slcepicardocardseverity_stich,
+                                |epi_running_index, (epi_card, _card, _ocardseverity)| {
+                                    epi_running_index.cmp(epi_card)
+                                },
+                            ).map(move |eitherorboth| td(match eitherorboth {
+                                EitherOrBoth::Left(_epi_running_index) => None,
+                                EitherOrBoth::Both(epi_running_index, (epi_card, card, ocardseverity)) => {
+                                    assert_eq!(epi_running_index, *epi_card);
+                                    let str_color = match ocardseverity {
+                                        Some(EPlayedCardSeverity::Optimal) => "#78db00", // green
+                                        Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
+                                        None => "lightgrey",
+                                    };
+                                    Some(internal_output_card_sauspiel_img(*card, format!("border-top: 5px solid {str_color};box-sizing: content-box;")))
+                                },
+                                EitherOrBoth::Right(_) => panic!(),
+                            }))),
+                            html_table_gap_cell.clone(),
+                            html_iter(EPlayerIndex::values().map(move |epi_points| 
+                                td((
+                                    points_cell_style(/*b_border_top*/false, epi_points),
+                                    if_then_some!(epi_points==epi_winner, format!("{}", points_stich(stich))),
+                                ))
+                            )),
                         ))
+                    })
+                    .collect::<Vec<_>>(), // TODO avoid
+                    tr((
+                        td(colspan(format!("{}", // TODO(html_generator) support format_args
+                            1 // Column "i-th Stich"
+                            + 1 // html_table_gap_cell
+                            + itepi_cycled_twice.clone().count()
+                            + 1 // html_table_gap_cell
+                        ))),
+                        html_iter(EPlayerIndex::values().map(|epi_points| {
+                            td((
+                                points_cell_style(/*b_border_top*/true, epi_points),
+                                format!("{}",
+                                    game_finished.stichseq.completed_stichs_winner_index(&game_finished.rules)
+                                        .filter_map(|(stich, epi_winner)|
+                                            if_then_some!(epi_points==epi_winner, points_stich(stich))
+                                        )
+                                        .sum::<isize>()
+                                ),
+                            ))
 
-                    })),
-                ))
+                        })),
+                    )),
+                )),
             ))).to_string());
             unwrap!(node_gameannouncements.append_with_node_1(&node_whole_game));
         },
