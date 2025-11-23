@@ -211,18 +211,18 @@ pub fn greet() {
             fn epi_to_sauspiel_position(epi: EPlayerIndex) -> usize {
                 epi.to_usize() + 1
             }
-            fn output_position_and_cards_sauspiel_img(epi: EPlayerIndex, slccard: &mut [ECard], trumpfdecider: &STrumpfDecider) -> String {
-                trumpfdecider.sort_cards(slccard);
-                let mut str_position_and_cards = format!("({})", epi_to_sauspiel_position(epi));
-                for card in slccard {
-                    str_position_and_cards += &internal_output_card_sauspiel_img(*card, "".into()).to_string();
-                }
-                str_position_and_cards
+            fn output_position_and_cards_sauspiel_img(epi: EPlayerIndex, mut veccard: Vec<ECard>, trumpfdecider: &STrumpfDecider) -> impl html_generator::AttributeOrChild {
+                trumpfdecider.sort_cards(&mut veccard);
+                use html_generator::*; // TODO narrower scope?
+                (
+                    format!("({})", epi_to_sauspiel_position(epi)),
+                    html_iter(veccard.into_iter().map(|card| internal_output_card_sauspiel_img(card, "".into())))
+                )
             }
             for epi in EPlayerIndex::values() {
                 let prepend_cards = |slcschlag_trumpf: &'static [ESchlag], oefarbe_trumpf: Option<EFarbe>, node: &web_sys::Element| {
                     node.set_inner_html(&format!("{} {}",
-                        output_position_and_cards_sauspiel_img(epi, &mut game_finished.aveccard[epi].clone(), &STrumpfDecider::new(slcschlag_trumpf, oefarbe_trumpf)),
+                        html_display_children(output_position_and_cards_sauspiel_img(epi, game_finished.aveccard[epi].to_vec(), &STrumpfDecider::new(slcschlag_trumpf, oefarbe_trumpf))),
                         node.inner_html()),
                     );
                 };
@@ -291,13 +291,13 @@ pub fn greet() {
             let rules = &game_finished.rules;
             let node_gameannouncements = unwrap!(node_gameannouncement_epi0.parent_element()); // TODO? Find common predecessor of all nodes in game_finished.mapepigameannouncement?
             { // Add doublings and stoss to protocol
-                let node_doubling_or_stoss = |epi, mut veccard: Vec<ECard>, str_explanation, trumpfdecider| {
+                let node_doubling_or_stoss = |epi, veccard: Vec<ECard>, str_explanation, trumpfdecider| {
                     let node_doubling_or_stoss = unwrap!(
                         unwrap!(node_gameannouncement_epi0.clone_node())
                             .dyn_into::<web_sys::Element>() // TODO can we avoid this?
                     );
                     node_doubling_or_stoss.set_inner_html(&format!("{} {} {}",
-                        output_position_and_cards_sauspiel_img(epi, &mut veccard, trumpfdecider),
+                        html_display_children(output_position_and_cards_sauspiel_img(epi, veccard, trumpfdecider)),
                         mapepistr_username[epi],
                         str_explanation,
                     ));
