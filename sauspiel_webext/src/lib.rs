@@ -420,13 +420,14 @@ pub fn greet() {
             for (epi, _card, ocardseverity) in vecepicardocardseverity.iter() {
                 assign_gt(&mut mapepiocardseverity[*epi], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
             }
+            const STR_STYLE_ACTIVE_PLAYER_BACKGROUND_COLOR : &str = "background-color: #11111111";
             let points_cell_style = |b_border_top: bool, epi: EPlayerIndex| {
                 let mut str_style = "padding: 5px;".to_string(); // TODO could html_generator solve this nicely?
                 if b_border_top {
                     str_style += "border-top: 1px solid black;";
                 }
                 if rules.playerindex() == Some(epi) { // TODO support "Mitspieler" for Rufspiel
-                    str_style += "background-color: #11111111";
+                    str_style += STR_STYLE_ACTIVE_PLAYER_BACKGROUND_COLOR;
                 }
                 attributes::style(str_style)
             };
@@ -436,14 +437,19 @@ pub fn greet() {
                     attributes::style("border-collapse: separate; border-spacing: 0 5px;"), // space between lines
                     tbody((
                         html_iter(EPlayerIndex::values().map(|epi_hand| tr((
-                            td(format!("({})", epi_to_sauspiel_position(epi_hand))),
-                            html_table_gap_cell.clone(),
-                            td(output_cards_sauspiel_img_as_spans(
-                                game_finished.aveccard[epi_hand].to_vec(),
-                                rules.trumpfdecider(),
-                            )),
-                            html_table_gap_cell.clone(),
-                            td(format!(" Karten von {}", mapepistr_username[epi_hand])),
+                            if_then_some!(Some(epi_hand)==rules.playerindex(),
+                                attributes::style(STR_STYLE_ACTIVE_PLAYER_BACKGROUND_COLOR)
+                            ),
+                            (
+                                td(format!("({})", epi_to_sauspiel_position(epi_hand))),
+                                html_table_gap_cell.clone(),
+                                td(output_cards_sauspiel_img_as_spans(
+                                    game_finished.aveccard[epi_hand].to_vec(),
+                                    rules.trumpfdecider(),
+                                )),
+                                html_table_gap_cell.clone(),
+                                td(format!(" Karten von {}", mapepistr_username[epi_hand])),
+                            )
                         )))),
                     )),
                 )),
