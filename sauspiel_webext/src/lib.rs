@@ -440,7 +440,7 @@ pub fn greet() {
                             html_table_gap_cell.clone(),
                             td(output_cards_sauspiel_img_as_spans(
                                 game_finished.aveccard[epi_hand].to_vec(),
-                                &rules.trumpfdecider(),
+                                rules.trumpfdecider(),
                             )),
                             html_table_gap_cell.clone(),
                             td(format!(" Karten von {}", mapepistr_username[epi_hand])),
