@@ -111,7 +111,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
     }
     impl_single_play!();
 
-    fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payout_no_invariant(&self, if_dbg_else!({stichseq}{_stichseq}): SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
         let playerparties13 = SPlayerParties13::new(self.epi);
         internal_payout(
             /*n_payout_primary_unmultiplied*/ self.n_payout_base.neg_if(!/*b_primary_party_wins*/debug_verify_eq!(
@@ -123,7 +123,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
 
-    fn payouthints(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, if_dbg_else!({tplahandstichseq}{_tplahandstichseq}): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         let playerparties13 = SPlayerParties13::new(self.epi);
         if debug_verify_eq!(
             0 < rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich,
