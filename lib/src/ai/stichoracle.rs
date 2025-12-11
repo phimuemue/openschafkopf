@@ -2470,12 +2470,12 @@ mod tests {
                         );
                         macro_rules! eq_on_field{($lhs:expr, $rhs:expr, $field:ident,) => {
                             assert_eq!(
-                                $lhs.iter().map(|(card, payoutstats)| (
+                                $lhs.iter().map(|(card, payoutstats)|
                                     (card, payoutstats.$field.clone())
-                                )).collect::<Vec<_>>(),
-                                $rhs.iter().map(|(card, payoutstats)| (
+                                ).collect::<Vec<_>>(),
+                                $rhs.iter().map(|(card, payoutstats)|
                                     (card, payoutstats.$field.clone())
-                                )).collect::<Vec<_>>(),
+                                ).collect::<Vec<_>>(),
                                 "\nRules:{} von {}\nHands:\n {}\nStichseq: {}\nStichs:\n",
                                 &game.rules,
                                 unwrap!(game.rules.playerindex()),
