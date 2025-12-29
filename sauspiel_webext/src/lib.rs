@@ -372,7 +372,7 @@ pub fn greet() {
                     });
                     append_sibling(&element_played_card, &div_table);
                     let get_min_max_eq = |payoutstats: &SMaxSelfishMinStrategy<SPayoutStats<()>>| {
-                        let payoutstats = &payoutstats.maxselfishmin.0;
+                        let payoutstats = &payoutstats.maxselfishmin.as_ref().unwrap_static_some().0;
                         verify_eq!(payoutstats.min(), payoutstats.max())
                     };
                     let (veccard_optimal, payoutstats_optimal) = determinebestcardresult.cards_with_maximum_value(

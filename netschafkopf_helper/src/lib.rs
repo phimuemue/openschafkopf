@@ -616,7 +616,7 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
             );
             let veccard_suggestion_openschafkopf = determinebestcardresult.cards_and_ts()
                 .max_set_by_key(|&(_card, payoutstatsperstrategy)|
-                    payoutstatsperstrategy.maxselfishmin.0.min()
+                    payoutstatsperstrategy.maxselfishmin.as_ref().unwrap_static_some().0.min()
                 )
                 .into_iter()
                 .map(|(card, _payoutstatsperstrategy)| card)

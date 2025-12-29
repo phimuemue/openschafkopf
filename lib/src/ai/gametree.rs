@@ -494,7 +494,7 @@ macro_rules! impl_perminmaxstrategy{(
     #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
     pub struct $struct<T> {
         // TODO? pub a good idea?
-        $(pub $ident_strategy: $emmstrategy<T>,)*
+        $(pub $ident_strategy: StaticOption<$emmstrategy<T>, SIsSomeTrue>,)*
     }
 
     #[derive(Serialize, Clone)] // TODO this should not be needed
@@ -513,7 +513,7 @@ macro_rules! impl_perminmaxstrategy{(
             where T: Clone
         {
             Self {
-                $($ident_strategy: $emmstrategy::new(t.clone()),)* // TODO can we avoid one clone call?
+                $($ident_strategy: StaticOption::<_, SIsSomeTrue>::new_with(|| $emmstrategy::new(t.clone())),)* // TODO can we avoid one clone call?
             }
         }
 
@@ -522,7 +522,7 @@ macro_rules! impl_perminmaxstrategy{(
                 $($ident_strategy,)*
             } = self;
             $struct{
-                $($ident_strategy: $emmstrategy::new(f(&$ident_strategy.0)),)*
+                $($ident_strategy: $ident_strategy.as_ref().map(|t| $emmstrategy::new(f(&t.0))),)*
             }
         }
 
@@ -534,17 +534,25 @@ macro_rules! impl_perminmaxstrategy{(
             let $struct{
                 $($ident_strategy,)*
             } = other;
-            $(fn_modify_element(&mut self.$ident_strategy.0, &$ident_strategy.0);)*
+            $(
+                self.$ident_strategy.as_mut().tuple_2($ident_strategy.as_ref())
+                    .map(|(t, t1)| fn_modify_element(&mut t.0, &t1.0)); // TODO good idea to use "map" to call a function?
+            )*
         }
 
         fn via_accessors(&self) -> Vec<(EMinMaxStrategy, &T)> {
-            [$((EMinMaxStrategy::$emmstrategy, &self.$ident_strategy.0),)*].into()
+            [$(
+                (EMinMaxStrategy::$emmstrategy, self.$ident_strategy.as_ref().map(|t| &t.0).into_option()),
+            )*]
+                .into_iter()
+                .filter_map(|(emmstrategy, ot)| ot.map(|t| (emmstrategy, t)))
+                .collect()
         }
 
-        fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&T)] { // TODO is there a better alternative?
+        fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->Option<&T>)] { // TODO is there a better alternative?
             use EMinMaxStrategy::*;
             &[
-                $(($emmstrategy, (|slf: &Self| &slf.$ident_strategy.0) as fn(&Self) -> &T),)*
+                $(($emmstrategy, (|slf: &Self| slf.$ident_strategy.as_ref().into_option().map(|t| &t.0)) as fn(&Self) -> Option<&T>),)*
             ]
         }
         fn compare_canonical<PayoutStatsPayload: Ord+Copy>(&self, other: &Self, fn_loss_or_win: impl Fn(isize, PayoutStatsPayload)->std::cmp::Ordering) -> std::cmp::Ordering where T: Borrow<SPayoutStats<PayoutStatsPayload>> {
@@ -553,23 +561,25 @@ macro_rules! impl_perminmaxstrategy{(
                 u128::cmp(&(numerator_lhs * denominator_rhs), &(denominator_lhs * numerator_rhs))
             }
             Equal
-                $(.then_with(|| {
-                    let payoutstats_lhs = self.$ident_strategy_cmp.0.borrow();
-                    let payoutstats_rhs = other.$ident_strategy_cmp.0.borrow();
-                    let mapordn_lhs = payoutstats_lhs.counts(&fn_loss_or_win).map_into(|n| n.as_num::<u128>());
-                    let mapordn_rhs = payoutstats_rhs.counts(&fn_loss_or_win).map_into(|n| n.as_num::<u128>());
-                    let compare_winning_probability_internal = |ord| compare_fractions(
-                        (mapordn_lhs[ord], mapordn_lhs.iter().sum()),
-                        (mapordn_rhs[ord], mapordn_rhs.iter().sum()),
-                    );
-                    compare_winning_probability_internal(Greater)
-                        .then_with(|| compare_winning_probability_internal(Less).reverse())
-                        .then_with(|| match unwrap!(payoutstats_lhs.avg().partial_cmp(&payoutstats_rhs.avg())) {
-                            Greater => Greater,
-                            Less => Less,
-                            Equal => payoutstats_lhs.max().cmp(&payoutstats_rhs.max()),
-                        })
-                }))+
+                $(.then_with(|| self.$ident_strategy_cmp.as_ref().tuple_2(other.$ident_strategy_cmp.as_ref())
+                    .map_or_else(/*default*/|| Equal, |(lhs, rhs)| {
+                        let payoutstats_lhs = lhs.0.borrow();
+                        let payoutstats_rhs = rhs.0.borrow();
+                        let mapordn_lhs = payoutstats_lhs.counts(&fn_loss_or_win).map_into(|n| n.as_num::<u128>());
+                        let mapordn_rhs = payoutstats_rhs.counts(&fn_loss_or_win).map_into(|n| n.as_num::<u128>());
+                        let compare_winning_probability_internal = |ord| compare_fractions(
+                            (mapordn_lhs[ord], mapordn_lhs.iter().sum()),
+                            (mapordn_rhs[ord], mapordn_rhs.iter().sum()),
+                        );
+                        compare_winning_probability_internal(Greater)
+                            .then_with(|| compare_winning_probability_internal(Less).reverse())
+                            .then_with(|| match unwrap!(payoutstats_lhs.avg().partial_cmp(&payoutstats_rhs.avg())) {
+                                Greater => Greater,
+                                Less => Less,
+                                Equal => payoutstats_lhs.max().cmp(&payoutstats_rhs.max()),
+                            })
+                    })
+                ))+
         }
     }
     impl TMinMaxStrategiesInternal<$struct_higher_kinded> for $struct<EnumMap<EPlayerIndex, isize>> {
@@ -577,18 +587,24 @@ macro_rules! impl_perminmaxstrategy{(
             let $struct{
                 $($ident_strategy,)*
             } = other;
-            $(self.$ident_strategy.assign_minmax_self($ident_strategy, epi_self);)*
+            $(
+                self.$ident_strategy.as_mut().tuple_2($ident_strategy)
+                    .map(|(lhs, rhs)| lhs.assign_minmax_self(rhs, epi_self)); // TODO good idea to use "map" to call a function?
+            )*
         }
 
         fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex) {
             let $struct{
                 $($ident_strategy,)*
             } = other;
-            $(self.$ident_strategy.assign_minmax_other($ident_strategy, epi_self, epi_card);)*
+            $(
+                self.$ident_strategy.as_mut().tuple_2($ident_strategy)
+                    .map(|(lhs, rhs)| lhs.assign_minmax_other(rhs, epi_self, epi_card)); // TODO good idea to use "map" to call a function?
+            )*
         }
 
         fn maxmin_for_pruner(&self, epi_self: EPlayerIndex) -> isize {
-            self.$ident_strategy_maxmin_for_pruner.0[epi_self]
+            self.$ident_strategy_maxmin_for_pruner.as_ref().unwrap_static_some().0[epi_self]
         }
     }
 }}
@@ -744,7 +760,7 @@ pub trait TMinMaxStrategies : TGenericArgs1 {
     fn via_accessors(&self) -> Vec<(EMinMaxStrategy, &<Self as TGenericArgs1>::Arg0)>
         where
             <Self as TGenericArgs1>::Arg0: 'static; // TODO why is this needed?
-    fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->&<Self as TGenericArgs1>::Arg0)]; // TODO is there a better alternative?
+    fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->Option<&<Self as TGenericArgs1>::Arg0>)]; // TODO is there a better alternative?
     fn compare_canonical<PayoutStatsPayload: Ord+Copy>(&self, other: &Self, fn_loss_or_win: impl Fn(isize, PayoutStatsPayload)->std::cmp::Ordering) -> std::cmp::Ordering where <Self as TGenericArgs1>::Arg0: Borrow<SPayoutStats<PayoutStatsPayload>>;
 }
 pub trait TMinMaxStrategiesInternal<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded> :
