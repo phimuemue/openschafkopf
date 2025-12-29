@@ -551,23 +551,23 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         ));
         for card in [H7, H8, H9] {
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.minmin.0.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.minmin.unwrap_static_some().0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxmin.0.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxmin.unwrap_static_some().0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxselfishmin.0.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxselfishmin.unwrap_static_some().0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxselfishmax.0.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxselfishmax.unwrap_static_some().0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxmax.0.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxmax.unwrap_static_some().0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
         }

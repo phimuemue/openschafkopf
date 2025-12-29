@@ -166,14 +166,14 @@ fn analyze_game(
                 let look_for_mistakes = |determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>| {
                     macro_rules! look_for_mistake{($strategy:ident, $emistake:expr) => {{
                         let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(
-                            |minmax_lhs, minmax_rhs| minmax_lhs.$strategy.0.min().cmp(&minmax_rhs.$strategy.0.min())
+                            |minmax_lhs, minmax_rhs| minmax_lhs.$strategy.as_ref().unwrap_static_some().0.min().cmp(&minmax_rhs.$strategy.as_ref().unwrap_static_some().0.min())
                         );
                         if_then_some!(
-                            an_payout[epi_zugeben]<minmax.$strategy.0.min()
+                            an_payout[epi_zugeben]<minmax.$strategy.as_ref().unwrap_static_some().0.min()
                                 && !veccard.contains(&card_played), // TODO can we improve this?
                             SAnalysisCardAndPayout{
                                 veccard,
-                                n_payout: minmax.$strategy.0.min(),
+                                n_payout: minmax.$strategy.as_ref().unwrap_static_some().0.min(),
                                 emistake: $emistake,
                             }
                         ) // else The decisive mistake must occur in subsequent stichs. TODO assert that it actually occurs
@@ -480,12 +480,11 @@ impl SGameAnalysis {
                                     td(format!("{}/{}", i_stich+1, i_card+1)) // TODO(html_generator) avoid creation of String
                             ))),
                             html_iter(SPerMinMaxStrategy::accessors().iter().rev().map(|(_emmstrategy, fn_value_for_strategy)| {
-                                tr(html_iter(vecpossiblepayout.iter().map(|SPossiblePayout(determinebestcardresult, (_i_stich, _i_card))|
-                                    td(format!("{}", // TODO(html_generator) avoid creation of String
-                                        fn_value_for_strategy(&determinebestcardresult
-                                            .t_combined
-                                            .map(|payoutstats| verify_eq!(payoutstats.min(), payoutstats.max()))),
-                                    ))
+                                tr(html_iter(vecpossiblepayout.iter().filter_map(|SPossiblePayout(determinebestcardresult, (_i_stich, _i_card))|
+                                    fn_value_for_strategy(&determinebestcardresult
+                                        .t_combined
+                                        .map(|payoutstats| verify_eq!(payoutstats.min(), payoutstats.max())))
+                                        .map(|t| td(format!("{t}"))) // TODO(html_generator) avoid creation of String
                                 )))
                             })),
                         ))
