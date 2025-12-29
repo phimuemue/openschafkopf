@@ -22,8 +22,8 @@ use std::io::IsTerminal;
 use std::sync::{Arc, Mutex};
 
 // TODO? can we make this a fn of SPayoutStatsTable?
-fn print_payoutstatstable<T: std::fmt::Display, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(
-    payoutstatstable: &SPayoutStatsTable<T, MinMaxStrategiesHK>,
+fn print_payoutstatstable<T: std::fmt::Display, TplStrategies: TTplStrategies>(
+    payoutstatstable: &SPayoutStatsTable<T, TplStrategies>,
     b_print_table_description_before_table: bool
 ) {
     let slcoutputline = &payoutstatstable.output_lines();
@@ -147,26 +147,23 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
 }
 
 #[derive(new, Serialize)]
-struct SJsonTableLine<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>
+struct SJsonTableLine<TplStrategies: TTplStrategies>
     where
-        MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
+        SPerMinMaxStrategyGeneric<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>, TplStrategies>: Serialize,
 {
     ostr_header: Option<String>,
-    perminmaxstrategyvecpayout_histogram: MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>,
+    perminmaxstrategyvecpayout_histogram: SPerMinMaxStrategyGeneric<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>, TplStrategies>,
 }
 
 #[derive(new, Serialize)]
-struct SJson<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>
-    where
-        MinMaxStrategiesHK::Type<Vec<((isize/*n_payout*/, char/*chr_loss_or_win*/), usize/*n_count*/)>>: Serialize,
-{
+struct SJson<TplStrategies: TTplStrategies> {
     str_rules: String,
     astr_hand: [String; EPlayerIndex::SIZE],
-    vectableline: Vec<SJsonTableLine<MinMaxStrategiesHK>>,
+    vectableline: Vec<SJsonTableLine<TplStrategies>>,
 }
 
-fn json_histograms<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(payoutstatsperstrategy: &MinMaxStrategiesHK::Type<SPayoutStats<std::cmp::Ordering>>)
-    -> MinMaxStrategiesHK::Type<Vec<((isize, char), usize)>>
+fn json_histograms<TplStrategies: TTplStrategies>(payoutstatsperstrategy: &SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>)
+    -> SPerMinMaxStrategyGeneric<Vec<((isize, char), usize)>, TplStrategies>
 {
     payoutstatsperstrategy.map(|payoutstats| 
         payoutstats.histogram().iter()
@@ -198,15 +195,12 @@ enum ESingleStrategy {
     MaxSelfishMin,
 }
 
-fn make_snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(rules: &SRules) -> impl Fn(&SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>> + '_
-    where
-        MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+std::fmt::Debug+Clone,
-{
-    move |rulestatecache| rules.snapshot_cache::<MinMaxStrategiesHK>(rulestatecache)
+fn make_snapshot_cache<TplStrategies: TTplStrategies>(rules: &SRules) -> impl Fn(&SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>> + '_ {
+    move |rulestatecache| rules.snapshot_cache::<TplStrategies>(rulestatecache)
 }
 
 #[allow(clippy::extra_unused_type_parameters)]
-fn make_snapshot_cache_none<MinMaxStrategiesHK>(_rules: &SRules) -> impl Fn(&SRuleStateCacheFixed)->SSnapshotCacheNone {
+fn make_snapshot_cache_none<TplStrategies>(_rules: &SRules) -> impl Fn(&SRuleStateCacheFixed)->SSnapshotCacheNone {
     SSnapshotCacheNone::factory()
 }
 
@@ -255,8 +249,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             }?;
             let fn_loss_or_win = |_n_payout, ord_vs_0| ord_vs_0;
             // we are interested in payout => single-card-optimization useless
-            macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($MinMaxStrategiesHK:ident, $fn_alphabetapruner:expr,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
-                type PayoutStats = <$MinMaxStrategiesHK as TMinMaxStrategiesHigherKinded>::Type<SPayoutStats<std::cmp::Ordering>>;
+            macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($TplStrategies:ident, $fn_alphabetapruner:expr,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
+                type PayoutStats = SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, $TplStrategies>;
                 #[derive(Debug, Clone)]
                 enum VRankChange { // Lower ranks considered better.
                     Change(ELoHi),
@@ -302,14 +296,14 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             })
                     ) as Box<_>,
                     $func_filter_allowed_cards,
-                    &|stichseq, ahand| <SMinReachablePayoutBase<$pruner, $MinMaxStrategiesHK, _>>::new_with_pruner(
+                    &|stichseq, ahand| <SMinReachablePayoutBase<$pruner, $TplStrategies, _>>::new_with_pruner(
                         rules,
                         epi_position,
                         expensifiers.clone(),
                         #[allow(clippy::redundant_closure_call)]
                         $fn_alphabetapruner(stichseq, ahand),
                     ),
-                    $fn_snapshotcache::<$MinMaxStrategiesHK>(rules),
+                    $fn_snapshotcache::<$TplStrategies>(rules),
                     $fn_visualizer,
                     /*fn_inspect*/&|inspectionpoint, i_ahand, ahand| {
                         if let Some(ref vecinterimres) = ovecinterimres_verbose {
@@ -361,7 +355,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     } else {
                                         assert!(vecinterimres.is_sorted_by(fn_cmp_to_fn_le(fn_cmp_interim_result)));
                                     }
-                                    print_payoutstatstable::<_,$MinMaxStrategiesHK>(
+                                    print_payoutstatstable::<_,$TplStrategies>(
                                         &internal_table(
                                             vecinterimres.iter()
                                                 .map(|SInterimResult{ornkchg, card, payoutstats}| (
@@ -404,14 +398,14 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     .map(|(card, payoutstatsperstrategy)|
                                         SJsonTableLine::new(
                                             /*ostr_header*/Some(card.to_string()),
-                                            /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$MinMaxStrategiesHK>(payoutstatsperstrategy),
+                                            /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$TplStrategies>(payoutstatsperstrategy),
                                         )
                                     ),
                                 std::iter::once(SJsonTableLine::new(
                                     /*ostr_header*/Some("no-details".to_string()),
-                                    /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$MinMaxStrategiesHK>(&determinebestcardresult.t_combined),
+                                    /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$TplStrategies>(&determinebestcardresult.t_combined),
                                 )),
-                            ).collect::<Vec<SJsonTableLine<$MinMaxStrategiesHK>>>(),
+                            ).collect::<Vec<SJsonTableLine<$TplStrategies>>>(),
                         ),
                     )));
                 } else {
@@ -420,12 +414,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         rules,
                         &fn_loss_or_win,
                     );
-                    print_payoutstatstable::<_,$MinMaxStrategiesHK>(
+                    print_payoutstatstable::<_,$TplStrategies>(
                         &payoutstatstable,
                         /*b_print_table_description_before_table*/b_verbose,
                     );
                     println!("-----");
-                    print_payoutstatstable::<_,$MinMaxStrategiesHK>(
+                    print_payoutstatstable::<_,$TplStrategies>(
                         &internal_table(
                             vec!(("no-details", determinebestcardresult.t_combined)),
                             /*b_group*/false,
@@ -491,7 +485,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 },
                 match ((oesinglestrategy, clapmatches.is_present("abprune"), rules.alpha_beta_pruner_lohi_values())) {
                     (None, b_abprune, _) => (
-                        SPerMinMaxStrategyHigherKinded,
+                        STplStrategiesAll,
                         {
                             if b_abprune && b_verbose {
                                 println!("Warning: abprune not supported strategy/rules combination. Continuing without.");
@@ -500,11 +494,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         },
                     ),
                     (Some(ESingleStrategy::MaxMin), false, _) => (
-                        SMaxMinStrategyHigherKinded,
+                        STplStrategiesOnlyMaxMin,
                         |_stichseq, _ahand| SAlphaBetaPrunerNone,
                     ),
                     (Some(ESingleStrategy::MaxMin), true, _) => (
-                        SMaxMinStrategyHigherKinded,
+                        STplStrategiesOnlyMaxMin,
                         (|_stichseq, _ahand| SAlphaBetaPruner::new({
                             let mut mapepilohi = EPlayerIndex::map_from_fn(|_| ELoHi::Lo);
                             mapepilohi[epi_position] = ELoHi::Hi;
@@ -512,7 +506,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         })),
                     ),
                     (Some(ESingleStrategy::MaxSelfishMin), b_abprune@false, _) | (Some(ESingleStrategy::MaxSelfishMin), b_abprune@true, None) => (
-                        SMaxSelfishMinStrategyHigherKinded,
+                        STplStrategiesOnlyMaxSelfishMin,
                         {
                             if b_abprune && b_verbose {
                                 println!("Warning: abprune not supported strategy/rules combination. Continuing without.");
@@ -521,7 +515,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         },
                     ),
                     (Some(ESingleStrategy::MaxSelfishMin), true, Some(fn_alpha_beta_pruner_lohi_values)) => (
-                        SMaxSelfishMinStrategyHigherKinded,
+                        STplStrategiesOnlyMaxSelfishMin,
                         (|stichseq, ahand| SAlphaBetaPruner::new({
                             let mut mapepilohi = fn_alpha_beta_pruner_lohi_values(
                                 &SRuleStateCacheFixed::new(ahand, stichseq),

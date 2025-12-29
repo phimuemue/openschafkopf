@@ -22,10 +22,7 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
         None
     }
 
-    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(&self, rules: &SRulesSoloLike<Self>) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
-        where
-            MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone,
-    ;
+    fn snapshot_cache<TplStrategies: TTplStrategies>(&self, rules: &SRulesSoloLike<Self>) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>>;
 }
 
 pub trait TPayoutDeciderSoloLikeDefault : TPayoutDeciderSoloLike {
@@ -148,11 +145,8 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
         )
     )}
 
-    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(&self, rules: &SRulesSoloLike<Self>) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
-        where
-            MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone,
-    {
-        super::snapshot_cache_point_based::<MinMaxStrategiesHK, _>(SPlayerParties13::new(rules.epi))
+    fn snapshot_cache<TplStrategies: TTplStrategies>(&self, rules: &SRulesSoloLike<Self>) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>> {
+        super::snapshot_cache_point_based::<TplStrategies, _>(SPlayerParties13::new(rules.epi))
     }
 }
 
@@ -222,11 +216,8 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
         equivalent_when_on_same_hand_point_based(slccard_ordered)
     }
 
-    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(&self, rules: &SRulesSoloLike<Self>) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
-        where
-            MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone,
-    {
-        payoutdecider::snapshot_cache_points_monotonic::<MinMaxStrategiesHK>(
+    fn snapshot_cache<TplStrategies: TTplStrategies>(&self, rules: &SRulesSoloLike<Self>) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>> {
+        payoutdecider::snapshot_cache_points_monotonic::<TplStrategies>(
             SPlayerParties13::new(rules.epi),
             self.pointstowin.clone(),
         )
@@ -281,11 +272,8 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
         vec![slccard_ordered.to_vec()] // In Tout, neighboring cards are equivalent regardless of points_card.
     }
 
-    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(&self, rules: &SRulesSoloLike<Self>) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
-        where
-            MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone,
-    {
-        super::snapshot_cache_point_based::<MinMaxStrategiesHK, _>(SPlayerParties13::new(rules.epi))
+    fn snapshot_cache<TplStrategies: TTplStrategies>(&self, rules: &SRulesSoloLike<Self>) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>> {
+        super::snapshot_cache_point_based::<TplStrategies, _>(SPlayerParties13::new(rules.epi))
     }
 }
 
@@ -352,11 +340,8 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
         vec![slccard_ordered.to_vec()] // In Sie, neighboring cards are equivalent regardless of points_card.
     }
 
-    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(&self, rules: &SRulesSoloLike<Self>) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
-        where
-            MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone,
-    {
-        super::snapshot_cache_point_based::<MinMaxStrategiesHK, _>(SPlayerParties13::new(rules.epi))
+    fn snapshot_cache<TplStrategies: TTplStrategies>(&self, rules: &SRulesSoloLike<Self>) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>> {
+        super::snapshot_cache_point_based::<TplStrategies, _>(SPlayerParties13::new(rules.epi))
     }
 }
 
@@ -452,11 +437,8 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<PayoutDeci
         self.payoutdecider.points_as_payout(self)
     }
 
-    fn snapshot_cache<MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded>(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>>>
-        where
-            MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: PartialEq+fmt::Debug+Clone,
-    {
-        self.payoutdecider.snapshot_cache::<MinMaxStrategiesHK>(self)
+    fn snapshot_cache<TplStrategies: TTplStrategies>(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>> {
+        self.payoutdecider.snapshot_cache::<TplStrategies>(self)
     }
 
     fn heuristic_active_occurence_probability(&self) -> Option<f64> {

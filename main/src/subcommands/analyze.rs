@@ -178,8 +178,8 @@ fn analyze_game(
                             }
                         ) // else The decisive mistake must occur in subsequent stichs. TODO assert that it actually occurs
                     }}}
-                    look_for_mistake!(maxmin, EMistake::Min)
-                        .or_else(|| look_for_mistake!(maxselfishmin, EMistake::SelfishMin))
+                    look_for_mistake!(omaxmin, EMistake::Min)
+                        .or_else(|| look_for_mistake!(omaxselfishmin, EMistake::SelfishMin))
                 };
                 let epi_current = unwrap!(game.stichseq.current_stich().current_playerindex());
                 let look_for_mistakes_simulating = || {
@@ -506,7 +506,7 @@ impl SGameAnalysis {
                                     fn_output_card,
                                 ),
                             ))),
-                            html_payout_table::<_, SPerMinMaxStrategyHigherKinded>(
+                            html_payout_table::<_, _>(
                                 &game.rules,
                                 &analysispercard.ahand,
                                 &analysispercard.stichseq,

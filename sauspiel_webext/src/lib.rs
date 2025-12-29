@@ -6,7 +6,7 @@ mod utils;
 use wasm_bindgen::prelude::*;
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    ai::{SPayoutStats, determine_best_card, gametree::{SMaxSelfishMinStrategy, SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, SMaxSelfishMinStrategyHigherKinded}, stichoracle::SFilterByOracle},
+    ai::{SPayoutStats, determine_best_card, gametree::{SMaxSelfishMinStrategy, SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, STplStrategiesOnlyMaxSelfishMin}, stichoracle::SFilterByOracle},
     game::{first_hand_for, SGameResultGeneric},
     game_analysis::{html_payout_table, html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
     rules::{TRules, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe, card_points::points_stich},
@@ -160,13 +160,13 @@ pub fn greet() {
             /*fn_filter*/|stichseq, ahand| {
                 SFilterByOracle::new(rules, ahand, stichseq)
             },
-            &|_stichseq, _ahand| SGenericMinReachablePayout::<SMaxSelfishMinStrategyHigherKinded, SAlphaBetaPrunerNone>::new(
+            &|_stichseq, _ahand| SGenericMinReachablePayout::<STplStrategiesOnlyMaxSelfishMin, SAlphaBetaPrunerNone>::new(
                 rules,
                 verify_eq!(epi, unwrap!(stichseq.current_playable_stich().current_playerindex())),
                 expensifiers.clone(),
             ),
             /*fn_snapshotcache*/|rulestatecache| {
-                rules.snapshot_cache::<SMaxSelfishMinStrategyHigherKinded>(rulestatecache)
+                rules.snapshot_cache::<STplStrategiesOnlyMaxSelfishMin>(rulestatecache)
             },
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
@@ -361,7 +361,7 @@ pub fn greet() {
                     );
                     let div_table = unwrap!(document.create_element("div"));
                     div_table.set_inner_html(&{
-                        html_display_children(html_payout_table::<_, SMaxSelfishMinStrategyHigherKinded>(
+                        html_display_children(html_payout_table::<_, _>(
                             rules,
                             &ahand,
                             &stichseq,
@@ -372,7 +372,7 @@ pub fn greet() {
                     });
                     append_sibling(&element_played_card, &div_table);
                     let get_min_max_eq = |payoutstats: &SMaxSelfishMinStrategy<SPayoutStats<()>>| {
-                        let payoutstats = &payoutstats.maxselfishmin.as_ref().unwrap_static_some().0;
+                        let payoutstats = &payoutstats.omaxselfishmin.as_ref().unwrap_static_some().0;
                         verify_eq!(payoutstats.min(), payoutstats.max())
                     };
                     let (veccard_optimal, payoutstats_optimal) = determinebestcardresult.cards_with_maximum_value(
@@ -587,7 +587,7 @@ pub fn greet() {
                                     )).to_string(),
                                 ))),
                                 if_then_some!(stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}), {
-                                    html_payout_table::<_, SMaxSelfishMinStrategyHigherKinded>(
+                                    html_payout_table::<_, _>(
                                         &game_finished.rules,
                                         &ahand,
                                         &stichseq,
