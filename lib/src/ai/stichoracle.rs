@@ -361,9 +361,9 @@ mod tests {
             SPrunerNothing,
             SAlphaBetaPrunerNone,
             SAlphaBetaPruner,
-            SPerMinMaxStrategyHigherKinded,
-            SMaxSelfishMinStrategyHigherKinded,
-            SMaxMinStrategyHigherKinded,
+            STplStrategiesAll,
+            STplStrategiesOnlyMaxMin,
+            STplStrategiesOnlyMaxSelfishMin,
             SRuleStateCacheFixed,
             SSnapshotCacheNone,
         },
@@ -2441,12 +2441,12 @@ mod tests {
                 /*fn_check_ask_for_card*/|game: &SGameGeneric<SRuleSet, (), ()>| {
                     if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
                         let epi = unwrap!(game.current_playable_stich().current_playerindex());
-                        macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr, $MinMaxStrategiesHK:ty, $fn_alphabetapruner:expr,) => {
+                        macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr, $TplStrategies:ty, $fn_alphabetapruner:expr,) => {
                             unwrap!(determine_best_card::<$ty_fn_make_filter,_,_,_,_,_,_,_,_>(
                                 &game.stichseq,
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                                 $fn_make_filter,
-                                &|stichseq, ahand| <SMinReachablePayoutBase<SPrunerNothing, $MinMaxStrategiesHK, _>>::new_with_pruner(
+                                &|stichseq, ahand| <SMinReachablePayoutBase<SPrunerNothing, $TplStrategies, _>>::new_with_pruner(
                                     &game.rules,
                                     epi,
                                     game.expensifiers.clone(),
@@ -2465,7 +2465,7 @@ mod tests {
                         let determinebestcardresult_simple = fwd!(
                             _,
                             /*fn_make_filter*/SNoFilter::factory(),
-                            SPerMinMaxStrategyHigherKinded,
+                            STplStrategiesAll,
                             /*fn_alphabetapruner*/|_stichseq, _ahand| SAlphaBetaPrunerNone,
                         );
                         macro_rules! eq_on_field{($lhs:expr, $rhs:expr, $field:ident,) => {
@@ -2490,31 +2490,31 @@ mod tests {
                                 /*fn_make_filter*/|stichseq, ahand| {
                                     SFilterByOracle::new(&game.rules, ahand, stichseq)
                                 },
-                                SMaxSelfishMinStrategyHigherKinded,
+                                STplStrategiesOnlyMaxSelfishMin,
                                 /*fn_alphabetapruner*/|_stichseq, _ahand| SAlphaBetaPrunerNone,
                             ),
-                            maxselfishmin, // TODO must be same as maxselfishmax
+                            omaxselfishmin, // TODO must be same as omaxselfishmax
                         );
                         eq_on_field!(
                             determinebestcardresult_simple,
                             fwd!(
                                 _,
                                 /*fn_make_filter*/SNoFilter::factory(),
-                                SMaxMinStrategyHigherKinded,
+                                STplStrategiesOnlyMaxMin,
                                 /*fn_alphabetapruner*/|_stichseq, _ahand| SAlphaBetaPruner::new({
                                     let mut mapepilohi = EPlayerIndex::map_from_fn(|_| ELoHi::Lo);
                                     mapepilohi[epi] = ELoHi::Hi;
                                     mapepilohi
                                 }),
                             ),
-                            maxmin,
+                            omaxmin,
                         );
                         eq_on_field!(
                             determinebestcardresult_simple,
                             fwd!(
                                 _,
                                 /*fn_make_filter*/SNoFilter::factory(),
-                                SMaxSelfishMinStrategyHigherKinded,
+                                STplStrategiesOnlyMaxSelfishMin,
                                 /*fn_alphabetapruner*/|stichseq, ahand| SAlphaBetaPruner::new({
                                     let mut mapepilohi = unwrap!(game.rules.alpha_beta_pruner_lohi_values())(
                                         &SRuleStateCacheFixed::new(ahand, stichseq),
@@ -2528,7 +2528,7 @@ mod tests {
                                     mapepilohi
                                 }),
                             ),
-                            maxselfishmin,
+                            omaxselfishmin,
                         );
                     }
                 },

@@ -41,18 +41,14 @@ pub fn generate_html_auxiliary_files(path_out_dir: &std::path::Path) -> Result<(
     Ok(())
 }
 
-pub fn html_payout_table<'a, 'b, HtmlAttributeOrChildCard: html_generator::AttributeOrChild, MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded+Clone>(
+pub fn html_payout_table<'a, 'b, HtmlAttributeOrChildCard: html_generator::AttributeOrChild, TplStrategies:TTplStrategies+Clone>(
     rules: &'b SRules,
     ahand: &'b EnumMap<EPlayerIndex, SHand>,
     stichseq: &'b SStichSequence,
-    determinebestcardresult: &'b SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<()>>>,
+    determinebestcardresult: &'b SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<()>, TplStrategies>>,
     card_played: ECard,
     fn_output_card: &'a dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard,
-) -> impl html_generator::AttributeOrChild<Attribute=()> + use<'a, HtmlAttributeOrChildCard, MinMaxStrategiesHK>
-    where
-        MinMaxStrategiesHK::Type<SPayoutStats<()>>: std::fmt::Debug,
-        MinMaxStrategiesHK::Type<[(String, f32); N_COLUMNS]>: PartialEq+Clone,
-{
+) -> impl html_generator::AttributeOrChild<Attribute=()> + use<'a, HtmlAttributeOrChildCard, TplStrategies> {
     use html_generator::*;
     fn condensed_cheating_columns(atplstrf: &[(String, f32); N_COLUMNS]) -> impl Iterator<Item=&(String, f32)> + Clone {
         let otplstrf_first = verify!(atplstrf.first());
@@ -62,7 +58,7 @@ pub fn html_payout_table<'a, 'b, HtmlAttributeOrChildCard: html_generator::Attri
         );
         otplstrf_first.into_iter()
     }
-    let vecoutputline_cheating = determine_best_card_table::table::</*TODO type annotations needed?*/MinMaxStrategiesHK, _>(
+    let vecoutputline_cheating = determine_best_card_table::table::</*TODO type annotations needed?*/TplStrategies, _>(
         determinebestcardresult,
         rules,
         /*fn_loss_or_win*/&|n_payout, ()| n_payout.cmp(&0),

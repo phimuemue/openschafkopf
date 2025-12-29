@@ -61,7 +61,7 @@ impl TPlayer for SPlayerComputer {
                             /*epi_rank*/rules.playerindex(),
                             &rules.clone().into(), // TODO avoid clone
                             expensifiers,
-                        ).maxmin.unwrap_static_some().0.avg().as_num::<f64>()
+                        ).omaxmin.unwrap_static_some().0.avg().as_num::<f64>()
                     }
                 )
             ))
@@ -93,7 +93,7 @@ impl TPlayer for SPlayerComputer {
                             /*epi_rank*/epi_active,
                             rules,
                             expensifiers,
-                        ).maxmin.unwrap_static_some().0.avg().as_num::<f64>()
+                        ).omaxmin.unwrap_static_some().0.avg().as_num::<f64>()
                     } else {
                         0f64
                     }
@@ -120,7 +120,7 @@ impl TPlayer for SPlayerComputer {
                         ),
                         &SSnapshotCacheNone::factory(), // TODO? use cache
                         &mut SNoVisualization,
-                    ).maxmin.unwrap_static_some().0[epi]
+                    ).omaxmin.unwrap_static_some().0[epi]
                 })
                 .sum::<isize>().as_num::<f64>()
                 / n_samples_per_stoss.as_num::<f64>()

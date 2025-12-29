@@ -132,15 +132,15 @@ impl SAi {
                 match (n_remaining_cards) {
                     1..=3 => (
                         SNoFilter::factory(),
-                        SMinReachablePayoutBase::<SPrunerNothing, SMaxMinMaxSelfishMinHigherKinded, /*TODO*/SAlphaBetaPrunerNone>,
+                        SMinReachablePayoutBase::<SPrunerNothing, STplStrategiesOnlyMaxSelfishMinMaxMin, /*TODO*/SAlphaBetaPrunerNone>,
                     ),
                     4 => (
                         SNoFilter::factory(),
-                        SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded, /*TODO*/SAlphaBetaPrunerNone>,
+                        SMinReachablePayoutBase::<SPrunerViaHint, STplStrategiesOnlyMaxSelfishMinMaxMin, /*TODO*/SAlphaBetaPrunerNone>,
                     ),
                     _ => (
                         SBranchingFactor::factory(1, self.n_suggest_card_branches+1),
-                        SMinReachablePayoutBase::<SPrunerViaHint, SMaxMinMaxSelfishMinHigherKinded, /*TODO*/SAlphaBetaPrunerNone>,
+                        SMinReachablePayoutBase::<SPrunerViaHint, STplStrategiesOnlyMaxSelfishMinMaxMin, /*TODO*/SAlphaBetaPrunerNone>,
                     ),
                 },
                 match ((&self.aiparams, n_remaining_cards)) {
@@ -259,27 +259,24 @@ pub fn determine_best_card<
     'stichseq,
     'rules,
     FilterAllowedCards: TFilterAllowedCards,
-    MinMaxStrategiesHK: TMinMaxStrategiesHigherKinded,
+    TplStrategies: TTplStrategies,
     AlphaBetaPruner: TAlphaBetaPruner+Sync,
     Pruner: TPruner+Sync,
-    SnapshotCache: TSnapshotCache<<SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> as TForEachSnapshot>::Output>,
+    SnapshotCache: TSnapshotCache<<SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> as TForEachSnapshot>::Output>,
     OSnapshotCache: Into<Option<SnapshotCache>>,
-    SnapshotVisualizer: TSnapshotVisualizer<<SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> as TForEachSnapshot>::Output>,
+    SnapshotVisualizer: TSnapshotVisualizer<<SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> as TForEachSnapshot>::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
     PayoutStatsPayload: Ord + Copy + Sync + Send,
 >(
     stichseq: &'stichseq SStichSequence,
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
-    fn_make_foreachsnapshot: &(dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>) -> SMinReachablePayoutBase<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> + std::marker::Sync),
+    fn_make_foreachsnapshot: &(dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>) -> SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> + std::marker::Sync),
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
-    fn_inspect: &(dyn Fn(&VInspectionPoint<&EnumMap<ECard, Option<<MinMaxStrategiesHK>::Type<SPayoutStats<PayoutStatsPayload>>>>>, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
+    fn_inspect: &(dyn Fn(&VInspectionPoint<&EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>>>, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
-) -> Option<SDetermineBestCardResult<MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>>>
-    where
-        MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>>: Send,
-        MinMaxStrategiesHK::Type<EnumMap<EPlayerIndex, isize>>: TMinMaxStrategiesInternal<MinMaxStrategiesHK> + Clone + Send,
+) -> Option<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>>
 {
     fn finalize_arc_mutex<T>(arcmutex: Arc<Mutex<T>>) -> T {
         unwrap!(
@@ -332,7 +329,7 @@ pub fn determine_best_card<
                             )
                         }
                     });
-                    let payoutstats : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output.map(|mapepin_payout|
+                    let payoutstats : SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, _> = output.map(|mapepin_payout|
                         SPayoutStats::new_1(fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
                     );
                     {
@@ -357,7 +354,7 @@ pub fn determine_best_card<
             let mapcardooutput_per_ahand = finalize_arc_mutex(mapcardooutput_per_ahand);
             let output_per_ahand = foreachsnapshot.combine_outputs(
                 epi_current,
-                /*infofromparent*/SMinReachablePayoutBase::<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner>::initial_info_from_parent(),
+                /*infofromparent*/SMinReachablePayoutBase::<'rules, Pruner, TplStrategies, AlphaBetaPruner>::initial_info_from_parent(),
                 <ECard as PlainEnum>::values().filter(|&card| 
                     mapcardooutput_per_ahand[card].is_some()
                 ),
@@ -365,7 +362,7 @@ pub fn determine_best_card<
                     unwrap!(mapcardooutput_per_ahand[card].as_ref()).clone()
                 },
             );
-            let payoutstats_per_hand : MinMaxStrategiesHK::Type<SPayoutStats<PayoutStatsPayload>> = output_per_ahand.map(|mapepin_payout|
+            let payoutstats_per_hand : SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies> = output_per_ahand.map(|mapepin_payout|
                 SPayoutStats::new_1(fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
             );
             unwrap!(ooutput_combined.lock()).insert_or_fold(payoutstats_per_hand, |payoutstats_acc, payoutstats_per_hand| {
@@ -551,23 +548,23 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         ));
         for card in [H7, H8, H9] {
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.minmin.unwrap_static_some().0.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.ominmin.unwrap_static_some().0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxmin.unwrap_static_some().0.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.omaxmin.unwrap_static_some().0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxselfishmin.unwrap_static_some().0.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.omaxselfishmin.unwrap_static_some().0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxselfishmax.unwrap_static_some().0.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.omaxselfishmax.unwrap_static_some().0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
             assert_eq!(
-                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.maxmax.unwrap_static_some().0.min()),
+                determinebestcardresult.mapcardt[card].clone().map(|minmax| minmax.omaxmax.unwrap_static_some().0.min()),
                 Some(3*(n_payout_base+2*n_payout_schneider_schwarz))
             );
         }
