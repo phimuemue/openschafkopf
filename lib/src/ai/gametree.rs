@@ -29,7 +29,7 @@ pub trait TSnapshotVisualizer<Output> {
 }
 
 
-pub fn visualizer_factory<'rules, MinMaxStrategiesHK>(path: std::path::PathBuf, rules: &'rules SRules, epi: EPlayerIndex) -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SForEachSnapshotHTMLVisualizer<'rules, MinMaxStrategiesHK> {
+pub fn visualizer_factory<'rules>(path: std::path::PathBuf, rules: &'rules SRules, epi: EPlayerIndex) -> impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SForEachSnapshotHTMLVisualizer<'rules> {
     unwrap!(std::fs::create_dir_all(&path));
     unwrap!(crate::game_analysis::generate_html_auxiliary_files(&path));
     move |i_ahand, ahand, ocard| {
@@ -56,15 +56,14 @@ pub fn visualizer_factory<'rules, MinMaxStrategiesHK>(path: std::path::PathBuf, 
     }
 }
 
-pub struct SForEachSnapshotHTMLVisualizer<'rules, MinMaxStrategiesHK> {
+pub struct SForEachSnapshotHTMLVisualizer<'rules> {
     file_output: BufWriter<fs::File>,
     rules: &'rules SRules,
     epi: EPlayerIndex,
-    phantom: std::marker::PhantomData<MinMaxStrategiesHK>,
 }
-impl<'rules, MinMaxStrategiesHK> SForEachSnapshotHTMLVisualizer<'rules, MinMaxStrategiesHK> {
+impl<'rules> SForEachSnapshotHTMLVisualizer<'rules> {
     fn new(file_output: fs::File, rules: &'rules SRules, epi: EPlayerIndex) -> Self {
-        let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output: BufWriter::with_capacity(16*1024*1024, file_output), rules, epi, phantom: std::marker::PhantomData};
+        let mut foreachsnapshothtmlvisualizer = SForEachSnapshotHTMLVisualizer{file_output: BufWriter::with_capacity(16*1024*1024, file_output), rules, epi};
         foreachsnapshothtmlvisualizer.write_all(
             &"<link rel=\"stylesheet\" type=\"text/css\" href=\"../css.css\">
             <style>
@@ -137,7 +136,7 @@ pub fn player_table_ahand<'a, HtmlAttributeOrChildCard: html_generator::Attribut
 impl<
     MinMaxStrategies: TMinMaxStrategies + TGenericArgs1<Arg0=EnumMap<EPlayerIndex, isize>>,
 >
-    TSnapshotVisualizer<MinMaxStrategies> for SForEachSnapshotHTMLVisualizer<'_, MinMaxStrategies::HigherKinded>
+    TSnapshotVisualizer<MinMaxStrategies> for SForEachSnapshotHTMLVisualizer<'_>
 {
     fn begin_snapshot(&mut self, ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) {
         let str_item_id = format!("{}{}",
