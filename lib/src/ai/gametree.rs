@@ -465,8 +465,12 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
         /*TMaxMax*/T,
         TplStrategies,
     >;
-    pub type SPerMinMaxStrategyRawPayout<TplStrategies> = SPerMinMaxStrategyGeneric<
-        EnumMap<EPlayerIndex, isize>,
+    pub type SPerMinMaxStrategyRawPayout<TplStrategies> = SPerMinMaxStrategyGeneric2<
+        /*TMinMin*/EnumMap<EPlayerIndex, isize>,
+        /*TMaxMin*/EnumMap<EPlayerIndex, isize>,
+        /*TMaxSelfishMin*/EnumMap<EPlayerIndex, isize>,
+        /*TMaxSelfishMax*/EnumMap<EPlayerIndex, isize>,
+        /*TMaxMax*/EnumMap<EPlayerIndex, isize>,
         TplStrategies,
     >;
 
