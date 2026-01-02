@@ -444,9 +444,9 @@ impl<'rules, Pruner, TplStrategies, AlphaBetaPruner> SMinReachablePayoutBase<'ru
 #[derive(Clone, Copy)]
 pub enum EMinMaxStrategy {
     MinMin,
-    Min,
-    SelfishMin,
-    SelfishMax,
+    MaxMin,
+    MaxSelfishMin,
+    MaxSelfishMax,
     Max,
 }
 pub trait TTplStrategies : Clone + PartialEq + std::fmt::Debug + 'static + Serialize {
@@ -583,9 +583,9 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
 define_and_impl_perminmaxstrategies!(
     [
         (IsSomeMinMin, MinMin, ominmin)
-        (IsSomeMaxMin, Min, omaxmin)
-        (IsSomeMaxSelfishMin, SelfishMin, omaxselfishmin)
-        (IsSomeMaxSelfishMax, SelfishMax, omaxselfishmax)
+        (IsSomeMaxMin, MaxMin, omaxmin)
+        (IsSomeMaxSelfishMin, MaxSelfishMin, omaxselfishmin)
+        (IsSomeMaxSelfishMax, MaxSelfishMax, omaxselfishmax)
         (IsSomeMaxMax, Max, omaxmax)
     ]
     [omaxselfishmin omaxselfishmax omaxmin omaxmax ominmin]
@@ -684,13 +684,13 @@ impl MinMin<EnumMap<EPlayerIndex, isize>> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct Min<T>(pub T);
-impl<T> Min<T> {
+pub struct MaxMin<T>(pub T);
+impl<T> MaxMin<T> {
     fn new(t: T) -> Self {
         Self(t)
     }
 }
-impl Min<EnumMap<EPlayerIndex, isize>> {
+impl MaxMin<EnumMap<EPlayerIndex, isize>> {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
         assign_gt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }
@@ -700,13 +700,13 @@ impl Min<EnumMap<EPlayerIndex, isize>> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct SelfishMin<T>(pub T);
-impl<T> SelfishMin<T> {
+pub struct MaxSelfishMin<T>(pub T);
+impl<T> MaxSelfishMin<T> {
     fn new(t: T) -> Self {
         Self(t)
     }
 }
-impl SelfishMin<EnumMap<EPlayerIndex, isize>> {
+impl MaxSelfishMin<EnumMap<EPlayerIndex, isize>> {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
         assign_gt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }
@@ -722,13 +722,13 @@ impl SelfishMin<EnumMap<EPlayerIndex, isize>> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct SelfishMax<T>(pub T);
-impl<T> SelfishMax<T> {
+pub struct MaxSelfishMax<T>(pub T);
+impl<T> MaxSelfishMax<T> {
     fn new(t: T) -> Self {
         Self(t)
     }
 }
-impl SelfishMax<EnumMap<EPlayerIndex, isize>> {
+impl MaxSelfishMax<EnumMap<EPlayerIndex, isize>> {
     fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
         assign_gt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }

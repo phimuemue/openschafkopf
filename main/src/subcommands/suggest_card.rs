@@ -39,9 +39,9 @@ fn print_payoutstatstable<T: std::fmt::Display, TplStrategies: TTplStrategies>(
                 n_subcolumns = astr.len(),
                 str_play = match emmstrategy {
                     EMinMaxStrategy::MinMin => "adversarially and you play pessimal",
-                    EMinMaxStrategy::Min => "adversarially",
-                    EMinMaxStrategy::SelfishMin => "optimally for themselves, in disfavor of you in case of doubt",
-                    EMinMaxStrategy::SelfishMax => "optimally for themselves, in favor of you in case of doubt",
+                    EMinMaxStrategy::MaxMin => "adversarially",
+                    EMinMaxStrategy::MaxSelfishMin => "optimally for themselves, in disfavor of you in case of doubt",
+                    EMinMaxStrategy::MaxSelfishMax => "optimally for themselves, in favor of you in case of doubt",
                     EMinMaxStrategy::Max => "optimally for you",
                 },
             );
