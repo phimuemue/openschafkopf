@@ -441,14 +441,6 @@ impl<'rules, Pruner, TplStrategies, AlphaBetaPruner> SMinReachablePayoutBase<'ru
     }
 }
 
-#[derive(Clone, Copy)]
-pub enum EMinMaxStrategy {
-    MinMin,
-    MaxMin,
-    MaxSelfishMin,
-    MaxSelfishMax,
-    Max,
-}
 pub trait TTplStrategies : Clone + PartialEq + std::fmt::Debug + 'static + Serialize {
     type IsSomeMinMin: TIsSome;
     type IsSomeMaxMin: TIsSome;
@@ -460,6 +452,11 @@ pub trait TTplStrategies : Clone + PartialEq + std::fmt::Debug + 'static + Seria
 }
 
 macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrategy:ident, $ident_strategy:ident))*][$($ident_strategy_cmp:ident)*]) => {
+    #[derive(Clone, Copy)]
+    pub enum EMinMaxStrategy {
+        $($emmstrategy,)*
+    }
+
     #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
     pub struct SPerMinMaxStrategyGeneric<T, TplStrategies: TTplStrategies> {
         $(/*TODO pub a good idea?*/pub $ident_strategy: StaticOption<$emmstrategy<T>, TplStrategies::$IsSome>,)*
