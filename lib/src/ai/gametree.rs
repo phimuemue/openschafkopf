@@ -441,20 +441,16 @@ impl<'rules, Pruner, TplStrategies, AlphaBetaPruner> SMinReachablePayoutBase<'ru
     }
 }
 
-pub trait TTplStrategies : Clone + PartialEq + std::fmt::Debug + 'static + Serialize {
-    type IsSomeMinMin: TIsSome;
-    type IsSomeMaxMin: TIsSome;
-    type IsSomeMaxSelfishMin: TIsSome;
-    type IsSomeMaxSelfishMax: TIsSome;
-    type IsSomeMaxMax: TIsSome;
-
-    fn maxmin_for_pruner(permmstrategy: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, Self>, epi_self: EPlayerIndex) -> isize;
-}
-
 macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrategy:ident, $ident_strategy:ident))*][$($ident_strategy_cmp:ident)*]) => {
     #[derive(Clone, Copy)]
     pub enum EMinMaxStrategy {
         $($emmstrategy,)*
+    }
+
+    pub trait TTplStrategies : Clone + PartialEq + std::fmt::Debug + 'static + Serialize {
+        $(type $IsSome: TIsSome;)*
+
+        fn maxmin_for_pruner(permmstrategy: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, Self>, epi_self: EPlayerIndex) -> isize;
     }
 
     #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
