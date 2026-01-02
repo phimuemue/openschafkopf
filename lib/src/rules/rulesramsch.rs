@@ -201,7 +201,7 @@ impl TRules for SRulesRamsch {
         )
     }
 
-    fn snapshot_cache<TplStrategies: TTplStrategies>(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>> {
+    fn snapshot_cache<TplStrategies: TTplStrategies>(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>>> {
         super::snapshot_cache::<TplStrategies>(|rulestatecache| {
             let mut payload_point_stich_count = 0;
             let point_stich_count = |epi| {

@@ -465,7 +465,10 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
         /*TMaxMax*/T,
         TplStrategies,
     >;
-
+    pub type SPerMinMaxStrategyRawPayout<TplStrategies> = SPerMinMaxStrategyGeneric<
+        EnumMap<EPlayerIndex, isize>,
+        TplStrategies,
+    >;
 
     impl<T, TplStrategies: TTplStrategies> SPerMinMaxStrategyGeneric<T, TplStrategies> {
         pub fn new(t: T) -> Self
@@ -532,7 +535,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
         }
     }
 
-    impl<TplStrategies: TTplStrategies> SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies> {
+    impl<TplStrategies: TTplStrategies> SPerMinMaxStrategyRawPayout<TplStrategies> {
         fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
             let Self{$($ident_strategy,)*} = other;
             $(
@@ -550,7 +553,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
         }
     }
 
-    impl<TplStrategies: TTplStrategies> TSnapshotVisualizer<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>> for SForEachSnapshotHTMLVisualizer<'_> {
+    impl<TplStrategies: TTplStrategies> TSnapshotVisualizer<SPerMinMaxStrategyRawPayout<TplStrategies>> for SForEachSnapshotHTMLVisualizer<'_> {
         fn begin_snapshot(&mut self, ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) {
             let str_item_id = format!("{}{}",
                 stichseq.count_played_cards(),
@@ -568,7 +571,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
             self.write_all(&"<ul>\n");
         }
 
-        fn end_snapshot(&mut self, minmax: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>) {
+        fn end_snapshot(&mut self, minmax: &SPerMinMaxStrategyRawPayout<TplStrategies>) {
             self.write_all(&"</ul>\n");
             self.write_all(&"</li>\n");
             self.write_all(&player_table(self.epi, |epi| {
@@ -764,8 +767,8 @@ pub trait TAlphaBetaPruner {
     type InfoFromParent: Clone;
     fn initial_info_from_parent() -> Self::InfoFromParent;
     type BreakType;
-    fn is_prunable_self<TplStrategies: TTplStrategies>(&self, minmax: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>, infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent>;
-    fn is_prunable_other<TplStrategies: TTplStrategies>(&self, minmax: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>, infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex, epi_card: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent>;
+    fn is_prunable_self<TplStrategies: TTplStrategies>(&self, minmax: &SPerMinMaxStrategyRawPayout<TplStrategies>, infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent>;
+    fn is_prunable_other<TplStrategies: TTplStrategies>(&self, minmax: &SPerMinMaxStrategyRawPayout<TplStrategies>, infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex, epi_card: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent>;
 }
 
 #[derive(Default)]
@@ -775,10 +778,10 @@ impl TAlphaBetaPruner for SAlphaBetaPrunerNone {
     fn initial_info_from_parent() -> Self::InfoFromParent {
     }
     type BreakType = Infallible;
-    fn is_prunable_self<TplStrategies: TTplStrategies>(&self, _minmax: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>, _infofromparent: Self::InfoFromParent, _epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
+    fn is_prunable_self<TplStrategies: TTplStrategies>(&self, _minmax: &SPerMinMaxStrategyRawPayout<TplStrategies>, _infofromparent: Self::InfoFromParent, _epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
         ControlFlow::Continue(())
     }
-    fn is_prunable_other<TplStrategies: TTplStrategies>(&self, _minmax: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>, _infofromparent: Self::InfoFromParent, _epi_self: EPlayerIndex, _epi_card: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
+    fn is_prunable_other<TplStrategies: TTplStrategies>(&self, _minmax: &SPerMinMaxStrategyRawPayout<TplStrategies>, _infofromparent: Self::InfoFromParent, _epi_self: EPlayerIndex, _epi_card: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
         ControlFlow::Continue(())
     }
 }
@@ -793,7 +796,7 @@ impl TAlphaBetaPruner for SAlphaBetaPruner {
         ELoHi::map_from_raw([isize::MIN, isize::MAX])
     }
     type BreakType = ();
-    fn is_prunable_self<TplStrategies: TTplStrategies>(&self, minmax: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>, mut infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
+    fn is_prunable_self<TplStrategies: TTplStrategies>(&self, minmax: &SPerMinMaxStrategyRawPayout<TplStrategies>, mut infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
         assert_eq!(self.mapepilohi[epi_self], ELoHi::Hi);
         let n_payout_for_pruner = TplStrategies::maxmin_for_pruner(minmax, epi_self);
         if n_payout_for_pruner >= infofromparent[ELoHi::Hi] {
@@ -804,7 +807,7 @@ impl TAlphaBetaPruner for SAlphaBetaPruner {
             ControlFlow::Continue(infofromparent)
         }
     }
-    fn is_prunable_other<TplStrategies: TTplStrategies>(&self, minmax: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>, mut infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex, epi_card: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
+    fn is_prunable_other<TplStrategies: TTplStrategies>(&self, minmax: &SPerMinMaxStrategyRawPayout<TplStrategies>, mut infofromparent: Self::InfoFromParent, epi_self: EPlayerIndex, epi_card: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
         match self.mapepilohi[epi_card] {
             ELoHi::Hi => {
                 self.is_prunable_self(
@@ -828,7 +831,7 @@ impl TAlphaBetaPruner for SAlphaBetaPruner {
 }
 
 impl<Pruner: TPruner, TplStrategies: TTplStrategies, AlphaBetaPruner: TAlphaBetaPruner> TForEachSnapshot for SMinReachablePayoutBase<'_, Pruner, TplStrategies, AlphaBetaPruner> {
-    type Output = SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>;
+    type Output = SPerMinMaxStrategyRawPayout<TplStrategies>;
     type InfoFromParent = AlphaBetaPruner::InfoFromParent;
 
     fn initial_info_from_parent() -> Self::InfoFromParent {
@@ -895,19 +898,19 @@ pub type SGenericMinReachablePayoutLowerBoundViaHint<'rules, TplStrategies, Alph
 pub type SMinReachablePayoutLowerBoundViaHint<'rules> = SMinReachablePayoutBase<'rules, SPrunerViaHint, STplStrategiesAll, SAlphaBetaPrunerNone>;
 
 pub trait TPruner : Sized {
-    fn pruned_output<TplStrategies: TTplStrategies, AlphaBetaPruner>(params: &SMinReachablePayoutBase<'_, Self, TplStrategies, AlphaBetaPruner>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>;
+    fn pruned_output<TplStrategies: TTplStrategies, AlphaBetaPruner>(params: &SMinReachablePayoutBase<'_, Self, TplStrategies, AlphaBetaPruner>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>>;
 }
 
 pub struct SPrunerNothing;
 impl TPruner for SPrunerNothing {
-    fn pruned_output<TplStrategies: TTplStrategies, AlphaBetaPruner>(_params: &SMinReachablePayoutBase<'_, Self, TplStrategies, AlphaBetaPruner>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>> {
+    fn pruned_output<TplStrategies: TTplStrategies, AlphaBetaPruner>(_params: &SMinReachablePayoutBase<'_, Self, TplStrategies, AlphaBetaPruner>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
         None
     }
 }
 
 pub struct SPrunerViaHint;
 impl TPruner for SPrunerViaHint {
-    fn pruned_output<TplStrategies: TTplStrategies, AlphaBetaPruner>(params: &SMinReachablePayoutBase<'_, Self, TplStrategies, AlphaBetaPruner>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>> {
+    fn pruned_output<TplStrategies: TTplStrategies, AlphaBetaPruner>(params: &SMinReachablePayoutBase<'_, Self, TplStrategies, AlphaBetaPruner>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
         let mapepion_payout = params.rules.payouthints(tplahandstichseq, &params.expensifiers, rulestatecache)
             .map(|intvlon_payout| {
                 intvlon_payout[ELoHi::Lo].filter(|n_payout| 0<*n_payout)

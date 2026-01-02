@@ -15,7 +15,7 @@ use itertools::*;
 use serde::Serialize;
 use failure::*;
 use derive_new::new;
-use plain_enum::{EnumMap, PlainEnum};
+use plain_enum::PlainEnum;
 use super::common_given_game::*;
 use as_num::*;
 use std::io::IsTerminal;
@@ -195,7 +195,7 @@ enum ESingleStrategy {
     MaxSelfishMin,
 }
 
-fn make_snapshot_cache<TplStrategies: TTplStrategies>(rules: &SRules) -> impl Fn(&SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>> + '_ {
+fn make_snapshot_cache<TplStrategies: TTplStrategies>(rules: &SRules) -> impl Fn(&SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>>> + '_ {
     move |rulestatecache| rules.snapshot_cache::<TplStrategies>(rulestatecache)
 }
 
