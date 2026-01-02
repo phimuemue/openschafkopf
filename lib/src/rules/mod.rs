@@ -19,7 +19,7 @@ pub mod tests;
 use crate::ai::ahand_vecstich_card_count_is_compatible;
 use crate::ai::rulespecific::*;
 use crate::ai::cardspartition::*;
-use crate::ai::gametree::{TSnapshotCache, TTplStrategies, SPerMinMaxStrategyGeneric};
+use crate::ai::gametree::{TSnapshotCache, TTplStrategies, SPerMinMaxStrategyRawPayout};
 use crate::primitives::*;
 use crate::rules::card_points::points_stich;
 use trumpfdecider::STrumpfDecider;
@@ -462,7 +462,7 @@ pub trait TRules : fmt::Display + Sync + fmt::Debug + Send + Clone {
         None
     }
 
-    fn snapshot_cache<TplStrategies: TTplStrategies>(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>>;
+    fn snapshot_cache<TplStrategies: TTplStrategies>(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>>>;
     fn alpha_beta_pruner_lohi_values(&self) -> Option<Box<dyn Fn(&SRuleStateCacheFixed)->EnumMap<EPlayerIndex, ELoHi> + Sync>>;
 
     fn heuristic_active_occurence_probability(&self) -> Option<f64> {
@@ -622,7 +622,7 @@ impl<Rules: TRules> TCardSorter for Rules {
     }
 }
 
-fn snapshot_cache_point_based<TplStrategies: TTplStrategies, PlayerParties: TPlayerParties+'static>(playerparties: PlayerParties) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>>
+fn snapshot_cache_point_based<TplStrategies: TTplStrategies, PlayerParties: TPlayerParties+'static>(playerparties: PlayerParties) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>>>
 {
     snapshot_cache::<TplStrategies>(move |rulestatecache| {
         let mut payload_point_stich_count = 0;
@@ -663,7 +663,7 @@ fn snap_equiv_base(stichseq: &SStichSequence) -> u64 {
     snapequiv
 }
 
-fn snapshot_cache<TplStrategies: TTplStrategies>(fn_payload: impl Fn(&SRuleStateCache)->u64 + 'static) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>>
+fn snapshot_cache<TplStrategies: TTplStrategies>(fn_payload: impl Fn(&SRuleStateCache)->u64 + 'static) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>>>
 {
     type SSnapshotEquivalenceClass = u64; // space-saving variant of this:
     // struct SSnapshotEquivalenceClass { // packed into SSnapshotEquivalenceClass TODO? use bitfield crate
@@ -674,7 +674,7 @@ fn snapshot_cache<TplStrategies: TTplStrategies>(fn_payload: impl Fn(&SRuleState
     #[derive(Debug)]
     struct SSnapshotCachePointBased<TplStrategies: TTplStrategies, FnPayload> {
         fn_payload: FnPayload,
-        mapsnapequivperminmaxmapepin_payout: HashMap<SSnapshotEquivalenceClass, SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>>,
+        mapsnapequivperminmaxmapepin_payout: HashMap<SSnapshotEquivalenceClass, SPerMinMaxStrategyRawPayout<TplStrategies>>,
     }
     impl<TplStrategies: TTplStrategies, FnPayload: Fn(&SRuleStateCache)->u64> SSnapshotCachePointBased<TplStrategies, FnPayload> {
         fn snap_equiv(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> SSnapshotEquivalenceClass {
@@ -683,15 +683,15 @@ fn snapshot_cache<TplStrategies: TTplStrategies>(fn_payload: impl Fn(&SRuleState
             snapequiv
         }
     }
-    impl<TplStrategies: TTplStrategies, FnPayload: Fn(&SRuleStateCache)->u64> TSnapshotCache<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>> for SSnapshotCachePointBased<TplStrategies, FnPayload>
+    impl<TplStrategies: TTplStrategies, FnPayload: Fn(&SRuleStateCache)->u64> TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>> for SSnapshotCachePointBased<TplStrategies, FnPayload>
     {
-        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>> {
+        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             self.mapsnapequivperminmaxmapepin_payout
                 .get(&self.snap_equiv(stichseq, rulestatecache))
                 .cloned()
         }
-        fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, TplStrategies>) {
+        fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SPerMinMaxStrategyRawPayout<TplStrategies>) {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             self.mapsnapequivperminmaxmapepin_payout
                 .insert(
