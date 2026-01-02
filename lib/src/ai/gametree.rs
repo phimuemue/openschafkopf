@@ -459,7 +459,7 @@ pub trait TTplStrategies : Clone + PartialEq + std::fmt::Debug + 'static + Seria
     fn maxmin_for_pruner(permmstrategy: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, Self>, epi_self: EPlayerIndex) -> isize;
 }
 
-macro_rules! define_and_impl_perminmaxstrategies{($(($IsSome:ident, $emmstrategy:ident, $ident_strategy:ident, /*TODO seems brittle to pass these in line with other parameters*/$ident_strategy_cmp:ident))*) => {
+macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrategy:ident, $ident_strategy:ident))*][$($ident_strategy_cmp:ident)*]) => {
     #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
     pub struct SPerMinMaxStrategyGeneric<T, TplStrategies: TTplStrategies> {
         $(/*TODO pub a good idea?*/pub $ident_strategy: StaticOption<$emmstrategy<T>, TplStrategies::$IsSome>,)*
@@ -581,11 +581,14 @@ macro_rules! define_and_impl_perminmaxstrategies{($(($IsSome:ident, $emmstrategy
     }
 }}
 define_and_impl_perminmaxstrategies!(
-    (IsSomeMinMin, MinMin, ominmin, omaxselfishmin)
-    (IsSomeMaxMin, Min, omaxmin, omaxselfishmax)
-    (IsSomeMaxSelfishMin, SelfishMin, omaxselfishmin, omaxmin)
-    (IsSomeMaxSelfishMax, SelfishMax, omaxselfishmax, omaxmax)
-    (IsSomeMaxMax, Max, omaxmax, ominmin)
+    [
+        (IsSomeMinMin, MinMin, ominmin)
+        (IsSomeMaxMin, Min, omaxmin)
+        (IsSomeMaxSelfishMin, SelfishMin, omaxselfishmin)
+        (IsSomeMaxSelfishMax, SelfishMax, omaxselfishmax)
+        (IsSomeMaxMax, Max, omaxmax)
+    ]
+    [omaxselfishmin omaxselfishmax omaxmin omaxmax ominmin]
 );
 
 macro_rules! impl_perminmaxstrategy{(
