@@ -441,7 +441,7 @@ impl<'rules, Pruner, TplStrategies, AlphaBetaPruner> SMinReachablePayoutBase<'ru
     }
 }
 
-macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrategy:ident, $ident_strategy:ident))*][$($ident_strategy_cmp:ident)*]) => {
+macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrategy:ident, $t_emmstrategy:ident, $ident_strategy:ident))*][$($ident_strategy_cmp:ident)*]) => {
     #[derive(Clone, Copy)]
     pub enum EMinMaxStrategy {
         $($emmstrategy,)*
@@ -454,9 +454,17 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
     }
 
     #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-    pub struct SPerMinMaxStrategyGeneric<T, TplStrategies: TTplStrategies> {
-        $(/*TODO pub a good idea?*/pub $ident_strategy: StaticOption<$emmstrategy<T>, TplStrategies::$IsSome>,)*
+    pub struct SPerMinMaxStrategyGeneric2<$($t_emmstrategy,)* TplStrategies: TTplStrategies> {
+        $(/*TODO pub a good idea?*/pub $ident_strategy: StaticOption<$emmstrategy<$t_emmstrategy>, TplStrategies::$IsSome>,)*
     }
+    pub type SPerMinMaxStrategyGeneric<T, TplStrategies> = SPerMinMaxStrategyGeneric2<
+        /*TMinMin*/T,
+        /*TMaxMin*/T,
+        /*TMaxSelfishMin*/T,
+        /*TMaxSelfishMax*/T,
+        /*TMaxMax*/T,
+        TplStrategies,
+    >;
 
 
     impl<T, TplStrategies: TTplStrategies> SPerMinMaxStrategyGeneric<T, TplStrategies> {
@@ -575,11 +583,11 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
 }}
 define_and_impl_perminmaxstrategies!(
     [
-        (IsSomeMinMin, MinMin, ominmin)
-        (IsSomeMaxMin, MaxMin, omaxmin)
-        (IsSomeMaxSelfishMin, MaxSelfishMin, omaxselfishmin)
-        (IsSomeMaxSelfishMax, MaxSelfishMax, omaxselfishmax)
-        (IsSomeMaxMax, Max, omaxmax)
+        (IsSomeMinMin, MinMin, TMinMin, ominmin)
+        (IsSomeMaxMin, MaxMin, TMaxMin, omaxmin)
+        (IsSomeMaxSelfishMin, MaxSelfishMin, TMaxSelfishMin, omaxselfishmin)
+        (IsSomeMaxSelfishMax, MaxSelfishMax, TMaxSelfishMax, omaxselfishmax)
+        (IsSomeMaxMax, Max, TMax, omaxmax)
     ]
     [omaxselfishmin omaxselfishmax omaxmin omaxmax ominmin]
 );
