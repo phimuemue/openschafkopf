@@ -612,7 +612,7 @@ impl_perminmaxstrategy!(
         SelfishMin maxselfishmin,
     }
     SMaxMinMaxSelfishMinHigherKinded
-    [maxmin maxselfishmin]
+    [maxselfishmin maxmin]
     maxmin
 );
 impl_perminmaxstrategy!(
