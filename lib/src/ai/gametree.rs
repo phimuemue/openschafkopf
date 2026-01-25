@@ -464,7 +464,7 @@ impl<'rules, Pruner, MinMaxStrategiesHK, AlphaBetaPruner> SMinReachablePayoutBas
     {
         Self::new_with_pruner(rules, epi, expensifiers, /*alphabetapruner*/Default::default())
     }
-    pub fn new_from_game<Ruleset>(game: &'rules SGameGeneric<Ruleset, (), ()>) -> Self
+    pub fn new_from_game<Ruleset, GameAnnouncement, DetermineRules>(game: &'rules SGameGeneric<Ruleset, GameAnnouncement, DetermineRules>) -> Self
         where
             AlphaBetaPruner: Default,
     {
