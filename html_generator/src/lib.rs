@@ -1,7 +1,5 @@
 use std::fmt::{Display, Formatter};
 
-pub struct IsAttribute;
-pub struct IsChild;
 pub trait AttributeOrChild {
     type Attribute: AttributeOrChild;
     type Child: AttributeOrChild;
