@@ -236,7 +236,7 @@ fn test_game_loop() {
                 println!("{str_ruleset}");
                 unwrap!(crate::rules::ruleset::SRuleSet::from_string(&str_ruleset))
             })
-            .choose_multiple(&mut rng, 2)
+            .sample(&mut rng, 2)
     {
         run_simple_game_loop(
             EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {

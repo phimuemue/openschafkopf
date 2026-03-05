@@ -2576,7 +2576,7 @@ mod tests {
                 if_dbg_else!(
                     {{
                         use rand::seq::IteratorRandom;
-                        itstockorgame.choose_multiple(&mut rand::rng(), 1).into_iter()
+                        itstockorgame.sample(&mut rand::rng(), 1).into_iter()
                     }}
                     {itstockorgame}
                 )

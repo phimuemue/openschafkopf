@@ -3,7 +3,7 @@ use crate::primitives::*;
 use crate::rules::*;
 use crate::util::*;
 use itertools::Itertools;
-use rand::{self, Rng};
+use rand::prelude::*;
 use std::{borrow::Borrow, cmp::Ordering, fmt::Debug, fs, io::{BufWriter, Write}, ops::ControlFlow, convert::Infallible};
 use super::{SPayoutStats, cardspartition::*};
 use serde::Serialize;
