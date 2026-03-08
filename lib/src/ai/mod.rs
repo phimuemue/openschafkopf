@@ -329,29 +329,34 @@ pub fn determine_best_card<
                             )
                         }
                     });
-                    let payoutstats : SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, _> = output.map(|mapepin_payout|
-                        SPayoutStats::new_1(fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
-                    );
                     {
                         let mapcardooutput_per_ahand = Arc::clone(&mapcardooutput_per_ahand);
                         verify!(unwrap!(mapcardooutput_per_ahand.lock())[card].replace(output).is_none());
                     }
-                    unwrap!(mapcardooutput.lock())[card].insert_or_fold(payoutstats, |payoutstats_acc, payoutstats| {
-                        payoutstats_acc.modify_with_other(
-                            &payoutstats,
-                            |lhs, rhs| SPayoutStats::accumulate(lhs, rhs),
-                        )
-                    });
                     fn_inspect(&VInspectionPoint::Card{b_before: false, card}, i_ahand, &ahand);
                 });
-            fn_inspect(
-                &VInspectionPoint::AfterHand(
-                    &*unwrap!(mapcardooutput.lock()) // TODO Can we avoid locking?
-                ),
-                i_ahand,
-                &ahand
-            );
             let mapcardooutput_per_ahand = finalize_arc_mutex(mapcardooutput_per_ahand);
+            {
+                let mut mapcardooutput = unwrap!(mapcardooutput.lock());
+                for card in <ECard as PlainEnum>::values() {
+                    if let Some(output) = &mapcardooutput_per_ahand[card] {
+                        let payoutstats : SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, _> = output.map(|mapepin_payout|
+                            SPayoutStats::new_1(fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
+                        );
+                        (*mapcardooutput)[card].insert_or_fold(payoutstats, |payoutstats_acc, payoutstats| {
+                            payoutstats_acc.modify_with_other(
+                                &payoutstats,
+                                |lhs, rhs| SPayoutStats::accumulate(lhs, rhs),
+                            )
+                        });
+                    }
+                }
+                fn_inspect(
+                    &VInspectionPoint::AfterHand(&mapcardooutput),
+                    i_ahand,
+                    &ahand
+                );
+            }
             let output_per_ahand = foreachsnapshot.combine_outputs(
                 epi_current,
                 /*infofromparent*/SMinReachablePayoutBase::<'rules, Pruner, TplStrategies, AlphaBetaPruner>::initial_info_from_parent(),
