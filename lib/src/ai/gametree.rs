@@ -455,7 +455,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
 
     #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
     pub struct SPerMinMaxStrategyGeneric2<$($t_emmstrategy,)* TplStrategies: TTplStrategies> {
-        $(/*TODO pub a good idea?*/pub $ident_strategy: StaticOption<$emmstrategy<$t_emmstrategy>, TplStrategies::$IsSome>,)*
+        $(/*TODO pub a good idea?*/pub $ident_strategy: StaticOption<$t_emmstrategy, TplStrategies::$IsSome>,)*
     }
     pub type SPerMinMaxStrategyGeneric<T, TplStrategies> = SPerMinMaxStrategyGeneric2<
         /*TMinMin*/T,
@@ -479,14 +479,14 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
             where T: Clone
         {
             Self {
-                $($ident_strategy: StaticOption::<_, TplStrategies::$IsSome>::new_with(|| $emmstrategy::new(t.clone())),)* // TODO can we avoid one clone call?
+                $($ident_strategy: StaticOption::<_, TplStrategies::$IsSome>::new_with(|| t.clone()),)* // TODO can we avoid one clone call?
             }
         }
 
         pub fn map<R>(&self, mut f: impl FnMut(&T)->R) -> SPerMinMaxStrategyGeneric<R, TplStrategies> {
             let Self{ $($ident_strategy,)* } = self;
             SPerMinMaxStrategyGeneric{
-                $($ident_strategy: $ident_strategy.as_ref().map(|t| $emmstrategy::new(f(&t.0))),)*
+                $($ident_strategy: $ident_strategy.as_ref().map(|t| f(&t)),)*
             }
         }
 
@@ -497,19 +497,19 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
         ) {
             $(
                 self.$ident_strategy.as_mut().tuple_2(other.$ident_strategy.as_ref())
-                    .map(|(t, t1)| fn_modify_element(&mut t.0, &t1.0)); // TODO good idea to use "map" to call a function?
+                    .map(|(t, t1)| fn_modify_element(t, t1)); // TODO good idea to use "map" to call a function?
             )*
         }
 
         pub fn via_accessors(&self) -> Vec<(EMinMaxStrategy, &T)> {
-            [$((EMinMaxStrategy::$emmstrategy, self.$ident_strategy.as_ref().map(|t| &t.0).into_option()),)*]
+            [$((EMinMaxStrategy::$emmstrategy, self.$ident_strategy.as_ref().into_option()),)*]
                 .into_iter()
                 .filter_map(|(emmstrategy, ot)| ot.map(|t| (emmstrategy, t)))
                 .collect()
         }
 
         pub fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->Option<&T>)] { // TODO is there a better alternative?
-            &[$((EMinMaxStrategy::$emmstrategy, (|slf: &Self| slf.$ident_strategy.as_ref().into_option().map(|t| &t.0)) as fn(&Self) -> Option<&T>),)*]
+            &[$((EMinMaxStrategy::$emmstrategy, (|slf: &Self| slf.$ident_strategy.as_ref().into_option()) as fn(&Self) -> Option<&T>),)*]
         }
         pub fn compare_canonical<PayoutStatsPayload: Ord+Copy>(&self, other: &Self, fn_loss_or_win: impl Fn(isize, PayoutStatsPayload)->std::cmp::Ordering) -> std::cmp::Ordering where T: Borrow<SPayoutStats<PayoutStatsPayload>> {
             use std::cmp::Ordering::*;
@@ -519,8 +519,8 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
             Equal
                 $(.then_with(|| self.$ident_strategy_cmp.as_ref().tuple_2(other.$ident_strategy_cmp.as_ref())
                     .map_or_else(/*default*/|| Equal, |(lhs, rhs)| {
-                        let payoutstats_lhs = lhs.0.borrow();
-                        let payoutstats_rhs = rhs.0.borrow();
+                        let payoutstats_lhs = lhs.borrow();
+                        let payoutstats_rhs = rhs.borrow();
                         let mapordn_lhs = payoutstats_lhs.counts(&fn_loss_or_win).map_into(|n| n.as_num::<u128>());
                         let mapordn_rhs = payoutstats_rhs.counts(&fn_loss_or_win).map_into(|n| n.as_num::<u128>());
                         let compare_winning_probability_internal = |ord| compare_fractions(
@@ -545,19 +545,19 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
                 self.$ident_strategy_assign.as_mut().tuple_2(other.$ident_strategy_assign).map($fn); // TODO good idea to use "map" to call a function?
             }}
             internal_assign_minmax_self!(ominmin, |(lhs, rhs)| {
-                assign_lt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+                assign_lt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
             internal_assign_minmax_self!(omaxmin, |(lhs, rhs)| {
-                assign_gt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+                assign_gt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
             internal_assign_minmax_self!(omaxselfishmin, |(lhs, rhs)| {
-                assign_gt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+                assign_gt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
             internal_assign_minmax_self!(omaxselfishmax, |(lhs, rhs)| {
-                assign_gt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+                assign_gt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
             internal_assign_minmax_self!(omaxmax, |(lhs, rhs)| {
-                assign_gt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+                assign_gt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
         }
 
@@ -566,13 +566,13 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
                 self.$ident_strategy_assign.as_mut().tuple_2(other.$ident_strategy_assign).map($fn); // TODO good idea to use "map" to call a function?
             }}
             internal_assign_minmax_self!(ominmin, |(lhs, rhs)| {
-                assign_lt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+                assign_lt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
             internal_assign_minmax_self!(omaxmin, |(lhs, rhs)| {
-                assign_lt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+                assign_lt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
             internal_assign_minmax_self!(omaxselfishmin, |(lhs, rhs)| {
-                assign_better(&mut lhs.0, rhs.0, |an_payout_lhs, an_payout_rhs| {
+                assign_better(lhs, rhs, |an_payout_lhs, an_payout_rhs| {
                     match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
                         Ordering::Less => false,
                         Ordering::Equal => an_payout_lhs[epi_self] < an_payout_rhs[epi_self],
@@ -581,7 +581,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
                 });
             });
             internal_assign_minmax_self!(omaxselfishmax, |(lhs, rhs)| {
-                assign_better(&mut lhs.0, rhs.0, |an_payout_lhs, an_payout_rhs| {
+                assign_better(lhs, rhs, |an_payout_lhs, an_payout_rhs| {
                     match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
                         Ordering::Less => false,
                         Ordering::Equal => an_payout_lhs[epi_self] > an_payout_rhs[epi_self],
@@ -590,7 +590,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
                 });
             });
             internal_assign_minmax_self!(omaxmax, |(lhs, rhs)| {
-                assign_gt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+                assign_gt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
         }
     }
@@ -658,7 +658,7 @@ macro_rules! impl_perminmaxstrategy{(
         type IsSomeMaxMax = $IsSomeMaxMax;
 
         fn maxmin_for_pruner(permmstrategy: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, Self>, epi_self: EPlayerIndex) -> isize {
-            permmstrategy.$ident_strategy_maxmin_for_pruner.as_ref().unwrap_static_some().0[epi_self]
+            permmstrategy.$ident_strategy_maxmin_for_pruner.as_ref().unwrap_static_some()[epi_self]
         }
     }
     pub type $struct<T> = SPerMinMaxStrategyGeneric<
@@ -712,46 +712,6 @@ impl_perminmaxstrategy!(
     STplStrategiesOnlyMaxSelfishMin
     omaxselfishmin
 );
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct MinMin<T>(pub T); // TODO this does not require a whole EnumMap - entry for epi_self is sufficient.
-impl<T> MinMin<T> {
-    fn new(t: T) -> Self {
-        Self(t)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct MaxMin<T>(pub T);
-impl<T> MaxMin<T> {
-    fn new(t: T) -> Self {
-        Self(t)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct MaxSelfishMin<T>(pub T);
-impl<T> MaxSelfishMin<T> {
-    fn new(t: T) -> Self {
-        Self(t)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct MaxSelfishMax<T>(pub T);
-impl<T> MaxSelfishMax<T> {
-    fn new(t: T) -> Self {
-        Self(t)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct Max<T>(pub T);
-impl<T> Max<T> {
-    fn new(t: T) -> Self {
-        Self(t)
-    }
-}
 
 pub trait TAlphaBetaPruner {
     type InfoFromParent: Clone;

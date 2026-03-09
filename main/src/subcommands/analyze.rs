@@ -166,14 +166,14 @@ fn analyze_game(
                 let look_for_mistakes = |determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>| {
                     macro_rules! look_for_mistake{($strategy:ident, $emistake:expr) => {{
                         let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(
-                            |minmax_lhs, minmax_rhs| minmax_lhs.$strategy.as_ref().unwrap_static_some().0.min().cmp(&minmax_rhs.$strategy.as_ref().unwrap_static_some().0.min())
+                            |minmax_lhs, minmax_rhs| minmax_lhs.$strategy.as_ref().unwrap_static_some().min().cmp(&minmax_rhs.$strategy.as_ref().unwrap_static_some().min())
                         );
                         if_then_some!(
-                            an_payout[epi_zugeben]<minmax.$strategy.as_ref().unwrap_static_some().0.min()
+                            an_payout[epi_zugeben]<minmax.$strategy.as_ref().unwrap_static_some().min()
                                 && !veccard.contains(&card_played), // TODO can we improve this?
                             SAnalysisCardAndPayout{
                                 veccard,
-                                n_payout: minmax.$strategy.as_ref().unwrap_static_some().0.min(),
+                                n_payout: minmax.$strategy.as_ref().unwrap_static_some().min(),
                                 emistake: $emistake,
                             }
                         ) // else The decisive mistake must occur in subsequent stichs. TODO assert that it actually occurs
