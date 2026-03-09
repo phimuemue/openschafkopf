@@ -541,19 +541,57 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
 
     impl<TplStrategies: TTplStrategies> SPerMinMaxStrategyRawPayout<TplStrategies> {
         fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
-            let Self{$($ident_strategy,)*} = other;
-            $(
-                self.$ident_strategy.as_mut().tuple_2($ident_strategy)
-                    .map(|(lhs, rhs)| lhs.assign_minmax_self(rhs, epi_self)); // TODO good idea to use "map" to call a function?
-            )*
+            macro_rules! internal_assign_minmax_self{($ident_strategy_assign:ident, $fn:expr) => {
+                self.$ident_strategy_assign.as_mut().tuple_2(other.$ident_strategy_assign).map($fn); // TODO good idea to use "map" to call a function?
+            }}
+            internal_assign_minmax_self!(ominmin, |(lhs, rhs)| {
+                assign_lt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+            });
+            internal_assign_minmax_self!(omaxmin, |(lhs, rhs)| {
+                assign_gt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+            });
+            internal_assign_minmax_self!(omaxselfishmin, |(lhs, rhs)| {
+                assign_gt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+            });
+            internal_assign_minmax_self!(omaxselfishmax, |(lhs, rhs)| {
+                assign_gt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+            });
+            internal_assign_minmax_self!(omaxmax, |(lhs, rhs)| {
+                assign_gt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+            });
         }
 
         fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex) {
-            let Self{$($ident_strategy,)*} = other;
-            $(
-                self.$ident_strategy.as_mut().tuple_2($ident_strategy)
-                    .map(|(lhs, rhs)| lhs.assign_minmax_other(rhs, epi_self, epi_card)); // TODO good idea to use "map" to call a function?
-            )*
+            macro_rules! internal_assign_minmax_self{($ident_strategy_assign:ident, $fn:expr) => {
+                self.$ident_strategy_assign.as_mut().tuple_2(other.$ident_strategy_assign).map($fn); // TODO good idea to use "map" to call a function?
+            }}
+            internal_assign_minmax_self!(ominmin, |(lhs, rhs)| {
+                assign_lt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+            });
+            internal_assign_minmax_self!(omaxmin, |(lhs, rhs)| {
+                assign_lt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+            });
+            internal_assign_minmax_self!(omaxselfishmin, |(lhs, rhs)| {
+                assign_better(&mut lhs.0, rhs.0, |an_payout_lhs, an_payout_rhs| {
+                    match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
+                        Ordering::Less => false,
+                        Ordering::Equal => an_payout_lhs[epi_self] < an_payout_rhs[epi_self],
+                        Ordering::Greater => true,
+                    }
+                });
+            });
+            internal_assign_minmax_self!(omaxselfishmax, |(lhs, rhs)| {
+                assign_better(&mut lhs.0, rhs.0, |an_payout_lhs, an_payout_rhs| {
+                    match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
+                        Ordering::Less => false,
+                        Ordering::Equal => an_payout_lhs[epi_self] > an_payout_rhs[epi_self],
+                        Ordering::Greater => true,
+                    }
+                });
+            });
+            internal_assign_minmax_self!(omaxmax, |(lhs, rhs)| {
+                assign_gt_by_key(&mut lhs.0, rhs.0, |an_payout| an_payout[epi_self]);
+            });
         }
     }
 
@@ -682,28 +720,12 @@ impl<T> MinMin<T> {
         Self(t)
     }
 }
-impl MinMin<EnumMap<EPlayerIndex, isize>> {
-    fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
-        assign_lt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
-    }
-    fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, _epi_card: EPlayerIndex) {
-        assign_lt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct MaxMin<T>(pub T);
 impl<T> MaxMin<T> {
     fn new(t: T) -> Self {
         Self(t)
-    }
-}
-impl MaxMin<EnumMap<EPlayerIndex, isize>> {
-    fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
-        assign_gt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
-    }
-    fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, _epi_card: EPlayerIndex) {
-        assign_lt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }
 }
 
@@ -714,20 +736,6 @@ impl<T> MaxSelfishMin<T> {
         Self(t)
     }
 }
-impl MaxSelfishMin<EnumMap<EPlayerIndex, isize>> {
-    fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
-        assign_gt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
-    }
-    fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex) {
-        assign_better(&mut self.0, other.0, |an_payout_lhs, an_payout_rhs| {
-            match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
-                Ordering::Less => false,
-                Ordering::Equal => an_payout_lhs[epi_self] < an_payout_rhs[epi_self],
-                Ordering::Greater => true,
-            }
-        });
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct MaxSelfishMax<T>(pub T);
@@ -736,34 +744,12 @@ impl<T> MaxSelfishMax<T> {
         Self(t)
     }
 }
-impl MaxSelfishMax<EnumMap<EPlayerIndex, isize>> {
-    fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
-        assign_gt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
-    }
-    fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex) {
-        assign_better(&mut self.0, other.0, |an_payout_lhs, an_payout_rhs| {
-            match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
-                Ordering::Less => false,
-                Ordering::Equal => an_payout_lhs[epi_self] > an_payout_rhs[epi_self],
-                Ordering::Greater => true,
-            }
-        });
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Max<T>(pub T);
 impl<T> Max<T> {
     fn new(t: T) -> Self {
         Self(t)
-    }
-}
-impl Max<EnumMap<EPlayerIndex, isize>> {
-    fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
-        assign_gt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
-    }
-    fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, _epi_card: EPlayerIndex) {
-        assign_gt_by_key(&mut self.0, other.0, |an_payout| an_payout[epi_self]);
     }
 }
 
