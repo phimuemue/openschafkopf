@@ -176,6 +176,10 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
             payload_stich_count
         })
     }
+
+    fn maxmin_can_be_used_instead_of_maxselfishmin(&self, epi: EPlayerIndex) -> bool {
+        epi == self.epi
+    }
 }
 
 #[test]

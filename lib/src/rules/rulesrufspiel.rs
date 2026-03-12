@@ -348,6 +348,9 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
     fn heuristic_active_occurence_probability(&self) -> Option<f64> {
         Some(0.09)
     }
+    fn maxmin_can_be_used_instead_of_maxselfishmin(&self, _epi: EPlayerIndex) -> bool {
+        false
+    }
 }
 
 #[derive(Debug, Clone)]

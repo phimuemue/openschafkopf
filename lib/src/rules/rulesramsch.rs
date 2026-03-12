@@ -233,4 +233,8 @@ impl TRules for SRulesRamsch {
     fn alpha_beta_pruner_lohi_values(&self) -> Option<Box<dyn Fn(&SRuleStateCacheFixed)->EnumMap<EPlayerIndex, ELoHi> + Sync>> {
         None
     }
+
+    fn maxmin_can_be_used_instead_of_maxselfishmin(&self, _epi: EPlayerIndex) -> bool {
+        false
+    }
 }

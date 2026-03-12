@@ -474,6 +474,8 @@ pub trait TRules : fmt::Display + Sync + fmt::Debug + Send + Clone {
         // => Assume 9%. (All of this is hand-waving and oversimplifying, but as a heuristic it might still be better than nothing.)
         None
     }
+
+    fn maxmin_can_be_used_instead_of_maxselfishmin(&self, epi: EPlayerIndex) -> bool;
 }
 
 impl<Rules: TRules> TWinnerIndex for Rules {

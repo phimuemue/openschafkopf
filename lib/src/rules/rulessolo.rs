@@ -444,6 +444,9 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<PayoutDeci
     fn heuristic_active_occurence_probability(&self) -> Option<f64> {
         self.of_heuristic_active_occurence_probability
     }
+    fn maxmin_can_be_used_instead_of_maxselfishmin(&self, epi: EPlayerIndex) -> bool {
+        epi == self.epi
+    }
 }
 
 #[derive(Copy, Clone)]

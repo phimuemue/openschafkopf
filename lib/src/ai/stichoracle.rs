@@ -2468,6 +2468,14 @@ mod tests {
                             STplStrategiesAll,
                             /*fn_alphabetapruner*/|_stichseq, _ahand| SAlphaBetaPrunerNone,
                         );
+                        if game.rules.maxmin_can_be_used_instead_of_maxselfishmin(epi) {
+                            for (_card, payoutstats) in &determinebestcardresult_simple {
+                                assert_eq!(
+                                    payoutstats.omaxmin.as_ref().unwrap_static_some().0,
+                                    payoutstats.omaxselfishmin.as_ref().unwrap_static_some().0,
+                                );
+                            }
+                        }
                         macro_rules! eq_on_field{($lhs:expr, $rhs:expr, $field:ident,) => {
                             assert_eq!(
                                 $lhs.iter().map(|(card, payoutstats)|
