@@ -6,10 +6,10 @@ mod utils;
 use wasm_bindgen::prelude::*;
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    ai::{SPayoutStats, determine_best_card, gametree::{SMaxSelfishMinStrategy, SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, STplStrategiesOnlyMaxSelfishMin}, stichoracle::SFilterByOracle},
+    ai::{SDetermineBestCardResult, SPayoutStats, determine_best_card, gametree::{SPerMinMaxStrategyGeneric, SMaxSelfishMinStrategy, SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, STplStrategiesOnlyMaxSelfishMin}, stichoracle::SFilterByOracle},
     game::{first_hand_for, SGameResultGeneric},
     game_analysis::{html_payout_table, html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
-    rules::{TRules, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe, card_points::points_stich},
+    rules::{SRules, TRules, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe, card_points::points_stich},
     primitives::{ECard, EFarbe, ESchlag, EPlayerIndex, SHand, SStichSequence, TCardSorter},
 };
 use crate::utils::*;
@@ -153,7 +153,7 @@ fn output_card_sauspiel_img(card: ECard, b_highlight: bool) -> impl html_generat
 pub fn greet() {
     set_panic_hook();
 
-    let determine_best_card_sauspiel = |ahand: EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence, epi, rules, expensifiers: &SExpensifiers| {
+    fn determine_best_card_sauspiel(ahand: EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence, epi: EPlayerIndex, rules: &SRules, expensifiers: &SExpensifiers) -> SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<()>, STplStrategiesOnlyMaxSelfishMin>> {
         unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_,_,_>(
             stichseq,
             Box::new(std::iter::once(ahand)) as Box<_>,
@@ -172,7 +172,7 @@ pub fn greet() {
             /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
             /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
         ))
-    };
+    }
     fn append_sibling(node_existing: &web_sys::Node, node_new: &web_sys::Node) {
         unwrap!(
             unwrap!(node_existing.parent_element())
