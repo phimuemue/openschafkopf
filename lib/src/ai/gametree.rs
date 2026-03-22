@@ -613,7 +613,7 @@ macro_rules! impl_perminmaxstrategy{(
     #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
     pub struct $struct_tpl_strategies;
     impl TTplStrategies for $struct_tpl_strategies {
-        type IsSomeMinMin = $IsSomeMaxMin;
+        type IsSomeMinMin = $IsSomeMinMin;
         type IsSomeMaxMin = $IsSomeMaxMin;
         type IsSomeMaxSelfishMin = $IsSomeMaxSelfishMin;
         type IsSomeMaxSelfishMax = $IsSomeMaxSelfishMax;
