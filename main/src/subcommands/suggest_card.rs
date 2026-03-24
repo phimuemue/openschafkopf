@@ -15,7 +15,7 @@ use itertools::*;
 use serde::Serialize;
 use failure::*;
 use derive_new::new;
-use plain_enum::PlainEnum;
+use plain_enum::{PlainEnum, EnumMap};
 use super::common_given_game::*;
 use as_num::*;
 use std::io::IsTerminal;
@@ -204,6 +204,41 @@ fn make_snapshot_cache_none<TplStrategies>(_rules: &SRules) -> impl Fn(&SRuleSta
     SSnapshotCacheNone::factory()
 }
 
+fn run_internal<
+    'stichseq,
+    'rules,
+    FilterAllowedCards: TFilterAllowedCards,
+    TplStrategies: TTplStrategies,
+    AlphaBetaPruner: TAlphaBetaPruner+Sync,
+    Pruner: TPruner+Sync,
+    SnapshotCache: TSnapshotCache<<SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> as TForEachSnapshot>::Output>,
+    OSnapshotCache: Into<Option<SnapshotCache>>,
+    SnapshotVisualizer: TSnapshotVisualizer<<SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> as TForEachSnapshot>::Output>,
+    OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
+    PayoutStatsPayload: Ord + Copy + Sync + Send,
+>(
+    stichseq: &'stichseq SStichSequence,
+    itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
+    fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
+    fn_make_foreachsnapshot: &(dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>) -> SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> + std::marker::Sync),
+    fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
+    fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
+    fn_inspect: &(dyn Fn(&VInspectionPoint<&EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>>>, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
+    fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
+) -> Option<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>>
+{
+    determine_best_card(
+        stichseq,
+        itahand,
+        fn_make_filter,
+        fn_make_foreachsnapshot,
+        fn_snapshotcache,
+        fn_visualizer,
+        fn_inspect,
+        fn_payout,
+    )
+}
+
 #[derive(Debug, Clone)]
 enum VRankChange { // Lower ranks considered better.
     Change(ELoHi),
@@ -288,7 +323,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 type PayoutStats = SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, $TplStrategies>;
                 let ovecinterimres_verbose = if_then_some!(b_verbose, Arc::new(Mutex::new(Vec::<SInterimResult<PayoutStats>>::new())));
                 let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
-                let determinebestcardresult = determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_,_>( // TODO avoid explicit types
+                let determinebestcardresult = run_internal::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_,_>( // TODO avoid explicit types
                     stichseq,
                     Box::new(
                         itahand
