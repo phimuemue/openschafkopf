@@ -204,6 +204,41 @@ fn make_snapshot_cache_none<TplStrategies>(_rules: &SRules) -> impl Fn(&SRuleSta
     SSnapshotCacheNone::factory()
 }
 
+#[derive(Debug, Clone)]
+enum VRankChange { // Lower ranks considered better.
+    Change(ELoHi),
+    Equal(usize/*n_iterations*/),
+}
+
+struct SInterimResult<PayoutStats> {
+    ornkchg: Option<VRankChange>,
+    card: ECard,
+    payoutstats: PayoutStats,
+}
+
+struct SPositionAndRank {
+    i_position: usize,
+    n_rank: usize,
+}
+
+fn for_each_interim_result<PayoutStats>( // TODORUST generic closure
+    slcinterimres: &mut [SInterimResult<PayoutStats>], // TODO Taking mut here is unfortunate, but I did not see a simple way out of this without duplication
+    fn_cmp_interim_result: impl FnMut(&SInterimResult<PayoutStats>, &SInterimResult<PayoutStats>)->std::cmp::Ordering,
+    mut fn_callback: impl FnMut(SPositionAndRank, &mut SInterimResult<PayoutStats>),
+) {
+    let mut n_rank = 0;
+    for slcinterimres_chunk in slcinterimres
+        .chunk_by_mut(fn_cmp_to_fn_eq(fn_cmp_interim_result))
+    {
+        let mut i_position = n_rank;
+        for interimres in slcinterimres_chunk.iter_mut() {
+            fn_callback(SPositionAndRank{i_position, n_rank}, interimres);
+            i_position += 1;
+        }
+        n_rank += slcinterimres_chunk.len();
+    }
+}
+
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     with_common_args(
         clapmatches,
@@ -251,38 +286,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             // we are interested in payout => single-card-optimization useless
             macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($TplStrategies:ident, $fn_alphabetapruner:expr,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                 type PayoutStats = SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, $TplStrategies>;
-                #[derive(Debug, Clone)]
-                enum VRankChange { // Lower ranks considered better.
-                    Change(ELoHi),
-                    Equal(usize/*n_iterations*/),
-                }
-                struct SInterimResult {
-                    ornkchg: Option<VRankChange>,
-                    card: ECard,
-                    payoutstats: PayoutStats,
-                }
-                struct SPositionAndRank {
-                    i_position: usize,
-                    n_rank: usize,
-                }
-                fn for_each_interim_result( // TODORUST generic closure
-                    slcinterimres: &mut [SInterimResult], // TODO Taking mut here is unfortunate, but I did not see a simple way out of this without duplication
-                    fn_cmp_interim_result: impl FnMut(&SInterimResult, &SInterimResult)->std::cmp::Ordering,
-                    mut fn_callback: impl FnMut(SPositionAndRank, &mut SInterimResult),
-                ) {
-                    let mut n_rank = 0;
-                    for slcinterimres_chunk in slcinterimres
-                        .chunk_by_mut(fn_cmp_to_fn_eq(fn_cmp_interim_result))
-                    {
-                        let mut i_position = n_rank;
-                        for interimres in slcinterimres_chunk.iter_mut() {
-                            fn_callback(SPositionAndRank{i_position, n_rank}, interimres);
-                            i_position += 1;
-                        }
-                        n_rank += slcinterimres_chunk.len();
-                    }
-                }
-                let ovecinterimres_verbose = if_then_some!(b_verbose, Arc::new(Mutex::new(Vec::<SInterimResult>::new())));
+                let ovecinterimres_verbose = if_then_some!(b_verbose, Arc::new(Mutex::new(Vec::<SInterimResult<PayoutStats>>::new())));
                 let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                 let determinebestcardresult = determine_best_card::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_,_>( // TODO avoid explicit types
                     stichseq,
@@ -317,7 +321,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                     );
                                 },
                                 VInspectionPoint::AfterHand(mapcardopayoutstats) => {
-                                    let fn_cmp_interim_result = |lhs: &SInterimResult, rhs: &SInterimResult| {
+                                    let fn_cmp_interim_result = |lhs: &SInterimResult<PayoutStats>, rhs: &SInterimResult<PayoutStats>| {
                                         rhs.payoutstats.compare_canonical(&lhs.payoutstats, fn_loss_or_win)
                                     };
                                     let mut vecinterimres = unwrap!(vecinterimres.lock());
