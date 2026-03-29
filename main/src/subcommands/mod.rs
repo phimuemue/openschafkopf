@@ -4,15 +4,12 @@ pub mod hand_stats;
 pub mod parse;
 pub mod suggest_card;
 pub mod webext;
-pub mod websocket;
 mod handconstraint;
 mod common_given_game;
 
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    rules::{
-        ruleset::{SRuleSet, VStockOrT},
-    },
+    rules::ruleset::VStockOrT,
     ai::SAi,
     primitives::card::EKurzLang,
     game::*,
@@ -21,26 +18,7 @@ use std::io::Read;
 use failure::*;
 use plain_enum::PlainEnum;
 
-fn clap_arg(str_long: &'static str, str_default: &'static str) -> clap::Arg<'static> {
-    clap::Arg::new(str_long)
-        .long(str_long)
-        .default_value(str_default)
-}
-
 mod shared_args {
-    pub fn ruleset_arg() -> clap::Arg<'static> {
-        super::clap_arg("ruleset", "rulesets/default.toml")
-            .help("Path to a ruleset TOML file.")
-            .long_help("The TOML ruleset file describes the set of available rules, prices, what to do if no one wants to play, whether stoss and doubling is allowed.")
-    }
-
-    pub fn ai_arg() -> clap::Arg<'static> {
-        super::clap_arg("ai", "cheating")
-            .help("Describes whether AI has access to all players' cards")
-            .long_help("Describes whether the AI plays fair or has access to all players' cards.")
-            .possible_values(["cheating", "simulating"]) // TODO custom validator?
-    }
-
     pub fn input_files_arg(str_name: &'static str) -> clap::Arg<'static> { // TODO? unify str_name
         clap::Arg::new(str_name)
             .takes_value(true)
@@ -48,10 +26,6 @@ mod shared_args {
             .help("Paths to files containing played games")
             .long_help("Paths or glob patterns to files containing played games. Files can either be saved HTML from sauspiel.de or plain text files containing one game per line (each line consisting of the rules, followed by a colon and the cards in the order they have been played).")
     }
-}
-
-pub fn get_ruleset(clapmatches: &clap::ArgMatches) -> Result<SRuleSet, Error> {
-    SRuleSet::from_file(std::path::Path::new(unwrap!(clapmatches.value_of("ruleset"))))
 }
 
 pub fn ai(subcommand_matches: &clap::ArgMatches) -> SAi {

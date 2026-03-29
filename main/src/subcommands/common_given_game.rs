@@ -35,10 +35,9 @@ enum VUserSuppliedPosition {
 }
 
 pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::Command<'static> {
-    use super::shared_args::*;
     clap::Command::new(str_subcommand)
         .about(str_about)
-        .arg(ruleset_arg())
+        .arg(openschafkopf_shared_args::ruleset_arg())
         .arg( // "overrides" ruleset // TODO? make ruleset optional
             clap::Arg::new("rules")
                 .long("rules")
@@ -201,7 +200,7 @@ pub fn with_common_args<FnWithArgs>(
         {
             Ok(vecrules) => {
                 if vecrules.is_empty() {
-                    let ruleset = super::get_ruleset(clapmatches)?;
+                    let ruleset = openschafkopf_shared_args::get_ruleset(clapmatches)?;
                     (
                         Box::new(ruleset
                             .avecrulegroup.into_raw().into_iter()
