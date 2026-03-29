@@ -106,7 +106,7 @@ function replace_div_with(div_old: HTMLElement, div_new: HTMLElement) {
     unwrap(div_old.parentNode).replaceChild(div_new, div_old);
 }
 
-function arrays_are_equal(vec_lhs, vec_rhs) : boolean { // TODO? General deep comparison utility
+function arrays_are_equal<T>(vec_lhs: T[], vec_rhs: T[]) : boolean { // TODO? General deep comparison utility
     return vec_lhs.length === vec_rhs.length
         && vec_lhs.every((element, i) => element === vec_rhs[i]);
 }
@@ -121,7 +121,7 @@ ws.onmessage = function(msg) {
     let sitestate = dbg(JSON.parse(msg.data) as SSiteState); // assume that server sends valid SSiteState // TODO? assert/check
     {
         let div_hand_new = new_div_with_id("hand");
-        let veccard_hand = sitestate.vectplstrstr_caption_message_zugeben.map((tplstrstr) => {
+        let veccard_hand = sitestate.vectplstrstr_caption_message_zugeben.map((tplstrstr: [String, String]) => {
             tplstrstr[0]
         });
         if (!arrays_are_equal(veccard_hand, localstate.veccard_hand)) {
