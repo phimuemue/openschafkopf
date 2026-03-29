@@ -1,4 +1,4 @@
-./target/release/openschafkopf websocket &
+./target/release/openschafkopf-websocket &
 sleep 2 # time to start openschafkopf
 
 # try to open for four players, each requiring to enter a name
