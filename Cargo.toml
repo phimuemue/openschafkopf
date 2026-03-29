@@ -1,10 +1,11 @@
 [workspace]
 members = [
     "main",
+    "openschafkopf-websocket",
     "util",
     "netschafkopf_helper",
     "sauspiel_webext",
-    "html_generator",
+    "html_generator", "openschafkopf-shared_args",
 ]
 resolver = "2"
 

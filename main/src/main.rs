@@ -31,7 +31,6 @@ fn main() -> Result<(), Error> {
     subcommands!(
         // play
         (cli, "cli")
-        (websocket, "websocket")
         // analyze
         (analyze, "analyze")
         (suggest_card, "suggest-card")

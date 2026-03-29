@@ -1,0 +1,23 @@
+[package]
+name = "openschafkopf-websocket"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license-file.workspace = true
+description = "Play schafkopf in the browser."
+
+[dependencies]
+openschafkopf-shared_args = {path = "../openschafkopf-shared_args"}
+openschafkopf_lib = {path = "../lib"}
+openschafkopf_util = {path = "../util"}
+rand = "0"
+serde = {version = "1", features = ["derive"]}
+serde_json = "1"
+itertools = "0"
+derive-new = "0"
+futures = "0.3"
+failure = "0" # TODO remove this dependency
+async-std = "1" # Probably TODO migrate to smol, according to https://github.com/async-rs/async-std/pull/1099
+async-tungstenite = "0"
+plain_enum = "0"
+clap = {version="3", features = ["std", "color", "suggestions", "wrap_help"]} # see https://docs.rs/clap/latest/clap/index.html#feature-flags

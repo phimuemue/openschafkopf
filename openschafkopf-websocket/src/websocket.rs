@@ -29,8 +29,7 @@ use async_tungstenite::{
 use plain_enum::{EnumMap, PlainEnum};
 use failure::*;
 
-mod gamephase;
-use gamephase::{
+use crate::gamephase::{
     SSendToPlayers,
     VGamePhase,
     VGamePhaseAction,
@@ -38,17 +37,6 @@ use gamephase::{
     VGameAction,
     VMessage,
 };
-
-pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
-    use super::shared_args::*;
-    clap::Command::new(str_subcommand)
-        .about("Play in the browser")
-        .arg(ruleset_arg())
-        .arg(clap::Arg::new("with-bots")
-            .long("with-bots")
-            .help("Allow playing against bots")
-        )
-}
 
 #[derive(Serialize, Deserialize)]
 enum VPlayerCmd {
@@ -440,7 +428,7 @@ async fn internal_run(ruleset: SRuleSet, b_with_bots: bool) -> Result<(), Error>
 
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     task::block_on(internal_run(
-        super::get_ruleset(clapmatches)?,
+        openschafkopf_shared_args::get_ruleset(clapmatches)?,
         /*b_with_bots*/clapmatches.is_present("with-bots"),
     ))
 }

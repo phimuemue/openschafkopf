@@ -1,0 +1,12 @@
+[package]
+name = "openschafkopf-shared_args"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license-file.workspace = true
+
+[dependencies]
+clap = "3"
+openschafkopf_lib = {path = "../lib"}
+failure = "0" # TODO remove this dependency
+openschafkopf_util = {path = "../util"}
