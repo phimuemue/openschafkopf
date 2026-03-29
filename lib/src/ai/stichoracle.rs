@@ -2471,8 +2471,8 @@ mod tests {
                         if game.rules.maxmin_can_be_used_instead_of_maxselfishmin(epi) {
                             for (_card, payoutstats) in &determinebestcardresult_simple {
                                 assert_eq!(
-                                    payoutstats.omaxmin.as_ref().unwrap_static_some().0,
-                                    payoutstats.omaxselfishmin.as_ref().unwrap_static_some().0,
+                                    payoutstats.omaxmin.as_ref().unwrap_static_some(),
+                                    payoutstats.omaxselfishmin.as_ref().unwrap_static_some(),
                                 );
                             }
                         }
