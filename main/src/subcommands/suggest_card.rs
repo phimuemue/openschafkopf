@@ -1,6 +1,6 @@
 use openschafkopf_lib::{
     ai::{*, gametree::*, stichoracle::SFilterByOracle, cardspartition::*},
-    rules::{SRules, TRules, SRuleStateCacheFixed},
+    rules::{SRules, TRules, SRuleStateCacheFixed, SExpensifiers},
     primitives::*,
     game_analysis::determine_best_card_table::{
         table,
@@ -220,11 +220,15 @@ fn run_internal<
     clapmatches: &clap::ArgMatches,
     rules: &SRules,
     fn_loss_or_win: &(impl Fn(isize, std::cmp::Ordering)->std::cmp::Ordering + std::marker::Sync),
+    epi_position: EPlayerIndex,
+    expensifiers: &SExpensifiers,
 
     stichseq: &'stichseq SStichSequence,
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
-    fn_make_foreachsnapshot: &(dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>) -> SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> + std::marker::Sync),
+
+    fn_alphabetapruner: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->AlphaBetaPruner + std::marker::Sync,
+
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, std::cmp::Ordering) + Sync),
@@ -244,7 +248,12 @@ fn run_internal<
                 })
         ) as Box<_>,
         fn_make_filter,
-        fn_make_foreachsnapshot,
+        /*fn_make_foreachsnapshot*/&|stichseq, ahand| <SMinReachablePayoutBase<Pruner, TplStrategies, _>>::new_with_pruner(
+            rules,
+            epi_position,
+            expensifiers.clone(),
+            fn_alphabetapruner(stichseq, ahand),
+        ),
         fn_snapshotcache,
         fn_visualizer,
         /*fn_inspect*/&|inspectionpoint, i_ahand, ahand| {
@@ -407,21 +416,17 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             let fn_loss_or_win = |_n_payout, ord_vs_0| ord_vs_0;
             // we are interested in payout => single-card-optimization useless
             macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($TplStrategies:ident, $fn_alphabetapruner:expr,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
-                let determinebestcardresult = run_internal::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_>( // TODO avoid explicit types
+                let determinebestcardresult = run_internal::<$($func_filter_allowed_cards_ty)*,_,_,$pruner,_,_,_,_>( // TODO avoid explicit types
                     b_verbose,
                     clapmatches,
                     rules,
                     &fn_loss_or_win,
+                    epi_position,
+                    expensifiers,
                     stichseq,
                     itahand,
                     $func_filter_allowed_cards,
-                    &|stichseq, ahand| <SMinReachablePayoutBase<$pruner, $TplStrategies, _>>::new_with_pruner(
-                        rules,
-                        epi_position,
-                        expensifiers.clone(),
-                        #[allow(clippy::redundant_closure_call)]
-                        $fn_alphabetapruner(stichseq, ahand),
-                    ),
+                    $fn_alphabetapruner,
                     $fn_snapshotcache::<$TplStrategies>(rules),
                     $fn_visualizer,
                     /*fn_payout*/&|stichseq, ahand, n_payout| fn_human_readable_payout(
