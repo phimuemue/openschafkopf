@@ -217,6 +217,8 @@ fn run_internal<
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
     PayoutStatsPayload: Ord + Copy + Sync + Send,
 >(
+    clapmatches: &clap::ArgMatches,
+
     stichseq: &'stichseq SStichSequence,
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
@@ -225,18 +227,27 @@ fn run_internal<
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(&VInspectionPoint<&EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>>>, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
-) -> Option<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>>
+) -> Result<Option<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>>, Error>
 {
-    determine_best_card(
+    let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
+    Ok(determine_best_card(
         stichseq,
-        itahand,
+        Box::new(
+            itahand
+                .flat_map(|ahand| {
+                    std::iter::repeat_n(
+                        ahand,
+                        n_repeat_hand,
+                    )
+                })
+        ) as Box<_>,
         fn_make_filter,
         fn_make_foreachsnapshot,
         fn_snapshotcache,
         fn_visualizer,
         fn_inspect,
         fn_payout,
-    )
+    ))
 }
 
 #[derive(Debug, Clone)]
@@ -322,18 +333,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($TplStrategies:ident, $fn_alphabetapruner:expr,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
                 type PayoutStats = SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, $TplStrategies>;
                 let ovecinterimres_verbose = if_then_some!(b_verbose, Arc::new(Mutex::new(Vec::<SInterimResult<PayoutStats>>::new())));
-                let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
                 let determinebestcardresult = run_internal::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_,_>( // TODO avoid explicit types
+                    clapmatches,
                     stichseq,
-                    Box::new(
-                        itahand
-                            .flat_map(|ahand| {
-                                std::iter::repeat_n(
-                                    ahand,
-                                    n_repeat_hand,
-                                )
-                            })
-                    ) as Box<_>,
+                    itahand,
                     $func_filter_allowed_cards,
                     &|stichseq, ahand| <SMinReachablePayoutBase<$pruner, $TplStrategies, _>>::new_with_pruner(
                         rules,
@@ -424,7 +427,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         (epi_position, ahand[epi_position].clone(/*TODO needed?*/)),
                         n_payout,
                     ),
-                ).ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
+                )?.ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
                 if clapmatches.is_present("json") {
                     println!("{}", unwrap!(serde_json::to_string(
                         &SJson::new(
