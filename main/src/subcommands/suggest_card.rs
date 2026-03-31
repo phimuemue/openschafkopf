@@ -215,9 +215,11 @@ fn run_internal<
     OSnapshotCache: Into<Option<SnapshotCache>>,
     SnapshotVisualizer: TSnapshotVisualizer<<SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> as TForEachSnapshot>::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
-    PayoutStatsPayload: Ord + Copy + Sync + Send,
 >(
+    b_verbose: bool,
     clapmatches: &clap::ArgMatches,
+    rules: &SRules,
+    fn_loss_or_win: &(impl Fn(isize, std::cmp::Ordering)->std::cmp::Ordering + std::marker::Sync),
 
     stichseq: &'stichseq SStichSequence,
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
@@ -225,11 +227,11 @@ fn run_internal<
     fn_make_foreachsnapshot: &(dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>) -> SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> + std::marker::Sync),
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
-    fn_inspect: &(dyn Fn(&VInspectionPoint<&EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>>>, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
-    fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
-) -> Result<Option<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>>, Error>
+    fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, std::cmp::Ordering) + Sync),
+) -> Result<Option<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>>>, Error>
 {
     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
+    let ovecinterimres_verbose = if_then_some!(b_verbose, Arc::new(Mutex::new(Vec::<SInterimResult<TplStrategies>>::new())));
     Ok(determine_best_card(
         stichseq,
         Box::new(
@@ -245,7 +247,81 @@ fn run_internal<
         fn_make_foreachsnapshot,
         fn_snapshotcache,
         fn_visualizer,
-        fn_inspect,
+        /*fn_inspect*/&|inspectionpoint, i_ahand, ahand| {
+            if let Some(ref vecinterimres) = ovecinterimres_verbose {
+                match inspectionpoint {
+                    VInspectionPoint::Card{b_before, card} => {
+                        println!(" {} {} ({}): {}",
+                            if *b_before {'>'} else {'<'},
+                            i_ahand+1, // TODO use same hand counters as in common_given_game
+                            card,
+                            display_card_slices(ahand, rules, " | "),
+                        );
+                    },
+                    VInspectionPoint::AfterHand(mapcardopayoutstats) => {
+                        let fn_cmp_interim_result = |lhs: &SInterimResult<TplStrategies>, rhs: &SInterimResult<TplStrategies>| {
+                            rhs.payoutstats.compare_canonical(&lhs.payoutstats, fn_loss_or_win)
+                        };
+                        let mut vecinterimres = unwrap!(vecinterimres.lock());
+                        let n_count_before = vecinterimres.len();
+                        assert!(vecinterimres.is_sorted_by(fn_cmp_to_fn_le(fn_cmp_interim_result)));
+                        // Remember old ranks and positions
+                        let mut mapcardoposandrank_old = ECard::map_from_fn(|_| None);
+                        for_each_interim_result(&mut vecinterimres, fn_cmp_interim_result, |posandrank, interimres| {
+                            verify!(mapcardoposandrank_old[interimres.card].replace(posandrank).is_none()); // Implies that each card occured only once
+                        });
+                        // Copy over/update values that have been present in previous iteration
+                        for (card, payoutstats) in internal_cards_and_ts(mapcardopayoutstats) {
+                            if let Some(posandrank) = &mapcardoposandrank_old[card] {
+                                assert_eq!(vecinterimres[posandrank.i_position].card, card);
+                                vecinterimres[posandrank.i_position].payoutstats = payoutstats.clone(); // Update to new value
+                            } else {
+                                vecinterimres.push(SInterimResult{ornkchg: None, card, payoutstats: payoutstats.clone()});
+                            }
+                        }
+                        // Compute rank changes - only on already known entries.
+                        let slcinterimres_already_present = &mut vecinterimres[0..n_count_before];
+                        slcinterimres_already_present.sort_by(&fn_cmp_interim_result);
+                        for_each_interim_result(slcinterimres_already_present, fn_cmp_interim_result, |posandrank, interimres| {
+                            interimres.ornkchg = Some(match posandrank.n_rank.cmp(&unwrap!(mapcardoposandrank_old[interimres.card].as_ref()).n_rank) {
+                                std::cmp::Ordering::Less => VRankChange::Change(ELoHi::Lo),
+                                std::cmp::Ordering::Greater => VRankChange::Change(ELoHi::Hi),
+                                std::cmp::Ordering::Equal => VRankChange::Equal(match interimres.ornkchg {
+                                    None | Some(VRankChange::Change(_)) => 1,
+                                    Some(VRankChange::Equal(n_iterations)) => n_iterations + 1,
+                                })
+                            });
+                        });
+                        if n_count_before<vecinterimres.len() {
+                            vecinterimres.sort_by(&fn_cmp_interim_result);
+                        } else {
+                            assert!(vecinterimres.is_sorted_by(fn_cmp_to_fn_le(fn_cmp_interim_result)));
+                        }
+                        print_payoutstatstable::<_,TplStrategies>(
+                            &internal_table(
+                                vecinterimres.iter()
+                                    .map(|SInterimResult{ornkchg, card, payoutstats}| (
+                                        format!("{} {}",
+                                            match ornkchg {
+                                                None => "".to_string(),
+                                                Some(VRankChange::Change(ELoHi::Lo)) => "^".to_string(),
+                                                Some(VRankChange::Equal(n_iterations)) => format!("=({n_iterations})"),
+                                                Some(VRankChange::Change(ELoHi::Hi)) => "v".to_string(),
+                                            },
+                                            card,
+                                        ),
+                                        payoutstats,
+                                    ))
+                                    .collect(),
+                                /*b_group*/false,
+                                &fn_loss_or_win,
+                            ),
+                            /*b_print_table_description_before_table*/false,
+                        );
+                    },
+                }
+            }
+        },
         fn_payout,
     ))
 }
@@ -256,10 +332,10 @@ enum VRankChange { // Lower ranks considered better.
     Equal(usize/*n_iterations*/),
 }
 
-struct SInterimResult<PayoutStats> {
+struct SInterimResult<TplStrategies: TTplStrategies> {
     ornkchg: Option<VRankChange>,
     card: ECard,
-    payoutstats: PayoutStats,
+    payoutstats: SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>,
 }
 
 struct SPositionAndRank {
@@ -267,10 +343,10 @@ struct SPositionAndRank {
     n_rank: usize,
 }
 
-fn for_each_interim_result<PayoutStats>( // TODORUST generic closure
-    slcinterimres: &mut [SInterimResult<PayoutStats>], // TODO Taking mut here is unfortunate, but I did not see a simple way out of this without duplication
-    fn_cmp_interim_result: impl FnMut(&SInterimResult<PayoutStats>, &SInterimResult<PayoutStats>)->std::cmp::Ordering,
-    mut fn_callback: impl FnMut(SPositionAndRank, &mut SInterimResult<PayoutStats>),
+fn for_each_interim_result<TplStrategies: TTplStrategies>( // TODORUST generic closure
+    slcinterimres: &mut [SInterimResult<TplStrategies>], // TODO Taking mut here is unfortunate, but I did not see a simple way out of this without duplication
+    fn_cmp_interim_result: impl FnMut(&SInterimResult<TplStrategies>, &SInterimResult<TplStrategies>)->std::cmp::Ordering,
+    mut fn_callback: impl FnMut(SPositionAndRank, &mut SInterimResult<TplStrategies>),
 ) {
     let mut n_rank = 0;
     for slcinterimres_chunk in slcinterimres
@@ -331,10 +407,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             let fn_loss_or_win = |_n_payout, ord_vs_0| ord_vs_0;
             // we are interested in payout => single-card-optimization useless
             macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($TplStrategies:ident, $fn_alphabetapruner:expr,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
-                type PayoutStats = SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, $TplStrategies>;
-                let ovecinterimres_verbose = if_then_some!(b_verbose, Arc::new(Mutex::new(Vec::<SInterimResult<PayoutStats>>::new())));
-                let determinebestcardresult = run_internal::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_,_>( // TODO avoid explicit types
+                let determinebestcardresult = run_internal::<$($func_filter_allowed_cards_ty)*,_,_,_,_,_,_,_>( // TODO avoid explicit types
+                    b_verbose,
                     clapmatches,
+                    rules,
+                    &fn_loss_or_win,
                     stichseq,
                     itahand,
                     $func_filter_allowed_cards,
@@ -347,81 +424,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     ),
                     $fn_snapshotcache::<$TplStrategies>(rules),
                     $fn_visualizer,
-                    /*fn_inspect*/&|inspectionpoint, i_ahand, ahand| {
-                        if let Some(ref vecinterimres) = ovecinterimres_verbose {
-                            match inspectionpoint {
-                                VInspectionPoint::Card{b_before, card} => {
-                                    println!(" {} {} ({}): {}",
-                                        if *b_before {'>'} else {'<'},
-                                        i_ahand+1, // TODO use same hand counters as in common_given_game
-                                        card,
-                                        display_card_slices(&ahand, rules, " | "),
-                                    );
-                                },
-                                VInspectionPoint::AfterHand(mapcardopayoutstats) => {
-                                    let fn_cmp_interim_result = |lhs: &SInterimResult<PayoutStats>, rhs: &SInterimResult<PayoutStats>| {
-                                        rhs.payoutstats.compare_canonical(&lhs.payoutstats, fn_loss_or_win)
-                                    };
-                                    let mut vecinterimres = unwrap!(vecinterimres.lock());
-                                    let n_count_before = vecinterimres.len();
-                                    assert!(vecinterimres.is_sorted_by(fn_cmp_to_fn_le(fn_cmp_interim_result)));
-                                    // Remember old ranks and positions
-                                    let mut mapcardoposandrank_old = ECard::map_from_fn(|_| None);
-                                    for_each_interim_result(&mut vecinterimres, fn_cmp_interim_result, |posandrank, interimres| {
-                                        verify!(mapcardoposandrank_old[interimres.card].replace(posandrank).is_none()); // Implies that each card occured only once
-                                    });
-                                    // Copy over/update values that have been present in previous iteration
-                                    for (card, payoutstats) in internal_cards_and_ts(mapcardopayoutstats) {
-                                        if let Some(posandrank) = &mapcardoposandrank_old[card] {
-                                            assert_eq!(vecinterimres[posandrank.i_position].card, card);
-                                            vecinterimres[posandrank.i_position].payoutstats = payoutstats.clone(); // Update to new value
-                                        } else {
-                                            vecinterimres.push(SInterimResult{ornkchg: None, card, payoutstats: payoutstats.clone()});
-                                        }
-                                    }
-                                    // Compute rank changes - only on already known entries.
-                                    let slcinterimres_already_present = &mut vecinterimres[0..n_count_before];
-                                    slcinterimres_already_present.sort_by(&fn_cmp_interim_result);
-                                    for_each_interim_result(slcinterimres_already_present, fn_cmp_interim_result, |posandrank, interimres| {
-                                        interimres.ornkchg = Some(match posandrank.n_rank.cmp(&unwrap!(mapcardoposandrank_old[interimres.card].as_ref()).n_rank) {
-                                            std::cmp::Ordering::Less => VRankChange::Change(ELoHi::Lo),
-                                            std::cmp::Ordering::Greater => VRankChange::Change(ELoHi::Hi),
-                                            std::cmp::Ordering::Equal => VRankChange::Equal(match interimres.ornkchg {
-                                                None | Some(VRankChange::Change(_)) => 1,
-                                                Some(VRankChange::Equal(n_iterations)) => n_iterations + 1,
-                                            })
-                                        });
-                                    });
-                                    if n_count_before<vecinterimres.len() {
-                                        vecinterimres.sort_by(&fn_cmp_interim_result);
-                                    } else {
-                                        assert!(vecinterimres.is_sorted_by(fn_cmp_to_fn_le(fn_cmp_interim_result)));
-                                    }
-                                    print_payoutstatstable::<_,$TplStrategies>(
-                                        &internal_table(
-                                            vecinterimres.iter()
-                                                .map(|SInterimResult{ornkchg, card, payoutstats}| (
-                                                    format!("{} {}",
-                                                        match ornkchg {
-                                                            None => "".to_string(),
-                                                            Some(VRankChange::Change(ELoHi::Lo)) => "^".to_string(),
-                                                            Some(VRankChange::Equal(n_iterations)) => format!("=({n_iterations})"),
-                                                            Some(VRankChange::Change(ELoHi::Hi)) => "v".to_string(),
-                                                        },
-                                                        card,
-                                                    ),
-                                                    payoutstats,
-                                                ))
-                                                .collect(),
-                                            /*b_group*/false,
-                                            &fn_loss_or_win,
-                                        ),
-                                        /*b_print_table_description_before_table*/false,
-                                    );
-                                },
-                            }
-                        }
-                    },
                     /*fn_payout*/&|stichseq, ahand, n_payout| fn_human_readable_payout(
                         stichseq.clone(),
                         (epi_position, ahand[epi_position].clone(/*TODO needed?*/)),
