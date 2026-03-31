@@ -218,6 +218,7 @@ fn run_internal<
 >(
     b_verbose: bool,
     clapmatches: &clap::ArgMatches,
+    ahand_fixed_with_holes: &EnumMap<EPlayerIndex, SHand>,
     rules: &SRules,
     fn_loss_or_win: &(impl Fn(isize, std::cmp::Ordering)->std::cmp::Ordering + std::marker::Sync),
     epi_position: EPlayerIndex,
@@ -232,11 +233,11 @@ fn run_internal<
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, std::cmp::Ordering) + Sync),
-) -> Result<Option<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>>>, Error>
+) -> Result<(), Error>
 {
     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
     let ovecinterimres_verbose = if_then_some!(b_verbose, Arc::new(Mutex::new(Vec::<SInterimResult<TplStrategies>>::new())));
-    Ok(determine_best_card(
+    let determinebestcardresult = determine_best_card(
         stichseq,
         Box::new(
             itahand
@@ -332,7 +333,50 @@ fn run_internal<
             }
         },
         fn_payout,
-    ))
+    ).ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
+    if clapmatches.is_present("json") {
+        println!("{}", unwrap!(serde_json::to_string(
+            &SJson::new(
+                /*str_rules*/rules.to_string(),
+                /*str_hand*/ahand_fixed_with_holes.map(|hand|
+                    SDisplayCardSlice::new(hand.cards().clone(), rules).to_string()
+                ).into_raw(),
+                /*vectableline*/itertools::chain(
+                    determinebestcardresult.cards_and_ts()
+                        .map(|(card, payoutstatsperstrategy)|
+                            SJsonTableLine::new(
+                                /*ostr_header*/Some(card.to_string()),
+                                /*perminmaxstrategyvecpayout_histogram*/json_histograms::<TplStrategies>(payoutstatsperstrategy),
+                            )
+                        ),
+                    std::iter::once(SJsonTableLine::new(
+                        /*ostr_header*/Some("no-details".to_string()),
+                        /*perminmaxstrategyvecpayout_histogram*/json_histograms::<TplStrategies>(&determinebestcardresult.t_combined),
+                    )),
+                ).collect::<Vec<SJsonTableLine<TplStrategies>>>(),
+            ),
+        )));
+    } else {
+        let payoutstatstable = table(
+            &determinebestcardresult,
+            rules,
+            &fn_loss_or_win,
+        );
+        print_payoutstatstable::<_,TplStrategies>(
+            &payoutstatstable,
+            /*b_print_table_description_before_table*/b_verbose,
+        );
+        println!("-----");
+        print_payoutstatstable::<_,TplStrategies>(
+            &internal_table(
+                vec!(("no-details", determinebestcardresult.t_combined)),
+                /*b_group*/false,
+                &fn_loss_or_win,
+            ),
+            /*b_print_table_description_before_table*/false,
+        );
+    }
+    Ok(())
 }
 
 #[derive(Debug, Clone)]
@@ -416,9 +460,10 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             let fn_loss_or_win = |_n_payout, ord_vs_0| ord_vs_0;
             // we are interested in payout => single-card-optimization useless
             macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($TplStrategies:ident, $fn_alphabetapruner:expr,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
-                let determinebestcardresult = run_internal::<$($func_filter_allowed_cards_ty)*,_,_,$pruner,_,_,_,_>( // TODO avoid explicit types
+                run_internal::<$($func_filter_allowed_cards_ty)*,$TplStrategies,_,$pruner,_,_,_,_>( // TODO avoid explicit types
                     b_verbose,
                     clapmatches,
+                    ahand_fixed_with_holes,
                     rules,
                     &fn_loss_or_win,
                     epi_position,
@@ -434,49 +479,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         (epi_position, ahand[epi_position].clone(/*TODO needed?*/)),
                         n_payout,
                     ),
-                )?.ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
-                if clapmatches.is_present("json") {
-                    println!("{}", unwrap!(serde_json::to_string(
-                        &SJson::new(
-                            /*str_rules*/rules.to_string(),
-                            /*str_hand*/ahand_fixed_with_holes.map(|hand|
-                                SDisplayCardSlice::new(hand.cards().clone(), rules).to_string()
-                            ).into_raw(),
-                            /*vectableline*/itertools::chain(
-                                determinebestcardresult.cards_and_ts()
-                                    .map(|(card, payoutstatsperstrategy)|
-                                        SJsonTableLine::new(
-                                            /*ostr_header*/Some(card.to_string()),
-                                            /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$TplStrategies>(payoutstatsperstrategy),
-                                        )
-                                    ),
-                                std::iter::once(SJsonTableLine::new(
-                                    /*ostr_header*/Some("no-details".to_string()),
-                                    /*perminmaxstrategyvecpayout_histogram*/json_histograms::<$TplStrategies>(&determinebestcardresult.t_combined),
-                                )),
-                            ).collect::<Vec<SJsonTableLine<$TplStrategies>>>(),
-                        ),
-                    )));
-                } else {
-                    let payoutstatstable = table(
-                        &determinebestcardresult,
-                        rules,
-                        &fn_loss_or_win,
-                    );
-                    print_payoutstatstable::<_,$TplStrategies>(
-                        &payoutstatstable,
-                        /*b_print_table_description_before_table*/b_verbose,
-                    );
-                    println!("-----");
-                    print_payoutstatstable::<_,$TplStrategies>(
-                        &internal_table(
-                            vec!(("no-details", determinebestcardresult.t_combined)),
-                            /*b_group*/false,
-                            &fn_loss_or_win,
-                        ),
-                        /*b_print_table_description_before_table*/false,
-                    );
-                }
+                )?
             }}}
             cartesian_match!(
                 forward,
