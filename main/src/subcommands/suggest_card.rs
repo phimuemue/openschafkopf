@@ -220,7 +220,6 @@ fn run_internal<
     clapmatches: &clap::ArgMatches,
     ahand_fixed_with_holes: &EnumMap<EPlayerIndex, SHand>,
     rules: &SRules,
-    fn_loss_or_win: &(impl Fn(isize, std::cmp::Ordering)->std::cmp::Ordering + std::marker::Sync),
     epi_position: EPlayerIndex,
     expensifiers: &SExpensifiers,
 
@@ -235,6 +234,7 @@ fn run_internal<
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, std::cmp::Ordering) + Sync),
 ) -> Result<(), Error>
 {
+    let fn_loss_or_win = |_n_payout, ord_vs_0| ord_vs_0;
     let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
     let ovecinterimres_verbose = if_then_some!(b_verbose, Arc::new(Mutex::new(Vec::<SInterimResult<TplStrategies>>::new())));
     let determinebestcardresult = determine_best_card(
@@ -457,7 +457,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 None => Ok(None),
                 Some(_) => Err(format_err!("Could not understand strategy.")),
             }?;
-            let fn_loss_or_win = |_n_payout, ord_vs_0| ord_vs_0;
             // we are interested in payout => single-card-optimization useless
             macro_rules! forward{(
                 (($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr),
@@ -471,7 +470,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     clapmatches,
                     ahand_fixed_with_holes,
                     rules,
-                    &fn_loss_or_win,
                     epi_position,
                     expensifiers,
                     stichseq,
