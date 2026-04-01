@@ -459,7 +459,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
             }?;
             let fn_loss_or_win = |_n_payout, ord_vs_0| ord_vs_0;
             // we are interested in payout => single-card-optimization useless
-            macro_rules! forward{((($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr), ($pruner:ident), ($TplStrategies:ident, $fn_alphabetapruner:expr,), $fn_snapshotcache:ident, $fn_visualizer: expr,) => {{ // TODORUST generic closures
+            macro_rules! forward{(
+                (($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr),
+                ($pruner:ident),
+                ($TplStrategies:ident, $fn_alphabetapruner:expr,),
+                $fn_snapshotcache:ident,
+                $fn_visualizer: expr,
+            ) => {{ // TODORUST generic closures
                 run_internal::<$($func_filter_allowed_cards_ty)*,$TplStrategies,_,$pruner,_,_,_,_>( // TODO avoid explicit types
                     b_verbose,
                     clapmatches,
