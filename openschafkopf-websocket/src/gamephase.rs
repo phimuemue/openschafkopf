@@ -78,11 +78,21 @@ pub type VGamePhase = VGamePhaseGeneric<
     SGameGeneric<SRuleSet, (), ()>,
 >;
 
-type SActivelyPlayableRulesIdentifier = String;
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
+pub struct SActivelyPlayableRulesIdentifier(String);
+
+impl SActivelyPlayableRulesIdentifier {
+    fn new(rules: &SActivelyPlayableRules) -> Self {
+        Self(
+            rules.to_string()
+        )
+    }
+}
+
 fn find_rules_by_id(slcrulegroup: &[SRuleGroup], hand: SFullHand, orulesid: &Option<SActivelyPlayableRulesIdentifier>) -> Result<Option<SActivelyPlayableRules>, ()> {
     allowed_rules(slcrulegroup, hand)
         .find(|orules|
-            &orules.map(<SActivelyPlayableRules>::to_string)==orulesid
+            &orules.map(SActivelyPlayableRulesIdentifier::new)==orulesid
         )
         .map(|orules| orules.cloned()) // TODO clone needed?
         .ok_or(())
@@ -97,7 +107,7 @@ pub fn rules_to_gamephaseaction<'retval, 'rules : 'retval, 'hand : 'retval>(slcr
                  } else {
                      "Weiter".to_string()
                  },
-                 fn_gamephaseaction(orules.map(<SActivelyPlayableRules>::to_string)),
+                 fn_gamephaseaction(orules.map(SActivelyPlayableRulesIdentifier::new)),
              )
         )
 }
