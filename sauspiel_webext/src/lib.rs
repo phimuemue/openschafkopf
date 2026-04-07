@@ -9,7 +9,7 @@ use openschafkopf_lib::{
     ai::{SDetermineBestCardResult, SPayoutStats, determine_best_card, gametree::{SPerMinMaxStrategyGeneric, SMaxSelfishMinStrategy, SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, STplStrategiesOnlyMaxSelfishMin}, stichoracle::SFilterByOracle},
     game::{first_hand_for, SGameResultGeneric},
     game_analysis::{html_payout_table, html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
-    rules::{SRules, TRules, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe, card_points::points_stich},
+    rules::{SRules, TRules, TRulesPlayerIndex, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe, card_points::points_stich},
     primitives::{ECard, EFarbe, ESchlag, EPlayerIndex, SHand, SStichSequence, TCardSorter},
 };
 use crate::utils::*;

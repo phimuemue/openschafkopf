@@ -7,7 +7,7 @@ use std::{
 };
 use openschafkopf_lib::{
     game::SGameResult,
-    rules::ruleset::{SRuleSet},
+    rules::{TRulesPlayerIndex, ruleset::{SRuleSet}},
     primitives::*,
 };
 use openschafkopf_util::*;

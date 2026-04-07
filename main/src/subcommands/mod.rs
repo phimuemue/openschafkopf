@@ -9,7 +9,7 @@ mod common_given_game;
 
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    rules::ruleset::VStockOrT,
+    rules::{TRulesPlayerIndex, ruleset::VStockOrT},
     ai::SAi,
     primitives::card::EKurzLang,
     game::*,

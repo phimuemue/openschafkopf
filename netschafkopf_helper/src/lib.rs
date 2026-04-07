@@ -12,6 +12,7 @@ use openschafkopf_lib::{
         SStoss,
         SStossParams,
         parser::parse_rule_description,
+        TRulesPlayerIndex,
     },
 };
 use plain_enum::{EnumMap, PlainEnum};

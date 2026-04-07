@@ -55,7 +55,10 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TActiv
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::SoloLike(VGameAnnouncementPrioritySoloLike::SoloSimple(self.i_prio))
     }
-    fn playerindex(&self) -> EPlayerIndex {
+}
+impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRulesPlayerIndex for SRulesBettel<BettelAllAllowedCardsWithinStich> {
+    type PlayerIndex = EPlayerIndex;
+    fn playerindex(&self) -> Self::PlayerIndex {
         self.epi
     }
 }

@@ -127,7 +127,10 @@ impl<RufspielPayout: TRufspielPayout> TActivelyPlayableRules for SRulesRufspielG
     fn priority(&self) -> VGameAnnouncementPriority {
         VGameAnnouncementPriority::RufspielLike
     }
-    fn playerindex(&self) -> EPlayerIndex {
+}
+impl<RufspielPayout: TRufspielPayout> TRulesPlayerIndex for SRulesRufspielGeneric<RufspielPayout> {
+    type PlayerIndex = EPlayerIndex;
+    fn playerindex(&self) -> Self::PlayerIndex {
         self.epi
     }
 }

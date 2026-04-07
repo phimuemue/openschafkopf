@@ -536,8 +536,13 @@ pub enum EBid {
     Higher,
 }
 
+pub trait TRulesPlayerIndex : TRules {
+    type PlayerIndex: Into<Option<EPlayerIndex>>;
+    fn playerindex(&self) -> Self::PlayerIndex;
+}
+
 #[enum_dispatch]
-pub trait TActivelyPlayableRules : TRules {
+pub trait TActivelyPlayableRules : TRulesPlayerIndex<PlayerIndex=EPlayerIndex> {
     fn priority(&self) -> VGameAnnouncementPriority;
     fn with_higher_prio_than(&self, prio: &VGameAnnouncementPriority, ebid: EBid) -> Option<SActivelyPlayableRules>
         where
@@ -555,7 +560,6 @@ pub trait TActivelyPlayableRules : TRules {
     fn with_increased_prio(&self, _prio: &VGameAnnouncementPriority, _ebid: EBid) -> Option<SActivelyPlayableRules> {
         None
     }
-    fn playerindex(&self) -> EPlayerIndex;
 }
 
 use rulesrufspiel::{SRulesRufspiel, SRulesRufspielGeneric, SRufspielPayoutPointsAsPayout};
@@ -571,8 +575,9 @@ pub enum SRules {
     Ramsch(SRulesRamsch),
 }
 
-impl SRules {
-    pub fn playerindex(&self) -> Option<EPlayerIndex> {
+impl TRulesPlayerIndex for SRules {
+    type PlayerIndex = Option<EPlayerIndex>;
+    fn playerindex(&self) -> Self::PlayerIndex {
         match self {
             Self::ActivelyPlayable(rules) => Some(rules.playerindex()),
             Self::Ramsch(rulesramsch) => rulesramsch.playerindex(), // Leave decision to rulesramsch
@@ -614,6 +619,22 @@ impl std::fmt::Display for SActivelyPlayableRules {
             Self::SoloLikePointsAsPayout(rules) => rules.fmt(fmt),
             Self::BettelNormal(rules) => rules.fmt(fmt),
             Self::BettelStichzwang(rules) => rules.fmt(fmt),
+        }
+    }
+}
+
+impl TRulesPlayerIndex for SActivelyPlayableRules {
+    type PlayerIndex = EPlayerIndex;
+    fn playerindex(&self) -> Self::PlayerIndex {
+        match self {
+            Self::Rufspiel(rules) => rules.playerindex(),
+            Self::RufspielPointsAsPayout(rules) => rules.playerindex(),
+            Self::SoloLikePointBased(rules) => rules.playerindex(),
+            Self::SoloLikeTout(rules) => rules.playerindex(),
+            Self::SoloLikeSie(rules) => rules.playerindex(),
+            Self::SoloLikePointsAsPayout(rules) => rules.playerindex(),
+            Self::BettelNormal(rules) => rules.playerindex(),
+            Self::BettelStichzwang(rules) => rules.playerindex(),
         }
     }
 }

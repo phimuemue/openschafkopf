@@ -35,7 +35,10 @@ impl SRulesRamsch {
             ojungfrau,
         }
     }
-    pub fn playerindex(&self) -> Option<EPlayerIndex> {
+}
+impl TRulesPlayerIndex for SRulesRamsch {
+    type PlayerIndex = Option<EPlayerIndex>; // TODO? StaticOption
+    fn playerindex(&self) -> Option<EPlayerIndex> {
         None // Ramsch is not an actively playable. // TODO? Is EPI3 the active player?
     }
 }

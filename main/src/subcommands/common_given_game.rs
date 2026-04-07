@@ -11,6 +11,7 @@ use openschafkopf_lib::{
         SStoss,
         SRules,
         TRules,
+        TRulesPlayerIndex,
         parser::parse_rule_description_simple,
     },
 };

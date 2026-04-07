@@ -351,6 +351,7 @@ mod tests {
             SRules,
             SActivelyPlayableRules,
             TRules,
+            TRulesPlayerIndex,
         },
         util::*,
         ai::{
