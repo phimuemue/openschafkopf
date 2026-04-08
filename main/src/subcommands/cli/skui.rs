@@ -162,7 +162,7 @@ pub fn print_game_announcements(epi_myself: EPlayerIndex, gameannouncements: &SG
     for (epi, orules) in gameannouncements.iter() {
         do_in_window(&VSkUiWindow::PlayerInfo(epi.to_relativeplayerposition(epi_myself)), |ncwin| {
             if let Some(ref rules) = *orules {
-                wprint(ncwin, &format!("{epi}: {rules}"));
+                wprint(ncwin, &format!("{}: {}", epi, SDisplayRules::new(rules, /*b_include_playerindex*/false)));
             } else {
                 wprint(ncwin, &format!("{epi}: Nothing"));
             }
@@ -172,7 +172,7 @@ pub fn print_game_announcements(epi_myself: EPlayerIndex, gameannouncements: &SG
 
 pub fn print_game_info(rules: &SRules, expensifiers: &SExpensifiers) {
     do_in_window(&VSkUiWindow::GameInfo, |ncwin| {
-        wprint(ncwin, &format!("{rules}"));
+        wprint(ncwin, &format!("{}", SDisplayRules::new(rules, /*b_include_playerindex*/true)));
         if let Some(epi) = rules.playerindex() {
             wprint(ncwin, &format!(", played by {epi}"));
         }

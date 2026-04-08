@@ -146,7 +146,7 @@ impl TPlayer for SPlayerHuman {
                 |oorules| match *oorules {
                     None => "Back".to_string(),
                     Some(None) => "Nothing".to_string(),
-                    Some(Some(rules)) => rules.to_string()
+                    Some(Some(rules)) => SDisplayRules::new(rules, /*b_include_playerindex*/false).to_string()
                 },
                 |i_oorules_chosen| vecoorules[i_oorules_chosen].and_then(|orules| orules),
                 &otplepiprio,

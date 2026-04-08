@@ -2,7 +2,7 @@ use crate::ai::{gametree::*, *};
 use crate::game;
 use crate::player::{playerrandom::SPlayerRandom, TPlayer};
 use crate::primitives::*;
-use crate::rules::{ruleset::*, *};
+use crate::rules::{SDisplayRules, ruleset::*, *};
 use crate::util::*;
 
 #[test]
@@ -100,7 +100,7 @@ fn detect_expensive_all_possible_hands() {
                         assert!(n < n_detect,
                             "n: {}\nrules: {}\nahand: {}\nvecstich:{}",
                             n,
-                            game.rules,
+                            SDisplayRules::new(&game.rules, /*b_include_playerindex*/true),
                             display_card_slices(&game.ahand, &game.rules, " | "),
                             game.stichseq.visible_stichs().iter().join(", "),
                         );

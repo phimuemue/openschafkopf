@@ -12,17 +12,6 @@ use std::{
 pub mod determine_best_card_table;
 pub mod parser;
 
-pub fn rules_to_string(rules: &SRules) -> String {
-    format!("{}{}", // TODO unify rule formatting
-        rules,
-        if let Some(epi) = rules.playerindex() {
-            format!(" von {epi}")
-        } else {
-            "".to_owned()
-        },
-    )
-}
-
 
 pub fn generate_html_auxiliary_files(path_out_dir: &std::path::Path) -> Result<(), std::io::Error> {
     macro_rules! write_auxiliary_file(($str_filename: expr) => {
@@ -143,7 +132,7 @@ pub fn html_copy_button(
         }})("{}", this)
         '>&#128203</button>"###,
         format!("{str_openschafkopf_executable} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand_all}\" --hand \"{str_hand_single}\"",
-            str_rules=rules_to_string(rules),
+            str_rules=SDisplayRules::new(rules, /*b_include_playerindex*/true),
             str_cards_on_table=stichseq.visible_stichs().iter()
                 .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
                 .join("  "),

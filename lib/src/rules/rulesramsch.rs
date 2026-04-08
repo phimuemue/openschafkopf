@@ -1,7 +1,7 @@
 use crate::primitives::*;
 use crate::rules::{card_points::*, payoutdecider::internal_payout, trumpfdecider::*, *};
 use crate::util::*;
-use std::{cmp::Ordering, fmt};
+use std::cmp::Ordering;
 
 // TODO Ramsch with Stichzwang
 
@@ -43,13 +43,11 @@ impl TRulesPlayerIndex for SRulesRamsch {
     }
 }
 
-impl fmt::Display for SRulesRamsch {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Ramsch")
-    }
-}
-
 impl TRules for SRulesRamsch {
+    fn display_rules_without_playerindex(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(fmt, "Ramsch")
+    }
+
     fn trumpfdecider(&self) -> &STrumpfDecider {
         &self.trumpfdecider
     }

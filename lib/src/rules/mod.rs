@@ -310,9 +310,26 @@ impl SRuleStateCache {
     }
 }
 
+#[derive(new)]
+pub struct SDisplayRules<'rules, Rules: TRulesPlayerIndex> {
+    rules: &'rules Rules,
+    b_include_playerindex: bool,
+}
+impl<'rules, Rules: TRulesPlayerIndex> std::fmt::Display for SDisplayRules<'rules, Rules> {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.rules.display_rules_without_playerindex(fmt)?;
+        if self.b_include_playerindex && let Some(epi)=self.rules.playerindex().into() {
+            write!(fmt, " von {epi}")?;
+        }
+        Ok(())
+    }
+}
+
 #[enum_dispatch]
-pub trait TRules : fmt::Display + Sync + fmt::Debug + Send + Clone {
+pub trait TRules : Sync + fmt::Debug + Send + Clone {
     fn disable_trait_objects<T>(self, _t: T) {}
+
+    fn display_rules_without_playerindex(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error>;
 
     // STrumpfDecider
     fn trumpfdecider(&self) -> &STrumpfDecider;
@@ -585,15 +602,6 @@ impl TRulesPlayerIndex for SRules {
     }
 }
 
-impl std::fmt::Display for SRules {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        match self {
-            Self::ActivelyPlayable(rules) => rules.fmt(fmt),
-            Self::Ramsch(rules) => rules.fmt(fmt),
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 #[enum_dispatch(TActivelyPlayableRules)]
 #[enum_dispatch(TRules)]
@@ -606,21 +614,6 @@ pub enum SActivelyPlayableRules {
     SoloLikePointsAsPayout(SRulesSoloLike<SPayoutDeciderPointsAsPayout<VGameAnnouncementPrioritySoloLike>>),
     BettelNormal(SRulesBettel<SBettelAllAllowedCardsWithinStichNormal>),
     BettelStichzwang(SRulesBettel<SBettelAllAllowedCardsWithinStichStichzwang>),
-}
-
-impl std::fmt::Display for SActivelyPlayableRules {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        match self {
-            Self::Rufspiel(rules) => rules.fmt(fmt),
-            Self::RufspielPointsAsPayout(rules) => rules.fmt(fmt),
-            Self::SoloLikePointBased(rules) => rules.fmt(fmt),
-            Self::SoloLikeTout(rules) => rules.fmt(fmt),
-            Self::SoloLikeSie(rules) => rules.fmt(fmt),
-            Self::SoloLikePointsAsPayout(rules) => rules.fmt(fmt),
-            Self::BettelNormal(rules) => rules.fmt(fmt),
-            Self::BettelStichzwang(rules) => rules.fmt(fmt),
-        }
-    }
 }
 
 impl TRulesPlayerIndex for SActivelyPlayableRules {

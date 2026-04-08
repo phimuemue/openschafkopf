@@ -351,7 +351,7 @@ mod tests {
             SRules,
             SActivelyPlayableRules,
             TRules,
-            TRulesPlayerIndex,
+            SDisplayRules,
         },
         util::*,
         ai::{
@@ -435,9 +435,8 @@ mod tests {
                     .collect::<Vec<_>>();
                 assert!(
                     vecstich_not_in_superset.is_empty(),
-                    "\nRules:{} von {}\nHands:\n {}\nStichseq: {}\nStichs:\n{:?}\n{}\n",
-                    rules,
-                    unwrap!(rules.playerindex()),
+                    "\nRules: {}\nHands:\n {}\nStichseq: {}\nStichs:\n{:?}\n{}\n",
+                    SDisplayRules::new(rules, /*b_include_playerindex*/true),
                     display_card_slices(ahand, rules, "\n "),
                     stichseq.visible_stichs().iter().join(", "),
                     vecstich_not_in_superset,
@@ -2485,9 +2484,8 @@ mod tests {
                                 $rhs.iter().map(|(card, payoutstats)|
                                     (card, payoutstats.$field.clone())
                                 ).collect::<Vec<_>>(),
-                                "\nRules:{} von {}\nHands:\n {}\nStichseq: {}\nStichs:\n",
-                                &game.rules,
-                                unwrap!(game.rules.playerindex()),
+                                "\nRules: {}\nHands:\n {}\nStichseq: {}\nStichs:\n",
+                                SDisplayRules::new(&game.rules, /*b_include_playerindex*/true),
                                 display_card_slices(&game.ahand, &game.rules, "\n "),
                                 game.stichseq.visible_stichs().iter().join(", "),
                             );

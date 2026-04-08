@@ -91,12 +91,6 @@ pub struct SRulesRufspielGeneric<RufspielPayout: TRufspielPayout> {
 
 pub type SRulesRufspiel = SRulesRufspielGeneric<SRufspielPayout>;
 
-impl<RufspielPayout: TRufspielPayout> fmt::Display for SRulesRufspielGeneric<RufspielPayout> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Rufspiel mit der {}-Sau", self.efarbe)
-    }
-}
-
 impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
     pub fn new(epi: EPlayerIndex, efarbe: EFarbe, payoutparams: SPayoutDeciderParams, stossparams: SStossParams) -> SRulesRufspiel {
         SRulesRufspiel {
@@ -166,6 +160,10 @@ impl TPlayerParties for SPlayerParties22 {
 }
 
 impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielPayout> {
+    fn display_rules_without_playerindex(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(fmt, "Rufspiel mit der {}-Sau", self.efarbe)
+    }
+
     fn trumpfdecider(&self) -> &STrumpfDecider {
         &self.trumpfdecider
     }

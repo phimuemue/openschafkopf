@@ -12,6 +12,7 @@ use openschafkopf_lib::{
         SRules,
         TRules,
         TRulesPlayerIndex,
+        SDisplayRules,
         parser::parse_rule_description_simple,
     },
 };
@@ -293,10 +294,10 @@ pub fn with_common_args<FnWithArgs>(
                 if veccard_hand_active.len()==stichseq.kurzlang().cards_per_player() {
                     if !rules.can_be_played(SFullHand::new(&veccard_hand_active, stichseq.kurzlang())) {
                         if b_single_rules {
-                            bail!("Rules {rules} cannot be played given these cards.");
+                            bail!("Rules {} cannot be played given these cards.", SDisplayRules::new(rules, /*b_include_playerindex*/true));
                         } else {
                             if b_verbose {
-                                println!("Rules {rules} cannot be played given these cards.");
+                                println!("Rules {} cannot be played given these cards.", SDisplayRules::new(rules, /*b_include_playerindex*/true));
                             }
                             continue;
                         }
@@ -332,7 +333,7 @@ pub fn with_common_args<FnWithArgs>(
                 let mut n_ahand_seen = 0;
                 let mut n_ahand_valid = 0;
                 if b_verbose || !b_single_rules {
-                    println!("Rules: {rules}");
+                    println!("Rules: {}", SDisplayRules::new(rules, /*b_include_playerindex*/true));
                 }
                 if b_verbose
                     || 1</*b_single_itahand*/vectplvecocardstr_ahand.len()

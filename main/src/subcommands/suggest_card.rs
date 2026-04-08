@@ -1,6 +1,6 @@
 use openschafkopf_lib::{
     ai::{*, gametree::*, stichoracle::SFilterByOracle, cardspartition::*},
-    rules::{SRules, TRules, SRuleStateCacheFixed, SExpensifiers},
+    rules::{SRules, SDisplayRules, TRules, SRuleStateCacheFixed, SExpensifiers},
     primitives::*,
     game_analysis::determine_best_card_table::{
         table,
@@ -337,7 +337,7 @@ fn run_internal<
     if clapmatches.is_present("json") {
         println!("{}", unwrap!(serde_json::to_string(
             &SJson::new(
-                /*str_rules*/rules.to_string(),
+                /*str_rules*/SDisplayRules::new(rules, /*b_include_playerindex*/true).to_string(),
                 /*str_hand*/ahand_fixed_with_holes.map(|hand|
                     SDisplayCardSlice::new(hand.cards().clone(), rules).to_string()
                 ).into_raw(),
@@ -423,7 +423,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     Some(tplrulesfn_points_as_payout)
                 } else {
                     if b_verbose { // TODO? dispatch statically
-                        println!("Rules {rules} do not support point based variant.");
+                        println!("Rules {} do not support point based variant.", SDisplayRules::new(rules, /*b_include_playerindex*/false));
                     }
                     None
                 }

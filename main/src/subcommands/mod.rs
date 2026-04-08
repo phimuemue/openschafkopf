@@ -9,7 +9,7 @@ mod common_given_game;
 
 use openschafkopf_util::*;
 use openschafkopf_lib::{
-    rules::{TRulesPlayerIndex, ruleset::VStockOrT},
+    rules::{SDisplayRules, TRulesPlayerIndex, ruleset::VStockOrT},
     ai::SAi,
     primitives::card::EKurzLang,
     game::*,
@@ -90,7 +90,7 @@ pub fn gameresult_to_dir<GameAnnouncements, DetermineRules>(
         },
         VStockOrT::OrT(game) => {
             let mut path_gameresult = path_to_kurzlang(game.kurzlang())
-                .join(game.rules.to_string());
+                .join(SDisplayRules::new(&game.rules, /*b_include_playerindex*/false).to_string());
             if let Some(epi) = game.rules.playerindex() {
                 path_gameresult = path_gameresult
                     .join(format!("von {}", epi.to_usize()));

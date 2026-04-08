@@ -12,7 +12,7 @@ use openschafkopf_lib::{
         SStoss,
         SStossParams,
         parser::parse_rule_description,
-        TRulesPlayerIndex,
+        SDisplayRules,
     },
 };
 use plain_enum::{EnumMap, PlainEnum};
@@ -630,13 +630,8 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
                 );
                 info!("Writing replay to {str_file_osk_replay}");
                 {
-                    let str_rules = format!("{}{}",
-                        game.rules,
-                        if let Some(epi) = game.rules.playerindex() {
-                            format!(" von {epi}")
-                        } else {
-                            "".to_owned()
-                        },
+                    let str_rules = format!("{}",
+                        SDisplayRules::new(&game.rules, /*b_include_playerindex*/true),
                     );
                     let mut file_osk_replay = unwrap!(File::create(str_file_osk_replay));
                     unwrap!(writeln!(&mut file_osk_replay, "echo '{}'", str_rules));
@@ -1248,7 +1243,7 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
                     _ => panic!("Unknown value for str_player: {str_player}"),
                 }))
             ));
-            info!("{rules}");
+            info!("{}", SDisplayRules::new(&rules, /*b_include_playerindex*/true));
             let ekurzlang = /*g_bKurzeKarte*/match unsafe{*as_ptr!(u8, 0x004ca5c8)} {
                 0 => EKurzLang::Lang,
                 1 => EKurzLang::Kurz,

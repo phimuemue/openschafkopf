@@ -7,7 +7,7 @@ use std::{
 };
 use openschafkopf_lib::{
     game::SGameResult,
-    rules::{TRulesPlayerIndex, ruleset::{SRuleSet}},
+    rules::{SDisplayRules, TRulesPlayerIndex, ruleset::{SRuleSet}},
     primitives::*,
 };
 use openschafkopf_util::*;
@@ -201,7 +201,7 @@ impl SPlayers {
                     ).into_raw(),
                     sendtoplayers.orules.as_ref().map(|rules| (
                         playerindex_server_to_client(rules.playerindex().unwrap_or(EPlayerIndex::EPI3)), // geber designates rules if no active
-                        format!("{rules}"),
+                        format!("{}", SDisplayRules::new(rules, /*b_include_playerindex*/true)),
                     )),
                     sendtoplayers.otimeoutaction
                         .as_ref()

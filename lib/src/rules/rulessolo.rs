@@ -355,12 +355,6 @@ pub struct SRulesSoloLike<PayoutDecider> {
     stossparams: SStossParams,
 }
 
-impl<PayoutDecider: TPayoutDeciderSoloLike> fmt::Display for SRulesSoloLike<PayoutDecider> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", self.str_name, self.payoutdecider.priorityinfo())
-    }
-}
-
 impl<PayoutDecider: TPayoutDeciderSoloLike> TActivelyPlayableRules for SRulesSoloLike<PayoutDecider> 
     where
         Self: Into<SActivelyPlayableRules>,
@@ -388,6 +382,10 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> TRulesPlayerIndex for SRulesSoloLike
 }
 
 impl<PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<PayoutDecider> {
+    fn display_rules_without_playerindex(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(fmt, "{}{}", self.str_name, self.payoutdecider.priorityinfo())
+    }
+
     fn trumpfdecider(&self) -> &STrumpfDecider {
         &self.trumpfdecider
     }

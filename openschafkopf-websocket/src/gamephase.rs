@@ -84,7 +84,7 @@ pub struct SActivelyPlayableRulesIdentifier(String);
 impl SActivelyPlayableRulesIdentifier {
     fn new(rules: &SActivelyPlayableRules) -> Self {
         Self(
-            rules.to_string()
+            SDisplayRules::new(rules, /*b_include_playerindex*/false).to_string()
         )
     }
 }
@@ -103,7 +103,7 @@ pub fn rules_to_gamephaseaction<'retval, 'rules : 'retval, 'hand : 'retval>(slcr
         .map(move |orules|
              (
                  if let Some(rules) = orules {
-                     rules.to_string()
+                     SDisplayRules::new(rules, /*b_include_playerindex*/false).to_string()
                  } else {
                      "Weiter".to_string()
                  },
@@ -375,7 +375,7 @@ impl VGamePhase {
                                             "Du bist an {}. Stelle. Von {}. Stelle wird {} geboten. Spielst Du etwas staerkeres?", // TODO umlaut-tactics?
                                             epi.to_usize() + 1, // EPlayerIndex is 0-based
                                             determinerules.tplepirules_current_bid.0.to_usize() + 1, // EPlayerIndex is 0-based
-                                            determinerules.tplepirules_current_bid.1,
+                                            SDisplayRules::new(&determinerules.tplepirules_current_bid.1, /*b_include_playerindex*/false),
                                         ),
                                         vecstrgamephaseaction: vecstrgamephaseaction.clone()
                                     }

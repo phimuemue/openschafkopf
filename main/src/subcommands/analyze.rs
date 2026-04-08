@@ -3,7 +3,7 @@ use openschafkopf_lib::{
     game_analysis::{*, parser::*},
     game::*,
     ai::{handiterators::*, gametree::*, *},
-    rules::{TRules, ruleset::VStockOrT},
+    rules::{TRules, SDisplayRules, ruleset::VStockOrT},
 };
 use openschafkopf_util::*;
 use std::{
@@ -269,7 +269,7 @@ fn analyze_games(path_analysis: &std::path::Path, fn_link: impl Fn(&str)->String
                 },
                 VStockOrT::OrT(game) => {
                     n_games_non_stock.fetch_add(1, Ordering::SeqCst);
-                    let str_rules = format!("{}", game.rules);
+                    let str_rules = format!("{}", SDisplayRules::new(&game.rules, /*b_include_playerindex*/true));
                     let path_analysis_game = path_analysis.join(gamewithdesc.str_description.replace(['/', '.'], "_"));
                     std::fs::create_dir_all(&path_analysis_game)?;
                     let path = path_analysis_game.join("analysis.html");
@@ -424,7 +424,7 @@ impl SGameAnalysis {
                 )),
                 body((
                     h1(("Schafkopf-Analyse: ", a((href(str_link), str_description)))),
-                    h2(rules_to_string(&game.rules)),
+                    h2(format_args!("{}", SDisplayRules::new(&game.rules, /*b_include_playerindex*/true))),
                     table(tr(
                         player_table_ahand(epi_self, &ahand, &game.rules, /*fn_border*/|_card| false, fn_output_card)
                     )),
