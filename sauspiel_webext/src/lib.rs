@@ -9,7 +9,7 @@ use openschafkopf_lib::{
     ai::{SDetermineBestCardResult, SPayoutStats, determine_best_card, gametree::{SPerMinMaxStrategyGeneric, SMaxSelfishMinStrategy, SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, STplStrategiesOnlyMaxSelfishMin}, stichoracle::SFilterByOracle},
     game::{first_hand_for, SGameResultGeneric},
     game_analysis::{html_payout_table, html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
-    rules::{SRules, TRules, TRulesPlayerIndex, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe, card_points::points_stich},
+    rules::{SDisplayRules, SRules, TRules, TRulesPlayerIndex, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe, card_points::points_stich},
     primitives::{ECard, EFarbe, ESchlag, EPlayerIndex, SHand, SStichSequence, TCardSorter},
 };
 use crate::utils::*;
@@ -432,7 +432,12 @@ pub fn greet() {
                 attributes::style(str_style)
             };
             node_whole_game.set_inner_html(&html_display_children((
-                // TODO Spielansage
+                div((
+                    attributes::style("font-weight: bold"),
+                    format!("{}", SDisplayRules::new(rules, |epi, fmt: &mut std::fmt::Formatter| {
+                        write!(fmt, "{}", mapepistr_username[epi])
+                    })),
+                )),
                 table((
                     attributes::style("border-collapse: separate; border-spacing: 0 5px;"), // space between lines
                     tbody((

@@ -310,16 +310,37 @@ impl SRuleStateCache {
     }
 }
 
-#[derive(new)]
-pub struct SDisplayRules<'rules, Rules: TRulesPlayerIndex> {
-    rules: &'rules Rules,
-    b_include_playerindex: bool,
+pub trait TWritePlayerIndex {
+    fn shall_write(&self) -> bool;
+    fn write_playerindex(&self, epi: EPlayerIndex, fmt: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error>;
 }
-impl<'rules, Rules: TRulesPlayerIndex> std::fmt::Display for SDisplayRules<'rules, Rules> {
+#[derive(new)]
+pub struct SDisplayRules<'rules, Rules: TRulesPlayerIndex, WritePlayerIndex: TWritePlayerIndex> {
+    rules: &'rules Rules,
+    writeplayerindex: WritePlayerIndex,
+}
+impl TWritePlayerIndex for bool {
+    fn shall_write(&self) -> bool {
+        *self
+    }
+    fn write_playerindex(&self, epi: EPlayerIndex, fmt: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        write!(fmt, "{epi}")
+    }
+}
+impl<F: Fn(EPlayerIndex, &mut std::fmt::Formatter)->Result<(), std::fmt::Error>> TWritePlayerIndex for F {
+    fn shall_write(&self) -> bool {
+        true
+    }
+    fn write_playerindex(&self, epi: EPlayerIndex, fmt: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        (self)(epi, fmt)
+    }
+}
+impl<'rules, Rules: TRulesPlayerIndex, WritePlayerIndex: TWritePlayerIndex> std::fmt::Display for SDisplayRules<'rules, Rules, WritePlayerIndex> {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.rules.display_rules_without_playerindex(fmt)?;
-        if self.b_include_playerindex && let Some(epi)=self.rules.playerindex().into() {
-            write!(fmt, " von {epi}")?;
+        if self.writeplayerindex.shall_write() && let Some(epi)=self.rules.playerindex().into() {
+            write!(fmt, " von ")?;
+            self.writeplayerindex.write_playerindex(epi, fmt)?;
         }
         Ok(())
     }
