@@ -1,6 +1,9 @@
 use openschafkopf_lib::{
     primitives::*,
-    rules::*,
+    rules::{
+        *,
+        trumpfdecider::SLaufendeCount,
+    },
 };
 use openschafkopf_util::*;
 use failure::*;
@@ -19,6 +22,7 @@ type SRhaiEPlayerIndex = i64; // TODO good idea?
 
 #[derive(Clone)]
 struct SContext {
+    stichseq: SStichSequence, // TODO how expensive is this?
     ahand: EnumMap<EPlayerIndex, SHand>,
     rules: SRules,
 }
@@ -46,8 +50,12 @@ impl SContext {
             .collect()
     }
 
-    fn who_has_card(&self, card: ECard) -> SRhaiEPlayerIndex/*or -1*/ {
+    fn who_has_card_internal(&self, card: ECard) -> Option<EPlayerIndex> {
         EPlayerIndex::values().find(|&epi| self.ahand[epi].contains(card))
+    }
+
+    fn who_has_card(&self, card: ECard) -> SRhaiEPlayerIndex/*or -1*/ {
+        self.who_has_card_internal(card)
             .map(|epi| epi.to_usize().as_num::<SRhaiEPlayerIndex>())
             .unwrap_or(-1)
     }
@@ -56,6 +64,7 @@ impl SContext {
 impl SConstraint {
     pub fn internal_eval<R>(
         &self,
+        stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
         rules: SRules,
         fn_eval: impl Fn(Result<rhai::Dynamic, Box<rhai::EvalAltResult>>)->R,
@@ -64,11 +73,11 @@ impl SConstraint {
             &mut rhai::Scope::new(),
             &self.ast,
             "inspect",
-            (SContext{ahand: ahand.clone(), rules},),
+            (SContext{stichseq: stichseq.clone(), ahand: ahand.clone(), rules},),
         ))
     }
-    pub fn eval(&self, ahand: &EnumMap<EPlayerIndex, SHand>, rules: SRules) -> bool {
-        self.internal_eval(ahand, rules, |resdynamic| {
+    pub fn eval(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rules: SRules) -> bool {
+        self.internal_eval(stichseq, ahand, rules, |resdynamic| {
             match resdynamic {
                 Ok(dynamic) => {
                     if let Ok(n) = dynamic.as_int() {
@@ -230,6 +239,25 @@ impl std::str::FromStr for SConstraint {
                         &ctx.rules,
                     )
                 )
+            });
+        engine
+            .register_fn("laufende", |ctx: SContext| {
+                if let Some(SLaufendeCount{n_laufende, b_primary_party}) = ctx.rules.count_laufende(
+                    ctx.stichseq.kurzlang(),
+                    /*fn_who_has_card*/|card| {
+                        unwrap!(
+                            ctx.who_has_card_internal(card)
+                                .or_else(|| ctx.stichseq.visible_cards()
+                                    .find(|&(_epi, card_visible)| card_visible==&card)
+                                    .map(|(epi, _card)| epi)
+                                )
+                        )
+                    },
+                ) {
+                    rhai::Dynamic::from(n_laufende.as_num::<rhai::INT>().neg_if(!b_primary_party))
+                } else {
+                    rhai::Dynamic::from("Rules do not support Laufende")
+                }
             });
         engine
             .register_type::<EPlayerIndex>()

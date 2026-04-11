@@ -361,7 +361,7 @@ pub fn with_common_args<FnWithArgs>(
                                 n_ahand_seen += 1;
                                 let b_valid = b_valid_so_far
                                     && otplconstraintstr.as_ref().map_or(true, |(constraint, _str_constraint)|
-                                        constraint.eval(ahand, rules.clone())
+                                        constraint.eval(&stichseq, ahand, rules.clone())
                                     );
                                 if b_valid {
                                     n_ahand_valid += 1;

@@ -177,7 +177,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     }
     with_common_args(
         clapmatches,
-        |itahand, rules, _stichseq, _ahand_fixed_with_holes, _epi_position, _expensifiers, b_verbose| {
+        |itahand, rules, stichseq, _ahand_fixed_with_holes, _epi_position, _expensifiers, b_verbose| {
             let mut vectplmapresinspectionresultnconstraint = vecconstraint
                 .iter()
                 .map(|constraint| (std::collections::HashMap::new(), constraint))
@@ -188,6 +188,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 for (mapresinspectionresultn, constraint) in vectplmapresinspectionresultnconstraint.iter_mut() {
                     *mapresinspectionresultn.entry(
                         constraint.internal_eval(
+                            stichseq,
                             &ahand,
                             rules.clone(),
                             |resdynamic| resdynamic
