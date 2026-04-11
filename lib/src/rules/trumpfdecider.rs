@@ -78,6 +78,41 @@ impl STrumpfDecider {
         }
         maptrumpforfarbeveccard
     }
+
+    pub fn count_laufende(
+        &self,
+        ekurzlang: EKurzLang,
+        playerparties: &impl TPlayerParties,
+        fn_who_has_card: impl Fn(ECard)->EPlayerIndex,
+    ) -> SLaufendeCount {
+        let mut itcard_trumpf_descending = self.trumpfs_in_descending_order()
+            .filter(|card| ekurzlang.supports_card(*card));
+        if let Some(card_hightest_trumpf) = itcard_trumpf_descending.next() {
+            let laufende_relevant = |card: ECard| { // TODO should we make this part of SRuleStateCacheFixed?
+                playerparties.is_primary_party(fn_who_has_card(card))
+            };
+            let b_might_have_lauf = laufende_relevant(card_hightest_trumpf);
+            let n_laufende = itcard_trumpf_descending
+                .take_while(|card| b_might_have_lauf==laufende_relevant(*card))
+                .count()
+                + 1 // consumed by next()
+            ;
+            SLaufendeCount {
+                n_laufende,
+                b_primary_party: b_might_have_lauf,
+            }
+        } else {
+            SLaufendeCount {
+                n_laufende: 0, // no Laufende
+                b_primary_party: true, // arbitrarily chosen
+            }
+        }
+    }
+}
+
+pub struct SLaufendeCount {
+    pub n_laufende: usize,
+    pub b_primary_party: bool,
 }
 
 impl TCardSorter for STrumpfDecider {
