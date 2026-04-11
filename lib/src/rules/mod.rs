@@ -22,7 +22,7 @@ use crate::ai::cardspartition::*;
 use crate::ai::gametree::{TSnapshotCache, TTplStrategies, SPerMinMaxStrategyRawPayout};
 use crate::primitives::*;
 use crate::rules::card_points::points_stich;
-use trumpfdecider::STrumpfDecider;
+use trumpfdecider::{STrumpfDecider, SLaufendeCount};
 use crate::util::*;
 use std::{
     borrow::Borrow,
@@ -360,6 +360,8 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
     fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering> {
         self.trumpfdecider().compare_cards(card_fst, card_snd)
     }
+    fn count_laufende(&self, ekurzlang: EKurzLang, fn_who_has_card: impl Fn(ECard)->EPlayerIndex) -> Option<SLaufendeCount>;
+
 
     fn can_be_played(&self, _hand: SFullHand) -> bool {
         true // probably, only Rufspiel is prevented in some cases

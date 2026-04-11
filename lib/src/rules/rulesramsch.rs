@@ -52,6 +52,10 @@ impl TRules for SRulesRamsch {
         &self.trumpfdecider
     }
 
+    fn count_laufende(&self, _ekurzlang: EKurzLang, _fn_who_has_card: impl Fn(ECard)->EPlayerIndex) -> Option<SLaufendeCount> {
+        None
+    }
+
     fn stoss_allowed(&self, stichseq: &SStichSequence, hand: &SHand, epi: EPlayerIndex, vecstoss: &[SStoss]) -> bool {
         // TODO? Use SStossParams?
         assert!(vecstoss.is_empty());

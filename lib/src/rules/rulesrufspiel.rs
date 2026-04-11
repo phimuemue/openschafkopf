@@ -113,7 +113,11 @@ impl<RufspielPayout: TRufspielPayout> SRulesRufspielGeneric<RufspielPayout> {
     }
 
     fn playerparties(&self, rulestatecache: &SRuleStateCacheFixed) -> SPlayerParties22 {
-        SPlayerParties22::new(self.epi, rulestatecache.who_has_card(self.rufsau()))
+        self.playerparties_internal(rulestatecache.who_has_card(self.rufsau()))
+    }
+
+    fn playerparties_internal(&self, epi_coplayer: EPlayerIndex) -> SPlayerParties22 {
+        SPlayerParties22::new(self.epi, epi_coplayer)
     }
 }
 
@@ -166,6 +170,14 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
 
     fn trumpfdecider(&self) -> &STrumpfDecider {
         &self.trumpfdecider
+    }
+
+    fn count_laufende(&self, ekurzlang: EKurzLang, fn_who_has_card: impl Fn(ECard)->EPlayerIndex) -> Option<SLaufendeCount> {
+        Some(self.trumpfdecider().count_laufende(
+            ekurzlang,
+            &self.playerparties_internal(/*epi_coplayer*/fn_who_has_card(self.rufsau())),
+            fn_who_has_card,
+        ))
     }
 
     fn can_be_played(&self, hand: SFullHand) -> bool {

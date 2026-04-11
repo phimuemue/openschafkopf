@@ -110,6 +110,15 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
     fn trumpfdecider(&self) -> &STrumpfDecider {
         &self.trumpfdecider
     }
+
+    fn count_laufende(&self, ekurzlang: EKurzLang, fn_who_has_card: impl Fn(ECard)->EPlayerIndex) -> Option<SLaufendeCount> {
+        Some(self.trumpfdecider().count_laufende(
+            ekurzlang,
+            &SPlayerParties13::new(self.epi),
+            fn_who_has_card,
+        ))
+    }
+
     impl_single_play!();
 
     fn payout_no_invariant(&self, if_dbg_else!({stichseq}{_stichseq}): SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
