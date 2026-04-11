@@ -3,10 +3,9 @@ pub use plain_enum::*;
 #[macro_use]
 pub mod staticvalue;
 pub mod vecext;
-pub mod negext;
 pub mod optionext;
 pub mod static_option;
-pub use self::{staticvalue::*, vecext::*, negext::*, optionext::*, static_option::*};
+pub use self::{staticvalue::*, vecext::*, optionext::*, static_option::*};
 pub use derive_new::new;
 pub use failure::{bail, format_err, Error};
 pub use openschafkopf_util::*;
