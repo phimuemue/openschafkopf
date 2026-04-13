@@ -138,19 +138,6 @@ pub fn with_common_args<FnWithArgs>(
     ).unwrap_or_else(|| {
         VChooseItAhand::All
     });
-    let b_verbose = clapmatches.is_present("verbose");
-    let veccard_stichseq = match clapmatches.value_of("cards_on_table") { // TODO allow multiple stichseq (in particular something like "ea | ez ek e9  sa sz | sk s9" so that the user can query intermittent game states).
-        None => Vec::new(),
-        Some(str_cards_on_table) => cardvector::parse_cards(str_cards_on_table)
-            .ok_or_else(||format_err!("Could not parse played cards"))?,
-    };
-    let vectplvecocardstr_ahand = unwrap!(clapmatches.values_of("hand"))
-        .map(|str_ahand| 
-            cardvector::parse_optional_cards::<Vec<_>>(str_ahand)
-                .ok_or_else(||format_err!("Could not parse hand: {}", str_ahand))
-                .map(|vecocard| (vecocard, str_ahand))
-        )
-        .collect::<Result<Vec<_>, _>>()?;
     let vecotplconstraintstr = clapmatches.values_of("constrain_hands")
         .map(|values_constrain_hands| -> Result<Vec<(SConstraint, &str)>, _> {
             values_constrain_hands
@@ -171,6 +158,19 @@ pub fn with_common_args<FnWithArgs>(
         .unwrap_or_else(|| vec!(None));
     assert!(!vecotplconstraintstr.is_empty());
     assert!(vecotplconstraintstr.iter().map(Option::is_some).all_equal());
+    let b_verbose = clapmatches.is_present("verbose");
+    let veccard_stichseq = match clapmatches.value_of("cards_on_table") { // TODO allow multiple stichseq (in particular something like "ea | ez ek e9  sa sz | sk s9" so that the user can query intermittent game states).
+        None => Vec::new(),
+        Some(str_cards_on_table) => cardvector::parse_cards(str_cards_on_table)
+            .ok_or_else(||format_err!("Could not parse played cards"))?,
+    };
+    let vectplvecocardstr_ahand = unwrap!(clapmatches.values_of("hand"))
+        .map(|str_ahand| 
+            cardvector::parse_optional_cards::<Vec<_>>(str_ahand)
+                .ok_or_else(||format_err!("Could not parse hand: {}", str_ahand))
+                .map(|vecocard| (vecocard, str_ahand))
+        )
+        .collect::<Result<Vec<_>, _>>()?;
     let vecstoss = match clapmatches.value_of("stoss")
         .map(|str_stoss| {
             if str_stoss.trim().is_empty() {
