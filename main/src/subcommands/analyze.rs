@@ -22,7 +22,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
     use super::shared_args::*;
     clap::Command::new(str_subcommand)
         .about("Analyze played games and spot suboptimal decisions")
-        .arg(input_files_arg("sauspiel-files"))
+        .arg(input_files_arg("file"))
         .arg(clap::Arg::new("include-no-findings") // TODO replace this by interactive option in resulting HTML
             .long("include-no-findings")
         )
@@ -40,7 +40,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     let mut vecgamewithdesc = Vec::new();
     super::glob_files_or_read_stdin(
-        clapmatches.values_of("sauspiel-files").into_iter().flatten(),
+        clapmatches.values_of("file").into_iter().flatten(),
         |opath, str_input, _i_input| {
             let str_path = match &opath {
                 Some(path) => path.to_string_lossy(),
