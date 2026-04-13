@@ -120,6 +120,24 @@ pub fn with_common_args<FnWithArgs>(
             bool/*b_verbose*/,
         ) -> Result<(), Error>,
 {
+    let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
+        if "all"==str_itahand.to_lowercase() { // TODO replace this case by simply "0"?
+            VChooseItAhand::All
+        } else {
+            match str_itahand
+                .split('/')
+                .map(|str_n| str_n.parse().ok())
+                .collect::<Option<Vec<_>>>()
+                .as_deref()
+            {
+                Some(&[n_samples]) => VChooseItAhand::Sample(n_samples, /*on_pool*/None),
+                Some(&[n_samples, n_pool]) => VChooseItAhand::Sample(n_samples, Some(n_pool)),
+                _ => bail!("Failed to parse simulate_hands"),
+            }
+        }
+    ).unwrap_or_else(|| {
+        VChooseItAhand::All
+    });
     let b_verbose = clapmatches.is_present("verbose");
     let veccard_stichseq = match clapmatches.value_of("cards_on_table") { // TODO allow multiple stichseq (in particular something like "ea | ez ek e9  sa sz | sk s9" so that the user can query intermittent game states).
         None => Vec::new(),
@@ -307,25 +325,6 @@ pub fn with_common_args<FnWithArgs>(
                 }
             }
             let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
-            use VChooseItAhand::*;
-            let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
-                if "all"==str_itahand.to_lowercase() { // TODO replace this case by simply "0"?
-                    All
-                } else {
-                    match str_itahand
-                        .split('/')
-                        .map(|str_n| str_n.parse().ok())
-                        .collect::<Option<Vec<_>>>()
-                        .as_deref()
-                    {
-                        Some(&[n_samples]) => Sample(n_samples, /*on_pool*/None),
-                        Some(&[n_samples, n_pool]) => Sample(n_samples, Some(n_pool)),
-                        _ => bail!("Failed to parse simulate_hands"),
-                    }
-                }
-            ).unwrap_or_else(|| {
-                All
-            });
             for epi in EPlayerIndex::values() {
                 assert!(ahand_with_holes[epi].cards().len() <= mapepin_cards_per_hand[epi]);
             }
@@ -391,8 +390,8 @@ pub fn with_common_args<FnWithArgs>(
                     b_verbose,
                 )?;
             }}}
-            match (iteratehands, rules.playerindex()) {
-                (All, _oepi_active) => {
+            match (&iteratehands, rules.playerindex()) {
+                (VChooseItAhand::All, _oepi_active) => {
                     let mut n_cards_unknown = mapepin_cards_per_hand.iter().sum::<usize>()
                         - ahand_with_holes.iter().map(|hand| hand.cards().len()).sum::<usize>();
                     let n_ahand_total = EPlayerIndex::values()
@@ -407,18 +406,18 @@ pub fn with_common_args<FnWithArgs>(
                         });
                     forward!(n_ahand_total, internal_all_possible_hands, |itahand| itahand)
                 },
-                (Sample(n_samples, None), _oepi_active) => {
-                    forward!(n_samples, internal_forever_rand_hands, |itahand| Iterator::take(itahand, n_samples))
+                (VChooseItAhand::Sample(n_samples, None), _oepi_active) => {
+                    forward!(n_samples, internal_forever_rand_hands, |itahand| Iterator::take(itahand, *n_samples))
                 },
-                (Sample(n_samples, Some(_n_pool)), None) => {
-                    forward!(n_samples, internal_forever_rand_hands, |itahand| Iterator::take(itahand, n_samples))
+                (VChooseItAhand::Sample(n_samples, Some(_n_pool)), None) => {
+                    forward!(n_samples, internal_forever_rand_hands, |itahand| Iterator::take(itahand, *n_samples))
                 },
-                (Sample(n_samples, Some(n_pool)), Some(epi_active)) => {
+                (VChooseItAhand::Sample(n_samples, Some(n_pool)), Some(epi_active)) => {
                     forward!(
-                        n_samples,
+                        *n_samples,
                         internal_forever_rand_hands,
                         |itahand_pool| {
-                            Iterator::take(itahand_pool, n_pool)
+                            Iterator::take(itahand_pool, *n_pool)
                                 .map(|ahand: EnumMap<EPlayerIndex, SHand>| {
                                     let payout = SAi::new_simulating(
                                         /*n_rank_rules_samples*/100,
@@ -438,7 +437,7 @@ pub fn with_common_args<FnWithArgs>(
                                     ).omaxselfishmin.as_ref().unwrap_static_some().avg();
                                     (ahand, payout)
                                 })
-                                .k_largest_by(n_samples, |tplahandpayout_lhs, tplahandpayout_rhs| unwrap!(tplahandpayout_lhs.1.partial_cmp(&tplahandpayout_rhs.1)))
+                                .k_largest_by(*n_samples, |tplahandpayout_lhs, tplahandpayout_rhs| unwrap!(tplahandpayout_lhs.1.partial_cmp(&tplahandpayout_rhs.1)))
                                 .map(|(ahand, _payout)| ahand)
                         }
                     )
