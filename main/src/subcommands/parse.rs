@@ -19,7 +19,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
     use super::shared_args::*;
     clap::Command::new(str_subcommand)
         .about("Parse a game into a simple format")
-        .arg(input_files_arg("file"))
+        .arg(glob_files_arg())
         .arg(clap::Arg::new("neural-net")
             .long("neural-net")
         )

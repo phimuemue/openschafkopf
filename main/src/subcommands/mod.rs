@@ -19,8 +19,8 @@ use failure::*;
 use plain_enum::PlainEnum;
 
 mod shared_args {
-    pub fn input_files_arg(str_name: &'static str) -> clap::Arg<'static> { // TODO? unify str_name
-        clap::Arg::new(str_name)
+    pub fn glob_files_arg() -> clap::Arg<'static> {
+        clap::Arg::new("file")
             .takes_value(true)
             .multiple_occurrences(true)
             .help("Paths to files containing played games")

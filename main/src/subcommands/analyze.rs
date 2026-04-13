@@ -22,7 +22,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
     use super::shared_args::*;
     clap::Command::new(str_subcommand)
         .about("Analyze played games and spot suboptimal decisions")
-        .arg(input_files_arg("file"))
+        .arg(glob_files_arg())
         .arg(clap::Arg::new("include-no-findings") // TODO replace this by interactive option in resulting HTML
             .long("include-no-findings")
         )
