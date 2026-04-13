@@ -44,8 +44,8 @@ pub fn ai(subcommand_matches: &clap::ArgMatches) -> SAi {
     }
 }
 
-pub fn glob_files_or_read_stdin<'str_glob>(
-    itstr_glob: impl Iterator<Item=&'str_glob str>,
+pub fn glob_files_or_read_stdin(
+    clapmatches: &clap::ArgMatches,
     mut fn_ok: impl FnMut(Option<std::path::PathBuf>, String, usize),
 ) -> Result<(), Error> {
     let mut i_ok = 0;
@@ -54,7 +54,7 @@ pub fn glob_files_or_read_stdin<'str_glob>(
         i_ok += 1;
     };
     let mut b_from_file = false;
-    for str_glob in itstr_glob {
+    for str_glob in clapmatches.values_of("file").into_iter().flatten() {
         b_from_file = true;
         for globresult in glob::glob(str_glob)? {
             if let Ok(path) = verify_or_println!(globresult) {

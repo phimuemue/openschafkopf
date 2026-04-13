@@ -165,7 +165,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         chrono::Local::now().format("%Y%m%d%H%M%S"),
     ));
     super::glob_files_or_read_stdin(
-        clapmatches.values_of("file").into_iter().flatten(),
+        clapmatches,
         |opath, str_input, i_input| {
             if let Ok(ref gameresult@SGameResultGeneric{stockorgame: VStockOrT::OrT(ref game), ..}) = analyze_sauspiel_html(&str_input)
                 .map(|game| game.map(|_|(), |_|(), |ruleset| ruleset.kurzlang()))
