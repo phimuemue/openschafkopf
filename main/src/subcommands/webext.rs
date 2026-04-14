@@ -198,7 +198,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
                             str_rules,
                             "--hand",
                             str_hand,
-                            "--cards-on-table",
+                            "--played-cards",
                             str_cards_as_played,
                             "--simulate-hands",
                             &str_simulate_hands,

@@ -131,7 +131,7 @@ pub fn html_copy_button(
             );
         }})("{}", this)
         '>&#128203</button>"###,
-        format!("{str_openschafkopf_executable} suggest-card --rules \"{str_rules}\" --cards-on-table \"{str_cards_on_table}\" --hand \"{str_hand_all}\" --hand \"{str_hand_single}\"",
+        format!("{str_openschafkopf_executable} suggest-card --rules \"{str_rules}\" --played-cards \"{str_cards_on_table}\" --hand \"{str_hand_all}\" --hand \"{str_hand_single}\"",
             str_rules=SDisplayRules::new(rules, /*b_include_playerindex*/true),
             str_cards_on_table=stichseq.visible_stichs().iter()
                 .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
