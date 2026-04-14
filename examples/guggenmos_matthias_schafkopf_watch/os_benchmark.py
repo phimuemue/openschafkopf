@@ -105,7 +105,7 @@ def os_execution_time(gameid, hands, cards, ausspieler, gametype, farbe, positio
             position = ausspieler[r]
             for s in range(nplayers):
                 cards_hand = ' '.join(hands1d)
-                command_ausspiel = f'--cards-on-table "{cards_table}" --hand "{cards_hand}"'
+                command_ausspiel = f'--played-cards "{cards_table}" --hand "{cards_hand}"'
                 command = f'{command_base} {command_ausspiel}'
                 if verbose:
                     print(f'\t\t____________')
