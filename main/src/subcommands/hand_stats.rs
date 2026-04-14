@@ -191,10 +191,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             stichseq,
                             &ahand,
                             rules.clone(),
-                            |resdynamic| resdynamic
-                                .map(VInspectionResult::new)
-                                .map_err(|err| format!("Error: {err:?}")),
-                        ),
+                        )
+                            .map(VInspectionResult::new)
+                            .map_err(|err| format!("Error: {err:?}")),
                     ).or_insert(0) += 1;
                 }
                 n_ahand_total += 1;

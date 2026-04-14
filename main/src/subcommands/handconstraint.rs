@@ -62,39 +62,36 @@ impl SContext {
 }
 
 impl SConstraint {
-    pub fn internal_eval<R>(
+    pub fn internal_eval(
         &self,
         stichseq: &SStichSequence,
         ahand: &EnumMap<EPlayerIndex, SHand>,
         rules: SRules,
-        fn_eval: impl Fn(Result<rhai::Dynamic, Box<rhai::EvalAltResult>>)->R,
-    ) -> R {
-        fn_eval(self.engine.call_fn(
+    ) -> Result<rhai::Dynamic, Box<rhai::EvalAltResult>> {
+        self.engine.call_fn(
             &mut rhai::Scope::new(),
             &self.ast,
             "inspect",
             (SContext{stichseq: stichseq.clone(), ahand: ahand.clone(), rules},),
-        ))
+        )
     }
     pub fn eval(&self, stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, rules: SRules) -> bool {
-        self.internal_eval(stichseq, ahand, rules, |resdynamic| {
-            match resdynamic {
-                Ok(dynamic) => {
-                    if let Ok(n) = dynamic.as_int() {
-                        0 != n
-                    } else if let Ok(b) = dynamic.as_bool() {
-                        b
-                    } else {
-                        eprintln!("Unknown result data type. Interpreted as false.");
-                        false
-                    }
-                },
-                Err(e) => {
-                    eprintln!("Error evaluating script ({e:?}).");
+        match self.internal_eval(stichseq, ahand, rules) {
+            Ok(dynamic) => {
+                if let Ok(n) = dynamic.as_int() {
+                    0 != n
+                } else if let Ok(b) = dynamic.as_bool() {
+                    b
+                } else {
+                    eprintln!("Unknown result data type. Interpreted as false.");
                     false
                 }
+            },
+            Err(e) => {
+                eprintln!("Error evaluating script ({e:?}).");
+                false
             }
-        })
+        }
     }
 }
 
