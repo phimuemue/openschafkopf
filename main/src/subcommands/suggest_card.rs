@@ -405,10 +405,8 @@ fn for_each_interim_result<TplStrategies: TTplStrategies>( // TODORUST generic c
     for slcinterimres_chunk in slcinterimres
         .chunk_by_mut(fn_cmp_to_fn_eq(fn_cmp_interim_result))
     {
-        let mut i_position = n_rank;
-        for interimres in slcinterimres_chunk.iter_mut() {
+        for (i_position, interimres) in (n_rank..).zip(slcinterimres_chunk.iter_mut()) {
             fn_callback(SPositionAndRank{i_position, n_rank}, interimres);
-            i_position += 1;
         }
         n_rank += slcinterimres_chunk.len();
     }
