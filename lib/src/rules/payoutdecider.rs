@@ -181,19 +181,19 @@ fn primary_points_to_normalized_points(n_points_primary_party: isize, pointstowi
     // n_points_normalized = 2*n_points_primary_party - 121
     let n_points_normalized = 2*n_points_primary_party - 2*pointstowin.points_to_win() + 1;
     debug_assert_eq!(
-        normalized_points_to_primary_points(n_points_normalized.as_num::<f32>(), pointstowin),
+        normalized_points_to_primary_points(n_points_normalized, pointstowin),
         n_points_primary_party
     );
     n_points_normalized
 }
 
-fn normalized_points_to_primary_points(f_points_normalized: f32, pointstowin: &impl TPointsToWin) -> isize {
-    ((f_points_normalized - 1. + 2.*pointstowin.points_to_win().as_num::<f32>()) / 2.).as_num::<isize>()
+fn normalized_points_to_primary_points(n_points_normalized: isize, pointstowin: &impl TPointsToWin) -> isize {
+    unwrap!((n_points_normalized - 1 + 2*pointstowin.points_to_win()).div_exact_unstable_name_collision(2))
 }
 
 pub fn normalized_points_to_points(f_points_normalized: f32, pointstowin: &impl TPointsToWin, b_primary: bool) -> isize {
     let n_primary_points = normalized_points_to_primary_points(
-        if b_primary { f_points_normalized } else { -f_points_normalized },
+        if b_primary { f_points_normalized } else { -f_points_normalized }.as_num::<isize>(),
         pointstowin
     );
     if b_primary {
