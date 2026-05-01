@@ -153,7 +153,9 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
 impl SPayoutDeciderPointsAsPayout<VGameAnnouncementPrioritySoloLike> {
     fn payout_to_points(epi_active: EPlayerIndex, epi_hand: EPlayerIndex, pointstowin: &impl TPointsToWin, n_payout: isize) -> isize {
         normalized_points_to_points(
-            n_payout.as_num::<f32>() / SPlayerParties13::new(epi_active).multiplier(epi_hand).as_num::<f32>(),
+            unwrap!(
+                n_payout.div_exact_unstable_name_collision(SPlayerParties13::new(epi_active).multiplier(epi_hand))
+            ),
             pointstowin,
             /*b_primary*/ epi_hand==epi_active,
         )

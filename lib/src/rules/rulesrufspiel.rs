@@ -381,7 +381,9 @@ impl SRufspielPayoutPointsAsPayout {
     ) -> isize {
         assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
         normalized_points_to_points(
-            n_payout.as_num::<f32>() / playerparties22_multiplier().as_num::<f32>(),
+            unwrap!(
+                n_payout.div_exact_unstable_name_collision(playerparties22_multiplier())
+            ),
             &SPointsToWin61{},
             /*b_primary*/ epi_hand==epi_active
                 || stichseq.cards_from_player(hand, epi_hand).any(|card| card==card_rufsau),

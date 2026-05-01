@@ -191,9 +191,9 @@ fn normalized_points_to_primary_points(n_points_normalized: isize, pointstowin: 
     unwrap!((n_points_normalized - 1 + 2*pointstowin.points_to_win()).div_exact_unstable_name_collision(2))
 }
 
-pub fn normalized_points_to_points(f_points_normalized: f32, pointstowin: &impl TPointsToWin, b_primary: bool) -> isize {
+pub fn normalized_points_to_points(n_points_normalized: isize, pointstowin: &impl TPointsToWin, b_primary: bool) -> isize {
     let n_primary_points = normalized_points_to_primary_points(
-        if b_primary { f_points_normalized } else { -f_points_normalized }.as_num::<isize>(),
+        if b_primary { n_points_normalized } else { -n_points_normalized },
         pointstowin
     );
     if b_primary {
@@ -319,10 +319,12 @@ pub fn snapshot_cache_points_monotonic<TplStrategies: TTplStrategies>(playerpart
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             let perminmaxn_payout = payoutstats.map(|mapepin_payout| {
                 let n_points_primary = payoutdecider::normalized_points_to_points(
-                    (
+                    unwrap!(
                         unwrap!(self.playerparties.primary_players().map(|epi| mapepin_payout[epi]).all_equal_value())
-                        / /*n_multiplier_primary*/ unwrap!(self.playerparties.primary_players().map(|epi| self.playerparties.multiplier(epi)).all_equal_value())
-                    ).as_num::<f32>(),
+                            .div_exact_unstable_name_collision(
+                                /*n_multiplier_primary*/ unwrap!(self.playerparties.primary_players().map(|epi| self.playerparties.multiplier(epi)).all_equal_value())
+                            )
+                    ),
                     &self.pointstowin,
                     /*b_primary*/true,
                 ) - self.playerparties.primary_points_so_far(&rulestatecache.changing);
