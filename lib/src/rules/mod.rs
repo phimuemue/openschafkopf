@@ -429,12 +429,12 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
             if b_test_points_as_payout
                 && let Some((rules, _fn_payout_to_points)) = self.points_as_payout()
             {
-		rules.payout(
-		    stichseq,
-		    expensifiers,
-		    rulestatecache,
-		    /*b_test_points_as_payout*/false,
-		);
+                rules.payout(
+                    stichseq,
+                    expensifiers,
+                    rulestatecache,
+                    /*b_test_points_as_payout*/false,
+                );
             }
         }
         apayoutinfo
