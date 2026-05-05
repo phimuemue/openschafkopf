@@ -139,8 +139,8 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
                     epi_active,
                     epi_hand,
                     &pointstowin,
-                    n_payout.as_num::<f32>(),
-                ).as_num::<isize>()
+                    n_payout,
+                )
             }) as Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), isize)->isize + Sync>,
         )
     )}
@@ -151,12 +151,12 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
 }
 
 impl SPayoutDeciderPointsAsPayout<VGameAnnouncementPrioritySoloLike> {
-    fn payout_to_points(epi_active: EPlayerIndex, epi_hand: EPlayerIndex, pointstowin: &impl TPointsToWin, f_payout: f32) -> f32 {
+    fn payout_to_points(epi_active: EPlayerIndex, epi_hand: EPlayerIndex, pointstowin: &impl TPointsToWin, n_payout: isize) -> isize {
         normalized_points_to_points(
-            f_payout / SPlayerParties13::new(epi_active).multiplier(epi_hand).as_num::<f32>(),
+            n_payout.as_num::<f32>() / SPlayerParties13::new(epi_active).multiplier(epi_hand).as_num::<f32>(),
             pointstowin,
             /*b_primary*/ epi_hand==epi_active,
-        )
+        ).as_num::<isize>()
     }
 }
 
@@ -186,8 +186,8 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
                         /*epi_active*/rules.epi,
                         /*epi_hand*/epi_card,
                         &self.pointstowin,
-                        an_payout[epi_card].as_num::<f32>(),
-                    ).as_num::<isize>(),
+                        an_payout[epi_card],
+                    ),
                     EPlayerIndex::values()
                         .filter(|epi| playerparties.is_primary_party(*epi)==b_primary)
                         .map(|epi|
