@@ -338,8 +338,8 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     card_rufsau,
                     stichseq,
                     (epi_hand, hand),
-                    n_payout.as_num::<f32>(),
-                ).as_num::<isize>()
+                    n_payout,
+                )
             }) as Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), isize)->isize + Sync>,
         ))
     }
@@ -377,15 +377,15 @@ impl SRufspielPayoutPointsAsPayout {
         card_rufsau: ECard,
         stichseq: &SStichSequence,
         (epi_hand, hand): (EPlayerIndex, &SHand),
-        f_payout: f32,
-    ) -> f32 {
+        n_payout: isize,
+    ) -> isize {
         assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
         normalized_points_to_points(
-            f_payout / playerparties22_multiplier().as_num::<f32>(),
+            n_payout.as_num::<f32>() / playerparties22_multiplier().as_num::<f32>(),
             &SPointsToWin61{},
             /*b_primary*/ epi_hand==epi_active
                 || stichseq.cards_from_player(hand, epi_hand).any(|card| card==card_rufsau),
-        )
+        ).as_num::<isize>()
     }
 }
 
@@ -412,8 +412,8 @@ impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
                         rules.rufsau(),
                         &stichseq_check,
                         (epi_card, &ahand_check[epi_card]),
-                        an_payout[epi_card].as_num::<f32>(),
-                    ).as_num::<isize>(),
+                        an_payout[epi_card],
+                    ),
                     EPlayerIndex::values()
                         .filter(|epi| playerparties.is_primary_party(*epi)==b_primary)
                         .map(|epi|
