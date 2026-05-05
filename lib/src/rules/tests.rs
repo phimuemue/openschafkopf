@@ -2104,7 +2104,7 @@ fn test_stock() {
         SLaufendeParams::new(10, 3),
     );
     for n_stock_initial in [0isize, 20, 40, 80, 160, 240, 320] {
-        assert_eq!(n_stock_initial%2, 0);
+        let n_stock_half = unwrap!(n_stock_initial.div_exact_unstable_name_collision(2));
         test_rules_manual(
             "Rufspiel: Players win stock",
             rulesrufspiel.clone(),
@@ -2121,7 +2121,7 @@ fn test_stock() {
                 (EPI1, [GA, GZ, GK, H8]),
                 (EPI0, [H7, G9, G8, G7]),
             ],
-            ([30+n_stock_initial/2, 30+n_stock_initial/2, -30, -30], -n_stock_initial),
+            ([30+n_stock_half, 30+n_stock_half, -30, -30], -n_stock_initial),
         );
         test_rules_manual(
             "Rufspiel: Players win stock",
@@ -2139,7 +2139,7 @@ fn test_stock() {
                 (EPI3, [G8, G7, E9, E8]),
                 (EPI3, [H8, E7, S8, S7]),
             ],
-            ([-30-n_stock_initial/2, -30-n_stock_initial/2, 30, 30], n_stock_initial),
+            ([-30-n_stock_half, -30-n_stock_half, 30, 30], n_stock_initial),
         );
     }
 }

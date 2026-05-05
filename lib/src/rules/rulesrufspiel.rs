@@ -49,14 +49,14 @@ impl TRufspielPayout for SRufspielPayout {
                 .count(),
             2
         );
-        assert_eq!(expensifiers.n_stock%2, 0);
+        let n_stock_half = unwrap!(expensifiers.n_stock.div_exact_unstable_name_collision(2));
         EPlayerIndex::map_from_fn(|epi|
             (an_payout_no_stock[epi] * expensifiers.stoss_doubling_factor())
                 + if playerparties.is_primary_party(epi) {
                     if 0<verify_eq!(an_payout_no_stock[epi], an_payout_no_stock[rules.epi]) {
-                        expensifiers.n_stock/2
+                        n_stock_half
                     } else {
-                        -expensifiers.n_stock/2
+                        -n_stock_half
                     }
                 } else {
                     0
