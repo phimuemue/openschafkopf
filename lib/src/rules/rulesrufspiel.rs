@@ -385,7 +385,7 @@ impl SRufspielPayoutPointsAsPayout {
             &SPointsToWin61{},
             /*b_primary*/ epi_hand==epi_active
                 || stichseq.cards_from_player(hand, epi_hand).any(|card| card==card_rufsau),
-        ).as_num::<isize>()
+        )
     }
 }
 

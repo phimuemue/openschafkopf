@@ -191,7 +191,7 @@ fn normalized_points_to_primary_points(f_points_normalized: f32, pointstowin: &i
     (f_points_normalized - 1. + 2.*pointstowin.points_to_win().as_num::<f32>()) / 2.
 }
 
-pub fn normalized_points_to_points(f_points_normalized: f32, pointstowin: &impl TPointsToWin, b_primary: bool) -> f32 {
+pub fn normalized_points_to_points(f_points_normalized: f32, pointstowin: &impl TPointsToWin, b_primary: bool) -> isize {
     let f_primary_points = normalized_points_to_primary_points(
         if b_primary { f_points_normalized } else { -f_points_normalized },
         pointstowin
@@ -200,7 +200,7 @@ pub fn normalized_points_to_points(f_points_normalized: f32, pointstowin: &impl 
         f_primary_points
     } else {
         120. - f_primary_points
-    }
+    }.as_num::<isize>()
 }
 
 impl<
@@ -325,7 +325,7 @@ pub fn snapshot_cache_points_monotonic<TplStrategies: TTplStrategies>(playerpart
                     ).as_num::<f32>(),
                     &self.pointstowin,
                     /*b_primary*/true,
-                ).as_num::<isize>() - self.playerparties.primary_points_so_far(&rulestatecache.changing);
+                ) - self.playerparties.primary_points_so_far(&rulestatecache.changing);
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
                 n_points_primary

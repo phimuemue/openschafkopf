@@ -156,7 +156,7 @@ impl SPayoutDeciderPointsAsPayout<VGameAnnouncementPrioritySoloLike> {
             n_payout.as_num::<f32>() / SPlayerParties13::new(epi_active).multiplier(epi_hand).as_num::<f32>(),
             pointstowin,
             /*b_primary*/ epi_hand==epi_active,
-        ).as_num::<isize>()
+        )
     }
 }
 
