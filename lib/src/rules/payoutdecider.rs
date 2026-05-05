@@ -192,15 +192,15 @@ fn normalized_points_to_primary_points(f_points_normalized: f32, pointstowin: &i
 }
 
 pub fn normalized_points_to_points(f_points_normalized: f32, pointstowin: &impl TPointsToWin, b_primary: bool) -> isize {
-    let f_primary_points = normalized_points_to_primary_points(
+    let n_primary_points = normalized_points_to_primary_points(
         if b_primary { f_points_normalized } else { -f_points_normalized },
         pointstowin
-    );
+    ).as_num::<isize>();
     if b_primary {
-        f_primary_points
+        n_primary_points
     } else {
-        120. - f_primary_points
-    }.as_num::<isize>()
+        120 - n_primary_points
+    }
 }
 
 impl<
