@@ -17,7 +17,6 @@ use failure::*;
 use derive_new::new;
 use plain_enum::{PlainEnum, EnumMap};
 use super::common_given_game::*;
-use as_num::*;
 use std::io::IsTerminal;
 use std::sync::{Arc, Mutex};
 
@@ -440,8 +439,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         fn_payout_to_points(
                             &stichseq,
                             (epi_position, &hand),
-                            n_payout.as_num::<f32>(),
-                        ).as_num::<isize>(),
+                            n_payout,
+                        ),
                         n_payout.cmp(&0), // Human readable payout may not indicate loss or win: In Rufspiel, if epi_position has 60, it may mean win or loss, depending on whether epi_position is co-player.
                     )
                 } else {
