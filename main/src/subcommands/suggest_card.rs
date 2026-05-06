@@ -433,11 +433,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 rules.clone()
             };
             let rules = &rules;
-            let fn_human_readable_payout = |stichseq: SStichSequence, (epi_position, hand), n_payout: isize| -> (isize, std::cmp::Ordering) {
+            let fn_human_readable_payout = |stichseq: &SStichSequence, (epi_position, hand), n_payout: isize| -> (isize, std::cmp::Ordering) {
                 if let Some((_rules, fn_payout_to_points)) = &otplrulesfn_points_as_payout {
                     (
                         fn_payout_to_points(
-                            &stichseq,
+                            stichseq,
                             (epi_position, &hand),
                             n_payout,
                         ),
@@ -476,7 +476,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     $fn_snapshotcache::<$TplStrategies>(rules),
                     $fn_visualizer,
                     /*fn_payout*/&|stichseq, ahand, n_payout| fn_human_readable_payout(
-                        stichseq.clone(),
+                        stichseq,
                         (epi_position, ahand[epi_position].clone(/*TODO needed?*/)),
                         n_payout,
                     ),
