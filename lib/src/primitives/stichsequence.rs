@@ -226,3 +226,8 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
             .chain(hand.cards().iter().copied())
     }
 }
+
+pub fn ahand_vecstich_card_count_is_compatible(ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) -> bool {
+    ahand.map(|hand| hand.cards().len()) == stichseq.remaining_cards_per_hand()
+}
+

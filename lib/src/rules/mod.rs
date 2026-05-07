@@ -16,7 +16,6 @@ pub mod rulessolo;
 #[cfg(test)]
 pub mod tests;
 
-use crate::ai::ahand_vecstich_card_count_is_compatible;
 use crate::ai::rulespecific::*;
 use crate::ai::cardspartition::*;
 use crate::ai::gametree::{TSnapshotCache, TTplStrategies, SPerMinMaxStrategyRawPayout};

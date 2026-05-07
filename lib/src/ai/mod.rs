@@ -22,10 +22,6 @@ use std::{
     collections::BTreeMap,
 };
 
-pub fn ahand_vecstich_card_count_is_compatible(ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) -> bool {
-    ahand.map(|hand| hand.cards().len()) == stichseq.remaining_cards_per_hand()
-}
-
 pub enum VAIParams {
     Cheating,
     Simulating {
