@@ -369,7 +369,7 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
     fn stoss_allowed(&self, stichseq: &SStichSequence, hand: &SHand, epi: EPlayerIndex, vecstoss: &[SStoss]) -> bool;
 
     fn payout(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache, if_dbg_else!({b_test_points_as_payout}{_}): dbg_parameter!(bool)) -> EnumMap<EPlayerIndex, isize> {
-        let apayoutinfo = self.payout_no_invariant(
+        let an_payout = self.payout_no_invariant(
             stichseq,
             expensifiers,
             debug_verify_eq!(
@@ -416,13 +416,13 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
                     mapepiintvlon_payout = mapepiintvlon_payout_after;
                 }
                 assert!(
-                    mapepiintvlon_payout.iter().zip_eq(apayoutinfo.iter().cloned())
+                    mapepiintvlon_payout.iter().zip_eq(an_payout.iter().cloned())
                         .all(|(intvlon_payout, payoutinfo)|
                             payouthint_contains(intvlon_payout, &ELoHi::map_from_fn(|_lohi| {
                                 Some(payoutinfo)
                             }))
                         ),
-                    "{stichseq_check}\n{ahand_check:?}\n{mapepiintvlon_payout:?}\n{apayoutinfo:?}",
+                    "{stichseq_check}\n{ahand_check:?}\n{mapepiintvlon_payout:?}\n{an_payout:?}",
                 );
             }
             if b_test_points_as_payout
@@ -436,7 +436,7 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
                 );
             }
         }
-        apayoutinfo
+        an_payout
     }
 
     fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize>;
