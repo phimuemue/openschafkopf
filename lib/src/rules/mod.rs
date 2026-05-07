@@ -396,6 +396,26 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
             let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
                 SHand::new_from_iter(stichseq.get().completed_cards_by(epi))
             );
+
+            let otplan_points_as_payout_fn_payout_to_points = if b_test_points_as_payout
+                && let Some((rules, fn_payout_to_points)) = self.points_as_payout()
+            {
+                let an_points_as_payout = rules.payout(
+                    stichseq,
+                    expensifiers,
+                    rulestatecache,
+                    /*b_test_points_as_payout*/false,
+                );
+                for (n_payout, n_points_as_payout) in itertools::zip_eq(
+                    an_payout.iter(),
+                    an_points_as_payout.iter(),
+                ) {
+                    assert_eq!(n_payout.signum(), n_points_as_payout.signum());
+                }
+                Some((an_points_as_payout, fn_payout_to_points))
+            } else {
+                None // TODO if_then_some
+            };
             for stich in stichseq.get().completed_stichs().iter() {
                 for (epi, card) in stich.iter() {
                     stichseq_check.zugeben(*card, self);
@@ -414,6 +434,16 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
                         "{stichseq_check}\n{ahand_check:?}\n{mapepiintvlon_payout:?}\n{mapepiintvlon_payout_after:?}",
                     );
                     mapepiintvlon_payout = mapepiintvlon_payout_after;
+                    if let Some((an_points_as_payout, fn_payout_to_points)) = &otplan_points_as_payout_fn_payout_to_points {
+                        for epi_check_fn_payout_to_points in EPlayerIndex::values() {
+                            fn_payout_to_points(
+                                &stichseq_check,
+                                &ahand_check,
+                                epi_check_fn_payout_to_points,
+                                an_points_as_payout[epi_check_fn_payout_to_points],
+                            );
+                        }
+                    }
                 }
                 assert!(
                     mapepiintvlon_payout.iter().zip_eq(an_payout.iter().cloned())
@@ -424,22 +454,6 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
                         ),
                     "{stichseq_check}\n{ahand_check:?}\n{mapepiintvlon_payout:?}\n{an_payout:?}",
                 );
-            }
-            if b_test_points_as_payout
-                && let Some((rules, _fn_payout_to_points)) = self.points_as_payout()
-            {
-                let an_points_as_payout = rules.payout(
-                    stichseq,
-                    expensifiers,
-                    rulestatecache,
-                    /*b_test_points_as_payout*/false,
-                );
-                for (n_payout, n_points_as_payout) in itertools::zip_eq(
-                    an_payout.iter(),
-                    an_points_as_payout.iter(),
-                ) {
-                    assert_eq!(n_payout.signum(), n_points_as_payout.signum());
-                }
             }
         }
         an_payout
