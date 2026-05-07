@@ -428,12 +428,18 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
             if b_test_points_as_payout
                 && let Some((rules, _fn_payout_to_points)) = self.points_as_payout()
             {
-                rules.payout(
+                let an_points_as_payout = rules.payout(
                     stichseq,
                     expensifiers,
                     rulestatecache,
                     /*b_test_points_as_payout*/false,
                 );
+                for (n_payout, n_points_as_payout) in itertools::zip_eq(
+                    an_payout.iter(),
+                    an_points_as_payout.iter(),
+                ) {
+                    assert_eq!(n_payout.signum(), n_points_as_payout.signum());
+                }
             }
         }
         an_payout
