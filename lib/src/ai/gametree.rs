@@ -606,7 +606,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
                 str_item_id,
                 "TODO", // slccard_allowed.len(),
             ));
-            assert!(ahand_vecstich_card_count_is_compatible(ahand, stichseq));
+            assert!(ahand_stichseq_card_count_is_compatible(ahand, stichseq));
             self.write_all(&html_generator::html_display_children(player_table_stichseq(self.epi, stichseq, &output_card)));
             self.write_all(&player_table_ahand(self.epi, ahand, self.rules, /*fn_border*/|_card| false, &output_card));
             self.write_all(&"</tr></table></label>\n");

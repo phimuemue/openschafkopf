@@ -302,7 +302,7 @@ pub fn determine_best_card<
                     let foreachsnapshot = fn_make_foreachsnapshot(stichseq, &ahand);
                     let mut visualizer = fn_visualizer(i_ahand, &ahand, Some(card)); // do before ahand is modified
                     debug_assert!(ahand[epi_current].cards().contains(&card));
-                    assert!(ahand_vecstich_card_count_is_compatible(&ahand, stichseq));
+                    assert!(ahand_stichseq_card_count_is_compatible(&ahand, stichseq));
                     let rules = foreachsnapshot.rules;
                     let output = stichseq.clone().zugeben_and_restore_with_hands(&mut ahand.clone(), epi_current, card, rules, |ahand, stichseq| {
                         if ahand.iter().all(|hand| hand.cards().is_empty()) {

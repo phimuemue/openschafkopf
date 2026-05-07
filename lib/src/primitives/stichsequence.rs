@@ -227,7 +227,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
     }
 }
 
-pub fn ahand_vecstich_card_count_is_compatible(ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) -> bool {
+pub fn ahand_stichseq_card_count_is_compatible(ahand: &EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence) -> bool {
     ahand.map(|hand| hand.cards().len()) == stichseq.remaining_cards_per_hand()
 }
 
