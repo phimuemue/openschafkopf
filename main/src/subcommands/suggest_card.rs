@@ -433,12 +433,13 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 rules.clone()
             };
             let rules = &rules;
-            let fn_human_readable_payout = |stichseq: &SStichSequence, (epi_position, hand): (EPlayerIndex, &SHand), n_payout: isize| -> (isize, std::cmp::Ordering) {
+            let fn_human_readable_payout = |stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, epi_position: EPlayerIndex, n_payout: isize| -> (isize, std::cmp::Ordering) {
                 if let Some((_rules, fn_payout_to_points)) = &otplrulesfn_points_as_payout {
                     (
                         fn_payout_to_points(
                             stichseq,
-                            (epi_position, hand),
+                            ahand,
+                            epi_position,
                             n_payout,
                         ),
                         n_payout.cmp(&0), // Human readable payout may not indicate loss or win: In Rufspiel, if epi_position has 60, it may mean win or loss, depending on whether epi_position is co-player.
@@ -477,7 +478,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     $fn_visualizer,
                     /*fn_payout*/&|stichseq, ahand, n_payout| fn_human_readable_payout(
                         stichseq,
-                        (epi_position, &ahand[epi_position]),
+                        ahand,
+                        epi_position,
                         n_payout,
                     ),
                 )?

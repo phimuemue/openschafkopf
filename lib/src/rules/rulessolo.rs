@@ -17,7 +17,7 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
 
     fn points_as_payout(&self, _rules: &SRulesSoloLike<Self>) -> Option<(
         SRules,
-        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), isize)->isize + Sync>,
+        Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
     )> {
         None
     }
@@ -117,7 +117,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
 
     fn points_as_payout(&self, rules: &SRulesSoloLike<Self>) -> Option<(
         SRules,
-        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), isize)->isize + Sync>,
+        Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
     )> {
         //assert_eq!(self, rules.payoutdecider); // TODO
         let pointstowin = self.pointstowin.clone();
@@ -133,15 +133,15 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
                 of_heuristic_active_occurence_probability: rules.of_heuristic_active_occurence_probability,
                 stossparams: rules.stossparams.clone(),
             }).into(),
-            Box::new(move |stichseq: &SStichSequence, (epi_hand, hand): (EPlayerIndex, &SHand), n_payout: isize| {
-                assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
+            Box::new(move |stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, epi_hand, n_payout: isize| {
+                assert!(ahand_stichseq_card_count_is_compatible(ahand, stichseq));
                 SPayoutDeciderPointsAsPayout::payout_to_points(
                     epi_active,
                     epi_hand,
                     &pointstowin,
                     n_payout,
                 )
-            }) as Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), isize)->isize + Sync>,
+            }) as Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
         )
     )}
 
@@ -442,7 +442,7 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<PayoutDeci
 
     fn points_as_payout(&self) -> Option<(
         SRules,
-        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), isize)->isize + Sync>,
+        Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
     )> {
         self.payoutdecider.points_as_payout(self)
     }

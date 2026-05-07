@@ -496,7 +496,7 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
 
     fn points_as_payout(&self) -> Option<(
         SRules,
-        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), isize)->isize + Sync>,
+        Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
     )> {
         None
     }

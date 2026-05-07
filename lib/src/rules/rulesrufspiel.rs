@@ -317,7 +317,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
 
     fn points_as_payout(&self) -> Option<(
         SRules,
-        Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), isize)->isize + Sync>,
+        Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
     )> {
         let epi_active = self.epi;
         let card_rufsau = self.rufsau();
@@ -331,16 +331,16 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 trumpfdecider: self.trumpfdecider.clone(),
                 stossparams: self.stossparams.clone(),
             }).into(),
-            Box::new(move |stichseq: &SStichSequence, (epi_hand, hand): (EPlayerIndex, &SHand), n_payout: isize| {
-                assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
+            Box::new(move |stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, epi_hand, n_payout: isize| {
+                assert!(ahand_stichseq_card_count_is_compatible(ahand, stichseq));
                 SRufspielPayoutPointsAsPayout::payout_to_points(
                     epi_active,
                     card_rufsau,
                     stichseq,
-                    (epi_hand, hand),
+                    (epi_hand, &ahand[epi_hand]),
                     n_payout,
                 )
-            }) as Box<dyn Fn(&SStichSequence, (EPlayerIndex, &SHand), isize)->isize + Sync>,
+            }) as Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
         ))
     }
 
