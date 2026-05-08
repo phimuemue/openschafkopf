@@ -52,8 +52,7 @@ pub struct SPayoutDeciderPointsAsPayout<PointsToWin> {
 fn points_primary_party (
     rulestatecache: &SRuleStateCache,
     playerparties: &impl TPlayerParties,
-    if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
-    if_dbg_else!({stichseq}{_}): dbg_parameter!(SStichSequenceGameFinished),
+    if_dbg_else!({(rules, stichseq)}{_}): dbg_parameter!((&impl TRules, SStichSequenceGameFinished)),
 ) -> isize {
     debug_verify_eq!(
         playerparties.primary_players()
@@ -122,7 +121,7 @@ impl<
         stichseq: SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
-        let n_points_primary_party = points_primary_party(rulestatecache, playerparties, dbg_argument!(rules), dbg_argument!(stichseq));
+        let n_points_primary_party = points_primary_party(rulestatecache, playerparties, dbg_argument!((rules, stichseq)));
         let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
         internal_payout(
             (self.payoutparams.n_payout_base
@@ -216,7 +215,7 @@ impl<
     ) -> EnumMap<EPlayerIndex, isize> {
         internal_payout(
             primary_points_to_normalized_points(
-                points_primary_party(rulestatecache, playerparties, dbg_argument!(rules), dbg_argument!(stichseq)),
+                points_primary_party(rulestatecache, playerparties, dbg_argument!((rules, stichseq))),
                 &self.pointstowin
             ),
             playerparties,
