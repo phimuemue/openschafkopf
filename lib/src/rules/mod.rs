@@ -146,12 +146,6 @@ pub trait TPlayerParties {
     fn multiplier(&self, epi: EPlayerIndex) -> isize;
     type ItEpiPrimary: Iterator<Item=EPlayerIndex>;
     fn primary_players(&self) -> Self::ItEpiPrimary;
-    fn primary_sum(&self, fn_val: impl Fn(EPlayerIndex)->isize) -> isize {
-        self.primary_players().map(fn_val).sum()
-    }
-    fn primary_points_so_far(&self, rulestatecache: &SRuleStateCacheChanging) -> isize {
-        self.primary_sum(|epi| rulestatecache.mapepipointstichcount[epi].n_point)
-    }
 }
 
 #[derive(new, Debug)]
