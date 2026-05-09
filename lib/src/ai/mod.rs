@@ -311,7 +311,7 @@ pub fn determine_best_card<
                                 stichseq_finished,
                                 &SRuleStateCache::new_from_gamefinishedstiche(
                                     stichseq_finished,
-                                    rules,
+                                    dbg_argument!(rules),
                                 ),
                             )
                         } else {

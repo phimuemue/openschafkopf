@@ -281,7 +281,7 @@ impl SRuleStateCache {
         )
     }
 
-    pub fn new_from_gamefinishedstiche(stichseq: SStichSequenceGameFinished, if_dbg_else!({winnerindex}{_}): &(impl TWinnerIndex + ?Sized)) -> SRuleStateCache {
+    pub fn new_from_gamefinishedstiche(stichseq: SStichSequenceGameFinished, if_dbg_else!({winnerindex}{_}): dbg_parameter!(&(impl TWinnerIndex + ?Sized))) -> SRuleStateCache {
         Self::new(
             (
                 &EPlayerIndex::map_from_fn(|_epi|
