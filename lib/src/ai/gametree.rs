@@ -205,8 +205,8 @@ impl TFilterAllowedCards for SNoFilter {
 }
 
 pub trait TSnapshotCache<T> { // TODO? could this be implemented via TForEachSnapshot
-    fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<T>;
-    fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, t: &T); // borrow to avoid unconditional copy - TODO good idea?
+    fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, if_dbg_else!({rules}{_}): dbg_parameter!(&SRules)) -> Option<T>;
+    fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, t: &T, if_dbg_else!({rules}{_}): dbg_parameter!(&SRules)); // borrow to avoid unconditional copy - TODO good idea?
     fn continue_with_cache(&self, _stichseq: &SStichSequence) -> bool {
         true
     }
@@ -218,19 +218,19 @@ impl SSnapshotCacheNone {
     }
 }
 impl<T> TSnapshotCache<T> for SSnapshotCacheNone {
-    fn get(&self, _stichseq: &SStichSequence, _rulestatecache: &SRuleStateCache) -> Option<T> {
+    fn get(&self, _stichseq: &SStichSequence, _rulestatecache: &SRuleStateCache, _rules: dbg_parameter!(&SRules)) -> Option<T> {
         None
     }
-    fn put(&mut self, _stichseq: &SStichSequence, _rulestatecache: &SRuleStateCache, _t: &T) {
+    fn put(&mut self, _stichseq: &SStichSequence, _rulestatecache: &SRuleStateCache, _t: &T, _rules: dbg_parameter!(&SRules)) {
     }
 }
 
 impl<T> TSnapshotCache<T> for Box<dyn TSnapshotCache<T>> {
-    fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<T> {
-        self.as_ref().get(stichseq, rulestatecache)
+    fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, if_dbg_else!({rules}{_}): dbg_parameter!(&SRules)) -> Option<T> {
+        self.as_ref().get(stichseq, rulestatecache, dbg_argument!(rules),)
     }
-    fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, t: &T) {
-        self.as_mut().put(stichseq, rulestatecache, t)
+    fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, t: &T, if_dbg_else!({rules}{_}): dbg_parameter!(&SRules)) {
+        self.as_mut().put(stichseq, rulestatecache, t, dbg_argument!(rules),)
     }
     fn continue_with_cache(&self, stichseq: &SStichSequence) -> bool {
         self.as_ref().continue_with_cache(stichseq)
@@ -364,7 +364,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                                 unwrap!(stichseq.last_completed_stich()),
                                 stichseq.current_stich().first_playerindex(),
                             );
-                            let output = if let Some(output) = snapshotcache.get(stichseq, rulestatecache) {
+                            let output = if let Some(output) = snapshotcache.get(stichseq, rulestatecache, dbg_argument!(rules),) {
                                 output
                             } else {
                                 macro_rules! fwd{(($fn_before:expr, $fn_after:expr, $func_filter_allowed_cards:expr), ($snapshotcache:expr),) => {{
@@ -388,7 +388,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                                         false => (&mut SSnapshotCacheNone),
                                     },
                                 );
-                                snapshotcache.put(stichseq, rulestatecache, &output);
+                                snapshotcache.put(stichseq, rulestatecache, &output, dbg_argument!(rules),);
                                 output
                             };
                             rulestatecache.unregister_stich(unregisterstich_cache);

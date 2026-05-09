@@ -299,13 +299,17 @@ pub fn snapshot_cache_points_monotonic<TplStrategies: TTplStrategies>(playerpart
         pointstowin: PointsToWin,
     }
     impl<TplStrategies: TTplStrategies, PlayerParties: TPlayerParties, PointsToWin: TPointsToWin> TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>> for SSnapshotCachePointsMonotonic<TplStrategies, PlayerParties, PointsToWin> {
-        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
+        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, if_dbg_else!({rules}{_}): dbg_parameter!(&SRules)) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             let perminmaxn_payout = self.mapsnapequivperminmaxn_payout
                 .get(&super::snap_equiv_base(stichseq))?;
             Some(perminmaxn_payout.map(|n_payout_points| {
                 let n_points_primary = n_payout_points
-                    + self.playerparties.primary_points_so_far(&rulestatecache.changing);
+                    + points_primary_party(
+                        rulestatecache,
+                        &self.playerparties,
+                        dbg_argument!((rules, stichseq)),
+                    );
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
                 payoutdecider::internal_payout(
@@ -314,7 +318,7 @@ pub fn snapshot_cache_points_monotonic<TplStrategies: TTplStrategies>(playerpart
                 )
             }))
         }
-        fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SPerMinMaxStrategyRawPayout<TplStrategies>) {
+        fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SPerMinMaxStrategyRawPayout<TplStrategies>, if_dbg_else!({rules}{_}): dbg_parameter!(&SRules)) {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             let perminmaxn_payout = payoutstats.map(|mapepin_payout| {
                 let n_points_primary = payoutdecider::normalized_points_to_points(
@@ -326,7 +330,11 @@ pub fn snapshot_cache_points_monotonic<TplStrategies: TTplStrategies>(playerpart
                     ),
                     &self.pointstowin,
                     /*b_primary*/true,
-                ) - self.playerparties.primary_points_so_far(&rulestatecache.changing);
+                ) - points_primary_party(
+                    rulestatecache,
+                    &self.playerparties,
+                    dbg_argument!((rules, stichseq))
+                );
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
                 n_points_primary
@@ -336,7 +344,7 @@ pub fn snapshot_cache_points_monotonic<TplStrategies: TTplStrategies>(playerpart
                     super::snap_equiv_base(stichseq),
                     perminmaxn_payout,
                 );
-            debug_assert_eq!(self.get(stichseq, rulestatecache).as_ref(), Some(payoutstats));
+            debug_assert_eq!(self.get(stichseq, rulestatecache, dbg_argument!(rules)).as_ref(), Some(payoutstats));
         }
         fn continue_with_cache(&self, stichseq: &SStichSequence) -> bool {
             stichseq.completed_stichs().len()<=5

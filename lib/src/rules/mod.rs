@@ -743,20 +743,20 @@ fn snapshot_cache<TplStrategies: TTplStrategies>(fn_payload: impl Fn(&SRuleState
     }
     impl<TplStrategies: TTplStrategies, FnPayload: Fn(&SRuleStateCache)->u64> TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>> for SSnapshotCachePointBased<TplStrategies, FnPayload>
     {
-        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
+        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, _rules: dbg_parameter!(&SRules)) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             self.mapsnapequivperminmaxmapepin_payout
                 .get(&self.snap_equiv(stichseq, rulestatecache))
                 .cloned()
         }
-        fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SPerMinMaxStrategyRawPayout<TplStrategies>) {
+        fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SPerMinMaxStrategyRawPayout<TplStrategies>, if_dbg_else!({rules}{_}): dbg_parameter!(&SRules)) {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             self.mapsnapequivperminmaxmapepin_payout
                 .insert(
                     self.snap_equiv(stichseq, rulestatecache),
                     payoutstats.clone()
                 );
-            debug_assert_eq!(self.get(stichseq, rulestatecache).as_ref(), Some(payoutstats));
+            debug_assert_eq!(self.get(stichseq, rulestatecache, dbg_argument!(rules),).as_ref(), Some(payoutstats));
         }
         fn continue_with_cache(&self, stichseq: &SStichSequence) -> bool {
             stichseq.completed_stichs().len()<=5
