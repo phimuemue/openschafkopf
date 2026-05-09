@@ -144,8 +144,7 @@ fn all_allowed_cards_within_stich_distinguish_farbe_frei (
 pub trait TPlayerParties {
     fn is_primary_party(&self, epi: EPlayerIndex) -> bool;
     fn multiplier(&self, epi: EPlayerIndex) -> isize;
-    type ItEpiPrimary: Iterator<Item=EPlayerIndex>;
-    fn primary_players(&self) -> Self::ItEpiPrimary;
+    fn primary_players(&self) -> impl Iterator<Item=EPlayerIndex>;
 }
 
 #[derive(new, Debug)]
@@ -166,8 +165,7 @@ impl TPlayerParties for SPlayerParties13 {
     fn multiplier(&self, epi: EPlayerIndex) -> isize {
         if self.is_primary_party(epi) {3} else {1}
     }
-    type ItEpiPrimary = std::iter::Once<EPlayerIndex>;
-    fn primary_players(&self) -> Self::ItEpiPrimary {
+    fn primary_players(&self) ->  impl Iterator<Item=EPlayerIndex> {
         std::iter::once(self.epi)
     }
 }
