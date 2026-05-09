@@ -52,13 +52,13 @@ pub struct SPayoutDeciderPointsAsPayout<PointsToWin> {
 fn points_primary_party (
     rulestatecache: &SRuleStateCache,
     playerparties: &impl TPlayerParties,
-    if_dbg_else!({(rules, stichseq)}{_}): dbg_parameter!((&impl TRules, SStichSequenceGameFinished)),
+    if_dbg_else!({(rules, stichseq)}{_}): dbg_parameter!((&impl TRules, &SStichSequence)),
 ) -> isize {
     debug_verify_eq!(
         playerparties.primary_players()
             .map(|epi| rulestatecache.changing.mapepipointstichcount[epi].n_point)
             .sum::<isize>(),
-        stichseq.get().completed_stichs_winner_index(rules)
+        stichseq.completed_stichs_winner_index(rules)
             .filter(|&(_stich, epi_winner)| playerparties.is_primary_party(epi_winner))
             .map(|(stich, _epi_winner)| card_points::points_stich(stich))
             .sum::<isize>()
@@ -121,7 +121,7 @@ impl<
         stichseq: SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
-        let n_points_primary_party = points_primary_party(rulestatecache, playerparties, dbg_argument!((rules, stichseq)));
+        let n_points_primary_party = points_primary_party(rulestatecache, playerparties, dbg_argument!((rules, stichseq.get())));
         let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
         internal_payout(
             (self.payoutparams.n_payout_base
@@ -215,7 +215,7 @@ impl<
     ) -> EnumMap<EPlayerIndex, isize> {
         internal_payout(
             primary_points_to_normalized_points(
-                points_primary_party(rulestatecache, playerparties, dbg_argument!((rules, stichseq))),
+                points_primary_party(rulestatecache, playerparties, dbg_argument!((rules, stichseq.get()))),
                 &self.pointstowin
             ),
             playerparties,
