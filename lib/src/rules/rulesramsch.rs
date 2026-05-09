@@ -68,7 +68,7 @@ impl TRules for SRulesRamsch {
         let points_for_player = |epi| mapepipointstichcount[epi].n_point;
         debug_assert_eq!(
             EPlayerIndex::map_from_fn(points_for_player),
-            stichseq.get().completed_stichs_winner_index(self)
+            stichseq.get().completed_stichs_winner_index(dbg_argument!(self))
                 .fold(
                     EPlayerIndex::map_from_fn(|_epi| 0),
                     mutate_return!(|an_points_accu, (stich, epi_winner)| {
@@ -87,7 +87,7 @@ impl TRules for SRulesRamsch {
             Some(VDurchmarsch::All) => {
                 120==n_points_max && debug_verify_eq!(
                     mapepipointstichcount[the_one_epi()].n_stich==stichseq.get().kurzlang().cards_per_player(),
-                    stichseq.get().completed_stichs_winner_index(self).all(|(_stich, epi_winner)| epi_winner==the_one_epi())
+                    stichseq.get().completed_stichs_winner_index(dbg_argument!(self)).all(|(_stich, epi_winner)| epi_winner==the_one_epi())
                 )
             },
             Some(VDurchmarsch::AtLeast(n_points_durchmarsch)) => {

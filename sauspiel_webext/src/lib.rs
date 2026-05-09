@@ -486,7 +486,7 @@ pub fn greet() {
                             ))
                         )),
                     )),
-                    vecepicardocardseverity.chunks(EPlayerIndex::SIZE).zip_eq(game_finished.stichseq.completed_stichs_winner_index(&game_finished.rules)).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
+                    vecepicardocardseverity.chunks(EPlayerIndex::SIZE).zip_eq(game_finished.stichseq.completed_stichs_winner_index(dbg_argument!(&game_finished.rules))).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
                         tr((
                             table_cell_with_background(
                                 "td",
@@ -534,7 +534,7 @@ pub fn greet() {
                             td((
                                 points_cell_style(/*b_border_top*/true, epi_points),
                                 format!("{}",
-                                    game_finished.stichseq.completed_stichs_winner_index(&game_finished.rules)
+                                    game_finished.stichseq.completed_stichs_winner_index(dbg_argument!(&game_finished.rules))
                                         .filter_map(|(stich, epi_winner)|
                                             if_then_some!(epi_points==epi_winner, points_stich(stich))
                                         )
