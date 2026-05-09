@@ -262,7 +262,7 @@ pub struct SUnregisterStich {
 impl SRuleStateCache {
     pub fn new(
         (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
-        if_dbg_else!({winnerindex}{_}): &(impl TWinnerIndex + ?Sized),
+        if_dbg_else!({winnerindex}{_}): dbg_parameter!(&(impl TWinnerIndex + ?Sized)),
     ) -> Self {
         assert!(ahand_stichseq_card_count_is_compatible(ahand, stichseq));
         stichseq.completed_stichs_winner_index(dbg_argument!(winnerindex)).fold(
@@ -281,7 +281,7 @@ impl SRuleStateCache {
         )
     }
 
-    pub fn new_from_gamefinishedstiche(stichseq: SStichSequenceGameFinished, winnerindex: &(impl TWinnerIndex + ?Sized)) -> SRuleStateCache {
+    pub fn new_from_gamefinishedstiche(stichseq: SStichSequenceGameFinished, if_dbg_else!({winnerindex}{_}): &(impl TWinnerIndex + ?Sized)) -> SRuleStateCache {
         Self::new(
             (
                 &EPlayerIndex::map_from_fn(|_epi|
@@ -289,7 +289,7 @@ impl SRuleStateCache {
                 ),
                 stichseq.get(),
             ),
-            winnerindex,
+            dbg_argument!(winnerindex),
         )
     }
 

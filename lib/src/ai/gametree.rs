@@ -257,7 +257,7 @@ pub fn explore_snapshots<
     macro_rules! forward{($func_filter_allowed_cards:expr, $snapshotcache:expr,) => {{
         let mut rulestatecache = SRuleStateCache::new(
             (ahand, stichseq),
-            rules,
+            dbg_argument!(rules),
         );
         explore_snapshots_internal(
             (ahand, stichseq),
