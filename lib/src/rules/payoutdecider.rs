@@ -87,15 +87,13 @@ fn payouthints_point_based(
     playerparties: &impl TPlayerParties,
     fn_payout_one_player_if_premature_winner: impl FnOnce(isize)->isize,
 ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
-    let mapbn_points = debug_verify_eq!(
-        EPlayerIndex::values()
-            .fold(bool::map_from_fn(|_b_primary| 0), mutate_return!(|mapbn_points, epi| {
-                mapbn_points[/*b_primary*/playerparties.is_primary_party(epi)] += rulestatecache.changing.mapepipointstichcount[epi].n_point;
-            })),
-        stichseq.completed_stichs_winner_index(rules)
-            .fold(bool::map_from_fn(|_b_primary| 0), mutate_return!(|mapbn_points, (stich, epi_winner)| {
-                mapbn_points[/*b_primary*/playerparties.is_primary_party(epi_winner)] += card_points::points_stich(stich);
-            }))
+    let mapbn_points = bool::map_from_fn(|b_primary|
+        pointstichcount_for_party(
+            b_primary,
+            rulestatecache,
+            playerparties,
+            dbg_argument!((rules, stichseq)),
+        ).n_point
     );
     let internal_payouthints = |n_points_primary_party, b_premature_winner_is_primary_party: bool| {
         internal_payout(
