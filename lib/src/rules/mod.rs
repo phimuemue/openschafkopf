@@ -674,7 +674,7 @@ impl<Rules: TRules> TCardSorter for Rules {
 
 fn snapshot_cache_point_based<TplStrategies: TTplStrategies, PlayerParties: TPlayerParties+'static>(playerparties: PlayerParties) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>>>
 {
-    snapshot_cache::<TplStrategies>(move |rulestatecache| {
+    snapshot_cache::<TplStrategies>(move |rulestatecache, if_dbg_else!({(_rules, _stichseq)}{_})| {
         let mut payload_point_stich_count = 0;
         let point_stich_count = |b_primary| { // TODO unify with pointstichcount_for_party
             EPlayerIndex::values()
@@ -713,7 +713,7 @@ fn snap_equiv_base(stichseq: &SStichSequence) -> u64 {
     snapequiv
 }
 
-fn snapshot_cache<TplStrategies: TTplStrategies>(fn_payload: impl Fn(&SRuleStateCache)->u64 + 'static) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>>>
+fn snapshot_cache<TplStrategies: TTplStrategies>(fn_payload: impl Fn(&SRuleStateCache, dbg_parameter!((&SRules, &SStichSequence)))->u64 + 'static) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>>>
 {
     type SSnapshotEquivalenceClass = u64; // space-saving variant of this:
     // struct SSnapshotEquivalenceClass { // packed into SSnapshotEquivalenceClass TODO? use bitfield crate
@@ -726,26 +726,26 @@ fn snapshot_cache<TplStrategies: TTplStrategies>(fn_payload: impl Fn(&SRuleState
         fn_payload: FnPayload,
         mapsnapequivperminmaxmapepin_payout: HashMap<SSnapshotEquivalenceClass, SPerMinMaxStrategyRawPayout<TplStrategies>>,
     }
-    impl<TplStrategies: TTplStrategies, FnPayload: Fn(&SRuleStateCache)->u64> SSnapshotCachePointBased<TplStrategies, FnPayload> {
-        fn snap_equiv(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache) -> SSnapshotEquivalenceClass {
+    impl<TplStrategies: TTplStrategies, FnPayload: Fn(&SRuleStateCache, dbg_parameter!((&SRules, &SStichSequence)))->u64> SSnapshotCachePointBased<TplStrategies, FnPayload> {
+        fn snap_equiv(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, if_dbg_else!({rules}{_}): dbg_parameter!(&SRules)) -> SSnapshotEquivalenceClass {
             let mut snapequiv = snap_equiv_base(stichseq);
-            set_bits!(snapequiv, (self.fn_payload)(rulestatecache), 34);
+            set_bits!(snapequiv, (self.fn_payload)(rulestatecache, dbg_argument!((rules, stichseq))), 34);
             snapequiv
         }
     }
-    impl<TplStrategies: TTplStrategies, FnPayload: Fn(&SRuleStateCache)->u64> TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>> for SSnapshotCachePointBased<TplStrategies, FnPayload>
+    impl<TplStrategies: TTplStrategies, FnPayload: Fn(&SRuleStateCache, dbg_parameter!((&SRules, &SStichSequence)))->u64> TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>> for SSnapshotCachePointBased<TplStrategies, FnPayload>
     {
-        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, _rules: dbg_parameter!(&SRules)) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
+        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, if_dbg_else!({rules}{_}): dbg_parameter!(&SRules)) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             self.mapsnapequivperminmaxmapepin_payout
-                .get(&self.snap_equiv(stichseq, rulestatecache))
+                .get(&self.snap_equiv(stichseq, rulestatecache, dbg_argument!(rules)))
                 .cloned()
         }
         fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SPerMinMaxStrategyRawPayout<TplStrategies>, if_dbg_else!({rules}{_}): dbg_parameter!(&SRules)) {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             self.mapsnapequivperminmaxmapepin_payout
                 .insert(
-                    self.snap_equiv(stichseq, rulestatecache),
+                    self.snap_equiv(stichseq, rulestatecache, dbg_argument!(rules)),
                     payoutstats.clone()
                 );
             debug_assert_eq!(self.get(stichseq, rulestatecache, dbg_argument!(rules),).as_ref(), Some(payoutstats));
