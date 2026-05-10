@@ -227,9 +227,9 @@ pub struct SPointStichCount {
     pub n_point: isize,
 }
 
-impl Add for SPointStichCount {
+impl Add<&SPointStichCount> for SPointStichCount {
     type Output = Self;
-    fn add(mut self, rhs: SPointStichCount) -> Self::Output {
+    fn add(mut self, rhs: &SPointStichCount) -> Self::Output {
         self.n_stich += rhs.n_stich;
         self.n_point += rhs.n_point;
         self
@@ -679,7 +679,7 @@ fn snapshot_cache_point_based<TplStrategies: TTplStrategies, PlayerParties: TPla
         let point_stich_count = |b_primary| {
             EPlayerIndex::values()
                 .filter(|epi| b_primary==playerparties.is_primary_party(*epi))
-                .map(|epi| rulestatecache.changing.mapepipointstichcount[epi].clone()) // TODO clone needed?
+                .map(|epi| &rulestatecache.changing.mapepipointstichcount[epi])
                 .fold(
                     SPointStichCount{n_stich: 0, n_point: 0},
                     SPointStichCount::add,
