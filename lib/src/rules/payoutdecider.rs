@@ -49,7 +49,7 @@ pub struct SPayoutDeciderPointsAsPayout<PointsToWin> {
     pub pointstowin: PointsToWin,
 }
 
-fn pointstichcount_for_party(
+pub fn pointstichcount_for_party(
     b_primary: bool,
     rulestatecache: &SRuleStateCache,
     playerparties: &impl TPlayerParties,
