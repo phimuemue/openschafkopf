@@ -676,7 +676,7 @@ fn snapshot_cache_point_based<TplStrategies: TTplStrategies, PlayerParties: TPla
 {
     snapshot_cache::<TplStrategies>(move |rulestatecache| {
         let mut payload_point_stich_count = 0;
-        let point_stich_count = |b_primary| {
+        let point_stich_count = |b_primary| { // TODO unify with pointstichcount_primary_party
             EPlayerIndex::values()
                 .filter(|epi| b_primary==playerparties.is_primary_party(*epi))
                 .map(|epi| &rulestatecache.changing.mapepipointstichcount[epi])

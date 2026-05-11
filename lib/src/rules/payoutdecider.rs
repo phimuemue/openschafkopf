@@ -49,20 +49,32 @@ pub struct SPayoutDeciderPointsAsPayout<PointsToWin> {
     pub pointstowin: PointsToWin,
 }
 
-fn points_primary_party (
+fn pointstichcount_primary_party (
     rulestatecache: &SRuleStateCache,
     playerparties: &impl TPlayerParties,
     if_dbg_else!({(rules, stichseq)}{_}): dbg_parameter!((&impl TRules, &SStichSequence)),
-) -> isize {
-    debug_verify_eq!(
-        playerparties.primary_players()
-            .map(|epi| rulestatecache.changing.mapepipointstichcount[epi].n_point)
-            .sum::<isize>(),
-        stichseq.completed_stichs_winner_index(rules)
-            .filter(|&(_stich, epi_winner)| playerparties.is_primary_party(epi_winner))
-            .map(|(stich, _epi_winner)| card_points::points_stich(stich))
-            .sum::<isize>()
-    )
+) -> SPointStichCount {
+    let pointstichcount_primary = playerparties.primary_players()
+        .map(|epi| &rulestatecache.changing.mapepipointstichcount[epi])
+        .fold(
+            SPointStichCount{n_stich: 0, n_point: 0},
+            SPointStichCount::add,
+        );
+    #[cfg(debug_assertions)] {
+        let itstich_primary = stichseq.completed_stichs_winner_index(rules)
+            .filter(|&(_stich, epi_winner)| playerparties.is_primary_party(epi_winner));
+        assert_eq!(
+            pointstichcount_primary.n_point,
+            itstich_primary.clone()
+                .map(|(stich, _epi_winner)| card_points::points_stich(stich))
+                .sum::<isize>(),
+        );
+        assert_eq!(
+            pointstichcount_primary.n_stich,
+            itstich_primary.count(),
+        );
+    }
+    pointstichcount_primary
 }
 
 fn payouthints_point_based(
@@ -121,7 +133,7 @@ impl<
         stichseq: SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
-        let n_points_primary_party = points_primary_party(rulestatecache, playerparties, dbg_argument!((rules, stichseq.get())));
+        let n_points_primary_party = pointstichcount_primary_party(rulestatecache, playerparties, dbg_argument!((rules, stichseq.get()))).n_point;
         let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
         internal_payout(
             (self.payoutparams.n_payout_base
@@ -215,7 +227,7 @@ impl<
     ) -> EnumMap<EPlayerIndex, isize> {
         internal_payout(
             primary_points_to_normalized_points(
-                points_primary_party(rulestatecache, playerparties, dbg_argument!((rules, stichseq.get()))),
+                pointstichcount_primary_party(rulestatecache, playerparties, dbg_argument!((rules, stichseq.get()))).n_point,
                 &self.pointstowin
             ),
             playerparties,
@@ -305,11 +317,11 @@ pub fn snapshot_cache_points_monotonic<TplStrategies: TTplStrategies>(playerpart
                 .get(&super::snap_equiv_base(stichseq))?;
             Some(perminmaxn_payout.map(|n_payout_points| {
                 let n_points_primary = n_payout_points
-                    + points_primary_party(
+                    + pointstichcount_primary_party(
                         rulestatecache,
                         &self.playerparties,
                         dbg_argument!((rules, stichseq)),
-                    );
+                    ).n_point;
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
                 payoutdecider::internal_payout(
@@ -330,11 +342,11 @@ pub fn snapshot_cache_points_monotonic<TplStrategies: TTplStrategies>(playerpart
                     ),
                     &self.pointstowin,
                     /*b_primary*/true,
-                ) - points_primary_party(
+                ) - pointstichcount_primary_party(
                     rulestatecache,
                     &self.playerparties,
                     dbg_argument!((rules, stichseq))
-                );
+                ).n_point;
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
                 n_points_primary
