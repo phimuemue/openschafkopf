@@ -134,7 +134,10 @@ pub fn internal_table<
         .into_iter()
     {
         perminmaxstrategyaformatinfo.modify_with_other(&perminmaxstrategyatplstrf, |aformatinfo, atplstrf| {
-            for ((str_val, f_val), formatinfo) in atplstrf.iter().zip_eq(aformatinfo.iter_mut()) {
+            for ((str_val, f_val), formatinfo) in itertools::zip_eq(
+                atplstrf.iter(),
+                aformatinfo.iter_mut(),
+            ) {
                 formatinfo.n_width = formatinfo.n_width.max(str_val.len());
                 assign_lt_partial_ord(&mut formatinfo.f_min, *f_val);
                 assign_gt_partial_ord(&mut formatinfo.f_max, *f_val);

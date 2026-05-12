@@ -421,7 +421,10 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
                         ),
                     );
                     assert!(
-                        mapepiintvlon_payout.iter().zip_eq(mapepiintvlon_payout_after.iter())
+                        itertools::zip_eq(
+                            mapepiintvlon_payout.iter(),
+                            mapepiintvlon_payout_after.iter(),
+                        )
                             .all(|(intvlon_payout, intvlon_payout_other)| payouthint_contains(intvlon_payout, intvlon_payout_other)),
                         "{stichseq_check}\n{ahand_check:?}\n{mapepiintvlon_payout:?}\n{mapepiintvlon_payout_after:?}",
                     );
@@ -438,7 +441,10 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
                     }
                 }
                 assert!(
-                    mapepiintvlon_payout.iter().zip_eq(an_payout.iter().cloned())
+                    itertools::zip_eq(
+                        mapepiintvlon_payout.iter(),
+                        an_payout.iter().cloned(),
+                    )
                         .all(|(intvlon_payout, payoutinfo)|
                             payouthint_contains(intvlon_payout, &ELoHi::map_from_fn(|_lohi| {
                                 Some(payoutinfo)

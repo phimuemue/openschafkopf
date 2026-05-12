@@ -525,7 +525,10 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
     );
     for acard_stich in [[EO, GO, HO, SO], [EU, GU, HU, SU], [HA, E7, E8, E9], [HZ, S7, S8, S9], [HK, G7, G8, G9]] {
         assert_eq!(EPlayerIndex::values().next(), Some(epi_active));
-        for (epi, card) in EPlayerIndex::values().zip_eq(acard_stich) {
+        for (epi, card) in itertools::zip_eq(
+            EPlayerIndex::values(),
+            acard_stich,
+        ) {
             unwrap!(game.zugeben(card, epi));
         }
     }

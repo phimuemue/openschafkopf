@@ -1171,13 +1171,19 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
         let aveccard_played = as_ptr!(u8, 0x4c60de, 0x4c60f9, 0x4c6114, 0x4c612f).map(|pbyte_played|
             unsafe {interpret_as_cards(pbyte_played, /*n_cards_max*/8)}
         );
-        for (str_player, veccard_hand) in astr_player.iter().zip_eq(aveccard_hand.iter()) {
+        for (str_player, veccard_hand) in itertools::zip_eq(
+            astr_player.iter(),
+            aveccard_hand.iter(),
+        ) {
             info!("Hand von {}: {}",
                 str_player,
                 veccard_hand.iter().join(" "),
             );
         }
-        for (str_player, veccard_played) in astr_player.iter().zip_eq(aveccard_played.iter()) {
+        for (str_player, veccard_played) in itertools::zip_eq(
+            astr_player.iter(),
+            aveccard_played.iter(),
+        ) {
             info!("Gespielte Karten von {}: {}",
                 str_player,
                 veccard_played.iter().join(" "),

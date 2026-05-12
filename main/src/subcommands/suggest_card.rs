@@ -59,13 +59,19 @@ fn print_payoutstatstable<T: std::fmt::Display, TplStrategies: TTplStrategies>(
         assign_gt(&mut n_width_id, str_id.len());
         vecstr_id.push(str_id);
     }
-    for (str_id, SOutputLine{vect:_, perminmaxstrategyatplstrf}) in vecstr_id.iter().zip_eq(slcoutputline.iter()) {
+    for (str_id, SOutputLine{vect:_, perminmaxstrategyatplstrf}) in itertools::zip_eq(
+        vecstr_id.iter(),
+        slcoutputline.iter(),
+    ) {
         print!("{str_id:<n_width_id$}: ");
         for ((_emmstrategy_atplstrf, atplstrf), (_emmstrategy_aformatinfo, aformatinfo)) in itertools::zip_eq(
             perminmaxstrategyatplstrf.via_accessors(),
             payoutstatstable.format_infos().via_accessors(),
         ) {
-            for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in atplstrf.iter().zip_eq(aformatinfo.iter()) {
+            for ((str_num, f), SFormatInfo{f_min, f_max, n_width}) in itertools::zip_eq(
+                atplstrf.iter(),
+                aformatinfo.iter(),
+            ) {
                 use termcolor::*;
                 let mut stdout = StandardStream::stdout(if std::io::stdout().is_terminal() {
                     ColorChoice::Auto

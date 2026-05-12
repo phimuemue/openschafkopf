@@ -23,7 +23,6 @@ use openschafkopf_lib::{
     game_analysis::parser::analyze_sauspiel_json,
     ai::gametree::{player_table_ahand, player_table_stichseq},
 };
-use itertools::Itertools;
 
 #[wasm_bindgen]
 extern "C" {
@@ -486,7 +485,10 @@ pub fn greet() {
                             ))
                         )),
                     )),
-                    vecepicardocardseverity.chunks(EPlayerIndex::SIZE).zip_eq(game_finished.stichseq.completed_stichs_winner_index(dbg_argument!(&game_finished.rules))).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
+                    itertools::zip_eq(
+                        vecepicardocardseverity.chunks(EPlayerIndex::SIZE),
+                        game_finished.stichseq.completed_stichs_winner_index(dbg_argument!(&game_finished.rules)),
+                    ).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
                         tr((
                             table_cell_with_background(
                                 "td",
