@@ -401,31 +401,62 @@ pub fn greet() {
                 append_sibling(&element_played_card, &div_button);
             }
             use html_generator::*; // TODO narrower scope?
-            fn table_cell_with_background(str_tag_name: &'static str, str_text: impl AttributeOrChild, ocardseverity: &Option<EPlayedCardSeverity>) -> HtmlElement<impl AttributeOrChild> {
-                let str_color = match ocardseverity {
-                    None | Some(EPlayedCardSeverity::Optimal) => "", // Do not indicate "unchecked" or "optimal" in overview cells
-                    Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
+            fn table_cell_with_background(str_tag_name: &'static str, str_text: impl AttributeOrChild, ocardseverity_bg: Option<EPlayedCardSeverity>, ocardseverity_top: Option<EPlayedCardSeverity>) -> HtmlElement<impl AttributeOrChild> {
+                let cardseverity_to_color = |ocardseverity| {
+                    match ocardseverity {
+                        None | Some(EPlayedCardSeverity::Optimal) => None, // Do not indicate "unchecked" or "optimal" in overview cells
+                        Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => Some(suboptimal_quality_to_html_color(b_loss_realized)),
+                    }
                 };
                 HtmlElement::new(
                     str_tag_name,
-                    (attributes::style(
-                        format!("background-color: {str_color};")),
+                    (
+                        // TODO(html_generator)? can we avoid all this string manipulation here?
+                        attributes::style(format!(
+                            "{str_color_bg}{str_color_top}",
+                            str_color_bg=cardseverity_to_color(ocardseverity_bg)
+                                .map(|str_color| format!("background-color: {str_color};"))
+                                .unwrap_or_default(),
+                            str_color_top=cardseverity_to_color(ocardseverity_top)
+                                .map(|str_color| format!("border-top: 5px solid {str_color};"))
+                                .unwrap_or_default(),
+                        )),
                         str_text,
                     )
                 )
             }
-            let itepi_cycled_twice = itertools::chain(
-                EPlayerIndex::values(),
-                EPlayerIndex::values().take(EPlayerIndex::SIZE - 1),
+            let ittplepib_repeated = itertools::chain(
+                EPlayerIndex::values()
+                    .map(|epi| (epi, /*bRepeated*/false)),
+                EPlayerIndex::values().take(EPlayerIndex::SIZE - 1)
+                    .map(|epi| (epi, /*bRepeated*/true)),
             );
             /*TODO const*/let html_table_gap_cell = th(attributes::style("width: 10px; background: none;"));
             let node_whole_game = unwrap!(
                 unwrap!(node_gameannouncement_epi0.clone_node())
                     .dyn_into::<web_sys::Element>() // TODO can we avoid this?
             );
-            let mut mapepiocardseverity = EPlayerIndex::map_from_fn(|_epi| None);
-            for (epi, _card, ocardseverity) in vecepicardocardseverity.iter() {
-                assign_gt(&mut mapepiocardseverity[*epi], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
+            fn make_playerindex_columns(
+                ittplepib_repeated: impl Iterator<Item=(EPlayerIndex, bool/*b_repeated*/)> + Clone,
+                slcepicardocardseverity_stich: &[(EPlayerIndex, ECard, Option<EPlayedCardSeverity>)],
+            ) -> impl Iterator<Item=Option<(EPlayerIndex, bool/*b_repeated*/, ECard, Option<&EPlayedCardSeverity>)>> + Clone {
+                assert_eq!(slcepicardocardseverity_stich.len(), EPlayerIndex::SIZE);
+                itertools::merge_join_by(
+                    ittplepib_repeated,
+                    slcepicardocardseverity_stich,
+                    |(epi_running_index, _b_repeated), (epi_card, _card, _ocardseverity)| {
+                        epi_running_index.cmp(epi_card)
+                    },
+                ).map(move |eitherorboth| match eitherorboth {
+                    EitherOrBoth::Left((_epi_running_index, _b_repeated)) => None,
+                    EitherOrBoth::Both((epi_running_index, b_repeated), (epi_card, card, ocardseverity)) => Some((
+                        verify_eq!(epi_running_index, *epi_card),
+                        b_repeated,
+                        *card,
+                        ocardseverity.as_ref(),
+                    )),
+                    EitherOrBoth::Right(_) => panic!(),
+                })
             }
             const STR_STYLE_ACTIVE_PLAYER_BACKGROUND_COLOR : &str = "background-color: #11111111";
             let points_cell_style = |b_border_top: bool, epi: EPlayerIndex| {
@@ -470,7 +501,7 @@ pub fn greet() {
                         th(()), // empty cell to match subsequent rows // TODO merge with next row's cell?
                         html_table_gap_cell.clone(),
                         th((
-                            colspan(format!("{}", itepi_cycled_twice.clone().count())),
+                            colspan(format!("{}", ittplepib_repeated.clone().count())),
                             "Karten",
                         )),
                         html_table_gap_cell.clone(),
@@ -482,13 +513,23 @@ pub fn greet() {
                     tr((
                         th(()), // empty cell to match subsequent rows
                         html_table_gap_cell.clone(),
-                        html_iter(itepi_cycled_twice.clone().map(|epi_header| {
-                            table_cell_with_background(
-                                "th",
-                                format!("{}", epi_to_sauspiel_position(epi_header)),
-                                &mapepiocardseverity[epi_header],
-                            )
-                        })),
+                        {
+                            let mut mapepimapbocardseverity_header = EPlayerIndex::map_from_fn(|_epi| bool::map_from_fn(|_b_repeated| None));
+                            vecepicardocardseverity.chunks(EPlayerIndex::SIZE).for_each(|slcepicardocardseverity_stich| {
+                                for (epi, b_repeated, _card, ocardseverity) in make_playerindex_columns(ittplepib_repeated.clone(), slcepicardocardseverity_stich).flatten() {
+                                    assign_gt(&mut mapepimapbocardseverity_header[epi][b_repeated], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
+                                }
+                            });
+                            html_iter(ittplepib_repeated.clone().map(move |(epi_header, b_repeated)| {
+                                let mapbocardseverity = &mapepimapbocardseverity_header[epi_header];
+                                table_cell_with_background(
+                                    "th",
+                                    format!("{}", epi_to_sauspiel_position(epi_header)),
+                                    /*ocardseverity_bg*/mapbocardseverity[b_repeated].cloned(),
+                                    /*ocardseverity_top*/unwrap!(mapbocardseverity.iter().max(/*exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?*/)).cloned(),
+                                )
+                            }))
+                        },
                         html_table_gap_cell.clone(),
                         html_iter(EPlayerIndex::values().map(|epi_points|
                             th((
@@ -505,28 +546,21 @@ pub fn greet() {
                             table_cell_with_background(
                                 "td",
                                 /*str_text*/format!("{}. Stich", i_stich+1),
-                                unwrap!(slcepicardocardseverity_stich.iter().map(|(_epi, _card, ocardseverity)| ocardseverity).max()),
+                                /*ocardseverity_bg*/unwrap!(slcepicardocardseverity_stich.iter().map(|(_epi, _card, ocardseverity)| ocardseverity).max()).clone(),
+                                /*ocardseverity_top*/None,
                             ),
                             html_table_gap_cell.clone(),
-                            html_iter(itertools::merge_join_by(
-                                itepi_cycled_twice.clone(),
-                                slcepicardocardseverity_stich,
-                                |epi_running_index, (epi_card, _card, _ocardseverity)| {
-                                    epi_running_index.cmp(epi_card)
-                                },
-                            ).map(move |eitherorboth| td(match eitherorboth {
-                                EitherOrBoth::Left(_epi_running_index) => None,
-                                EitherOrBoth::Both(epi_running_index, (epi_card, card, ocardseverity)) => {
-                                    assert_eq!(epi_running_index, *epi_card);
-                                    let str_color = match ocardseverity {
-                                        Some(EPlayedCardSeverity::Optimal) => "#78db00", // green
-                                        Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
-                                        None => "lightgrey",
-                                    };
-                                    Some(internal_output_card_sauspiel_img(*card, format!("border-top: 5px solid {str_color};box-sizing: content-box;")))
-                                },
-                                EitherOrBoth::Right(_) => panic!(),
-                            }))),
+                            html_iter(
+                                make_playerindex_columns(ittplepib_repeated.clone(), slcepicardocardseverity_stich)
+                                    .map(|otplepibcardocardseverity| td(otplepibcardocardseverity.map(|(_epi, _b_repeated, card, ocardseverity)| {
+                                        let str_color = match ocardseverity {
+                                            Some(EPlayedCardSeverity::Optimal) => "#78db00", // green
+                                            Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
+                                            None => "lightgrey",
+                                        };
+                                        Some(internal_output_card_sauspiel_img(card, format!("border-top: 5px solid {str_color};box-sizing: content-box;")))
+                                    })))
+                            ),
                             html_table_gap_cell.clone(),
                             html_iter(EPlayerIndex::values().map(move |epi_points| 
                                 td((
@@ -541,7 +575,7 @@ pub fn greet() {
                         td(colspan(format!("{}", // TODO(html_generator) support format_args
                             1 // Column "i-th Stich"
                             + 1 // html_table_gap_cell
-                            + itepi_cycled_twice.clone().count()
+                            + ittplepib_repeated.clone().count()
                             + 1 // html_table_gap_cell
                         ))),
                         html_iter(EPlayerIndex::values().map(|epi_points| {
