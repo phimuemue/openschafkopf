@@ -483,7 +483,11 @@ pub fn greet() {
                         th(()), // empty cell to match subsequent rows
                         html_table_gap_cell.clone(),
                         html_iter(itepi_cycled_twice.clone().map(|epi_header| {
-                            table_cell_with_background("th", format!("{}", epi_to_sauspiel_position(epi_header)), &mapepiocardseverity[epi_header])
+                            table_cell_with_background(
+                                "th",
+                                format!("{}", epi_to_sauspiel_position(epi_header)),
+                                &mapepiocardseverity[epi_header],
+                            )
                         })),
                         html_table_gap_cell.clone(),
                         html_iter(EPlayerIndex::values().map(|epi_points|
