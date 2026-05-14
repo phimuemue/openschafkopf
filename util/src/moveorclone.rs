@@ -17,3 +17,9 @@ impl<T: Clone> TMoveOrClone<T> for &T {
         self.clone()
     }
 }
+
+impl<T: Clone> TMoveOrClone<T> for &mut T {
+    fn move_or_clone(self) -> T {
+        self.clone()
+    }
+}
