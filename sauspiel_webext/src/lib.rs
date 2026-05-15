@@ -275,8 +275,13 @@ pub fn greet() {
                             ))
                         }
                         for i_determinerulesstep in (1..vecdeterminerulesstep.len()).rev() {
-                            if vecdeterminerulesstep[i_determinerulesstep-1].resoefarbe_trumpf.is_err() {
-                                vecdeterminerulesstep[i_determinerulesstep-1].resoefarbe_trumpf = verify!(vecdeterminerulesstep[i_determinerulesstep].resoefarbe_trumpf);
+                            match vecdeterminerulesstep[i_determinerulesstep-1].resoefarbe_trumpf {
+                                Err(()) | Ok(None) => {
+                                    vecdeterminerulesstep[i_determinerulesstep-1].resoefarbe_trumpf = verify!(vecdeterminerulesstep[i_determinerulesstep].resoefarbe_trumpf);
+                                },
+                                Ok(Some(_efarbe)) => {
+                                    // keep efarbe
+                                },
                             }
                         }
                     }
