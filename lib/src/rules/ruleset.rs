@@ -117,7 +117,7 @@ impl SRuleSet {
                 bail!("Currently, having both Ramsch and Stock is not supported.")
             },
             (Some(val_ramsch), None) => {
-                let durchmarsch = (match val_ramsch.get("durchmarsch") {
+                let odurchmarsch = (match val_ramsch.get("durchmarsch") {
                     None => Ok(None),
                     Some(toml::Value::String(str_durchmarsch)) if "all"==str_durchmarsch => {
                         Ok(Some(VDurchmarsch::All))
@@ -145,7 +145,7 @@ impl SRuleSet {
                 read_int(val_ramsch, "price").map(|n_price|
                     VStockOrT::OrT(SRulesRamsch::new(
                         n_price.as_num(),
-                        durchmarsch,
+                        odurchmarsch,
                         ojungfrau,
                     ))
                 )
