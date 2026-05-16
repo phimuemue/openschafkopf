@@ -76,14 +76,14 @@ impl SRuleSet {
     pub fn from_string(str_toml: &str) -> Result<SRuleSet, Error> {
         let tomltbl = str_toml.parse::<toml::Value>()?;
         let read_int = |tomlval: &toml::Value, str_key: &str| -> Result<i64, Error> {
-            if let Some(n) = tomlval.get(str_key).and_then(|tomlval| tomlval.as_integer()) {
-                if 0<=n {
-                    Ok(n)
-                } else {
-                    bail!(format!("Found {} with invalid value {}. Must be at least 0.", str_key, n));
-                }
+            let n = tomlval.get(str_key)
+                .ok_or_else(|| format_err!("Could not find {}.", str_key))?
+                .as_integer()
+                .ok_or_else(|| format_err!("{:?} is not an int {}.", tomlval, str_key))?;
+            if 0<=n {
+                Ok(n)
             } else {
-                bail!(format!("Could not find {}.", str_key));
+                bail!(format!("Found {} with invalid value {}. Must be at least 0.", str_key, n));
             }
         };
         let fallback = |str_not_found: &str, str_fallback: &str| {
