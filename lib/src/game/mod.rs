@@ -289,6 +289,9 @@ impl SDetermineRules {
         if rules.priority()<self.currently_offered_prio().1 {
             bail!("announced rules' priority must be at least as large as the latest announced priority");
         }
+        if epi!=rules.playerindex() {
+            bail!("Rules have wrong playerindex");
+        }
         if !rules.can_be_played(self.fullhand(epi)) {
             bail!("Rules cannot be played. {}", SDisplayCardSlice::new(self.aveccard[epi].clone(), &rules));
         }
