@@ -132,7 +132,7 @@ pub fn with_common_args<FnWithArgs>(
             {
                 Some(&[n_samples]) => VChooseItAhand::Sample(n_samples, /*on_pool*/None),
                 Some(&[n_samples, n_pool]) => VChooseItAhand::Sample(n_samples, Some(n_pool)),
-                _ => bail!("Failed to parse simulate_hands"),
+                _ => return Err(format_err!("Failed to parse simulate_hands")),
             }
         }
     ).unwrap_or_else(|| {
@@ -191,7 +191,7 @@ pub fn with_common_args<FnWithArgs>(
     {
         Some(Ok(vecstoss)) => vecstoss,
         None => Vec::new(),
-        Some(Err(e)) => bail!("Could not parse stoss: {}", e),
+        Some(Err(e)) => return Err(format_err!("Could not parse stoss: {}", e)),
     };
     let expensifiers = SExpensifiers::new(
         /*n_stock*/0, // TODO? make adjustable
@@ -210,7 +210,7 @@ pub fn with_common_args<FnWithArgs>(
             .duplicates()
             .collect::<Vec<_>>();
         if !veccard_duplicate.is_empty() {
-            bail!("Cards are used more than once: {}", veccard_duplicate.iter().join(", "));
+            return Err(format_err!("Cards are used more than once: {}", veccard_duplicate.iter().join(", ")));
         }
         let (itrules, b_single_rules) = match clapmatches.values_of("rules")
             .map(|values| values.map(parse_rule_description_simple))
@@ -247,7 +247,7 @@ pub fn with_common_args<FnWithArgs>(
                 }
             },
             Err(err) => {
-                bail!("Could not parse rules: {}", err);
+                return Err(format_err!("Could not parse rules: {}", err));
             },
         };
         for rules in itrules {
@@ -312,7 +312,7 @@ pub fn with_common_args<FnWithArgs>(
                 if veccard_hand_active.len()==stichseq.kurzlang().cards_per_player() {
                     if !rules.can_be_played(SFullHand::new(&veccard_hand_active, stichseq.kurzlang())) {
                         if b_single_rules {
-                            bail!("Rules {} cannot be played given these cards.", SDisplayRules::new(rules, /*b_include_playerindex*/true));
+                            return Err(format_err!("Rules {} cannot be played given these cards.", SDisplayRules::new(rules, /*b_include_playerindex*/true)));
                         } else {
                             if b_verbose {
                                 println!("Rules {} cannot be played given these cards.", SDisplayRules::new(rules, /*b_include_playerindex*/true));

@@ -206,14 +206,14 @@ impl SGamePreparations {
 
     pub fn announce_game(&mut self, epi: EPlayerIndex, orules: Option<SActivelyPlayableRules>) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something() {
-            bail!("Wrong player index");
+            return Err(format_err!("Wrong player index"));
         }
         if let Some(ref rules) = orules {
             if epi!=rules.playerindex() {
-                bail!("Rules have wrong player index.");
+                return Err(format_err!("Rules have wrong player index."));
             }
             if !rules.can_be_played(self.fullhand(epi)) {
-                bail!("Rules cannot be played. {}", SDisplayCardSlice::new(self.aveccard[epi].clone(), &orules));
+                return Err(format_err!("Rules cannot be played. {}", SDisplayCardSlice::new(self.aveccard[epi].clone(), &orules)));
             }
         }
         self.gameannouncements.push(orules);
@@ -284,16 +284,16 @@ impl SDetermineRules {
 
     pub fn announce_game(&mut self, epi: EPlayerIndex, rules: SActivelyPlayableRules) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
-            bail!("announce_game not allowed for specified EPlayerIndex");
+            return Err(format_err!("announce_game not allowed for specified EPlayerIndex"));
         }
         if rules.priority()<self.currently_offered_prio().1 {
-            bail!("announced rules' priority must be at least as large as the latest announced priority");
+            return Err(format_err!("announced rules' priority must be at least as large as the latest announced priority"));
         }
         if epi!=rules.playerindex() {
-            bail!("Rules have wrong playerindex");
+            return Err(format_err!("Rules have wrong playerindex"));
         }
         if !rules.can_be_played(self.fullhand(epi)) {
-            bail!("Rules cannot be played. {}", SDisplayCardSlice::new(self.aveccard[epi].clone(), &rules));
+            return Err(format_err!("Rules cannot be played. {}", SDisplayCardSlice::new(self.aveccard[epi].clone(), &rules)));
         }
         assert_ne!(epi, self.tplepirules_current_bid.0);
         assert!(!self.vectplepirules_queued.is_empty());
@@ -307,7 +307,7 @@ impl SDetermineRules {
 
     pub fn resign(&mut self, epi: EPlayerIndex) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
-            bail!("announce_game not allowed for specified EPlayerIndex");
+            return Err(format_err!("announce_game not allowed for specified EPlayerIndex"));
         }
         assert!(!self.vectplepirules_queued.is_empty());
         verify_eq!(unwrap!(self.vectplepirules_queued.pop()).0, epi);
@@ -500,10 +500,10 @@ impl<Ruleset, GameAnnouncement, DetermineRules> SGameGeneric<Ruleset, GameAnnoun
 
     pub fn stoss(&mut self, epi_stoss: EPlayerIndex) -> Result<(), Error> {
         match self.which_player_can_do_something() {
-            None => bail!("Game already ended."),
+            None => Err(format_err!("Game already ended.")),
             Some(gameaction) => {
                 if !gameaction.1.contains(&epi_stoss) {
-                    bail!(format!("Stoss not allowed for specified epi {:?}", gameaction.1));
+                    return Err(format_err!("Stoss not allowed for specified epi {:?}", gameaction.1));
                 }
                 self.expensifiers.vecstoss.push(SStoss{
                     epi : epi_stoss,
@@ -516,13 +516,13 @@ impl<Ruleset, GameAnnouncement, DetermineRules> SGameGeneric<Ruleset, GameAnnoun
 
     pub fn zugeben(&mut self, card: ECard, epi: EPlayerIndex) -> Result<(), Error> {
         if Some(epi)!=self.which_player_can_do_something().map(|gameaction| gameaction.0) {
-            bail!("Wrong player index");
+            return Err(format_err!("Wrong player index"));
         }
         if !self.ahand[epi].contains(card) {
-            bail!("card not contained in player's hand");
+            return Err(format_err!("card not contained in player's hand"));
         }
         if !self.rules.card_is_allowed(&self.stichseq, &self.ahand[epi], card) {
-            bail!("{} is not allowed", card);
+            return Err(format_err!("{} is not allowed", card));
         }
         self.ahand[epi].play_card(card);
         self.stichseq.zugeben(card, &self.rules);

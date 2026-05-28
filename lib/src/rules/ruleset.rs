@@ -83,7 +83,7 @@ impl SRuleSet {
             if 0<=n {
                 Ok(n)
             } else {
-                bail!(format!("Found {} with invalid value {}. Must be at least 0.", str_key, n));
+                Err(format_err!("Found {} with invalid value {}. Must be at least 0.", str_key, n))
             }
         };
         let fallback = |str_not_found: &str, str_fallback: &str| {
@@ -114,7 +114,7 @@ impl SRuleSet {
         let stockorramsch = match (tomltbl.get("ramsch"), tomltbl.get("stock")) {
             (Some(_), Some(_)) => {
                 // TODORULES Better alternatives? Allow stock *and* ramsch at the same time?
-                bail!("Currently, having both Ramsch and Stock is not supported.")
+                return Err(format_err!("Currently, having both Ramsch and Stock is not supported."))
             },
             (Some(val_ramsch), None) => {
                 let odurchmarsch = (match val_ramsch.get("durchmarsch") {
@@ -125,7 +125,7 @@ impl SRuleSet {
                     Some(&toml::Value::Integer(n_durchmarsch)) if (61..=120).contains(&n_durchmarsch) => {
                         Ok(Some(VDurchmarsch::AtLeast(n_durchmarsch.as_num())))
                     },
-                    _ => bail!("Invalid value for ramsch.durchmarsch. \"All\" or a number in [61; 120] is supported.")
+                    _ => return Err(format_err!("Invalid value for ramsch.durchmarsch. \"All\" or a number in [61; 120] is supported."))
                 } as Result<_, Error>)?;
                 let ojungfrau = (match val_ramsch.get("jungfrau") {
                     None => Ok(None),
@@ -139,7 +139,7 @@ impl SRuleSet {
                         Ok(Some(VJungfrau::DoubleIndividuallyMultiple))
                     },
                     _ => {
-                        bail!("Invalid value for ramsch.jungfrau. \"DoubleAll\", \"DoubleIndividuallyMultiple\" or \"DoubleIndividuallyOnce\" is supported.")
+                        return Err(format_err!("Invalid value for ramsch.jungfrau. \"DoubleAll\", \"DoubleIndividuallyMultiple\" or \"DoubleIndividuallyOnce\" is supported."))
                     }
                 } as Result<_, Error>)?;
                 read_int(val_ramsch, "price").map(|n_price|
