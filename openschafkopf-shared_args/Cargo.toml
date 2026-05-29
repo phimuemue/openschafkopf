@@ -8,5 +8,4 @@ license-file.workspace = true
 [dependencies]
 clap = "3"
 openschafkopf_lib = {path = "../lib"}
-failure = "0" # TODO remove this dependency
 openschafkopf_util = {path = "../util"}

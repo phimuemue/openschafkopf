@@ -21,7 +21,6 @@ arrayvec = "0"
 rayon = "1"
 toml = "0.8" # TODO update
 as_num = "0"
-failure = "0" # TODO remove this dependency
 derive-new = "0"
 chrono = "0"
 select = "0"
