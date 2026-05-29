@@ -13,7 +13,6 @@ use openschafkopf_lib::{
 use openschafkopf_util::*;
 use itertools::*;
 use serde::Serialize;
-use failure::*;
 use derive_new::new;
 use plain_enum::{PlainEnum, EnumMap};
 use super::common_given_game::*;

@@ -1,7 +1,6 @@
 use openschafkopf_util::*;
 use itertools::Itertools;
 use super::common_given_game::*;
-use failure::*;
 use as_num::*;
 use std::{
     cmp::Ordering,

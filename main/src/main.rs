@@ -6,9 +6,8 @@
 mod subcommands;
 
 use openschafkopf_util::*;
-use failure::*;
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<(), SStringifiedError> {
     logging::init_logging("openschafkopf")?; // TODO? split for certain subcommands (e.g. webext)
     macro_rules! subcommands{($(($mod:ident, $str_cmd:expr))*) => {
         let clapmatches = clap::Command::new("schafkopf")

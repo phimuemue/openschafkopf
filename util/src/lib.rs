@@ -36,3 +36,6 @@ pub mod negext;
 pub use negext::*;
 #[macro_use]
 pub mod dbg_argument;
+#[macro_use]
+pub mod stringified_error;
+pub use stringified_error::*;

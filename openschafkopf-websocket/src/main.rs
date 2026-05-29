@@ -1,8 +1,7 @@
 mod websocket;
 pub mod gamephase;
-use failure::Error;
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<(), openschafkopf_util::SStringifiedError> {
     websocket::run(
         &clap::Command::new("openschafkopf-websocket")
             .about("Play in the browser")

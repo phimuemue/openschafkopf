@@ -13,7 +13,6 @@ use std::{
     sync::{Arc, atomic::{AtomicUsize, Ordering}, Mutex},
 };
 use std::fmt::Write as _;
-use failure::*;
 use rayon::prelude::*;
 use itertools::Itertools;
 use plain_enum::*;
@@ -37,7 +36,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
         )
 }
 
-pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
+pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), SStringifiedError> {
     let mut vecgamewithdesc = Vec::new();
     super::glob_files_or_read_stdin(
         clapmatches,
@@ -111,7 +110,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
 
 struct SGameWithDesc {
     pub str_description: String,
-    pub resgameresult: Result<SGameResult</*Ruleset*/()>, failure::Error>,
+    pub resgameresult: Result<SGameResult</*Ruleset*/()>, SStringifiedError>,
 }
 
 fn analyze_game(

@@ -12,7 +12,6 @@ use openschafkopf_lib::{
 use openschafkopf_util::*;
 use itertools::Itertools;
 use std::io::Write;
-use failure::*;
 use plain_enum::PlainEnum;
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {

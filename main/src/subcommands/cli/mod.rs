@@ -1,6 +1,5 @@
 mod skui;
 mod playerhuman;
-use failure::*;
 
 use openschafkopf_lib::{
     game::run::run_simple_game_loop,
@@ -20,7 +19,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
         )
 }
 
-pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
+pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), SStringifiedError> {
     let _tui = skui::STuiGuard::init_ui();
     let (mut aattable, n_stock) = run_simple_game_loop(
         /*aplayer*/EPlayerIndex::map_from_fn(|epi| -> Box<dyn TPlayer> {

@@ -24,7 +24,7 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
         .about("Backend of a web-extension suggesting a card for a given game state")
 }
 
-pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), failure::Error> {
+pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), SStringifiedError> {
     use std::sync::{Arc, Mutex};
     let ocmd_openschafkopf: Arc<Mutex<Option<std::process::Child>>> = Arc::new(Mutex::new(None));
     let (sendstr, recvstr) = std::sync::mpsc::channel();

@@ -18,7 +18,6 @@ use openschafkopf_lib::{
 };
 use openschafkopf_util::*;
 use itertools::Itertools;
-use failure::*;
 use plain_enum::{EnumMap, PlainEnum};
 use as_num::*;
 

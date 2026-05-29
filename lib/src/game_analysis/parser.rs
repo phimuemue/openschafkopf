@@ -44,7 +44,7 @@ impl TRuleSet for SSauspielRuleset {
 #[derive(Debug, Clone)]
 pub struct SGameAnnouncementAnonymous;
 
-fn iter_to_arr<T>(it: impl IntoIterator<Item=T>) -> Result<[T; EPlayerIndex::SIZE], failure::Error> {
+fn iter_to_arr<T>(it: impl IntoIterator<Item=T>) -> Result<[T; EPlayerIndex::SIZE], SStringifiedError> {
     it.into_iter()
         .collect_array()
         .ok_or_else(|| format_err!("Wrong number of elements"))
@@ -129,7 +129,7 @@ impl<'node> TSauspielHtmlNode<'node> for select::node::Node<'node> {
     }
 }
 
-pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, /*GameAnnouncement*/(), Vec<()>>, failure::Error> {
+pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSauspielRuleset, /*GameAnnouncement*/(), Vec<()>>, SStringifiedError> {
     internal_analyze_sauspiel_html(
         Document::from(str_html),
         /*fn_gameannouncement*/|_,_,_| (),
@@ -148,7 +148,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
             SGameResultGeneric<SSauspielRuleset, GameAnnouncement, Vec<DetermineRulesStep>>,
             EnumMap<EPlayerIndex, String>,
         ),
-        failure::Error
+        SStringifiedError
     >
     where
         for <'card> FnGameAnnouncement: FnMut(EPlayerIndex, &Option<SGameAnnouncementAnonymous>, Document::HtmlNode<'card>)->GameAnnouncement,
@@ -167,13 +167,13 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
             .find_attr("data-username", ())
             .map(|node_username| unwrap!(node_username.attr("data-username")))
     ).map(EPlayerIndex::map_from_raw)?;
-    let username_to_epi = |str_username: &str| -> Result<EPlayerIndex, failure::Error> {
+    let username_to_epi = |str_username: &str| -> Result<EPlayerIndex, SStringifiedError> {
         EPlayerIndex::values()
             .find(|epi| mapepistr_username[*epi]==str_username)
             .ok_or_else(|| format_err!("username {} not part of mapepistr_username {:?}", str_username, mapepistr_username))
     };
     // TODO ensure that "key_figure_table" looks exactly as we expect
-    let scrape_from_key_figure_table = |str_key| -> Result<_, failure::Error> {
+    let scrape_from_key_figure_table = |str_key| -> Result<_, SStringifiedError> {
         doc.find_name("th")
             .filter(|node| node.inner_html()==str_key)
             .exactly_one().map_err(|it| format_err!("{:?}", it))?
@@ -183,7 +183,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
     };
     fn get_cards<'node, HtmlNode: TSauspielHtmlNode<'node>>(
         node: &HtmlNode,
-    ) -> Result<Vec<(ECard, bool/*b_highlight*/, HtmlNode)>, failure::Error> {
+    ) -> Result<Vec<(ECard, bool/*b_highlight*/, HtmlNode)>, SStringifiedError> {
         node
             .find_class("card-image")
             .map(|node_card| -> Result<_, _> {
@@ -210,7 +210,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
     }
     let aveccard = iter_to_arr(
         doc.find_inner_html("Karten von:")
-            .try_fold(Vec::new(), |mut vecveccard, node| -> Result<_, failure::Error> {
+            .try_fold(Vec::new(), |mut vecveccard, node| -> Result<_, SStringifiedError> {
                 let mut veccardbnode = get_cards(
                     &node
                         .parent().ok_or_else(|| format_err!(r#""Karten von:" has no parent"#))?
@@ -241,7 +241,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
                     $parser_digits.clone(),
                     string(" / ").with($parser_digits.clone()),
                     optional(string(" / ").with($parser_digits.clone())),
-                )).map(|(resn_1, resn_2, oresn_3)| -> Result<_, failure::Error> {
+                )).map(|(resn_1, resn_2, oresn_3)| -> Result<_, SStringifiedError> {
                     Ok(if let Some(resn_3)=oresn_3 {
                         (resn_1?, resn_2?, resn_3?)
                     } else {
@@ -257,7 +257,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
                     parser_tarif!(
                         choice!(string("€ "), string("$ ")), // Note: I could not find a game from Vereinsheim, but I suspect they use $
                         (parser_digits.clone(), char(','), count_min_max::<String,_>(2, 2, digit()))
-                            .map(|(resn_before_comma, _str_comma, str_2_digits_after_comma)| -> Result<_, failure::Error> {
+                            .map(|(resn_before_comma, _str_comma, str_2_digits_after_comma)| -> Result<_, SStringifiedError> {
                                 let n_before_comma : isize = resn_before_comma?;
                                 let n_after_comma : isize = str_2_digits_after_comma.parse::<isize>()?;
                                 Ok(n_before_comma * 100 + n_after_comma)
@@ -346,7 +346,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
                 Err(format_err!("Could not parse rules"))
             }
         })?;
-    let get_doublings_stoss = |str_key: &'static str| -> Result<_, failure::Error> {
+    let get_doublings_stoss = |str_key: &'static str| -> Result<_, SStringifiedError> {
         scrape_from_key_figure_table(str_key)?
             .find_name("a")
             .map(|node| username_to_epi(&node.inner_html()))
@@ -478,7 +478,7 @@ plain_enum_mod!(modesauspielposition, derive(Deserialize_repr,), map_derive(), E
 pub fn analyze_sauspiel_json(
     str_json: &str,
     fn_before_zugeben: impl FnMut(&SGameGeneric<EKurzLang, (), ()>, /*i_stich*/usize, EPlayerIndex, ECard),
-) -> Result<SGameResultGeneric</*Ruleset*/EKurzLang, (), ()>, failure::Error> {
+) -> Result<SGameResultGeneric</*Ruleset*/EKurzLang, (), ()>, SStringifiedError> {
     #[derive(Deserialize, Debug)]
     #[serde(tag = "type")]
     #[allow(non_camel_case_types, non_snake_case)] // to match Sauspiel JSON
@@ -625,7 +625,7 @@ pub fn analyze_sauspiel_json(
     }().map_err(|err| format_err!("{}: {:?}", err, vecerr))
 }
 
-pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failure::Error>> + std::fmt::Debug + '_ {
+pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, SStringifiedError>> + std::fmt::Debug + '_ {
     str_lines
         .lines()
         .map(|str_plain| {
@@ -654,7 +654,7 @@ pub fn analyze_plain(str_lines: &str) -> impl Iterator<Item=Result<SGame, failur
         })
 }
 
-pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*Ruleset*/String>, failure::Error>>, failure::Error> {
+pub fn analyze_netschafkopf(str_lines: &str) -> Result<Vec<Result<SGameResult</*Ruleset*/String>, SStringifiedError>>, SStringifiedError> {
     let mut itstr_line = str_lines.lines();
     let ruleset = itstr_line.next().ok_or_else(|| format_err!("First line should contain rules"))?.to_string();
     itstr_line.next()

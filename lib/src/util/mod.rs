@@ -8,7 +8,6 @@ pub mod static_option;
 pub mod int_ext;
 pub use self::{staticvalue::*, vecext::*, optionext::*, static_option::*, int_ext::*};
 pub use derive_new::new;
-pub use failure::{format_err, Error};
 pub use openschafkopf_util::*;
 #[macro_use]
 pub mod bitfield;

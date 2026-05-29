@@ -1,6 +1,5 @@
 use openschafkopf_util::*;
 use openschafkopf_lib::rules::ruleset::SRuleSet;
-use failure::Error;
 
 pub fn clap_arg(str_long: &'static str, str_default: &'static str) -> clap::Arg<'static> {
     clap::Arg::new(str_long)
@@ -21,7 +20,7 @@ pub fn ruleset_arg() -> clap::Arg<'static> {
         .long_help("The TOML ruleset file describes the set of available rules, prices, what to do if no one wants to play, whether stoss and doubling is allowed.")
 }
 
-pub fn get_ruleset(clapmatches: &clap::ArgMatches) -> Result<SRuleSet, Error> {
+pub fn get_ruleset(clapmatches: &clap::ArgMatches) -> Result<SRuleSet, SStringifiedError> {
     SRuleSet::from_file(std::path::Path::new(unwrap!(clapmatches.value_of("ruleset"))))
 }
 

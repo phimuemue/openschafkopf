@@ -27,7 +27,6 @@ use async_tungstenite::{
     tungstenite::protocol::Message,
 };
 use plain_enum::{EnumMap, PlainEnum};
-use failure::*;
 
 use crate::gamephase::{
     SSendToPlayers,
@@ -413,7 +412,7 @@ async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sock
     unwrap!(table.lock()).remove(&sockaddr);
 }
 
-async fn internal_run(ruleset: SRuleSet, b_with_bots: bool) -> Result<(), Error> {
+async fn internal_run(ruleset: SRuleSet, b_with_bots: bool) -> Result<(), SStringifiedError> {
     let str_addr = "127.0.0.1:8080";
     let table = Arc::new(Mutex::new(STable::new(ruleset, b_with_bots)));
     // Create the event loop and TCP listener we'll accept connections on.
@@ -426,7 +425,7 @@ async fn internal_run(ruleset: SRuleSet, b_with_bots: bool) -> Result<(), Error>
     Ok(())
 }
 
-pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
+pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), SStringifiedError> {
     task::block_on(internal_run(
         openschafkopf_shared_args::get_ruleset(clapmatches)?,
         /*b_with_bots*/clapmatches.is_present("with-bots"),

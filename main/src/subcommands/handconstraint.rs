@@ -6,7 +6,6 @@ use openschafkopf_lib::{
     },
 };
 use openschafkopf_util::*;
-use failure::*;
 use plain_enum::{PlainEnum, EnumMap};
 use as_num::*;
 

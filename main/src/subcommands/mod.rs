@@ -15,7 +15,6 @@ use openschafkopf_lib::{
     game::*,
 };
 use std::io::Read;
-use failure::*;
 use plain_enum::PlainEnum;
 
 mod shared_args {
@@ -47,7 +46,7 @@ pub fn ai(subcommand_matches: &clap::ArgMatches) -> SAi {
 pub fn glob_files_or_read_stdin(
     clapmatches: &clap::ArgMatches,
     mut fn_ok: impl FnMut(Option<std::path::PathBuf>, String, usize),
-) -> Result<(), Error> {
+) -> Result<(), SStringifiedError> {
     let mut i_ok = 0;
     let mut fn_ok = move |opath, str_ok| {
         fn_ok(opath, str_ok, i_ok);
