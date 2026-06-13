@@ -443,6 +443,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     (
                         fn_payout_to_points(
                             &SRuleStateCacheFixed::new(ahand, stichseq),
+                            stichseq.kurzlang(),
                             epi_position,
                             n_payout,
                         ),

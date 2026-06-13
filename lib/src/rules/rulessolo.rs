@@ -127,12 +127,13 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
                 of_heuristic_active_occurence_probability: rules.of_heuristic_active_occurence_probability,
                 stossparams: rules.stossparams.clone(),
             }).into(),
-            Box::new(move |_rulestatecache: &SRuleStateCacheFixed, epi_hand, n_payout: isize| {
+            Box::new(move |_rulestatecache: &SRuleStateCacheFixed, ekurzlang, epi_hand, n_payout: isize| {
                 SPayoutDeciderPointsAsPayout::payout_to_points(
                     epi_active,
                     epi_hand,
                     &pointstowin,
                     n_payout,
+                    ekurzlang,
                 )
             }) as FnConvertPointsAsPayout,
         )
@@ -144,14 +145,15 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
 }
 
 impl SPayoutDeciderPointsAsPayout<VGameAnnouncementPrioritySoloLike> {
-    fn payout_to_points(epi_active: EPlayerIndex, epi_hand: EPlayerIndex, pointstowin: &impl TPointsToWin, n_payout: isize) -> isize {
-        normalized_points_to_points(
+    fn payout_to_points(epi_active: EPlayerIndex, epi_hand: EPlayerIndex, pointstowin: &impl TPointsToWin, n_payout: isize, ekurzlang: EKurzLang) -> isize {
+        normalized_pointstichcount_to_pointstichcount(
             unwrap!(
                 n_payout.div_exact_unstable_name_collision(SPlayerParties13::new(epi_active).multiplier(epi_hand))
             ),
             pointstowin,
             /*b_primary*/ epi_hand==epi_active,
-        )
+            ekurzlang,
+        ).n_point
     }
 }
 
@@ -178,6 +180,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
                         epi_hand,
                         &self.pointstowin,
                         an_payout[epi_hand],
+                        stichseq.get().kurzlang(),
                     ),
                     EPlayerIndex::values()
                         .filter(|epi| playerparties.is_primary_party(*epi)==b_primary)

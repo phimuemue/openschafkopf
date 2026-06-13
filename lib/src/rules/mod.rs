@@ -25,7 +25,7 @@ use trumpfdecider::{STrumpfDecider, SLaufendeCount};
 use crate::util::*;
 use std::{
     borrow::Borrow,
-    ops::Add,
+    ops::{Add, Sub},
     cmp::Ordering,
     fmt,
     collections::HashMap,
@@ -270,6 +270,27 @@ impl Add<&SPointStichCount> for SPointStichCount {
         self
     }
 }
+impl Add<SPointStichCount> for &SPointStichCount {
+    type Output = SPointStichCount;
+    fn add(self, rhs: SPointStichCount) -> Self::Output {
+        rhs.add(self)
+    }
+}
+impl Sub<&SPointStichCount> for SPointStichCount {
+    type Output = Self;
+    fn sub(mut self, rhs: &SPointStichCount) -> Self::Output {
+        self.n_stich -= rhs.n_stich;
+        self.n_point -= rhs.n_point;
+        self.assert_invariant();
+        self
+    }
+}
+impl Sub for SPointStichCount {
+    type Output = Self;
+    fn sub(self, rhs: SPointStichCount) -> Self::Output {
+        self.sub(&rhs)
+    }
+}
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct SRuleStateCacheChanging {
@@ -374,7 +395,7 @@ impl<'rules, Rules: TRulesPlayerIndex, WritePlayerIndex: TWritePlayerIndex> std:
     }
 }
 
-pub type FnConvertPointsAsPayout = Box<dyn Fn(&SRuleStateCacheFixed, EPlayerIndex, isize)->isize + Sync>;
+pub type FnConvertPointsAsPayout = Box<dyn Fn(&SRuleStateCacheFixed, EKurzLang, EPlayerIndex, isize)->isize + Sync>;
 
 #[enum_dispatch]
 pub trait TRules : Sync + fmt::Debug + Send + Clone {
@@ -446,6 +467,7 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
                 for epi_check_fn_payout_to_points in EPlayerIndex::values() {
                     fn_payout_to_points(
                         &rulestatecache.fixed,
+                        stichseq.get().kurzlang(),
                         epi_check_fn_payout_to_points,
                         an_points_as_payout[epi_check_fn_payout_to_points],
                     );
