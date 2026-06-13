@@ -25,7 +25,7 @@ use trumpfdecider::{STrumpfDecider, SLaufendeCount};
 use crate::util::*;
 use std::{
     borrow::Borrow,
-    ops::Add,
+    ops::{Add, Sub},
     cmp::Ordering,
     fmt,
     collections::HashMap,
@@ -268,6 +268,27 @@ impl Add<&SPointStichCount> for SPointStichCount {
         self.n_point += rhs.n_point;
         self.assert_invariant();
         self
+    }
+}
+impl Add<SPointStichCount> for &SPointStichCount {
+    type Output = SPointStichCount;
+    fn add(self, rhs: SPointStichCount) -> Self::Output {
+        rhs.add(self)
+    }
+}
+impl Sub<&SPointStichCount> for SPointStichCount {
+    type Output = Self;
+    fn sub(mut self, rhs: &SPointStichCount) -> Self::Output {
+        self.n_stich -= rhs.n_stich;
+        self.n_point -= rhs.n_point;
+        self.assert_invariant();
+        self
+    }
+}
+impl Sub for SPointStichCount {
+    type Output = Self;
+    fn sub(self, rhs: SPointStichCount) -> Self::Output {
+        self.sub(&rhs)
     }
 }
 
