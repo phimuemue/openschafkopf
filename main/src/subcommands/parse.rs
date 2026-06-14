@@ -225,8 +225,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                         0
                                     }
                                 },
-                                /*fn_points_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].n_point,
-                                /*fn_stichs_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].n_stich,
+                                /*fn_points_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].point_count(),
+                                /*fn_stichs_for_player*/|epi| rulestatecache.changing.mapepipointstichcount[epi].stich_count(),
                                 /*fn_result_column*/|epi, card| bool_to_usize(rulestatecache.fixed.who_has_card(card)==epi) ,
                             );
                             unwrap!(game_csv.zugeben(card_zugeben, epi)); // validated by analyze_sauspiel_html

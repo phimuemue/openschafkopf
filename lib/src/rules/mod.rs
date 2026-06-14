@@ -223,8 +223,42 @@ impl SRuleStateCacheFixed {
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub struct SPointStichCount {
-    pub n_stich: usize,
-    pub n_point: isize,
+    n_stich: usize,
+    n_point: isize,
+}
+
+// These serve to avoid mistakes in SPointStichCount::new. // TODO good idea?
+#[derive(Debug, Copy, Clone)]
+pub struct PointCount(isize);
+#[derive(Debug, Copy, Clone)]
+pub struct StichCount(usize);
+
+impl SPointStichCount {
+    pub fn new(n_stich: StichCount, n_point: PointCount) -> Self {
+        let pointstichcount = Self {
+            n_stich: n_stich.0,
+            n_point: n_point.0,
+        };
+        pointstichcount.assert_invariant();
+        pointstichcount
+    }
+
+    fn assert_invariant(&self) {
+        #[allow(unused_comparisons, clippy::absurd_extreme_comparisons)] {
+            assert!(0 <= self.n_stich);
+        }
+        assert!(self.n_stich <= EKurzLang::max_cards_per_player());
+        assert!(0 <= self.n_point);
+        assert!(self.n_point <= 120);
+    }
+
+    // TODO accessor macro
+    pub fn stich_count(&self) -> usize {
+        self.n_stich
+    }
+    pub fn point_count(&self) -> isize {
+        self.n_point
+    }
 }
 
 impl Add<&SPointStichCount> for SPointStichCount {
@@ -232,6 +266,7 @@ impl Add<&SPointStichCount> for SPointStichCount {
     fn add(mut self, rhs: &SPointStichCount) -> Self::Output {
         self.n_stich += rhs.n_stich;
         self.n_point += rhs.n_point;
+        self.assert_invariant();
         self
     }
 }
@@ -260,10 +295,10 @@ impl SRuleStateCache {
         stichseq.completed_stichs_winner_index(dbg_argument!(winnerindex)).fold(
             Self {
                 changing: SRuleStateCacheChanging {
-                    mapepipointstichcount: EPlayerIndex::map_from_fn(|_epi| SPointStichCount {
-                        n_stich: 0,
-                        n_point: 0,
-                    }),
+                    mapepipointstichcount: EPlayerIndex::map_from_fn(|_epi| SPointStichCount::new(
+                        StichCount(0),
+                        PointCount(0),
+                    )),
                 },
                 fixed: SRuleStateCacheFixed::new(ahand, stichseq),
             },
@@ -292,12 +327,14 @@ impl SRuleStateCache {
         };
         self.changing.mapepipointstichcount[epi_winner].n_stich += 1;
         self.changing.mapepipointstichcount[epi_winner].n_point += points_stich(stich.borrow());
+        self.changing.mapepipointstichcount[epi_winner].assert_invariant();
         unregisterstich
     }
 
     pub fn unregister_stich(&mut self, unregisterstich: SUnregisterStich) {
         self.changing.mapepipointstichcount[unregisterstich.epi_winner].n_point = unregisterstich.n_points_epi_winner_before;
         self.changing.mapepipointstichcount[unregisterstich.epi_winner].n_stich -= 1;
+        self.changing.mapepipointstichcount[unregisterstich.epi_winner].assert_invariant();
     }
 }
 
