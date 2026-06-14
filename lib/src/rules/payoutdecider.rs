@@ -59,7 +59,7 @@ pub fn pointstichcount_for_party(
         .filter(|&epi| b_primary==playerparties.is_primary_party(epi))
         .map(|epi| &rulestatecache.changing.mapepipointstichcount[epi])
         .fold(
-            SPointStichCount{n_stich: 0, n_point: 0},
+            SPointStichCount::new(StichCount(0), PointCount(0)),
             SPointStichCount::add,
         );
     #[cfg(debug_assertions)] {
