@@ -153,7 +153,7 @@ impl<
                     0 // "nothing", i.e. neither schneider nor schwarz
                 }
             }
-            + self.payoutparams.laufendeparams.payout_laufende(trumpfdecider, rulestatecache, stichseq, playerparties)).neg_if(!b_primary_party_wins),
+            + self.payoutparams.laufendeparams.payout_laufende(trumpfdecider, rulestatecache, stichseq.get().kurzlang(), playerparties)).neg_if(!b_primary_party_wins),
             playerparties,
         )
     }
@@ -259,18 +259,11 @@ impl SLaufendeParams {
         &self,
         trumpfdecider: &STrumpfDecider,
         rulestatecache: &SRuleStateCache,
-        stichseq: SStichSequenceGameFinished,
+        ekurzlang: EKurzLang,
         playerparties: &PlayerParties
     ) -> isize {
-        debug_assert_eq!(
-            SRuleStateCacheFixed::new(
-                /*ahand*/&EPlayerIndex::map_from_fn(|_epi| SHand::new_from_vec(SHandVector::new())),
-                stichseq.get(),
-            ),
-            rulestatecache.fixed,
-        );
         let n_laufende = trumpfdecider.count_laufende(
-            stichseq.get().kurzlang(),
+            ekurzlang,
             playerparties,
             /*fn_who_has_card*/|card| rulestatecache.fixed.who_has_card(card),
         ).n_laufende;

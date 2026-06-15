@@ -241,7 +241,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
         let playerparties13 = &SPlayerParties13::new(rules.epi);
         // TODORULES optionally count schneider/schwarz
         internal_payout(
-            /*n_payout_primary_unmultiplied*/((self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(&rules.trumpfdecider, rulestatecache, stichseq, playerparties13)) * 2)
+            /*n_payout_primary_unmultiplied*/((self.payoutparams.n_payout_base + self.payoutparams.laufendeparams.payout_laufende(&rules.trumpfdecider, rulestatecache, stichseq.get().kurzlang(), playerparties13)) * 2)
                 .neg_if(!/*b_primary_party_wins*/debug_verify_eq!(
                     rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich==stichseq.get().kurzlang().cards_per_player(),
                     stichseq.get().completed_stichs_winner_index(rules)
