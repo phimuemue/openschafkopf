@@ -722,7 +722,7 @@ fn snapshot_cache_point_based<TplStrategies: TTplStrategies, PlayerParties: TPla
         let point_stich_count = |b_primary| {
             payoutdecider::pointstichcount_for_party(
                 b_primary,
-                rulestatecache,
+                &rulestatecache.changing,
                 &playerparties,
                 dbg_argument!((rules, stichseq)),
             )
