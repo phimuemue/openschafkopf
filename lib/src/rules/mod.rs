@@ -717,14 +717,13 @@ impl<Rules: TRules> TCardSorter for Rules {
 
 fn snapshot_cache_point_based<TplStrategies: TTplStrategies, PlayerParties: TPlayerParties+'static>(playerparties: PlayerParties) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>>>
 {
-    snapshot_cache::<TplStrategies>(move |rulestatecache, if_dbg_else!({(rules, stichseq)}{_})| {
+    snapshot_cache::<TplStrategies>(move |rulestatecache, if_dbg_else!({_tplrulesstichseq}{_})| {
         let mut payload_point_stich_count = 0;
         let point_stich_count = |b_primary| {
             payoutdecider::pointstichcount_for_party(
                 b_primary,
                 &rulestatecache.changing,
                 &playerparties,
-                dbg_argument!((rules, stichseq)),
             )
         };
         let pointstichcount_primary = point_stich_count(true);

@@ -53,37 +53,19 @@ pub fn pointstichcount_for_party(
     b_primary: bool,
     rulestatecache: &SRuleStateCacheChanging,
     playerparties: &impl TPlayerParties,
-    if_dbg_else!({(rules, stichseq)}{_}): dbg_parameter!((&impl TRules, &SStichSequence)),
 ) -> SPointStichCount {
-    let pointstichcount_primary = EPlayerIndex::values()
+    EPlayerIndex::values()
         .filter(|&epi| b_primary==playerparties.is_primary_party(epi))
         .map(|epi| &rulestatecache.mapepipointstichcount[epi])
         .fold(
             SPointStichCount::new(StichCount(0), PointCount(0)),
             SPointStichCount::add,
-        );
-    #[cfg(debug_assertions)] {
-        let itstich_primary = stichseq.completed_stichs_winner_index(rules)
-            .filter(|&(_stich, epi_winner)| b_primary==playerparties.is_primary_party(epi_winner));
-        assert_eq!(
-            pointstichcount_primary.n_point,
-            itstich_primary.clone()
-                .map(|(stich, _epi_winner)| card_points::points_stich(stich))
-                .sum::<isize>(),
-        );
-        assert_eq!(
-            pointstichcount_primary.n_stich,
-            itstich_primary.count(),
-        );
-    }
-    pointstichcount_primary
+        )
 }
 
 fn payouthints_point_based(
     pointstowin: &impl TPointsToWin,
-    if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
     rulestatecache: &SRuleStateCache,
-    if_dbg_else!({stichseq}{_}): dbg_parameter!(&SStichSequence),
     playerparties: &impl TPlayerParties,
     fn_payout_one_player_if_premature_winner: impl FnOnce(isize)->isize,
 ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
@@ -92,7 +74,6 @@ fn payouthints_point_based(
             b_primary,
             &rulestatecache.changing,
             playerparties,
-            dbg_argument!((rules, stichseq)),
         ).n_point
     );
     let internal_payouthints = |n_points_primary_party, b_premature_winner_is_primary_party: bool| {
@@ -136,7 +117,7 @@ impl<
         let SPointStichCount {
             n_point: n_points_primary_party,
             n_stich: n_stichs_primary_party,
-        } = pointstichcount_for_party(/*b_primary*/true, &rulestatecache.changing, playerparties, dbg_argument!((rules, stichseq.get())));
+        } = pointstichcount_for_party(/*b_primary*/true, &rulestatecache.changing, playerparties);
         let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
         internal_payout(
             (self.payoutparams.n_payout_base
@@ -164,16 +145,14 @@ impl<
 
     fn payouthints(
         &self,
-        if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
+        _rules: dbg_parameter!(&impl TRules),
         rulestatecache: &SRuleStateCache,
-        (_ahand, if_dbg_else!({stichseq}{_})): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
+        (_ahand, _stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         payouthints_point_based(
             &self.pointstowin,
-            dbg_argument!(rules),
             rulestatecache,
-            dbg_argument!(stichseq),
             playerparties,
             /*fn_payout_one_player_if_premature_winner*/|_n_points_primary_party| {
                 self.payoutparams.n_payout_base
@@ -223,15 +202,15 @@ impl<
 > TPayoutDecider for SPayoutDeciderPointsAsPayout<PointsToWin> {
     fn payout(
         &self,
-        if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
+        _rules: dbg_parameter!(&impl TRules),
         _trumpfdecider: &STrumpfDecider,
         rulestatecache: &SRuleStateCache,
-        if_dbg_else!({stichseq}{_}): SStichSequenceGameFinished,
+        _stichseq: SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
         internal_payout(
             primary_points_to_normalized_points(
-                pointstichcount_for_party(/*b_primary*/true, &rulestatecache.changing, playerparties, dbg_argument!((rules, stichseq.get()))).n_point,
+                pointstichcount_for_party(/*b_primary*/true, &rulestatecache.changing, playerparties).n_point,
                 &self.pointstowin
             ),
             playerparties,
@@ -240,16 +219,14 @@ impl<
 
     fn payouthints(
         &self,
-        if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
+        _rules: dbg_parameter!(&impl TRules),
         rulestatecache: &SRuleStateCache,
-        (_ahand, if_dbg_else!({stichseq}{_})): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
+        (_ahand, _stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         payouthints_point_based(
             &self.pointstowin,
-            dbg_argument!(rules),
             rulestatecache,
-            dbg_argument!(stichseq),
             playerparties,
             /*fn_payout_one_player_if_premature_winner*/|n_points_primary_party| {
                 primary_points_to_normalized_points(n_points_primary_party, &self.pointstowin).abs()
@@ -314,7 +291,7 @@ pub fn snapshot_cache_points_monotonic<TplStrategies: TTplStrategies>(playerpart
         pointstowin: PointsToWin,
     }
     impl<TplStrategies: TTplStrategies, PlayerParties: TPlayerParties, PointsToWin: TPointsToWin> TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>> for SSnapshotCachePointsMonotonic<TplStrategies, PlayerParties, PointsToWin> {
-        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, if_dbg_else!({rules}{_}): dbg_parameter!(&SRules)) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
+        fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, _rules: dbg_parameter!(&SRules)) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
             debug_assert_eq!(stichseq.current_stich().size(), 0);
             let perminmaxn_payout = self.mapsnapequivperminmaxn_payout
                 .get(&super::snap_equiv_base(stichseq))?;
@@ -324,7 +301,6 @@ pub fn snapshot_cache_points_monotonic<TplStrategies: TTplStrategies>(playerpart
                         /*b_primary*/true,
                         &rulestatecache.changing,
                         &self.playerparties,
-                        dbg_argument!((rules, stichseq)),
                     ).n_point;
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
@@ -350,7 +326,6 @@ pub fn snapshot_cache_points_monotonic<TplStrategies: TTplStrategies>(playerpart
                     /*b_primary*/true,
                     &rulestatecache.changing,
                     &self.playerparties,
-                    dbg_argument!((rules, stichseq))
                 ).n_point;
                 debug_assert!(0<=n_points_primary);
                 debug_assert!(n_points_primary<=120);
