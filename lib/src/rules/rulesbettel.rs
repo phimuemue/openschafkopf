@@ -171,7 +171,7 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
     }
 
     fn snapshot_cache<TplStrategies: TTplStrategies>(&self, _rulestatecachefixed: &SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>>> {
-        super::snapshot_cache::<TplStrategies>(|rulestatecache, if_dbg_else!({(_rules, _stichseq)}{_})| {
+        super::snapshot_cache::<TplStrategies>(|rulestatecache| {
             let mut payload_stich_count = 0;
             for (i_epi, epi) in EPlayerIndex::values()
                 .skip(1) // first EPI implicitly clear
