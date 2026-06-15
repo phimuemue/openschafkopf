@@ -255,7 +255,13 @@ impl<
 }
 
 impl SLaufendeParams {
-    pub fn payout_laufende<PlayerParties: TPlayerParties>(&self, trumpfdecider: &STrumpfDecider, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, playerparties: &PlayerParties) -> isize {
+    pub fn payout_laufende<PlayerParties: TPlayerParties>(
+        &self,
+        trumpfdecider: &STrumpfDecider,
+        rulestatecache: &SRuleStateCache,
+        stichseq: SStichSequenceGameFinished,
+        playerparties: &PlayerParties
+    ) -> isize {
         debug_assert_eq!(
             SRuleStateCacheFixed::new(
                 /*ahand*/&EPlayerIndex::map_from_fn(|_epi| SHand::new_from_vec(SHandVector::new())),
