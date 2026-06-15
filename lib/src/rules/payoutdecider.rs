@@ -133,16 +133,20 @@ impl<
         stichseq: SStichSequenceGameFinished,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
-        let n_points_primary_party = pointstichcount_for_party(/*b_primary*/true, &rulestatecache.changing, playerparties, dbg_argument!((rules, stichseq.get()))).n_point;
+        let SPointStichCount {
+            n_point: n_points_primary_party,
+            n_stich: n_stichs_primary_party,
+        } = pointstichcount_for_party(/*b_primary*/true, &rulestatecache.changing, playerparties, dbg_argument!((rules, stichseq.get())));
         let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
         internal_payout(
             (self.payoutparams.n_payout_base
             + { 
                 if debug_verify_eq!(
-                    EPlayerIndex::values()
-                        .filter(|epi| b_primary_party_wins==playerparties.is_primary_party(*epi))
-                        .map(|epi|  rulestatecache.changing.mapepipointstichcount[epi].n_stich)
-                        .sum::<usize>()==stichseq.get().kurzlang().cards_per_player(),
+                    if b_primary_party_wins {
+                        n_stichs_primary_party
+                    } else {
+                        stichseq.get().kurzlang().cards_per_player()-n_stichs_primary_party
+                    }==stichseq.get().kurzlang().cards_per_player(),
                     stichseq.get().completed_stichs_winner_index(rules)
                         .all(|(_stich, epi_winner)| b_primary_party_wins==playerparties.is_primary_party(epi_winner))
                 ) {
