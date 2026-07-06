@@ -381,6 +381,9 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> TRulesPlayerIndex for SRulesSoloLike
     fn playerindex(&self) -> Self::PlayerIndex {
         self.epi
     }
+    fn co_playerindex(&self, _fn_who_has_card: impl Fn(ECard)->EPlayerIndex) -> Option<EPlayerIndex> {
+        None
+    }
 }
 
 impl<PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<PayoutDecider> {

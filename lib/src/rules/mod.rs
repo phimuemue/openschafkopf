@@ -633,6 +633,23 @@ pub enum EBid {
 pub trait TRulesPlayerIndex : TRules {
     type PlayerIndex: Into<Option<EPlayerIndex>>;
     fn playerindex(&self) -> Self::PlayerIndex;
+    fn co_playerindex(&self, fn_who_has_card: impl Fn(ECard)->EPlayerIndex) -> Option<EPlayerIndex>; // TODO this can only be Some(...) if Self::PlayerIndex is Some. Should we encode this invariant in the types?
+    fn is_primary(&self, epi: EPlayerIndex, fn_who_has_card: impl Fn(ECard)->EPlayerIndex) -> Option<bool/*b_active*/> {
+        let oepi_active = self.playerindex().into();
+        let oepi_coplayer = self.co_playerindex(fn_who_has_card);
+        assert!(match (oepi_active, oepi_coplayer) {
+            (Some(epi_active), Some(epi_coplayer)) => epi_active!=epi_coplayer,
+            (Some(_), None)|(None, None)=> true,
+            (None, Some(_)) => panic!("No active player, but a second primary player."),
+        });
+        if Some(epi)==oepi_coplayer {
+            Some(/*b_active*/false)
+        } else if Some(epi)==oepi_active {
+            Some(/*b_active*/true)
+        } else {
+            None
+        }
+    }
 }
 
 #[enum_dispatch]
@@ -677,6 +694,12 @@ impl TRulesPlayerIndex for SRules {
             Self::Ramsch(rulesramsch) => rulesramsch.playerindex(), // Leave decision to rulesramsch
         }
     }
+    fn co_playerindex(&self, fn_who_has_card: impl Fn(ECard)->EPlayerIndex) -> Option<EPlayerIndex> {
+        match self {
+            Self::ActivelyPlayable(rules) => rules.co_playerindex(fn_who_has_card),
+            Self::Ramsch(rulesramsch) => rulesramsch.co_playerindex(fn_who_has_card), // Leave decision to rulesramsch
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -705,6 +728,18 @@ impl TRulesPlayerIndex for SActivelyPlayableRules {
             Self::SoloLikePointsAsPayout(rules) => rules.playerindex(),
             Self::BettelNormal(rules) => rules.playerindex(),
             Self::BettelStichzwang(rules) => rules.playerindex(),
+        }
+    }
+    fn co_playerindex(&self, fn_who_has_card: impl Fn(ECard)->EPlayerIndex) -> Option<EPlayerIndex> {
+        match self {
+            Self::Rufspiel(rules) => rules.co_playerindex(fn_who_has_card),
+            Self::RufspielPointsAsPayout(rules) => rules.co_playerindex(fn_who_has_card),
+            Self::SoloLikePointBased(rules) => rules.co_playerindex(fn_who_has_card),
+            Self::SoloLikeTout(rules) => rules.co_playerindex(fn_who_has_card),
+            Self::SoloLikeSie(rules) => rules.co_playerindex(fn_who_has_card),
+            Self::SoloLikePointsAsPayout(rules) => rules.co_playerindex(fn_who_has_card),
+            Self::BettelNormal(rules) => rules.co_playerindex(fn_who_has_card),
+            Self::BettelStichzwang(rules) => rules.co_playerindex(fn_who_has_card),
         }
     }
 }

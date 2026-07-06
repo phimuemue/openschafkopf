@@ -41,6 +41,9 @@ impl TRulesPlayerIndex for SRulesRamsch {
     fn playerindex(&self) -> Option<EPlayerIndex> {
         None // Ramsch is not an actively playable. // TODO? Is EPI3 the active player?
     }
+    fn co_playerindex(&self, _fn_who_has_card: impl Fn(ECard)->EPlayerIndex) -> Option<EPlayerIndex> {
+        None
+    }
 }
 
 impl TRules for SRulesRamsch {

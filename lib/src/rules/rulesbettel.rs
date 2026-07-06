@@ -55,6 +55,9 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
     fn playerindex(&self) -> Self::PlayerIndex {
         self.epi
     }
+    fn co_playerindex(&self, _fn_who_has_card: impl Fn(ECard)->EPlayerIndex) -> Option<EPlayerIndex> {
+        None
+    }
 }
 
 #[derive(Clone, Debug)]

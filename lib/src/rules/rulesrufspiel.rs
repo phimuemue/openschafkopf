@@ -131,6 +131,9 @@ impl<RufspielPayout: TRufspielPayout> TRulesPlayerIndex for SRulesRufspielGeneri
     fn playerindex(&self) -> Self::PlayerIndex {
         self.epi
     }
+    fn co_playerindex(&self, fn_who_has_card: impl Fn(ECard)->EPlayerIndex) -> Option<EPlayerIndex> {
+        Some(fn_who_has_card(self.rufsau()))
+    }
 }
 
 #[derive(Debug)]
