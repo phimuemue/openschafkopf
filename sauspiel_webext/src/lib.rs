@@ -16,9 +16,7 @@ use crate::utils::*;
 use std::fmt::Debug;
 use std::cmp::Ordering;
 use plain_enum::*;
-use itertools::EitherOrBoth;
-#[cfg(feature="sauspiel_webext_use_json")]
-use itertools::Itertools;
+use itertools::{Itertools, EitherOrBoth};
 
 #[cfg(feature="sauspiel_webext_use_json")]
 use openschafkopf_lib::{
@@ -463,14 +461,28 @@ pub fn greet() {
                     EitherOrBoth::Right(_) => panic!(),
                 })
             }
-            const STR_STYLE_ACTIVE_PLAYER_BACKGROUND_COLOR : &str = "background-color: #11111111";
+            let get_style_background = |epi_style_background| {
+                rules.is_primary(
+                    epi_style_background,
+                    /*fn_who_has_card*/|card| unwrap!(EPlayerIndex::values()
+                        .filter(|&epi_hand|
+                            game_finished.aveccard[epi_hand].contains(&card)
+                        )
+                        .exactly_one()
+                    ),
+                ).map(|b_active| if b_active {
+                    "background-color: #11111111;"
+                } else {
+                    "background:repeating-linear-gradient( 45deg, transparent, transparent 3px, #11111109 3px, #11111109 6px );"
+                })
+            };
             let points_cell_style = |b_border_top: bool, epi: EPlayerIndex| {
                 let mut str_style = "padding: 5px;".to_string(); // TODO could html_generator solve this nicely?
                 if b_border_top {
                     str_style += "border-top: 1px solid black;";
                 }
-                if rules.playerindex() == Some(epi) { // TODO support "Mitspieler" for Rufspiel
-                    str_style += STR_STYLE_ACTIVE_PLAYER_BACKGROUND_COLOR;
+                if let Some(str_style_background) = get_style_background(epi) {
+                    str_style += str_style_background;
                 }
                 attributes::style(str_style)
             };
@@ -485,9 +497,7 @@ pub fn greet() {
                     attributes::style("border-collapse: separate; border-spacing: 0 5px;"), // space between lines
                     tbody((
                         html_iter(EPlayerIndex::values().map(|epi_hand| tr((
-                            if_then_some!(Some(epi_hand)==rules.playerindex(),
-                                attributes::style(STR_STYLE_ACTIVE_PLAYER_BACKGROUND_COLOR)
-                            ),
+                            get_style_background(epi_hand).map(attributes::style),
                             (
                                 td(format!("({})", epi_to_sauspiel_position(epi_hand))),
                                 html_table_gap_cell.clone(),
