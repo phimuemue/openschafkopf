@@ -261,7 +261,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         },
     )?;
     if let Some(mut mapstrfile_neural_net) = omapstrfile_neural_net {
-        for (_str_path, file) in mapstrfile_neural_net.iter_mut() {
+        for file in mapstrfile_neural_net.values_mut() {
             unwrap!(file.flush());
         }
     }
