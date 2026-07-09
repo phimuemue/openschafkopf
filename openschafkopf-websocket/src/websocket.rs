@@ -408,7 +408,7 @@ async fn handle_connection(table: Arc<Mutex<STable>>, tcpstream: TcpStream, sock
         });
     let receive_from_others = rxmsg.map(Ok).forward(sink_ws_out);
     future::select(broadcast_incoming, receive_from_others).await;
-    println!("{} disconnected", &sockaddr);
+    println!("{sockaddr} disconnected");
     unwrap!(table.lock()).remove(&sockaddr);
 }
 
