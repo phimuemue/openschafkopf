@@ -337,14 +337,14 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 stossparams: self.stossparams.clone(),
             }).into(),
             Box::new(move |rulestatecache: &SRuleStateCacheFixed, ekurzlang, epi_hand, n_payout: isize| {
-                SRufspielPayoutPointsAsPayout::payout_to_points(
+                SRufspielPayoutPointsAsPayout::normalized_pointstichcount_to_pointstichcount(
                     epi_active,
                     card_rufsau,
                     epi_hand,
                     rulestatecache,
                     ekurzlang,
                     n_payout,
-                )
+                ).n_point
             }) as FnConvertPointsAsPayout,
         ))
     }
@@ -377,14 +377,14 @@ pub struct SRufspielPayoutPointsAsPayout {
 }
 
 impl SRufspielPayoutPointsAsPayout {
-    fn payout_to_points(
+    fn normalized_pointstichcount_to_pointstichcount(
         epi_active: EPlayerIndex,
         card_rufsau: ECard,
         epi_hand: EPlayerIndex,
         rulestatecache: &SRuleStateCacheFixed,
         ekurzlang: EKurzLang,
         n_payout: isize,
-    ) -> isize {
+    ) -> SPointStichCount {
         normalized_pointstichcount_to_pointstichcount(
             unwrap!(
                 n_payout.div_exact_unstable_name_collision(playerparties22_multiplier())
@@ -393,7 +393,7 @@ impl SRufspielPayoutPointsAsPayout {
             /*b_primary*/ epi_hand==epi_active
                 || rulestatecache.who_has_card(card_rufsau)==epi_hand,
             ekurzlang,
-        ).n_point
+        )
     }
 }
 
@@ -417,14 +417,14 @@ impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
             for epi_hand in EPlayerIndex::values() {
                 let b_primary = playerparties.is_primary_party(epi_hand);
                 assert_eq!(
-                    Self::payout_to_points(
+                    Self::normalized_pointstichcount_to_pointstichcount(
                         /*epi_active*/rules.epi,
                         rules.rufsau(),
                         epi_hand,
                         &rulestatecache.fixed,
                         stichseq.get().kurzlang(),
                         an_payout[epi_hand],
-                    ),
+                    ).n_point,
                     EPlayerIndex::values()
                         .filter(|epi| playerparties.is_primary_party(*epi)==b_primary)
                         .map(|epi|
