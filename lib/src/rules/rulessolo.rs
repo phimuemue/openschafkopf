@@ -89,7 +89,6 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
 
     fn payout(&self, rules: &SRulesSoloLike<Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         TPayoutDecider::payout(self,
-            dbg_argument!(rules),
             &rules.trumpfdecider,
             rulestatecache,
             stichseq,
@@ -164,7 +163,6 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
 
     fn payout(&self, rules: &SRulesSoloLike<Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         let an_payout = TPayoutDecider::payout(self,
-            dbg_argument!(rules),
             &rules.trumpfdecider,
             rulestatecache,
             stichseq,

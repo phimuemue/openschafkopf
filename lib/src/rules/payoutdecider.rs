@@ -109,7 +109,6 @@ impl<
 > TPayoutDecider for SPayoutDeciderPointBased<PointsToWin> {
     fn payout(
         &self,
-        if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
         trumpfdecider: &STrumpfDecider,
         rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
@@ -123,15 +122,13 @@ impl<
         internal_payout(
             (self.payoutparams.n_payout_base
             + { 
-                if debug_verify_eq!(
-                    if b_primary_party_wins {
+                if 
+                    (if b_primary_party_wins {
                         n_stichs_primary_party
                     } else {
                         stichseq.get().kurzlang().cards_per_player()-n_stichs_primary_party
-                    }==stichseq.get().kurzlang().cards_per_player(),
-                    stichseq.get().completed_stichs_winner_index(rules)
-                        .all(|(_stich, epi_winner)| b_primary_party_wins==playerparties.is_primary_party(epi_winner))
-                ) {
+                    }) == stichseq.get().kurzlang().cards_per_player()
+                {
                     2*self.payoutparams.n_payout_schneider_schwarz // schwarz
                 } else if (b_primary_party_wins && n_points_primary_party>90) || (!b_primary_party_wins && n_points_primary_party<=30) {
                     self.payoutparams.n_payout_schneider_schwarz // schneider
@@ -224,7 +221,6 @@ impl<
 > TPayoutDecider for SPayoutDeciderPointsAsPayout<PointsToWin> {
     fn payout(
         &self,
-        _rules: dbg_parameter!(&impl TRules),
         _trumpfdecider: &STrumpfDecider,
         rulestatecache: &SRuleStateCache,
         _stichseq: SStichSequenceGameFinished,
@@ -285,7 +281,6 @@ pub fn internal_payout(n_payout_primary_unmultiplied: isize, playerparties: &imp
 pub trait TPayoutDecider : Sync + Send + 'static + Clone + fmt::Debug {
     fn payout(
         &self,
-        if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
         trumpfdecider: &STrumpfDecider,
         rulestatecache: &SRuleStateCache,
         stichseq: SStichSequenceGameFinished,
