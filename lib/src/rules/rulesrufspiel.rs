@@ -317,10 +317,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         Some(Box::new(SAIRufspiel::new(self)))
     }
 
-    fn points_as_payout(&self) -> Option<(
-        SRules,
-        Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
-    )> {
+    fn points_as_payout(&self) -> Option<(SRules, FnConvertPointsAsPayout)> {
         let epi_active = self.epi;
         let card_rufsau = self.rufsau();
         Some((
@@ -342,7 +339,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                     (epi_hand, &ahand[epi_hand]),
                     n_payout,
                 )
-            }) as Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
+            }) as FnConvertPointsAsPayout,
         ))
     }
 

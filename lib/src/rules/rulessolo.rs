@@ -15,10 +15,7 @@ pub trait TPayoutDeciderSoloLike : Sync + 'static + Clone + fmt::Debug + Send {
     fn payouthints(&self, rules: &SRulesSoloLike<Self>, rulestatecache: &SRuleStateCache, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
     fn equivalent_when_on_same_hand(slccard_ordered: &[ECard]) -> Vec<Vec<ECard>>;
 
-    fn points_as_payout(&self, _rules: &SRulesSoloLike<Self>) -> Option<(
-        SRules,
-        Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
-    )> {
+    fn points_as_payout(&self, _rules: &SRulesSoloLike<Self>) -> Option<(SRules, FnConvertPointsAsPayout)> {
         None
     }
 
@@ -115,10 +112,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
         equivalent_when_on_same_hand_point_based(slccard_ordered)
     }
 
-    fn points_as_payout(&self, rules: &SRulesSoloLike<Self>) -> Option<(
-        SRules,
-        Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
-    )> {
+    fn points_as_payout(&self, rules: &SRulesSoloLike<Self>) -> Option<(SRules, FnConvertPointsAsPayout)> {
         //assert_eq!(self, rules.payoutdecider); // TODO
         let pointstowin = self.pointstowin.clone();
         let epi_active = rules.epi;
@@ -141,7 +135,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
                     &pointstowin,
                     n_payout,
                 )
-            }) as Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
+            }) as FnConvertPointsAsPayout,
         )
     )}
 
@@ -443,10 +437,7 @@ impl<PayoutDecider: TPayoutDeciderSoloLike> TRules for SRulesSoloLike<PayoutDeci
         ))
     }
 
-    fn points_as_payout(&self) -> Option<(
-        SRules,
-        Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
-    )> {
+    fn points_as_payout(&self) -> Option<(SRules, FnConvertPointsAsPayout)> {
         self.payoutdecider.points_as_payout(self)
     }
 

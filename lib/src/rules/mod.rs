@@ -374,6 +374,8 @@ impl<'rules, Rules: TRulesPlayerIndex, WritePlayerIndex: TWritePlayerIndex> std:
     }
 }
 
+pub type FnConvertPointsAsPayout = Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>;
+
 #[enum_dispatch]
 pub trait TRules : Sync + fmt::Debug + Send + Clone {
     fn disable_trait_objects<T>(self, _t: T) {}
@@ -549,10 +551,7 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
         None
     }
 
-    fn points_as_payout(&self) -> Option<(
-        SRules,
-        Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>,
-    )> {
+    fn points_as_payout(&self) -> Option<(SRules, FnConvertPointsAsPayout)> {
         None
     }
 
