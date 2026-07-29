@@ -41,8 +41,9 @@ impl TRufspielPayout for SRufspielPayout {
     ) -> EnumMap<EPlayerIndex, isize> {
         let playerparties = rules.playerparties(&rulestatecache.fixed);
         let an_payout_no_stock = self.payoutdecider.payout(
+            &pointstichcount_for_party(/*b_primary*/true, &rulestatecache.changing, &playerparties),
             &rules.trumpfdecider,
-            rulestatecache,
+            &rulestatecache.fixed,
             stichseq.get().kurzlang(),
             &playerparties,
         );
@@ -406,8 +407,9 @@ impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
     ) -> EnumMap<EPlayerIndex, isize> {
         let playerparties = rules.playerparties(&rulestatecache.fixed);
         let an_payout = self.payoutdecider.payout(
+            &pointstichcount_for_party(/*b_primary*/true, &rulestatecache.changing, &playerparties),
             &rules.trumpfdecider,
-            rulestatecache,
+            &rulestatecache.fixed,
             stichseq.get().kurzlang(),
             &playerparties,
         );

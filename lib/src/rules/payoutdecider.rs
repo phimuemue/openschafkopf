@@ -109,15 +109,16 @@ impl<
 > TPayoutDecider for SPayoutDeciderPointBased<PointsToWin> {
     fn payout(
         &self,
+        pointstichcount_primary: &SPointStichCount,
         trumpfdecider: &STrumpfDecider,
-        rulestatecache: &SRuleStateCache,
+        rulestatecache: &SRuleStateCacheFixed,
         ekurzlang: EKurzLang,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
         let SPointStichCount {
             n_point: n_points_primary_party,
             n_stich: n_stichs_primary_party,
-        } = pointstichcount_for_party(/*b_primary*/true, &rulestatecache.changing, playerparties);
+        } = pointstichcount_primary.clone(); // TODO clone is ugly here
         let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
         internal_payout(
             (self.payoutparams.n_payout_base
@@ -136,7 +137,7 @@ impl<
                     0 // "nothing", i.e. neither schneider nor schwarz
                 }
             }
-            + self.payoutparams.laufendeparams.payout_laufende(trumpfdecider, &rulestatecache.fixed, ekurzlang, playerparties)).neg_if(!b_primary_party_wins),
+            + self.payoutparams.laufendeparams.payout_laufende(trumpfdecider, rulestatecache, ekurzlang, playerparties)).neg_if(!b_primary_party_wins),
             playerparties,
         )
     }
@@ -221,14 +222,15 @@ impl<
 > TPayoutDecider for SPayoutDeciderPointsAsPayout<PointsToWin> {
     fn payout(
         &self,
+        pointstichcount_primary: &SPointStichCount,
         _trumpfdecider: &STrumpfDecider,
-        rulestatecache: &SRuleStateCache,
+        _rulestatecache: &SRuleStateCacheFixed,
         _ekurzlang: EKurzLang,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
         internal_payout(
             primary_pointstichcount_to_normalized(
-                &pointstichcount_for_party(/*b_primary*/true, &rulestatecache.changing, playerparties),
+                pointstichcount_primary,
                 &self.pointstowin
             ),
             playerparties,
@@ -281,8 +283,9 @@ pub fn internal_payout(n_payout_primary_unmultiplied: isize, playerparties: &imp
 pub trait TPayoutDecider : Sync + Send + 'static + Clone + fmt::Debug {
     fn payout(
         &self,
+        pointstichcount_primary: &SPointStichCount,
         trumpfdecider: &STrumpfDecider,
-        rulestatecache: &SRuleStateCache,
+        rulestatecache: &SRuleStateCacheFixed,
         ekurzlang: EKurzLang,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>;

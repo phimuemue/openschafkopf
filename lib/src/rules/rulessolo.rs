@@ -88,11 +88,13 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
     }
 
     fn payout(&self, rules: &SRulesSoloLike<Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
+        let playerparties = SPlayerParties13::new(rules.epi);
         TPayoutDecider::payout(self,
+            &pointstichcount_for_party(/*b_primary*/true, &rulestatecache.changing, &playerparties),
             &rules.trumpfdecider,
-            rulestatecache,
+            &rulestatecache.fixed,
             stichseq.get().kurzlang(),
-            &SPlayerParties13::new(rules.epi),
+            &playerparties,
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
 
@@ -162,11 +164,13 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
     }
 
     fn payout(&self, rules: &SRulesSoloLike<Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
+        let playerparties = SPlayerParties13::new(rules.epi);
         let an_payout = TPayoutDecider::payout(self,
+            &pointstichcount_for_party(/*b_primary*/true, &rulestatecache.changing, &playerparties),
             &rules.trumpfdecider,
-            rulestatecache,
+            &rulestatecache.fixed,
             stichseq.get().kurzlang(),
-            &SPlayerParties13::new(rules.epi),
+            &playerparties,
         );
         #[cfg(debug_assertions)] {
             let playerparties = SPlayerParties13::new(rules.epi);
