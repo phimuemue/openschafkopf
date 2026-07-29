@@ -43,7 +43,7 @@ impl TRufspielPayout for SRufspielPayout {
         let an_payout_no_stock = self.payoutdecider.payout(
             &rules.trumpfdecider,
             rulestatecache,
-            stichseq,
+            stichseq.get().kurzlang(),
             &playerparties,
         );
         assert!(an_payout_no_stock.iter().all(|n_payout_no_stock| 0!=*n_payout_no_stock));
@@ -408,7 +408,7 @@ impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
         let an_payout = self.payoutdecider.payout(
             &rules.trumpfdecider,
             rulestatecache,
-            stichseq,
+            stichseq.get().kurzlang(),
             &playerparties,
         );
         #[cfg(debug_assertions)] {

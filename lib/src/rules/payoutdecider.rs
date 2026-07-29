@@ -111,7 +111,7 @@ impl<
         &self,
         trumpfdecider: &STrumpfDecider,
         rulestatecache: &SRuleStateCache,
-        stichseq: SStichSequenceGameFinished,
+        ekurzlang: EKurzLang,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
         let SPointStichCount {
@@ -126,8 +126,8 @@ impl<
                     (if b_primary_party_wins {
                         n_stichs_primary_party
                     } else {
-                        stichseq.get().kurzlang().cards_per_player()-n_stichs_primary_party
-                    }) == stichseq.get().kurzlang().cards_per_player()
+                        ekurzlang.cards_per_player()-n_stichs_primary_party
+                    }) == ekurzlang.cards_per_player()
                 {
                     2*self.payoutparams.n_payout_schneider_schwarz // schwarz
                 } else if (b_primary_party_wins && n_points_primary_party>90) || (!b_primary_party_wins && n_points_primary_party<=30) {
@@ -136,7 +136,7 @@ impl<
                     0 // "nothing", i.e. neither schneider nor schwarz
                 }
             }
-            + self.payoutparams.laufendeparams.payout_laufende(trumpfdecider, &rulestatecache.fixed, stichseq.get().kurzlang(), playerparties)).neg_if(!b_primary_party_wins),
+            + self.payoutparams.laufendeparams.payout_laufende(trumpfdecider, &rulestatecache.fixed, ekurzlang, playerparties)).neg_if(!b_primary_party_wins),
             playerparties,
         )
     }
@@ -223,7 +223,7 @@ impl<
         &self,
         _trumpfdecider: &STrumpfDecider,
         rulestatecache: &SRuleStateCache,
-        _stichseq: SStichSequenceGameFinished,
+        _ekurzlang: EKurzLang,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
         internal_payout(
@@ -283,7 +283,7 @@ pub trait TPayoutDecider : Sync + Send + 'static + Clone + fmt::Debug {
         &self,
         trumpfdecider: &STrumpfDecider,
         rulestatecache: &SRuleStateCache,
-        stichseq: SStichSequenceGameFinished,
+        ekurzlang: EKurzLang,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize>;
 

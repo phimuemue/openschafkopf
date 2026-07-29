@@ -91,7 +91,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
         TPayoutDecider::payout(self,
             &rules.trumpfdecider,
             rulestatecache,
-            stichseq,
+            stichseq.get().kurzlang(),
             &SPlayerParties13::new(rules.epi),
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
@@ -165,7 +165,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
         let an_payout = TPayoutDecider::payout(self,
             &rules.trumpfdecider,
             rulestatecache,
-            stichseq,
+            stichseq.get().kurzlang(),
             &SPlayerParties13::new(rules.epi),
         );
         #[cfg(debug_assertions)] {
