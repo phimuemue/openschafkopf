@@ -115,23 +115,19 @@ impl<
         ekurzlang: EKurzLang,
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, isize> {
-        let SPointStichCount {
-            n_point: n_points_primary_party,
-            n_stich: n_stichs_primary_party,
-        } = pointstichcount_primary.clone(); // TODO clone is ugly here
-        let b_primary_party_wins = n_points_primary_party >= self.pointstowin.points_to_win();
+        let b_primary_party_wins = pointstichcount_primary.n_point >= self.pointstowin.points_to_win();
         internal_payout(
             (self.payoutparams.n_payout_base
             + { 
                 if 
                     (if b_primary_party_wins {
-                        n_stichs_primary_party
+                        pointstichcount_primary.n_stich
                     } else {
-                        ekurzlang.cards_per_player()-n_stichs_primary_party
+                        ekurzlang.cards_per_player()-pointstichcount_primary.n_stich
                     }) == ekurzlang.cards_per_player()
                 {
                     2*self.payoutparams.n_payout_schneider_schwarz // schwarz
-                } else if (b_primary_party_wins && n_points_primary_party>90) || (!b_primary_party_wins && n_points_primary_party<=30) {
+                } else if (b_primary_party_wins && pointstichcount_primary.n_point>90) || (!b_primary_party_wins && pointstichcount_primary.n_point<=30) {
                     self.payoutparams.n_payout_schneider_schwarz // schneider
                 } else {
                     0 // "nothing", i.e. neither schneider nor schwarz
