@@ -32,7 +32,13 @@ pub struct SRufspielPayout {
 }
 
 impl TRufspielPayout for SRufspielPayout {
-    fn payout(&self, rules: &SRulesRufspielGeneric<Self>, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(
+        &self,
+        rules: &SRulesRufspielGeneric<Self>,
+        stichseq: SStichSequenceGameFinished,
+        expensifiers: &SExpensifiers,
+        rulestatecache: &SRuleStateCache
+    ) -> EnumMap<EPlayerIndex, isize> {
         let playerparties = rules.playerparties(&rulestatecache.fixed);
         let an_payout_no_stock = self.payoutdecider.payout(
             dbg_argument!(rules),
@@ -389,7 +395,13 @@ impl SRufspielPayoutPointsAsPayout {
 }
 
 impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
-    fn payout(&self, rules: &SRulesRufspielGeneric<Self>, stichseq: SStichSequenceGameFinished, _expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(
+        &self,
+        rules: &SRulesRufspielGeneric<Self>,
+        stichseq: SStichSequenceGameFinished,
+        _expensifiers: &SExpensifiers,
+        rulestatecache: &SRuleStateCache
+    ) -> EnumMap<EPlayerIndex, isize> {
         let playerparties = rules.playerparties(&rulestatecache.fixed);
         let an_payout = self.payoutdecider.payout(
             dbg_argument!(rules),
