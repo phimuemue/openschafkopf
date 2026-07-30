@@ -335,18 +335,14 @@ impl<Ruleset, GameAnnouncement, DetermineRules> TGamePhase for SGameGeneric<Rule
     type Finish = SGameResultGeneric<Ruleset, GameAnnouncement, DetermineRules>;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {
-        if self.stichseq.completed_stichs().len() < self.kurzlang().cards_per_player() {
-            self.current_playable_stich().current_playerindex().map(|epi_current| (
-                epi_current,
-                EPlayerIndex::values()
-                    .filter(|epi| {
-                        self.rules.stoss_allowed(&self.stichseq, &self.ahand[*epi], *epi, &self.expensifiers.vecstoss)
-                    })
-                    .collect(),
-            ))
-        } else {
-            None
-        }
+        self.stichseq.current_playerindex().map(|epi_current| (
+            epi_current,
+            EPlayerIndex::values()
+                .filter(|epi| {
+                    self.rules.stoss_allowed(&self.stichseq, &self.ahand[*epi], *epi, &self.expensifiers.vecstoss)
+                })
+                .collect(),
+        ))
     }
 
     fn finish_success(self) -> Self::Finish {
