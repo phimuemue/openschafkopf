@@ -505,7 +505,7 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
 
     fn all_allowed_cards(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         assert!(!hand.cards().is_empty());
-        #[cfg(debug_assertions)]assert!(!stichseq.game_finished());
+        #[cfg(debug_assertions)]assert!(stichseq.current_playerindex().is_some());
         let veccard = if stichseq.current_stich().is_empty() {
             self.all_allowed_cards_first_in_stich(stichseq, hand)
         } else {

@@ -28,7 +28,7 @@ pub struct SStichSequenceGameFinished<'stichseq>(&'stichseq SStichSequence);
 
 impl SStichSequenceGameFinished<'_> {
     pub fn new(stichseq: &SStichSequence) -> SStichSequenceGameFinished<'_> {
-        assert!(stichseq.game_finished());
+        assert!(stichseq.current_playerindex().is_none());
         SStichSequenceGameFinished(stichseq)
     }
     pub fn get(&self) -> &SStichSequence {
@@ -88,10 +88,14 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         })
     }
 
-    pub fn game_finished(&self) -> bool {
+    pub fn current_playerindex(&self) -> Option<EPlayerIndex> {
         #[cfg(debug_assertions)]self.assert_invariant();
         assert!(self.completed_stichs().len()<=self.ekurzlang.cards_per_player());
-        self.completed_stichs().len()==self.ekurzlang.cards_per_player()
+        if self.completed_stichs().len()<self.ekurzlang.cards_per_player() {
+            verify!(self.current_playable_stich().current_playerindex())
+        } else {
+            None
+        }
     }
 
     pub fn no_card_played(&self) -> bool {

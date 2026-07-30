@@ -268,7 +268,7 @@ pub fn with_common_args<FnWithArgs>(
                     let mut stichseq = SStichSequence::new(ekurzlang);
                     for &card in veccard_stichseq.iter() {
                         if !ekurzlang.supports_card(card)
-                            || stichseq.game_finished()
+                            || stichseq.current_playerindex().is_none()
                         {
                             return None; // TODO? distinguish error
                         }
