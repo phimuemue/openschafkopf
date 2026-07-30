@@ -161,7 +161,7 @@ pub fn greet() {
             },
             &|_stichseq, _ahand| SGenericMinReachablePayout::<STplStrategiesOnlyMaxSelfishMin, SAlphaBetaPrunerNone>::new(
                 rules,
-                verify_eq!(epi, unwrap!(stichseq.current_playable_stich().current_playerindex())),
+                verify_eq!(epi, unwrap!(stichseq.current_playerindex())),
                 expensifiers.clone(),
             ),
             /*fn_snapshotcache*/|rulestatecache| {
