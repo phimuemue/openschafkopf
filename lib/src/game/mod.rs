@@ -489,7 +489,6 @@ impl<Ruleset, GameAnnouncement, DetermineRules> SGameGeneric<Ruleset, GameAnnoun
     }
 
     forward_to_field!(self.stichseq,
-        pub fn current_playable_stich(&self) -> &SStich;
         pub fn completed_stichs(&self) -> &[SStich];
         pub fn kurzlang(&self) -> EKurzLang;
     );

@@ -88,7 +88,7 @@ fn detect_expensive_all_possible_hands() {
         EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
             /*fn_check_ask_for_card*/|game: &SGameGeneric<SRuleSet, (), ()>| {
                 if game.kurzlang().cards_per_player() - 4 < game.completed_stichs().len() {
-                    let epi_current = unwrap!(game.current_playable_stich().current_playerindex());
+                    let epi_current = unwrap!(game.which_player_can_do_something()).0;
                     let vecahand = all_possible_hands(
                         &game.stichseq,
                         (game.ahand[epi_current].clone(), epi_current),

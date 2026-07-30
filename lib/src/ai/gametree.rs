@@ -1,4 +1,4 @@
-use crate::game::SGameGeneric;
+use crate::game::{SGameGeneric, TGamePhase};
 use crate::primitives::*;
 use crate::rules::*;
 use crate::util::*;
@@ -435,7 +435,7 @@ impl<'rules, Pruner, TplStrategies, AlphaBetaPruner> SMinReachablePayoutBase<'ru
     {
         Self::new(
             &game.rules,
-            unwrap!(game.current_playable_stich().current_playerindex()),
+            unwrap!(game.which_player_can_do_something()).0,
             game.expensifiers.clone(),
         )
     }

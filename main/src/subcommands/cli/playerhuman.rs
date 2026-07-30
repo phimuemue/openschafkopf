@@ -76,7 +76,7 @@ impl TPlayer for SPlayerHuman {
     }
 
     fn ask_for_card(&self, game: &SGameGeneric<SRuleSet, (), ()>, txcard: mpsc::Sender<ECard>) {
-        skui::print_stichseq(unwrap!(game.current_playable_stich().current_playerindex()), &game.stichseq);
+        skui::print_stichseq(unwrap!(game.which_player_can_do_something()).0, &game.stichseq);
         let epi = unwrap!(game.which_player_can_do_something()).0;
         let veccard = {
             let mut veccard = game.ahand[epi].cards().clone();

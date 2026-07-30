@@ -332,7 +332,7 @@ impl TFilterAllowedCards for SFilterByOracle<'_> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        game::SGameGeneric,
+        game::{SGameGeneric, TGamePhase},
         player::{
             TPlayer,
             playerrandom::SPlayerRandom,
@@ -2440,7 +2440,7 @@ mod tests {
             EPlayerIndex::map_from_fn(|_epi| Box::new(SPlayerRandom::new(
                 /*fn_check_ask_for_card*/|game: &SGameGeneric<SRuleSet, (), ()>| {
                     if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
-                        let epi = unwrap!(game.current_playable_stich().current_playerindex());
+                        let epi = unwrap!(game.which_player_can_do_something()).0;
                         macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr, $TplStrategies:ty, $fn_alphabetapruner:expr,) => {
                             unwrap!(determine_best_card::<$ty_fn_make_filter,_,_,_,_,_,_,_,_>(
                                 &game.stichseq,

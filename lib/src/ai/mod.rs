@@ -538,7 +538,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
         &game.rules,
         &game.expensifiers.vecstoss,
     ) {
-        assert!(!game.current_playable_stich().is_full());
+        assert!(game.which_player_can_do_something().is_some());
         let stichseq = &game.stichseq;
         let determinebestcardresult = unwrap!(determine_best_card(
             stichseq,
