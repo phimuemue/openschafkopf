@@ -867,7 +867,6 @@ fn test_snapshotcache() {
             /*fn_check_ask_for_card*/|game_in: &SGameGeneric<SRuleSet, (), ()>| {
                 let internal_test = |game: &SGameGeneric<SRuleSet, (), ()>| {
                     if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
-                        //let epi = unwrap!(game.which_player_can_do_something()).0;
                         macro_rules! fwd{($fn_snapshotcache:expr) => {
                             unwrap!(determine_best_card(
                                 &game.stichseq,
