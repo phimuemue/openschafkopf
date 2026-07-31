@@ -169,19 +169,15 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
             &SPlayerParties13::new(rules.epi),
         );
         #[cfg(debug_assertions)] {
-            let mut stichseq_check = SStichSequence::new(stichseq.get().kurzlang());
-            let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
-                SHand::new_from_iter(stichseq.get().completed_cards_by(epi))
-            );
             let playerparties = SPlayerParties13::new(rules.epi);
-            for (epi_card, card) in stichseq.get().completed_cards() {
-                let b_primary = playerparties.is_primary_party(epi_card);
+            for epi_hand in EPlayerIndex::values() {
+                let b_primary = playerparties.is_primary_party(epi_hand);
                 assert_eq!(
                     Self::payout_to_points(
                         /*epi_active*/rules.epi,
-                        /*epi_hand*/epi_card,
+                        epi_hand,
                         &self.pointstowin,
-                        an_payout[epi_card],
+                        an_payout[epi_hand],
                     ),
                     EPlayerIndex::values()
                         .filter(|epi| playerparties.is_primary_party(*epi)==b_primary)
@@ -190,8 +186,6 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
                         )
                         .sum::<isize>(),
                 );
-                stichseq_check.zugeben(*card, rules);
-                ahand_check[epi_card].play_card(*card);
             }
 
         }
