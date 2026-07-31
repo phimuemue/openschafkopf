@@ -330,12 +330,12 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 trumpfdecider: self.trumpfdecider.clone(),
                 stossparams: self.stossparams.clone(),
             }).into(),
-            Box::new(move |stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, epi_hand, n_payout: isize| {
+            Box::new(move |rulestatecache: &SRuleStateCacheFixed, epi_hand, n_payout: isize| {
                 SRufspielPayoutPointsAsPayout::payout_to_points(
                     epi_active,
                     card_rufsau,
                     epi_hand,
-                    &SRuleStateCacheFixed::new(ahand, stichseq),
+                    rulestatecache,
                     n_payout,
                 )
             }) as FnConvertPointsAsPayout,

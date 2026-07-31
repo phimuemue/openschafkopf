@@ -442,8 +442,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 if let Some((_rules, fn_payout_to_points)) = &otplrulesfn_points_as_payout {
                     (
                         fn_payout_to_points(
-                            stichseq,
-                            ahand,
+                            &SRuleStateCacheFixed::new(ahand, stichseq),
                             epi_position,
                             n_payout,
                         ),

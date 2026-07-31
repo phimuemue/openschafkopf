@@ -127,8 +127,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
                 of_heuristic_active_occurence_probability: rules.of_heuristic_active_occurence_probability,
                 stossparams: rules.stossparams.clone(),
             }).into(),
-            Box::new(move |stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, epi_hand, n_payout: isize| {
-                assert!(ahand_stichseq_card_count_is_compatible(ahand, stichseq));
+            Box::new(move |_rulestatecache: &SRuleStateCacheFixed, epi_hand, n_payout: isize| {
                 SPayoutDeciderPointsAsPayout::payout_to_points(
                     epi_active,
                     epi_hand,

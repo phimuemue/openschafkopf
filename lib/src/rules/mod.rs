@@ -374,7 +374,7 @@ impl<'rules, Rules: TRulesPlayerIndex, WritePlayerIndex: TWritePlayerIndex> std:
     }
 }
 
-pub type FnConvertPointsAsPayout = Box<dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, EPlayerIndex, isize)->isize + Sync>;
+pub type FnConvertPointsAsPayout = Box<dyn Fn(&SRuleStateCacheFixed, EPlayerIndex, isize)->isize + Sync>;
 
 #[enum_dispatch]
 pub trait TRules : Sync + fmt::Debug + Send + Clone {
@@ -471,8 +471,7 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
                     if let Some((an_points_as_payout, fn_payout_to_points)) = &otplan_points_as_payout_fn_payout_to_points {
                         for epi_check_fn_payout_to_points in EPlayerIndex::values() {
                             fn_payout_to_points(
-                                &stichseq_check,
-                                &ahand_check,
+                                &SRuleStateCacheFixed::new(&ahand_check, &stichseq_check),
                                 epi_check_fn_payout_to_points,
                                 an_points_as_payout[epi_check_fn_payout_to_points],
                             );
