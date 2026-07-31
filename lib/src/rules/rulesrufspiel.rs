@@ -331,12 +331,11 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
                 stossparams: self.stossparams.clone(),
             }).into(),
             Box::new(move |stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, epi_hand, n_payout: isize| {
-                assert!(ahand_stichseq_card_count_is_compatible(ahand, stichseq));
                 SRufspielPayoutPointsAsPayout::payout_to_points(
                     epi_active,
                     card_rufsau,
-                    stichseq,
-                    (epi_hand, &ahand[epi_hand]),
+                    epi_hand,
+                    &SRuleStateCacheFixed::new(ahand, stichseq),
                     n_payout,
                 )
             }) as FnConvertPointsAsPayout,
@@ -374,18 +373,17 @@ impl SRufspielPayoutPointsAsPayout {
     fn payout_to_points(
         epi_active: EPlayerIndex,
         card_rufsau: ECard,
-        stichseq: &SStichSequence,
-        (epi_hand, hand): (EPlayerIndex, &SHand),
+        epi_hand: EPlayerIndex,
+        rulestatecache: &SRuleStateCacheFixed,
         n_payout: isize,
     ) -> isize {
-        assert!(stichseq.remaining_cards_per_hand()[epi_hand]==hand.cards().len());
         normalized_points_to_points(
             unwrap!(
                 n_payout.div_exact_unstable_name_collision(playerparties22_multiplier())
             ),
             &SPointsToWin61{},
             /*b_primary*/ epi_hand==epi_active
-                || stichseq.cards_from_player(hand, epi_hand).any(|card| card==card_rufsau),
+                || rulestatecache.who_has_card(card_rufsau)==epi_hand,
         )
     }
 }
@@ -411,8 +409,8 @@ impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
                     Self::payout_to_points(
                         /*epi_active*/rules.epi,
                         rules.rufsau(),
-                        &stichseq_check,
-                        (epi_card, &ahand_check[epi_card]),
+                        epi_card,
+                        &rulestatecache.fixed,
                         an_payout[epi_card],
                     ),
                     EPlayerIndex::values()
