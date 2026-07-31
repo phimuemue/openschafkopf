@@ -399,19 +399,15 @@ impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
             &playerparties,
         );
         #[cfg(debug_assertions)] {
-            let mut stichseq_check = SStichSequence::new(stichseq.get().kurzlang());
-            let mut ahand_check = EPlayerIndex::map_from_fn(|epi|
-                SHand::new_from_iter(stichseq.get().completed_cards_by(epi))
-            );
-            for (epi_card, card) in stichseq.get().completed_cards() {
-                let b_primary = playerparties.is_primary_party(epi_card);
+            for epi_hand in EPlayerIndex::values() {
+                let b_primary = playerparties.is_primary_party(epi_hand);
                 assert_eq!(
                     Self::payout_to_points(
                         /*epi_active*/rules.epi,
                         rules.rufsau(),
-                        epi_card,
+                        epi_hand,
                         &rulestatecache.fixed,
-                        an_payout[epi_card],
+                        an_payout[epi_hand],
                     ),
                     EPlayerIndex::values()
                         .filter(|epi| playerparties.is_primary_party(*epi)==b_primary)
@@ -420,10 +416,7 @@ impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
                         )
                         .sum::<isize>(),
                 );
-                stichseq_check.zugeben(*card, rules);
-                ahand_check[epi_card].play_card(*card);
             }
-
         }
         an_payout
     }
