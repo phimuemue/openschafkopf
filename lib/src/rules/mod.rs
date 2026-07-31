@@ -428,7 +428,7 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
                 SHand::new_from_iter(stichseq.get().completed_cards_by(epi))
             );
 
-            let otplan_points_as_payout_fn_payout_to_points = if b_test_points_as_payout
+            if b_test_points_as_payout
                 && let Some((rules, fn_payout_to_points)) = self.points_as_payout()
             {
                 let an_points_as_payout = rules.payout(
@@ -443,14 +443,22 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
                 ) {
                     assert_eq!(n_payout.signum(), n_points_as_payout.signum());
                 }
-                Some((an_points_as_payout, fn_payout_to_points))
-            } else {
-                None // TODO if_then_some
+                for epi_check_fn_payout_to_points in EPlayerIndex::values() {
+                    fn_payout_to_points(
+                        &rulestatecache.fixed,
+                        epi_check_fn_payout_to_points,
+                        an_points_as_payout[epi_check_fn_payout_to_points],
+                    );
+                }
             };
             for stich in stichseq.get().completed_stichs().iter() {
                 for (epi, card) in stich.iter() {
                     stichseq_check.zugeben(*card, self);
                     ahand_check[epi].play_card(*card);
+                    assert_eq!(
+                        rulestatecache.fixed,
+                        SRuleStateCacheFixed::new(&ahand_check, &stichseq_check),
+                    );
                     let mapepiintvlon_payout_after = self.payouthints(
                         (&ahand_check, &stichseq_check),
                         expensifiers,
@@ -468,15 +476,6 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
                         "{stichseq_check}\n{ahand_check:?}\n{mapepiintvlon_payout:?}\n{mapepiintvlon_payout_after:?}",
                     );
                     mapepiintvlon_payout = mapepiintvlon_payout_after;
-                    if let Some((an_points_as_payout, fn_payout_to_points)) = &otplan_points_as_payout_fn_payout_to_points {
-                        for epi_check_fn_payout_to_points in EPlayerIndex::values() {
-                            fn_payout_to_points(
-                                &SRuleStateCacheFixed::new(&ahand_check, &stichseq_check),
-                                epi_check_fn_payout_to_points,
-                                an_points_as_payout[epi_check_fn_payout_to_points],
-                            );
-                        }
-                    }
                 }
                 assert!(
                     itertools::zip_eq(
