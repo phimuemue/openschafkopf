@@ -274,12 +274,6 @@ pub fn determine_best_card<
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
 ) -> Option<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>>
 {
-    fn finalize_arc_mutex<T>(arcmutex: Arc<Mutex<T>>) -> T {
-        unwrap!(
-            unwrap!(Arc::into_inner(arcmutex)) // "Returns the inner value, if the Arc has exactly one strong reference"   
-                .into_inner() // "If another user of this mutex panicked while holding the mutex, then this call will return an error instead"
-        )
-    }
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
         ECard::map_from_fn(|_card| None),
