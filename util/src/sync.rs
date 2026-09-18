@@ -1,4 +1,5 @@
 use std::sync::{Arc, Mutex};
+#[cfg(debug_assertions)]
 use super::verify::*;
 
 pub fn finalize_arc_mutex<T>(arcmutex: Arc<Mutex<T>>) -> T {
