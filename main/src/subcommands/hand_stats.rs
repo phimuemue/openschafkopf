@@ -176,7 +176,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     }
     with_common_args(
         clapmatches,
-        |itahand, rules, stichseq, _ahand_fixed_with_holes, _epi_position, _expensifiers, b_verbose| {
+        |itahand, rules, stichseq, _ahand_fixed_with_holes, _epi_position, _expensifiers, b_verbose, mapcardsetepi_distribution| {
             let mut vectplmapresinspectionresultnconstraint = vecconstraint
                 .iter()
                 .map(|constraint| (std::collections::HashMap::new(), constraint))
@@ -198,6 +198,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 n_ahand_total += 1;
             }
             let percentage = |n_count: usize| n_count.as_num::<f64>()/n_ahand_total.as_num::<f64>();
+            print_card_distribution_statistics(
+                stichseq,
+                rules,
+                &unwrap!(mapcardsetepi_distribution.lock()),
+            );
             for (mapresinspectionresultn, constraint) in vectplmapresinspectionresultnconstraint {
                 if b_verbose || 1<vecconstraint.len() {
                     println!("{constraint}");

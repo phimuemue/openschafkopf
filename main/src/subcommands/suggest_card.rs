@@ -236,6 +236,7 @@ fn run_internal<
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, std::cmp::Ordering) + Sync),
+    mapcardsetepi_distribution: Arc<Mutex<EnumMap<ECard, EnumSet<EPlayerIndex>>>>,
 ) -> Result<(), Error>
 {
     let fn_loss_or_win = |_n_payout, ord_vs_0| ord_vs_0;
@@ -339,6 +340,7 @@ fn run_internal<
         fn_payout,
     ).ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
     if clapmatches.is_present("json") {
+        // TODO output mapcardsetepi_distribution
         println!("{}", unwrap!(serde_json::to_string(
             &SJson::new(
                 /*str_rules*/SDisplayRules::new(rules, /*b_include_playerindex*/true).to_string(),
@@ -361,6 +363,11 @@ fn run_internal<
             ),
         )));
     } else {
+        print_card_distribution_statistics(
+            stichseq,
+            rules,
+            &unwrap!(mapcardsetepi_distribution.lock()), // Cannot finalize_arc_mutex, because still held by iterator
+        );
         let payoutstatstable = table(
             &determinebestcardresult,
             rules,
@@ -419,7 +426,7 @@ fn for_each_interim_result<TplStrategies: TTplStrategies>( // TODORUST generic c
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     with_common_args(
         clapmatches,
-        |itahand, rules, stichseq, ahand_fixed_with_holes, epi_position, expensifiers, b_verbose| {
+        |itahand, rules, stichseq, ahand_fixed_with_holes, epi_position, expensifiers, b_verbose, mapcardsetepi_distribution| {
             let otplrulesfn_points_as_payout = if clapmatches.is_present("points") {
                 if let Some(tplrulesfn_points_as_payout) = rules.points_as_payout() {
                     Some(tplrulesfn_points_as_payout)
@@ -486,6 +493,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         epi_position,
                         n_payout,
                     ),
+                    mapcardsetepi_distribution,
                 )?
             }}}
             let oebranching = if let Some(str_branching) = clapmatches.value_of("branching") {

@@ -14,12 +14,14 @@ use openschafkopf_lib::{
         TRulesPlayerIndex,
         SDisplayRules,
         parser::parse_rule_description_simple,
+        VTrumpfOrFarbe,
     },
 };
 use openschafkopf_util::*;
 use itertools::Itertools;
 use plain_enum::{EnumMap, PlainEnum};
 use as_num::*;
+use std::sync::{Arc, Mutex};
 
 pub use super::handconstraint::*;
 
@@ -117,6 +119,7 @@ pub fn with_common_args<FnWithArgs>(
             EPlayerIndex/*epi_position*/,
             &SExpensifiers,
             bool/*b_verbose*/,
+            Arc<Mutex<EnumMap<ECard, EnumSet<EPlayerIndex>>>>,
         ) -> Result<(), Error>,
 {
     let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
@@ -333,6 +336,7 @@ pub fn with_common_args<FnWithArgs>(
                 if b_verbose || !b_single_rules {
                     println!("Rules: {}", SDisplayRules::new(rules, /*b_include_playerindex*/true));
                 }
+                let mapcardsetepi_distribution = Arc::new(Mutex::new(ECard::map_from_fn(|_card| EnumSet::<EPlayerIndex>::new_empty())));
                 if b_verbose
                     || 1</*b_single_itahand*/vectplvecocardstr_ahand.len()
                     || 1<vecotplconstraintstr.len()
@@ -380,6 +384,14 @@ pub fn with_common_args<FnWithArgs>(
                                 b_valid
                             }
                         ))
+                        .inspect(|ahand| {
+                            let mut mapcardsetepi_distribution = unwrap!(mapcardsetepi_distribution.lock());
+                            for epi in EPlayerIndex::values() {
+                                for &card in ahand[epi].cards() {
+                                    mapcardsetepi_distribution[card].insert(epi);
+                                }
+                            }
+                        })
                     ),
                     rules,
                     &stichseq,
@@ -387,6 +399,7 @@ pub fn with_common_args<FnWithArgs>(
                     epi_position,
                     &expensifiers,
                     b_verbose,
+                    mapcardsetepi_distribution.clone(), // Only to be used after fn_with_args drove the iterator to completion
                 )?;
             }}}
             match (&iteratehands, rules.playerindex()) {
@@ -447,3 +460,172 @@ pub fn with_common_args<FnWithArgs>(
     Ok(())
 }
 
+fn print_table<'tableline>(
+    str_indent: &'static str,
+    itvecstr: impl Iterator<Item=&'tableline Vec<String>> + Clone, // TODO more generic?
+) {
+    let vecn_width = (0../*n_columns*/unwrap!(itvecstr.clone().map(Vec::len).all_equal_value()))
+        .map(|i_column|
+            unwrap!(itvecstr.clone().map(|vecstr| vecstr[i_column].len()).max())
+        )
+        .collect::<Vec<_>>();
+    for vecstr in itvecstr {
+        print!("{str_indent}");
+        for (str_column, n_width) in itertools::zip_eq(vecstr, &vecn_width) {
+            print!("{str_column:<n_width$}");
+        }
+        println!();
+    }
+}
+
+pub fn print_card_distribution_statistics(
+    stichseq: &SStichSequence,
+    rules: &SRules,
+    mapcardsetepi_distribution: &EnumMap<ECard, EnumSet<EPlayerIndex>>,
+) {
+    enum VWithPlayer<MultiplePlayers> {
+        OnePlayer(EPlayerIndex),
+        MultiplePlayers(MultiplePlayers),
+    }
+    let ekurzlang = stichseq.kurzlang();
+    let ittplcardwithplayer = ECard::values(ekurzlang).filter_map(|card| {
+        let setepi = &mapcardsetepi_distribution[card];
+        match setepi.iter().exactly_one_2() {
+            Err(ExactlyOneError::Empty) => {
+                assert!(stichseq.visible_cards().find(|(_epi, card_visible)| *card_visible==&card).is_some());
+                None // Ignore already played cards
+            },
+            Ok(epi_exactly_one) => Some(VWithPlayer::OnePlayer(epi_exactly_one)),
+            Err(ExactlyOneError::MoreThanOne([_,_],_)) => Some(VWithPlayer::MultiplePlayers(setepi)),
+        }.map(|withplayer| (card, withplayer))
+    });
+    // Collect unplayed cards that occured at exaclty one player vs at multiple players
+    let mut mapepisetcard_with_one_player = EPlayerIndex::map_from_fn(|_epi| EnumSet::<ECard>::new_empty());
+    let mut maptrumpforfarbeveccard_with_multiple_players = VTrumpfOrFarbe::map_from_fn(|_trumpforfarbe| Vec::new());
+    for (card, withplayer) in ittplcardwithplayer.clone() {
+        match withplayer {
+            VWithPlayer::OnePlayer(epi_exactly_one) => {
+                verify!(mapepisetcard_with_one_player[epi_exactly_one].insert(card));
+            },
+            VWithPlayer::MultiplePlayers(_setepi) => {
+                maptrumpforfarbeveccard_with_multiple_players[rules.trumpforfarbe(card)].push(card);
+            }
+        }
+    }
+    // Determine which players' hands are considered "completely known"
+    let mapepin_card_count = stichseq.remaining_cards_per_hand();
+    let setepi_hand_completely_known = EnumSet::<EPlayerIndex>::new_from_fn(|epi|
+        mapepin_card_count[epi]==mapepisetcard_with_one_player[epi].iter().count()
+    );
+    // Find out if one particular player cannot have certain cards
+    let mut mapepisetcard_not_with_player = EPlayerIndex::map_from_fn(|_epi| EnumSet::<ECard>::new_empty());
+    for (card, withplayer) in ittplcardwithplayer.clone() {
+        match withplayer {
+            VWithPlayer::OnePlayer(epi_exactly_one) => {
+                assert!(mapepisetcard_with_one_player[epi_exactly_one].contains(card));
+            },
+            VWithPlayer::MultiplePlayers(setepi) => {
+                if let Ok(epi_exactly_one) = setepi_hand_completely_known.complement().minus(setepi).iter().exactly_one_2() {
+                    verify!(mapepisetcard_not_with_player[epi_exactly_one].insert(card));
+                }
+            },
+        }
+    }
+    fn columns_for_always_or_never_cards(
+        str_first_column: String,
+        fn_player_column: impl Fn(EPlayerIndex)->String,
+    ) -> Vec<String> {
+        std::iter::chain(
+            std::iter::once(str_first_column),
+            itertools::intersperse(
+                EPlayerIndex::values().map(fn_player_column),
+                " | ".to_string(),
+            ),
+        ).collect()
+    }
+    println!("Card distribution (as per simulation):");
+    print_table(
+        /*str_indent*/" ",
+        std::iter::chain(
+            std::iter::once(columns_for_always_or_never_cards("+ ".to_string(), |epi| {
+                let mut veccard = mapepisetcard_with_one_player[epi].iter()
+                    .collect::<Vec<_>>();
+                rules.sort_cards(&mut veccard);
+                veccard.iter().map(ECard::to_string)
+                    .pad_using(ekurzlang.cards_per_player(), |_| "__".to_string())
+                    .join(" ")
+            })),
+            if_then_some!(mapepisetcard_not_with_player.iter().any(|setcard| !setcard.is_empty()), {
+                columns_for_always_or_never_cards("- ".to_string(), |epi| {
+                    SDisplayCardSlice::new(
+                        mapepisetcard_not_with_player[epi].iter().collect::<Vec<_>>(),
+                        rules
+                    ).to_string()
+                })
+            }),
+        ).collect::<Vec<_>>().iter()
+    );
+    let mut vecvecstr_trumpforfarbe = Vec::new(); // We collect "backwards" into this vector. Simplifies unioning (see below).
+    for (trumpforfarbe, mut veccard_with_multiple_players) in itertools::zip_eq( // TODO EnumMap iterator instead of zip_eq + manually reversing two iterators
+        VTrumpfOrFarbe::values().rev(),
+        maptrumpforfarbeveccard_with_multiple_players.into_raw().into_iter().rev(),
+    ) {
+        rules.sort_cards(&mut veccard_with_multiple_players);
+        let mut push_trumpforfarbe_line = |str_trumpforfarbe_heading, slccard_chunk: &[ECard], setepi: &EnumSet<EPlayerIndex>| {
+            vecvecstr_trumpforfarbe.push(std::iter::chain(
+                [
+                    str_trumpforfarbe_heading,
+                    slccard_chunk.iter().join(" ").to_string(),
+                    " | ".to_string()
+                ],
+                itertools::intersperse(
+                    EPlayerIndex::values().map(|epi| {
+                        if setepi.contains(epi) {
+                            epi.to_string()
+                        } else {
+                            "".to_string()
+                        }
+                    }),
+                    " ".to_string(),
+                ),
+            ).collect::<Vec<_>>())
+        };
+        let str_trumpforfarbe_heading = format!("? {trumpforfarbe}: ");
+        match veccard_with_multiple_players
+            .chunk_by(|card_lhs, card_rhs| mapcardsetepi_distribution[*card_lhs]==mapcardsetepi_distribution[*card_rhs]) // TODO? chunk_by_key
+            .map(|slccard_chunk| (
+                unwrap!(
+                    slccard_chunk.iter()
+                        .map(|&card| &mapcardsetepi_distribution[card])
+                        .all_equal_value()
+                ),
+                slccard_chunk
+            ))
+            .rev()
+            .exactly_one_2()
+        {
+            Err(ExactlyOneError::Empty) => {},
+            Ok((setepi, slccard_chunk)) => {
+                push_trumpforfarbe_line(str_trumpforfarbe_heading, slccard_chunk, setepi);
+            },
+            Err(ExactlyOneError::MoreThanOne(atplsetepislccard, ittplsetepislccard)) => {
+                let mut setepi_union = EnumSet::<EPlayerIndex>::new_empty();
+                for (setepi_chunk, slccard_chunk) in std::iter::chain(atplsetepislccard, ittplsetepislccard) {
+                    push_trumpforfarbe_line("".to_string(), slccard_chunk, setepi_chunk);
+                    for epi_chunk in setepi_chunk.iter() { // TODO EnumSet::union
+                        setepi_union.insert(epi_chunk);
+                    }
+                }
+                push_trumpforfarbe_line(
+                    str_trumpforfarbe_heading,
+                    /*slccard_chunk*/&[], // Done by the "sub-items"
+                    &setepi_union,
+                );
+            },
+        }
+
+    }
+    if !vecvecstr_trumpforfarbe.is_empty() {
+        print_table(/*str_indent*/" ", vecvecstr_trumpforfarbe.iter().rev());
+    }
+}
