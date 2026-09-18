@@ -16,7 +16,7 @@ use crate::utils::*;
 use std::fmt::Debug;
 use std::cmp::Ordering;
 use plain_enum::*;
-use itertools::{Itertools, EitherOrBoth};
+use itertools::EitherOrBoth;
 
 #[cfg(feature="sauspiel_webext_use_json")]
 use openschafkopf_lib::{

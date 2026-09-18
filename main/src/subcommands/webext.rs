@@ -1,6 +1,5 @@
 //use as_num::AsNum;
 use byteorder::ByteOrder;
-use itertools::Itertools;
 //use openschafkopf_logging::*;
 //use openschafkopf_util::*;
 use serde_json::json;
