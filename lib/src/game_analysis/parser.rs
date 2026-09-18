@@ -162,7 +162,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
     // TODO acknowledge timeouts
     let mapepistr_username = iter_to_arr(
         doc.find_class("game-participants")
-            .exactly_one()
+            .exactly_one_2()
             .map_err(|it| format_err!("{:?}", it))?
             .find_attr("data-username", ())
             .map(|node_username| unwrap!(node_username.attr("data-username")))
@@ -176,10 +176,10 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
     let scrape_from_key_figure_table = |str_key| -> Result<_, SStringifiedError> {
         doc.find_name("th")
             .filter(|node| node.inner_html()==str_key)
-            .exactly_one().map_err(|it| format_err!("{:?}", it))?
+            .exactly_one_2().map_err(|it| format_err!("{:?}", it))?
             .parent().ok_or_else(|| format_err!("Error with {}: {} has no parent", str_key, str_key))?
             .find_name("td")
-            .exactly_one().map_err(|it| format_err!("{:?}", it))
+            .exactly_one_2().map_err(|it| format_err!("{:?}", it))
     };
     fn get_cards<'node, HtmlNode: TSauspielHtmlNode<'node>>(
         node: &HtmlNode,
@@ -326,11 +326,11 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
         return Err(format_err!("Ruleset"));
     };
     let orules = doc.find_class("title-supertext")
-        .exactly_one()
+        .exactly_one_2()
         .map_err(|it| format_err!("{:?}", it))?
         .parent().ok_or_else(|| format_err!("title-supertext has no parent"))?
         .find_name("h1")
-        .exactly_one()
+        .exactly_one_2()
         .map_err(|it| format_err!("{:?}", it))
         .and_then(|node_rules| {
             if let Ok(rules) = parse_rule_description(
@@ -367,12 +367,12 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
     };
     let node_card_rows = ((((doc.find_name("h4")
         .filter(|node| node.inner_html()=="Spielermittlung")
-        .exactly_one()
+        .exactly_one_2()
         .map_err(|it| format_err!("{:?}", it)))?
         .parent().ok_or_else(|| format_err!("Spielermittlung has no parent")))?
         .parent().ok_or_else(|| format_err!("Spielermittlung parent has no parent")))?
         .find_class("card-rows")
-        .exactly_one()
+        .exactly_one_2()
         .map_err(|it| format_err!("{:?}", it)))?;
     let mut itnode_gameannouncement = node_card_rows
         .find_class("card-row");
@@ -775,7 +775,7 @@ fn test_parse_netschafkopf() {
 #[test]
 fn test_analyze_plain() {
     fn internal_test(str_in: &str) {
-        unwrap!(unwrap!(analyze_plain(str_in).exactly_one()));
+        unwrap!(unwrap!(analyze_plain(str_in).exactly_one_2()));
     }
     internal_test("Rufspiel Blaue von 3: so h7 go eo ho hz hk eu gu h9 su g8 g9 ga gk e9 ea ek ez e7 g7 ha s7 gz sa s9 h8 sz e8 sk hu s8");
     internal_test("Schelln-Wenz von 2: ea ek e7 ez gz g7 ga go eu e9 so s9 gu h7 sa hu su h8 e8 sz s8 ha eo g9 s7 h9 hk g8 sk hz ho gk");

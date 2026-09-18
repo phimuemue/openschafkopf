@@ -299,8 +299,8 @@ pub fn with_common_args<FnWithArgs>(
                     })
                     .map(|ahand| (stichseq, ahand, epi_position))
                 })
-                .exactly_one()
-                .map_err(|err| format_err!("Could not determine ekurzlang: {}", err))?;
+                .exactly_one_2()
+                .map_err(|err| format_err!("Could not determine ekurzlang: {:?}", err))?;
 			assert!(
 				oepi_position_concrete.is_none() || oepi_position_concrete==Some(epi_position)
 			);

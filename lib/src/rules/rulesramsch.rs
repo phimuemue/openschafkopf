@@ -83,7 +83,7 @@ impl TRules for SRulesRamsch {
         let n_points_max = points_for_player(vecepi_most_points[0]);
         let the_one_epi = || -> EPlayerIndex {
             assert!(n_points_max>=61);
-            *unwrap!(vecepi_most_points.iter().exactly_one())
+            *unwrap!(vecepi_most_points.iter().exactly_one_2())
         };
         if match self.odurchmarsch {
             None => false,
@@ -105,7 +105,7 @@ impl TRules for SRulesRamsch {
             )
         } else {
             let epi_loser : EPlayerIndex = {
-                vecepi_most_points.iter().copied().exactly_one().unwrap_or_else(|_err| {
+                vecepi_most_points.iter().copied().exactly_one_2().unwrap_or_else(|_err| {
                     // TODO highest stich count loses
                     // TODO most trumpf in stichs loses
                     // TODO combination of all of the tie breakers

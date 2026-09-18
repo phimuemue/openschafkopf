@@ -94,7 +94,7 @@ impl SAi {
         if let Ok(card)=rules.all_allowed_cards(
             stichseq,
             hand_fixed
-        ).iter().exactly_one() {
+        ).iter().exactly_one_2() {
             *card
         } else if let Some(card) = rules.rulespecific_ai()
             .and_then(|airulespecific| airulespecific.suggest_card(hand_fixed, stichseq))

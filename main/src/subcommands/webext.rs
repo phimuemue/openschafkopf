@@ -121,7 +121,7 @@ pub fn run(_clapmatches: &clap::ArgMatches) -> Result<(), SStringifiedError> {
                         .take(verify_eq!(EPlayerIndex::SIZE, jsonarr_announcement.len()))
                         .enumerate()
                         .filter(|&(_n_epi, jsonval_announcement)| jsonval_announcement.is_string())
-                        .exactly_one()
+                        .exactly_one_2()
                     {
                         Ok((n_epi_active, _str_announcement)) => n_epi_active,
                         Err(e) => {

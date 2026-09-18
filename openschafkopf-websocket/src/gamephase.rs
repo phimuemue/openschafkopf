@@ -313,20 +313,21 @@ impl VGamePhase {
                                                 if epi==EPlayerIndex::EPI0 {
                                                     assert!(vectplepirules.is_empty());
                                                     "".to_string()
-                                                } else if vectplepirules.is_empty() {
-                                                    "Bisher will niemand spielen. Spielst Du?".to_string()
                                                 } else {
-                                                    match vectplepirules.iter().exactly_one() {
+                                                    match vectplepirules.into_iter().exactly_one_2() {
+                                                        Err(ExactlyOneError::Empty) => {
+                                                            "Bisher will niemand spielen. Spielst Du?".to_string()
+                                                        },
                                                         Ok((epi_announced, _rules)) => {
                                                             format!(
                                                                 "Vor Dir spielt an {}. Stelle. Spielst Du auch?",
                                                                 epi_announced.to_usize() + 1, // EPlayerIndex is 0-based
                                                             )
                                                         },
-                                                        Err(ittplepirules) => {
+                                                        Err(ExactlyOneError::MoreThanOne(atplepirules, ittplepirules)) => {
                                                             format!(
                                                                 "Vor Dir spielen: An {}. Spielst Du auch?",
-                                                                ittplepirules
+                                                                std::iter::chain(atplepirules, ittplepirules)
                                                                     .map(|(epi_announced, _rules)| {
                                                                         format!(
                                                                             "{}. Stelle",

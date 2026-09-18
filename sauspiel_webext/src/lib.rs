@@ -468,7 +468,7 @@ pub fn greet() {
                         .filter(|&epi_hand|
                             game_finished.aveccard[epi_hand].contains(&card)
                         )
-                        .exactly_one()
+                        .exactly_one_2()
                     ),
                 ).map(|b_active| if b_active {
                     "background-color: #11111111;"
@@ -691,7 +691,7 @@ pub fn greet() {
                             &unwrap!(
                                 document
                                     .find_class("game-overview")
-                                    .exactly_one()
+                                    .exactly_one_2()
                             ).0,
                             &div_openschafkopf_overview,
                         );

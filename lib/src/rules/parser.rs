@@ -41,16 +41,13 @@ pub fn parse_rule_description(
         (EFarbe::Schelln, &["schell", "pump", "hundsgfickte"]),
     ].into_iter()
         .filter(|(_efarbe, slcstr_farbe)| str_rules_contains(slcstr_farbe))
-        .exactly_one()
+        .exactly_one_2()
     {
         Ok((efarbe, _)) => Some(efarbe),
-        Err(itefarbeslcstr) => {
-            if 0==itefarbeslcstr.count() {
-                None
-            } else {
-                return Err(format_err!("Could not clearly determine efarbe."))
-            }
-        },
+        Err(ExactlyOneError::Empty) => None,
+        Err(ExactlyOneError::MoreThanOne([_,_],_)) => return Err(
+            format_err!("Could not clearly determine efarbe.")
+        ),
     };
     let make_sololike = |esololike| {
         macro_rules! make_sololike_internal {($payoutdecider: ident) => {
@@ -133,16 +130,15 @@ pub fn parse_rule_description(
         }),
     ].into_iter()
         .filter(|(slcstr, _)| str_rules_contains(slcstr))
-        .exactly_one()
+        .exactly_one_2()
     {
         Ok((_, Ok(rules))) => Ok(rules),
         Ok((_, Err(ref e))) => Err(format_err!("{}", &e.to_string())),
-        Err(itslcstrrules) => {
-            if 0==itslcstrrules.count() {
-                Err(format_err!("Cannot understand rule description."))
-            } else {
-                Err(format_err!("Rule description is ambiguous."))
-            }
+        Err(ExactlyOneError::Empty) => {
+            Err(format_err!("Cannot understand rule description."))
+        }
+        Err(ExactlyOneError::MoreThanOne([_,_],_)) => {
+            Err(format_err!("Rule description is ambiguous."))
         }
     }
 }
