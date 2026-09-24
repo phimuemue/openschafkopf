@@ -61,6 +61,9 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         if self.completed_stichs_no_invariant().len()==self.ekurzlang.cards_per_player() {
             assert!(self.current_stich_no_invariant().is_empty());
         }
+        for (_epi, &card) in self.visible_cards() {
+            assert!(self.ekurzlang.supports_card(card));
+        }
     }
 
     pub fn new(ekurzlang: EKurzLang) -> Self {
