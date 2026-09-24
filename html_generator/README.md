@@ -39,7 +39,7 @@ div((
 ## Implementation notes
 
 Ideally I'd want to write `div("Text")` or `div(class("DivClass"), "Text")`, but Rust does not support function overloading.
-Thus, I decided that `div` (and others) always take one argument, and this argument can be simple enough (such as `"Text"` or a tuple, such as `(class("DivClass"), "Text")`.
+Thus, I decided that `div` (and others) always take one argument, and this argument can be simple (such as `"Text"`), or a tuple, such as `(class("DivClass"), "Text")`.
 This means, that oftentimes, function calls look like this `div(("Look", "Two parentheses"))`. I accept that.
 
 When an argument to `div` is a tuple, the crate tries to figure out what the tuple components mean and distribute them into either attributes or children.
