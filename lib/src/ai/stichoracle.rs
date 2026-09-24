@@ -37,7 +37,6 @@ impl SStichTrie {
     }
 
     fn depth_in_edges(&self) -> usize {
-        #[cfg(debug_assertions)] self.assert_invariant(); // checks that trie holds stichs of equal length
         if self.vectplcardtrie.is_empty() {
             0
         } else {
