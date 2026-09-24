@@ -11,7 +11,6 @@ pub struct SCardsPartition {
 
 impl std::fmt::Debug for SCardsPartition {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        self.assert_invariant();
         // TODO this is simple, but O(n^2)
         let mut vecveccard = Vec::new();
         for card in <ECard as PlainEnum>::values() {
@@ -146,7 +145,6 @@ impl SCardsPartition {
     }
 
     pub fn next(&self, card: ECard) -> Option<ECard> {
-        self.assert_invariant();
         self.next_no_invariant(card)
     }
 
@@ -156,7 +154,6 @@ impl SCardsPartition {
     }
 
     pub fn prev(&self, card: ECard) -> Option<ECard> {
-        self.assert_invariant();
         self.prev_no_invariant(card)
     }
 
@@ -166,7 +163,6 @@ impl SCardsPartition {
     }
 
     fn prev_while(&self, card: ECard, mut fn_pred: impl FnMut(ECard)->bool) -> ECard {
-        self.assert_invariant();
         assert!(fn_pred(card));
         let mut card_out = card;
         while let Some(card_prev) = self.prev(card_out) {
