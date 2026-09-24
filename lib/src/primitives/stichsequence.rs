@@ -92,7 +92,6 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
     }
 
     pub fn current_playerindex(&self) -> Option<EPlayerIndex> {
-        #[cfg(debug_assertions)]self.assert_invariant();
         assert!(self.completed_stichs().len()<=self.ekurzlang.cards_per_player());
         if self.completed_stichs().len()<self.ekurzlang.cards_per_player() {
             verify!(self.current_playable_stich().current_playerindex())
@@ -102,7 +101,6 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
     }
 
     pub fn no_card_played(&self) -> bool {
-        #[cfg(debug_assertions)]self.assert_invariant();
         self.completed_stichs().is_empty() && self.current_stich().is_empty()
     }
 
@@ -111,7 +109,6 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
     }
 
     pub fn completed_stichs(&self) -> &[SStich] {
-        #[cfg(debug_assertions)]self.assert_invariant();
         self.completed_stichs_no_invariant()
     }
 
@@ -124,18 +121,15 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
     }
 
     pub fn current_stich(&self) -> &SStich {
-        #[cfg(debug_assertions)]self.assert_invariant();
         self.current_stich_no_invariant()
     }
 
     pub fn current_playable_stich(&self) -> &SStich {
-        #[cfg(debug_assertions)]self.assert_invariant();
         assert!(self.completed_stichs().len()<self.kurzlang().cards_per_player());
         self.current_stich()
     }
 
     pub fn completed_stichs_winner_index<'lifetime>(&'lifetime self, if_dbg_else!({winnerindex}{_}): dbg_parameter!(&'lifetime(impl TWinnerIndex + ?Sized))) -> impl Iterator<Item=(SFullStich<&'lifetime SStich>, EPlayerIndex)> + Clone + 'lifetime {
-        #[cfg(debug_assertions)]self.assert_invariant();
         self.vecstich[0..self.vecstich.len()]
             .iter()
             .tuple_windows()
@@ -199,12 +193,10 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
     }
 
     pub fn kurzlang(&self) -> EKurzLang {
-        #[cfg(debug_assertions)]self.assert_invariant();
         self.ekurzlang
     }
 
     pub fn count_played_cards(&self) -> usize {
-        #[cfg(debug_assertions)]self.assert_invariant();
         self.completed_stichs().len() * EPlayerIndex::SIZE
             + self.current_stich().size()
     }
