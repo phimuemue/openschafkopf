@@ -106,61 +106,17 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
         )
 }
 
-pub fn with_common_args<FnWithArgs>(
+fn for_each_game_situation(
     clapmatches: &clap::ArgMatches,
-    mut fn_with_args: FnWithArgs,
-) -> Result<(), Error>
-    where
-        for<'rules> FnWithArgs: FnMut(
-            Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
-            &'rules SRules,
-            &SStichSequence,
-            &EnumMap<EPlayerIndex, SHand>, // TODO? Good idea? Could this simply given by itahand?
-            EPlayerIndex/*epi_position*/,
-            &SExpensifiers,
-            bool/*b_verbose*/,
-            Arc<Mutex<EnumMap<ECard, EnumSet<EPlayerIndex>>>>,
-        ) -> Result<(), Error>,
-{
-    let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
-        if "all"==str_itahand.to_lowercase() { // TODO replace this case by simply "0"?
-            VChooseItAhand::All
-        } else {
-            match str_itahand
-                .split('/')
-                .map(|str_n| str_n.parse().ok())
-                .collect::<Option<Vec<_>>>()
-                .as_deref()
-            {
-                Some(&[n_samples]) => VChooseItAhand::Sample(n_samples, /*on_pool*/None),
-                Some(&[n_samples, n_pool]) => VChooseItAhand::Sample(n_samples, Some(n_pool)),
-                _ => return Err(format_err!("Failed to parse simulate_hands")),
-            }
-        }
-    ).unwrap_or_else(|| {
-        VChooseItAhand::All
-    });
-    let vecotplconstraintstr = clapmatches.values_of("constrain_hands")
-        .map(|values_constrain_hands| -> Result<Vec<(SConstraint, &str)>, _> {
-            values_constrain_hands
-                .map(|str_constrain_hands|
-                    str_constrain_hands.parse::<SConstraint>()
-                        .map_err(|err| format_err!("Cannot parse hand constraints: {:?}", err))
-                        .map(|constraint| (
-                            constraint,
-                            str_constrain_hands,
-                        )),
-                )
-                .collect::<Result<Vec<_>,_>>()
-        })
-        .transpose()?
-        .map(|vectplconstraintstr: Vec<(SConstraint, &str)>| -> Vec<Option<(SConstraint, &str)>> {
-            vectplconstraintstr.into_iter().map(Some).collect()
-        })
-        .unwrap_or_else(|| vec!(None));
-    assert!(!vecotplconstraintstr.is_empty());
-    assert!(vecotplconstraintstr.iter().map(Option::is_some).all_equal());
-    let b_verbose = clapmatches.is_present("verbose");
+    b_verbose: bool,
+    mut fn_with_game_situation: impl FnMut(
+        (&EnumMap<EPlayerIndex, SHand>, &str/*str_ahand*/, bool/*b_single_ahand*/),
+        (&SRules, bool/*b_single_rules*/),
+        &SStichSequence,
+        EPlayerIndex/*epi_position*/,
+        &SExpensifiers,
+    ) -> Result<(), Error>,
+) -> Result<(), Error> {
     let veccard_stichseq = match clapmatches.value_of("cards_on_table") { // TODO allow multiple stichseq (in particular something like "ea | ez ek e9  sa sz | sk s9" so that the user can query intermittent game states).
         None => Vec::new(),
         Some(str_cards_on_table) => cardvector::parse_cards(str_cards_on_table)
@@ -173,6 +129,7 @@ pub fn with_common_args<FnWithArgs>(
                 .map(|vecocard| (vecocard, str_ahand))
         )
         .collect::<Result<Vec<_>, _>>()?;
+    let b_single_ahand = vectplvecocardstr_ahand.len()==1;
     let vecstoss = match clapmatches.value_of("stoss")
         .map(|str_stoss| {
             if str_stoss.trim().is_empty() {
@@ -203,10 +160,7 @@ pub fn with_common_args<FnWithArgs>(
         ),
         vecstoss,
     );
-    for ((vecocard_hand, str_ahand), otplconstraintstr) in itertools::iproduct!(
-        vectplvecocardstr_ahand.iter(),
-        vecotplconstraintstr.iter() // TODO itertools support trailing comma
-    ) {
+    for (vecocard_hand, str_ahand) in vectplvecocardstr_ahand.iter() {
         let veccard_duplicate = veccard_stichseq.iter()
             .chain(vecocard_hand.iter().filter_map(|ocard| ocard.as_ref()))
             .duplicates()
@@ -326,6 +280,81 @@ pub fn with_common_args<FnWithArgs>(
                     // let hand iterators try to generate valid hands.
                 }
             }
+            fn_with_game_situation(
+                (&ahand_with_holes, str_ahand, b_single_ahand),
+                (rules, b_single_rules),
+                &stichseq,
+                epi_position,
+                &expensifiers,
+            )?;
+        } // itrules
+    } // vecocard_hand, str_ahand)
+    Ok(())
+}
+
+pub fn with_common_args<FnWithArgs>(
+    clapmatches: &clap::ArgMatches,
+    mut fn_with_args: FnWithArgs,
+) -> Result<(), Error>
+    where
+        for<'rules> FnWithArgs: FnMut(
+            Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
+            &'rules SRules,
+            &SStichSequence,
+            &EnumMap<EPlayerIndex, SHand>, // TODO? Good idea? Could this simply given by itahand?
+            EPlayerIndex/*epi_position*/,
+            &SExpensifiers,
+            bool/*b_verbose*/,
+            Arc<Mutex<EnumMap<ECard, EnumSet<EPlayerIndex>>>>,
+        ) -> Result<(), Error>,
+{
+    let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
+        if "all"==str_itahand.to_lowercase() { // TODO replace this case by simply "0"?
+            VChooseItAhand::All
+        } else {
+            match str_itahand
+                .split('/')
+                .map(|str_n| str_n.parse().ok())
+                .collect::<Option<Vec<_>>>()
+                .as_deref()
+            {
+                Some(&[n_samples]) => VChooseItAhand::Sample(n_samples, /*on_pool*/None),
+                Some(&[n_samples, n_pool]) => VChooseItAhand::Sample(n_samples, Some(n_pool)),
+                _ => return Err(format_err!("Failed to parse simulate_hands")),
+            }
+        }
+    ).unwrap_or_else(|| {
+        VChooseItAhand::All
+    });
+    let vecotplconstraintstr = clapmatches.values_of("constrain_hands")
+        .map(|values_constrain_hands| -> Result<Vec<(SConstraint, &str)>, _> {
+            values_constrain_hands
+                .map(|str_constrain_hands|
+                    str_constrain_hands.parse::<SConstraint>()
+                        .map_err(|err| format_err!("Cannot parse hand constraints: {:?}", err))
+                        .map(|constraint| (
+                            constraint,
+                            str_constrain_hands,
+                        )),
+                )
+                .collect::<Result<Vec<_>,_>>()
+        })
+        .transpose()?
+        .map(|vectplconstraintstr: Vec<(SConstraint, &str)>| -> Vec<Option<(SConstraint, &str)>> {
+            vectplconstraintstr.into_iter().map(Some).collect()
+        })
+        .unwrap_or_else(|| vec!(None));
+    assert!(!vecotplconstraintstr.is_empty());
+    assert!(vecotplconstraintstr.iter().map(Option::is_some).all_equal());
+    let b_verbose = clapmatches.is_present("verbose");
+    for_each_game_situation( clapmatches, b_verbose, |
+        (ahand_with_holes, str_ahand, b_single_ahand),
+        (rules, b_single_rules),
+        stichseq,
+        epi_position,
+        expensifiers,
+    | {
+        for otplconstraintstr in &vecotplconstraintstr {
             let mapepin_cards_per_hand = stichseq.remaining_cards_per_hand();
             for epi in EPlayerIndex::values() {
                 assert!(ahand_with_holes[epi].cards().len() <= mapepin_cards_per_hand[epi]);
@@ -338,7 +367,7 @@ pub fn with_common_args<FnWithArgs>(
                 }
                 let mapcardsetepi_distribution = Arc::new(Mutex::new(ECard::map_from_fn(|_card| EnumSet::<EPlayerIndex>::new_empty())));
                 if b_verbose
-                    || 1</*b_single_itahand*/vectplvecocardstr_ahand.len()
+                    || !b_single_ahand
                     || 1<vecotplconstraintstr.len()
                 {
                     println!("Hand(s): {} {}",
@@ -400,7 +429,7 @@ pub fn with_common_args<FnWithArgs>(
                     &expensifiers,
                     b_verbose,
                     mapcardsetepi_distribution.clone(), // Only to be used after fn_with_args drove the iterator to completion
-                )?;
+                )
             }}}
             match (&iteratehands, rules.playerindex()) {
                 (VChooseItAhand::All, _oepi_active) => {
@@ -445,7 +474,7 @@ pub fn with_common_args<FnWithArgs>(
                                         ),
                                         epi_active,
                                         rules,
-                                        &expensifiers,
+                                        expensifiers,
                                     ).omaxselfishmin.as_ref().unwrap_static_some().avg();
                                     (ahand, payout)
                                 })
@@ -454,10 +483,10 @@ pub fn with_common_args<FnWithArgs>(
                         }
                     )
                 },
-            };
+            }?;
         }
-    }
-    Ok(())
+        Ok(())
+    })
 }
 
 fn print_table<'tableline>(
