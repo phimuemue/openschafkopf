@@ -169,6 +169,8 @@ struct SJsonTableLine<TplStrategies: TTplStrategies>
 #[derive(new, Serialize)]
 struct SJson<TplStrategies: TTplStrategies> {
     str_rules: String,
+    str_stichseq: String,
+    ocard_played: Option<ECard>,
     astr_hand: [String; EPlayerIndex::SIZE],
     vectableline: Vec<SJsonTableLine<TplStrategies>>,
 }
@@ -350,10 +352,11 @@ fn run_internal<
     ).ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
     if clapmatches.is_present("json") {
         // TODO output mapcardsetepi_distribution
-        // TODO output ocard_played
         println!("{}", unwrap!(serde_json::to_string(
             &SJson::new(
                 /*str_rules*/SDisplayRules::new(rules, /*b_include_playerindex*/true).to_string(),
+                /*vec_stichseq*/stichseq.visible_cards().map(|(_epi, &card)| card).join(" "),
+                ocard_played,
                 /*str_hand*/ahand_fixed_with_holes.map(|hand|
                     SDisplayCardSlice::new(hand.cards().clone(), rules).to_string()
                 ).into_raw(),
