@@ -134,7 +134,7 @@ fn for_each_game_situation(
     clapmatches: &clap::ArgMatches,
     b_verbose: bool,
     mut fn_with_game_situation: impl FnMut(
-        (&EnumMap<EPlayerIndex, SHand>, &str/*str_ahand*/, bool/*b_single_ahand*/),
+        (&EnumMap<EPlayerIndex, SHand>, &str/*str_ahand*/, bool/*b_explicitly_given_single_ahand*/),
         (&SRules, bool/*b_explicitly_given_single_rules*/),
         &SStichSequence,
         Option<ECard>/*ocard_played*/,
@@ -177,7 +177,7 @@ fn for_each_game_situation(
                                                         SDisplayCardSlice::new(hand.cards().clone(), &game.rules).to_string()
                                                     )
                                                     .join(" | "),
-                                                /*b_single_ahand*/false
+                                                /*b_explicitly_given_single_ahand*/false
                                             ),
                                             (&game.rules, /*b_explicitly_given_single_rules*/false),
                                             &game.stichseq,
@@ -214,7 +214,7 @@ fn for_each_game_situation(
             Some(str_cards_on_table) => cardvector::parse_cards(str_cards_on_table)
                 .ok_or_else(||format_err!("Could not parse played cards"))?,
         };
-        let b_single_ahand = vectplvecocardstr_ahand.len()==1;
+        let b_explicitly_given_single_ahand = vectplvecocardstr_ahand.len()==1;
         let vecstoss = match clapmatches.value_of("stoss")
             .map(|str_stoss| {
                 if str_stoss.trim().is_empty() {
@@ -353,7 +353,7 @@ fn for_each_game_situation(
                     }
                 }
                 fn_with_game_situation(
-                    (&ahand_with_holes, str_ahand, b_single_ahand),
+                    (&ahand_with_holes, str_ahand, b_explicitly_given_single_ahand),
                     (rules, b_explicitly_given_single_rules),
                     &stichseq,
                     /*ocard_played*/None,
@@ -423,7 +423,7 @@ pub fn with_common_args<FnWithArgs>(
     assert!(vecotplconstraintstr.iter().map(Option::is_some).all_equal());
     let b_verbose = clapmatches.is_present("verbose");
     for_each_game_situation( clapmatches, b_verbose, |
-        (ahand_with_holes, str_ahand, b_single_ahand),
+        (ahand_with_holes, str_ahand, b_explicitly_given_single_ahand),
         (rules, b_explicitly_given_single_rules),
         stichseq,
         ocard_played,
@@ -443,7 +443,7 @@ pub fn with_common_args<FnWithArgs>(
                 }
                 let mapcardsetepi_distribution = Arc::new(Mutex::new(ECard::map_from_fn(|_card| EnumSet::<EPlayerIndex>::new_empty())));
                 if b_verbose
-                    || !b_single_ahand
+                    || !b_explicitly_given_single_ahand
                     || 1<vecotplconstraintstr.len()
                 {
                     println!("Hand(s): {} {}",
