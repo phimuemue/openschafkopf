@@ -41,17 +41,13 @@ macro_rules! impl_try_zip{($fn_name:ident ($($refmut_lhs:tt)*) ($($refmut_rhs:tt
         fn_determine_rules: impl FnOnce($($refmut_lhs)* DetermineRules, $($refmut_rhs)* DetermineRulesOther) -> R,
         fn_game: impl FnOnce($($refmut_lhs)* Game, $($refmut_rhs)* GameOther) -> R,
     ) -> R {
-        use VGamePhaseGeneric::*;
-        match (self, other) {
-            (DealCards(lhs), DealCards(rhs)) => fn_deal_cards(lhs, rhs),
-            (DealCards(_), _) => value_on_failing_match,
-            (GamePreparations(lhs), GamePreparations(rhs)) => fn_game_preparations(lhs, rhs),
-            (GamePreparations(_), _) => value_on_failing_match,
-            (DetermineRules(lhs), DetermineRules(rhs)) => fn_determine_rules(lhs, rhs),
-            (DetermineRules(_), _) => value_on_failing_match,
-            (Game(lhs), Game(rhs)) => fn_game(lhs, rhs),
-            (Game(_), _) => value_on_failing_match,
-        }
+        match_same_variants!(match (self, other) {
+            VGamePhaseGeneric::DealCards(lhs), (rhs) => fn_deal_cards(lhs, rhs),
+            VGamePhaseGeneric::GamePreparations(lhs), (rhs) => fn_game_preparations(lhs, rhs),
+            VGamePhaseGeneric::DetermineRules(lhs), (rhs) => fn_determine_rules(lhs, rhs),
+            VGamePhaseGeneric::Game(lhs), (rhs) => fn_game(lhs, rhs),
+            _ => value_on_failing_match,
+        })
     }
 }}
 

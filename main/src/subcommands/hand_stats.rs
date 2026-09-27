@@ -77,19 +77,25 @@ impl <Number, Unknown> VInspectionResult<Number, Unknown> {
 }
 impl VInspectionResult<f64, SUndefined> {
     fn accumulate_weighted_sum(&mut self, inspectionresult: &Self, f_percentage: f64) {
-        use VInspectionResult::*;
-        match (self, inspectionresult) {
-            (RecognizableAsNumber(number_self), RecognizableAsNumber(number_rhs)) => {
+        match_same_variants!(match (&mut *self, inspectionresult) {
+            VInspectionResult::RecognizableAsNumber(number_self), (number_rhs) => {
                 *number_self += number_rhs * f_percentage;
             },
-            (Array(vecinspectionresult_self), Array(vecinspectionresult_rhs)) if vecinspectionresult_self.len()==vecinspectionresult_rhs.len() => {
-                itertools::zip_eq(vecinspectionresult_self, vecinspectionresult_rhs)
-                    .for_each(|(lhs, rhs)| lhs.accumulate_weighted_sum(rhs, f_percentage));
+            VInspectionResult::Array(vecinspectionresult_self), (vecinspectionresult_rhs) => {
+                if vecinspectionresult_self.len()==vecinspectionresult_rhs.len() {
+                    itertools::zip_eq(vecinspectionresult_self, vecinspectionresult_rhs)
+                        .for_each(|(lhs, rhs)| lhs.accumulate_weighted_sum(rhs, f_percentage));
+                } else {
+                    *self = VInspectionResult::Unknown(SUndefined);
+                }
             },
-            (/*TODO why is slf needed?*/slf, _) => {
-                *slf = VInspectionResult::Unknown(SUndefined);
+            VInspectionResult::Unknown(SUndefined), (SUndefined) => {
+                // No need to update self
             },
-        }
+            _ => {
+                *self = VInspectionResult::Unknown(SUndefined);
+            },
+        })
     }
 }
 impl VInspectionResult<VRecognizableAsNumber, String> {

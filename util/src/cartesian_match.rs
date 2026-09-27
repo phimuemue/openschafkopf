@@ -99,4 +99,19 @@ macro_rules! cartesian_match(
     };
 );
 
+#[macro_export]
+macro_rules! match_same_variants(
+    (match ($lhs:expr, $rhs:expr) {
+        $($enum:ident :: $variant:ident($($variant_lhs:tt)*), ($($variant_rhs:tt)*) => $result:expr,)+
+        _ => $result_default:expr,
+    }) => {
+        match ($lhs, $rhs) {
+            $(($enum :: $variant($($variant_lhs)*), $enum :: $variant($($variant_rhs)*)) => $result,)+
+            $(
+                #[allow(unused_variables)] // TODO Can we get avoid this?
+                ($enum :: $variant($($variant_lhs)*), _) => $result_default,
+            )+
+        }
+    }
+);
 
