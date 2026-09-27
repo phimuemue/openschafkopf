@@ -487,8 +487,7 @@ pub fn print_card_distribution_statistics(
         OnePlayer(EPlayerIndex),
         MultiplePlayers(MultiplePlayers),
     }
-    let ekurzlang = stichseq.kurzlang();
-    let ittplcardwithplayer = ECard::values(ekurzlang).filter_map(|card| {
+    let ittplcardwithplayer = ECard::values(stichseq.kurzlang()).filter_map(|card| {
         let setepi = &mapcardsetepi_distribution[card];
         match setepi.iter().exactly_one_2() {
             Err(ExactlyOneError::Empty) => {
@@ -552,7 +551,7 @@ pub fn print_card_distribution_statistics(
                     .collect::<Vec<_>>();
                 rules.sort_cards(&mut veccard);
                 veccard.iter().map(ECard::to_string)
-                    .pad_using(ekurzlang.cards_per_player(), |_| "__".to_string())
+                    .pad_using(mapepin_card_count[epi], |_| "__".to_string())
                     .join(" ")
             })),
             if_then_some!(mapepisetcard_not_with_player.iter().any(|setcard| !setcard.is_empty()), {
