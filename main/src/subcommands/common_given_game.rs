@@ -135,7 +135,7 @@ fn for_each_game_situation(
     b_verbose: bool,
     mut fn_with_game_situation: impl FnMut(
         (&EnumMap<EPlayerIndex, SHand>, &str/*str_ahand*/, bool/*b_single_ahand*/),
-        (&SRules, bool/*b_single_rules*/),
+        (&SRules, bool/*b_explicitly_given_single_rules*/),
         &SStichSequence,
         Option<ECard>/*ocard_played*/,
         EPlayerIndex/*epi_position*/,
@@ -179,7 +179,7 @@ fn for_each_game_situation(
                                                     .join(" | "),
                                                 /*b_single_ahand*/false
                                             ),
-                                            (&game.rules, /*b_single_rules: TODO Be more precise here?*/false),
+                                            (&game.rules, /*b_explicitly_given_single_rules*/false),
                                             &game.stichseq,
                                             Some(card_played),
                                             oepi_position_concrete.unwrap_or(epi_zugeben),
@@ -253,7 +253,7 @@ fn for_each_game_situation(
             if !veccard_duplicate.is_empty() {
                 return Err(format_err!("Cards are used more than once: {}", veccard_duplicate.iter().join(", ")));
             }
-            let (itrules, b_single_rules) = match clapmatches.values_of("rules")
+            let (itrules, b_explicitly_given_single_rules) = match clapmatches.values_of("rules")
                 .map(|values| values.map(parse_rule_description_simple))
                 .into_iter()
                 .flatten()
@@ -280,11 +280,11 @@ fn for_each_game_situation(
                                     VStockOrT::OrT(rules) => Some(rules.into())
                                 })
                             ) as Box<dyn Iterator<Item=SRules>>,
-                            /*b_single_rules*/false,
+                            /*b_explicitly_given_single_rules*/false,
                         )
                     } else {
-                        let b_single_rules = vecrules.len()==1;
-                        (Box::new(vecrules.into_iter()) as Box<dyn Iterator<Item=SRules>>, b_single_rules)
+                        let b_explicitly_given_single_rules = vecrules.len()==1;
+                        (Box::new(vecrules.into_iter()) as Box<dyn Iterator<Item=SRules>>, b_explicitly_given_single_rules)
                     }
                 },
                 Err(err) => {
@@ -339,7 +339,7 @@ fn for_each_game_situation(
                         .collect::<Vec<_>>();
                     if veccard_hand_active.len()==stichseq.kurzlang().cards_per_player() {
                         if !rules.can_be_played(SFullHand::new(&veccard_hand_active, stichseq.kurzlang())) {
-                            if b_single_rules {
+                            if b_explicitly_given_single_rules {
                                 return Err(format_err!("Rules {} cannot be played given these cards.", SDisplayRules::new(rules, /*b_include_playerindex*/true)));
                             } else {
                                 if b_verbose {
@@ -354,7 +354,7 @@ fn for_each_game_situation(
                 }
                 fn_with_game_situation(
                     (&ahand_with_holes, str_ahand, b_single_ahand),
-                    (rules, b_single_rules),
+                    (rules, b_explicitly_given_single_rules),
                     &stichseq,
                     /*ocard_played*/None,
                     epi_position,
@@ -424,7 +424,7 @@ pub fn with_common_args<FnWithArgs>(
     let b_verbose = clapmatches.is_present("verbose");
     for_each_game_situation( clapmatches, b_verbose, |
         (ahand_with_holes, str_ahand, b_single_ahand),
-        (rules, b_single_rules),
+        (rules, b_explicitly_given_single_rules),
         stichseq,
         ocard_played,
         epi_position,
@@ -438,7 +438,7 @@ pub fn with_common_args<FnWithArgs>(
             macro_rules! forward{($n_ahand_total: expr, $itahand_factory: expr, $fn_take: expr) => {{ // TODORUST generic closures
                 let mut n_ahand_seen = 0;
                 let mut n_ahand_valid = 0;
-                if b_verbose || !b_single_rules {
+                if b_verbose || !b_explicitly_given_single_rules {
                     println!("Rules: {}", SDisplayRules::new(rules, /*b_include_playerindex*/true));
                 }
                 let mapcardsetepi_distribution = Arc::new(Mutex::new(ECard::map_from_fn(|_card| EnumSet::<EPlayerIndex>::new_empty())));
