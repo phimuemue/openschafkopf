@@ -36,61 +36,77 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
         )
 }
 
+pub fn for_each_gameresult(
+    opath: Option<&std::path::PathBuf>,
+    str_input: &str,
+    b_verbose: bool,
+    mut fn_with_gameresult: impl FnMut(SGameWithDesc),
+) {
+    let str_path = match &opath {
+        Some(path) => path.to_string_lossy(),
+        None => Cow::Borrowed("stdin"), // hope that path is not "stdin"
+    };
+    if b_verbose {
+        println!("Opened {str_path}");
+    }
+    let mut b_found = false;
+    let mut call_fn_with_gameresult = |str_description: String, resgameresult: Result<_, _>| {
+        b_found = b_found || resgameresult.is_ok();
+        fn_with_gameresult(SGameWithDesc{
+            str_description,
+            resgameresult,
+        });
+    };
+    if let resgameresult@Ok(_) = analyze_sauspiel_html(str_input)
+        .map(|game| game.map(|_|(), |_|(), |_|()))
+        .or_else(|_err| analyze_sauspiel_json(str_input, |_,_,_,_| {})
+            .map(|game| game.map(|_|(), |_|(), |_|()))
+        )
+    {
+        call_fn_with_gameresult(
+            str_path.clone().into_owned(),
+            resgameresult
+        )
+    } else {
+        let mut b_found_plain = false;
+        for (i, resgame) in analyze_plain(str_input)
+            .chain(analyze_netschafkopf(str_input).into_iter().flatten()
+                .map(|resgameresult| resgameresult.and_then(|gameresult| {
+                    match gameresult.stockorgame {
+                        VStockOrT::Stock(_ruleset) => Err(format_err!("Nothing to analyze.")),
+                        VStockOrT::OrT(game) => Ok(game.map(|_|(), |_|(), |_|(), |rules| rules)),
+                    }
+                }))
+            )
+            .filter(|res| res.is_ok())
+            .enumerate()
+        {
+            b_found_plain = true;
+            call_fn_with_gameresult(
+                format!("{str_path}_{i}"),
+                resgame.and_then(|game| game.finish().map_err(|_game| format_err!("Could not game.finish")))
+            )
+        }
+        if !b_found_plain {
+            call_fn_with_gameresult(str_path.clone().into_owned(), Err(format_err!("Nothing found in {}: Trying to continue.", str_path)));
+        }
+    }
+    if !b_found && b_verbose {
+        println!("Nothing found in {str_path}: Trying to continue.");
+    }
+}
+
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), SStringifiedError> {
     let mut vecgamewithdesc = Vec::new();
     super::glob_files_or_read_stdin(
         clapmatches,
         |opath, str_input, _i_input| {
-            let str_path = match &opath {
-                Some(path) => path.to_string_lossy(),
-                None => Cow::Borrowed("stdin"), // hope that path is not "stdin"
-            };
-            println!("Opened {str_path}");
-            let mut b_found = false;
-            let mut push_game = |str_description: String, resgameresult: Result<_, _>| {
-                b_found = b_found || resgameresult.is_ok();
-                vecgamewithdesc.push(SGameWithDesc{
-                    str_description,
-                    resgameresult,
-                });
-            };
-            if let resgameresult@Ok(_) = analyze_sauspiel_html(&str_input)
-                .map(|game| game.map(|_|(), |_|(), |_|()))
-                .or_else(|_err| analyze_sauspiel_json(&str_input, |_,_,_,_| {})
-                    .map(|game| game.map(|_|(), |_|(), |_|()))
-                )
-            {
-                push_game(
-                    str_path.clone().into_owned(),
-                    resgameresult
-                )
-            } else {
-                let mut b_found_plain = false;
-                for (i, resgame) in analyze_plain(&str_input)
-                    .chain(analyze_netschafkopf(&str_input).into_iter().flatten()
-                        .map(|resgameresult| resgameresult.and_then(|gameresult| {
-                            match gameresult.stockorgame {
-                                VStockOrT::Stock(_ruleset) => Err(format_err!("Nothing to analyze.")),
-                                VStockOrT::OrT(game) => Ok(game.map(|_|(), |_|(), |_|(), |rules| rules)),
-                            }
-                        }))
-                    )
-                    .filter(|res| res.is_ok())
-                    .enumerate()
-                {
-                    b_found_plain = true;
-                    push_game(
-                        format!("{str_path}_{i}"),
-                        resgame.and_then(|game| game.finish().map_err(|_game| format_err!("Could not game.finish")))
-                    )
-                }
-                if !b_found_plain {
-                    push_game(str_path.clone().into_owned(), Err(format_err!("Nothing found in {}: Trying to continue.", str_path)));
-                }
-            }
-            if !b_found {
-                eprintln!("Nothing found in {str_path}: Trying to continue.");
-            }
+            for_each_gameresult(
+                opath.as_ref(),
+                &str_input,
+                /*b_verbose*/true,
+                |gamewithdesc| vecgamewithdesc.push(gamewithdesc),
+            );
         },
     )?;
     let path_openschafkopf_executable = unwrap!(unwrap!(std::env::current_exe()).canonicalize());
@@ -108,7 +124,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), SStringifiedError> {
     Ok(())
 }
 
-struct SGameWithDesc {
+pub struct SGameWithDesc {
     pub str_description: String,
     pub resgameresult: Result<SGameResult</*Ruleset*/()>, SStringifiedError>,
 }

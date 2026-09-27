@@ -43,10 +43,10 @@ pub fn ai(subcommand_matches: &clap::ArgMatches) -> SAi {
     }
 }
 
-pub fn glob_files_or_read_stdin(
+pub fn glob_files(
     clapmatches: &clap::ArgMatches,
     mut fn_ok: impl FnMut(Option<std::path::PathBuf>, String, usize),
-) -> Result<(), SStringifiedError> {
+) -> Result<bool/*b_from_file*/, SStringifiedError> {
     let mut i_ok = 0;
     let mut fn_ok = move |opath, str_ok| {
         fn_ok(opath, str_ok, i_ok);
@@ -64,10 +64,18 @@ pub fn glob_files_or_read_stdin(
             }
         }
     }
-    if !b_from_file {
+    Ok(b_from_file)
+}
+
+pub fn glob_files_or_read_stdin(
+    clapmatches: &clap::ArgMatches,
+    mut fn_ok: impl FnMut(Option<std::path::PathBuf>, String, usize),
+) -> Result<(), SStringifiedError> {
+    if !dbg!(glob_files(clapmatches, &mut fn_ok))? {
         fn_ok(
             /*opath*/None,
             std::io::read_to_string(std::io::stdin())?,
+            0,
         );
     }
     Ok(())

@@ -16,6 +16,7 @@ use openschafkopf_lib::{
         parser::parse_rule_description_simple,
         VTrumpfOrFarbe,
     },
+    game::{SGame, SExpensifiersNoStoss},
 };
 use openschafkopf_util::*;
 use itertools::Itertools;
@@ -69,7 +70,6 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
         .arg(clap::Arg::new("hand")
             .long("hand")
             .takes_value(true)
-            .required(true)
             .multiple_occurrences(true)
             .help("The cards on someone's hand")
             .long_help("The cards on the current player's hand (simply separated by spaces, such as \"eo go ho so eu gu hu su\" for a Sie), or the hands of all players. Specifying all player's hands works by first listing cards of player 0, then player 1, then player 2, then player 3 (Example: \"ea ez  ga gz  ha hz  sa sz\" means player 0 has Eichel-Ass and Eichel-Zehn, player 1 has Gras-Ass and Gras-Zehn, and so forth). You can use underscore to leave \"holes\" in other players' hands (Example: \"ea __  ga __  ha __  sa __\" means player 0 has Eichel-Ass and another unknown card, player 1 has Gras-Ass and unknown card, and so forth).")
@@ -85,6 +85,9 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
             .takes_value(true)
             .help("Stosses given")
             .long_help("Stosses given so far. Enumerate the respective player indices one after another, separated by a space.")
+        )
+        .arg(super::shared_args::glob_files_arg()
+            .long("file")
         )
         .arg(clap::Arg::new("simulate_hands")
             .long("simulate-hands")
@@ -117,178 +120,236 @@ fn for_each_game_situation(
         &SExpensifiers,
     ) -> Result<(), Error>,
 ) -> Result<(), Error> {
-    let veccard_stichseq = match clapmatches.value_of("cards_on_table") { // TODO allow multiple stichseq (in particular something like "ea | ez ek e9  sa sz | sk s9" so that the user can query intermittent game states).
-        None => Vec::new(),
-        Some(str_cards_on_table) => cardvector::parse_cards(str_cards_on_table)
-            .ok_or_else(||format_err!("Could not parse played cards"))?,
-    };
-    let vectplvecocardstr_ahand = unwrap!(clapmatches.values_of("hand"))
-        .map(|str_ahand| 
-            cardvector::parse_optional_cards::<Vec<_>>(str_ahand)
-                .ok_or_else(||format_err!("Could not parse hand: {}", str_ahand))
-                .map(|vecocard| (vecocard, str_ahand))
-        )
-        .collect::<Result<Vec<_>, _>>()?;
-    let b_single_ahand = vectplvecocardstr_ahand.len()==1;
-    let vecstoss = match clapmatches.value_of("stoss")
-        .map(|str_stoss| {
-            if str_stoss.trim().is_empty() {
-                Ok(Vec::new())
-            } else {
-                str_stoss
-                    .split(' ')
-                    .filter(|str_epi| !str_epi.is_empty())
-                    .map(|str_epi| str_epi.parse::<EPlayerIndex>()
-                        .map(|epi| SStoss {
-                            epi,
-                            n_cards_played: 0, // TODO? make adjustable
-                        })
-                    )
-                    .collect::<Result<Vec<_>, _>>()
+    super::glob_files(clapmatches, |opath, str_input, _i_input| {// short-circuits when user requested input from files but something bad happened
+        super::analyze::for_each_gameresult(opath.as_ref(), &str_input, b_verbose, |gamewithdesc| {
+            match gamewithdesc.resgameresult {
+                Ok(gameresult) => {
+                    if b_verbose {
+                        println!("{}", gamewithdesc.str_description);
+                    }
+                    match gameresult.stockorgame {
+                        VStockOrT::Stock(_) => {
+                            if b_verbose {
+                                println!("Ignoring {}.", gamewithdesc.str_description);
+                            }
+                        },
+                        VStockOrT::OrT(game_in) => {
+                            unwrap!(SGame::new(
+                                game_in.aveccard.clone(),
+                                SExpensifiersNoStoss::new_with_doublings(
+                                    game_in.expensifiers.n_stock,
+                                    game_in.expensifiers.doublings.clone(),
+                                ),
+                                game_in.rules.clone()
+                            ).play_cards_and_stoss(
+                                &game_in.expensifiers.vecstoss,
+                                game_in.stichseq.visible_cards(),
+                                /*fn_before_zugeben*/|game, _i_stich, epi_zugeben, _card_played| {
+                                    // TODO somehow mark card_played
+                                    unwrap!/*assume that fn_with_game_situation can work with a pre-checked game*/(fn_with_game_situation(
+                                        (
+                                            &game.ahand,
+                                            /*str_ahand*/&game.ahand.iter()
+                                                .map(|hand|
+                                                    SDisplayCardSlice::new(hand.cards().clone(), &game.rules).to_string()
+                                                )
+                                                .join(" | "),
+                                            /*b_single_ahand*/false
+                                        ),
+                                        (&game.rules, /*b_single_rules: TODO Be more precise here?*/false),
+                                        &game.stichseq,
+                                        epi_zugeben, // TODO respect clapmatches.get_one("position")
+                                        &game.expensifiers,
+                                    ));
+                                },
+                            ));
+                        },
+                    }
+                },
+                Err(err) => println!("Error on {}: {}", gamewithdesc.str_description, err),
             }
-        })
-    {
-        Some(Ok(vecstoss)) => vecstoss,
-        None => Vec::new(),
-        Some(Err(e)) => return Err(format_err!("Could not parse stoss: {}", e)),
-    };
-    let expensifiers = SExpensifiers::new(
-        /*n_stock*/0, // TODO? make adjustable
-        /*doublings*/SDoublings::new_full( // TODO? make adjustable
-            SStaticEPI0{},
-            [false; EPlayerIndex::SIZE],
-        ),
-        vecstoss,
-    );
-    for (vecocard_hand, str_ahand) in vectplvecocardstr_ahand.iter() {
-        let veccard_duplicate = veccard_stichseq.iter()
-            .chain(vecocard_hand.iter().filter_map(|ocard| ocard.as_ref()))
-            .duplicates()
-            .collect::<Vec<_>>();
-        if !veccard_duplicate.is_empty() {
-            return Err(format_err!("Cards are used more than once: {}", veccard_duplicate.iter().join(", ")));
-        }
-        let (itrules, b_single_rules) = match clapmatches.values_of("rules")
-            .map(|values| values.map(parse_rule_description_simple))
-            .into_iter()
-            .flatten()
-            .collect::<Result<Vec<_>,_>>()
-        {
-            Ok(vecrules) => {
-                if vecrules.is_empty() {
-                    let ruleset = openschafkopf_shared_args::get_ruleset(clapmatches)?;
-                    (
-                        Box::new(ruleset
-                            .avecrulegroup.into_raw().into_iter()
-                            .flat_map(|vecrulegroup|
-                                vecrulegroup.into_iter().flat_map(|rulegroup| {
-                                    rulegroup.vecorules.into_iter()
-                                        .filter_map(|orules|
-                                            orules.as_ref().map(|rules|
-                                                SRules::from(rules.clone())
-                                            )
-                                        )
-                                })
-                            )
-                            .chain(match ruleset.stockorramsch {
-                                VStockOrT::Stock(_) => None,
-                                VStockOrT::OrT(rules) => Some(rules.into())
-                            })
-                        ) as Box<dyn Iterator<Item=SRules>>,
-                        /*b_single_rules*/false,
-                    )
-                } else {
-                    let b_single_rules = vecrules.len()==1;
-                    (Box::new(vecrules.into_iter()) as Box<dyn Iterator<Item=SRules>>, b_single_rules)
-                }
+        });
+    })?;
+    { // "Classical" invocation
+        let vectplvecocardstr_ahand = match clapmatches.values_of("hand") {
+            Some(values_hand) => {
+                values_hand.map(|str_ahand| 
+                    cardvector::parse_optional_cards::<Vec<_>>(str_ahand)
+                        .ok_or_else(||format_err!("Could not parse hand: {}", str_ahand))
+                        .map(|vecocard| (vecocard, str_ahand))
+                )
+                .collect::<Result<Vec<_>, _>>()?
             },
-            Err(err) => {
-                return Err(format_err!("Could not parse rules: {}", err));
+            None => {
+                Vec::new()
             },
         };
-        for rules in itrules {
-            let rules = &rules;
-			let oepi_position_concrete = match unwrap!(clapmatches.get_one("position")) {
-				VUserSuppliedPosition::CurrentPlayer => None, // To be determined with stichseq
-				VUserSuppliedPosition::Concrete(epi_position_concrete) => {
-					Some(*epi_position_concrete)
-				}
-				VUserSuppliedPosition::RulesAnnouncer => {
-					Some(
-						rules.playerindex()
-							.ok_or_else(||format_err!("Rules are not 'announced'."))?
-					)
-				},
-			};
-            let (stichseq, ahand_with_holes, epi_position) = EKurzLang::values()
-                .filter_map(|ekurzlang| {
-                    let mut stichseq = SStichSequence::new(ekurzlang);
-                    for &card in veccard_stichseq.iter() {
-                        if !ekurzlang.supports_card(card)
-                            || stichseq.current_playerindex().is_none()
-                        {
-                            return None; // TODO? distinguish error
-                        }
-                        stichseq.zugeben(card, rules);
-                    }
-                    let epi_position = oepi_position_concrete.unwrap_or_else(||
-						unwrap!(stichseq.current_stich().current_playerindex())
-					);
-                    if_then_some!(
-                        stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
-                        (SHand::new_from_iter(vecocard_hand.iter().flatten()), epi_position)
-                            .to_ahand()
-                    ).or_else(|| {
-                        let n_cards_total = stichseq.kurzlang().cards_per_player()*EPlayerIndex::SIZE;
-                        if_then_some!(stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total, {
-                            let mut i_card_lo = 0;
-                            EPlayerIndex::map_from_raw(stichseq.remaining_cards_per_hand().as_raw().map(|n_remaining| {
-                                // Note: This function is called for each index in order (https://doc.rust-lang.org/std/primitive.array.html#method.map)
-                                let hand = SHand::new_from_iter(
-                                    vecocard_hand[i_card_lo..i_card_lo+n_remaining].iter()
-                                        .flatten()
-                                );
-                                i_card_lo += n_remaining;
-                                assert!(hand.cards().len() <= n_remaining);
-                                hand
-                            }))
-                        })
-                    })
-                    .map(|ahand| (stichseq, ahand, epi_position))
-                })
-                .exactly_one_2()
-                .map_err(|err| format_err!("Could not determine ekurzlang: {:?}", err))?;
-			assert!(
-				oepi_position_concrete.is_none() || oepi_position_concrete==Some(epi_position)
-			);
-            // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
-            if let Some(epi_active) = rules.playerindex() {
-                let veccard_hand_active = stichseq.cards_from_player(&ahand_with_holes[epi_active], epi_active)
-                    .collect::<Vec<_>>();
-                if veccard_hand_active.len()==stichseq.kurzlang().cards_per_player() {
-                    if !rules.can_be_played(SFullHand::new(&veccard_hand_active, stichseq.kurzlang())) {
-                        if b_single_rules {
-                            return Err(format_err!("Rules {} cannot be played given these cards.", SDisplayRules::new(rules, /*b_include_playerindex*/true)));
-                        } else {
-                            if b_verbose {
-                                println!("Rules {} cannot be played given these cards.", SDisplayRules::new(rules, /*b_include_playerindex*/true));
-                            }
-                            continue;
-                        }
-                    }
+        let veccard_stichseq = match clapmatches.value_of("cards_on_table") { // TODO allow multiple stichseq (in particular something like "ea | ez ek e9  sa sz | sk s9" so that the user can query intermittent game states).
+            None => Vec::new(),
+            Some(str_cards_on_table) => cardvector::parse_cards(str_cards_on_table)
+                .ok_or_else(||format_err!("Could not parse played cards"))?,
+        };
+        let b_single_ahand = vectplvecocardstr_ahand.len()==1;
+        let vecstoss = match clapmatches.value_of("stoss")
+            .map(|str_stoss| {
+                if str_stoss.trim().is_empty() {
+                    Ok(Vec::new())
                 } else {
-                    // let hand iterators try to generate valid hands.
+                    str_stoss
+                        .split(' ')
+                        .filter(|str_epi| !str_epi.is_empty())
+                        .map(|str_epi| str_epi.parse::<EPlayerIndex>()
+                            .map(|epi| SStoss {
+                                epi,
+                                n_cards_played: 0, // TODO? make adjustable
+                            })
+                        )
+                        .collect::<Result<Vec<_>, _>>()
                 }
+            })
+        {
+            Some(Ok(vecstoss)) => vecstoss,
+            None => Vec::new(),
+            Some(Err(e)) => return Err(format_err!("Could not parse stoss: {}", e)),
+        };
+        let expensifiers = SExpensifiers::new(
+            /*n_stock*/0, // TODO? make adjustable
+            /*doublings*/SDoublings::new_full( // TODO? make adjustable
+                SStaticEPI0{},
+                [false; EPlayerIndex::SIZE],
+            ),
+            vecstoss,
+        );
+        for (vecocard_hand, str_ahand) in vectplvecocardstr_ahand.iter() {
+            let veccard_duplicate = veccard_stichseq.iter()
+                .chain(vecocard_hand.iter().filter_map(|ocard| ocard.as_ref()))
+                .duplicates()
+                .collect::<Vec<_>>();
+            if !veccard_duplicate.is_empty() {
+                return Err(format_err!("Cards are used more than once: {}", veccard_duplicate.iter().join(", ")));
             }
-            fn_with_game_situation(
-                (&ahand_with_holes, str_ahand, b_single_ahand),
-                (rules, b_single_rules),
-                &stichseq,
-                epi_position,
-                &expensifiers,
-            )?;
-        } // itrules
-    } // vecocard_hand, str_ahand)
+            let (itrules, b_single_rules) = match clapmatches.values_of("rules")
+                .map(|values| values.map(parse_rule_description_simple))
+                .into_iter()
+                .flatten()
+                .collect::<Result<Vec<_>,_>>()
+            {
+                Ok(vecrules) => {
+                    if vecrules.is_empty() {
+                        let ruleset = openschafkopf_shared_args::get_ruleset(clapmatches)?;
+                        (
+                            Box::new(ruleset
+                                .avecrulegroup.into_raw().into_iter()
+                                .flat_map(|vecrulegroup|
+                                    vecrulegroup.into_iter().flat_map(|rulegroup| {
+                                        rulegroup.vecorules.into_iter()
+                                            .filter_map(|orules|
+                                                orules.as_ref().map(|rules|
+                                                    SRules::from(rules.clone())
+                                                )
+                                            )
+                                    })
+                                )
+                                .chain(match ruleset.stockorramsch {
+                                    VStockOrT::Stock(_) => None,
+                                    VStockOrT::OrT(rules) => Some(rules.into())
+                                })
+                            ) as Box<dyn Iterator<Item=SRules>>,
+                            /*b_single_rules*/false,
+                        )
+                    } else {
+                        let b_single_rules = vecrules.len()==1;
+                        (Box::new(vecrules.into_iter()) as Box<dyn Iterator<Item=SRules>>, b_single_rules)
+                    }
+                },
+                Err(err) => {
+                    return Err(format_err!("Could not parse rules: {}", err));
+                },
+            };
+            for rules in itrules {
+                let rules = &rules;
+                let oepi_position_concrete = match unwrap!(clapmatches.get_one("position")) {
+                    VUserSuppliedPosition::CurrentPlayer => None, // To be determined with stichseq
+                    VUserSuppliedPosition::Concrete(epi_position_concrete) => {
+                        Some(*epi_position_concrete)
+                    }
+                    VUserSuppliedPosition::RulesAnnouncer => {
+                        Some(
+                            rules.playerindex()
+                                .ok_or_else(||format_err!("Rules are not 'announced'."))?
+                        )
+                    },
+                };
+                let (stichseq, ahand_with_holes, epi_position) = EKurzLang::values()
+                    .filter_map(|ekurzlang| {
+                        let mut stichseq = SStichSequence::new(ekurzlang);
+                        for &card in veccard_stichseq.iter() {
+                            if !ekurzlang.supports_card(card)
+                                || stichseq.current_playerindex().is_none()
+                            {
+                                return None; // TODO? distinguish error
+                            }
+                            stichseq.zugeben(card, rules);
+                        }
+                        let epi_position = oepi_position_concrete.unwrap_or_else(||
+                            unwrap!(stichseq.current_stich().current_playerindex())
+                        );
+                        if_then_some!(
+                            stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
+                            (SHand::new_from_iter(vecocard_hand.iter().flatten()), epi_position)
+                                .to_ahand()
+                        ).or_else(|| {
+                            let n_cards_total = stichseq.kurzlang().cards_per_player()*EPlayerIndex::SIZE;
+                            if_then_some!(stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total, {
+                                let mut i_card_lo = 0;
+                                EPlayerIndex::map_from_raw(stichseq.remaining_cards_per_hand().as_raw().map(|n_remaining| {
+                                    // Note: This function is called for each index in order (https://doc.rust-lang.org/std/primitive.array.html#method.map)
+                                    let hand = SHand::new_from_iter(
+                                        vecocard_hand[i_card_lo..i_card_lo+n_remaining].iter()
+                                            .flatten()
+                                    );
+                                    i_card_lo += n_remaining;
+                                    assert!(hand.cards().len() <= n_remaining);
+                                    hand
+                                }))
+                            })
+                        })
+                        .map(|ahand| (stichseq, ahand, epi_position))
+                    })
+                    .exactly_one_2()
+                    .map_err(|err| format_err!("Could not determine ekurzlang: {:?}", err))?;
+                assert!(
+                    oepi_position_concrete.is_none() || oepi_position_concrete==Some(epi_position)
+                );
+                // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
+                if let Some(epi_active) = rules.playerindex() {
+                    let veccard_hand_active = stichseq.cards_from_player(&ahand_with_holes[epi_active], epi_active)
+                        .collect::<Vec<_>>();
+                    if veccard_hand_active.len()==stichseq.kurzlang().cards_per_player() {
+                        if !rules.can_be_played(SFullHand::new(&veccard_hand_active, stichseq.kurzlang())) {
+                            if b_single_rules {
+                                return Err(format_err!("Rules {} cannot be played given these cards.", SDisplayRules::new(rules, /*b_include_playerindex*/true)));
+                            } else {
+                                if b_verbose {
+                                    println!("Rules {} cannot be played given these cards.", SDisplayRules::new(rules, /*b_include_playerindex*/true));
+                                }
+                                continue;
+                            }
+                        }
+                    } else {
+                        // let hand iterators try to generate valid hands.
+                    }
+                }
+                fn_with_game_situation(
+                    (&ahand_with_holes, str_ahand, b_single_ahand),
+                    (rules, b_single_rules),
+                    &stichseq,
+                    epi_position,
+                    &expensifiers,
+                )?;
+            } // itrules
+        } // vecocard_hand, str_ahand)
+    }
     Ok(())
 }
 
