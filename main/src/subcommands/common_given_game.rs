@@ -116,6 +116,7 @@ fn for_each_game_situation(
         (&EnumMap<EPlayerIndex, SHand>, &str/*str_ahand*/, bool/*b_single_ahand*/),
         (&SRules, bool/*b_single_rules*/),
         &SStichSequence,
+        Option<ECard>/*ocard_played*/,
         EPlayerIndex/*epi_position*/,
         &SExpensifiers,
     ) -> Result<(), Error>,
@@ -144,8 +145,7 @@ fn for_each_game_situation(
                             ).play_cards_and_stoss(
                                 &game_in.expensifiers.vecstoss,
                                 game_in.stichseq.visible_cards(),
-                                /*fn_before_zugeben*/|game, _i_stich, epi_zugeben, _card_played| {
-                                    // TODO somehow mark card_played
+                                /*fn_before_zugeben*/|game, _i_stich, epi_zugeben, card_played| {
                                     unwrap!/*assume that fn_with_game_situation can work with a pre-checked game*/(fn_with_game_situation(
                                         (
                                             &game.ahand,
@@ -158,6 +158,7 @@ fn for_each_game_situation(
                                         ),
                                         (&game.rules, /*b_single_rules: TODO Be more precise here?*/false),
                                         &game.stichseq,
+                                        Some(card_played),
                                         epi_zugeben, // TODO respect clapmatches.get_one("position")
                                         &game.expensifiers,
                                     ));
@@ -344,6 +345,7 @@ fn for_each_game_situation(
                     (&ahand_with_holes, str_ahand, b_single_ahand),
                     (rules, b_single_rules),
                     &stichseq,
+                    /*ocard_played*/None,
                     epi_position,
                     &expensifiers,
                 )?;
@@ -362,6 +364,7 @@ pub fn with_common_args<FnWithArgs>(
             Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>>+Send+'rules>,
             &'rules SRules,
             &SStichSequence,
+            Option<ECard>/*ocard_played*/,
             &EnumMap<EPlayerIndex, SHand>, // TODO? Good idea? Could this simply given by itahand?
             EPlayerIndex/*epi_position*/,
             &SExpensifiers,
@@ -412,6 +415,7 @@ pub fn with_common_args<FnWithArgs>(
         (ahand_with_holes, str_ahand, b_single_ahand),
         (rules, b_single_rules),
         stichseq,
+        ocard_played,
         epi_position,
         expensifiers,
     | {
@@ -485,6 +489,7 @@ pub fn with_common_args<FnWithArgs>(
                     ),
                     rules,
                     &stichseq,
+                    ocard_played,
                     &ahand_with_holes,
                     epi_position,
                     &expensifiers,

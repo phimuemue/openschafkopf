@@ -22,7 +22,8 @@ use std::sync::{Arc, Mutex};
 // TODO? can we make this a fn of SPayoutStatsTable?
 fn print_payoutstatstable<T: std::fmt::Display, TplStrategies: TTplStrategies>(
     payoutstatstable: &SPayoutStatsTable<T, TplStrategies>,
-    b_print_table_description_before_table: bool
+    b_print_table_description_before_table: bool,
+    fn_mark_played: impl Fn(&T)->bool,
 ) {
     let slcoutputline = &payoutstatstable.output_lines();
     if b_print_table_description_before_table { // TODO? only for second-level verbosity
@@ -54,7 +55,13 @@ fn print_payoutstatstable<T: std::fmt::Display, TplStrategies: TTplStrategies>(
     let mut vecstr_id = Vec::new();
     let mut n_width_id = 0;
     for outputline in slcoutputline.iter() {
-        let str_id = outputline.vect.iter().join(" ");
+        let str_id = outputline.vect.iter()
+            .map(|t| if fn_mark_played(t) {
+                format!("[{t}]")
+            } else {
+                format!("{t}")
+            })
+            .join(" ");
         assign_gt(&mut n_width_id, str_id.len());
         vecstr_id.push(str_id);
     }
@@ -228,6 +235,7 @@ fn run_internal<
     expensifiers: &SExpensifiers,
 
     stichseq: &'stichseq SStichSequence,
+    ocard_played: Option<ECard>,
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
 
@@ -332,6 +340,7 @@ fn run_internal<
                                 &fn_loss_or_win,
                             ),
                             /*b_print_table_description_before_table*/false,
+                            /*fn_mark_played*/|_str_card| false, // TODO Mark played card in intermediate result
                         );
                     },
                 }
@@ -341,6 +350,7 @@ fn run_internal<
     ).ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
     if clapmatches.is_present("json") {
         // TODO output mapcardsetepi_distribution
+        // TODO output ocard_played
         println!("{}", unwrap!(serde_json::to_string(
             &SJson::new(
                 /*str_rules*/SDisplayRules::new(rules, /*b_include_playerindex*/true).to_string(),
@@ -376,6 +386,7 @@ fn run_internal<
         print_payoutstatstable::<_,TplStrategies>(
             &payoutstatstable,
             /*b_print_table_description_before_table*/b_verbose,
+            /*fn_mark_played*/|card| Some(*card)==ocard_played,
         );
         println!("-----");
         print_payoutstatstable::<_,TplStrategies>(
@@ -385,6 +396,7 @@ fn run_internal<
                 &fn_loss_or_win,
             ),
             /*b_print_table_description_before_table*/false,
+            /*fn_mark_played*/|_| false, // Do not mark played card in "combined" line
         );
     }
     Ok(())
@@ -426,7 +438,7 @@ fn for_each_interim_result<TplStrategies: TTplStrategies>( // TODORUST generic c
 pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     with_common_args(
         clapmatches,
-        |itahand, rules, stichseq, ahand_fixed_with_holes, epi_position, expensifiers, b_verbose, mapcardsetepi_distribution| {
+        |itahand, rules, stichseq, ocard_played, ahand_fixed_with_holes, epi_position, expensifiers, b_verbose, mapcardsetepi_distribution| {
             let otplrulesfn_points_as_payout = if clapmatches.is_present("points") {
                 if let Some(tplrulesfn_points_as_payout) = rules.points_as_payout() {
                     Some(tplrulesfn_points_as_payout)
@@ -482,6 +494,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     epi_position,
                     expensifiers,
                     stichseq,
+                    ocard_played,
                     itahand,
                     $func_filter_allowed_cards,
                     $fn_alphabetapruner,

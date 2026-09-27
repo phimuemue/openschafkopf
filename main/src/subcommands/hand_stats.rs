@@ -176,7 +176,8 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
     }
     with_common_args(
         clapmatches,
-        |itahand, rules, stichseq, _ahand_fixed_with_holes, _epi_position, _expensifiers, b_verbose, mapcardsetepi_distribution| {
+        |itahand, rules, stichseq, _ocard_played, _ahand_fixed_with_holes, _epi_position, _expensifiers, b_verbose, mapcardsetepi_distribution| {
+            // TODO can/should we do something with ocard_played?
             let mut vectplmapresinspectionresultnconstraint = vecconstraint
                 .iter()
                 .map(|constraint| (std::collections::HashMap::new(), constraint))
