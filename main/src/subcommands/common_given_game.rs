@@ -37,6 +37,22 @@ enum VUserSuppliedPosition {
 	Concrete(EPlayerIndex),
 	RulesAnnouncer,
 }
+impl VUserSuppliedPosition {
+    fn with_concrete_playerindex<R>(&self, rules: &SRules, fn_with_concrete_playerindex: impl FnOnce(Option<EPlayerIndex>)->Result<R, Error>) -> Result<R, Error> {
+        fn_with_concrete_playerindex(match self {
+            VUserSuppliedPosition::CurrentPlayer => None, // To be determined with stichseq
+            VUserSuppliedPosition::Concrete(epi_position_concrete) => {
+                Some(*epi_position_concrete)
+            }
+            VUserSuppliedPosition::RulesAnnouncer => {
+                Some(
+                    rules.playerindex()
+                        .ok_or_else(||format_err!("Rules are not 'announced'."))?
+                )
+            },
+        })
+    }
+}
 
 pub const STR_GROUP_GENERATING_HANDS : &str = "Generating hands";
 
@@ -126,6 +142,7 @@ fn for_each_game_situation(
         &SExpensifiers,
     ) -> Result<(), Error>,
 ) -> Result<(), Error> {
+    let usersuppliedposition : &VUserSuppliedPosition = unwrap!(clapmatches.get_one("position"));
     super::glob_files(clapmatches, |opath, str_input, _i_input| {// short-circuits when user requested input from files but something bad happened
         super::analyze::for_each_gameresult(opath.as_ref(), &str_input, b_verbose, |gamewithdesc| {
             match gamewithdesc.resgameresult {
@@ -140,35 +157,37 @@ fn for_each_game_situation(
                             }
                         },
                         VStockOrT::OrT(game_in) => {
-                            unwrap!(SGame::new(
-                                game_in.aveccard.clone(),
-                                SExpensifiersNoStoss::new_with_doublings(
-                                    game_in.expensifiers.n_stock,
-                                    game_in.expensifiers.doublings.clone(),
-                                ),
-                                game_in.rules.clone()
-                            ).play_cards_and_stoss(
-                                &game_in.expensifiers.vecstoss,
-                                game_in.stichseq.visible_cards(),
-                                /*fn_before_zugeben*/|game, _i_stich, epi_zugeben, card_played| {
-                                    unwrap!/*assume that fn_with_game_situation can work with a pre-checked game*/(fn_with_game_situation(
-                                        (
-                                            &game.ahand,
-                                            /*str_ahand*/&game.ahand.iter()
-                                                .map(|hand|
-                                                    SDisplayCardSlice::new(hand.cards().clone(), &game.rules).to_string()
-                                                )
-                                                .join(" | "),
-                                            /*b_single_ahand*/false
-                                        ),
-                                        (&game.rules, /*b_single_rules: TODO Be more precise here?*/false),
-                                        &game.stichseq,
-                                        Some(card_played),
-                                        epi_zugeben, // TODO respect clapmatches.get_one("position")
-                                        &game.expensifiers,
-                                    ));
-                                },
-                            ));
+                            let _result_used_by_verify_or_println = verify_or_println!(usersuppliedposition.with_concrete_playerindex(&game_in.rules, |oepi_position_concrete| {
+                                verify!(SGame::new(
+                                    game_in.aveccard.clone(),
+                                    SExpensifiersNoStoss::new_with_doublings(
+                                        game_in.expensifiers.n_stock,
+                                        game_in.expensifiers.doublings.clone(),
+                                    ),
+                                    game_in.rules.clone()
+                                ).play_cards_and_stoss(
+                                    &game_in.expensifiers.vecstoss,
+                                    game_in.stichseq.visible_cards(),
+                                    /*fn_before_zugeben*/|game, _i_stich, epi_zugeben, card_played| {
+                                        unwrap!/*assume that fn_with_game_situation can work with a pre-checked game*/(fn_with_game_situation(
+                                            (
+                                                &game.ahand,
+                                                /*str_ahand*/&game.ahand.iter()
+                                                    .map(|hand|
+                                                        SDisplayCardSlice::new(hand.cards().clone(), &game.rules).to_string()
+                                                    )
+                                                    .join(" | "),
+                                                /*b_single_ahand*/false
+                                            ),
+                                            (&game.rules, /*b_single_rules: TODO Be more precise here?*/false),
+                                            &game.stichseq,
+                                            Some(card_played),
+                                            oepi_position_concrete.unwrap_or(epi_zugeben),
+                                            &game.expensifiers,
+                                        ));
+                                    },
+                                ))
+                            }));
                         },
                     }
                 },
@@ -274,59 +293,46 @@ fn for_each_game_situation(
             };
             for rules in itrules {
                 let rules = &rules;
-                let oepi_position_concrete = match unwrap!(clapmatches.get_one("position")) {
-                    VUserSuppliedPosition::CurrentPlayer => None, // To be determined with stichseq
-                    VUserSuppliedPosition::Concrete(epi_position_concrete) => {
-                        Some(*epi_position_concrete)
-                    }
-                    VUserSuppliedPosition::RulesAnnouncer => {
-                        Some(
-                            rules.playerindex()
-                                .ok_or_else(||format_err!("Rules are not 'announced'."))?
-                        )
-                    },
-                };
-                let (stichseq, ahand_with_holes, epi_position) = EKurzLang::values()
-                    .filter_map(|ekurzlang| {
-                        let mut stichseq = SStichSequence::new(ekurzlang);
-                        for &card in veccard_stichseq.iter() {
-                            if !ekurzlang.supports_card(card)
-                                || stichseq.current_playerindex().is_none()
-                            {
-                                return None; // TODO? distinguish error
+                let (stichseq, ahand_with_holes, epi_position) = usersuppliedposition.with_concrete_playerindex(rules, |oepi_position_concrete| {
+                    EKurzLang::values()
+                        .filter_map(|ekurzlang| {
+                            let mut stichseq = SStichSequence::new(ekurzlang);
+                            for &card in veccard_stichseq.iter() {
+                                if !ekurzlang.supports_card(card)
+                                    || stichseq.current_playerindex().is_none()
+                                {
+                                    return None; // TODO? distinguish error
+                                }
+                                stichseq.zugeben(card, rules);
                             }
-                            stichseq.zugeben(card, rules);
-                        }
-                        let epi_position = oepi_position_concrete.unwrap_or_else(||
-                            unwrap!(stichseq.current_stich().current_playerindex())
-                        );
-                        if_then_some!(
-                            stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
-                            (SHand::new_from_iter(vecocard_hand.iter().flatten()), epi_position)
-                                .to_ahand()
-                        ).or_else(|| {
-                            let n_cards_total = stichseq.kurzlang().cards_per_player()*EPlayerIndex::SIZE;
-                            if_then_some!(stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total, {
-                                let mut i_card_lo = 0;
-                                EPlayerIndex::map_from_raw(stichseq.remaining_cards_per_hand().as_raw().map(|n_remaining| {
-                                    // Note: This function is called for each index in order (https://doc.rust-lang.org/std/primitive.array.html#method.map)
-                                    let hand = SHand::new_from_iter(
-                                        vecocard_hand[i_card_lo..i_card_lo+n_remaining].iter()
-                                            .flatten()
-                                    );
-                                    i_card_lo += n_remaining;
-                                    assert!(hand.cards().len() <= n_remaining);
-                                    hand
-                                }))
+                            let epi_position = oepi_position_concrete.unwrap_or_else(||
+                                unwrap!(stichseq.current_stich().current_playerindex())
+                            );
+                            if_then_some!(
+                                stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
+                                (SHand::new_from_iter(vecocard_hand.iter().flatten()), epi_position)
+                                    .to_ahand()
+                            ).or_else(|| {
+                                let n_cards_total = stichseq.kurzlang().cards_per_player()*EPlayerIndex::SIZE;
+                                if_then_some!(stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total, {
+                                    let mut i_card_lo = 0;
+                                    EPlayerIndex::map_from_raw(stichseq.remaining_cards_per_hand().as_raw().map(|n_remaining| {
+                                        // Note: This function is called for each index in order (https://doc.rust-lang.org/std/primitive.array.html#method.map)
+                                        let hand = SHand::new_from_iter(
+                                            vecocard_hand[i_card_lo..i_card_lo+n_remaining].iter()
+                                                .flatten()
+                                        );
+                                        i_card_lo += n_remaining;
+                                        assert!(hand.cards().len() <= n_remaining);
+                                        hand
+                                    }))
+                                })
                             })
+                            .map(|ahand| (stichseq, ahand, epi_position))
                         })
-                        .map(|ahand| (stichseq, ahand, epi_position))
-                    })
-                    .exactly_one_2()
-                    .map_err(|err| format_err!("Could not determine ekurzlang: {:?}", err))?;
-                assert!(
-                    oepi_position_concrete.is_none() || oepi_position_concrete==Some(epi_position)
-                );
+                        .exactly_one_2()
+                        .map_err(|err| format_err!("Could not determine ekurzlang: {:?}", err))
+                })?;
                 // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
                 if let Some(epi_active) = rules.playerindex() {
                     let veccard_hand_active = stichseq.cards_from_player(&ahand_with_holes[epi_active], epi_active)
