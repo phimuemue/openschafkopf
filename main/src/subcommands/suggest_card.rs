@@ -106,12 +106,6 @@ fn print_payoutstatstable<T: std::fmt::Display, TplStrategies: TTplStrategies>(
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
     subcommand_given_game(str_subcommand, "Suggest a card to play given the game so far")
-        .help_heading(STR_GROUP_GENERATING_HANDS)
-        .arg(clap::Arg::new("repeat_hands")
-            .long("repeat-hands")
-            .takes_value(true)
-            .help("Repeat each simulated card distribution")
-        )
         .help_heading("Game tree exploration")
         .arg(clap::Arg::new("branching")
             .long("branching")
@@ -253,19 +247,10 @@ fn run_internal<
 ) -> Result<(), Error>
 {
     let fn_loss_or_win = |_n_payout, ord_vs_0| ord_vs_0;
-    let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
     let ovecinterimres_verbose = if_then_some!(b_verbose, Arc::new(Mutex::new(Vec::<SInterimResult<TplStrategies>>::new())));
     let determinebestcardresult = determine_best_card(
         stichseq,
-        Box::new(
-            itahand
-                .flat_map(|ahand| {
-                    std::iter::repeat_n(
-                        ahand,
-                        n_repeat_hand,
-                    )
-                })
-        ) as Box<_>,
+        itahand,
         fn_make_filter,
         /*fn_make_foreachsnapshot*/&|stichseq, ahand| <SMinReachablePayoutBase<Pruner, TplStrategies, _>>::new_with_pruner(
             rules,

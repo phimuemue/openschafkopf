@@ -54,8 +54,6 @@ impl VUserSuppliedPosition {
     }
 }
 
-pub const STR_GROUP_GENERATING_HANDS : &str = "Generating hands";
-
 pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::Command<'static> {
     clap::Command::new(str_subcommand)
         .about(str_about)
@@ -108,7 +106,7 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
         .arg(super::shared_args::glob_files_arg()
             .long("file")
         )
-        .help_heading(STR_GROUP_GENERATING_HANDS)
+        .help_heading("Generating hands")
         .arg(clap::Arg::new("simulate_hands")
             .long("simulate-hands")
             .takes_value(true)
@@ -121,6 +119,11 @@ pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static s
             .multiple_occurrences(true)
             .help("Constrain simulated hands")
             .long_help("Constrain simulated hands so that certain criteria are fulfilled. Example: \"4<ctx.trumpf(0) && ctx.ea(1)\" only considers card distributions where player 0 has more than 4 Trumpf and player 1 has Eichel-Ass. (Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).)") // TODO improve docs
+        )
+        .arg(clap::Arg::new("repeat_hands")
+            .long("repeat-hands")
+            .takes_value(true)
+            .help("Repeat each simulated card distribution")
         )
         .help_heading(None)
         .arg(clap::Arg::new("verbose")
@@ -422,6 +425,7 @@ pub fn with_common_args<FnWithArgs>(
     assert!(!vecotplconstraintstr.is_empty());
     assert!(vecotplconstraintstr.iter().map(Option::is_some).all_equal());
     let b_verbose = clapmatches.is_present("verbose");
+    let n_repeat_hand = clapmatches.value_of("repeat_hands").unwrap_or("1").parse()?;
     for_each_game_situation( clapmatches, b_verbose, |
         (ahand_with_holes, str_ahand, b_explicitly_given_single_ahand),
         (rules, b_explicitly_given_single_rules),
@@ -496,6 +500,12 @@ pub fn with_common_args<FnWithArgs>(
                                     mapcardsetepi_distribution[card].insert(epi);
                                 }
                             }
+                        })
+                        .flat_map(|ahand| {
+                            std::iter::repeat_n(
+                                ahand,
+                                n_repeat_hand,
+                            )
                         })
                     ),
                     rules,
