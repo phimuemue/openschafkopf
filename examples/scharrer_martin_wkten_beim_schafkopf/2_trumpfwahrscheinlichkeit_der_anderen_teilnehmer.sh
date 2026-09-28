@@ -3,7 +3,7 @@ set -e
 N_SIMULATE_HANDS=10000
 
 echo "2.3 Trumpfwahrscheinlichkeit der anderen Teilnehmer - bestätigt"
-./target/release/openschafkopf hand-stats --simulate-hands $N_SIMULATE_HANDS  --rules "herz-solo von 0" \
+./target/release/openschafkopf suggest-card --no-gametree --simulate-hands $N_SIMULATE_HANDS  --rules "herz-solo von 0" \
     --hand "eo go ho so eu gu hu su" \
     --hand "eo go ho so eu gu hu    e7" \
     --hand "eo go ho so eu gu       e7 e8" \

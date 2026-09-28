@@ -3,7 +3,7 @@ set -e
 N_SIMULATE_HANDS=10000
 
 echo "7 Gegenspieler ist nicht Farbfrei - abweichend"
-./target/release/openschafkopf hand-stats --simulate-hands $N_SIMULATE_HANDS --rules "schelln rufspiel von 0" \
+./target/release/openschafkopf suggest-card --no-gametree --simulate-hands $N_SIMULATE_HANDS --rules "schelln rufspiel von 0" \
     --hand "eo go ho so eu hu   s7   ea" \
     --hand "eo go ho so eu      s7   ea ez" \
     --hand "eo go ho so         s7   ea ez ek" \

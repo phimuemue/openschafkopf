@@ -2,7 +2,7 @@
 
 N_SIMULATE_HANDS=1000000
 
-target/release/openschafkopf hand-stats \
+target/release/openschafkopf suggest-card --no-gametree \
     --rules "wenz tout von 3" \
     --position rulesannouncer \
     --hand "eu hu su sa sz sk" \

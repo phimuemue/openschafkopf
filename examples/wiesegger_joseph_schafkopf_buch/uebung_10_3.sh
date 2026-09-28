@@ -6,7 +6,7 @@ echo ""
 echo "The above shows that we cannot win this game by our own efforts."
 echo ""
 echo "Links' cards can be determined:"
-./target/release/openschafkopf hand-stats --rules "Eichel-Wenz von 2" --played-cards "ha hk ea h8  gu ez eu e7  sk s7 ek sa  su g7 e8 hu" --hand "ga gk go g8" --simulate-hands all --inspect "ctx.hand_to_string(2)"
+./target/release/openschafkopf suggest-card --no-gametree --rules "Eichel-Wenz von 2" --played-cards "ha hk ea h8  gu ez eu e7  sk s7 ek sa  su g7 e8 hu" --hand "ga gk go g8" --simulate-hands all --inspect "ctx.hand_to_string(2)"
 
 echo ""
 echo "Run simulation from Links' point of view, depending on the card we play:"

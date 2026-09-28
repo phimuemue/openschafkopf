@@ -6,7 +6,7 @@ N_SIMULATE_HANDS=100000
 
 echo ""
 echo "1./2. Fall: 2 Ober, 2 Unter, 2 Herz"
-./target/release/openschafkopf hand-stats --simulate-hands $N_SIMULATE_HANDS  --rules "herz-solo von 0" --hand "eo ho eu hu hz hk" \
+./target/release/openschafkopf suggest-card --no-gametree --simulate-hands $N_SIMULATE_HANDS  --rules "herz-solo von 0" --hand "eo ho eu hu hz hk" \
     --inspect "
 /*4 Trumpf*/ ctx.trumpf().extract(1).contains(4)" \
     --inspect '
@@ -16,7 +16,7 @@ echo "1./2. Fall: 2 Ober, 2 Unter, 2 Herz"
 
 echo ""
 echo "3. Fall: Eichel-Ober, Eichel-, Herz- und Schelln-Unter, 2 Herz"
-./target/release/openschafkopf hand-stats --simulate-hands $N_SIMULATE_HANDS  --rules "herz-solo von 0" --hand "eo eu hu su hz h9" \
+./target/release/openschafkopf suggest-card --no-gametree --simulate-hands $N_SIMULATE_HANDS  --rules "herz-solo von 0" --hand "eo eu hu su hz h9" \
     --inspect '
 /*(B1) 3 Trumpf, exakt 1 Ober*/ import "examples/holzapfel_michael_wkten/7_solo_gegner_trumpf_ober_unter.rhai" as ext; ext::any_has_trumpf_ober(ctx, 3, 1)' \
     --inspect '

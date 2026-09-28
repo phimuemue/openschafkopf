@@ -3,7 +3,7 @@ set -e
 N_SIMULATE_HANDS=10000
 
 echo "Einfache Verteilung der Eichel-Karten. Jemand frei?"
-./target/release/openschafkopf hand-stats --simulate-hands $N_SIMULATE_HANDS  --rules "herz-solo von 0" \
+./target/release/openschafkopf suggest-card --no-gametree --simulate-hands $N_SIMULATE_HANDS  --rules "herz-solo von 0" \
     --hand "eo go ho so eu gu hu su" \
     --hand "eo go ho so eu gu hu    e7" \
     --hand "eo go ho so eu gu       e7 e8" \
@@ -16,7 +16,7 @@ echo "Einfache Verteilung der Eichel-Karten. Jemand frei?"
 
 echo
 echo "Eichel-Rufspiel von 1 (gegen 0) - ist Partner von 0 Eichel frei?"
-./target/release/openschafkopf hand-stats --simulate-hands $N_SIMULATE_HANDS  --rules "eichel rufspiel von 1" \
+./target/release/openschafkopf suggest-card --no-gametree --simulate-hands $N_SIMULATE_HANDS  --rules "eichel rufspiel von 1" \
     --hand "eo go ho so eu gu hu su" \
     --hand "eo go ho so eu gu hu     e7" \
     --hand "eo go ho so eu gu        e7 e8" \
@@ -26,7 +26,7 @@ echo "Eichel-Rufspiel von 1 (gegen 0) - ist Partner von 0 Eichel frei?"
 
 echo
 echo "Eichel-Rufspiel von 1 (mit 0) - ist Gegner Eichel frei?"
-./target/release/openschafkopf hand-stats --simulate-hands $N_SIMULATE_HANDS  --rules "eichel rufspiel von 1" \
+./target/release/openschafkopf suggest-card --no-gametree --simulate-hands $N_SIMULATE_HANDS  --rules "eichel rufspiel von 1" \
     --hand "eo go ho so eu gu hu   ea" \
     --hand "eo go ho so eu gu      ea e7" \
     --hand "eo go ho so eu         ea e7 e8" \
@@ -36,7 +36,7 @@ echo "Eichel-Rufspiel von 1 (mit 0) - ist Gegner Eichel frei?"
 
 echo
 echo "Eichel-Rufspiel von 1 (gegen 0) (mind. 4 Trumpf, Eichel nicht längste Farbe) - ist Partner von 0 Eichel frei?"
-./target/release/openschafkopf hand-stats --simulate-hands $N_SIMULATE_HANDS  --rules "eichel rufspiel von 1" --constrain-hands "ctx.trumpf(1)>=4 && (ctx.gras(1)==0 || ctx.eichel(1)<=ctx.gras(1)) && (ctx.schelln(1)==0 || ctx.eichel(1)<=ctx.schelln(1))" \
+./target/release/openschafkopf suggest-card --no-gametree --simulate-hands $N_SIMULATE_HANDS  --rules "eichel rufspiel von 1" --constrain-hands "ctx.trumpf(1)>=4 && (ctx.gras(1)==0 || ctx.eichel(1)<=ctx.gras(1)) && (ctx.schelln(1)==0 || ctx.eichel(1)<=ctx.schelln(1))" \
     --hand "eo go ho so eu gu hu su" \
     --hand "eo go ho so eu gu hu     e7" \
     --hand "eo go ho so eu gu        e7 e8" \
@@ -46,7 +46,7 @@ echo "Eichel-Rufspiel von 1 (gegen 0) (mind. 4 Trumpf, Eichel nicht längste Far
 
 echo
 echo "Eichel-Rufspiel von 1 (mit 0) (mind. 4 Trumpf, Eichel nicht längste Farbe) - ist Gegner von 0 Eichel frei?"
-./target/release/openschafkopf hand-stats --simulate-hands $N_SIMULATE_HANDS  --rules "eichel rufspiel von 1" --constrain-hands "ctx.trumpf(1)>=4 && (ctx.gras(1)==0 || ctx.eichel(1)<=ctx.gras(1)) && (ctx.schelln(1)==0 || ctx.eichel(1)<=ctx.schelln(1))" \
+./target/release/openschafkopf suggest-card --no-gametree --simulate-hands $N_SIMULATE_HANDS  --rules "eichel rufspiel von 1" --constrain-hands "ctx.trumpf(1)>=4 && (ctx.gras(1)==0 || ctx.eichel(1)<=ctx.gras(1)) && (ctx.schelln(1)==0 || ctx.eichel(1)<=ctx.schelln(1))" \
     --hand "go ho so eu gu hu su  ea" \
     --hand "go ho so eu gu hu     ea e7" \
     --hand "go ho so eu gu        ea e7 e8" \
@@ -56,7 +56,7 @@ echo "Eichel-Rufspiel von 1 (mit 0) (mind. 4 Trumpf, Eichel nicht längste Farbe
 
 echo
 echo "Eichel-Rufspiel von 1 (gegen 0) (mind. 4 Trumpf, Eichel nicht längste Farbe) - ist Partner von 0 Eichel frei und hat Trumpf?"
-./target/release/openschafkopf hand-stats --simulate-hands $N_SIMULATE_HANDS  --rules "eichel rufspiel von 1" --constrain-hands "ctx.trumpf(1)>=4 && (ctx.gras(1)==0 || ctx.eichel(1)<=ctx.gras(1)) && (ctx.schelln(1)==0 || ctx.eichel(1)<=ctx.schelln(1))" \
+./target/release/openschafkopf suggest-card --no-gametree --simulate-hands $N_SIMULATE_HANDS  --rules "eichel rufspiel von 1" --constrain-hands "ctx.trumpf(1)>=4 && (ctx.gras(1)==0 || ctx.eichel(1)<=ctx.gras(1)) && (ctx.schelln(1)==0 || ctx.eichel(1)<=ctx.schelln(1))" \
     --hand "eo go ho so eu gu hu su" \
     --hand "eo go ho so eu gu hu     ga" \
     --hand "eo go ho so eu gu        ga gz" \
@@ -100,7 +100,7 @@ echo "Eichel-Rufspiel von 1 (gegen 0) (mind. 4 Trumpf, Eichel nicht längste Far
 
 echo
 echo "Eichel-Rufspiel von 1 (mit 0) (mind. 4 Trumpf, Eichel nicht längste Farbe) - ist Gegner Eichel frei und hat Trumpf?"
-./target/release/openschafkopf hand-stats --simulate-hands $N_SIMULATE_HANDS  --rules "eichel rufspiel von 1" --constrain-hands "ctx.trumpf(1)>=4 && (ctx.gras(1)==0 || ctx.eichel(1)<=ctx.gras(1)) && (ctx.schelln(1)==0 || ctx.eichel(1)<=ctx.schelln(1))" \
+./target/release/openschafkopf suggest-card --no-gametree --simulate-hands $N_SIMULATE_HANDS  --rules "eichel rufspiel von 1" --constrain-hands "ctx.trumpf(1)>=4 && (ctx.gras(1)==0 || ctx.eichel(1)<=ctx.gras(1)) && (ctx.schelln(1)==0 || ctx.eichel(1)<=ctx.schelln(1))" \
     --hand "go ho so eu gu hu su  ea" \
     --hand "go ho so eu gu hu     ea  ga" \
     --hand "go ho so eu gu        ea  ga gz" \

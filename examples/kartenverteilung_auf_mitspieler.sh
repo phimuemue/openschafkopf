@@ -1,6 +1,6 @@
 N_SIMULATE_HANDS=10000
 
-./target/release/openschafkopf hand-stats --rules "ramsch" --simulate-hands $N_SIMULATE_HANDS \
+./target/release/openschafkopf suggest-card --no-gametree --rules "ramsch" --simulate-hands $N_SIMULATE_HANDS \
     --hand "sa sz sk so su s9 s8 s7" \
     --hand "sa sz sk so su s9" \
     --inspect 'import "examples/kartenverteilung_auf_mitspieler.rhai" as ext; ext::kartenverteilung(ctx,0)' \
