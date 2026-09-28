@@ -500,7 +500,7 @@ for veccard_hand in itertools.combinations(veccard_trumpf, 7):
             "--hand", str_hand,
             "--simulate-hands", "10000",
             "--inspect", " && ".join(vecstr_opponent_is_weak_enough),
-            # "--json", # TODO support json in hand-stats
+            # "--json", # TODO support json
         ],
         capture_output=True,
         text=True,
