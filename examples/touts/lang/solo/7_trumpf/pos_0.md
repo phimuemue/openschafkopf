@@ -494,7 +494,8 @@ for veccard_hand in itertools.combinations(veccard_trumpf, 7):
     str_openschafkopf_output = subprocess.run(
         [
             "target/release/openschafkopf",
-            "hand-stats",
+            "suggest-card",
+            "--no-gametree",
             "--rules", "herz solo von 0",
             "--hand", str_hand,
             "--simulate-hands", "10000",
