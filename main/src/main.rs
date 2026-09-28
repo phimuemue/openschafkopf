@@ -33,7 +33,6 @@ fn main() -> Result<(), SStringifiedError> {
         // analyze
         (analyze, "analyze")
         (suggest_card, "suggest-card")
-        (hand_stats, "hand-stats")
         // misc
         (parse, "parse")
         (webext, "webext")

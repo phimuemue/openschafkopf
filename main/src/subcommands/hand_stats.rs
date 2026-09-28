@@ -1,24 +1,10 @@
 use openschafkopf_util::*;
-use itertools::Itertools;
-use super::common_given_game::*;
 use as_num::*;
 use std::{
     cmp::Ordering,
     fmt::{Display, Formatter},
     hash::{Hash, Hasher},
 };
-
-pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
-    subcommand_given_game(str_subcommand, "Statistics about hands that could be dealt.")
-        .arg(clap::Arg::new("inspect")
-            .long("inspect")
-            .takes_value(true)
-            .multiple_occurrences(true)
-            .help("Describes inspection target")
-            .long_help("Describes what the software will inspect. Example: \"ctx.ea(0)\" checks if player 0 has Eichel-Ass, \"ctx.trumpf(2)\" counts the trumpf cards held by player 2. (Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).)") // TODO improve docs.
-        )
-}
-
 
 #[derive(Debug, Clone, Copy)]
 pub struct STotalOrderedFloat(pub rhai::FLOAT); // TODO good idea?
@@ -173,79 +159,3 @@ impl Ord for VRecognizableAsNumber {
     }
 }
 
-pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
-    let vecconstraint : Vec<SConstraint> = clapmatches.values_of("inspect")
-        .map(|itstr_inspect|
-            itstr_inspect.map(|str_inspect| /*-> Result<_, Error>*/ {
-                str_inspect.parse::<SConstraint>()
-                    .map_err(|_| format_err!("Cannot parse inspection target."))
-            }).collect::<Result<_,_>>()
-        )
-        .transpose()?
-        .unwrap_or_default();
-    with_common_args(
-        clapmatches,
-        |itahand, rules, stichseq, _ocard_played, _ahand_fixed_with_holes, _epi_position, _expensifiers, b_verbose, mapcardsetepi_distribution| {
-            // TODO can/should we do something with ocard_played?
-            let mut vectplmapresinspectionresultnconstraint = vecconstraint
-                .iter()
-                .map(|constraint| (std::collections::HashMap::new(), constraint))
-                .collect::<Vec<_>>();
-            let mut n_ahand_total = 0;
-            for ahand in itahand {
-                // assert_eq!(ahand[epi_position], hand_fixed);
-                for (mapresinspectionresultn, constraint) in vectplmapresinspectionresultnconstraint.iter_mut() {
-                    *mapresinspectionresultn.entry(
-                        constraint.internal_eval(
-                            stichseq,
-                            &ahand,
-                            rules.clone(),
-                        )
-                            .map(VInspectionResult::new)
-                            .map_err(|err| format!("Error: {err:?}")),
-                    ).or_insert(0) += 1;
-                }
-                n_ahand_total += 1;
-            }
-            let percentage = |n_count: usize| n_count.as_num::<f64>()/n_ahand_total.as_num::<f64>();
-            print_card_distribution_statistics(
-                stichseq,
-                rules,
-                &unwrap!(mapcardsetepi_distribution.lock()),
-            );
-            for (mapresinspectionresultn, constraint) in vectplmapresinspectionresultnconstraint {
-                if b_verbose || 1<vecconstraint.len() {
-                    println!("{constraint}");
-                }
-                let mut oresinspectionresult_weighted_sum = None;
-                for (resinspectionresult, n_count) in mapresinspectionresultn.into_iter()
-                    .sorted_unstable_by(|lhs, rhs| Ord::cmp(&lhs.0, &rhs.0))
-                {
-                    let str_result_or_err = match resinspectionresult {
-                        Ok(inspectionresult) => {
-                            if let Ok(inspectionresult_weighted_sum) = oresinspectionresult_weighted_sum.get_or_insert_with(||
-                                Ok(inspectionresult.map_numbers_remove_unknown(&|_| 0.,)) // Determine structure, initialize numbers with 0
-                            ) {
-                                inspectionresult_weighted_sum.accumulate_weighted_sum(
-                                    &inspectionresult.map_numbers_remove_unknown(&|number| number.to_total_ordered_float().0),
-                                    percentage(n_count),
-                                );
-                            }
-                            format!("{inspectionresult}")
-                        },
-                        Err(str_err) => {
-                            oresinspectionresult_weighted_sum = Some(Err(())); // Do not show weighted sum if there are errors.
-                            str_err
-                        },
-                    };
-                    println!("{} {} ({:.2}%)", str_result_or_err, n_count, percentage(n_count)*100.);
-                }
-                if let Some(Ok(inspectionresult_weighted_sum))=oresinspectionresult_weighted_sum {
-                    println!("-----");
-                    println!("\u{2300} {inspectionresult_weighted_sum:.4}");
-                }
-            }
-            Ok(())
-        }
-    )
-}
