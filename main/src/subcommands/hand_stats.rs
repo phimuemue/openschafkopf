@@ -20,8 +20,8 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
 }
 
 
-#[derive(Clone, Copy)]
-struct STotalOrderedFloat(rhai::FLOAT); // TODO good idea?
+#[derive(Debug, Clone, Copy)]
+pub struct STotalOrderedFloat(pub rhai::FLOAT); // TODO good idea?
 impl Display for STotalOrderedFloat {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.0.fmt(f)
@@ -49,21 +49,21 @@ impl Hash for STotalOrderedFloat {
     }
 }
 
-#[derive(Hash, Eq, PartialEq, Ord, PartialOrd)]
-enum VInspectionResult<Number, Unknown> {
+#[derive(Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
+pub enum VInspectionResult<Number, Unknown> {
     RecognizableAsNumber(Number),
     Array(Vec<VInspectionResult<Number, Unknown>>),
     Unknown(Unknown),
 }
-#[derive(Hash, Eq, PartialEq, Ord, PartialOrd)]
-struct SUndefined;
+#[derive(Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
+pub struct SUndefined;
 impl Display for SUndefined {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(formatter, "\u{22a5}")
     }
 }
 impl <Number, Unknown> VInspectionResult<Number, Unknown> {
-    fn map_numbers_remove_unknown<Number2>(&self, fn_number: &impl Fn(&Number)->Number2) -> VInspectionResult<Number2, SUndefined> {
+    pub fn map_numbers_remove_unknown<Number2>(&self, fn_number: &impl Fn(&Number)->Number2) -> VInspectionResult<Number2, SUndefined> {
         match self {
             VInspectionResult::RecognizableAsNumber(number) => VInspectionResult::RecognizableAsNumber(fn_number(number)),
             VInspectionResult::Unknown(_unknown) => VInspectionResult::Unknown(SUndefined),
@@ -76,7 +76,7 @@ impl <Number, Unknown> VInspectionResult<Number, Unknown> {
     }
 }
 impl VInspectionResult<f64, SUndefined> {
-    fn accumulate_weighted_sum(&mut self, inspectionresult: &Self, f_percentage: f64) {
+    pub fn accumulate_weighted_sum(&mut self, inspectionresult: &Self, f_percentage: f64) {
         match_same_variants!(match (&mut *self, inspectionresult) {
             VInspectionResult::RecognizableAsNumber(number_self), (number_rhs) => {
                 *number_self += number_rhs * f_percentage;
@@ -99,7 +99,7 @@ impl VInspectionResult<f64, SUndefined> {
     }
 }
 impl VInspectionResult<VRecognizableAsNumber, String> {
-    fn new(dynamic: rhai::Dynamic) -> Self {
+    pub fn new(dynamic: rhai::Dynamic) -> Self {
         if let Ok(b) = dynamic.as_bool() {
             VInspectionResult::RecognizableAsNumber(VRecognizableAsNumber::Bool(b))
         } else if let Ok(n) = dynamic.as_int() {
@@ -137,8 +137,8 @@ impl<Number: Display, Unknown: Display> Display for VInspectionResult<Number, Un
         }
     }
 }
-#[derive(/*TODO? Hash by numeric value?*/Hash, Eq, PartialEq)]
-enum VRecognizableAsNumber { // TODO distinction even useful?
+#[derive(/*TODO? Hash by numeric value?*/Hash, Eq, PartialEq, Debug)]
+pub enum VRecognizableAsNumber { // TODO distinction even useful?
     Int(rhai::INT),
     Float(STotalOrderedFloat),
     Bool(bool),
@@ -153,7 +153,7 @@ impl Display for VRecognizableAsNumber {
     }
 }
 impl VRecognizableAsNumber {
-    fn to_total_ordered_float(&self) -> STotalOrderedFloat {
+    pub fn to_total_ordered_float(&self) -> STotalOrderedFloat {
         STotalOrderedFloat(match self {
             VRecognizableAsNumber::Int(n) => n.as_num::<f64>(),
             VRecognizableAsNumber::Float(STotalOrderedFloat(f)) => *f,
