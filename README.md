@@ -42,7 +42,6 @@ SUBCOMMANDS:
     cli             Play in command line
     analyze         Analyze played games and spot suboptimal decisions
     suggest-card    Suggest a card to play given the game so far
-    hand-stats      Statistics about hands that could be dealt.
     parse           Parse a game into a simple format
     webext          Backend of a web-extension suggesting a card for a given game state
     help            Print this message or the help of the given subcommand(s)
