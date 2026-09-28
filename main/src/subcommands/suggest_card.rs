@@ -15,7 +15,7 @@ use itertools::*;
 use serde::Serialize;
 use derive_new::new;
 use plain_enum::{PlainEnum, EnumMap};
-use super::{common_given_game::*, hand_stats::*};
+use super::common_given_game::*;
 use std::io::IsTerminal;
 use std::sync::{Arc, Mutex};
 use as_num::*;

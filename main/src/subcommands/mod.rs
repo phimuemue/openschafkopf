@@ -1,6 +1,5 @@
 pub mod analyze;
 pub mod cli;
-pub mod hand_stats;
 pub mod parse;
 pub mod suggest_card;
 pub mod webext;
