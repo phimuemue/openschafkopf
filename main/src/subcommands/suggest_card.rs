@@ -311,7 +311,6 @@ pub fn with_common_args<FnWithArgs>(
             EPlayerIndex/*epi_position*/,
             &SExpensifiers,
             bool/*b_verbose*/,
-            Arc<Mutex<EnumMap<ECard, EnumSet<EPlayerIndex>>>>,
         ) -> Result<(), Error>,
 {
     let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
@@ -373,7 +372,6 @@ pub fn with_common_args<FnWithArgs>(
                 if b_verbose || !b_explicitly_given_single_rules {
                     println!("Rules: {}", SDisplayRules::new(rules, /*b_include_playerindex*/true));
                 }
-                let mapcardsetepi_distribution = Arc::new(Mutex::new(ECard::map_from_fn(|_card| EnumSet::<EPlayerIndex>::new_empty())));
                 if b_verbose
                     || !b_explicitly_given_single_ahand
                     || 1<vecotplconstraintstr.len()
@@ -421,14 +419,6 @@ pub fn with_common_args<FnWithArgs>(
                                 b_valid
                             }
                         ))
-                        .inspect(|ahand| {
-                            let mut mapcardsetepi_distribution = unwrap!(mapcardsetepi_distribution.lock());
-                            for epi in EPlayerIndex::values() {
-                                for &card in ahand[epi].cards() {
-                                    mapcardsetepi_distribution[card].insert(epi);
-                                }
-                            }
-                        })
                         .flat_map(|ahand| {
                             std::iter::repeat_n(
                                 ahand,
@@ -443,7 +433,6 @@ pub fn with_common_args<FnWithArgs>(
                     epi_position,
                     &expensifiers,
                     b_verbose,
-                    mapcardsetepi_distribution.clone(), // Only to be used after fn_with_args drove the iterator to completion
                 )
             }}}
             match (&iteratehands, rules.playerindex()) {
@@ -983,7 +972,6 @@ fn run_internal<
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, std::cmp::Ordering) + Sync),
-    mapcardsetepi_distribution: Arc<Mutex<EnumMap<ECard, EnumSet<EPlayerIndex>>>>,
     slcconstraint: &[SConstraint],
 ) -> Result<(), Error>
 {
@@ -1087,7 +1075,6 @@ fn run_internal<
         fn_payout,
     ).ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
     if clapmatches.is_present("json") {
-        // TODO output mapcardsetepi_distribution
         // TODO output inspectionstatistics
         println!("{}", unwrap!(serde_json::to_string(
             &SJson::new(
@@ -1113,10 +1100,11 @@ fn run_internal<
             ),
         )));
     } else {
+        let inspectionstatistics = finalize_arc_mutex(inspectionstatistics);
         print_card_distribution_statistics(
             stichseq,
             rules,
-            &unwrap!(mapcardsetepi_distribution.lock()), // Cannot finalize_arc_mutex, because still held by iterator
+            &inspectionstatistics.mapcardsetepi_distribution,
         );
         let payoutstatstable = table(
             &determinebestcardresult,
@@ -1140,7 +1128,7 @@ fn run_internal<
         );
         print_inspection_results(
             b_verbose,
-            finalize_arc_mutex(inspectionstatistics),
+            inspectionstatistics,
         );
     }
     Ok(())
@@ -1223,6 +1211,7 @@ type InspectionHistogram = std::collections::HashMap<Result<VInspectionResult<VR
 struct SInspectionStatistics<'lifetime> {
     n_ahand_total: u64,
     vectplinspectionhistogramconstraint: Vec<(InspectionHistogram, &'lifetime SConstraint)>,
+    mapcardsetepi_distribution: EnumMap<ECard, EnumSet<EPlayerIndex>>,
     stichseq: &'lifetime SStichSequence,
     rules: &'lifetime SRules,
 }
@@ -1235,6 +1224,7 @@ impl<'lifetime> SInspectionStatistics<'lifetime> {
                 .iter()
                 .map(|constraint| (InspectionHistogram::new(), constraint))
                 .collect(),
+            mapcardsetepi_distribution: ECard::map_from_fn(|_card| EnumSet::<EPlayerIndex>::new_empty()),
             stichseq,
             rules,
         }
@@ -1245,6 +1235,7 @@ impl<'lifetime> SInspectionStatistics<'lifetime> {
         ahand: &EnumMap<EPlayerIndex, SHand>,
     ) {
         for (inspectionhistogram, constraint) in self.vectplinspectionhistogramconstraint.iter_mut() {
+            // TODO: Should we evaluate result without holding lock?
             *inspectionhistogram.entry(
                 constraint.internal_eval(
                     self.stichseq,
@@ -1256,6 +1247,11 @@ impl<'lifetime> SInspectionStatistics<'lifetime> {
             ).or_insert(0) += 1;
         }
         self.n_ahand_total += 1;
+        for epi in EPlayerIndex::values() {
+            for &card in ahand[epi].cards() {
+                self.mapcardsetepi_distribution[card].insert(epi);
+            }
+        }
     }
 }
 
@@ -1271,7 +1267,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         .unwrap_or_default();
     with_common_args(
         clapmatches,
-        |itahand, rules, stichseq, ocard_played, ahand_fixed_with_holes, epi_position, expensifiers, b_verbose, mapcardsetepi_distribution| {
+        |itahand, rules, stichseq, ocard_played, ahand_fixed_with_holes, epi_position, expensifiers, b_verbose| {
             let otplrulesfn_points_as_payout = if clapmatches.is_present("points") {
                 if let Some(tplrulesfn_points_as_payout) = rules.points_as_payout() {
                     Some(tplrulesfn_points_as_payout)
@@ -1347,7 +1343,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             epi_position,
                             n_payout,
                         ),
-                        mapcardsetepi_distribution,
                         &vecconstraint,
                     )?
                 }}}
