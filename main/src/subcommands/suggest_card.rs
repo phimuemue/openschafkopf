@@ -1283,6 +1283,11 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 for ahand in itahand {
                     inspectionstatistics.update_inspection_statistics(&ahand);
                 }
+                print_card_distribution_statistics(
+                    stichseq,
+                    rules,
+                    &inspectionstatistics.mapcardsetepi_distribution,
+                );
                 print_inspection_results(b_verbose, inspectionstatistics);
             } else {
                 let fn_human_readable_payout = |stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, epi_position: EPlayerIndex, n_payout: isize| -> (isize, std::cmp::Ordering) {
