@@ -61,85 +61,6 @@ impl VUserSuppliedPosition {
     }
 }
 
-pub fn subcommand_given_game(str_subcommand: &'static str, str_about: &'static str) -> clap::Command<'static> {
-    clap::Command::new(str_subcommand)
-        .about(str_about)
-        .help_heading("Game description")
-        .arg(openschafkopf_shared_args::ruleset_arg())
-        .arg( // "overrides" ruleset // TODO? make ruleset optional
-            clap::Arg::new("rules")
-                .long("rules")
-                .takes_value(true)
-                .required(false)
-                .multiple_occurrences(true)
-                .help("Rules as plain text")
-                .long_help("Rules, given in plain text. The program tries to be lenient in the input format, so that all of the following should be accepted: \"gras wenz von 1\", \"farbwenz gras von 1\", \"BlauWenz von 1\". Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).")
-        )
-        .arg(clap::Arg::new("position")
-            .long("position")
-            .help("Position of the player")
-			.value_parser(|str_position: &str| -> Result<VUserSuppliedPosition, String> {
-				match str_position {
-					"0" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI0)),
-					"1" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI1)),
-					"2" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI2)),
-					"3" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI3)),
-					"current" => Ok(VUserSuppliedPosition::CurrentPlayer),
-					"rulesannouncer" => Ok(VUserSuppliedPosition::RulesAnnouncer),
-					_ => Err(format!("{str_position} not recognized. Supported values: 0, 1, 2, 3, current, rulesannouncer."))
-				}
-			})
-            .default_value("current")
-        )
-        .arg(clap::Arg::new("hand")
-            .long("hand")
-            .takes_value(true)
-            .multiple_occurrences(true)
-            .help("The cards on someone's hand")
-            .long_help("The cards on the current player's hand (simply separated by spaces, such as \"eo go ho so eu gu hu su\" for a Sie), or the hands of all players. Specifying all player's hands works by first listing cards of player 0, then player 1, then player 2, then player 3 (Example: \"ea ez  ga gz  ha hz  sa sz\" means player 0 has Eichel-Ass and Eichel-Zehn, player 1 has Gras-Ass and Gras-Zehn, and so forth). You can use underscore to leave \"holes\" in other players' hands (Example: \"ea __  ga __  ha __  sa __\" means player 0 has Eichel-Ass and another unknown card, player 1 has Gras-Ass and unknown card, and so forth).")
-        )
-        .arg(clap::Arg::new("cards_on_table")
-            .long("played-cards")
-            .takes_value(true)
-            .help("Cards played so far")
-            .long_help("Cards played so far in the order they have been played. The software matches the cards to the respective player.")
-        )
-        .arg(clap::Arg::new("stoss")
-            .long("stoss")
-            .takes_value(true)
-            .help("Stosses given")
-            .long_help("Stosses given so far. Enumerate the respective player indices one after another, separated by a space.")
-        )
-        .arg(super::shared_args::glob_files_arg()
-            .long("file")
-        )
-        .help_heading("Generating hands")
-        .arg(clap::Arg::new("simulate_hands")
-            .long("simulate-hands")
-            .takes_value(true)
-            .help("Number of hands to simulate")
-            .long_help("Number of unknown hands to simulate. Can either be a number or \"all\", causing the software to generate all possible combinations.")
-        )
-        .arg(clap::Arg::new("constrain_hands")
-            .long("constrain-hands")
-            .takes_value(true)
-            .multiple_occurrences(true)
-            .help("Constrain simulated hands")
-            .long_help("Constrain simulated hands so that certain criteria are fulfilled. Example: \"4<ctx.trumpf(0) && ctx.ea(1)\" only considers card distributions where player 0 has more than 4 Trumpf and player 1 has Eichel-Ass. (Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).)") // TODO improve docs
-        )
-        .arg(clap::Arg::new("repeat_hands")
-            .long("repeat-hands")
-            .takes_value(true)
-            .help("Repeat each simulated card distribution")
-        )
-        .help_heading(None)
-        .arg(clap::Arg::new("verbose")
-            .long("verbose")
-            .short('v')
-            .help("Show more output")
-        )
-}
-
 fn for_each_game_situation(
     clapmatches: &clap::ArgMatches,
     b_verbose: bool,
@@ -838,7 +759,76 @@ fn print_payoutstatstable<T: std::fmt::Display, TplStrategies: TTplStrategies>(
 }
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
-    subcommand_given_game(str_subcommand, "Suggest a card to play given the game so far")
+    clap::Command::new(str_subcommand)
+        .about("Suggest a card to play given the game so far") // TODO explain that suggest-card can do more
+        .help_heading("Game description")
+        .arg(openschafkopf_shared_args::ruleset_arg())
+        .arg( // "overrides" ruleset // TODO? make ruleset optional
+            clap::Arg::new("rules")
+                .long("rules")
+                .takes_value(true)
+                .required(false)
+                .multiple_occurrences(true)
+                .help("Rules as plain text")
+                .long_help("Rules, given in plain text. The program tries to be lenient in the input format, so that all of the following should be accepted: \"gras wenz von 1\", \"farbwenz gras von 1\", \"BlauWenz von 1\". Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).")
+        )
+        .arg(clap::Arg::new("position")
+            .long("position")
+            .help("Position of the player")
+            .value_parser(|str_position: &str| -> Result<VUserSuppliedPosition, String> {
+                match str_position {
+                    "0" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI0)),
+                    "1" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI1)),
+                    "2" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI2)),
+                    "3" => Ok(VUserSuppliedPosition::Concrete(EPlayerIndex::EPI3)),
+                    "current" => Ok(VUserSuppliedPosition::CurrentPlayer),
+                    "rulesannouncer" => Ok(VUserSuppliedPosition::RulesAnnouncer),
+                    _ => Err(format!("{str_position} not recognized. Supported values: 0, 1, 2, 3, current, rulesannouncer."))
+                }
+            })
+            .default_value("current")
+        )
+        .arg(clap::Arg::new("hand")
+            .long("hand")
+            .takes_value(true)
+            .multiple_occurrences(true)
+            .help("The cards on someone's hand")
+            .long_help("The cards on the current player's hand (simply separated by spaces, such as \"eo go ho so eu gu hu su\" for a Sie), or the hands of all players. Specifying all player's hands works by first listing cards of player 0, then player 1, then player 2, then player 3 (Example: \"ea ez  ga gz  ha hz  sa sz\" means player 0 has Eichel-Ass and Eichel-Zehn, player 1 has Gras-Ass and Gras-Zehn, and so forth). You can use underscore to leave \"holes\" in other players' hands (Example: \"ea __  ga __  ha __  sa __\" means player 0 has Eichel-Ass and another unknown card, player 1 has Gras-Ass and unknown card, and so forth).")
+        )
+        .arg(clap::Arg::new("cards_on_table")
+            .long("played-cards")
+            .takes_value(true)
+            .help("Cards played so far")
+            .long_help("Cards played so far in the order they have been played. The software matches the cards to the respective player.")
+        )
+        .arg(clap::Arg::new("stoss")
+            .long("stoss")
+            .takes_value(true)
+            .help("Stosses given")
+            .long_help("Stosses given so far. Enumerate the respective player indices one after another, separated by a space.")
+        )
+        .arg(super::shared_args::glob_files_arg()
+            .long("file")
+        )
+        .help_heading("Generating hands")
+        .arg(clap::Arg::new("simulate_hands")
+            .long("simulate-hands")
+            .takes_value(true)
+            .help("Number of hands to simulate")
+            .long_help("Number of unknown hands to simulate. Can either be a number or \"all\", causing the software to generate all possible combinations.")
+        )
+        .arg(clap::Arg::new("constrain_hands")
+            .long("constrain-hands")
+            .takes_value(true)
+            .multiple_occurrences(true)
+            .help("Constrain simulated hands")
+            .long_help("Constrain simulated hands so that certain criteria are fulfilled. Example: \"4<ctx.trumpf(0) && ctx.ea(1)\" only considers card distributions where player 0 has more than 4 Trumpf and player 1 has Eichel-Ass. (Players are numbere from 0 to 3, where 0 is the player to open the first stich (1, 2, 3 follow accordingly).)") // TODO improve docs
+        )
+        .arg(clap::Arg::new("repeat_hands")
+            .long("repeat-hands")
+            .takes_value(true)
+            .help("Repeat each simulated card distribution")
+        )
         .help_heading("Game tree exploration")
         .arg(clap::Arg::new("branching")
             .long("branching")
@@ -869,6 +859,11 @@ pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
             .long_help("Only distribute the cards across the players, but do not explore the gametree.")
         )
         .help_heading(None)
+        .arg(clap::Arg::new("verbose")
+            .long("verbose")
+            .short('v')
+            .help("Show more output")
+        )
         .arg(clap::Arg::new("strategy")
             .long("strategy")
             .takes_value(true)
