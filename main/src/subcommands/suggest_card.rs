@@ -748,7 +748,7 @@ fn print_payoutstatstable<T: std::fmt::Display, TplStrategies: TTplStrategies>(
 
 pub fn subcommand(str_subcommand: &'static str) -> clap::Command<'static> {
     clap::Command::new(str_subcommand)
-        .about("Suggest a card to play given the game so far") // TODO explain that suggest-card can do more
+        .about("Suggest a card to play given the game so far and compute statistics about a given game")
         .help_heading("Game description")
         .arg(openschafkopf_shared_args::ruleset_arg())
         .arg( // "overrides" ruleset // TODO? make ruleset optional
