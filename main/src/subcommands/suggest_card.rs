@@ -264,7 +264,6 @@ fn for_each_game_situation(
                         .exactly_one_2()
                         .map_err(|err| format_err!("Could not determine ekurzlang: {:?}", err))
                 })?;
-                // TODO check that everything is ok (no duplicate cards, cards are allowed, current stich not full, etc.)
                 if let Some(epi_active) = rules.playerindex() {
                     let veccard_hand_active = stichseq.cards_from_player(&ahand_with_holes[epi_active], epi_active)
                         .collect::<Vec<_>>();
