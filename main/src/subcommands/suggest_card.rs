@@ -1263,7 +1263,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 if let Some(tplrulesfn_points_as_payout) = rules.points_as_payout() {
                     Some(tplrulesfn_points_as_payout)
                 } else {
-                    if b_verbose { // TODO? dispatch statically
+                    if b_verbose {
                         println!("Rules {} do not support point based variant.", SDisplayRules::new(rules, /*b_include_playerindex*/false));
                     }
                     None
