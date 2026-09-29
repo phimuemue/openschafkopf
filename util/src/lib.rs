@@ -43,3 +43,5 @@ pub mod sync;
 pub use sync::*;
 pub mod iterext;
 pub use iterext::*;
+pub mod sliceext;
+pub use sliceext::*;

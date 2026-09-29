@@ -623,15 +623,7 @@ pub fn print_card_distribution_statistics(
         };
         let str_trumpforfarbe_heading = format!("? {trumpforfarbe}: ");
         match veccard_with_multiple_players
-            .chunk_by(|card_lhs, card_rhs| mapcardsetepi_distribution[*card_lhs]==mapcardsetepi_distribution[*card_rhs]) // TODO? chunk_by_key
-            .map(|slccard_chunk| (
-                unwrap!(
-                    slccard_chunk.iter()
-                        .map(|&card| &mapcardsetepi_distribution[card])
-                        .all_equal_value()
-                ),
-                slccard_chunk
-            ))
+            .chunk_by_key(|&card| &mapcardsetepi_distribution[card])
             .rev()
             .exactly_one_2()
         {
