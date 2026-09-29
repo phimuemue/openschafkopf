@@ -4,7 +4,6 @@ pub mod parse;
 pub mod suggest_card;
 pub mod webext;
 mod handconstraint;
-mod common_given_game;
 
 use openschafkopf_util::*;
 use openschafkopf_lib::{
