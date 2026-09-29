@@ -1037,7 +1037,7 @@ fn run_internal<
                         } else {
                             assert!(vecinterimres.is_sorted_by(fn_cmp_to_fn_le(fn_cmp_interim_result)));
                         }
-                        print_payoutstatstable::<_,TplStrategies>(
+                        print_payoutstatstable(
                             &internal_table(
                                 vecinterimres.iter()
                                     .map(|SInterimResult{ornkchg, card, payoutstats}| (
@@ -1102,13 +1102,13 @@ fn run_internal<
             rules,
             &fn_loss_or_win,
         );
-        print_payoutstatstable::<_,TplStrategies>(
+        print_payoutstatstable(
             &payoutstatstable,
             /*b_print_table_description_before_table*/b_verbose,
             /*fn_mark_played*/|card| Some(*card)==ocard_played,
         );
         println!("-----");
-        print_payoutstatstable::<_,TplStrategies>(
+        print_payoutstatstable(
             &internal_table(
                 vec!(("no-details", determinebestcardresult.t_combined)),
                 /*b_group*/false,
