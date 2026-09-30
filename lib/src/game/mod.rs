@@ -45,7 +45,7 @@ impl SExpensifiersNoStoss {
         SExpensifiers::new(
             self.n_stock,
             self.doublings,
-            /*vecstoss*/vec!(),
+            /*vecstoss*/Vec::new(),
         )
     }
 }
@@ -414,7 +414,7 @@ impl<Ruleset, GameAnnouncement, DetermineRules> SGameGeneric<Ruleset, GameAnnoun
             mapepigameannouncement,
             determinerules,
             rules,
-            expensifiers: SExpensifiers::new(expensifiers.n_stock, expensifiers.doublings, /*vecstoss*/vec!()),
+            expensifiers: SExpensifiers::new(expensifiers.n_stock, expensifiers.doublings, /*vecstoss*/Vec::new()),
             stichseq: SStichSequence::new(unwrap!(EKurzLang::from_cards_per_player(n_cards_per_player))),
             ruleset,
         }

@@ -347,7 +347,7 @@ pub fn with_common_args<FnWithArgs>(
         .map(|vectplconstraintstr: Vec<(SConstraint, &str)>| -> Vec<Option<(SConstraint, &str)>> {
             vectplconstraintstr.into_iter().map(Some).collect()
         })
-        .unwrap_or_else(|| vec!(None));
+        .unwrap_or_else(|| vec![None]);
     assert!(!vecotplconstraintstr.is_empty());
     assert!(vecotplconstraintstr.iter().map(Option::is_some).all_equal());
     let b_verbose = clapmatches.is_present("verbose");
@@ -1110,7 +1110,7 @@ fn run_internal<
         println!("-----");
         print_payoutstatstable(
             &internal_table(
-                vec!(("no-details", determinebestcardresult.t_combined)),
+                vec![("no-details", determinebestcardresult.t_combined)],
                 /*b_group*/false,
                 &fn_loss_or_win,
             ),
