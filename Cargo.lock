@@ -1535,9 +1535,9 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 
 [[package]]
 name = "plain_enum"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f230de6b21c3e6e4ddb4a9785d2d6dc9427435f6cc714ab65d969e2cdc6641ed"
+checksum = "dff9045be41b78b1a4dcd3a47fa68a2b16cfd308bee05e33365a9e04e4f77e8f"
 
 [[package]]
 name = "png"
