@@ -250,7 +250,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
                 playerparties13,
             )
                 .map(|n_payout| {
-                     SInterval::from_tuple(tpl_flip_if(0<verify_ne!(*n_payout, 0), (None, Some(*n_payout * expensifiers.stoss_doubling_factor()))))
+                     SInterval::from_raw(array_flip_if(0<verify_ne!(*n_payout, 0), [None, Some(*n_payout * expensifiers.stoss_doubling_factor())]))
                 })
         } else {
             EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))
@@ -318,7 +318,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
                 &SPlayerParties13::new(rules.epi),
             )
                 .map(|n_payout| {
-                     SInterval::from_tuple(tpl_flip_if(0<verify_ne!(*n_payout, 0), (None, Some(*n_payout * expensifiers.stoss_doubling_factor()))))
+                     SInterval::from_raw(array_flip_if(0<verify_ne!(*n_payout, 0), [None, Some(*n_payout * expensifiers.stoss_doubling_factor())]))
                 })
         } else {
             EPlayerIndex::map_from_fn(|_epi| SInterval::from_raw([None, None]))

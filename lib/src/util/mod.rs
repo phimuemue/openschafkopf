@@ -14,11 +14,11 @@ pub mod bitfield;
 #[macro_use]
 pub mod forward_to_field;
 
-pub fn tpl_flip_if<T>(b: bool, (t0, t1): (T, T)) -> (T, T) {
+pub fn array_flip_if<T>(b: bool, [t0, t1]: [T; 2]) -> [T; 2] {
     if b {
-        (t1, t0)
+        [t1, t0]
     } else {
-        (t0, t1)
+        [t0, t1]
     }
 }
 
