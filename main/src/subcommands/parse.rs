@@ -168,7 +168,9 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         |opath, str_input, i_input| {
             if let Ok(ref gameresult@SGameResultGeneric{stockorgame: VStockOrT::OrT(ref game), ..}) = analyze_sauspiel_html(&str_input)
                 .map(|game| game.map(|_|(), |_|(), |ruleset| ruleset.kurzlang()))
-                .or_else(|_err| analyze_sauspiel_json(&str_input, |_,_,_,_| {}))
+                .or_else(|_err| analyze_sauspiel_json(&str_input, |_,_,_,_| {})
+                    .map(|(game, _mapepiostr_username)| game)
+                )
             {
                 let mut game_csv = SGame::new(
                     game.aveccard.clone(),

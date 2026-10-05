@@ -692,7 +692,7 @@ pub fn greet() {
                         ));
                     },
                 ) {
-                    Ok(SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}) => {
+                    Ok((SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout:_}, _mapepiostr_username)) => {
                         use html_generator::*;
                         let str_html_out = html_display_children(html_iter(vecahandstichseqcardepi.into_iter().map(|((ahand, stichseq), card_played, epi)| {
                             (
@@ -742,7 +742,7 @@ pub fn greet() {
                             &div_openschafkopf_overview,
                         );
                     },
-                    Ok(SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}) => {
+                    Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepiostr_username)) => {
                         // Nothing to analyze for Stock.
                     },
                     Err(err_json) => {

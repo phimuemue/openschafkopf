@@ -478,7 +478,7 @@ plain_enum_mod!(modesauspielposition, derive(Deserialize_repr,), map_derive(), E
 pub fn analyze_sauspiel_json(
     str_json: &str,
     fn_before_zugeben: impl FnMut(&SGameGeneric<EKurzLang, (), ()>, /*i_stich*/usize, EPlayerIndex, ECard),
-) -> Result<SGameResultGeneric</*Ruleset*/EKurzLang, (), ()>, SStringifiedError> {
+) -> Result<(SGameResultGeneric</*Ruleset*/EKurzLang, (), ()>, EnumMap<EPlayerIndex, Option<String>>), SStringifiedError> {
     #[derive(Deserialize, Debug)]
     #[serde(tag = "type")]
     #[allow(non_camel_case_types, non_snake_case)] // to match Sauspiel JSON
@@ -493,8 +493,8 @@ pub fn analyze_sauspiel_json(
             // avatar: SAvatar,
         },
         joinedTable {
-            // position: ESauspielPosition,
-            // userName: String,
+            position: ESauspielPosition,
+            userName: String,
             // playInstant: bool,
             // userID: usize,
             // balancePlay: isize,
@@ -555,6 +555,7 @@ pub fn analyze_sauspiel_json(
     let mut resoefarbe = Err(SMissing);
     let mut vectplpositioncard_played = Vec::new();
     let mut vecerr = Vec::new();
+    let mut mappositionostr_username = ESauspielPosition::map_from_fn(|_position| None);
 
     for jsonval_sauspieljsonevent in serde_json::from_str::<Vec<serde_json::Value>>(str_json)? {
         match serde_json::value::from_value(jsonval_sauspieljsonevent) {
@@ -563,7 +564,6 @@ pub fn analyze_sauspiel_json(
             },
             Ok(
                 VSauspielJSONEvent::yourAuthenticationSucceeded{..}
-                | VSauspielJSONEvent::joinedTable{..}
                 | VSauspielJSONEvent::gameStarted{..}
                 | VSauspielJSONEvent::playersGotCards{..} // TODO? derive EKurzLang and aveccard from this
                 | VSauspielJSONEvent::youGotCards{..} // TODO? derive EKurzLang from this
@@ -572,6 +572,9 @@ pub fn analyze_sauspiel_json(
                 | VSauspielJSONEvent::wonTheTrick{..} // TODO? consistency checks
             )
             => {
+            },
+            Ok(VSauspielJSONEvent::joinedTable{position, userName}) => {
+                verify!(mappositionostr_username[position].replace(userName).is_none());
             },
             Ok(VSauspielJSONEvent::playsTheGame{suit, position, ..}) => {
                 resoefarbe = Ok(suit);
@@ -620,6 +623,18 @@ pub fn analyze_sauspiel_json(
             ekurzlang,
             fn_before_zugeben,
         ).and_then(|game| game.finish()
+            .map(|gameresult| (
+                gameresult,
+                {
+                    let mut mapepiostr_username = EPlayerIndex::map_from_fn(|_epi| None);
+                    for position in ESauspielPosition::values() {
+                        if let Some(str_username) = mappositionostr_username[position].take() {
+                            verify!(mapepiostr_username[position_to_epi(position)].replace(str_username).is_none());
+                        }
+                    }
+                    mapepiostr_username
+                }
+            ))
             .map_err(|err| format_err!("Could not finish game: {:?}", err))
         )
     }().map_err(|err| format_err!("{}: {:?}", err, vecerr))

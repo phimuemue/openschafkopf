@@ -60,7 +60,7 @@ pub fn for_each_gameresult(
     if let resgameresult@Ok(_) = analyze_sauspiel_html(str_input)
         .map(|game| game.map(|_|(), |_|(), |_|()))
         .or_else(|_err| analyze_sauspiel_json(str_input, |_,_,_,_| {})
-            .map(|game| game.map(|_|(), |_|(), |_|()))
+            .map(|(game, _mapepiostr_username)| game.map(|_|(), |_|(), |_|()))
         )
     {
         call_fn_with_gameresult(
