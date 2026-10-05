@@ -661,64 +661,62 @@ pub fn greet() {
             // Nothing to analyze for Stock.
         },
         Err(err_html) => { // TODO we should distinguish between "Game not visible/found/accessible" and "HTML not understood"
-            {
-                let mut vecahandstichseqcardepi = Vec::new();
-                match analyze_sauspiel_json(
-                    &{
-                        let xmlhttprequest = unwrap!(web_sys::XmlHttpRequest::new());
-                        let str_json_url = format!("{}.json", unwrap!(unwrap!(web_sys::window()).location().href()));
-                        dbg_alert!(&str_json_url);
-                        unwrap!(xmlhttprequest.open_with_async(
-                            "GET",
-                            &str_json_url,
-                            /*async*/false,
-                        ));
-                        unwrap!(xmlhttprequest.send());
-                        let str_json = unwrap!( // unwrap Option
-                            unwrap!(xmlhttprequest.response_text()) // unwrap Result
-                        );
-                        assert!(xmlhttprequest.status().is_ok());
-                        dbg_alert!(&str_json);
-                        str_json
-                    },
-                    /*fn_before_zugeben*/|game, _i_stich, epi, card| {
-                        vecahandstichseqcardepi.push((
-                            (game.ahand.clone(), game.stichseq.clone()),
-                            card,
-                            epi,
-                            (),
-                        ));
-                    },
-                ) {
-                    Ok((SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout}, mapepiostr_username)) => {
-                        let str_html_out = make_simple_game_protocol(
-                            &game_finished,
-                            &an_payout,
-                            &mapepiostr_username.map_into(|ostr_username| ostr_username.unwrap_or_else(|| "[Spielername unbekannt]".to_string())),
-                            vecahandstichseqcardepi.iter(),
-                            /*fn_with_determinebestcardresult*/|_rules, _ahand, _stichseq, _determinebestcardresult, _card_played, _element_played_card| {},
-                            /*fn_for_each_card*/|_rules, _ahand, _stichseq, _element_played_card| {
-                            },
-                        );
-                        let div_openschafkopf_overview = unwrap!(document.create_element("div"));
-                        div_openschafkopf_overview.set_inner_html(&str_html_out);
-                        let document = SWebsysDocument(document);
-                        append_sibling(
-                            &unwrap!(
-                                document
-                                    .find_class("game-overview")
-                                    .exactly_one_2()
-                            ).0,
-                            &div_openschafkopf_overview,
-                        );
-                    },
-                    Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepiostr_username)) => {
-                        // Nothing to analyze for Stock.
-                    },
-                    Err(err_json) => {
-                        dbg_alert!(&format!("Error parsing document:\n{err_html:?}\n{err_json:?}"));
-                    },
-                }
+            let mut vecahandstichseqcardepi = Vec::new();
+            match analyze_sauspiel_json(
+                &{
+                    let xmlhttprequest = unwrap!(web_sys::XmlHttpRequest::new());
+                    let str_json_url = format!("{}.json", unwrap!(unwrap!(web_sys::window()).location().href()));
+                    dbg_alert!(&str_json_url);
+                    unwrap!(xmlhttprequest.open_with_async(
+                        "GET",
+                        &str_json_url,
+                        /*async*/false,
+                    ));
+                    unwrap!(xmlhttprequest.send());
+                    let str_json = unwrap!( // unwrap Option
+                        unwrap!(xmlhttprequest.response_text()) // unwrap Result
+                    );
+                    assert!(xmlhttprequest.status().is_ok());
+                    dbg_alert!(&str_json);
+                    str_json
+                },
+                /*fn_before_zugeben*/|game, _i_stich, epi, card| {
+                    vecahandstichseqcardepi.push((
+                        (game.ahand.clone(), game.stichseq.clone()),
+                        card,
+                        epi,
+                        (),
+                    ));
+                },
+            ) {
+                Ok((SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout}, mapepiostr_username)) => {
+                    let str_html_out = make_simple_game_protocol(
+                        &game_finished,
+                        &an_payout,
+                        &mapepiostr_username.map_into(|ostr_username| ostr_username.unwrap_or_else(|| "[Spielername unbekannt]".to_string())),
+                        vecahandstichseqcardepi.iter(),
+                        /*fn_with_determinebestcardresult*/|_rules, _ahand, _stichseq, _determinebestcardresult, _card_played, _element_played_card| {},
+                        /*fn_for_each_card*/|_rules, _ahand, _stichseq, _element_played_card| {
+                        },
+                    );
+                    let div_openschafkopf_overview = unwrap!(document.create_element("div"));
+                    div_openschafkopf_overview.set_inner_html(&str_html_out);
+                    let document = SWebsysDocument(document);
+                    append_sibling(
+                        &unwrap!(
+                            document
+                                .find_class("game-overview")
+                                .exactly_one_2()
+                        ).0,
+                        &div_openschafkopf_overview,
+                    );
+                },
+                Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepiostr_username)) => {
+                    // Nothing to analyze for Stock.
+                },
+                Err(err_json) => {
+                    dbg_alert!(&format!("Error parsing document:\n{err_html:?}\n{err_json:?}"));
+                },
             }
         },
     };
