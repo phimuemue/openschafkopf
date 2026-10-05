@@ -18,7 +18,6 @@ use std::cmp::Ordering;
 use plain_enum::*;
 use itertools::EitherOrBoth;
 
-#[cfg(feature="sauspiel_webext_use_json")]
 use openschafkopf_lib::{
     game_analysis::parser::analyze_sauspiel_json,
     ai::gametree::{player_table_ahand, player_table_stichseq},
@@ -661,10 +660,7 @@ pub fn greet() {
             // Nothing to analyze for Stock.
         },
         Err(err_html) => { // TODO we should distinguish between "Game not visible/found/accessible" and "HTML not understood"
-            #[cfg(not(feature="sauspiel_webext_use_json"))] {
-                dbg_alert!(&format!("Error parsing document:\n{err_html:?}"));
-            }
-            #[cfg(feature="sauspiel_webext_use_json")] {
+            {
                 let mut vecahandstichseqcardepi = Vec::new();
                 match analyze_sauspiel_json(
                     &{
