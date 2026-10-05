@@ -7,7 +7,7 @@ use wasm_bindgen::prelude::*;
 use openschafkopf_util::*;
 use openschafkopf_lib::{
     ai::{SDetermineBestCardResult, SPayoutStats, determine_best_card, gametree::{SPerMinMaxStrategyGeneric, SMaxSelfishMinStrategy, SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, STplStrategiesOnlyMaxSelfishMin}, stichoracle::SFilterByOracle},
-    game::{first_hand_for, SGameResultGeneric},
+    game::{first_hand_for, SGameResultGeneric, SGameGeneric},
     game_analysis::{html_payout_table, html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
     rules::{SDisplayRules, SRules, TRules, TRulesPlayerIndex, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe, card_points::points_stich},
     primitives::{ECard, EFarbe, ESchlag, EPlayerIndex, SHand, SStichSequence, TCardSorter},
@@ -353,56 +353,6 @@ pub fn greet() {
                     "#ffef00" // yellow
                 }
             }
-            let mut vecepicardocardseverity = Vec::new();
-            for ((ahand, stichseq), card_played, epi, element_played_card) in vecahandstichseqcardepielement {
-                let ocardseverity = if_then_some!(stichseq.remaining_cards_per_hand()[epi] <= if_dbg_else!({3}{5}), {
-                    let determinebestcardresult = determine_best_card_sauspiel(
-                        ahand.clone(),
-                        &stichseq,
-                        epi,
-                        rules,
-                        &game_finished.expensifiers,
-                    );
-                    let div_table = unwrap!(document.create_element("div"));
-                    div_table.set_inner_html(&{
-                        html_display_children(html_payout_table::<_, _>(
-                            rules,
-                            &ahand,
-                            &stichseq,
-                            &determinebestcardresult,
-                            card_played,
-                            &output_card_sauspiel_img,
-                        )).to_string()
-                    });
-                    append_sibling(&element_played_card, &div_table);
-                    let get_min_max_eq = |payoutstats: &SMaxSelfishMinStrategy<SPayoutStats<()>>| {
-                        let payoutstats = &payoutstats.omaxselfishmin.as_ref().unwrap_static_some();
-                        verify_eq!(payoutstats.min(), payoutstats.max())
-                    };
-                    let (veccard_optimal, payoutstats_optimal) = determinebestcardresult.cards_with_maximum_value(
-                        |lhs: &SMaxSelfishMinStrategy<SPayoutStats<()>>, rhs| {
-                            get_min_max_eq(lhs).cmp(&get_min_max_eq(rhs))
-                        },
-                    );
-                    if !veccard_optimal.contains(&card_played) {
-                        match an_payout[epi].cmp(&get_min_max_eq(payoutstats_optimal)) {
-                            Ordering::Greater | Ordering::Equal => EPlayedCardSeverity::Suboptimal(/*b_loss_realized*/false),
-                            Ordering::Less => EPlayedCardSeverity::Suboptimal(/*b_loss_realized*/true),
-                        }
-                    } else {
-                        EPlayedCardSeverity::Optimal
-                    }
-                });
-                vecepicardocardseverity.push((epi, card_played, ocardseverity));
-                let div_button = unwrap!(document.create_element("div"));
-                div_button.set_inner_html(&html_copy_button(
-                    rules,
-                    &ahand,
-                    &stichseq,
-                    /*str_openschafkopf_executable*/"openschafkopf",
-                ));
-                append_sibling(&element_played_card, &div_button);
-            }
             use html_generator::*; // TODO narrower scope?
             fn table_cell_with_background(str_tag_name: &'static str, str_text: impl AttributeOrChild, ocardseverity_bg: Option<EPlayedCardSeverity>, ocardseverity_top: Option<EPlayedCardSeverity>) -> HtmlElement<impl AttributeOrChild> {
                 let cardseverity_to_color = |ocardseverity| {
@@ -428,187 +378,283 @@ pub fn greet() {
                     )
                 )
             }
-            let ittplepib_repeated = itertools::chain(
-                EPlayerIndex::values()
-                    .map(|epi| (epi, /*bRepeated*/false)),
-                EPlayerIndex::values().take(EPlayerIndex::SIZE - 1)
-                    .map(|epi| (epi, /*bRepeated*/true)),
-            );
-            /*TODO const*/let html_table_gap_cell = th(attributes::style("width: 10px; background: none;"));
             let node_whole_game = unwrap!(
                 unwrap!(node_gameannouncement_epi0.clone_node())
                     .dyn_into::<web_sys::Element>() // TODO can we avoid this?
             );
-            fn make_playerindex_columns(
-                ittplepib_repeated: impl Iterator<Item=(EPlayerIndex, bool/*b_repeated*/)> + Clone,
-                slcepicardocardseverity_stich: &[(EPlayerIndex, ECard, Option<EPlayedCardSeverity>)],
-            ) -> impl Iterator<Item=Option<(EPlayerIndex, bool/*b_repeated*/, ECard, Option<&EPlayedCardSeverity>)>> + Clone {
-                assert_eq!(slcepicardocardseverity_stich.len(), EPlayerIndex::SIZE);
-                itertools::merge_join_by(
-                    ittplepib_repeated,
-                    slcepicardocardseverity_stich,
-                    |(epi_running_index, _b_repeated), (epi_card, _card, _ocardseverity)| {
-                        epi_running_index.cmp(epi_card)
-                    },
-                ).map(move |eitherorboth| match eitherorboth {
-                    EitherOrBoth::Left((_epi_running_index, _b_repeated)) => None,
-                    EitherOrBoth::Both((epi_running_index, b_repeated), (epi_card, card, ocardseverity)) => Some((
-                        verify_eq!(epi_running_index, *epi_card),
-                        b_repeated,
-                        *card,
-                        ocardseverity.as_ref(),
-                    )),
-                    EitherOrBoth::Right(_) => panic!(),
-                })
-            }
-            let get_style_background = |epi_style_background| {
-                rules.is_primary(
-                    epi_style_background,
-                    /*fn_who_has_card*/|card| unwrap!(EPlayerIndex::values()
-                        .filter(|&epi_hand|
-                            game_finished.aveccard[epi_hand].contains(&card)
-                        )
-                        .exactly_one_2()
-                    ),
-                ).map(|b_active| if b_active {
-                    "background-color: #11111111;"
-                } else {
-                    "background:repeating-linear-gradient( 45deg, transparent, transparent 3px, #11111109 3px, #11111109 6px );"
-                })
-            };
-            let points_cell_style = |b_border_top: bool, epi: EPlayerIndex| {
-                let mut str_style = "padding: 5px;".to_string(); // TODO could html_generator solve this nicely?
-                if b_border_top {
-                    str_style += "border-top: 1px solid black;";
+            fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, ElementPlayedCard:'lft>(
+                game_finished: &SGameGeneric<Ruleset, GameAnnouncement, DetermineRules>,
+                an_payout: &EnumMap<EPlayerIndex, isize>,
+                mapepistr_username: &EnumMap<EPlayerIndex, String>,
+                itahandstichseqcardepielement: impl Iterator<Item=&'lft((EnumMap<EPlayerIndex, SHand>, SStichSequence), ECard, EPlayerIndex, ElementPlayedCard)>,
+                mut fn_with_determinebestcardresult: impl FnMut(
+                    &SRules,
+                    &EnumMap<EPlayerIndex, SHand>,
+                    &SStichSequence,
+                    &SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<()>, STplStrategiesOnlyMaxSelfishMin>>,
+                    ECard/*card_played*/,
+                    &ElementPlayedCard,
+                ),
+                mut fn_for_each_card: impl FnMut(
+                    &SRules,
+                    &EnumMap<EPlayerIndex, SHand>,
+                    &SStichSequence,
+                    &ElementPlayedCard,
+                ),
+            ) -> String {
+                let rules = &game_finished.rules;
+                let mut vecepicardocardseverity = Vec::new();
+                for ((ahand, stichseq), card_played, epi, element_played_card) in itahandstichseqcardepielement {
+                    let ocardseverity = if_then_some!(stichseq.remaining_cards_per_hand()[*epi] <= if_dbg_else!({3}{5}), {
+                        let determinebestcardresult = determine_best_card_sauspiel(
+                            ahand.clone(),
+                            stichseq,
+                            *epi,
+                            rules,
+                            &game_finished.expensifiers,
+                        );
+                        fn_with_determinebestcardresult(
+                            rules,
+                            ahand,
+                            stichseq,
+                            &determinebestcardresult,
+                            *card_played,
+                            element_played_card,
+                        );
+                        let get_min_max_eq = |payoutstats: &SMaxSelfishMinStrategy<SPayoutStats<()>>| {
+                            let payoutstats = &payoutstats.omaxselfishmin.as_ref().unwrap_static_some();
+                            verify_eq!(payoutstats.min(), payoutstats.max())
+                        };
+                        let (veccard_optimal, payoutstats_optimal) = determinebestcardresult.cards_with_maximum_value(
+                            |lhs: &SMaxSelfishMinStrategy<SPayoutStats<()>>, rhs| {
+                                get_min_max_eq(lhs).cmp(&get_min_max_eq(rhs))
+                            },
+                        );
+                        if !veccard_optimal.contains(card_played) {
+                            match an_payout[*epi].cmp(&get_min_max_eq(payoutstats_optimal)) {
+                                Ordering::Greater | Ordering::Equal => EPlayedCardSeverity::Suboptimal(/*b_loss_realized*/false),
+                                Ordering::Less => EPlayedCardSeverity::Suboptimal(/*b_loss_realized*/true),
+                            }
+                        } else {
+                            EPlayedCardSeverity::Optimal
+                        }
+                    });
+                    vecepicardocardseverity.push((*epi, *card_played, ocardseverity));
+                    fn_for_each_card(
+                        rules,
+                        ahand,
+                        stichseq,
+                        element_played_card,
+                    );
                 }
-                if let Some(str_style_background) = get_style_background(epi) {
-                    str_style += str_style_background;
-                }
-                attributes::style(str_style)
-            };
-            node_whole_game.set_inner_html(&html_display_children((
-                div((
-                    attributes::style("font-weight: bold"),
-                    format!("{}", SDisplayRules::new(rules, |epi, fmt: &mut std::fmt::Formatter| {
-                        write!(fmt, "{}", mapepistr_username[epi])
-                    })),
-                )),
-                table((
-                    attributes::style("border-collapse: separate; border-spacing: 0 5px;"), // space between lines
-                    tbody((
-                        html_iter(EPlayerIndex::values().map(|epi_hand| tr((
-                            get_style_background(epi_hand).map(attributes::style),
-                            (
-                                td(format!("({})", epi_to_sauspiel_position(epi_hand))),
-                                html_table_gap_cell.clone(),
-                                td(output_cards_sauspiel_img_as_spans(
-                                    game_finished.aveccard[epi_hand].to_vec(),
-                                    rules.trumpfdecider(),
-                                )),
-                                html_table_gap_cell.clone(),
-                                td(format!(" Karten von {}", mapepistr_username[epi_hand])),
-                            )
-                        )))),
-                    )),
-                )),
-                table(tbody((
-                    tr((
-                        th(()), // empty cell to match subsequent rows // TODO merge with next row's cell?
-                        html_table_gap_cell.clone(),
-                        th((
-                            colspan(format!("{}", ittplepib_repeated.clone().count())),
-                            "Karten",
-                        )),
-                        html_table_gap_cell.clone(),
-                        th((
-                            colspan(format!("{}", EPlayerIndex::SIZE)),
-                            "Augen", // "Augen" as used by sauspiel.de
-                        )),
-                    )),
-                    tr((
-                        th(()), // empty cell to match subsequent rows
-                        html_table_gap_cell.clone(),
-                        {
-                            let mut mapepimapbocardseverity_header = EPlayerIndex::map_from_fn(|_epi| bool::map_from_fn(|_b_repeated| None));
-                            vecepicardocardseverity.chunks(EPlayerIndex::SIZE).for_each(|slcepicardocardseverity_stich| {
-                                for (epi, b_repeated, _card, ocardseverity) in make_playerindex_columns(ittplepib_repeated.clone(), slcepicardocardseverity_stich).flatten() {
-                                    assign_gt(&mut mapepimapbocardseverity_header[epi][b_repeated], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
-                                }
-                            });
-                            html_iter(ittplepib_repeated.clone().map(move |(epi_header, b_repeated)| {
-                                let mapbocardseverity = &mapepimapbocardseverity_header[epi_header];
-                                table_cell_with_background(
-                                    "th",
-                                    format!("{}", epi_to_sauspiel_position(epi_header)),
-                                    /*ocardseverity_bg*/mapbocardseverity[b_repeated].cloned(),
-                                    /*ocardseverity_top*/unwrap!(mapbocardseverity.iter().max(/*exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?*/)).cloned(),
-                                )
-                            }))
+                let ittplepib_repeated = itertools::chain(
+                    EPlayerIndex::values()
+                        .map(|epi| (epi, /*bRepeated*/false)),
+                    EPlayerIndex::values().take(EPlayerIndex::SIZE - 1)
+                        .map(|epi| (epi, /*bRepeated*/true)),
+                );
+                /*TODO const*/let html_table_gap_cell = th(attributes::style("width: 10px; background: none;"));
+                fn make_playerindex_columns(
+                    ittplepib_repeated: impl Iterator<Item=(EPlayerIndex, bool/*b_repeated*/)> + Clone,
+                    slcepicardocardseverity_stich: &[(EPlayerIndex, ECard, Option<EPlayedCardSeverity>)],
+                ) -> impl Iterator<Item=Option<(EPlayerIndex, bool/*b_repeated*/, ECard, Option<&EPlayedCardSeverity>)>> + Clone {
+                    assert_eq!(slcepicardocardseverity_stich.len(), EPlayerIndex::SIZE);
+                    itertools::merge_join_by(
+                        ittplepib_repeated,
+                        slcepicardocardseverity_stich,
+                        |(epi_running_index, _b_repeated), (epi_card, _card, _ocardseverity)| {
+                            epi_running_index.cmp(epi_card)
                         },
-                        html_table_gap_cell.clone(),
-                        html_iter(EPlayerIndex::values().map(|epi_points|
-                            th((
-                                points_cell_style(/*b_border_top*/false, epi_points),
-                                format!("{}", epi_to_sauspiel_position(epi_points)),
-                            ))
+                    ).map(move |eitherorboth| match eitherorboth {
+                        EitherOrBoth::Left((_epi_running_index, _b_repeated)) => None,
+                        EitherOrBoth::Both((epi_running_index, b_repeated), (epi_card, card, ocardseverity)) => Some((
+                            verify_eq!(epi_running_index, *epi_card),
+                            b_repeated,
+                            *card,
+                            ocardseverity.as_ref(),
                         )),
-                    )),
-                    itertools::zip_eq(
-                        vecepicardocardseverity.chunks(EPlayerIndex::SIZE),
-                        game_finished.stichseq.completed_stichs_winner_index(dbg_argument!(&game_finished.rules)),
-                    ).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
-                        tr((
-                            table_cell_with_background(
-                                "td",
-                                /*str_text*/format!("{}. Stich", i_stich+1),
-                                /*ocardseverity_bg*/unwrap!(slcepicardocardseverity_stich.iter().map(|(_epi, _card, ocardseverity)| ocardseverity).max()).clone(),
-                                /*ocardseverity_top*/None,
-                            ),
-                            html_table_gap_cell.clone(),
-                            html_iter(
-                                make_playerindex_columns(ittplepib_repeated.clone(), slcepicardocardseverity_stich)
-                                    .map(|otplepibcardocardseverity| td(otplepibcardocardseverity.map(|(_epi, _b_repeated, card, ocardseverity)| {
-                                        let str_color = match ocardseverity {
-                                            Some(EPlayedCardSeverity::Optimal) => "#78db00", // green
-                                            Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
-                                            None => "lightgrey",
-                                        };
-                                        Some(internal_output_card_sauspiel_img(card, format!("border-top: 5px solid {str_color};box-sizing: content-box;")))
-                                    })))
-                            ),
-                            html_table_gap_cell.clone(),
-                            html_iter(EPlayerIndex::values().map(move |epi_points| 
-                                td((
-                                    points_cell_style(/*b_border_top*/false, epi_points),
-                                    if_then_some!(epi_points==epi_winner, format!("{}", points_stich(stich))),
-                                ))
-                            )),
-                        ))
+                        EitherOrBoth::Right(_) => panic!(),
                     })
-                    .collect::<Vec<_>>(), // TODO avoid
-                    tr((
-                        td(colspan(format!("{}", // TODO(html_generator) support format_args
-                            1 // Column "i-th Stich"
-                            + 1 // html_table_gap_cell
-                            + ittplepib_repeated.clone().count()
-                            + 1 // html_table_gap_cell
-                        ))),
-                        html_iter(EPlayerIndex::values().map(|epi_points| {
-                            td((
-                                points_cell_style(/*b_border_top*/true, epi_points),
-                                format!("{}",
-                                    game_finished.stichseq.completed_stichs_winner_index(dbg_argument!(&game_finished.rules))
-                                        .filter_map(|(stich, epi_winner)|
-                                            if_then_some!(epi_points==epi_winner, points_stich(stich))
-                                        )
-                                        .sum::<isize>()
-                                ),
-                            ))
-
+                }
+                let get_style_background = |epi_style_background| {
+                    rules.is_primary(
+                        epi_style_background,
+                        /*fn_who_has_card*/|card| unwrap!(EPlayerIndex::values()
+                            .filter(|&epi_hand|
+                                game_finished.aveccard[epi_hand].contains(&card)
+                            )
+                            .exactly_one_2()
+                        ),
+                    ).map(|b_active| if b_active {
+                        "background-color: #11111111;"
+                    } else {
+                        "background:repeating-linear-gradient( 45deg, transparent, transparent 3px, #11111109 3px, #11111109 6px );"
+                    })
+                };
+                let points_cell_style = |b_border_top: bool, epi: EPlayerIndex| {
+                    let mut str_style = "padding: 5px;".to_string(); // TODO could html_generator solve this nicely?
+                    if b_border_top {
+                        str_style += "border-top: 1px solid black;";
+                    }
+                    if let Some(str_style_background) = get_style_background(epi) {
+                        str_style += str_style_background;
+                    }
+                    attributes::style(str_style)
+                };
+                html_display_children((
+                    div((
+                        attributes::style("font-weight: bold"),
+                        format!("{}", SDisplayRules::new(rules, |epi, fmt: &mut std::fmt::Formatter| {
+                            write!(fmt, "{}", mapepistr_username[epi])
                         })),
                     )),
-                )),
-            ))).to_string());
+                    table((
+                        attributes::style("border-collapse: separate; border-spacing: 0 5px;"), // space between lines
+                        tbody((
+                            html_iter(EPlayerIndex::values().map(|epi_hand| tr((
+                                get_style_background(epi_hand).map(attributes::style),
+                                (
+                                    td(format!("({})", epi_to_sauspiel_position(epi_hand))),
+                                    html_table_gap_cell.clone(),
+                                    td(output_cards_sauspiel_img_as_spans(
+                                        game_finished.aveccard[epi_hand].to_vec(),
+                                        rules.trumpfdecider(),
+                                    )),
+                                    html_table_gap_cell.clone(),
+                                    td(format!(" Karten von {}", mapepistr_username[epi_hand])),
+                                )
+                            )))),
+                        )),
+                    )),
+                    table(tbody((
+                        tr((
+                            th(()), // empty cell to match subsequent rows // TODO merge with next row's cell?
+                            html_table_gap_cell.clone(),
+                            th((
+                                colspan(format!("{}", ittplepib_repeated.clone().count())),
+                                "Karten",
+                            )),
+                            html_table_gap_cell.clone(),
+                            th((
+                                colspan(format!("{}", EPlayerIndex::SIZE)),
+                                "Augen", // "Augen" as used by sauspiel.de
+                            )),
+                        )),
+                        tr((
+                            th(()), // empty cell to match subsequent rows
+                            html_table_gap_cell.clone(),
+                            {
+                                let mut mapepimapbocardseverity_header = EPlayerIndex::map_from_fn(|_epi| bool::map_from_fn(|_b_repeated| None));
+                                vecepicardocardseverity.chunks(EPlayerIndex::SIZE).for_each(|slcepicardocardseverity_stich| {
+                                    for (epi, b_repeated, _card, ocardseverity) in make_playerindex_columns(ittplepib_repeated.clone(), slcepicardocardseverity_stich).flatten() {
+                                        assign_gt(&mut mapepimapbocardseverity_header[epi][b_repeated], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
+                                    }
+                                });
+                                html_iter(ittplepib_repeated.clone().map(move |(epi_header, b_repeated)| {
+                                    let mapbocardseverity = &mapepimapbocardseverity_header[epi_header];
+                                    table_cell_with_background(
+                                        "th",
+                                        format!("{}", epi_to_sauspiel_position(epi_header)),
+                                        /*ocardseverity_bg*/mapbocardseverity[b_repeated].cloned(),
+                                        /*ocardseverity_top*/unwrap!(mapbocardseverity.iter().max(/*exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?*/)).cloned(),
+                                    )
+                                }))
+                            },
+                            html_table_gap_cell.clone(),
+                            html_iter(EPlayerIndex::values().map(|epi_points|
+                                th((
+                                    points_cell_style(/*b_border_top*/false, epi_points),
+                                    format!("{}", epi_to_sauspiel_position(epi_points)),
+                                ))
+                            )),
+                        )),
+                        itertools::zip_eq(
+                            vecepicardocardseverity.chunks(EPlayerIndex::SIZE),
+                            game_finished.stichseq.completed_stichs_winner_index(dbg_argument!(&game_finished.rules)),
+                        ).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
+                            tr((
+                                table_cell_with_background(
+                                    "td",
+                                    /*str_text*/format!("{}. Stich", i_stich+1),
+                                    /*ocardseverity_bg*/unwrap!(slcepicardocardseverity_stich.iter().map(|(_epi, _card, ocardseverity)| ocardseverity).max()).clone(),
+                                    /*ocardseverity_top*/None,
+                                ),
+                                html_table_gap_cell.clone(),
+                                html_iter(
+                                    make_playerindex_columns(ittplepib_repeated.clone(), slcepicardocardseverity_stich)
+                                        .map(|otplepibcardocardseverity| td(otplepibcardocardseverity.map(|(_epi, _b_repeated, card, ocardseverity)| {
+                                            let str_color = match ocardseverity {
+                                                Some(EPlayedCardSeverity::Optimal) => "#78db00", // green
+                                                Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
+                                                None => "lightgrey",
+                                            };
+                                            Some(internal_output_card_sauspiel_img(card, format!("border-top: 5px solid {str_color};box-sizing: content-box;")))
+                                        })))
+                                ),
+                                html_table_gap_cell.clone(),
+                                html_iter(EPlayerIndex::values().map(move |epi_points| 
+                                    td((
+                                        points_cell_style(/*b_border_top*/false, epi_points),
+                                        if_then_some!(epi_points==epi_winner, format!("{}", points_stich(stich))),
+                                    ))
+                                )),
+                            ))
+                        })
+                        .collect::<Vec<_>>(), // TODO avoid
+                        tr((
+                            td(colspan(format!("{}", // TODO(html_generator) support format_args
+                                1 // Column "i-th Stich"
+                                + 1 // html_table_gap_cell
+                                + ittplepib_repeated.clone().count()
+                                + 1 // html_table_gap_cell
+                            ))),
+                            html_iter(EPlayerIndex::values().map(|epi_points| {
+                                td((
+                                    points_cell_style(/*b_border_top*/true, epi_points),
+                                    format!("{}",
+                                        game_finished.stichseq.completed_stichs_winner_index(dbg_argument!(&game_finished.rules))
+                                            .filter_map(|(stich, epi_winner)|
+                                                if_then_some!(epi_points==epi_winner, points_stich(stich))
+                                            )
+                                            .sum::<isize>()
+                                    ),
+                                ))
+
+                            })),
+                        )),
+                    )),
+                ))).to_string()
+            }
+            node_whole_game.set_inner_html(&make_simple_game_protocol(
+                &game_finished,
+                &an_payout,
+                &mapepistr_username,
+                vecahandstichseqcardepielement.iter(),
+                /*fn_with_determinebestcardresult*/|rules, ahand, stichseq, determinebestcardresult, card_played, element_played_card| {
+                    let div_table = unwrap!(document.create_element("div"));
+                    div_table.set_inner_html(&{
+                        html_display_children(html_payout_table::<_, _>(
+                            rules,
+                            ahand,
+                            stichseq,
+                            determinebestcardresult,
+                            card_played,
+                            &output_card_sauspiel_img,
+                        )).to_string()
+                    });
+                    append_sibling(element_played_card, &div_table);
+                },
+                /*fn_for_each_card*/|rules, ahand, stichseq, element_played_card| {
+                    let div_button = unwrap!(document.create_element("div"));
+                    div_button.set_inner_html(&html_copy_button(
+                        rules,
+                        ahand,
+                        stichseq,
+                        /*str_openschafkopf_executable*/"openschafkopf",
+                    ));
+                    append_sibling(element_played_card, &div_button);
+                },
+            ));
             unwrap!(node_gameannouncements.append_with_node_1(&node_whole_game));
         },
         Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepistr_username)) => {
