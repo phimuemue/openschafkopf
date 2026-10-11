@@ -144,18 +144,20 @@ fn output_card_sauspiel_img(card: ECard, b_highlight: bool) -> impl html_generat
     )
 }
 
+#[wasm_bindgen]
+pub fn analyze(str_url: String) -> String {
+    format!("hello from Rust: {str_url}")
+}
+
 #[wasm_bindgen(start)]
 pub fn greet() {
     set_panic_hook();
 
-    let str_window_location_href = unwrap!(unwrap!(web_sys::window()).location().href());
+    let ostr_window_location_href = web_sys::window() // TODO: unwrap all these and make greet a non-start method
+        .map(|window| window.location())
+        .and_then(|location| location.href().ok());
 
-    if unwrap!(
-        unwrap!(web_sys::Url::new(&str_window_location_href)).pathname()
-            .strip_prefix("/spiele/") // Only runs on sauspiel.de/spiele/
-    ).is_empty() {
-        // TODO implement analysis in spiel overview
-    } else {
+    if let Some(str_window_location_href) = ostr_window_location_href {
         #[derive(PartialOrd, Ord, PartialEq, Eq, Clone)]
         enum EPlayedCardSeverity {
             Optimal,
