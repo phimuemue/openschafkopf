@@ -35,6 +35,7 @@ features = [
     'HtmlElement',
     'Location',
     'Node',
+    'Url',
     'Window',
     'XmlHttpRequest',
 ]

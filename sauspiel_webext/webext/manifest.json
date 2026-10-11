@@ -5,7 +5,10 @@
 
   "content_scripts": [
     {
-      "matches": ["*://*.sauspiel.de/spiele/*"],
+      "matches": [
+        "*://*.sauspiel.de/spiele",
+        "*://*.sauspiel.de/spiele/*"
+      ],
       "js": [
           "sauspiel_webext.js",
           "sauspiel_webext_content_script.js"

@@ -148,575 +148,584 @@ fn output_card_sauspiel_img(card: ECard, b_highlight: bool) -> impl html_generat
 pub fn greet() {
     set_panic_hook();
 
-    #[derive(PartialOrd, Ord, PartialEq, Eq, Clone)]
-    enum EPlayedCardSeverity {
-        Optimal,
-        Suboptimal(bool/*b_loss_realized*/),
-    }
-    fn suboptimal_quality_to_html_color(b_loss_realized: bool) -> &'static str {
-        if b_loss_realized {
-            "#d70000" // red
-        } else {
-            "#ffef00" // yellow
-        }
-    }
-    use html_generator::*; // TODO narrower scope?
-    fn table_cell_with_background(str_tag_name: &'static str, str_text: impl AttributeOrChild, ocardseverity_bg: Option<EPlayedCardSeverity>, ocardseverity_top: Option<EPlayedCardSeverity>) -> HtmlElement<impl AttributeOrChild> {
-        let cardseverity_to_color = |ocardseverity| {
-            match ocardseverity {
-                None | Some(EPlayedCardSeverity::Optimal) => None, // Do not indicate "unchecked" or "optimal" in overview cells
-                Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => Some(suboptimal_quality_to_html_color(b_loss_realized)),
-            }
-        };
-        HtmlElement::new(
-            str_tag_name,
-            (
-                // TODO(html_generator)? can we avoid all this string manipulation here?
-                attributes::style(format!(
-                    "{str_color_bg}{str_color_top}",
-                    str_color_bg=cardseverity_to_color(ocardseverity_bg)
-                        .map(|str_color| format!("background-color: {str_color};"))
-                        .unwrap_or_default(),
-                    str_color_top=cardseverity_to_color(ocardseverity_top)
-                        .map(|str_color| format!("border-top: 5px solid {str_color};"))
-                        .unwrap_or_default(),
-                )),
-                str_text,
-            )
-        )
-    }
+    let str_window_location_href = unwrap!(unwrap!(web_sys::window()).location().href());
 
-    fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, ElementPlayedCard:'lft>(
-        game_finished: &SGameGeneric<Ruleset, GameAnnouncement, DetermineRules>,
-        an_payout: &EnumMap<EPlayerIndex, isize>,
-        mapepistr_username: &EnumMap<EPlayerIndex, String>,
-        itahandstichseqcardepielement: impl Iterator<Item=&'lft((EnumMap<EPlayerIndex, SHand>, SStichSequence), ECard, EPlayerIndex, ElementPlayedCard)>,
-        mut fn_with_determinebestcardresult: impl FnMut(
-            &SRules,
-            &EnumMap<EPlayerIndex, SHand>,
-            &SStichSequence,
-            &SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<()>, STplStrategiesOnlyMaxSelfishMin>>,
-            ECard/*card_played*/,
-            &ElementPlayedCard,
-        ),
-        mut fn_for_each_card: impl FnMut(
-            &SRules,
-            &EnumMap<EPlayerIndex, SHand>,
-            &SStichSequence,
-            &ElementPlayedCard,
-        ),
-    ) -> String {
-        use html_generator::*;
-        let rules = &game_finished.rules;
-        let mut vecepicardocardseverity = Vec::new();
-        for ((ahand, stichseq), card_played, epi, element_played_card) in itahandstichseqcardepielement {
-            let ocardseverity = if_then_some!(stichseq.remaining_cards_per_hand()[*epi] <= if_dbg_else!({3}{5}), {
-                let determinebestcardresult = determine_best_card_sauspiel(
-                    ahand.clone(),
-                    stichseq,
-                    *epi,
-                    rules,
-                    &game_finished.expensifiers,
-                );
-                fn_with_determinebestcardresult(
-                    rules,
-                    ahand,
-                    stichseq,
-                    &determinebestcardresult,
-                    *card_played,
-                    element_played_card,
-                );
-                let get_min_max_eq = |payoutstats: &SMaxSelfishMinStrategy<SPayoutStats<()>>| {
-                    let payoutstats = &payoutstats.omaxselfishmin.as_ref().unwrap_static_some();
-                    verify_eq!(payoutstats.min(), payoutstats.max())
-                };
-                let (veccard_optimal, payoutstats_optimal) = determinebestcardresult.cards_with_maximum_value(
-                    |lhs: &SMaxSelfishMinStrategy<SPayoutStats<()>>, rhs| {
-                        get_min_max_eq(lhs).cmp(&get_min_max_eq(rhs))
-                    },
-                );
-                if !veccard_optimal.contains(card_played) {
-                    match an_payout[*epi].cmp(&get_min_max_eq(payoutstats_optimal)) {
-                        Ordering::Greater | Ordering::Equal => EPlayedCardSeverity::Suboptimal(/*b_loss_realized*/false),
-                        Ordering::Less => EPlayedCardSeverity::Suboptimal(/*b_loss_realized*/true),
-                    }
-                } else {
-                    EPlayedCardSeverity::Optimal
-                }
-            });
-            vecepicardocardseverity.push((*epi, *card_played, ocardseverity));
-            fn_for_each_card(
-                rules,
-                ahand,
-                stichseq,
-                element_played_card,
-            );
+    if unwrap!(
+        unwrap!(web_sys::Url::new(&str_window_location_href)).pathname()
+            .strip_prefix("/spiele/") // Only runs on sauspiel.de/spiele/
+    ).is_empty() {
+        // TODO implement analysis in spiel overview
+    } else {
+        #[derive(PartialOrd, Ord, PartialEq, Eq, Clone)]
+        enum EPlayedCardSeverity {
+            Optimal,
+            Suboptimal(bool/*b_loss_realized*/),
         }
-        let ittplepib_repeated = itertools::chain(
-            EPlayerIndex::values()
-                .map(|epi| (epi, /*bRepeated*/false)),
-            EPlayerIndex::values().take(EPlayerIndex::SIZE - 1)
-                .map(|epi| (epi, /*bRepeated*/true)),
-        );
-        /*TODO const*/let html_table_gap_cell = th(attributes::style("width: 10px; background: none;"));
-        fn make_playerindex_columns(
-            ittplepib_repeated: impl Iterator<Item=(EPlayerIndex, bool/*b_repeated*/)> + Clone,
-            slcepicardocardseverity_stich: &[(EPlayerIndex, ECard, Option<EPlayedCardSeverity>)],
-        ) -> impl Iterator<Item=Option<(EPlayerIndex, bool/*b_repeated*/, ECard, Option<&EPlayedCardSeverity>)>> + Clone {
-            assert_eq!(slcepicardocardseverity_stich.len(), EPlayerIndex::SIZE);
-            itertools::merge_join_by(
-                ittplepib_repeated,
-                slcepicardocardseverity_stich,
-                |(epi_running_index, _b_repeated), (epi_card, _card, _ocardseverity)| {
-                    epi_running_index.cmp(epi_card)
-                },
-            ).map(move |eitherorboth| match eitherorboth {
-                EitherOrBoth::Left((_epi_running_index, _b_repeated)) => None,
-                EitherOrBoth::Both((epi_running_index, b_repeated), (epi_card, card, ocardseverity)) => Some((
-                    verify_eq!(epi_running_index, *epi_card),
-                    b_repeated,
-                    *card,
-                    ocardseverity.as_ref(),
-                )),
-                EitherOrBoth::Right(_) => panic!(),
-            })
-        }
-        let get_style_background = |epi_style_background| {
-            rules.is_primary(
-                epi_style_background,
-                /*fn_who_has_card*/|card| unwrap!(EPlayerIndex::values()
-                    .filter(|&epi_hand|
-                        game_finished.aveccard[epi_hand].contains(&card)
-                    )
-                    .exactly_one_2()
-                ),
-            ).map(|b_active| if b_active {
-                "background-color: #11111111;"
+        fn suboptimal_quality_to_html_color(b_loss_realized: bool) -> &'static str {
+            if b_loss_realized {
+                "#d70000" // red
             } else {
-                "background:repeating-linear-gradient( 45deg, transparent, transparent 3px, #11111109 3px, #11111109 6px );"
-            })
-        };
-        let points_cell_style = |b_border_top: bool, epi: EPlayerIndex| {
-            let mut str_style = "padding: 5px;".to_string(); // TODO could html_generator solve this nicely?
-            if b_border_top {
-                str_style += "border-top: 1px solid black;";
+                "#ffef00" // yellow
             }
-            if let Some(str_style_background) = get_style_background(epi) {
-                str_style += str_style_background;
-            }
-            attributes::style(str_style)
-        };
-        html_display_children((
-            div((
-                attributes::style("font-weight: bold"),
-                format!("{}", SDisplayRules::new(rules, |epi, fmt: &mut std::fmt::Formatter| {
-                    write!(fmt, "{}", mapepistr_username[epi])
-                })),
-            )),
-            table((
-                attributes::style("border-collapse: separate; border-spacing: 0 5px;"), // space between lines
-                tbody((
-                    html_iter(EPlayerIndex::values().map(|epi_hand| tr((
-                        get_style_background(epi_hand).map(attributes::style),
-                        (
-                            td(format!("({})", epi_to_sauspiel_position(epi_hand))),
-                            html_table_gap_cell.clone(),
-                            td(output_cards_sauspiel_img_as_spans(
-                                game_finished.aveccard[epi_hand].to_vec(),
-                                rules.trumpfdecider(),
-                            )),
-                            html_table_gap_cell.clone(),
-                            td(format!(" Karten von {}", mapepistr_username[epi_hand])),
-                        )
-                    )))),
-                )),
-            )),
-            table(tbody((
-                tr((
-                    th(()), // empty cell to match subsequent rows // TODO merge with next row's cell?
-                    html_table_gap_cell.clone(),
-                    th((
-                        colspan(format!("{}", ittplepib_repeated.clone().count())),
-                        "Karten",
+        }
+        use html_generator::*; // TODO narrower scope?
+        fn table_cell_with_background(str_tag_name: &'static str, str_text: impl AttributeOrChild, ocardseverity_bg: Option<EPlayedCardSeverity>, ocardseverity_top: Option<EPlayedCardSeverity>) -> HtmlElement<impl AttributeOrChild> {
+            let cardseverity_to_color = |ocardseverity| {
+                match ocardseverity {
+                    None | Some(EPlayedCardSeverity::Optimal) => None, // Do not indicate "unchecked" or "optimal" in overview cells
+                    Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => Some(suboptimal_quality_to_html_color(b_loss_realized)),
+                }
+            };
+            HtmlElement::new(
+                str_tag_name,
+                (
+                    // TODO(html_generator)? can we avoid all this string manipulation here?
+                    attributes::style(format!(
+                        "{str_color_bg}{str_color_top}",
+                        str_color_bg=cardseverity_to_color(ocardseverity_bg)
+                            .map(|str_color| format!("background-color: {str_color};"))
+                            .unwrap_or_default(),
+                        str_color_top=cardseverity_to_color(ocardseverity_top)
+                            .map(|str_color| format!("border-top: 5px solid {str_color};"))
+                            .unwrap_or_default(),
                     )),
-                    html_table_gap_cell.clone(),
-                    th((
-                        colspan(format!("{}", EPlayerIndex::SIZE)),
-                        "Augen", // "Augen" as used by sauspiel.de
-                    )),
-                )),
-                tr((
-                    th(()), // empty cell to match subsequent rows
-                    html_table_gap_cell.clone(),
-                    {
-                        let mut mapepimapbocardseverity_header = EPlayerIndex::map_from_fn(|_epi| bool::map_from_fn(|_b_repeated| None));
-                        vecepicardocardseverity.chunks(EPlayerIndex::SIZE).for_each(|slcepicardocardseverity_stich| {
-                            for (epi, b_repeated, _card, ocardseverity) in make_playerindex_columns(ittplepib_repeated.clone(), slcepicardocardseverity_stich).flatten() {
-                                assign_gt(&mut mapepimapbocardseverity_header[epi][b_repeated], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
-                            }
-                        });
-                        html_iter(ittplepib_repeated.clone().map(move |(epi_header, b_repeated)| {
-                            let mapbocardseverity = &mapepimapbocardseverity_header[epi_header];
-                            table_cell_with_background(
-                                "th",
-                                format!("{}", epi_to_sauspiel_position(epi_header)),
-                                /*ocardseverity_bg*/mapbocardseverity[b_repeated].cloned(),
-                                /*ocardseverity_top*/unwrap!(mapbocardseverity.iter().max(/*exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?*/)).cloned(),
-                            )
-                        }))
-                    },
-                    html_table_gap_cell.clone(),
-                    html_iter(EPlayerIndex::values().map(|epi_points|
-                        th((
-                            points_cell_style(/*b_border_top*/false, epi_points),
-                            format!("{}", epi_to_sauspiel_position(epi_points)),
-                        ))
-                    )),
-                )),
-                itertools::zip_eq(
-                    vecepicardocardseverity.chunks(EPlayerIndex::SIZE),
-                    game_finished.stichseq.completed_stichs_winner_index(dbg_argument!(&game_finished.rules)),
-                ).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
-                    tr((
-                        table_cell_with_background(
-                            "td",
-                            /*str_text*/format!("{}. Stich", i_stich+1),
-                            /*ocardseverity_bg*/unwrap!(slcepicardocardseverity_stich.iter().map(|(_epi, _card, ocardseverity)| ocardseverity).max()).clone(),
-                            /*ocardseverity_top*/None,
-                        ),
-                        html_table_gap_cell.clone(),
-                        html_iter(
-                            make_playerindex_columns(ittplepib_repeated.clone(), slcepicardocardseverity_stich)
-                                .map(|otplepibcardocardseverity| td(otplepibcardocardseverity.map(|(_epi, _b_repeated, card, ocardseverity)| {
-                                    let str_color = match ocardseverity {
-                                        Some(EPlayedCardSeverity::Optimal) => "#78db00", // green
-                                        Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
-                                        None => "lightgrey",
-                                    };
-                                    Some(internal_output_card_sauspiel_img(card, format!("border-top: 5px solid {str_color};box-sizing: content-box;")))
-                                })))
-                        ),
-                        html_table_gap_cell.clone(),
-                        html_iter(EPlayerIndex::values().map(move |epi_points| 
-                            td((
-                                points_cell_style(/*b_border_top*/false, epi_points),
-                                if_then_some!(epi_points==epi_winner, format!("{}", points_stich(stich))),
-                            ))
-                        )),
-                    ))
-                })
-                .collect::<Vec<_>>(), // TODO avoid
-                tr((
-                    td(colspan(format!("{}", // TODO(html_generator) support format_args
-                        1 // Column "i-th Stich"
-                        + 1 // html_table_gap_cell
-                        + ittplepib_repeated.clone().count()
-                        + 1 // html_table_gap_cell
-                    ))),
-                    html_iter(EPlayerIndex::values().map(|epi_points| {
-                        td((
-                            points_cell_style(/*b_border_top*/true, epi_points),
-                            format!("{}",
-                                game_finished.stichseq.completed_stichs_winner_index(dbg_argument!(&game_finished.rules))
-                                    .filter_map(|(stich, epi_winner)|
-                                        if_then_some!(epi_points==epi_winner, points_stich(stich))
-                                    )
-                                    .sum::<isize>()
-                            ),
-                        ))
+                    str_text,
+                )
+            )
+        }
 
-                    })),
-                )),
-            )),
-        ))).to_string()
-    }
-
-    fn epi_to_sauspiel_position(epi: EPlayerIndex) -> usize {
-        epi.to_usize() + 1
-    }
-
-    fn determine_best_card_sauspiel(ahand: EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence, epi: EPlayerIndex, rules: &SRules, expensifiers: &SExpensifiers) -> SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<()>, STplStrategiesOnlyMaxSelfishMin>> {
-        unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_,_,_>(
-            stichseq,
-            Box::new(std::iter::once(ahand)) as Box<_>,
-            /*fn_filter*/|stichseq, ahand| {
-                SFilterByOracle::new(rules, ahand, stichseq)
-            },
-            &|_stichseq, _ahand| SGenericMinReachablePayout::<STplStrategiesOnlyMaxSelfishMin, SAlphaBetaPrunerNone>::new(
-                rules,
-                verify_eq!(epi, unwrap!(stichseq.current_playerindex())),
-                expensifiers.clone(),
+        fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, ElementPlayedCard:'lft>(
+            game_finished: &SGameGeneric<Ruleset, GameAnnouncement, DetermineRules>,
+            an_payout: &EnumMap<EPlayerIndex, isize>,
+            mapepistr_username: &EnumMap<EPlayerIndex, String>,
+            itahandstichseqcardepielement: impl Iterator<Item=&'lft((EnumMap<EPlayerIndex, SHand>, SStichSequence), ECard, EPlayerIndex, ElementPlayedCard)>,
+            mut fn_with_determinebestcardresult: impl FnMut(
+                &SRules,
+                &EnumMap<EPlayerIndex, SHand>,
+                &SStichSequence,
+                &SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<()>, STplStrategiesOnlyMaxSelfishMin>>,
+                ECard/*card_played*/,
+                &ElementPlayedCard,
             ),
-            /*fn_snapshotcache*/|rulestatecache| {
-                rules.snapshot_cache::<STplStrategiesOnlyMaxSelfishMin>(rulestatecache)
-            },
-            /*fn_visualizer*/SNoVisualization::factory(),
-            /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
-            /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
-        ))
-    }
-    fn append_sibling(node_existing: &web_sys::Node, node_new: &web_sys::Node) {
-        unwrap!(
-            unwrap!(node_existing.parent_element())
-                .append_child(node_new)
-        );
-    }
-    let document = unwrap!(unwrap!(web_sys::window()).document());
-    let mut vecahandstichseqcardepielement = Vec::new();
-    #[derive(Clone)]
-    struct SDetermineRulesStep {
-        epi: EPlayerIndex,
-        node_determinerules: web_sys::Element,
-        resslcschlag_trumpf: Result<&'static [ESchlag], ()>,
-        resoefarbe_trumpf: Result<Option<EFarbe>, ()>,
-    }
-    fn output_cards_sauspiel_img_as_spans(mut veccard: Vec<ECard>, trumpfdecider: &STrumpfDecider) -> impl html_generator::AttributeOrChild {
-        use html_generator::*;
-        trumpfdecider.sort_cards(&mut veccard);
-        html_iter(veccard.into_iter().map(|card| internal_output_card_sauspiel_img(card, "".into())))
-    }
-    fn output_position_and_cards_sauspiel_img(epi: EPlayerIndex, veccard: Vec<ECard>, trumpfdecider: &STrumpfDecider) -> impl html_generator::AttributeOrChild {
-        (
-            format!("({})", epi_to_sauspiel_position(epi)),
-            output_cards_sauspiel_img_as_spans(veccard, trumpfdecider)
-        )
-    }
-    match internal_analyze_sauspiel_html(
-        SWebsysDocument(document.clone()),
-        /*fn_gameannouncement*/|_, ogameannouncement, node_gameannouncement| (ogameannouncement.clone(), node_gameannouncement),
-        /*fn_determinerules_step*/|epi, oeobslcschlagoefarbe_trumpf, SWebsysElement(node_determinerules)| SDetermineRulesStep {
-            epi,
-            resslcschlag_trumpf: oeobslcschlagoefarbe_trumpf.clone().and_then(EitherOrBoth::left).ok_or(()),
-            resoefarbe_trumpf: oeobslcschlagoefarbe_trumpf.clone().and_then(EitherOrBoth::right).ok_or(()),
-            node_determinerules,
-        },
-        /*fn_before_play_card*/|game, card, epi, element_played_card| {
-            vecahandstichseqcardepielement.push((
-                (game.ahand.clone(), game.stichseq.clone()),
-                card,
-                epi,
-                element_played_card.0
-            ));
-        },
-    ) {
-        Ok((SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout}, mapepistr_username)) => {
-            let (_ogameannouncement, SWebsysElement(node_gameannouncement_epi0)) = &game_finished.mapepigameannouncement[EPlayerIndex::EPI0];
-            for epi in EPlayerIndex::values() {
-                let prepend_cards = |slcschlag_trumpf: &'static [ESchlag], oefarbe_trumpf: Option<EFarbe>, node: &web_sys::Element| {
-                    node.set_inner_html(&format!("{} {}",
-                        html_display_children(output_position_and_cards_sauspiel_img(epi, game_finished.aveccard[epi].to_vec(), &STrumpfDecider::new(slcschlag_trumpf, oefarbe_trumpf))),
-                        node.inner_html()),
-                    );
-                };
-                let (ogameannouncement, SWebsysElement(node_gameannouncement)) = &game_finished.mapepigameannouncement[epi];
-                let mut itdeterminerulesstep_epi = game_finished.determinerules.iter()
-                    .filter(|determinerulesstep| determinerulesstep.epi==epi);
-                let (slcschlag_trumpf_gameannouncement, oefarbe_trumpf_gameannouncement) = if let Some(SGameAnnouncementAnonymous) = ogameannouncement {
-                    let mut vecdeterminerulesstep = itdeterminerulesstep_epi.cloned().collect::<Vec<_>>(); // TODO can we work directly on game.determinerules?
-                    assert!(!vecdeterminerulesstep.is_empty());
-                    { // Sauspiel reveals slcschlag_trumpf first, so we propagate that forwards
-                        if vecdeterminerulesstep[0].resslcschlag_trumpf.is_err() {
-                            vecdeterminerulesstep[0].resslcschlag_trumpf = Ok(&[ESchlag::Ober, ESchlag::Unter]);
-                        }
-                        for i_determinerulesstep in 1..vecdeterminerulesstep.len() {
-                            if vecdeterminerulesstep[i_determinerulesstep].resslcschlag_trumpf.is_err() {
-                                vecdeterminerulesstep[i_determinerulesstep].resslcschlag_trumpf = verify!(vecdeterminerulesstep[i_determinerulesstep-1].resslcschlag_trumpf);
-                            }
-                        }
-                    }
-                    { // Sauspiel reveals oefarbe_trumpf potentially last, so we propagate that backwards
-                        let determinerulesstep_last = unwrap!(vecdeterminerulesstep.last_mut());
-                        assert!(determinerulesstep_last.resslcschlag_trumpf.is_ok());
-                        if determinerulesstep_last.resoefarbe_trumpf.is_err() {
-                            // determine oefarbe_trumpf heuristically
-                            let trumpfdecider_no_farbe = STrumpfDecider::new(
-                                unwrap!(determinerulesstep_last.resslcschlag_trumpf),
-                                /*ofearbe*/None
-                            );
-                            let mut mapefarben_count = EFarbe::map_from_fn(|_efarbe| 0);
-                            for &card in &game_finished.aveccard[epi] {
-                                match trumpfdecider_no_farbe.trumpforfarbe(card) {
-                                    VTrumpfOrFarbe::Trumpf => {},
-                                    VTrumpfOrFarbe::Farbe(efarbe) => {
-                                        mapefarben_count[efarbe] += 1;
-                                    },
-                                }
-                            }
-                            determinerulesstep_last.resoefarbe_trumpf = Ok(EFarbe::values().max_by(|&efarbe_lhs, &efarbe_rhs|
-                                mapefarben_count[efarbe_lhs].cmp(&mapefarben_count[efarbe_rhs])
-                                    .then_with(|| {
-                                        let has_ass = |efarbe| {
-                                            game_finished.aveccard[epi].contains(&ECard::new(efarbe, ESchlag::Ass))
-                                        };
-                                        has_ass(efarbe_rhs).cmp(&has_ass(efarbe_lhs))
-                                    })
-                            ))
-                        }
-                        for i_determinerulesstep in (1..vecdeterminerulesstep.len()).rev() {
-                            match vecdeterminerulesstep[i_determinerulesstep-1].resoefarbe_trumpf {
-                                Err(()) | Ok(None) => {
-                                    vecdeterminerulesstep[i_determinerulesstep-1].resoefarbe_trumpf = verify!(vecdeterminerulesstep[i_determinerulesstep].resoefarbe_trumpf);
-                                },
-                                Ok(Some(_efarbe)) => {
-                                    // keep efarbe
-                                },
-                            }
-                        }
-                    }
-                    // vecdeterminerulesstep is prepared, so we can improve determinerules section
-                    for SDetermineRulesStep{epi:_, node_determinerules, resslcschlag_trumpf, resoefarbe_trumpf} in &vecdeterminerulesstep {
-                        prepend_cards(unwrap!(resslcschlag_trumpf), unwrap!(resoefarbe_trumpf), node_determinerules);
-                    }
-                    let determinerulesstep_first = unwrap!(vecdeterminerulesstep.first());
-                    (unwrap!(determinerulesstep_first.resslcschlag_trumpf), unwrap!(determinerulesstep_first.resoefarbe_trumpf))
-                } else {
-                    assert!(itdeterminerulesstep_epi.next().is_none());
-                    (type_inference!(&'static[ESchlag], &[ESchlag::Ober, ESchlag::Unter]), Some(EFarbe::Herz))
-                };
-                prepend_cards(slcschlag_trumpf_gameannouncement, oefarbe_trumpf_gameannouncement, node_gameannouncement);
-            }
+            mut fn_for_each_card: impl FnMut(
+                &SRules,
+                &EnumMap<EPlayerIndex, SHand>,
+                &SStichSequence,
+                &ElementPlayedCard,
+            ),
+        ) -> String {
+            use html_generator::*;
             let rules = &game_finished.rules;
-            let node_gameannouncements = unwrap!(node_gameannouncement_epi0.parent_element()); // TODO? Find common predecessor of all nodes in game_finished.mapepigameannouncement?
-            { // Add doublings and stoss to protocol
-                let node_doubling_or_stoss = |epi, veccard: Vec<ECard>, str_explanation, trumpfdecider| {
-                    let node_doubling_or_stoss = unwrap!(
-                        unwrap!(node_gameannouncement_epi0.clone_node())
-                            .dyn_into::<web_sys::Element>() // TODO can we avoid this?
+            let mut vecepicardocardseverity = Vec::new();
+            for ((ahand, stichseq), card_played, epi, element_played_card) in itahandstichseqcardepielement {
+                let ocardseverity = if_then_some!(stichseq.remaining_cards_per_hand()[*epi] <= if_dbg_else!({3}{5}), {
+                    let determinebestcardresult = determine_best_card_sauspiel(
+                        ahand.clone(),
+                        stichseq,
+                        *epi,
+                        rules,
+                        &game_finished.expensifiers,
                     );
-                    node_doubling_or_stoss.set_inner_html(&format!("{} {} {}",
-                        html_display_children(output_position_and_cards_sauspiel_img(epi, veccard, trumpfdecider)),
-                        mapepistr_username[epi],
-                        str_explanation,
-                    ));
-                    node_doubling_or_stoss
-                };
-                // Add doublings to protocol
-                let trumpfdecider_doubling = STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz));
-                for epi in EPlayerIndex::values().rev(/*so that we can repeatedly prepend*/) {
-                    unwrap!(node_gameannouncements.prepend_with_node_1(&node_doubling_or_stoss(
-                        epi,
-                        first_hand_for(&game_finished.aveccard[epi], game_finished.kurzlang()).to_vec(),
-                        if *unwrap!(game_finished.expensifiers.doublings.get(epi)) {
-                            "klopft"
-                        } else {
-                            "klopft nicht"
-                        },
-                        &trumpfdecider_doubling,
-                    )));
-                }
-                // Add stoss to protocol
-                for (stoss, str_explanation_stoss) in std::iter::zip(
-                    &game_finished.expensifiers.vecstoss,
-                    itertools::chain(
-                        ["gibt Kontra", "gibt Retour"],
-                        std::iter::repeat("gibt Stoss"),
-                    )
-                ) {
-                    let epi = stoss.epi;
-                    unwrap!(node_gameannouncements.append_with_node_1(&node_doubling_or_stoss(
-                        epi,
-                        game_finished.aveccard[epi].to_vec(),
-                        str_explanation_stoss,
-                        rules.trumpfdecider(),
-                    )));
-                }
-            }
-            let node_whole_game = unwrap!(
-                unwrap!(node_gameannouncement_epi0.clone_node())
-                    .dyn_into::<web_sys::Element>() // TODO can we avoid this?
-            );
-            node_whole_game.set_inner_html(&make_simple_game_protocol(
-                &game_finished,
-                &an_payout,
-                &mapepistr_username,
-                vecahandstichseqcardepielement.iter(),
-                /*fn_with_determinebestcardresult*/|rules, ahand, stichseq, determinebestcardresult, card_played, element_played_card| {
-                    let div_table = unwrap!(document.create_element("div"));
-                    div_table.set_inner_html(&{
-                        html_display_children(html_payout_table::<_, _>(
-                            rules,
-                            ahand,
-                            stichseq,
-                            determinebestcardresult,
-                            card_played,
-                            &output_card_sauspiel_img,
-                        )).to_string()
-                    });
-                    append_sibling(element_played_card, &div_table);
-                },
-                /*fn_for_each_card*/|rules, ahand, stichseq, element_played_card| {
-                    let div_button = unwrap!(document.create_element("div"));
-                    div_button.set_inner_html(&html_copy_button(
+                    fn_with_determinebestcardresult(
                         rules,
                         ahand,
                         stichseq,
-                        /*str_openschafkopf_executable*/"openschafkopf",
-                    ));
-                    append_sibling(element_played_card, &div_button);
-                },
-            ));
-            unwrap!(node_gameannouncements.append_with_node_1(&node_whole_game));
-        },
-        Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepistr_username)) => {
-            // Nothing to analyze for Stock.
-        },
-        Err(err_html) => { // TODO we should distinguish between "Game not visible/found/accessible" and "HTML not understood"
-            let mut vecahandstichseqcardepi = Vec::new();
-            match analyze_sauspiel_json(
-                &{
-                    let xmlhttprequest = unwrap!(web_sys::XmlHttpRequest::new());
-                    let str_json_url = format!("{}.json", unwrap!(unwrap!(web_sys::window()).location().href()));
-                    unwrap!(xmlhttprequest.open_with_async(
-                        "GET",
-                        &str_json_url,
-                        /*async*/false,
-                    ));
-                    unwrap!(xmlhttprequest.send());
-                    assert!(xmlhttprequest.status().is_ok());
-                    unwrap!( // unwrap Option
-                        unwrap!(xmlhttprequest.response_text()) // unwrap Result
-                    )
-                },
-                /*fn_before_zugeben*/|game, _i_stich, epi, card| {
-                    vecahandstichseqcardepi.push((
-                        (game.ahand.clone(), game.stichseq.clone()),
-                        card,
-                        epi,
-                        (),
-                    ));
-                },
-            ) {
-                Ok((SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout}, mapepiostr_username)) => {
-                    let str_html_out = make_simple_game_protocol(
-                        &game_finished,
-                        &an_payout,
-                        &mapepiostr_username.map_into(|ostr_username| ostr_username.unwrap_or_else(|| "[Spielername unbekannt]".to_string())),
-                        vecahandstichseqcardepi.iter(),
-                        /*fn_with_determinebestcardresult*/|_rules, _ahand, _stichseq, _determinebestcardresult, _card_played, _element_played_card| {},
-                        /*fn_for_each_card*/|_rules, _ahand, _stichseq, _element_played_card| {
+                        &determinebestcardresult,
+                        *card_played,
+                        element_played_card,
+                    );
+                    let get_min_max_eq = |payoutstats: &SMaxSelfishMinStrategy<SPayoutStats<()>>| {
+                        let payoutstats = &payoutstats.omaxselfishmin.as_ref().unwrap_static_some();
+                        verify_eq!(payoutstats.min(), payoutstats.max())
+                    };
+                    let (veccard_optimal, payoutstats_optimal) = determinebestcardresult.cards_with_maximum_value(
+                        |lhs: &SMaxSelfishMinStrategy<SPayoutStats<()>>, rhs| {
+                            get_min_max_eq(lhs).cmp(&get_min_max_eq(rhs))
                         },
                     );
-                    let div_openschafkopf_overview = unwrap!(document.create_element("div"));
-                    div_openschafkopf_overview.set_inner_html(&str_html_out);
-                    let document = SWebsysDocument(document);
-                    append_sibling(
-                        &unwrap!(
-                            document
-                                .find_class("game-overview")
-                                .exactly_one_2()
-                        ).0,
-                        &div_openschafkopf_overview,
-                    );
-                },
-                Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepiostr_username)) => {
-                    // Nothing to analyze for Stock.
-                },
-                Err(err_json) => {
-                    dbg_alert!(&format!("Error parsing document:\n{err_html:?}\n{err_json:?}"));
-                },
+                    if !veccard_optimal.contains(card_played) {
+                        match an_payout[*epi].cmp(&get_min_max_eq(payoutstats_optimal)) {
+                            Ordering::Greater | Ordering::Equal => EPlayedCardSeverity::Suboptimal(/*b_loss_realized*/false),
+                            Ordering::Less => EPlayedCardSeverity::Suboptimal(/*b_loss_realized*/true),
+                        }
+                    } else {
+                        EPlayedCardSeverity::Optimal
+                    }
+                });
+                vecepicardocardseverity.push((*epi, *card_played, ocardseverity));
+                fn_for_each_card(
+                    rules,
+                    ahand,
+                    stichseq,
+                    element_played_card,
+                );
             }
-        },
-    };
+            let ittplepib_repeated = itertools::chain(
+                EPlayerIndex::values()
+                    .map(|epi| (epi, /*bRepeated*/false)),
+                EPlayerIndex::values().take(EPlayerIndex::SIZE - 1)
+                    .map(|epi| (epi, /*bRepeated*/true)),
+            );
+            /*TODO const*/let html_table_gap_cell = th(attributes::style("width: 10px; background: none;"));
+            fn make_playerindex_columns(
+                ittplepib_repeated: impl Iterator<Item=(EPlayerIndex, bool/*b_repeated*/)> + Clone,
+                slcepicardocardseverity_stich: &[(EPlayerIndex, ECard, Option<EPlayedCardSeverity>)],
+            ) -> impl Iterator<Item=Option<(EPlayerIndex, bool/*b_repeated*/, ECard, Option<&EPlayedCardSeverity>)>> + Clone {
+                assert_eq!(slcepicardocardseverity_stich.len(), EPlayerIndex::SIZE);
+                itertools::merge_join_by(
+                    ittplepib_repeated,
+                    slcepicardocardseverity_stich,
+                    |(epi_running_index, _b_repeated), (epi_card, _card, _ocardseverity)| {
+                        epi_running_index.cmp(epi_card)
+                    },
+                ).map(move |eitherorboth| match eitherorboth {
+                    EitherOrBoth::Left((_epi_running_index, _b_repeated)) => None,
+                    EitherOrBoth::Both((epi_running_index, b_repeated), (epi_card, card, ocardseverity)) => Some((
+                        verify_eq!(epi_running_index, *epi_card),
+                        b_repeated,
+                        *card,
+                        ocardseverity.as_ref(),
+                    )),
+                    EitherOrBoth::Right(_) => panic!(),
+                })
+            }
+            let get_style_background = |epi_style_background| {
+                rules.is_primary(
+                    epi_style_background,
+                    /*fn_who_has_card*/|card| unwrap!(EPlayerIndex::values()
+                        .filter(|&epi_hand|
+                            game_finished.aveccard[epi_hand].contains(&card)
+                        )
+                        .exactly_one_2()
+                    ),
+                ).map(|b_active| if b_active {
+                    "background-color: #11111111;"
+                } else {
+                    "background:repeating-linear-gradient( 45deg, transparent, transparent 3px, #11111109 3px, #11111109 6px );"
+                })
+            };
+            let points_cell_style = |b_border_top: bool, epi: EPlayerIndex| {
+                let mut str_style = "padding: 5px;".to_string(); // TODO could html_generator solve this nicely?
+                if b_border_top {
+                    str_style += "border-top: 1px solid black;";
+                }
+                if let Some(str_style_background) = get_style_background(epi) {
+                    str_style += str_style_background;
+                }
+                attributes::style(str_style)
+            };
+            html_display_children((
+                div((
+                    attributes::style("font-weight: bold"),
+                    format!("{}", SDisplayRules::new(rules, |epi, fmt: &mut std::fmt::Formatter| {
+                        write!(fmt, "{}", mapepistr_username[epi])
+                    })),
+                )),
+                table((
+                    attributes::style("border-collapse: separate; border-spacing: 0 5px;"), // space between lines
+                    tbody((
+                        html_iter(EPlayerIndex::values().map(|epi_hand| tr((
+                            get_style_background(epi_hand).map(attributes::style),
+                            (
+                                td(format!("({})", epi_to_sauspiel_position(epi_hand))),
+                                html_table_gap_cell.clone(),
+                                td(output_cards_sauspiel_img_as_spans(
+                                    game_finished.aveccard[epi_hand].to_vec(),
+                                    rules.trumpfdecider(),
+                                )),
+                                html_table_gap_cell.clone(),
+                                td(format!(" Karten von {}", mapepistr_username[epi_hand])),
+                            )
+                        )))),
+                    )),
+                )),
+                table(tbody((
+                    tr((
+                        th(()), // empty cell to match subsequent rows // TODO merge with next row's cell?
+                        html_table_gap_cell.clone(),
+                        th((
+                            colspan(format!("{}", ittplepib_repeated.clone().count())),
+                            "Karten",
+                        )),
+                        html_table_gap_cell.clone(),
+                        th((
+                            colspan(format!("{}", EPlayerIndex::SIZE)),
+                            "Augen", // "Augen" as used by sauspiel.de
+                        )),
+                    )),
+                    tr((
+                        th(()), // empty cell to match subsequent rows
+                        html_table_gap_cell.clone(),
+                        {
+                            let mut mapepimapbocardseverity_header = EPlayerIndex::map_from_fn(|_epi| bool::map_from_fn(|_b_repeated| None));
+                            vecepicardocardseverity.chunks(EPlayerIndex::SIZE).for_each(|slcepicardocardseverity_stich| {
+                                for (epi, b_repeated, _card, ocardseverity) in make_playerindex_columns(ittplepib_repeated.clone(), slcepicardocardseverity_stich).flatten() {
+                                    assign_gt(&mut mapepimapbocardseverity_header[epi][b_repeated], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
+                                }
+                            });
+                            html_iter(ittplepib_repeated.clone().map(move |(epi_header, b_repeated)| {
+                                let mapbocardseverity = &mapepimapbocardseverity_header[epi_header];
+                                table_cell_with_background(
+                                    "th",
+                                    format!("{}", epi_to_sauspiel_position(epi_header)),
+                                    /*ocardseverity_bg*/mapbocardseverity[b_repeated].cloned(),
+                                    /*ocardseverity_top*/unwrap!(mapbocardseverity.iter().max(/*exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?*/)).cloned(),
+                                )
+                            }))
+                        },
+                        html_table_gap_cell.clone(),
+                        html_iter(EPlayerIndex::values().map(|epi_points|
+                            th((
+                                points_cell_style(/*b_border_top*/false, epi_points),
+                                format!("{}", epi_to_sauspiel_position(epi_points)),
+                            ))
+                        )),
+                    )),
+                    itertools::zip_eq(
+                        vecepicardocardseverity.chunks(EPlayerIndex::SIZE),
+                        game_finished.stichseq.completed_stichs_winner_index(dbg_argument!(&game_finished.rules)),
+                    ).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
+                        tr((
+                            table_cell_with_background(
+                                "td",
+                                /*str_text*/format!("{}. Stich", i_stich+1),
+                                /*ocardseverity_bg*/unwrap!(slcepicardocardseverity_stich.iter().map(|(_epi, _card, ocardseverity)| ocardseverity).max()).clone(),
+                                /*ocardseverity_top*/None,
+                            ),
+                            html_table_gap_cell.clone(),
+                            html_iter(
+                                make_playerindex_columns(ittplepib_repeated.clone(), slcepicardocardseverity_stich)
+                                    .map(|otplepibcardocardseverity| td(otplepibcardocardseverity.map(|(_epi, _b_repeated, card, ocardseverity)| {
+                                        let str_color = match ocardseverity {
+                                            Some(EPlayedCardSeverity::Optimal) => "#78db00", // green
+                                            Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
+                                            None => "lightgrey",
+                                        };
+                                        Some(internal_output_card_sauspiel_img(card, format!("border-top: 5px solid {str_color};box-sizing: content-box;")))
+                                    })))
+                            ),
+                            html_table_gap_cell.clone(),
+                            html_iter(EPlayerIndex::values().map(move |epi_points| 
+                                td((
+                                    points_cell_style(/*b_border_top*/false, epi_points),
+                                    if_then_some!(epi_points==epi_winner, format!("{}", points_stich(stich))),
+                                ))
+                            )),
+                        ))
+                    })
+                    .collect::<Vec<_>>(), // TODO avoid
+                    tr((
+                        td(colspan(format!("{}", // TODO(html_generator) support format_args
+                            1 // Column "i-th Stich"
+                            + 1 // html_table_gap_cell
+                            + ittplepib_repeated.clone().count()
+                            + 1 // html_table_gap_cell
+                        ))),
+                        html_iter(EPlayerIndex::values().map(|epi_points| {
+                            td((
+                                points_cell_style(/*b_border_top*/true, epi_points),
+                                format!("{}",
+                                    game_finished.stichseq.completed_stichs_winner_index(dbg_argument!(&game_finished.rules))
+                                        .filter_map(|(stich, epi_winner)|
+                                            if_then_some!(epi_points==epi_winner, points_stich(stich))
+                                        )
+                                        .sum::<isize>()
+                                ),
+                            ))
+
+                        })),
+                    )),
+                )),
+            ))).to_string()
+        }
+
+        fn epi_to_sauspiel_position(epi: EPlayerIndex) -> usize {
+            epi.to_usize() + 1
+        }
+
+        fn determine_best_card_sauspiel(ahand: EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence, epi: EPlayerIndex, rules: &SRules, expensifiers: &SExpensifiers) -> SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<()>, STplStrategiesOnlyMaxSelfishMin>> {
+            unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_,_,_>(
+                stichseq,
+                Box::new(std::iter::once(ahand)) as Box<_>,
+                /*fn_filter*/|stichseq, ahand| {
+                    SFilterByOracle::new(rules, ahand, stichseq)
+                },
+                &|_stichseq, _ahand| SGenericMinReachablePayout::<STplStrategiesOnlyMaxSelfishMin, SAlphaBetaPrunerNone>::new(
+                    rules,
+                    verify_eq!(epi, unwrap!(stichseq.current_playerindex())),
+                    expensifiers.clone(),
+                ),
+                /*fn_snapshotcache*/|rulestatecache| {
+                    rules.snapshot_cache::<STplStrategiesOnlyMaxSelfishMin>(rulestatecache)
+                },
+                /*fn_visualizer*/SNoVisualization::factory(),
+                /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
+                /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
+            ))
+        }
+        fn append_sibling(node_existing: &web_sys::Node, node_new: &web_sys::Node) {
+            unwrap!(
+                unwrap!(node_existing.parent_element())
+                    .append_child(node_new)
+            );
+        }
+        let document = unwrap!(unwrap!(web_sys::window()).document());
+        let mut vecahandstichseqcardepielement = Vec::new();
+        #[derive(Clone)]
+        struct SDetermineRulesStep {
+            epi: EPlayerIndex,
+            node_determinerules: web_sys::Element,
+            resslcschlag_trumpf: Result<&'static [ESchlag], ()>,
+            resoefarbe_trumpf: Result<Option<EFarbe>, ()>,
+        }
+        fn output_cards_sauspiel_img_as_spans(mut veccard: Vec<ECard>, trumpfdecider: &STrumpfDecider) -> impl html_generator::AttributeOrChild {
+            use html_generator::*;
+            trumpfdecider.sort_cards(&mut veccard);
+            html_iter(veccard.into_iter().map(|card| internal_output_card_sauspiel_img(card, "".into())))
+        }
+        fn output_position_and_cards_sauspiel_img(epi: EPlayerIndex, veccard: Vec<ECard>, trumpfdecider: &STrumpfDecider) -> impl html_generator::AttributeOrChild {
+            (
+                format!("({})", epi_to_sauspiel_position(epi)),
+                output_cards_sauspiel_img_as_spans(veccard, trumpfdecider)
+            )
+        }
+        match internal_analyze_sauspiel_html(
+            SWebsysDocument(document.clone()),
+            /*fn_gameannouncement*/|_, ogameannouncement, node_gameannouncement| (ogameannouncement.clone(), node_gameannouncement),
+            /*fn_determinerules_step*/|epi, oeobslcschlagoefarbe_trumpf, SWebsysElement(node_determinerules)| SDetermineRulesStep {
+                epi,
+                resslcschlag_trumpf: oeobslcschlagoefarbe_trumpf.clone().and_then(EitherOrBoth::left).ok_or(()),
+                resoefarbe_trumpf: oeobslcschlagoefarbe_trumpf.clone().and_then(EitherOrBoth::right).ok_or(()),
+                node_determinerules,
+            },
+            /*fn_before_play_card*/|game, card, epi, element_played_card| {
+                vecahandstichseqcardepielement.push((
+                    (game.ahand.clone(), game.stichseq.clone()),
+                    card,
+                    epi,
+                    element_played_card.0
+                ));
+            },
+        ) {
+            Ok((SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout}, mapepistr_username)) => {
+                let (_ogameannouncement, SWebsysElement(node_gameannouncement_epi0)) = &game_finished.mapepigameannouncement[EPlayerIndex::EPI0];
+                for epi in EPlayerIndex::values() {
+                    let prepend_cards = |slcschlag_trumpf: &'static [ESchlag], oefarbe_trumpf: Option<EFarbe>, node: &web_sys::Element| {
+                        node.set_inner_html(&format!("{} {}",
+                            html_display_children(output_position_and_cards_sauspiel_img(epi, game_finished.aveccard[epi].to_vec(), &STrumpfDecider::new(slcschlag_trumpf, oefarbe_trumpf))),
+                            node.inner_html()),
+                        );
+                    };
+                    let (ogameannouncement, SWebsysElement(node_gameannouncement)) = &game_finished.mapepigameannouncement[epi];
+                    let mut itdeterminerulesstep_epi = game_finished.determinerules.iter()
+                        .filter(|determinerulesstep| determinerulesstep.epi==epi);
+                    let (slcschlag_trumpf_gameannouncement, oefarbe_trumpf_gameannouncement) = if let Some(SGameAnnouncementAnonymous) = ogameannouncement {
+                        let mut vecdeterminerulesstep = itdeterminerulesstep_epi.cloned().collect::<Vec<_>>(); // TODO can we work directly on game.determinerules?
+                        assert!(!vecdeterminerulesstep.is_empty());
+                        { // Sauspiel reveals slcschlag_trumpf first, so we propagate that forwards
+                            if vecdeterminerulesstep[0].resslcschlag_trumpf.is_err() {
+                                vecdeterminerulesstep[0].resslcschlag_trumpf = Ok(&[ESchlag::Ober, ESchlag::Unter]);
+                            }
+                            for i_determinerulesstep in 1..vecdeterminerulesstep.len() {
+                                if vecdeterminerulesstep[i_determinerulesstep].resslcschlag_trumpf.is_err() {
+                                    vecdeterminerulesstep[i_determinerulesstep].resslcschlag_trumpf = verify!(vecdeterminerulesstep[i_determinerulesstep-1].resslcschlag_trumpf);
+                                }
+                            }
+                        }
+                        { // Sauspiel reveals oefarbe_trumpf potentially last, so we propagate that backwards
+                            let determinerulesstep_last = unwrap!(vecdeterminerulesstep.last_mut());
+                            assert!(determinerulesstep_last.resslcschlag_trumpf.is_ok());
+                            if determinerulesstep_last.resoefarbe_trumpf.is_err() {
+                                // determine oefarbe_trumpf heuristically
+                                let trumpfdecider_no_farbe = STrumpfDecider::new(
+                                    unwrap!(determinerulesstep_last.resslcschlag_trumpf),
+                                    /*ofearbe*/None
+                                );
+                                let mut mapefarben_count = EFarbe::map_from_fn(|_efarbe| 0);
+                                for &card in &game_finished.aveccard[epi] {
+                                    match trumpfdecider_no_farbe.trumpforfarbe(card) {
+                                        VTrumpfOrFarbe::Trumpf => {},
+                                        VTrumpfOrFarbe::Farbe(efarbe) => {
+                                            mapefarben_count[efarbe] += 1;
+                                        },
+                                    }
+                                }
+                                determinerulesstep_last.resoefarbe_trumpf = Ok(EFarbe::values().max_by(|&efarbe_lhs, &efarbe_rhs|
+                                    mapefarben_count[efarbe_lhs].cmp(&mapefarben_count[efarbe_rhs])
+                                        .then_with(|| {
+                                            let has_ass = |efarbe| {
+                                                game_finished.aveccard[epi].contains(&ECard::new(efarbe, ESchlag::Ass))
+                                            };
+                                            has_ass(efarbe_rhs).cmp(&has_ass(efarbe_lhs))
+                                        })
+                                ))
+                            }
+                            for i_determinerulesstep in (1..vecdeterminerulesstep.len()).rev() {
+                                match vecdeterminerulesstep[i_determinerulesstep-1].resoefarbe_trumpf {
+                                    Err(()) | Ok(None) => {
+                                        vecdeterminerulesstep[i_determinerulesstep-1].resoefarbe_trumpf = verify!(vecdeterminerulesstep[i_determinerulesstep].resoefarbe_trumpf);
+                                    },
+                                    Ok(Some(_efarbe)) => {
+                                        // keep efarbe
+                                    },
+                                }
+                            }
+                        }
+                        // vecdeterminerulesstep is prepared, so we can improve determinerules section
+                        for SDetermineRulesStep{epi:_, node_determinerules, resslcschlag_trumpf, resoefarbe_trumpf} in &vecdeterminerulesstep {
+                            prepend_cards(unwrap!(resslcschlag_trumpf), unwrap!(resoefarbe_trumpf), node_determinerules);
+                        }
+                        let determinerulesstep_first = unwrap!(vecdeterminerulesstep.first());
+                        (unwrap!(determinerulesstep_first.resslcschlag_trumpf), unwrap!(determinerulesstep_first.resoefarbe_trumpf))
+                    } else {
+                        assert!(itdeterminerulesstep_epi.next().is_none());
+                        (type_inference!(&'static[ESchlag], &[ESchlag::Ober, ESchlag::Unter]), Some(EFarbe::Herz))
+                    };
+                    prepend_cards(slcschlag_trumpf_gameannouncement, oefarbe_trumpf_gameannouncement, node_gameannouncement);
+                }
+                let rules = &game_finished.rules;
+                let node_gameannouncements = unwrap!(node_gameannouncement_epi0.parent_element()); // TODO? Find common predecessor of all nodes in game_finished.mapepigameannouncement?
+                { // Add doublings and stoss to protocol
+                    let node_doubling_or_stoss = |epi, veccard: Vec<ECard>, str_explanation, trumpfdecider| {
+                        let node_doubling_or_stoss = unwrap!(
+                            unwrap!(node_gameannouncement_epi0.clone_node())
+                                .dyn_into::<web_sys::Element>() // TODO can we avoid this?
+                        );
+                        node_doubling_or_stoss.set_inner_html(&format!("{} {} {}",
+                            html_display_children(output_position_and_cards_sauspiel_img(epi, veccard, trumpfdecider)),
+                            mapepistr_username[epi],
+                            str_explanation,
+                        ));
+                        node_doubling_or_stoss
+                    };
+                    // Add doublings to protocol
+                    let trumpfdecider_doubling = STrumpfDecider::new(&[ESchlag::Ober, ESchlag::Unter], Some(EFarbe::Herz));
+                    for epi in EPlayerIndex::values().rev(/*so that we can repeatedly prepend*/) {
+                        unwrap!(node_gameannouncements.prepend_with_node_1(&node_doubling_or_stoss(
+                            epi,
+                            first_hand_for(&game_finished.aveccard[epi], game_finished.kurzlang()).to_vec(),
+                            if *unwrap!(game_finished.expensifiers.doublings.get(epi)) {
+                                "klopft"
+                            } else {
+                                "klopft nicht"
+                            },
+                            &trumpfdecider_doubling,
+                        )));
+                    }
+                    // Add stoss to protocol
+                    for (stoss, str_explanation_stoss) in std::iter::zip(
+                        &game_finished.expensifiers.vecstoss,
+                        itertools::chain(
+                            ["gibt Kontra", "gibt Retour"],
+                            std::iter::repeat("gibt Stoss"),
+                        )
+                    ) {
+                        let epi = stoss.epi;
+                        unwrap!(node_gameannouncements.append_with_node_1(&node_doubling_or_stoss(
+                            epi,
+                            game_finished.aveccard[epi].to_vec(),
+                            str_explanation_stoss,
+                            rules.trumpfdecider(),
+                        )));
+                    }
+                }
+                let node_whole_game = unwrap!(
+                    unwrap!(node_gameannouncement_epi0.clone_node())
+                        .dyn_into::<web_sys::Element>() // TODO can we avoid this?
+                );
+                node_whole_game.set_inner_html(&make_simple_game_protocol(
+                    &game_finished,
+                    &an_payout,
+                    &mapepistr_username,
+                    vecahandstichseqcardepielement.iter(),
+                    /*fn_with_determinebestcardresult*/|rules, ahand, stichseq, determinebestcardresult, card_played, element_played_card| {
+                        let div_table = unwrap!(document.create_element("div"));
+                        div_table.set_inner_html(&{
+                            html_display_children(html_payout_table::<_, _>(
+                                rules,
+                                ahand,
+                                stichseq,
+                                determinebestcardresult,
+                                card_played,
+                                &output_card_sauspiel_img,
+                            )).to_string()
+                        });
+                        append_sibling(element_played_card, &div_table);
+                    },
+                    /*fn_for_each_card*/|rules, ahand, stichseq, element_played_card| {
+                        let div_button = unwrap!(document.create_element("div"));
+                        div_button.set_inner_html(&html_copy_button(
+                            rules,
+                            ahand,
+                            stichseq,
+                            /*str_openschafkopf_executable*/"openschafkopf",
+                        ));
+                        append_sibling(element_played_card, &div_button);
+                    },
+                ));
+                unwrap!(node_gameannouncements.append_with_node_1(&node_whole_game));
+            },
+            Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepistr_username)) => {
+                // Nothing to analyze for Stock.
+            },
+            Err(err_html) => { // TODO we should distinguish between "Game not visible/found/accessible" and "HTML not understood"
+                let mut vecahandstichseqcardepi = Vec::new();
+                match analyze_sauspiel_json(
+                    &{
+                        let xmlhttprequest = unwrap!(web_sys::XmlHttpRequest::new());
+                        let str_json_url = format!("{}.json", str_window_location_href);
+                        unwrap!(xmlhttprequest.open_with_async(
+                            "GET",
+                            &str_json_url,
+                            /*async*/false,
+                        ));
+                        unwrap!(xmlhttprequest.send());
+                        assert!(xmlhttprequest.status().is_ok());
+                        unwrap!( // unwrap Option
+                            unwrap!(xmlhttprequest.response_text()) // unwrap Result
+                        )
+                    },
+                    /*fn_before_zugeben*/|game, _i_stich, epi, card| {
+                        vecahandstichseqcardepi.push((
+                            (game.ahand.clone(), game.stichseq.clone()),
+                            card,
+                            epi,
+                            (),
+                        ));
+                    },
+                ) {
+                    Ok((SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout}, mapepiostr_username)) => {
+                        let str_html_out = make_simple_game_protocol(
+                            &game_finished,
+                            &an_payout,
+                            &mapepiostr_username.map_into(|ostr_username| ostr_username.unwrap_or_else(|| "[Spielername unbekannt]".to_string())),
+                            vecahandstichseqcardepi.iter(),
+                            /*fn_with_determinebestcardresult*/|_rules, _ahand, _stichseq, _determinebestcardresult, _card_played, _element_played_card| {},
+                            /*fn_for_each_card*/|_rules, _ahand, _stichseq, _element_played_card| {
+                            },
+                        );
+                        let div_openschafkopf_overview = unwrap!(document.create_element("div"));
+                        div_openschafkopf_overview.set_inner_html(&str_html_out);
+                        let document = SWebsysDocument(document);
+                        append_sibling(
+                            &unwrap!(
+                                document
+                                    .find_class("game-overview")
+                                    .exactly_one_2()
+                            ).0,
+                            &div_openschafkopf_overview,
+                        );
+                    },
+                    Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepiostr_username)) => {
+                        // Nothing to analyze for Stock.
+                    },
+                    Err(err_json) => {
+                        dbg_alert!(&format!("Error parsing document:\n{err_html:?}\n{err_json:?}"));
+                    },
+                }
+            },
+        };
+    }
 }
 
 
