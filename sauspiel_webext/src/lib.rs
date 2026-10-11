@@ -666,19 +666,16 @@ pub fn greet() {
                 &{
                     let xmlhttprequest = unwrap!(web_sys::XmlHttpRequest::new());
                     let str_json_url = format!("{}.json", unwrap!(unwrap!(web_sys::window()).location().href()));
-                    dbg_alert!(&str_json_url);
                     unwrap!(xmlhttprequest.open_with_async(
                         "GET",
                         &str_json_url,
                         /*async*/false,
                     ));
                     unwrap!(xmlhttprequest.send());
-                    let str_json = unwrap!( // unwrap Option
-                        unwrap!(xmlhttprequest.response_text()) // unwrap Result
-                    );
                     assert!(xmlhttprequest.status().is_ok());
-                    dbg_alert!(&str_json);
-                    str_json
+                    unwrap!( // unwrap Option
+                        unwrap!(xmlhttprequest.response_text()) // unwrap Result
+                    )
                 },
                 /*fn_before_zugeben*/|game, _i_stich, epi, card| {
                     vecahandstichseqcardepi.push((
