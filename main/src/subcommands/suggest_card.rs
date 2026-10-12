@@ -239,11 +239,11 @@ fn for_each_game_situation(
                                 return Err(EDetermineKurzLangError::UnsupportedCard);
                             }
                         }
-                        let mut stichseq = SStichSequence::new(ekurzlang);
-                        for &card in veccard_stichseq.iter() {
-                            assert!(stichseq.current_playerindex().is_some());
-                            stichseq.zugeben(card, rules);
-                        }
+                        let stichseq = unwrap!(SStichSequence::new_from_cards(
+                            ekurzlang,
+                            veccard_stichseq.iter().copied(),
+                            rules
+                        ));
                         let epi_position = oepi_position_concrete.unwrap_or_else(||
                             unwrap!(stichseq.current_stich().current_playerindex())
                         );
