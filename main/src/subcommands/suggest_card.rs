@@ -227,7 +227,6 @@ fn for_each_game_situation(
                 #[derive(Debug, Clone)]
                 enum EDetermineKurzLangError {
                     UnsupportedCard,
-                    TooManyCardsInStichSequence,
                     IncompatibleHandAndStichSequenceCardCounts,
                 }
                 let (stichseq, ahand_with_holes, epi_position) = usersuppliedposition.with_concrete_playerindex(rules, |oepi_position_concrete| {
@@ -242,9 +241,7 @@ fn for_each_game_situation(
                         }
                         let mut stichseq = SStichSequence::new(ekurzlang);
                         for &card in veccard_stichseq.iter() {
-                            if stichseq.current_playerindex().is_none() {
-                                return Err(EDetermineKurzLangError::TooManyCardsInStichSequence);
-                            }
+                            assert!(stichseq.current_playerindex().is_some());
                             stichseq.zugeben(card, rules);
                         }
                         let epi_position = oepi_position_concrete.unwrap_or_else(||
