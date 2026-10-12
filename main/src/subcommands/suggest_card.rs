@@ -224,51 +224,61 @@ fn for_each_game_situation(
             };
             for rules in itrules {
                 let rules = &rules;
+                #[derive(Debug, Clone)]
+                enum EDetermineKurzLangError {
+                    UnsupportedCard,
+                    TooManyCardsInStichSequence,
+                    IncompatibleHandAndStichSequenceCardCounts,
+                }
                 let (stichseq, ahand_with_holes, epi_position) = usersuppliedposition.with_concrete_playerindex(rules, |oepi_position_concrete| {
-                    EKurzLang::values()
-                        .filter_map(|ekurzlang| {
-                            for &card in std::iter::chain(
-                                veccard_stichseq.iter(),
-                                vecocard_hand.iter().flatten()
-                            ) {
-                                if !ekurzlang.supports_card(card) {
-                                    return None; // TODO? distinguish error
-                                }
+                    let mapekurzlangrestplstichseqahandepi = EKurzLang::map_from_fn(|ekurzlang| -> Result<_,_> {
+                        for &card in std::iter::chain(
+                            veccard_stichseq.iter(),
+                            vecocard_hand.iter().flatten()
+                        ) {
+                            if !ekurzlang.supports_card(card) {
+                                return Err(EDetermineKurzLangError::UnsupportedCard);
                             }
-                            let mut stichseq = SStichSequence::new(ekurzlang);
-                            for &card in veccard_stichseq.iter() {
-                                if stichseq.current_playerindex().is_none() {
-                                    return None; // TODO? distinguish error
-                                }
-                                stichseq.zugeben(card, rules);
+                        }
+                        let mut stichseq = SStichSequence::new(ekurzlang);
+                        for &card in veccard_stichseq.iter() {
+                            if stichseq.current_playerindex().is_none() {
+                                return Err(EDetermineKurzLangError::TooManyCardsInStichSequence);
                             }
-                            let epi_position = oepi_position_concrete.unwrap_or_else(||
-                                unwrap!(stichseq.current_stich().current_playerindex())
-                            );
-                            if_then_some!(
-                                stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
-                                (SHand::new_from_iter(vecocard_hand.iter().flatten()), epi_position)
-                                    .to_ahand()
-                            ).or_else(|| {
-                                let n_cards_total = stichseq.kurzlang().cards_per_player()*EPlayerIndex::SIZE;
-                                if_then_some!(stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total, {
-                                    let mut i_card_lo = 0;
-                                    EPlayerIndex::map_from_raw(stichseq.remaining_cards_per_hand().as_raw().map(|n_remaining| {
-                                        // Note: This function is called for each index in order (https://doc.rust-lang.org/std/primitive.array.html#method.map)
-                                        let hand = SHand::new_from_iter(
-                                            vecocard_hand[i_card_lo..i_card_lo+n_remaining].iter()
-                                                .flatten()
-                                        );
-                                        i_card_lo += n_remaining;
-                                        assert!(hand.cards().len() <= n_remaining);
-                                        hand
-                                    }))
-                                })
+                            stichseq.zugeben(card, rules);
+                        }
+                        let epi_position = oepi_position_concrete.unwrap_or_else(||
+                            unwrap!(stichseq.current_stich().current_playerindex())
+                        );
+                        if_then_some!(
+                            stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),
+                            (SHand::new_from_iter(vecocard_hand.iter().flatten()), epi_position)
+                                .to_ahand()
+                        ).or_else(|| {
+                            let n_cards_total = stichseq.kurzlang().cards_per_player()*EPlayerIndex::SIZE;
+                            if_then_some!(stichseq.visible_cards().count()+vecocard_hand.len()==n_cards_total, {
+                                let mut i_card_lo = 0;
+                                EPlayerIndex::map_from_raw(stichseq.remaining_cards_per_hand().as_raw().map(|n_remaining| {
+                                    // Note: This function is called for each index in order (https://doc.rust-lang.org/std/primitive.array.html#method.map)
+                                    let hand = SHand::new_from_iter(
+                                        vecocard_hand[i_card_lo..i_card_lo+n_remaining].iter()
+                                            .flatten()
+                                    );
+                                    i_card_lo += n_remaining;
+                                    assert!(hand.cards().len() <= n_remaining);
+                                    hand
+                                }))
                             })
-                            .map(|ahand| (stichseq, ahand, epi_position))
                         })
+                        .map(|ahand| (stichseq, ahand, epi_position))
+                        .ok_or(EDetermineKurzLangError::IncompatibleHandAndStichSequenceCardCounts)
+                    });
+                    EKurzLang::values()
+                        .filter_map(|ekurzlang|
+                            mapekurzlangrestplstichseqahandepi[ekurzlang].clone(/*TODO avoidable?*/).ok()
+                        )
                         .exactly_one_2()
-                        .map_err(|err| format_err!("Could not determine ekurzlang: {:?}", err))
+                        .map_err(|err| format_err!("{err:?}. {mapekurzlangrestplstichseqahandepi:?}"))
                 })?;
                 if let Some(epi_active) = rules.playerindex() {
                     let veccard_hand_active = stichseq.cards_from_player(&ahand_with_holes[epi_active], epi_active)
