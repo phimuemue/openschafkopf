@@ -227,11 +227,17 @@ fn for_each_game_situation(
                 let (stichseq, ahand_with_holes, epi_position) = usersuppliedposition.with_concrete_playerindex(rules, |oepi_position_concrete| {
                     EKurzLang::values()
                         .filter_map(|ekurzlang| {
+                            for &card in std::iter::chain(
+                                veccard_stichseq.iter(),
+                                vecocard_hand.iter().flatten()
+                            ) {
+                                if !ekurzlang.supports_card(card) {
+                                    return None; // TODO? distinguish error
+                                }
+                            }
                             let mut stichseq = SStichSequence::new(ekurzlang);
                             for &card in veccard_stichseq.iter() {
-                                if !ekurzlang.supports_card(card)
-                                    || stichseq.current_playerindex().is_none()
-                                {
+                                if stichseq.current_playerindex().is_none() {
                                     return None; // TODO? distinguish error
                                 }
                                 stichseq.zugeben(card, rules);
