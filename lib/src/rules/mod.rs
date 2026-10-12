@@ -76,7 +76,7 @@ impl fmt::Display for VTrumpfOrFarbe {
     }
 }
 
-pub type SDoublings = SPlayersInRound<bool, SStaticEPI0>; // assume that doublings occur in order
+pub type SDoublings = SPlayersInRound<bool, SStaticEPI0>; // TODO support doublings in arbitrary order
 
 #[derive(Clone, new, Debug)]
 pub struct SStossParams {
