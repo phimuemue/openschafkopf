@@ -9,7 +9,7 @@ use arrayvec::ArrayVec;
 
 #[derive(Clone, Debug)]
 struct STrumpfDeciderInternal {
-    slcschlag: &'static [ESchlag],
+    vecschlag: ArrayVec<ESchlag, {ESchlag::SIZE}>,
     oefarbe: Option<EFarbe>,
     mapschlagoi_higher_is_stronger: EnumMap<ESchlag, Option<NonZeroUsize>>,
 }
@@ -25,7 +25,7 @@ impl STrumpfDeciderInternal {
         }
         assert!(slcschlag_trumpf.iter().all_unique());
         Self{
-            slcschlag: slcschlag_trumpf,
+            vecschlag: slcschlag_trumpf.iter().copied().collect(),
             oefarbe: oefarbe.into(),
             mapschlagoi_higher_is_stronger,
         }
@@ -133,14 +133,14 @@ impl TCardSorter for STrumpfDecider {
 
 impl STrumpfDeciderInternal {
     fn trumpforfarbe(&self, card: ECard) -> VTrumpfOrFarbe {
-        if self.slcschlag.contains(&card.schlag()) || self.oefarbe==Some(card.farbe()) {
+        if self.vecschlag.contains(&card.schlag()) || self.oefarbe==Some(card.farbe()) {
             VTrumpfOrFarbe::Trumpf
         } else {
             VTrumpfOrFarbe::Farbe(card.farbe())
         }
     }
     fn compare_cards(&self, card_fst: ECard, card_snd: ECard) -> Option<Ordering> {
-        let find_schlag = |schlag_card| self.slcschlag.iter().position(|&schlag_trumpf| schlag_trumpf==schlag_card);
+        let find_schlag = |schlag_card| self.vecschlag.iter().position(|&schlag_trumpf| schlag_trumpf==schlag_card);
         match (find_schlag(card_fst.schlag()), find_schlag(card_snd.schlag())) {
             (Some(i_fst), Some(i_snd)) => Some({
                 match i_fst.cmp(&i_snd) {
