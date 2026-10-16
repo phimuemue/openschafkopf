@@ -23,6 +23,7 @@ impl STrumpfDeciderInternal {
         for schlag in ESchlag::values() {
             assert_eq!(mapschlagoi_higher_is_stronger[schlag].is_some(), !slcschlag_trumpf.contains(&schlag));
         }
+        assert!(slcschlag_trumpf.iter().all_unique());
         Self{
             slcschlag: slcschlag_trumpf,
             oefarbe: oefarbe.into(),

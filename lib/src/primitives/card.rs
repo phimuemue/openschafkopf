@@ -34,7 +34,7 @@ impl<'de> serde::Deserialize<'de> for EFarbe {
     }
 }
 
-plain_enum_mod!(modeschlag, ESchlag {
+plain_enum_mod!(modeschlag, derive(Hash,), map_derive(), ESchlag {
     Ass,
     Zehn,
     Koenig,
