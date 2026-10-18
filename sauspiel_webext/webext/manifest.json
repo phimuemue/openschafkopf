@@ -8,7 +8,7 @@
       "matches": ["*://*.sauspiel.de/spiele/*"],
       "js": [
           "sauspiel_webext.js",
-          "sauspiel_webext_content_script.js"
+          "spielbericht_content_script.js"
       ]
     }
   ],
