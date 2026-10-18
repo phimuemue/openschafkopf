@@ -144,8 +144,8 @@ fn output_card_sauspiel_img(card: ECard, b_highlight: bool) -> impl html_generat
     )
 }
 
-#[wasm_bindgen(start)]
-pub fn greet() {
+#[wasm_bindgen]
+pub fn analyze_spielbericht() { // "Spielbericht" as sometimes referred to by Sauspiel
     set_panic_hook();
 
     #[derive(PartialOrd, Ord, PartialEq, Eq, Clone)]
