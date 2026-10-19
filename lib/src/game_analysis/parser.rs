@@ -473,7 +473,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
     }.map(|gameresult| (gameresult, mapepistr_username))
 }
 
-plain_enum_mod!(modesauspielposition, derive(Deserialize_repr,), map_derive(), ESauspielPosition {_0, _1, _2, _3,});
+plain_enum_mod!(modesauspielposition, derive(Deserialize_repr, Hash,), map_derive(), ESauspielPosition {_0, _1, _2, _3,});
 
 pub fn analyze_sauspiel_json(
     str_json: &str,
@@ -556,6 +556,8 @@ pub fn analyze_sauspiel_json(
     let mut vectplpositioncard_played = Vec::new();
     let mut vecerr = Vec::new();
     let mut mappositionostr_username = ESauspielPosition::map_from_fn(|_position| None);
+    let mut vecposition_doubling = Vec::new();
+    let mut vecposition_stoss = Vec::new();
 
     for jsonval_sauspieljsonevent in serde_json::from_str::<Vec<serde_json::Value>>(str_json)? {
         match serde_json::value::from_value(jsonval_sauspieljsonevent) {
@@ -567,11 +569,15 @@ pub fn analyze_sauspiel_json(
                 | VSauspielJSONEvent::gameStarted{..}
                 | VSauspielJSONEvent::playersGotCards{..} // TODO? derive EKurzLang and aveccard from this
                 | VSauspielJSONEvent::youGotCards{..} // TODO? derive EKurzLang from this
-                | VSauspielJSONEvent::hasKnocked{..} // TODO collect doublings
-                | VSauspielJSONEvent::hasContra{..} // TODO collect stoss
                 | VSauspielJSONEvent::wonTheTrick{..} // TODO? consistency checks
             )
             => {
+            },
+            Ok(VSauspielJSONEvent::hasKnocked{position}) => {
+                vecposition_doubling.push(position);
+            },
+            Ok(VSauspielJSONEvent::hasContra{position}) => {
+                vecposition_stoss.push(position);
             },
             Ok(VSauspielJSONEvent::joinedTable{position, userName}) => {
                 verify!(mappositionostr_username[position].replace(userName).is_none());
@@ -589,6 +595,7 @@ pub fn analyze_sauspiel_json(
             },
         }
     }
+    assert!(vecposition_doubling.iter().all_unique());
     move || -> Result<_,_> {
         let position_corresponding_to_epi0 = vectplpositioncard_played.first()
             .ok_or_else(|| format_err!("Cannot determine position_corresponding_to_epi0"))
@@ -618,7 +625,21 @@ pub fn analyze_sauspiel_json(
         ).map_err(|SDuplicateCard(card)| format_err!("Duplicate card: {}", card))?;
         SGameGeneric::</*Ruleset*/EKurzLang, (), ()>::new_finished_with_ruleset(
             rules,
-            SExpensifiers::new_no_stock_doublings_stoss(), // TODO
+            SExpensifiers::new(
+                /*n_stock: Sauspiel does not support Stock*/0,
+                SDoublings::new_full(
+                    SStaticEPI0{},
+                    EPlayerIndex::map_from_fn(|epi| // TODO respect oder of doublings
+                        vecposition_doubling.iter().any(|&position| position_to_epi(position)==epi)
+                    ).into_raw(),
+                ),
+                vecposition_stoss.into_iter() // TODO Check that vecstoss is compatible with Sauspiel rules
+                    .map(|position| SStoss{
+                        epi: position_to_epi(position),
+                        n_cards_played: 0, // TODO Does Sauspiel expose time of Stoss?
+                    })
+                    .collect(),
+            ),
             SStichSequenceGameFinished::new(&stichseq),
             ekurzlang,
             fn_before_zugeben,
