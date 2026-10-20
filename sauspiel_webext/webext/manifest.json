@@ -5,6 +5,13 @@
 
   "content_scripts": [
     {
+      "matches": ["*://*.sauspiel.de/spiele", "*://*.sauspiel.de/spiele/"],
+      "js": [
+          "sauspiel_webext.js",
+          "spielesuche_content_script.js"
+      ]
+    },
+    {
       "matches": ["*://*.sauspiel.de/spiele/*"],
       "js": [
           "sauspiel_webext.js",
@@ -14,6 +21,7 @@
   ],
 
   "web_accessible_resources": [
+      "sauspiel_webext.js",
       "sauspiel_webext_bg.wasm"
   ],
 
