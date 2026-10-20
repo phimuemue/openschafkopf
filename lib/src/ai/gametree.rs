@@ -450,7 +450,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
     pub trait TTplStrategies : Clone + PartialEq + std::fmt::Debug + 'static + Serialize {
         $(type $IsSome: TIsSome;)*
 
-        fn maxmin_for_pruner(permmstrategy: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, Self>, epi_self: EPlayerIndex) -> isize;
+        fn maxmin_for_pruner(permmstrategy: &SPerMinMaxStrategyRawPayout<Self>, epi_self: EPlayerIndex) -> isize;
     }
 
     #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -657,7 +657,7 @@ macro_rules! impl_perminmaxstrategy{(
         type IsSomeMaxSelfishMax = $IsSomeMaxSelfishMax;
         type IsSomeMaxMax = $IsSomeMaxMax;
 
-        fn maxmin_for_pruner(permmstrategy: &SPerMinMaxStrategyGeneric<EnumMap<EPlayerIndex, isize>, Self>, epi_self: EPlayerIndex) -> isize {
+        fn maxmin_for_pruner(permmstrategy: &SPerMinMaxStrategyRawPayout<Self>, epi_self: EPlayerIndex) -> isize {
             permmstrategy.$ident_strategy_maxmin_for_pruner.as_ref().unwrap_static_some()[epi_self]
         }
     }
