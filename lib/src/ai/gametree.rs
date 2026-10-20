@@ -868,7 +868,7 @@ impl TPruner for SPrunerViaHint {
             });
         if_then_some!(
             mapepion_payout.iter().all(Option::is_some),
-            SPerMinMaxStrategyGeneric::<EnumMap<EPlayerIndex, isize>, _>::new(mapepion_payout.map(|opayout| unwrap!(opayout)))
+            SPerMinMaxStrategyRawPayout::new(mapepion_payout.map(|opayout| unwrap!(opayout)))
         )
     }
 }
