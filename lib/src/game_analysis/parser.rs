@@ -473,7 +473,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
     }.map(|gameresult| (gameresult, mapepistr_username))
 }
 
-plain_enum_mod!(modesauspielposition, derive(Deserialize_repr, Hash,), map_derive(), ESauspielPosition {_0, _1, _2, _3,});
+plain_enum!(derive(Deserialize_repr, Hash,), ESauspielPosition {_0, _1, _2, _3,});
 
 pub fn analyze_sauspiel_json(
     str_json: &str,

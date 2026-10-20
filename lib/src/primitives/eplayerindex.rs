@@ -3,7 +3,7 @@ use arrayvec::{self, ArrayVec};
 use std::{fmt, slice, str::FromStr};
 use serde_repr::Serialize_repr;
 
-plain_enum_mod!(modepi, derive(Serialize_repr, Hash,), map_derive(), EPlayerIndex {
+plain_enum!(derive(Serialize_repr, Hash,), EPlayerIndex {
     EPI0, EPI1, EPI2, EPI3,
 });
 define_static_value!(pub SStaticEPI0, EPlayerIndex, EPlayerIndex::EPI0);

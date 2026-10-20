@@ -1,6 +1,6 @@
 use plain_enum::*;
 
-plain_enum_mod!(modelohi, ELoHi {Lo, Hi,});
+plain_enum!(ELoHi {Lo, Hi,});
 
 pub type SInterval<T> = EnumMap<ELoHi, T>;
 

@@ -4,7 +4,7 @@ use std::{
 };
 use serde::{Serializer};
 
-plain_enum_mod!(modefarbe, EFarbe {
+plain_enum!(EFarbe {
     Eichel,
     Gras,
     Herz,
@@ -34,7 +34,7 @@ impl<'de> serde::Deserialize<'de> for EFarbe {
     }
 }
 
-plain_enum_mod!(modeschlag, derive(Hash,), map_derive(), ESchlag {
+plain_enum!(derive(Hash,), ESchlag {
     Ass,
     Zehn,
     Koenig,
@@ -51,7 +51,7 @@ impl fmt::Display for ESchlag {
     }
 }
 
-plain_enum_mod!(modekurzlang, EKurzLang {
+plain_enum!(EKurzLang {
     Kurz,
     Lang,
 });
