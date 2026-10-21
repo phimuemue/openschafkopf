@@ -15,7 +15,6 @@ pub trait TRufspielPayout: Clone + Sync + fmt::Debug + Send + 'static {
     fn payouthints(
         &self,
         rules: &SRulesRufspielGeneric<Self>,
-        tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         expensifiers: &SExpensifiers,
         rulestatecache: &SRuleStateCache,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
@@ -69,7 +68,7 @@ impl TRufspielPayout for SRufspielPayout {
                 },
         )
     }
-    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         self.payoutdecider.payouthints(
             rulestatecache,
             &rules.playerparties(&rulestatecache.fixed),
@@ -210,10 +209,9 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         )
     }
 
-    fn payouthints(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         self.rufspielpayout.payouthints(
             self,
-            tplahandstichseq,
             expensifiers,
             rulestatecache,
         )
@@ -430,7 +428,7 @@ impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
         }
         an_payout
     }
-    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, _expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         self.payoutdecider.payouthints(
             rulestatecache,
             &rules.playerparties(&rulestatecache.fixed),
