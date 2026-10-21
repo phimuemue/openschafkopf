@@ -69,11 +69,9 @@ impl TRufspielPayout for SRufspielPayout {
                 },
         )
     }
-    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         self.payoutdecider.payouthints(
-            dbg_argument!(rules),
             rulestatecache,
-            tplahandstichseq,
             &rules.playerparties(&rulestatecache.fixed),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
             // TODO Stock
@@ -432,11 +430,9 @@ impl TRufspielPayout for SRufspielPayoutPointsAsPayout {
         }
         an_payout
     }
-    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesRufspielGeneric<Self>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         self.payoutdecider.payouthints(
-            dbg_argument!(rules),
             rulestatecache,
-            tplahandstichseq,
             &rules.playerparties(&rulestatecache.fixed),
         )
     }

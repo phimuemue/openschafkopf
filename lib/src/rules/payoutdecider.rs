@@ -145,9 +145,7 @@ impl<
 
     fn payouthints(
         &self,
-        _rules: dbg_parameter!(&impl TRules),
         rulestatecache: &SRuleStateCache,
-        (_ahand, _stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         payouthints_point_based(
@@ -219,9 +217,7 @@ impl<
 
     fn payouthints(
         &self,
-        _rules: dbg_parameter!(&impl TRules),
         rulestatecache: &SRuleStateCache,
-        (_ahand, _stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         payouthints_point_based(
@@ -271,9 +267,7 @@ pub trait TPayoutDecider : Sync + Send + 'static + Clone + fmt::Debug {
 
     fn payouthints(
         &self,
-        if_dbg_else!({rules}{_}): dbg_parameter!(&impl TRules),
         rulestatecache: &SRuleStateCache,
-        tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence),
         playerparties: &impl TPlayerParties,
     ) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 }

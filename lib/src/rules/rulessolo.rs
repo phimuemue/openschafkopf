@@ -97,11 +97,9 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointBased<VGameAnnouncementPriori
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
 
-    fn payouthints(&self, rules: &SRulesSoloLike<Self>, rulestatecache: &SRuleStateCache, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesSoloLike<Self>, rulestatecache: &SRuleStateCache, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         TPayoutDecider::payouthints(self,
-            dbg_argument!(rules),
             rulestatecache,
-            tplahandstichseq,
             &SPlayerParties13::new(rules.epi),
         ).map(|intvlon_payout| intvlon_payout.map(|on_payout|
              on_payout.map(|n_payout| n_payout * expensifiers.stoss_doubling_factor()),
@@ -192,11 +190,9 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderPointsAsPayout<VGameAnnouncementPr
         an_payout
     }
 
-    fn payouthints(&self, rules: &SRulesSoloLike<Self>, rulestatecache: &SRuleStateCache, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesSoloLike<Self>, rulestatecache: &SRuleStateCache, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         TPayoutDecider::payouthints(self,
-            dbg_argument!(rules),
             rulestatecache,
-            tplahandstichseq,
             &SPlayerParties13::new(rules.epi),
         )
     }
