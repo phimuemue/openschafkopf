@@ -237,7 +237,13 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderTout {
     fn payouthints(&self, rules: &SRulesSoloLike<Self>, rulestatecache: &SRuleStateCache, (_ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         let playerparties13 = &SPlayerParties13::new(rules.epi);
         if debug_verify_eq!(
-            rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich < stichseq.completed_stichs().len(),
+            rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich < verify_eq!(
+                rulestatecache.changing.mapepipointstichcount
+                    .iter()
+                    .map(|pointstichcount| pointstichcount.n_stich)
+                    .sum(),
+                stichseq.completed_stichs().len()
+            ),
             !stichseq.completed_stichs_winner_index(rules)
                 .all(|(_stich, epi_winner)| playerparties13.is_primary_party(epi_winner))
         ) {
