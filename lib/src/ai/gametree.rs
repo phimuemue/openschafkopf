@@ -474,6 +474,22 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
         TplStrategies,
     >;
 
+    impl<$($t_emmstrategy,)* TplStrategies: TTplStrategies> SPerMinMaxStrategyGeneric2<$($t_emmstrategy,)* TplStrategies> {
+        pub fn internal_via_accessors<'slf, R>(
+            &'slf self,
+            $($ident_strategy: impl FnOnce(&'slf $t_emmstrategy)->R,)*
+        ) -> Vec<(EMinMaxStrategy, R)> {
+            [$((
+                EMinMaxStrategy::$emmstrategy,
+                self.$ident_strategy.as_ref().into_option()
+                    .map($ident_strategy),
+            ),)*]
+                .into_iter()
+                .filter_map(|(emmstrategy, or)| or.map(|r| (emmstrategy, r)))
+                .collect() // TODO needed?
+        }
+    }
+
     impl<T, TplStrategies: TTplStrategies> SPerMinMaxStrategyGeneric<T, TplStrategies> {
         pub fn new(t: T) -> Self
             where T: Clone
@@ -502,10 +518,13 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
         }
 
         pub fn via_accessors(&self) -> Vec<(EMinMaxStrategy, &T)> {
-            [$((EMinMaxStrategy::$emmstrategy, self.$ident_strategy.as_ref().into_option()),)*]
-                .into_iter()
-                .filter_map(|(emmstrategy, ot)| ot.map(|t| (emmstrategy, t)))
-                .collect()
+            self.internal_via_accessors(
+                |t| t,
+                |t| t,
+                |t| t,
+                |t| t,
+                |t| t,
+            )
         }
 
         pub fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->Option<&T>)] { // TODO is there a better alternative?
