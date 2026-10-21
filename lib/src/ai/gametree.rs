@@ -441,6 +441,8 @@ impl<'rules, Pruner, TplStrategies, AlphaBetaPruner> SMinReachablePayoutBase<'ru
     }
 }
 
+macro_rules! ignore_ident{($ident:ident, $($tt:tt)*) => { $($tt)* }}
+
 macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrategy:ident, $t_emmstrategy:ident, $ident_strategy:ident))*][$($ident_strategy_cmp:ident)*]) => {
     #[derive(Clone, Copy)]
     pub enum EMinMaxStrategy {
@@ -458,11 +460,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
         $(/*TODO pub a good idea?*/pub $ident_strategy: StaticOption<$t_emmstrategy, TplStrategies::$IsSome>,)*
     }
     pub type SPerMinMaxStrategyGeneric<T, TplStrategies> = SPerMinMaxStrategyGeneric2<
-        /*TMinMin*/T,
-        /*TMaxMin*/T,
-        /*TMaxSelfishMin*/T,
-        /*TMaxSelfishMax*/T,
-        /*TMaxMax*/T,
+        $(ignore_ident!($ident_strategy, T),)*
         TplStrategies,
     >;
     pub type SPerMinMaxStrategyRawPayout<TplStrategies> = SPerMinMaxStrategyGeneric2<
@@ -519,11 +517,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
 
         pub fn via_accessors(&self) -> Vec<(EMinMaxStrategy, &T)> {
             self.internal_via_accessors(
-                |t| t,
-                |t| t,
-                |t| t,
-                |t| t,
-                |t| t,
+                $(ignore_ident!($ident_strategy, |t| t),)*
             )
         }
 
