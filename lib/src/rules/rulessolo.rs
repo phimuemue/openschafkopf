@@ -270,15 +270,24 @@ pub struct SPayoutDeciderSie {
 fn cards_valid_for_sie<ItCard: Clone+Iterator<Item=ECard>>(
     rules: &SRulesSoloLike<SPayoutDeciderSie>,
     mut itcard: ItCard,
+    rulestatecache: &SRuleStateCacheFixed,
     ekurzlang: EKurzLang,
 ) -> bool {
     let n_cards_per_player = ekurzlang.cards_per_player();
-    assert_eq!(itcard.clone().count(), n_cards_per_player);
-    let veccard_trumpf_relevant = rules.trumpfdecider
-        .trumpfs_in_descending_order()
-        .take(n_cards_per_player)
-        .collect::<SHandVector>();
-    itcard.all(|card| veccard_trumpf_relevant.contains(&card))
+    verify_eq!(
+        rules.trumpfdecider
+            .trumpfs_in_descending_order()
+            .take(n_cards_per_player)
+            .all(|card| rulestatecache.who_has_card(card)==rules.epi),
+        {
+            assert_eq!(itcard.clone().count(), n_cards_per_player);
+            let veccard_trumpf_relevant = rules.trumpfdecider
+                .trumpfs_in_descending_order()
+                .take(n_cards_per_player)
+                .collect::<SHandVector>();
+            itcard.all(|card| veccard_trumpf_relevant.contains(&card))
+        }
+    )
 }
 
 impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
@@ -286,7 +295,7 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
         VGameAnnouncementPriority::SoloSie
     }
 
-    fn payout(&self, rules: &SRulesSoloLike<Self>, _rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
+    fn payout(&self, rules: &SRulesSoloLike<Self>, rulestatecache: &SRuleStateCache, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, isize> {
         let playerparties13 = &SPlayerParties13::new(rules.epi);
         // TODORULES optionally count schneider/schwarz
         internal_payout(
@@ -297,16 +306,18 @@ impl TPayoutDeciderSoloLike for SPayoutDeciderSie {
                 .neg_if(!/*b_primary_party_wins*/cards_valid_for_sie(
                     rules,
                     stichseq.get().completed_cards_by(playerparties13.primary_player()),
+                    &rulestatecache.fixed,
                     stichseq.get().kurzlang(),
                 )),
             playerparties13,
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
 
-    fn payouthints(&self, rules: &SRulesSoloLike<Self>, _rulestatecache: &SRuleStateCache, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, rules: &SRulesSoloLike<Self>, rulestatecache: &SRuleStateCache, (ahand, stichseq): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         if !cards_valid_for_sie(
             rules,
             stichseq.cards_from_player(&ahand[rules.epi], rules.epi),
+            &rulestatecache.fixed,
             stichseq.kurzlang(),
         ) {
             internal_payout(
