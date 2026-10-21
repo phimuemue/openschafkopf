@@ -460,7 +460,7 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
                         SRuleStateCacheFixed::new(&ahand_check, &stichseq_check),
                     );
                     let mapepiintvlon_payout_after = self.payouthints(
-                        (&ahand_check, &stichseq_check),
+                        verify_eq!(stichseq.get().kurzlang(), stichseq_check.kurzlang()),
                         expensifiers,
                         &SRuleStateCache::new(
                             (&ahand_check, &stichseq_check),
@@ -496,7 +496,7 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
 
     fn payout_no_invariant(&self, stichseq: SStichSequenceGameFinished, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, isize>;
 
-    fn payouthints(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
+    fn payouthints(&self, ekurzlang: EKurzLang, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>>;
 
     fn equivalent_when_on_same_hand(&self) -> SCardsPartition;
     fn only_minmax_points_when_on_same_hand(&self, _rulestatecache: &SRuleStateCacheFixed) -> Option<(SCardsPartition, SPlayerPartiesTable)> {

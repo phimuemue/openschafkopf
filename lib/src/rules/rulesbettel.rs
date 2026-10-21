@@ -136,13 +136,9 @@ impl<BettelAllAllowedCardsWithinStich: TBettelAllAllowedCardsWithinStich> TRules
         ).map(|n_payout| n_payout * expensifiers.stoss_doubling_factor())
     }
 
-    fn payouthints(&self, if_dbg_else!({tplahandstichseq}{_tplahandstichseq}): (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
+    fn payouthints(&self, _ekurzlang: EKurzLang, expensifiers: &SExpensifiers, rulestatecache: &SRuleStateCache) -> EnumMap<EPlayerIndex, SInterval<Option<isize>>> {
         let playerparties13 = SPlayerParties13::new(self.epi);
-        if debug_verify_eq!(
-            0 < rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich,
-            !tplahandstichseq.1.completed_stichs_winner_index(self)
-                .all(|(_stich, epi_winner)| !playerparties13.is_primary_party(epi_winner))
-        ) {
+        if 0 < rulestatecache.changing.mapepipointstichcount[playerparties13.primary_player()].n_stich {
             internal_payout(
                 /*n_payout_primary_unmultiplied; loss is certain*/-self.n_payout_base * expensifiers.stoss_doubling_factor(),
                 &playerparties13,

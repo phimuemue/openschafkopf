@@ -874,7 +874,7 @@ impl TPruner for SPrunerNothing {
 pub struct SPrunerViaHint;
 impl TPruner for SPrunerViaHint {
     fn pruned_output<TplStrategies: TTplStrategies, AlphaBetaPruner>(params: &SMinReachablePayoutBase<'_, Self, TplStrategies, AlphaBetaPruner>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
-        let mapepion_payout = params.rules.payouthints(tplahandstichseq, &params.expensifiers, rulestatecache)
+        let mapepion_payout = params.rules.payouthints(tplahandstichseq.1.kurzlang(), &params.expensifiers, rulestatecache)
             .map(|intvlon_payout| {
                 intvlon_payout[ELoHi::Lo].filter(|n_payout| 0<*n_payout)
                     .or_else(|| intvlon_payout[ELoHi::Hi].filter(|n_payout| *n_payout<0))
