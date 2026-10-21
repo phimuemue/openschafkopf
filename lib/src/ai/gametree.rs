@@ -13,7 +13,7 @@ pub trait TForEachSnapshot {
     type InfoFromParent;
     fn initial_info_from_parent() -> Self::InfoFromParent;
     fn final_output(&self, stichseq: SStichSequenceGameFinished, rulestatecache: &SRuleStateCache) -> Self::Output;
-    fn pruned_output(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<Self::Output>;
+    fn pruned_output(&self, ekurzlang: EKurzLang, rulestatecache: &SRuleStateCache) -> Option<Self::Output>;
     fn combine_outputs(
         &self,
         epi_card: EPlayerIndex,
@@ -339,7 +339,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             },
         }
     } else {
-        foreachsnapshot./*TODO fold pruned_output into combine_outputs*/pruned_output((ahand, stichseq), rulestatecache).unwrap_or_else(|| {
+        foreachsnapshot./*TODO fold pruned_output into combine_outputs, TODO? call pruned_output only with each new stich?*/pruned_output(stichseq.kurzlang(), rulestatecache).unwrap_or_else(|| {
             let mut veccard_allowed = rules.all_allowed_cards(stichseq, &ahand[epi_current]);
             func_filter_allowed_cards.filter_allowed_cards(stichseq, &mut veccard_allowed);
             // TODO? use equivalent card optimization
@@ -810,8 +810,8 @@ impl<Pruner: TPruner, TplStrategies: TTplStrategies, AlphaBetaPruner: TAlphaBeta
         ))
     }
 
-    fn pruned_output(&self, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
-        Pruner::pruned_output(self, tplahandstichseq, rulestatecache)
+    fn pruned_output(&self, ekurzlang: EKurzLang, rulestatecache: &SRuleStateCache) -> Option<Self::Output> {
+        Pruner::pruned_output(self, ekurzlang, rulestatecache)
     }
 
     fn combine_outputs(
@@ -861,20 +861,20 @@ pub type SGenericMinReachablePayoutLowerBoundViaHint<'rules, TplStrategies, Alph
 pub type SMinReachablePayoutLowerBoundViaHint<'rules> = SMinReachablePayoutBase<'rules, SPrunerViaHint, STplStrategiesAll, SAlphaBetaPrunerNone>;
 
 pub trait TPruner : Sized {
-    fn pruned_output<TplStrategies: TTplStrategies, AlphaBetaPruner>(params: &SMinReachablePayoutBase<'_, Self, TplStrategies, AlphaBetaPruner>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>>;
+    fn pruned_output<TplStrategies: TTplStrategies, AlphaBetaPruner>(params: &SMinReachablePayoutBase<'_, Self, TplStrategies, AlphaBetaPruner>, ekurzlang: EKurzLang, rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>>;
 }
 
 pub struct SPrunerNothing;
 impl TPruner for SPrunerNothing {
-    fn pruned_output<TplStrategies: TTplStrategies, AlphaBetaPruner>(_params: &SMinReachablePayoutBase<'_, Self, TplStrategies, AlphaBetaPruner>, _tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), _rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
+    fn pruned_output<TplStrategies: TTplStrategies, AlphaBetaPruner>(_params: &SMinReachablePayoutBase<'_, Self, TplStrategies, AlphaBetaPruner>, _ekurzlang: EKurzLang, _rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
         None
     }
 }
 
 pub struct SPrunerViaHint;
 impl TPruner for SPrunerViaHint {
-    fn pruned_output<TplStrategies: TTplStrategies, AlphaBetaPruner>(params: &SMinReachablePayoutBase<'_, Self, TplStrategies, AlphaBetaPruner>, tplahandstichseq: (&EnumMap<EPlayerIndex, SHand>, &SStichSequence), rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
-        let mapepion_payout = params.rules.payouthints(tplahandstichseq.1.kurzlang(), &params.expensifiers, rulestatecache)
+    fn pruned_output<TplStrategies: TTplStrategies, AlphaBetaPruner>(params: &SMinReachablePayoutBase<'_, Self, TplStrategies, AlphaBetaPruner>, ekurzlang: EKurzLang, rulestatecache: &SRuleStateCache) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
+        let mapepion_payout = params.rules.payouthints(ekurzlang, &params.expensifiers, rulestatecache)
             .map(|intvlon_payout| {
                 intvlon_payout[ELoHi::Lo].filter(|n_payout| 0<*n_payout)
                     .or_else(|| intvlon_payout[ELoHi::Hi].filter(|n_payout| *n_payout<0))
