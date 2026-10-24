@@ -18,7 +18,7 @@ pub trait TForEachSnapshot {
         &self,
         epi_card: EPlayerIndex,
         infofromparent: Self::InfoFromParent,
-        itcard_allowed: impl Iterator<Item=ECard>,
+        slccard_allowed: &[ECard],
         fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent) -> Self::Output,
     ) -> Self::Output;
 }
@@ -346,7 +346,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
             foreachsnapshot.combine_outputs(
                 epi_current,
                 infofromparent,
-                veccard_allowed.into_iter(),
+                &veccard_allowed,
                 /*fn_card_to_output*/|card, infofromparent| {
                     stichseq.zugeben_and_restore_with_hands(ahand, epi_current, card, rules, |ahand, stichseq| {
                         macro_rules! next_step {($func_filter_allowed_cards:expr, $snapshotcache:expr) => {explore_snapshots_internal(
@@ -818,15 +818,16 @@ impl<Pruner: TPruner, TplStrategies: TTplStrategies, AlphaBetaPruner: TAlphaBeta
         &self,
         epi_card: EPlayerIndex,
         mut infofromparent: Self::InfoFromParent,
-        mut itcard_allowed: impl Iterator<Item=ECard>,
+        slccard_allowed: &[ECard],
         mut fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent) -> Self::Output,
     ) -> Self::Output {
+        let (&card_allowed_first, slccard_allowed_tail) = unwrap!(slccard_allowed.split_first());
         let mut minmax_acc = fn_card_to_output(
-            unwrap!(itcard_allowed.next()),
+            card_allowed_first,
             infofromparent.clone(),
         );
         if self.epi==epi_card {
-            for card_allowed in itcard_allowed {
+            for &card_allowed in slccard_allowed_tail {
                 match self.alphabetapruner.is_prunable_self(&minmax_acc, infofromparent.clone(), self.epi) {
                     ControlFlow::Break(_) => {
                         break;
@@ -839,7 +840,7 @@ impl<Pruner: TPruner, TplStrategies: TTplStrategies, AlphaBetaPruner: TAlphaBeta
             }
         } else {
             // other players may play inconveniently for epi_stich
-            for card_allowed in itcard_allowed {
+            for &card_allowed in slccard_allowed_tail {
                 match self.alphabetapruner.is_prunable_other(&minmax_acc, infofromparent.clone(), self.epi, epi_card) {
                     ControlFlow::Break(_) => {
                         break;

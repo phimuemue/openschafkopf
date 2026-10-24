@@ -350,9 +350,9 @@ pub fn determine_best_card<
             let output_per_ahand = foreachsnapshot.combine_outputs(
                 epi_current,
                 /*infofromparent*/SMinReachablePayoutBase::<'rules, Pruner, TplStrategies, AlphaBetaPruner>::initial_info_from_parent(),
-                <ECard as PlainEnum>::values().filter(|&card| 
+                &<ECard as PlainEnum>::values().filter(|&card| 
                     mapcardooutput_per_ahand[card].is_some()
-                ),
+                ).collect::<Vec<_>>(),
                 /*fn_card_to_output*/|card, _infofromparent| {
                     unwrap!(mapcardooutput_per_ahand[card].as_ref()).clone()
                 },

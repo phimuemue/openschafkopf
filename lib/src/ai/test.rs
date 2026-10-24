@@ -123,10 +123,10 @@ fn detect_expensive_all_possible_hands() {
                                 &self,
                                 _epi_card: EPlayerIndex,
                                 _infofromparent: Self::InfoFromParent,
-                                itcard_allowed: impl Iterator<Item=ECard>,
+                                slccard_allowed: &[ECard],
                                 mut fn_card_to_output: impl FnMut(ECard, Self::InfoFromParent) -> Self::Output,
                             ) -> Self::Output {
-                                itcard_allowed.map(|card| fn_card_to_output(card, ())).sum()
+                                slccard_allowed.iter().map(|&card| fn_card_to_output(card, ())).sum()
                             }
                         }
                         assert_bound(
