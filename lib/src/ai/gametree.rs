@@ -473,6 +473,14 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
     >;
 
     impl<$($t_emmstrategy,)* TplStrategies: TTplStrategies> SPerMinMaxStrategyGeneric2<$($t_emmstrategy,)* TplStrategies> {
+        pub fn internal_new(
+            $($ident_strategy: impl FnOnce()->$t_emmstrategy,)*
+        ) -> Self {
+            Self {
+                $($ident_strategy: StaticOption::<_, TplStrategies::$IsSome>::new_with(|| $ident_strategy()),)*
+            }
+        }
+
         pub fn internal_via_accessors<'slf, R>(
             &'slf self,
             $($ident_strategy: impl FnOnce(&'slf $t_emmstrategy)->R,)*
@@ -492,9 +500,9 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
         pub fn new(t: T) -> Self
             where T: Clone
         {
-            Self {
-                $($ident_strategy: StaticOption::<_, TplStrategies::$IsSome>::new_with(|| t.clone()),)* // TODO can we avoid one clone call?
-            }
+            Self::internal_new(
+                $(ignore_ident!($ident_strategy, || t.clone()),)* // TODO can we avoid one clone call?
+            )
         }
 
         pub fn map<R>(&self, mut f: impl FnMut(&T)->R) -> SPerMinMaxStrategyGeneric<R, TplStrategies> {
