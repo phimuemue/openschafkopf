@@ -553,23 +553,23 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
     }
 
     impl<TplStrategies: TTplStrategies> SPerMinMaxStrategyRawPayout<TplStrategies> {
-        fn assign_minmax_self(&mut self, other: Self, epi_self: EPlayerIndex) {
-            macro_rules! internal_assign_minmax_self{($ident_strategy_assign:ident, $fn:expr) => {
+        fn accumulate_self(&mut self, other: Self, epi_self: EPlayerIndex) {
+            macro_rules! internal_accumulate_self{($ident_strategy_assign:ident, $fn:expr) => {
                 self.$ident_strategy_assign.as_mut().tuple_2(other.$ident_strategy_assign).map($fn); // TODO good idea to use "map" to call a function?
             }}
-            internal_assign_minmax_self!(ominmin, |(lhs, rhs)| {
+            internal_accumulate_self!(ominmin, |(lhs, rhs)| {
                 assign_lt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
-            internal_assign_minmax_self!(omaxmin, |(lhs, rhs)| {
+            internal_accumulate_self!(omaxmin, |(lhs, rhs)| {
                 assign_gt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
-            internal_assign_minmax_self!(omaxselfishmin, |(lhs, rhs)| {
+            internal_accumulate_self!(omaxselfishmin, |(lhs, rhs)| {
                 assign_gt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
-            internal_assign_minmax_self!(omaxselfishmax, |(lhs, rhs)| {
+            internal_accumulate_self!(omaxselfishmax, |(lhs, rhs)| {
                 assign_gt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
-            internal_assign_minmax_self!(omaxmax, |(lhs, rhs)| {
+            internal_accumulate_self!(omaxmax, |(lhs, rhs)| {
                 assign_gt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
         }
@@ -834,7 +834,7 @@ impl<Pruner: TPruner, TplStrategies: TTplStrategies, AlphaBetaPruner: TAlphaBeta
                     },
                     ControlFlow::Continue(infofromparent_new) => {
                         infofromparent = infofromparent_new;
-                        minmax_acc.assign_minmax_self(fn_card_to_output(card_allowed, infofromparent.clone()), self.epi);
+                        minmax_acc.accumulate_self(fn_card_to_output(card_allowed, infofromparent.clone()), self.epi);
                     },
                 }
             }
