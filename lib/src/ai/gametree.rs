@@ -574,17 +574,17 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
             });
         }
 
-        fn assign_minmax_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex) {
-            macro_rules! internal_assign_minmax_self{($ident_strategy_assign:ident, $fn:expr) => {
+        fn accumulate_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex) {
+            macro_rules! internal_accumulate_other{($ident_strategy_assign:ident, $fn:expr) => {
                 self.$ident_strategy_assign.as_mut().tuple_2(other.$ident_strategy_assign).map($fn); // TODO good idea to use "map" to call a function?
             }}
-            internal_assign_minmax_self!(ominmin, |(lhs, rhs)| {
+            internal_accumulate_other!(ominmin, |(lhs, rhs)| {
                 assign_lt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
-            internal_assign_minmax_self!(omaxmin, |(lhs, rhs)| {
+            internal_accumulate_other!(omaxmin, |(lhs, rhs)| {
                 assign_lt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
-            internal_assign_minmax_self!(omaxselfishmin, |(lhs, rhs)| {
+            internal_accumulate_other!(omaxselfishmin, |(lhs, rhs)| {
                 assign_better(lhs, rhs, |an_payout_lhs, an_payout_rhs| {
                     match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
                         Ordering::Less => false,
@@ -593,7 +593,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
                     }
                 });
             });
-            internal_assign_minmax_self!(omaxselfishmax, |(lhs, rhs)| {
+            internal_accumulate_other!(omaxselfishmax, |(lhs, rhs)| {
                 assign_better(lhs, rhs, |an_payout_lhs, an_payout_rhs| {
                     match an_payout_lhs[epi_card].cmp(&an_payout_rhs[epi_card]) {
                         Ordering::Less => false,
@@ -602,7 +602,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
                     }
                 });
             });
-            internal_assign_minmax_self!(omaxmax, |(lhs, rhs)| {
+            internal_accumulate_other!(omaxmax, |(lhs, rhs)| {
                 assign_gt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
         }
@@ -847,7 +847,7 @@ impl<Pruner: TPruner, TplStrategies: TTplStrategies, AlphaBetaPruner: TAlphaBeta
                     },
                     ControlFlow::Continue(infofromparent_new) => {
                         infofromparent = infofromparent_new;
-                        minmax_acc.assign_minmax_other(fn_card_to_output(card_allowed, infofromparent.clone()), self.epi, epi_card);
+                        minmax_acc.accumulate_other(fn_card_to_output(card_allowed, infofromparent.clone()), self.epi, epi_card);
                     },
                 }
             }
