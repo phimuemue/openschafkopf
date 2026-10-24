@@ -552,8 +552,26 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
         }
     }
 
+    pub type SPerMinMaxStrategyRawPayoutAccumulatorHelper<TplStrategies> = SPerMinMaxStrategyGeneric2<
+        /*TMinMin*/(),
+        /*TMaxMin*/(),
+        /*TMaxSelfishMin*/(),
+        /*TMaxSelfishMax*/(),
+        /*TMaxMax*/(),
+        TplStrategies,
+    >;
     impl<TplStrategies: TTplStrategies> SPerMinMaxStrategyRawPayout<TplStrategies> {
-        fn accumulate_self(&mut self, other: Self, epi_self: EPlayerIndex) {
+        fn accumulator_helper(&self) -> SPerMinMaxStrategyRawPayoutAccumulatorHelper<TplStrategies> {
+            SPerMinMaxStrategyRawPayoutAccumulatorHelper::<TplStrategies>{
+                ominmin: self.ominmin.as_ref().map(|_| ()),
+                omaxmin: self.omaxmin.as_ref().map(|_| ()),
+                omaxselfishmin: self.omaxselfishmin.as_ref().map(|_| ()),
+                omaxselfishmax: self.omaxselfishmax.as_ref().map(|_| ()),
+                omaxmax: self.omaxmax.as_ref().map(|_| ()),
+            }
+        }
+
+        fn accumulate_self(&mut self, other: Self, epi_self: EPlayerIndex, _accumulatorhelper: &mut SPerMinMaxStrategyRawPayoutAccumulatorHelper<TplStrategies>) {
             macro_rules! internal_accumulate_self{($ident_strategy_assign:ident, $fn:expr) => {
                 self.$ident_strategy_assign.as_mut().tuple_2(other.$ident_strategy_assign).map($fn); // TODO good idea to use "map" to call a function?
             }}
@@ -574,7 +592,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
             });
         }
 
-        fn accumulate_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex) {
+        fn accumulate_other(&mut self, other: Self, epi_self: EPlayerIndex, epi_card: EPlayerIndex, _accumulatorhelper: &mut SPerMinMaxStrategyRawPayoutAccumulatorHelper<TplStrategies>) {
             macro_rules! internal_accumulate_other{($ident_strategy_assign:ident, $fn:expr) => {
                 self.$ident_strategy_assign.as_mut().tuple_2(other.$ident_strategy_assign).map($fn); // TODO good idea to use "map" to call a function?
             }}
@@ -605,6 +623,14 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
             internal_accumulate_other!(omaxmax, |(lhs, rhs)| {
                 assign_gt_by_key(lhs, rhs, |an_payout| an_payout[epi_self]);
             });
+        }
+
+        fn finish_accumulate_self(&mut self, _n_card: usize, _accumulatorhelper: SPerMinMaxStrategyRawPayoutAccumulatorHelper<TplStrategies>) {
+            // TODO The macro should automatically find out if we missed something here.
+        }
+
+        fn finish_accumulate_other(&mut self, _n_card: usize, _accumulatorhelper: SPerMinMaxStrategyRawPayoutAccumulatorHelper<TplStrategies>) {
+            // TODO The macro should automatically find out if we missed something here.
         }
     }
 
@@ -827,6 +853,7 @@ impl<Pruner: TPruner, TplStrategies: TTplStrategies, AlphaBetaPruner: TAlphaBeta
             infofromparent.clone(),
         );
         if self.epi==epi_card {
+            let mut accumulatorhelper = minmax_acc.accumulator_helper();
             for &card_allowed in slccard_allowed_tail {
                 match self.alphabetapruner.is_prunable_self(&minmax_acc, infofromparent.clone(), self.epi) {
                     ControlFlow::Break(_) => {
@@ -834,12 +861,14 @@ impl<Pruner: TPruner, TplStrategies: TTplStrategies, AlphaBetaPruner: TAlphaBeta
                     },
                     ControlFlow::Continue(infofromparent_new) => {
                         infofromparent = infofromparent_new;
-                        minmax_acc.accumulate_self(fn_card_to_output(card_allowed, infofromparent.clone()), self.epi);
+                        minmax_acc.accumulate_self(fn_card_to_output(card_allowed, infofromparent.clone()), self.epi, &mut accumulatorhelper);
                     },
                 }
             }
+            minmax_acc.finish_accumulate_self(slccard_allowed.len(), accumulatorhelper);
         } else {
             // other players may play inconveniently for epi_stich
+            let mut accumulatorhelper = minmax_acc.accumulator_helper();
             for &card_allowed in slccard_allowed_tail {
                 match self.alphabetapruner.is_prunable_other(&minmax_acc, infofromparent.clone(), self.epi, epi_card) {
                     ControlFlow::Break(_) => {
@@ -847,10 +876,11 @@ impl<Pruner: TPruner, TplStrategies: TTplStrategies, AlphaBetaPruner: TAlphaBeta
                     },
                     ControlFlow::Continue(infofromparent_new) => {
                         infofromparent = infofromparent_new;
-                        minmax_acc.accumulate_other(fn_card_to_output(card_allowed, infofromparent.clone()), self.epi, epi_card);
+                        minmax_acc.accumulate_other(fn_card_to_output(card_allowed, infofromparent.clone()), self.epi, epi_card, &mut accumulatorhelper);
                     },
                 }
             }
+            minmax_acc.finish_accumulate_other(slccard_allowed.len(), accumulatorhelper);
         }
         minmax_acc
     }
