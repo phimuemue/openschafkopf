@@ -31,6 +31,14 @@ pub fn assign_gt_by_key<T, K: Ord, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, 
     assign_better(dst, src, |lhs, rhs| fn_key(lhs) > fn_key(rhs))
 }
 
+pub fn assign_lt_partial_ord_by_key<T, K: PartialOrd, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src, mut fn_key: impl FnMut(&T) -> K) -> bool {
+    assign_better(dst, src, |lhs, rhs| fn_key(lhs) < fn_key(rhs))
+}
+
+pub fn assign_gt_partial_ord_by_key<T, K: PartialOrd, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src, mut fn_key: impl FnMut(&T) -> K) -> bool {
+    assign_better(dst, src, |lhs, rhs| fn_key(lhs) > fn_key(rhs))
+}
+
 pub fn assign_neq<T: Eq, Src: TMoveOrClone<T>+Borrow<T>>(dst: &mut T, src: Src) -> bool {
     assign_better(dst, src, |lhs, rhs| lhs!=rhs)
 }
