@@ -494,6 +494,15 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
                 .filter_map(|(emmstrategy, or)| or.map(|r| (emmstrategy, r)))
                 .collect() // TODO needed?
         }
+
+        pub fn internal_map<'slf, $($emmstrategy,)*>(
+            &'slf self,
+            $($ident_strategy: impl FnOnce(&'slf $t_emmstrategy)->$emmstrategy,)*
+        ) -> SPerMinMaxStrategyGeneric2<$($emmstrategy,)* TplStrategies> {
+            SPerMinMaxStrategyGeneric2{
+                $($ident_strategy: self.$ident_strategy.as_ref().map(|t| $ident_strategy(&t)),)*
+            }
+        }
     }
 
     impl<T, TplStrategies: TTplStrategies> SPerMinMaxStrategyGeneric<T, TplStrategies> {
@@ -505,11 +514,10 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
             )
         }
 
-        pub fn map<R>(&self, mut f: impl FnMut(&T)->R) -> SPerMinMaxStrategyGeneric<R, TplStrategies> {
-            let Self{ $($ident_strategy,)* } = self;
-            SPerMinMaxStrategyGeneric{
-                $($ident_strategy: $ident_strategy.as_ref().map(|t| f(&t)),)*
-            }
+        pub fn map<R>(&self, f: impl Fn(&T)->R) -> SPerMinMaxStrategyGeneric<R, TplStrategies> {
+            self.internal_map(
+                $(ignore_ident!($ident_strategy, |t| f(&t)),)*
+            )
         }
 
         pub fn modify_with_other<T1>(
