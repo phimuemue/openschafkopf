@@ -980,7 +980,6 @@ fn run_internal<
 ) -> Result<(), Error>
 {
     let inspectionstatistics = Arc::new(Mutex::new(SInspectionStatistics::new(slcconstraint, stichseq, rules)));
-    let fn_loss_or_win = |_n_payout, ord_vs_0| ord_vs_0;
     let ovecinterimres_verbose = if_then_some!(b_verbose, Arc::new(Mutex::new(Vec::<SInterimResult<TplStrategies>>::new())));
     let determinebestcardresult = determine_best_card(
         stichseq,
@@ -1013,7 +1012,7 @@ fn run_internal<
                     );
                     if let Some(ref vecinterimres) = ovecinterimres_verbose {
                         let fn_cmp_interim_result = |lhs: &SInterimResult<TplStrategies>, rhs: &SInterimResult<TplStrategies>| {
-                            rhs.payoutstats.compare_canonical(&lhs.payoutstats, fn_loss_or_win)
+                            rhs.payoutstats.compare_canonical(&lhs.payoutstats)
                         };
                         let mut vecinterimres = unwrap!(vecinterimres.lock());
                         let n_count_before = vecinterimres.len();
@@ -1067,7 +1066,6 @@ fn run_internal<
                                     ))
                                     .collect(),
                                 /*b_group*/false,
-                                &fn_loss_or_win,
                             ),
                             /*b_print_table_description_before_table*/false,
                             /*fn_mark_played*/|_str_card| false, // TODO Mark played card in intermediate result
@@ -1113,7 +1111,6 @@ fn run_internal<
         let payoutstatstable = table(
             &determinebestcardresult,
             rules,
-            &fn_loss_or_win,
         );
         print_payoutstatstable(
             &payoutstatstable,
@@ -1125,7 +1122,6 @@ fn run_internal<
             &internal_table(
                 vec![("no-details", determinebestcardresult.t_combined)],
                 /*b_group*/false,
-                &fn_loss_or_win,
             ),
             /*b_print_table_description_before_table*/false,
             /*fn_mark_played*/|_| false, // Do not mark played card in "combined" line

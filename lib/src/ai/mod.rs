@@ -155,7 +155,6 @@ impl SAi {
                 SMaxMinMaxSelfishMin::compare_canonical( // TODO good idea?
                     lhs,
                     rhs,
-                    |n_payout, _ordering_against_0| n_payout.cmp(&0), // TODO is this even correct?
                 )
             }).0;
             *unwrap!(veccard_maximum_value.first())
@@ -232,10 +231,10 @@ impl SPayoutStats {
     pub fn histogram(&self) -> &BTreeMap<(isize, std::cmp::Ordering), usize> {
         &self.mapnn_histogram
     }
-    pub fn counts(&self, fn_loss_or_win: impl Fn(isize, std::cmp::Ordering)->std::cmp::Ordering) -> EnumMap<std::cmp::Ordering, usize> {
+    pub fn counts(&self) -> EnumMap<std::cmp::Ordering, usize> {
         let mut mapordn_counts = std::cmp::Ordering::map_from_fn(|_ord| 0);
-        for ((n_payout, ordering_against_0), n_count) in self.mapnn_histogram.iter() {
-            mapordn_counts[fn_loss_or_win(*n_payout, *ordering_against_0)] += n_count;
+        for ((_n_payout, ordering_against_0), n_count) in self.mapnn_histogram.iter() {
+            mapordn_counts[*ordering_against_0] += n_count;
         }
         mapordn_counts
     }

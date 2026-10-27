@@ -55,10 +55,9 @@ pub fn internal_table<
 >(
     mut vectpayoutstatsperstrategy: Vec<(T, PayoutStatsPerStrategy)>,
     b_group: bool,
-    fn_loss_or_win: &dyn Fn(isize, std::cmp::Ordering) -> std::cmp::Ordering,
 ) -> SPayoutStatsTable<T, TplStrategies> {
     vectpayoutstatsperstrategy.sort_unstable_by(|(_t_lhs, minmax_lhs), (_t_rhs, minmax_rhs)| {
-        minmax_lhs.borrow().compare_canonical(minmax_rhs.borrow(), fn_loss_or_win)
+        minmax_lhs.borrow().compare_canonical(minmax_rhs.borrow())
     });
     vectpayoutstatsperstrategy.reverse(); // descending
     let mut vecoutputline : Vec<SOutputLine<_,_>> = Vec::new();
@@ -72,14 +71,14 @@ pub fn internal_table<
     ]);
     let b_exists_count_of_zero_payout_positive = vectpayoutstatsperstrategy.iter().any(|(_, perminmaxstrategypaystats)| {
         perminmaxstrategypaystats.borrow().via_accessors().iter().any(|(_emmstrategy, paystats)|
-            0!=paystats.counts(fn_loss_or_win)[std::cmp::Ordering::Equal]
+            0!=paystats.counts()[std::cmp::Ordering::Equal]
         )
     });
     for ((perminmaxstrategyatplstrf, _grouping), grptpltmapemmstrategyatplstrf) in vectpayoutstatsperstrategy.into_iter()
         .map(|(t, minmax)| {
             let minmax = minmax.borrow();
             let column_counts = |paystats: &SPayoutStats| {
-                let mapordn_count = paystats.counts(fn_loss_or_win);
+                let mapordn_count = paystats.counts();
                 let f_percentage_not_lost = (mapordn_count[std::cmp::Ordering::Equal]+mapordn_count[std::cmp::Ordering::Greater])
                     .as_num::<f32>()
                     / (mapordn_count.iter().sum::<usize>().as_num::<f32>());
@@ -160,12 +159,10 @@ pub fn table<
 >(
     determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>,
     rules: &SRules,
-    fn_loss_or_win: &dyn Fn(isize, std::cmp::Ordering) -> std::cmp::Ordering,
 ) -> SPayoutStatsTable<ECard, TplStrategies> {
     let mut payoutstatstable = internal_table(
         determinebestcardresult.cards_and_ts().collect(),
         /*b_group*/true,
-        fn_loss_or_win,
     );
     for outputline in payoutstatstable.vecoutputline.iter_mut() {
         rules.sort_cards(&mut outputline.vect);

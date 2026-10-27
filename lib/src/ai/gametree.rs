@@ -540,7 +540,7 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
         pub fn accessors() -> &'static [(EMinMaxStrategy, fn(&Self)->Option<&T>)] { // TODO is there a better alternative?
             &[$((EMinMaxStrategy::$emmstrategy, (|slf: &Self| slf.$ident_strategy.as_ref().into_option()) as fn(&Self) -> Option<&T>),)*]
         }
-        pub fn compare_canonical(&self, other: &Self, fn_loss_or_win: impl Fn(isize, std::cmp::Ordering)->std::cmp::Ordering) -> std::cmp::Ordering where T: Borrow<SPayoutStats> {
+        pub fn compare_canonical(&self, other: &Self) -> std::cmp::Ordering where T: Borrow<SPayoutStats> {
             use std::cmp::Ordering::*;
             fn compare_fractions((numerator_lhs, denominator_lhs): (u128, u128), (numerator_rhs, denominator_rhs): (u128, u128)) -> std::cmp::Ordering {
                 u128::cmp(&(numerator_lhs * denominator_rhs), &(denominator_lhs * numerator_rhs))
@@ -550,8 +550,8 @@ macro_rules! define_and_impl_perminmaxstrategies{([$(($IsSome:ident, $emmstrateg
                     .map_or_else(/*default*/|| Equal, |(lhs, rhs)| {
                         let payoutstats_lhs = lhs.borrow();
                         let payoutstats_rhs = rhs.borrow();
-                        let mapordn_lhs = payoutstats_lhs.counts(&fn_loss_or_win).map_into(|n| n.as_num::<u128>());
-                        let mapordn_rhs = payoutstats_rhs.counts(&fn_loss_or_win).map_into(|n| n.as_num::<u128>());
+                        let mapordn_lhs = payoutstats_lhs.counts().map_into(|n| n.as_num::<u128>());
+                        let mapordn_rhs = payoutstats_rhs.counts().map_into(|n| n.as_num::<u128>());
                         let compare_winning_probability_internal = |ord| compare_fractions(
                             (mapordn_lhs[ord], mapordn_lhs.iter().sum()),
                             (mapordn_rhs[ord], mapordn_rhs.iter().sum()),
