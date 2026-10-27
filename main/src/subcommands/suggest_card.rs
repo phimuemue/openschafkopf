@@ -975,7 +975,7 @@ fn run_internal<
 
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
-    fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, std::cmp::Ordering) + Sync),
+    fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->isize + Sync),
     slcconstraint: &[SConstraint],
 ) -> Result<(), Error>
 {
@@ -1303,18 +1303,15 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                 );
                 print_inspection_results(b_verbose, inspectionstatistics);
             } else {
-                let fn_human_readable_payout = |stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, epi_position: EPlayerIndex, n_payout: isize| -> (isize, std::cmp::Ordering) {
+                let fn_human_readable_payout = |stichseq: &SStichSequence, ahand: &EnumMap<EPlayerIndex, SHand>, epi_position: EPlayerIndex, n_payout: isize| -> isize {
                     if let Some((_rules, fn_payout_to_points)) = &otplrulesfn_points_as_payout {
-                        (
-                            fn_payout_to_points(
-                                &SRuleStateCacheFixed::new(ahand, stichseq),
-                                epi_position,
-                                n_payout,
-                            ),
-                            n_payout.cmp(&0), // Human readable payout may not indicate loss or win: In Rufspiel, if epi_position has 60, it may mean win or loss, depending on whether epi_position is co-player.
+                        fn_payout_to_points(
+                            &SRuleStateCacheFixed::new(ahand, stichseq),
+                            epi_position,
+                            n_payout,
                         )
                     } else {
-                        (n_payout, n_payout.cmp(&0))
+                        n_payout
                     }
                 };
                 use EBranching::*;

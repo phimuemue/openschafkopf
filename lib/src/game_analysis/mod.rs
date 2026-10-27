@@ -34,7 +34,7 @@ pub fn html_payout_table<'a, 'b, HtmlAttributeOrChildCard: html_generator::Attri
     rules: &'b SRules,
     ahand: &'b EnumMap<EPlayerIndex, SHand>,
     stichseq: &'b SStichSequence,
-    determinebestcardresult: &'b SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<()>, TplStrategies>>,
+    determinebestcardresult: &'b SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>>,
     card_played: ECard,
     fn_output_card: &'a dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard,
 ) -> impl html_generator::AttributeOrChild<Attribute=()> + use<'a, HtmlAttributeOrChildCard, TplStrategies> {
@@ -50,7 +50,7 @@ pub fn html_payout_table<'a, 'b, HtmlAttributeOrChildCard: html_generator::Attri
     let vecoutputline_cheating = determine_best_card_table::table::</*TODO type annotations needed?*/TplStrategies, _>(
         determinebestcardresult,
         rules,
-        /*fn_loss_or_win*/&|n_payout, ()| n_payout.cmp(&0),
+        /*fn_loss_or_win*/&|_n_payout, ord_vs_0| ord_vs_0, // TODO fn_loss_or_win still needed?
     ).into_output_lines();
     // TODO? should veccard_non_allowed be a separate row in determine_best_card_table::table?
     let hand_current_player = &ahand[unwrap!(stichseq.current_stich().current_playerindex())];

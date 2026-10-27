@@ -874,7 +874,7 @@ fn test_snapshotcache() {
                                 $fn_snapshotcache,
                                 SNoVisualization::factory(),
                                 /*fn_inspect*/&|_,_,_| {},
-                                /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
+                                /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
                             ))
                                 .cards_and_ts()
                                 .collect::<Vec<_>>()

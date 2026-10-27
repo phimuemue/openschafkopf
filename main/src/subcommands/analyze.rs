@@ -166,7 +166,7 @@ fn analyze_game(
                         /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO possibly use cache
                         /*fn_visualizer*/SNoVisualization::factory(),
                         /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
-                        /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
+                        /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
                     ))
                 };
                 for epi in EPlayerIndex::values() {
@@ -178,7 +178,7 @@ fn analyze_game(
                         (i_stich, stichseq.current_stich().size()),
                     ));
                 }
-                let look_for_mistakes = |determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>| {
+                let look_for_mistakes = |determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<std::cmp::Ordering>>>| {
                     macro_rules! look_for_mistake{($strategy:ident, $emistake:expr) => {{
                         let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(
                             |minmax_lhs, minmax_rhs| minmax_lhs.$strategy.as_ref().unwrap_static_some().min().cmp(&minmax_rhs.$strategy.as_ref().unwrap_static_some().min())
@@ -374,7 +374,7 @@ pub struct SAnalysisPerCard {
     pub stichseq: SStichSequence, // TODO this is space-inefficient
     ahand: EnumMap<EPlayerIndex, SHand>, // TODO this is space-inefficient
     card_played: ECard,
-    determinebestcardresult_cheating: SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>,
+    determinebestcardresult_cheating: SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<std::cmp::Ordering>>>,
     pub oanalysisimpr: Option<SAnalysisImprovement>,
 }
 
@@ -398,7 +398,7 @@ pub struct SGameAnalysis {
 }
 
 pub struct SPossiblePayout(
-    SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<()>>>,
+    SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<std::cmp::Ordering>>>,
     (/*i_stich*/usize, /*i_card*/usize),
 );
 

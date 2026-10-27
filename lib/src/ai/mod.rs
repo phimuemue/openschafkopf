@@ -54,7 +54,7 @@ impl SAi {
         }
     }
 
-    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &SRules, expensifiers: &SExpensifiers) -> SPerMinMaxStrategy<SPayoutStats<()>> {
+    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &SRules, expensifiers: &SExpensifiers) -> SPerMinMaxStrategy<SPayoutStats<std::cmp::Ordering>> {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
         let stichseq = &SStichSequence::new(unwrap!(EKurzLang::from_cards_per_player(hand_fixed.get().len())));
         unwrap!(determine_best_card(
@@ -76,7 +76,7 @@ impl SAi {
             SSnapshotCacheNone::factory(), // TODO? make customizable
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_,_,_|{},
-            /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
+            /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
         )).t_combined
     }
 
@@ -117,7 +117,7 @@ impl SAi {
                     SSnapshotCacheNone::factory(), // TODO possibly use cache
                     fn_visualizer,
                     /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
-                    /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
+                    /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
                 )
             }}}
             let n_remaining_cards = stichseq.remaining_cards_per_hand()[epi_current];
@@ -155,7 +155,7 @@ impl SAi {
                 SMaxMinMaxSelfishMin::compare_canonical( // TODO good idea?
                     lhs,
                     rhs,
-                    |n_payout, ()| n_payout.cmp(&0), // TODO is this even correct?
+                    |n_payout, _ordering_against_0| n_payout.cmp(&0), // TODO is this even correct?
                 )
             }).0;
             *unwrap!(veccard_maximum_value.first())
@@ -262,7 +262,6 @@ pub fn determine_best_card<
     OSnapshotCache: Into<Option<SnapshotCache>>,
     SnapshotVisualizer: TSnapshotVisualizer<<SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> as TForEachSnapshot>::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
-    PayoutStatsPayload: Ord + Copy + Sync + Send,
 >(
     stichseq: &'stichseq SStichSequence,
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
@@ -270,9 +269,9 @@ pub fn determine_best_card<
     fn_make_foreachsnapshot: &(dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>) -> SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> + std::marker::Sync),
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
-    fn_inspect: &(dyn Fn(&VInspectionPoint<&EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>>>, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
-    fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->(isize, PayoutStatsPayload) + Sync),
-) -> Option<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>>
+    fn_inspect: &(dyn Fn(&VInspectionPoint<&EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>>>>, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
+    fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->isize + Sync),
+) -> Option<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>>>
 {
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
@@ -330,13 +329,16 @@ pub fn determine_best_card<
                 let mut mapcardooutput = unwrap!(mapcardooutput.lock());
                 for card in <ECard as PlainEnum>::values() {
                     if let Some(output) = &mapcardooutput_per_ahand[card] {
-                        let payoutstats : SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, _> = output.map(|mapepin_payout|
-                            SPayoutStats::new_1(fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
+                        let payoutstats : SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, _> = output.map(|mapepin_payout|
+                            SPayoutStats::new_1((
+                                fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]),
+                                mapepin_payout[foreachsnapshot.epi].cmp(&0),
+                            ))
                         );
                         (*mapcardooutput)[card].insert_or_fold(payoutstats, |payoutstats_acc, payoutstats| {
                             payoutstats_acc.modify_with_other(
                                 &payoutstats,
-                                |lhs, rhs| SPayoutStats::accumulate(lhs, rhs),
+                                SPayoutStats::accumulate,
                             )
                         });
                     }
@@ -357,8 +359,11 @@ pub fn determine_best_card<
                     unwrap!(mapcardooutput_per_ahand[card].as_ref()).clone()
                 },
             );
-            let payoutstats_per_hand : SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies> = output_per_ahand.map(|mapepin_payout|
-                SPayoutStats::new_1(fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]))
+            let payoutstats_per_hand : SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies> = output_per_ahand.map(|mapepin_payout|
+                SPayoutStats::new_1((
+                    fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]),
+                    mapepin_payout[foreachsnapshot.epi].cmp(&0),
+                ))
             );
             unwrap!(ooutput_combined.lock()).insert_or_fold(payoutstats_per_hand, |payoutstats_acc, payoutstats_per_hand| {
                 payoutstats_acc.modify_with_other(
@@ -542,7 +547,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO test cache
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
-            /*fn_payout*/&|_stichseq, _ahand, n_payout| (n_payout, ()),
+            /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
         ));
         for card in [H7, H8, H9] {
             assert_eq!(
