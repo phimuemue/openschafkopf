@@ -51,12 +51,11 @@ impl<T, TplStrategies: TTplStrategies> SPayoutStatsTable<T, TplStrategies> {
 pub fn internal_table<
     TplStrategies: TTplStrategies,
     T,
-    PayoutStatsPayload: Copy+Ord+std::fmt::Debug+'static, // TODO why is 'static needed?
-    PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>,
+    PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>>,
 >(
     mut vectpayoutstatsperstrategy: Vec<(T, PayoutStatsPerStrategy)>,
     b_group: bool,
-    fn_loss_or_win: &dyn Fn(isize, PayoutStatsPayload) -> std::cmp::Ordering,
+    fn_loss_or_win: &dyn Fn(isize, std::cmp::Ordering) -> std::cmp::Ordering,
 ) -> SPayoutStatsTable<T, TplStrategies> {
     vectpayoutstatsperstrategy.sort_unstable_by(|(_t_lhs, minmax_lhs), (_t_rhs, minmax_rhs)| {
         minmax_lhs.borrow().compare_canonical(minmax_rhs.borrow(), fn_loss_or_win)
@@ -79,7 +78,7 @@ pub fn internal_table<
     for ((perminmaxstrategyatplstrf, _grouping), grptpltmapemmstrategyatplstrf) in vectpayoutstatsperstrategy.into_iter()
         .map(|(t, minmax)| {
             let minmax = minmax.borrow();
-            let column_counts = |paystats: &SPayoutStats<PayoutStatsPayload>| {
+            let column_counts = |paystats: &SPayoutStats<std::cmp::Ordering>| {
                 let mapordn_count = paystats.counts(fn_loss_or_win);
                 let f_percentage_not_lost = (mapordn_count[std::cmp::Ordering::Equal]+mapordn_count[std::cmp::Ordering::Greater])
                     .as_num::<f32>()
@@ -107,7 +106,7 @@ pub fn internal_table<
             let column_min_or_max = |n: isize| {
                 (format!("{n} "), n.as_num::<f32>())
             };
-            let column_average = |paystats: &SPayoutStats<PayoutStatsPayload>| {
+            let column_average = |paystats: &SPayoutStats<std::cmp::Ordering>| {
                 let f_avg = paystats.avg();
                 (format!("{f_avg:.2} "), f_avg)
             };
@@ -158,11 +157,10 @@ pub fn internal_table<
 
 pub fn table<
     TplStrategies: TTplStrategies,
-    PayoutStatsPayload: Copy+Ord+std::fmt::Debug+'static,
 >(
-    determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<PayoutStatsPayload>, TplStrategies>>,
+    determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>>,
     rules: &SRules,
-    fn_loss_or_win: &dyn Fn(isize, PayoutStatsPayload) -> std::cmp::Ordering,
+    fn_loss_or_win: &dyn Fn(isize, std::cmp::Ordering) -> std::cmp::Ordering,
 ) -> SPayoutStatsTable<ECard, TplStrategies> {
     let mut payoutstatstable = internal_table(
         determinebestcardresult.cards_and_ts().collect(),
