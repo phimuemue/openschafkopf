@@ -178,7 +178,7 @@ fn analyze_game(
                         (i_stich, stichseq.current_stich().size()),
                     ));
                 }
-                let look_for_mistakes = |determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<std::cmp::Ordering>>>| {
+                let look_for_mistakes = |determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats>>| {
                     macro_rules! look_for_mistake{($strategy:ident, $emistake:expr) => {{
                         let (veccard, minmax) = determinebestcardresult.cards_with_maximum_value(
                             |minmax_lhs, minmax_rhs| minmax_lhs.$strategy.as_ref().unwrap_static_some().min().cmp(&minmax_rhs.$strategy.as_ref().unwrap_static_some().min())
@@ -374,7 +374,7 @@ pub struct SAnalysisPerCard {
     pub stichseq: SStichSequence, // TODO this is space-inefficient
     ahand: EnumMap<EPlayerIndex, SHand>, // TODO this is space-inefficient
     card_played: ECard,
-    determinebestcardresult_cheating: SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<std::cmp::Ordering>>>,
+    determinebestcardresult_cheating: SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats>>,
     pub oanalysisimpr: Option<SAnalysisImprovement>,
 }
 
@@ -398,7 +398,7 @@ pub struct SGameAnalysis {
 }
 
 pub struct SPossiblePayout(
-    SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats<std::cmp::Ordering>>>,
+    SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats>>,
     (/*i_stich*/usize, /*i_card*/usize),
 );
 

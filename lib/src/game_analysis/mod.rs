@@ -34,7 +34,7 @@ pub fn html_payout_table<'a, 'b, HtmlAttributeOrChildCard: html_generator::Attri
     rules: &'b SRules,
     ahand: &'b EnumMap<EPlayerIndex, SHand>,
     stichseq: &'b SStichSequence,
-    determinebestcardresult: &'b SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>>,
+    determinebestcardresult: &'b SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>,
     card_played: ECard,
     fn_output_card: &'a dyn Fn(ECard, bool/*b_highlight*/)->HtmlAttributeOrChildCard,
 ) -> impl html_generator::AttributeOrChild<Attribute=()> + use<'a, HtmlAttributeOrChildCard, TplStrategies> {

@@ -905,7 +905,7 @@ struct SJson<TplStrategies: TTplStrategies> {
     vectableline: Vec<SJsonTableLine<TplStrategies>>,
 }
 
-fn json_histograms<TplStrategies: TTplStrategies>(payoutstatsperstrategy: &SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>)
+fn json_histograms<TplStrategies: TTplStrategies>(payoutstatsperstrategy: &SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>)
     -> SPerMinMaxStrategyGeneric<Vec<((isize, char), usize)>, TplStrategies>
 {
     payoutstatsperstrategy.map(|payoutstats| 
@@ -1147,7 +1147,7 @@ enum VRankChange { // Lower ranks considered better.
 struct SInterimResult<TplStrategies: TTplStrategies> {
     ornkchg: Option<VRankChange>,
     card: ECard,
-    payoutstats: SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>,
+    payoutstats: SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>,
 }
 
 struct SPositionAndRank {

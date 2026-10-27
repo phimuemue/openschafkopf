@@ -233,7 +233,7 @@ fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, El
         &SRules,
         &EnumMap<EPlayerIndex, SHand>,
         &SStichSequence,
-        &SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, STplStrategiesOnlyMaxSelfishMin>>,
+        &SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats, STplStrategiesOnlyMaxSelfishMin>>,
         ECard/*card_played*/,
         &ElementPlayedCard,
     ),
@@ -275,12 +275,12 @@ fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, El
                     *card_played,
                     element_played_card,
                 );
-                let get_min_max_eq = |payoutstats: &SMaxSelfishMinStrategy<SPayoutStats<std::cmp::Ordering>>| {
+                let get_min_max_eq = |payoutstats: &SMaxSelfishMinStrategy<SPayoutStats>| {
                     let payoutstats = &payoutstats.omaxselfishmin.as_ref().unwrap_static_some();
                     verify_eq!(payoutstats.min(), payoutstats.max())
                 };
                 let (veccard_optimal, payoutstats_optimal) = determinebestcardresult.cards_with_maximum_value(
-                    |lhs: &SMaxSelfishMinStrategy<SPayoutStats<std::cmp::Ordering>>, rhs| {
+                    |lhs: &SMaxSelfishMinStrategy<SPayoutStats>, rhs| {
                         get_min_max_eq(lhs).cmp(&get_min_max_eq(rhs))
                     },
                 );
@@ -488,7 +488,7 @@ fn epi_to_sauspiel_position(epi: EPlayerIndex) -> usize {
     epi.to_usize() + 1
 }
 
-fn determine_best_card_sauspiel(ahand: EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence, epi: EPlayerIndex, rules: &SRules, expensifiers: &SExpensifiers) -> SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, STplStrategiesOnlyMaxSelfishMin>> {
+fn determine_best_card_sauspiel(ahand: EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence, epi: EPlayerIndex, rules: &SRules, expensifiers: &SExpensifiers) -> SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats, STplStrategiesOnlyMaxSelfishMin>> {
     unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_,_>(
         stichseq,
         Box::new(std::iter::once(ahand)) as Box<_>,

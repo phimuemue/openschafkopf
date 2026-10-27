@@ -51,7 +51,7 @@ impl<T, TplStrategies: TTplStrategies> SPayoutStatsTable<T, TplStrategies> {
 pub fn internal_table<
     TplStrategies: TTplStrategies,
     T,
-    PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>>,
+    PayoutStatsPerStrategy: Borrow<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>,
 >(
     mut vectpayoutstatsperstrategy: Vec<(T, PayoutStatsPerStrategy)>,
     b_group: bool,
@@ -78,7 +78,7 @@ pub fn internal_table<
     for ((perminmaxstrategyatplstrf, _grouping), grptpltmapemmstrategyatplstrf) in vectpayoutstatsperstrategy.into_iter()
         .map(|(t, minmax)| {
             let minmax = minmax.borrow();
-            let column_counts = |paystats: &SPayoutStats<std::cmp::Ordering>| {
+            let column_counts = |paystats: &SPayoutStats| {
                 let mapordn_count = paystats.counts(fn_loss_or_win);
                 let f_percentage_not_lost = (mapordn_count[std::cmp::Ordering::Equal]+mapordn_count[std::cmp::Ordering::Greater])
                     .as_num::<f32>()
@@ -106,7 +106,7 @@ pub fn internal_table<
             let column_min_or_max = |n: isize| {
                 (format!("{n} "), n.as_num::<f32>())
             };
-            let column_average = |paystats: &SPayoutStats<std::cmp::Ordering>| {
+            let column_average = |paystats: &SPayoutStats| {
                 let f_avg = paystats.avg();
                 (format!("{f_avg:.2} "), f_avg)
             };
@@ -158,7 +158,7 @@ pub fn internal_table<
 pub fn table<
     TplStrategies: TTplStrategies,
 >(
-    determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>>,
+    determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>,
     rules: &SRules,
     fn_loss_or_win: &dyn Fn(isize, std::cmp::Ordering) -> std::cmp::Ordering,
 ) -> SPayoutStatsTable<ECard, TplStrategies> {

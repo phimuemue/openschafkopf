@@ -54,7 +54,7 @@ impl SAi {
         }
     }
 
-    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &SRules, expensifiers: &SExpensifiers) -> SPerMinMaxStrategy<SPayoutStats<std::cmp::Ordering>> {
+    pub fn rank_rules(&self, hand_fixed: SFullHand, epi_rank: EPlayerIndex, rules: &SRules, expensifiers: &SExpensifiers) -> SPerMinMaxStrategy<SPayoutStats> {
         // TODO: adjust interface to get whole game in case of VAIParams::Cheating
         let stichseq = &SStichSequence::new(unwrap!(EKurzLang::from_cards_per_player(hand_fixed.get().len())));
         unwrap!(determine_best_card(
@@ -192,14 +192,14 @@ impl<T> SDetermineBestCardResult<T> {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct SPayoutStats<T: Ord> {
-    mapnn_histogram: BTreeMap<(isize/*n_payout*/, T), usize/*n_count*/>, // TODO manually sorted Vec better?
+pub struct SPayoutStats {
+    mapnn_histogram: BTreeMap<(isize/*n_payout*/, std::cmp::Ordering/*ordering_against_0*/), usize/*n_count*/>, // TODO manually sorted Vec better?
 }
 
-impl<T: Ord + Copy> SPayoutStats<T> {
-    pub fn new_1((n_payout, t): (isize, T)) -> Self {
+impl SPayoutStats {
+    pub fn new_1((n_payout, ordering_against_0): (isize, std::cmp::Ordering)) -> Self {
         Self {
-            mapnn_histogram: Some(((n_payout, t), 1)).into_iter().collect()
+            mapnn_histogram: Some(((n_payout, ordering_against_0), 1)).into_iter().collect()
         }
     }
 
@@ -229,13 +229,13 @@ impl<T: Ord + Copy> SPayoutStats<T> {
             ));
         n_payout_sum.as_num::<f32>() / n_count_sum.as_num::<f32>()
     }
-    pub fn histogram(&self) -> &BTreeMap<(isize, T), usize> {
+    pub fn histogram(&self) -> &BTreeMap<(isize, std::cmp::Ordering), usize> {
         &self.mapnn_histogram
     }
-    pub fn counts(&self, fn_loss_or_win: impl Fn(isize, T)->std::cmp::Ordering) -> EnumMap<std::cmp::Ordering, usize> {
+    pub fn counts(&self, fn_loss_or_win: impl Fn(isize, std::cmp::Ordering)->std::cmp::Ordering) -> EnumMap<std::cmp::Ordering, usize> {
         let mut mapordn_counts = std::cmp::Ordering::map_from_fn(|_ord| 0);
-        for ((n_payout, t), n_count) in self.mapnn_histogram.iter() {
-            mapordn_counts[fn_loss_or_win(*n_payout, *t)] += n_count;
+        for ((n_payout, ordering_against_0), n_count) in self.mapnn_histogram.iter() {
+            mapordn_counts[fn_loss_or_win(*n_payout, *ordering_against_0)] += n_count;
         }
         mapordn_counts
     }
@@ -269,9 +269,9 @@ pub fn determine_best_card<
     fn_make_foreachsnapshot: &(dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>) -> SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> + std::marker::Sync),
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
-    fn_inspect: &(dyn Fn(&VInspectionPoint<&EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>>>>, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
+    fn_inspect: &(dyn Fn(&VInspectionPoint<&EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>>>, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->isize + Sync),
-) -> Option<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies>>>
+) -> Option<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>>
 {
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
@@ -329,7 +329,7 @@ pub fn determine_best_card<
                 let mut mapcardooutput = unwrap!(mapcardooutput.lock());
                 for card in <ECard as PlainEnum>::values() {
                     if let Some(output) = &mapcardooutput_per_ahand[card] {
-                        let payoutstats : SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, _> = output.map(|mapepin_payout|
+                        let payoutstats : SPerMinMaxStrategyGeneric<SPayoutStats, _> = output.map(|mapepin_payout|
                             SPayoutStats::new_1((
                                 fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]),
                                 mapepin_payout[foreachsnapshot.epi].cmp(&0),
@@ -359,7 +359,7 @@ pub fn determine_best_card<
                     unwrap!(mapcardooutput_per_ahand[card].as_ref()).clone()
                 },
             );
-            let payoutstats_per_hand : SPerMinMaxStrategyGeneric<SPayoutStats<std::cmp::Ordering>, TplStrategies> = output_per_ahand.map(|mapepin_payout|
+            let payoutstats_per_hand : SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies> = output_per_ahand.map(|mapepin_payout|
                 SPayoutStats::new_1((
                     fn_payout(stichseq, &ahand, mapepin_payout[foreachsnapshot.epi]),
                     mapepin_payout[foreachsnapshot.epi].cmp(&0),
