@@ -463,10 +463,8 @@ pub fn with_common_args<FnWithArgs>(
                         });
                     forward!(n_ahand_total, internal_all_possible_hands, |itahand| itahand)
                 },
-                (VChooseItAhand::Sample(n_samples, None), _oepi_active) => {
-                    forward!(n_samples, internal_forever_rand_hands, |itahand| Iterator::take(itahand, *n_samples))
-                },
-                (VChooseItAhand::Sample(n_samples, Some(_n_pool)), None) => {
+                (VChooseItAhand::Sample(n_samples, None), _/*oepi_active*/)
+                | (VChooseItAhand::Sample(n_samples, Some(_/*n_pool*/)), None) => {
                     forward!(n_samples, internal_forever_rand_hands, |itahand| Iterator::take(itahand, *n_samples))
                 },
                 (VChooseItAhand::Sample(n_samples, Some(n_pool)), Some(epi_active)) => {
