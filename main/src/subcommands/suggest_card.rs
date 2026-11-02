@@ -447,27 +447,37 @@ pub fn with_common_args<FnWithArgs>(
                     b_verbose,
                 )
             }}}
+            let n_ahand_total = {
+                let mut n_cards_unknown = mapepin_cards_per_hand.iter().sum::<usize>()
+                    - ahand_with_holes.iter().map(|hand| hand.cards().len()).sum::<usize>();
+                EPlayerIndex::values()
+                    .fold(1u64, |n_ahand_total, epi| {
+                        let n_cards_sampled = mapepin_cards_per_hand[epi]-ahand_with_holes[epi].cards().len();
+                        let n_binom = num_integer::binomial(
+                            n_cards_unknown.as_num::<u64>(),
+                            n_cards_sampled.as_num::<u64>(),
+                        );
+                        n_cards_unknown -= n_cards_sampled;
+                        n_ahand_total*n_binom
+                    })
+            };
             match (&iteratehands, rules.playerindex()) {
                 (VChooseItAhand::All, _oepi_active) => {
-                    let mut n_cards_unknown = mapepin_cards_per_hand.iter().sum::<usize>()
-                        - ahand_with_holes.iter().map(|hand| hand.cards().len()).sum::<usize>();
-                    let n_ahand_total = EPlayerIndex::values()
-                        .fold(1u64, |n_ahand_total, epi| {
-                            let n_cards_sampled = mapepin_cards_per_hand[epi]-ahand_with_holes[epi].cards().len();
-                            let n_binom = num_integer::binomial(
-                                n_cards_unknown.as_num::<u64>(),
-                                n_cards_sampled.as_num::<u64>(),
-                            );
-                            n_cards_unknown -= n_cards_sampled;
-                            n_ahand_total*n_binom
-                        });
                     forward!(n_ahand_total, internal_all_possible_hands, |itahand| itahand)
                 },
                 (VChooseItAhand::Sample(n_samples, None), _/*oepi_active*/)
                 | (VChooseItAhand::Sample(n_samples, Some(_/*n_pool*/)), None) => {
-                    forward!(n_samples, internal_forever_rand_hands, |itahand| Iterator::take(itahand, *n_samples))
+                    if n_ahand_total <= n_samples.as_num::<u64>() {
+                        if b_verbose {
+                            println!("Requested generating more hands than theoretically possible. Generating all hands instead.")
+                        }
+                        forward!(n_ahand_total, internal_all_possible_hands, |itahand| itahand)
+                    } else {
+                        forward!(n_samples, internal_forever_rand_hands, |itahand| Iterator::take(itahand, *n_samples))
+                    }
                 },
                 (VChooseItAhand::Sample(n_samples, Some(n_pool)), Some(epi_active)) => {
+                    // TODO similar logic if n_ahand_total <= n_samples resp. n_pool?
                     forward!(
                         *n_samples,
                         internal_forever_rand_hands,
