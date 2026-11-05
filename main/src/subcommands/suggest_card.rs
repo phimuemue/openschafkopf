@@ -1263,6 +1263,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         )
         .transpose()?
         .unwrap_or_default();
+    let oesinglestrategy = match clapmatches.value_of("strategy") {
+        Some("maxmin") => Ok(Some(ESingleStrategy::MaxMin)),
+        Some("maxselfishmin") => Ok(Some(ESingleStrategy::MaxSelfishMin)),
+        None => Ok(None),
+        Some(_) => Err(format_err!("Could not understand strategy.")),
+    }?;
     let oebranching = {
         use VBranching::*;
         if let Some(str_branching) = clapmatches.value_of("branching") {
@@ -1335,12 +1341,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         n_payout
                     }
                 };
-                let oesinglestrategy = match clapmatches.value_of("strategy") {
-                    Some("maxmin") => Ok(Some(ESingleStrategy::MaxMin)),
-                    Some("maxselfishmin") => Ok(Some(ESingleStrategy::MaxSelfishMin)),
-                    None => Ok(None),
-                    Some(_) => Err(format_err!("Could not understand strategy.")),
-                }?;
                 // we are interested in payout => single-card-optimization useless
                 macro_rules! forward{(
                     (($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr),
@@ -1405,7 +1405,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         // Some("hint") => (SPrunerViaHint), // TODO re-enable
                         _ => (SPrunerNothing),
                     },
-                    match ((oesinglestrategy, clapmatches.is_present("abprune"), rules.alpha_beta_pruner_lohi_values())) {
+                    match ((&oesinglestrategy, clapmatches.is_present("abprune"), rules.alpha_beta_pruner_lohi_values())) {
                         (None, b_abprune, _) => (
                             STplStrategiesAll,
                             {
