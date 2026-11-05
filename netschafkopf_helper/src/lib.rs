@@ -605,7 +605,7 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
                     epi_active,
                     game.expensifiers.clone(),
                 ),
-                |rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache)),
+                SSnapshotCacheNone::factory(),
                 SNoVisualization::factory(),
                 /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
                 /*fn_payout*/&|_stichseq, _ahand, n_payout: isize| n_payout,

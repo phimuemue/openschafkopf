@@ -213,8 +213,8 @@ pub trait TSnapshotCache<T> { // TODO? could this be implemented via TForEachSna
 }
 pub struct SSnapshotCacheNone;
 impl SSnapshotCacheNone {
-    pub fn factory() -> impl Fn(&SRuleStateCacheFixed) -> Self {
-        |_| Self
+    pub fn factory() -> impl Fn(&SRuleStateCacheFixed) -> Option<Self> {
+        |_rulestatecache| None // This has the same meaning as a SSnapshotCacheNone.
     }
 }
 impl<T> TSnapshotCache<T> for SSnapshotCacheNone {

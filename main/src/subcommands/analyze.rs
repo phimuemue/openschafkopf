@@ -163,7 +163,7 @@ fn analyze_game(
                             epi,
                             game.expensifiers.clone(),
                         ),
-                        /*fn_snapshotcache*/|rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache)), // TODO possibly use cache
+                        /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO possibly use cache
                         /*fn_visualizer*/SNoVisualization::factory(),
                         /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
                         /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,

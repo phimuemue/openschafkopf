@@ -2452,7 +2452,7 @@ mod tests {
                                     #[allow(clippy::redundant_closure_call)]
                                     $fn_alphabetapruner(stichseq, ahand),
                                 ),
-                                /*fn_snapshotcache*/|rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache)),
+                                /*fn_snapshotcache*/SSnapshotCacheNone::factory(),
                                 SNoVisualization::factory(),
                                 /*fn_inspect*/&|_,_,_| {},
                                 /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,

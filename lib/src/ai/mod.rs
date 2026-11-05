@@ -73,7 +73,7 @@ impl SAi {
                     expensifiers.clone(), // TODO? can clone be avoided
                 )
             },
-            |rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache)), // TODO? make customizable
+            SSnapshotCacheNone::factory(), // TODO? make customizable
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_,_,_|{},
             /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
@@ -114,7 +114,7 @@ impl SAi {
                         epi_current,
                         expensifiers.clone(),
                     ),
-                    |rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache)), // TODO possibly use cache
+                    SSnapshotCacheNone::factory(), // TODO possibly use cache
                     fn_visualizer,
                     /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
                     /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
@@ -542,7 +542,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             Box::new(std::iter::once(ahand)) as Box<_>,
             /*fn_make_filter*/SBranchingFactor::factory(1, 2),
             &|_stichseq, _ahand| SMinReachablePayout::new_from_game(&game),
-            /*fn_snapshotcache*/|rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache)), // TODO test cache
+            /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO test cache
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
             /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,

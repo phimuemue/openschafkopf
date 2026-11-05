@@ -881,7 +881,7 @@ fn test_snapshotcache() {
                         }}
                         // TODO The following two should use the same type, maybe enforcable by making fwd a closure
                         assert_eq!(
-                            fwd!(|rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache))),
+                            fwd!(SSnapshotCacheNone::factory()),
                             fwd!(|rulestatecache| Some(game.rules.snapshot_cache::<STplStrategiesAll>(rulestatecache))),
                         );
                     }

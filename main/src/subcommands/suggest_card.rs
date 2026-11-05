@@ -952,7 +952,7 @@ fn make_snapshot_cache<TplStrategies: TTplStrategies>(rules: &SRules) -> impl Fn
 
 #[allow(clippy::extra_unused_type_parameters)]
 fn make_snapshot_cache_none<TplStrategies>(_rules: &SRules) -> impl Fn(&SRuleStateCacheFixed)->Option<SSnapshotCacheNone> {
-    |rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache))
+    SSnapshotCacheNone::factory()
 }
 
 fn run_internal<
