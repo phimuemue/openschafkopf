@@ -975,7 +975,7 @@ fn run_internal<
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->isize + Sync),
     slcconstraint: &[SConstraint],
-) -> Result<(), Error>
+) -> Result<(), SCouldNotGenerateValidHands>
 {
     let inspectionstatistics = Arc::new(Mutex::new(SInspectionStatistics::new(slcconstraint, stichseq, rules)));
     let ovecinterimres_verbose = if_then_some!(b_verbose, Arc::new(Mutex::new(Vec::<SInterimResult<TplStrategies>>::new())));
@@ -1073,7 +1073,7 @@ fn run_internal<
             }
         },
         fn_payout,
-    ).map_err(|SCouldNotGenerateValidHands|format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
+    )?;
     if clapmatches.is_present("json") {
         // TODO output inspectionstatistics
         println!("{}", unwrap!(serde_json::to_string(
@@ -1374,7 +1374,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             n_payout,
                         ),
                         &vecconstraint,
-                    )?
+                    ).map_err(|SCouldNotGenerateValidHands|format_err!("Could not determine best card. Apparently could not generate valid hands."))?
                 }}}
                 cartesian_match!(
                     forward,
