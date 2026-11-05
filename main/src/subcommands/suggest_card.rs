@@ -323,7 +323,7 @@ pub fn with_common_args<FnWithArgs>(
             EPlayerIndex/*epi_position*/,
             &SExpensifiers,
             bool/*b_verbose*/,
-        ) -> Result<(), Error>,
+        ) -> Result<(), SCouldNotGenerateValidHands>,
 {
     let iteratehands = if_then_some!(let Some(str_itahand)=clapmatches.value_of("simulate_hands"),
         if "all"==str_itahand.to_lowercase() { // TODO replace this case by simply "0"?
@@ -445,7 +445,7 @@ pub fn with_common_args<FnWithArgs>(
                     epi_position,
                     &expensifiers,
                     b_verbose,
-                )
+                ).map_err(|SCouldNotGenerateValidHands|format_err!("Could not determine best card. Apparently could not generate valid hands."))
             }}}
             let n_ahand_total = {
                 let mut n_cards_unknown = mapepin_cards_per_hand.iter().sum::<usize>()
@@ -1462,7 +1462,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         //     )
                         // },
                     },
-                ).map_err(|SCouldNotGenerateValidHands|format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
+                )?;
             }
             
             Ok(())
