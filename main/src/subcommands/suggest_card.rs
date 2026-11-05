@@ -1374,7 +1374,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                             n_payout,
                         ),
                         &vecconstraint,
-                    ).map_err(|SCouldNotGenerateValidHands|format_err!("Could not determine best card. Apparently could not generate valid hands."))?
+                    )
                 }}}
                 cartesian_match!(
                     forward,
@@ -1462,7 +1462,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         //     )
                         // },
                     },
-                );
+                ).map_err(|SCouldNotGenerateValidHands|format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
             }
             
             Ok(())
