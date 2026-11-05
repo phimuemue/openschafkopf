@@ -1,5 +1,5 @@
 use openschafkopf_lib::{
-    ai::{*, handiterators::*, gametree::*, stichoracle::SFilterByOracle, cardspartition::*},
+    ai::{*, handiterators::*, gametree::*, stichoracle::SFilterByOracle},
     rules::{
         SRules,
         SDisplayRules,
@@ -933,9 +933,9 @@ fn json_histograms<TplStrategies: TTplStrategies>(payoutstatsperstrategy: &SPerM
     )
 }
 
-enum EBranching {
+enum VBranching {
     Branching(usize, usize),
-    Equivalent(usize, SCardsPartition),
+    Equivalent(usize),
     Oracle,
     OnePerWinnerIndex(Option<EPlayerIndex>),
 }
@@ -1263,6 +1263,33 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
         )
         .transpose()?
         .unwrap_or_default();
+    let oebranching = {
+        use VBranching::*;
+        if let Some(str_branching) = clapmatches.value_of("branching") {
+            if str_branching.is_empty() {
+                None
+            } else if str_branching=="oracle" {
+                Some(Oracle)
+            } else if let Some(oepi_unfiltered) = str_branching.strip_prefix("oneperwinnerindex")
+                .map(|str_oepi_unfiltered| str_oepi_unfiltered.parse().ok())
+            {
+                Some(OnePerWinnerIndex(oepi_unfiltered))
+            } else if let Some(n_until_stichseq_len) = str_branching.strip_prefix("equiv")
+                .and_then(|str_n_until_remaining_cards| str_n_until_remaining_cards.parse().ok())
+            {
+                Some(Equivalent(n_until_stichseq_len))
+            } else {
+                let [str_lo, str_hi] = str_branching
+                    .split(',')
+                    .collect_array()
+                    .ok_or_else(|| format_err!("Could not parse branching"))?;
+                let (n_lo, n_hi) = (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?);
+                Some(Branching(n_lo, n_hi)) // TODO we should avoid branching in case n_lo is greater than all hand's fixed cards
+            }
+        } else {
+            None
+        }
+    };
     with_common_args(
         clapmatches,
         |itahand, rules, stichseq, ocard_played, ahand_fixed_with_holes, epi_position, expensifiers, b_verbose| {
@@ -1308,7 +1335,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         n_payout
                     }
                 };
-                use EBranching::*;
                 let oesinglestrategy = match clapmatches.value_of("strategy") {
                     Some("maxmin") => Ok(Some(ESingleStrategy::MaxMin)),
                     Some("maxselfishmin") => Ok(Some(ESingleStrategy::MaxSelfishMin)),
@@ -1350,49 +1376,25 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         &vecconstraint,
                     )?
                 }}}
-                let oebranching = if let Some(str_branching) = clapmatches.value_of("branching") {
-                    if str_branching.is_empty() {
-                        None
-                    } else if str_branching=="oracle" {
-                        Some(Oracle)
-                    } else if let Some(oepi_unfiltered) = str_branching.strip_prefix("oneperwinnerindex")
-                        .map(|str_oepi_unfiltered| str_oepi_unfiltered.parse().ok())
-                    {
-                        Some(OnePerWinnerIndex(oepi_unfiltered))
-                    } else if let Some(n_until_stichseq_len) = str_branching.strip_prefix("equiv")
-                        .and_then(|str_n_until_remaining_cards| str_n_until_remaining_cards.parse().ok())
-                    {
-                        Some(Equivalent(n_until_stichseq_len, rules.equivalent_when_on_same_hand()))
-                    } else {
-                        let [str_lo, str_hi] = str_branching
-                            .split(',')
-                            .collect_array()
-                            .ok_or_else(|| format_err!("Could not parse branching"))?;
-                        let (n_lo, n_hi) = (str_lo.trim().parse::<usize>()?, str_hi.trim().parse::<usize>()?);
-                        Some(Branching(n_lo, n_hi)) // TODO we should avoid branching in case n_lo is greater than all hand's fixed cards
-                    }
-                } else {
-                    None
-                };
                 cartesian_match!(
                     forward,
                     match (oebranching) {
                         None => ((_), SNoFilter::factory()),
-                        Some(Branching(n_lo, n_hi)) => ((_), {
+                        Some(VBranching::Branching(n_lo, n_hi)) => ((_), {
                             let n_lo = n_lo.max(1);
                             SBranchingFactor::factory(n_lo, n_hi.max(n_lo+1))
                         }),
-                        Some(Equivalent(n_until_stichseq_len, cardspartition)) => (
+                        Some(VBranching::Equivalent(n_until_stichseq_len)) => (
                             (_),
                             equivalent_cards_filter(
                                 n_until_stichseq_len,
-                                cardspartition.clone(),
+                                rules.equivalent_when_on_same_hand(),
                             )
                         ),
-                        Some(Oracle) => ((SFilterByOracle), |stichseq, ahand| {
+                        Some(VBranching::Oracle) => ((SFilterByOracle), |stichseq, ahand| {
                             SFilterByOracle::new(rules, ahand, stichseq)
                         }),
-                        Some(OnePerWinnerIndex(oepi_unfiltered)) => ((_), |_stichseq, _ahand| {
+                        Some(VBranching::OnePerWinnerIndex(oepi_unfiltered)) => ((_), |_stichseq, _ahand| {
                             SFilterOnePerWinnerIndex::new(
                                 oepi_unfiltered,
                                 rules,
