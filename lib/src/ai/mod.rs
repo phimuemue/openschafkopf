@@ -250,6 +250,9 @@ pub enum VInspectionPoint<AfterHand> {
     ),
 }
 
+#[derive(Debug)]
+pub struct SCouldNotGenerateValidHands;
+
 pub fn determine_best_card<
     'stichseq,
     'rules,
@@ -269,7 +272,7 @@ pub fn determine_best_card<
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(&VInspectionPoint<&EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>>>, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->isize + Sync),
-) -> Option<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>>
+) -> Result<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>, SCouldNotGenerateValidHands>
 {
     let mapcardooutput = Arc::new(Mutex::new(
         // aggregate n_payout per card in some way
@@ -372,12 +375,12 @@ pub fn determine_best_card<
         });
     let mapcardooutput = finalize_arc_mutex(mapcardooutput);
     let ooutput_combined = finalize_arc_mutex(ooutput_combined);
-    if_then_some!(let Some(output_combined) = ooutput_combined, {
+    ooutput_combined.map(|output_combined|
         SDetermineBestCardResult{
             mapcardt: mapcardooutput,
             t_combined: output_combined,
         }
-    })
+    ).ok_or(SCouldNotGenerateValidHands)
 }
 
 pub struct SBranchingFactor{

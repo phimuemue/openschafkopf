@@ -1073,7 +1073,7 @@ fn run_internal<
             }
         },
         fn_payout,
-    ).ok_or_else(||format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
+    ).map_err(|SCouldNotGenerateValidHands|format_err!("Could not determine best card. Apparently could not generate valid hands."))?;
     if clapmatches.is_present("json") {
         // TODO output inspectionstatistics
         println!("{}", unwrap!(serde_json::to_string(
