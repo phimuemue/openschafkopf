@@ -71,7 +71,7 @@ fn for_each_game_situation(
         Option<ECard>/*ocard_played*/,
         EPlayerIndex/*epi_position*/,
         &SExpensifiers,
-    ) -> Result<(), Error>,
+    ),
 ) -> Result<(), Error> {
     let usersuppliedposition : &VUserSuppliedPosition = unwrap!(clapmatches.get_one("position"));
     super::glob_files(clapmatches, |opath, str_input, _i_input| {// short-circuits when user requested input from files but something bad happened
@@ -100,7 +100,7 @@ fn for_each_game_situation(
                                     &game_in.expensifiers.vecstoss,
                                     game_in.stichseq.visible_cards(),
                                     /*fn_before_zugeben*/|game, _i_stich, epi_zugeben, card_played| {
-                                        unwrap!/*assume that fn_with_game_situation can work with a pre-checked game*/(fn_with_game_situation(
+                                        fn_with_game_situation(
                                             (
                                                 &game.ahand,
                                                 /*str_ahand*/&game.ahand.iter()
@@ -115,7 +115,7 @@ fn for_each_game_situation(
                                             Some(card_played),
                                             oepi_position_concrete.unwrap_or(epi_zugeben),
                                             &game.expensifiers,
-                                        ));
+                                        );
                                     },
                                 ))
                             }));
@@ -302,7 +302,7 @@ fn for_each_game_situation(
                     /*ocard_played*/None,
                     epi_position,
                     &expensifiers,
-                )?;
+                );
             } // itrules
         } // vecocard_hand, str_ahand)
     }
@@ -445,7 +445,7 @@ pub fn with_common_args<FnWithArgs>(
                     epi_position,
                     &expensifiers,
                     b_verbose,
-                ).map_err(|SCouldNotGenerateValidHands|format_err!("Could not determine best card. Apparently could not generate valid hands."))
+                )
             }}}
             let n_ahand_total = {
                 let mut n_cards_unknown = mapepin_cards_per_hand.iter().sum::<usize>()
@@ -461,7 +461,7 @@ pub fn with_common_args<FnWithArgs>(
                         n_ahand_total*n_binom
                     })
             };
-            match (&iteratehands, rules.playerindex()) {
+            let res = match (&iteratehands, rules.playerindex()) {
                 (VChooseItAhand::All, _oepi_active) => {
                     forward!(n_ahand_total, internal_all_possible_hands, |itahand| itahand)
                 },
@@ -507,9 +507,14 @@ pub fn with_common_args<FnWithArgs>(
                         }
                     )
                 },
-            }?;
+            };
+            match res {
+                Ok(()) => {},
+                Err(SCouldNotGenerateValidHands) => {
+                    println!("Apparently could not generate valid hands."); // TODO Should we stop here? // TODO Should we offer more information?
+                },
+            }
         }
-        Ok(())
     })
 }
 
