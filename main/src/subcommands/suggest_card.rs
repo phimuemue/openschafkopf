@@ -946,10 +946,6 @@ enum ESingleStrategy {
     MaxSelfishMin,
 }
 
-fn make_snapshot_cache<TplStrategies: TTplStrategies>(rules: &SRules) -> impl Fn(&SRuleStateCacheFixed) -> Option<Box<dyn TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>>>> + '_ {
-    move |rulestatecache| Some(rules.snapshot_cache::<TplStrategies>(rulestatecache))
-}
-
 fn run_internal<
     'stichseq,
     'rules,
@@ -1340,7 +1336,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         $fn_alphabetapruner,
                         /*fn_snapshotcache*/|rulestatecache| -> Option<_> {
                             match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
-                                true => make_snapshot_cache::<$TplStrategies>(rules)(rulestatecache),
+                                true => Some(rules.snapshot_cache::<$TplStrategies>(rulestatecache)),
                                 false => None,
                             }
                         },
