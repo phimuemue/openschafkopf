@@ -950,11 +950,6 @@ fn make_snapshot_cache<TplStrategies: TTplStrategies>(rules: &SRules) -> impl Fn
     move |rulestatecache| Some(rules.snapshot_cache::<TplStrategies>(rulestatecache))
 }
 
-#[allow(clippy::extra_unused_type_parameters)]
-fn make_snapshot_cache_none<TplStrategies>(_rules: &SRules) -> impl Fn(&SRuleStateCacheFixed)->Option<SSnapshotCacheNone> {
-    SSnapshotCacheNone::factory()
-}
-
 fn run_internal<
     'stichseq,
     'rules,
@@ -1329,7 +1324,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     (($($func_filter_allowed_cards_ty: tt)*), $func_filter_allowed_cards: expr),
                     ($pruner:ident),
                     ($TplStrategies:ident, $fn_alphabetapruner:expr,),
-                    $fn_snapshotcache:ident,
                     $fn_visualizer: expr,
                 ) => {{ // TODORUST generic closures
                     run_internal::<$($func_filter_allowed_cards_ty)*,$TplStrategies,_,$pruner,_,_,_>( // TODO avoid explicit types
@@ -1344,7 +1338,12 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                         itahand,
                         $func_filter_allowed_cards,
                         $fn_alphabetapruner,
-                        $fn_snapshotcache::<$TplStrategies>(rules),
+                        /*fn_snapshotcache*/|rulestatecache| -> Option<_> {
+                            match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
+                                true => make_snapshot_cache::<$TplStrategies>(rules)(rulestatecache),
+                                false => None,
+                            }
+                        },
                         $fn_visualizer,
                         /*fn_payout*/&|stichseq, ahand, n_payout| fn_human_readable_payout(
                             stichseq,
@@ -1454,10 +1453,6 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                                 mapepilohi
                             })),
                         ),
-                    },
-                    match (clapmatches.is_present("snapshotcache")) { // TODO customizable depth
-                        true => make_snapshot_cache,
-                        false => make_snapshot_cache_none,
                     },
                     match (clapmatches.value_of("visualize")) {
                         _ => (SNoVisualization::factory()),
