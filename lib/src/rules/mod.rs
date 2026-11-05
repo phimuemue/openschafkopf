@@ -879,9 +879,10 @@ fn test_snapshotcache() {
                                 .cards_and_ts()
                                 .collect::<Vec<_>>()
                         }}
+                        // TODO The following two should use the same type, maybe enforcable by making fwd a closure
                         assert_eq!(
-                            fwd!(SSnapshotCacheNone::factory()),
-                            fwd!(|rulestatecache| game.rules.snapshot_cache::<STplStrategiesAll>(rulestatecache)),
+                            fwd!(|rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache))),
+                            fwd!(|rulestatecache| Some(game.rules.snapshot_cache::<STplStrategiesAll>(rulestatecache))),
                         );
                     }
                 };

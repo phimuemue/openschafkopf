@@ -118,7 +118,9 @@ impl TPlayer for SPlayerComputer {
                             epi,
                             expensifiers.clone(),
                         ),
-                        &SSnapshotCacheNone::factory(), // TODO? use cache
+                        &|rulestatecache| -> Option<_> {
+                            Some(SSnapshotCacheNone::factory()(rulestatecache)) // TODO use None // TODO? use cache
+                        },
                         &mut SNoVisualization,
                     ).omaxmin.unwrap_static_some()[epi]
                 })

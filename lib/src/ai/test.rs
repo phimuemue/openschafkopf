@@ -135,7 +135,7 @@ fn detect_expensive_all_possible_hands() {
                                 &game.rules,
                                 &SNoFilter::factory(),
                                 &SLeafCounter{},
-                                &SSnapshotCacheNone::factory(),
+                                &|rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache)),
                                 &mut SNoVisualization,
                             ),
                             2000

@@ -242,13 +242,12 @@ pub fn explore_snapshots<
     FilterAllowedCards: TFilterAllowedCards,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
     SnapshotCache: TSnapshotCache<ForEachSnapshot::Output>,
-    OSnapshotCache: Into<Option<SnapshotCache>>,
 >(
     (ahand, stichseq): (&mut EnumMap<EPlayerIndex, SHand>, &mut SStichSequence),
     rules: &SRules,
     fn_make_filter: &impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards,
     foreachsnapshot: &ForEachSnapshot,
-    fn_snapshotcache: &impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache,
+    fn_snapshotcache: &impl Fn(&SRuleStateCacheFixed) -> Option<SnapshotCache>,
     snapshotvisualizer: &mut impl TSnapshotVisualizer<ForEachSnapshot::Output>,
 ) -> ForEachSnapshot::Output 
     where
@@ -275,7 +274,7 @@ pub fn explore_snapshots<
             Some(mut func_filter_allowed_cards) => (&mut func_filter_allowed_cards),
             None => (/*func_filter_allowed_cards*/&mut SNoFilter),
         },
-        match(fn_snapshotcache(&SRuleStateCacheFixed::new(ahand, stichseq)).into()) {
+        match (fn_snapshotcache(&SRuleStateCacheFixed::new(ahand, stichseq))) {
             Some(mut snapshotcache) => (&mut snapshotcache),
             None => (&mut SSnapshotCacheNone),
         },

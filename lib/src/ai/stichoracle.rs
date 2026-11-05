@@ -2441,7 +2441,7 @@ mod tests {
                     if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
                         let epi = unwrap!(game.which_player_can_do_something()).0;
                         macro_rules! fwd{($ty_fn_make_filter:tt, $fn_make_filter:expr, $TplStrategies:ty, $fn_alphabetapruner:expr,) => {
-                            unwrap!(determine_best_card::<$ty_fn_make_filter,_,_,_,_,_,_,_>(
+                            unwrap!(determine_best_card::<$ty_fn_make_filter,_,_,_,_,_,_>(
                                 &game.stichseq,
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                                 $fn_make_filter,
@@ -2452,7 +2452,7 @@ mod tests {
                                     #[allow(clippy::redundant_closure_call)]
                                     $fn_alphabetapruner(stichseq, ahand),
                                 ),
-                                /*fn_snapshotcache*/SSnapshotCacheNone::factory(),
+                                /*fn_snapshotcache*/|rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache)),
                                 SNoVisualization::factory(),
                                 /*fn_inspect*/&|_,_,_| {},
                                 /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,

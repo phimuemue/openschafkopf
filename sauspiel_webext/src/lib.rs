@@ -489,7 +489,7 @@ fn epi_to_sauspiel_position(epi: EPlayerIndex) -> usize {
 }
 
 fn determine_best_card_sauspiel(ahand: EnumMap<EPlayerIndex, SHand>, stichseq: &SStichSequence, epi: EPlayerIndex, rules: &SRules, expensifiers: &SExpensifiers) -> SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats, STplStrategiesOnlyMaxSelfishMin>> {
-    unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_,_>(
+    unwrap!(determine_best_card::<SFilterByOracle,_,_,_,_,_,_>(
         stichseq,
         Box::new(std::iter::once(ahand)) as Box<_>,
         /*fn_filter*/|stichseq, ahand| {
@@ -501,7 +501,7 @@ fn determine_best_card_sauspiel(ahand: EnumMap<EPlayerIndex, SHand>, stichseq: &
             expensifiers.clone(),
         ),
         /*fn_snapshotcache*/|rulestatecache| {
-            rules.snapshot_cache::<STplStrategiesOnlyMaxSelfishMin>(rulestatecache)
+            Some(rules.snapshot_cache::<STplStrategiesOnlyMaxSelfishMin>(rulestatecache))
         },
         /*fn_visualizer*/SNoVisualization::factory(),
         /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},

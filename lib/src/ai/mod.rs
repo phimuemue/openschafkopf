@@ -73,7 +73,7 @@ impl SAi {
                     expensifiers.clone(), // TODO? can clone be avoided
                 )
             },
-            SSnapshotCacheNone::factory(), // TODO? make customizable
+            |rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache)), // TODO? make customizable
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_,_,_|{},
             /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
@@ -114,7 +114,7 @@ impl SAi {
                         epi_current,
                         expensifiers.clone(),
                     ),
-                    SSnapshotCacheNone::factory(), // TODO possibly use cache
+                    |rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache)), // TODO possibly use cache
                     fn_visualizer,
                     /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
                     /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
@@ -258,7 +258,6 @@ pub fn determine_best_card<
     AlphaBetaPruner: TAlphaBetaPruner+Sync,
     Pruner: TPruner+Sync,
     SnapshotCache: TSnapshotCache<<SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> as TForEachSnapshot>::Output>,
-    OSnapshotCache: Into<Option<SnapshotCache>>,
     SnapshotVisualizer: TSnapshotVisualizer<<SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> as TForEachSnapshot>::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
 >(
@@ -266,7 +265,7 @@ pub fn determine_best_card<
     itahand: Box<dyn Iterator<Item=EnumMap<EPlayerIndex, SHand>> + Send + 'stichseq>,
     fn_make_filter: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->OFilterAllowedCards + std::marker::Sync,
     fn_make_foreachsnapshot: &(dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>) -> SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> + std::marker::Sync),
-    fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
+    fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> Option<SnapshotCache> + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_inspect: &(dyn Fn(&VInspectionPoint<&EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>>>, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->isize + Sync),
@@ -543,7 +542,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             Box::new(std::iter::once(ahand)) as Box<_>,
             /*fn_make_filter*/SBranchingFactor::factory(1, 2),
             &|_stichseq, _ahand| SMinReachablePayout::new_from_game(&game),
-            /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO test cache
+            /*fn_snapshotcache*/|rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache)), // TODO test cache
             /*fn_visualizer*/SNoVisualization::factory(),
             /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
             /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,

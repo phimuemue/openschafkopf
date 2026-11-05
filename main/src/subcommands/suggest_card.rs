@@ -946,13 +946,13 @@ enum ESingleStrategy {
     MaxSelfishMin,
 }
 
-fn make_snapshot_cache<TplStrategies: TTplStrategies>(rules: &SRules) -> impl Fn(&SRuleStateCacheFixed) -> Box<dyn TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>>> + '_ {
-    move |rulestatecache| rules.snapshot_cache::<TplStrategies>(rulestatecache)
+fn make_snapshot_cache<TplStrategies: TTplStrategies>(rules: &SRules) -> impl Fn(&SRuleStateCacheFixed) -> Option<Box<dyn TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>>>> + '_ {
+    move |rulestatecache| Some(rules.snapshot_cache::<TplStrategies>(rulestatecache))
 }
 
 #[allow(clippy::extra_unused_type_parameters)]
-fn make_snapshot_cache_none<TplStrategies>(_rules: &SRules) -> impl Fn(&SRuleStateCacheFixed)->SSnapshotCacheNone {
-    SSnapshotCacheNone::factory()
+fn make_snapshot_cache_none<TplStrategies>(_rules: &SRules) -> impl Fn(&SRuleStateCacheFixed)->Option<SSnapshotCacheNone> {
+    |rulestatecache| Some(SSnapshotCacheNone::factory()(rulestatecache))
 }
 
 fn run_internal<
@@ -963,7 +963,6 @@ fn run_internal<
     AlphaBetaPruner: TAlphaBetaPruner+Sync,
     Pruner: TPruner+Sync,
     SnapshotCache: TSnapshotCache<<SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> as TForEachSnapshot>::Output>,
-    OSnapshotCache: Into<Option<SnapshotCache>>,
     SnapshotVisualizer: TSnapshotVisualizer<<SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> as TForEachSnapshot>::Output>,
     OFilterAllowedCards: Into<Option<FilterAllowedCards>>,
 >(
@@ -981,7 +980,7 @@ fn run_internal<
 
     fn_alphabetapruner: impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>)->AlphaBetaPruner + std::marker::Sync,
 
-    fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> OSnapshotCache + std::marker::Sync,
+    fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> Option<SnapshotCache> + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->isize + Sync),
     slcconstraint: &[SConstraint],
@@ -1333,7 +1332,7 @@ pub fn run(clapmatches: &clap::ArgMatches) -> Result<(), Error> {
                     $fn_snapshotcache:ident,
                     $fn_visualizer: expr,
                 ) => {{ // TODORUST generic closures
-                    run_internal::<$($func_filter_allowed_cards_ty)*,$TplStrategies,_,$pruner,_,_,_,_>( // TODO avoid explicit types
+                    run_internal::<$($func_filter_allowed_cards_ty)*,$TplStrategies,_,$pruner,_,_,_>( // TODO avoid explicit types
                         b_verbose,
                         clapmatches,
                         ahand_fixed_with_holes,
