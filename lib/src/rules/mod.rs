@@ -854,7 +854,6 @@ fn test_snapshotcache() {
                 SMinReachablePayout,
                 SNoFilter,
                 SNoVisualization,
-                SSnapshotCacheNone,
                 STplStrategiesAll,
             },
             determine_best_card,
@@ -865,24 +864,26 @@ fn test_snapshotcache() {
             /*fn_check_ask_for_card*/|game_in: &SGameGeneric<SRuleSet, (), ()>| {
                 let internal_test = |game: &SGameGeneric<SRuleSet, (), ()>| {
                     if game.kurzlang().cards_per_player() - if_dbg_else!({4}{5}) < game.completed_stichs().len() {
-                        macro_rules! fwd{($fn_snapshotcache:expr) => {
+                        let fwd = |orules_snapshotcache: Option<&SRules>| {
                             unwrap!(determine_best_card(
                                 &game.stichseq,
                                 Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                                 /*fn_make_filter*/SNoFilter::factory(),
                                 &|_stichseq, _ahand| SMinReachablePayout::new_from_game(game),
-                                $fn_snapshotcache,
+                                |rulestatecache| orules_snapshotcache.map(|rules|
+                                    rules.snapshot_cache::<STplStrategiesAll>(rulestatecache)
+                                ),
                                 SNoVisualization::factory(),
                                 /*fn_inspect*/&|_,_,_| {},
                                 /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
                             ))
                                 .cards_and_ts()
+                                .map(|(card, t)| (card, t.clone())) // TODO avoid clone
                                 .collect::<Vec<_>>()
-                        }}
-                        // TODO The following two should use the same type, maybe enforcable by making fwd a closure
+                        };
                         assert_eq!(
-                            fwd!(SSnapshotCacheNone::factory()),
-                            fwd!(|rulestatecache| Some(game.rules.snapshot_cache::<STplStrategiesAll>(rulestatecache))),
+                            fwd(None),
+                            fwd(Some(&game.rules)),
                         );
                     }
                 };
