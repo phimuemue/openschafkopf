@@ -163,10 +163,10 @@ pub fn analyze_sauspiel_json_from_js(str_json: &str, str_username: String) -> SO
             }
         },
     ) {
-        Ok(Some((str_html_simple_game_protocol, vecepicardocardseverity))) => SOverviewAnalysis {
+        Ok(Some((str_html_simple_game_protocol, vecgameprotocolstep))) => SOverviewAnalysis {
             str_html_simple_game_protocol,
-            ostr_color_suboptimal_quality: vecepicardocardseverity.iter()
-                .filter_map(|(_epi, _card, ocardseverity)| match ocardseverity {
+            ostr_color_suboptimal_quality: vecgameprotocolstep.iter()
+                .filter_map(|gameprotocolstep| match &gameprotocolstep.ocardseverity {
                     None => None,
                     Some(EPlayedCardSeverity::Optimal) => None,
                     Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => Some(b_loss_realized),
@@ -224,6 +224,13 @@ fn table_cell_with_background(str_tag_name: &'static str, str_text: impl Attribu
     )
 }
 
+#[derive(Clone)]
+struct SGameProtocolStep {
+    epi: EPlayerIndex,
+    card_played: ECard,
+    ocardseverity: Option<EPlayedCardSeverity>,
+}
+
 fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, ElementPlayedCard:'lft>(
     game_finished: &SGameGeneric<Ruleset, GameAnnouncement, DetermineRules>,
     an_payout: &EnumMap<EPlayerIndex, isize>,
@@ -250,10 +257,10 @@ fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, El
         &EnumMap<EPlayerIndex, String>,
         EPlayerIndex,
     ) -> bool,
-) -> (String, Vec<(EPlayerIndex, ECard, Option<EPlayedCardSeverity>)>) {
+) -> (String, Vec<SGameProtocolStep>) {
     use html_generator::*;
     let rules = &game_finished.rules;
-    let mut vecepicardocardseverity = Vec::new();
+    let mut vecgameprotocolstep = Vec::new();
     for ((ahand, stichseq), card_played, epi, element_played_card) in itahandstichseqcardepielement {
         let ocardseverity = if_then_some!(
             stichseq.remaining_cards_per_hand()[*epi] <= if_dbg_else!({3}{5}) // TODO Can we make it fast enough to get rid of this?
@@ -294,7 +301,11 @@ fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, El
                 }
             }
         );
-        vecepicardocardseverity.push((*epi, *card_played, ocardseverity));
+        vecgameprotocolstep.push(SGameProtocolStep{
+            epi: *epi,
+            card_played: *card_played,
+            ocardseverity,
+        });
         fn_for_each_card(
             rules,
             ahand,
@@ -311,23 +322,21 @@ fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, El
     /*TODO const*/let html_table_gap_cell = th(attributes::style("width: 10px; background: none;"));
     fn make_playerindex_columns(
         ittplepib_repeated: impl Iterator<Item=(EPlayerIndex, bool/*b_repeated*/)> + Clone,
-        slcepicardocardseverity_stich: &[(EPlayerIndex, ECard, Option<EPlayedCardSeverity>)],
-    ) -> impl Iterator<Item=Option<(EPlayerIndex, bool/*b_repeated*/, ECard, Option<&EPlayedCardSeverity>)>> + Clone {
-        assert_eq!(slcepicardocardseverity_stich.len(), EPlayerIndex::SIZE);
+        slcgameprotocolstep_stich: &[SGameProtocolStep],
+    ) -> impl Iterator<Item=Option<(bool/*b_repeated*/, &SGameProtocolStep)>> + Clone {
+        assert_eq!(slcgameprotocolstep_stich.len(), EPlayerIndex::SIZE);
         itertools::merge_join_by(
             ittplepib_repeated,
-            slcepicardocardseverity_stich,
-            |(epi_running_index, _b_repeated), (epi_card, _card, _ocardseverity)| {
-                epi_running_index.cmp(epi_card)
+            slcgameprotocolstep_stich,
+            |(epi_running_index, _b_repeated), gameprotocolstep| {
+                epi_running_index.cmp(&gameprotocolstep.epi)
             },
         ).map(move |eitherorboth| match eitherorboth {
             EitherOrBoth::Left((_epi_running_index, _b_repeated)) => None,
-            EitherOrBoth::Both((epi_running_index, b_repeated), (epi_card, card, ocardseverity)) => Some((
-                verify_eq!(epi_running_index, *epi_card),
-                b_repeated,
-                *card,
-                ocardseverity.as_ref(),
-            )),
+            EitherOrBoth::Both((epi_running_index, b_repeated), gameprotocolstep) => {
+                assert_eq!(epi_running_index, gameprotocolstep.epi);
+                Some((b_repeated, gameprotocolstep))
+            },
             EitherOrBoth::Right(_) => panic!(),
         })
     }
@@ -401,9 +410,9 @@ fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, El
                     html_table_gap_cell.clone(),
                     {
                         let mut mapepimapbocardseverity_header = EPlayerIndex::map_from_fn(|_epi| bool::map_from_fn(|_b_repeated| None));
-                        vecepicardocardseverity.chunks(EPlayerIndex::SIZE).for_each(|slcepicardocardseverity_stich| {
-                            for (epi, b_repeated, _card, ocardseverity) in make_playerindex_columns(ittplepib_repeated.clone(), slcepicardocardseverity_stich).flatten() {
-                                assign_gt(&mut mapepimapbocardseverity_header[epi][b_repeated], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
+                        vecgameprotocolstep.chunks(EPlayerIndex::SIZE).for_each(|slcgameprotocolstep_stich| {
+                            for (b_repeated, SGameProtocolStep{epi, card_played:_, ocardseverity}) in make_playerindex_columns(ittplepib_repeated.clone(), slcgameprotocolstep_stich).flatten() {
+                                assign_gt(&mut mapepimapbocardseverity_header[*epi][b_repeated], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
                             }
                         });
                         html_iter(ittplepib_repeated.clone().map(move |(epi_header, b_repeated)| {
@@ -411,8 +420,8 @@ fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, El
                             table_cell_with_background(
                                 "th",
                                 format!("{}", epi_to_sauspiel_position(epi_header)),
-                                /*ocardseverity_bg*/mapbocardseverity[b_repeated].cloned(),
-                                /*ocardseverity_top*/unwrap!(mapbocardseverity.iter().max(/*exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?*/)).cloned(),
+                                /*ocardseverity_bg*/mapbocardseverity[b_repeated].clone(),
+                                /*ocardseverity_top*/unwrap!(mapbocardseverity.iter().max(/*exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?*/)).clone(),
                             )
                         }))
                     },
@@ -425,26 +434,26 @@ fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, El
                     )),
                 )),
                 itertools::zip_eq(
-                    vecepicardocardseverity.chunks(EPlayerIndex::SIZE),
+                    vecgameprotocolstep.chunks(EPlayerIndex::SIZE),
                     game_finished.stichseq.completed_stichs_winner_index(dbg_argument!(&game_finished.rules)),
-                ).enumerate().map(|(i_stich, (slcepicardocardseverity_stich, (stich, epi_winner)))| {
+                ).enumerate().map(|(i_stich, (slcgameprotocolstep_stich, (stich, epi_winner)))| {
                     tr((
                         table_cell_with_background(
                             "td",
                             /*str_text*/format!("{}. Stich", i_stich+1),
-                            /*ocardseverity_bg*/unwrap!(slcepicardocardseverity_stich.iter().map(|(_epi, _card, ocardseverity)| ocardseverity).max()).clone(),
+                            /*ocardseverity_bg*/unwrap!(slcgameprotocolstep_stich.iter().map(|gameprotocolstep| gameprotocolstep.ocardseverity.clone()).max()).clone(),
                             /*ocardseverity_top*/None,
                         ),
                         html_table_gap_cell.clone(),
                         html_iter(
-                            make_playerindex_columns(ittplepib_repeated.clone(), slcepicardocardseverity_stich)
-                                .map(|otplepibcardocardseverity| td(otplepibcardocardseverity.map(|(_epi, _b_repeated, card, ocardseverity)| {
-                                    let str_color = match ocardseverity {
+                            make_playerindex_columns(ittplepib_repeated.clone(), slcgameprotocolstep_stich)
+                                .map(|otplbgameprotocolstep| td(otplbgameprotocolstep.map(|(_b_repeated, gameprotocolstep)| {
+                                    let str_color = match &gameprotocolstep.ocardseverity {
                                         Some(EPlayedCardSeverity::Optimal) => "#78db00", // green
                                         Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
                                         None => "lightgrey",
                                     };
-                                    Some(internal_output_card_sauspiel_img(card, format!("border-top: 5px solid {str_color};box-sizing: content-box;")))
+                                    Some(internal_output_card_sauspiel_img(gameprotocolstep.card_played, format!("border-top: 5px solid {str_color};box-sizing: content-box;")))
                                 })))
                         ),
                         html_table_gap_cell.clone(),
@@ -480,7 +489,7 @@ fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, El
                 )),
             )),
         ))).to_string(),
-        vecepicardocardseverity.clone(),
+        vecgameprotocolstep.clone(),
     )
 }
 
@@ -773,7 +782,7 @@ fn internal_analyze_sauspiel_json(
         &EnumMap<EPlayerIndex, String>,
         EPlayerIndex,
     ) -> bool,
-) -> Result<Option<(String/*str_html_simple_game_protocol*/, Vec<(EPlayerIndex, ECard, Option<EPlayedCardSeverity>)>)>, SStringifiedError> {
+) -> Result<Option<(String/*str_html_simple_game_protocol*/, Vec<SGameProtocolStep>)>, SStringifiedError> {
     let mut vecahandstichseqcardepi = Vec::new();
     match analyze_sauspiel_json(
         str_json,
@@ -787,7 +796,7 @@ fn internal_analyze_sauspiel_json(
         },
     ) {
         Ok((SGameResultGeneric{stockorgame: VStockOrT::OrT(game_finished), an_payout}, mapepiostr_username)) => {
-            let (str_html_simple_game_protocol, vecepicardocardseverity) = make_simple_game_protocol(
+            let (str_html_simple_game_protocol, vecgameprotocolstep) = make_simple_game_protocol(
                 &game_finished,
                 &an_payout,
                 &mapepiostr_username.map_into(|ostr_username| ostr_username.unwrap_or_else(|| "[Spielername unbekannt]".to_string())),
@@ -799,7 +808,7 @@ fn internal_analyze_sauspiel_json(
             );
             Ok(Some((
                 str_html_simple_game_protocol,
-                vecepicardocardseverity,
+                vecgameprotocolstep,
             )))
         },
         Ok((SGameResultGeneric{stockorgame: VStockOrT::Stock(_), an_payout:_}, _mapepiostr_username)) => {
