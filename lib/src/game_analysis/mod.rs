@@ -130,14 +130,24 @@ pub fn html_copy_button(
             );
         }})("{}", this)
         '>&#128203</button>"###,
-        format!("{str_openschafkopf_executable} suggest-card --rules \"{str_rules}\" --played-cards \"{str_cards_on_table}\" --hand \"{str_hand_all}\" --hand \"{str_hand_single}\"",
-            str_rules=SDisplayRules::new(rules, /*b_include_playerindex*/true),
-            str_cards_on_table=stichseq.visible_stichs().iter()
-                .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
-                .join("  "),
-            str_hand_all=display_card_slices(ahand, rules, "  "),
-            str_hand_single=SDisplayCardSlice::new(ahand[unwrap!(stichseq.current_stich().current_playerindex())].cards().to_vec(), rules),
-        ).replace('\"', "\\\""),
+        openschafkopf_invocation_command(rules, ahand, stichseq, str_openschafkopf_executable, /*str_quote*/"\\\""),
+    )
+}
+
+pub fn openschafkopf_invocation_command(
+    rules: &SRules,
+    ahand: &EnumMap<EPlayerIndex, SHand>,
+    stichseq: &SStichSequence,
+    str_openschafkopf_executable: &str,
+    str_quote: &str,
+) -> String{
+    format!("{str_openschafkopf_executable} suggest-card --rules {str_quote}{str_rules}{str_quote} --played-cards {str_quote}{str_cards_on_table}{str_quote} --hand {str_quote}{str_hand_all}{str_quote} --hand {str_quote}{str_hand_single}{str_quote}",
+        str_rules=SDisplayRules::new(rules, /*b_include_playerindex*/true),
+        str_cards_on_table=stichseq.visible_stichs().iter()
+            .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
+            .join("  "),
+        str_hand_all=display_card_slices(ahand, rules, "  "),
+        str_hand_single=SDisplayCardSlice::new(ahand[unwrap!(stichseq.current_stich().current_playerindex())].cards().to_vec(), rules),
     )
 }
 

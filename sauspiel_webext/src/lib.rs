@@ -8,7 +8,7 @@ use openschafkopf_util::*;
 use openschafkopf_lib::{
     ai::{SDetermineBestCardResult, SPayoutStats, determine_best_card, gametree::{SPerMinMaxStrategyGeneric, SMaxSelfishMinStrategy, SAlphaBetaPrunerNone, SGenericMinReachablePayout, SNoVisualization, STplStrategiesOnlyMaxSelfishMin}, stichoracle::SFilterByOracle},
     game::{first_hand_for, SGameResultGeneric, SGameGeneric},
-    game_analysis::{html_payout_table, html_copy_button, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
+    game_analysis::{html_payout_table, html_copy_button, openschafkopf_invocation_command, parser::{SGameAnnouncementAnonymous, internal_analyze_sauspiel_html, TSauspielHtmlDocument, TSauspielHtmlNode, VSauspielHtmlData}},
     rules::{SDisplayRules, SRules, TRules, TRulesPlayerIndex, ruleset::VStockOrT, SExpensifiers, trumpfdecider::STrumpfDecider, VTrumpfOrFarbe, card_points::points_stich},
     primitives::{ECard, EFarbe, ESchlag, EPlayerIndex, SHand, SStichSequence, TCardSorter},
 };
@@ -112,13 +112,16 @@ impl TSauspielHtmlNode<'_> for SWebsysElement {
     }
 }
 
-fn internal_output_card_sauspiel_img(card: ECard, str_style: String) -> html_generator::HtmlElement<impl html_generator::AttributeOrChild> {
+fn internal_output_card_sauspiel_img(card: ECard, str_style: String, attr_extra: impl html_generator::AttributeOrChild<Child=()>) -> html_generator::HtmlElement<impl html_generator::AttributeOrChild> {
     let str_card = format!("{card}").replace('Z', "X"); // TODO proper card formatter
     use html_generator::*;
     elements::span((
         class(format!("card-icon card-icon-by card-icon-{str_card}")),
-        attributes::title(str_card.clone()),
-        attributes::style(str_style),
+        (
+            attributes::title(str_card.clone()),
+            attributes::style(str_style),
+            attr_extra,
+        ),
         str_card
     ))
     /* // TODO This would look better:
@@ -141,6 +144,7 @@ fn output_card_sauspiel_img(card: ECard, b_highlight: bool) -> impl html_generat
     internal_output_card_sauspiel_img(
         card,
         /*str_style*/if b_highlight { "box-shadow: inset 0px 0px 5px black;border-radius: 4px;" } else { "" }.into(),
+        (),
     )
 }
 
@@ -229,6 +233,8 @@ struct SGameProtocolStep {
     epi: EPlayerIndex,
     card_played: ECard,
     ocardseverity: Option<EPlayedCardSeverity>,
+    stichseq: SStichSequence,
+    ahand: EnumMap<EPlayerIndex, SHand>,
 }
 
 fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, ElementPlayedCard:'lft>(
@@ -305,6 +311,8 @@ fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, El
             epi: *epi,
             card_played: *card_played,
             ocardseverity,
+            stichseq: stichseq.clone(),
+            ahand: ahand.clone(),
         });
         fn_for_each_card(
             rules,
@@ -411,7 +419,7 @@ fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, El
                     {
                         let mut mapepimapbocardseverity_header = EPlayerIndex::map_from_fn(|_epi| bool::map_from_fn(|_b_repeated| None));
                         vecgameprotocolstep.chunks(EPlayerIndex::SIZE).for_each(|slcgameprotocolstep_stich| {
-                            for (b_repeated, SGameProtocolStep{epi, card_played:_, ocardseverity}) in make_playerindex_columns(ittplepib_repeated.clone(), slcgameprotocolstep_stich).flatten() {
+                            for (b_repeated, SGameProtocolStep{epi, card_played:_, ocardseverity, stichseq:_, ahand:_}) in make_playerindex_columns(ittplepib_repeated.clone(), slcgameprotocolstep_stich).flatten() {
                                 assign_gt(&mut mapepimapbocardseverity_header[*epi][b_repeated], ocardseverity); // exploits that Option::None is smaller than any Option::Some(_) // TODO Good idea?
                             }
                         });
@@ -453,7 +461,32 @@ fn make_simple_game_protocol<'lft, Ruleset, GameAnnouncement, DetermineRules, El
                                         Some(EPlayedCardSeverity::Suboptimal(b_loss_realized)) => suboptimal_quality_to_html_color(*b_loss_realized),
                                         None => "lightgrey",
                                     };
-                                    Some(internal_output_card_sauspiel_img(gameprotocolstep.card_played, format!("border-top: 5px solid {str_color};box-sizing: content-box;")))
+                                    Some(internal_output_card_sauspiel_img(
+                                        gameprotocolstep.card_played,
+                                        format!("border-top: 5px solid {str_color};box-sizing: content-box;"),
+                                        html_generator::onclick(
+                                            format!(r###"
+                                                (function /*copyToClipboard*/(str, btn) {{
+                                                    navigator.clipboard.writeText(str).then(
+                                                        function() {{
+                                                            // No particular indication for success
+                                                        }},
+                                                        function() {{
+                                                            alert('Could not copy to clipboard.');
+                                                        }},
+                                                    );
+                                                }})(`{}`, this)
+                                                "###,
+                                                openschafkopf_invocation_command(
+                                                    &game_finished.rules, 
+                                                    &gameprotocolstep.ahand,
+                                                    &gameprotocolstep.stichseq,
+                                                    /*str_openschafkopf_executable*/"openschafkopf",
+                                                    /*str_quote*/"'",
+                                                ),
+                                            )
+                                        ),
+                                    ))
                                 })))
                         ),
                         html_table_gap_cell.clone(),
@@ -527,7 +560,7 @@ fn append_sibling(node_existing: &web_sys::Node, node_new: &web_sys::Node) {
 fn output_cards_sauspiel_img_as_spans(mut veccard: Vec<ECard>, trumpfdecider: &STrumpfDecider) -> impl html_generator::AttributeOrChild {
     use html_generator::*;
     trumpfdecider.sort_cards(&mut veccard);
-    html_iter(veccard.into_iter().map(|card| internal_output_card_sauspiel_img(card, "".into())))
+    html_iter(veccard.into_iter().map(|card| internal_output_card_sauspiel_img(card, "".into(), ())))
 }
 fn output_position_and_cards_sauspiel_img(epi: EPlayerIndex, veccard: Vec<ECard>, trumpfdecider: &STrumpfDecider) -> impl html_generator::AttributeOrChild {
     (
