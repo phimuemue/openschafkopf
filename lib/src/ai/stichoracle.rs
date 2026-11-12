@@ -233,7 +233,7 @@ impl SStichTrie {
             },
         };
         #[cfg(debug_assertions)] stichtrie.assert_invariant();
-        debug_assert!(stichtrie.traverse_trie(stichseq.current_stich().first_playerindex()).iter().all(|stich|
+        debug_assert!(stichtrie.traverse_trie(stichseq.current_stich_first_playerindex()).iter().all(|stich|
             stich.equal_up_to_size(&stich_current, stich_current.size())
         ));
         stichtrie
@@ -400,7 +400,7 @@ mod tests {
                 slccard_stichseq.iter().copied(),
                 rules,
             ));
-            let epi_first = stichseq.current_stich().first_playerindex();
+            let epi_first = stichseq.current_stich_first_playerindex();
             let ahand = &EPlayerIndex::map_from_raw(aslccard_hand)
                 .map_into(SHand::new_from_iter);
             let (mut cardspartition, playerparties) = unwrap!(rules.only_minmax_points_when_on_same_hand(
@@ -415,7 +415,7 @@ mod tests {
                 &cardspartition,
                 &playerparties,
             );
-            let setstich_oracle = stichtrie.traverse_trie(stichseq.current_stich().first_playerindex()).iter().cloned().collect::<std::collections::HashSet<_>>();
+            let setstich_oracle = stichtrie.traverse_trie(stichseq.current_stich_first_playerindex()).iter().cloned().collect::<std::collections::HashSet<_>>();
             let setstich_check = slcacard_stich
                 .iter()
                 .map(|acard| SStich::new_full(

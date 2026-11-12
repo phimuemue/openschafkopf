@@ -132,6 +132,10 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         self.current_stich().is_empty()
     }
 
+    pub fn current_stich_first_playerindex(&self) -> EPlayerIndex {
+        self.current_stich().first_playerindex()
+    }
+
     pub fn current_playable_stich(&self) -> &SStich {
         assert!(self.completed_stichs().len()<self.kurzlang().cards_per_player());
         self.current_stich()

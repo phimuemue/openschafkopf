@@ -781,7 +781,7 @@ fn snap_equiv_base(stichseq: &SStichSequence) -> u64 {
         }
         setcard_played
     };
-    set_bits!(snapequiv, /*epi_next_stich*/stichseq.current_stich().first_playerindex().to_usize(), 0);
+    set_bits!(snapequiv, /*epi_next_stich*/stichseq.current_stich_first_playerindex().to_usize(), 0);
     set_bits!(snapequiv, setcard_played, 2);
     snapequiv
 }
