@@ -175,7 +175,7 @@ fn analyze_game(
                             epi,
                             Box::new(std::iter::once(game.ahand.clone())) as Box<_>,
                         ),
-                        (i_stich, stichseq.current_stich().size()),
+                        (i_stich, stichseq.current_stich_size()),
                     ));
                 }
                 let look_for_mistakes = |determinebestcardresult: &SDetermineBestCardResult<SPerMinMaxStrategy<SPayoutStats>>| {

@@ -327,7 +327,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                 output
             }};
         }
-        match stichseq.current_stich().size() {
+        match stichseq.current_stich_size() {
             0 => for_each_allowed_card!((0, 1, 2, 3,), stichseq),
             1 => for_each_allowed_card!((0, 1, 2,), stichseq),
             2 => for_each_allowed_card!((0, 1,), stichseq),
