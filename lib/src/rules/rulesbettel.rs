@@ -70,7 +70,7 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichNorm
         assert!(!stichseq.current_stich_is_empty());
         all_allowed_cards_within_stich_distinguish_farbe_frei(
             rulesbettel,
-            /*card_first_in_stich*/ *stichseq.current_stich().first(),
+            /*card_first_in_stich*/stichseq.current_stich_first_card(),
             hand,
             /*fn_farbe_not_frei*/|veccard_same_farbe| veccard_same_farbe,
         )
@@ -83,7 +83,7 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStic
         assert!(!stichseq.current_stich_is_empty());
         all_allowed_cards_within_stich_distinguish_farbe_frei(
             rulesbettel,
-            /*card_first_in_stich*/ *stichseq.current_stich().first(),
+            /*card_first_in_stich*/stichseq.current_stich_first_card(),
             hand,
             /*fn_farbe_not_frei*/|veccard_same_farbe| {
                 let veccard_allowed_higher_than_current_best = veccard_same_farbe.iter().copied()
