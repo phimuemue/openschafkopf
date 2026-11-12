@@ -101,7 +101,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
     }
 
     pub fn no_card_played(&self) -> bool {
-        self.completed_stichs().is_empty() && self.current_stich().is_empty()
+        self.completed_stichs().is_empty() && self.current_stich_is_empty()
     }
 
     fn completed_stichs_no_invariant(&self) -> &[SStich] {
@@ -126,6 +126,10 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
 
     pub fn current_stich_current_playerindex(&self) -> Option<EPlayerIndex> {
         self.current_stich().current_playerindex()
+    }
+
+    pub fn current_stich_is_empty(&self) -> bool {
+        self.current_stich().is_empty()
     }
 
     pub fn current_playable_stich(&self) -> &SStich {
@@ -159,7 +163,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         self.zugeben(card, winnerindex);
         let r = func(self);
         #[cfg(debug_assertions)]self.assert_invariant();
-        if self.current_stich().is_empty() {
+        if self.current_stich_is_empty() {
             unwrap!(self.vecstich.pop());
             assert!(self.current_stich_no_invariant().is_full());
         }

@@ -67,7 +67,7 @@ pub struct SBettelAllAllowedCardsWithinStichStichzwang {}
 
 impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichNormal {
     fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
-        assert!(!stichseq.current_stich().is_empty());
+        assert!(!stichseq.current_stich_is_empty());
         all_allowed_cards_within_stich_distinguish_farbe_frei(
             rulesbettel,
             /*card_first_in_stich*/ *stichseq.current_stich().first(),
@@ -80,7 +80,7 @@ impl TBettelAllAllowedCardsWithinStich for SBettelAllAllowedCardsWithinStichStic
     fn all_allowed_cards_within_stich(rulesbettel: &SRulesBettel<Self>, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         let stich = stichseq.current_stich();
         let card_highest = *unwrap!(stich.get(rulesbettel.preliminary_winner_index(stich)));
-        assert!(!stichseq.current_stich().is_empty());
+        assert!(!stichseq.current_stich_is_empty());
         all_allowed_cards_within_stich_distinguish_farbe_frei(
             rulesbettel,
             /*card_first_in_stich*/ *stichseq.current_stich().first(),

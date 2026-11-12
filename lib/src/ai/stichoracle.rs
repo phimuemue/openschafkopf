@@ -93,7 +93,7 @@ impl SStichTrie {
             playerparties: &SPlayerPartiesTable,
         ) -> (SStichTrie, Option<bool/*b_stich_winner_is_primary*/>) {
             if n_depth==0 {
-                assert!(stichseq.current_stich().is_empty());
+                assert!(stichseq.current_stich_is_empty());
                 (
                     SStichTrie::new(),
                     Some(playerparties.is_primary_party(rules.winner_index(unwrap!(stichseq.last_completed_stich())))),
@@ -298,7 +298,7 @@ impl<'rules> SFilterByOracle<'rules> {
 impl TFilterAllowedCards for SFilterByOracle<'_> {
     type UnregisterStich = (SStichTrie, EnumMap<EPlayerIndex, SRemoved>);
     fn register_stich(&mut self, ahand: &mut EnumMap<EPlayerIndex, SHand>, stichseq: &mut SStichSequence) -> Self::UnregisterStich {
-        assert!(stichseq.current_stich().is_empty());
+        assert!(stichseq.current_stich_is_empty());
         let aremovedcard = EPlayerIndex::map_from_fn(|epi|
             self.cardspartition_completed_cards.remove_from_chain(unwrap!(stichseq.last_completed_stich())[epi])
         );

@@ -358,7 +358,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
                             $snapshotcache,
                             snapshotvisualizer,
                         )}}
-                        if stichseq.current_stich().is_empty() {
+                        if stichseq.current_stich_is_empty() {
                             let unregisterstich_cache = rulestatecache.register_stich(
                                 unwrap!(stichseq.last_completed_stich()),
                                 stichseq.current_stich().first_playerindex(),
@@ -960,7 +960,7 @@ impl SFilterEquivalentCards {
 impl TFilterAllowedCards for SFilterEquivalentCards {
     type UnregisterStich = EnumMap<EPlayerIndex, SRemoved>;
     fn register_stich(&mut self, _ahand: &mut EnumMap<EPlayerIndex, SHand>, stichseq: &mut SStichSequence) -> Self::UnregisterStich {
-        debug_assert!(stichseq.current_stich().is_empty());
+        debug_assert!(stichseq.current_stich_is_empty());
         self.internal_register_stich(unwrap!(stichseq.last_completed_stich()))
     }
     fn unregister_stich(&mut self, unregisterstich: Self::UnregisterStich) {

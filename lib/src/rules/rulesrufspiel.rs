@@ -285,7 +285,7 @@ impl<RufspielPayout: TRufspielPayout> TRules for SRulesRufspielGeneric<RufspielP
         if hand.cards().len()<=1 {
             hand.cards().clone()
         } else {
-            assert!(!stichseq.current_stich().is_empty());
+            assert!(!stichseq.current_stich_is_empty());
             let epi = unwrap!(stichseq.current_stich_current_playerindex());
             let card_first = *stichseq.current_stich().first();
             if /*either weggelaufen or epi is not partner, and accordingly does not hold rufsau*/stichseq.completed_stichs().iter()

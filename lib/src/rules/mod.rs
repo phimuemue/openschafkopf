@@ -506,7 +506,7 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
     fn all_allowed_cards(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         assert!(!hand.cards().is_empty());
         #[cfg(debug_assertions)]assert!(stichseq.current_playerindex().is_some());
-        let veccard = if stichseq.current_stich().is_empty() {
+        let veccard = if stichseq.current_stich_is_empty() {
             self.all_allowed_cards_first_in_stich(stichseq, hand)
         } else {
             self.all_allowed_cards_within_stich(stichseq, hand)
@@ -522,7 +522,7 @@ pub trait TRules : Sync + fmt::Debug + Send + Clone {
 
     fn all_allowed_cards_within_stich(&self, stichseq: &SStichSequence, hand: &SHand) -> SHandVector {
         // probably in most cases, only the first card of the current stich is decisive
-        assert!(!stichseq.current_stich().is_empty());
+        assert!(!stichseq.current_stich_is_empty());
         all_allowed_cards_within_stich_distinguish_farbe_frei(
             self,
             /*card_first_in_stich*/ *stichseq.current_stich().first(),
