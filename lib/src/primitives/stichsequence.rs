@@ -57,8 +57,8 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         assert!(!self.current_stich_no_invariant().is_full());
         assert_eq!(self.vecstich[0..self.vecstich.len()-1].len(), self.vecstich.len()-1);
         assert!(self.vecstich[0..self.vecstich.len()-1].iter().all(SStich::is_full));
-        assert!(self.completed_stichs_no_invariant().len()<=self.ekurzlang.cards_per_player());
-        if self.completed_stichs_no_invariant().len()==self.ekurzlang.cards_per_player() {
+        assert!(self.completed_stichs().len()<=self.ekurzlang.cards_per_player());
+        if self.completed_stichs().len()==self.ekurzlang.cards_per_player() {
             assert!(self.current_stich_no_invariant().is_empty());
         }
         for (_epi, &card) in self.visible_cards() {
@@ -104,12 +104,8 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         self.completed_stichs().is_empty() && self.current_stich_is_empty()
     }
 
-    fn completed_stichs_no_invariant(&self) -> &[SStich] {
-        &self.vecstich[0..self.vecstich.len()-1]
-    }
-
     pub fn completed_stichs(&self) -> &[SStich] {
-        self.completed_stichs_no_invariant()
+        &self.vecstich[0..self.vecstich.len()-1]
     }
 
     pub fn last_completed_stich(&self) -> Option<SFullStich<&SStich>> {
