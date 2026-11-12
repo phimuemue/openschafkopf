@@ -54,12 +54,12 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
     fn assert_invariant(&self) {
         assert!(!self.vecstich.is_empty());
         assert_eq!(self.vecstich[0].first_playerindex(), EPlayerIndex::EPI0);
-        assert!(!self.current_stich_no_invariant().is_full());
+        assert!(!self.current_stich().is_full());
         assert_eq!(self.vecstich[0..self.vecstich.len()-1].len(), self.vecstich.len()-1);
         assert!(self.vecstich[0..self.vecstich.len()-1].iter().all(SStich::is_full));
         assert!(self.completed_stichs().len()<=self.ekurzlang.cards_per_player());
         if self.completed_stichs().len()==self.ekurzlang.cards_per_player() {
-            assert!(self.current_stich_no_invariant().is_empty());
+            assert!(self.current_stich().is_empty());
         }
         for (_epi, &card) in self.visible_cards() {
             assert!(self.ekurzlang.supports_card(card));
@@ -112,12 +112,8 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         self.completed_stichs().last().map(SFullStich::new)
     }
 
-    fn current_stich_no_invariant(&self) -> &SStich {
-        unwrap!(self.vecstich.last())
-    }
-
     pub fn current_stich(&self) -> &SStich {
-        self.current_stich_no_invariant()
+        unwrap!(self.vecstich.last())
     }
 
     pub fn current_stich_current_playerindex(&self) -> Option<EPlayerIndex> {
@@ -154,8 +150,8 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
     pub fn zugeben(&mut self, card: ECard, winnerindex: &(impl TWinnerIndex + ?Sized)) {
         #[cfg(debug_assertions)]self.assert_invariant();
         unwrap!(self.vecstich.last_mut()).push(card);
-        if self.current_stich_no_invariant().is_full() {
-            self.vecstich.push(SStich::new(winnerindex.winner_index(SFullStich::new(self.current_stich_no_invariant()))));
+        if self.current_stich().is_full() {
+            self.vecstich.push(SStich::new(winnerindex.winner_index(SFullStich::new(self.current_stich()))));
         }
         #[cfg(debug_assertions)]self.assert_invariant();
     }
@@ -169,7 +165,7 @@ impl SStichSequence { // TODO implement wrappers for SStichSequence that allow o
         #[cfg(debug_assertions)]self.assert_invariant();
         if self.current_stich_is_empty() {
             unwrap!(self.vecstich.pop());
-            assert!(self.current_stich_no_invariant().is_full());
+            assert!(self.current_stich().is_full());
         }
         unwrap!(self.vecstich.last_mut()).undo_most_recent();
         debug_assert_eq!(n_len, self.vecstich.len());
