@@ -99,7 +99,7 @@ impl SStichTrie {
                     Some(playerparties.is_primary_party(rules.winner_index(unwrap!(stichseq.last_completed_stich())))),
                 )
             } else {
-                let epi_card = unwrap!(stichseq.current_stich().current_playerindex());
+                let epi_card = unwrap!(stichseq.current_stich_current_playerindex());
                 // TODO: If all remaining players (starting with epi_card) belong to the same playerparty, then, if this playerparty...
                 // * ... wins the trick, only the highest-points card from each partition's chain must be examined.
                 // * ... loses the trick, only the lowest-points card from each partition's chain must be examined.

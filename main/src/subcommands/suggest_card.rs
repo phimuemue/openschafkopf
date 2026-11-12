@@ -245,7 +245,7 @@ fn for_each_game_situation(
                             rules
                         ));
                         let epi_position = oepi_position_concrete.unwrap_or_else(||
-                            unwrap!(stichseq.current_stich().current_playerindex())
+                            unwrap!(stichseq.current_stich_current_playerindex())
                         );
                         if_then_some!(
                             stichseq.remaining_cards_per_hand()[epi_position]==vecocard_hand.len(),

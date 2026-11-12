@@ -89,7 +89,7 @@ impl SAi {
         let stichseq = &game.stichseq;
         let ahand = &game.ahand;
         let expensifiers = &game.expensifiers;
-        let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
+        let epi_current = unwrap!(stichseq.current_stich_current_playerindex());
         let hand_fixed = &ahand[epi_current];
         if let Ok(card)=rules.all_allowed_cards(
             stichseq,
@@ -279,7 +279,7 @@ pub fn determine_best_card<
         ECard::map_from_fn(|_card| None),
     ));
     let ooutput_combined = Arc::new(Mutex::new(None));
-    let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
+    let epi_current = unwrap!(stichseq.current_stich_current_playerindex());
     itahand
         .enumerate()
         .par_bridge() // TODO can we derive a true parallel iterator?

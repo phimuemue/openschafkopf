@@ -196,7 +196,7 @@ fn analyze_game(
                     look_for_mistake!(omaxmin, EMistake::Min)
                         .or_else(|| look_for_mistake!(omaxselfishmin, EMistake::SelfishMin))
                 };
-                let epi_current = unwrap!(game.stichseq.current_stich().current_playerindex());
+                let epi_current = unwrap!(game.stichseq.current_stich_current_playerindex());
                 let look_for_mistakes_simulating = || {
                     look_for_mistakes(
                         &fwd_to_determine_best_card(
@@ -418,7 +418,7 @@ impl SGameAnalysis {
         });
         let epi_self = EPlayerIndex::EPI0;
         let stich_caption = |stichseq: &SStichSequence| {
-            let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
+            let epi_current = unwrap!(stichseq.current_stich_current_playerindex());
             (
                 format!("Stich {}, Spieler {}",
                     stichseq.completed_stichs().len() + 1, // humans count 1-based

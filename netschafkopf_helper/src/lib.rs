@@ -1259,7 +1259,7 @@ fn log_game() -> Option<(EnumMap<EPlayerIndex, Vec<ECard>>, SGame, EPlayerIndex/
             for _i_card in 0..n_stichs_completed*EPlayerIndex::SIZE + n_current_stich_size {
                 stichseq.zugeben(
                     aveccard_played
-                        [epi_to_netschafkopf_playerindex(unwrap!(stichseq.current_stich().current_playerindex()))-1]
+                        [epi_to_netschafkopf_playerindex(unwrap!(stichseq.current_stich_current_playerindex()))-1]
                         [stichseq.completed_stichs().len()],
                     &rules,
                 );

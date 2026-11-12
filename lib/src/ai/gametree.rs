@@ -295,7 +295,7 @@ fn explore_snapshots_internal<ForEachSnapshot>(
         ForEachSnapshot: TForEachSnapshot,
 {
     snapshotvisualizer.begin_snapshot(ahand, stichseq);
-    let epi_current = unwrap!(stichseq.current_stich().current_playerindex());
+    let epi_current = unwrap!(stichseq.current_stich_current_playerindex());
     let output = if debug_verify_eq!(
         ahand[epi_current].cards().len() <= 1,
         ahand.iter().all(|hand| hand.cards().len() <= 1)

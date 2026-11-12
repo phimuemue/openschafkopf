@@ -52,7 +52,7 @@ pub fn html_payout_table<'a, 'b, HtmlAttributeOrChildCard: html_generator::Attri
         rules,
     ).into_output_lines();
     // TODO? should veccard_non_allowed be a separate row in determine_best_card_table::table?
-    let hand_current_player = &ahand[unwrap!(stichseq.current_stich().current_playerindex())];
+    let hand_current_player = &ahand[unwrap!(stichseq.current_stich_current_playerindex())];
     let veccard_allowed = rules.all_allowed_cards(
         stichseq,
         hand_current_player,
@@ -147,7 +147,7 @@ pub fn openschafkopf_invocation_command(
             .filter_map(|stich| if_then_some!(!stich.is_empty(), stich.iter().map(|(_epi, card)| *card).join(" ")))
             .join("  "),
         str_hand_all=display_card_slices(ahand, rules, "  "),
-        str_hand_single=SDisplayCardSlice::new(ahand[unwrap!(stichseq.current_stich().current_playerindex())].cards().to_vec(), rules),
+        str_hand_single=SDisplayCardSlice::new(ahand[unwrap!(stichseq.current_stich_current_playerindex())].cards().to_vec(), rules),
     )
 }
 
