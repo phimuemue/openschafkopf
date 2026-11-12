@@ -286,7 +286,7 @@ pub fn snapshot_cache_points_monotonic<TplStrategies: TTplStrategies>(playerpart
     }
     impl<TplStrategies: TTplStrategies, PlayerParties: TPlayerParties, PointsToWin: TPointsToWin> TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>> for SSnapshotCachePointsMonotonic<TplStrategies, PlayerParties, PointsToWin> {
         fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, _rules: dbg_parameter!(&SRules)) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
-            debug_assert_eq!(stichseq.current_stich().size(), 0);
+            debug_assert!(stichseq.current_stich_is_empty());
             let perminmaxn_payout = self.mapsnapequivperminmaxn_payout
                 .get(&super::snap_equiv_base(stichseq))?;
             Some(perminmaxn_payout.map(|n_payout_points| {
@@ -305,7 +305,7 @@ pub fn snapshot_cache_points_monotonic<TplStrategies: TTplStrategies>(playerpart
             }))
         }
         fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SPerMinMaxStrategyRawPayout<TplStrategies>, if_dbg_else!({rules}{_}): dbg_parameter!(&SRules)) {
-            debug_assert_eq!(stichseq.current_stich().size(), 0);
+            debug_assert!(stichseq.current_stich_is_empty());
             let perminmaxn_payout = payoutstats.map(|mapepin_payout| {
                 let n_points_primary = payoutdecider::normalized_points_to_points(
                     unwrap!(

@@ -770,7 +770,7 @@ fn snapshot_cache_point_based<TplStrategies: TTplStrategies, PlayerParties: TPla
 
 
 fn snap_equiv_base(stichseq: &SStichSequence) -> u64 {
-    debug_assert_eq!(stichseq.current_stich().size(), 0);
+    debug_assert!(stichseq.current_stich_is_empty());
     let mut snapequiv = 0;
     let setcard_played = {
         let mut setcard_played = 0u64;
@@ -809,13 +809,13 @@ fn snapshot_cache<TplStrategies: TTplStrategies>(fn_payload: impl Fn(&SRuleState
     impl<TplStrategies: TTplStrategies, FnPayload: Fn(&SRuleStateCache)->u64> TSnapshotCache<SPerMinMaxStrategyRawPayout<TplStrategies>> for SSnapshotCachePointBased<TplStrategies, FnPayload>
     {
         fn get(&self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, _rules: dbg_parameter!(&SRules)) -> Option<SPerMinMaxStrategyRawPayout<TplStrategies>> {
-            debug_assert_eq!(stichseq.current_stich().size(), 0);
+            debug_assert!(stichseq.current_stich_is_empty());
             self.mapsnapequivperminmaxmapepin_payout
                 .get(&self.snap_equiv(stichseq, rulestatecache))
                 .cloned()
         }
         fn put(&mut self, stichseq: &SStichSequence, rulestatecache: &SRuleStateCache, payoutstats: &SPerMinMaxStrategyRawPayout<TplStrategies>, if_dbg_else!({rules}{_}): dbg_parameter!(&SRules)) {
-            debug_assert_eq!(stichseq.current_stich().size(), 0);
+            debug_assert!(stichseq.current_stich_is_empty());
             self.mapsnapequivperminmaxmapepin_payout
                 .insert(
                     self.snap_equiv(stichseq, rulestatecache),
