@@ -16,8 +16,10 @@ libc = "0.2.147"
 log = "0.4.19"
 retour = { git = "https://github.com/phimuemue/retour-rs.git" } # TODO eliminate own fork once https://github.com/Hpmason/retour-rs/issues/69 is solved
 simple-logging = "2.0.2"
-winapi = { version = "0.3.9", features = ["consoleapi", "libloaderapi", "minwindef", "memoryapi", "winuser"] }
 openschafkopf_util = {path = "../util"}
 openschafkopf_lib = {path = "../lib"}
 plain_enum = "0"
 as_num = "0"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3.9", features = ["consoleapi", "libloaderapi", "minwindef", "memoryapi", "winuser"] }
