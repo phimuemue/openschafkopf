@@ -250,7 +250,7 @@ impl std::str::FromStr for SConstraint {
                             ctx.who_has_card_internal(card)
                                 .or_else(|| ctx.stichseq.visible_cards()
                                     .find(|&(_epi, card_visible)| card_visible==&card)
-                                    .map(|(epi, _card)| epi)
+                                    .map(get_by_type::<ECard, _>)
                                 )
                         )
                     },
