@@ -503,7 +503,7 @@ pub fn with_common_args<FnWithArgs>(
                                     (ahand, payout)
                                 })
                                 .k_largest_by(*n_samples, |tplahandpayout_lhs, tplahandpayout_rhs| unwrap!(tplahandpayout_lhs.1.partial_cmp(&tplahandpayout_rhs.1)))
-                                .map(|(ahand, _payout)| ahand)
+                                .map(get_by_type::<EnumMap<EPlayerIndex, SHand>,_>)
                         }
                     )
                 },
