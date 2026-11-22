@@ -45,3 +45,5 @@ pub mod iterext;
 pub use iterext::*;
 pub mod sliceext;
 pub use sliceext::*;
+pub mod get_by_type;
+pub use get_by_type::*;
