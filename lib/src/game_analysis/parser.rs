@@ -135,7 +135,7 @@ pub fn analyze_sauspiel_html(str_html: &str) -> Result<SGameResultGeneric<SSausp
         /*fn_gameannouncement*/|_,_,_| (),
         /*fn_determinerules_step*/|_,_,_| (),
         /*fn_before_play_card*/|_,_,_,_| (),
-    ).map(|(gameresult, _mapepistr_username)| gameresult)
+    ).map(get_by_type::<SGameResultGeneric<_,_,_>,_>)
 }
 
 pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnouncement, FnGameAnnouncement, DetermineRulesStep, FnDetermineRulesStep, FnBeforePlayCard>(
@@ -219,7 +219,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
                 veccardbnode.sort_unstable_by_key(|&(_card, b_highlight, ref _node_card)| !b_highlight);
                 vecveccard.push(SHandVector::try_from(
                     veccardbnode.into_iter()
-                        .map(|(card, _b_highlight, _node_card)| card)
+                        .map(get_by_type::<ECard,_>)
                         .collect::<Vec<_>>()
                         .as_slice()
                 )?);
@@ -457,7 +457,7 @@ pub fn internal_analyze_sauspiel_html<Document: TSauspielHtmlDocument, GameAnnou
                     .parent().ok_or_else(|| format_err!("walking html failed"))?,
             )? {
                 let epi_zugeben = game.which_player_can_do_something()
-                    .map(|(epi_zugeben, _vecepi_stoss)| epi_zugeben)
+                    .map(get_by_type::<EPlayerIndex/*epi_zugeben*/,_>)
                     .ok_or_else(|| format_err!("which_player_can_do_something"))?;
                 fn_before_play_card(&game, card, epi_zugeben, node_card);
                 verify_is_unit!(game.zugeben(card, epi_zugeben)?);

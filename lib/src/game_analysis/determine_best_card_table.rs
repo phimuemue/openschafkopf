@@ -143,7 +143,7 @@ pub fn internal_table<
         });
         vecoutputline.push(SOutputLine{
             vect: grptpltmapemmstrategyatplstrf.into_iter()
-                .map(|(t, _atplstrf)| t)
+                .map(get_by_type::<T,_>)
                 .collect(),
             perminmaxstrategyatplstrf,
         });

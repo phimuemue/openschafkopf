@@ -620,7 +620,7 @@ fn internal_suggest(fn_call_original: &dyn Fn()->isize) -> isize {
                     payoutstatsperstrategy.omaxselfishmin.as_ref().unwrap_static_some().min()
                 )
                 .into_iter()
-                .map(|(card, _payoutstatsperstrategy)| card)
+                .map(get_by_type::<ECard,_>)
                 .collect::<Vec<_>>();
             assert!(!veccard_suggestion_openschafkopf.is_empty());
             if !veccard_suggestion_openschafkopf.contains(&card_suggestion_netschk) {

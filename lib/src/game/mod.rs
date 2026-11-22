@@ -181,7 +181,7 @@ impl TGamePhase for SGamePreparations {
                         None | Some(EDoublingScope::Games) => *n_stock,
                         Some(EDoublingScope::GamesAndStock) => {
                             *n_stock * 2isize.pow(
-                                self.expensifiers.doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count().as_num()
+                                self.expensifiers.doublings.iter().filter(|tpl| *tpl.get_by_type::<&bool/*b_doubling*/,_>()).count().as_num()
                             )
                         }
                     };
@@ -283,7 +283,7 @@ impl SDetermineRules {
     }
 
     pub fn announce_game(&mut self, epi: EPlayerIndex, rules: SActivelyPlayableRules) -> Result<(), Error> {
-        if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
+        if Some(epi)!=self.which_player_can_do_something().map(get_by_type::<EPlayerIndex,_>) {
             return Err(format_err!("announce_game not allowed for specified EPlayerIndex"));
         }
         if rules.priority()<self.currently_offered_prio().1 {
@@ -306,7 +306,7 @@ impl SDetermineRules {
     }
 
     pub fn resign(&mut self, epi: EPlayerIndex) -> Result<(), Error> {
-        if Some(epi)!=self.which_player_can_do_something().map(|(epi, ref _vecrulegroup)| epi) {
+        if Some(epi)!=self.which_player_can_do_something().map(get_by_type::<EPlayerIndex,_>) {
             return Err(format_err!("announce_game not allowed for specified EPlayerIndex"));
         }
         assert!(!self.vectplepirules_queued.is_empty());

@@ -188,7 +188,7 @@ pub fn print_game_info(rules: &SRules, expensifiers: &SExpensifiers) {
             ". Doublings: ",
             expensifiers.doublings.iter()
                 .filter(|&(_epi, b_doubling)| *b_doubling)
-                .map(|(epi, _b_doubling)| epi)
+                .map(get_by_type::<EPlayerIndex,_>)
                 .collect()
         );
         print_special(

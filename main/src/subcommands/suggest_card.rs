@@ -503,7 +503,7 @@ pub fn with_common_args<FnWithArgs>(
                                     (ahand, payout)
                                 })
                                 .k_largest_by(*n_samples, |tplahandpayout_lhs, tplahandpayout_rhs| unwrap!(tplahandpayout_lhs.1.partial_cmp(&tplahandpayout_rhs.1)))
-                                .map(|(ahand, _payout)| ahand)
+                                .map(get_by_type::<EnumMap<EPlayerIndex, SHand>,_>)
                         }
                     )
                 },
@@ -1084,7 +1084,7 @@ fn run_internal<
         println!("{}", unwrap!(serde_json::to_string(
             &SJson::new(
                 /*str_rules*/SDisplayRules::new(rules, /*b_include_playerindex*/true).to_string(),
-                /*vec_stichseq*/stichseq.visible_cards().map(|(_epi, &card)| card).join(" "),
+                /*vec_stichseq*/stichseq.visible_cards().map(get_by_type::<&ECard,_>).join(" "),
                 ocard_played,
                 /*str_hand*/ahand_fixed_with_holes.map(|hand|
                     SDisplayCardSlice::new(hand.cards().clone(), rules).to_string()

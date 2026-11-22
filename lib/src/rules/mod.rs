@@ -119,7 +119,7 @@ impl SExpensifiers {
     pub fn stoss_doubling_factor(&self) -> isize {
         2isize.pow((
             self.vecstoss.len() +
-            self.doublings.iter().filter(|&(_epi, &b_doubling)| b_doubling).count()
+            self.doublings.iter().filter(|tpl| *tpl.get_by_type::<&bool/*b_doubling*/,_>()).count()
         ).as_num::<u32>())
     }
 }
