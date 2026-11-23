@@ -534,7 +534,7 @@ pub struct SGameResultGeneric<Ruleset, GameAnnouncement, DetermineRules> {
 pub type SGameResult<Ruleset> = SGameResultGeneric<Ruleset, (), ()>;
 
 impl<Ruleset> TGamePhase for SGameResult<Ruleset> { // "absorbing state"
-    type ActivePlayerInfo = std::convert::Infallible;
+    type ActivePlayerInfo = !;
     type Finish = Self;
 
     fn which_player_can_do_something(&self) -> Option<Self::ActivePlayerInfo> {

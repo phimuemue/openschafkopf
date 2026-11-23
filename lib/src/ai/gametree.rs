@@ -4,7 +4,7 @@ use crate::rules::*;
 use crate::util::*;
 use itertools::Itertools;
 use rand::prelude::*;
-use std::{borrow::Borrow, cmp::Ordering, fmt::Debug, fs, io::{BufWriter, Write}, ops::ControlFlow, convert::Infallible};
+use std::{borrow::Borrow, cmp::Ordering, fmt::Debug, fs, io::{BufWriter, Write}, ops::ControlFlow};
 use super::{SPayoutStats, cardspartition::*};
 use serde::Serialize;
 
@@ -781,7 +781,7 @@ impl TAlphaBetaPruner for SAlphaBetaPrunerNone {
     type InfoFromParent = ();
     fn initial_info_from_parent() -> Self::InfoFromParent {
     }
-    type BreakType = Infallible;
+    type BreakType = !;
     fn is_prunable_self<TplStrategies: TTplStrategies>(&self, _minmax: &SPerMinMaxStrategyRawPayout<TplStrategies>, _infofromparent: Self::InfoFromParent, _epi_self: EPlayerIndex) -> ControlFlow<Self::BreakType, /*Continue*/Self::InfoFromParent> {
         ControlFlow::Continue(())
     }
