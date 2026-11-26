@@ -416,17 +416,18 @@ pub fn with_common_args<FnWithArgs>(
                                     n_ahand_valid += 1;
                                 }
                                 if b_verbose {
-                                    println!("{} {}/{}/{} {}",
-                                        if b_valid {
-                                            '>'
-                                        } else {
-                                            '|'
-                                        },
-                                        n_ahand_valid,
-                                        n_ahand_seen,
-                                        $n_ahand_total,
-                                        display_card_slices(&ahand, rules, " | "),
-                                    )
+                                    // TODO indicatif...
+                                    // println!("{} {}/{}/{} {}",
+                                    //     if b_valid {
+                                    //         '>'
+                                    //     } else {
+                                    //         '|'
+                                    //     },
+                                    //     n_ahand_valid,
+                                    //     n_ahand_seen,
+                                    //     $n_ahand_total,
+                                    //     display_card_slices(&ahand, rules, " | "),
+                                    // )
                                 }
                                 b_valid
                             }
@@ -984,16 +985,7 @@ fn run_internal<
 {
     let inspectionstatistics = Arc::new(Mutex::new(SInspectionStatistics::new(slcconstraint, stichseq, rules)));
     let ovecinterimres_verbose = if_then_some!(b_verbose, Arc::new(Mutex::new(Vec::<SInterimResult<TplStrategies>>::new())));
-    let inspect_card = |b_before, tpliahand: &(usize, EnumMap<EPlayerIndex,_>), card| {
-        if b_verbose {
-            println!(" {} {} ({}): {}",
-                if b_before {'>'} else {'<'},
-                tpliahand.0+1, // TODO use same hand counters as in common_given_game
-                card,
-                display_card_slices(&tpliahand.1, rules, " | "),
-            );
-        }
-    };
+    let omultiprogress = if_then_some!(b_verbose, indicatif::MultiProgress::new());
     let determinebestcardresult = determine_best_card(
         stichseq,
         itahand,
@@ -1007,14 +999,23 @@ fn run_internal<
         fn_snapshotcache,
         fn_visualizer,
         /*determinebestcardinspect*/(
-            /*FnStartHand*/|i_ahand, ahand: &EnumMap<EPlayerIndex, SHand>| -> (usize, EnumMap<EPlayerIndex, SHand>) {
-                (i_ahand, ahand.clone())
+            /*FnStartHand*/|i_ahand, ahand: &EnumMap<EPlayerIndex, SHand>| -> (usize, EnumMap<EPlayerIndex, SHand>, _) {
+                (
+                    i_ahand,
+                    ahand.clone(),
+                    omultiprogress.as_ref().map(|multiprogress| {
+                        multiprogress.add(indicatif::ProgressBar::new(ahand[epi_position].cards().len().as_num::<u64>()))
+                    }),
+                )
             },
-            /*FnFinishHand*/|tpliahand: (_, EnumMap<EPlayerIndex, SHand>), mapcardopayoutstats: &EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>>| {
+            /*FnFinishHand*/|tpliahandoprogressbar: (_, EnumMap<EPlayerIndex, SHand>, Option<indicatif::ProgressBar>), mapcardopayoutstats: &EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>>| {
                 unwrap!(inspectionstatistics.lock()).update_inspection_statistics(
-                    &tpliahand.1,
+                    &tpliahandoprogressbar.1,
                     // TODO respect mapcardopayoutstats
                 );
+                if let Some(progressbar) = tpliahandoprogressbar.2.as_ref() {
+                    progressbar.finish_and_clear();
+                }
                 if let Some(ref vecinterimres) = ovecinterimres_verbose {
                     let fn_cmp_interim_result = |lhs: &SInterimResult<TplStrategies>, rhs: &SInterimResult<TplStrategies>| {
                         rhs.payoutstats.compare_canonical(&lhs.payoutstats)
@@ -1077,11 +1078,13 @@ fn run_internal<
                     );
                 }
             },
-            /*FnStartCard*/|tpliahand: &(usize, EnumMap<_,_>), card| {
-                inspect_card(/*b_before*/true, tpliahand, card);
+            /*FnStartCard*/|_tpliahandoprogressbar: &(usize, EnumMap<_,_>, _), _card| {
+                // TODO? Do something here? Indicate that card is started?
             },
-            /*FnFinishCard*/|tpliahand: &(usize, EnumMap<_,_>), card| {
-                inspect_card(/*b_before*/false, tpliahand, card);
+            /*FnFinishCard*/|tpliahandoprogressbar: &(usize, EnumMap<_,_>, Option<indicatif::ProgressBar>), _card| {
+                if let Some(progressbar) = tpliahandoprogressbar.2.as_ref() {
+                    progressbar.inc(1);
+                }
             },
         ),
         fn_payout,
