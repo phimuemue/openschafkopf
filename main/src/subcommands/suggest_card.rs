@@ -984,6 +984,16 @@ fn run_internal<
 {
     let inspectionstatistics = Arc::new(Mutex::new(SInspectionStatistics::new(slcconstraint, stichseq, rules)));
     let ovecinterimres_verbose = if_then_some!(b_verbose, Arc::new(Mutex::new(Vec::<SInterimResult<TplStrategies>>::new())));
+    let inspect_card = |b_before, tpliahand: &(usize, EnumMap<EPlayerIndex,_>), card| {
+        if b_verbose {
+            println!(" {} {} ({}): {}",
+                if b_before {'>'} else {'<'},
+                tpliahand.0+1, // TODO use same hand counters as in common_given_game
+                card,
+                display_card_slices(&tpliahand.1, rules, " | "),
+            );
+        }
+    };
     let determinebestcardresult = determine_best_card(
         stichseq,
         itahand,
@@ -996,87 +1006,84 @@ fn run_internal<
         ),
         fn_snapshotcache,
         fn_visualizer,
-        /*fn_inspect*/&|inspectionpoint, i_ahand, ahand| {
-            match inspectionpoint {
-                VInspectionPoint::Card{b_before, card} => {
-                    if b_verbose {
-                        println!(" {} {} ({}): {}",
-                            if *b_before {'>'} else {'<'},
-                            i_ahand+1, // TODO use same hand counters as in common_given_game
-                            card,
-                            display_card_slices(ahand, rules, " | "),
-                        );
-                    }
-                },
-                VInspectionPoint::AfterHand(mapcardopayoutstats) => {
-                    unwrap!(inspectionstatistics.lock()).update_inspection_statistics(
-                        ahand,
-                        // TODO respect mapcardopayoutstats
-                    );
-                    if let Some(ref vecinterimres) = ovecinterimres_verbose {
-                        let fn_cmp_interim_result = |lhs: &SInterimResult<TplStrategies>, rhs: &SInterimResult<TplStrategies>| {
-                            rhs.payoutstats.compare_canonical(&lhs.payoutstats)
-                        };
-                        let mut vecinterimres = unwrap!(vecinterimres.lock());
-                        let n_count_before = vecinterimres.len();
-                        assert!(vecinterimres.is_sorted_by(fn_cmp_to_fn_le(fn_cmp_interim_result)));
-                        // Remember old ranks and positions
-                        let mut mapcardoposandrank_old = ECard::map_from_fn(|_| None);
-                        for_each_interim_result(&mut vecinterimres, fn_cmp_interim_result, |posandrank, interimres| {
-                            verify!(mapcardoposandrank_old[interimres.card].replace(posandrank).is_none()); // Implies that each card occured only once
-                        });
-                        // Copy over/update values that have been present in previous iteration
-                        for (card, payoutstats) in internal_cards_and_ts(mapcardopayoutstats) {
-                            if let Some(posandrank) = &mapcardoposandrank_old[card] {
-                                assert_eq!(vecinterimres[posandrank.i_position].card, card);
-                                vecinterimres[posandrank.i_position].payoutstats = payoutstats.clone(); // Update to new value
-                            } else {
-                                vecinterimres.push(SInterimResult{ornkchg: None, card, payoutstats: payoutstats.clone()});
-                            }
-                        }
-                        // Compute rank changes - only on already known entries.
-                        let slcinterimres_already_present = &mut vecinterimres[0..n_count_before];
-                        slcinterimres_already_present.sort_by(&fn_cmp_interim_result);
-                        for_each_interim_result(slcinterimres_already_present, fn_cmp_interim_result, |posandrank, interimres| {
-                            interimres.ornkchg = Some(match posandrank.n_rank.cmp(&unwrap!(mapcardoposandrank_old[interimres.card].as_ref()).n_rank) {
-                                std::cmp::Ordering::Less => VRankChange::Change(ELoHi::Lo),
-                                std::cmp::Ordering::Greater => VRankChange::Change(ELoHi::Hi),
-                                std::cmp::Ordering::Equal => VRankChange::Equal(match interimres.ornkchg {
-                                    None | Some(VRankChange::Change(_)) => 1,
-                                    Some(VRankChange::Equal(n_iterations)) => n_iterations + 1,
-                                })
-                            });
-                        });
-                        if n_count_before<vecinterimres.len() {
-                            vecinterimres.sort_by(&fn_cmp_interim_result);
+        /*determinebestcardinspect*/(
+            /*FnStartHand*/|i_ahand, ahand: &EnumMap<EPlayerIndex, SHand>| -> (usize, EnumMap<EPlayerIndex, SHand>) {
+                (i_ahand, ahand.clone())
+            },
+            /*FnFinishHand*/|tpliahand: (_, EnumMap<EPlayerIndex, SHand>), mapcardopayoutstats: &EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>>| {
+                unwrap!(inspectionstatistics.lock()).update_inspection_statistics(
+                    &tpliahand.1,
+                    // TODO respect mapcardopayoutstats
+                );
+                if let Some(ref vecinterimres) = ovecinterimres_verbose {
+                    let fn_cmp_interim_result = |lhs: &SInterimResult<TplStrategies>, rhs: &SInterimResult<TplStrategies>| {
+                        rhs.payoutstats.compare_canonical(&lhs.payoutstats)
+                    };
+                    let mut vecinterimres = unwrap!(vecinterimres.lock());
+                    let n_count_before = vecinterimres.len();
+                    assert!(vecinterimres.is_sorted_by(fn_cmp_to_fn_le(fn_cmp_interim_result)));
+                    // Remember old ranks and positions
+                    let mut mapcardoposandrank_old = ECard::map_from_fn(|_| None);
+                    for_each_interim_result(&mut vecinterimres, fn_cmp_interim_result, |posandrank, interimres| {
+                        verify!(mapcardoposandrank_old[interimres.card].replace(posandrank).is_none()); // Implies that each card occured only once
+                    });
+                    // Copy over/update values that have been present in previous iteration
+                    for (card, payoutstats) in internal_cards_and_ts(mapcardopayoutstats) {
+                        if let Some(posandrank) = &mapcardoposandrank_old[card] {
+                            assert_eq!(vecinterimres[posandrank.i_position].card, card);
+                            vecinterimres[posandrank.i_position].payoutstats = payoutstats.clone(); // Update to new value
                         } else {
-                            assert!(vecinterimres.is_sorted_by(fn_cmp_to_fn_le(fn_cmp_interim_result)));
+                            vecinterimres.push(SInterimResult{ornkchg: None, card, payoutstats: payoutstats.clone()});
                         }
-                        print_payoutstatstable(
-                            &internal_table(
-                                vecinterimres.iter()
-                                    .map(|SInterimResult{ornkchg, card, payoutstats}| (
-                                        format!("{} {}",
-                                            match ornkchg {
-                                                None => "".to_string(),
-                                                Some(VRankChange::Change(ELoHi::Lo)) => "^".to_string(),
-                                                Some(VRankChange::Equal(n_iterations)) => format!("=({n_iterations})"),
-                                                Some(VRankChange::Change(ELoHi::Hi)) => "v".to_string(),
-                                            },
-                                            card,
-                                        ),
-                                        payoutstats,
-                                    ))
-                                    .collect(),
-                                /*b_group*/false,
-                            ),
-                            /*b_print_table_description_before_table*/false,
-                            /*fn_mark_played*/|_str_card| false, // TODO Mark played card in intermediate result
-                        );
                     }
-                },
-            }
-        },
+                    // Compute rank changes - only on already known entries.
+                    let slcinterimres_already_present = &mut vecinterimres[0..n_count_before];
+                    slcinterimres_already_present.sort_by(&fn_cmp_interim_result);
+                    for_each_interim_result(slcinterimres_already_present, fn_cmp_interim_result, |posandrank, interimres| {
+                        interimres.ornkchg = Some(match posandrank.n_rank.cmp(&unwrap!(mapcardoposandrank_old[interimres.card].as_ref()).n_rank) {
+                            std::cmp::Ordering::Less => VRankChange::Change(ELoHi::Lo),
+                            std::cmp::Ordering::Greater => VRankChange::Change(ELoHi::Hi),
+                            std::cmp::Ordering::Equal => VRankChange::Equal(match interimres.ornkchg {
+                                None | Some(VRankChange::Change(_)) => 1,
+                                Some(VRankChange::Equal(n_iterations)) => n_iterations + 1,
+                            })
+                        });
+                    });
+                    if n_count_before<vecinterimres.len() {
+                        vecinterimres.sort_by(&fn_cmp_interim_result);
+                    } else {
+                        assert!(vecinterimres.is_sorted_by(fn_cmp_to_fn_le(fn_cmp_interim_result)));
+                    }
+                    print_payoutstatstable(
+                        &internal_table(
+                            vecinterimres.iter()
+                                .map(|SInterimResult{ornkchg, card, payoutstats}| (
+                                    format!("{} {}",
+                                        match ornkchg {
+                                            None => "".to_string(),
+                                            Some(VRankChange::Change(ELoHi::Lo)) => "^".to_string(),
+                                            Some(VRankChange::Equal(n_iterations)) => format!("=({n_iterations})"),
+                                            Some(VRankChange::Change(ELoHi::Hi)) => "v".to_string(),
+                                        },
+                                        card,
+                                    ),
+                                    payoutstats,
+                                ))
+                                .collect(),
+                            /*b_group*/false,
+                        ),
+                        /*b_print_table_description_before_table*/false,
+                        /*fn_mark_played*/|_str_card| false, // TODO Mark played card in intermediate result
+                    );
+                }
+            },
+            /*FnStartCard*/|tpliahand: &(usize, EnumMap<_,_>), card| {
+                inspect_card(/*b_before*/true, tpliahand, card);
+            },
+            /*FnFinishCard*/|tpliahand: &(usize, EnumMap<_,_>), card| {
+                inspect_card(/*b_before*/false, tpliahand, card);
+            },
+        ),
         fn_payout,
     )?;
     if clapmatches.is_present("json") {

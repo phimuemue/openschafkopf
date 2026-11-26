@@ -546,7 +546,7 @@ fn determine_best_card_sauspiel(ahand: EnumMap<EPlayerIndex, SHand>, stichseq: &
             Some(rules.snapshot_cache::<STplStrategiesOnlyMaxSelfishMin>(rulestatecache))
         },
         /*fn_visualizer*/SNoVisualization::factory(),
-        /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
+        /*determinebestcardinspect*/(),
         /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
     ))
 }

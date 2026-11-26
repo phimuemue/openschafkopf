@@ -874,7 +874,7 @@ fn test_snapshotcache() {
                                     rules.snapshot_cache::<STplStrategiesAll>(rulestatecache)
                                 ),
                                 SNoVisualization::factory(),
-                                /*fn_inspect*/&|_,_,_| {},
+                                /*determinebestcardinspect*/(),
                                 /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
                             ))
                                 .cards_and_ts()

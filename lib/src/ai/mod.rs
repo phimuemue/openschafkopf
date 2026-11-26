@@ -75,7 +75,7 @@ impl SAi {
             },
             SSnapshotCacheNone::factory(), // TODO? make customizable
             /*fn_visualizer*/SNoVisualization::factory(),
-            /*fn_inspect*/&|_,_,_|{},
+            /*determinebestcardinspect*/(),
             /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
         )).t_combined
     }
@@ -116,7 +116,7 @@ impl SAi {
                     ),
                     SSnapshotCacheNone::factory(), // TODO possibly use cache
                     fn_visualizer,
-                    /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
+                    /*determinebestcardinspect*/(),
                     /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
                 )
             }}}
@@ -240,18 +240,48 @@ impl SPayoutStats {
     }
 }
 
-pub enum VInspectionPoint<AfterHand> {
-    Card{
-        b_before: bool,
-        card: ECard,
-    },
-    AfterHand(
-        AfterHand,
-    ),
-}
-
 #[derive(Debug)]
 pub struct SCouldNotGenerateValidHands;
+
+pub trait TDetermineBestCardInspect<TplStrategies: TTplStrategies> : std::marker::Sync {
+    type TStart: std::marker::Sync;
+    fn start_hand(&self, i_ahand: usize, ahand: &EnumMap<EPlayerIndex, SHand>)->Self::TStart;
+    fn finish_hand(&self, _start: Self::TStart, _mapcardpayoutstats: &EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>>) {}
+    fn start_card(&self, _start: &Self::TStart, _card: ECard) {}
+    fn finish_card(&self, _start: &Self::TStart, _card: ECard) {}
+}
+impl<TplStrategies: TTplStrategies> TDetermineBestCardInspect<TplStrategies> for () {
+    type TStart = ();
+    fn start_hand(&self, _i_ahand: usize, _ahand: &EnumMap<EPlayerIndex, SHand>)->Self::TStart {}
+}
+impl<
+    TplStrategies: TTplStrategies,
+    TStart: std::marker::Sync,
+    FnStartHand,
+    FnFinishHand,
+    FnStartCard,
+    FnFinishCard,
+> TDetermineBestCardInspect<TplStrategies> for (FnStartHand, FnFinishHand, FnStartCard, FnFinishCard)
+    where
+        for<'a> FnStartHand: Fn(usize, &'a EnumMap<EPlayerIndex, SHand>)->TStart + std::marker::Sync,
+        for<'a> FnFinishHand: Fn(TStart, &'a EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>>) + std::marker::Sync,
+        for<'a> FnStartCard: Fn(&'a TStart, ECard) + std::marker::Sync,
+        for<'a> FnFinishCard: Fn(&'a TStart, ECard) + std::marker::Sync,
+{
+    type TStart = TStart;
+    fn start_hand(&self, i_ahand: usize, ahand: &EnumMap<EPlayerIndex, SHand>)->Self::TStart {
+        (self.0)(i_ahand, ahand)
+    }
+    fn finish_hand(&self, start: Self::TStart, mapcardpayoutstats: &EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>>) {
+        (self.1)(start, mapcardpayoutstats)
+    }
+    fn start_card(&self, start: &Self::TStart, card: ECard) {
+        (self.2)(start, card)
+    }
+    fn finish_card(&self, start: &Self::TStart, card: ECard) {
+        (self.3)(start, card)
+    }
+}
 
 pub fn determine_best_card<
     'stichseq,
@@ -270,7 +300,7 @@ pub fn determine_best_card<
     fn_make_foreachsnapshot: &(dyn Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>) -> SMinReachablePayoutBase<'rules, Pruner, TplStrategies, AlphaBetaPruner> + std::marker::Sync),
     fn_snapshotcache: impl Fn(&SRuleStateCacheFixed) -> Option<SnapshotCache> + std::marker::Sync,
     fn_visualizer: impl Fn(usize, &EnumMap<EPlayerIndex, SHand>, Option<ECard>) -> SnapshotVisualizer + std::marker::Sync,
-    fn_inspect: &(dyn Fn(&VInspectionPoint<&EnumMap<ECard, Option<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>>>, usize, &EnumMap<EPlayerIndex, SHand>) + std::marker::Sync),
+    determinebestcardinspect: impl TDetermineBestCardInspect<TplStrategies>,
     fn_payout: &(impl Fn(&SStichSequence, &EnumMap<EPlayerIndex, SHand>, isize)->isize + Sync),
 ) -> Result<SDetermineBestCardResult<SPerMinMaxStrategyGeneric<SPayoutStats, TplStrategies>>, SCouldNotGenerateValidHands>
 {
@@ -284,6 +314,7 @@ pub fn determine_best_card<
         .enumerate()
         .par_bridge() // TODO can we derive a true parallel iterator?
         .for_each(|(i_ahand, ahand)| {
+            let inspectbeforehandresult = determinebestcardinspect.start_hand(i_ahand, &ahand);
             let mapcardooutput_per_ahand = Arc::new(Mutex::new(ECard::map_from_fn(|_| None)));
             let foreachsnapshot = fn_make_foreachsnapshot(stichseq, &ahand);
             foreachsnapshot.rules.all_allowed_cards(
@@ -292,7 +323,7 @@ pub fn determine_best_card<
             )
                 .into_par_iter()
                 .for_each(|&card| {
-                    fn_inspect(&VInspectionPoint::Card{b_before: true, card}, i_ahand, &ahand);
+                    determinebestcardinspect.start_card(&inspectbeforehandresult, card);
                     let foreachsnapshot = fn_make_foreachsnapshot(stichseq, &ahand);
                     let mut visualizer = fn_visualizer(i_ahand, &ahand, Some(card)); // do before ahand is modified
                     debug_assert!(ahand[epi_current].cards().contains(&card));
@@ -323,7 +354,7 @@ pub fn determine_best_card<
                         let mapcardooutput_per_ahand = Arc::clone(&mapcardooutput_per_ahand);
                         verify!(unwrap!(mapcardooutput_per_ahand.lock())[card].replace(output).is_none());
                     }
-                    fn_inspect(&VInspectionPoint::Card{b_before: false, card}, i_ahand, &ahand);
+                    determinebestcardinspect.finish_card(&inspectbeforehandresult, card);
                 });
             let mapcardooutput_per_ahand = finalize_arc_mutex(mapcardooutput_per_ahand);
             {
@@ -344,10 +375,9 @@ pub fn determine_best_card<
                         });
                     }
                 }
-                fn_inspect(
-                    &VInspectionPoint::AfterHand(&mapcardooutput),
-                    i_ahand,
-                    &ahand
+                determinebestcardinspect.finish_hand(
+                    inspectbeforehandresult,
+                    &mapcardooutput,
                 );
             }
             let output_per_ahand = foreachsnapshot.combine_outputs(
@@ -547,7 +577,7 @@ fn test_very_expensive_exploration() { // this kind of abuses the test mechanism
             &|_stichseq, _ahand| SMinReachablePayout::new_from_game(&game),
             /*fn_snapshotcache*/SSnapshotCacheNone::factory(), // TODO test cache
             /*fn_visualizer*/SNoVisualization::factory(),
-            /*fn_inspect*/&|_inspectionpoint, _i_ahand, _ahand| {},
+            /*determinebestcardinspect*/(),
             /*fn_payout*/&|_stichseq, _ahand, n_payout| n_payout,
         ));
         for card in [H7, H8, H9] {
